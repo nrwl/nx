@@ -13,7 +13,7 @@ use super::dependent_outputs::compute_dependent_output_edges;
 use super::touched::{ChangedExternals, touched_tasks};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::ProjectGraph;
-use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
+use crate::native::tasks::types::{HashPlans, TaskGraph};
 
 #[napi(object)]
 pub struct AffectedTasksOptions {
@@ -231,6 +231,7 @@ fn affected_through_output_reads(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::tasks::types::HashInstruction;
     use crate::native::test_utils::{graph_of_roots as graph, hash_plans, strings, task_graph};
 
     /// Builds a one-task plan from the given instructions.

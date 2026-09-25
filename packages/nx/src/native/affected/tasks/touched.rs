@@ -7,11 +7,12 @@ use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 use super::plan_ids::referenced_ids;
-use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
+use crate::native::affected::project_paths::ProjectRoots;
 use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob};
 use crate::native::project_graph::types::{ExternalNode, ProjectGraph};
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
+use crate::native::utils::path::normalize_js_path;
 
 /// The externals a change moved, as the matcher asks about them.
 pub(crate) struct ChangedExternals<'a> {
@@ -73,7 +74,7 @@ pub(crate) fn touched_tasks(
     // no files, so nothing else in the plan can see this.
     let reconfigured: HashSet<&str> = changed_project_configs
         .iter()
-        .filter_map(|file| roots.owner_of(&normalize_path(file)))
+        .filter_map(|file| roots.owner_of(&normalize_js_path(file)))
         .collect();
 
     let ids = referenced_ids(hash_plans);
@@ -114,7 +115,7 @@ struct ChangedFiles<'a> {
 
 impl<'a> ChangedFiles<'a> {
     fn new(roots: &'a ProjectRoots, changed_files: &[String]) -> Self {
-        let files: Vec<String> = changed_files.iter().map(|f| normalize_path(f)).collect();
+        let files: Vec<String> = changed_files.iter().map(|f| normalize_js_path(f)).collect();
         let mut by_owner: HashMap<&str, Vec<usize>> = HashMap::new();
         for (index, file) in files.iter().enumerate() {
             if let Some(owner) = roots.owner_of(file) {

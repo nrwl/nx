@@ -1,12 +1,13 @@
-use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
+use crate::native::affected::project_paths::ProjectRoots;
 use crate::native::project_graph::types::ProjectGraph;
+use crate::native::utils::path::normalize_js_path;
 
 /// Maps each changed file to the project that owns it.
 pub(super) fn touched_projects(graph: &ProjectGraph, touched_files: &[String]) -> Vec<String> {
     let roots = ProjectRoots::new(graph);
     touched_files
         .iter()
-        .filter_map(|file| roots.owner_of(&normalize_path(file)).map(String::from))
+        .filter_map(|file| roots.owner_of(&normalize_js_path(file)).map(String::from))
         .collect()
 }
 

@@ -31,6 +31,17 @@ where
     }
 }
 
+/// A path as a person or JS wrote it, for any OS: a Windows drive letter
+/// stripped, then `\` swapped for `/`. Mirrors `normalizePath` in
+/// `packages/nx/src/utils/path.ts`. Paths read from disk use `Normalize`.
+pub fn normalize_js_path(path: &str) -> String {
+    let without_drive = match path.as_bytes() {
+        [drive, b':', ..] if drive.is_ascii_alphabetic() => &path[2..],
+        _ => path,
+    };
+    without_drive.replace('\\', "/")
+}
+
 pub fn get_child_files<'a, T>(
     directory: &Path,
     files: &'a BTreeMap<PathBuf, T>,
@@ -45,6 +56,14 @@ pub fn get_child_files<'a, T>(
 mod test {
     use super::*;
     use std::path::PathBuf;
+
+    #[test]
+    fn normalizes_a_js_path_on_any_os() {
+        assert_eq!(normalize_js_path("libs\\a\\index.ts"), "libs/a/index.ts");
+        // Stripping the drive leaves a leading slash, as `normalizePath` does.
+        assert_eq!(normalize_js_path("C:\\libs\\a"), "/libs/a");
+        assert_eq!(normalize_js_path("libs/a/index.ts"), "libs/a/index.ts");
+    }
 
     #[test]
     fn should_get_child_files() {

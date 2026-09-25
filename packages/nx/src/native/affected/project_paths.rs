@@ -29,16 +29,6 @@ impl ProjectRoots {
     }
 }
 
-/// Mirrors `normalizePath` in `packages/nx/src/utils/path.ts`: strip a Windows drive
-/// letter, then swap separators. `--files` arrives exactly as typed.
-pub(crate) fn normalize_path(path: &str) -> String {
-    let without_drive = match path.as_bytes() {
-        [drive, b':', ..] if drive.is_ascii_alphabetic() => &path[2..],
-        _ => path,
-    };
-    without_drive.replace('\\', "/")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -69,14 +59,5 @@ mod tests {
     fn a_path_under_no_root_has_no_owner() {
         let roots = ProjectRoots::new(&graph(&[("a", "libs/a")]));
         assert_eq!(roots.owner_of("elsewhere/x.ts"), None);
-    }
-
-    #[test]
-    fn normalizes_windows_paths() {
-        assert_eq!(normalize_path("libs\\a\\index.ts"), "libs/a/index.ts");
-        // Stripping the drive leaves a leading slash, which matches no root key.
-        // Parity with `normalizePath`, not an improvement on it.
-        assert_eq!(normalize_path("C:\\libs\\a"), "/libs/a");
-        assert_eq!(normalize_path("libs/a/index.ts"), "libs/a/index.ts");
     }
 }
