@@ -38,18 +38,23 @@ When `nx.json` also contains an `nxCloudId`, the token is checked against Nx Clo
 {% tabs %}
 {% tabitem label="macOS & Linux" %}
 
-We look for this file at the following locations:
+We look for this file at the following locations, in order:
 
 - `$XDG_CONFIG_HOME/nxcloud/nxcloud.ini`
-- `$HOME/config/nxcloud/nxcloud.ini`
 - `$HOME/.nxcloud.ini`
+- `$HOME/.config/nxcloud/nxcloud.ini`
 
-If we don't find an existing config file, we create one at `$HOME/config/nxcloud/nxcloud.ini`
+If we don't find an existing config file, we create one at `$HOME/.config/nxcloud/nxcloud.ini`
 
 {% /tabitem %}
 {% tabitem label="Windows" %}
 
-We look for this file within the `%LOCALAPPDATA%/nxcloud` directory and if it does not exist, we will create a new `nxcloud.ini` file there.
+We look for this file at the following locations, in order:
+
+- `%USERPROFILE%/.nxcloud.ini`
+- `%LOCALAPPDATA%/nxcloud/nxcloud.ini`
+
+If we don't find an existing config file, we create one at `%LOCALAPPDATA%/nxcloud/nxcloud.ini`
 
 {% /tabitem %}
 {% /tabs %}
@@ -651,7 +656,6 @@ Use it to dedicate a pool of agents to a subset of your pipeline, for example `-
 | Variable                                           | Description                                                                                        |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `NX_AGENT_NAME`                                    | Name the agent for logs and the Nx Cloud UI. Defaults to the CircleCI job name, then a random name |
-| `NX_AGENT_INSTANCE_NAME`                           | Distinguish individual instances that share an agent name                                          |
 | `NX_AGENT_LAUNCH_TEMPLATE`                         | Report the [launch template](/docs/kb/launch-templates) the agent runs, used by assignment rules   |
 | `NX_VERBOSE_LOGGING` or `NX_CLOUD_VERBOSE_LOGGING` | Set either to `true` to turn on verbose logging. `start-agent` has no `--verbose` flag             |
 
