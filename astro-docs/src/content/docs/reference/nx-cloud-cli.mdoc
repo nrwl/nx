@@ -415,7 +415,7 @@ If you accidentally run this command locally, remove all generated marker files 
 | `--distribute-on`               | string  | Configure the number of agents, [launch templates](/docs/kb/launch-templates) and [assignment rules](/docs/kb/assignment-rules) for distributed execution              |         |
 | `--assignment-rules`            | string  | Path to the [assignment rules configuration](/docs/kb/assignment-rules#using-assignment-rules-when-you-bring-your-own-compute) for manual distribution.                |         |
 | `--no-distribution`             | boolean | Disable distribution for this run                                                                                                                                      |         |
-| `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx complete-ci-run`                                                                                      | `false` |
+| `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx complete-ci-run`. See detailed usage below.                                                           | `false` |
 | `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                    |         |
 | `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails. This flag does not interrupt the command itself. To cancel the command on failure use [nxBail](/docs/reference/nx-commands) | `true`  |
 | `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                                                                                                     | `true`  |
@@ -455,6 +455,23 @@ distribute-on:
   medium-changeset: 6 linux-medium-js
   large-changeset: 10 linux-medium-js
 ```
+
+##### --require-explicit-completion
+
+By default, Nx Cloud closes a run group when its [heartbeat](/docs/kb/heartbeat-and-manual-shutdown-handling) stops arriving for 30 seconds. Some workflows cannot keep a heartbeat that steady, for example CI providers that reap background processes between steps, or pipelines that span multiple sequential machines with a gap while the next one boots. Passing `--require-explicit-completion` turns that auto-completion off for the run. The run group only closes when you invoke [`nx-cloud complete-ci-run`](#nx-cloud-complete-ci-run), so a paused heartbeat cannot end the run early.
+
+Pair the flag with an always-run completion step at the end of the main job:
+
+```yaml
+- run: npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --require-explicit-completion
+# ... your affected build / lint / test / e2e steps ...
+- run: npx nx-cloud complete-ci-run
+  if: always()
+```
+
+`if: always()` (or the equivalent for your provider) is important. The step needs to run after both success and failure, and after workflow cancellation, or the CIPE stays open until Nx Cloud's server-side reconciliation sweeps it hours later.
+
+If you configure runs with a `.nx/ci-config.yaml` file instead of CLI flags, use [`lifecycle.heartbeat: false`](/docs/reference/nx-cloud/ci-config#lifecycleheartbeat). It does the same thing.
 
 ##### --stop-agents-after
 
@@ -677,13 +694,15 @@ npx nx-cloud stop-all-agents
 
 ### `nx-cloud complete-ci-run`
 
-Explicitly complete a CI run when automatic completion monitoring is turned off, either with `lifecycle.heartbeat: false` in `.nx/ci-config.yaml`, or with `--require-explicit-completion` on `start-ci-run`.
+Explicitly complete a CI run when automatic completion monitoring is turned off, either with [`lifecycle.heartbeat: false`](/docs/reference/nx-cloud/ci-config#lifecycleheartbeat) in `.nx/ci-config.yaml`, or with [`--require-explicit-completion`](#--require-explicit-completion) on `start-ci-run`. Invoke it as the last step of your main job, guarded by `if: always()` (or the equivalent for your provider) so it also runs on failures and cancellations.
 
 **Usage:**
 
 ```shell
 npx nx-cloud complete-ci-run
 ```
+
+See [heartbeat and main job completion handling](/docs/kb/heartbeat-and-manual-shutdown-handling#caveats) for when to opt out of the heartbeat entirely, and [unify multiple workflows into one CIPE](/docs/kb/unify-workflows-into-one-cipe) for the multi-workflow coordination pattern.
 
 ### `nx-cloud cleanup`
 
