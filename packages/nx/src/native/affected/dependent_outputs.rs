@@ -13,7 +13,9 @@ use tracing::{debug, trace};
 
 use crate::native::affected::dependency_closure::walk_dependencies;
 use crate::native::affected::plan_ids::referenced_ids;
-use crate::native::glob::{NxGlobSet, build_glob_set, normalize_glob};
+use crate::native::glob::{
+    NxGlobSet, build_glob_set, literal_segment, normalize_glob, partition_glob,
+};
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
 /// Consumer task id -> the upstream task ids whose declared outputs it reads.
@@ -155,7 +157,7 @@ fn producers_read_by<'a>(
     producers.into_iter().map(str::to_string).collect()
 }
 
-/// A producer's declared output with its `literal_prefix`, normalized like the
+/// A producer's declared output with its literal leading folders, normalized like the
 /// reads it is compared against.
 struct OutputPattern {
     raw: String,
@@ -166,7 +168,7 @@ impl OutputPattern {
     fn new(raw: &str) -> Self {
         let raw = normalize_glob(raw);
         Self {
-            prefix: literal_prefix(&raw).to_string(),
+            prefix: partition_glob(&raw).0,
             raw,
         }
     }
@@ -192,9 +194,9 @@ enum IgnoredFileSetPattern {
 
 impl IgnoredFileSetPattern {
     fn new(pattern: &str) -> Self {
-        let prefix = literal_prefix(pattern);
+        let (prefix, _) = partition_glob(pattern);
         if !prefix.is_empty() {
-            Self::Under(prefix.to_string())
+            Self::Under(prefix)
         } else if pattern.contains('/') || pattern.starts_with("**") {
             Self::Anywhere(pattern.to_string())
         } else {
@@ -230,8 +232,8 @@ impl IgnoredFileSetPattern {
 /// only after a wildcard: a literal output may be a directory, `dist/lib.v2`.
 fn distinct_extensions(read: &str, output: &str) -> bool {
     let output_segment = output.rsplit('/').next().unwrap_or(output);
-    let output_extension = output_segment
-        .contains(['*', '?'])
+    let output_extension = literal_segment(output_segment)
+        .is_none()
         .then(|| literal_extension(output))
         .flatten();
     matches!(
@@ -241,15 +243,15 @@ fn distinct_extensions(read: &str, output: &str) -> bool {
 }
 
 /// The literal extension a pattern's last segment ends in: `js` for
-/// `dist/**/*.js`. None when there is no extension, the extension has a
-/// wildcard, or the segment has a brace or group.
+/// `dist/**/*.js`. None when there is no extension, the extension is not
+/// plain text, or the segment has a brace or group the `.` may sit inside.
 fn literal_extension(pattern: &str) -> Option<&str> {
     let segment = pattern.rsplit('/').next().unwrap_or(pattern);
     if segment.contains(['{', '(']) {
         return None;
     }
     let ext = segment.rsplit_once('.')?.1;
-    (!ext.is_empty() && !ext.contains(['*', '?', '['])).then_some(ext)
+    (!ext.is_empty() && literal_segment(ext).as_deref() == Some(ext)).then_some(ext)
 }
 
 /// Segment-wise, so `dist/libs/ui` does not contain `dist/libs/ui-legacy` the
@@ -259,20 +261,6 @@ fn is_path_prefix(prefix: &str, path: &str) -> bool {
         || path
             .strip_prefix(prefix)
             .is_some_and(|rest| rest.starts_with('/'))
-}
-
-/// The leading path segments of a glob that contain no wildcard:
-/// `dist/libs/ui/**/*.js` -> `dist/libs/ui`, `**/*.js` -> `""`. A pattern with
-/// no wildcard is returned whole.
-fn literal_prefix(pattern: &str) -> &str {
-    let pattern = pattern.strip_prefix('!').unwrap_or(pattern);
-    let Some(wildcard) = pattern.find(['*', '?', '[', '{', '(']) else {
-        return pattern.trim_end_matches('/');
-    };
-    // Back up to the last complete segment: `dist/li*` must not claim `dist/li`.
-    pattern[..wildcard]
-        .rfind('/')
-        .map_or("", |slash| &pattern[..slash])
 }
 
 #[cfg(test)]
@@ -739,13 +727,18 @@ mod tests {
         assert_eq!(literal_extension("**/*.{js,d.ts}"), None);
     }
 
+    /// The prefix comes from the glob parser, so an escaped bracket is part of
+    /// the folder name rather than a class that ends the prefix at `dist`.
     #[test]
-    fn literal_prefix_stops_at_the_last_complete_segment() {
-        assert_eq!(literal_prefix("dist/libs/ui/**/*.js"), "dist/libs/ui");
-        assert_eq!(literal_prefix("dist/li*"), "dist");
-        assert_eq!(literal_prefix("dist/{a,b}/**"), "dist");
-        assert_eq!(literal_prefix("**/*.js"), "");
-        assert_eq!(literal_prefix("dist/libs/ui/"), "dist/libs/ui");
-        assert_eq!(literal_prefix("!dist/libs/ui/**"), "dist/libs/ui");
+    fn an_escaped_bracket_stays_in_the_prefix() {
+        let e = edges(
+            &[
+                ("id:build", &[r"dist/\[id\]"]),
+                ("other:build", &["dist/other"]),
+            ],
+            &[("app:build", &["id:build", "other:build"])],
+            &[("app:build", vec![include_ignored(&[r"dist/\[id\]/**"])])],
+        );
+        assert_eq!(e["app:build"], strings(&["id:build"]));
     }
 }
