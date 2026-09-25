@@ -305,6 +305,9 @@ describe('migrate run issues', () => {
         pass
       );
       expect(resolvedAgain.ok).toBe(false);
+      expect((resolvedAgain as { ok: false; reason: string }).reason).toContain(
+        'already resolved'
+      );
     });
 
     it('rejects a handoff that reports and updates the same issue', () => {
