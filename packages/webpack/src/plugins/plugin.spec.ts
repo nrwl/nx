@@ -21,7 +21,11 @@ import { hashObject, workspaceDataDirectory } from '@nx/devkit/internal';
 import { rmSync } from 'fs';
 import { createNodesV2 } from './plugin';
 import { join } from 'path';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/webpack/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -52,6 +56,7 @@ describe('@nx/webpack/plugin', () => {
   });
 
   afterEach(() => {
+    resetCjsMocks();
     vi.resetModules();
     tempFs.cleanup();
     if (originalCacheProjectGraph !== undefined) {
@@ -402,8 +407,11 @@ describe('@nx/webpack/plugin', () => {
   });
 
   function mockWebpackConfig(config: any) {
-    vi.mock(join(tempFs.tempDir, 'my-app/webpack.config.js'), () => config, {
-      virtual: true,
-    });
+    // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+    mockCjsModule(
+      import.meta.url,
+      join(tempFs.tempDir, 'my-app/webpack.config.js'),
+      config
+    );
   }
 });
