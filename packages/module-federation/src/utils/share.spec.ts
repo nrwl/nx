@@ -9,12 +9,28 @@ vi.mock('fs', async () => {
     lstatSync: vi.fn((...args: any[]) => actual.lstatSync(...args)),
   };
 });
+// jest's workspace root (tmp/unit) resolved the repo's node_modules; the shared
+// setup's temp root has none, and secondary entry points are resolved from it.
+const { repoRoot } = vi.hoisted(() => ({
+  repoRoot: require('path').resolve(__dirname, '../../../..'),
+}));
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   readJsonFile: vi.fn(),
+  workspaceRoot: repoRoot,
 }));
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
+  return {
+    ...actual,
+    readModulePackageJson: (pkg: string, paths = [repoRoot]) =>
+      actual.readModulePackageJson(pkg, paths),
+  };
+});
 
 import * as fs from 'fs';
+import { rmSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import * as tsUtils from './typescript';
 
 import * as nxFileutils from '@nx/devkit';
@@ -25,6 +41,11 @@ import {
 } from './share';
 
 describe('MF Share Utils', () => {
+  // The fs mock also reaches nx's `node:fs` imports, so readNxJson sees
+  // `existsSync() === true` and needs an nx.json to read.
+  const nxJsonPath = join(process.env.NX_WORKSPACE_ROOT_PATH, 'nx.json');
+  beforeAll(() => writeFileSync(nxJsonPath, '{}'));
+  afterAll(() => rmSync(nxJsonPath, { force: true }));
   afterEach(() => vi.clearAllMocks());
 
   describe('ShareWorkspaceLibraries', () => {
