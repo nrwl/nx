@@ -1,4 +1,6 @@
 use anyhow::Result;
+use std::cell::Cell;
+use std::time::Duration;
 use tracing::trace;
 
 #[derive(Clone, Debug)]
@@ -92,12 +94,44 @@ fn value_from_row(row: &turso::Row, idx: usize) -> DbValue {
     }
 }
 
+/// SQLite's default busy-handler schedule. turso's own busy wait re-polls without
+/// sleeping, so it burns a core; we wait here instead.
+const BUSY_DELAYS_MS: [u64; 12] = [1, 2, 5, 10, 15, 20, 25, 25, 25, 50, 50, 100];
+const BUSY_TIMEOUT: Duration = Duration::from_secs(12);
+
+fn is_busy(e: &anyhow::Error) -> bool {
+    matches!(
+        e.downcast_ref::<turso::Error>(),
+        Some(turso::Error::Busy(_) | turso::Error::BusySnapshot(_))
+    )
+}
+
+/// Runs `op` until it stops reporting busy or `BUSY_TIMEOUT` has been spent sleeping.
+fn retry_while_busy<T>(mut op: impl FnMut() -> Result<T>) -> Result<T> {
+    let mut waited = Duration::ZERO;
+    for attempt in 0.. {
+        match op() {
+            Err(e) if is_busy(&e) && waited < BUSY_TIMEOUT => {
+                let delay =
+                    Duration::from_millis(BUSY_DELAYS_MS[attempt.min(BUSY_DELAYS_MS.len() - 1)]);
+                trace!("Database busy, retrying in {:?}", delay);
+                std::thread::sleep(delay);
+                waited += delay;
+            }
+            result => return result,
+        }
+    }
+    unreachable!()
+}
+
 #[derive(Default)]
 pub struct NxDbConnection {
     rt: Option<tokio::runtime::Runtime>,
     conn: Option<turso::Connection>,
     /// Keep the Database alive — Connection may reference it internally.
     _db: Option<turso::Database>,
+    /// Inside a transaction only the whole transaction may be retried, not one statement.
+    in_transaction: Cell<bool>,
 }
 
 impl NxDbConnection {
@@ -106,6 +140,7 @@ impl NxDbConnection {
             rt: Some(rt),
             conn: Some(conn),
             _db: Some(db),
+            in_transaction: Cell::new(false),
         }
     }
 
@@ -121,48 +156,57 @@ impl NxDbConnection {
             .ok_or_else(|| anyhow::anyhow!("No database connection available"))
     }
 
+    fn retrying<T>(&self, mut op: impl FnMut() -> Result<T>) -> Result<T> {
+        if self.in_transaction.get() {
+            op()
+        } else {
+            retry_while_busy(op)
+        }
+    }
+
     pub fn execute(&self, sql: &str, params: &[DbValue]) -> Result<usize> {
         let rt = self.rt()?;
         let conn = self.conn()?;
-        let turso_params = to_turso_params(params);
-        let n = rt
-            .block_on(conn.execute(sql, turso_params))
-            .map_err(|e| anyhow::anyhow!("DB execute error: \"{}\", {:?}", sql, e))?;
-        Ok(n as usize)
+        self.retrying(|| {
+            let n = rt
+                .block_on(conn.execute(sql, to_turso_params(params)))
+                .map_err(|e| {
+                    anyhow::Error::new(e).context(format!("DB execute error: \"{sql}\""))
+                })?;
+            Ok(n as usize)
+        })
     }
 
     pub fn execute_batch(&self, sql: &str) -> Result<()> {
         let rt = self.rt()?;
         let conn = self.conn()?;
-        rt.block_on(conn.execute_batch(sql))
-            .map(|_| ())
-            .map_err(|e| anyhow::anyhow!("DB execute batch error: \"{}\", {:?}", sql, e))
+        self.retrying(|| {
+            rt.block_on(conn.execute_batch(sql))
+                .map(|_| ())
+                .map_err(|e| {
+                    anyhow::Error::new(e).context(format!("DB execute batch error: \"{sql}\""))
+                })
+        })
     }
 
     pub fn query_rows(&self, sql: &str, params: &[DbValue]) -> Result<Vec<DbRow>> {
         let rt = self.rt()?;
         let conn = self.conn()?;
-        let turso_params = to_turso_params(params);
-        let mut rows = rt
-            .block_on(conn.query(sql, turso_params))
-            .map_err(|e| anyhow::anyhow!("DB query_rows error: \"{}\", {:?}", sql, e))?;
+        self.retrying(|| {
+            let mut rows = rt
+                .block_on(conn.query(sql, to_turso_params(params)))
+                .map_err(|e| anyhow::Error::new(e).context(format!("DB query error: \"{sql}\"")))?;
 
-        let col_count = rows.column_count() as usize;
-        let mut result = Vec::new();
-        loop {
-            match rt.block_on(rows.next()) {
-                Ok(Some(row)) => {
-                    let mut values = Vec::with_capacity(col_count);
-                    for i in 0..col_count {
-                        values.push(value_from_row(&row, i));
-                    }
-                    result.push(DbRow { values });
-                }
-                Ok(None) => break,
-                Err(e) => return Err(anyhow::anyhow!("Row read error: {:?}", e)),
+            let col_count = rows.column_count() as usize;
+            let mut result = Vec::new();
+            while let Some(row) = rt.block_on(rows.next()).map_err(|e| {
+                anyhow::Error::new(e).context(format!("DB row read error: \"{sql}\""))
+            })? {
+                let values = (0..col_count).map(|i| value_from_row(&row, i)).collect();
+                result.push(DbRow { values });
             }
-        }
-        Ok(result)
+            Ok(result)
+        })
     }
 
     pub fn query_row(&self, sql: &str, params: &[DbValue]) -> Result<Option<DbRow>> {
@@ -170,20 +214,27 @@ impl NxDbConnection {
         Ok(rows.into_iter().next())
     }
 
-    pub fn transaction<T>(&self, operation: impl FnOnce(&Self) -> Result<T>) -> Result<T> {
-        self.execute("BEGIN", &[])?;
-        match operation(self) {
-            Ok(result) => {
-                self.execute("COMMIT", &[])?;
-                Ok(result)
+    /// Takes the write lock up front, so a busy error can only mean "retry the whole
+    /// transaction", which this does. `operation` may therefore run more than once.
+    pub fn transaction<T>(&self, mut operation: impl FnMut(&Self) -> Result<T>) -> Result<T> {
+        retry_while_busy(|| {
+            self.in_transaction.set(true);
+            if let Err(e) = self.execute("BEGIN IMMEDIATE", &[]) {
+                self.in_transaction.set(false);
+                return Err(e);
             }
-            Err(e) => {
+            let result = operation(self).and_then(|value| {
+                self.execute("COMMIT", &[])?;
+                Ok(value)
+            });
+            self.in_transaction.set(false);
+            if result.is_err() {
                 if let Err(rollback_err) = self.execute("ROLLBACK", &[]) {
                     trace!("Rollback failed: {:?}", rollback_err);
                 }
-                Err(e)
             }
-        }
+            result
+        })
     }
 
     pub fn close(self) -> Result<()> {
