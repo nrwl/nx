@@ -155,7 +155,7 @@ fn producers_read_by<'a>(
         if reads_declared
             || globs
                 .iter()
-                .any(|read| patterns.iter().any(|output| read.claims(output)))
+                .any(|read| patterns.iter().any(|output| read.may_read(output)))
         {
             producers.push(upstream);
         }
@@ -166,89 +166,90 @@ fn producers_read_by<'a>(
     producers.into_iter().map(str::to_string).collect()
 }
 
-/// A producer's declared output with its literal leading folders, normalized like the
-/// reads it is compared against.
+/// A producer's declared output, normalized like the reads it is compared
+/// against, reduced to what `may_read` compares.
 struct OutputPattern {
-    raw: String,
     prefix: String,
+    /// Only after a wildcard: a literal output may be a directory, `dist/lib.v2`.
+    extension: Option<String>,
 }
 
 impl OutputPattern {
     fn new(raw: &str) -> Self {
         let raw = normalize_glob(raw);
+        let last_segment = raw.rsplit('/').next().unwrap_or(&raw);
+        let extension = literal_segment(last_segment)
+            .is_none()
+            .then(|| literal_extension(&raw))
+            .flatten()
+            .map(str::to_string);
         Self {
             prefix: partition_glob(&raw).0,
-            raw,
+            extension,
         }
     }
 }
 
 /// A read classified by how it compares to a producer's outputs. Both sides are
-/// patterns, so this is overlap, and it errs towards claiming: an extra edge
+/// patterns, so the answer is a maybe, and it errs towards yes: an extra edge
 /// costs a cache hit, a missing one skips a task that needed to run.
 enum IgnoredFileSetPattern {
     /// Has a literal leading path, `dist/libs/ui/**/*.js` or `package.json`.
-    /// Claims an output when either literal prefix contains the other.
+    /// May read an output when either literal prefix contains the other.
     Under(String),
     /// Leads with a wildcard and spans directories, `**/*.js` or
     /// `{dist,out}/lib/**`, so it can reach into any output directory. Ruled
     /// out only when both name a literal extension and the two differ.
-    Anywhere(String),
+    Anywhere { extension: Option<String> },
     /// A single wildcard segment, `*.json`, matching only root-level paths: it
-    /// claims an output only when the glob matches the output's literal prefix.
-    /// Precompiled because `claims` runs per output per consumer; a glob that
-    /// fails to compile claims everything.
-    RootLevel(String, Option<Arc<NxGlobSet>>),
+    /// may read an output only when the glob matches the output's literal
+    /// prefix. A glob that fails to compile may read everything.
+    RootLevel {
+        extension: Option<String>,
+        glob: Option<Arc<NxGlobSet>>,
+    },
 }
 
 impl IgnoredFileSetPattern {
     fn new(pattern: &str) -> Self {
         let (prefix, _) = partition_glob(pattern);
+        let extension = literal_extension(pattern).map(str::to_string);
         if !prefix.is_empty() {
             Self::Under(prefix)
         } else if pattern.contains('/') || pattern.starts_with("**") {
-            Self::Anywhere(pattern.to_string())
+            Self::Anywhere { extension }
         } else {
-            Self::RootLevel(
-                pattern.to_string(),
-                build_glob_set(std::slice::from_ref(&pattern)).ok(),
-            )
+            Self::RootLevel {
+                extension,
+                glob: build_glob_set(std::slice::from_ref(&pattern)).ok(),
+            }
         }
     }
 
-    fn claims(&self, output: &OutputPattern) -> bool {
+    fn may_read(&self, output: &OutputPattern) -> bool {
         match self {
             // An output whose own prefix is empty leads with a wildcard and
-            // could be anywhere, so it is claimed.
+            // could be anywhere.
             Self::Under(prefix) => {
                 output.prefix.is_empty()
                     || is_path_prefix(prefix, &output.prefix)
                     || is_path_prefix(&output.prefix, prefix)
             }
-            Self::Anywhere(pattern) => !distinct_extensions(pattern, &output.raw),
-            Self::RootLevel(pattern, _) if output.prefix.is_empty() => {
-                !distinct_extensions(pattern, &output.raw)
+            Self::Anywhere { extension } => !distinct_extensions(extension, &output.extension),
+            Self::RootLevel { extension, .. } if output.prefix.is_empty() => {
+                !distinct_extensions(extension, &output.extension)
             }
-            Self::RootLevel(_, glob) => glob
+            Self::RootLevel { glob, .. } => glob
                 .as_ref()
                 .map_or(true, |glob| glob.is_match(&output.prefix)),
         }
     }
 }
 
-/// Whether a read and an output each end in a literal extension and the two
-/// differ, in which case no path can match both. An output's extension counts
-/// only after a wildcard: a literal output may be a directory, `dist/lib.v2`.
-fn distinct_extensions(read: &str, output: &str) -> bool {
-    let output_segment = output.rsplit('/').next().unwrap_or(output);
-    let output_extension = literal_segment(output_segment)
-        .is_none()
-        .then(|| literal_extension(output))
-        .flatten();
-    matches!(
-        (literal_extension(read), output_extension),
-        (Some(x), Some(y)) if x != y
-    )
+/// Both sides name a literal extension and the two differ, so no path can
+/// match both.
+fn distinct_extensions(read: &Option<String>, output: &Option<String>) -> bool {
+    matches!((read, output), (Some(x), Some(y)) if x != y)
 }
 
 /// The literal extension a pattern's last segment ends in: `js` for
@@ -431,7 +432,7 @@ mod tests {
     }
 
     #[test]
-    fn a_prefix_does_not_claim_a_sibling_directory() {
+    fn a_prefix_does_not_read_a_sibling_directory() {
         let e = edges(
             &[
                 ("legacy:build", &["dist/libs/ui-legacy"]),
@@ -663,7 +664,7 @@ mod tests {
     }
 
     #[test]
-    fn a_recursive_root_glob_claims_directories_but_not_a_different_extension() {
+    fn a_recursive_root_glob_may_read_directories_but_not_a_different_extension() {
         let e = edges(
             &[
                 ("ui:build", &["dist/libs/ui"]),
@@ -677,7 +678,7 @@ mod tests {
     }
 
     #[test]
-    fn a_single_level_root_glob_claims_only_what_it_matches() {
+    fn a_single_level_root_glob_may_read_only_what_it_matches() {
         let e = edges(
             &[
                 ("manifest:build", &["package.json"]),
