@@ -7,15 +7,12 @@
 
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
 use std::time::Instant;
 use tracing::{debug, trace};
 
 use crate::native::affected::dependency_closure::walk_dependencies;
 use crate::native::affected::plan_ids::referenced_ids;
-use crate::native::glob::{
-    NxGlobSet, build_glob_set, literal_segment, normalize_glob, partition_glob,
-};
+use crate::native::glob::{literal_segment, normalize_glob, partition_glob};
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
 /// Consumer task id -> the upstream task ids whose declared outputs it reads.
@@ -55,7 +52,7 @@ pub(crate) fn compute_dependent_output_edges(
 fn producers_by_consumer(
     hash_plans: &HashPlans,
     reads: &OutputReads,
-    patterns_of: &HashMap<&str, Vec<OutputPattern>>,
+    patterns_of: &HashMap<&str, Vec<GlobShape>>,
     task_graph: &TaskGraph,
 ) -> HashMap<String, Vec<String>> {
     hash_plans
@@ -70,7 +67,7 @@ fn producers_by_consumer(
 }
 
 /// Each task with declared outputs -> those outputs, parsed for comparison.
-fn output_patterns(task_graph: &TaskGraph) -> HashMap<&str, Vec<OutputPattern>> {
+fn output_patterns(task_graph: &TaskGraph) -> HashMap<&str, Vec<GlobShape>> {
     task_graph
         .tasks
         .iter()
@@ -78,7 +75,7 @@ fn output_patterns(task_graph: &TaskGraph) -> HashMap<&str, Vec<OutputPattern>> 
         .map(|(id, task)| {
             (
                 id.as_str(),
-                task.outputs.iter().map(|o| OutputPattern::new(o)).collect(),
+                task.outputs.iter().map(|o| GlobShape::new(o)).collect(),
             )
         })
         .collect()
@@ -88,7 +85,7 @@ fn output_patterns(task_graph: &TaskGraph) -> HashMap<&str, Vec<OutputPattern>> 
 /// `Ref` guard cannot outlive the lookup.
 struct OutputReads {
     declared: HashMap<u32, Vec<String>>,
-    globs: HashMap<u32, Vec<IgnoredFileSetPattern>>,
+    globs: HashMap<u32, Vec<GlobShape>>,
 }
 
 impl OutputReads {
@@ -106,7 +103,7 @@ impl OutputReads {
                     let reads = patterns
                         .iter()
                         .filter(|pattern| !pattern.starts_with('!'))
-                        .map(|pattern| IgnoredFileSetPattern::new(&normalize_glob(pattern)))
+                        .map(|pattern| GlobShape::new(pattern))
                         .collect();
                     globs.insert(id, reads);
                 }
@@ -122,12 +119,12 @@ fn producers_read_by<'a>(
     consumer: &str,
     plan: &[u32],
     reads: &OutputReads,
-    patterns_of: &HashMap<&'a str, Vec<OutputPattern>>,
+    patterns_of: &HashMap<&'a str, Vec<GlobShape>>,
     task_graph: &'a TaskGraph,
     seen: &mut HashSet<&'a str>,
 ) -> Vec<String> {
     let mut declared: HashSet<&[String]> = HashSet::new();
-    let mut globs: Vec<&IgnoredFileSetPattern> = Vec::new();
+    let mut globs: Vec<&GlobShape> = Vec::new();
     for id in plan {
         if let Some(outputs) = reads.declared.get(id) {
             declared.insert(outputs.as_slice());
@@ -166,82 +163,37 @@ fn producers_read_by<'a>(
     producers.into_iter().map(str::to_string).collect()
 }
 
-/// A producer's declared output, normalized like the reads it is compared
-/// against, reduced to what `may_read` compares.
-struct OutputPattern {
+/// A glob reduced to what an overlap check compares, for reads and outputs
+/// alike. Both may name a directory, so an extension counts only after a
+/// wildcard: `dist/lib.v2` may be a folder.
+struct GlobShape {
     prefix: String,
-    /// Only after a wildcard: a literal output may be a directory, `dist/lib.v2`.
     extension: Option<String>,
 }
 
-impl OutputPattern {
-    fn new(raw: &str) -> Self {
-        let raw = normalize_glob(raw);
-        let last_segment = raw.rsplit('/').next().unwrap_or(&raw);
+impl GlobShape {
+    fn new(glob: &str) -> Self {
+        let glob = normalize_glob(glob);
+        let last_segment = glob.rsplit('/').next().unwrap_or(&glob);
         let extension = literal_segment(last_segment)
             .is_none()
-            .then(|| literal_extension(&raw))
+            .then(|| literal_extension(&glob))
             .flatten()
             .map(str::to_string);
         Self {
-            prefix: partition_glob(&raw).0,
+            prefix: partition_glob(&glob).0,
             extension,
         }
     }
-}
 
-/// A read classified by how it compares to a producer's outputs. Both sides are
-/// patterns, so the answer is a maybe, and it errs towards yes: an extra edge
-/// costs a cache hit, a missing one skips a task that needed to run.
-enum IgnoredFileSetPattern {
-    /// Has a literal leading path, `dist/libs/ui/**/*.js` or `package.json`.
-    /// May read an output when either literal prefix contains the other.
-    Under(String),
-    /// Leads with a wildcard and spans directories, `**/*.js` or
-    /// `{dist,out}/lib/**`, so it can reach into any output directory. Ruled
-    /// out only when both name a literal extension and the two differ.
-    Anywhere { extension: Option<String> },
-    /// A single wildcard segment, `*.json`, matching only root-level paths: it
-    /// may read an output only when the glob matches the output's literal
-    /// prefix. A glob that fails to compile may read everything.
-    RootLevel {
-        extension: Option<String>,
-        glob: Option<Arc<NxGlobSet>>,
-    },
-}
-
-impl IgnoredFileSetPattern {
-    fn new(pattern: &str) -> Self {
-        let (prefix, _) = partition_glob(pattern);
-        let extension = literal_extension(pattern).map(str::to_string);
-        if !prefix.is_empty() {
-            Self::Under(prefix)
-        } else if pattern.contains('/') || pattern.starts_with("**") {
-            Self::Anywhere { extension }
+    /// Whether some path could match both. Errs towards yes: an extra edge
+    /// costs a cache hit, a missing one skips a task that needed to run.
+    fn may_read(&self, output: &GlobShape) -> bool {
+        if self.prefix.is_empty() || output.prefix.is_empty() {
+            !distinct_extensions(&self.extension, &output.extension)
         } else {
-            Self::RootLevel {
-                extension,
-                glob: build_glob_set(std::slice::from_ref(&pattern)).ok(),
-            }
-        }
-    }
-
-    fn may_read(&self, output: &OutputPattern) -> bool {
-        match self {
-            // An output whose own prefix is empty leads with a wildcard and
-            // could be anywhere.
-            Self::Under(prefix) => {
-                output.prefix.is_empty()
-                    || is_path_prefix(prefix, &output.prefix)
-                    || is_path_prefix(&output.prefix, prefix)
-            }
-            Self::Anywhere { extension } => !distinct_extensions(extension, &output.extension),
-            Self::RootLevel { extension, .. } if output.prefix.is_empty() => {
-                !distinct_extensions(extension, &output.extension)
-            }
-            Self::RootLevel { glob, .. } => glob
-                .as_ref()
-                .map_or(true, |glob| glob.is_match(&output.prefix)),
+            is_path_prefix(&self.prefix, &output.prefix)
+                || is_path_prefix(&output.prefix, &self.prefix)
         }
     }
 }
@@ -677,18 +629,33 @@ mod tests {
         assert_eq!(e["app:build"], strings(&["ui:build"]));
     }
 
+    /// A read with no literal folder compares only extensions, so `*.json`
+    /// reaches a directory output even though `*` stops at the root. The extra
+    /// edge costs a cache hit.
     #[test]
-    fn a_single_level_root_glob_may_read_only_what_it_matches() {
+    fn a_root_glob_may_read_any_directory_output() {
         let e = edges(
             &[
                 ("manifest:build", &["package.json"]),
                 ("ui:build", &["dist/libs/ui"]),
+                ("types:build", &["dist/**/*.d.ts"]),
                 ("app:build", &["dist/app"]),
             ],
-            &[("app:build", &["manifest:build", "ui:build"])],
+            &[("app:build", &["manifest:build", "ui:build", "types:build"])],
             &[("app:build", vec![include_ignored(&["*.json"])])],
         );
-        assert_eq!(e["app:build"], strings(&["manifest:build"]));
+        assert_eq!(e["app:build"], strings(&["manifest:build", "ui:build"]));
+    }
+
+    /// A literal read may be a directory, so its dotted name is not an extension.
+    #[test]
+    fn a_literal_read_is_not_ruled_out_by_its_dotted_name() {
+        let e = edges(
+            &[("gen:build", &["**/*.js"]), ("app:build", &["dist/app"])],
+            &[("app:build", &["gen:build"])],
+            &[("app:build", vec![include_ignored(&["dist/lib.v2"])])],
+        );
+        assert_eq!(e["app:build"], strings(&["gen:build"]));
     }
 
     /// A read that leads with a wildcard or a brace but spans directories is
