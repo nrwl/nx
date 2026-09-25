@@ -241,14 +241,18 @@ Changing one spec file then runs that project's `test` task rather than the `tes
 
 Task selection can also pick up a task that project selection misses. A `dependsOn` that names another project's target, like `{ "projects": ["lib"], "target": "build" }`, adds an edge the project graph doesn't record. When the task reads that target's output through `dependentTasksOutputFiles`, task selection follows the edge and project selection can't.
 
-Use the environment variable rather than a flag, so `nx show projects --affected -t test` and `nx affected -t test` in the same CI script see the same affected set. The run also executes the tasks the affected ones depend on, and those can restore from cache when nothing in them changed.
+Set the variable for the whole CI job, so `nx show projects --affected -t test` and `nx affected -t test` in the same script see the same affected set. The run also executes the tasks the affected ones depend on, and those can restore from cache when nothing in them changed.
 
 {% aside type="caution" title="What changes when you opt in" %}
 Nx selects a task when your change reaches one of its inputs, rather than by where the task sits in the task graph.
 
-**`dependsOn` alone doesn't make a task affected.** A task is affected by its dependency when it reads that dependency's build output, through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks). An edge that only orders the two tasks doesn't carry the change across.
+**`dependsOn` alone doesn't make a task affected.** A change to a dependency reaches a task only through the task's own inputs, for example `^production` or the dependency's build output through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks). An edge that only orders the two tasks doesn't carry the change across.
 
 **A target with `"cache": false` and its own `inputs` can stop running** when only its dependency changed. Add `^default` or `dependentTasksOutputFiles` to its inputs so the dependency's files reach its hash.
+
+**A task whose executor defines a custom hasher is always selected** for the targets you run. Its hash comes from code outside its inputs, so Nx can't tell which changes reach it.
+
+**Sync generators that change files during a run don't update the selection.** Nx selects tasks before syncing, so run the command again after a sync applies changes.
 {% /aside %}
 
 ## Best paired with remote caching and distribution
