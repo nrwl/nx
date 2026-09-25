@@ -3,13 +3,14 @@ use crate::native::tasks::details::SCHEMA as TASK_DETAILS_SCHEMA;
 use crate::native::tasks::running_tasks_service::SCHEMA as RUNNING_TASKS_SCHEMA;
 use crate::native::tasks::task_history::SCHEMA as TASK_HISTORY_SCHEMA;
 use crate::native::tasks::task_invocation_tracker::SCHEMA as TASK_INVOCATIONS_SCHEMA;
+use std::fs::File;
 use std::path::Path;
 use tracing::{debug, trace};
 
 /// Bump this ONLY when the database schema changes.
 /// The value is appended to the DB filename (e.g. `nx-v2.db`), so a bump
 /// means "open a different file" rather than "migrate in place".
-pub const DB_VERSION: &str = "4";
+pub const DB_VERSION: &str = "5";
 
 pub(crate) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
     trace!("Initializing turso database at {:?}", db_path);
@@ -25,15 +26,13 @@ pub(crate) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
                 .experimental_multiprocess_wal(true)
                 .build(),
         )
-        .map_err(|e| anyhow::anyhow!("Failed to open database: {:?}", e))?;
+        .map_err(|e| {
+            anyhow::Error::new(e).context(format!("Failed to open database at {db_path:?}"))
+        })?;
 
     let conn = db
         .connect()
         .map_err(|e| anyhow::anyhow!("Failed to connect to database: {:?}", e))?;
-
-    // Waits with SQLite's increasing busy delays while another process holds the write lock.
-    conn.busy_timeout(std::time::Duration::from_secs(12))
-        .map_err(|e| anyhow::anyhow!("Failed to set busy timeout: {:?}", e))?;
 
     let c = NxDbConnection::new(rt, db, conn);
 
@@ -43,6 +42,30 @@ pub(crate) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
 
     create_all_tables(&c)?;
     Ok(c)
+}
+
+/// Serializes first-time schema creation across processes; without it, concurrent
+/// openers of a new database fail with "Database schema changed".
+pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<File> {
+    let lock_file_path = db_path.with_extension("lock");
+    trace!("Getting lock on {:?}", lock_file_path);
+    let lock_file = File::create(&lock_file_path)
+        .map_err(|e| anyhow::anyhow!("Failed to create lock file {lock_file_path:?}: {e}"))?;
+    fs4::fs_std::FileExt::lock_exclusive(&lock_file)
+        .map_err(|e| anyhow::anyhow!("Failed to lock {lock_file_path:?}: {e}"))?;
+    Ok(lock_file)
+}
+
+pub(super) fn unlock_file(lock_file: &File) {
+    fs4::fs_std::FileExt::unlock(lock_file).ok();
+}
+
+/// turso refuses shared-WAL coordination on network filesystems (NFS, SMB, 9p).
+pub(super) fn is_unsupported_filesystem(e: &anyhow::Error) -> bool {
+    matches!(
+        e.downcast_ref::<turso::Error>(),
+        Some(err) if err.to_string().contains("multiprocess WAL is not supported")
+    )
 }
 
 fn create_all_tables(c: &NxDbConnection) -> anyhow::Result<()> {

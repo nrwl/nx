@@ -8,7 +8,7 @@ use std::fs::{create_dir_all, read_dir, remove_file};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::{mem, process};
-use tracing::{trace, trace_span};
+use tracing::{debug, trace, trace_span};
 
 #[napi]
 pub fn connect_to_nx_db(
@@ -28,12 +28,32 @@ pub fn connect_to_nx_db(
 
     trace_span!("process", id = process::id()).in_scope(|| {
         trace!("Creating connection to {:?}", db_path);
-        let c = initialize::initialize_db(&db_path)?;
+        let c = match open_locked(&db_path) {
+            Err(e) if initialize::is_unsupported_filesystem(&e) => {
+                let local_dir = std::env::temp_dir()
+                    .join("nx-db")
+                    .join(hash(cache_dir_buf.to_string_lossy().as_bytes()));
+                debug!(
+                    "{:?} does not support multi-process access, using {:?} instead",
+                    cache_dir_buf, local_dir
+                );
+                create_dir_all(&local_dir)?;
+                open_locked(&local_dir.join(db_path.file_name().expect("db path has a file name")))?
+            }
+            result => result?,
+        };
 
         cleanup_stale_db_files(&cache_dir_buf, &db_file_name);
 
         Ok(External::new(Arc::new(Mutex::new(c))))
     })
+}
+
+fn open_locked(db_path: &Path) -> anyhow::Result<NxDbConnection> {
+    let lock_file = initialize::create_lock_file(db_path)?;
+    let result = initialize::initialize_db(db_path);
+    initialize::unlock_file(&lock_file);
+    result
 }
 
 /// Remove DB files belonging to old schema versions that haven't been
@@ -100,4 +120,73 @@ pub fn close_db_connection(
 ) -> anyhow::Result<()> {
     let conn = mem::take(&mut *connection.lock().unwrap());
     conn.close()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::native::db::connection::DbValue;
+    use std::process::Command;
+
+    const WORKER_DB_ENV: &str = "NX_DB_MULTI_PROCESS_TEST_DB";
+    const WRITES_PER_WORKER: usize = 50;
+
+    /// Child side of `separate_processes_can_create_and_write_the_same_db`.
+    #[test]
+    #[ignore]
+    fn multi_process_worker() -> anyhow::Result<()> {
+        let Ok(db_path) = std::env::var(WORKER_DB_ENV) else {
+            return Ok(());
+        };
+        let conn = open_locked(Path::new(&db_path))?;
+        let pid = process::id().to_string();
+        for i in 0..WRITES_PER_WORKER {
+            conn.transaction(|c| {
+                c.execute(
+                    "INSERT INTO metadata (key, value) VALUES (?1, ?2)",
+                    &[
+                        DbValue::from(format!("{pid}-{i}")),
+                        DbValue::from(pid.as_str()),
+                    ],
+                )?;
+                Ok(())
+            })?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn separate_processes_can_create_and_write_the_same_db() -> anyhow::Result<()> {
+        const WORKERS: usize = 8;
+        let temp_dir = tempfile::tempdir()?;
+        let db_path = temp_dir.path().join("shared.db");
+
+        let children = (0..WORKERS)
+            .map(|_| {
+                Command::new(std::env::current_exe()?)
+                    .args([
+                        "--exact",
+                        "native::db::tests::multi_process_worker",
+                        "--ignored",
+                        "--test-threads=1",
+                    ])
+                    .env(WORKER_DB_ENV, &db_path)
+                    .stdout(std::process::Stdio::piped())
+                    .spawn()
+            })
+            .collect::<std::io::Result<Vec<_>>>()?;
+        for child in children {
+            let output = child.wait_with_output()?;
+            assert!(
+                output.status.success(),
+                "worker failed:\n{}",
+                String::from_utf8_lossy(&output.stdout)
+            );
+        }
+
+        let conn = open_locked(&db_path)?;
+        let rows = conn.query_rows("SELECT COUNT(*) FROM metadata", &[])?;
+        assert_eq!(rows[0].get_i64(0)? as usize, WORKERS * WRITES_PER_WORKER);
+        Ok(())
+    }
 }
