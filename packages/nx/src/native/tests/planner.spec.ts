@@ -1843,7 +1843,9 @@ describe('task planner', () => {
     });
   });
   describe('io snapshots', () => {
-    function fixture(opts: { cyclic?: boolean } = {}) {
+    function fixture(
+      opts: { cyclic?: boolean; extraParentInputs?: unknown[] } = {}
+    ) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [
           { file: 'libs/parent/filea.ts', hash: 'a.hash' },
@@ -1866,6 +1868,7 @@ describe('task planner', () => {
                 { runtime: 'echo runtime123' },
                 { json: '{projectRoot}/package.json', fields: ['version'] },
                 { fileset: '{projectRoot}/generated', includeIgnored: true },
+                ...(opts.extraParentInputs ?? []),
               ],
               outputs: ['{workspaceRoot}/dist/libs/parent'],
             },
@@ -2035,6 +2038,25 @@ describe('task planner', () => {
       // read the plan drops, or one naming a missing file, move the key.
       expect(marker(parentReadOther)).toBe(same);
       expect(planFor(parentReadOther)).not.toEqual(planFor(snapshotsFor(base)));
+    });
+
+    it('keeps a negation only when every visit of the project declares it', () => {
+      const read = snapshotsFor({
+        'parent:build': { inputs: ['libs/child/readme.md'] },
+      });
+      const groupFor = (extraParentInputs?: unknown[]) => {
+        const { planner, taskGraph } = fixture({ extraParentInputs });
+        return planner
+          .getPlans(['parent:build'], taskGraph, read)
+          ['parent:build'].find((entry) => entry.includes('readme.md'));
+      };
+
+      // Only ^prod visits the child, and it excludes markdown.
+      expect(groupFor()).toBe(`files:[libs/child/readme.md,${CHILD_NEG}]`);
+      // A second visit hashes the child's markdown natively, so the read stays.
+      expect(groupFor([{ input: 'default', projects: ['child'] }])).toBe(
+        'files:[libs/child/readme.md]'
+      );
     });
 
     it("keeps a continuous dependency's inputs in the task it serves", () => {
@@ -2314,7 +2336,7 @@ describe('task planner', () => {
       expect(plan).not.toContain('**/*.d.ts:dist/libs/child');
     });
 
-    it("scopes a selected project's observed reads by its selected input's negations", () => {
+    it("keeps a selected project's read that another visit still hashes natively", () => {
       const { taskGraph, projectGraph } = fixture();
       (projectGraph.nodes.parent.data.targets.build as any).inputs.push({
         input: 'selected',
@@ -2342,7 +2364,11 @@ describe('task planner', () => {
       const childGroup = plan.find((entry) =>
         entry.includes('libs/child/fileb.ts')
       );
-      expect(childGroup).toContain('!libs/child/**/*.gen.ts');
+      // ^prod visits the child too and does not exclude *.gen.ts, so natively
+      // a.gen.ts is hashed and the selected input's negation cannot drop it.
+      expect(childGroup).toBe(
+        'files:[libs/child/a.gen.ts,libs/child/fileb.ts]'
+      );
     });
 
     it.each([

@@ -31,10 +31,11 @@ use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
 
-/// (project, workspace-relative negated pattern) pairs declared by the
-/// projects a task's plan visits. Snapshot globs are filtered by them at hash
-/// time, so removing a negation re-admits the observed reads it excluded.
-type Negations = Vec<(String, String)>;
+/// One entry per visit of a project whose inputs include its files: the
+/// workspace-relative negated patterns that visit declares. Natively each
+/// visit is its own fileset, so a snapshot group keeps only the negations
+/// every visit shares; removing one re-admits the observed reads it excluded.
+type Negations = Vec<(String, Vec<String>)>;
 
 const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
@@ -588,11 +589,19 @@ impl HashPlanner {
         for (project, mut group) in buckets {
             group.sort();
             group.dedup();
-            let mut declared_negations: Vec<String> = negations
+            let visits: Vec<&Vec<String>> = negations
                 .iter()
                 .filter(|(p, _)| p == project)
-                .map(|(_, pattern)| pattern.clone())
+                .map(|(_, patterns)| patterns)
                 .collect();
+            let mut declared_negations: Vec<String> = match visits.split_first() {
+                None => Vec::new(),
+                Some((first, rest)) => first
+                    .iter()
+                    .filter(|pattern| rest.iter().all(|visit| visit.contains(pattern)))
+                    .cloned()
+                    .collect(),
+            };
             declared_negations.sort();
             declared_negations.dedup();
             group.extend(declared_negations);
@@ -1627,7 +1636,15 @@ fn collect_negations(
     self_inputs: &[Input],
     negations: &mut Negations,
 ) {
+    // A visit that hashes none of the project's files cannot keep one hashed.
+    let includes_files = self_inputs
+        .iter()
+        .any(|input| matches!(input, Input::FileSet { fileset, .. } if !fileset.starts_with('!')));
+    if !includes_files {
+        return;
+    }
     let project_root = &project_graph.nodes[project_name].root;
+    let mut patterns = Vec::new();
     for input in self_inputs {
         if let Input::FileSet {
             fileset,
@@ -1636,12 +1653,12 @@ fn collect_negations(
         } = input
             && fileset.starts_with('!')
         {
-            negations.push((
-                project_name.to_string(),
-                resolve_files_glob(fileset, project_root, project_name),
-            ));
+            patterns.push(resolve_files_glob(fileset, project_root, project_name));
         }
     }
+    patterns.sort();
+    patterns.dedup();
+    negations.push((project_name.to_string(), patterns));
 }
 
 /// Reads left out of the snapshot's file groups: node_modules (never hashed as
