@@ -163,6 +163,10 @@ A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data
 It also skips the timestamp files Vite and Vitest write beside their config, such as `vite.config.ts.timestamp-1700000000000.mjs`.
 Nx reads a symlinked file where it points, even outside the workspace, so a `dist` linked into a build cache is hashed. A glob doesn't walk into a symlinked directory unless it names that directory. A glob that climbs out with `..`, or names an absolute path, is a configuration error.
 
+In CI with [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) set, Nx can hash a task from the files it read on a recorded run.
+Those reads replace its declared filesets, `includeIgnored` ones included, so a matching file the recorded run didn't read doesn't change the hash.
+To keep a target's declared inputs authoritative, set [`sandbox.backfill: false`](/docs/reference/project-configuration#sandbox) on it.
+
 ### JSON files
 
 Configuration files such as `package.json` or `tsconfig.base.json` hold fields that are irrelevant to most tasks. Nx can hash a subset of a JSON file so that edits to the remaining fields do not invalidate the cache. JSON inputs are defined like this:
@@ -295,6 +299,7 @@ Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d
 
 A [continuous task](/docs/kb/defining-task-pipeline#continuous-task-dependencies), such as the `serve` task an `e2e` task depends on, runs in its own process, yet what it reads still decides what the task it serves observes.
 A task therefore also hashes the declared inputs of every continuous dependency it has, and of the servers those depend on in turn: files, environment variables, runtime commands and external dependencies alike.
+In CI with [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) set, when the task hashes from a recorded snapshot, a server that has one contributes the files it read instead of its declared filesets.
 There's nothing to declare, and only continuous dependencies count.
 A server that declares no inputs contributes its whole project, so declare inputs on servers that live at the workspace root, such as a local registry.
 When a server reads the outputs of its own build dependencies, Nx hashes the task it serves once the server is running, so those outputs count too.

@@ -3,10 +3,26 @@ import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspac
 import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
-import { HashPlanner } from '../native';
+import {
+  closeDbConnection,
+  connectToNxDb,
+  HashPlanner,
+  IoSnapshotStore,
+} from '../native';
+import { join } from 'path';
 import { TaskGraph } from '../config/task-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+
+vi.mock('../tasks-runner/utils', async () => {
+  const actual = await vi.importActual('../tasks-runner/utils');
+  return {
+    ...actual,
+    // The real lookup reads this repo's built `packages/nx/dist` executor
+    // schema, which nx:test does not declare as an input.
+    getExecutorForTask: vi.fn(() => ({})),
+  };
+});
 
 // Helper to normalize hash results for deterministic snapshot comparison
 // (parallel processing may produce inputs in arbitrary order)
@@ -1553,6 +1569,182 @@ describe('native task hasher', () => {
     );
     expect(reused.value).toEqual(planned.value);
     expect(reused.details).toEqual(planned.details);
+  });
+
+  // The entry digest covers the writes, not the reads, because a read
+  // reaches the hash as the file group it becomes. That is only true while
+  // every read-driven difference has another carrier, so assert it directly
+  // rather than by reading the planner: two entries differing in one read
+  // must hash differently, with the digest identical.
+  it('moves a task hash by a changed read while the entry digest holds', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/one.txt': 'one',
+      'libs/child/two.txt': 'two',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-read-db'),
+      'io-snapshots'
+    );
+    const snapshotSet = (inputs: string[]) => {
+      new IoSnapshotStore(snapshotDb).import({
+        requestedCommit: commit,
+        snapshotsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: ['dist/child'] },
+        }),
+      });
+      return new IoSnapshotStore(snapshotDb).get(commit);
+    };
+    const task = taskGraph.tasks['child:compile'];
+    const hashWith = async (inputs: string[]) =>
+      impl.hashTask(
+        task,
+        taskGraph,
+        {},
+        tempFs.tempDir,
+        true,
+        snapshotSet(inputs)
+      );
+
+    const one = await hashWith(['libs/child/one.txt']);
+    const two = await hashWith(['libs/child/two.txt']);
+
+    const digestOf = (hash: typeof one) =>
+      Object.keys(hash.details).filter((key) => key.startsWith('io-snapshot:'));
+    expect(digestOf(one)).toEqual(digestOf(two));
+    expect(digestOf(one)).toEqual([expect.stringMatching(/^io-snapshot:\d+$/)]);
+    expect(two.value).not.toBe(one.value);
+    expect(two.inputs.files).toContain('libs/child/two.txt');
+    expect(two.inputs.files).not.toContain('libs/child/one.txt');
+  });
+
+  it('hashes a task from its snapshot instead of its declared fileset', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-db'),
+      'io-snapshots'
+    );
+    const snapshotSet = (inputs: string[]) => {
+      new IoSnapshotStore(snapshotDb).import({
+        requestedCommit: commit,
+        snapshotsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: [] },
+        }),
+      });
+      return new IoSnapshotStore(snapshotDb).get(commit);
+    };
+    const snapshots = snapshotSet(['libs/child/observed.txt']);
+    const task = taskGraph.tasks['child:compile'];
+
+    const native = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true
+    );
+    const fromSnapshot = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      snapshots
+    );
+
+    expect(fromSnapshot.value).not.toBe(native.value);
+    // The observed read plus the always-on workspace files; none of the
+    // declared fileset's files.
+    expect(fromSnapshot.inputs.files).toContain('libs/child/observed.txt');
+    expect(
+      fromSnapshot.inputs.files.filter((f) => f.startsWith('libs/child/'))
+    ).toEqual(['libs/child/observed.txt']);
+    const digests = (hash: typeof native) =>
+      Object.keys(hash.details).filter((key) => key.startsWith('io-snapshot:'));
+    expect(digests(fromSnapshot)).toEqual([
+      expect.stringMatching(/^io-snapshot:\d+$/),
+    ]);
+    expect(digests(native)).toEqual([]);
+
+    // The observed file is what the hash follows now, not the declared fileset.
+    await tempFs.createFiles({ 'libs/child/observed.txt': 'changed' });
+    const changed = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      snapshots
+    );
+    expect(changed.value).not.toBe(fromSnapshot.value);
+    closeDbConnection(snapshotDb);
+  });
+
+  it('keeps hashing from its own version after the commit is re-imported', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/one.txt': 'one',
+      'libs/child/two.txt': 'two',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-versions-db'),
+      'io-snapshots'
+    );
+    const store = new IoSnapshotStore(snapshotDb);
+    const importReads = (inputs: string[]) =>
+      store.import({
+        requestedCommit: commit,
+        snapshotsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: [] },
+        }),
+      });
+    const first = importReads(['libs/child/one.txt']);
+    // Read back lazily, as the daemon and a reading client do.
+    const pinned = store.getVersion(commit, first.resolution.fetchedAt);
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    importReads(['libs/child/two.txt']);
+
+    const task = taskGraph.tasks['child:compile'];
+    const hashWith = (snapshots: typeof first) =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, snapshots);
+    const fromPinned = await hashWith(pinned);
+    expect(fromPinned.inputs.files).toContain('libs/child/one.txt');
+    expect(fromPinned.inputs.files).not.toContain('libs/child/two.txt');
+    expect((await hashWith(store.get(commit))).inputs.files).toContain(
+      'libs/child/two.txt'
+    );
+    closeDbConnection(snapshotDb);
+  });
+
+  it('moves a task hash by a lockfile-only edit when the snapshot read the lockfile', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.20"}' });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-lockfile-db'),
+      'io-snapshots'
+    );
+    new IoSnapshotStore(snapshotDb).import({
+      requestedCommit: commit,
+      snapshotsJson: JSON.stringify({
+        'child:compile': { commit, inputs: ['package-lock.json'], outputs: [] },
+      }),
+    });
+    const snapshots = new IoSnapshotStore(snapshotDb).get(commit);
+    const task = taskGraph.tasks['child:compile'];
+    const hash = () =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, snapshots);
+
+    const before = await hash();
+    expect(before.inputs.files).toContain('package-lock.json');
+
+    await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.21"}' });
+    expect((await hash()).value).not.toBe(before.value);
+    closeDbConnection(snapshotDb);
   });
 
   it('plans again for a task graph other than the up-front batch, and for a task the batch never planned', async () => {

@@ -29,6 +29,14 @@ import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
+import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
+import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
+import { formatIoSnapshotSummary } from '../io-snapshots/report';
+import {
+  loadIoSnapshotsForRun,
+  snapshotsOf,
+  type IoSnapshotOutcome,
+} from '../io-snapshots/store';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
@@ -1005,7 +1013,20 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
+  // Must precede hashing: the set is the snapshot source for task hashes,
+  // and observed outputs join the task outputs the hasher and cache see.
+  const ioSnapshotOutcome = await loadIoSnapshotsForRun(nxJson, runnerOptions);
+  const ioSnapshots = snapshotsOf(ioSnapshotOutcome);
+  if (ioSnapshots) {
+    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
+  }
+
+  let hasher = createTaskHasher(
+    projectGraph,
+    nxJson,
+    runnerOptions,
+    ioSnapshots
+  );
 
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
@@ -1016,8 +1037,10 @@ export async function invokeTasksRunner({
     projectGraph,
     taskGraph,
     nxJson,
-    taskDetails
+    taskDetails,
+    ioSnapshots
   );
+  reportIoSnapshots(ioSnapshotOutcome, projectGraph, taskGraph, nxArgs);
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
     ...constructLifeCycles(lifeCycle, taskGraph, nxJson, nxArgs.skipNxCache),
@@ -1210,6 +1233,21 @@ function loadTasksRunner(modulePath: string): TasksRunner {
     }
     throw e;
   }
+}
+
+function reportIoSnapshots(
+  outcome: IoSnapshotOutcome | null,
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  nxArgs: NxArgs
+): void {
+  if (!outcome || outcome.status === 'skipped') return;
+  if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
+  const summary = formatIoSnapshotSummary(
+    buildIoSnapshotOverrides(projectGraph, taskGraph, outcome.snapshots),
+    outcome.status
+  );
+  output.note({ title: summary.line, bodyLines: summary.bodyLines });
 }
 
 export function getRunner(
