@@ -2093,6 +2093,28 @@ describe('native task hasher with affected plans', () => {
       'parent:build': {},
     });
     expect(plan).toHaveBeenCalled();
+
+    // Affected plans without snapshots; a run that hashes from them plans anew.
+    plan.mockClear();
+    const plansWithSnapshots = vi
+      .spyOn(hasher as any, 'plan')
+      .mockImplementation((ids: string[], graph: TaskGraph) =>
+        context.planner.getPlansReference(ids, graph)
+      );
+    const snapshots = { commit: 'c', resolution: { fetchedAt: 1 } } as any;
+    await hasher.hashTasks(
+      [planned.tasks['parent:build']],
+      planned,
+      { 'parent:build': {} },
+      undefined,
+      undefined,
+      snapshots
+    );
+    expect(plansWithSnapshots).toHaveBeenCalledWith(
+      ['parent:build'],
+      planned,
+      snapshots
+    );
   });
 });
 
