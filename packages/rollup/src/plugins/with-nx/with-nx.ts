@@ -30,6 +30,7 @@ import { generatePackageJson } from '../package-json/generate-package-json';
 import { swc } from '../swc';
 import { getProjectNode } from './get-project-node';
 import { normalizeOptions } from './normalize-options';
+import { clearTimersOnClose } from './watch-program-timers';
 import { RollupWithNxPluginOptions } from './with-nx-options';
 
 // These use require because the ES import isn't correct.
@@ -261,6 +262,7 @@ export function withNx(
           : finalConfig.output.dir;
         return require('@rollup/plugin-typescript')({
           tsconfig: tsConfigPath,
+          typescript: clearTimersOnClose(ts),
           compilerOptions: {
             ...tsCompilerOptions,
             composite: false,
