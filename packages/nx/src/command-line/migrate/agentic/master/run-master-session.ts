@@ -7,25 +7,42 @@ import {
   completionSummaryLines,
   completionWarnings,
   hasUnresolvedIssues,
+  holdRunToContinue,
+  type MigrateRunPolicy,
   type MigrateRunState,
+  type OrchestratorInitResult,
   readRunState,
+  renderContinueCommand,
+  renderExistingRunCommands,
+  renderExistingRunReport,
   runDir,
   runOrchestratorInit,
   type RunOrchestratorInitInput,
+  runOrchestratorResume,
   tallySteps,
 } from '../../run';
+import { canPrompt, migrateChoice } from '../../safe-prompt';
 import type { DetectedInstalledAgent } from '../types';
 import { spawnMasterSession } from './spawn-master';
 
 export interface RunMasterSessionInput extends Omit<
   RunOrchestratorInitInput,
-  'emitAgentInstructions'
+  'emitAgentInstructions' | 'onExistingRun'
 > {
   agent: DetectedInstalledAgent;
+  interactive?: boolean;
+  // The active run to continue instead of starting one (`--run-id`), or
+  // the one to replace under `startFresh`.
+  runId?: string;
+  // Delete the record of the run `runId` names and start a new one
+  // (`--start-fresh --run-id`).
+  startFresh?: boolean;
+  // Required here: without it init would start or replace a run unasked.
+  confirmStart: () => Promise<boolean>;
 }
 
 /**
- * Starts (or resumes) an orchestrated run and hands it to one agent session
+ * Starts (or continues) an orchestrated run and hands it to one agent session
  * that drives it through `--run-id` reconciles. Run state is the only
  * authority on the outcome: the exit code follows what run.json says once the
  * session ends, not what the agent process returned.
@@ -33,18 +50,74 @@ export interface RunMasterSessionInput extends Omit<
 export async function runMasterSession(
   input: RunMasterSessionInput
 ): Promise<number | undefined> {
-  const { agent, ...init } = input;
-  const ready = await runOrchestratorInit({
-    ...init,
-    emitAgentInstructions: false,
-  });
+  const {
+    agent,
+    interactive,
+    runId: requestedRunId,
+    startFresh,
+    ...init
+  } = input;
+  // The invocation's policy; an interactive continue adopts the run's recorded
+  // one instead, shown in the report and the choice, so resume, broker and
+  // the resume hint agree with the run.
+  let policy: MigrateRunPolicy = {
+    createCommits: init.createCommits,
+    skipInstall: init.skipInstall,
+  };
+  const resume = (runId: string) =>
+    runOrchestratorResume({
+      root: init.root,
+      runId,
+      policy,
+      emitAgentInstructions: false,
+    });
+  // With `replaceRunId`, starts fresh over that run only; the consent covers
+  // the run the user saw, and any other active run is reported instead.
+  const start = (replaceRunId?: string) =>
+    runOrchestratorInit({
+      ...init,
+      emitAgentInstructions: false,
+      onExistingRun: replaceRunId === undefined ? 'report' : 'start-fresh',
+      replaceRunId,
+    });
+  let ready =
+    requestedRunId !== undefined && !startFresh
+      ? resume(requestedRunId)
+      : await start(startFresh ? requestedRunId : undefined);
+  if (ready.kind === 'existing-run' && canPrompt(interactive)) {
+    const decision = await decideExistingRun(ready, init.root);
+    if (decision === 'abort') {
+      output.log({
+        title: `Leaving migrate run ${ready.runId} as it is. ${continueHint(init.root, agent.id, ready.runId, ready.facts.policy)}`,
+      });
+      return;
+    }
+    if (decision === 'continue') {
+      policy = ready.facts.policy;
+      ready = resume(ready.runId);
+    } else {
+      ready = await start(ready.runId);
+    }
+  }
+  if (ready.kind === 'existing-run') {
+    output.warn(
+      renderExistingRunReport(
+        ready.facts,
+        renderExistingRunCommands(
+          init.root,
+          ready.facts,
+          init.migrationsPath,
+          agent.id
+        )
+      )
+    );
+    return 1;
+  }
   if (ready.kind === 'refused') {
     return;
   }
   const { runId, runRoot, runbookPath, reconcileCommand } = ready;
-  // Not rendered: the gate env var and the migrations path would have to be
-  // reproduced, and the same command carries both.
-  const resumeHint = 'Run the same nx migrate command again to resume it.';
+  const resumeHint = continueHint(init.root, agent.id, runId, policy);
 
   output.log({
     title: `Starting ${agent.displayName} to drive migrate run ${runId}.`,
@@ -55,10 +128,7 @@ export async function runMasterSession(
     runId,
     runbookPath,
     reconcileCommand,
-    policy: {
-      createCommits: init.createCommits,
-      skipInstall: init.skipInstall,
-    },
+    policy,
   });
   if (session.kind === 'spawn-failed') {
     output.error({
@@ -123,4 +193,45 @@ export async function runMasterSession(
       throw new Error(`Unhandled migrate run status: ${unhandled}`);
     }
   }
+}
+
+function continueHint(
+  root: string,
+  agentId: string,
+  runId: string,
+  policy: MigrateRunPolicy
+): string {
+  return `Run ${renderContinueCommand(root, runId, policy, agentId)}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`;
+}
+
+async function decideExistingRun(
+  found: Extract<OrchestratorInitResult, { kind: 'existing-run' }>,
+  root: string
+): Promise<'continue' | 'start-fresh' | 'abort'> {
+  output.log(renderExistingRunReport(found.facts));
+  // A held run leaves nothing to ask: continue would open a second session
+  // over the live one, and start fresh refuses. The continue's own gate
+  // throws the refusal; a holder gone since the report lets the prompt run.
+  if (
+    found.facts.otherHolders === 'unknown' ||
+    found.facts.otherHolders.length > 0
+  ) {
+    holdRunToContinue(root, found.runId);
+  }
+  return migrateChoice({
+    message: 'What do you want to do with the active migrate run?',
+    choices: [
+      {
+        value: 'continue',
+        label: 'Continue it',
+        hint: 'picks the run up where it stopped, keeping its recorded commit and install policy',
+      },
+      {
+        value: 'start-fresh',
+        label: 'Start fresh',
+        hint: 'deletes the run record only; the whole plan runs again',
+      },
+      { value: 'abort', label: 'Abort', hint: 'leaves the run as it is' },
+    ],
+  });
 }

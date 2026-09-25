@@ -14,10 +14,13 @@ import {
   NewerRunStateFormatError,
   migrateRunsDir,
   readRunState,
+  runDir,
   writeRunState,
   type MigrateRunState,
 } from './run-state';
 import {
+  holdRunActivity,
+  liveRunActivityPids,
   updateRunState,
   withRunCreationLock,
   withRunStateLock,
@@ -162,6 +165,43 @@ describe('state-lock', () => {
       );
       // The lock is released even though the read threw.
       expect(isLocked()).toBe(false);
+    });
+  });
+
+  describe('holdRunActivity', () => {
+    it('refuses a run whose run.json is gone, registering nothing', () => {
+      const deleted = runDir(tempRoot, 'run-1');
+      mkdirSync(deleted, { recursive: true });
+
+      expect(() => holdRunActivity(tempRoot, 'run-1')).toThrow(
+        "Migrate run 'run-1' was deleted while this command was starting."
+      );
+      expect(existsSync(join(deleted, 'activity'))).toBe(false);
+    });
+  });
+
+  describe('liveRunActivityPids', () => {
+    it('is empty when no process registered on the run or every lock file is free', () => {
+      expect(liveRunActivityPids(dir)).toEqual([]);
+      mkdirSync(join(dir, 'activity'));
+      writeFileSync(join(dir, 'activity', '999-cafe.lock'), '');
+
+      expect(liveRunActivityPids(dir)).toEqual([]);
+    });
+
+    it('is unknown when the activity directory cannot be listed or a held lock has no pid in its name', () => {
+      writeFileSync(join(dir, 'activity'), '');
+      expect(liveRunActivityPids(dir)).toBe('unknown');
+
+      rmSync(join(dir, 'activity'));
+      mkdirSync(join(dir, 'activity'));
+      const holder = new FileLock(join(dir, 'activity', 'stray.lock'));
+      holder.lock();
+      try {
+        expect(liveRunActivityPids(dir)).toBe('unknown');
+      } finally {
+        holder.unlock();
+      }
     });
   });
 });

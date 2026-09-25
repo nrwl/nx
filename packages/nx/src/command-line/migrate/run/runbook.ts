@@ -11,8 +11,9 @@ import {
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
 
-// A resume without a commit flag takes its policy from nx.json and refuses
-// the run when it differs from the recorded one.
+// A run's reconciles and workers skip the nx.json overlay and a continue takes
+// only `agentic` from it, but the next init reads the whole section: an edit
+// mid-run changes what a start-fresh or a later run does.
 const NX_JSON_MIGRATE_RULE = `  - Do not edit the \`migrate\` section of nx.json.`;
 
 export const RUNBOOK_FILE_NAME = 'RUNBOOK.md';
@@ -90,6 +91,10 @@ export function renderRunbook(ctx: RunbookContext): string {
     `orchestrator eventually says so with a \`no-progress\` action. Act on the`,
     `repeated instructions or report the blocker to the user; re-running the`,
     `reconcile command alone changes nothing.`,
+    ``,
+    `An \`existing-run\` action means no run was started because one is`,
+    `already active. Show its report to the user and let them choose between`,
+    `the two commands it lists; do not choose for them.`,
     ``,
     `## Agent work`,
     ``,

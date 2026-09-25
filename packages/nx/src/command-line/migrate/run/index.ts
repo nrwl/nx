@@ -32,6 +32,7 @@ export {
   applyStepEvent,
   completionSummaryLines,
   hasPendingCommitDebt,
+  latestRound,
   tallySteps,
 } from './state-machine';
 export { hasUnresolvedIssues } from './issues';
@@ -41,20 +42,31 @@ export type {
   ApplyStepEventResult,
 } from './state-machine';
 
-export { createRunId, computePlanHash } from './run-id';
+export { createRunId } from './run-id';
 
 export { runSingleMigrationWorker } from './worker';
 export type { RunSingleMigrationWorkerInput } from './worker';
 
 export {
+  activeRunToReplace,
   completionWarnings,
+  holdRunToContinue,
+  releaseRunToHandOff,
   runOrchestratorInit,
   runOrchestratorReconcile,
+  runOrchestratorResume,
 } from './orchestrator';
 export type {
+  OrchestratorInitResult,
   RunOrchestratorInitInput,
   RunOrchestratorReconcileInput,
 } from './orchestrator';
+
+export {
+  renderContinueCommand,
+  renderExistingRunCommands,
+  renderExistingRunReport,
+} from './existing-run-report';
 
 export {
   BROKER_ENV_VAR,
