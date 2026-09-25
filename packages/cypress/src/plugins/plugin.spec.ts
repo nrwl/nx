@@ -46,7 +46,7 @@ describe('@nx/cypress/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
     tempFs = null;
     process.chdir(cwd);
@@ -1563,7 +1563,7 @@ describe('@nx/cypress/plugin', () => {
         screenshotsFolder: join(tempFs.tempDir, 'dist/screenshots'),
       },
     });
-    jest.mock(
+    vi.mock(
       join(tempFs.tempDir, 'apps/myapp/cypress.config.js'),
       () => ({ default: cypressConfig }),
       { virtual: true }
@@ -1749,7 +1749,7 @@ describe('@nx/cypress/plugin', () => {
     // is that the hash is different after updating the
     // config file. The actual config read is mocked below.
     tempFs.createFileSync('cypress.config.js', JSON.stringify(cypressConfig));
-    jest.mock(
+    vi.mock(
       join(tempFs.tempDir, 'cypress.config.js'),
       () => ({
         default: cypressConfig,

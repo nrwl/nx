@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -17,9 +18,9 @@ import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import { componentConfigurationGenerator } from './component-configuration';
 import { cypressInitGenerator } from '../init/init';
 
-jest.mock('../../utils/versions', () => ({
-  ...jest.requireActual('../../utils/versions'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('../../utils/versions', async () => ({
+  ...(await vi.importActual<any>('../../utils/versions')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 let projectConfig: ProjectConfiguration = {
@@ -43,7 +44,7 @@ let projectConfig: ProjectConfiguration = {
 };
 describe('Cypress Component Configuration', () => {
   let tree: Tree;
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 
@@ -102,7 +103,7 @@ describe('Cypress Component Configuration', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockedInstalledCypressVersion.mockReset();
   });
 

@@ -20,12 +20,12 @@ import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 let fs: TempFs;
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -143,7 +143,7 @@ export default defineConfig({
     `${projectOpts.appRoot}/cypress.config.ts`,
     cypressConfigContents
   );
-  jest.doMock(
+  vi.doMock(
     join(fs.tempDir, `${projectOpts.appRoot}/cypress.config.ts`),
     () => ({
       default: {

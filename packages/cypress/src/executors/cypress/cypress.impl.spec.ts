@@ -1,33 +1,34 @@
+import type { Mock, MockInstance } from 'vitest';
 // Mock detect-port as a callable function that also works with `import * as`
-jest.mock('detect-port', () => {
-  const fn = jest.fn();
+vi.mock('detect-port', () => {
+  const fn = vi.fn();
   return Object.assign(fn, { __esModule: true, default: fn });
 });
 
 import { ExecutorContext } from '@nx/devkit';
 
 // Get reference to the mocked function
-const mockDetectPortFn = jest.requireMock('detect-port') as jest.Mock;
+const mockDetectPortFn = jest.requireMock('detect-port') as Mock;
 import { getExecutorInformation } from '@nx/devkit/internal';
 import * as path from 'path';
 import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import cypressExecutor, { CypressExecutorOptions } from './cypress.impl';
 
-jest.mock('@nx/devkit');
+vi.mock('@nx/devkit');
 let devkit = require('@nx/devkit');
-jest.mock('nx/src/command-line/run/executor-utils', () => ({
-  ...jest.requireActual('nx/src/command-line/run/executor-utils'),
-  getExecutorInformation: jest.fn(),
+vi.mock('nx/src/command-line/run/executor-utils', async () => ({
+  ...(await vi.importActual<any>('nx/src/command-line/run/executor-utils')),
+  getExecutorInformation: vi.fn(),
 }));
-jest.mock('../../utils/versions', () => ({
-  ...jest.requireActual('../../utils/versions'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('../../utils/versions', async () => ({
+  ...(await vi.importActual<any>('../../utils/versions')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 const Cypress = require('cypress');
 
 describe('Cypress builder', () => {
-  let cypressRun: jest.SpyInstance;
-  let cypressOpen: jest.SpyInstance;
+  let cypressRun: MockInstance;
+  let cypressOpen: MockInstance;
   const cypressOptions: CypressExecutorOptions = {
     cypressConfig: 'apps/my-app-e2e/cypress.json',
     parallel: false,
@@ -39,7 +40,7 @@ describe('Cypress builder', () => {
     skipServe: false,
   };
   let mockContext: ExecutorContext;
-  let mockedInstalledCypressMajorVersion: jest.Mock<
+  let mockedInstalledCypressMajorVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as any;
   mockContext = {
@@ -55,21 +56,21 @@ describe('Cypress builder', () => {
       },
     },
   } as any;
-  jest.spyOn(devkit, 'readTargetOptions').mockReturnValue({
+  vi.spyOn(devkit, 'readTargetOptions').mockReturnValue({
     watch: true,
   });
-  (getExecutorInformation as jest.Mock).mockReturnValue({
+  (getExecutorInformation as Mock).mockReturnValue({
     schema: { properties: {} },
-    hasherFactory: jest.fn(),
-    implementationFactory: jest.fn(),
-    batchImplementationFactory: jest.fn(),
+    hasherFactory: vi.fn(),
+    implementationFactory: vi.fn(),
+    batchImplementationFactory: vi.fn(),
     isNgCompat: true,
     isNxExecutor: true,
   });
   let runExecutor: any;
   beforeEach(async () => {
     mockedInstalledCypressMajorVersion.mockReturnValue(15);
-    runExecutor = (devkit as any).runExecutor = jest.fn().mockReturnValue([
+    runExecutor = (devkit as any).runExecutor = vi.fn().mockReturnValue([
       {
         success: true,
         baseUrl: 'http://localhost:4200',
@@ -85,19 +86,17 @@ describe('Cypress builder', () => {
       };
     };
     (devkit as any).logger = {
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
+      warn: vi.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
     };
-    cypressRun = jest
-      .spyOn(Cypress, 'run')
-      .mockReturnValue(Promise.resolve({}));
-    cypressOpen = jest
+    cypressRun = vi.spyOn(Cypress, 'run').mockReturnValue(Promise.resolve({}));
+    cypressOpen = vi
       .spyOn(Cypress, 'open')
       .mockReturnValue(Promise.resolve({}));
   });
 
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it('should call `Cypress.run` if headless mode is `true`', async () => {
     const { success } = await cypressExecutor(cypressOptions, mockContext);
@@ -129,7 +128,7 @@ describe('Cypress builder', () => {
   });
 
   it('should fail early if application build fails', async () => {
-    (devkit as any).runExecutor = jest.fn().mockReturnValue([
+    (devkit as any).runExecutor = vi.fn().mockReturnValue([
       {
         success: false,
       },
@@ -359,7 +358,7 @@ describe('Cypress builder', () => {
 
   it('should not forward watch option to devServerTarget when not supported', async () => {
     // Simulate a dev server target that does not support watch option.
-    (devkit as any).readTargetOptions = jest.fn().mockReturnValue({});
+    (devkit as any).readTargetOptions = vi.fn().mockReturnValue({});
 
     const { success } = await cypressExecutor(cypressOptions, mockContext);
 
@@ -374,9 +373,7 @@ describe('Cypress builder', () => {
   });
 
   it('should try to detectPort when a port option is provided', async () => {
-    (devkit as any).readTargetOptions = jest
-      .fn()
-      .mockReturnValue({ port: 4200 });
+    (devkit as any).readTargetOptions = vi.fn().mockReturnValue({ port: 4200 });
     mockDetectPortFn.mockResolvedValue(4200);
 
     const { success } = await cypressExecutor(
@@ -389,7 +386,7 @@ describe('Cypress builder', () => {
 
   it('should forward watch option to devServerTarget when supported', async () => {
     // Simulate a dev server target that support watch option.
-    (devkit as any).readTargetOptions = jest
+    (devkit as any).readTargetOptions = vi
       .fn()
       .mockReturnValue({ watch: true });
 
