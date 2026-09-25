@@ -599,7 +599,10 @@ export class TargetProjectLocator {
     );
     if (packageJsonPath) {
       if (this.packageJsonResolutionCache.has(packageJsonPath)) {
-        return this.packageJsonResolutionCache.get(packageJsonPath);
+        const cached = this.packageJsonResolutionCache.get(packageJsonPath);
+        if (cached) {
+          return cached;
+        }
       }
       const parsedPackageJson = readJsonFile(packageJsonPath);
 
@@ -607,11 +610,6 @@ export class TargetProjectLocator {
         this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
         return parsedPackageJson;
       }
-      // A wildcard export such as `"./*": "./dist/cjs/*"` reroutes
-      // `<package>/package.json` to a module-format stub (`{"type":"commonjs"}`)
-      // that carries no name or version. That stub is not the package manifest,
-      // so fall through and traverse upwards from it, exactly as we do when the
-      // package.json is not directly resolvable at all.
     }
 
     try {
@@ -627,7 +625,7 @@ export class TargetProjectLocator {
           if (cached) {
             return cached;
           }
-          // A cached null marks a module-format stub; keep traversing.
+          // Cached incomplete manifests are traversal points, not terminal misses.
         } else {
           try {
             const parsedPackageJson = readJsonFile(packageJsonPath);

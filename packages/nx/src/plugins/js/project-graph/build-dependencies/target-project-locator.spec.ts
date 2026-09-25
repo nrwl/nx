@@ -34,9 +34,7 @@ vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     if (pathOrPackage === '@json2csv/plainjs/package.json') {
       return '/root/node_modules/@json2csv/plainjs/dist/cjs/package.json';
     }
-    // A wildcard export ("./*": "./dist/cjs/*") reroutes package.json to a
-    // module-format stub. Unlike @json2csv/plainjs above, this package has NO
-    // unversioned `npm:@rerouted/pkg` node to fall back on.
+    // Resolve package.json to the nested module-format stub used by this test.
     if (pathOrPackage === '@rerouted/pkg/package.json') {
       return '/root/node_modules/@rerouted/pkg/dist/cjs/package.json';
     }
@@ -774,9 +772,6 @@ describe('TargetProjectLocator', () => {
           JSON.stringify({
             type: 'commonjs',
           }),
-        // @rerouted/pkg models the same reroute, but its only graph node is
-        // versioned (it is not a dependency of the root package.json), so the
-        // locator must traverse up to the real manifest to find the version.
         './node_modules/@rerouted/pkg/package.json': JSON.stringify({
           name: '@rerouted/pkg',
           version: '2.0.0',
@@ -988,10 +983,7 @@ describe('TargetProjectLocator', () => {
             hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
           },
         },
-        /**
-         * @rerouted/pkg also reroutes package.json to a module-format stub, but
-         * only exists as a VERSIONED node (no root-level `npm:@rerouted/pkg`).
-         */
+        // Keep this versioned-only so resolution cannot use the unversioned fallback.
         'npm:@rerouted/pkg@2.0.0': {
           type: 'npm',
           name: 'npm:@rerouted/pkg@2.0.0',
@@ -1170,11 +1162,6 @@ describe('TargetProjectLocator', () => {
     });
 
     it('should resolve a rerouted package.json to its versioned node when no root-level node exists', () => {
-      // With a wildcard export the directly resolvable package.json is a
-      // module-format stub without name/version. The locator must keep
-      // traversing to the real manifest instead of returning null, otherwise
-      // the import can only be matched through the unversioned fallback node,
-      // which exists solely for packages declared by the root package.json.
       const result = targetProjectLocator.findProjectFromImport(
         '@rerouted/pkg/some/subpath',
         'libs/proj/index.ts'
