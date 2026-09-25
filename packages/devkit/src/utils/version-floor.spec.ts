@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { updateJson, workspaceRoot } from 'nx/src/devkit-exports';
 import { FsTree } from 'nx/src/generators/tree';
 import { createTreeWithEmptyWorkspace } from '../../testing';
@@ -375,7 +376,7 @@ describe('assertSupportedPackageVersion', () => {
   });
 
   it('falls back to module resolution when the tree has no node_modules (e.g. Yarn PnP)', () => {
-    const spy = jest
+    const spy = vi
       .spyOn(installedVersion, 'getInstalledPackageVersion')
       .mockReturnValue('1.5.0');
     try {
@@ -394,7 +395,7 @@ describe('assertSupportedPackageVersion', () => {
   });
 
   it('does not resolve from the process for a tree not rooted at the workspace', () => {
-    const spy = jest
+    const spy = vi
       .spyOn(installedVersion, 'getInstalledPackageVersion')
       .mockReturnValue('1.5.0');
     try {
@@ -415,10 +416,10 @@ describe('assertSupportedPackageVersion', () => {
 });
 
 describe('assertSupportedInstalledPackageVersion', () => {
-  let getInstalledPackageVersionSpy: jest.SpyInstance;
+  let getInstalledPackageVersionSpy: MockInstance;
 
   beforeEach(() => {
-    getInstalledPackageVersionSpy = jest.spyOn(
+    getInstalledPackageVersionSpy = vi.spyOn(
       installedVersion,
       'getInstalledPackageVersion'
     );
@@ -662,7 +663,7 @@ describe('getResolvedPackageVersion', () => {
   });
 
   it('falls back to module resolution when the tree has no node_modules (e.g. Yarn PnP)', () => {
-    const spy = jest
+    const spy = vi
       .spyOn(installedVersion, 'getInstalledPackageVersion')
       .mockReturnValue('2.5.0');
     try {
@@ -679,7 +680,7 @@ describe('getResolvedPackageVersion', () => {
   });
 
   it('does not resolve from the process for a tree not rooted at the workspace', () => {
-    const spy = jest
+    const spy = vi
       .spyOn(installedVersion, 'getInstalledPackageVersion')
       .mockReturnValue('2.5.0');
     try {

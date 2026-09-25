@@ -5,7 +5,7 @@ describe(`aggregateLog utils`, () => {
   it('should aggregate similar logs to single log listing the affected projects', () => {
     // ARRANGE
     let spyLog = '';
-    jest.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
+    vi.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
     const aggregatedLogs = new AggregatedLog();
     aggregatedLogs.addLog({
       executorName: '@nx/vite:serve',
@@ -42,7 +42,7 @@ describe(`aggregateLog utils`, () => {
   it('should aggregate similar logs to single log and output different logs correctly', () => {
     // ARRANGE
     let spyLog = '';
-    jest.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
+    vi.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
     const aggregatedLogs = new AggregatedLog();
     aggregatedLogs.addLog({
       executorName: '@nx/vite:serve',

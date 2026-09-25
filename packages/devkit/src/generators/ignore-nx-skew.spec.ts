@@ -23,8 +23,8 @@ const ABSENT_ON_OLDER_NX = [
   'createPrettierIgnoreChecker',
 ] as const;
 
-jest.mock('nx/src/devkit-internals', () => {
-  const actual = jest.requireActual('nx/src/devkit-internals');
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
   const olderNx = { ...actual };
   for (const name of [
     'createGitIgnoreChecker',
@@ -44,7 +44,7 @@ describe('ignore checkers against an nx without them', () => {
   });
 
   it('guards the simulation itself', () => {
-    const actual = jest.requireActual('nx/src/devkit-internals');
+    const actual = await vi.importActual<any>('nx/src/devkit-internals');
     const mocked = require('nx/src/devkit-internals');
 
     const stripped = Object.keys(actual)

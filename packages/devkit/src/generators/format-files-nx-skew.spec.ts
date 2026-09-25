@@ -8,10 +8,10 @@ import { formatFiles } from './format-files';
 // crash mid-generator is the `detectFormatterInTree` presence check. The one in
 // `formatWithOxfmt` is not reachable from here - see the oxfmt case below.
 
-const mockIsUsingPrettierInTree = jest.fn();
+const mockIsUsingPrettierInTree = vi.fn();
 
-jest.mock('nx/src/devkit-internals', () => {
-  const actual = jest.requireActual('nx/src/devkit-internals');
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
   const {
     detectFormatter,
     detectFormatterInTree,
@@ -37,7 +37,7 @@ describe('formatFiles against an nx without the formatter exports', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    const { isUsingPrettierInTree } = jest.requireActual(
+    const { isUsingPrettierInTree } = await vi.importActual<any>(
       'nx/src/devkit-internals'
     );
     mockIsUsingPrettierInTree

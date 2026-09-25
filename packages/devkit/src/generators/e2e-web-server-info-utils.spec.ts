@@ -2,13 +2,10 @@
 // `await import('@nx/vite/plugin')` doesn't pull @nx/vite and @nx/js source
 // into this test. Only the createNodesV2 glob is consumed, and the include/
 // exclude assertions depend on the nxJson registration, not the real plugin.
-jest.mock(
+vi.mock(
   '@nx/vite/plugin',
   () => ({
-    createNodesV2: [
-      '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
-      jest.fn(),
-    ],
+    createNodesV2: ['**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}', vi.fn()],
   }),
   { virtual: true }
 );
@@ -32,7 +29,7 @@ describe('getE2EWebServerInfo', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should use the default values when no plugin is registered and plugins are not being used', async () => {

@@ -21,7 +21,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     setCwd('');
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     originalInitCwd = process.env.INIT_CWD;
   });

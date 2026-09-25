@@ -46,14 +46,14 @@ describe('retryOnRequireEsmRace', () => {
   it('awaits the raced module before loading again', async () => {
     const racedModule = '/x/node_modules/esm-only/index.js';
     let racedModuleLoaded = false;
-    const load = jest
+    const load = vi
       .fn()
       .mockRejectedValueOnce(raceError(racedModule))
       .mockImplementation(async () => {
         expect(racedModuleLoaded).toBe(true);
         return 'config';
       });
-    const importModule = jest.fn(async () => {
+    const importModule = vi.fn(async () => {
       racedModuleLoaded = true;
     });
 
@@ -69,11 +69,11 @@ describe('retryOnRequireEsmRace', () => {
     async (code) => {
       const racedModule =
         '/tmp/workspace because it is not yet fully loaded./node_modules/esm-only/index.js';
-      const load = jest
+      const load = vi
         .fn<Promise<string>, []>()
         .mockRejectedValueOnce(raceError(racedModule, code))
         .mockResolvedValue('config');
-      const importModule = jest.fn().mockResolvedValue(undefined);
+      const importModule = vi.fn().mockResolvedValue(undefined);
 
       await expect(retryOnRequireEsmRace(load, importModule)).resolves.toBe(
         'config'
@@ -89,8 +89,8 @@ describe('retryOnRequireEsmRace', () => {
     const error = Object.assign(new Error('new message format'), {
       code: 'ERR_REQUIRE_ESM_RACE_CONDITION',
     });
-    const load = jest.fn<Promise<string>, []>().mockRejectedValue(error);
-    const importModule = jest.fn().mockResolvedValue(undefined);
+    const load = vi.fn<Promise<string>, []>().mockRejectedValue(error);
+    const importModule = vi.fn().mockResolvedValue(undefined);
 
     await expect(retryOnRequireEsmRace(load, importModule)).rejects.toBe(error);
     expect(error.message).toContain(
@@ -102,7 +102,7 @@ describe('retryOnRequireEsmRace', () => {
 
   it('rethrows other errors without retrying', async () => {
     const error = new Error('syntax error');
-    const load = jest.fn().mockRejectedValue(error);
+    const load = vi.fn().mockRejectedValue(error);
 
     await expect(retryOnRequireEsmRace(load)).rejects.toBe(error);
     expect(load).toHaveBeenCalledTimes(1);
@@ -111,12 +111,12 @@ describe('retryOnRequireEsmRace', () => {
   it('waits for each raced module', async () => {
     const firstModule = '/x/node_modules/first/index.js';
     const secondModule = '/x/node_modules/second/index.js';
-    const load = jest
+    const load = vi
       .fn()
       .mockRejectedValueOnce(raceError(firstModule))
       .mockRejectedValueOnce(raceError(secondModule))
       .mockResolvedValue('config');
-    const importModule = jest.fn().mockResolvedValue(undefined);
+    const importModule = vi.fn().mockResolvedValue(undefined);
 
     await expect(retryOnRequireEsmRace(load, importModule)).resolves.toBe(
       'config'
@@ -135,12 +135,12 @@ describe('retryOnRequireEsmRace', () => {
   it('awaits the same raced module again before retrying', async () => {
     const racedModule = '/x/node_modules/esm-only/index.js';
     const error = raceError(racedModule);
-    const load = jest
+    const load = vi
       .fn<Promise<string>, []>()
       .mockRejectedValueOnce(error)
       .mockRejectedValueOnce(error)
       .mockResolvedValue('config');
-    const importModule = jest.fn().mockResolvedValue(undefined);
+    const importModule = vi.fn().mockResolvedValue(undefined);
 
     await expect(retryOnRequireEsmRace(load, importModule)).resolves.toBe(
       'config'
@@ -151,8 +151,8 @@ describe('retryOnRequireEsmRace', () => {
 
   it('stops retrying after the retry limit', async () => {
     const error = raceError('/x/node_modules/esm-only/index.js');
-    const load = jest.fn<Promise<string>, []>().mockRejectedValue(error);
-    const importModule = jest.fn().mockResolvedValue(undefined);
+    const load = vi.fn<Promise<string>, []>().mockRejectedValue(error);
+    const importModule = vi.fn().mockResolvedValue(undefined);
 
     await expect(retryOnRequireEsmRace(load, importModule)).rejects.toBe(error);
     expect(importModule).toHaveBeenCalledTimes(20);

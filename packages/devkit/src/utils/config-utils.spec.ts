@@ -148,7 +148,7 @@ describe('isTranspilerRecoverableError', () => {
     // nx 23.0/23.1 recover these error classes in loadTsFile but do not
     // re-export the classifiers from devkit-internals.
     jest.isolateModules(() => {
-      jest.doMock('nx/src/devkit-internals', () => ({}));
+      vi.doMock('nx/src/devkit-internals', () => ({}));
       const {
         isTranspilerRecoverableError: withoutHostClassifiers,
       } = require('./config-utils');
@@ -156,7 +156,7 @@ describe('isTranspilerRecoverableError', () => {
         expect(withoutHostClassifiers(err, path)).toBe(expected);
       }
     });
-    jest.dontMock('nx/src/devkit-internals');
+    vi.doUnmock('nx/src/devkit-internals');
   });
 });
 

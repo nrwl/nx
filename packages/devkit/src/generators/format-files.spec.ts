@@ -9,7 +9,7 @@ describe('formatFiles', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...originalEnv };
   });
 

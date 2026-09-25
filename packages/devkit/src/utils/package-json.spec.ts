@@ -477,14 +477,14 @@ describe('addDependenciesToPackageJson', () => {
 
   describe('catalog support', () => {
     beforeEach(() => {
-      jest
-        .spyOn(packageManagerUtils, 'detectPackageManager')
-        .mockReturnValue('pnpm');
+      vi.spyOn(packageManagerUtils, 'detectPackageManager').mockReturnValue(
+        'pnpm'
+      );
       tree.root = '/test-workspace';
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should update existing catalog dependencies in pnpm workspace', () => {
@@ -521,9 +521,9 @@ catalog:
     });
 
     it('should use direct dependencies with unsupported package managers', () => {
-      jest
-        .spyOn(packageManagerUtils, 'detectPackageManager')
-        .mockReturnValue('npm');
+      vi.spyOn(packageManagerUtils, 'detectPackageManager').mockReturnValue(
+        'npm'
+      );
       writeJson(tree, 'package.json', {
         dependencies: { react: 'catalog:' },
       });
@@ -683,13 +683,13 @@ describe('getDependencyVersionFromPackageJson', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should resolve a bun catalog reference to the catalog version', () => {
-    jest
-      .spyOn(packageManagerUtils, 'detectPackageManager')
-      .mockReturnValue('bun');
+    vi.spyOn(packageManagerUtils, 'detectPackageManager').mockReturnValue(
+      'bun'
+    );
     writeJson(tree, 'package.json', {
       workspaces: ['packages/*'],
       catalog: { vite: '6.0.0' },
@@ -708,9 +708,9 @@ describe('getDependencyVersionFromPackageJson', () => {
   });
 
   it('should resolve a bun named catalog reference', () => {
-    jest
-      .spyOn(packageManagerUtils, 'detectPackageManager')
-      .mockReturnValue('bun');
+    vi.spyOn(packageManagerUtils, 'detectPackageManager').mockReturnValue(
+      'bun'
+    );
     writeJson(tree, 'package.json', {
       workspaces: ['packages/*'],
       catalogs: { web: { react: '^18.2.0' } },
@@ -729,9 +729,9 @@ describe('getDependencyVersionFromPackageJson', () => {
   });
 
   it('should resolve a bun catalog reference nested under workspaces', () => {
-    jest
-      .spyOn(packageManagerUtils, 'detectPackageManager')
-      .mockReturnValue('bun');
+    vi.spyOn(packageManagerUtils, 'detectPackageManager').mockReturnValue(
+      'bun'
+    );
     writeJson(tree, 'package.json', {
       workspaces: { packages: ['packages/*'], catalog: { vite: '6.0.0' } },
     });
@@ -749,9 +749,9 @@ describe('getDependencyVersionFromPackageJson', () => {
   });
 
   it('should return the raw specifier when no catalog manager applies', () => {
-    jest
-      .spyOn(packageManagerUtils, 'detectPackageManager')
-      .mockReturnValue('npm');
+    vi.spyOn(packageManagerUtils, 'detectPackageManager').mockReturnValue(
+      'npm'
+    );
     writeJson(tree, 'package.json', {
       catalog: { vite: '6.0.0' },
     });

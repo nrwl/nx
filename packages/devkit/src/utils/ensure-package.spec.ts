@@ -2,21 +2,21 @@ import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-// Recomputed inside the factory because `jest.mock` is hoisted above any
+// Recomputed inside the factory because `vi.mock` is hoisted above any
 // module-scope const it would otherwise close over.
 const fixtureRoot = join(tmpdir(), `nx-ensure-package-${process.pid}`);
 
-jest.mock('nx/src/devkit-exports', () => ({
-  ...jest.requireActual('nx/src/devkit-exports'),
+vi.mock('nx/src/devkit-exports', async () => ({
+  ...(await vi.importActual<any>('nx/src/devkit-exports')),
   workspaceRoot: require('path').join(
     require('os').tmpdir(),
     `nx-ensure-package-${process.pid}`
   ),
 }));
 
-jest.mock('nx/src/devkit-internals', () => ({
-  ...jest.requireActual('nx/src/devkit-internals'),
-  installPackageToTmp: jest.fn(() => {
+vi.mock('nx/src/devkit-internals', async () => ({
+  ...(await vi.importActual<any>('nx/src/devkit-internals')),
+  installPackageToTmp: vi.fn(() => {
     throw new Error('installPackageToTmp should not have been reached');
   }),
 }));

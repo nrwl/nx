@@ -2,10 +2,10 @@
 // `await import('@nx/cypress/plugin')` (fired when include/exclude is present)
 // doesn't pull real plugin code, which transitively imports @nx/js source and
 // inflates sandbox inputs.
-jest.mock(
+vi.mock(
   '@nx/cypress/plugin',
   () => ({
-    createNodesV2: ['**/cypress.config.{js,ts,mjs,cjs}', jest.fn()],
+    createNodesV2: ['**/cypress.config.{js,ts,mjs,cjs}', vi.fn()],
   }),
   { virtual: true }
 );
@@ -26,7 +26,7 @@ describe('find-plugin-for-config-file', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should return the plugin when its registered as just a string', async () => {
