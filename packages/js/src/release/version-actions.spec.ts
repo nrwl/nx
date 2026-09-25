@@ -1,5 +1,6 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readJson, writeJson, type Tree } from '@nx/devkit';
+import { ProjectNotConfiguredForReleaseError } from 'nx/release';
 import JsVersionActions from './version-actions';
 
 vi.mock('@nx/devkit', async () => ({
@@ -226,6 +227,9 @@ describe('JsVersionActions', () => {
   });
 
   describe('local dependencies outside the release set', () => {
+    const notConfiguredForReleaseError = (projectName = 'dependency') =>
+      new ProjectNotConfiguredForReleaseError(projectName);
+
     it('handles protocol preservation independently for each manifest', async () => {
       const tree = createTreeWithEmptyWorkspace();
       writeJson(tree, 'packages/my-lib/package.json', {
@@ -413,6 +417,122 @@ describe('JsVersionActions', () => {
 
       expect(readJson(tree, 'packages/my-lib/package.json')).toEqual(manifest);
       expect(resolveCurrentVersion).not.toHaveBeenCalled();
+    });
+
+    it('preserves an unconfigured private development dependency', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      writeJson(tree, 'packages/dependency/package.json', {
+        name: 'dependency',
+        private: true,
+      });
+      const versionActions = await createVersionActions(tree);
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        {},
+        async () => {
+          throw notConfiguredForReleaseError();
+        }
+      );
+
+      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+        devDependencies: { dependency: 'workspace:^' },
+      });
+    });
+
+    it.each(['dependencies', 'peerDependencies', 'optionalDependencies'])(
+      'rejects an unconfigured private dependency also used in %s',
+      async (dependencyType) => {
+        const tree = createTreeWithEmptyWorkspace();
+        writeJson(tree, 'packages/my-lib/package.json', {
+          [dependencyType]: { dependency: 'workspace:^' },
+          devDependencies: { dependency: 'workspace:^' },
+        });
+        writeJson(tree, 'packages/dependency/package.json', {
+          name: 'dependency',
+          private: true,
+        });
+        const versionActions = await createVersionActions(tree);
+
+        await expect(
+          versionActions.updateProjectDependencies(
+            tree,
+            createProjectGraph(),
+            {},
+            async () => {
+              throw notConfiguredForReleaseError();
+            }
+          )
+        ).rejects.toThrow('not configured for Nx Release');
+      }
+    );
+
+    it('rejects an unconfigured public development dependency', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      writeJson(tree, 'packages/dependency/package.json', {
+        name: 'dependency',
+      });
+      const versionActions = await createVersionActions(tree);
+
+      await expect(
+        versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          async () => {
+            throw notConfiguredForReleaseError();
+          }
+        )
+      ).rejects.toThrow('not configured for Nx Release');
+    });
+
+    it('rejects an unconfigured development dependency with no manifest', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      const versionActions = await createVersionActions(tree);
+
+      await expect(
+        versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          async () => {
+            throw notConfiguredForReleaseError();
+          }
+        )
+      ).rejects.toThrow('not configured for Nx Release');
+    });
+
+    it('rejects other resolver errors for private development dependencies', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      writeJson(tree, 'packages/dependency/package.json', {
+        name: 'dependency',
+        private: true,
+      });
+      const versionActions = await createVersionActions(tree);
+
+      await expect(
+        versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          async () => {
+            throw new Error('registry lookup failed');
+          }
+        )
+      ).rejects.toThrow('registry lookup failed');
     });
 
     it('does not modify any manifest when version resolution fails', async () => {

@@ -21,6 +21,7 @@ import { resolveCurrentVersion } from '../version/resolve-current-version';
 import { topologicalSort } from '../version/topological-sort';
 import {
   NOOP_VERSION_ACTIONS,
+  ProjectNotConfiguredForReleaseError,
   resolveVersionActionsForProject,
   type AfterAllProjectsVersioned,
   type VersionActions,
@@ -746,9 +747,7 @@ export class ReleaseGraph {
       !this.projectsToVersionActions.has(projectName) ||
       !this.finalConfigsByProject.has(projectName)
     ) {
-      throw new Error(
-        `Cannot resolve a concrete current version for dependency project "${projectName}" because it is not configured for Nx Release. Include the project in an Nx Release group so that its current version resolver can be configured.`
-      );
+      throw new ProjectNotConfiguredForReleaseError(projectName);
     }
 
     let currentVersion: string | null;

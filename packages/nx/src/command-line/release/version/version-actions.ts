@@ -40,6 +40,21 @@ export type ResolveVersionForDependency = (
   dependencyProjectName: string
 ) => Promise<string>;
 
+/**
+ * Indicates that a dependency project cannot provide a concrete version
+ * because it is outside the configured Nx Release projects.
+ *
+ * @public
+ */
+export class ProjectNotConfiguredForReleaseError extends Error {
+  constructor(projectName: string) {
+    super(
+      `Cannot resolve a concrete current version for dependency project "${projectName}" because it is not configured for Nx Release. Include the project in an Nx Release group so that its current version resolver can be configured.`
+    );
+    this.name = 'ProjectNotConfiguredForReleaseError';
+  }
+}
+
 function resolveVersionActionsPath(
   path: string,
   projectGraphNode: ProjectGraphProjectNode

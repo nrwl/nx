@@ -12,7 +12,10 @@ import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { applyEdits, FormattingOptions, modify } from 'jsonc-parser';
 import { validRange } from 'semver';
-import { VersionActions } from 'nx/release';
+import {
+  ProjectNotConfiguredForReleaseError,
+  VersionActions,
+} from 'nx/release';
 import type { ResolveVersionForDependency } from 'nx/release';
 import type {
   AfterAllProjectsVersioned,
@@ -45,6 +48,7 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
 
 type LocalDependencyProject = {
   projectName: string;
+  projectRoot: string;
 };
 
 // Cache at the module level to avoid re-detecting the package manager for each instance
@@ -356,6 +360,18 @@ export default class JsVersionActions extends VersionActions {
                   resolveVersion
                 );
               } catch (error) {
+                if (
+                  this.shouldPreserveUnconfiguredPrivateDevDependency(
+                    tree,
+                    json,
+                    depType,
+                    dependencyName,
+                    targetProject,
+                    error
+                  )
+                ) {
+                  continue;
+                }
                 const message =
                   error instanceof Error ? error.message : String(error);
                 throw new Error(
@@ -432,10 +448,46 @@ export default class JsVersionActions extends VersionActions {
       if (!packageName) {
         continue;
       }
-      lookup.set(packageName, { projectName });
+      lookup.set(packageName, {
+        projectName,
+        projectRoot: node.data.root,
+      });
     }
     localDependencyProjectsByGraph.set(projectGraph, lookup);
     return lookup;
+  }
+
+  private shouldPreserveUnconfiguredPrivateDevDependency(
+    tree: Tree,
+    manifest: Record<string, Record<string, string> | unknown>,
+    dependencyType: string,
+    dependencyName: string,
+    targetProject: LocalDependencyProject,
+    error: unknown
+  ): boolean {
+    if (
+      dependencyType !== 'devDependencies' ||
+      !(error instanceof ProjectNotConfiguredForReleaseError) ||
+      ['dependencies', 'peerDependencies', 'optionalDependencies'].some(
+        (type) =>
+          (manifest[type] as Record<string, string> | undefined)?.[
+            dependencyName
+          ] !== undefined
+      )
+    ) {
+      return false;
+    }
+
+    const targetManifestPath = join(targetProject.projectRoot, 'package.json');
+    if (!tree.exists(targetManifestPath)) {
+      return false;
+    }
+
+    try {
+      return readJson(tree, targetManifestPath).private === true;
+    } catch {
+      return false;
+    }
   }
 
   private async resolveLocalDependencySpecifier(

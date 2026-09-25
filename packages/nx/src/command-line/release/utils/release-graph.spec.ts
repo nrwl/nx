@@ -55,6 +55,7 @@ import {
   createNxReleaseConfigAndPopulateWorkspace,
   mockResolveVersionActionsForProjectImplementation,
 } from '../version/test-utils';
+import { ProjectNotConfiguredForReleaseError } from '../version/version-actions';
 import { createReleaseGraph } from './release-graph';
 
 process.env.NX_DAEMON = 'false';
@@ -1407,14 +1408,17 @@ describe('ReleaseGraph', () => {
         verbose: false,
       });
 
-      await expect(
-        releaseGraph.resolveCurrentVersionForDependency(
-          tree,
-          projectGraph,
-          'external-project',
-          ''
-        )
-      ).rejects.toThrow(
+      const result = releaseGraph.resolveCurrentVersionForDependency(
+        tree,
+        projectGraph,
+        'external-project',
+        ''
+      );
+
+      await expect(result).rejects.toBeInstanceOf(
+        ProjectNotConfiguredForReleaseError
+      );
+      await expect(result).rejects.toThrow(
         'dependency project "external-project" because it is not configured for Nx Release'
       );
     });
