@@ -145,17 +145,17 @@ fn producers_read_by<'a>(
     let mut producers: Vec<&str> = Vec::new();
     seen.clear();
     walk_dependencies(task_graph, vec![consumer], seen, |upstream| {
-        let Some(patterns) = patterns_of.get(upstream) else {
+        let Some(task) = task_graph.tasks.get(upstream) else {
             return;
         };
-        let reads_declared = task_graph
-            .tasks
-            .get(upstream)
-            .is_some_and(|task| declared.contains(task.outputs.as_slice()));
-        if reads_declared
+        if task.outputs.is_empty() {
+            return;
+        }
+        let outputs = patterns_of.get(upstream).map_or(&[][..], Vec::as_slice);
+        if declared.contains(task.outputs.as_slice())
             || globs
                 .iter()
-                .any(|read| patterns.iter().any(|output| read.may_read(output)))
+                .any(|read| outputs.iter().any(|output| read.may_read(output)))
         {
             producers.push(upstream);
         }
