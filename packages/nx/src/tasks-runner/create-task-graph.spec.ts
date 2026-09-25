@@ -4685,24 +4685,26 @@ describe('narrowTaskGraph', () => {
     };
   }
 
-  function narrowed(projectGraph: ProjectGraph, initial: string[]) {
+  function narrowed(
+    projectGraph: ProjectGraph,
+    candidates: string[],
+    initial: string[]
+  ) {
     const { taskGraph, dependencyOverrides } =
       createTaskGraphWithDependencyOverrides(
         projectGraph,
         {},
-        ['app', 'app2', 'lib'],
+        candidates,
         ['build'],
         undefined,
         cli
       );
-    const keep = new Set([...initial, 'lib:build']);
     return narrowTaskGraph(
       projectGraph,
       taskGraph,
       dependencyOverrides,
       new Set(initial),
-      keep,
-      keep
+      new Set([...initial, 'lib:build'])
     );
   }
 
@@ -4715,7 +4717,7 @@ describe('narrowTaskGraph', () => {
       ['app:build', 'lib:build']
     );
 
-    const result = narrowed(projectGraph, ['app:build']);
+    const result = narrowed(projectGraph, ['app', 'lib'], ['app:build']);
 
     expect(result.tasks).toEqual(expected.tasks);
     expect(result.tasks['lib:build'].outputs).toEqual(['dist/lib']);
@@ -4733,6 +4735,67 @@ describe('narrowTaskGraph', () => {
       options: { mode: 'a' },
       dependsOn: [{ dependencies: true, target: 'build', options: 'forward' }],
     });
-    expect(narrowed(projectGraph, ['app:build', 'app2:build'])).toBeUndefined();
+    expect(
+      narrowed(
+        projectGraph,
+        ['app', 'app2', 'lib'],
+        ['app:build', 'app2:build']
+      )
+    ).toBeUndefined();
+  });
+
+  // b and c form a cycle without the target, so the dummy tasks standing in
+  // for them are dropped, yet the run still reaches x:build through them and
+  // x:build's forwarding edge may be the one that creates x:gen. Every edge
+  // into x:gen counts, not just those left in the final graph.
+  it('counts edges from tasks reached only through a dropped dummy cycle', () => {
+    const run = (dependsOn?: any[]) => ({
+      executor: 'nx:run-commands',
+      options: {},
+      ...(dependsOn ? { dependsOn } : {}),
+    });
+    const projectGraph = {
+      nodes: {
+        a: node('a', {
+          build: run(['^build', { projects: ['x'], target: 'gen' }]),
+        }),
+        b: node('b', {}),
+        c: node('c', {}),
+        x: node('x', {
+          build: run([{ target: 'gen', params: 'forward' }]),
+          gen: run(),
+        }),
+      },
+      dependencies: {
+        a: [edge('a', 'b')],
+        b: [edge('b', 'c')],
+        c: [edge('c', 'b'), edge('c', 'x')],
+        x: [],
+      },
+    } as ProjectGraph;
+    const { taskGraph, dependencyOverrides } =
+      createTaskGraphWithDependencyOverrides(
+        projectGraph,
+        {},
+        ['a'],
+        ['build'],
+        undefined,
+        cli
+      );
+    const keep = new Set(['a:build', 'x:gen']);
+
+    const result = narrowTaskGraph(
+      projectGraph,
+      taskGraph,
+      dependencyOverrides,
+      new Set(['a:build']),
+      keep
+    );
+
+    const expected = pruneToSelectedTasks(
+      createTaskGraph(projectGraph, {}, ['a'], ['build'], undefined, cli),
+      [...keep]
+    );
+    expect(result?.tasks ?? expected.tasks).toEqual(expected.tasks);
   });
 });

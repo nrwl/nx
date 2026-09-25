@@ -502,16 +502,15 @@ export function createTaskGraphWithDependencyOverrides(
 
 /**
  * `taskGraph` pruned to `keep`, as if built from `initial` alone: a kept task
- * that build reaches only as a dependency gets the overrides its edges from
- * `built` give it. Undefined when those edges disagree, since which one wins
- * depends on the order `createTaskGraph` visits them.
+ * that build reaches only as a dependency gets the overrides its edges give it.
+ * Every recorded edge counts, since the smaller build visits a subset of them
+ * and which one wins depends on visiting order; undefined when they disagree.
  */
 export function narrowTaskGraph(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   dependencyOverrides: DependencyOverrides,
   initial: Set<string>,
-  built: Set<string>,
   keep: Set<string>
 ): TaskGraph | undefined {
   const tasks: Record<string, Task> = {};
@@ -521,9 +520,7 @@ export function narrowTaskGraph(
       tasks[id] = { ...task };
       continue;
     }
-    const edges = (dependencyOverrides[id] ?? []).filter((e) =>
-      built.has(e.from)
-    );
+    const edges = dependencyOverrides[id] ?? [];
     if (!edges.length) {
       return undefined;
     }

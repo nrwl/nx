@@ -103,9 +103,6 @@ pub struct AffectedTaskSelection {
     pub affected: Vec<String>,
     /// `affected` plus everything it depends on, sorted: what a run keeps.
     pub required: Vec<String>,
-    /// What the run builds before pruning to `required`, sorted: the requested
-    /// tasks of every project owning an affected task, and their dependencies.
-    pub built: Vec<String>,
 }
 
 pub(crate) const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
@@ -175,28 +172,7 @@ pub(crate) fn compute_affected_task_selection(
         })
         .collect();
     let required = with_dependencies(task_graph, affected.iter().map(String::as_str));
-    let owning: HashSet<&str> = affected
-        .iter()
-        .filter_map(|id| task_graph.tasks.get(id))
-        .map(|task| task.target.project.as_str())
-        .collect();
-    let built = with_dependencies(
-        task_graph,
-        task_graph
-            .tasks
-            .iter()
-            .filter(|(_, task)| {
-                owning.contains(task.target.project.as_str())
-                    && options.targets.contains(&task.target.target)
-            })
-            .map(|(id, _)| id.as_str()),
-    );
-
-    Ok(AffectedTaskSelection {
-        affected,
-        required,
-        built,
-    })
+    Ok(AffectedTaskSelection { affected, required })
 }
 
 /// Changed paths that are project configuration, split by whether the file is
@@ -1519,30 +1495,5 @@ mod tests {
 
         assert_eq!(s.affected, strings(&["app:build"]));
         assert_eq!(s.required, strings(&["app:build", "app:prebuild"]));
-    }
-
-    /// The run builds every requested task of the projects owning an affected
-    /// task, and what they depend on, before pruning to `required`.
-    #[test]
-    fn built_is_what_the_run_builds_before_pruning() {
-        let p = multi_plans(&[("app:build", vec![reads_x()])]);
-        let tg = task_graph(
-            &[
-                ("app:build", &[]),
-                ("app:test", &[]),
-                ("lib:build", &[]),
-                ("lib:test", &[]),
-            ],
-            &[("app:test", &["lib:build"])],
-        );
-        let options = AffectedTasksOptions {
-            targets: strings(&["build", "test"]),
-            ..options(&[])
-        };
-
-        let s = select(&tg, &p, &options);
-
-        assert_eq!(s.required, strings(&["app:build"]));
-        assert_eq!(s.built, strings(&["app:build", "app:test", "lib:build"]));
     }
 }

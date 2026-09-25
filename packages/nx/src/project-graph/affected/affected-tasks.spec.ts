@@ -314,6 +314,29 @@ describe('the run graph selection hands over', () => {
   });
 });
 
+describe('the run graph with --exclude-task-dependencies', () => {
+  // The run builds app:test alone, so lib:test must not ride along even
+  // though the full graph keeps the edge between two initial tasks.
+  it('holds only the selected tasks', async () => {
+    const result = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/js/src/index.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      extraTargetDependencies: { test: ['^test'] },
+      excludeTaskDependencies: true,
+    });
+    expect(Object.keys(result.runTaskGraph.tasks)).toEqual(['app:test']);
+  });
+});
+
 describe('computeAffectedTasks with the daemon on', () => {
   beforeEach(() => vi.clearAllMocks());
 

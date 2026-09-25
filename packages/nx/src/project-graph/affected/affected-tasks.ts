@@ -220,10 +220,16 @@ export async function selectAffectedTasks(
   const owning = new Set(
     selection.affected.map((id) => taskGraph.tasks[id].target.project)
   );
-  const initial = selection.built.filter((id) => {
-    const { project, target } = taskGraph.tasks[id].target;
-    return owning.has(project) && targets.includes(target);
-  });
+  const initial = new Set(
+    taskIds.filter((id) => {
+      const { project, target } = taskGraph.tasks[id].target;
+      return owning.has(project) && targets.includes(target);
+    })
+  );
+  // Without dependencies the run builds its initial tasks and nothing else.
+  const keep = request.excludeTaskDependencies
+    ? selection.required.filter((id) => initial.has(id))
+    : selection.required;
 
   return {
     affectedTaskIds: new Set(selection.affected),
@@ -233,9 +239,8 @@ export async function selectAffectedTasks(
       projectGraph,
       taskGraph,
       dependencyOverrides,
-      new Set(initial),
-      new Set(selection.built),
-      new Set(selection.required)
+      initial,
+      new Set(keep)
     ),
     plans,
   };
