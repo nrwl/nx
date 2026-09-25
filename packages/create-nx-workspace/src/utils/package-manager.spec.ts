@@ -12,7 +12,38 @@ import {
   findWorkspacePackages,
   findAllWorkspacePackageJsons,
   convertStarToWorkspaceProtocol,
+  detectInvokedPackageManager,
 } from './package-manager';
+
+describe('detectInvokedPackageManager', () => {
+  const originalEnv = process.env;
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it.each([
+    ['/usr/lib/node_modules/npm/bin/npm-cli.js', 'npm'],
+    ['C:\\node\\node_modules\\npm\\bin\\npm-cli.js', 'npm'],
+    ['/usr/lib/node_modules/pnpm/bin/pnpm.cjs', 'pnpm'],
+    ['/cache/yarn/4.0.2/yarn.js', 'yarn'],
+  ])(
+    'uses the invoking executable %s over an inherited user agent',
+    (execpath, expected) => {
+      process.env.npm_execpath = execpath;
+      process.env.npm_config_user_agent = 'bun/1.0.0 npm/? node/v22.0.0';
+      expect(detectInvokedPackageManager()).toBe(expected);
+    }
+  );
+
+  it('falls back to the user agent for an unrecognized executable', () => {
+    process.env.npm_execpath = '/custom/launcher.js';
+    process.env.npm_config_user_agent = 'yarn/4.0.2 npm/? node/v22.0.0';
+    expect(detectInvokedPackageManager()).toBe('yarn');
+  });
+});
 
 describe('workspacesToPnpmYaml', () => {
   it('should convert single workspace glob to yaml', () => {
