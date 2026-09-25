@@ -44,7 +44,12 @@ vi.mock('../../project-graph/affected/affected-tasks', () => ({
       continuousDependencies: { 'ui:build': [], 'core:build': [] },
       roots: ['core:build'],
     },
-    reasons: { 'ui:build': [{ kind: 'input-file', file: 'libs/ui/src/x.ts' }] },
+    explanation: {
+      affected: {
+        'ui:build': [{ kind: 'input-file', file: 'libs/ui/src/x.ts' }],
+      },
+      dependencies: {},
+    },
   }),
 }));
 

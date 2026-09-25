@@ -50,6 +50,18 @@ export interface AffectedReason {
   producer?: string;
 }
 
+/** What `--explain` reports, keyed by project name or task id. */
+export interface AffectedExplanation {
+  /** The selection, and every reason each entry is in it. */
+  affected: Record<string, AffectedReason[]>;
+  /**
+   * Entries a reason names as the way the change arrived that are not in the
+   * selection themselves, followed transitively, so every chain can be traced
+   * within the same output.
+   */
+  dependencies: Record<string, AffectedReason[]>;
+}
+
 /** A reason, bound to the project a locator marked. */
 export interface TouchedProject extends AffectedReason {
   project: string;
@@ -100,19 +112,15 @@ export function formatAffectedReason(reason: AffectedReason): string {
  * recording one, so a project with none is absent rather than empty.
  */
 export function formatAffectedExplanation(
-  reasons: Record<string, AffectedReason[]>,
+  { affected: reasons, dependencies: carried }: AffectedExplanation,
   heading: string,
   /**
    * Tasks that will run only to satisfy the selected ones. Absent unless the
    * caller is about to run them, so `show projects` never passes it.
    */
-  dependencies?: number,
-  /**
-   * Tasks outside the selection that a reason names as a producer, listed so
-   * every chain can be followed within the output.
-   */
-  carried: Record<string, AffectedReason[]> = {}
+  dependencyCount?: number
 ): string {
+  const noun = heading.toLowerCase().includes('task') ? 'task' : 'project';
   const names = Object.keys(reasons).sort();
   if (!names.length) {
     return `Nothing affected.`;
@@ -154,7 +162,7 @@ export function formatAffectedExplanation(
   const carriedNames = Object.keys(carried).sort();
   if (carriedNames.length) {
     lines.push(
-      `Not selected, but carried the change to a selected task (${carriedNames.length}):`,
+      `Not selected, but carried the change to a selected ${noun} (${carriedNames.length}):`,
       ''
     );
     carriedNames.forEach(render);
@@ -162,13 +170,12 @@ export function formatAffectedExplanation(
 
   // Same shape as the run summary, which reports the tasks it ran and the ones
   // it ran only to get there.
-  const noun = heading.toLowerCase().includes('task') ? 'task' : 'project';
   const plural = names.length === 1 ? noun : `${noun}s`;
   lines.push(
-    dependencies === undefined
+    dependencyCount === undefined
       ? `${names.length} affected ${plural}.`
-      : `${names.length} affected ${plural} and ${dependencies} ${
-          dependencies === 1 ? 'task' : 'tasks'
+      : `${names.length} affected ${plural} and ${dependencyCount} ${
+          dependencyCount === 1 ? 'task' : 'tasks'
         } they depend on.`
   );
   return lines.join('\n');

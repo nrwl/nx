@@ -1,6 +1,9 @@
 import { writeFileSync } from 'fs';
 import { output } from '../../utils/output';
-import { AffectedReason, formatAffectedExplanation } from './affected-reasons';
+import {
+  AffectedExplanation,
+  formatAffectedExplanation,
+} from './affected-reasons';
 
 /**
  * Prints `--explain` output.
@@ -10,36 +13,35 @@ import { AffectedReason, formatAffectedExplanation } from './affected-reasons';
  * other string is a file to write the JSON to.
  */
 export function printAffectedExplanation(
-  reasons: Record<string, AffectedReason[]>,
+  explanation: AffectedExplanation,
   heading: string,
   destination: string | boolean | undefined,
   /** Tasks that run only to satisfy the selected ones. Only `nx affected`
    * runs them, so `show projects` leaves this off. */
-  dependencies?: number,
-  carried?: Record<string, AffectedReason[]>
+  dependencyCount?: number
 ): void {
   if (destination === 'stdout') {
-    console.log(JSON.stringify(reasons, null, 2));
+    console.log(JSON.stringify(explanation, null, 2));
     return;
   }
   if (typeof destination === 'string' && destination) {
-    writeFileSync(destination, JSON.stringify(reasons, null, 2));
+    writeFileSync(destination, JSON.stringify(explanation, null, 2));
     output.success({ title: `Reasons written to ${destination}` });
     return;
   }
 
   const rendered = formatAffectedExplanation(
-    reasons,
+    explanation,
     heading,
-    dependencies,
-    carried
+    dependencyCount
   );
-  if (!Object.keys(reasons).length) {
+  const count = Object.keys(explanation.affected).length;
+  if (!count) {
     output.log({ title: rendered });
     return;
   }
   output.log({
-    title: `${heading} (${Object.keys(reasons).length})`,
+    title: `${heading} (${count})`,
     // The heading and its blank line are already in the title.
     bodyLines: rendered.split('\n').slice(2),
   });

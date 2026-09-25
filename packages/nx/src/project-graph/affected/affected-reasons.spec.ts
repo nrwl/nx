@@ -130,6 +130,7 @@ describe('formatAffectedExplanation', () => {
     'app:build': [{ kind: 'dependent-output', producer: 'ui:build' }],
     'ui:build': [{ kind: 'input-file', file: 'libs/ui/src/x.ts' }],
   };
+  const selected = { affected: reasons, dependencies: {} };
 
   /**
    * Only the command that is about to run the closure reports it. `nx affected`
@@ -137,23 +138,28 @@ describe('formatAffectedExplanation', () => {
    * what it would drag in would describe a run that is not happening.
    */
   it('names the closure when the caller is going to run it', () => {
-    expect(formatAffectedExplanation(reasons, 'Affected tasks', 149)).toContain(
-      '2 affected tasks and 149 tasks they depend on.'
-    );
+    expect(
+      formatAffectedExplanation(selected, 'Affected tasks', 149)
+    ).toContain('2 affected tasks and 149 tasks they depend on.');
   });
 
   it('reports the selection alone when no closure is passed', () => {
-    const out = formatAffectedExplanation(reasons, 'Affected tasks');
+    const out = formatAffectedExplanation(selected, 'Affected tasks');
     expect(out).toContain('2 affected tasks.');
     expect(out).not.toContain('depend on');
   });
 
   it('lists a producer outside the selection in its own section', () => {
     const out = formatAffectedExplanation(
-      { 'app:build': [{ kind: 'dependent-output', producer: 'app:prebuild' }] },
-      'Affected tasks',
-      undefined,
-      { 'app:prebuild': [{ kind: 'input-file', file: 'libs/app/src/x.ts' }] }
+      {
+        affected: {
+          'app:build': [{ kind: 'dependent-output', producer: 'app:prebuild' }],
+        },
+        dependencies: {
+          'app:prebuild': [{ kind: 'input-file', file: 'libs/app/src/x.ts' }],
+        },
+      },
+      'Affected tasks'
     );
     expect(out).toContain(
       'Not selected, but carried the change to a selected task (1):'
@@ -163,7 +169,7 @@ describe('formatAffectedExplanation', () => {
   });
 
   it('sorts an entry reached only through a dependency to the bottom', () => {
-    const out = formatAffectedExplanation(reasons, 'Affected tasks');
+    const out = formatAffectedExplanation(selected, 'Affected tasks');
     expect(out.indexOf('ui:build')).toBeLessThan(out.indexOf('app:build'));
   });
 });
