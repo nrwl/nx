@@ -215,7 +215,7 @@ fn extension_after_wildcard(glob: &str) -> Option<String> {
 
 /// Segment-wise, so `dist/libs/ui` does not contain `dist/libs/ui-legacy` the
 /// way a plain `starts_with` would.
-fn is_path_prefix(prefix: &str, path: &str) -> bool {
+pub(super) fn is_path_prefix(prefix: &str, path: &str) -> bool {
     path == prefix
         || path
             .strip_prefix(prefix)

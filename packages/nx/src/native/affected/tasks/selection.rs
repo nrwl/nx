@@ -21,10 +21,11 @@ pub struct AffectedTasksOptions {
     /// `getPlugins` is async and spawns plugin workers.
     pub project_glob_patterns: Vec<String>,
     pub workspace_root: String,
-    /// Tasks of the projects a dependency change names outright, through
-    /// `projectsAffectedByDependencyUpdates` or as a workspace project the root
-    /// package.json depends on. Ids not in the task graph are ignored.
-    pub seed_task_ids: Vec<String>,
+    /// Tasks touched whatever their plan says: those of projects a dependency
+    /// change names outright (`projectsAffectedByDependencyUpdates`, or a
+    /// workspace project the root package.json depends on), and those whose
+    /// executor hashes outside its plan. Ids not in the task graph are ignored.
+    pub always_touched_task_ids: Vec<String>,
     /// External node names whose version or integrity moved. A plan carries them
     /// as `External(name)`, so a package is matched the way a path is.
     pub changed_externals: Vec<String>,
@@ -77,46 +78,29 @@ pub(crate) fn compute_affected_task_selection(
     let start = Instant::now();
     let (configs, deleted) = changed_project_configs(changed_files, options);
 
-    let externals = ChangedExternals::new(
-        &options.changed_externals,
-        &options.changed_external_types,
-        &graph.external_nodes,
-    );
-    let mut touched: HashSet<String> =
-        touched_tasks(graph, hash_plans, changed_files, &configs, &externals)?
-            .into_iter()
-            .collect();
-    touched.extend(
-        options
-            .seed_task_ids
-            .iter()
-            .filter(|id| task_graph.tasks.contains_key(*id))
-            .cloned(),
-    );
     // The project a deleted config described is gone, so no surviving task has
     // a fileset that names it and nothing narrower than everything is sound.
-    if !deleted.is_empty() {
-        touched.extend(task_graph.tasks.keys().cloned());
-    }
-    let touched_duration = start.elapsed();
-    trace!("{} tasks touched in {:?}", touched.len(), touched_duration);
+    let mut reached: Vec<String> = if deleted.is_empty() {
+        reached_by_change(
+            graph,
+            hash_plans,
+            task_graph,
+            changed_files,
+            &configs,
+            options,
+        )?
+    } else {
+        debug!("a project config was deleted, so every task is affected");
+        task_graph.tasks.keys().cloned().collect()
+    };
+    reached.sort_unstable();
 
-    let edges_start = Instant::now();
-    let producers_of = compute_dependent_output_edges(hash_plans, task_graph);
-    let edges_duration = edges_start.elapsed();
-    trace!(
-        "{} consumers read another task's outputs, resolved in {:?}",
-        producers_of.len(),
-        edges_duration
-    );
-
-    let propagate_start = Instant::now();
     let excluded: HashSet<&str> = options
         .excluded_projects
         .iter()
         .map(String::as_str)
         .collect();
-    let affected: Vec<String> = affected_through_output_reads(&touched, task_graph, &producers_of)
+    let affected: Vec<String> = reached
         .into_iter()
         .filter(|id| {
             task_graph.tasks.get(id).is_some_and(|task| {
@@ -125,27 +109,65 @@ pub(crate) fn compute_affected_task_selection(
             })
         })
         .collect();
-    let propagate_duration = propagate_start.elapsed();
 
     let closure_start = Instant::now();
     let required = dependency_closure(task_graph, affected.iter().map(String::as_str));
     let closure_duration = closure_start.elapsed();
 
     debug!(
-        "affected tasks selected in {:?} - {} changed files over {} tasks: {} touched ({:?}), {} consumers of outputs ({:?}), {} affected ({:?}), {} required ({:?})",
+        "affected tasks selected in {:?} - {} changed files over {} tasks: {} affected, {} required ({:?})",
         start.elapsed(),
         changed_files.len(),
         task_graph.tasks.len(),
-        touched.len(),
-        touched_duration,
-        producers_of.len(),
-        edges_duration,
         affected.len(),
-        propagate_duration,
         required.len(),
         closure_duration
     );
     Ok(AffectedTaskSelection { affected, required })
+}
+
+/// The tasks a change touches directly, the always-touched ones, and every
+/// task reading their outputs, before filtering to the requested targets.
+fn reached_by_change(
+    graph: &ProjectGraph,
+    hash_plans: &HashPlans,
+    task_graph: &TaskGraph,
+    changed_files: &[String],
+    configs: &[String],
+    options: &AffectedTasksOptions,
+) -> anyhow::Result<Vec<String>> {
+    let touched_start = Instant::now();
+    let externals = ChangedExternals::new(
+        &options.changed_externals,
+        &options.changed_external_types,
+        &graph.external_nodes,
+    );
+    let mut touched = touched_tasks(graph, hash_plans, changed_files, configs, &externals)?;
+    touched.extend(
+        options
+            .always_touched_task_ids
+            .iter()
+            .filter(|id| task_graph.tasks.contains_key(*id))
+            .cloned(),
+    );
+    let touched_duration = touched_start.elapsed();
+
+    let edges_start = Instant::now();
+    let producers_of = compute_dependent_output_edges(hash_plans, task_graph);
+    let edges_duration = edges_start.elapsed();
+
+    let propagate_start = Instant::now();
+    let reached = affected_through_output_reads(&touched, task_graph, &producers_of);
+    debug!(
+        "{} touched ({:?}), {} consumers of outputs ({:?}), {} reached ({:?})",
+        touched.len(),
+        touched_duration,
+        producers_of.len(),
+        edges_duration,
+        reached.len(),
+        propagate_start.elapsed()
+    );
+    Ok(reached)
 }
 
 /// Changed paths that are project configuration, split by whether the file is
@@ -191,7 +213,7 @@ fn changed_project_configs(
 
 /// Carries affectedness from a producer to the tasks that read its outputs, never along
 /// plain `dependsOn`. Reachability rather than an ordered pass, since continuous
-/// dependencies and cycles defeat any fixed order. Returns the affected set, sorted.
+/// dependencies and cycles defeat any fixed order.
 fn affected_through_output_reads(
     touched: &HashSet<String>,
     task_graph: &TaskGraph,
@@ -223,9 +245,7 @@ fn affected_through_output_reads(
         }
     }
 
-    let mut affected: Vec<String> = affected.into_iter().map(str::to_string).collect();
-    affected.sort_unstable();
-    affected
+    affected.into_iter().map(str::to_string).collect()
 }
 
 #[cfg(test)]
@@ -241,11 +261,11 @@ mod tests {
 
     /// Rooted at the repository rather than this crate, so `packages/nx/...`
     /// paths stat the real files the deletion check asks about.
-    fn options(seeds: &[&str]) -> AffectedTasksOptions {
+    fn options(always_touched: &[&str]) -> AffectedTasksOptions {
         AffectedTasksOptions {
             project_glob_patterns: strings(&["**/project.json", "**/package.json"]),
             workspace_root: format!("{}/../..", env!("CARGO_MANIFEST_DIR")),
-            seed_task_ids: strings(seeds),
+            always_touched_task_ids: strings(always_touched),
             changed_externals: vec![],
             changed_external_types: vec![],
             excluded_projects: vec![],
@@ -312,7 +332,7 @@ mod tests {
     }
 
     #[test]
-    fn a_seed_selects_the_task_and_ignores_ids_outside_the_graph() {
+    fn an_always_touched_task_is_selected_and_ids_outside_the_graph_ignored() {
         let g = graph(&[("a", "libs/a")]);
         let p = hash_plans(&[("a:build", vec![])]);
         let tg = task_graph(&[("a:build", &[])], &[]);

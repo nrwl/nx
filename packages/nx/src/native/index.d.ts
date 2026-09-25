@@ -452,11 +452,12 @@ export interface AffectedTasksOptions {
   projectGlobPatterns: Array<string>
   workspaceRoot: string
   /**
-   * Tasks of the projects a dependency change names outright, through
-   * `projectsAffectedByDependencyUpdates` or as a workspace project the root
-   * package.json depends on. Ids not in the task graph are ignored.
+   * Tasks touched whatever their plan says: those of projects a dependency
+   * change names outright (`projectsAffectedByDependencyUpdates`, or a
+   * workspace project the root package.json depends on), and those whose
+   * executor hashes outside its plan. Ids not in the task graph are ignored.
    */
-  seedTaskIds: Array<string>
+  alwaysTouchedTaskIds: Array<string>
   /**
    * External node names whose version or integrity moved. A plan carries them
    * as `External(name)`, so a package is matched the way a path is.

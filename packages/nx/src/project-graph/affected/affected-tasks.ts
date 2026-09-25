@@ -272,7 +272,7 @@ export async function selectAffectedTasks(
     {
       projectGlobPatterns: await getProjectGlobPatterns(nxJson),
       workspaceRoot,
-      seedTaskIds: taskIds.filter(
+      alwaysTouchedTaskIds: taskIds.filter(
         (id) =>
           namedProjects.has(taskGraph.tasks[id].target.project) ||
           hasCustomHasher(taskGraph.tasks[id], projects)

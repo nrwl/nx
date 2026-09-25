@@ -6,9 +6,10 @@
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 
+use super::dependent_outputs::is_path_prefix;
 use super::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::ProjectRoots;
-use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob};
+use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob, partition_glob};
 use crate::native::project_graph::types::{ExternalNode, ProjectGraph};
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
@@ -66,7 +67,7 @@ pub(crate) fn touched_tasks(
     changed_files: &[String],
     changed_project_configs: &[String],
     externals: &ChangedExternals,
-) -> anyhow::Result<Vec<String>> {
+) -> anyhow::Result<HashSet<String>> {
     let roots = ProjectRoots::new(graph);
     let changed = ChangedFiles::new(&roots, changed_files);
 
@@ -94,15 +95,12 @@ pub(crate) fn touched_tasks(
         matched[id as usize] = hit;
     }
 
-    let mut touched: Vec<String> = hash_plans
+    Ok(hash_plans
         .plans
         .par_iter()
         .filter(|(_, plan)| plan.iter().any(|&id| matched[id as usize]))
         .map(|(task_id, _)| task_id.clone())
-        .collect();
-    // `plans` is a HashMap, so sort for a reproducible answer.
-    touched.par_sort_unstable();
-    Ok(touched)
+        .collect())
 }
 
 /// The changed paths, normalized and indexed by owning project, so an instruction
@@ -139,6 +137,36 @@ impl<'a> ChangedFiles<'a> {
     }
 }
 
+/// The candidates under some positive glob's literal leading folders, the only
+/// place it can match, so most instructions are ruled out before compiling.
+/// Normalized first, which only widens the prefix.
+fn under_literal_prefix(
+    globs: &[String],
+    changed: &ChangedFiles,
+    candidates: &[usize],
+) -> Vec<usize> {
+    if candidates.is_empty() {
+        return Vec::new();
+    }
+    let prefixes: Vec<String> = globs
+        .iter()
+        .filter(|glob| !glob.starts_with('!'))
+        .map(|glob| partition_glob(&normalize_glob(glob)).0)
+        .collect();
+    if prefixes.iter().any(String::is_empty) {
+        return candidates.to_vec();
+    }
+    candidates
+        .iter()
+        .copied()
+        .filter(|&index| {
+            prefixes
+                .iter()
+                .any(|prefix| is_path_prefix(prefix, &changed.files[index]))
+        })
+        .collect()
+}
+
 /// Whether any changed file is one this instruction would hash. `TaskOutput` never
 /// matches; `affected_through_output_reads` carries it instead.
 fn instruction_matches(
@@ -150,8 +178,8 @@ fn instruction_matches(
     // Scoped to one project, the way the hasher scopes the same globs with
     // project_file_map, or workspace-wide when there is no owner to match.
     let any_matching = |globs: &[String], project: Option<&str>| -> anyhow::Result<bool> {
-        let candidates = changed.candidates(project);
-        if globs.is_empty() || candidates.is_empty() {
+        let candidates = under_literal_prefix(globs, changed, changed.candidates(project));
+        if candidates.is_empty() {
             return Ok(false);
         }
         let glob = build_glob_set(&fileset_patterns(globs))?;
@@ -245,7 +273,13 @@ mod tests {
         changed: &[&str],
     ) -> Vec<String> {
         let p = plans("a:build", instructions);
-        touched_tasks(g, &p, &strings(changed), &[], &no_externals()).unwrap()
+        sorted(touched_tasks(g, &p, &strings(changed), &[], &no_externals()).unwrap())
+    }
+
+    fn sorted(touched: HashSet<String>) -> Vec<String> {
+        let mut touched: Vec<String> = touched.into_iter().collect();
+        touched.sort();
+        touched
     }
 
     fn touched_for_externals(
@@ -265,14 +299,16 @@ mod tests {
         let p = plans("a:build", instructions);
         let moved = strings(moved);
         let types = strings(types);
-        touched_tasks(
-            &g,
-            &p,
-            &[],
-            &[],
-            &ChangedExternals::new(&moved, &types, &g.external_nodes),
+        sorted(
+            touched_tasks(
+                &g,
+                &p,
+                &[],
+                &[],
+                &ChangedExternals::new(&moved, &types, &g.external_nodes),
+            )
+            .unwrap(),
         )
-        .unwrap()
     }
 
     #[test]
@@ -601,7 +637,7 @@ mod tests {
         let config_b = strings(&["libs/b/project.json"]);
 
         let hit = touched_tasks(&g, &p, &config_a, &config_a, &no_externals()).unwrap();
-        assert_eq!(hit, strings(&["consumer:build"]));
+        assert_eq!(sorted(hit), strings(&["consumer:build"]));
 
         // Another project's config leaves it alone.
         let miss = touched_tasks(&g, &p, &config_b, &config_b, &no_externals()).unwrap();
@@ -620,9 +656,9 @@ mod tests {
         assert!(source.is_empty());
     }
 
-    /// `plans` is a HashMap, so the answer has to be sorted or it varies per run.
+    /// One instruction is checked once and answers for every plan that shares it.
     #[test]
-    fn the_touched_list_is_sorted() {
+    fn every_plan_sharing_a_matched_instruction_is_touched() {
         let g = graph(&[("a", "libs/a")]);
         let pool = Arc::new(InstructionPool::new());
         let id = pool.intern(HashInstruction::WorkspaceFileSet(strings(&[
@@ -638,6 +674,6 @@ mod tests {
             deferred: Default::default(),
         };
         let touched = touched_tasks(&g, &p, &strings(&["x.txt"]), &[], &no_externals()).unwrap();
-        assert_eq!(touched, strings(&["a:build", "m:build", "z:build"]));
+        assert_eq!(sorted(touched), strings(&["a:build", "m:build", "z:build"]));
     }
 }
