@@ -4,7 +4,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use tracing::warn;
 
 use super::all_project_names;
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob};
 use crate::native::project_graph::types::{Project, ProjectGraph, Target};
 use crate::native::types::{JsInputs, NxJson};
 
@@ -52,12 +52,21 @@ pub(super) fn implicitly_touched_projects(
 
     let mut touched: BTreeSet<&str> = BTreeSet::new();
     for (pattern, implicit) in &implicits {
-        // An unparseable fileset matches nothing; the hasher rejects the same glob.
-        let Ok(glob) = build_glob_set(&[*pattern]) else {
-            warn!("ignoring unparseable input fileset: {{workspaceRoot}}/{pattern}");
-            continue;
+        // Read the way the hasher reads it: slashes collapsed, and a literal path
+        // is that file or everything under it.
+        let pattern = normalize_glob(pattern);
+        let changed = match build_glob_set(&fileset_patterns(std::slice::from_ref(&pattern))) {
+            Ok(glob) => touched_files.iter().any(|file| glob.is_match(file)),
+            // Taken literally, as minimatch did, so the change still selects the
+            // project and the run surfaces the hasher's error for this glob.
+            Err(_) => {
+                warn!("matching unparseable input fileset literally: {{workspaceRoot}}/{pattern}");
+                touched_files
+                    .iter()
+                    .any(|file| file == &pattern || is_under(file, &pattern))
+            }
         };
-        if !touched_files.iter().any(|file| glob.is_match(file)) {
+        if !changed {
             continue;
         }
         match implicit {
@@ -67,6 +76,11 @@ pub(super) fn implicitly_touched_projects(
     }
 
     Ok(touched.into_iter().map(String::from).collect())
+}
+
+fn is_under(file: &str, folder: &str) -> bool {
+    file.strip_prefix(folder)
+        .is_some_and(|rest| rest.starts_with('/'))
 }
 
 type NamedInputs<'a> = HashMap<&'a str, &'a Vec<JsInputs>>;
@@ -295,25 +309,63 @@ mod tests {
         );
     }
 
-    /// A malformed fileset is skipped with a warning rather than aborting the command.
     #[test]
-    fn an_unparseable_fileset_is_ignored_rather_than_fatal() {
+    fn a_literal_fileset_covers_everything_under_it() {
+        let mut a = project("a");
+        a.targets = HashMap::from([(
+            "build".to_string(),
+            target_with_inputs(&["{workspaceRoot}/generated"]),
+        )]);
+        let g = graph(vec![("a", a), ("b", project("b"))]);
+
+        assert_eq!(
+            implicitly_touched_projects(
+                &g,
+                &nx_json_with_files_named_input(),
+                &files(&["generated/api.ts"])
+            )
+            .unwrap(),
+            vec!["a"]
+        );
+    }
+
+    #[test]
+    fn repeated_slashes_in_a_fileset_still_match() {
+        let mut a = project("a");
+        a.targets = HashMap::from([(
+            "build".to_string(),
+            target_with_inputs(&["{workspaceRoot}/config//**/*.json"]),
+        )]);
+        let g = graph(vec![("a", a), ("b", project("b"))]);
+
+        assert_eq!(
+            implicitly_touched_projects(
+                &g,
+                &nx_json_with_files_named_input(),
+                &files(&["config/dev.json"])
+            )
+            .unwrap(),
+            vec!["a"]
+        );
+    }
+
+    /// A malformed fileset is matched literally rather than aborting the command
+    /// or being dropped.
+    #[test]
+    fn an_unparseable_fileset_matches_its_literal_path() {
         let mut a = project("a");
         a.targets = HashMap::from([(
             "build".to_string(),
             target_with_inputs(&["{workspaceRoot}/config/[dev.json"]),
         )]);
         let g = graph(vec![("a", a)]);
+        let touched = |file| {
+            implicitly_touched_projects(&g, &nx_json_with_files_named_input(), &files(&[file]))
+                .unwrap()
+        };
 
-        assert!(
-            implicitly_touched_projects(
-                &g,
-                &nx_json_with_files_named_input(),
-                &files(&["config/dev.json"])
-            )
-            .unwrap()
-            .is_empty()
-        );
+        assert_eq!(touched("config/[dev.json"), vec!["a"]);
+        assert!(touched("config/dev.json").is_empty());
     }
 
     /// A named input that references itself terminates instead of overflowing the stack.
