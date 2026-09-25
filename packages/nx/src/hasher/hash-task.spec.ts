@@ -68,7 +68,7 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
     return { projectGraph, taskGraph };
   }
 
-  it('offers only tasks that might hash up front and assigns what the hasher returns', async () => {
+  it('offers every task without a custom hasher and assigns what the hasher returns', async () => {
     const { projectGraph, taskGraph } = graph();
     const hashTasksUpfront = vi.fn(async (tasks: { id: string }[]) => ({
       'app:build': hashOf('app:build'),
@@ -81,11 +81,12 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
       null
     );
 
-    // app:e2e reads outputs through its own inputs, so it is never planned
-    // up front; app:test's outputs hide behind ^production, so the hasher
-    // must see it to defer it.
+    // app:e2e reads outputs through its own inputs and app:test's hide
+    // behind ^production; only the hasher's plan can tell which upstream
+    // outputs each one really reads, so both are offered and it defers them.
     expect(hashTasksUpfront.mock.calls[0][0].map((t) => t.id).sort()).toEqual([
       'app:build',
+      'app:e2e',
       'app:test',
     ]);
     expect(taskGraph.tasks['app:build'].hash).toBe('hash-app:build');

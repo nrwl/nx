@@ -3,6 +3,7 @@ import '../internal-testing-utils/mock-fs';
 
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
+  collectUpstreamTaskIdsWithOutputs,
   findCycle,
   findCycles,
   makeAcyclic,
@@ -417,6 +418,48 @@ describe('task graph utils', () => {
          - b:watch <- a:build
         Parallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it.]
       `);
+    });
+  });
+
+  describe('collectUpstreamTaskIdsWithOutputs', () => {
+    // app -> install (no outputs) -> lib (outputs); app -> tool (no outputs)
+    const task = (id: string, outputs: string[]) => {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        outputs,
+        overrides: {},
+        parallelism: true,
+      };
+    };
+    const taskGraph: TaskGraph = {
+      roots: ['lib:build', 'tool:install'],
+      tasks: {
+        'app:build': task('app:build', ['dist/app']),
+        'plugin:install': task('plugin:install', []),
+        'lib:build': task('lib:build', ['dist/lib']),
+        'tool:install': task('tool:install', []),
+      },
+      dependencies: {
+        'app:build': ['plugin:install', 'tool:install'],
+        'plugin:install': ['lib:build'],
+        'lib:build': [],
+        'tool:install': [],
+      },
+      continuousDependencies: {},
+    };
+
+    it('drops dependencies that declare no outputs', () => {
+      expect(
+        collectUpstreamTaskIdsWithOutputs(taskGraph, 'app:build', false)
+      ).toEqual([]);
+    });
+
+    it('reaches outputs behind an output-less dependency when transitive', () => {
+      expect(
+        collectUpstreamTaskIdsWithOutputs(taskGraph, 'app:build', true)
+      ).toEqual(['lib:build']);
     });
   });
 });
