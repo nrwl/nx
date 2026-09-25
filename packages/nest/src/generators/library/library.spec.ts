@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import {
   getProjects,
   readJson,
@@ -17,7 +18,7 @@ describe('lib', () => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -353,17 +354,17 @@ describe('lib', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
       const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
+      formatFilesSpy = vi
         .spyOn(devkitModule, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files by default', async () => {
