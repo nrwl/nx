@@ -320,7 +320,7 @@ CI:
 {% /tabitem %}
 {% /tabs %}
 
-For other CI providers (Jenkins, Azure Pipelines, Bitbucket), see our guides to get the [last successful CI run for your CI provider](/docs/kb/setup-ci#get-the-commit-of-the-last-successful-build).
+For other CI providers (Jenkins, Azure Pipelines, Bitbucket), see our guides to get the [last successful CI run for your CI provider](/docs/kb/affected-base-commit).
 
 ## Ignoring files from affected commands
 
@@ -363,3 +363,15 @@ For binary Bun lockfiles (`bun.lockb`), Nx asks Bun to render the lockfile befor
 ## Not using git
 
 If you aren't using Git, you can pass `--files` to any affected command to indicate what files have been changed.
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Set the affected base commit in CI" description="How each CI provider passes the base and head commits" href="/docs/kb/affected-base-commit" /%}
+
+{% linkcard title="Reduce wasted time in CI" description="How affected and remote caching cut work from every run" href="/docs/kb/reduce-waste" /%}
+
+{% linkcard title="Reduce affected projects in a pipeline" description="Find why a pipeline affected more projects than expected" href="/docs/kb/cipe-affected-project-graph" /%}
+
+{% /cardgrid %}
