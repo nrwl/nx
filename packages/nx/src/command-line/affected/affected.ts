@@ -72,7 +72,7 @@ export async function affected(
   // own would.
   let projectGraph: ProjectGraph;
   let taskSelection: TaskSelection | undefined;
-  let projectNames: string[] = [];
+  let projects: ProjectGraphProjectNode[] = [];
   if (useTasks) {
     ({ projectGraph, taskSelection } = await getAffectedTasks(
       nxArgs,
@@ -81,22 +81,18 @@ export async function affected(
       extraTargetDependencies,
       extraOptions.excludeTaskDependencies
     ));
-    projectNames = initiatingProjects(taskSelection);
   } else {
     projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    const projects = await getAffectedGraphNodes(nxArgs, projectGraph);
-    if (command === 'affected') {
-      projectNames = allProjectsWithTarget(projects, nxArgs).map((p) => p.name);
-      if (!nxArgs.graph) {
-        taskSelection = selectTasksForProjects(
-          projectGraph,
-          projectNames,
-          nxArgs,
-          overrides,
-          extraTargetDependencies,
-          extraOptions.excludeTaskDependencies
-        );
-      }
+    projects = await getAffectedGraphNodes(nxArgs, projectGraph);
+    if (command === 'affected' && !nxArgs.graph) {
+      taskSelection = selectTasksForProjects(
+        projectGraph,
+        projectsWithTarget(projects, nxArgs),
+        nxArgs,
+        overrides,
+        extraTargetDependencies,
+        extraOptions.excludeTaskDependencies
+      );
     }
   }
 
@@ -104,6 +100,9 @@ export async function affected(
     switch (command) {
       case 'affected': {
         if (nxArgs.graph) {
+          const projectNames = useTasks
+            ? initiatingProjects(taskSelection)
+            : projectsWithTarget(projects, nxArgs);
           const file = readGraphFileFromGraphArg(nxArgs);
 
           return await generateGraph(
@@ -210,13 +209,13 @@ function initiatingProjects(selection: TaskSelection): string[] {
   ];
 }
 
-function allProjectsWithTarget(
+function projectsWithTarget(
   projects: ProjectGraphProjectNode[],
   nxArgs: NxArgs
-) {
-  return projects.filter((p) =>
-    nxArgs.targets.find((target) => projectHasTarget(p, target))
-  );
+): string[] {
+  return projects
+    .filter((p) => nxArgs.targets.find((target) => projectHasTarget(p, target)))
+    .map((p) => p.name);
 }
 
 function printError(e: any, verbose?: boolean) {
