@@ -70,7 +70,7 @@ describe('retryOnRequireEsmRace', () => {
       const racedModule =
         '/tmp/workspace because it is not yet fully loaded./node_modules/esm-only/index.js';
       const load = vi
-        .fn<Promise<string>, []>()
+        .fn<() => Promise<string>>()
         .mockRejectedValueOnce(raceError(racedModule, code))
         .mockResolvedValue('config');
       const importModule = vi.fn().mockResolvedValue(undefined);
@@ -89,7 +89,7 @@ describe('retryOnRequireEsmRace', () => {
     const error = Object.assign(new Error('new message format'), {
       code: 'ERR_REQUIRE_ESM_RACE_CONDITION',
     });
-    const load = vi.fn<Promise<string>, []>().mockRejectedValue(error);
+    const load = vi.fn<() => Promise<string>>().mockRejectedValue(error);
     const importModule = vi.fn().mockResolvedValue(undefined);
 
     await expect(retryOnRequireEsmRace(load, importModule)).rejects.toBe(error);
@@ -136,7 +136,7 @@ describe('retryOnRequireEsmRace', () => {
     const racedModule = '/x/node_modules/esm-only/index.js';
     const error = raceError(racedModule);
     const load = vi
-      .fn<Promise<string>, []>()
+      .fn<() => Promise<string>>()
       .mockRejectedValueOnce(error)
       .mockRejectedValueOnce(error)
       .mockResolvedValue('config');
@@ -151,7 +151,7 @@ describe('retryOnRequireEsmRace', () => {
 
   it('stops retrying after the retry limit', async () => {
     const error = raceError('/x/node_modules/esm-only/index.js');
-    const load = vi.fn<Promise<string>, []>().mockRejectedValue(error);
+    const load = vi.fn<() => Promise<string>>().mockRejectedValue(error);
     const importModule = vi.fn().mockResolvedValue(undefined);
 
     await expect(retryOnRequireEsmRace(load, importModule)).rejects.toBe(error);
