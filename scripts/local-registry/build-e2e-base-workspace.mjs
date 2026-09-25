@@ -18,8 +18,9 @@
  * it instead of running create-nx-workspace. A missing tarball is not an error;
  * newProject falls back to its original lazy build.
  *
- * Matrix entries are built concurrently. Failed entries remain absent so matching
- * callers use the lazy fallback; the task fails only when every entry fails.
+ * Matrix entries are built concurrently. Any failed entry fails the task: the output
+ * is cached, so a partial set would keep that combination on the lazy fallback on
+ * every later cache hit.
  */
 import { exec } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -106,9 +107,7 @@ for (const [{ pm, preset }, r] of failures) {
       `${String(stdout ?? '').slice(-4000)}\n${String(stderr ?? '').slice(-4000)}`
   );
 }
-if (failures.length === combos.length) {
-  // Every template failed: the fallback path would silently absorb this and every
-  // spec file would pay the cold start again, so fail loudly instead.
+if (failures.length > 0) {
   process.exit(1);
 }
 
