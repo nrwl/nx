@@ -5,8 +5,8 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { getLockFileName, setupWorkspaceContext } from '@nx/devkit/internal';
 import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
@@ -40,7 +40,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
     process.chdir(cwd);
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
