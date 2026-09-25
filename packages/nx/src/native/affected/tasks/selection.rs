@@ -422,28 +422,9 @@ fn instruction_matches(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::project_graph::types::Project;
     use crate::native::tasks::types::{InstructionPool, Task, TaskTarget};
+    use crate::native::test_utils::graph_of_roots as graph;
     use std::collections::HashMap;
-
-    fn graph(roots: &[(&str, &str)]) -> ProjectGraph {
-        ProjectGraph {
-            nodes: roots
-                .iter()
-                .map(|(name, root)| {
-                    (
-                        name.to_string(),
-                        Project {
-                            root: root.to_string(),
-                            ..Default::default()
-                        },
-                    )
-                })
-                .collect(),
-            dependencies: HashMap::new(),
-            external_nodes: HashMap::new(),
-        }
-    }
 
     fn strings(v: &[&str]) -> Vec<String> {
         v.iter().map(|s| s.to_string()).collect()

@@ -42,26 +42,7 @@ pub(crate) fn normalize_path(path: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::project_graph::types::Project;
-
-    fn graph(roots: &[(&str, &str)]) -> ProjectGraph {
-        ProjectGraph {
-            nodes: roots
-                .iter()
-                .map(|(name, root)| {
-                    (
-                        name.to_string(),
-                        Project {
-                            root: root.to_string(),
-                            ..Default::default()
-                        },
-                    )
-                })
-                .collect(),
-            dependencies: HashMap::new(),
-            external_nodes: HashMap::new(),
-        }
-    }
+    use crate::native::test_utils::graph_of_roots as graph;
 
     #[test]
     fn resolves_the_innermost_owning_project() {

@@ -10,6 +10,8 @@ pub mod metadata;
 pub mod plugins;
 pub mod project_graph;
 pub mod tasks;
+#[cfg(test)]
+pub(crate) mod test_utils;
 mod types;
 pub mod utils;
 mod walker;

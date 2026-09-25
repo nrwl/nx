@@ -156,8 +156,8 @@ fn collect_filesets<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_support::{files, graph, project};
     use super::*;
+    use crate::native::test_utils::{files, graph, project};
 
     fn string_inputs(values: &[&str]) -> Vec<JsInputs> {
         values.iter().map(|v| Either9::B(v.to_string())).collect()

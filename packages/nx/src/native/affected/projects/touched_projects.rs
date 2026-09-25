@@ -12,8 +12,8 @@ pub(super) fn touched_projects(graph: &ProjectGraph, touched_files: &[String]) -
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_support::{files, graph, project};
     use super::*;
+    use crate::native::test_utils::{files, graph, project};
 
     /// Unsorted: `touched_projects` emits one entry per changed file, in input
     /// order, and downstream dedupes.

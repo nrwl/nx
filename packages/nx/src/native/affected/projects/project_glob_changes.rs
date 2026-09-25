@@ -54,8 +54,8 @@ pub(super) fn projects_from_project_glob_changes(
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_support::{files, graph, project};
     use super::*;
+    use crate::native::test_utils::{files, graph, project};
 
     fn glob_options(deletion_affects_all: bool) -> AffectedOptions {
         AffectedOptions {

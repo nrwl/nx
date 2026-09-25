@@ -1,6 +1,4 @@
 mod implicit_dependencies;
-mod locators;
+pub mod locators;
 mod project_glob_changes;
-#[cfg(test)]
-mod test_support;
 mod touched_projects;
