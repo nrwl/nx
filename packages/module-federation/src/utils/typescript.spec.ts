@@ -1,6 +1,7 @@
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn((...args: any[]) =>
+import type { Mock } from 'vitest';
+vi.mock('fs', async () => ({
+  ...(await vi.importActual<any>('fs')),
+  existsSync: vi.fn((...args: any[]) =>
     (jest.requireActual('fs') as any).existsSync(...args)
   ),
 }));
@@ -8,10 +9,10 @@ const fs = require('fs');
 
 let readConfigFileResult: any;
 let parseJsonConfigFileContentResult: any;
-jest.mock('typescript', () => ({
-  ...jest.requireActual('typescript'),
-  readConfigFile: jest.fn().mockImplementation(() => readConfigFileResult),
-  parseJsonConfigFileContent: jest
+vi.mock('typescript', async () => ({
+  ...(await vi.importActual<any>('typescript')),
+  readConfigFile: vi.fn().mockImplementation(() => readConfigFileResult),
+  parseJsonConfigFileContent: vi
     .fn()
     .mockImplementation(() => parseJsonConfigFileContentResult),
 }));
@@ -19,10 +20,10 @@ jest.mock('typescript', () => ({
 import { readTsPathMappings } from './typescript';
 
 describe('readTsPathMappings', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it('should normalize paths', () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
+    (fs.existsSync as Mock).mockReturnValue(true);
     readConfigFileResult = {
       config: {
         options: {
