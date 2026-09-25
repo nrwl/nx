@@ -381,6 +381,8 @@ describe('assertSupportedPackageVersion', () => {
       .mockReturnValue('1.5.0');
     try {
       const tree = new FsTree(workspaceRoot, false);
+      // The unit-test workspace root is an empty scratch dir.
+      tree.write('package.json', '{}');
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
@@ -668,6 +670,8 @@ describe('getResolvedPackageVersion', () => {
       .mockReturnValue('2.5.0');
     try {
       const tree = new FsTree(workspaceRoot, false);
+      // The unit-test workspace root is an empty scratch dir.
+      tree.write('package.json', '{}');
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
