@@ -1,3 +1,6 @@
+// The shared vitest setup stubs ensurePackage at its source path.
+vi.unmock('./package-json');
+
 import * as packageManagerUtils from 'nx/src/utils/package-manager';
 import { createTree } from 'nx/src/generators/testing-utils/create-tree';
 import type { Tree } from 'nx/src/generators/tree';

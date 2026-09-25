@@ -21,6 +21,9 @@ vi.mock('nx/src/devkit-internals', async () => ({
   }),
 }));
 
+// The shared vitest setup stubs ensurePackage at its source path.
+vi.unmock('./package-json');
+
 import { ensurePackage } from './package-json';
 
 describe('ensurePackage resolution', () => {
