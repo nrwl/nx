@@ -11,7 +11,11 @@ import {
   type ProjectGraph,
   type Tree,
 } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -67,39 +71,29 @@ vi.mock('@nx/devkit', async () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-vi.mock('nx/src/devkit-internals', () => {
-  // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
-  const getActual = () =>
-    jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
-  const getActualDevkitInternals = () =>
-    jest.requireActual('nx/src/devkit-internals');
-
-  return new Proxy(
-    {},
-    {
-      get(target, prop) {
-        if (prop === 'getExecutorInformation') {
-          // Read the executor schema from source so this unit test does not
-          // depend on @nx/webpack being built. executors.json points `schema`
-          // at ./dist (only present after copy-assets); readTargetOptions only
-          // consumes `schema`.
-          return vi.fn().mockImplementation((_pkg, executorName) => ({
-            schema: JSON.parse(
-              readFileSync(
-                join(__dirname, '../../executors', executorName, 'schema.json'),
-                'utf-8'
-              )
-            ),
-          }));
-        }
-        if (prop === 'retrieveProjectConfigurations') {
-          return getActual().retrieveProjectConfigurations;
-        }
-        // For all other properties, return from the actual module
-        return getActualDevkitInternals()[prop];
-      },
-    }
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
+  const { retrieveProjectConfigurations } = await vi.importActual<any>(
+    'nx/src/project-graph/utils/retrieve-workspace-files'
   );
+  return {
+    ...actual,
+    retrieveProjectConfigurations,
+    // Read the executor schema from source so this unit test does not
+    // depend on @nx/webpack being built. executors.json points `schema`
+    // at ./dist (only present after copy-assets); readTargetOptions only
+    // consumes `schema`.
+    getExecutorInformation: vi
+      .fn()
+      .mockImplementation((_pkg, executorName) => ({
+        schema: JSON.parse(
+          readFileSync(
+            join(__dirname, '../../executors', executorName, 'schema.json'),
+            'utf-8'
+          )
+        ),
+      })),
+  };
 });
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
@@ -165,9 +159,12 @@ function writeWebpackConfig(
 ) {
   tree.write(`${projectRoot}/webpack.config.js`, webpackConfig);
   fs.createFileSync(`${projectRoot}/webpack.config.js`, webpackConfig);
-  vi.doMock(join(fs.tempDir, projectRoot, 'webpack.config.js'), () => ({}), {
-    virtual: true,
-  });
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
+    join(fs.tempDir, projectRoot, 'webpack.config.js'),
+    {}
+  );
 }
 
 function createProject(
@@ -285,6 +282,7 @@ describe('convert-to-inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
+    resetCjsMocks();
     vi.resetModules();
   });
 
