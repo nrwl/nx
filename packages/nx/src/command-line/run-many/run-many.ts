@@ -53,6 +53,16 @@ export async function runMany(
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projects = projectsToRun(nxArgs, projectGraph);
 
+  // Drawn by --graph and run otherwise, so the two agree.
+  const taskSelection = selectTasksForProjects(
+    projectGraph,
+    projects.map((p) => p.name),
+    nxArgs,
+    overrides,
+    extraTargetDependencies,
+    extraOptions.excludeTaskDependencies
+  );
+
   if (nxArgs.graph) {
     const file = readGraphFileFromGraphArg(nxArgs);
     const projectNames = projects.map((t) => t.name);
@@ -65,19 +75,14 @@ export async function runMany(
         targets: nxArgs.targets,
         projects: projectNames,
         file,
+        taskSelection,
+        configuration: nxArgs.configuration,
       },
       projectNames
     );
   } else {
     const status = await runCommand(
-      selectTasksForProjects(
-        projectGraph,
-        projects.map((p) => p.name),
-        nxArgs,
-        overrides,
-        extraTargetDependencies,
-        extraOptions.excludeTaskDependencies
-      ),
+      taskSelection,
       projectGraph,
       { nxJson },
       nxArgs,

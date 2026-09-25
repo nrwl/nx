@@ -380,16 +380,18 @@ describe('taskGraphForSelection', () => {
     const narrowed = { ...built, tasks: { 'app:build': task('app:build') } };
     const build = vi.fn(() => built);
     expect(
-      taskGraphForSelection(build, ['app:build', 'lib:build'], narrowed)
+      taskGraphForSelection(build, {
+        taskGraph: narrowed,
+        taskIds: ['app:build', 'lib:build'],
+      })
     ).toBe(narrowed);
     expect(build).not.toHaveBeenCalled();
   });
 
-  it('builds and prunes to the selection when none was narrowed', () => {
-    const drawn = taskGraphForSelection(
-      () => built,
-      ['app:build', 'lib:build']
-    );
+  it('builds and prunes to the ids when given no graph, as the live graph is', () => {
+    const drawn = taskGraphForSelection(() => built, {
+      taskIds: ['app:build', 'lib:build'],
+    });
     expect(Object.keys(drawn.tasks).sort()).toEqual(['app:build', 'lib:build']);
   });
 

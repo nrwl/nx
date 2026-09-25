@@ -16,6 +16,7 @@ import {
 } from '../../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { TaskResult } from '../../tasks-runner/life-cycle';
+import type { NxArgs } from '../../utils/command-line-utils';
 import {
   runTasksForCommand,
   selectTasksForProjects,
@@ -275,6 +276,14 @@ async function runPublishOnProjects(
         targets: [requiredTargetName],
         projects: projectNamesWithTarget,
         file,
+        taskSelection: selectTasksForProjects(
+          projectGraph,
+          projectNamesWithTarget,
+          { targets: [requiredTargetName] } as NxArgs,
+          overrides,
+          {},
+          extraOptions.excludeTaskDependencies
+        ),
       },
       projectNamesWithTarget
     );

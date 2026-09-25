@@ -92,7 +92,7 @@ export async function affected(
   } else {
     projectGraph = await createProjectGraphAsync({ exitOnError: true });
     projects = await getAffectedGraphNodes(nxArgs, projectGraph);
-    if (command === 'affected' && !nxArgs.graph) {
+    if (command === 'affected') {
       taskSelection = selectTasksForProjects(
         projectGraph,
         projectsWithTarget(projects, nxArgs),
@@ -124,8 +124,7 @@ export async function affected(
                 (!nxArgs.projects || nxArgs.projects.length === 0),
               projects: projectNames,
               file,
-              selectedTaskIds: taskSelection?.taskIds,
-              selectedTaskGraph: taskSelection?.taskGraph,
+              taskSelection,
               configuration: nxArgs.configuration,
             },
             projectNames

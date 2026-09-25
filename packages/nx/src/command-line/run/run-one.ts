@@ -77,6 +77,16 @@ export async function runOne(
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
+  // Drawn by --graph and run otherwise, so the two agree.
+  const taskSelection = selectTasksForProjects(
+    projectGraph,
+    projects.map((p) => p.name),
+    nxArgs,
+    overrides,
+    extraTargetDependencies,
+    extraOptions.excludeTaskDependencies
+  );
+
   if (nxArgs.graph) {
     const projectNames = projects.map((t) => t.name);
     const file = readGraphFileFromGraphArg(nxArgs);
@@ -89,19 +99,14 @@ export async function runOne(
         targets: nxArgs.targets,
         projects: projectNames,
         file,
+        taskSelection,
+        configuration: nxArgs.configuration,
       },
       projectNames
     );
   } else {
     const status = await runCommand(
-      selectTasksForProjects(
-        projectGraph,
-        projects.map((p) => p.name),
-        nxArgs,
-        overrides,
-        extraTargetDependencies,
-        extraOptions.excludeTaskDependencies
-      ),
+      taskSelection,
       projectGraph,
       { nxJson },
       nxArgs,
