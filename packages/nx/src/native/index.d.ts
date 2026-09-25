@@ -1201,6 +1201,8 @@ export interface TaskInputMatches {
   packages: Array<string>
   /** The plan hashes every external dependency, and one moved. */
   allExternals: boolean
+  /** Changed config files of the projects whose configuration the plan hashes. */
+  projectConfigs: Array<string>
 }
 
 /**

@@ -231,8 +231,14 @@ pub(crate) fn compute_affected_task_explanation(
         changed_files,
         options.selectively_hash_ts_config,
     );
-    let mut input_matches =
-        compute_input_matches(graph, hash_plans, changed_files, &externals, &contents)?;
+    let mut input_matches = compute_input_matches(
+        graph,
+        hash_plans,
+        changed_files,
+        &configs,
+        &externals,
+        &contents,
+    )?;
     input_matches.retain(|id, _| reached.contains(id.as_str()));
 
     Ok(AffectedTaskExplanation {
@@ -1015,5 +1021,29 @@ mod tests {
         let e = compute_affected_task_explanation(&g, &p, &tg, &strings(&[deleted]), &options(&[]))
             .unwrap();
         assert_eq!(e.deleted_project_configs, strings(&[deleted]));
+    }
+
+    /// A config change resolves to no files, so no fileset can name it; the
+    /// explanation has to name the config itself.
+    #[test]
+    fn the_explanation_names_a_changed_project_config() {
+        let g = graph(&[("a", "packages/nx"), ("b", "packages/js")]);
+        let p = plans(
+            "b:build",
+            vec![HashInstruction::ProjectConfiguration("a".into())],
+        );
+        let tg = task_graph(&[("b:build", &[])], &[]);
+        let e = compute_affected_task_explanation(
+            &g,
+            &p,
+            &tg,
+            &strings(&["packages/nx/package.json"]),
+            &options(&[]),
+        )
+        .unwrap();
+        assert_eq!(
+            e.input_matches["b:build"].project_configs,
+            strings(&["packages/nx/package.json"])
+        );
     }
 }

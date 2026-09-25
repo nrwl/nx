@@ -117,6 +117,29 @@ describe('computeAffectedTasks', () => {
     );
   });
 
+  it('explains a task reached through a changed project config', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/package.json',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+    for (const task of ['lib:test', 'app:test']) {
+      expect(explanation.affected[task]).toContainEqual({
+        kind: 'project-configuration',
+        file: 'packages/nx/package.json',
+      });
+    }
+  });
+
   /**
    * The project the config described is gone from the graph, so no surviving
    * task has a fileset that names it and nothing narrower than everything is

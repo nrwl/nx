@@ -288,25 +288,40 @@ pub struct TaskInputMatches {
     pub packages: Vec<String>,
     /// The plan hashes every external dependency, and one moved.
     pub all_externals: bool,
+    /// Changed config files of the projects whose configuration the plan hashes.
+    pub project_configs: Vec<String>,
 }
 
 impl TaskInputMatches {
     fn matched(&self) -> bool {
-        !self.files.is_empty() || !self.packages.is_empty() || self.all_externals
+        !self.files.is_empty()
+            || !self.packages.is_empty()
+            || self.all_externals
+            || !self.project_configs.is_empty()
     }
 }
 
 /// Per task, every changed file its plan matched with the pattern responsible,
-/// and every moved package it hashes.
+/// every moved package it hashes, and every changed config it hashes.
+///
+/// `changed_project_configs` is the subset of `changed_files` that is project
+/// configuration still on disk.
 pub(crate) fn compute_input_matches(
     graph: &ProjectGraph,
     hash_plans: &HashPlans,
     changed_files: &[String],
+    changed_project_configs: &[String],
     externals: &ChangedExternals,
     contents: &ChangedContents,
 ) -> anyhow::Result<HashMap<String, TaskInputMatches>> {
     let roots = ProjectRoots::new(graph);
     let changed = ChangedFiles::new(&roots, changed_files);
+    let mut reconfigured: HashMap<&str, Vec<String>> = HashMap::new();
+    for file in changed_project_configs {
+        if let Some(project) = roots.owner_of(&normalize_js_path(file)) {
+            reconfigured.entry(project).or_default().push(file.clone());
+        }
+    }
 
     // Per instruction, what it matched. Only instructions that matched
     // something are kept.
@@ -317,6 +332,7 @@ pub(crate) fn compute_input_matches(
                 hash_plans.pool.get(id).value(),
                 &changed,
                 changed_files,
+                &reconfigured,
                 externals,
                 contents,
             )?;
@@ -334,6 +350,9 @@ pub(crate) fn compute_input_matches(
                 merged.files.extend(hits.files.iter().cloned());
                 merged.packages.extend(hits.packages.iter().cloned());
                 merged.all_externals |= hits.all_externals;
+                merged
+                    .project_configs
+                    .extend(hits.project_configs.iter().cloned());
             }
             if !merged.matched() {
                 return None;
@@ -346,6 +365,8 @@ pub(crate) fn compute_input_matches(
                 .dedup_by(|a, b| a.file == b.file && a.pattern == b.pattern);
             merged.packages.sort_unstable();
             merged.packages.dedup();
+            merged.project_configs.sort_unstable();
+            merged.project_configs.dedup();
             Some((task_id.clone(), merged))
         })
         .collect())
@@ -361,6 +382,7 @@ fn instruction_matches_detail(
     instruction: &HashInstruction,
     changed: &ChangedFiles,
     raw_files: &[String],
+    reconfigured: &HashMap<&str, Vec<String>>,
     externals: &ChangedExternals,
     contents: &ChangedContents,
 ) -> anyhow::Result<TaskInputMatches> {
@@ -467,6 +489,13 @@ fn instruction_matches_detail(
         }),
         HashInstruction::AllExternalDependencies => Ok(TaskInputMatches {
             all_externals: externals.any(),
+            ..Default::default()
+        }),
+        HashInstruction::ProjectConfiguration(project) => Ok(TaskInputMatches {
+            project_configs: reconfigured
+                .get(project.as_str())
+                .cloned()
+                .unwrap_or_default(),
             ..Default::default()
         }),
         _ => Ok(TaskInputMatches::default()),
@@ -1084,6 +1113,7 @@ mod tests {
             &g,
             &p,
             &strings(&["libs/a/src/x.ts", "libs/a/src/x.spec.ts"]),
+            &[],
             &no_externals(),
             &ChangedContents::default(),
         )
@@ -1115,6 +1145,7 @@ mod tests {
         let hits = compute_input_matches(
             &g,
             &p,
+            &[],
             &[],
             &ChangedExternals::new(&moved, &[], &g.external_nodes),
             &ChangedContents::default(),

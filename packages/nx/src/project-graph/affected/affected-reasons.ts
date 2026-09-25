@@ -21,6 +21,8 @@ export type AffectedReasonKind =
   | 'workspace-configuration'
   /** A project config no longer on disk, so its project is gone. */
   | 'deleted-project-configuration'
+  /** Task-level: a project config the task hashes changed. */
+  | 'project-configuration'
   /** A lockfile changed. */
   | 'lockfile'
   /** An external package's version moved. */
@@ -114,6 +116,8 @@ export function formatAffectedReason(reason: AffectedReason): string {
       return `${reason.file} changed, which can restructure the task graph`;
     case 'deleted-project-configuration':
       return `${reason.file} was deleted`;
+    case 'project-configuration':
+      return `project configuration in ${reason.file} changed`;
     case 'lockfile':
       return `lockfile ${reason.file} changed`;
     case 'npm-package':
