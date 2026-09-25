@@ -43,7 +43,6 @@ const projectGraph = {
 
 const explain = (nxArgs: object) =>
   explainAffectedProjects(
-    'affected',
     { targets: ['build'], files: ['packages/nx/src/x.ts'], ...nxArgs } as any,
     projectGraph,
     {} as any
@@ -68,11 +67,5 @@ describe('explainAffectedProjects', () => {
     const { affected, dependencies } = await explain({ exclude: ['js'] });
     expect(Object.keys(affected).sort()).toEqual(['devkit', 'nx']);
     expect(dependencies).toEqual({});
-  });
-
-  it('gives --all its own reason instead of explaining the diff', async () => {
-    const { affected } = await explain({ all: true });
-    expect(Object.keys(affected).sort()).toEqual(['devkit', 'js', 'nx']);
-    expect(affected.js).toEqual([{ kind: 'all-projects' }]);
   });
 });

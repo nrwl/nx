@@ -147,7 +147,6 @@ describe('formatAffectedReason', () => {
       { kind: 'npm-package', package: 'npm:lodash' },
       { kind: 'tsconfig', file: 'tsconfig.base.json' },
       { kind: 'tsconfig-paths', file: 'tsconfig.base.json' },
-      { kind: 'all-projects' },
       { kind: 'custom-hasher' },
       { kind: 'external-dependencies', file: 'pnpm-lock.yaml' },
       { kind: 'dependency', dependency: 'ui' },

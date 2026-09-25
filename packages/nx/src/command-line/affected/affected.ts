@@ -37,7 +37,6 @@ import {
   explainSelection,
   isExplaining,
   type AffectedExplanation,
-  type AffectedReason,
 } from '../../project-graph/affected/affected-reasons';
 import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
 
@@ -121,7 +120,7 @@ export async function affected(
     projectGraph = await createProjectGraphAsync({ exitOnError: true });
     if (isExplaining(nxArgs.explain)) {
       printAffectedExplanation(
-        await explainAffectedProjects(command, nxArgs, projectGraph, nxJson),
+        await explainAffectedProjects(nxArgs, projectGraph, nxJson),
         'Affected projects',
         nxArgs.explain
       );
@@ -235,29 +234,19 @@ function initiatingProjects(selection: TaskSelection): string[] {
 }
 
 /**
- * Explains the projects the run acts on: `--all` or the diff, less `--exclude`,
- * and for `affected` only the projects with a requested target.
+ * Explains the projects the run acts on: the diff, less `--exclude`, and only
+ * the projects with a requested target.
  */
 export async function explainAffectedProjects(
-  command: 'graph' | 'print-affected' | 'affected',
   nxArgs: NxArgs,
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ): Promise<AffectedExplanation> {
-  const reasons: Record<string, AffectedReason[]> = nxArgs.all
-    ? Object.fromEntries(
-        Object.keys(projectGraph.nodes).map((name) => [
-          name,
-          [{ kind: 'all-projects' }],
-        ])
-      )
-    : (
-        await filterAffectedWithReasons(
-          projectGraph,
-          calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
-          nxJson
-        )
-      ).reasons;
+  const { reasons } = await filterAffectedWithReasons(
+    projectGraph,
+    calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+    nxJson
+  );
   const excluded = new Set(
     nxArgs.exclude
       ? findMatchingProjects(nxArgs.exclude, projectGraph.nodes)
@@ -267,8 +256,7 @@ export async function explainAffectedProjects(
     reasons,
     (name) =>
       !excluded.has(name) &&
-      (command !== 'affected' ||
-        projectsWithTarget([projectGraph.nodes[name]], nxArgs).length > 0)
+      projectsWithTarget([projectGraph.nodes[name]], nxArgs).length > 0
   );
 }
 
