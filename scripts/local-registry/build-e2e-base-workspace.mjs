@@ -191,7 +191,27 @@ function registryEnv(cacheRoot) {
     YARN_ENABLE_GLOBAL_CACHE: 'false',
     BUN_CONFIG_REGISTRY: registry,
     BUN_CONFIG_TOKEN: authToken,
+    // The initial commit can leave enough loose objects for git to start gc in the
+    // background, which deletes them while the template is packed (ENOENT under
+    // .git/objects) or removed (ENOTEMPTY).
+    ...gitConfigEnv({ 'gc.auto': '0', 'maintenance.auto': 'false' }),
   };
+}
+
+/**
+ * Git config as `GIT_CONFIG_*` env vars, appended after any the caller already set.
+ * @param {Record<string, string>} entries
+ */
+function gitConfigEnv(entries) {
+  const start = Number(process.env.GIT_CONFIG_COUNT ?? 0);
+  /** @type {Record<string, string>} */
+  const env = {};
+  Object.entries(entries).forEach(([key, value], i) => {
+    env[`GIT_CONFIG_KEY_${start + i}`] = key;
+    env[`GIT_CONFIG_VALUE_${start + i}`] = value;
+  });
+  env.GIT_CONFIG_COUNT = String(start + Object.keys(entries).length);
+  return env;
 }
 
 /** @param {{ pm: string, preset: string }} combo */
