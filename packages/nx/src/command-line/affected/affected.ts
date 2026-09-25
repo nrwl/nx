@@ -58,9 +58,6 @@ export async function affected(
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
-  const projectGraph = await createProjectGraphAsync({
-    exitOnError: true,
-  });
   // Task selection needs a target to select against, so `nx graph --affected`
   // and the deprecated print-affected stay project-grained.
   const useTasks =
@@ -68,16 +65,15 @@ export async function affected(
     command === 'affected' &&
     !!nxArgs.targets?.length;
 
-  const { projects, taskSelection } = useTasks
+  const { projectGraph, projects, taskSelection } = useTasks
     ? await getAffectedTasks(
         nxArgs,
-        projectGraph,
         nxJson,
         overrides,
         extraTargetDependencies,
         extraOptions.excludeTaskDependencies
       )
-    : { projects: await getAffectedGraphNodes(nxArgs, projectGraph) };
+    : await getAffectedProjects(nxArgs);
 
   try {
     switch (command) {
@@ -140,39 +136,64 @@ export async function getAffectedGraphNodes(
         calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
       );
 
-  const excluded = excludedProjects(nxArgs, affectedGraph.nodes);
-  return Object.entries(affectedGraph.nodes)
-    .filter(([projectName]) => !excluded.has(projectName))
-    .map(([, project]) => project);
+  if (nxArgs.exclude) {
+    const excludedProjects = new Set(
+      findMatchingProjects(nxArgs.exclude, affectedGraph.nodes)
+    );
+
+    return Object.entries(affectedGraph.nodes)
+      .filter(([projectName]) => !excludedProjects.has(projectName))
+      .map(([, project]) => project);
+  }
+
+  return Object.values(affectedGraph.nodes);
 }
 
+async function getAffectedProjects(nxArgs: NxArgs): Promise<{
+  projectGraph: ProjectGraph;
+  projects: ProjectGraphProjectNode[];
+  taskSelection?: TaskSelection;
+}> {
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  return {
+    projectGraph,
+    projects: await getAffectedGraphNodes(nxArgs, projectGraph),
+  };
+}
+
+/** Runs with the graph selection used, which the daemon returns rather than one fetched first. */
 async function getAffectedTasks(
   nxArgs: NxArgs,
-  projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   overrides: Record<string, unknown>,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   excludeTaskDependencies: boolean
 ): Promise<{
+  projectGraph: ProjectGraph;
   projects: ProjectGraphProjectNode[];
   taskSelection: TaskSelection;
 }> {
   const {
+    projectGraph,
     affectedTaskIds,
     requiredTaskIds,
     taskGraph,
     runTaskGraph,
     planningContext,
   } = await computeAffectedTasks({
-    projectGraph,
     nxJson,
     targets: nxArgs.targets,
     touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+    fileChangeArgs: {
+      base: nxArgs.base,
+      head: nxArgs.head,
+      files: nxArgs.files,
+    },
     configuration: nxArgs.configuration,
     overrides,
     extraTargetDependencies,
     excludeTaskDependencies,
-    excludedProjects: [...excludedProjects(nxArgs, projectGraph.nodes)],
+    exclude: nxArgs.exclude,
   });
   // runCommand still seeds the graph from projects; the prune is what narrows
   // it back down to the selected tasks and their dependencies.
@@ -180,6 +201,7 @@ async function getAffectedTasks(
     [...affectedTaskIds].map((id) => taskGraph.tasks[id].target.project)
   );
   return {
+    projectGraph,
     projects: [...owning].map((name) => projectGraph.nodes[name]),
     taskSelection: {
       taskIds: requiredTaskIds,
@@ -187,15 +209,6 @@ async function getAffectedTasks(
       taskGraph: runTaskGraph,
     },
   };
-}
-
-function excludedProjects(
-  nxArgs: NxArgs,
-  nodes: Record<string, ProjectGraphProjectNode>
-): Set<string> {
-  return new Set(
-    nxArgs.exclude ? findMatchingProjects(nxArgs.exclude, nodes) : []
-  );
 }
 
 function allProjectsWithTarget(

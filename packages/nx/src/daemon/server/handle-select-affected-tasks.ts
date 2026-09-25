@@ -30,6 +30,7 @@ export async function handleSelectAffectedTasks(
   }
 
   const response: SelectAffectedTasksResponse = {
+    projectGraph,
     affectedTaskIds: [...selection.affectedTaskIds],
     requiredTaskIds: selection.requiredTaskIds,
     runTaskGraph: selection.runTaskGraph,

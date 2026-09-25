@@ -1,3 +1,4 @@
+import type { ProjectGraph } from '../../config/project-graph';
 import type { TaskGraph } from '../../config/task-graph';
 import type { AffectedTasksRequest } from '../../project-graph/affected/affected-tasks';
 
@@ -9,6 +10,8 @@ export type HandleSelectAffectedTasksMessage = {
 };
 
 export type SelectAffectedTasksResponse = {
+  /** The graph selection ran against, for the command to run with. */
+  projectGraph: ProjectGraph;
   affectedTaskIds: string[];
   requiredTaskIds: string[];
   taskGraph: TaskGraph;

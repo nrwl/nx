@@ -273,7 +273,7 @@ describe('computeAffectedTasks', () => {
           getChanges: () => [new WholeFileChange()],
         },
       ] as any,
-      excludedProjects: ['lib'],
+      exclude: ['lib'],
     });
     expect([...result.affectedTaskIds]).toEqual(['app:test']);
     expect(result.requiredTaskIds).toEqual(['app:test']);
@@ -364,7 +364,9 @@ describe('computeAffectedTasks with the daemon on', () => {
 
   it('asks the daemon to select, sending the request as plain data', async () => {
     daemon.enabled.mockReturnValueOnce(true);
+    const daemonGraph = graph();
     daemon.selectAffectedTasks.mockResolvedValueOnce({
+      projectGraph: daemonGraph,
       affectedTaskIds: ['lib:test'],
       requiredTaskIds: ['lib:test'],
       taskGraph: {
@@ -394,7 +396,7 @@ describe('computeAffectedTasks with the daemon on', () => {
       overrides: {},
       extraTargetDependencies: {},
       excludeTaskDependencies: false,
-      excludedProjects: [],
+      exclude: [],
     });
     // A FileChange's lazy getChanges() cannot cross the socket.
     expect(JSON.parse(JSON.stringify(request))).toEqual(request);
@@ -402,6 +404,39 @@ describe('computeAffectedTasks with the daemon on', () => {
     expect(result.requiredTaskIds).toEqual(['lib:test']);
     // The plans stay in the daemon, which is what hashes them.
     expect(result.planningContext).toBeUndefined();
+    // The command runs with the graph the daemon selected against.
+    expect(result.projectGraph).toBe(daemonGraph);
+  });
+
+  // The graph fetch is what recovers from a daemon that cannot answer, and an
+  // error in selection itself recurs in-process.
+  it('selects in-process when the daemon cannot', async () => {
+    daemon.enabled.mockReturnValueOnce(true);
+    daemon.selectAffectedTasks.mockRejectedValueOnce(
+      new Error('socket closed')
+    );
+    const projectGraph = graph();
+
+    const result = await computeAffectedTasks({
+      projectGraph,
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/src/x.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+    });
+
+    expect(result.projectGraph).toBe(projectGraph);
+    expect([...result.affectedTaskIds].sort()).toEqual([
+      'app:test',
+      'lib:test',
+    ]);
+    expect(result.planningContext).toBeDefined();
   });
 
   // The daemon handles SELECT_AFFECTED_TASKS by calling the same selection;

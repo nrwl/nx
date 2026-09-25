@@ -9,8 +9,18 @@ import {
 } from '../../tasks-runner/create-task-graph';
 import { runnableForTarget } from '../../utils/project-graph-utils';
 import { getExecutorForTask } from '../../tasks-runner/utils';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph';
-import { FileChange, readPackageJson } from '../file-utils';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph';
+import {
+  calculateFileChanges,
+  FileChange,
+  readPackageJson,
+} from '../file-utils';
+import type { NxArgs } from '../../utils/command-line-utils';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { logger } from '../../utils/logger';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createTaskPlanningContext,
@@ -38,6 +48,8 @@ export function selectsAffectedTasks(): boolean {
 }
 
 export interface AffectedTasksResult {
+  /** The graph selection ran against, which the command should run with too. */
+  projectGraph: ProjectGraph;
   /** Tasks that are themselves affected — NOT their dependency closure. */
   affectedTaskIds: Set<string>;
   /** `affectedTaskIds` plus everything they depend on: what a run keeps. */
@@ -54,32 +66,41 @@ export interface AffectedTasksResult {
 }
 
 export interface ComputeAffectedTasksOptions {
-  projectGraph: ProjectGraph;
+  /**
+   * Selected against when the daemon is off, and fetched when absent. With the
+   * daemon on, its own graph is used and returned instead.
+   */
+  projectGraph?: ProjectGraph;
   nxJson: NxJsonConfiguration;
   targets: string[];
   touchedFiles: FileChange[];
+  /** What `touchedFiles` was computed from, so the daemon reads the same diff. */
+  fileChangeArgs?: FileChangeArgs;
   configuration?: string;
   overrides?: Record<string, unknown>;
   extraTargetDependencies?: TargetDependencies;
   excludeTaskDependencies?: boolean;
-  /** Projects whose tasks are dropped from the selection, but not from its dependencies. */
-  excludedProjects?: string[];
+  /** `--exclude` patterns: matching tasks are dropped from the selection, but not from its dependencies. */
+  exclude?: string[];
   packageJson?: any;
 }
 
+export type FileChangeArgs = Pick<NxArgs, 'base' | 'head' | 'files'>;
+
 /**
  * What selection needs from the command, reduced to plain data so the daemon
- * can run it. The lockfile diff reads git, so it is taken here.
+ * can run it. Anything read against the project graph, like `--exclude` and the
+ * lockfile diff, is resolved by whichever process selects.
  */
 export interface AffectedTasksRequest {
   targets: string[];
   changedFiles: string[];
+  fileChangeArgs?: FileChangeArgs;
   configuration?: string;
   overrides: Record<string, unknown>;
   extraTargetDependencies: TargetDependencies;
   excludeTaskDependencies: boolean;
-  excludedProjects: string[];
-  dependencies: DependencyChanges;
+  exclude: string[];
 }
 
 /**
@@ -88,7 +109,8 @@ export interface AffectedTasksRequest {
  *
  * With the daemon on, the daemon selects: it hashes the tasks that run, and
  * plans are native memory that cannot cross to it, so selecting anywhere else
- * would plan every task twice.
+ * would plan every task twice. It returns the graph it selected against, so
+ * the command runs with that graph rather than one fetched a moment earlier.
  */
 export async function computeAffectedTasks(
   opts: ComputeAffectedTasksOptions
@@ -96,40 +118,44 @@ export async function computeAffectedTasks(
   const request: AffectedTasksRequest = {
     targets: opts.targets,
     changedFiles: opts.touchedFiles.map((f) => f.file),
+    fileChangeArgs: opts.fileChangeArgs,
     configuration: opts.configuration,
     overrides: opts.overrides ?? {},
     extraTargetDependencies: opts.extraTargetDependencies ?? {},
     excludeTaskDependencies: opts.excludeTaskDependencies ?? false,
-    excludedProjects: opts.excludedProjects ?? [],
-    dependencies: dependencyChanges(
-      opts.projectGraph,
-      opts.touchedFiles,
-      opts.nxJson,
-      opts.packageJson
-    ),
+    exclude: opts.exclude ?? [],
   };
 
   if (!isOnDaemon() && daemonClient.enabled()) {
-    const selection = await daemonClient.selectAffectedTasks(request);
-    return {
-      affectedTaskIds: new Set(selection.affectedTaskIds),
-      requiredTaskIds: selection.requiredTaskIds,
-      taskGraph: selection.taskGraph,
-      runTaskGraph: selection.runTaskGraph,
-    };
+    try {
+      const selection = await daemonClient.selectAffectedTasks(request);
+      return {
+        projectGraph: selection.projectGraph,
+        affectedTaskIds: new Set(selection.affectedTaskIds),
+        requiredTaskIds: selection.requiredTaskIds,
+        taskGraph: selection.taskGraph,
+        runTaskGraph: selection.runTaskGraph,
+      };
+    } catch (e) {
+      // Fetching the graph falls back from a daemon that cannot answer and
+      // reports a broken graph; an error in selection itself recurs below.
+      logger.verbose(`Selecting affected tasks in the daemon failed: ${e}`);
+    }
   }
 
-  const planningContext = createTaskPlanningContext(
-    opts.projectGraph,
-    opts.nxJson
-  );
+  const projectGraph =
+    opts.projectGraph ?? (await createProjectGraphAsync({ exitOnError: true }));
+  const planningContext = createTaskPlanningContext(projectGraph, opts.nxJson);
   const selection = await selectAffectedTasks(
-    opts.projectGraph,
+    projectGraph,
     opts.nxJson,
     planningContext,
-    request
+    request,
+    opts.touchedFiles,
+    opts.packageJson
   );
   return {
+    projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     requiredTaskIds: selection.requiredTaskIds,
     taskGraph: selection.taskGraph,
@@ -160,7 +186,12 @@ export async function selectAffectedTasks(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   planningContext: TaskPlanningContext,
-  request: AffectedTasksRequest
+  request: AffectedTasksRequest,
+  touchedFiles: FileChange[] = calculateFileChanges(
+    request.changedFiles,
+    request.fileChangeArgs as NxArgs
+  ),
+  packageJson?: any
 ): Promise<{
   affectedTaskIds: Set<string>;
   requiredTaskIds: string[];
@@ -199,7 +230,13 @@ export async function selectAffectedTasks(
   const taskIds = Object.keys(taskGraph.tasks);
   const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
 
-  const namedProjects = new Set(request.dependencies.projects);
+  const dependencies = dependencyChanges(
+    projectGraph,
+    touchedFiles,
+    nxJson,
+    packageJson
+  );
+  const namedProjects = new Set(dependencies.projects);
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
   const selection = nativeAffectedTasks(
@@ -215,9 +252,11 @@ export async function selectAffectedTasks(
           namedProjects.has(taskGraph.tasks[id].target.project) ||
           hasCustomHasher(taskGraph.tasks[id], projects)
       ),
-      changedExternals: request.dependencies.externals,
-      changedExternalTypes: request.dependencies.changedExternalTypes,
-      excludedProjects: request.excludedProjects,
+      changedExternals: dependencies.externals,
+      changedExternalTypes: dependencies.changedExternalTypes,
+      excludedProjects: request.exclude.length
+        ? findMatchingProjects(request.exclude, projectGraph.nodes)
+        : [],
       targets,
     }
   );

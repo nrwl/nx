@@ -55,16 +55,24 @@ export async function showProjectsHandler(
         nxJson,
         targets: args.withTarget,
         touchedFiles,
+        fileChangeArgs: {
+          base: nxArgs.base,
+          head: nxArgs.head,
+          files: nxArgs.files,
+        },
       });
       const owning = new Set(
         [...affectedTasks.affectedTaskIds].map(
           (id) => affectedTasks.taskGraph.tasks[id].target.project
         )
       );
+      // The graph selection used, which with the daemon on is its own.
       graph = {
-        ...graph,
+        ...affectedTasks.projectGraph,
         nodes: Object.fromEntries(
-          Object.entries(graph.nodes).filter(([name]) => owning.has(name))
+          Object.entries(affectedTasks.projectGraph.nodes).filter(([name]) =>
+            owning.has(name)
+          )
         ),
       };
     } else {
