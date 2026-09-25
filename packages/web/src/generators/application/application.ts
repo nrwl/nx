@@ -603,8 +603,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       js: false,
       linter: options.linter,
       enableTypedLinting,
-      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
-      webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
+      webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+      webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       addPlugin: options.addPlugin,
     });
 

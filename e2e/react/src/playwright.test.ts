@@ -42,7 +42,10 @@ describe('React Playwright e2e tests', () => {
     let originalConfig = '';
     updateFile(configPath, (content) => {
       originalConfig = content;
-      return content.replace(/url: 'http:\/\/[^']*'/, 'url: baseURL');
+      return content.replace(
+        /url: (?:'http:\/\/[^']*'|webServerAddress)/,
+        'url: baseURL'
+      );
     });
 
     try {
@@ -67,7 +70,10 @@ describe('React Playwright e2e tests', () => {
     let originalConfig = '';
     updateFile(configPath, (content) => {
       originalConfig = content;
-      return content.replace(/url: 'http:\/\/[^']*'/, 'url: baseURL');
+      return content.replace(
+        /url: (?:'http:\/\/[^']*'|webServerAddress)/,
+        'url: baseURL'
+      );
     });
 
     try {
@@ -119,7 +125,7 @@ describe('React Playwright e2e tests', () => {
     updateFile(`${e2eProject}/playwright.config.mts`, (content) => {
       originalConfig = content;
       return content.replace(
-        /url: 'http:\/\/[^']*'/,
+        /url: (?:'http:\/\/[^']*'|webServerAddress)/,
         `url: 'http://localhost:${port}'`
       );
     });

@@ -121,8 +121,10 @@ export async function addE2e(
       js: false,
       linter: options.linter,
       enableTypedLinting: isTypedLintingEnabled(options),
-      webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
-      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+      webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       addPlugin: true,
     });
 
