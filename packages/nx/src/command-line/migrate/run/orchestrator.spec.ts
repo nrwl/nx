@@ -7843,6 +7843,33 @@ describe('orchestrator', () => {
       expect(instructions).toContain('lint first, then build, then unit tests');
     });
 
+    it('names the pass when a clean retry is refused because HEAD moved past its dispense', async () => {
+      mockGetLatestCommitSha.mockReturnValue(HEAD);
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'succeeded'),
+          passStep('step-2', 'awaiting-prompt-outcome', { gitRefBefore: BASE }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+        gitRefAtInit: BASE,
+      });
+      writePassHandoff(dir, { status: 'failed', summary: 'tests are red' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry-clean',
+      });
+
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain(
+        `HEAD is at ${HEAD} rather than the ${BASE} this validation pass started from`
+      );
+      expect(readRunState(dir).steps[1].status).toBe('failed');
+    });
+
     it('re-emits the pass on a later reconcile and rewrites a removed instructions file', async () => {
       const dir = afterMigrations();
       await runOrchestratorReconcile({ root, runId: 'run-1' });

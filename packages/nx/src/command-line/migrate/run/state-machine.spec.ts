@@ -1116,6 +1116,62 @@ describe('applyStepEvent', () => {
       }
     );
 
+    describe('on a failed final-validation step', () => {
+      function failedPass(
+        commits: MigrateCommitLedgerEntry[] = []
+      ): MigrateRunState {
+        return {
+          ...stateWithStep(),
+          steps: [
+            {
+              id: 'step-1',
+              roundIndex: 0,
+              kind: 'final-validation',
+              status: 'failed',
+              attempt: 1,
+              dispenseCount: 1,
+              hasGenerator: false,
+              promptOutcome: { status: 'failed', summary: 'tests are red' },
+            },
+          ],
+          commits,
+        };
+      }
+
+      it('adopt names the pass in the recorded summary', () => {
+        const result = applyStepEvent(failedPass(), {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action: 'adopt',
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0].outcome?.summary).toBe(
+            "Adopted after the attempt failed: the working tree as it stood was taken as this validation pass's result."
+          );
+        }
+      });
+
+      it.each(['skip', 'unresolved'] as const)(
+        'refusing %s over a landed commit names the pass',
+        (action) => {
+          const result = applyStepEvent(
+            failedPass([{ kind: 'landed', sha: 'abc', stepIds: ['step-1'] }]),
+            { type: 'stepAction', stepId: 'step-1', attempt: 1, action }
+          );
+
+          expect(result).toMatchObject({
+            kind: 'error',
+            reason: expect.stringContaining(
+              'so the validation pass may be committed.'
+            ),
+          });
+        }
+      );
+    });
+
     it('unresolved from failed keeps the attempt and the failure it gave up on', () => {
       const state = stateWithStep({
         status: 'failed',
