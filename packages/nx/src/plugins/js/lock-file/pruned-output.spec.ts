@@ -181,6 +181,49 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     });
   });
 
+  it('carries trustLockfile and trustPolicy settings on pnpm 11', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'trustLockfile: true',
+        'trustPolicy: no-downgrade',
+        'trustPolicyExclude:',
+        "  - 'webpack@4.47.0'",
+        'trustPolicyIgnoreAfter: 43200',
+        'minimumReleaseAgeIgnoreMissingTime: true',
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir);
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      packages: [],
+      trustLockfile: true,
+      trustPolicy: 'no-downgrade',
+      trustPolicyExclude: ['webpack@4.47.0'],
+      trustPolicyIgnoreAfter: 43200,
+      minimumReleaseAgeIgnoreMissingTime: true,
+    });
+  });
+
+  // These only affect resolving or rewriting a fresh lockfile, which a pruned
+  // output's `--frozen-lockfile` install never does.
+  it('does not carry trustPolicyExcludePrune, minimumReleaseAgeExcludePrune, or blockExoticSubdeps', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'trustPolicyExcludePrune: true',
+        'minimumReleaseAgeExcludePrune: true',
+        'blockExoticSubdeps: true',
+        '',
+      ].join('\n')
+    );
+
+    expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
+  });
+
   it('carries no settings on pnpm 10 (those are read from package.json)', () => {
     mockPnpmVersion('10.5.0');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
