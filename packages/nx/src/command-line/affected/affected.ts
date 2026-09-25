@@ -74,13 +74,21 @@ export async function affected(
   let taskSelection: TaskSelection | undefined;
   let projects: ProjectGraphProjectNode[] = [];
   if (useTasks) {
-    ({ projectGraph, taskSelection } = await getAffectedTasks(
-      nxArgs,
+    ({ projectGraph, taskSelection } = await computeAffectedTasks({
       nxJson,
+      targets: nxArgs.targets,
+      touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+      fileChangeArgs: {
+        base: nxArgs.base,
+        head: nxArgs.head,
+        files: nxArgs.files,
+      },
+      configuration: nxArgs.configuration,
       overrides,
       extraTargetDependencies,
-      extraOptions.excludeTaskDependencies
-    ));
+      excludeTaskDependencies: extraOptions.excludeTaskDependencies,
+      exclude: nxArgs.exclude,
+    }));
   } else {
     projectGraph = await createProjectGraphAsync({ exitOnError: true });
     projects = await getAffectedGraphNodes(nxArgs, projectGraph);
@@ -168,35 +176,6 @@ export async function getAffectedGraphNodes(
   }
 
   return Object.values(affectedGraph.nodes);
-}
-
-/** Runs with the graph selection used, which the daemon returns rather than one fetched first. */
-async function getAffectedTasks(
-  nxArgs: NxArgs,
-  nxJson: NxJsonConfiguration,
-  overrides: Record<string, unknown>,
-  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  excludeTaskDependencies: boolean
-): Promise<{
-  projectGraph: ProjectGraph;
-  taskSelection: TaskSelection;
-}> {
-  const { projectGraph, taskSelection } = await computeAffectedTasks({
-    nxJson,
-    targets: nxArgs.targets,
-    touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
-    fileChangeArgs: {
-      base: nxArgs.base,
-      head: nxArgs.head,
-      files: nxArgs.files,
-    },
-    configuration: nxArgs.configuration,
-    overrides,
-    extraTargetDependencies,
-    excludeTaskDependencies,
-    exclude: nxArgs.exclude,
-  });
-  return { projectGraph, taskSelection };
 }
 
 function initiatingProjects(selection: TaskSelection): string[] {
