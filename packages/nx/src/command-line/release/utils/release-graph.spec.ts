@@ -1407,16 +1407,19 @@ describe('ReleaseGraph', () => {
         verbose: false,
       });
 
-      await expect(
-        releaseGraph.resolveCurrentVersionForDependency(
-          tree,
-          projectGraph,
-          'external-project',
-          ''
-        )
-      ).rejects.toThrow(
-        'dependency project "external-project" because it is not configured for Nx Release'
+      const result = releaseGraph.resolveCurrentVersionForDependency(
+        tree,
+        projectGraph,
+        'external-project',
+        ''
       );
+
+      await expect(result).rejects.toMatchObject({
+        code: 'NX_RELEASE_PROJECT_NOT_CONFIGURED',
+        message: expect.stringContaining(
+          'dependency project "external-project" because it is not configured for Nx Release'
+        ),
+      });
     });
 
     it('retains the underlying resolver failure in the actionable error', async () => {

@@ -34,6 +34,9 @@ export type SemverBumpType = ReleaseType | 'none';
  * when it is part of the release, or its current version when it is not being
  * versioned.
  *
+ * When the project is not configured for Nx Release, the returned promise
+ * rejects with an error whose `code` is `NX_RELEASE_PROJECT_NOT_CONFIGURED`.
+ *
  * @public
  */
 export type ResolveVersionForDependency = (

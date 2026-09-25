@@ -746,8 +746,11 @@ export class ReleaseGraph {
       !this.projectsToVersionActions.has(projectName) ||
       !this.finalConfigsByProject.has(projectName)
     ) {
-      throw new Error(
-        `Cannot resolve a concrete current version for dependency project "${projectName}" because it is not configured for Nx Release. Include the project in an Nx Release group so that its current version resolver can be configured.`
+      throw Object.assign(
+        new Error(
+          `Cannot resolve a concrete current version for dependency project "${projectName}" because it is not configured for Nx Release. Include the project in an Nx Release group so that its current version resolver can be configured.`
+        ),
+        { code: 'NX_RELEASE_PROJECT_NOT_CONFIGURED' }
       );
     }
 
