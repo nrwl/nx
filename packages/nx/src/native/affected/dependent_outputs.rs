@@ -24,7 +24,7 @@ pub(crate) fn compute_dependent_output_edges(
     task_graph: &TaskGraph,
 ) -> HashMap<String, Vec<String>> {
     let start = Instant::now();
-    let Some(reads) = OutputReads::resolve(hash_plans) else {
+    let Some(reads) = OutputReads::from_plans(hash_plans) else {
         trace!("no plan reads another task's outputs");
         return HashMap::new();
     };
@@ -82,7 +82,7 @@ struct OutputReads {
 
 impl OutputReads {
     /// None when no plan reads another task's output.
-    fn resolve(hash_plans: &HashPlans) -> Option<Self> {
+    fn from_plans(hash_plans: &HashPlans) -> Option<Self> {
         let mut declared = HashMap::new();
         let mut globs = HashMap::new();
         for id in referenced_ids(hash_plans) {
