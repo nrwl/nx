@@ -2098,10 +2098,10 @@ describe('task planner', () => {
       ).toHaveLength(2);
     });
 
-    it('keeps the declared inputs of a continuous dependency of a task that opted out of backfill', () => {
+    it('keeps the declared inputs of a continuous dependency of a task whose ultracache mode is not on', () => {
       const { planner, taskGraph } = fixture();
       const graph = withContinuousDependency(taskGraph);
-      graph.tasks['parent:build'].sandbox = { backfill: false };
+      graph.tasks['parent:build'].ultracache = { mode: 'warn' };
       const plan = planner.getPlans(
         ['parent:build'],
         graph,
@@ -2479,13 +2479,13 @@ describe('task planner', () => {
       }
     );
 
-    it("moves the snapshot marker when the task's sandbox exclusions change, and only then", () => {
+    it("moves the snapshot marker when the task's ultracache exclusions change, and only then", () => {
       const { planner, taskGraph } = fixture();
       const snapshots = snapshotsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
-      const markerWith = (sandbox: object | undefined) => {
-        taskGraph.tasks['parent:build'].sandbox = sandbox;
+      const markerWith = (ultracache: object | undefined) => {
+        taskGraph.tasks['parent:build'].ultracache = ultracache;
         return planner
           .getPlans(['parent:build'], taskGraph, snapshots)
           ['parent:build'].find((entry) => entry.startsWith('io-snapshot:'));
@@ -2563,14 +2563,15 @@ describe('task planner', () => {
     });
 
     it.each([
-      [{ enabled: false }, 'disabled'],
-      [{ backfill: false }, 'backfill-disabled'],
+      [{ mode: 'off' }, 'disabled'],
+      [{ mode: 'warn' }, 'autofix-disabled'],
+      [{ mode: 'error' }, 'autofix-disabled'],
     ])(
-      'withholds the snapshot from a task whose sandbox is %j',
-      (sandbox, reason) => {
+      'withholds the snapshot from a task whose ultracache is %j',
+      (ultracache, reason) => {
         const { planner, taskGraph } = fixture();
         // Read off the task, where the task graph resolved target defaults.
-        taskGraph.tasks['parent:build'].sandbox = sandbox;
+        taskGraph.tasks['parent:build'].ultracache = ultracache;
         const snapshots = snapshotsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
         });

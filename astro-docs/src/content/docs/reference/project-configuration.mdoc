@@ -595,31 +595,42 @@ And the E2E project's `e2e` task has a dependency on the `serve` task, which ens
 }
 ```
 
-### Sandbox
+### Ultracache
 
-When [sandboxing](/docs/kb/sandboxing) is enabled, Nx tracks the files each task reads and writes. The `sandbox` property adjusts that tracking for a single target.
+Nx Cloud records the files each task reads and writes, and uses those recordings in place of the target's declared `inputs` and `outputs`. The `ultracache` property adjusts that for a single target.
 
-Set `"enabled": false` to stop tracking a target's tasks:
+Set `mode` to choose how a target participates:
+
+| Mode    | Records IO | Reports undeclared access | Applies the recording |
+| ------- | ---------- | ------------------------- | --------------------- |
+| `on`    | yes        | no                        | yes                   |
+| `warn`  | yes        | warns                     | no                    |
+| `error` | yes        | reports, see below        | no                    |
+| `off`   | no         | no                        | no                    |
+
+`error` is reserved for failing the task on an undeclared read or write. Nothing enforces that per target yet, so it behaves as `warn` today.
+
+`on` is the default. Use `warn` or `error` on a target whose inputs depend on dynamic behavior or external state: Nx keeps watching it and tells you what it touched, but hashes it from what it declared. Use `off` to stop recording it at all.
 
 ```json
 {
   "targets": {
     "build": {
-      "sandbox": {
-        "enabled": false
+      "ultracache": {
+        "mode": "warn"
       }
     }
   }
 }
 ```
 
-Use `ignoredReads` and `ignoredWrites` to keep tracking the target while excluding paths from its report. The patterns are globs relative to the workspace root.
+Use `ignoredReads` and `ignoredWrites` to keep recording the target while excluding paths from its report. The patterns are globs relative to the workspace root.
 
 ```json
 {
   "targets": {
     "build": {
-      "sandbox": {
+      "ultracache": {
         "ignoredReads": ["tmp/**"],
         "ignoredWrites": ["**/.cache/**"]
       }
@@ -634,33 +645,19 @@ When Nx hashes a task from a recorded snapshot, an excluded read doesn't count t
 The first path segment cannot contain `*`, so `**/generated/**` is not supported. `?`, `!`, `[`, `]` and extglobs are not supported either. Nothing reports these at authoring time, so the pattern has no effect. Anchor it to a directory instead, such as `libs/*/generated/**`.
 {% /aside %}
 
-Set `"backfill": false` to keep tracking the target but hash it from its declared inputs and outputs. By default, a recorded snapshot backfills both: the reads it observed replace the target's declared filesets, and the writes it observed extend its outputs. A target whose inputs depend on dynamic behavior or external state can't be described that way, so it should opt out.
+Reads and writes move together. A task hashed from its recorded reads but cached from its declared outputs would describe a run that never happened, so no mode applies one without the other.
 
-```json
-{
-  "targets": {
-    "build": {
-      "sandbox": {
-        "backfill": false
-      }
-    }
-  }
-}
-```
-
-Reads and writes are one switch. A task hashed from its recorded reads but cached from its declared outputs would describe a run that never happened.
-
-{% aside type="note" title="Needs snapshot-backed hashing" %}
-`backfill` only applies where Nx hashes from a recorded snapshot. That's in CI with [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) or `NX_CLOUD_USE_IO_SNAPSHOTS` set, and only for tasks a snapshot was recorded for. Everywhere else, a task hashes from its declared inputs and caches its declared outputs.
+{% aside type="note" title="Nx Cloud only" %}
+Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it. Applying a recording additionally needs [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) or `NX_CLOUD_USE_IO_SNAPSHOTS` set in CI, and a recording for the task in question. See [task sandboxing](/docs/kb/sandboxing).
 {% /aside %}
 
-A target that defines `sandbox` replaces the inherited configuration rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoredReads` and `ignoredWrites` to keep inherited patterns.
+A target that defines `ultracache` replaces the inherited configuration rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoredReads` and `ignoredWrites` to keep inherited patterns.
 
 ```json
 {
   "targets": {
     "build": {
-      "sandbox": {
+      "ultracache": {
         "...": true,
         "ignoredReads": ["...", "tmp/**"]
       }
@@ -670,7 +667,7 @@ A target that defines `sandbox` replaces the inherited configuration rather than
 ```
 
 {% aside type="note" title="Workspace-wide exclusions live elsewhere" %}
-`sandbox` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/sandboxing-config.yaml`. See [Excluding paths](/docs/kb/sandboxing#excluding-paths). The two combine: a task is checked against its own `sandbox` patterns and the workspace-wide ones together, so neither overrides the other.
+`ultracache` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/sandboxing-config.yaml`. See [Excluding paths](/docs/kb/sandboxing#excluding-paths). The two combine: a task is checked against its own `ultracache` patterns and the workspace-wide ones together, so neither overrides the other.
 {% /aside %}
 
 ### Sync generators
@@ -758,19 +755,19 @@ If the inferred target has `inputs: ["default", "^production"]`, the result is `
 }
 ```
 
-Nx processes target configuration down to `options[x]`, `configurations[x][y]`, and the keys of `sandbox`; values below that are opaque to the merge pipeline. Spread is therefore resolved at these levels:
+Nx processes target configuration down to `options[x]`, `configurations[x][y]`, and the keys of `ultracache`; values below that are opaque to the merge pipeline. Spread is therefore resolved at these levels:
 
-| Level                                              | Example                                                                     |
-| -------------------------------------------------- | --------------------------------------------------------------------------- |
-| Target root                                        | `"build": { "dependsOn": ["lint"], "...": true }`                           |
-| `inputs`, `outputs`, `dependsOn`, `syncGenerators` | `"inputs": ["my-input", "..."]`                                             |
-| `options`                                          | `"options": { "...": true, "outputPath": "dist/custom" }`                   |
-| `options[x]`                                       | `"options": { "env": { "MY_VAR": "val", "...": true } }`                    |
-| `configurations`                                   | `"configurations": { "my-config": { ... }, "...": true }`                   |
-| `configurations[x]`                                | `"configurations": { "prod": { "...": true, "sourceMap": false } }`         |
-| `configurations[x][y]`                             | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
-| `sandbox`                                          | `"sandbox": { "...": true, "enabled": false }`                              |
-| `sandbox.ignoredReads`, `sandbox.ignoredWrites`    | `"sandbox": { "ignoredReads": ["...", "tmp/**"] }`                          |
+| Level                                                 | Example                                                                     |
+| ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| Target root                                           | `"build": { "dependsOn": ["lint"], "...": true }`                           |
+| `inputs`, `outputs`, `dependsOn`, `syncGenerators`    | `"inputs": ["my-input", "..."]`                                             |
+| `options`                                             | `"options": { "...": true, "outputPath": "dist/custom" }`                   |
+| `options[x]`                                          | `"options": { "env": { "MY_VAR": "val", "...": true } }`                    |
+| `configurations`                                      | `"configurations": { "my-config": { ... }, "...": true }`                   |
+| `configurations[x]`                                   | `"configurations": { "prod": { "...": true, "sourceMap": false } }`         |
+| `configurations[x][y]`                                | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
+| `ultracache`                                          | `"ultracache": { "...": true, "mode": "off" }`                              |
+| `ultracache.ignoredReads`, `ultracache.ignoredWrites` | `"ultracache": { "ignoredReads": ["...", "tmp/**"] }`                       |
 
 {% aside type="caution" title="Spread does not apply to deeply nested options" %}
 Because `options[x]` and `configurations[x][y]` are the innermost levels Nx inspects, a spread token nested any deeper has no effect. For example, `options.webpack = { "...": true }` works (the spread is at `options[x]`), but `options.webpack.plugins = { "...": true }` is ignored because the spread sits inside the opaque value Nx assigns to `options.webpack`.

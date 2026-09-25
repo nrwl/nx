@@ -1,4 +1,4 @@
-import type { JsonInput, TaskSandboxConfiguration } from '../native';
+import type { JsonInput, TaskUltracacheConfiguration } from '../native';
 import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
@@ -182,13 +182,14 @@ export interface TargetMetadata {
 export type Spreadable<T> = T & { '...'?: true };
 
 /**
- * Configuration for observed-IO sandboxing of a target's tasks.
+ * Ultracache configuration for a target's tasks.
  *
- * The resolved shape rides on each Task instance (`Task['sandbox']`), which is
- * why it is shared with the native task definition. Authoring additionally
+ * The resolved shape rides on each Task instance (`Task['ultracache']`), which
+ * is why it is shared with the native task definition. Authoring additionally
  * permits `'...'`, which target merging resolves away.
  */
-export type TargetSandboxConfiguration = Spreadable<TaskSandboxConfiguration>;
+export type TargetUltracacheConfiguration =
+  Spreadable<TaskUltracacheConfiguration>;
 
 export interface TargetDependencyConfig {
   /**
@@ -290,9 +291,9 @@ export interface TargetConfiguration<T = any> {
   cache?: boolean;
 
   /**
-   * Configures observed-IO sandboxing for tasks of this target.
+   * Configures ultracache for tasks of this target. Nx Cloud only.
    */
-  sandbox?: TargetSandboxConfiguration;
+  ultracache?: TargetUltracacheConfiguration;
 
   /**
    * Metadata about the target

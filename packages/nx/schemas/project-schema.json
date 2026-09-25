@@ -138,38 +138,33 @@
             "type": "boolean",
             "description": "Specifies if the given target should be cacheable"
           },
-          "sandbox": {
+          "ultracache": {
             "type": "object",
-            "description": "Configures observed-IO sandboxing for tasks of this target",
+            "description": "Configures ultracache for tasks of this target. Nx Cloud only.",
             "properties": {
               "...": {
                 "type": "boolean",
                 "const": true,
-                "description": "Merges with the inherited sandbox configuration instead of replacing it. Keys before this token defer to the inherited value; keys after it win."
+                "description": "Merges with the inherited ultracache configuration instead of replacing it. Keys before this token defer to the inherited value; keys after it win."
               },
-              "enabled": {
-                "type": "boolean",
-                "default": true,
-                "description": "Whether tasks for this target are tracked by the sandbox"
-              },
-              "backfill": {
-                "type": "boolean",
-                "default": true,
-                "description": "Whether a recorded IO snapshot backfills this target's declared inputs and outputs. When false, the task hashes from its declared filesets and caches its declared outputs, even though its IO is still recorded."
+              "mode": {
+                "enum": ["on", "warn", "error", "off"],
+                "default": "on",
+                "description": "How this target's tasks participate. 'on' records IO and lets the recording stand in for the declared inputs and outputs. 'warn' records and reports undeclared reads and writes without applying them. 'error' is reserved for failing the task on an undeclared read or write; until per-target enforcement lands it behaves as 'warn'. 'off' records nothing."
               },
               "ignoredReads": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 },
-                "description": "Workspace-relative glob patterns for reads excluded from sandboxing reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
+                "description": "Workspace-relative glob patterns for reads excluded from ultracache reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
               },
               "ignoredWrites": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 },
-                "description": "Workspace-relative glob patterns for writes excluded from sandboxing reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
+                "description": "Workspace-relative glob patterns for writes excluded from ultracache reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
               }
             },
             "additionalProperties": false

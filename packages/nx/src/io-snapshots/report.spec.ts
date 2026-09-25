@@ -47,7 +47,7 @@ describe('formatIoSnapshotSummary', () => {
       tasksWithOutputs: ['a:build'],
       diagnostics: [
         { reason: 'disabled', taskId: 'c:e2e' },
-        { reason: 'backfill-disabled', taskId: 'h:deploy' },
+        { reason: 'autofix-disabled', taskId: 'h:deploy' },
         { reason: 'missing', taskId: 'd:test' },
         { reason: 'missing', taskId: 'e:test' },
         { reason: 'invalid-glob', taskId: 'f:lint', glob: 'libs/./x.ts' },
@@ -57,13 +57,13 @@ describe('formatIoSnapshotSummary', () => {
     };
     const summary = formatIoSnapshotSummary(result, 'cached');
     expect(summary.line).toBe(
-      'I/O snapshots: 2 tasks hashed from snapshot (1 with observed outputs), 6 tasks fell back (2 missing, 1 backfill-disabled, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
+      'I/O snapshots: 2 tasks hashed from snapshot (1 with observed outputs), 6 tasks fell back (2 missing, 1 autofix-disabled, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
     );
     expect(summary.bodyLines).toEqual([
       'set: cached',
       'commit abc123, 3 tasks in set',
-      'c:e2e: sandbox.enabled is false',
-      'h:deploy: sandbox.backfill is false',
+      'c:e2e: ultracache.mode is off',
+      'h:deploy: ultracache.mode is not on',
       'd:test: no snapshot for this task',
       'e:test: no snapshot for this task',
       'f:lint: snapshot glob "libs/./x.ts" is not a valid files glob',

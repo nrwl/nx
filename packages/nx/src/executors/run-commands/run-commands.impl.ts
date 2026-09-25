@@ -101,7 +101,7 @@ export default async function (
 export async function runCommands(
   options: RunCommandsOptions,
   context: ExecutorContext,
-  task?: Pick<Task, 'id' | 'sandbox'>
+  task?: Pick<Task, 'id' | 'ultracache'>
 ) {
   const normalized = normalizeOptions(options);
 
@@ -158,10 +158,10 @@ export async function runCommands(
         id: resolvedTaskId,
         // Both graphs are typed as present, but `convert-nx-executor` passes
         // null for each.
-        sandbox:
+        ultracache:
           context.projectName && context.targetName
             ? context.projectGraph?.nodes?.[context.projectName]?.data
-                .targets?.[context.targetName]?.sandbox
+                .targets?.[context.targetName]?.ultracache
             : undefined,
       };
     const runningTask = isSingleCommandAndCanUsePseudoTerminal

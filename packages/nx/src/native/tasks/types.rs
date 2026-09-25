@@ -38,35 +38,47 @@ pub struct Task {
     pub parallelism: Option<bool>,
     /// This denotes if the task runs continuously
     pub continuous: Option<bool>,
-    /// The target's observed-IO sandbox configuration, if declared
-    pub sandbox: Option<TaskSandboxConfiguration>,
+    /// The target's ultracache configuration, if declared
+    pub ultracache: Option<TaskUltracacheConfiguration>,
 }
 
-/// Observed-IO sandbox configuration of a task's target
+/// How a target's tasks participate in ultracache. Nx Cloud only: nothing in
+/// the OSS runner records or applies IO, so every mode behaves as `Off` without
+/// it.
+#[napi(string_enum = "lowercase")]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub enum UltracacheMode {
+    /// Record IO and let the recording stand in for the target's declared
+    /// inputs and outputs. The default.
+    #[default]
+    On,
+    /// Record IO and report undeclared reads and writes, but hash and cache
+    /// from what the target declared.
+    Warn,
+    /// Reserved for failing the task on an undeclared read or write. Nothing
+    /// enforces that per target yet, so it behaves as `Warn` today.
+    Error,
+    /// Record nothing, so no report is produced and nothing is applied.
+    Off,
+}
+
+/// Ultracache configuration of a task's target
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
-pub struct TaskSandboxConfiguration {
-    /// Whether tasks for this target are tracked by the sandbox.
-    /// Defaults to true. When false, no IO tracing is reported for the
-    /// task, so no sandbox report is produced.
-    pub enabled: Option<bool>,
+pub struct TaskUltracacheConfiguration {
+    /// How this target's tasks participate. Defaults to `on`.
+    #[napi(ts_type = "'on' | 'warn' | 'error' | 'off'")]
+    pub mode: Option<UltracacheMode>,
     /// Workspace-relative glob patterns for reads that should be excluded
-    /// from sandboxing reports. The first path segment cannot contain `*`,
+    /// from ultracache reports. The first path segment cannot contain `*`,
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
     pub ignored_reads: Option<Vec<String>>,
     /// Workspace-relative glob patterns for writes that should be excluded
-    /// from sandboxing reports. The first path segment cannot contain `*`,
+    /// from ultracache reports. The first path segment cannot contain `*`,
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
     pub ignored_writes: Option<Vec<String>>,
-    /// Whether a recorded IO snapshot backfills this target's declared inputs
-    /// and outputs. Defaults to true. When false, the task hashes from its
-    /// declared filesets and caches its declared outputs, even though its IO is
-    /// still recorded. Reads and writes are one switch: a task whose hash came
-    /// from the recording but whose cache did not would describe a state that
-    /// never ran.
-    pub backfill: Option<bool>,
 }
 
 impl Task {

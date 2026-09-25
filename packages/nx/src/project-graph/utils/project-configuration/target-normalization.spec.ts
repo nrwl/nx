@@ -119,11 +119,11 @@ describe('validateAndNormalizeProjectRootMap', () => {
     expect(projectRootMap['libs/a/ui'].name).toEqual('ui');
   });
 
-  describe('sandbox validation through the real merge pipeline', () => {
+  describe('ultracache validation through the real merge pipeline', () => {
     // The root-map tests below construct shapes the pipeline cannot produce.
-    // This one goes through mergeCreateNodesResults so a falsy sandbox is
+    // This one goes through mergeCreateNodesResults so a falsy ultracache is
     // proven to reach validation the way an authored project.json would.
-    const resultsFor = (sandbox: unknown) => [
+    const resultsFor = (ultracache: unknown) => [
       [
         [
           'nx/core/project-json',
@@ -133,7 +133,7 @@ describe('validateAndNormalizeProjectRootMap', () => {
               'libs/a/ui': {
                 name: 'a-ui',
                 root: 'libs/a/ui',
-                targets: { build: { executor: 'nx:run-commands', sandbox } },
+                targets: { build: { executor: 'nx:run-commands', ultracache } },
               },
             },
           },
@@ -144,7 +144,7 @@ describe('validateAndNormalizeProjectRootMap', () => {
     // Escaping this call is what takes the daemon down: only the three
     // classifiable errors are collected, and `shutdown-utils` exits the
     // process for anything else.
-    it('collects sandbox: false authored on a project instead of throwing', async () => {
+    it('collects ultracache: false authored on a project instead of throwing', async () => {
       const { mergeCreateNodesResults } =
         await import('../project-configuration-utils');
       const errors: Error[] = [];
@@ -160,18 +160,18 @@ describe('validateAndNormalizeProjectRootMap', () => {
       ).not.toThrow();
 
       expect(errors.map((e) => e.message)).toEqual([
-        expect.stringMatching(/"sandbox" configuration for target "build"/),
+        expect.stringMatching(/"ultracache" configuration for target "build"/),
       ]);
     });
 
-    it('accepts a well-formed sandbox authored on a project', async () => {
+    it('accepts a well-formed ultracache authored on a project', async () => {
       const { mergeCreateNodesResults } =
         await import('../project-configuration-utils');
       const errors: Error[] = [];
 
       expect(() =>
         mergeCreateNodesResults(
-          resultsFor({ enabled: false, ignoredReads: ['tmp/**'] }) as any,
+          resultsFor({ mode: 'off', ignoredReads: ['tmp/**'] }) as any,
           [],
           {} as any,
           tempFs.tempDir,
@@ -183,22 +183,22 @@ describe('validateAndNormalizeProjectRootMap', () => {
     });
   });
 
-  describe('sandbox validation', () => {
-    const projectRootMapWithSandbox = (sandbox: unknown) => ({
+  describe('ultracache validation', () => {
+    const projectRootMapWithUltracache = (ultracache: unknown) => ({
       'libs/a/ui': {
         root: 'libs/a/ui',
         name: 'a-ui',
-        targets: { build: { executor: 'nx:run-commands', sandbox } },
+        targets: { build: { executor: 'nx:run-commands', ultracache } },
       },
     });
 
     // Aggregated as a WorkspaceValidityError so `mergeCreateNodesResults` can
     // classify it; a bespoke class escapes to the daemon.
-    const sandboxErrors = (sandbox: unknown): string[] => {
+    const ultracacheErrors = (ultracache: unknown): string[] => {
       try {
         validateAndNormalizeProjectRootMap(
           tempFs.tempDir,
-          projectRootMapWithSandbox(sandbox) as any,
+          projectRootMapWithUltracache(ultracache) as any,
           {}
         );
       } catch (e) {
@@ -211,50 +211,52 @@ describe('validateAndNormalizeProjectRootMap', () => {
       return [];
     };
 
-    it('should reject a non-object sandbox', () => {
-      expect(sandboxErrors(false)).toEqual([
+    it('should reject a non-object ultracache', () => {
+      expect(ultracacheErrors(false)).toEqual([
         expect.stringMatching(
-          /"sandbox" configuration for target "build" in project "a-ui"/
+          /"ultracache" configuration for target "build" in project "a-ui"/
         ),
       ]);
     });
 
     it('should reject a string where a glob array is required', () => {
-      expect(sandboxErrors({ ignoredReads: 'tmp/**' })).toEqual([
+      expect(ultracacheErrors({ ignoredReads: 'tmp/**' })).toEqual([
         expect.stringMatching(
-          /"sandbox.ignoredReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
+          /"ultracache.ignoredReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
         ),
       ]);
     });
 
     it('should reject a non-string element inside a glob array', () => {
-      expect(sandboxErrors({ ignoredWrites: ['ok/**', 7] })).toEqual([
+      expect(ultracacheErrors({ ignoredWrites: ['ok/**', 7] })).toEqual([
         expect.stringMatching(
-          /"sandbox.ignoredWrites\[1\]".*must be a glob pattern string/
+          /"ultracache.ignoredWrites\[1\]".*must be a glob pattern string/
         ),
       ]);
     });
 
-    it('should reject a non-boolean enabled', () => {
-      expect(sandboxErrors({ enabled: 'false' })).toEqual([
+    it('should reject a mode that is not one of the four', () => {
+      expect(ultracacheErrors({ mode: 'enabled' })).toEqual([
         expect.stringMatching(
-          /"sandbox.enabled".*must be a boolean, but it is a string/
+          /"ultracache.mode" for target "build" in project "a-ui" must be one of "on", "warn", "error", "off", but it is "enabled"/
         ),
       ]);
     });
 
-    it('should reject a non-boolean backfill', () => {
-      expect(sandboxErrors({ backfill: 'false' })).toEqual([
-        expect.stringMatching(
-          /"sandbox.backfill".*must be a boolean, but it is a string/
-        ),
+    it('should reject a mode that is not a string', () => {
+      expect(ultracacheErrors({ mode: false })).toEqual([
+        expect.stringMatching(/"ultracache.mode".*but it is a boolean/),
       ]);
     });
 
-    it('should reject a key that is not a sandbox option', () => {
-      expect(sandboxErrors({ ignoreReads: ['tmp/**'] })).toEqual([
+    it.each(['on', 'warn', 'error', 'off'])('should accept mode %s', (mode) => {
+      expect(ultracacheErrors({ mode })).toEqual([]);
+    });
+
+    it('should reject a key that is not an ultracache option', () => {
+      expect(ultracacheErrors({ ignoreReads: ['tmp/**'] })).toEqual([
         expect.stringMatching(
-          /"sandbox.ignoreReads" for target "build" in project "a-ui" is not a sandbox option/
+          /"ultracache.ignoreReads" for target "build" in project "a-ui" is not an ultracache option/
         ),
       ]);
     });
@@ -262,40 +264,37 @@ describe('validateAndNormalizeProjectRootMap', () => {
     // A spread with no base to resolve against survives merging, so rejecting
     // it here would fail a config the merge deliberately let through.
     it('should accept the spread token as a key', () => {
-      expect(sandboxErrors({ '...': true, backfill: false })).toEqual([]);
+      expect(ultracacheErrors({ '...': true, mode: 'warn' })).toEqual([]);
     });
 
     it('should report every malformed key in one error', () => {
-      const [message] = sandboxErrors({
-        enabled: 'false',
-        backfill: 'false',
+      const [message] = ultracacheErrors({
+        mode: 'enabled',
         ignoreReads: ['tmp/**'],
         ignoredReads: 'tmp/**',
         ignoredWrites: ['ok/**', 7],
       });
 
       expect(message).toMatch(
-        /"sandbox.ignoreReads" .* is not a sandbox option/
+        /"ultracache.ignoreReads" .* is not an ultracache option/
       );
-      expect(message).toMatch(/"sandbox.enabled"/);
-      expect(message).toMatch(/"sandbox.backfill"/);
-      expect(message).toMatch(/"sandbox.ignoredReads"/);
-      expect(message).toMatch(/"sandbox.ignoredWrites\[1\]"/);
+      expect(message).toMatch(/"ultracache.mode"/);
+      expect(message).toMatch(/"ultracache.ignoredReads"/);
+      expect(message).toMatch(/"ultracache.ignoredWrites\[1\]"/);
     });
 
-    it('should accept a well-formed sandbox', () => {
+    it('should accept a well-formed ultracache', () => {
       expect(
-        sandboxErrors({
-          enabled: false,
-          backfill: false,
+        ultracacheErrors({
+          mode: 'warn',
           ignoredReads: ['tmp/**'],
           ignoredWrites: ['scratch/**'],
         })
       ).toEqual([]);
     });
 
-    it('should accept a target with no sandbox', () => {
-      expect(sandboxErrors(undefined)).toEqual([]);
+    it('should accept a target with no ultracache', () => {
+      expect(ultracacheErrors(undefined)).toEqual([]);
     });
   });
 
