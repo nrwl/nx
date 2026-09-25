@@ -126,6 +126,12 @@ describe('Nx Affected with task selection', () => {
       expect(run).toContain(
         `Successfully ran target test for project ${mylib}`
       );
+
+      // With a second target the run still executes only what was selected:
+      // the spec is not in the build's `production` inputs.
+      const both = runCLI(`affected -t build,test --files="${spec}"`, byTask);
+      expect(both).toContain(`nx run ${mylib}:test`);
+      expect(both).not.toContain(`nx run ${mylib}:build`);
     }, 1000000);
 
     // Two targets, because with one each selected project owns one task and

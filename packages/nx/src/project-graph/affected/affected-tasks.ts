@@ -4,11 +4,15 @@ import type { ProjectConfiguration } from '../../config/workspace-json-project-j
 import { TaskGraph } from '../../config/task-graph';
 import { affectedTasks as nativeAffectedTasks } from '../../native';
 import {
+  createTaskGraph,
   createTaskGraphWithDependencyOverrides,
   narrowTaskGraph,
 } from '../../tasks-runner/create-task-graph';
 import { runnableForTarget } from '../../utils/project-graph-utils';
-import { getExecutorForTask } from '../../tasks-runner/utils';
+import {
+  getExecutorForTask,
+  pruneToSelectedTasks,
+} from '../../tasks-runner/utils';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -59,11 +63,8 @@ export interface AffectedTasksResult {
   initiatingTaskIds: string[];
   /** The full, unpruned graph the answer was computed over. */
   taskGraph: TaskGraph;
-  /**
-   * The graph the run executes, narrowed from `taskGraph` so the run need not
-   * build its own. Absent when it cannot be derived.
-   */
-  runTaskGraph?: TaskGraph;
+  /** The graph the run executes. */
+  runTaskGraph: TaskGraph;
   /** Hand to the runner so the survivors are not planned a second time. */
   planningContext?: TaskPlanningContext;
 }
@@ -205,7 +206,7 @@ export async function selectAffectedTasks(
   requiredTaskIds: string[];
   initiatingTaskIds: string[];
   taskGraph: TaskGraph;
-  runTaskGraph?: TaskGraph;
+  runTaskGraph: TaskGraph;
   plans?: NonNullable<TaskPlanningContext['plans']>['plans'];
 }> {
   const { targets } = request;
@@ -214,16 +215,18 @@ export async function selectAffectedTasks(
   // createTask throws.
   const candidates = [...runnableForTarget(projectGraph.nodes, targets)];
   if (!candidates.length) {
+    const empty: TaskGraph = {
+      roots: [],
+      tasks: {},
+      dependencies: {},
+      continuousDependencies: {},
+    };
     return {
       affectedTaskIds: new Set(),
       requiredTaskIds: [],
       initiatingTaskIds: [],
-      taskGraph: {
-        roots: [],
-        tasks: {},
-        dependencies: {},
-        continuousDependencies: {},
-      },
+      taskGraph: empty,
+      runTaskGraph: empty,
     };
   }
 
@@ -292,13 +295,28 @@ export async function selectAffectedTasks(
     requiredTaskIds: selection.required,
     initiatingTaskIds: keep.filter((id) => initial.has(id)),
     taskGraph,
-    runTaskGraph: narrowTaskGraph(
-      projectGraph,
-      taskGraph,
-      dependencyOverrides,
-      initial,
-      new Set(keep)
-    ),
+    // Edges that disagree on a dependency's overrides leave it to a build from
+    // the owning projects, which settles them the way the run always has.
+    runTaskGraph:
+      narrowTaskGraph(
+        projectGraph,
+        taskGraph,
+        dependencyOverrides,
+        initial,
+        new Set(keep)
+      ) ??
+      pruneToSelectedTasks(
+        createTaskGraph(
+          projectGraph,
+          request.extraTargetDependencies,
+          [...owning],
+          targets,
+          request.configuration,
+          request.overrides,
+          request.excludeTaskDependencies
+        ),
+        keep
+      ),
     plans,
   };
 }

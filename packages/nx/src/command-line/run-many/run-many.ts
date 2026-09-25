@@ -1,4 +1,7 @@
-import { runCommand } from '../../tasks-runner/run-command';
+import {
+  runCommand,
+  selectTasksForProjects,
+} from '../../tasks-runner/run-command';
 import {
   NxArgs,
   readGraphFileFromGraphArg,
@@ -67,7 +70,14 @@ export async function runMany(
     );
   } else {
     const status = await runCommand(
-      projects,
+      selectTasksForProjects(
+        projectGraph,
+        projects.map((p) => p.name),
+        nxArgs,
+        overrides,
+        extraTargetDependencies,
+        extraOptions.excludeTaskDependencies
+      ),
       projectGraph,
       { nxJson },
       nxArgs,

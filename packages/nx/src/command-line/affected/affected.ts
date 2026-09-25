@@ -1,5 +1,8 @@
 import { calculateFileChanges } from '../../project-graph/file-utils';
-import { runCommand } from '../../tasks-runner/run-command';
+import {
+  runCommand,
+  selectTasksForProjects,
+} from '../../tasks-runner/run-command';
 import { output } from '../../utils/output';
 import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 import type { NxArgs } from '../../utils/command-line-utils';
@@ -65,22 +68,42 @@ export async function affected(
     command === 'affected' &&
     !!nxArgs.targets?.length;
 
-  const { projectGraph, projects, taskSelection } = useTasks
-    ? await getAffectedTasks(
-        nxArgs,
-        nxJson,
-        overrides,
-        extraTargetDependencies,
-        extraOptions.excludeTaskDependencies
-      )
-    : await getAffectedProjects(nxArgs);
+  // Above the try, so an error building what to run reports the way the run's
+  // own would.
+  let projectGraph: ProjectGraph;
+  let taskSelection: TaskSelection | undefined;
+  let projectNames: string[] = [];
+  if (useTasks) {
+    ({ projectGraph, taskSelection } = await getAffectedTasks(
+      nxArgs,
+      nxJson,
+      overrides,
+      extraTargetDependencies,
+      extraOptions.excludeTaskDependencies
+    ));
+    projectNames = initiatingProjects(taskSelection);
+  } else {
+    projectGraph = await createProjectGraphAsync({ exitOnError: true });
+    const projects = await getAffectedGraphNodes(nxArgs, projectGraph);
+    if (command === 'affected') {
+      projectNames = allProjectsWithTarget(projects, nxArgs).map((p) => p.name);
+      if (!nxArgs.graph) {
+        taskSelection = selectTasksForProjects(
+          projectGraph,
+          projectNames,
+          nxArgs,
+          overrides,
+          extraTargetDependencies,
+          extraOptions.excludeTaskDependencies
+        );
+      }
+    }
+  }
 
   try {
     switch (command) {
       case 'affected': {
-        const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
         if (nxArgs.graph) {
-          const projectNames = projectsWithTarget.map((t) => t.name);
           const file = readGraphFileFromGraphArg(nxArgs);
 
           return await generateGraph(
@@ -102,15 +125,14 @@ export async function affected(
           );
         } else {
           const status = await runCommand(
-            projectsWithTarget,
+            taskSelection,
             projectGraph,
             { nxJson },
             nxArgs,
             overrides,
             null,
             extraTargetDependencies,
-            extraOptions,
-            taskSelection
+            extraOptions
           );
           await output.drain();
           process.exit(status);
@@ -149,18 +171,6 @@ export async function getAffectedGraphNodes(
   return Object.values(affectedGraph.nodes);
 }
 
-async function getAffectedProjects(nxArgs: NxArgs): Promise<{
-  projectGraph: ProjectGraph;
-  projects: ProjectGraphProjectNode[];
-  taskSelection?: TaskSelection;
-}> {
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  return {
-    projectGraph,
-    projects: await getAffectedGraphNodes(nxArgs, projectGraph),
-  };
-}
-
 /** Runs with the graph selection used, which the daemon returns rather than one fetched first. */
 async function getAffectedTasks(
   nxArgs: NxArgs,
@@ -170,15 +180,12 @@ async function getAffectedTasks(
   excludeTaskDependencies: boolean
 ): Promise<{
   projectGraph: ProjectGraph;
-  projects: ProjectGraphProjectNode[];
   taskSelection: TaskSelection;
 }> {
   const {
     projectGraph,
-    affectedTaskIds,
     requiredTaskIds,
     initiatingTaskIds,
-    taskGraph,
     runTaskGraph,
     planningContext,
   } = await computeAffectedTasks({
@@ -196,21 +203,25 @@ async function getAffectedTasks(
     excludeTaskDependencies,
     exclude: nxArgs.exclude,
   });
-  // runCommand still seeds the graph from projects; the prune is what narrows
-  // it back down to the selected tasks and their dependencies.
-  const owning = new Set(
-    [...affectedTaskIds].map((id) => taskGraph.tasks[id].target.project)
-  );
   return {
     projectGraph,
-    projects: [...owning].map((name) => projectGraph.nodes[name]),
     taskSelection: {
-      taskIds: requiredTaskIds,
-      initiatingTaskIds,
-      planningContext,
       taskGraph: runTaskGraph,
+      initiatingTaskIds,
+      taskIds: requiredTaskIds,
+      planningContext,
     },
   };
+}
+
+function initiatingProjects(selection: TaskSelection): string[] {
+  return [
+    ...new Set(
+      selection.initiatingTaskIds.map(
+        (id) => selection.taskGraph.tasks[id].target.project
+      )
+    ),
+  ];
 }
 
 function allProjectsWithTarget(

@@ -16,7 +16,10 @@ import {
 } from '../../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { TaskResult } from '../../tasks-runner/life-cycle';
-import { runTasksForCommand } from '../../tasks-runner/run-command';
+import {
+  runTasksForCommand,
+  selectTasksForProjects,
+} from '../../tasks-runner/run-command';
 import {
   createOverrides,
   readGraphFileFromGraphArg,
@@ -308,28 +311,36 @@ async function runPublishOnProjects(
    */
   process.env.NX_TUI = 'false';
   const publishOutputStyle = (args as any).specifiedOutputStyle ?? 'static';
+  const publishArgs = {
+    targets: [requiredTargetName],
+    ...(args as any),
+    // Everything this command reports — the registry, the tag, the
+    // package.json diff, the dry-run summary — is printed from inside the
+    // task, so the failures-only default would swallow all of it (under
+    // --dry-run every task succeeds by definition). Set after the spread and
+    // on all three fields: the middleware always writes `resolvedOutputStyle`,
+    // so a value placed before it would be overwritten on every run, and the
+    // renderer reads the new fields rather than the deprecated one. A style
+    // the user actually named still wins, which is what `specifiedOutputStyle`
+    // being set means.
+    outputStyle: publishOutputStyle,
+    specifiedOutputStyle: publishOutputStyle,
+    resolvedOutputStyle: publishOutputStyle,
+    // It is possible for workspaces to have circular dependencies between packages and still release them to a registry
+    nxIgnoreCycles: true,
+  };
   const { taskResults } = await runTasksForCommand(
-    projectsWithTarget,
+    selectTasksForProjects(
+      projectGraph,
+      projectsWithTarget.map((p) => p.name),
+      publishArgs,
+      overrides,
+      {},
+      extraOptions.excludeTaskDependencies
+    ),
     projectGraph,
     { nxJson },
-    {
-      targets: [requiredTargetName],
-      ...(args as any),
-      // Everything this command reports — the registry, the tag, the
-      // package.json diff, the dry-run summary — is printed from inside the
-      // task, so the failures-only default would swallow all of it (under
-      // --dry-run every task succeeds by definition). Set after the spread and
-      // on all three fields: the middleware always writes `resolvedOutputStyle`,
-      // so a value placed before it would be overwritten on every run, and the
-      // renderer reads the new fields rather than the deprecated one. A style
-      // the user actually named still wins, which is what `specifiedOutputStyle`
-      // being set means.
-      outputStyle: publishOutputStyle,
-      specifiedOutputStyle: publishOutputStyle,
-      resolvedOutputStyle: publishOutputStyle,
-      // It is possible for workspaces to have circular dependencies between packages and still release them to a registry
-      nxIgnoreCycles: true,
-    },
+    publishArgs,
     overrides,
     null,
     {},
