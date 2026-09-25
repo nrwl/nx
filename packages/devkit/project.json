@@ -14,7 +14,13 @@
       "inputs": [
         "...",
         "{workspaceRoot}/tools/vitest/**/*",
-        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js",
+        "{workspaceRoot}/packages/cypress/plugin.ts",
+        "{workspaceRoot}/packages/cypress/tsconfig.json",
+        "{workspaceRoot}/packages/cypress/tsconfig.lib.json",
+        "{workspaceRoot}/packages/vite/plugin.ts",
+        "{workspaceRoot}/packages/vite/tsconfig.json",
+        "{workspaceRoot}/packages/vite/tsconfig.lib.json"
       ]
     }
   }
