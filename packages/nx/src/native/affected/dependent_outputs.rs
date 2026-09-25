@@ -26,9 +26,11 @@
 
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
+use crate::native::affected::dependency_closure::walk_dependencies;
 use crate::native::affected::plan_ids::referenced_ids;
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
 /// Consumer task id -> the upstream task ids whose declared outputs it reads.
@@ -42,164 +44,122 @@ pub(crate) fn compute_dependent_output_edges(
     hash_plans: &HashPlans,
     task_graph: &TaskGraph,
 ) -> HashMap<String, Vec<String>> {
-    // Indexed both ways, because the two read kinds ask different questions:
-    // TaskOutput matches an output vector whole, an includeIgnored glob is
-    // tested against each output pattern.
-    let mut producers_by_outputs: HashMap<&[String], Vec<&str>> = HashMap::new();
-    let mut outputs_of: HashMap<&str, Vec<OutputPattern<'_>>> = HashMap::new();
-    for (id, task) in &task_graph.tasks {
-        if task.outputs.is_empty() {
-            continue;
-        }
-        producers_by_outputs
-            .entry(task.outputs.as_slice())
-            .or_default()
-            .push(id.as_str());
-        outputs_of.insert(
-            id.as_str(),
-            task.outputs.iter().map(|o| OutputPattern::new(o)).collect(),
-        );
-    }
-
-    // Resolved once per distinct instruction rather than once per task: one
-    // instruction shared by a thousand plans is interned to a single id. Cloned
-    // rather than borrowed, since the pool hands out a guard that cannot outlive
-    // the lookup; the count is bounded by unique inputs, not by task count.
-    let mut declared_reads: HashMap<u32, Vec<String>> = HashMap::new();
-    let mut glob_reads: HashMap<u32, Vec<ReadPattern>> = HashMap::new();
-    for id in referenced_ids(hash_plans) {
-        match hash_plans.pool.get(id).value() {
-            HashInstruction::TaskOutput(_, outputs) => {
-                declared_reads.insert(id, outputs.clone());
-            }
-            HashInstruction::IgnoredFileSet(globs) => {
-                // Negated patterns are exclusions, not things read.
-                let reads = globs
-                    .iter()
-                    .filter(|glob| !glob.starts_with('!'))
-                    .map(|glob| ReadPattern::new(glob))
-                    .collect();
-                glob_reads.insert(id, reads);
-            }
-            _ => {}
-        }
-    }
-    if declared_reads.is_empty() && glob_reads.is_empty() {
+    let Some(reads) = Reads::resolve(hash_plans) else {
         return HashMap::new();
-    }
-
+    };
+    let patterns_of = output_patterns(task_graph);
     hash_plans
         .plans
         .par_iter()
         .map_init(HashSet::new, |seen, (consumer, plan)| {
-            let declared: Vec<&Vec<String>> = plan
-                .iter()
-                .filter_map(|id| declared_reads.get(id))
-                .collect();
-            let mut producers: Vec<&str> = Vec::new();
-            if !declared.is_empty() {
-                // Equality names the producer, but two unrelated tasks can
-                // declare the same outputs, so only one the consumer depends on
-                // counts.
-                let upstream: HashSet<&str> =
-                    closure_of(task_graph, consumer, seen).into_iter().collect();
-                producers.extend(
-                    declared
-                        .iter()
-                        .filter_map(|outputs| producers_by_outputs.get(outputs.as_slice()))
-                        .flatten()
-                        .copied()
-                        .filter(|producer| upstream.contains(producer)),
-                );
-            }
-
-            // Like a TaskOutput, only a plan carrying an includeIgnored read pays
-            // for the walk.
-            let reads: Vec<&ReadPattern> = plan
-                .iter()
-                .filter_map(|id| glob_reads.get(id))
-                .flatten()
-                .collect();
-            if !reads.is_empty() {
-                for upstream in closure_of(task_graph, consumer, seen) {
-                    if let Some(outputs) = outputs_of.get(upstream) {
-                        let claims = reads
-                            .iter()
-                            .any(|read| outputs.iter().any(|out| read.claims(out)));
-                        if claims {
-                            producers.push(upstream);
-                        }
-                    }
-                }
-            }
-
-            if producers.is_empty() {
-                return None;
-            }
-            // The walk order is not meaningful; sort for a stable answer.
-            producers.sort_unstable();
-            producers.dedup();
-            Some((
-                consumer.clone(),
-                producers.into_iter().map(str::to_string).collect(),
-            ))
+            let producers =
+                producers_read_by(consumer, plan, &reads, &patterns_of, task_graph, seen);
+            (!producers.is_empty()).then(|| (consumer.clone(), producers))
         })
         .flatten()
         .collect()
 }
 
-/// Every task reachable from `from` over regular and continuous edges,
-/// excluding itself unless a cycle leads back. The planner splices a served
-/// task's reads into its consumer's plan (`collect_continuous_dependencies`),
-/// so either kind of read can name a producer behind a continuous edge.
-/// `seen` is caller-owned so one allocation serves every consumer on a worker.
-fn closure_of<'a>(
-    task_graph: &'a TaskGraph,
-    from: &str,
-    seen: &mut HashSet<&'a str>,
-) -> Vec<&'a str> {
-    seen.clear();
-    reach(task_graph, vec![from], seen)
+/// Each task with declared outputs -> those outputs, parsed for comparison.
+fn output_patterns(task_graph: &TaskGraph) -> HashMap<&str, Vec<OutputPattern<'_>>> {
+    task_graph
+        .tasks
+        .iter()
+        .filter(|(_, task)| !task.outputs.is_empty())
+        .map(|(id, task)| {
+            (
+                id.as_str(),
+                task.outputs.iter().map(|o| OutputPattern::new(o)).collect(),
+            )
+        })
+        .collect()
 }
 
-/// `from` and every task reachable from it, sorted. Ids the graph does not
-/// contain are dropped.
-pub(crate) fn with_dependencies<'a>(
-    task_graph: &TaskGraph,
-    from: impl IntoIterator<Item = &'a str>,
-) -> Vec<String> {
-    let mut seen = HashSet::new();
-    let starts: Vec<&str> = from
-        .into_iter()
-        .filter_map(|id| task_graph.tasks.get_key_value(id))
-        .map(|(id, _)| id.as_str())
-        .filter(|id| seen.insert(*id))
-        .collect();
-    let mut all = starts.clone();
-    all.extend(reach(task_graph, starts, &mut seen));
-    all.sort_unstable();
-    all.into_iter().map(str::to_string).collect()
+/// The read instructions the plans hold, decoded once per interned id: one
+/// instruction shared by a thousand plans is a single id. Cloned rather than
+/// borrowed, since the pool hands out a guard that cannot outlive the lookup;
+/// the count is bounded by unique inputs, not by task count.
+struct Reads {
+    declared: HashMap<u32, Vec<String>>,
+    globs: HashMap<u32, Vec<ReadPattern>>,
 }
 
-fn reach<'a: 'b, 'b>(
-    task_graph: &'a TaskGraph,
-    mut stack: Vec<&'b str>,
-    seen: &mut HashSet<&'a str>,
-) -> Vec<&'a str> {
-    let mut reached = Vec::new();
-    while let Some(current) = stack.pop() {
-        let edges = [
-            task_graph.dependencies.get(current),
-            task_graph.continuous_dependencies.get(current),
-        ];
-        for dep in edges.into_iter().flatten().flatten() {
-            if seen.insert(dep.as_str()) {
-                reached.push(dep.as_str());
-                stack.push(dep.as_str());
+impl Reads {
+    /// None when no plan reads another task's output.
+    fn resolve(hash_plans: &HashPlans) -> Option<Self> {
+        let mut declared = HashMap::new();
+        let mut globs = HashMap::new();
+        for id in referenced_ids(hash_plans) {
+            match hash_plans.pool.get(id).value() {
+                HashInstruction::TaskOutput(_, outputs) => {
+                    declared.insert(id, outputs.clone());
+                }
+                HashInstruction::IgnoredFileSet(patterns) => {
+                    // Negated patterns are exclusions, not things read.
+                    let reads = patterns
+                        .iter()
+                        .filter(|pattern| !pattern.starts_with('!'))
+                        .map(|pattern| ReadPattern::new(pattern))
+                        .collect();
+                    globs.insert(id, reads);
+                }
+                _ => {}
             }
         }
+        (!declared.is_empty() || !globs.is_empty()).then_some(Self { declared, globs })
     }
-    reached
+}
+
+/// The producers whose outputs one consumer's plan reads, sorted. Each task in
+/// the consumer's closure is tested as the walk reaches it, and a plan without
+/// a read never walks.
+fn producers_read_by<'a>(
+    consumer: &str,
+    plan: &[u32],
+    reads: &Reads,
+    patterns_of: &HashMap<&'a str, Vec<OutputPattern<'a>>>,
+    task_graph: &'a TaskGraph,
+    seen: &mut HashSet<&'a str>,
+) -> Vec<String> {
+    let mut declared: HashSet<&[String]> = HashSet::new();
+    let mut globs: Vec<&ReadPattern> = Vec::new();
+    for id in plan {
+        if let Some(outputs) = reads.declared.get(id) {
+            declared.insert(outputs.as_slice());
+        }
+        if let Some(patterns) = reads.globs.get(id) {
+            globs.extend(patterns);
+        }
+    }
+    if declared.is_empty() && globs.is_empty() {
+        return Vec::new();
+    }
+
+    // Equality names a producer, but two unrelated tasks can declare the same
+    // outputs; only testing the consumer's own closure keeps the one it
+    // depends on.
+    let mut producers: Vec<&str> = Vec::new();
+    seen.clear();
+    walk_dependencies(task_graph, vec![consumer], seen, |upstream| {
+        let Some(patterns) = patterns_of.get(upstream) else {
+            return;
+        };
+        let reads_declared = task_graph
+            .tasks
+            .get(upstream)
+            .is_some_and(|task| declared.contains(task.outputs.as_slice()));
+        if reads_declared
+            || globs
+                .iter()
+                .any(|read| patterns.iter().any(|output| read.claims(output)))
+        {
+            producers.push(upstream);
+        }
+    });
+
+    // The walk order is not meaningful; sort for a stable answer.
+    producers.sort_unstable();
+    producers.into_iter().map(str::to_string).collect()
 }
 
 /// A producer's declared output, with the literal directory it is under.
@@ -231,7 +191,9 @@ enum ReadPattern {
     Anywhere(String),
     /// A single segment with a wildcard, `*.json`. Names only root-level paths,
     /// so it claims a literal output only when the glob itself matches it.
-    RootLevel(String),
+    /// Compiled here, since `claims` runs per output per consumer; one that
+    /// cannot compile claims everything.
+    RootLevel(String, Option<Arc<NxGlobSet>>),
 }
 
 impl ReadPattern {
@@ -242,7 +204,10 @@ impl ReadPattern {
         } else if pattern.contains('/') || pattern.starts_with("**") {
             Self::Anywhere(pattern.to_string())
         } else {
-            Self::RootLevel(pattern.to_string())
+            Self::RootLevel(
+                pattern.to_string(),
+                build_glob_set(std::slice::from_ref(&pattern)).ok(),
+            )
         }
     }
 
@@ -256,10 +221,11 @@ impl ReadPattern {
                     || is_path_prefix(output.prefix, prefix)
             }
             Self::Anywhere(pattern) => !distinct_extensions(pattern, output.raw),
-            Self::RootLevel(pattern) if output.prefix.is_empty() => {
+            Self::RootLevel(pattern, _) if output.prefix.is_empty() => {
                 !distinct_extensions(pattern, output.raw)
             }
-            Self::RootLevel(pattern) => build_glob_set(std::slice::from_ref(pattern))
+            Self::RootLevel(_, glob) => glob
+                .as_ref()
                 .map_or(true, |glob| glob.is_match(output.prefix)),
         }
     }

@@ -22,9 +22,8 @@ use std::path::Path;
 use std::sync::Arc;
 use tracing::warn;
 
-use crate::native::affected::dependent_outputs::{
-    compute_dependent_output_edges, with_dependencies,
-};
+use crate::native::affected::dependency_closure::dependency_closure;
+use crate::native::affected::dependent_outputs::compute_dependent_output_edges;
 use crate::native::affected::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
 use crate::native::glob::{build_glob_set, fileset_patterns};
@@ -171,7 +170,7 @@ pub(crate) fn compute_affected_task_selection(
             })
         })
         .collect();
-    let required = with_dependencies(task_graph, affected.iter().map(String::as_str));
+    let required = dependency_closure(task_graph, affected.iter().map(String::as_str));
     Ok(AffectedTaskSelection { affected, required })
 }
 

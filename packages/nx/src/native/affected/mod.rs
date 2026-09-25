@@ -4,6 +4,7 @@
 //! `dependencies` as `HashMap<String, Vec<String>>`, with no edge `type` or
 //! `source`, so it cannot rebuild what `filterAffected` returns.
 
+mod dependency_closure;
 pub mod dependent_outputs;
 mod implicit_dependencies;
 mod plan_ids;
