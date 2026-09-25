@@ -1,21 +1,22 @@
+import type { Mock, MockInstance } from 'vitest';
 import { updatePackageJson } from './update-package-json';
 import { writeJsonFile } from '@nx/devkit';
 import { PackageJson } from '@nx/devkit/internal';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  writeJsonFile: jest.fn(),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  writeJsonFile: vi.fn(),
 }));
 
 describe('updatePackageJson', () => {
-  let writeFileSyncSpy: jest.SpyInstance;
+  let writeFileSyncSpy: MockInstance;
 
   beforeEach(() => {
-    (writeJsonFile as jest.Mock).mockClear();
+    (writeJsonFile as Mock).mockClear();
     // Use require to get the real fs module object (esModuleInterop's __importStar
     // would create a copy, and spies on the copy wouldn't affect the callsite).
     const fs = require('fs');
-    writeFileSyncSpy = jest
+    writeFileSyncSpy = vi
       .spyOn(fs, 'writeFileSync')
       .mockImplementation(() => undefined);
   });

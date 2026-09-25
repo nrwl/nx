@@ -4,24 +4,24 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 // Jest 29 does not support dynamic import() unless --experimental-vm-modules is set.
 // For now, we will mock the loadConfigFile function. We should remove this once we upgrade to Jest 30.
-jest.mock('rollup/loadConfigFile', () => {
+vi.mock('rollup/loadConfigFile', () => {
   return {
-    loadConfigFile: jest.fn(),
+    loadConfigFile: vi.fn(),
   };
 });
 
 // Mock getPackageManagerCommand to ensure consistent test environment
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  getPackageManagerCommand: jest.fn(() => ({
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  getPackageManagerCommand: vi.fn(() => ({
     exec: 'npx',
   })),
 }));
 
 // Mock isUsingTsSolutionSetup to ensure consistent test environment
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(() => false),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(() => false),
 }));
 
 describe('@nx/rollup/plugin', () => {
@@ -96,7 +96,7 @@ describe('@nx/rollup/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
       process.chdir(cwd);
     });
@@ -174,7 +174,7 @@ describe('@nx/rollup/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
       process.chdir(cwd);
     });
