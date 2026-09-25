@@ -18,7 +18,7 @@ describe('getWebpackE2EWebServerInfo', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should use the default values when no plugin is registered and plugins are not being used', async () => {

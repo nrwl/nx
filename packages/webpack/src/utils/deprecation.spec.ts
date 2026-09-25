@@ -1,12 +1,13 @@
+import type { MockInstance } from 'vitest';
 describe('@nx/webpack compose helpers deprecation', () => {
   // Each test runs in an isolated module registry so the warn-once flag and the
   // logger spy resolve to the same fresh instances.
   function setup() {
-    let warn!: jest.SpyInstance;
+    let warn!: MockInstance;
     let mod!: typeof import('./deprecation');
     jest.isolateModules(() => {
       const { logger } = require('@nx/devkit');
-      warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
       mod = require('./deprecation');
     });
     return { warn, mod };
@@ -46,10 +47,10 @@ describe('@nx/webpack compose helpers deprecation', () => {
   });
 
   it('warns when a user constructs withNx', () => {
-    let warn!: jest.SpyInstance;
+    let warn!: MockInstance;
     jest.isolateModules(() => {
       const { logger } = require('@nx/devkit');
-      warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
       const { withNx } = require('./with-nx');
       withNx();
     });

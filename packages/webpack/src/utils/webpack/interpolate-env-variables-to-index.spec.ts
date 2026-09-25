@@ -8,7 +8,7 @@ describe('interpolateEnvironmentVariablesToIndex()', () => {
   };
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...envDefaults };
   });
 
