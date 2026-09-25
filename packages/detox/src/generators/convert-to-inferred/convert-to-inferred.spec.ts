@@ -16,12 +16,12 @@ import { convertToInferred } from './convert-to-inferred';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -62,7 +62,7 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-jest.mock('nx/src/devkit-internals', () => {
+vi.mock('nx/src/devkit-internals', () => {
   // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
   const getActual = () =>
     jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
@@ -74,7 +74,7 @@ jest.mock('nx/src/devkit-internals', () => {
     {
       get(target, prop) {
         if (prop === 'getExecutorInformation') {
-          return jest
+          return vi
             .fn()
             .mockImplementation((pkg, ...args) =>
               getActualDevkitInternals().getExecutorInformation(
@@ -205,7 +205,7 @@ function writeDetoxConfig(tree: Tree, projectRoot: string) {
     `${projectRoot}/.detoxrc.json`,
     JSON.stringify(detoxConfig)
   );
-  jest.doMock(
+  vi.doMock(
     join(fs.tempDir, projectRoot, '.detoxrc.json'),
     () => detoxConfig,
     {
@@ -319,7 +319,7 @@ describe('convert-to-inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should convert project to use inference plugin', async () => {
