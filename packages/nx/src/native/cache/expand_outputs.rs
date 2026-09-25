@@ -25,30 +25,36 @@ where
         &directory
     );
 
-    // The paths the entries name when none is a pattern or a negation.
-    let named = entries
+    // Literal entries, each with the path its escapes resolve to, when none
+    // is a pattern or a negation.
+    let literal = entries
         .iter()
         .map(|entry| match partition_glob(entry) {
-            (named, None) if !entry.starts_with('!') => Some(named),
+            (named, None) if !entry.starts_with('!') => Some((entry, named)),
             _ => None,
         })
         .collect::<Option<Vec<_>>>();
 
-    if let Some(named) = named {
+    if let Some(literal) = literal {
         trace!("No glob patterns found, checking if entries exist");
         let mut existing_count = 0;
-        let existing_directories = named
+        // A path as written wins, like `get_files_for_outputs`: `dist\app` is a
+        // real name off Windows even though it reads as `distapp`.
+        let existing_directories = literal
             .into_iter()
-            .filter(|entry| {
-                let path = directory.join(entry);
-                let exists = path.exists();
-                if exists {
-                    existing_count += 1;
-                    trace!("Found existing entry: {}", entry);
-                } else {
-                    trace!("Entry does not exist: {}", entry);
+            .filter_map(|(entry, named)| {
+                let existing = [entry.as_str(), named.as_str()]
+                    .into_iter()
+                    .find(|path| directory.join(path).exists())
+                    .map(str::to_string);
+                match &existing {
+                    Some(path) => {
+                        existing_count += 1;
+                        trace!("Found existing entry: {}", path);
+                    }
+                    None => trace!("Entry does not exist: {}", entry),
                 }
-                exists
+                existing
             })
             .collect::<Vec<_>>();
         debug!(
@@ -140,8 +146,8 @@ pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::R
                 // expand_outputs does when it includes an existing directory
                 // wholesale. This cannot be gated on the entry being a glob: a
                 // real directory can carry glob syntax (`app/[id]`), and only
-                // expand_outputs, which stats the path first, can tell. For a
-                // true glob (`dist/*.js/**`) the containment form is inert.
+                // get_files_for_outputs, which stats the path first, can tell.
+                // For a true glob (`dist/*.js/**`) the containment form is inert.
                 vec![
                     format!("{negation}{pattern}"),
                     format!("{negation}{pattern}/**"),
@@ -525,6 +531,18 @@ mod test {
         assert_eq!(files, ["dist/*/x.js"]);
         let expanded = _expand_outputs(temp.path(), vec![r"dist/\*/x.js".into()]).unwrap();
         assert_eq!(expanded, ["dist/*/x.js"]);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn a_backslash_in_a_real_name_is_read_as_written() {
+        let temp = TempDir::new().unwrap();
+        temp.child(r"dist\app/main.js").write_str("x").unwrap();
+
+        let expanded = _expand_outputs(temp.path(), vec![r"dist\app".into()]).unwrap();
+        assert_eq!(expanded, [r"dist\app"]);
+        let files = get_files_for_outputs(temp.path(), vec![r"dist\app".into()]).unwrap();
+        assert_eq!(files, [r"dist\app/main.js"]);
     }
 
     #[test]

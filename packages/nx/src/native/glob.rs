@@ -215,7 +215,9 @@ mod test {
 
     /// Pins how every glob-syntax reader answers for a corpus of real globs,
     /// so a change to the parser or the splitter shows up as a snapshot diff.
+    /// Recorded off Windows, where `\` escapes rather than separates.
     #[test]
+    #[cfg(not(windows))]
     fn glob_readers_agree_with_the_recorded_corpus() {
         let corpus = include_str!("glob/fixtures/glob_corpus.txt");
         let mut report = String::new();

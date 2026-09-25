@@ -44,9 +44,10 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
 }
 
 /// A glob split into the directory it is read from and the pattern under it.
-/// The directory is the glob's own text up to its first pattern segment, so
-/// `dist/@scope` is a directory like any other; `normalize_glob` first when
-/// `dist//gen/` and `dist/gen` should read the same. The remainder comes back untouched, with a negation marker
+/// The directory is the literal segments before the first pattern, escapes
+/// resolved (`libs/\*` is `libs/*`), so `dist/@scope` is a directory like any
+/// other; `normalize_glob` first when `dist//gen/` and `dist/gen` should read
+/// the same. The remainder comes back untouched, with a negation marker
 /// re-attached, and is `None` when the glob is literal to its end: it then
 /// names that path rather than matching under it.
 ///
@@ -458,7 +459,7 @@ mod test {
     #[test]
     fn should_partition_glob_with_leading_dirs_and_no_patterns() {
         assert_eq!(super::partition_glob("dist/app"), ("dist/app".into(), None));
-        // The split keeps the text as written; cleaning it is normalize_glob's job.
+        // The split does not clean the glob; that is normalize_glob's job.
         assert_eq!(
             super::partition_glob("dist//app/"),
             ("dist//app/".into(), None)
