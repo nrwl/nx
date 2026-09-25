@@ -16,7 +16,7 @@ pub fn hash_tsconfig_selectively(
     Ok(hash(&[project_path.as_bytes(), ts_config].concat()))
 }
 
-pub(crate) fn remove_other_project_paths(
+fn remove_other_project_paths(
     project_name: &str,
     project_root_mappings: &HashMap<String, String>,
     paths: &HashMap<String, Vec<String>>,

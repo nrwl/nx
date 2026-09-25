@@ -5,8 +5,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::native::project_graph::types::ProjectGraph;
-use crate::native::project_graph::utils::create_project_root_mappings;
-use crate::native::tasks::hashers::remove_other_project_paths;
+use crate::native::project_graph::utils::{create_project_root_mappings, find_project_for_path};
 use crate::native::tasks::types::JsonFileSetInput;
 use crate::native::utils::path::normalize_js_path;
 
@@ -100,22 +99,51 @@ impl<'a> ChangedContents<'a> {
 }
 
 /// The projects whose paths entries, as `hash_tsconfig_selectively` filters
-/// them, differ between the two versions.
+/// them, differ between the two versions: per changed key, the owners whose
+/// own targets changed. Only changed keys are walked, not every project.
 fn projects_with_changed_paths(graph: &ProjectGraph, change: &TsConfigChange) -> HashSet<String> {
-    if change.paths_before == change.paths_after {
-        return HashSet::new();
-    }
-    // The hasher's own mapping, so the filter agrees with the hash.
+    // The hasher's own mapping, so ownership agrees with the hash.
     let mappings = create_project_root_mappings(&graph.nodes);
-    graph
-        .nodes
+    let keys: HashSet<&String> = change
+        .paths_before
         .keys()
-        .filter(|project| {
-            remove_other_project_paths(project, &mappings, &change.paths_before)
-                != remove_other_project_paths(project, &mappings, &change.paths_after)
-        })
-        .cloned()
-        .collect()
+        .chain(change.paths_after.keys())
+        .collect();
+    let mut projects = HashSet::new();
+    for key in keys {
+        let (before, after) = (
+            targets(&change.paths_before, key),
+            targets(&change.paths_after, key),
+        );
+        if before == after {
+            continue;
+        }
+        let (before, after) = (by_owner(before, &mappings), by_owner(after, &mappings));
+        for owner in before.keys().chain(after.keys()) {
+            if before.get(owner) != after.get(owner) {
+                projects.insert(owner.to_string());
+            }
+        }
+    }
+    projects
+}
+
+fn targets<'a>(paths: &'a HashMap<String, Vec<String>>, key: &str) -> &'a [String] {
+    paths.get(key).map_or(&[], Vec::as_slice)
+}
+
+/// `targets` grouped by owning project, in their order.
+fn by_owner<'a>(
+    targets: &'a [String],
+    mappings: &'a HashMap<String, String>,
+) -> HashMap<&'a str, Vec<&'a str>> {
+    let mut owned: HashMap<&str, Vec<&str>> = HashMap::new();
+    for target in targets {
+        if let Some(owner) = find_project_for_path(target, mappings) {
+            owned.entry(owner).or_default().push(target);
+        }
+    }
+    owned
 }
 
 /// Mirrors `filter_json_value`: `fields` keep dot paths, `exclude_fields` then
@@ -243,6 +271,27 @@ mod tests {
     fn a_selectively_hashed_paths_change_touches_only_the_project_it_maps_into() {
         let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
         let contents = ChangedContents::new(&g, None, Some(&ts_config(false, true)));
+        assert!(contents.ts_config_changed("a"));
+        assert!(!contents.ts_config_changed("b"));
+    }
+
+    /// A key can point into several projects; only those whose own targets moved changed.
+    #[test]
+    fn a_shared_key_touches_only_the_project_whose_target_moved() {
+        let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
+        let change = TsConfigChange {
+            rest_changed: false,
+            selective: true,
+            paths_before: HashMap::from([(
+                "@ws/*".to_string(),
+                strings(&["libs/a/src/index.ts", "libs/b/src/index.ts"]),
+            )]),
+            paths_after: HashMap::from([(
+                "@ws/*".to_string(),
+                strings(&["libs/a/src/main.ts", "libs/b/src/index.ts"]),
+            )]),
+        };
+        let contents = ChangedContents::new(&g, None, Some(&change));
         assert!(contents.ts_config_changed("a"));
         assert!(!contents.ts_config_changed("b"));
     }
