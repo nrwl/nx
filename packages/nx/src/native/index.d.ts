@@ -72,9 +72,25 @@ export declare class FileLock {
   locked: boolean
   constructor(lockFilePath: string)
   unlock(): void
+  /**
+   * Whether anybody holds the lock, the caller included. A free lock is
+   * briefly taken and released to answer.
+   */
   check(): boolean
   wait(): Promise<void>
+  /**
+   * Resolves `true` once nobody holds the lock, `false` if `timeoutMs` passes
+   * first. `Infinity` is `wait()`; negative or NaN throws synchronously.
+   * Leaves `locked` as it was.
+   */
+  waitTimeout(timeoutMs: number): Promise<boolean>
   lock(): void
+  /**
+   * `lock()` that gives up: `false` if the lock is still held after
+   * `timeoutMs`. `0` is a single attempt and `Infinity` is `lock()`;
+   * negative or NaN throws. As with `tryLock()`, `false` leaves `locked` true.
+   */
+  lockTimeout(timeoutMs: number): boolean
   /** Takes the lock without blocking; false means another handle holds it. */
   tryLock(): boolean
 }
