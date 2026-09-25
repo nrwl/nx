@@ -24,7 +24,7 @@ describe('nxViteTsPaths', () => {
     }
     delete global.NX_GRAPH_CREATION;
     tempFs.cleanup();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   const resolveWith = async (importPath: string) => {

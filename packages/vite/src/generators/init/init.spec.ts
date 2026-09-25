@@ -14,9 +14,9 @@ import { nxVersion } from '../../utils/versions';
 import { initGenerator } from './init';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
 }));
@@ -56,7 +56,7 @@ describe('@nx/vite:init', () => {
     });
 
     it('should default to vite 7 when an older esbuild is already installed', async () => {
-      const warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {
+      const warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {
         // no-op
       });
       updateJson(tree, 'package.json', (json) => {
