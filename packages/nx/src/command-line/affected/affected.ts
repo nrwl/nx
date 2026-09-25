@@ -33,9 +33,13 @@ import {
   selectsAffectedTasks,
 } from '../../project-graph/affected/affected-tasks';
 import type { TaskSelection } from '../../tasks-runner/run-command';
-import type { AffectedExplanation } from '../../project-graph/affected/affected-reasons';
+import {
+  explainSelection,
+  isExplaining,
+  type AffectedExplanation,
+  type AffectedReason,
+} from '../../project-graph/affected/affected-reasons';
 import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
-import { isExplaining } from '../../project-graph/affected/affected-reasons';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -116,13 +120,8 @@ export async function affected(
   } else {
     projectGraph = await createProjectGraphAsync({ exitOnError: true });
     if (isExplaining(nxArgs.explain)) {
-      const { reasons } = await filterAffectedWithReasons(
-        projectGraph,
-        calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
-        nxJson
-      );
       printAffectedExplanation(
-        { affected: reasons, dependencies: {} },
+        await explainAffectedProjects(command, nxArgs, projectGraph, nxJson),
         'Affected projects',
         nxArgs.explain
       );
@@ -233,6 +232,44 @@ function initiatingProjects(selection: TaskSelection): string[] {
       )
     ),
   ];
+}
+
+/**
+ * Explains the projects the run acts on: `--all` or the diff, less `--exclude`,
+ * and for `affected` only the projects with a requested target.
+ */
+export async function explainAffectedProjects(
+  command: 'graph' | 'print-affected' | 'affected',
+  nxArgs: NxArgs,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+): Promise<AffectedExplanation> {
+  const reasons: Record<string, AffectedReason[]> = nxArgs.all
+    ? Object.fromEntries(
+        Object.keys(projectGraph.nodes).map((name) => [
+          name,
+          [{ kind: 'all-projects' }],
+        ])
+      )
+    : (
+        await filterAffectedWithReasons(
+          projectGraph,
+          calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+          nxJson
+        )
+      ).reasons;
+  const excluded = new Set(
+    nxArgs.exclude
+      ? findMatchingProjects(nxArgs.exclude, projectGraph.nodes)
+      : []
+  );
+  return explainSelection(
+    reasons,
+    (name) =>
+      !excluded.has(name) &&
+      (command !== 'affected' ||
+        projectsWithTarget([projectGraph.nodes[name]], nxArgs).length > 0)
+  );
 }
 
 function projectsWithTarget(

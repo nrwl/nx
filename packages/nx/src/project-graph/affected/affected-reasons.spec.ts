@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  explainSelection,
   formatAffectedExplanation,
   formatAffectedReason,
   isExplaining,
@@ -171,5 +172,34 @@ describe('formatAffectedExplanation', () => {
   it('sorts an entry reached only through a dependency to the bottom', () => {
     const out = formatAffectedExplanation(selected, 'Affected tasks');
     expect(out.indexOf('ui:build')).toBeLessThan(out.indexOf('app:build'));
+  });
+});
+
+describe('explainSelection', () => {
+  const reasons: Record<string, AffectedReason[]> = {
+    'a:build': [{ kind: 'dependent-output', producer: 'b:gen' }],
+    'b:gen': [{ kind: 'dependent-output', producer: 'c:gen' }],
+    'c:gen': [{ kind: 'input-file', file: 'c/x.ts' }],
+    'd:gen': [{ kind: 'input-file', file: 'd/x.ts' }],
+  };
+
+  it('follows the chain from the selection through what it drops', () => {
+    const { affected, dependencies } = explainSelection(
+      reasons,
+      (name) => name === 'a:build'
+    );
+    expect(Object.keys(affected)).toEqual(['a:build']);
+    expect(Object.keys(dependencies).sort()).toEqual(['b:gen', 'c:gen']);
+  });
+
+  it('survives a cycle between dropped entries', () => {
+    const { dependencies } = explainSelection(
+      {
+        ...reasons,
+        'c:gen': [{ kind: 'dependent-output', producer: 'b:gen' }],
+      },
+      (name) => name === 'a:build'
+    );
+    expect(Object.keys(dependencies).sort()).toEqual(['b:gen', 'c:gen']);
   });
 });

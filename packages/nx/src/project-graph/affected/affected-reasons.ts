@@ -34,7 +34,9 @@ export type AffectedReasonKind =
   /** Task-level: it reads the outputs of a task that is itself affected. */
   | 'dependent-output'
   /** Task-level: it hashes every external dependency, and one moved. */
-  | 'external-dependencies';
+  | 'external-dependencies'
+  /** `--all` asked for every project, whatever changed. */
+  | 'all-projects';
 
 export interface AffectedReason {
   kind: AffectedReasonKind;
@@ -60,6 +62,38 @@ export interface AffectedExplanation {
    * within the same output.
    */
   dependencies: Record<string, AffectedReason[]>;
+}
+
+/**
+ * Splits `reasons` by whether the run keeps each entry. A dropped entry still
+ * lands in `dependencies` when a kept entry's reason names it, transitively.
+ */
+export function explainSelection(
+  reasons: Record<string, AffectedReason[]>,
+  isSelected: (name: string) => boolean
+): AffectedExplanation {
+  const explanation: AffectedExplanation = { affected: {}, dependencies: {} };
+  for (const [name, forName] of Object.entries(reasons)) {
+    if (isSelected(name)) {
+      explanation.affected[name] = forName;
+    }
+  }
+  const upstream = (forName: AffectedReason[]) =>
+    forName.map((r) => r.dependency ?? r.producer).filter(Boolean);
+  const pending = Object.values(explanation.affected).flatMap(upstream);
+  while (pending.length) {
+    const name = pending.pop();
+    if (
+      name in explanation.affected ||
+      name in explanation.dependencies ||
+      !(name in reasons)
+    ) {
+      continue;
+    }
+    explanation.dependencies[name] = reasons[name];
+    pending.push(...upstream(reasons[name]));
+  }
+  return explanation;
 }
 
 /** A reason, bound to the project a locator marked. */
@@ -100,6 +134,8 @@ export function formatAffectedReason(reason: AffectedReason): string {
       return `reads the outputs of ${reason.producer}, which the change reached`;
     case 'external-dependencies':
       return `hashes every external dependency, and ${reason.file} changed`;
+    case 'all-projects':
+      return `--all selects every project`;
   }
 }
 
