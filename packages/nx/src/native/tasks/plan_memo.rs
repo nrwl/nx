@@ -10,11 +10,12 @@ use crate::native::tasks::types::{TaskGraph, TaskTarget, TaskUltracacheConfigura
 
 #[derive(Default)]
 pub(super) struct PlanMemo {
-    recorded: Mutex<Option<Recorded>>,
+    recorded: Mutex<Recorded>,
 }
 
 /// Invariant: every task in `plans` has its closure described by `tasks`, as
 /// it was when the plan was made.
+#[derive(Default)]
 struct Recorded {
     /// The snapshot set's commit and fetch time; plans made against another are dropped.
     snapshots: Option<(String, i64)>,
@@ -47,14 +48,7 @@ impl PlannedTask {
     }
 
     fn matches(&self, task_graph: &TaskGraph, custom_hasher: &HashSet<&str>, id: &str) -> bool {
-        task_graph.tasks.get(id).is_some_and(|task| {
-            self.target == task.target
-                && self.outputs == task.outputs
-                && self.dependencies == edges(&task_graph.dependencies, id)
-                && self.continuous_dependencies == edges(&task_graph.continuous_dependencies, id)
-                && self.ultracache == task.ultracache
-                && self.custom_hasher == custom_hasher.contains(id)
-        })
+        Self::of(task_graph, custom_hasher, id).as_ref() == Some(self)
     }
 }
 
@@ -73,21 +67,14 @@ impl PlanMemo {
         custom_hasher: &[String],
     ) -> PlanMemoGuard<'_> {
         let mut recorded = self.recorded.lock().expect("plan memo lock");
-        if recorded
-            .as_ref()
-            .is_none_or(|recorded| recorded.snapshots != snapshots)
-        {
-            *recorded = Some(Recorded {
+        if recorded.snapshots != snapshots {
+            *recorded = Recorded {
                 snapshots,
-                tasks: HashMap::new(),
-                plans: HashMap::new(),
-            });
+                ..Default::default()
+            };
         }
         let custom_hasher: HashSet<&str> = custom_hasher.iter().map(String::as_str).collect();
-        recorded
-            .as_mut()
-            .expect("just set")
-            .forget_what_changed(task_graph, &custom_hasher);
+        recorded.forget_what_changed(task_graph, &custom_hasher);
         PlanMemoGuard { recorded }
     }
 }
@@ -95,17 +82,16 @@ impl PlanMemo {
 /// The memo locked from `begin` to `finish`, so one call's lookups and inserts
 /// agree on one task graph.
 pub(super) struct PlanMemoGuard<'a> {
-    recorded: MutexGuard<'a, Option<Recorded>>,
+    recorded: MutexGuard<'a, Recorded>,
 }
 
 impl PlanMemoGuard<'_> {
     /// The tasks of `task_ids` with no plan kept.
     pub(super) fn missing<'t>(&self, task_ids: &[&'t str]) -> Vec<&'t str> {
-        let plans = &self.recorded.as_ref().expect("begun").plans;
         task_ids
             .iter()
             .copied()
-            .filter(|id| !plans.contains_key(*id))
+            .filter(|id| !self.recorded.plans.contains_key(*id))
             .collect()
     }
 
@@ -115,7 +101,7 @@ impl PlanMemoGuard<'_> {
         planned: HashMap<String, Vec<u32>>,
         task_ids: &[&str],
     ) -> HashMap<String, Vec<u32>> {
-        let plans = &mut self.recorded.as_mut().expect("begun").plans;
+        let plans = &mut self.recorded.plans;
         plans.extend(planned);
         task_ids
             .iter()
