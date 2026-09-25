@@ -326,6 +326,143 @@ some-other-external-package@^4.0.1:
       tempFs.cleanup();
     });
 
+    describe('pnpm snapshot dependency changes', () => {
+      const lockfile = (dependencies: string) => `lockfileVersion: '9.0'
+importers:
+  .: {}
+packages:
+  host@1.0.0:
+    resolution: {integrity: sha512-host}
+  dep@1.0.0:
+    resolution: {integrity: sha512-one}
+  dep@2.0.0:
+    resolution: {integrity: sha512-two}
+snapshots:
+  host@1.0.0:
+${dependencies}
+  dep@1.0.0: {}
+  dep@2.0.0: {}
+`;
+
+      beforeEach(() => {
+        graph.externalNodes = {
+          'npm:host': {
+            type: 'npm',
+            name: 'npm:host',
+            data: { packageName: 'host', version: '1.0.0' },
+          },
+          'npm:dep@1.0.0': {
+            type: 'npm',
+            name: 'npm:dep@1.0.0',
+            data: { packageName: 'dep', version: '1.0.0' },
+          },
+          'npm:dep@2.0.0': {
+            type: 'npm',
+            name: 'npm:dep@2.0.0',
+            data: { packageName: 'dep', version: '2.0.0' },
+          },
+        };
+      });
+
+      const touched = (base: string, head: string, file = 'pnpm-lock.yaml') =>
+        getTouchedProjectsFromLockFile(
+          [{ file, getChanges: () => [new LockFileChange(base, head)] }],
+          graph.nodes,
+          autoNxJson,
+          undefined,
+          graph
+        );
+
+      it.each(['pnpm-lock.yaml', 'pnpm-lock.yml'])(
+        'detects redirects between existing versions in %s',
+        (file) => {
+          expect(
+            touched(
+              lockfile('    dependencies:\n      dep: 1.0.0'),
+              lockfile('    dependencies:\n      dep: 2.0.0'),
+              file
+            )
+          ).toEqual(['npm:host']);
+        }
+      );
+
+      it('detects optional dependency redirects', () => {
+        expect(
+          touched(
+            lockfile('    optionalDependencies:\n      dep: 1.0.0'),
+            lockfile('    optionalDependencies:\n      dep: 2.0.0')
+          )
+        ).toEqual(['npm:host']);
+      });
+
+      it.each([false, true])(
+        'detects dependency additions and removals (reverse: %s)',
+        (reverse) => {
+          const before = lockfile('    dependencies: {}');
+          const after = lockfile('    dependencies:\n      dep: 1.0.0');
+          expect(
+            touched(reverse ? after : before, reverse ? before : after)
+          ).toEqual(['npm:host']);
+        }
+      );
+
+      it('ignores dependency key ordering', () => {
+        expect(
+          touched(
+            lockfile(
+              '    dependencies:\n      first: dep@1.0.0\n      second: dep@2.0.0'
+            ),
+            lockfile(
+              '    dependencies:\n      second: dep@2.0.0\n      first: dep@1.0.0'
+            )
+          )
+        ).toEqual([]);
+      });
+
+      it('keeps dependency edges associated with their peer context', () => {
+        const base = lockfile('    dependencies:\n      dep: 1.0.0').replace(
+          'snapshots:\n  host@1.0.0:\n    dependencies:\n      dep: 1.0.0',
+          'snapshots:\n  host@1.0.0(dep@1.0.0):\n    dependencies:\n      dep: 1.0.0\n  host@1.0.0(dep@2.0.0):\n    dependencies:\n      dep: 2.0.0'
+        );
+        const head = base
+          .replace('      dep: 1.0.0', '      dep: temporary')
+          .replace('      dep: 2.0.0', '      dep: 1.0.0')
+          .replace('      dep: temporary', '      dep: 2.0.0');
+        expect(touched(base, head)).toEqual(['npm:host']);
+      });
+
+      it('detects dependency redirects in v6 package snapshots', () => {
+        const base = `lockfileVersion: '6.0'
+importers:
+  .: {}
+packages:
+  /host@1.0.0:
+    resolution: {integrity: sha512-host}
+    dependencies:
+      dep: 1.0.0
+  /dep@1.0.0:
+    resolution: {integrity: sha512-one}
+  /dep@2.0.0:
+    resolution: {integrity: sha512-two}
+`;
+        expect(
+          touched(base, base.replace('      dep: 1.0.0', '      dep: 2.0.0'))
+        ).toEqual(['npm:host']);
+      });
+
+      it('detects redirects alongside an unrelated integrity change', () => {
+        expect(
+          touched(
+            lockfile('    dependencies:\n      dep: 1.0.0'),
+            lockfile('    dependencies:\n      dep: 2.0.0').replace(
+              'sha512-one',
+              'sha512-changed'
+            )
+          ).sort()
+        ).toEqual(['npm:dep@1.0.0', 'npm:dep@2.0.0', 'npm:host']);
+      });
+    });
+
     AUTO_CASES.forEach(({ lockFile, base, head }) => {
       describe(`"${lockFile}"`, () => {
         it('should not return changes when the lock file is untouched', () => {
