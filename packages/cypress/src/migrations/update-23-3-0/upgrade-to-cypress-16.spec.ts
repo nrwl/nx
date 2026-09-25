@@ -228,7 +228,7 @@ describe('upgrade-to-cypress-16', () => {
         skipAgentic: true,
         agentContext: [],
         nextSteps: [
-          `Kept Cypress 15: Cypress 16 component testing requires Vite 8 and apps/app/cypress.config.ts resolves Vite 7.3.6. Update Vite to 8 (\`nx migrate\` bumps it through \`@nx/vite\`), then run \`${RERUN_COMMAND}\` to move to Cypress 16.`,
+          `Kept Cypress 15: Cypress 16 component testing requires Vite 8 and apps/app/cypress.config.ts resolves Vite 7.3.6. Update \`vite\` to 8 where each listed config resolves it from, and any \`@vitejs/*\` plugin whose peer range excludes Vite 8. Install, then run \`${RERUN_COMMAND}\` to move to Cypress 16.`,
         ],
       });
     }
@@ -560,7 +560,7 @@ export default defineConfig({ component: ctConfig });
       const result = await migration(tree);
 
       expect(result.nextSteps).toEqual([
-        `Kept Cypress 15: Cypress 16 component testing requires Vite 8 and ${blocker}. Update Vite to 8 (\`nx migrate\` bumps it through \`@nx/vite\`), then run \`${RERUN_COMMAND}\` to move to Cypress 16.`,
+        `Kept Cypress 15: Cypress 16 component testing requires Vite 8 and ${blocker}. Update \`vite\` to 8 where each listed config resolves it from, and any \`@vitejs/*\` plugin whose peer range excludes Vite 8. Install, then run \`${RERUN_COMMAND}\` to move to Cypress 16.`,
       ]);
     }
   );

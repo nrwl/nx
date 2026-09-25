@@ -88,7 +88,7 @@ export default async function upgradeToCypress16(
     return skipped(
       `Kept Cypress 15: Cypress 16 component testing requires Vite 8 and ${blockers.join(
         ', '
-      )}. Update Vite to 8 (\`nx migrate\` bumps it through \`@nx/vite\`), then run \`${RERUN_COMMAND}\` to move to Cypress 16.`
+      )}. Update \`vite\` to 8 where each listed config resolves it from, and any \`@vitejs/*\` plugin whose peer range excludes Vite 8. Install, then run \`${RERUN_COMMAND}\` to move to Cypress 16.`
     );
   }
 
