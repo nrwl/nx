@@ -44,6 +44,6 @@ export function createTaskPlanningContext(
   const projectGraphRef = transformProjectGraphForRust(projectGraph);
   return {
     projectGraphRef,
-    planner: new HashPlanner(nxJson as any, projectGraphRef),
+    planner: new HashPlanner(nxJson, projectGraphRef),
   };
 }
