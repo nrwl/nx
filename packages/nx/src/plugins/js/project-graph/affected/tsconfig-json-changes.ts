@@ -13,13 +13,18 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, a, b, c, graph): TouchedProject[] => {
   const rootTsConfig = getRootTsConfigFileName();
-  return locateTouchedProjectsFromTsConfig(touchedFiles, a, b, c, graph).map(
-    (project) => ({
-      project,
-      kind: 'tsconfig' as const,
-      file: rootTsConfig ?? undefined,
-    })
+  const { projects, byPathMapping } = locateTouchedProjectsFromTsConfig(
+    touchedFiles,
+    a,
+    b,
+    c,
+    graph
   );
+  return projects.map((project) => ({
+    project,
+    kind: byPathMapping ? ('tsconfig-paths' as const) : ('tsconfig' as const),
+    file: rootTsConfig ?? undefined,
+  }));
 };
 
 const locateTouchedProjectsFromTsConfig = (
@@ -30,22 +35,27 @@ const locateTouchedProjectsFromTsConfig = (
   _b: Parameters<TouchedProjectLocator>[2],
   _c: Parameters<TouchedProjectLocator>[3],
   graph: Parameters<TouchedProjectLocator>[4]
-): string[] => {
+): { projects: string[]; byPathMapping: boolean } => {
+  const none = { projects: [], byPathMapping: false };
+  const everything = () => ({
+    projects: Object.keys(graph.nodes),
+    byPathMapping: false,
+  });
   const rootTsConfig = getRootTsConfigFileName();
   if (!rootTsConfig) {
-    return [];
+    return none;
   }
   const tsConfigJsonChanges = touchedFiles.find(
     (change) => change.file === rootTsConfig
   );
   if (!tsConfigJsonChanges) {
-    return [];
+    return none;
   }
 
   const changes = tsConfigJsonChanges.getChanges();
 
   if (!allChangesArePathChanges(changes)) {
-    return Object.keys(graph.nodes);
+    return everything();
   }
 
   const touched: string[] = [];
@@ -58,13 +68,13 @@ const locateTouchedProjectsFromTsConfig = (
 
     // If a path is deleted, everything is touched
     if (change.type === JsonDiffType.Deleted) {
-      return Object.keys(graph.nodes);
+      return everything();
     }
     touched.push(
       ...getProjectsAffectedByPaths(change, Object.values(graph.nodes))
     );
   }
-  return touched;
+  return { projects: touched, byPathMapping: true };
 };
 
 function allChangesArePathChanges(
