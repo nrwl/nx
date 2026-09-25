@@ -2,13 +2,11 @@
 // `await import('@nx/cypress/plugin')` (fired when include/exclude is present)
 // doesn't pull real plugin code, which transitively imports @nx/js source and
 // inflates sandbox inputs.
-vi.mock(
-  '@nx/cypress/plugin',
-  () => ({
-    createNodesV2: ['**/cypress.config.{js,ts,mjs,cjs}', vi.fn()],
-  }),
-  { virtual: true }
-);
+vi.mock('@nx/cypress/plugin', () => ({
+  // Vitest throws on reading an export the factory did not return.
+  createNodes: undefined,
+  createNodesV2: ['**/cypress.config.{js,ts,mjs,cjs}', vi.fn()],
+}));
 
 import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';

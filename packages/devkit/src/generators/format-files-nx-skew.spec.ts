@@ -26,8 +26,18 @@ vi.mock('nx/src/devkit-internals', async () => {
     createPrettierIgnoreChecker,
     ...olderNx
   } = actual;
+  // Explicitly `undefined`, not omitted: vitest throws on reading an export
+  // its mock factory did not return, where an older nx's CJS module reads as
+  // `undefined`.
   return {
     ...olderNx,
+    detectFormatter: undefined,
+    detectFormatterInTree: undefined,
+    formatFilesWithOxfmt: undefined,
+    oxfmtConfigFiles: undefined,
+    createGitIgnoreChecker: undefined,
+    createOxfmtIgnoreChecker: undefined,
+    createPrettierIgnoreChecker: undefined,
     isUsingPrettierInTree: (...args: unknown[]) =>
       mockIsUsingPrettierInTree(...args),
   };
@@ -36,7 +46,7 @@ vi.mock('nx/src/devkit-internals', async () => {
 describe('formatFiles against an nx without the formatter exports', () => {
   let tree: Tree;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const { isUsingPrettierInTree } = await vi.importActual<any>(
       'nx/src/devkit-internals'
     );
@@ -45,10 +55,10 @@ describe('formatFiles against an nx without the formatter exports', () => {
       .mockImplementation(isUsingPrettierInTree);
   });
 
-  it('guards the simulation itself', () => {
+  it('guards the simulation itself', async () => {
     // Without this the suite passes for the wrong reason: a mock that quietly
     // stopped applying would exercise the current nx and prove nothing.
-    const seen = require('nx/src/devkit-internals');
+    const seen: any = await import('nx/src/devkit-internals');
     expect(seen.detectFormatterInTree).toBeUndefined();
     expect(seen.formatFilesWithOxfmt).toBeUndefined();
     // Asserted alongside the formatter exports so the two lists cannot drift -
@@ -62,7 +72,7 @@ describe('formatFiles against an nx without the formatter exports', () => {
 
   it('still selects prettier through the fallback', async () => {
     // Asserts the branch was taken, not its output. Whether prettier can
-    // actually format under jest depends on whether its dynamic `import()` is
+    // actually format under the test runner depends on whether its dynamic `import()` is
     // reachable, which varies between an isolated run and the full suite - so
     // the formatted text is not a stable signal. That the fallback consulted
     // prettier detection, and that detection said yes, is.
