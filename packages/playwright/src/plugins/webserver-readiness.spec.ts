@@ -947,7 +947,7 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
   });
 
   it('kills a hung worker and rejects when the evaluation times out', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     try {
       // Holds the event loop open and never reports, like a config stuck in a
       // busy loop or awaiting something that never resolves.
@@ -960,10 +960,10 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
       const assertion = expect(evaluation).rejects.toThrow(
         'Timed out evaluating the Playwright config'
       );
-      jest.advanceTimersByTime(30_000);
+      vi.advanceTimersByTime(30_000);
       await assertion;
     } finally {
-      jest.useRealTimers();
+      vi.useRealTimers();
     }
   });
 });
