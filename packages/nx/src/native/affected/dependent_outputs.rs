@@ -1,28 +1,9 @@
-//! Which upstream task's build artifacts a task reads.
-//!
-//! Neither kind of read can be matched against the filesystem: the artifact does
-//! not exist when affected runs (it is the thing the run would produce) and it is
-//! gitignored, so it is in neither the file map nor the diff. Both are answered
-//! from declared configuration.
-//!
-//! The two kinds need different work, and only one of them is expensive.
-//!
-//! `TaskOutput(glob, outputs)` comes from an explicit `dependentTasksOutputFiles`
-//! input, and `process_tasks_outputs` builds one per dependent task from
-//! `task.outputs.clone()`. The embedded vector *is* some producer's declared
-//! outputs, so equality against `task.outputs` names that producer exactly, with
-//! no path analysis. Two unrelated tasks can declare the same outputs, so the
-//! match is still limited to the consumer's dependency closure.
-//!
-//! An `IgnoredFileSet(globs)` comes from an `includeIgnored` fileset. I/O
-//! tracing turns an observed read of a generated artifact into one of these,
-//! which can preclude the explicit input entirely, so a plan can read a
-//! dependency's output with no `TaskOutput` anywhere in it. It carries no
-//! project and names no producer, so each pattern is compared to declared
-//! outputs, over the consumer's dependency closure: by
-//! directory containment when the read names one, and by what the glob can
-//! match when it leads with a wildcard. Either walk runs only for tasks
-//! carrying a read.
+//! Which upstream tasks' declared outputs a task reads, so a change propagates
+//! producer -> consumer. Outputs are gitignored and may not exist yet, so this
+//! compares declared configuration, never the filesystem. A `TaskOutput` embeds
+//! its producer's `outputs` verbatim and is matched by equality. An
+//! `IgnoredFileSet` (snapshot plans carry observed reads instead of any
+//! `TaskOutput`) names no producer and is matched by pattern overlap.
 
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
@@ -36,12 +17,8 @@ use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
 /// Consumer task id -> the upstream task ids whose declared outputs it reads.
-///
-/// Producers are searched over the whole dependency closure, not just direct
-/// dependencies: `TaskOutput` does not record whether its `transitive` flag was
-/// set, and an observed read cannot say how deep the producer sits. Over-
-/// reporting an edge costs a task that was going to be a cache hit; missing one
-/// skips a task that needed to run.
+/// Searched over the whole dependency closure: `TaskOutput` does not keep its
+/// `transitive` flag, and an observed read cannot say how deep its producer sits.
 pub(crate) fn compute_dependent_output_edges(
     hash_plans: &HashPlans,
     task_graph: &TaskGraph,
@@ -96,10 +73,8 @@ fn output_patterns(task_graph: &TaskGraph) -> HashMap<&str, Vec<OutputPattern<'_
         .collect()
 }
 
-/// The read instructions the plans hold, decoded once per interned id: one
-/// instruction shared by a thousand plans is a single id. Cloned rather than
-/// borrowed, since the pool hands out a guard that cannot outlive the lookup;
-/// the count is bounded by unique inputs, not by task count.
+/// Read instructions decoded once per interned id. Cloned because the pool's
+/// `Ref` guard cannot outlive the lookup.
 struct Reads {
     declared: HashMap<u32, Vec<String>>,
     globs: HashMap<u32, Vec<ReadPattern>>,
@@ -131,9 +106,7 @@ impl Reads {
     }
 }
 
-/// The producers whose outputs one consumer's plan reads, sorted. Each task in
-/// the consumer's closure is tested as the walk reaches it, and a plan without
-/// a read never walks.
+/// The producers whose outputs one consumer's plan reads, sorted.
 fn producers_read_by<'a>(
     consumer: &str,
     plan: &[u32],
@@ -156,9 +129,8 @@ fn producers_read_by<'a>(
         return Vec::new();
     }
 
-    // Equality names a producer, but two unrelated tasks can declare the same
-    // outputs; only testing the consumer's own closure keeps the one it
-    // depends on.
+    // Two unrelated tasks can declare the same outputs; only the consumer's own
+    // closure picks the one it depends on.
     let mut producers: Vec<&str> = Vec::new();
     seen.clear();
     walk_dependencies(task_graph, vec![consumer], seen, |upstream| {
@@ -183,7 +155,7 @@ fn producers_read_by<'a>(
     producers.into_iter().map(str::to_string).collect()
 }
 
-/// A producer's declared output, with the literal directory it is under.
+/// A producer's declared output with its `literal_prefix`.
 struct OutputPattern<'a> {
     raw: &'a str,
     prefix: &'a str,
@@ -198,22 +170,21 @@ impl<'a> OutputPattern<'a> {
     }
 }
 
-/// An observed or declared read, classified by how it can be compared to a
-/// producer's outputs. Neither side is a concrete path, so this is containment
-/// between patterns, and it errs towards claiming: an edge too many costs a
-/// cache hit, one too few skips a task that needed to run.
+/// A read classified by how it compares to a producer's outputs. Both sides are
+/// patterns, so this is overlap, and it errs towards claiming: an extra edge
+/// costs a cache hit, a missing one skips a task that needed to run.
 enum ReadPattern {
-    /// Leads with a literal directory, `dist/libs/ui/**/*.js`. Compared to an
-    /// output by directory containment on their literal prefixes.
+    /// Has a literal leading path, `dist/libs/ui/**/*.js` or `package.json`.
+    /// Claims an output when either literal prefix contains the other.
     Under(String),
     /// Leads with a wildcard and spans directories, `**/*.js` or
     /// `{dist,out}/lib/**`, so it can reach into any output directory. Ruled
     /// out only when both name a literal extension and the two differ.
     Anywhere(String),
-    /// A single segment with a wildcard, `*.json`. Names only root-level paths,
-    /// so it claims a literal output only when the glob itself matches it.
-    /// Compiled here, since `claims` runs per output per consumer; one that
-    /// cannot compile claims everything.
+    /// A single wildcard segment, `*.json`, matching only root-level paths: it
+    /// claims an output only when the glob matches the output's literal prefix.
+    /// Precompiled because `claims` runs per output per consumer; a glob that
+    /// fails to compile claims everything.
     RootLevel(String, Option<Arc<NxGlobSet>>),
 }
 
@@ -268,8 +239,8 @@ fn distinct_extensions(read: &str, output: &str) -> bool {
 }
 
 /// The literal extension a pattern's last segment ends in: `js` for
-/// `dist/**/*.js`. None when the segment has no extension or the extension
-/// itself carries a wildcard.
+/// `dist/**/*.js`. None when there is no extension, the extension has a
+/// wildcard, or the segment has a brace or group.
 fn literal_extension(pattern: &str) -> Option<&str> {
     let segment = pattern.rsplit('/').next().unwrap_or(pattern);
     if segment.contains(['{', '(']) {
@@ -288,10 +259,9 @@ fn is_path_prefix(prefix: &str, path: &str) -> bool {
             .is_some_and(|rest| rest.starts_with('/'))
 }
 
-/// The leading path segments of a glob that contain no wildcard, so
-/// `dist/libs/ui/**/*.js` reduces to `dist/libs/ui`. A pattern whose first
-/// segment is already a wildcard reduces to `""`; how it then compares to an
-/// output is `ReadPattern`'s decision.
+/// The leading path segments of a glob that contain no wildcard:
+/// `dist/libs/ui/**/*.js` -> `dist/libs/ui`, `**/*.js` -> `""`. A pattern with
+/// no wildcard is returned whole.
 fn literal_prefix(pattern: &str) -> &str {
     let pattern = pattern.strip_prefix('!').unwrap_or(pattern);
     let Some(wildcard) = pattern.find(['*', '?', '[', '{', '(']) else {
@@ -372,7 +342,6 @@ mod tests {
         HashInstruction::IgnoredFileSet(strings(globs))
     }
 
-    /// The embedded vector is the producer's own `outputs`, so equality names it.
     #[test]
     fn resolves_the_producer_a_task_output_embeds() {
         let e = edges(
@@ -386,8 +355,6 @@ mod tests {
         assert_eq!(e["app:build"], strings(&["ui:build"]));
     }
 
-    /// A sibling dependency whose outputs the consumer does not name is not a
-    /// producer. This is what coarse propagation over-selects.
     #[test]
     fn ignores_a_dependency_it_does_not_read() {
         let e = edges(
@@ -448,7 +415,6 @@ mod tests {
         assert_eq!(e["app:build"], strings(&["ui:build"]));
     }
 
-    /// Segment-wise, so a prefix does not claim a sibling with a longer name.
     #[test]
     fn a_prefix_does_not_claim_a_sibling_directory() {
         let e = edges(
@@ -483,9 +449,6 @@ mod tests {
         assert!(e.is_empty());
     }
 
-    /// Instructions are interned per pool, so two producers with the same
-    /// outputs vector share the TaskOutput that embeds it. Only the one the
-    /// consumer depends on is its producer.
     #[test]
     fn a_task_output_names_only_the_producer_the_consumer_depends_on() {
         let e = edges(
@@ -564,7 +527,6 @@ mod tests {
         assert_eq!(e["app:build"], strings(&["core:build"]));
     }
 
-    /// Negated patterns are exclusions, not things read.
     #[test]
     fn a_negated_read_pattern_is_not_matched() {
         let e = edges(
@@ -685,9 +647,6 @@ mod tests {
         assert!(e.is_empty());
     }
 
-    /// A read leading with `**` can reach into any output directory, so it
-    /// still claims a directory output. It stops claiming an output whose
-    /// literal extension it can never match.
     #[test]
     fn a_recursive_root_glob_claims_directories_but_not_a_different_extension() {
         let e = edges(
@@ -702,8 +661,6 @@ mod tests {
         assert_eq!(e["app:build"], strings(&["ui:build"]));
     }
 
-    /// A single-level root glob names only root-level paths, so it claims an
-    /// output only when the glob itself matches it.
     #[test]
     fn a_single_level_root_glob_claims_only_what_it_matches() {
         let e = edges(
