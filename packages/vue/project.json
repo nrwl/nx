@@ -8,6 +8,13 @@
       "outputs": ["{projectRoot}/README.md"],
       "command": "node ./scripts/copy-readme.js vue packages/vue/readme-template.md packages/vue/README.md",
       "inputs": ["copyReadme"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   }
 }
