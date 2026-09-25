@@ -183,12 +183,12 @@ impl GlobShape {
     /// Whether some path could match both. Errs towards yes: an extra edge
     /// costs a cache hit, a missing one skips a task that needed to run.
     fn may_read(&self, output: &GlobShape) -> bool {
-        if self.prefix.is_empty() || output.prefix.is_empty() {
-            self.may_share_extension(output)
-        } else {
-            is_path_prefix(&self.prefix, &output.prefix)
-                || is_path_prefix(&output.prefix, &self.prefix)
-        }
+        // An empty prefix leads with a wildcard and could start anywhere.
+        let folders_meet = self.prefix.is_empty()
+            || output.prefix.is_empty()
+            || is_path_prefix(&self.prefix, &output.prefix)
+            || is_path_prefix(&output.prefix, &self.prefix);
+        folders_meet && self.may_share_extension(output)
     }
 
     /// Only two different extensions rule a match out; an unknown one could be anything.
@@ -642,6 +642,20 @@ mod tests {
             &[("app:build", vec![include_ignored(&["*.json"])])],
         );
         assert_eq!(e["app:build"], strings(&["manifest:build", "ui:build"]));
+    }
+
+    #[test]
+    fn nested_folders_with_different_extensions_do_not_meet() {
+        let e = edges(
+            &[
+                ("css:build", &["dist/lib/**/*.css"]),
+                ("js:build", &["dist/lib/**/*.js"]),
+                ("app:build", &["dist/app"]),
+            ],
+            &[("app:build", &["css:build", "js:build"])],
+            &[("app:build", vec![include_ignored(&["dist/**/*.js"])])],
+        );
+        assert_eq!(e["app:build"], strings(&["js:build"]));
     }
 
     /// A literal read may be a directory, so its dotted name is not an extension.
