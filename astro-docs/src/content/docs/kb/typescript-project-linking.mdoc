@@ -235,41 +235,7 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
 
 {% youtube src="https://youtu.be/O2xBQJMTs9E" title="Why TypeScript Project References Make Your CI Faster!" /%}
 
-Using TypeScript project references improves both the speed and memory usage of build and typecheck tasks. The repository below contains benchmarks showing the difference between running typecheck with and without using TypeScript project references.
-
-{% github_repository title="TypeScript Project References Benchmark" url="https://github.com/jaysoo/typecheck-timings" /%}
-
-Here are the baseline typecheck task performance results.
-
-```text
-Typecheck without using project references: 186 seconds, max memory 6.14 GB
-```
-
-Using project references allows the TypeScript compiler to individually check the types for each project and store the results of that calculation in a `.tsbuildinfo` file for later use. Because of this, the TypeScript compiler does not need to load the entire codebase into memory at the same time, which you can see from the decreased memory usage on the first run with project references enabled.
-
-```text
-Typecheck with project references first run: 175 seconds, max memory 945 MB
-```
-
-Once the `.tsbuildinfo` files have been created, subsequent runs will be much faster.
-
-```text
-Typecheck with all `.tsbuildinfo` files created: 25 seconds, max memory 429 MB
-```
-
-Even if some projects have been updated and individual projects need to be type checked again, the TypeScript compiler can still use the cached `.tsbuildinfo` files for any projects that were not affected. This is very similar to the way Nx caching and affected features work.
-
-```text
-Typecheck (1 pkg updated): 36.33 seconds, max memory 655.14 MB
-Typecheck (5 pkg updated): 48.21 seconds, max memory 702.96 MB
-Typecheck (25 pkg updated): 65.25 seconds, max memory 666.78 MB
-Typecheck (100 pkg updated): 80.69 seconds, max memory 664.58 MB
-Typecheck (1 nested leaf pkg updated): 26.66 seconds, max memory 407.54 MB
-Typecheck (2 nested leaf pkg updated): 31.17 seconds, max memory 889.86 MB
-Typecheck (1 nested root pkg updated): 26.67 seconds, max memory 393.78 MB
-```
-
-These performance benefits will be more noticeable for larger repositories, but even small code bases will see some benefits.
+Project references let TypeScript check each project separately and store the result in a `.tsbuildinfo` file. Later typecheck tasks can reuse results for unchanged projects instead of loading and checking the full codebase again.
 
 ### Local TypeScript path aliases
 

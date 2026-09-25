@@ -527,7 +527,7 @@
 /ci/recipes/enterprise/dte/bitbucket-dte /docs/guides/nx-cloud/bring-your-own-compute 301
 /ci/recipes/enterprise/dte/gitlab-dte /docs/guides/nx-cloud/bring-your-own-compute 301
 /ci/recipes/enterprise/dte/jenkins-dte /docs/guides/nx-cloud/bring-your-own-compute 301
-/showcase/benchmarks/dte /docs/reference/benchmarks/nx-agents 301
+/showcase/benchmarks/dte /docs/kb/nx-agents 301
 
 # --- cliAndCloudLinkFixes ---
 /ci/enterprise/conformance/configure-conformance-rules-in-nx-cloud /docs/enterprise/configure-conformance-rules-in-nx-cloud 301
@@ -1081,10 +1081,10 @@
 /reference/core-api/shared-fs-cache/executors /docs/reference/remote-cache-plugins/shared-fs-cache/overview 301
 /reference/core-api/shared-fs-cache/generators/init /docs/reference/remote-cache-plugins/shared-fs-cache/generators 301
 /reference/core-api/shared-fs-cache/migrations /docs/reference/remote-cache-plugins/shared-fs-cache/overview 301
-/showcase/benchmarks/tsc-batch-mode /docs/reference/benchmarks/tsc-batch-mode 301
-/showcase/benchmarks/caching /docs/reference/benchmarks/caching 301
-/showcase/benchmarks/nx-agents /docs/reference/benchmarks/nx-agents 301
-/showcase/benchmarks /docs/reference/benchmarks 301
+/showcase/benchmarks/tsc-batch-mode /docs/kb/tsc-batch-mode 301
+/showcase/benchmarks/caching /docs/kb/nx-agents 301
+/showcase/benchmarks/nx-agents /docs/kb/nx-agents 301
+/showcase/benchmarks /docs/kb/nx-agents 301
 /technologies /docs/technologies 301
 /technologies/typescript /docs/technologies/typescript 301
 /technologies/typescript/introduction /docs/technologies/typescript/introduction 301
