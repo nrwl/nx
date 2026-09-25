@@ -1,8 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // getProjectGlobPatterns reads these from the plugins' recorded capabilities.
-// Mocked at that boundary rather than on affected-projects itself, since the
-// call is module-internal and would not see a mock of its own export.
 vi.mock('../plugins/get-plugins', () => ({
   capabilitiesOfConfiguredPlugins: async () =>
     ['**/project.json', '**/package.json', '**/build.gradle'].map(
@@ -448,8 +446,6 @@ describe('computeAffectedTasks with the daemon on', () => {
     ).rejects.toBeInstanceOf(ProjectGraphError);
   });
 
-  // The graph fetch is what recovers from a daemon that cannot answer, and an
-  // error in selection itself recurs in-process.
   it('selects in-process when the daemon cannot', async () => {
     daemon.enabled.mockReturnValueOnce(true);
     daemon.selectAffectedTasks.mockRejectedValueOnce(
@@ -479,8 +475,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     expect(result.taskSelection.planningContext).toBeDefined();
   });
 
-  // The daemon handles SELECT_AFFECTED_TASKS by calling the same selection;
-  // asking itself over the socket would never return.
+  // Inside the daemon there is no daemon to ask.
   it('selects in-process when already running inside the daemon', async () => {
     daemon.enabled.mockReturnValueOnce(true);
     onDaemon.isOnDaemon.mockReturnValueOnce(true);
@@ -515,8 +510,7 @@ describe('selectsAffectedTasks', () => {
     }
   });
 
-  // The default is the release: task selection stays opt-in until it is
-  // flipped on purpose, so an edit that flips it has to fail here.
+  // Task selection stays opt-in; flipping the default must be a deliberate edit that fails here.
   it('selects whole projects when the variable is unset', () => {
     delete process.env.NX_LEGACY_AFFECTED;
     expect(selectsAffectedTasks()).toBe(false);

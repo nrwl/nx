@@ -149,8 +149,7 @@ function changedExternalNodes(
  * Parse the base and head revisions of the lock file with Nx's
  * existing parsers and diff the resulting package -> version maps.
  *
- * Returns the set of changed package names, or null if parsing
- * failed (in which case the caller should fall back to all projects).
+ * Returns the set of changed package names, or null if parsing failed.
  */
 function getChangedPackageNames(
   file: string,

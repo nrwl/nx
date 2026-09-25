@@ -44,10 +44,8 @@ import { packageJsonDependencyChanges } from '../../plugins/js/project-graph/aff
  * reaches, rather than whole projects. Off by default while the task path
  * settles.
  *
- * Env-var only, so `nx show projects --affected -t build` and
- * `nx affected -t build` in one CI script agree on what is affected. The run
- * also executes the dependencies those tasks need, so it runs more than the
- * list names.
+ * Env-var only, so `nx show projects --affected` and `nx affected` in one CI
+ * script agree. The run also executes the selected tasks' dependencies.
  */
 export function selectsAffectedTasks(): boolean {
   return process.env.NX_LEGACY_AFFECTED === 'false';
@@ -65,10 +63,7 @@ export interface AffectedTasksResult {
 }
 
 export interface ComputeAffectedTasksOptions {
-  /**
-   * Selected against when the daemon is off, and fetched when absent. With the
-   * daemon on, its own graph is used and returned instead.
-   */
+  /** Fetched when absent. Unused when the daemon selects; it returns its own graph. */
   projectGraph?: ProjectGraph;
   nxJson: NxJsonConfiguration;
   targets: string[];
@@ -79,7 +74,7 @@ export interface ComputeAffectedTasksOptions {
   overrides?: Record<string, unknown>;
   extraTargetDependencies?: TargetDependencies;
   excludeTaskDependencies?: boolean;
-  /** `--exclude` patterns: matching tasks are dropped from the selection, but not from its dependencies. */
+  /** `--exclude` project patterns. Their tasks leave the selection but still carry a change and run as dependencies. */
   exclude?: string[];
   packageJson?: any;
 }
@@ -106,10 +101,9 @@ export interface AffectedTasksRequest {
  * Selects the tasks a change reaches, rather than the projects that own a
  * changed file.
  *
- * With the daemon on, the daemon selects: it hashes the tasks that run, and
- * plans are native memory that cannot cross to it, so selecting anywhere else
- * would plan every task twice. It returns the graph it selected against, so
- * the command runs with that graph rather than one fetched a moment earlier.
+ * With the daemon on, the daemon selects: it hashes the run's tasks, and plans
+ * are native memory that cannot cross to it. It returns the graph it selected
+ * against, which the command must run with.
  */
 export async function computeAffectedTasks(
   opts: ComputeAffectedTasksOptions
@@ -136,8 +130,8 @@ export async function computeAffectedTasks(
       if (e?.name === DaemonProjectGraphError.name) {
         throw ProjectGraphError.fromDaemonProjectGraphError(e);
       }
-      // Fetching the graph falls back from a daemon that cannot answer; an
-      // error in selection itself recurs below.
+      // Not rethrown: the graph fetch handles an unreachable daemon, and a
+      // selection error recurs in-process below.
       logger.verbose(`Selecting affected tasks in the daemon failed: ${e}`);
     }
   }
@@ -159,9 +153,8 @@ export async function computeAffectedTasks(
     taskGraph: selection.taskGraph,
     taskSelection: {
       ...selection.taskSelection,
-      // The plans ride along so the hasher narrows them instead of building
-      // its own. Every task it will be asked about is in here, since the run
-      // graph is a subset of the one planned above.
+      // The run graph is a subset of the one planned above, so the hasher can
+      // narrow these plans instead of planning again.
       planningContext: selection.plans
         ? {
             ...planningContext,
@@ -173,14 +166,9 @@ export async function computeAffectedTasks(
 }
 
 /**
- * Plans the targets' full task graph, as `run-many` would build it, and matches
- * the changed paths against every plan. There is no project-grained pass in
- * front of it: that bound rests on declared ownership, and under an I/O
- * snapshot a task's observed reads can name a file no project the reverse walk
- * finds would own, so bounding by it would miss the task.
- *
- * The one implementation for the client and the daemon, so the two cannot
- * select differently.
+ * Plans the targets' full task graph and matches the changed paths against
+ * every plan. No project-level prefilter: under an I/O snapshot a task can read
+ * files no affected project owns. Shared by the client and the daemon.
  */
 export async function selectAffectedTasks(
   projectGraph: ProjectGraph,
@@ -328,9 +316,7 @@ function hasCustomHasher(
 
 /**
  * A lockfile or package.json change reaches a hash as `External(name)`, a
- * package rather than a path, so the JS locators' diff of it is handed over as
- * package names for the plans to match. Costs nothing when neither file is in
- * the diff.
+ * package rather than a path, so it is handed to the plans as package names.
  */
 function dependencyChanges(
   projectGraph: ProjectGraph,
