@@ -288,12 +288,20 @@ fn negated_glob(input: &str) -> (&str, bool) {
 }
 
 /// The one name `segment` matches, with escapes resolved, or `None` when it is
-/// a pattern: `a\*b` names `a*b`.
+/// a pattern: `a\*b` names `a*b`. An escape never resolves to `.` or `..`, so
+/// `\.\.` cannot slip past the checks callers run on the raw text.
 pub fn literal_segment(segment: &str) -> Option<String> {
     let ("", parts) = parse_segment(segment).finish().ok()? else {
         return None;
     };
-    parts.iter().map(GlobGroup::literal_text).collect()
+    let name: String = parts
+        .iter()
+        .map(GlobGroup::literal_text)
+        .collect::<Option<_>>()?;
+    if name != segment && matches!(name.as_str(), "." | "..") {
+        return None;
+    }
+    Some(name)
 }
 
 pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
@@ -406,6 +414,11 @@ mod test {
     #[test]
     #[cfg(not(windows))]
     fn a_backslash_escapes_the_next_character() {
+        assert_eq!(super::literal_segment(r"\*").as_deref(), Some("*"));
+        // An escape never resolves to `.` or `..`, which would dodge `..` checks.
+        for escaped_dots in [r"\.", r"\.\.", r".\.", r"\.."] {
+            assert_eq!(super::literal_segment(escaped_dots), None, "{escaped_dots}");
+        }
         use GlobGroup::*;
         assert_eq!(
             segments(r"a\*b/雪\雪"),

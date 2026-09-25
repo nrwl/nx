@@ -535,6 +535,22 @@ mod test {
 
     #[test]
     #[cfg(unix)]
+    fn an_escaped_parent_segment_stays_inside_the_workspace() {
+        let temp = TempDir::new().unwrap();
+        temp.child("victim").write_str("secret").unwrap();
+        let workspace = temp.child("workspace");
+        workspace.child("dist/x.js").write_str("x").unwrap();
+
+        for entry in [r"\.\./victim", r"dist/\.\./\.\./victim"] {
+            let expanded = _expand_outputs(workspace.path(), vec![entry.into()]).unwrap();
+            assert!(expanded.is_empty(), "{entry}: {expanded:?}");
+            let files = get_files_for_outputs(workspace.path(), vec![entry.into()]).unwrap();
+            assert!(files.is_empty(), "{entry}: {files:?}");
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
     fn a_backslash_in_a_real_name_is_read_as_written() {
         let temp = TempDir::new().unwrap();
         temp.child(r"dist\app/main.js").write_str("x").unwrap();
