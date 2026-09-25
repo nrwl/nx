@@ -13,7 +13,11 @@ import {
   writeJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
@@ -163,15 +167,14 @@ function createTestProject(
     `${projectOpts.appRoot}/playwright.config.ts`,
     playwrightConfigContents
   );
-  vi.doMock(
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
     join(fs.tempDir, `${projectOpts.appRoot}/playwright.config.ts`),
-    () => ({
+    {
       default: {
         outputDir: '../dist/.playwright/myapp-e2e',
       },
-    }),
-    {
-      virtual: true,
     }
   );
 
@@ -200,6 +203,7 @@ describe('Playwright - Convert Executors To Plugin', () => {
 
   afterEach(() => {
     fs.reset();
+    resetCjsMocks();
   });
 
   describe('--project', () => {
