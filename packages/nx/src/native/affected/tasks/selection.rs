@@ -9,7 +9,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
-use tracing::{debug, trace, warn};
+use tracing::{debug, trace};
 
 use super::dependency_closure::dependency_closure;
 use super::dependent_outputs::compute_dependent_output_edges;
@@ -213,7 +213,7 @@ fn changed_project_configs(
             |pattern| match build_glob_set(std::slice::from_ref(pattern)) {
                 Ok(glob) => Some(glob),
                 Err(_) => {
-                    warn!("ignoring unparseable plugin createNodes glob: {pattern}");
+                    trace!("ignoring unparseable plugin createNodes glob: {pattern}");
                     None
                 }
             },

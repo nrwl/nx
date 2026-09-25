@@ -1,6 +1,6 @@
 use napi::bindgen_prelude::*;
 use std::path::Path;
-use tracing::warn;
+use tracing::trace;
 
 use super::locators::{AffectedOptions, all_project_names};
 use crate::native::glob::build_glob_set;
@@ -27,7 +27,7 @@ pub(super) fn projects_from_project_glob_changes(
             |pattern| match build_glob_set(std::slice::from_ref(pattern)) {
                 Ok(glob) => Some(glob),
                 Err(_) => {
-                    warn!("ignoring unparseable plugin createNodes glob: {pattern}");
+                    trace!("ignoring unparseable plugin createNodes glob: {pattern}");
                     None
                 }
             },

@@ -1,7 +1,7 @@
 use napi::bindgen_prelude::*;
 use std::borrow::Cow;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use tracing::warn;
+use tracing::trace;
 
 use super::locators::all_project_names;
 use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob};
@@ -21,7 +21,7 @@ pub(super) fn implicitly_touched_projects(
     nx_json: &NxJson,
     touched_files: &[String],
 ) -> Result<Vec<String>> {
-    // BTreeMap so the scan, and its warnings, run in a stable order.
+    // BTreeMap so the scan, and its logs, run in a stable order.
     let mut implicits: std::collections::BTreeMap<&str, Implicit> = Default::default();
     implicits.insert("nx.json", Implicit::AllProjects);
 
@@ -60,7 +60,7 @@ pub(super) fn implicitly_touched_projects(
             // Taken literally, as minimatch did, so the change still selects the
             // project and the run surfaces the hasher's error for this glob.
             Err(_) => {
-                warn!("matching unparseable input fileset literally: {{workspaceRoot}}/{pattern}");
+                trace!("matching unparseable input fileset literally: {{workspaceRoot}}/{pattern}");
                 touched_files
                     .iter()
                     .any(|file| file == &pattern || is_under(file, &pattern))
