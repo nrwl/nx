@@ -109,7 +109,11 @@ describe('Cypress Component Configuration', () => {
 
   it('should install the cypress 15 set for the vite bundler on a fresh workspace with a vite below 8', async () => {
     mockedInstalledCypressVersion.mockImplementation(
-      jest.requireActual('../../utils/versions').getInstalledCypressMajorVersion
+      (
+        await vi.importActual<typeof import('../../utils/versions')>(
+          '../../utils/versions'
+        )
+      ).getInstalledCypressMajorVersion
     );
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies = { ...json.devDependencies, vite: '^7.0.0' };
