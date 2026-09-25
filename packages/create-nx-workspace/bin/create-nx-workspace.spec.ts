@@ -55,7 +55,7 @@ describe('validateWorkspaceName', () => {
   it('should throw CnwError with INVALID_WORKSPACE_NAME code', () => {
     try {
       validateWorkspaceName('4name');
-      fail('Expected CnwError to be thrown');
+      expect.unreachable('Expected CnwError to be thrown');
     } catch (e) {
       expect(e).toBeInstanceOf(CnwError);
       expect((e as CnwError).code).toBe('INVALID_WORKSPACE_NAME');
@@ -248,7 +248,7 @@ describe('resolveSpecialFolderName', () => {
     it('should throw INVALID_PATH when parent directory does not exist', () => {
       try {
         resolveSpecialFolderName('/nonexistent-parent-dir-xyz/acme');
-        fail('Expected CnwError to be thrown');
+        expect.unreachable('Expected CnwError to be thrown');
       } catch (e) {
         expect(e).toBeInstanceOf(CnwError);
         expect((e as CnwError).code).toBe('INVALID_PATH');
