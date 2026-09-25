@@ -61,10 +61,9 @@ export async function showProjectsHandler(
           files: nxArgs.files,
         },
       });
+      const { taskGraph, initiatingTaskIds } = affectedTasks.taskSelection;
       const owning = new Set(
-        [...affectedTasks.affectedTaskIds].map(
-          (id) => affectedTasks.taskGraph.tasks[id].target.project
-        )
+        initiatingTaskIds.map((id) => taskGraph.tasks[id].target.project)
       );
       // The graph selection used, which with the daemon on is its own.
       graph = {
