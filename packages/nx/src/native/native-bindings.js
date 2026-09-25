@@ -632,6 +632,7 @@ module.exports.installNxConsoleForEditor = nativeBinding.installNxConsoleForEdit
 module.exports.IS_WASM = nativeBinding.IS_WASM
 module.exports.isAiAgent = nativeBinding.isAiAgent
 module.exports.isEditorInstalled = nativeBinding.isEditorInstalled
+module.exports.jsonFilesReadByFields = nativeBinding.jsonFilesReadByFields
 module.exports.killProcessTree = nativeBinding.killProcessTree
 module.exports.killProcessTreeGraceful = nativeBinding.killProcessTreeGraceful
 module.exports.locateTouchedProjects = nativeBinding.locateTouchedProjects

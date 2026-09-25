@@ -28,6 +28,18 @@ vi.mock('../../tasks-runner/utils', async (importOriginal) => {
         : actual.getExecutorForTask(task, projects),
   };
 });
+// File contents at `base` and `head`, for inputs compared field by field.
+const revisions = vi.hoisted(
+  () => ({}) as Record<string, { base: string; head: string }>
+);
+vi.mock('../file-utils', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    defaultReadFileAtRevision: (file: string, revision: string | void) =>
+      revisions[file]?.[revision === 'base' ? 'base' : 'head'] ?? '',
+  };
+});
 import { computeAffectedTasks, selectsAffectedTasks } from './affected-tasks';
 import { LockFileChange, WholeFileChange } from '../file-utils';
 import { ProjectGraphError } from '../error-types';
@@ -391,6 +403,48 @@ describe('the run graph with --exclude-task-dependencies', () => {
     expect([...result.affectedTaskIds]).toEqual(['app:test']);
     expect(Object.keys(result.taskSelection.taskGraph.tasks)).toEqual([
       'app:test',
+    ]);
+  });
+});
+
+describe('a JSON input that hashes some fields', () => {
+  afterEach(() => delete revisions['package.json']);
+
+  const selectFor = async (base: object, head: object) => {
+    revisions['package.json'] = {
+      base: JSON.stringify(base),
+      head: JSON.stringify(head),
+    };
+    const projectGraph = graph();
+    projectGraph.nodes.lib.data.targets.test.inputs = [
+      { json: '{workspaceRoot}/package.json', fields: ['version'] },
+    ] as any;
+    const result = await computeAffectedTasks({
+      projectGraph,
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        { file: 'package.json', getChanges: () => [new WholeFileChange()] },
+      ] as any,
+      fileChangeArgs: { base: 'base', head: 'head' },
+    });
+    return [...result.affectedTaskIds];
+  };
+
+  it('is not affected by a field it does not hash', async () => {
+    expect(
+      await selectFor(
+        { version: '1', description: 'a' },
+        { version: '1', description: 'b' }
+      )
+    ).toEqual([]);
+  });
+
+  it('is affected by a field it hashes', async () => {
+    expect(await selectFor({ version: '1' }, { version: '2' })).toEqual([
+      'lib:test',
     ]);
   });
 });

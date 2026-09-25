@@ -480,6 +480,13 @@ export interface AffectedTasksOptions {
    * on, which carries a change but is only ever run as a dependency.
    */
   targets: Array<string>
+  /**
+   * The field paths that changed in the files `jsonFilesReadByFields` named.
+   * A file left out counts as changed as a whole.
+   */
+  jsonChanges?: Array<JsonFileChange>
+  /** Set when a root tsconfig is in the diff. */
+  tsConfigChange?: TsConfigChange
 }
 
 export interface BatchInfo {
@@ -856,6 +863,21 @@ export const IS_WASM: boolean
 export declare function isAiAgent(): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
+
+export interface JsonFileChange {
+  file: string
+  /**
+   * The changed field paths, one key per segment. Unset when the file as a
+   * whole counts as changed: added, deleted, unparseable or not an object.
+   */
+  paths?: Array<Array<string>>
+}
+
+/**
+ * The changed files some field-filtered JSON input reads, so only those are
+ * read at both revisions and diffed.
+ */
+export declare function jsonFilesReadByFields(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>): Array<string>
 
 export interface JsonInput {
   json: string
@@ -1242,6 +1264,25 @@ export declare function trackPageView(pageTitle: string, pageLocation?: string |
  * This wont be needed once the project graph is created in Rust
  */
 export declare function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
+
+/**
+ * The root tsconfig as `TsConfiguration` hashes it: `compilerOptions.paths`
+ * apart from the rest.
+ */
+export interface TsConfigChange {
+  /**
+   * Everything but `compilerOptions.paths` changed, or the file could not be
+   * compared at all.
+   */
+  restChanged: boolean
+  /**
+   * `selectivelyHashTsConfig`: a task hashes only its own project's paths.
+   * Otherwise it hashes no paths at all.
+   */
+  selective: boolean
+  pathsBefore: Record<string, Array<string>>
+  pathsAfter: Record<string, Array<string>>
+}
 
 export interface TuiCliArgs {
   targets?: string[] | undefined

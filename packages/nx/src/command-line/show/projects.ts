@@ -56,9 +56,13 @@ export async function showProjectsHandler(
           head: nxArgs.head,
           files: nxArgs.files,
         },
-        ioSnapshotOutcome: await (
-          require('../../tasks-runner/run-command') as typeof import('../../tasks-runner/run-command')
-        ).loadIoSnapshotsForCommand(nxArgs, nxJson),
+        ioSnapshotOutcome: await runCommandModule().loadIoSnapshotsForCommand(
+          nxArgs,
+          nxJson
+        ),
+        selectivelyHashTsConfig:
+          runCommandModule().getRunner(nxArgs, nxJson).runnerOptions
+            ?.selectivelyHashTsConfig ?? false,
       });
       const { taskGraph, initiatingTaskIds } = affectedTasks.taskSelection;
       const owning = new Set(
@@ -150,4 +154,9 @@ function getAffectedGraph(
 
 async function getTouchedFiles(nxArgs: NxArgs): Promise<FileChange[]> {
   return calculateFileChanges(parseFiles(nxArgs).files, nxArgs);
+}
+
+/** Loaded only when task selection needs it. */
+function runCommandModule(): typeof import('../../tasks-runner/run-command') {
+  return require('../../tasks-runner/run-command');
 }

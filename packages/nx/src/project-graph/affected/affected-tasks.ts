@@ -4,8 +4,10 @@ import type { ProjectConfiguration } from '../../config/workspace-json-project-j
 import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
+  jsonFilesReadByFields,
   type IoSnapshots,
 } from '../../native';
+import { jsonFieldChanges, tsConfigChange } from './changed-contents';
 import { applyIoSnapshotOutputs } from '../../io-snapshots/outputs';
 import { ioSnapshotEligibilityOptions } from '../../io-snapshots/overrides';
 import { snapshotsOf, type IoSnapshotOutcome } from '../../io-snapshots/store';
@@ -86,6 +88,7 @@ export interface ComputeAffectedTasksOptions {
   packageJson?: any;
   /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
   ioSnapshotOutcome?: IoSnapshotOutcome | null;
+  selectivelyHashTsConfig?: boolean;
 }
 
 export type FileChangeArgs = Pick<NxArgs, 'base' | 'head' | 'files'>;
@@ -105,6 +108,8 @@ export interface AffectedTasksRequest {
   excludeTaskDependencies: boolean;
   exclude: string[];
   ioSnapshots?: IoSnapshotVersion;
+  /** The runner's `selectivelyHashTsConfig`, which decides what the tsconfig hash reads. */
+  selectivelyHashTsConfig?: boolean;
 }
 
 /**
@@ -127,6 +132,7 @@ export async function computeAffectedTasks(
     extraTargetDependencies: opts.extraTargetDependencies ?? {},
     excludeTaskDependencies: opts.excludeTaskDependencies ?? false,
     exclude: opts.exclude ?? [],
+    selectivelyHashTsConfig: opts.selectivelyHashTsConfig,
   };
   const ioSnapshots = snapshotsOf(opts.ioSnapshotOutcome ?? null);
   if (ioSnapshots) {
@@ -283,6 +289,20 @@ export async function selectAffectedTasks(
         ? findMatchingProjects(request.exclude, projectGraph.nodes)
         : [],
       targets,
+      // Read at both revisions only for the inputs that hash part of a file.
+      jsonChanges: jsonFieldChanges(
+        jsonFilesReadByFields(
+          planningContext.projectGraphRef,
+          plans,
+          request.changedFiles
+        ),
+        request.fileChangeArgs
+      ),
+      tsConfigChange: tsConfigChange(
+        request.changedFiles,
+        request.fileChangeArgs,
+        request.selectivelyHashTsConfig ?? false
+      ),
     }
   );
 
