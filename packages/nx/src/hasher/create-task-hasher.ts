@@ -40,8 +40,8 @@ export function createTaskHasher(
       nxJson,
       rustReferences,
       runnerOptions,
-      ioSnapshots,
-      planningContext
+      planningContext,
+      ioSnapshots
     );
   }
 }

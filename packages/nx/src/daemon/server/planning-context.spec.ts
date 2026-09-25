@@ -18,7 +18,7 @@ vi.mock('../../hasher/task-hasher', () => ({
   InProcessTaskHasher: class {
     hashTasks = vi.fn(async () => []);
     constructor(...args: unknown[]) {
-      state.hashers.push({ planningContext: args[5] });
+      state.hashers.push({ planningContext: args[4] });
     }
   },
 }));

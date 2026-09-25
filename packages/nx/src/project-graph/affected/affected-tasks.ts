@@ -165,9 +165,11 @@ export async function computeAffectedTasks(
     opts.nxJson,
     planningContext,
     request,
-    opts.touchedFiles,
-    opts.packageJson,
-    ioSnapshots
+    {
+      touchedFiles: opts.touchedFiles,
+      packageJson: opts.packageJson,
+      ioSnapshots,
+    }
   );
   return {
     projectGraph,
@@ -192,12 +194,18 @@ export async function selectAffectedTasks(
   nxJson: NxJsonConfiguration,
   planningContext: TaskPlanningContext,
   request: AffectedTasksRequest,
-  touchedFiles: FileChange[] = calculateFileChanges(
-    request.changedFiles,
-    request.fileChangeArgs as NxArgs
-  ),
-  packageJson?: any,
-  ioSnapshots?: IoSnapshots
+  {
+    touchedFiles = calculateFileChanges(
+      request.changedFiles,
+      request.fileChangeArgs as NxArgs
+    ),
+    packageJson,
+    ioSnapshots,
+  }: {
+    touchedFiles?: FileChange[];
+    packageJson?: any;
+    ioSnapshots?: IoSnapshots;
+  } = {}
 ): Promise<{
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;

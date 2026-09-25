@@ -40,7 +40,6 @@ async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
       nxJson,
       rustReferences,
       runnerOptions,
-      undefined,
       planningContextFor(projectGraph, nxJson)
     );
   }

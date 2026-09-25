@@ -24,9 +24,7 @@ export async function handleSelectAffectedTasks(
     nxJson,
     planningContextFor(projectGraph, nxJson),
     request,
-    undefined,
-    undefined,
-    getIoSnapshotsForVersion(request.ioSnapshots)
+    { ioSnapshots: getIoSnapshotsForVersion(request.ioSnapshots) }
   );
 
   const response: SelectAffectedTasksResponse = {

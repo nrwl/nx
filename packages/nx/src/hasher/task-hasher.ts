@@ -231,9 +231,9 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly nxJson: NxJsonConfiguration,
     private readonly externalRustReferences: NxWorkspaceFilesExternals | null,
     private readonly options: any,
+    private readonly planningContext?: TaskPlanningContext,
     /** This run's snapshot set; the daemon passes one per request instead. */
-    private readonly ioSnapshots?: IoSnapshots,
-    private readonly planningContext?: TaskPlanningContext
+    private readonly ioSnapshots?: IoSnapshots
   ) {
     this.taskHasher = new NativeTaskHasherImpl(
       workspaceRoot,

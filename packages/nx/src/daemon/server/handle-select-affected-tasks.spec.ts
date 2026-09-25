@@ -73,7 +73,9 @@ describe('handleSelectAffectedTasks', () => {
     await handleSelectAffectedTasks({ ...request, ioSnapshots: version });
 
     expect(getIoSnapshotsForVersion).toHaveBeenCalledWith(version);
-    expect(selectAffectedTasks.mock.calls[0][6]).toBe(snapshots);
+    expect(selectAffectedTasks.mock.calls[0][4]).toEqual({
+      ioSnapshots: snapshots,
+    });
   });
 
   it('fails with the graph error rather than selecting', async () => {
