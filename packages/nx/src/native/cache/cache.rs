@@ -202,7 +202,8 @@ impl NxCache {
         // `is_cache_entry` distinguishes a real cache entry, which owns a
         // `<cacheDir>/<hash>` directory, from a row that exists only so the
         // terminal output of an uncacheable run is reachable by the GC. Only
-        // the former may be served as a cache hit — see `get`/`fetch_cache_rows`.
+        // the former may be served as a cache hit, and only while that directory
+        // exists — see `get`/`fetch_cache_rows` and `build_cached_result`.
         let query = if self.link_task_details {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
                 hash    TEXT PRIMARY KEY NOT NULL,
@@ -256,7 +257,10 @@ impl NxCache {
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
 
         // Terminal output file read happens AFTER the lock is released.
-        let result = row_data.map(|(code, size)| self.build_cached_result(&hash, code, size));
+        let result = row_data.and_then(|(code, size)| self.build_cached_result(&hash, code, size));
+        if row_data.is_some() && result.is_none() {
+            self.remove_stale_cache_records(std::slice::from_ref(&hash))?;
+        }
 
         trace!("GET {} {:?}", &hash, start.elapsed());
         Ok(result)
@@ -276,13 +280,25 @@ impl NxCache {
 
         // 2. For each requested hash, read its terminal output file in
         //    parallel. Misses stay as None so callers can correlate by index.
-        let results = hashes
+        let results: Vec<Option<CachedResult>> = hashes
             .par_iter()
             .map(|hash| {
                 rows.get(hash)
-                    .map(|&(code, size)| self.build_cached_result(hash, code, size))
+                    .and_then(|&(code, size)| self.build_cached_result(hash, code, size))
             })
             .collect();
+
+        // 3. A row whose artifacts are gone is a miss above; drop those rows
+        //    in one statement rather than from inside the parallel map.
+        let stale: Vec<String> = hashes
+            .iter()
+            .zip(&results)
+            .filter(|(hash, result)| result.is_none() && rows.contains_key(*hash))
+            .map(|(hash, _)| hash.clone())
+            .collect();
+        if !stale.is_empty() {
+            self.remove_stale_cache_records(&stale)?;
+        }
 
         trace!("GET_BATCH {} hashes {:?}", hashes.len(), start.elapsed());
         Ok(results)
@@ -332,18 +348,35 @@ impl NxCache {
         Ok(rows)
     }
 
-    /// Assemble a `CachedResult` for a confirmed hit by reading its
-    /// terminal output file. Safe to call concurrently — Rayon invokes
-    /// this from multiple threads during `get_batch`.
-    fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> CachedResult {
+    /// Assemble a `CachedResult` for a row `get`/`get_batch` found, or `None`
+    /// when the `<cacheDir>/<hash>` directory the row describes is gone.
+    ///
+    /// The database is an index of the cache directory, not the cache: the
+    /// directory can be emptied, moved or pointed elsewhere (`cacheDirectory`,
+    /// `NX_CACHE_DIRECTORY`) while `.nx/workspace-data` keeps its rows. Served
+    /// as a hit, such a row restores nothing and the run carries on with the
+    /// outputs missing. `put` and every remote retrieve create the directory,
+    /// even for a task with no outputs, so its absence is the only check needed.
+    ///
+    /// Safe to call concurrently — Rayon invokes this from multiple threads
+    /// during `get_batch`.
+    fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> Option<CachedResult> {
+        let outputs_path = self.cache_path.join(hash);
+        if !outputs_path.is_dir() {
+            debug!(
+                "Cache record {} has no artifacts at {:?}, treating as a miss",
+                hash, &outputs_path
+            );
+            return None;
+        }
         let terminal_output =
             read_to_string(self.get_task_outputs_path_internal(hash)).unwrap_or_default();
-        CachedResult {
+        Some(CachedResult {
             code,
             terminal_output: Some(terminal_output),
-            outputs_path: self.cache_path.join(hash).to_normalized_string(),
+            outputs_path: outputs_path.to_normalized_string(),
             size: Some(size),
-        }
+        })
     }
 
     #[napi]
@@ -624,6 +657,32 @@ impl NxCache {
 
         remove_items(&outdated_cache)?;
 
+        Ok(())
+    }
+
+    /// Drop records whose `<cacheDir>/<hash>` directory is gone: the row and
+    /// its terminal output together, as `remove_old_cache_records` does for an
+    /// expired entry. Left in place, the row would count against
+    /// `maxCacheSize` for artifacts that no longer exist and cost a stat on
+    /// every lookup; the next `put` of the hash records a fresh row.
+    fn remove_stale_cache_records(&self, hashes: &[String]) -> anyhow::Result<()> {
+        trace!("Removing {} cache records without artifacts", hashes.len());
+        let values = Rc::new(
+            hashes
+                .iter()
+                .map(|h| Value::from(h.clone()))
+                .collect::<Vec<Value>>(),
+        );
+        self.db.lock().unwrap().execute(
+            "DELETE FROM cache_outputs WHERE hash IN rarray(?1)",
+            [values],
+        )?;
+
+        let terminal_outputs = hashes
+            .iter()
+            .map(|hash| self.get_task_outputs_path_internal(hash))
+            .collect::<Vec<_>>();
+        remove_items(&terminal_outputs)?;
         Ok(())
     }
 
@@ -916,5 +975,122 @@ mod test {
         assert!(
             normalize_outputs(ws, vec!["dist".to_string(), r"..\..\escape".to_string()]).is_err()
         );
+    }
+
+    /// A workspace, a cache directory and a database of its own under `temp`.
+    fn cache_in(temp: &TempDir) -> NxCache {
+        let workspace_root = temp.path().join("workspace");
+        create_dir_all(&workspace_root).unwrap();
+        let db =
+            crate::native::db::initialize::initialize_db(&temp.path().join("test.db")).unwrap();
+        NxCache::new(
+            workspace_root.to_str().unwrap().to_string(),
+            temp.path().join("cache").to_str().unwrap().to_string(),
+            &External::new(Arc::new(Mutex::new(db))),
+            None,
+            None,
+        )
+        .unwrap()
+    }
+
+    /// `cache_outputs.hash` references `task_details`, which Nx fills in
+    /// before it stores a task.
+    fn record_task(cache: &NxCache, hash: &str) {
+        cache
+            .db
+            .lock()
+            .unwrap()
+            .execute(
+                "INSERT OR IGNORE INTO task_details (hash, project, target) VALUES (?1, 'app', 'build')",
+                params![hash],
+            )
+            .unwrap();
+    }
+
+    /// Builds one output file for `hash` in the workspace and stores it.
+    fn put_output(cache: &mut NxCache, hash: &str) {
+        record_task(cache, hash);
+        let output = cache.workspace_root.join("dist").join(hash);
+        create_dir_all(&output).unwrap();
+        std::fs::write(output.join("main.js"), b"built").unwrap();
+        cache
+            .put(
+                hash.to_string(),
+                "log".to_string(),
+                vec![format!("dist/{hash}")],
+                0,
+            )
+            .unwrap();
+    }
+
+    fn records_for(cache: &NxCache, hash: &str) -> i64 {
+        cache
+            .db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT COUNT(*) FROM cache_outputs WHERE hash = ?1",
+                params![hash],
+                |row| row.get(0),
+            )
+            .unwrap()
+            .unwrap()
+    }
+
+    #[test]
+    fn get_is_a_miss_once_the_artifact_directory_is_gone() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let hit = cache.get("1".to_string()).unwrap().unwrap();
+        assert!(Path::new(&hit.outputs_path).is_dir());
+
+        // The cache directory was emptied, moved or repointed; the database
+        // still holds the row.
+        std::fs::remove_dir_all(&hit.outputs_path).unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        assert_eq!(records_for(&cache, "1"), 0);
+        assert!(!cache.get_task_outputs_path_internal("1").exists());
+
+        // The task reruns and the next put is a hit again.
+        put_output(&mut cache, "1");
+        assert!(cache.get("1".to_string()).unwrap().is_some());
+    }
+
+    #[test]
+    fn get_batch_drops_only_the_records_whose_artifacts_are_gone() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        put_output(&mut cache, "2");
+        std::fs::remove_dir_all(cache.cache_path.join("2")).unwrap();
+
+        let results = cache
+            .get_batch(vec!["1".to_string(), "2".to_string(), "3".to_string()])
+            .unwrap();
+
+        assert!(results[0].is_some());
+        assert!(results[1].is_none());
+        assert!(results[2].is_none());
+        assert_eq!(records_for(&cache, "1"), 1);
+        assert_eq!(records_for(&cache, "2"), 0);
+        assert!(cache.get_task_outputs_path_internal("1").exists());
+        assert!(!cache.get_task_outputs_path_internal("2").exists());
+    }
+
+    #[test]
+    fn a_task_with_no_outputs_still_hits() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        // `put` creates the directory whether or not anything is copied into
+        // it, so the directory check cannot turn these into misses.
+        record_task(&cache, "1");
+        cache
+            .put("1".to_string(), "log".to_string(), vec![], 0)
+            .unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_some());
+        assert!(cache.get_batch(vec!["1".to_string()]).unwrap()[0].is_some());
     }
 }
