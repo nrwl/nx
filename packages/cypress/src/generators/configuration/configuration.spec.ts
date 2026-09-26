@@ -226,9 +226,9 @@ describe('Cypress e2e configuration', () => {
         addPlugin: true,
       });
     }).rejects.toThrowErrorMatchingInlineSnapshot(`
-        "Project my-app already has an e2e target.
-        Rename or remove the existing e2e target."
-      `);
+      [Error: Project my-app already has an e2e target.
+      Rename or remove the existing e2e target.]
+    `);
   });
 
   it('should customize directory name', async () => {
