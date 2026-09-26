@@ -1,12 +1,14 @@
+import * as devkit from '@nx/devkit';
+import type { MockInstance } from 'vitest';
 // Pin the detected package manager so inferred lock-file outputs (e.g.
 // prune-lockfile) and package-manager commands are deterministic regardless of
 // which package manager runs the tests.
-jest.mock('@nx/devkit', () => {
-  const actual = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
   return {
     ...actual,
-    detectPackageManager: jest.fn(() => 'npm'),
-    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+    detectPackageManager: vi.fn(() => 'npm'),
+    getPackageManagerCommand: vi.fn((pm = 'npm') =>
       actual.getPackageManagerCommand(pm)
     ),
   };
@@ -29,7 +31,7 @@ describe('application generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should generate project configurations', async () => {
@@ -303,17 +305,16 @@ describe('application generator', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
-        .spyOn(devkitModule, 'formatFiles')
+      formatFilesSpy = vi
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files', async () => {
