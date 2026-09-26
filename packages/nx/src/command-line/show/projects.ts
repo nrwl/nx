@@ -68,8 +68,10 @@ export async function showProjectsHandler(
         // No dependency count: this command answers which tasks are affected
         // and never runs their closure, so reporting what it would drag in
         // would describe a run that is not happening.
+        // Runs nothing, so what a run would need first is not part of the answer.
+        const { required: _, ...explanation } = affectedTasks.explanation;
         printAffectedExplanation(
-          affectedTasks.explanation,
+          explanation,
           'Affected tasks',
           // show projects declares its own --json, which has no executor to
           // pass through to.
@@ -100,7 +102,7 @@ export async function showProjectsHandler(
         nxJson
       );
       printAffectedExplanation(
-        { affected: reasons, dependencies: {} },
+        { affected: reasons, upstream: {} },
         'Affected projects',
         args.json ? 'stdout' : nxArgs.explain
       );

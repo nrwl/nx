@@ -48,7 +48,7 @@ vi.mock('../../project-graph/affected/affected-tasks', () => ({
       affected: {
         'ui:build': [{ kind: 'input-file', file: 'libs/ui/src/x.ts' }],
       },
-      dependencies: {},
+      upstream: {},
     },
   }),
 }));

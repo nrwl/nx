@@ -81,23 +81,23 @@ const explain = (nxArgs: object) =>
 
 describe('explainAffectedProjects', () => {
   it('explains only the projects the run acts on', async () => {
-    const { affected, dependencies } = await explain({});
+    const { affected, upstream } = await explain({});
     expect(Object.keys(affected).sort()).toEqual(['devkit', 'js', 'nx']);
-    expect(dependencies).toEqual({});
+    expect(upstream).toEqual({});
   });
 
   // An excluded project still carried the change, so its dependents' reasons
   // name it and it has to be found somewhere in the output.
-  it('moves an excluded project a reason names to the dependencies', async () => {
-    const { affected, dependencies } = await explain({ exclude: ['nx'] });
+  it('moves an excluded project a reason names upstream', async () => {
+    const { affected, upstream } = await explain({ exclude: ['nx'] });
     expect(Object.keys(affected).sort()).toEqual(['devkit', 'js']);
-    expect(Object.keys(dependencies)).toEqual(['nx']);
+    expect(Object.keys(upstream)).toEqual(['nx']);
   });
 
   it('drops an excluded project nothing selected depends on', async () => {
-    const { affected, dependencies } = await explain({ exclude: ['js'] });
+    const { affected, upstream } = await explain({ exclude: ['js'] });
     expect(Object.keys(affected).sort()).toEqual(['devkit', 'nx']);
-    expect(dependencies).toEqual({});
+    expect(upstream).toEqual({});
   });
 });
 
@@ -107,7 +107,7 @@ describe('nx affected --explain', () => {
       'app:build': [{ kind: 'dependent-output', producer: 'ui:build' }],
       'ui:build': [{ kind: 'input-file', file: 'libs/ui/src/x.ts' }],
     },
-    dependencies: {},
+    upstream: {},
   };
   let written: string[];
 
@@ -182,9 +182,9 @@ describe('nx affected --explain', () => {
       'exit 0'
     );
 
-    const { affected: selected, dependencies } = JSON.parse(written.join(''));
+    const { affected: selected, upstream } = JSON.parse(written.join(''));
     expect(Object.keys(selected).sort()).toEqual(['devkit', 'js']);
-    expect(Object.keys(dependencies)).toEqual(['nx']);
+    expect(Object.keys(upstream)).toEqual(['nx']);
     expect(runCommand).not.toHaveBeenCalled();
   });
 });

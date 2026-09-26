@@ -65,18 +65,24 @@ export interface AffectedExplanation {
    * selection themselves, followed transitively, so every chain can be traced
    * within the same output.
    */
-  dependencies: Record<string, AffectedReason[]>;
+  upstream: Record<string, AffectedReason[]>;
+  /**
+   * Tasks a run keeps only because others need them: the change reached none
+   * of them. Each maps to the kept tasks that depend on it. Only when the
+   * caller is about to run the selection.
+   */
+  required?: Record<string, string[]>;
 }
 
 /**
  * Splits `reasons` by whether the run keeps each entry. A dropped entry still
- * lands in `dependencies` when a kept entry's reason names it, transitively.
+ * lands in `upstream` when a kept entry's reason names it, transitively.
  */
 export function explainSelection(
   reasons: Record<string, AffectedReason[]>,
   isSelected: (name: string) => boolean
 ): AffectedExplanation {
-  const explanation: AffectedExplanation = { affected: {}, dependencies: {} };
+  const explanation: AffectedExplanation = { affected: {}, upstream: {} };
   for (const [name, forName] of Object.entries(reasons)) {
     if (isSelected(name)) {
       explanation.affected[name] = forName;
@@ -89,12 +95,12 @@ export function explainSelection(
     const name = pending.pop();
     if (
       name in explanation.affected ||
-      name in explanation.dependencies ||
+      name in explanation.upstream ||
       !(name in reasons)
     ) {
       continue;
     }
-    explanation.dependencies[name] = reasons[name];
+    explanation.upstream[name] = reasons[name];
     pending.push(...upstream(reasons[name]));
   }
   return explanation;
@@ -150,13 +156,16 @@ export function formatAffectedReason(reason: AffectedReason): string {
 /**
  * Renders `--explain` output: one block per entity, its reasons beneath it.
  *
+ * With nothing upstream or required it is one list. Otherwise it is laid out
+ * as the run goes: what runs only because it is needed, what the change
+ * touched, what it reached through those, and last the selection itself, so
+ * the reader's own entries stay at the bottom however long the chain grows.
+ *
  * An entity with no reason is still listed, with a line saying so, because a
- * blank line is indistinguishable from a bug when you are troubleshooting. Only
- * the task path can produce one: project reasons are only ever created by
- * recording one, so a project with none is absent rather than empty.
+ * blank line is indistinguishable from a bug when you are troubleshooting.
  */
 export function formatAffectedExplanation(
-  { affected: reasons, dependencies: carried }: AffectedExplanation,
+  { affected, upstream, required = {} }: AffectedExplanation,
   heading: string,
   /**
    * Tasks that will run only to satisfy the selected ones. Absent unless the
@@ -165,28 +174,35 @@ export function formatAffectedExplanation(
   dependencyCount?: number
 ): string {
   const noun = heading.toLowerCase().includes('task') ? 'task' : 'project';
-  const names = Object.keys(reasons).sort();
+  const names = Object.keys(affected).sort();
   if (!names.length) {
     return `Nothing affected.`;
   }
 
-  // Upstream first, the selection last: the reader's own tasks stay at the
-  // bottom however long the chain above them grows. Within a group, what the
-  // change reached directly comes before what a dependency pulled in.
-  const reasonsOf = (name: string) => reasons[name] ?? carried[name] ?? [];
-  const reachedThroughDependency = (name: string) =>
-    reasonsOf(name).length > 0 && reasonsOf(name).every(isUpstreamReason);
-  const upstreamFirst = (group: Record<string, AffectedReason[]>) => {
-    const sorted = Object.keys(group).sort();
-    return [
-      ...sorted.filter((n) => !reachedThroughDependency(n)),
-      ...sorted.filter(reachedThroughDependency),
-    ];
-  };
+  const reasonsOf = (name: string) => affected[name] ?? upstream[name] ?? [];
+  // Touched: the change reached its own inputs. Otherwise it was reached only
+  // through another entry.
+  const touched = (name: string) =>
+    !reasonsOf(name).length || !reasonsOf(name).every(isUpstreamReason);
+  const touchedFirst = (group: string[]) => [
+    ...group.filter(touched),
+    ...group.filter((name) => !touched(name)),
+  ];
+  const reachedThrough =
+    noun === 'task'
+      ? 'reads outputs the change reached'
+      : 'depends on a project the change reached';
 
   const lines = [`${heading} (${names.length}):`, ''];
-  const render = (name: string) => {
+  const render = (name: string, withLayer = false) => {
     lines.push(`  ${name}`);
+    if (withLayer) {
+      lines.push(
+        touched(name)
+          ? `    - touched: its own inputs changed`
+          : `    - affected: ${reachedThrough}`
+      );
+    }
     const forName = reasonsOf(name);
     if (!forName.length) {
       lines.push(`    - selected, but no reason was recorded`);
@@ -196,7 +212,7 @@ export function formatAffectedExplanation(
     }
     // Every reason names another entry, so say where the chain starts: the
     // reader should not have to follow it up the output to find the file.
-    if (reachedThroughDependency(name)) {
+    if (!touched(name)) {
       const origins = chainOrigins(name, reasonsOf);
       if (origins.length) {
         const shown = origins.slice(0, 3).join(', ');
@@ -207,22 +223,47 @@ export function formatAffectedExplanation(
     }
     lines.push('');
   };
+  const section = (title: string, group: string[]) => {
+    if (group.length) {
+      lines.push(`${title} (${group.length}):`, '');
+      group.forEach((name) => render(name));
+    }
+  };
 
-  const carriedNames = upstreamFirst(carried);
-  if (carriedNames.length) {
-    lines.push(
-      `Upstream, carried the change here (${carriedNames.length}):`,
-      ''
+  const upstreamNames = Object.keys(upstream).sort();
+  const requiredNames = Object.keys(required).sort();
+  if (!upstreamNames.length && !requiredNames.length) {
+    touchedFirst(names).forEach((name) => render(name));
+  } else {
+    if (requiredNames.length) {
+      lines.push(
+        `Dependencies, needed to run first (${requiredNames.length}):`,
+        ''
+      );
+      for (const name of requiredNames) {
+        const by = required[name];
+        const more = by.length > 2 ? ` and ${by.length - 2} more` : '';
+        lines.push(
+          by.length
+            ? `  ${name}, needed by ${by.slice(0, 2).join(', ')}${more}`
+            : `  ${name}`
+        );
+      }
+      lines.push('');
+    }
+    section(`Touched, their own inputs changed`, upstreamNames.filter(touched));
+    section(
+      `Affected, ${noun === 'task' ? 'they read outputs' : 'they depend on a project'} the change reached`,
+      upstreamNames.filter((name) => !touched(name))
     );
-    carriedNames.forEach(render);
     lines.push(
       noun === 'task'
         ? `Your targets (${names.length}):`
         : `Affected projects (${names.length}):`,
       ''
     );
+    touchedFirst(names).forEach((name) => render(name, true));
   }
-  upstreamFirst(reasons).forEach(render);
 
   // Same shape as the run summary, which reports the tasks it ran and the ones
   // it ran only to get there.
