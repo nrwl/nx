@@ -294,20 +294,25 @@ Affected tasks (3):
 
 The output follows the order the run goes in, and the tasks you asked for always come last:
 
-- **Dependencies** run only because a task below needs them. Your change didn't reach them, so they usually restore from cache.
-- **Touched** tasks are ones your change reached through their own inputs.
-- **Affected, they read outputs** lists tasks that read the outputs of a task your change reached.
-- **Affected tasks**, the last section, are the ones you asked for, each marked touched or affected.
+- `Dependencies` run only because a task below needs them. Your change didn't reach them, so they can restore from cache.
+- `Touched` tasks had one of their own inputs changed.
+- Under `Affected, they read outputs`, each task reads the outputs of one your change reached.
+- `Affected tasks` comes last and holds the tasks you asked for, each marked touched or affected.
 
 The layers above the last section list tasks you didn't ask for, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`.
-Each entry lists every reason that applies, so a task reached through two different dependencies reports both.
+Each entry lists every reason that applies, so a task reached through two different producers reports both.
 An entry reached only through other entries ends with the changed file its chain starts from.
 To follow the chain step by step, look up the task named in a reason.
 
-The last line counts the closure: tasks Nx runs only so the selected ones can run.
+The last line counts the tasks Nx runs only so the selected ones can run.
 
 Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
-The JSON has four keys: `affected` for the tasks you asked for, `upstream` for the tasks above them, `touched` for the ones among both that your change reached directly, and `required` for the dependencies.
+The JSON has four keys:
+
+- `affected` holds the tasks you asked for.
+- `upstream` holds the tasks above them.
+- `touched` lists which of those your change reached directly.
+- `required` maps each dependency to the tasks that need it.
 
 `nx show projects --affected -t build --explain` explains its answer the same way. It reports a selection rather than running one, so it leaves off the Dependencies layer and the last line.
 
