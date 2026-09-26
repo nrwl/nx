@@ -163,7 +163,7 @@ function readLockFileAtRevision(
 
 export const TEN_MEGABYTES = 1024 * 10000;
 
-export function defaultReadFileAtRevision(
+function defaultReadFileAtRevision(
   file: string,
   revision: void | string
 ): string {
