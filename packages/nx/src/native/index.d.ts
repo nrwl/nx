@@ -440,6 +440,11 @@ export interface AffectedOptions {
  * the selection, so a reason naming a producer can be looked up too.
  */
 export interface AffectedTaskExplanation {
+  /**
+   * The reached tasks the change touched directly, sorted: a matched input,
+   * or always touched. Every other reached task was carried through outputs.
+   */
+  touched: Array<string>
   /** Consumer -> the reached producers whose outputs it reads. */
   producersOf: Record<string, Array<string>>
   /** Changed project configs no longer on disk. Every task was seeded for them. */

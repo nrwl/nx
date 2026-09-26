@@ -434,6 +434,8 @@ describe('explaining a change carried by a dependency-only task', () => {
     expect(result.explanation.affected['app:build']).toEqual([
       { kind: 'dependent-output', producer: 'app:prebuild' },
     ]);
+    // Selection's own touched set: the prebuild matched, the build did not.
+    expect(result.explanation.touched).toEqual(['app:prebuild']);
     expect(result.explanation.upstream['app:prebuild']).toContainEqual(
       expect.objectContaining({
         kind: 'input-file',

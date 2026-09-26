@@ -96,13 +96,13 @@ export async function showProjectsHandler(
     } else if (isExplaining(nxArgs.explain)) {
       // Reports the selection rather than filtering to it, so the later
       // --projects and --withTarget filters would only obscure the answer.
-      const { reasons } = await filterAffectedWithReasons(
+      const { reasons, touched } = await filterAffectedWithReasons(
         graph,
         touchedFiles,
         nxJson
       );
       printAffectedExplanation(
-        { affected: reasons, upstream: {} },
+        { affected: reasons, upstream: {}, touched },
         'Affected projects',
         args.json ? 'stdout' : nxArgs.explain
       );

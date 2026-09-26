@@ -11,6 +11,7 @@ vi.mock('../../project-graph/affected/affected-project-graph', () => ({
       docs: [{ kind: 'dependency', dependency: 'nx' }],
       js: [{ kind: 'dependency', dependency: 'devkit' }],
     },
+    touched: ['nx'],
   }),
 }));
 vi.mock('../../project-graph/file-utils', async (importOriginal) => ({

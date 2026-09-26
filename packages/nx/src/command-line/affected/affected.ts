@@ -242,7 +242,7 @@ export async function explainAffectedProjects(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ): Promise<AffectedExplanation> {
-  const { reasons } = await filterAffectedWithReasons(
+  const { reasons, touched } = await filterAffectedWithReasons(
     projectGraph,
     calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
     nxJson
@@ -254,6 +254,7 @@ export async function explainAffectedProjects(
   );
   return explainSelection(
     reasons,
+    touched,
     (name) =>
       !excluded.has(name) &&
       projectsWithTarget([projectGraph.nodes[name]], nxArgs).length > 0

@@ -138,6 +138,8 @@ pub(crate) fn compute_affected_task_selection(
 /// output-read edges it was carried along.
 struct Reached {
     tasks: Vec<String>,
+    /// The part of `tasks` the change reached directly, not through outputs.
+    touched: HashSet<String>,
     producers_of: HashMap<String, Vec<String>>,
 }
 
@@ -145,6 +147,9 @@ struct Reached {
 /// the selection, so a reason naming a producer can be looked up too.
 #[napi(object)]
 pub struct AffectedTaskExplanation {
+    /// The reached tasks the change touched directly, sorted: a matched input,
+    /// or always touched. Every other reached task was carried through outputs.
+    pub touched: Vec<String>,
     /// Consumer -> the reached producers whose outputs it reads.
     pub producers_of: HashMap<String, Vec<String>>,
     /// Changed project configs no longer on disk. Every task was seeded for them.
@@ -186,6 +191,7 @@ pub(crate) fn compute_affected_task_explanation(
     let (configs, deleted) = changed_project_configs(changed_files, options);
     let Reached {
         tasks: reached,
+        touched,
         producers_of,
     } = if deleted.is_empty() {
         reached_by_change(
@@ -197,8 +203,10 @@ pub(crate) fn compute_affected_task_explanation(
             options,
         )?
     } else {
+        // A deleted config seeds every task, so every task is touched.
         Reached {
             tasks: task_graph.tasks.keys().cloned().collect(),
+            touched: task_graph.tasks.keys().cloned().collect(),
             producers_of: compute_dependent_output_edges(hash_plans, task_graph),
         }
     };
@@ -241,7 +249,10 @@ pub(crate) fn compute_affected_task_explanation(
     )?;
     input_matches.retain(|id, _| reached.contains(id.as_str()));
 
+    let mut touched: Vec<String> = touched.into_iter().collect();
+    touched.sort_unstable();
     Ok(AffectedTaskExplanation {
+        touched,
         producers_of,
         deleted_project_configs: deleted,
         input_matches,
@@ -305,6 +316,7 @@ fn reached_by_change(
     );
     Ok(Reached {
         tasks: reached,
+        touched,
         producers_of,
     })
 }
@@ -1009,6 +1021,7 @@ mod tests {
         );
         assert_eq!(e.input_matches["app:prebuild"].files[0].file, "x.txt");
         assert!(!e.input_matches.contains_key("app:build"));
+        assert_eq!(e.touched, strings(&["app:prebuild"]));
         assert!(e.deleted_project_configs.is_empty());
     }
 
