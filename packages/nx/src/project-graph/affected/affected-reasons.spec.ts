@@ -220,7 +220,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain('Touched, their own inputs changed (1):');
-    expect(out).toContain('Your targets (1):');
+    expect(out).toMatch(/\n\nAffected tasks \(1\):\n/);
     expect(out).toContain('    - affected: reads outputs the change reached');
     expect(out.indexOf('app:prebuild')).toBeLessThan(out.indexOf('app:build'));
     const entries = out.split('\n').filter((line) => /^  \S/.test(line));
@@ -230,7 +230,7 @@ describe('formatAffectedExplanation', () => {
 
   it('adds no section labels when nothing was carried', () => {
     const out = formatAffectedExplanation(selected, 'Affected tasks');
-    expect(out).not.toContain('Your targets');
+    expect(out.match(/Affected tasks \(/g)).toHaveLength(1);
     expect(out).not.toContain('Touched,');
   });
 
@@ -262,7 +262,7 @@ describe('formatAffectedExplanation', () => {
     );
     expect(out).toContain('  tools:build, needed by app:build');
     expect(at('Dependencies,')).toBeLessThan(at('Touched,'));
-    expect(at('Touched,')).toBeLessThan(at('Your targets (2):'));
+    expect(at('Touched,')).toBeLessThan(at('\n\nAffected tasks (2):'));
     // Touched targets before the ones reached through them.
     expect(at('  lib:build')).toBeLessThan(at('  app:build'));
     expect(out).toContain('    - touched: its own inputs changed');
