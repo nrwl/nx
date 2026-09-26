@@ -48,9 +48,9 @@ describe('parseTargetString', () => {
   };
 
   it.each(cases)('$input -> $expected', ({ input, expected }) => {
-    jest
-      .spyOn(splitTarget, 'splitTarget')
-      .mockReturnValueOnce(Object.values(expected) as [string]);
+    vi.spyOn(splitTarget, 'splitTarget').mockReturnValueOnce(
+      Object.values(expected) as [string]
+    );
     expect(parseTargetString(input, null)).toEqual(expected);
   });
 

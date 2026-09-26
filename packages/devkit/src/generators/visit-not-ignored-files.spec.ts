@@ -17,7 +17,7 @@ describe('visitNotIgnoredFiles', () => {
     tree.write('dir/file1.ts', '');
     tree.write('dir/dir2/file2.ts', '');
 
-    const visitor = jest.fn();
+    const visitor = vi.fn();
     visitNotIgnoredFiles(tree, 'dir', visitor);
 
     expect(visitor).toHaveBeenCalledWith('dir/file1.ts');
@@ -31,7 +31,7 @@ describe('visitNotIgnoredFiles', () => {
     tree.write('dir/node_modules/file1.ts', '');
     tree.write('dir/dir2/file2.ts', '');
 
-    const visitor = jest.fn();
+    const visitor = vi.fn();
     visitNotIgnoredFiles(tree, 'dir', visitor);
 
     expect(visitor).toHaveBeenCalledWith('dir/file1.ts');
@@ -48,7 +48,7 @@ describe('visitNotIgnoredFiles', () => {
       tree.write('dir/node_modules/file1.ts', '');
       tree.write('dir/dir2/file2.ts', '');
 
-      const visitor = jest.fn();
+      const visitor = vi.fn();
       visitNotIgnoredFiles(tree, dirPath, visitor);
 
       expect(visitor).toHaveBeenCalledWith('.gitignore');
@@ -140,7 +140,7 @@ describe('visitNotIgnoredFiles', () => {
       tree.write('apps/foo/.gitignore', 'build\n');
       tree.write('apps/foo/build/deep/a.ts', '');
       tree.write('apps/foo/src/b.ts', '');
-      const children = jest.spyOn(tree, 'children');
+      const children = vi.spyOn(tree, 'children');
 
       const visited = visitAll();
 
