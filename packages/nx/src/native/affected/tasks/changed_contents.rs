@@ -3,7 +3,6 @@
 //! file counts as changed whenever it is in the diff. Each is read at both
 //! revisions only when some instruction asks about it.
 
-use jsonc_parser::JsonValue;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::convert::Infallible;
@@ -13,9 +12,10 @@ use std::sync::{Arc, OnceLock};
 
 use crate::native::project_graph::types::ProjectGraph;
 use crate::native::project_graph::utils::{create_project_root_mappings, find_project_for_path};
-use crate::native::tasks::hashers::{OnceCache, parse_json_or_jsonc};
+use crate::native::tasks::hashers::OnceCache;
 use crate::native::tasks::types::JsonFileSetInput;
 use crate::native::utils::command::create_command;
+use crate::native::utils::json_diff::{MODIFIED, Ordered, json_changes, parse_ordered};
 use crate::native::utils::path::normalize_js_path;
 
 const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
@@ -195,75 +195,29 @@ impl Revisions<'_> {
     }
 }
 
-/// Parsed as the hasher parses it, so both agree on what a field is. Whole
-/// when unparseable or not an object.
-fn json_object(bytes: &[u8]) -> Option<Value> {
-    parse_json_or_jsonc(bytes).filter(Value::is_object)
+/// Parsed as the hasher parses it (JSON, else JSONC), so both agree on what a
+/// field is. Whole when unparseable or not an object.
+fn json_object(bytes: &[u8]) -> Option<Ordered> {
+    parse_ordered(std::str::from_utf8(bytes).ok()?)
+        .filter(|value| matches!(value, Ordered::Object(_)))
 }
 
-/// The field paths whose values differ, one key per segment. Objects are
-/// compared key by key; anything else, arrays included, as a whole.
-fn changed_field_paths(before: &Value, after: &Value) -> Vec<Vec<String>> {
-    let mut changed = Vec::new();
-    collect_changed(before, after, &mut Vec::new(), &mut changed);
-    changed
-}
-
-fn collect_changed(
-    before: &Value,
-    after: &Value,
-    path: &mut Vec<String>,
-    changed: &mut Vec<Vec<String>>,
-) {
-    match (before, after) {
-        (Value::Object(before), Value::Object(after)) => {
-            let added = after.keys().filter(|key| !before.contains_key(*key));
-            for key in before.keys().chain(added) {
-                path.push(key.clone());
-                match (before.get(key), after.get(key)) {
-                    (Some(before), Some(after)) => collect_changed(before, after, path, changed),
-                    _ => changed.push(path.clone()),
-                }
-                path.pop();
-            }
-        }
-        _ if before != after => changed.push(path.clone()),
-        _ => {}
-    }
-}
-
-/// A JSON value with its keys in file order, so `==` sees a reorder the way
-/// `JSON.stringify` does. Numbers keep their text: `1.0` and `1` differ here
-/// though not to JS, which can only select an extra task.
-#[derive(PartialEq)]
-enum Ordered {
-    Object(Vec<(String, Ordered)>),
-    Array(Vec<Ordered>),
-    String(String),
-    Number(String),
-    Boolean(bool),
-    Null,
-}
-
-impl From<JsonValue<'_>> for Ordered {
-    fn from(value: JsonValue<'_>) -> Self {
-        match value {
-            JsonValue::Object(object) => Self::Object(
-                object
-                    .take_inner()
-                    .into_iter()
-                    .map(|(key, value)| (key, value.into()))
-                    .collect(),
-            ),
-            JsonValue::Array(array) => {
-                Self::Array(array.take_inner().into_iter().map(Self::from).collect())
-            }
-            JsonValue::String(text) => Self::String(text.into_owned()),
-            JsonValue::Number(text) => Self::Number(text.to_string()),
-            JsonValue::Boolean(value) => Self::Boolean(value),
-            JsonValue::Null => Self::Null,
-        }
-    }
+/// The field paths `jsonDiff` reports, less a container that stayed a
+/// container: its children's changes describe it, and above a kept nested
+/// field it would claim a change the field never saw.
+fn changed_field_paths(before: &Ordered, after: &Ordered) -> Vec<Vec<String>> {
+    json_changes(before, after)
+        .into_iter()
+        .filter(|change| {
+            !(change.kind == MODIFIED
+                && matches!(
+                    (&change.value.lhs, &change.value.rhs),
+                    (Some(Value::Object(_)), Some(Value::Object(_)))
+                        | (Some(Value::Array(_)), Some(Value::Array(_)))
+                ))
+        })
+        .map(|change| change.path)
+        .collect()
 }
 
 /// The root tsconfig split as `NativeTaskHasherImpl` splits it: everything but
@@ -275,9 +229,7 @@ struct TsConfigParts {
 
 fn ts_config_parts(bytes: &[u8]) -> Option<TsConfigParts> {
     let text = std::str::from_utf8(bytes).ok()?;
-    let mut rest: Ordered = jsonc_parser::parse_to_value(text, &Default::default())
-        .ok()??
-        .into();
+    let mut rest = parse_ordered(text)?;
     let Ordered::Object(entries) = &mut rest else {
         return None;
     };
@@ -482,14 +434,16 @@ mod tests {
     }
 
     #[test]
-    fn changed_field_paths_descend_objects_and_compare_the_rest_whole() {
-        let before = serde_json::json!({ "a": { "b": 1, "c": 2 }, "list": [1, 2], "gone": 1 });
-        let after = serde_json::json!({ "a": { "b": 1, "c": 3 }, "list": [1, 3], "new": 1 });
+    fn changed_field_paths_are_the_leaves_that_moved() {
+        let before =
+            parse_ordered(r#"{ "a": { "b": 1, "c": 2 }, "list": [1, 2], "gone": 1 }"#).unwrap();
+        let after =
+            parse_ordered(r#"{ "a": { "b": 1, "c": 3 }, "list": [1, 3], "new": 1 }"#).unwrap();
         let mut changed = changed_field_paths(&before, &after);
         changed.sort();
         assert_eq!(
             changed,
-            [vec!["a", "c"], vec!["gone"], vec!["list"], vec!["new"]]
+            [vec!["a", "c"], vec!["gone"], vec!["list", "1"], vec!["new"]]
                 .map(|path| path.into_iter().map(String::from).collect::<Vec<_>>())
         );
     }

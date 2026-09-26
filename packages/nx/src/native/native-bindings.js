@@ -605,6 +605,7 @@ module.exports.closeDbConnection = nativeBinding.closeDbConnection
 module.exports.connectToNxDb = nativeBinding.connectToNxDb
 module.exports.copy = nativeBinding.copy
 module.exports.detectAiAgent = nativeBinding.detectAiAgent
+module.exports.diffJson = nativeBinding.diffJson
 module.exports.directlyTouchedProjects = nativeBinding.directlyTouchedProjects
 module.exports.EventType = nativeBinding.EventType
 module.exports.expandFilesInput = nativeBinding.expandFilesInput

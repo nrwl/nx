@@ -13,7 +13,8 @@ import type { NxArgs } from '../utils/command-line-utils';
 import { readJsonFile } from '../utils/fileutils';
 import { assertValidGitRevision } from '../utils/git-revision';
 import { getIgnoreObject } from '../utils/ignore';
-import { jsonDiff } from '../utils/json-diff';
+import { diffJson } from '../native';
+import { jsonDiff, type JsonChange } from '../utils/json-diff';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export interface Change {
@@ -123,7 +124,12 @@ export function calculateFileChanges(
             try {
               const atBase = readFileAtRevision(f, nxArgs.base);
               const atHead = readFileAtRevision(f, nxArgs.head);
-              return jsonDiff(JSON.parse(atBase), JSON.parse(atHead));
+              // Unset when either side is not strict JSON.
+              return (
+                (diffJson(atBase, atHead) as JsonChange[] | null) ?? [
+                  new WholeFileChange(),
+                ]
+              );
             } catch (e) {
               return [new WholeFileChange()];
             }

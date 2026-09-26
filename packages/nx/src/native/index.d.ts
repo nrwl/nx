@@ -564,6 +564,12 @@ export interface DepsOutputsInput {
 export declare function detectAiAgent(): string | null
 
 /**
+ * `jsonDiff(JSON.parse(lhs), JSON.parse(rhs))`, or `null` when either side is
+ * not strict JSON, where `JSON.parse` would throw.
+ */
+export declare function diffJson(lhs: string, rhs: string): Array<JsonChange> | null
+
+/**
  * Only the projects that own a changed file, one entry per file, in input
  * order. `nx release` version plans ignore implicit and config-derived touches.
  */
@@ -875,6 +881,18 @@ export const IS_WASM: boolean
 export declare function isAiAgent(): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
+
+/** One entry of `jsonDiff`'s result: `type` is a `JsonDiffType` value. */
+export interface JsonChange {
+  type: string
+  path: Array<string>
+  value: JsonChangeValue
+}
+
+export interface JsonChangeValue {
+  lhs?: any
+  rhs?: any
+}
 
 export interface JsonInput {
   json: string
