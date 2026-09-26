@@ -249,6 +249,15 @@ pub(crate) fn compute_affected_task_explanation(
     )?;
     input_matches.retain(|id, _| reached.contains(id.as_str()));
 
+    // The detail pass mirrors `instruction_matches`; a touched task it cannot
+    // attribute means the two matchers have drifted apart.
+    debug_assert!(
+        !deleted.is_empty()
+            || touched.iter().all(|id| {
+                input_matches.contains_key(id) || options.always_touched_task_ids.contains(id)
+            }),
+        "a touched task has no input match: instruction_matches_detail has drifted"
+    );
     let mut touched: Vec<String> = touched.into_iter().collect();
     touched.sort_unstable();
     Ok(AffectedTaskExplanation {
