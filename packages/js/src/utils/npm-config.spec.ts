@@ -1,14 +1,14 @@
 import { ExecException } from 'child_process';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { getNpmRegistry, getNpmTag, parseRegistryOptions } from './npm-config';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { PackageJson } from '@nx/devkit/internal';
 
-jest.mock('child_process', () => {
-  const original = jest.requireActual('child_process');
+vi.mock('child_process', async () => {
+  const original = await vi.importActual<any>('child_process');
   return {
     ...original,
-    exec: jest
+    exec: vi
       .fn()
       .mockImplementation(
         (

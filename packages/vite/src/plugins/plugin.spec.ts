@@ -1,8 +1,8 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
@@ -529,6 +529,15 @@ describe('@nx/vite/plugin', () => {
                     "dev": {
                       "command": "vite",
                       "continuous": true,
+                      "inputs": [
+                        "production",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "vite",
+                          ],
+                        },
+                      ],
                       "metadata": {
                         "description": "Starts Vite dev server",
                         "help": {
@@ -553,6 +562,15 @@ describe('@nx/vite/plugin', () => {
                       "dependsOn": [
                         "build",
                       ],
+                      "inputs": [
+                        "production",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "vite",
+                          ],
+                        },
+                      ],
                       "metadata": {
                         "description": "Locally preview Vite production build",
                         "help": {
@@ -574,6 +592,15 @@ describe('@nx/vite/plugin', () => {
                     "serve": {
                       "command": "vite",
                       "continuous": true,
+                      "inputs": [
+                        "production",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "vite",
+                          ],
+                        },
+                      ],
                       "metadata": {
                         "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                         "description": "Starts Vite dev server",
@@ -596,6 +623,15 @@ describe('@nx/vite/plugin', () => {
                     "serve-static": {
                       "continuous": true,
                       "executor": "@nx/web:file-server",
+                      "inputs": [
+                        "production",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "vite",
+                          ],
+                        },
+                      ],
                       "options": {
                         "buildTarget": "build",
                         "spa": true,

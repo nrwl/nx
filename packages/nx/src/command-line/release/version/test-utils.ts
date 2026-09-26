@@ -21,7 +21,10 @@ import {
   type FinalConfigForProject,
 } from '../utils/release-graph';
 import { ReleaseGroupProcessor } from './release-group-processor';
-import { VersionActions } from './version-actions';
+import {
+  type ResolveVersionForDependency,
+  VersionActions,
+} from './version-actions';
 
 export async function createNxReleaseConfigAndPopulateWorkspace(
   tree: Tree,
@@ -281,8 +284,9 @@ export class MockJsVersionActions extends VersionActions {
   private read = (tree: Tree, manifestPath: string): any =>
     JSON.parse(tree.read(manifestPath, 'utf-8')!.toString());
 
-  // Match `@nx/devkit`'s `updateJson` formatting (2-space indent + trailing
-  // newline) so existing snapshots continue to match.
+  // Normalize JSON to a stable two-space format for orchestration snapshots.
+  // Formatting preservation is JS-specific behavior covered against the real
+  // implementation in packages/js.
   private write = (tree: Tree, manifestPath: string, json: any): void =>
     tree.write(manifestPath, JSON.stringify(json, null, 2) + '\n');
 
@@ -335,29 +339,56 @@ export class MockJsVersionActions extends VersionActions {
   async updateProjectDependencies(
     tree: Tree,
     projectGraph: ProjectGraph,
-    dependenciesToUpdate: Record<string, string>
+    dependenciesToUpdate: Record<string, string>,
+    resolveVersionForDependency?: ResolveVersionForDependency
   ): Promise<string[]> {
-    let count = Object.keys(dependenciesToUpdate).length;
-    if (count === 0) return [];
+    const projectByPackageName = new Map<string, string>();
+    for (const [projectName, node] of Object.entries(projectGraph.nodes)) {
+      const packageName = node.data.metadata?.js?.packageName;
+      if (packageName) {
+        projectByPackageName.set(packageName, projectName);
+      }
+    }
 
     const logs: string[] = [];
     for (const { manifestPath, preserveLocalDependencyProtocols } of this
       .manifestsToUpdate) {
       const json = this.read(tree, manifestPath);
+      let count = 0;
       for (const depType of DEPENDENCY_FIELDS) {
         if (!json[depType]) continue;
-        for (const [dep, newVersion] of Object.entries(dependenciesToUpdate)) {
-          const name = projectGraph.nodes[dep].data.metadata?.js?.packageName;
-          const current = name && json[depType][name];
-          if (!current) continue;
+        for (const [packageName, currentVersion] of Object.entries<string>(
+          json[depType]
+        )) {
+          const projectName = projectByPackageName.get(packageName);
+          if (!projectName) continue;
+
+          let newVersion = dependenciesToUpdate[projectName];
           if (
             preserveLocalDependencyProtocols &&
-            (current.startsWith('file:') || current.startsWith('workspace:'))
+            (currentVersion.startsWith('file:') ||
+              currentVersion.startsWith('workspace:'))
           ) {
-            count--;
             continue;
           }
-          json[depType][name] = newVersion;
+
+          if (
+            newVersion === undefined &&
+            resolveVersionForDependency &&
+            (currentVersion.startsWith('file:') ||
+              currentVersion.startsWith('workspace:'))
+          ) {
+            newVersion = await resolveVersionForDependency(projectName);
+            if (currentVersion.startsWith('workspace:^')) {
+              newVersion = `^${newVersion}`;
+            } else if (currentVersion.startsWith('workspace:~')) {
+              newVersion = `~${newVersion}`;
+            }
+          }
+
+          if (newVersion === undefined) continue;
+          json[depType][packageName] = newVersion;
+          count++;
         }
       }
       this.write(tree, manifestPath, json);
@@ -749,7 +780,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
   }
 
   // Default path: use a self-contained MockJsVersionActions instead of
-  // `jest.requireActual('@nx/js/src/release/version-actions')`. The real
+  // `vi.importActual('@nx/js/src/release/version-actions')`. The real
   // module imports from `@nx/devkit`, which would pull devkit's entire
   // source tree into the test sandbox. Tests that genuinely depend on
   // JsVersionActions behavior (registry resolution, lockfile updates,

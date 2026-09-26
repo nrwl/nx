@@ -1,8 +1,10 @@
 import { joinPathFragments, output, type ExecutorContext } from '@nx/devkit';
-import { assertSupportedInstalledPackageVersion } from '@nx/devkit/internal';
+import {
+  assertSupportedInstalledPackageVersion,
+  interpolate,
+} from '@nx/devkit/internal';
 import type { ESLint } from 'eslint';
 import { mkdirSync, writeFileSync } from 'fs';
-import { interpolate } from 'nx/src/tasks-runner/utils';
 import { dirname, posix, relative, resolve } from 'path';
 import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file';
 import { warnEslintExecutorDeprecation } from '../../utils/deprecation';

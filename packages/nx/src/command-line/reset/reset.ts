@@ -1,16 +1,15 @@
 import { rmSync } from 'node:fs';
-import { join } from 'node:path';
 
 import { daemonClient } from '../../daemon/client/client';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from '../../daemon/tmp-dir';
 import {
   cacheDir,
+  cacheDirectoryForWorkspace,
+  sharedDataDirectory,
   workspaceDataDirectory,
-  workspaceDataDirectoryForWorkspace,
 } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
-import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
-import { getMainWorktreeRoot } from '../../native';
+import { getNativeFileCacheLocationToDelete } from '../../native/native-file-cache-location';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ResetCommandOptions } from './command-object';
 import { getCloudClient } from '../../nx-cloud/utilities/client';
@@ -146,8 +145,7 @@ function removeInstalledNxCloudClient() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      const cloudClientDir = getCloudClientLocation();
-      rmSync(join(cloudClientDir, 'cloud'), { recursive: true, force: true });
+      rmSync(getCloudClientLocation(), { recursive: true, force: true });
     }
   );
 }
@@ -158,8 +156,20 @@ function cleanupCacheEntries() {
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
       rmSync(cacheDir, { recursive: true, force: true });
+      // `cacheDir` is the shared directory whenever sharing is available, so
+      // this is the checkout's own `.nx/cache`: still there from before the
+      // move, and still what a later run falls back to if `~/.nx` stops being
+      // reachable. Reset means both.
+      removeIfDistinct(cacheDirectoryForWorkspace(workspaceRoot), cacheDir);
     }
   );
+}
+
+/** Skips the no-op when the two resolve to one directory. */
+function removeIfDistinct(dir: string, from: string) {
+  if (dir !== from) {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 function cleanupNativeFileCache() {
@@ -167,7 +177,12 @@ function cleanupNativeFileCache() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      rmSync(getNativeFileCacheLocation(), { recursive: true, force: true });
+      // Null when the native cache root is not a real directory we own, which
+      // would mean deleting through a path another user planted.
+      const cacheDir = getNativeFileCacheLocationToDelete();
+      if (cacheDir) {
+        rmSync(cacheDir, { recursive: true, force: true });
+      }
     }
   );
 }
@@ -179,19 +194,15 @@ function cleanupWorkspaceData() {
     () => {
       rmSync(workspaceDataDirectory, { recursive: true, force: true });
 
-      // If in a worktree, also clean the shared workspace data directory
-      // in the main repo where the DB actually lives
-      try {
-        const mainRoot = getMainWorktreeRoot(workspaceRoot);
-        if (mainRoot) {
-          const sharedDir = workspaceDataDirectoryForWorkspace(mainRoot);
-          if (sharedDir !== workspaceDataDirectory) {
-            rmSync(sharedDir, { recursive: true, force: true });
-          }
-        }
-      } catch {
-        // Worktree detection is best-effort during reset
-      }
+      // Also clean wherever the DB actually lives, which is outside this
+      // checkout whenever the shared root is reachable. Resolved through the
+      // same decision the DB itself uses, so reset cannot delete a directory
+      // this process never wrote to -- a sandboxed agent that fell back to its
+      // own checkout, or a configured location, yields nothing extra.
+      removeIfDistinct(
+        sharedDataDirectory(workspaceRoot, 'workspace-data'),
+        workspaceDataDirectory
+      );
     }
   );
 }

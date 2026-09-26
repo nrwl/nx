@@ -18,7 +18,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
       beforeAll(() => {
         gradleProjectName = uniq('gradle-dsl-test');
-        newProject({ packages: [] });
+        newProject({ keepBackup: true, packages: [] });
         createGradleProject(gradleProjectName, type);
         runCLI(`add @nx/gradle`);
 

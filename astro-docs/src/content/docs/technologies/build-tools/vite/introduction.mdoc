@@ -9,7 +9,7 @@ filter: 'type:References'
 
 [Vite](https://vite.dev/) is a fast build tool and dev server for modern web apps. In a Vite monorepo, Nx runs and caches Vite tasks across every project so you only rebuild what changed.
 
-The `@nx/vite` plugin adds [inferred targets](#configuration) and [project configuration generators](#setup).
+The `@nx/vite` plugin adds [inferred tasks](#configuration) and [project configuration generators](#setup).
 
 {% aside type="note" title="Vitest is now in @nx/vitest" %}
 Starting with Nx v22, Vitest support has moved to the dedicated [`@nx/vitest` plugin](/docs/technologies/test-tools/vitest/introduction). In Nx v21 and prior, `@nx/vite` contained what is now in `@nx/vitest`. If you are upgrading, see the [migration guide](/docs/kb/migrating-from-nx-vite).
@@ -104,16 +104,18 @@ The `@nx/vite` plugin infers tasks by reading Vite config files. Any of the foll
 - `vite.config.cjs`
 - `vite.config.cts`
 
-Build targets are only created when the project is buildable. A project is treated as buildable when any of the following are true:
+The configuration directory must also contain a `package.json` or `project.json`.
+
+Build tasks are only created when the project is buildable. A project is treated as buildable when any of the following are true:
 
 - `build.lib` is set in `vite.config.*`
 - `build.rollupOptions.input` or `build.rolldownOptions.input` is set (Vite 8 uses `rolldownOptions`)
 - `builder.buildApp` is set
 - an `index.html` file exists at the project root
 
-Dev, preview, and serve-static targets are created for buildable projects. If you are in library mode (`build.lib`), these targets are skipped unless you explicitly configure a dev server (e.g. `server.host` or `server.port`).
+Dev, preview, and serve-static tasks are created for buildable projects. If you are in library mode (`build.lib`), these tasks are skipped unless you explicitly configure a dev server (e.g. `server.host` or `server.port`).
 
-Typecheck targets are created when a `tsconfig*.json` file exists in the project.
+Typecheck tasks are created when a `tsconfig*.json` file exists in the project.
 
 ### Plugin options
 
@@ -132,6 +134,7 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static",
         "typecheckTargetName": "typecheck",
+        "compiler": "tsc",
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
       }
@@ -140,18 +143,23 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 }
 ```
 
-`serveTargetName` is deprecated; use `devTargetName` instead. `buildDepsTargetName` and `watchDepsTargetName` create targets that build or watch project dependencies.
+`serveTargetName` is deprecated; use `devTargetName` instead. `buildDepsTargetName` and `watchDepsTargetName` create tasks that build or watch project dependencies.
 
-| Option                  | Description                                          | Default        |
-| ----------------------- | ---------------------------------------------------- | -------------- |
-| `buildTargetName`       | Name of the Vite build target                        | `build`        |
-| `previewTargetName`     | Name of the Vite preview target                      | `preview`      |
-| `serveTargetName`       | Name of the deprecated Vite serve target             | `serve`        |
-| `devTargetName`         | Name of the Vite dev server target                   | `dev`          |
-| `serveStaticTargetName` | Name of the static file server target                | `serve-static` |
-| `typecheckTargetName`   | Name of the typecheck target                         | `typecheck`    |
-| `buildDepsTargetName`   | Name of the build-deps target for dependency builds  | none           |
-| `watchDepsTargetName`   | Name of the watch-deps target for dependency watches | none           |
+| Option                  | Description                                        | Default        |
+| ----------------------- | -------------------------------------------------- | -------------- |
+| `buildTargetName`       | Name of the Vite build task                        | `build`        |
+| `previewTargetName`     | Name of the Vite preview task                      | `preview`      |
+| `serveTargetName`       | Name of the deprecated Vite serve task             | `serve`        |
+| `devTargetName`         | Name of the Vite dev server task                   | `dev`          |
+| `serveStaticTargetName` | Name of the static file server task                | `serve-static` |
+| `typecheckTargetName`   | Name of the typecheck task                         | `typecheck`    |
+| `compiler`              | Typecheck compiler: `tsc`, `tsgo`, or `vue-tsc`    | auto-detected  |
+| `buildDepsTargetName`   | Name of the build-deps task for dependency builds  | none           |
+| `watchDepsTargetName`   | Name of the watch-deps task for dependency watches | none           |
+
+The build and typecheck tasks are cached, with build outputs based on your Vite configuration.
+The dev, preview, and static-server tasks are continuous.
+When `compiler` is omitted, Nx uses `vue-tsc` when it detects a Vite Vue plugin and `tsc` otherwise.
 
 ### Disable or scope inference
 
@@ -173,11 +181,13 @@ To avoid specific targets, adjust the config files that trigger them. For exampl
 
 ### View inferred tasks
 
-To see what tasks Nx inferred for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run:
+To see what tasks Nx inferred for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run:
 
 ```shell
 nx show project my-app --web
 ```
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/vite/plugin`.
 
 ## Set up CI for your Vite monorepo
 

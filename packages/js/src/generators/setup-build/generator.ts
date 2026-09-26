@@ -1,6 +1,8 @@
 import {
   addBuildTargetDefaults,
   readTargetDefaultsForTarget,
+  mergeTargetConfigurations,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   ensurePackage,
@@ -18,8 +20,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { basename, dirname, join } from 'node:path/posix';
-import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { getImportPath } from '../../utils/get-import-path';
 import {
@@ -30,7 +30,10 @@ import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
-import { readTsConfig } from '../../utils/typescript/ts-config';
+import {
+  createTreeParseConfigHost,
+  readTsConfig,
+} from '../../utils/typescript/ts-config';
 import {
   getDefinedCustomConditionName,
   getProjectSourceRoot,
@@ -237,11 +240,10 @@ function updatePackageJsonForTsc(
     ts = ensureTypescript();
   }
 
-  const tsconfig = readTsConfig(options.tsConfig, {
-    ...ts.sys,
-    readFile: (p) => tree.read(p, 'utf-8'),
-    fileExists: (p) => tree.exists(p),
-  });
+  const tsconfig = readTsConfig(
+    options.tsConfig,
+    createTreeParseConfigHost(tree)
+  );
 
   let main: string;
   let rootDir: string;

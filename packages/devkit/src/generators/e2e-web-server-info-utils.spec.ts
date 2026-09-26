@@ -314,4 +314,47 @@ describe('getE2EWebServerInfo', () => {
       }
     `);
   });
+
+  it('should not re-derive from targetDefaults when the port was explicit', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    // The plugin must be registered, or findPluginForConfigFile bails early and
+    // the port-resolution branch under test is never reached.
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: {
+        serveTargetName: 'vite:serve',
+        previewTargetName: 'vite:preview',
+      },
+    });
+    nxJson.targetDefaults = { 'vite:serve': { options: { port: 4300 } } };
+    updateNxJson(tree, nxJson);
+
+    // ACT — the caller resolved 4321 and baked it into both URLs. Re-deriving here
+    // would rewrite the address to 4300 and leave the CI URL at 4321.
+    const e2eWebServerInfo = await getE2EWebServerInfo(
+      tree,
+      'app',
+      {
+        plugin: '@nx/vite/plugin',
+        configFilePath: 'app/vite.config.ts',
+        serveTargetName: 'serveTargetName',
+        serveStaticTargetName: 'previewTargetName',
+      },
+      {
+        defaultServeTargetName: 'serve',
+        defaultServeStaticTargetName: 'preview',
+        defaultE2EWebServerAddress: 'http://localhost:4321',
+        defaultE2ECiBaseUrl: 'http://localhost:4321',
+        defaultE2EPort: 4321,
+        e2EPortIsExplicit: true,
+      },
+      true
+    );
+
+    // ASSERT — both URLs keep the explicitly requested port, and agree
+    expect(e2eWebServerInfo.e2eWebServerAddress).toBe('http://localhost:4321');
+    expect(e2eWebServerInfo.e2eCiBaseUrl).toBe('http://localhost:4321');
+  });
 });

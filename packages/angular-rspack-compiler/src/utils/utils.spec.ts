@@ -3,12 +3,10 @@ import {
   isPresent,
   isUsingWindows,
   maxWorkers,
-  normalizeQuotes,
   parseMaxWorkers,
 } from './utils';
 import * as nodeOSModule from 'node:os';
 import { ENV_NG_BUILD_MAX_WORKERS } from './constants.ts';
-import * as osModule from 'node:os';
 
 vi.mock('node:os');
 
@@ -97,14 +95,8 @@ describe('maxWorkers', () => {
   });
 });
 
-describe('normalizeQuotes', () => {
-  it.each(["'", '"', '`'])('should remove (%s) quotes if given', (quote) => {
-    expect(normalizeQuotes(`${quote}test${quote}`)).toBe('test');
-  });
-});
-
 describe('isUsingWindows', async () => {
-  const platformSpy = vi.spyOn(osModule, 'platform');
+  const platformSpy = vi.spyOn(nodeOSModule, 'platform');
 
   beforeEach(() => {
     platformSpy.mockClear();

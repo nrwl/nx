@@ -1,14 +1,18 @@
-import { joinPathFragments, logger, normalizePath } from '@nx/devkit';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import {
+  joinPathFragments,
+  logger,
+  normalizePath,
+  workspaceRoot,
+  readCachedProjectGraph,
+} from '@nx/devkit';
 import { dirname, join, relative, resolve } from 'path';
-import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
-import { getSourceDirOfDependentProjects } from 'nx/src/utils/project-graph-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import ignore from 'ignore';
 import {
+  getSourceDirOfDependentProjects,
   createProjectRootMappings,
   findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
+} from '@nx/devkit/internal';
 
 function configureIgnore() {
   let ig: ReturnType<typeof ignore>;

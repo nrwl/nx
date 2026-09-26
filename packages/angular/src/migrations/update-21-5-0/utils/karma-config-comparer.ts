@@ -225,9 +225,8 @@ module.exports = function (config) {
 
 async function getKarmaConfigTemplate(): Promise<string> {
   try {
-    const templatePath = require.resolve(
-      '@schematics/angular/config/files/karma.conf.js.template'
-    );
+    const templatePath =
+      require.resolve('@schematics/angular/config/files/karma.conf.js.template');
     return await readFile(templatePath, 'utf-8');
   } catch (e) {
     return karmaConfigTemplateFallback;

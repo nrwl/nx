@@ -1,9 +1,9 @@
-// Module-level mock container - initialized early so jest.mock factories can reference it
+// Module-level mock container - initialized early so vi.mock factories can reference it
 const mocks = {
-  deriveSpecifierFromConventionalCommits: jest.fn(),
-  deriveSpecifierFromVersionPlan: jest.fn(),
-  resolveVersionActionsForProject: jest.fn(),
-  resolveCurrentVersion: jest.fn(),
+  deriveSpecifierFromConventionalCommits: vi.fn(),
+  deriveSpecifierFromVersionPlan: vi.fn(),
+  resolveVersionActionsForProject: vi.fn(),
+  resolveCurrentVersion: vi.fn(),
 };
 
 // Aliases for test usage
@@ -14,13 +14,13 @@ const mockResolveVersionActionsForProject =
   mocks.resolveVersionActionsForProject;
 const mockResolveCurrentVersion = mocks.resolveCurrentVersion;
 
-jest.mock('./derive-specifier-from-conventional-commits', () => ({
+vi.mock('./derive-specifier-from-conventional-commits', () => ({
   deriveSpecifierFromConventionalCommits: (...args: any[]) =>
     mocks.deriveSpecifierFromConventionalCommits(...args),
 }));
 
-jest.mock('./version-actions', () => {
-  const actual = jest.requireActual('./version-actions');
+vi.mock('./version-actions', async () => {
+  const actual = await vi.importActual('./version-actions');
   return {
     ...actual,
     deriveSpecifierFromVersionPlan: (...args: any[]) =>
@@ -30,8 +30,8 @@ jest.mock('./version-actions', () => {
   };
 });
 
-jest.mock('./project-logger', () => {
-  const actual = jest.requireActual('./project-logger');
+vi.mock('./project-logger', async () => {
+  const actual = await vi.importActual('./project-logger');
   return {
     ...actual,
     // Don't slow down or add noise to unit tests output unnecessarily
@@ -42,7 +42,7 @@ jest.mock('./project-logger', () => {
   };
 });
 
-jest.mock('./resolve-current-version', () => ({
+vi.mock('./resolve-current-version', () => ({
   resolveCurrentVersion: (...args: any[]) =>
     mocks.resolveCurrentVersion(...args),
 }));
@@ -55,7 +55,7 @@ import {
   mockResolveVersionActionsForProjectImplementation,
 } from './test-utils';
 
-// Using the daemon in unit tests would cause jest to never exit
+// A daemon connection would keep the test process alive after the run
 process.env.NX_DAEMON = 'false';
 
 describe('Multiple Release Groups', () => {
@@ -63,7 +63,7 @@ describe('Multiple Release Groups', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 
     mockResolveVersionActionsForProject.mockImplementation(
       mockResolveVersionActionsForProjectImplementation

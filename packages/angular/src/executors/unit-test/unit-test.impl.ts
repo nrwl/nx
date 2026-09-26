@@ -4,7 +4,7 @@ import type {
   NgPackagrBuilderOptions,
 } from '@angular/build';
 import type { ExecutorContext, Target } from '@nx/devkit';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
 import { targetFromTargetString } from '../../utils/targets';
 import type { ApplicationExecutorOptions } from '../application/schema';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';

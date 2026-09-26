@@ -1,54 +1,86 @@
-jest.mock('enquirer', () => ({
-  prompt: jest.fn(),
+import type { Mock } from 'vitest';
+vi.mock('@clack/prompts', () => ({
+  autocomplete: vi.fn(),
+  isCancel: vi.fn(() => false),
 }));
 
-import { prompt as enquirerPrompt } from 'enquirer';
-import { migratePrompt } from './safe-prompt';
+import { autocomplete, isCancel } from '@clack/prompts';
+import { migrateChoice, migrateConfirm } from './safe-prompt';
 
-const mockPrompt = enquirerPrompt as unknown as jest.Mock;
+const mockAutocomplete = autocomplete as unknown as Mock;
+const mockIsCancel = isCancel as unknown as Mock;
 
-describe('migratePrompt', () => {
+describe('migrate prompts', () => {
   beforeEach(() => {
-    mockPrompt.mockReset();
+    mockAutocomplete.mockReset();
+    mockIsCancel.mockReset().mockReturnValue(false);
   });
 
-  it('injects an `options.cancel` handler into a single-question config so enquirer routes cancel through us instead of its broken built-in cleanup', async () => {
-    mockPrompt.mockResolvedValueOnce({});
-    await migratePrompt({
-      name: 'x',
-      type: 'confirm',
-      message: '?',
+  describe('migrateConfirm', () => {
+    it('resolves true when the user answers yes', async () => {
+      mockAutocomplete.mockResolvedValueOnce('Yes');
+      await expect(migrateConfirm({ message: '?' })).resolves.toBe(true);
     });
-    const arg = mockPrompt.mock.calls[0][0];
-    expect(typeof arg.cancel).toBe('function');
+
+    it('resolves false when the user answers no', async () => {
+      mockAutocomplete.mockResolvedValueOnce('No');
+      await expect(migrateConfirm({ message: '?' })).resolves.toBe(false);
+    });
+
+    it('offers No first when `initial` is false', async () => {
+      mockAutocomplete.mockResolvedValueOnce('No');
+      await migrateConfirm({ message: '?', initial: false });
+      expect(mockAutocomplete.mock.calls[0][0].initialValue).toBe('No');
+    });
   });
 
-  it('injects an `options.cancel` handler into every question of an array config', async () => {
-    mockPrompt.mockResolvedValueOnce({});
-    await migratePrompt([
-      { name: 'first', type: 'confirm', message: '?' },
-      { name: 'second', type: 'confirm', message: '?' },
-    ]);
-    const arg = mockPrompt.mock.calls[0][0];
-    expect(Array.isArray(arg)).toBe(true);
-    expect(arg).toHaveLength(2);
-    expect(typeof arg[0].cancel).toBe('function');
-    expect(typeof arg[1].cancel).toBe('function');
+  describe('migrateChoice', () => {
+    it('returns the chosen value rather than a keyed reply object', async () => {
+      mockAutocomplete.mockResolvedValueOnce('b');
+      await expect(
+        migrateChoice({
+          message: '?',
+          choices: [{ value: 'a' }, { value: 'b' }],
+        })
+      ).resolves.toBe('b');
+    });
+
+    it('labels a choice with its value when no label is given', async () => {
+      mockAutocomplete.mockResolvedValueOnce('a');
+      await migrateChoice({ message: '?', choices: [{ value: 'a' }] });
+      expect(mockAutocomplete.mock.calls[0][0].options).toEqual([
+        { value: 'a', label: 'a' },
+      ]);
+    });
   });
 
-  it('does not mutate the caller-provided config object', async () => {
-    mockPrompt.mockResolvedValueOnce({});
-    const original = { name: 'x', type: 'confirm', message: '?' };
-    await migratePrompt(original as any);
-    expect(original).not.toHaveProperty('cancel');
-  });
+  // Cancelling ends the process rather than returning, so `nx migrate` never
+  // proceeds on a half-answered prompt.
+  describe('cancellation', () => {
+    it('ends as an interrupt when the user cancels', async () => {
+      mockAutocomplete.mockResolvedValueOnce(Symbol.for('clack:cancel'));
+      mockIsCancel.mockReturnValue(true);
+      // All three are stubbed on purpose: a real `kill` would signal this test
+      // worker, and a real `removeAllListeners` would strip its SIGINT handling.
+      const removeAllListeners = vi
+        .spyOn(process, 'removeAllListeners')
+        .mockReturnValue(process);
+      const kill = vi
+        .spyOn(process, 'kill')
+        .mockImplementation((() => true) as never);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => {
+        throw new Error('exited');
+      }) as never);
 
-  it('does not mutate caller-provided array entries', async () => {
-    mockPrompt.mockResolvedValueOnce({});
-    const a = { name: 'a', type: 'confirm', message: '?' };
-    const b = { name: 'b', type: 'confirm', message: '?' };
-    await migratePrompt([a, b] as any);
-    expect(a).not.toHaveProperty('cancel');
-    expect(b).not.toHaveProperty('cancel');
+      await expect(migrateConfirm({ message: '?' })).rejects.toThrow('exited');
+      if (process.platform !== 'win32') {
+        expect(kill).toHaveBeenCalledWith(process.pid, 'SIGINT');
+      }
+      expect(exit).toHaveBeenCalledWith(130);
+
+      removeAllListeners.mockRestore();
+      kill.mockRestore();
+      exit.mockRestore();
+    });
   });
 });

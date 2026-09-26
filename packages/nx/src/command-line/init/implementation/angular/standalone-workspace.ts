@@ -23,6 +23,7 @@ import type {
   AngularJsonProjectConfiguration,
   WorkspaceCapabilities,
 } from './types';
+import { recordInitWrite } from '../format';
 
 export async function setupStandaloneWorkspace(
   repoRoot: string,
@@ -56,7 +57,8 @@ export async function setupStandaloneWorkspace(
   const projects = toNewFormat(angularJson).projects;
   for (const [projectName, project] of Object.entries(projects ?? {})) {
     updateProjectOutputs(repoRoot, projectName, project, cacheableOperations);
-    writeJsonFile(join(project.root, 'project.json'), {
+    const projectJsonPath = join(project.root, 'project.json');
+    writeJsonFile(projectJsonPath, {
       $schema: normalizePath(
         relative(
           join(repoRoot, project.root),
@@ -67,6 +69,7 @@ export async function setupStandaloneWorkspace(
       ...project,
       root: undefined,
     });
+    recordInitWrite(projectJsonPath);
   }
   unlinkSync(angularJsonPath);
 }
@@ -139,7 +142,9 @@ function createNxJson(
   if (Object.keys(defaults).length > 0) {
     nxJson.targetDefaults = defaults;
   }
-  writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
+  const nxJsonPath = join(repoRoot, 'nx.json');
+  writeJsonFile(nxJsonPath, nxJson);
+  recordInitWrite(nxJsonPath);
 }
 
 function updateProjectOutputs(
@@ -278,4 +283,5 @@ function replaceNgWithNxInPackageJsonScripts(repoRoot: string): void {
       .replace(/ ng /g, ' nx ');
   });
   writeJsonFile(packageJsonPath, packageJson);
+  recordInitWrite(packageJsonPath);
 }

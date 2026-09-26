@@ -1,6 +1,54 @@
-import { extractDocumentedVars, extractUsedVarsFromContent } from './index';
+import envVarsDocumentedRule, {
+  extractDocumentedVars,
+  extractUsedVarsFromContent,
+} from './index';
 
 describe('env-vars-documented', () => {
+  it('scans source files for every project under packages', async () => {
+    const docsPath =
+      'astro-docs/src/content/docs/reference/environment-variables.mdoc';
+    const files = new Map([
+      [docsPath, '| `NX_CORE_DOCUMENTED` | boolean | Documented. |'],
+      ['packages/nx/src/core.ts', 'process.env.NX_CORE_DOCUMENTED;'],
+      [
+        'packages/webpack/src/plugin.ts',
+        'process.env.NX_PACKAGE_UNDOCUMENTED;',
+      ],
+      ['apps/demo/src/main.ts', 'process.env.NX_APP_UNDOCUMENTED;'],
+    ]);
+
+    const result = await envVarsDocumentedRule.implementation({
+      tree: {
+        read: (file: string) => files.get(file) ?? null,
+      },
+      projectGraph: {
+        nodes: {
+          nx: { data: { root: 'packages/nx' } },
+          webpack: { data: { root: 'packages/webpack' } },
+          demo: { data: { root: 'apps/demo' } },
+        },
+      },
+      fileMapCache: {
+        fileMap: {
+          projectFileMap: {
+            nx: [{ file: 'packages/nx/src/core.ts' }],
+            webpack: [{ file: 'packages/webpack/src/plugin.ts' }],
+            demo: [{ file: 'apps/demo/src/main.ts' }],
+          },
+        },
+      },
+      ruleOptions: {},
+    } as unknown as Parameters<typeof envVarsDocumentedRule.implementation>[0]);
+
+    expect(result.details.violations).toEqual([
+      {
+        message:
+          'Env var `NX_PACKAGE_UNDOCUMENTED` not documented. Found in packages/webpack/src/plugin.ts. Add a row to astro-docs/src/content/docs/reference/environment-variables.mdoc or list `NX_PACKAGE_UNDOCUMENTED` in the rule\'s "ignore" option.',
+        file: docsPath,
+      },
+    ]);
+  });
+
   describe('extractDocumentedVars()', () => {
     it('extracts NX_* names from table rows', () => {
       const mdoc = [

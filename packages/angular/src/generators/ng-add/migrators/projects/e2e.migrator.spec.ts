@@ -1,23 +1,27 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import type { Mock } from 'vitest';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createRequire } from 'module';
 
 // mock so we can test multiple versions
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual<any>('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
-// mock bc the nxE2EPreset uses fs for path normalization
-jest.mock('fs', () => {
-  return {
-    ...jest.requireActual('fs'),
-    lstatSync: jest.fn(() => ({
-      isDirectory: jest.fn(() => true),
-    })),
-  };
+// mock bc the nxE2EPreset uses fs for path normalization; it is `require`d,
+// so the fake has to go on the CJS channel.
+mockCjsModule(import.meta.url, 'fs', {
+  ...createRequire(import.meta.url)('fs'),
+  lstatSync: vi.fn(() => ({
+    isDirectory: vi.fn(() => true),
+  })),
 });
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
-import { formatFiles, ProjectConfiguration, Tree } from '@nx/devkit';
 import {
+  formatFiles,
+  ProjectConfiguration,
+  Tree,
   joinPathFragments,
   readJson,
   readProjectConfiguration,
@@ -27,16 +31,15 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Logger, MigrationProjectConfiguration } from '../../utilities';
 import { E2eMigrator } from './e2e.migrator';
 
-const mockedLogger = { warn: jest.fn() };
+const mockedLogger = { warn: vi.fn() };
 
 describe('e2e migrator', () => {
   let tree: Tree;
   let migrator: E2eMigrator;
   let envBackup: string | undefined;
-  let mockedInstalledCypressVersion =
-    getInstalledCypressMajorVersion as jest.Mock<
-      ReturnType<typeof getInstalledCypressMajorVersion>
-    >;
+  let mockedInstalledCypressVersion = getInstalledCypressMajorVersion as Mock<
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  >;
 
   function addProject(
     name: string,
@@ -77,7 +80,7 @@ describe('e2e migrator', () => {
 
     mockedInstalledCypressVersion.mockReturnValue(15);
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

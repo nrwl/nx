@@ -10,6 +10,7 @@ import { JavaIcon } from './technologies/java';
 import { JavaScriptIcon } from './technologies/javascript';
 import { JestIcon } from './technologies/jest';
 import { NestJSIcon } from './technologies/nestjs';
+import { OxlintIcon } from './technologies/oxlint';
 import { NextJSIcon } from './technologies/nextjs';
 import { NodeIcon } from './technologies/nodejs';
 import { NuxtIcon } from './technologies/nuxtjs';
@@ -44,6 +45,7 @@ export const MonochromaticTechnologyIconsMap: Record<
   esbuild: { icon: EsbuildIcon },
   eslint: { icon: EslintIcon },
   expo: { icon: ExpoIcon },
+  oxlint: { icon: OxlintIcon },
   express: { icon: ExpressIcon },
   'F#': { icon: FSharpIcon },
   gradle: { icon: JavaIcon, className: 'text-slate-600 dark:text-slate-300' },

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { join } from 'path';
 import type { ProjectGraph } from '../config/project-graph';
 import type { HashInputs } from '../native';
@@ -5,37 +6,37 @@ import { workspaceRoot } from '../utils/workspace-root';
 
 // ── Mocks must be declared BEFORE imports that use them ─────────────────────
 //
-// jest.mock() calls are hoisted to the top of the file by Babel/SWC. We
+// vi.mock() calls are hoisted to the top of the file by vitest's transform. We
 // configure the mock implementations in beforeEach so every test starts with a
 // fresh set of spies. _resetContextForTesting() clears the module-level cache
 // so each test loads a clean context.
 
-jest.mock('../project-graph/project-graph', () => ({
-  createProjectGraphAsync: jest.fn(),
+vi.mock('../project-graph/project-graph', () => ({
+  createProjectGraphAsync: vi.fn(),
 }));
 
-jest.mock('../config/nx-json', () => ({
-  readNxJson: jest.fn().mockReturnValue({}),
+vi.mock('../config/nx-json', () => ({
+  readNxJson: vi.fn().mockReturnValue({}),
 }));
 
-jest.mock('./hash-plan-inspector', () => ({
-  HashPlanInspector: jest.fn(),
+vi.mock('./hash-plan-inspector', () => ({
+  HashPlanInspector: vi.fn(),
 }));
 
-jest.mock('../tasks-runner/utils', () => {
-  const actual = jest.requireActual('../tasks-runner/utils');
+vi.mock('../tasks-runner/utils', async () => {
+  const actual = await vi.importActual('../tasks-runner/utils');
   return {
     ...actual,
-    getOutputsForTargetAndConfiguration: jest.fn(),
+    getOutputsForTargetAndConfiguration: vi.fn(),
   };
 });
 
-jest.mock('../tasks-runner/create-task-graph', () => ({
-  createTaskGraph: jest.fn(),
+vi.mock('../tasks-runner/create-task-graph', () => ({
+  createTaskGraph: vi.fn(),
 }));
 
-jest.mock('./task-hasher', () => ({
-  getInputs: jest.fn(),
+vi.mock('./task-hasher', () => ({
+  getInputs: vi.fn(),
 }));
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
@@ -53,16 +54,16 @@ import {
   _resetContextForTesting,
 } from './check-task-files';
 
-const mockCreateProjectGraphAsync = jest.mocked(createProjectGraphAsync);
-const MockHashPlanInspector = jest.mocked(HashPlanInspector);
-const mockGetOutputs = jest.mocked(getOutputsForTargetAndConfiguration);
-const mockCreateTaskGraph = jest.mocked(createTaskGraph);
-const mockGetStructuredInputs = jest.mocked(mockedGetInputs);
+const mockCreateProjectGraphAsync = vi.mocked(createProjectGraphAsync);
+const MockHashPlanInspector = vi.mocked(HashPlanInspector);
+const mockGetOutputs = vi.mocked(getOutputsForTargetAndConfiguration);
+const mockCreateTaskGraph = vi.mocked(createTaskGraph);
+const mockGetStructuredInputs = vi.mocked(mockedGetInputs);
 
 // ── Per-test mock spies ──────────────────────────────────────────────────────
 
-let mockInit: jest.Mock;
-let mockInspectTaskInputs: jest.Mock;
+let mockInit: Mock;
+let mockInspectTaskInputs: Mock;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -137,20 +138,21 @@ function buildGraphWithDeps(): ProjectGraph {
 
 describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset module-level caches so each test gets a fresh context load.
     _resetContextForTesting();
 
-    mockInit = jest.fn().mockResolvedValue(undefined);
-    mockInspectTaskInputs = jest.fn();
+    mockInit = vi.fn().mockResolvedValue(undefined);
+    mockInspectTaskInputs = vi.fn();
 
-    MockHashPlanInspector.mockImplementation(
-      () =>
-        ({
-          init: mockInit,
-          inspectTaskInputs: mockInspectTaskInputs,
-        }) as unknown as HashPlanInspector
-    );
+    // A plain function so `new HashPlanInspector(...)` works (arrows are not
+    // constructible under vitest's mocks).
+    MockHashPlanInspector.mockImplementation(function () {
+      return {
+        init: mockInit,
+        inspectTaskInputs: mockInspectTaskInputs,
+      } as unknown as HashPlanInspector;
+    } as any);
 
     // Default project graph returned by createProjectGraphAsync.
     mockCreateProjectGraphAsync.mockResolvedValue(buildGraph());

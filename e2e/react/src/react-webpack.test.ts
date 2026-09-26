@@ -7,9 +7,9 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Webpack', () => {
@@ -34,7 +34,7 @@ describe('Build React applications and libraries with Webpack', () => {
     const webpackConfig = readFile(`apps/${appName}/webpack.config.js`);
     expect(webpackConfig).toContain(`port: ${customPort}`);
 
-    if (runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });

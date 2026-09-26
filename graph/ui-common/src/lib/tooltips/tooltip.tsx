@@ -135,7 +135,7 @@ export function Tooltip({
         width: 'max-content',
         ...animationStyles,
       }}
-      className="z-20 min-w-[250px] max-w-prose rounded-md border border-slate-500"
+      className="z-20 max-w-prose min-w-[250px] rounded-md border border-slate-500"
       {...getFloatingProps()}
     >
       {showTooltipArrow && (
@@ -151,7 +151,7 @@ export function Tooltip({
           ref={arrowRef}
         ></div>
       )}
-      <div className="select-text rounded-md bg-white p-3 dark:bg-slate-900 dark:text-slate-400">
+      <div className="rounded-md bg-white p-3 select-text dark:bg-slate-900 dark:text-slate-400">
         {content}
       </div>
     </div>

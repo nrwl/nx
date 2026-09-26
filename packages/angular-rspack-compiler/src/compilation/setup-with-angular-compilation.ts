@@ -164,8 +164,9 @@ export async function setupCompilationWithAngularCompilation(
 
   // The compiler already tracks each source file's template and stylesheet
   // dependencies; re-key them like the emit cache so loaders can register
-  // watch dependencies without re-parsing sources. AOT only: JIT compilations
-  // do not report them and fall back to the URL resolvers.
+  // watch dependencies without re-parsing sources. JIT compilations do not
+  // report them, and neither does @angular/build 20 in any mode, so both fall
+  // back to the URL resolvers.
   let resourceDependencies: Map<string, readonly string[]> | undefined;
   if (componentResourcesDependencies) {
     resourceDependencies = new Map();

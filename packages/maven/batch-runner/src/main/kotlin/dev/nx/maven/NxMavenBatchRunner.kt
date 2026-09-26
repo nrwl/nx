@@ -100,14 +100,11 @@ private fun printFailedTasks(results: Map<String, TaskResult>) {
     log.info("═".repeat(80))
     log.info("❌ FAILED TASKS")
     log.info("═".repeat(80))
-    failedResults.forEach { (taskId, result) ->
-        log.info("")
-        log.info("Task: $taskId")
-        log.info("-".repeat(40))
-        if (result.terminalOutput.isNotBlank()) {
-            log.info(result.terminalOutput)
-        }
-    }
+    // Ids only. Nx renders each failed task's output in its own block, so
+    // repeating the bodies here is a third copy of what the tee already
+    // streamed; the recap earns its place by naming what failed, which is
+    // otherwise hard to pick out of interleaved parallel output.
+    failedResults.keys.forEach { taskId -> log.info(taskId) }
     log.info("═".repeat(80))
     log.info("")
 }

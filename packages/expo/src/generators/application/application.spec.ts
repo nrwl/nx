@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getProjects,
@@ -9,7 +9,10 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { expoApplicationGenerator } from './application';
+import {
+  expoApplicationGenerator,
+  expoApplicationGeneratorInternal,
+} from './application';
 
 describe('app', () => {
   let appTree: Tree;
@@ -570,12 +573,27 @@ describe('app', () => {
           "version",
           "private",
           "scripts",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
 
       expect(packageJson).toHaveProperty('dependencies.expo');
+    });
+
+    it('should default to package.json through the cli entry point', async () => {
+      // generators.json registers the internal entry, so this is what `nx g` runs
+      await expoApplicationGeneratorInternal(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        unitTestRunner: 'none',
+        js: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-app/project.json')).toBeFalsy();
+      expect(tree.exists('my-app/package.json')).toBeTruthy();
     });
 
     it('should generate project.json if useProjectJson is true', async () => {

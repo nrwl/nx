@@ -6,8 +6,8 @@ import {
   type Tree,
   updateJson,
 } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { getCustomConditionName } from '../../utils/typescript/ts-solution-setup';
+import { type PackageJson } from '@nx/devkit/internal';
 
 export default async function (tree: Tree) {
   if (!isDevelopmentCustomConditionDefined(tree)) {

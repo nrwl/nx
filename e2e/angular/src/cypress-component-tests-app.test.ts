@@ -1,4 +1,4 @@
-import { runCLI, runE2ETests } from '@nx/e2e-utils';
+import { runCLI, shouldRunCypressTests } from '@nx/e2e-utils';
 import {
   setupCypressComponentTests,
   cleanupCypressComponentTests,
@@ -14,13 +14,13 @@ describe('Angular Cypress Component Tests - App', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  it('should test app', () => {
+  it('should test app', async () => {
     const { appName } = setup;
 
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
-    if (runE2ETests('cypress')) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );

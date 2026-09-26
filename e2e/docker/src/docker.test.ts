@@ -1,4 +1,5 @@
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
@@ -6,7 +7,6 @@ import {
   newProject,
   readJson,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
@@ -21,7 +21,7 @@ const TEN_MINS_MS = 600_000;
 describe('Docker E2Es', () => {
   if (isDockerAvailable()) {
     beforeEach(async () => {
-      newProject({ packages: ['@nx/docker'] });
+      newProject({ keepBackup: true, packages: ['@nx/docker'] });
       addDockerPluginIfNotExists();
       // Normalize git committer information so it is deterministic in snapshots
       await runCommandAsync(`git config user.email "test@test.com"`);
@@ -68,6 +68,28 @@ describe('Docker E2Es', () => {
       );
       expect(releaseResult.includes('Successfully ran target')).toBeTruthy();
     });
+
+    it(
+      'should not run shell metacharacters in a docker version',
+      () => {
+        const myapp = uniq('myapp');
+        createDockerApp(myapp);
+        addDockerReleaseConfiguration(myapp);
+        addDockerPluginIfNotExists();
+
+        runCLI(`reset`);
+        runCLI(`run ${myapp}:docker:build`);
+
+        // The ';' used to terminate the `docker tag` shell string, running the
+        // rest as a second command. Versioning now fails on the invalid ref.
+        runCLI(`release version --dockerVersion='1.0.0; touch injected.txt'`, {
+          silenceError: true,
+        });
+
+        checkFilesDoNotExist('injected.txt');
+      },
+      TEN_MINS_MS
+    );
 
     it(
       'should skip default tag when skipDefaultTag is true',

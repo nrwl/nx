@@ -4,10 +4,13 @@ import {
   addBuildTargetDefaults,
   logShowProjectCommand,
   E2EWebServerDetails,
+  type PackageJson,
+  acknowledgeBuildScripts,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -31,9 +34,11 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import {
+  addLintingToProject,
   swcCoreVersion,
   getNpmScope,
   addProjectToTsSolutionWorkspace,
+  normalizeLinterOption,
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';
@@ -48,7 +53,6 @@ import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import staticServeConfiguration from '../static-serve/static-serve-configuration';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -307,6 +311,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     js: false,
     skipFormat: true,
     platform: 'web',
+    formatter: options.formatter,
   });
   tasks.push(jsInitTask);
   const webTask = await webInitGenerator(host, {
@@ -324,6 +329,16 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   createApplicationFiles(host, options);
 
   let enableTypedLinting = false;
+  if (options.linter !== 'eslint') {
+    tasks.push(
+      await addLintingToProject(host, {
+        linter: options.linter,
+        project: options.projectName,
+        unitTestRunner: options.unitTestRunner,
+        addPlugin: options.addPlugin,
+      })
+    );
+  }
   if (options.linter === 'eslint') {
     const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
       '@nx/eslint',
@@ -477,7 +492,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       options.projectName,
       joinPathFragments(options.appProjectRoot, `webpack.config.js`),
       options.addPlugin,
-      4200
+      // This generator has no `port` option, so there is never an explicit request
+      // to pass on. The helper defaults to 4200 itself, and leaving this undefined
+      // is what lets targetDefaults still apply.
+      undefined
     );
   } else if (options.bundler === 'vite') {
     const { getViteE2EWebServerInfo } = ensurePackage<
@@ -600,7 +618,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const jestTask = await configurationGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
-      setupFile: 'web-components',
+      // No setup file: the `web-components` one only ever held the
+      // `document-register-element` polyfill, which is long gone.
+      setupFile: 'none',
       compiler: options.compiler,
       skipFormat: true,
       addPlugin: options.addPlugin,
@@ -616,6 +636,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         },
         target: 'es2016',
       },
+    });
+    // @swc/core's postinstall only installs a wasm fallback for platforms not
+    // covered by its prebuilt optional dependencies, so skip it.
+    acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+      '@swc/core': false,
     });
     const installTask = addDependenciesToPackageJson(
       host,
@@ -697,7 +722,7 @@ async function normalizeOptions(
     : [];
 
   options.style = options.style || 'css';
-  options.linter = options.linter || 'eslint';
+  options.linter = await normalizeLinterOption(host, options.linter);
   options.unitTestRunner = options.unitTestRunner || 'jest';
   options.e2eTestRunner = options.e2eTestRunner || 'playwright';
 

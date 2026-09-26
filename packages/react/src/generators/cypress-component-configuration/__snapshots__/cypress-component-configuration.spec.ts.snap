@@ -1,9 +1,7 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`React:CypressComponentTestConfiguration should generate cypress component test config with --build-target 1`] = `
-"const {
-  nxComponentTestingPreset,
-} = require('@nx/react/plugins/component-testing');
+exports[`React:CypressComponentTestConfiguration > should generate cypress component test config with --build-target 1`] = `
+"const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
 const { defineConfig } = require('cypress');
 module.exports = defineConfig({
   component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
@@ -11,10 +9,8 @@ module.exports = defineConfig({
 "
 `;
 
-exports[`React:CypressComponentTestConfiguration should generate cypress component test config with project graph 1`] = `
-"const {
-  nxComponentTestingPreset,
-} = require('@nx/react/plugins/component-testing');
+exports[`React:CypressComponentTestConfiguration > should generate cypress component test config with project graph 1`] = `
+"const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
 const { defineConfig } = require('cypress');
 module.exports = defineConfig({
   component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
@@ -22,10 +18,8 @@ module.exports = defineConfig({
 "
 `;
 
-exports[`React:CypressComponentTestConfiguration should generate cypress component test config with webpack 1`] = `
-"const {
-  nxComponentTestingPreset,
-} = require('@nx/react/plugins/component-testing');
+exports[`React:CypressComponentTestConfiguration > should generate cypress component test config with webpack 1`] = `
+"const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
 const { defineConfig } = require('cypress');
 module.exports = defineConfig({
   component: {
@@ -38,10 +32,8 @@ module.exports = defineConfig({
 "
 `;
 
-exports[`React:CypressComponentTestConfiguration should generate cypress config with vite 1`] = `
-"const {
-  nxComponentTestingPreset,
-} = require('@nx/react/plugins/component-testing');
+exports[`React:CypressComponentTestConfiguration > should generate cypress config with vite 1`] = `
+"const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
 const { defineConfig } = require('cypress');
 module.exports = defineConfig({
   component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
@@ -49,7 +41,7 @@ module.exports = defineConfig({
 "
 `;
 
-exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 1`] = `
+exports[`React:CypressComponentTestConfiguration > should generate tests for existing js components 1`] = `
 "import * as React from 'react';
 import SomeCmp from './some-cmp';
 
@@ -61,7 +53,7 @@ describe(SomeCmp.name, () => {
 "
 `;
 
-exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 2`] = `
+exports[`React:CypressComponentTestConfiguration > should generate tests for existing js components 2`] = `
 "import * as React from 'react';
 import AnotherCmp from './another-cmp';
 
@@ -73,7 +65,7 @@ describe(AnotherCmp.name, () => {
 "
 `;
 
-exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 1`] = `
+exports[`React:CypressComponentTestConfiguration > should generate tests for existing tsx components 1`] = `
 "import * as React from 'react';
 import SomeLib from './some-lib';
 
@@ -85,7 +77,7 @@ describe(SomeLib.name, () => {
 "
 `;
 
-exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 2`] = `
+exports[`React:CypressComponentTestConfiguration > should generate tests for existing tsx components 2`] = `
 "import * as React from 'react';
 import AnotherCmp from './another-cmp';
 

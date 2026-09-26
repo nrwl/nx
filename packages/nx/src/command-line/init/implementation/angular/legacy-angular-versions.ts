@@ -13,9 +13,10 @@ import {
   resolvePackageVersionUsingRegistry,
 } from '../../../../utils/package-manager';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
-import { initCloud, setNeverConnectToCloud } from '../utils';
+import { initCloud } from '../utils';
 import { MessageOptionKey } from '../../../../utils/ab-testing';
 import type { Options } from './types';
+import { recordInitWrite } from '../format';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
 // key is major Angular version and value is Nx version to use
@@ -143,8 +144,6 @@ export async function getLegacyMigrationFunctionIfApplicable(
     if (nxCloudChoice === 'yes') {
       output.log({ title: '🛠️ Setting up Nx Cloud' });
       await initCloud('nx-init-angular');
-    } else if (nxCloudChoice === 'never') {
-      setNeverConnectToCloud(repoRoot);
     }
   };
 }
@@ -179,6 +178,7 @@ async function installDependencies(
     json.dependencies = sortObjectByKeys(json.dependencies);
   }
   writeJsonFile(`package.json`, json);
+  recordInitWrite('package.json');
 
   execSync(pmc.install, { stdio: [0, 1, 2], windowsHide: true });
 }

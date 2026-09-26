@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   directory: string;
@@ -7,12 +7,11 @@ export interface Schema {
   skipTsConfig?: boolean;
   skipFormat?: boolean;
   tags?: string;
-  unitTestRunner?: 'jest' | 'none';
-  linter?: Linter | LinterType;
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
+  linter?: LinterType;
   buildable?: boolean;
   publishable?: boolean;
   importPath?: string;
-  testEnvironment?: 'jsdom' | 'node';
   rootDir?: string;
   babelJest?: boolean;
   js?: boolean;

@@ -4,7 +4,7 @@ import { join } from 'path';
 import { gte, rcompare, satisfies } from 'semver';
 import { MS_PER_DAY } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
-import { readNpmrcEntries } from '../npmrc';
+import { readNpmrcEntries } from '../../package-manager-config/npmrc';
 import type { RegistryMetadata } from '../packument';
 import {
   blockedVersionsFrom,
@@ -177,7 +177,10 @@ function readNpmrcKeys(
   fallback: string
 ): NpmrcCooldownKeys {
   const present: NpmrcCooldownKeys = { minReleaseAge: false, before: false };
-  for (const { key } of readNpmrcEntries(override ?? fallback) ?? []) {
+  // npm silently treats an .npmrc it cannot read as absent, so both non-array
+  // states scan nothing.
+  const entries = readNpmrcEntries(override ?? fallback);
+  for (const { key } of Array.isArray(entries) ? entries : []) {
     if (key === 'min-release-age') {
       present.minReleaseAge = true;
     } else if (key === 'before') {

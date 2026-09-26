@@ -1,16 +1,16 @@
-import { Tree } from '@nx/devkit';
 import {
-  E2EWebServerDetails,
-  readTargetDefaultsForTarget,
-} from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
-import {
+  Tree,
   addProjectConfiguration,
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
 } from '@nx/devkit';
+import {
+  E2EWebServerDetails,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
 

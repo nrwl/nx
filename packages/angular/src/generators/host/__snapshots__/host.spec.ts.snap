@@ -1,12 +1,8 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Host App Generator --ssr should generate the correct files 1`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-import {
-  BrowserModule,
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { App } from './app';
 import { appRoutes } from './app.routes';
@@ -15,17 +11,14 @@ import { NxWelcome } from './nx-welcome';
 @NgModule({
   declarations: [App, NxWelcome],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideClientHydration(withEventReplay()),
-  ],
+  providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
   bootstrap: [App],
 })
 export class AppModule {}
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 2`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 2`] = `
 "import { platformBrowser } from '@angular/platform-browser';
 import { AppModule } from './app/app-module';
 
@@ -35,12 +28,12 @@ platformBrowser()
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 3`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 3`] = `
 "export { AppServerModule as default } from './app/app.server.module';
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 4`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 4`] = `
 "import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
@@ -59,7 +52,11 @@ export function app(): express.Express {
 
   server.use(cors());
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
@@ -109,12 +106,12 @@ export default AppServerModule;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 5`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 5`] = `
 "import('./main.server');
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 6`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 6`] = `
 "/**
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
@@ -137,7 +134,7 @@ module.exports = {
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 7`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 7`] = `
 "const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 /**
@@ -149,7 +146,7 @@ module.exports = withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 8`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 8`] = `
 "import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 
@@ -162,7 +159,7 @@ export const appRoutes: Route[] = [
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 9`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 9`] = `
 {
   "configurations": {
     "development": {
@@ -191,7 +188,7 @@ exports[`Host App Generator --ssr should generate the correct files 9`] = `
 }
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 10`] = `
+exports[`Host App Generator > --ssr > should generate the correct files 10`] = `
 {
   "configurations": {
     "development": {
@@ -209,7 +206,7 @@ exports[`Host App Generator --ssr should generate the correct files 10`] = `
 }
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 1`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
@@ -218,22 +215,18 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 2`] = `
-"import {
-  BootstrapContext,
-  bootstrapApplication,
-} from '@angular/platform-browser';
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 2`] = `
+"import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
 import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = (context: BootstrapContext) =>
-  bootstrapApplication(App, config, context);
+const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 3`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 3`] = `
 "import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
@@ -252,7 +245,11 @@ export function app(): express.Express {
 
   server.use(cors());
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
@@ -302,12 +299,12 @@ export default bootstrap;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 4`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 4`] = `
 "import('./main.server');
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 5`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 5`] = `
 "/**
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
@@ -330,7 +327,7 @@ module.exports = {
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 6`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 6`] = `
 "const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 /**
@@ -342,7 +339,7 @@ module.exports = withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 7`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 7`] = `
 "import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 
@@ -355,17 +352,11 @@ export const appRoutes: Route[] = [
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 8`] = `
-"import {
-  ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
-} from '@angular/core';
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 8`] = `
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
-import {
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -377,7 +368,7 @@ export const appConfig: ApplicationConfig = {
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 9`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 9`] = `
 "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
 import { provideServerRendering } from '@angular/ssr';
 import { appConfig } from './app.config';
@@ -390,7 +381,7 @@ export const config = mergeApplicationConfig(appConfig, serverConfig);
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 10`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 10`] = `
 {
   "configurations": {
     "development": {
@@ -419,7 +410,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 }
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone 11`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone 11`] = `
 {
   "configurations": {
     "development": {
@@ -437,7 +428,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 }
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 1`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
@@ -446,22 +437,18 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 2`] = `
-"import {
-  BootstrapContext,
-  bootstrapApplication,
-} from '@angular/platform-browser';
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 2`] = `
+"import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
 import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = (context: BootstrapContext) =>
-  bootstrapApplication(App, config, context);
+const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 3`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 3`] = `
 "import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
@@ -480,7 +467,11 @@ export function app(): express.Express {
 
   server.use(cors());
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
@@ -530,9 +521,9 @@ export default bootstrap;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 4`] = `"import('./main.server');"`;
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 4`] = `"import('./main.server');"`;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 5`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 5`] = `
 "import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
@@ -559,7 +550,7 @@ export default config;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 6`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 6`] = `
 "import { withModuleFederationForSSR } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
@@ -572,7 +563,7 @@ export default withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 7`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 7`] = `
 "import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 
@@ -584,17 +575,11 @@ export const appRoutes: Route[] = [
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 8`] = `
-"import {
-  ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
-} from '@angular/core';
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 8`] = `
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
-import {
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -606,7 +591,7 @@ export const appConfig: ApplicationConfig = {
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 9`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 9`] = `
 "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
 import { provideServerRendering } from '@angular/ssr';
 import { appConfig } from './app.config';
@@ -619,7 +604,7 @@ export const config = mergeApplicationConfig(appConfig, serverConfig);
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 10`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 10`] = `
 {
   "configurations": {
     "development": {
@@ -648,7 +633,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 }
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 11`] = `
+exports[`Host App Generator > --ssr > should generate the correct files for standalone when --typescript=true 11`] = `
 {
   "configurations": {
     "development": {
@@ -666,13 +651,9 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 }
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 1`] = `
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-import {
-  BrowserModule,
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { App } from './app';
 import { appRoutes } from './app.routes';
@@ -681,17 +662,14 @@ import { NxWelcome } from './nx-welcome';
 @NgModule({
   declarations: [App, NxWelcome],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideClientHydration(withEventReplay()),
-  ],
+  providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
   bootstrap: [App],
 })
 export class AppModule {}
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 2`] = `
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 2`] = `
 "import { platformBrowser } from '@angular/platform-browser';
 import { AppModule } from './app/app-module';
 
@@ -701,12 +679,12 @@ platformBrowser()
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 3`] = `
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 3`] = `
 "export { AppServerModule as default } from './app/app.server.module';
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 4`] = `
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 4`] = `
 "import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
@@ -725,7 +703,11 @@ export function app(): express.Express {
 
   server.use(cors());
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
@@ -775,9 +757,9 @@ export default AppServerModule;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 5`] = `"import('./main.server');"`;
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 5`] = `"import('./main.server');"`;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 6`] = `
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 6`] = `
 "import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
@@ -804,7 +786,7 @@ export default config;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 7`] = `
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 7`] = `
 "import { withModuleFederationForSSR } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
@@ -817,7 +799,7 @@ export default withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 8`] = `
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 8`] = `
 "import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 
@@ -829,7 +811,7 @@ export const appRoutes: Route[] = [
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 9`] = `
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 9`] = `
 {
   "configurations": {
     "development": {
@@ -858,7 +840,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 }
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 10`] = `
+exports[`Host App Generator > --ssr > should generate the correct files when --typescript=true 10`] = `
 {
   "configurations": {
     "development": {
@@ -876,7 +858,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 }
 `;
 
-exports[`Host App Generator should generate a host app with a remote 1`] = `
+exports[`Host App Generator > should generate a host app with a remote 1`] = `
 "const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
@@ -889,7 +871,7 @@ module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator should generate a host app with a remote 2`] = `
+exports[`Host App Generator > should generate a host app with a remote 2`] = `
 "const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
@@ -902,7 +884,7 @@ module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator should generate a host app with a remote when --typesscript=true 1`] = `
+exports[`Host App Generator > should generate a host app with a remote when --typesscript=true 1`] = `
 "import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
@@ -915,7 +897,7 @@ export default withModuleFederation(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator should generate a host app with a remote when --typesscript=true 2`] = `
+exports[`Host App Generator > should generate a host app with a remote when --typesscript=true 2`] = `
 "import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
@@ -928,7 +910,7 @@ export default withModuleFederation(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator should generate a host app with no remotes 1`] = `
+exports[`Host App Generator > should generate a host app with no remotes 1`] = `
 "const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
@@ -941,7 +923,7 @@ module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator should generate a host app with no remotes when --typescript=true 1`] = `
+exports[`Host App Generator > should generate a host app with no remotes when --typescript=true 1`] = `
 "import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
@@ -954,7 +936,7 @@ export default withModuleFederation(config, { dts: false });
 "
 `;
 
-exports[`Host App Generator should generate a host with remotes using standalone components 1`] = `
+exports[`Host App Generator > should generate a host with remotes using standalone components 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
@@ -965,7 +947,7 @@ bootstrapApplication(App, appConfig).catch((err) =>
 "
 `;
 
-exports[`Host App Generator should generate a host with remotes using standalone components 2`] = `
+exports[`Host App Generator > should generate a host with remotes using standalone components 2`] = `
 "import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NxWelcome } from './nx-welcome';
@@ -982,7 +964,7 @@ export class App {
 "
 `;
 
-exports[`Host App Generator should generate the correct app component spec file 1`] = `
+exports[`Host App Generator > should generate the correct app component spec file 1`] = `
 "import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { NxWelcome } from './nx-welcome';
@@ -1027,7 +1009,7 @@ describe('App', () => {
 "
 `;
 
-exports[`Host App Generator should generate the correct app component spec file with a directory 1`] = `
+exports[`Host App Generator > should generate the correct app component spec file with a directory 1`] = `
 "import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { NxWelcome } from './nx-welcome';

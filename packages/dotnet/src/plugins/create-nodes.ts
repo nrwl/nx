@@ -5,10 +5,11 @@ import {
   TargetConfiguration,
 } from '@nx/devkit';
 import {
+  ANALYZER_CANCELLED_MESSAGE,
   analyzeProjects,
   isAnalysisErrorResult,
 } from '../analyzer/analyzer-client';
-import { mergeTargetConfigurations } from 'nx/src/project-graph/utils/project-configuration-utils';
+import { mergeTargetConfigurations } from '@nx/devkit/internal';
 
 export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
   /**
@@ -92,16 +93,16 @@ export interface DotNetPluginOptions {
   run?: TargetConfigurationWithName | false;
 }
 
-// MSBuild auto-imports Directory.Build.props/.targets from each ancestor of a project file,
-// reads Directory.Build.rsp from ancestors during CLI builds, applies Directory.Solution.*
-// when building a .sln, and reads Directory.Packages.props from the nearest ancestor when
-// Central Package Management is in use. Matching them here causes createNodesV2 to re-run
-// (and the analyzer's cache to invalidate) when any of them change, and gives us the file
-// list to hand to the analyzer so it can declare per-project ancestor inputs.
-// The analyzer partitions matched paths into project vs directory files by filename, so we
-// don't have to repeat that classification on this side.
+// Every file matched here re-runs createNodes and enters the analyzer's cache key when
+// it changes. Project files and the ancestor-scoped files MSBuild, the SDK resolver, NuGet
+// and the analyzers read on their own (Directory.*, global.json, nuget.config,
+// .editorconfig) are also handed to the analyzer so it can declare per-project inputs.
+// Any other .props/.targets is matched only so an edit to a file a project imports by
+// name invalidates the graph; the analyzer discovers which ones matter by evaluating and
+// reports them back as evaluationInputs, which covers imports with other extensions.
+// The analyzer partitions matched paths by filename, so nothing is classified here.
 const dotnetProjectGlob =
-  '**/{*.{csproj,fsproj,vbproj},Directory.Build.{props,targets,rsp},Directory.Solution.{props,targets},Directory.Packages.props}';
+  '**/{*.{csproj,fsproj,vbproj,props,targets},Directory.Build.rsp,global.json,nuget.config,NuGet.config,NuGet.Config,.editorconfig}';
 
 /**
  * Merge user-specified target configurations with the generated targets from the analyzer
@@ -216,6 +217,14 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
       );
 
       if (isAnalysisErrorResult(result)) {
+        if (result.error.message === ANALYZER_CANCELLED_MESSAGE) {
+          // Superseded by a newer analysis — silently return empty rather than
+          // failing the user's command with an internal sentinel.
+          // Safe only because the daemon drops this compute at its
+          // `stalePostCreateNodes` guard before createDependencies runs; that one
+          // would throw on the cache this run deliberately did not write.
+          return [];
+        }
         throw result.error;
       }
 

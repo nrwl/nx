@@ -33,20 +33,20 @@ describe('TasksSchedule', () => {
 
   beforeEach(() => {
     lifeCycle = {
-      startTask: jest.fn(),
-      endTask: jest.fn(),
-      scheduleTask: jest.fn(),
+      startTask: vi.fn(),
+      endTask: vi.fn(),
+      scheduleTask: vi.fn(),
     };
     taskHistory = {
-      getEstimatedTaskTimings: jest.fn(),
-      getFlakyTasks: jest.fn(),
-      recordTaskRuns: jest.fn(),
+      getEstimatedTaskTimings: vi.fn(),
+      getFlakyTasks: vi.fn(),
+      recordTaskRuns: vi.fn(),
     };
-    jest.spyOn(taskHistoryUtils, 'getTaskHistory').mockReturnValue(taskHistory);
+    vi.spyOn(taskHistoryUtils, 'getTaskHistory').mockReturnValue(taskHistory);
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('dependent tasks', () => {
@@ -78,14 +78,14 @@ describe('TasksSchedule', () => {
         },
         roots: ['lib1:build', 'app2:build'],
       };
-      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
-      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+      vi.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
           properties: {},
         },
-        implementationFactory: jest.fn(),
-        batchImplementationFactory: jest.fn(),
+        implementationFactory: vi.fn(),
+        batchImplementationFactory: vi.fn(),
         isNgCompat: true,
         isNxExecutor: true,
       });
@@ -307,14 +307,14 @@ describe('TasksSchedule', () => {
           'app4:test',
         ],
       };
-      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
-      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+      vi.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
           properties: {},
         },
-        implementationFactory: jest.fn(),
-        batchImplementationFactory: jest.fn(),
+        implementationFactory: vi.fn(),
+        batchImplementationFactory: vi.fn(),
         isNgCompat: true,
         isNxExecutor: true,
       });
@@ -591,14 +591,14 @@ describe('TasksSchedule', () => {
           },
           roots: ['lib1:build', 'app2:build'],
         };
-        jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
-        jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+        vi.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+        vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
           schema: {
             version: 2,
             properties: {},
           },
-          implementationFactory: jest.fn(),
-          batchImplementationFactory: jest.fn(),
+          implementationFactory: vi.fn(),
+          batchImplementationFactory: vi.fn(),
           isNgCompat: true,
           isNxExecutor: true,
         });
@@ -768,14 +768,14 @@ describe('TasksSchedule', () => {
           },
           roots: ['app1:test', 'app2:test', 'lib1:test'],
         };
-        jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
-        jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+        vi.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+        vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
           schema: {
             version: 2,
             properties: {},
           },
-          implementationFactory: jest.fn(),
-          batchImplementationFactory: jest.fn(),
+          implementationFactory: vi.fn(),
+          batchImplementationFactory: vi.fn(),
           isNgCompat: true,
           isNxExecutor: true,
         });
@@ -1000,7 +1000,7 @@ describe('TasksSchedule', () => {
         version: '5',
       };
 
-      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      vi.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
       taskHistory.getEstimatedTaskTimings.mockReturnValue({});
     });
 
@@ -1009,13 +1009,13 @@ describe('TasksSchedule', () => {
     });
 
     it('should batch tasks when executor has preferBatch: true and --batch not specified', async () => {
-      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
           properties: {},
         },
-        implementationFactory: jest.fn(),
-        batchImplementationFactory: jest.fn(),
+        implementationFactory: vi.fn(),
+        batchImplementationFactory: vi.fn(),
         preferBatch: true,
         isNgCompat: true,
         isNxExecutor: true,
@@ -1040,13 +1040,13 @@ describe('TasksSchedule', () => {
     });
 
     it('should NOT batch when --batch=false even if preferBatch is true', async () => {
-      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
           properties: {},
         },
-        implementationFactory: jest.fn(),
-        batchImplementationFactory: jest.fn(),
+        implementationFactory: vi.fn(),
+        batchImplementationFactory: vi.fn(),
         preferBatch: true,
         isNgCompat: true,
         isNxExecutor: true,
@@ -1070,13 +1070,13 @@ describe('TasksSchedule', () => {
     });
 
     it('should batch when --batch=true even without preferBatch', async () => {
-      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
           properties: {},
         },
-        implementationFactory: jest.fn(),
-        batchImplementationFactory: jest.fn(),
+        implementationFactory: vi.fn(),
+        batchImplementationFactory: vi.fn(),
         // preferBatch not set (undefined)
         isNgCompat: true,
         isNxExecutor: true,
@@ -1101,13 +1101,13 @@ describe('TasksSchedule', () => {
     });
 
     it('should NOT batch when --batch not specified and preferBatch not set', async () => {
-      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
           properties: {},
         },
-        implementationFactory: jest.fn(),
-        batchImplementationFactory: jest.fn(),
+        implementationFactory: vi.fn(),
+        batchImplementationFactory: vi.fn(),
         // preferBatch not set (undefined)
         isNgCompat: true,
         isNxExecutor: true,
@@ -1131,13 +1131,13 @@ describe('TasksSchedule', () => {
     });
 
     it('should NOT batch when preferBatch is explicitly false', async () => {
-      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
           properties: {},
         },
-        implementationFactory: jest.fn(),
-        batchImplementationFactory: jest.fn(),
+        implementationFactory: vi.fn(),
+        batchImplementationFactory: vi.fn(),
         preferBatch: false,
         isNgCompat: true,
         isNxExecutor: true,
@@ -1195,14 +1195,14 @@ describe('TasksSchedule', () => {
         roots: ['lib1:build'],
       };
 
-      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
-      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+      vi.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
           properties: {},
         },
-        implementationFactory: jest.fn(),
-        batchImplementationFactory: jest.fn(),
+        implementationFactory: vi.fn(),
+        batchImplementationFactory: vi.fn(),
         isNgCompat: true,
         isNxExecutor: true,
       });
@@ -1329,11 +1329,11 @@ describe('TasksSchedule', () => {
         roots: ['app1:build', 'app2:serve', 'app3:serve'],
       };
 
-      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
-      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+      vi.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: { version: 2, properties: {} },
-        implementationFactory: jest.fn(),
-        batchImplementationFactory: jest.fn(),
+        implementationFactory: vi.fn(),
+        batchImplementationFactory: vi.fn(),
         isNgCompat: true,
         isNxExecutor: true,
       });

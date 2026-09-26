@@ -50,6 +50,7 @@ export const autoprefixerVersion = '10.4.13';
 // SSR and Module Federation
 export const expressVersion = '^4.21.2';
 export const typesExpressVersion = '^4.17.21';
+export const httpProxyMiddlewareVersion = '^3.0.5';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
@@ -62,3 +63,4 @@ export const sassVersion = '^1.97.2';
 // rollup plugins (if needed)
 export const rollupPluginUrlVersion = '^8.0.2';
 export const svgrRollupVersion = '^8.1.0';
+export const svgrWebpackVersion = '^8.0.1';

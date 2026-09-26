@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   ProjectGraph,
@@ -11,11 +11,11 @@ import remote from './remote';
 import host from '../host/host';
 import { getRootTsConfigPathInTree } from '@nx/js';
 
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    readCachedProjectGraph: jest.fn().mockImplementation(
+    readCachedProjectGraph: vi.fn().mockImplementation(
       (): ProjectGraph => ({
         dependencies: {},
         nodes: {
@@ -105,6 +105,30 @@ describe('remote generator', () => {
   });
 
   describe('bundler=rspack', () => {
+    it('should give each portless remote a distinct port', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const base = {
+        e2eTestRunner: 'none',
+        linter: 'none',
+        unitTestRunner: 'none',
+        style: 'css',
+        skipFormat: true,
+        bundler: 'rspack',
+      } as const;
+
+      await remote(tree, { ...base, directory: 'r1', name: 'r1' });
+      await remote(tree, { ...base, directory: 'r2', name: 'r2' });
+
+      // Without a port of its own a remote lands on the executor's 4200 default and
+      // collides with every other remote, and `undefined` reaches the host manifest.
+      const p1 = readProjectConfiguration(tree, 'r1').targets.serve.options
+        .port;
+      const p2 = readProjectConfiguration(tree, 'r2').targets.serve.options
+        .port;
+      expect(p1).toEqual(4200);
+      expect(p2).toEqual(4201);
+    });
+
     it('should set up continuous tasks when host is provided', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await host(tree, {
@@ -243,6 +267,42 @@ describe('remote generator', () => {
 
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['@nx/web']).toBeDefined();
+    });
+
+    it('should install @swc-node/register so the TS config loads without native type stripping', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await remote(tree, {
+        directory: 'test',
+        devServerPort: 4201,
+        e2eTestRunner: 'cypress',
+        linter: 'eslint',
+        skipFormat: true,
+        style: 'css',
+        unitTestRunner: 'jest',
+        bundler: 'rspack',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc-node/register']).toBeDefined();
+      expect(packageJson.devDependencies['@swc/core']).toBeDefined();
+    });
+
+    it('should not install @swc-node/register for a JS config', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await remote(tree, {
+        directory: 'test',
+        devServerPort: 4201,
+        e2eTestRunner: 'cypress',
+        linter: 'eslint',
+        skipFormat: true,
+        style: 'css',
+        unitTestRunner: 'jest',
+        bundler: 'rspack',
+        typescriptConfiguration: false,
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc-node/register']).toBeUndefined();
     });
 
     it('should not set the remote as the default project', async () => {

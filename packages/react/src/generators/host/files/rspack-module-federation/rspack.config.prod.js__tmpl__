@@ -37,7 +37,7 @@ module.exports = {
     publicPath: 'auto'
   },
   devServer: {
-    port: <%= devServerPort %>,
+    port: <%= port %>,
     historyApiFallback: {
       index: '/index.html',
       disableDotRule: true,

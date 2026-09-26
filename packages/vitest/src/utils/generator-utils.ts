@@ -13,6 +13,7 @@ import {
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { VitestExecutorOptions } from '../executors/test/schema';
+import type { VitestPluginOptions } from '../plugins/plugin';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 import { warnVitestExecutorGenerating } from './deprecation';
 import { nxVersion } from './versions';
@@ -41,19 +42,30 @@ export function addOrChangeTestTarget(
   hasPlugin: boolean
 ) {
   const nxJson = readNxJson(tree);
+  const target = options.testTarget ?? 'test';
 
-  hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vitest'
-      : p.plugin === '@nx/vitest' || hasPlugin
-  );
+  // The plugin only infers the target names it is registered for, so a request
+  // for any other name still needs an explicit target.
+  hasPlugin ||=
+    nxJson.plugins?.some((p) => {
+      if (typeof p === 'string') {
+        return p === '@nx/vitest' && target === 'test';
+      }
+      if (p.plugin !== '@nx/vitest') {
+        return false;
+      }
+      const pluginOptions = p.options as VitestPluginOptions;
+      return (
+        (pluginOptions?.testTargetName ?? 'test') === target ||
+        pluginOptions?.ciTargetName === target
+      );
+    }) ?? false;
 
   if (hasPlugin) {
     return;
   }
 
   const project = readProjectConfiguration(tree, options.project);
-  const target = options.testTarget ?? 'test';
 
   const reportsDirectory = joinPathFragments(
     'coverage',
@@ -79,16 +91,33 @@ export function addOrChangeTestTarget(
   updateProjectConfiguration(tree, options.project, project);
 }
 
+// Escape a value for emission inside a single-quoted source literal.
+function escapeLiteral(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
+}
+
 export interface ViteConfigFileOptions {
   project: string;
   includeLib?: boolean;
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
+  testInclude?: string[];
+  /**
+   * Aliases to emit under `resolve.alias`, as alias -> project-relative path.
+   * Only applies when a new config file is written; an existing config is left
+   * untouched.
+   */
+  resolveAlias?: Record<string, string>;
   rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
   coverageProvider?: 'v8' | 'istanbul' | 'custom' | 'none';
+  passWithNoTests?: boolean;
   setupFile?: string;
   useEsmExtension?: boolean;
   port?: number;
@@ -103,6 +132,7 @@ export function createOrEditViteConfig(
     projectAlreadyHasViteTargets?: TargetFlags;
     skipPackageJson?: boolean;
     vitestFileName?: boolean;
+    skipNxPlugins?: boolean;
   } = {}
 ) {
   const { root: projectRoot } = readProjectConfiguration(tree, options.project);
@@ -164,7 +194,7 @@ export function createOrEditViteConfig(
     );
   }
 
-  if (!isTsSolutionSetup) {
+  if (!isTsSolutionSetup && !extraOptions.skipNxPlugins) {
     imports.push(
       `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
@@ -177,7 +207,7 @@ export function createOrEditViteConfig(
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
-      `dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json')${
+      `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
         !isTsSolutionSetup ? ', pathsToAliases: false' : ''
       } })`
     );
@@ -189,13 +219,20 @@ export function createOrEditViteConfig(
       ? `./coverage/${options.project}`
       : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
+  const testInclude = options.testInclude ?? [
+    '{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+  ];
+
   const testOption = options.includeVitest
     ? `  test: {
     name: '${options.project}',
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: [${testInclude
+      .map((pattern) => `'${escapeLiteral(pattern)}'`)
+      .join(', ')}],
+${options.passWithNoTests ? `    passWithNoTests: true,\n` : ''}\
 ${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
 ${
   options.inSourceTests
@@ -252,6 +289,20 @@ ${
   //   plugins: () => [ nxViteTsPaths() ],
   // },`;
 
+  const aliasEntries = Object.entries(options.resolveAlias ?? {});
+  const resolveOption = aliasEntries.length
+    ? `  resolve: {
+    alias: {
+${aliasEntries
+  .map(
+    ([alias, target]) =>
+      `      '${escapeLiteral(alias)}': join(import.meta.dirname, '${escapeLiteral(target)}'),`
+  )
+  .join('\n')}
+    },
+  },`
+    : '';
+
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
     offsetFromRoot(projectRoot),
     'node_modules',
@@ -260,6 +311,11 @@ ${
   )}',`;
 
   if (tree.exists(viteConfigPath)) {
+    if (aliasEntries.length) {
+      logger.warn(
+        `${viteConfigPath} already exists; the requested resolve.alias entries were not added to it.`
+      );
+    }
     handleViteConfigFileExists(
       tree,
       viteConfigPath,
@@ -278,16 +334,20 @@ ${
     return;
   }
 
-  // When using vitest.config, use vitest/config import and skip vite-specific options
+  if (aliasEntries.length) {
+    imports.push(`import { join } from 'node:path'`);
+  }
+
   const viteConfigContent = extraOptions.vitestFileName
     ? `import { defineConfig } from 'vitest/config';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   ${printOptions(
     cacheDir,
     plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
+    resolveOption,
     defineOption,
     testOption
   )}
@@ -298,12 +358,13 @@ import { defineConfig } from 'vite';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   ${printOptions(
     cacheDir,
     devServerOption,
     previewServerOption,
     `  plugins: [${plugins.join(', ')}],`,
+    resolveOption,
     workerOption,
     buildOption,
     defineOption,
@@ -375,7 +436,10 @@ function handleViteConfigFileExists(
   const testOptionObject = {
     globals: true,
     environment: options.testEnvironment ?? 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: options.testInclude ?? [
+      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+    ],
+    ...(options.passWithNoTests ? { passWithNoTests: true } : {}),
     reporters: ['default'],
     coverage: {
       reportsDirectory: reportsDirectory,

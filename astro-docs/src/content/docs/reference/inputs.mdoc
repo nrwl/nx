@@ -52,22 +52,18 @@ Alternatively, you can use the object format with the `fileset` property:
 
 #### Directory paths
 
-When specifying a directory as an input, you must use a trailing slash or a glob pattern. A path without a trailing slash or glob pattern will be treated as a file path and will not match any files within the directory.
+A path with no glob pattern names that file, or that directory and everything under it. All three of these match every file in `src`:
 
 ```jsonc
 // nx.json
 {
   "inputs": [
-    "{projectRoot}/src/", // ✓ Matches all files in src (note the trailing slash)
-    "{projectRoot}/src/**/*", // ✓ Matches all files in src using glob
-    "{projectRoot}/src", // ✗ Does NOT match files - treated as a file path
+    "{projectRoot}/src", // the directory and everything under it
+    "{projectRoot}/src/", // the same, written with a trailing slash
+    "{projectRoot}/src/**/*", // the same, written as a glob
   ],
 }
 ```
-
-{% aside type="note" title="Difference from Outputs" %}
-This behavior differs from `outputs`, which support naked directory paths without a trailing slash. For example, `{projectRoot}/dist` works as an output but would not work as an input.
-{% /aside %}
 
 #### Token behavior with nested projects
 
@@ -78,8 +74,10 @@ These tokens behave differently when dealing with nested projects:
 
 For example, in a structure like `packages/parent/nested-child/`, using `{projectRoot}/**/*` for the `parent` project will exclude files from `nested-child`, while `{workspaceRoot}/packages/parent/**/*` will include them.
 
-{% aside type="tip" title="Gitignored Files Are Excluded" %}
-Files listed in `.gitignore` are automatically excluded from inputs. Nx will not consider gitignored files when computing the hash for tasks; therefore, changes to ignored files will not invalidate the cache.
+{% aside type="tip" title="Gitignored files are excluded by default" %}
+Nx leaves files listed in `.gitignore` out of a task's inputs, so a change to one of them doesn't invalidate the cache.
+To include such files anyway, add `includeIgnored: true` to the fileset.
+See [gitignored files](#gitignored-files).
 {% /aside %}
 
 Prefixing a source file input with `!` will exclude the files matching the pattern from the set of files used to calculate the hash.
@@ -107,6 +105,90 @@ By default, Nx will use all files in a project as well as all files in the proje
 This may cause Nx to rerun some tasks even when files irrelevant to the task have changed but it ensures that by default, Nx always re-runs the task when it should.
 
 To get a better idea of how to use inputs, you can browse some [common input sets](/docs/kb/configure-inputs#common-inputs).
+
+### Gitignored files
+
+A fileset only sees files that `.gitignore` and `.nxignore` don't exclude.
+A gitignored or generated file, such as a downloaded schema or a generated client, can't be an input that way.
+Add `includeIgnored: true` to match files on disk, whether Git tracks them or not:
+
+```jsonc
+{
+  "inputs": [
+    { "fileset": "{projectRoot}/generated/**/*.json", "includeIgnored": true },
+    {
+      "fileset": "!{projectRoot}/generated/**/*.local.json",
+      "includeIgnored": true,
+    },
+    {
+      "fileset": "{workspaceRoot}/openapi.generated.json",
+      "includeIgnored": true,
+    },
+  ],
+}
+```
+
+`{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
+Nx checks the matched files on every run, so keep the globs narrow.
+A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored file in the workspace, so the task's inputs change whenever any of them does.
+A new matching file counts without a configuration change.
+A path can name a file that doesn't exist yet: the cache key changes when the file appears or is removed.
+
+A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob resolved with it.
+For a fileset on the project itself, that's the project's other `includeIgnored` globs.
+For one with `dependencies: true`, it's the globs carrying that flag, applied together to each dependency:
+
+```jsonc
+{
+  "inputs": [
+    {
+      "fileset": "{projectRoot}/dist/**",
+      "includeIgnored": true,
+      "dependencies": true,
+    },
+    {
+      "fileset": "!{projectRoot}/dist/**/*.map",
+      "includeIgnored": true,
+      "dependencies": true,
+    },
+  ],
+}
+```
+
+The group reaches every dependency in the chain, not only the direct ones: each dependency applies it and passes it on.
+Without the flag it's a normal fileset and doesn't affect them.
+A negation with nothing to filter is a configuration error.
+
+A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, or `.yarn/cache` unless it names a path inside one of them.
+It also skips the timestamp files Vite and Vitest write beside their config, such as `vite.config.ts.timestamp-1700000000000.mjs`.
+Nx reads a symlinked file where it points, even outside the workspace, so a `dist` linked into a build cache is hashed. A glob doesn't walk into a symlinked directory unless it names that directory. A glob that climbs out with `..`, or names an absolute path, is a configuration error.
+
+In CI with [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) set, Nx can hash a task from the files it read on a recorded run.
+Those reads replace its declared filesets, `includeIgnored` ones included, so a matching file the recorded run didn't read doesn't change the hash.
+To keep a target's declared inputs authoritative, set [`ultracache.mode: "warn"`](/docs/reference/project-configuration#ultracache) on it.
+
+### JSON files
+
+Configuration files such as `package.json` or `tsconfig.base.json` hold fields that are irrelevant to most tasks. Nx can hash a subset of a JSON file so that edits to the remaining fields do not invalidate the cache. JSON inputs are defined like this:
+
+```jsonc
+{
+  "inputs": [
+    { "json": "{projectRoot}/package.json" }, // The whole file
+    { "json": "{projectRoot}/package.json", "fields": ["dependencies"] }, // Only the listed fields
+    {
+      "json": "{workspaceRoot}/tsconfig.base.json",
+      "excludeFields": ["compilerOptions.paths"], // Everything except the listed fields
+    },
+  ],
+}
+```
+
+The `json` path must be prefixed with `{workspaceRoot}` or `{projectRoot}`, the same as a source file input, and it can be a glob pattern that matches several files.
+
+Both `fields` and `excludeFields` accept dot notation to reach nested values, such as `compilerOptions.target`. Fields that a file does not contain are skipped. When both properties are set, `fields` selects first and `excludeFields` then removes from that selection.
+
+A JSON input hashes the parsed contents of the file rather than its raw bytes, so reformatting the file or reordering its keys does not invalidate the cache. Files that parse as neither JSON nor JSONC fall back to hashing the raw contents, and the field filters do not apply to them.
 
 ### Environment variables
 
@@ -212,6 +294,15 @@ When a task depends on another task, it is possible that the outputs of the depe
 
 The glob pattern is matched against the file paths resolved from workspace root. For example, if a dependent task has `outputs: ["{workspaceRoot}/dist/{projectRoot}"]` and the project root is `libs/my-lib`, the output path becomes `dist/libs/my-lib`.
 Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d.ts`, `dist/**/*.d.ts`, or `dist/libs/my-lib/**/*.d.ts`. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/concepts/task-pipeline-configuration). It's possible the dependent tasks can change over time, so be careful to not overly scope the matching glob to prevent accidental false cache hits.
+
+### Inputs of continuous dependencies
+
+A [continuous task](/docs/kb/defining-task-pipeline#continuous-task-dependencies), such as the `serve` task an `e2e` task depends on, runs in its own process, yet what it reads still decides what the task it serves observes.
+A task therefore also hashes the declared inputs of every continuous dependency it has, and of the servers those depend on in turn: files, environment variables, runtime commands and external dependencies alike.
+In CI with [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) set, when the task hashes from a recorded snapshot, a server that has one contributes the files it read instead of its declared filesets.
+There's nothing to declare, and only continuous dependencies count.
+A server that declares no inputs contributes its whole project, so declare inputs on servers that live at the workspace root, such as a local registry.
+When a server reads the outputs of its own build dependencies, Nx hashes the task it serves once the server is running, so those outputs count too.
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 

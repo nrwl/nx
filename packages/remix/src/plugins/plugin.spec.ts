@@ -1,23 +1,24 @@
+import type { Mock } from 'vitest';
 import {
   type CreateNodesContext,
   detectPackageManager,
   joinPathFragments,
 } from '@nx/devkit';
 import { createNodesV2 as createNodes } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('../utils/executor-utils', () => ({
-  loadViteDynamicImport: jest.fn().mockResolvedValue({
-    resolveConfig: jest.fn().mockResolvedValue({}),
+vi.mock('../utils/executor-utils', () => ({
+  loadViteDynamicImport: vi.fn().mockResolvedValue({
+    resolveConfig: vi.fn().mockResolvedValue({}),
   }),
 }));
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
 describe('@nx/remix/plugin', () => {
@@ -26,7 +27,7 @@ describe('@nx/remix/plugin', () => {
   let cwd = process.cwd();
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
   });
 
   describe('Remix Classic Compiler', () => {
@@ -82,7 +83,7 @@ module.exports = {
       });
 
       afterEach(() => {
-        jest.resetModules();
+        vi.resetModules();
         tempFs.cleanup();
         process.chdir(cwd);
       });
@@ -145,7 +146,7 @@ module.exports = {
       });
 
       afterEach(() => {
-        jest.resetModules();
+        vi.resetModules();
         tempFs.cleanup();
         process.chdir(cwd);
       });
@@ -228,7 +229,7 @@ module.exports = {
       });
 
       it('should infer typecheck with --build flag when using TS solution setup', async () => {
-        (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+        (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
         tempFs.createFileSync(
           'my-app/package.json',
           JSON.stringify('{"name": "my-app", "version": "0.0.0"}')
@@ -317,8 +318,8 @@ module.exports = {
           });`
         );
         process.chdir(tempFs.tempDir);
-        (loadViteDynamicImport as jest.Mock).mockResolvedValue({
-          resolveConfig: jest.fn().mockResolvedValue({
+        (loadViteDynamicImport as Mock).mockResolvedValue({
+          resolveConfig: vi.fn().mockResolvedValue({
             build: {
               lib: {
                 entry: 'index.ts',
@@ -330,7 +331,7 @@ module.exports = {
       });
 
       afterEach(() => {
-        jest.resetModules();
+        vi.resetModules();
         tempFs.cleanup();
         process.chdir(cwd);
       });
@@ -381,8 +382,8 @@ module.exports = {
              plugins:[remix()]
           });`
         );
-        (loadViteDynamicImport as jest.Mock).mockResolvedValue({
-          resolveConfig: jest.fn().mockResolvedValue({
+        (loadViteDynamicImport as Mock).mockResolvedValue({
+          resolveConfig: vi.fn().mockResolvedValue({
             build: {
               lib: {
                 entry: 'index.ts',
@@ -401,7 +402,7 @@ module.exports = {
       });
 
       afterEach(() => {
-        jest.resetModules();
+        vi.resetModules();
         tempFs.cleanup();
         process.chdir(cwd);
       });

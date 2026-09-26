@@ -1,0 +1,83 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["../../.oxlintrc.json"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "create-nx-workspace",
+            "message": "Please import utils from nx or @nx/devkit instead."
+          },
+          {
+            "name": "node-fetch",
+            "message": "Please default to native fetch instead of 'node-fetch'."
+          },
+          {
+            "name": "@nx/workspace"
+          },
+          {
+            "name": "@angular-devkit/core"
+          },
+          {
+            "name": "@angular-devkit/architect"
+          },
+          {
+            "name": "@angular-devkit/schematics"
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["nx/src/plugins/js*", "nx/src/plugins/js*/**"],
+            "message": "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead"
+          },
+          {
+            "group": ["**/native-bindings", "**/native-bindings.js"],
+            "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+          },
+          {
+            "group": ["nx", "nx/**", "!nx/release", "!nx/release/**"],
+            "message": "Import from '@nx/devkit' or '@nx/devkit/internal' instead of 'nx' — devkit is the version-compatibility boundary (see packages/devkit/CLAUDE.md)."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/migrations/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["nx/src/plugins/js*", "nx/src/plugins/js*/**"],
+                "message": "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead"
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+              },
+              {
+                "group": ["nx", "nx/**", "!nx/release", "!nx/release/**"],
+                "message": "Import from '@nx/devkit' or '@nx/devkit/internal' instead of 'nx' — devkit is the version-compatibility boundary (see packages/devkit/CLAUDE.md)."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,5 +1,4 @@
-import { Node, RenderableTreeNode } from '@markdoc/markdoc';
-import markdoc from '@markdoc/markdoc';
+import markdoc, { Node, RenderableTreeNode } from '@markdoc/markdoc';
 import { load as yamlLoad } from '@zkochan/js-yaml';
 import React, { ReactNode } from 'react';
 import { Heading } from './lib/nodes/heading.component';

@@ -22,6 +22,7 @@ We'll show you how to create a [React Router](https://reactrouter.com/home) appl
 ✔ What framework would you like to use? · none
 ✔ Application name · acme
 ✔ Would you like to use React Router for server-side rendering [https://reactrouter.com/]? · Yes
+✔ Which linter would you like to use? · eslint
 ```
 
 ## Have an existing app?
@@ -42,9 +43,59 @@ nx g @nx/react:app apps/happynrwl --routing --use-react-router
 
 There is no need to install any additional plugins to use React Router with Nx. The `@nx/react` plugin already includes support for React Router.
 
+## Configure inferred React Router tasks
+
+The `@nx/react/router-plugin` plugin looks for any of these files:
+
+- `react-router.config.js`
+- `react-router.config.ts`
+- `react-router.config.cjs`
+- `react-router.config.cts`
+- `react-router.config.mjs`
+- `react-router.config.mts`
+
+The same directory must also contain:
+
+- A `vite.config.*` file
+- Either a `package.json` or `project.json` file
+
+Nx creates a cached `build` task with outputs derived from the React Router configuration, continuous `dev` and `start` tasks, and a cached `typecheck` task. The `start` task is omitted when the React Router configuration sets `ssr: false`.
+
+Configure the plugin in `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/react/router-plugin",
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "startTargetName": "start",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ]
+}
+```
+
+| Option                | Type   | Default     | Description                                     |
+| --------------------- | ------ | ----------- | ----------------------------------------------- |
+| `buildTargetName`     | string | `build`     | Name of the cached production build task.       |
+| `devTargetName`       | string | `dev`       | Name of the continuous development server task. |
+| `startTargetName`     | string | `start`     | Name of the continuous production server task.  |
+| `typecheckTargetName` | string | `typecheck` | Name of the cached TypeScript typecheck task.   |
+| `buildDepsTargetName` | string | none        | Name of an optional dependency build task.      |
+| `watchDepsTargetName` | string | none        | Name of an optional dependency watch task.      |
+
+Use `include` and `exclude` glob patterns to scope the plugin. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/react/router-plugin`.
+
 ## Running the application
 
-Now that you have created your React Router application with Nx you can build, serve and test with the following commands:
+Now that you have created your React Router application with Nx, you can build, serve, and test with the following commands:
 
 ### Build
 

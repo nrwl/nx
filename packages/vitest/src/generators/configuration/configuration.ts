@@ -48,6 +48,18 @@ import type {
 
 let ts: typeof import('typescript');
 
+// Must match `vitestWorkspaceFiles` in ../../plugins/plugin.ts, or the guards
+// here and inference disagree about what counts as an existing workspace file.
+const WORKSPACE_FILE_EXTENSIONS = [
+  'ts',
+  'mts',
+  'cts',
+  'js',
+  'mjs',
+  'cjs',
+  'json',
+] as const;
+
 /**
  * Determines whether to use vitest.config.mts instead of vite.config.mts.
  * Returns true for new non-framework projects that don't already have a vite.config.
@@ -200,6 +212,7 @@ getTestBed().initTestEnvironment(
           imports: [`import angular from '@analogjs/vite-plugin-angular'`],
           plugins: ['angular()'],
           setupFile: relativeTestSetupPath,
+          passWithNoTests: schema.passWithNoTests,
           useEsmExtension: true,
         },
         true,
@@ -228,6 +241,7 @@ getTestBed().initTestEnvironment(
             schema.coverageProvider === 'none'
               ? undefined
               : schema.coverageProvider,
+          passWithNoTests: schema.passWithNoTests,
           useEsmExtension: true,
         },
         true,
@@ -297,7 +311,7 @@ getTestBed().initTestEnvironment(
     const vitestMajorVersion = getInstalledVitestMajorVersion(tree);
 
     if (vitestMajorVersion === null || vitestMajorVersion >= 4) {
-      const hasWorkspaceFile = ['ts', 'js', 'json'].some(
+      const hasWorkspaceFile = WORKSPACE_FILE_EXTENSIONS.some(
         (ext) =>
           tree.exists(`vitest.workspace.${ext}`) ||
           tree.exists(`vitest.projects.${ext}`)
@@ -363,8 +377,10 @@ getTestBed().initTestEnvironment(
         // root vite.config added later; exclude both so neither is resolved as
         // an extra project that, carrying no `include`, re-runs every spec via
         // the default glob.
+        // `.mts` keeps it ESM whatever the root package.json `type` is; a
+        // CommonJS-loaded config trips Vite's `configLoader: 'native'` warning.
         tree.write(
-          'vitest.config.ts',
+          'vitest.config.mts',
           `import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -376,14 +392,13 @@ export default defineConfig({
         );
       }
     } else if (
-      !tree.exists(`vitest.workspace.ts`) &&
-      !tree.exists(`vitest.workspace.js`) &&
-      !tree.exists(`vitest.workspace.json`) &&
-      !tree.exists(`vitest.projects.ts`) &&
-      !tree.exists(`vitest.projects.js`) &&
-      !tree.exists(`vitest.projects.json`)
+      !WORKSPACE_FILE_EXTENSIONS.some(
+        (ext) =>
+          tree.exists(`vitest.workspace.${ext}`) ||
+          tree.exists(`vitest.projects.${ext}`)
+      )
     ) {
-      tree.write('vitest.workspace.ts', `export default [${projectGlobs}];`);
+      tree.write('vitest.workspace.mts', `export default [${projectGlobs}];`);
     }
   }
 

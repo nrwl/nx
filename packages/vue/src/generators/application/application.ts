@@ -1,4 +1,4 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import { logShowProjectCommand, type PackageJson } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -29,7 +29,6 @@ import {
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, {
@@ -59,7 +58,6 @@ export async function applicationGeneratorInternal(
         : 'tsconfig.base.json',
       skipFormat: true,
       addTsPlugin,
-      formatter: _options.formatter,
       platform: 'web',
     })
   );
@@ -132,7 +130,7 @@ export async function applicationGeneratorInternal(
       {
         name: options.projectName,
         projectRoot: options.appProjectRoot,
-        linter: options.linter ?? 'eslint',
+        linter: options.linter,
         unitTestRunner: options.unitTestRunner,
         skipPackageJson: options.skipPackageJson,
         enableTypedLinting: isTypedLintingEnabled(options),

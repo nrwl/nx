@@ -69,7 +69,7 @@ export const Modal = forwardRef(
           </TransitionChild>
 
           <div className="fixed inset-0 z-[9999] w-screen overflow-y-auto">
-            <div className="flex h-full min-h-full items-end items-center justify-center p-4 text-center sm:p-0">
+            <div className="flex h-full min-h-full items-center items-end justify-center p-4 text-center sm:p-0">
               <TransitionChild
                 as={Fragment}
                 enter="ease-out duration-300"
@@ -85,7 +85,7 @@ export const Modal = forwardRef(
                   <div className="flex items-center justify-between rounded-t border-b bg-white p-2 pb-1 md:p-4 md:pb-2 dark:border-gray-600 dark:bg-slate-900">
                     <DialogTitle
                       as="h3"
-                      className="text-lg font-medium leading-6 text-gray-900 dark:text-slate-200"
+                      className="text-lg leading-6 font-medium text-gray-900 dark:text-slate-200"
                     >
                       {title}
                     </DialogTitle>

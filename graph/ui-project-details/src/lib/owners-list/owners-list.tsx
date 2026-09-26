@@ -37,7 +37,7 @@ export function OwnersList({ owners, className }: OwnersListProps) {
 
   return (
     <div className={twMerge('relative max-w-full', className)}>
-      <p className="flex min-w-0 font-medium leading-loose">
+      <p className="flex min-w-0 leading-loose font-medium">
         <span className="inline-block">Owners:</span>
 
         <span

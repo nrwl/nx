@@ -52,6 +52,32 @@ describe('assertSupportedTypescriptVersion', () => {
     expect(() => assertSupportedTypescriptVersion(tree)).not.toThrow();
   });
 
+  it('does not throw when the declared range straddles the floor and the installed version meets it (e.g. typescript-eslint style ranges)', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: { typescript: '>=4.8.4 <6.1.0' },
+    }));
+    tree.write(
+      'node_modules/typescript/package.json',
+      JSON.stringify({ name: 'typescript', version: '6.0.2' })
+    );
+
+    expect(() => assertSupportedTypescriptVersion(tree)).not.toThrow();
+  });
+
+  it('asks to install dependencies when the declared range straddles the floor and no installed version resolves', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: { typescript: '>=4.8.4 <6.1.0' },
+    }));
+
+    expect(() => assertSupportedTypescriptVersion(tree)).toThrow(
+      /Unable to determine the installed version of `typescript`/
+    );
+  });
+
   it('does not throw when typescript is within the supported window', () => {
     const tree = createTreeWithEmptyWorkspace();
     updateJson(tree, 'package.json', (json) => ({

@@ -1,24 +1,27 @@
+import type { Mock } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   readJson,
+  readJsonFile,
   readProjectConfiguration,
   Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { dirname, join } from 'path';
 import libraryGenerator from './library';
 import { Schema } from './schema';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 describe('next library', () => {
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   it('should use @nx/next images.d.ts file', async () => {
@@ -41,6 +44,24 @@ describe('next library', () => {
       .compilerOptions.types;
 
     expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
+  });
+
+  it('should not install Next.js ESLint packages the library does not use', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      directory: 'my-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+    });
+
+    const { devDependencies } = readJson(appTree, 'package.json');
+    expect(devDependencies['eslint-config-next']).toBeUndefined();
+    expect(devDependencies['@next/eslint-plugin-next']).toBeUndefined();
   });
 
   it('should generate a buildable library', async () => {
@@ -89,6 +110,52 @@ describe('next library', () => {
     expect(packageJson.exports['./server'].default).toBe('./dist/server.js');
   });
 
+  it('should configure server entry point for buildable library with Rollup', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(appTree, {
+      directory: 'my-buildable-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+      buildable: true,
+    });
+
+    const build = readProjectConfiguration(appTree, 'my-buildable-lib').targets
+      .build;
+    expect(build.executor).toBe('@nx/rollup:rollup');
+    expect(build.options.additionalEntryPoints).toEqual([
+      'my-buildable-lib/src/server.ts',
+    ]);
+    expect(build.options.generateExportsField).toBeUndefined();
+  });
+
+  it('should configure server entry point in the rollup config file when using the rollup plugin', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(appTree, {
+      directory: 'my-buildable-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+      bundler: 'rollup',
+      addPlugin: true,
+    });
+
+    const rollupConfig = appTree.read(
+      'my-buildable-lib/rollup.config.cjs',
+      'utf-8'
+    );
+    expect(rollupConfig).toContain(`main: './src/index.ts',
+    additionalEntryPoints: ['./src/server.ts'],
+    outputPath:`);
+    expect(rollupConfig).not.toContain('generateExportsField');
+  });
+
   it('should generate a server-only entry point', async () => {
     const appTree = createTreeWithEmptyWorkspace();
 
@@ -135,6 +202,63 @@ describe('next library', () => {
     expect(
       readJson(appTree, 'package.json').devDependencies['cypress']
     ).toBeUndefined();
+  });
+
+  it('should install swc dependencies when compiler is swc', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      directory: 'my-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: false,
+      buildable: true,
+      compiler: 'swc',
+    });
+
+    expect(
+      readJson(appTree, 'package.json').devDependencies['@swc/core']
+    ).toEqual(expect.any(String));
+  });
+
+  it('should generate in-source tests when inSourceTests is true', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      directory: 'my-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'vitest',
+      style: 'css',
+      component: true,
+      inSourceTests: true,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeFalsy();
+    expect(appTree.read('my-lib/src/lib/my-lib.tsx', 'utf-8')).toContain(
+      'import.meta.vitest'
+    );
+  });
+
+  it('should keep its options aligned with @nx/react:library', () => {
+    const nextSchema = require('./schema.json');
+    const reactSchema = readJsonFile(
+      join(
+        dirname(require.resolve('@nx/react/package.json')),
+        'src/generators/library/schema.json'
+      )
+    );
+    // `minimal` is only declared in the React schema; nothing reads it.
+    const { minimal, ...reactProperties } = reactSchema.properties;
+    const { name, ...nextProperties } = nextSchema.properties;
+    const { name: reactName, ...expectedProperties } = reactProperties;
+
+    expect(nextProperties).toEqual(expectedProperties);
+    expect(name).toEqual({ ...reactName, pattern: expect.any(String) });
   });
 
   describe('TS solution setup', () => {
@@ -300,6 +424,36 @@ describe('next library', () => {
       expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
     });
 
+    it('should export the server entry from source for non-buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: 'none',
+        skipFormat: true,
+        skipTsConfig: false,
+        unitTestRunner: 'none',
+        style: 'css',
+        component: false,
+        useProjectJson: false,
+      });
+
+      expect(readJson(tree, 'mylib/package.json').exports)
+        .toMatchInlineSnapshot(`
+        {
+          ".": {
+            "default": "./src/index.ts",
+            "import": "./src/index.ts",
+            "types": "./src/index.ts",
+          },
+          "./package.json": "./package.json",
+          "./server": {
+            "default": "./src/server.ts",
+            "import": "./src/server.ts",
+            "types": "./src/server.ts",
+          },
+        }
+      `);
+    });
+
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
         directory: 'mylib',
@@ -328,6 +482,12 @@ describe('next library', () => {
               "types": "./dist/index.esm.d.ts",
               "import": "./dist/index.esm.js",
               "default": "./dist/index.esm.js"
+            },
+            "./server": {
+              "@proj/source": "./src/server.ts",
+              "types": "./dist/server.d.ts",
+              "import": "./dist/server.esm.js",
+              "default": "./dist/server.esm.js"
             }
           },
           "nx": {
@@ -358,6 +518,9 @@ describe('next library', () => {
                       "input": ".",
                       "output": "."
                     }
+                  ],
+                  "additionalEntryPoints": [
+                    "mylib/src/server.ts"
                   ]
                 }
               },
@@ -377,6 +540,36 @@ describe('next library', () => {
           }
         }
         "
+      `);
+    });
+
+    it('should configure server entry point in the rollup config file when using the rollup plugin', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: 'eslint',
+        skipFormat: true,
+        skipTsConfig: false,
+        unitTestRunner: 'jest',
+        style: 'css',
+        component: false,
+        useProjectJson: false,
+        bundler: 'rollup',
+        addPlugin: true,
+      });
+
+      const rollupConfig = tree.read('mylib/rollup.config.cjs', 'utf-8');
+      expect(rollupConfig).toContain(`main: './src/index.ts',
+    additionalEntryPoints: ['./src/server.ts'],
+    outputPath:`);
+      expect(rollupConfig).not.toContain('generateExportsField');
+      expect(readJson(tree, 'mylib/package.json').exports['./server'])
+        .toMatchInlineSnapshot(`
+        {
+          "@proj/source": "./src/server.ts",
+          "default": "./dist/server.esm.js",
+          "import": "./dist/server.esm.js",
+          "types": "./dist/server.d.ts",
+        }
       `);
     });
 

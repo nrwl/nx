@@ -10,51 +10,44 @@ describe('PseudoTerminal', () => {
     terminal = undefined;
   });
 
-  it('should run command', (done) => {
+  it('should run command', async () => {
     const childProcess = terminal.runCommand('echo "hello world"');
-    childProcess.onExit((exitCode) => {
-      expect(exitCode).toEqual(0);
-      done();
-    });
+    const exitCode = await new Promise((resolve) =>
+      childProcess.onExit(resolve)
+    );
+    expect(exitCode).toEqual(0);
   });
 
-  it('should kill a running command', (done) => {
+  // 1s (the jest-era budget) is too tight once the suite runs files in
+  // parallel: spawning the pty and reaping the kill both contend for CPU.
+  it('should kill a running command', { timeout: 10_000 }, async () => {
     const childProcess = terminal.runCommand(
       'sleep 3 && echo "hello world" > file.txt'
     );
-    childProcess.onExit((exit_code) => {
-      expect(exit_code).not.toEqual(0);
-      done();
-    });
+    const exited = new Promise((resolve) => childProcess.onExit(resolve));
     childProcess.kill();
     expect(childProcess.isAlive).toEqual(false);
-  }, 1000);
+    expect(await exited).not.toEqual(0);
+  });
 
-  it('should subscribe to output', (done) => {
+  it('should subscribe to output', async () => {
     const childProcess = terminal.runCommand('echo "hello world"');
     let output = '';
     childProcess.onOutput((chunk) => {
       output += chunk;
     });
 
-    childProcess.onExit(() => {
-      try {
-        expect(output.trim()).toContain('hello world');
-      } finally {
-        done();
-      }
-    });
+    await new Promise((resolve) => childProcess.onExit(resolve));
+    expect(output.trim()).toContain('hello world');
   });
 
   if (process.env.CI !== 'true') {
-    it('should be tty', (done) => {
+    it('should be tty', async () => {
       const childProcess = terminal.runCommand(
         'node -p "if (process.stdout.isTTY === undefined) process.exit(1)"'
       );
-      childProcess.onExit((code) => {
-        expect(code).toEqual(0);
-        done();
-      });
+      const code = await new Promise((resolve) => childProcess.onExit(resolve));
+      expect(code).toEqual(0);
     });
   }
 });

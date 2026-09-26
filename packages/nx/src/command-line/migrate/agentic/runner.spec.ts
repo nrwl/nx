@@ -1,27 +1,31 @@
+import type { Mock, MockInstance } from 'vitest';
 import { EventEmitter } from 'events';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-jest.mock('child_process', () => ({
-  spawn: jest.fn(),
-  execSync: jest.fn(),
-  // `promisify(exec)` in transitive imports needs a function to wrap.
-  exec: jest.fn(),
+vi.mock('child_process', () => ({
+  spawn: vi.fn(),
+  execSync: vi.fn(),
+  // `promisify(exec)` and `promisify(execFile)` in transitive imports need a function to wrap.
+  exec: vi.fn(),
+  execFile: vi.fn(),
 }));
-jest.mock('enquirer', () => ({
-  prompt: jest.fn(),
+vi.mock('@clack/prompts', () => ({
+  autocomplete: vi.fn(),
+  isCancel: () => false,
 }));
 
 import { execSync, spawn } from 'child_process';
-import { prompt } from 'enquirer';
+import { autocomplete } from '@clack/prompts';
 import { output } from '../../../utils/output';
-import { adaptSpawnForWindowsShim, runAgentic } from './runner';
+import { runAgentic } from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
+import { WINDOWS_COMMAND_LINE_BUDGET } from './windows-cmd';
 
-const mockSpawn = spawn as unknown as jest.Mock;
-const mockExecSync = execSync as unknown as jest.Mock;
-const mockPrompt = prompt as unknown as jest.Mock;
+const mockSpawn = spawn as unknown as Mock;
+const mockExecSync = execSync as unknown as Mock;
+const mockPrompt = autocomplete as unknown as Mock;
 
 function makeDetected(): DetectedInstalledAgent {
   return {
@@ -38,7 +42,7 @@ function makeDefinition(): AgentDefinition {
     displayName: 'Claude Code',
     binaryNames: ['claude'],
     wellKnownPaths: () => [],
-    buildInteractive: jest.fn(() => ({
+    buildInteractive: vi.fn(() => ({
       args: ['--system-prompt', 'sys', 'user'],
       cwd: '/workspace',
     })),
@@ -49,7 +53,7 @@ type FakeChild = EventEmitter & {
   exitCode: number | null;
   signalCode: NodeJS.Signals | null;
   killed: boolean;
-  kill: jest.Mock<boolean, [NodeJS.Signals?]>;
+  kill: Mock<(signal?: NodeJS.Signals) => boolean>;
 };
 
 function fakeChild(
@@ -59,7 +63,7 @@ function fakeChild(
   ee.exitCode = null;
   ee.signalCode = null;
   ee.killed = false;
-  ee.kill = jest.fn((signal?: NodeJS.Signals) => {
+  ee.kill = vi.fn((signal?: NodeJS.Signals) => {
     if (ee.killed) return false;
     ee.killed = true;
     if (opts.exitOnKill) {
@@ -78,7 +82,7 @@ describe('runAgentic', () => {
   let handoffFilePath: string;
   let originalListeners: NodeJS.SignalsListener[];
 
-  let warnSpy: jest.SpyInstance;
+  let warnSpy: MockInstance;
   // Suite-scoped so `afterEach` can restore the `process.on` spy even if a
   // test body threw before its inline cleanup — a leaked spy turns the next
   // test's `captureSigintHandlers` into a spy-on-spy.
@@ -93,7 +97,7 @@ describe('runAgentic', () => {
     mockSpawn.mockReset();
     mockExecSync.mockReset();
     mockPrompt.mockReset();
-    warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {});
     sigintCapture = null;
     originalListeners = process.listeners('SIGINT') as NodeJS.SignalsListener[];
   });
@@ -137,7 +141,7 @@ describe('runAgentic', () => {
   } {
     const handlers: NodeJS.SignalsListener[] = [];
     const realOn = process.on.bind(process);
-    const spy = jest
+    const spy = vi
       .spyOn(process, 'on')
       .mockImplementation((event: string | symbol, listener: any) => {
         if (event === 'SIGINT') handlers.push(listener);
@@ -163,9 +167,13 @@ describe('runAgentic', () => {
 
   function defaultInvocation(workspaceRoot = workspace) {
     return {
-      systemContext: 'sys',
-      userPrompt: 'user',
+      systemPrompt: 'sys',
+      systemPromptFilePath: `${workspaceRoot}/.nx/migrate-runs/1.0.0/m.system.md`,
+      instructionsPointer: 'read m.instructions.md',
+      inlineSystemContext: 'inline sys',
+      inlineSystemContextFallback: 'short sys',
       workspaceRoot,
+      runDirName: '23.0.0',
     } as const;
   }
 
@@ -192,7 +200,7 @@ describe('runAgentic', () => {
 
   it('passes binary, args, cwd, merged env, and stdio: inherit through to spawn', async () => {
     const definition = makeDefinition();
-    (definition.buildInteractive as jest.Mock).mockReturnValue({
+    (definition.buildInteractive as Mock).mockReturnValue({
       args: ['--flag', 'value'],
       env: { CUSTOM: '1' },
       cwd: '/custom-cwd',
@@ -204,6 +212,7 @@ describe('runAgentic', () => {
       definition,
       invocationContext: defaultInvocation('/workspace'),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     const [binary, args, options] = mockSpawn.mock.calls[0];
@@ -217,7 +226,7 @@ describe('runAgentic', () => {
 
   it('falls back to workspaceRoot as cwd when the spec omits it', async () => {
     const definition = makeDefinition();
-    (definition.buildInteractive as jest.Mock).mockReturnValue({ args: [] });
+    (definition.buildInteractive as Mock).mockReturnValue({ args: [] });
     spawnWithHandoff({ status: 'success', summary: 'ok' });
 
     await runAgentic({
@@ -225,6 +234,7 @@ describe('runAgentic', () => {
       definition,
       invocationContext: defaultInvocation('/ws'),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(mockSpawn.mock.calls[0][2].cwd).toBe('/ws');
@@ -260,6 +270,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
       expect(outcome).toEqual(expected);
@@ -277,13 +288,14 @@ describe('runAgentic', () => {
         setImmediate(() => child.emit('exit', 0));
         return child;
       });
-      mockPrompt.mockResolvedValue({ choice });
+      mockPrompt.mockResolvedValue(choice);
 
       const outcome = await runAgentic({
         detected: makeDetected(),
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
       expect(mockPrompt).toHaveBeenCalledTimes(1);
@@ -312,13 +324,14 @@ describe('runAgentic', () => {
     ],
   ])('treats %s as exit-with-no-handoff', async (_label, setup) => {
     setup();
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     const outcome = await runAgentic({
       detected: makeDetected(),
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(outcome.kind).toBe('ambiguous-abort');
@@ -337,6 +350,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
     });
 
@@ -355,13 +369,14 @@ describe('runAgentic', () => {
       });
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'continue' });
+    mockPrompt.mockResolvedValue('continue');
 
     const outcome = await runAgentic({
       detected: makeDetected(),
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
     });
 
@@ -394,14 +409,15 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
       gracefulExitMs: 20,
     });
 
     expect(child.kill).toHaveBeenCalledWith('SIGINT');
     expect(child.kill).toHaveBeenCalledWith('SIGKILL');
-    // SIGTERM is intentionally skipped — a process that ignores SIGINT
-    // hits the same handler on SIGTERM.
+    // SIGTERM is skipped so a child that ignored SIGINT does not get a
+    // second graceful signal before SIGKILL.
     expect(child.kill).not.toHaveBeenCalledWith('SIGTERM');
     expect(outcome).toEqual({ kind: 'success', summary: 'done' });
   });
@@ -428,6 +444,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
       gracefulExitMs: 20,
       forceKillWaitMs: 20,
@@ -468,6 +485,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
         handoffPollIntervalMs: 5,
       });
 
@@ -508,6 +526,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
         handoffPollIntervalMs: 5,
         forceKillWaitMs: 20,
       });
@@ -520,8 +539,8 @@ describe('runAgentic', () => {
 
   it('passes a SIGINT during the agent run through without crashing and aborts directly afterward', async () => {
     // Invoke runAgentic's SIGINT listener directly. `process.emit('SIGINT',
-    // …)` behaves inconsistently across jest workers (the signal name
-    // collides with jest's own handlers), so we capture exactly the listener
+    // …)` behaves inconsistently across test workers (the signal name
+    // collides with the runner's own handlers), so we capture exactly the listener
     // `runAgentic` registered via a `process.on` spy and trigger it. The
     // capture is restored in `afterEach` regardless of whether this test
     // body completes — see `let sigintCapture` at suite scope.
@@ -530,9 +549,9 @@ describe('runAgentic', () => {
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       setImmediate(() => {
-        // No expect inside setImmediate — Jest silently swallows throws
-        // here. A missing handler triggers TypeError + timeout, which is
-        // visible.
+        // No expect inside setImmediate: a throw there surfaces as an
+        // unhandled error, not as this test failing. A missing handler
+        // hangs the await into a timeout, which does fail this test.
         localCapture.handlers[0]('SIGINT');
         setImmediate(() => child.emit('exit', 130, 'SIGINT'));
       });
@@ -544,10 +563,11 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
-    // Verify the spy captured exactly the runner-registered listener —
-    // post-await so the assertion lives inside Jest's promise chain.
+    // Verify the spy captured exactly the runner-registered listener.
+    // Post-await so a failure is attributed to this test.
     expect(localCapture.handlers).toHaveLength(1);
     // userInterrupted=true short-circuits the ambiguous prompt.
     expect(mockPrompt).not.toHaveBeenCalled();
@@ -558,20 +578,22 @@ describe('runAgentic', () => {
     mockSpawn.mockImplementation(() => {
       throw new Error('ENOENT: no such file or directory');
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     const lines = ambiguousCauseLines();
     expect(lines.join('\n')).toContain('Could not spawn the agent');
     expect(lines.join('\n')).toContain('ENOENT');
-    // The prompt itself stays single-line — multi-line `message` triggers
-    // enquirer's wrap-asymmetric redraw on narrow terminals.
+    // The prompt stays single-line. Multi-line `message` triggered enquirer's
+    // wrap-asymmetric redraw on narrow terminals; kept because that constraint
+    // is unverified under @clack/prompts, not because the cause still applies.
     expect(mockPrompt.mock.calls[0][0].message).toBe(
       'How should nx migrate proceed?'
     );
@@ -583,13 +605,14 @@ describe('runAgentic', () => {
       setImmediate(() => child.emit('exit', 1, null));
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(ambiguousCauseLines().join('\n')).toContain(
@@ -607,13 +630,14 @@ describe('runAgentic', () => {
       setImmediate(() => child.emit('exit', 0, null));
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     const text = ambiguousCauseLines().join('\n');
@@ -638,6 +662,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(localCapture.handlers).toHaveLength(1);
@@ -671,6 +696,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(localCapture.handlers).toHaveLength(1);
@@ -694,13 +720,14 @@ describe('runAgentic', () => {
       });
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(ambiguousCauseLines().join('\n')).toContain('invalid JSON');
@@ -719,90 +746,112 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation('C:\\workspace'),
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
-      // Adapter behavior is covered in detail by the adaptSpawnForWindowsShim
-      // suite below; here we only verify runAgentic actually routes through it.
       const [binary, args] = mockSpawn.mock.calls[0];
       expect(binary).toMatch(/cmd\.exe$/i);
-      expect(args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
+      expect(args.slice(0, 5)).toEqual(['/e:on', '/v:off', '/d', '/s', '/c']);
     });
   });
-});
 
-describe('adaptSpawnForWindowsShim', () => {
-  const originalPlatform = process.platform;
-  const originalComspec = process.env.comspec;
-
-  function setPlatform(value: NodeJS.Platform): void {
-    Object.defineProperty(process, 'platform', {
-      configurable: true,
-      writable: true,
-      value,
-    });
-  }
-
-  afterEach(() => {
-    Object.defineProperty(process, 'platform', {
-      configurable: true,
-      writable: true,
-      value: originalPlatform,
-    });
-    if (originalComspec === undefined) delete process.env.comspec;
-    else process.env.comspec = originalComspec;
-  });
-
-  it('returns inputs untouched for non-shim binaries on Windows', () => {
-    setPlatform('win32');
-    const out = adaptSpawnForWindowsShim('C:\\bin\\claude.exe', ['a'], {});
-    expect(out.binary).toBe('C:\\bin\\claude.exe');
-    expect(out.args).toEqual(['a']);
-    expect(out.options.windowsVerbatimArguments).toBeUndefined();
-  });
-
-  it.each([
-    ['lowercase .cmd', 'C:\\Program Files\\agent\\bin\\claude.cmd'],
-    ['.bat', 'C:\\tools\\agent.bat'],
-    ['uppercase .CMD', 'C:\\bin\\AGENT.CMD'],
-  ])(
-    'wraps %s in cmd.exe /d /s /c with windowsVerbatimArguments',
-    (_label, binary) => {
-      setPlatform('win32');
-      process.env.comspec = 'C:\\Windows\\System32\\cmd.exe';
-      const out = adaptSpawnForWindowsShim(binary, ['--flag', 'value'], {
-        stdio: 'inherit',
-        windowsHide: true,
-      });
-      expect(out.binary).toBe('C:\\Windows\\System32\\cmd.exe');
-      expect(out.args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
-      expect(out.args[3]).toMatch(/^".*"$/);
-      expect(out.options.windowsVerbatimArguments).toBe(true);
-      // Pre-existing options are preserved.
-      expect(out.options.stdio).toBe('inherit');
-      expect(out.options.windowsHide).toBe(true);
+  describe('Windows command line budget', () => {
+    function echoingDefinition(): AgentDefinition {
+      return {
+        ...makeDefinition(),
+        buildInteractive: vi.fn((ctx) => ({
+          args: ['-c', `developer_instructions=${ctx.inlineSystemContext}`],
+          cwd: ctx.workspaceRoot,
+        })),
+      };
     }
-  );
 
-  it('quotes args and caret-escapes cmd metacharacters (cross-spawn style)', () => {
-    setPlatform('win32');
-    const out = adaptSpawnForWindowsShim(
-      'C:\\bin\\claude.cmd',
-      ['arg with spaces', 'arg&with&amp', 'plain'],
-      {}
-    );
-    // Each arg is double-quoted, then cmd.exe metacharacters (including the
-    // quotes and the embedded spaces) are caret-escaped — cmd strips the
-    // carets in its first parsing pass, leaving the original argument intact.
-    const cmdLine = out.args[3];
-    expect(cmdLine).toContain('^"arg^ with^ spaces^"');
-    expect(cmdLine).toContain('^"arg^&with^&amp^"');
-    expect(cmdLine).toContain('^"plain^"');
-  });
+    function shimAgent(): DetectedInstalledAgent {
+      return {
+        ...makeDetected(),
+        displayName: 'OpenAI Codex',
+        binary: 'C:\\Users\\u\\AppData\\Roaming\\npm\\codex.cmd',
+      };
+    }
 
-  it('falls back to "cmd.exe" when comspec is unset', () => {
-    setPlatform('win32');
-    delete process.env.comspec;
-    const out = adaptSpawnForWindowsShim('C:\\x.cmd', [], {});
-    expect(out.binary).toBe('cmd.exe');
+    it('falls back to the shorter system context when the full one overflows', async () => {
+      await withPlatform('win32', async () => {
+        spawnWithHandoff({ status: 'success', summary: 'ok' });
+        const definition = echoingDefinition();
+
+        const outcome = await runAgentic({
+          detected: shimAgent(),
+          definition,
+          invocationContext: {
+            ...defaultInvocation('C:\\workspace'),
+            inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET),
+            inlineSystemContextFallback: 'short',
+          },
+          handoffFilePath,
+          handoffsDir: workspace,
+        });
+
+        expect(outcome).toEqual({ kind: 'success', summary: 'ok' });
+        const cmdLine = mockSpawn.mock.calls[0][1][5];
+        expect(cmdLine).toContain('short');
+        expect(cmdLine.length).toBeLessThanOrEqual(WINDOWS_COMMAND_LINE_BUDGET);
+      });
+    });
+
+    it('refuses to spawn when even the shorter system context overflows', async () => {
+      await withPlatform('win32', async () => {
+        const errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {});
+        try {
+          await expect(
+            runAgentic({
+              detected: shimAgent(),
+              definition: echoingDefinition(),
+              invocationContext: {
+                ...defaultInvocation('C:\\workspace'),
+                inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET),
+                inlineSystemContextFallback: 'y'.repeat(
+                  WINDOWS_COMMAND_LINE_BUDGET
+                ),
+              },
+              handoffFilePath,
+              handoffsDir: workspace,
+            })
+          ).rejects.toThrow('exceeds the Windows limit');
+          expect(mockSpawn).not.toHaveBeenCalled();
+          const reported = errorSpy.mock.calls[0][0] as {
+            title: string;
+            bodyLines: string[];
+          };
+          expect(reported.title).toContain('OpenAI Codex');
+          expect(reported.bodyLines.join('\n')).toContain('8191');
+          expect(reported.bodyLines.join('\n')).toContain('--agentic=false');
+          // The workspace root is one contributor of three and none at all
+          // for opencode, so the message must not pin the overflow on it.
+          expect(reported.bodyLines.join('\n')).toContain(
+            `migration's package and name`
+          );
+        } finally {
+          errorSpy.mockRestore();
+        }
+      });
+    });
+
+    it('does not measure a command line off the Windows shim path', async () => {
+      spawnWithHandoff({ status: 'success', summary: 'ok' });
+
+      const outcome = await runAgentic({
+        detected: makeDetected(),
+        definition: echoingDefinition(),
+        invocationContext: {
+          ...defaultInvocation(),
+          inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET * 2),
+        },
+        handoffFilePath,
+        handoffsDir: workspace,
+      });
+
+      expect(outcome).toEqual({ kind: 'success', summary: 'ok' });
+      expect(mockSpawn.mock.calls[0][1][1]).toContain('x'.repeat(100));
+    });
   });
 });

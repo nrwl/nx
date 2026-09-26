@@ -1,0 +1,18 @@
+{
+  "name": "examples-typescript-basic",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p nx js",
+    "validate": "nx format:check && nx run-many -t typecheck"
+  },
+  "devDependencies": {
+    "@nx/js": "link:../../../packages/js",
+    "nx": "link:../../../packages/nx",
+    "oxfmt": "^0.60.0",
+    "typescript": "~6.0.3"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

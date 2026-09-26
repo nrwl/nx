@@ -9,7 +9,7 @@ topics:
 Sync generators are generators that are used to ensure that your file system is in the correct state before a task is run or the CI process is started. From a technical perspective, a sync generator is no different from any other generator, but it has some additional performance considerations and needs to be registered in a particular way.
 
 {% aside type="caution" title="Disable the Nx Daemon during development" %}
-When developing the Nx sync generator, disable the [Nx Daemon](/docs/concepts/nx-daemon) by setting `NX_DAEMON=false`. The daemon caches your plugin code, so changes to your plugin won't be reflected until the daemon restarts.
+When developing the Nx sync generator, disable the [Nx Daemon](/docs/reference/nx-daemon) by setting `NX_DAEMON=false`. The daemon caches your plugin code, so changes to your plugin won't be reflected until the daemon restarts.
 {% /aside %}
 
 ## Create a new sync generator
@@ -142,7 +142,7 @@ export default mySyncGenerator;
 To register a generator as a sync generator for a particular task, add the generator to the `syncGenerators` property of the task configuration.
 
 {% aside type="note" title="Important: Package.json Configuration" %}
-For projects using [inferred targets](/docs/concepts/inferred-tasks) (no project.json file), the sync generators must be registered inside the `nx` property in package.json, not at the root level.
+For projects using [inferred targets](/docs/concepts/mental-model#inferred-tasks) (no project.json file), the sync generators must be registered inside the `nx` property in package.json, not at the root level.
 {% /aside %}
 
 {% tabs %}

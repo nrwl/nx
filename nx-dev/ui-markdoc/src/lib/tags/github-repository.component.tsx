@@ -33,7 +33,7 @@ export function GithubRepository({
               href={url}
               target="_blank"
               rel="noreferrer"
-              className="block text-sm font-medium text-white no-underline opacity-80"
+              className="block text-sm font-medium text-black no-underline opacity-80 group-hover:text-white dark:text-white"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>
               {url.replace(/^.*\/\/[^\/]+/, '')}

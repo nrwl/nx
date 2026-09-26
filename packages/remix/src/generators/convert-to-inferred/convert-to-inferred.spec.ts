@@ -13,20 +13,20 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
 import { join } from 'path';
 import { convertToInferred } from './convert-to-inferred';
 import { getLockFileName } from '@nx/js';
+import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -108,7 +108,7 @@ export default config;`;
   fs.createFileSync(`${projectRoot}/remix.config.js`, remixConfigContents);
   tree.write(`${projectRoot}/package.json`, `{"type":"module"}`);
   fs.createFileSync(`${projectRoot}/package.json`, `{"type":"module"}`);
-  jest.doMock(
+  vi.doMock(
     join(fs.tempDir, projectRoot, 'remix.config.js'),
     () => remixConfig,
     { virtual: true }
@@ -178,7 +178,7 @@ describe('Remix - Convert To Inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   describe('--project', () => {
@@ -406,30 +406,18 @@ describe('Remix - Convert To Inferred', () => {
 
       // ASSERT
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets).toMatchInlineSnapshot(`
-        {
-          "serve": {
-            "options": {
-              "env": {
-                "PORT": "4200",
-              },
-            },
-          },
-        }
-      `);
+      expect(updatedProject.targets).toMatchInlineSnapshot(`{}`);
 
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets).toMatchInlineSnapshot(`
+      expect(updatedProject2.targets).toMatchInlineSnapshot(`{}`);
+      // the serve env config shared by both migrated projects is centralized,
+      // scoped to the remix plugin's targets
+      expect(readNxJson(tree).targetDefaults?.serve).toEqual([
         {
-          "serve": {
-            "options": {
-              "env": {
-                "PORT": "4200",
-              },
-            },
-          },
-        }
-      `);
+          filter: { plugin: '@nx/remix/plugin' },
+          options: { env: { PORT: '4200' } },
+        },
+      ]);
 
       const nxJsonPlugins = readNxJson(tree).plugins;
       const remixPlugin = nxJsonPlugins.find(

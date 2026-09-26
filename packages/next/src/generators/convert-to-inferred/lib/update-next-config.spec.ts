@@ -5,15 +5,15 @@ import { updateNextConfig } from './update-next-config';
 describe('UpdateNextConfig', () => {
   let tree: Tree;
   const mockLog = {
-    addLog: jest.fn(),
+    addLog: vi.fn(),
     logs: new Map(),
-    flushLogs: jest.fn(),
-    reset: jest.fn(),
+    flushLogs: vi.fn(),
+    reset: vi.fn(),
   };
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should update the next config file adding the options passed in', () => {

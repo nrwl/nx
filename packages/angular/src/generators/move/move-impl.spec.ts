@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import * as devkit from '@nx/devkit';
 import {
@@ -98,9 +98,9 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
       standalone: false,
     });
 
-    jest
-      .spyOn(devkit, 'createProjectGraphAsync')
-      .mockImplementation(() => Promise.resolve(projectGraph));
+    vi.spyOn(devkit, 'createProjectGraphAsync').mockImplementation(() =>
+      Promise.resolve(projectGraph)
+    );
   });
 
   it('should move a project', async () => {

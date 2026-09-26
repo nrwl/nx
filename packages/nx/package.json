@@ -11,6 +11,7 @@
   },
   "files": [
     "dist/bin",
+    "dist/nx-cloud-internals.*",
     "dist/plugins",
     "dist/presets",
     "dist/release",
@@ -50,11 +51,11 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "smol-toml": "1.6.1",
+    "smol-toml": "1.7.1",
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@zkochan/js-yaml": "catalog:",
-    "axios": "1.16.1",
+    "axios": "1.18.1",
     "picocolors": "catalog:",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
@@ -62,9 +63,8 @@
     "dotenv": "~16.4.5",
     "dotenv-expand": "~12.0.3",
     "ejs": "5.0.1",
-    "enquirer": "catalog:",
+    "@clack/prompts": "catalog:",
     "figures": "3.2.0",
-    "flat": "^5.0.2",
     "ignore": "^7.0.5",
     "@jest/diff-sequences": "30.0.1",
     "jsonc-parser": "catalog:",
@@ -135,6 +135,7 @@
       "@nx/next",
       "@nx/node",
       "@nx/nuxt",
+      "@nx/oxlint",
       "@nx/playwright",
       "@nx/plugin",
       "@nx/react",
@@ -191,6 +192,9 @@
   },
   "typesVersions": {
     "*": {
+      "nx-cloud-internals": [
+        "dist/nx-cloud-internals.d.ts"
+      ],
       "bin/*": [
         "dist/bin/*.d.ts"
       ],
@@ -279,6 +283,11 @@
     },
     "./package.json": "./package.json",
     "./package": "./package.json",
+    "./nx-cloud-internals": {
+      "@nx/nx-source": "./nx-cloud-internals.ts",
+      "types": "./dist/nx-cloud-internals.d.ts",
+      "default": "./dist/nx-cloud-internals.js"
+    },
     "./migrations.json": "./migrations.json",
     "./migrations": "./migrations.json",
     "./generators.json": "./generators.json",

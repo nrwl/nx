@@ -134,8 +134,7 @@
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "autoprefixer": "catalog:css",
     "browserslist": "^4.26.0",
-    "css-loader": "^6.4.0",
-    "enquirer": "catalog:",
+    "css-loader": "^7.1.4",
     "express": "^4.21.2",
     "http-proxy-middleware": "catalog:",
     "less-loader": "catalog:css",
@@ -159,7 +158,8 @@
   },
   "devDependencies": {
     "nx": "workspace:*",
-    "@nx/nest": "workspace:*"
+    "@nx/nest": "workspace:*",
+    "@rspack/cli": "catalog:rspack"
   },
   "peerDependencies": {
     "@rspack/cli": "^1.0.0 || ^2.0.0",

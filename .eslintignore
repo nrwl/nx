@@ -1,0 +1,9 @@
+# Read by oxlint (not eslint 9) to prune directory traversal: the examples/*
+# trees are standalone workspaces whose own .oxlintrc.json files load their own
+# copy of the @nx/oxlint boundaries plugin — walking into them from the root
+# workspace registers the "@nx" JS plugin twice and fails the whole run.
+# Config-file ignorePatterns cannot express this: oxlint applies it after
+# nested-config discovery; only CLI/ignore-file patterns prune the walk.
+# ESLint 9 warns that this file is unsupported; that is expected, it is not
+# ESLint's file.
+/examples

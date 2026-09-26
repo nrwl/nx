@@ -1,9 +1,10 @@
+import type { Mock } from 'vitest';
 import { execFileSync, execSync } from 'child_process';
 import { splitArgsIntoNxArgsAndOverrides } from './command-line-utils';
 import { withEnvironmentVariables as withEnvironment } from '../internal-testing-utils/with-environment';
 
-jest.mock('../project-graph/file-utils');
-jest.mock('child_process');
+vi.mock('../project-graph/file-utils');
+vi.mock('child_process');
 
 describe('splitArgs', () => {
   const blockedEnvVars = [
@@ -505,8 +506,8 @@ describe('splitArgs', () => {
   });
 
   describe('resolving the affected base against git', () => {
-    const execFileSyncMock = execFileSync as jest.Mock;
-    const execSyncMock = execSync as jest.Mock;
+    const execFileSyncMock = execFileSync as Mock;
+    const execSyncMock = execSync as Mock;
 
     function splitAffectedArgs(args: Record<string, any>, nxJson = {}) {
       return splitArgsIntoNxArgsAndOverrides(
@@ -522,7 +523,7 @@ describe('splitArgs', () => {
     });
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('should resolve the merge base by passing revisions as arguments rather than through a shell', () => {

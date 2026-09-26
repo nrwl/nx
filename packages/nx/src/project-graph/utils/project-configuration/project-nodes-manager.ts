@@ -11,6 +11,8 @@ import {
   resolveCommandSyntacticSugar,
 } from './target-merging';
 import { validateProject } from './target-normalization';
+import { analyzeWorktreeConflicts } from '../../../utils/git-worktrees';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { ProjectNameInNodePropsManager } from './name-substitution-manager';
 import type { ConfigurationSourceMaps, SourceInformation } from './source-maps';
 import {
@@ -191,14 +193,10 @@ export function mergeProjectConfigurationIntoRootMap(
         ? target
         : resolveCommandSyntacticSugar(target, project.root);
 
-      let matchingTargets = [];
-      if (isGlobPattern(targetName)) {
-        // find all targets matching the glob pattern
-        // this will map atomized targets to the glob pattern same as it does for targetDefaults
-        matchingTargets = Object.keys(
-          updatedProjectConfiguration.targets
-        ).filter((key) => minimatch(key, targetName));
-      }
+      let matchingTargets = findMatchingTargetNames(
+        targetName,
+        Object.keys(updatedProjectConfiguration.targets)
+      );
       // If no matching targets were found, we can assume that the target name is not (meant to be) a glob pattern
       if (!matchingTargets.length) {
         matchingTargets = [targetName];
@@ -226,6 +224,22 @@ export function mergeProjectConfigurationIntoRootMap(
     updatedProjectConfiguration.name !== matchingProject?.name;
 
   return { nameChanged };
+}
+
+/**
+ * The existing target names a glob-pattern target key merges onto. This maps
+ * atomized targets to the glob pattern the same way targetDefaults does.
+ * Returns an empty array for a non-glob key or a pattern matching nothing;
+ * the merge treats those as literal target names.
+ */
+export function findMatchingTargetNames(
+  pattern: string,
+  targetNames: string[]
+): string[] {
+  if (!isGlobPattern(pattern)) {
+    return [];
+  }
+  return targetNames.filter((name) => minimatch(name, pattern));
 }
 
 export function readProjectConfigurationsFromRootMap(
@@ -263,7 +277,13 @@ export function readProjectConfigurationsFromRootMap(
   }
 
   if (conflicts.size > 0) {
-    throw new MultipleProjectsWithSameNameError(conflicts, projects);
+    // Only on the way to throwing, so a workspace without duplicates never
+    // pays for reading git's worktree registry.
+    throw new MultipleProjectsWithSameNameError(
+      conflicts,
+      projects,
+      analyzeWorktreeConflicts(workspaceRoot, conflicts) ?? undefined
+    );
   }
   if (projectRootsWithNoName.length > 0) {
     throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);

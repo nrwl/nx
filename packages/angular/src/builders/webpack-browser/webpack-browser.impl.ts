@@ -7,14 +7,13 @@ import {
 } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { existsSync } from 'fs';
-import { isNpmProject } from 'nx/src/project-graph/operators';
-import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
 import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { assertPackageIsInstalled } from '../../executors/utilities/builder-package';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import type { BrowserBuilderSchema } from './schema';
+import { isNpmProject, getDependencyConfigs } from '@nx/devkit/internal';
 // This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
 const Module = require('module');
 

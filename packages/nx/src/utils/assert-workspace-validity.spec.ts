@@ -32,14 +32,14 @@ describe('assertWorkspaceValidity', () => {
 
     expect(() => assertWorkspaceValidity(mockProjects, {}))
       .toThrowErrorMatchingInlineSnapshot(`
-      "[Configuration Error]:
-      The following implicitDependencies should be an array of strings:
-        lib1.implicitDependencies: "*"
+    [WorkspaceValidityError: [Configuration Error]:
+    The following implicitDependencies should be an array of strings:
+      lib1.implicitDependencies: "*"
 
-      The following implicitDependencies point to non-existent project(s):
-        app2
-          invalidproj"
-    `);
+    The following implicitDependencies point to non-existent project(s):
+      app2
+        invalidproj]
+  `);
   });
 
   it('should throw for an invalid project-level implicit dependency with glob', () => {

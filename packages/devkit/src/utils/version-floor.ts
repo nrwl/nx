@@ -1,9 +1,18 @@
-import type { Tree } from 'nx/src/devkit-exports';
-import { coerce, lt } from 'semver';
+import { workspaceRoot, type Tree } from 'nx/src/devkit-exports';
 import {
+  clean,
+  coerce,
+  intersects,
+  lt,
+  minVersion,
+  satisfies,
+  validRange,
+} from 'semver';
+import {
+  getDeclaredPackageVersion,
   getInstalledPackageVersion,
+  getInstalledPackageVersionFromTree,
   isNonSemverDistTag,
-  normalizeSemver,
 } from './installed-version';
 import { getDependencyVersionFromPackageJson } from './package-json';
 
@@ -35,9 +44,22 @@ export function throwForUnsupportedVersion(
 /**
  * Asserts that a package detected in the workspace is at or above the
  * plugin's supported floor. No-op when the package is not detected
- * (fresh-install path) or when declared as `latest`/`next`. Throws via
- * `throwForUnsupportedVersion` (with the original declared range for
- * clarity) when below floor.
+ * (fresh-install path) or when declared as `latest`/`next`.
+ *
+ * Resolution order:
+ * - When the installed version satisfies the declared range, the installed
+ *   version decides. This resolves open ranges (e.g. `>=4.8.4 <6.1.0`) to
+ *   what is actually installed. An install behind a declaration that is not a
+ *   range (e.g. `file:../pkg`) decides as well.
+ * - An exact declared version is compared to the floor directly.
+ * - A declared range that cannot reach the floor throws as unsupported. A
+ *   range that straddles the floor cannot be judged without an installed
+ *   version (the lockfile may pin either side), so when none resolves it
+ *   throws asking to install dependencies first.
+ *
+ * Prereleases count as their release version throughout (e.g. `6.0.0-rc.1`
+ * as `6.0.0`), for installed versions, exact declared versions, and range
+ * endpoints alike.
  *
  * Use from generator entry points to fail fast on unsupported workspaces
  * before writing any incompatible config.
@@ -51,10 +73,160 @@ export function assertSupportedPackageVersion(
   if (!declared || isNonSemverDistTag(declared)) {
     return;
   }
-  const cleaned = normalizeSemver(declared);
-  if (cleaned && lt(cleaned, minSupportedVersion)) {
+
+  const installed = getSatisfyingInstalledPackageVersion(
+    tree,
+    packageName,
+    declared
+  );
+  if (installed) {
+    const release = coerce(installed)?.version ?? installed;
+    if (lt(release, minSupportedVersion)) {
+      throwForUnsupportedVersion(packageName, installed, minSupportedVersion);
+    }
+    return;
+  }
+
+  const cleaned = clean(declared);
+  if (cleaned) {
+    // Strip any prerelease so it counts as its release version.
+    const release = coerce(cleaned)?.version ?? cleaned;
+    if (lt(release, minSupportedVersion)) {
+      throwForUnsupportedVersion(packageName, declared, minSupportedVersion);
+    }
+    return;
+  }
+
+  if (validRange(declared)) {
+    // The `-0` floor comparator admits prereleases of the floor version, so
+    // a range reaching the floor only through its prereleases still counts.
+    if (!intersects(declared, `>=${minSupportedVersion}-0`)) {
+      throwForUnsupportedVersion(packageName, declared, minSupportedVersion);
+    }
+    const min = minVersion(declared);
+    const rangeMinimum = min ? `${min.major}.${min.minor}.${min.patch}` : null;
+    if (rangeMinimum && lt(rangeMinimum, minSupportedVersion)) {
+      throw new Error(
+        `Unable to determine the installed version of \`${packageName}\`.\n\n` +
+          `  Declared: ${declared}\n` +
+          `  Supported: >= ${minSupportedVersion}\n\n` +
+          `The declared range allows versions below the supported minimum. ` +
+          `Install the workspace dependencies so the installed version can be verified, then try again.`
+      );
+    }
+    return;
+  }
+
+  const coerced = coerce(declared)?.version;
+  if (coerced && lt(coerced, minSupportedVersion)) {
     throwForUnsupportedVersion(packageName, declared, minSupportedVersion);
   }
+}
+
+/**
+ * Resolves the version of a package a generator should target.
+ *
+ * Resolution order:
+ * - When the installed version satisfies the declared range, the installed
+ *   version decides. This resolves open ranges (e.g. `>=15.0.0 <17.0.0`) to
+ *   what is actually installed. A declaration that is not a range (`latest`,
+ *   `file:../pkg`) resolved to the installed version, so that version decides
+ *   as well.
+ * - Otherwise the declared range's floor (`semver.minVersion`, a prerelease
+ *   when the range starts at one). This is the fresh-workspace path (nothing
+ *   installed yet) and the case where a generator is mid-flight re-pinning
+ *   the package: the new range no longer satisfies the still-installed
+ *   version, so intent wins. A dist tag with nothing installed resolves to
+ *   `latestKnownVersion`.
+ *
+ * Returns `null` when the package is not declared and no
+ * `latestKnownVersion` is provided; an install that is not declared in the
+ * workspace `package.json` (e.g. a hoisted transitive dependency) is ignored.
+ */
+export function getResolvedPackageVersion(
+  tree: Tree,
+  packageName: string,
+  latestKnownVersion?: string
+): string | null {
+  const declared = getDependencyVersionFromPackageJson(tree, packageName);
+  if (declared) {
+    const installed = getSatisfyingInstalledPackageVersion(
+      tree,
+      packageName,
+      declared
+    );
+    if (installed) {
+      return installed;
+    }
+    // `minVersion` reads the whole range, so `<16 >=15.8.0` floors at 15.8.0.
+    // It is null for a range nothing satisfies.
+    const floor = validRange(declared) ? minVersion(declared)?.version : null;
+    if (floor) {
+      return floor;
+    }
+  }
+  return getDeclaredPackageVersion(tree, packageName, latestKnownVersion);
+}
+
+/**
+ * Returns the installed version of a package when it satisfies the declared
+ * range, `null` when nothing is installed or the install does not match the
+ * declaration. An `npm:<name>@<range>` alias is matched against its range. A
+ * declaration without a range, such as a dist tag (`latest`) or a `file:`,
+ * `link:` or `workspace:` specifier, admits whatever is installed: it has no
+ * version to compare. Use it to gate on what actually runs while keeping the
+ * declared-range fallback for the fresh-install path.
+ */
+export function getSatisfyingInstalledPackageVersion(
+  tree: Tree,
+  packageName: string,
+  declared: string
+): string | null {
+  const installed =
+    getInstalledPackageVersionFromTree(tree, packageName) ??
+    getInstalledPackageVersionFromProcess(tree, packageName);
+  if (!installed) {
+    return null;
+  }
+  const range = getNpmAliasRange(declared) ?? declared;
+  if (!validRange(range)) {
+    return installed;
+  }
+  // An installed prerelease can match the declared range in either form:
+  // raw (a same-tuple prerelease comparator) or as its release version.
+  const release = coerce(installed)?.version ?? installed;
+  return satisfies(installed, range) || satisfies(release, range)
+    ? installed
+    : null;
+}
+
+// The range follows the last `@`. In `npm:@scope/pkg` that `@` starts the
+// scope, so there is no range.
+function getNpmAliasRange(declared: string): string | null {
+  const prefix = 'npm:';
+  if (!declared.startsWith(prefix)) {
+    return null;
+  }
+  const at = declared.lastIndexOf('@');
+  return at > prefix.length ? declared.slice(at + 1) : null;
+}
+
+/**
+ * Module-resolution fallback for installs without a `node_modules` layout
+ * (e.g. Yarn PnP). Only valid when the tree is the running process's
+ * workspace; unit trees (e.g. rooted at `/virtual`) must not resolve
+ * packages from the process environment. Resolves from the workspace root
+ * only, so a copy hoisted into `.nx/installation` cannot shadow the
+ * workspace's own install.
+ */
+function getInstalledPackageVersionFromProcess(
+  tree: Tree,
+  packageName: string
+): string | null {
+  if (tree.root !== workspaceRoot) {
+    return null;
+  }
+  return getInstalledPackageVersion(packageName, [tree.root]);
 }
 
 /**

@@ -10,12 +10,14 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 
-import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname } from 'path';
 import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
 import { getProjectReportLines } from './get-project-report-lines';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fileSeparator, newLineSeparator } from '../../utils/exec-gradle';
+import {
+  hashWithWorkspaceContext,
+  workspaceDataDirectory,
+} from '@nx/devkit/internal';
 
 export interface GradleReport {
   gradleFileToGradleProjectMap: Map<string, string>;

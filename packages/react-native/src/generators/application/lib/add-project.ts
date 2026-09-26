@@ -9,8 +9,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { NormalizedSchema } from './normalize-options';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { warnReactNativeExecutorGenerating } from '../../../utils/deprecation';
+import { type PackageJson } from '@nx/devkit/internal';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);

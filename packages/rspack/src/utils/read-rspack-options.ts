@@ -1,7 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
 import type { Configuration } from '@rspack/core';
 import { isNxRspackComposablePlugin } from './config';
-import { readNxJsonFromDisk } from 'nx/src/devkit-internals';
+import { readNxJsonFromDisk } from '@nx/devkit/internal';
 
 /**
  * Reads the Rspack options from a give Rspack configuration. The configuration can be:

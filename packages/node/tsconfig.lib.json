@@ -40,6 +40,9 @@
       "path": "../devkit/tsconfig.lib.json"
     },
     {
+      "path": "../vitest/tsconfig.lib.json"
+    },
+    {
       "path": "../webpack/tsconfig.lib.json"
     },
     {

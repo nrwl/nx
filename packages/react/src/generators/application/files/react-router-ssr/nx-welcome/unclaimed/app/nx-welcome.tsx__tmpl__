@@ -5,6 +5,8 @@
  Delete this file and get started with your project!
  * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  */
+/* oxlint-disable jsx-a11y/prefer-tag-over-role -- the icons below
+   are inline SVGs, which have no tag to swap the role for. */
  export function NxWelcome({ title }: { title: string }) {
   return (
     <>

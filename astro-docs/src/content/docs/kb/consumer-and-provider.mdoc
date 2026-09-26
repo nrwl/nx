@@ -9,7 +9,7 @@ topics:
   - 'Module Federation'
 ---
 
-Nx v23 introduces a new generator surface in `@nx/react` (`@nx/react:consumer` and `@nx/react:provider`) that replaces the v22 `host` and `remote` generators. Shared logic (federation-name validation, port defaults, version pins) lives in `@nx/module-federation` so framework-specific generators can build on it. The new model has two roles:
+Nx v23 introduces a new generator surface in `@nx/react` (`@nx/react:consumer` and `@nx/react:provider`) that replaces the v22 `host` and `remote` generators. Both generators wire up the official Module Federation plugins directly and do not install `@nx/module-federation`. The new model has two roles:
 
 - **Provider** - an app that exposes a federated component.
 - **Consumer** - an app that loads federated components at runtime via a hardcoded `PROVIDERS` list in `src/mf.ts`.
@@ -37,7 +37,7 @@ Generated tree:
 ```text
 apps/my-provider/
 ├── package.json          # name, scripts, MF + framework deps
-├── vite.config.ts        # (or rsbuild/rspack equivalent) with federation plugin
+├── vite.config.mts       # (or rsbuild/rspack equivalent) with federation plugin
 ├── index.html
 ├── src/
 │   ├── index.ts          # `import('./bootstrap')` indirection (required)
@@ -59,7 +59,7 @@ Generated tree:
 ```text
 apps/my-consumer/
 ├── package.json
-├── vite.config.ts        # NO build-time `remotes:` block
+├── vite.config.mts       # NO build-time `remotes:` block
 ├── index.html
 ├── src/
 │   ├── index.ts          # `import('./bootstrap')`
@@ -141,6 +141,8 @@ Angular Module Federation in Nx is no longer supported. Use [`@angular-architect
 ## Migrate from `host` / `remote`
 
 There is **no automated codemod**. Existing setups vary widely (custom executors, host orchestration, SSR variants) and a generator would not land cleanly. Migrate manually using the steps below, or paste the AI prompt at the end of this section into Cursor / Claude Code / Copilot to perform the rewrite on your own codebase.
+
+The steps below regenerate each app, so they move webpack apps onto a different bundler. To keep your current webpack or Rspack setup and swap only the federation plugin, see [migrating off `@nx/module-federation`](/docs/kb/migrate-from-nx-module-federation) instead.
 
 ### Manual steps
 

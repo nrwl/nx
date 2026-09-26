@@ -3,9 +3,9 @@ import {
   reservePort,
   runCLI,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import {
   setupModuleFederationTest,
@@ -86,7 +86,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const buildRemoteOutput = runCLI(`build ${remote}`);
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests('cypress')) {
+    if (await shouldRunCypressTests()) {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
@@ -177,7 +177,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const buildRemoteOutput = runCLI(`build ${remote}`);
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests('cypress')) {
+    if (await shouldRunCypressTests()) {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),

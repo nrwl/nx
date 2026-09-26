@@ -176,7 +176,7 @@ function withNx(
         const { readTsConfigPaths } = require('@nx/js');
         const {
           findAllProjectNodeDependencies,
-        } = require('nx/src/utils/project-graph-utils');
+        } = require('@nx/devkit/internal');
         const paths = readTsConfigPaths();
         const deps = findAllProjectNodeDependencies(project);
         nextConfig.transpilePackages ??= [];

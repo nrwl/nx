@@ -17,9 +17,10 @@ import {
 import { nextInitGenerator } from '../init/init';
 import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 import { Schema } from './schema';
-import { normalizeOptions } from './lib/normalize-options';
+import { normalizeOptions, NormalizedSchema } from './lib/normalize-options';
 import { updateViteConfigForServerEntry } from './lib/update-vite-config';
-import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions';
+import { addRollupServerEntry } from './lib/add-rollup-server-entry';
+import { tsLibVersion } from '../../utils/versions';
 import {
   isUsingTsSolutionSetup,
   addProjectToTsSolutionWorkspace,
@@ -68,11 +69,6 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
 
   if (!options.skipPackageJson) {
     const devDependencies: Record<string, string> = {};
-    if (options.linter === 'eslint') {
-      devDependencies['eslint-config-next'] = eslintConfigNextVersion;
-      devDependencies['@next/eslint-plugin-next'] = eslintConfigNextVersion;
-    }
-
     if (options.unitTestRunner && options.unitTestRunner !== 'none') {
       devDependencies['@testing-library/react'] = testingLibraryReactVersion;
       devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
@@ -134,41 +130,43 @@ export async function HelloServer() {
     addTsConfigPath(host, `${options.importPath}/server`, [serverEntryPath]);
   }
 
-  // Configure Vite and package.json for server entry point when using Vite bundler
-  if (options.bundler === 'vite') {
-    // Update vite.config.mts to support multiple entry points
-    const viteConfigPath = joinPathFragments(
-      options.projectRoot,
-      'vite.config.mts'
+  // The React library generator defaults buildable and publishable libraries to Rollup.
+  const bundler =
+    options.bundler && options.bundler !== 'none'
+      ? options.bundler
+      : options.buildable || options.publishable
+        ? 'rollup'
+        : 'none';
+  if (bundler === 'vite') {
+    updateViteConfigForServerEntry(
+      host,
+      joinPathFragments(options.projectRoot, 'vite.config.mts')
     );
-    updateViteConfigForServerEntry(host, viteConfigPath);
-
-    // Update package.json to include server export
+    addServerExport(host, options, './dist/server.js');
+  } else if (bundler === 'rollup') {
+    addRollupServerEntry(host, options);
+    if (isTsSolutionSetup) {
+      // Other setups publish no exports field, and introducing one would close
+      // every other subpath of the package.
+      addServerExport(host, options, './dist/server.esm.js');
+    }
+  } else if (bundler === 'none' && isTsSolutionSetup) {
+    // Non-buildable libs resolve `.` straight to source, so `./server` does the same.
     const packageJsonPath = joinPathFragments(
       options.projectRoot,
       'package.json'
     );
     if (host.exists(packageJsonPath)) {
       updateJson(host, packageJsonPath, (json) => {
-        if (!json.exports) {
-          json.exports = {};
-        }
-
-        // Add server export
-        const serverExport: any = {};
-
-        // For TS Solution setups, include development condition
-        if (isTsSolutionSetup) {
-          const customConditionName = getDefinedCustomConditionName(host);
-          serverExport[customConditionName] = './src/server.ts';
-        }
-
-        serverExport.types = './dist/server.d.ts';
-        serverExport.import = './dist/server.js';
-        serverExport.default = './dist/server.js';
-
-        json.exports['./server'] = serverExport;
-
+        json.exports ??= {};
+        const serverSource = `./src/server.${options.js ? 'js' : 'ts'}`;
+        json.exports['./server'] = options.js
+          ? serverSource
+          : {
+              types: serverSource,
+              import: serverSource,
+              default: serverSource,
+            };
         return json;
       });
     }
@@ -220,6 +218,39 @@ export async function HelloServer() {
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function addServerExport(
+  host: Tree,
+  options: NormalizedSchema,
+  distFile: string
+): void {
+  const packageJsonPath = joinPathFragments(
+    options.projectRoot,
+    'package.json'
+  );
+  if (!host.exists(packageJsonPath)) {
+    return;
+  }
+  updateJson(host, packageJsonPath, (json) => {
+    json.exports ??= {};
+    const serverExport: Record<string, string> = {};
+    if (options.isUsingTsSolutionConfig) {
+      const customConditionName = getDefinedCustomConditionName(host);
+      if (customConditionName) {
+        serverExport[customConditionName] = `./src/server.${
+          options.js ? 'js' : 'ts'
+        }`;
+      }
+    }
+    // Both bundlers name the declaration after the entry, without the format
+    // suffix the JavaScript output carries.
+    serverExport.types = './dist/server.d.ts';
+    serverExport.import = distFile;
+    serverExport.default = distFile;
+    json.exports['./server'] = serverExport;
+    return json;
+  });
 }
 
 export default libraryGenerator;

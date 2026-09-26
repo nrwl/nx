@@ -73,6 +73,57 @@ export function changeExecutorNameToNewName(tree: Tree) {
 export default changeExecutorNameToNewName;
 ```
 
+## Return values
+
+A migration can return nothing at all.
+When it has something to report, return a [`MigrationReturnObject`](/docs/reference/devkit/MigrationReturnObject):
+
+```ts
+export default async function update(tree: Tree) {
+  // ...
+  return {
+    nextSteps: ['Review the rewritten build target in apps/admin.'],
+    agentContext: [
+      'apps/admin/vite.config.ts spreads its plugin array, so the plugin list was left alone.',
+    ],
+  };
+}
+```
+
+`nextSteps` is for the user running the migration.
+Nx prints these in the end-of-run summary.
+Returning a plain `string[]` is shorthand for this field on its own.
+
+`agentContext` only reaches an AI agent.
+With the agentic flow on, Nx hands these strings to the agent that runs a paired prompt or reviews what the generator changed, but only when that step actually runs.
+When `nx migrate` itself runs inside an agent, they go to that agent instead.
+Anything else drops them, so duplicate what the user needs into `nextSteps`.
+
+### Skip the AI step
+
+An entry with a generator half gets an AI step during an agentic run in one of two shapes.
+A hybrid entry, one with both `implementation` and `prompt`, runs its prompt after the generator.
+A generator-only entry that changed files gets a review pass unless you pass `--no-validate`.
+
+Return `skipAgentic: true` when the deterministic run already handled everything, and Nx skips that step:
+
+```ts
+export default async function update(tree: Tree) {
+  if (!tree.exists('eslint.config.js')) {
+    // No flat config in this workspace, so there's nothing left for the prompt.
+    return { skipAgentic: true };
+  }
+  // ...
+}
+```
+
+The flag is opt-in and read strictly, so only a literal `true` skips anything and leaving it out keeps the behavior you have today.
+
+For a hybrid entry it also drops the prompt from the end-of-run next steps.
+That matters when the agentic flow is off, since Nx would otherwise tell the user to apply a prompt with no work left in it.
+Don't return `agentContext` alongside it.
+The two contradict each other, and Nx drops the context feeding the step it waived.
+
 ## Update package.json dependencies
 
 If you just need to change dependency versions, you can add some configuration options to the `migrations.json` file without making a full generator.

@@ -1,16 +1,30 @@
-import { IsolatedPlugin, LoadResultPayload } from './isolated-plugin';
+import { EventEmitter } from 'events';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
+import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
+import {
+  connectToWorker,
+  describeWorkerExit,
+  getPluginWorkerSocketId,
+  isPluginWorkerSocketRefusal,
+  IsolatedPlugin,
+  LoadResultPayload,
+} from './isolated-plugin';
 
 // We need to mock the dependencies before importing the class
-jest.mock('../../../daemon/socket-utils', () => ({
-  getPluginOsSocketPath: jest.fn(() => '/mock/socket/path'),
+vi.mock('../../../daemon/socket-utils', () => ({
+  getPluginOsSocketPath: vi.fn(() => '/mock/socket/path'),
 }));
 
-jest.mock('../../../utils/installation-directory', () => ({
-  getNxRequirePaths: jest.fn(() => ['/mock/require/path']),
+vi.mock('../../../utils/installation-directory', () => ({
+  getNxRequirePaths: vi.fn(() => ['/mock/require/path']),
 }));
 
-jest.mock('../resolve-plugin', () => ({
-  resolveNxPlugin: jest.fn().mockResolvedValue({
+vi.mock('../../../utils/wait-for-socket-connection', () => ({
+  waitForSocketConnection: vi.fn(),
+}));
+
+vi.mock('../resolve-plugin', () => ({
+  resolveNxPlugin: vi.fn().mockResolvedValue({
     name: 'test-plugin',
     pluginPath: '/mock/plugin/path',
     shouldRegisterTSTranspiler: false,
@@ -18,6 +32,42 @@ jest.mock('../resolve-plugin', () => ({
 }));
 
 describe('IsolatedPlugin', () => {
+  describe('plugin worker socket ids', () => {
+    const initialWorkerCount = global.nxPluginWorkerCount;
+
+    beforeEach(() => {
+      global.nxPluginWorkerCount = 0;
+    });
+
+    afterAll(() => {
+      global.nxPluginWorkerCount = initialWorkerCount;
+    });
+
+    it('combines the pid, a monotonic counter, and eight random hex characters', () => {
+      expect(getPluginWorkerSocketId()).toMatch(
+        new RegExp(`^${process.pid}-0-[0-9a-f]{8}$`)
+      );
+      expect(getPluginWorkerSocketId()).toMatch(
+        new RegExp(`^${process.pid}-1-[0-9a-f]{8}$`)
+      );
+    });
+
+    it('draws the tail fresh each time rather than deriving it', () => {
+      // The shape above is satisfied by any constant and by a hash of the
+      // workspace root — which is exactly the determinism this replaced, so
+      // without this the fix can be reverted with the suite green. On Windows
+      // the name is the only barrier there is.
+      const tails = new Set(
+        Array.from({ length: 16 }, () => {
+          const parts = getPluginWorkerSocketId().split('-');
+          return parts[parts.length - 1];
+        })
+      );
+
+      expect(tails.size).toBeGreaterThan(1);
+    });
+  });
+
   // Helper to create a mock load result
   function createLoadResult(
     hooks: Partial<{
@@ -56,7 +106,7 @@ describe('IsolatedPlugin', () => {
     plugin.shutdownCount = 0;
 
     // Mock spawnAndConnect
-    const spawnAndConnect = jest.fn().mockImplementation(async () => {
+    const spawnAndConnect = vi.fn().mockImplementation(async () => {
       plugin._alive = true;
       plugin.spawnAndConnectCount++;
       return loadResult;
@@ -64,14 +114,14 @@ describe('IsolatedPlugin', () => {
     plugin.spawnAndConnect = spawnAndConnect;
 
     // Mock shutdown
-    const shutdown = jest.fn().mockImplementation(() => {
+    const shutdown = vi.fn().mockImplementation(async () => {
       plugin._alive = false;
       plugin.shutdownCount++;
     });
     plugin.shutdown = shutdown;
 
     // Mock sendRequest to return success by default
-    const sendRequest = jest.fn().mockImplementation(async (type: string) => {
+    const sendRequest = vi.fn().mockImplementation((type: string) => {
       switch (type) {
         case 'createNodes':
           return { success: true, result: [] };
@@ -100,6 +150,225 @@ describe('IsolatedPlugin', () => {
       sendRequest,
     };
   }
+
+  describe('worker exit descriptions', () => {
+    it('reports a non-zero exit code', () => {
+      expect(describeWorkerExit(1, null)).toBe('(exit code 1)');
+    });
+
+    it('reports a zero exit code rather than dropping it as falsy', () => {
+      expect(describeWorkerExit(0, null)).toBe('(exit code 0)');
+    });
+
+    it('reports the signal when the worker was killed', () => {
+      expect(describeWorkerExit(null, 'SIGTERM')).toBe('(killed by SIGTERM)');
+    });
+
+    it('calls out SIGKILL as a likely out-of-memory kill', () => {
+      expect(describeWorkerExit(null, 'SIGKILL')).toBe(
+        '(killed by SIGKILL, commonly an out-of-memory kill)'
+      );
+    });
+
+    it('prefers the signal when both are present', () => {
+      expect(describeWorkerExit(0, 'SIGKILL')).toContain('SIGKILL');
+    });
+
+    it('says so when neither is reported', () => {
+      expect(describeWorkerExit(null, null)).toBe(
+        '(no exit code or signal reported)'
+      );
+    });
+  });
+
+  describe('settling pending requests when a worker is lost', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    function testPlugin(pendingRequests = 2) {
+      const plugin: any = Object.create(IsolatedPlugin.prototype);
+      plugin.name = 'test-plugin';
+      plugin._alive = true;
+      plugin.responseHandlers = new Map();
+      const errors: Error[] = [];
+      for (let tx = 0; tx < pendingRequests; tx++) {
+        plugin.responseHandlers.set(String(tx), {
+          onMessage: vi.fn(),
+          onError: (e: Error) => errors.push(e),
+        });
+      }
+      return { plugin, errors };
+    }
+
+    it('hands the caller-supplied error to every pending request', () => {
+      const { plugin, errors } = testPlugin();
+
+      plugin.failPendingRequests(new Error('worker sent something unreadable'));
+
+      expect(errors.map((e) => e.message)).toEqual([
+        'worker sent something unreadable',
+        'worker sent something unreadable',
+      ]);
+      expect(plugin.responseHandlers.size).toBe(0);
+    });
+
+    it('takes the worker out of service without settling anything', () => {
+      const { plugin, errors } = testPlugin();
+      plugin._connectPromise = Promise.resolve();
+
+      plugin.markUnusable();
+
+      expect(plugin._alive).toBe(false);
+      expect(plugin._connectPromise).toBeNull();
+      expect(errors).toEqual([]);
+      expect(plugin.responseHandlers.size).toBe(2);
+    });
+
+    it('unpipes the worker streams so the host stops mirroring a dead worker', () => {
+      const { plugin } = testPlugin();
+      const stdout = { unpipe: vi.fn() };
+      const stderr = { unpipe: vi.fn() };
+      plugin.worker = { stdout, stderr };
+
+      plugin.markUnusable();
+
+      expect(stdout.unpipe).toHaveBeenCalledWith(process.stdout);
+      expect(stderr.unpipe).toHaveBeenCalledWith(process.stderr);
+    });
+
+    it('survives a worker that is already gone', () => {
+      const { plugin } = testPlugin();
+      plugin.worker = null;
+
+      expect(() => plugin.markUnusable()).not.toThrow();
+      expect(plugin._alive).toBe(false);
+    });
+
+    it('logs a framing failure when there are no pending requests', () => {
+      const { plugin } = testPlugin(0);
+      const socket = { destroy: vi.fn() };
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      plugin.handleFramingFailure(socket, new Error('stream is out of sync'));
+
+      expect(socket.destroy).toHaveBeenCalled();
+      expect(consoleError).toHaveBeenCalledWith(
+        'Plugin worker "test-plugin" sent a message the host could not read, ' +
+          'so its connection was dropped. stream is out of sync'
+      );
+    });
+
+    it('routes a framing failure to pending requests without logging it twice', () => {
+      const { plugin, errors } = testPlugin();
+      const socket = { destroy: vi.fn() };
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      plugin.handleFramingFailure(socket, new Error('stream is out of sync'));
+
+      expect(errors.map((error) => error.message)).toEqual([
+        'Plugin worker "test-plugin" sent a message the host could not read, so its connection was dropped. stream is out of sync',
+        'Plugin worker "test-plugin" sent a message the host could not read, so its connection was dropped. stream is out of sync',
+      ]);
+      expect(consoleError).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reporting a worker that dies before connecting', () => {
+    afterEach(() => {
+      vi.mocked(waitForSocketConnection).mockReset();
+    });
+
+    // The worker exits while connectToWorker is still polling, which is the
+    // only window in which this message is produced.
+    function workerExitingDuringConnect(
+      code: number | null,
+      signal: NodeJS.Signals | null
+    ) {
+      const worker = new EventEmitter() as any;
+      worker.pid = 4242;
+      vi.mocked(waitForSocketConnection).mockImplementation(async () => {
+        worker.emit('exit', code, signal);
+        return null;
+      });
+      return worker;
+    }
+
+    it('names the signal rather than reporting a null exit code', async () => {
+      const worker = workerExitingDuringConnect(null, 'SIGKILL');
+
+      await expect(
+        connectToWorker(worker, '/mock/socket/path', 'test-plugin')
+      ).rejects.toThrow(
+        'Plugin worker for "test-plugin" exited (killed by SIGKILL, commonly an out-of-memory kill) before the connection was established.'
+      );
+    });
+
+    it('reports an exit code when there is no signal', async () => {
+      const worker = workerExitingDuringConnect(1, null);
+
+      await expect(
+        connectToWorker(worker, '/mock/socket/path', 'test-plugin')
+      ).rejects.toThrow(
+        'Plugin worker for "test-plugin" exited (exit code 1) before the connection was established.'
+      );
+    });
+
+    // The refusal branch keys off the code alone, so widening the handler to
+    // take a signal must not stop a refusal being recognized as one.
+    it('still recognizes a socket refusal once the signal is threaded through', async () => {
+      const worker = workerExitingDuringConnect(SOCKET_REFUSED_EXIT_CODE, null);
+
+      await expect(
+        connectToWorker(worker, '/mock/socket/path', 'test-plugin')
+      ).rejects.toSatisfy(isPluginWorkerSocketRefusal);
+    });
+
+    it('does not treat a signal kill as a socket refusal', async () => {
+      const worker = workerExitingDuringConnect(null, 'SIGKILL');
+
+      await expect(
+        connectToWorker(worker, '/mock/socket/path', 'test-plugin')
+      ).rejects.toSatisfy((error) => !isPluginWorkerSocketRefusal(error));
+    });
+  });
+
+  describe('a load that fails', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('puts the worker down instead of leaving it loading', async () => {
+      const shutdown = vi.spyOn(IsolatedPlugin.prototype as any, 'shutdown');
+      vi.spyOn(
+        IsolatedPlugin.prototype as any,
+        'spawnAndConnect'
+      ).mockRejectedValue(new Error('Loading "test-plugin" timed out'));
+
+      await expect(IsolatedPlugin.load('test-plugin', '/root')).rejects.toThrow(
+        'timed out'
+      );
+
+      expect(shutdown).toHaveBeenCalled();
+    });
+
+    it('ends the socket of a worker that never answered a load', () => {
+      const plugin: any = Object.create(IsolatedPlugin.prototype);
+      const socket = { end: vi.fn() };
+      // What a load timeout leaves behind: connected, never alive.
+      plugin._alive = false;
+      plugin.worker = null;
+      plugin.socket = socket;
+
+      plugin.shutdown();
+
+      expect(socket.end).toHaveBeenCalled();
+    });
+  });
 
   describe('lifecycle integration', () => {
     it('should shutdown after single-hook plugin completes', async () => {
@@ -221,6 +490,42 @@ describe('IsolatedPlugin', () => {
     });
   });
 
+  describe('a released plugin', () => {
+    // Later hooks in the phase, so only the release can shut the worker down.
+    const graphHooks = {
+      createNodesPattern: '**/*.json',
+      hasCreateDependencies: true,
+      hasCreateMetadata: true,
+    };
+
+    it('answers a straggling call and then puts the worker back down', async () => {
+      const { plugin, spawnAndConnect, shutdown } = createTestPlugin(
+        createLoadResult(graphHooks)
+      );
+
+      plugin.dispose();
+      expect(shutdown).toHaveBeenCalledTimes(1);
+
+      // A caller that took this plugin while it was still the current one.
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(spawnAndConnect).toHaveBeenCalledTimes(1);
+      expect(shutdown).toHaveBeenCalledTimes(2);
+      expect(plugin._alive).toBe(false);
+    });
+
+    it('keeps the worker up for the rest of the phase while it is still held', async () => {
+      const { plugin, shutdown } = createTestPlugin(
+        createLoadResult(graphHooks)
+      );
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(shutdown).not.toHaveBeenCalled();
+      expect(plugin._alive).toBe(true);
+    });
+  });
+
   describe('concurrent calls', () => {
     it('should handle concurrent calls with ref counting', async () => {
       const { plugin, shutdown, sendRequest } = createTestPlugin(
@@ -238,7 +543,7 @@ describe('IsolatedPlugin', () => {
       );
 
       let callCount = 0;
-      sendRequest.mockImplementation(() => {
+      sendRequest.mockImplementation(async () => {
         callCount++;
         return callCount === 1 ? promiseA : promiseB;
       });

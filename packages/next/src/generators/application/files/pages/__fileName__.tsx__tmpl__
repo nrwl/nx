@@ -1,3 +1,5 @@
+/* oxlint-disable jsx-a11y/prefer-tag-over-role -- the icons below
+   are inline SVGs, which have no tag to swap the role for. */
 <%_ if (style !== 'none') { var wrapper = 'div'; _%>
 import styles from './<%= fileName %>.module.<%= style %>';
 <% } else { var wrapper = 'div'; } %>

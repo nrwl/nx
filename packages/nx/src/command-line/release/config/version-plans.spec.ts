@@ -177,7 +177,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump in 'plan1.md' but version plans are not enabled.`
+              `[Error: Found a version bump in 'plan1.md' but version plans are not enabled.]`
             );
           });
 
@@ -209,7 +209,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump in 'plan1.md' but projects are configured to be independently versioned. Individual projects should be bumped instead.`
+              `[Error: Found a version bump in 'plan1.md' but projects are configured to be independently versioned. Individual projects should be bumped instead.]`
             );
           });
 
@@ -241,7 +241,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".`
+              `[Error: Found a version bump in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".]`
             );
           });
 
@@ -274,7 +274,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.`
+              `[Error: Found a version bump in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.]`
             );
           });
         });
@@ -308,7 +308,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace.`
+              `[Error: Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace.]`
             );
           });
 
@@ -340,7 +340,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg1' in 'plan1.md' but version plans are not enabled.`
+              `[Error: Found a version bump for project 'pkg1' in 'plan1.md' but version plans are not enabled.]`
             );
           });
 
@@ -372,7 +372,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg2' in 'plan1.md' but the project is not configured for release. Ensure it is included by the 'release.projects' globs in nx.json.`
+              `[Error: Found a version bump for project 'pkg2' in 'plan1.md' but the project is not configured for release. Ensure it is included by the 'release.projects' globs in nx.json.]`
             );
           });
 
@@ -404,7 +404,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".`
+              `[Error: Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".]`
             );
           });
 
@@ -437,7 +437,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.`
+              `[Error: Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.]`
             );
           });
         });
@@ -473,7 +473,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for group 'group1' in 'plan1.md' but the group does not have version plans enabled.`
+              `[Error: Found a version bump for group 'group1' in 'plan1.md' but the group does not have version plans enabled.]`
             );
           });
 
@@ -505,7 +505,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for group 'group1' in 'plan1.md' but the group's projects are independently versioned. Individual projects of 'group1' should be bumped instead.`
+              `[Error: Found a version bump for group 'group1' in 'plan1.md' but the group's projects are independently versioned. Individual projects of 'group1' should be bumped instead.]`
             );
           });
 
@@ -537,7 +537,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for group 'group1' in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".`
+              `[Error: Found a version bump for group 'group1' in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".]`
             );
           });
 
@@ -570,7 +570,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for group 'group1' in 'plan1.md' that conflicts with another version bump for this group. When the group is in fixed versioning mode, all groups' version bumps within the same version plan must match.`
+              `[Error: Found a version bump for group 'group1' in 'plan1.md' that conflicts with another version bump for this group. When the group is in fixed versioning mode, all groups' version bumps within the same version plan must match.]`
             );
           });
         });
@@ -610,7 +610,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg2' in 'plan1.md' but the project's group 'group2' does not have version plans enabled.`
+              `[Error: Found a version bump for project 'pkg2' in 'plan1.md' but the project's group 'group2' does not have version plans enabled.]`
             );
           });
 
@@ -642,7 +642,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace.`
+              `[Error: Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace.]`
             );
           });
 
@@ -684,7 +684,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg3' in 'plan1.md' but the project is not in any configured release groups.`
+              `[Error: Found a version bump for project 'pkg3' in 'plan1.md' but the project is not in any configured release groups.]`
             );
           });
 
@@ -716,7 +716,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".`
+              `[Error: Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".]`
             );
           });
 
@@ -749,7 +749,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another project's version bump in the same release group 'group1'. When the group is in fixed versioning mode, all projects' version bumps within the same group must match.`
+              `[Error: Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another project's version bump in the same release group 'group1'. When the group is in fixed versioning mode, all projects' version bumps within the same group must match.]`
             );
           });
         });

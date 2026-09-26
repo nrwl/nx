@@ -118,7 +118,7 @@ export function TrustedBy({
             href={`/customers?utm_source=${utmSource}&utm_medium=website&utm_campaign=${utmCampaign}&utm_content=our_customers`}
             title="Our customers"
             prefetch={false}
-            className="group font-semibold leading-6 text-zinc-950 transition-all duration-200 dark:text-white"
+            className="group leading-6 font-semibold text-zinc-950 transition-all duration-200 dark:text-white"
           >
             Learn about our customers{' '}
             <span

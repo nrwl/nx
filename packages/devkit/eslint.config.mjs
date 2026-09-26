@@ -9,42 +9,8 @@ export default [
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
+      // The nx-barrel import boundary moved to this package's .oxlintrc.json.
       '@typescript-eslint/explicit-module-boundary-types': 'error',
-      '@typescript-eslint/no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            '@nx/workspace',
-            '@angular-devkit/core',
-            '@angular-devkit/architect',
-            '@angular-devkit/schematics',
-          ],
-          patterns: [
-            {
-              group: [
-                'nx/bin/*',
-                'nx/src/*',
-                'nx/plugins/*',
-                '!nx/src/devkit-internals',
-                '!nx/src/devkit-exports',
-              ],
-              allowTypeImports: true,
-              message:
-                'Only import from nx/src/devkit-internals or nx/src/devkit-exports',
-            },
-            {
-              group: ['@nx/devkit/**/*'],
-              message: 'Use a relative import',
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: ['**/*.spec.ts'],
-    rules: {
-      '@typescript-eslint/no-restricted-imports': 'off',
     },
   },
   {

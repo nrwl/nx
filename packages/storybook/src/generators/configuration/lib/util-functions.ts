@@ -16,7 +16,6 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import type { LinterType } from '@nx/eslint';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -97,9 +96,7 @@ export function addAngularStorybookTarget(
     options: {
       port: 4400,
       configDir: `${projectConfig.root}/.storybook`,
-      browserTarget: `${projectName}:${
-        ngBuildTarget ? 'build' : 'build-storybook'
-      }`,
+      browserTarget: `${projectName}:${ngBuildTarget ?? 'build-storybook'}`,
       compodoc: false,
     },
     configurations: {
@@ -115,9 +112,7 @@ export function addAngularStorybookTarget(
     options: {
       outputDir: joinPathFragments('dist/storybook', projectName),
       configDir: `${projectConfig.root}/.storybook`,
-      browserTarget: `${projectName}:${
-        ngBuildTarget ? 'build' : 'build-storybook'
-      }`,
+      browserTarget: `${projectName}:${ngBuildTarget ?? 'build-storybook'}`,
       compodoc: false,
     },
     configurations: {
@@ -471,7 +466,6 @@ export function normalizeSchema(
 ): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
-    linter: 'eslint' as LinterType,
     js: false,
   };
   return {

@@ -53,8 +53,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint"],
-      "default": "eslint"
+      "enum": ["eslint", "oxlint"]
     },
     "ignorePaths": {
       "type": "array",

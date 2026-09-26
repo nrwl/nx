@@ -6,7 +6,7 @@
         "buildEnvironment": {
           "cache": true,
           "metadata": {
-            "description": "Displays all buildscript dependencies declared in root project \u0027my-composite\u0027.",
+            "description": "Displays all buildscript dependencies declared in root project 'my-composite'.",
             "technologies": ["gradle"]
           },
           "command": "./gradlew :buildEnvironment",
@@ -35,5 +35,8 @@
       "target": "projectRoot/my-utils",
       "sourceFile": "projectRoot/build.gradle.kts"
     }
-  ]
+  ],
+  "buildFileByProjectRoot": {
+    "nested/nested/proj": "nested/nested/proj/build.gradle"
+  }
 }

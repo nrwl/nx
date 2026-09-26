@@ -5,19 +5,6 @@ export default [
   ...baseConfig,
   { ignores: ['dist'] },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          name: 'chalk',
-          message:
-            'Please use `picocolors` in place of `chalk` for rendering terminal colors',
-        },
-      ],
-    },
-  },
-  {
     files: ['./package.json', './generators.json', './executors.json'],
     rules: {
       '@nx/nx-plugin-checks': 'error',

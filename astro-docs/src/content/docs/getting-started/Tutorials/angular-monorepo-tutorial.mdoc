@@ -60,7 +60,7 @@ Let's take a look at the structure of our new Nx workspace:
   - package-lock.json
   - package.json
   - tsconfig.base.json
-  - vitest.config.ts
+  - vitest.config.mts
 
 {%/filetree%}
 
@@ -132,7 +132,7 @@ Each target contains a configuration object that tells Nx how to run that target
 
 The most critical parts are:
 
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/docs/kb/intro) and `<executor-name>` points to a function that runs the task.
+- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/docs/concepts/nx-plugins) and `<executor-name>` points to a function that runs the task.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
 To view all tasks for a project, look in the [Nx Console](/docs/getting-started/editor-setup) project detail view or run:
@@ -262,7 +262,7 @@ Running the above command should lead to the following directory structure:
   - nx.json
   - package.json
   - tsconfig.base.json
-  - vitest.config.ts
+  - vitest.config.mts
 
 {%/filetree %}
 

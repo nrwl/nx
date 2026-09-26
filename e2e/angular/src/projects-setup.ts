@@ -25,6 +25,7 @@ export async function setupProjectsTest(): Promise<ProjectsTestSetup> {
   const proj = newProject({
     packages: [
       '@nx/angular',
+      '@nx/eslint',
       '@nx/webpack',
       '@nx/vitest',
       '@nx/playwright',

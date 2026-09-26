@@ -1,4 +1,8 @@
-import { buildSystemPrompt } from './system-prompt';
+import {
+  buildInlineSystemContext,
+  buildMinimalSystemContext,
+  buildSystemPrompt,
+} from './system-prompt';
 
 describe('buildSystemPrompt', () => {
   const ctx = {
@@ -7,6 +11,8 @@ describe('buildSystemPrompt', () => {
       '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json',
     packageManager: 'npm',
     nxInvocation: 'npx nx',
+    formatCommand: 'npx prettier --write --ignore-unknown -- <paths>',
+    pmExec: 'npx',
   };
 
   it('embeds the workspace root inside its tag', () => {
@@ -29,7 +35,7 @@ describe('buildSystemPrompt', () => {
 
   it('renders the nx invocation distinct from the package manager so npm gets `npx nx`', () => {
     const prompt = buildSystemPrompt(ctx);
-    expect(prompt).toMatch(/To invoke nx, use `npx nx …`/);
+    expect(prompt).toMatch(/To invoke nx, use `npx nx \.\.\.`/);
   });
 
   it('honors a package-manager-specific nx invocation (e.g. `pnpm exec nx`)', () => {
@@ -39,7 +45,7 @@ describe('buildSystemPrompt', () => {
       nxInvocation: 'pnpm exec nx',
     });
     expect(prompt).toContain('<package_manager>pnpm</package_manager>');
-    expect(prompt).toMatch(/To invoke nx, use `pnpm exec nx …`/);
+    expect(prompt).toMatch(/To invoke nx, use `pnpm exec nx \.\.\.`/);
   });
 
   it('wraps the opening brief, handoff contract, environment note, and scope rules in their tags', () => {
@@ -143,21 +149,83 @@ describe('buildSystemPrompt', () => {
       expect(prompt).toMatch(VALIDATION_MARKER);
       expect(prompt).not.toContain(AUTHOR_MARKER);
     });
+
+    it.each(['author', 'generic-validation'] as const)(
+      'keeps the agent out of the run directory but says nothing about nx.json (%s)',
+      (mode) => {
+        // The commit policy is read once before the per-step runner starts,
+        // so only the orchestrated runbook needs the nx.json rule.
+        const prompt = buildSystemPrompt({ ...ctx, mode });
+        expect(prompt).toContain(
+          'Do not edit anything under `.nx/migrate-runs` except the handoff file you are asked to write.'
+        );
+        expect(prompt).not.toContain('nx.json');
+      }
+    );
   });
 
   describe('formatting the agent’s changes (author mode)', () => {
-    it('directs the agent to format the files it changed before handoff, via nx format:write', () => {
+    it('directs the agent to run the resolved formatter command over only the files it changed, rather than nx format:write', () => {
       const prompt = buildSystemPrompt(ctx);
-      expect(prompt).toMatch(
-        /format the files you created or modified .* run `nx format:write`/
+      expect(prompt).toContain(
+        'run `npx prettier --write --ignore-unknown -- <paths>` over exactly the files you created or modified'
+      );
+      // nx format:write cannot be scoped that tightly: it selects the branch
+      // delta by default and always appends the root config files, both of
+      // which the scope rules forbid touching.
+      expect(prompt).toMatch(/Do not use `nx format:write` for this/);
+    });
+
+    it('renders the oxfmt command verbatim when that is the resolved formatter', () => {
+      const prompt = buildSystemPrompt({
+        ...ctx,
+        formatCommand:
+          'pnpm exec oxfmt --no-error-on-unmatched-pattern -- <paths>',
+      });
+      expect(prompt).toContain(
+        'run `pnpm exec oxfmt --no-error-on-unmatched-pattern -- <paths>` over exactly the files you created or modified'
+      );
+      expect(prompt).not.toContain('run `npx prettier');
+    });
+
+    it('tells the agent not to run a formatter when the workspace has none', () => {
+      const prompt = buildSystemPrompt({ ...ctx, formatCommand: null });
+      expect(prompt).toContain(
+        'No configured formatter is installed in this workspace; do not install or run one over your changes.'
+      );
+      expect(prompt).not.toContain(
+        'After applying your changes and before writing the handoff, run'
       );
     });
 
-    it('carves nx format:write out of the mutating-nx-command prohibition', () => {
+    it.each([
+      [
+        'a resolved command',
+        'npx prettier --write --ignore-unknown -- <paths>',
+      ],
+      ['no formatter', null],
+    ])(
+      'names the exact replacement commands for a migration that changes the formatter itself (%s)',
+      (_name, formatCommand) => {
+        const prompt = buildSystemPrompt({
+          ...ctx,
+          formatCommand,
+          pmExec: 'pnpm exec',
+        });
+        // The command was resolved before the step ran, so only the agent
+        // knows the formatter changed; the flags must not be left to it.
+        expect(prompt).toContain(
+          'If this migration itself added or replaced the workspace formatter, run the new one over exactly the files you created or modified instead: `pnpm exec prettier --write --ignore-unknown -- <paths>` for Prettier, `pnpm exec oxfmt --no-error-on-unmatched-pattern -- <paths>` for oxfmt, but only if it is installed under node_modules; if it is not, do not install or run it. If you created or modified no files, do not run it.'
+        );
+      }
+    );
+
+    it('lists nx format:write among the forbidden mutating nx commands', () => {
       const prompt = buildSystemPrompt(ctx);
       expect(prompt).toMatch(
-        /mutate workspace state .*, except `nx format:write` to format the files you changed/
+        /mutate workspace state \(`nx migrate`, `nx reset`, `nx format:write`/
       );
+      expect(prompt).not.toMatch(/except `nx format:write`/);
     });
 
     it('no longer blanket-forbids reformatting, only reformatting untouched files', () => {
@@ -166,6 +234,88 @@ describe('buildSystemPrompt', () => {
         'Do not refactor, reformat, or update dependencies'
       );
       expect(prompt).toMatch(/do not reformat files you did not change/);
+    });
+  });
+});
+
+describe('inline system contexts', () => {
+  const systemPromptFilePath =
+    '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.system.md';
+  const handoffFileAbsolutePath =
+    '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json';
+
+  function fullSystemPrompt(): string {
+    return buildSystemPrompt({
+      workspaceRoot: '/abs/workspace',
+      handoffFileAbsolutePath,
+      packageManager: 'npm',
+      nxInvocation: 'npx nx',
+      formatCommand: 'npx prettier --write --ignore-unknown -- <paths>',
+      pmExec: 'npx',
+    });
+  }
+
+  describe('buildInlineSystemContext', () => {
+    const context = buildInlineSystemContext({
+      handoffFileAbsolutePath,
+      systemPromptFilePath,
+    });
+
+    it('points at the system prompt file', () => {
+      expect(context).toContain(
+        `<operating_instructions>\n${systemPromptFilePath}\n</operating_instructions>`
+      );
+    });
+
+    // nx blocks on the handoff, so that part cannot depend on the agent
+    // getting around to opening the file.
+    it('carries the same handoff contract the system prompt file does', () => {
+      const full = fullSystemPrompt();
+      const closing = '</handoff_contract>';
+      const contract = full.slice(
+        full.indexOf('<handoff_contract>'),
+        full.indexOf(closing) + closing.length
+      );
+      expect(context).toContain(contract);
+      expect(contract).toContain(handoffFileAbsolutePath);
+    });
+
+    // Repeats the boundary inline in case the agent acts before reading the
+    // file.
+    it('restates the workspace-root boundary', () => {
+      expect(context).toContain(
+        'Do not modify files outside the workspace root.'
+      );
+    });
+
+    // The scope rules are the only mode-dependent section, so keeping them in
+    // the file makes the command line independent of the step's mode.
+    it('leaves scope rules in the system prompt file', () => {
+      expect(context).not.toContain('<scope_rules>');
+    });
+  });
+
+  describe('buildMinimalSystemContext', () => {
+    const context = buildMinimalSystemContext(systemPromptFilePath);
+
+    it('points at the system prompt file and names what is in it', () => {
+      expect(context).toContain(
+        `<operating_instructions>\n${systemPromptFilePath}\n</operating_instructions>`
+      );
+      expect(context).toContain('handoff contract');
+      expect(context).toContain(
+        'Do not modify files outside the workspace root.'
+      );
+    });
+
+    it('trades the inline handoff contract for length', () => {
+      expect(context).not.toContain('<handoff_contract>');
+      expect(context.length).toBeLessThan(
+        buildInlineSystemContext({
+          handoffFileAbsolutePath,
+          systemPromptFilePath,
+        }).length
+      );
     });
   });
 });

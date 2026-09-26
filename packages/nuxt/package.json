@@ -68,6 +68,7 @@
     "semver": "catalog:"
   },
   "devDependencies": {
+    "nuxt": "^3.21.10",
     "nx": "workspace:*"
   },
   "peerDependencies": {

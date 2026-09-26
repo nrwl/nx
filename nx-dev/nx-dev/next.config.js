@@ -31,6 +31,9 @@ module.exports = withNx({
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   experimental: {
     cpus: 1,
     outputFileTracingExcludes: {
@@ -99,6 +102,12 @@ module.exports = withNx({
       {
         source: '/llms-full.txt',
         destination: `${astroDocsUrl}/docs/llms-full.txt`,
+      },
+      // Agent Skills Discovery requires the index at the apex; the mirror is
+      // served from astro-docs with the other agent-facing endpoints.
+      {
+        source: '/.well-known/agent-skills/:path*',
+        destination: `${astroDocsUrl}/docs/.well-known/agent-skills/:path*`,
       },
     ];
 

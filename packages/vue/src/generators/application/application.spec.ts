@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -11,11 +11,12 @@ import {
   readJson,
 } from '@nx/devkit';
 
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as devkitExports from '@nx/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
-import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { PackageManagerCommands } from '@nx/devkit/internal';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 
 describe('application generator', () => {
   let tree: Tree;
@@ -39,6 +40,26 @@ describe('application generator', () => {
     }
   });
 
+  it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      applicationGenerator(tree, { ...options, style: 'scss' })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]@parcel\/watcher['"]: false/
+    );
+  });
+
+  it('should not record a @parcel/watcher decision without scss', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      applicationGenerator(tree, { ...options, style: 'css' })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+      '@parcel/watcher'
+    );
+  });
+
   it('should run successfully', async () => {
     await applicationGenerator(tree, options);
     const config = readProjectConfiguration(tree, 'test');
@@ -57,6 +78,7 @@ describe('application generator', () => {
     });
     updateNxJson(tree, nxJson);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       ...options,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'playwright',
@@ -78,6 +100,7 @@ describe('application generator', () => {
 
     updateNxJson(tree, nxJson);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       ...options,
       bundler: 'rsbuild',
       unitTestRunner: 'vitest',
@@ -147,6 +170,7 @@ describe('application generator', () => {
     });
     updateNxJson(tree, nxJson);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       ...options,
       addPlugin: true,
       unitTestRunner: 'vitest',

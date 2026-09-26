@@ -19,11 +19,15 @@ title="Applying Module Boundaries"
 
 Nx offers two complementary approaches to enforce module boundaries:
 
-**ESLint Integration** - For JavaScript/TypeScript projects, enforce boundaries on code imports using the `@nx/enforce-module-boundaries` ESLint rule. This checks TypeScript imports and `package.json` dependencies during linting.
+**Lint rule integration** - For JavaScript/TypeScript projects, enforce boundaries on code imports with a lint rule for ESLint or Oxlint. This checks TypeScript imports and `package.json` dependencies during linting.
 
 **Language-Agnostic Conformance** - For any project type (e.g. Java, Python, PHP, JavaScript, etc.), use the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/conformance). This rule checks dependencies in the Nx graph during `nx conformance:check`. Requires [Nx Enterprise plan](https://nx.dev/enterprise).
 
 Both approaches use the same tag-based constraint system described below.
+
+Say `client` and `admin` may depend on a shared `utils` library, but `utils` must not import from either of them. The lint rule and the conformance check both report the dependency that crosses that boundary.
+
+![utils importing from client is reported as a violation](../../../assets/features/module-boundaries-violation.svg)
 
 ## Tags
 
@@ -98,7 +102,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 
 Once you have tagged your projects, configure the dependency constraints based on your chosen approach:
 
-{% tabs syncKey="eslint-config-preference" %}
+{% tabs syncKey="boundary-enforcement" %}
 {% tabitem label="ESLint" %}
 
 For JavaScript/TypeScript projects, configure the `@nx/enforce-module-boundaries` ESLint rule:
@@ -195,6 +199,51 @@ tagged with "scoped:shared" or "scope:admin".
 ```
 
 Read more about [ESLint rule options](/docs/kb/enforce-module-boundaries).
+
+{% /tabitem %}
+{% tabitem label="Oxlint" %}
+
+For JavaScript/TypeScript projects, configure the `@nx/enforce-module-boundaries` rule from [`@nx/oxlint`](/docs/technologies/oxlint/introduction):
+
+{% aside type="caution" title="Experimental" %}
+Module boundaries on Oxlint depend on the Oxlint JavaScript plugin API. Oxlint excludes that API from its semantic versioning policy, so it can change in any release.
+{% /aside %}
+
+```shell
+nx add @nx/oxlint
+```
+
+Register the plugin and configure the rule in `.oxlintrc.json`:
+
+```json
+{
+  "jsPlugins": ["@nx/oxlint/boundaries-plugin"],
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": [],
+        "depConstraints": [
+          {
+            "sourceTag": "scope:shared",
+            "onlyDependOnLibsWithTags": ["scope:shared"]
+          },
+          {
+            "sourceTag": "scope:admin",
+            "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          },
+          {
+            "sourceTag": "scope:client",
+            "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Read more about [rule options](/docs/kb/enforce-module-boundaries).
 
 {% /tabitem %}
 {% tabitem label="Conformance" %}

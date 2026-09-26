@@ -3,20 +3,23 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './upgrade-react-native-projects';
 import * as nxDevkitConfigUtils from '@nx/devkit/internal';
 import * as path from 'path';
+import { execSync as realExecSync } from 'child_process';
+import type { Mock } from 'vitest';
 
 // Mock execSync
-jest.mock('child_process', () => ({
-  execSync: jest.fn(),
-  exec: jest.fn(),
+vi.mock('child_process', () => ({
+  execSync: vi.fn(),
+  exec: vi.fn(),
+  execFile: vi.fn(),
 }));
 
 describe('upgrade-react-native-projects', () => {
   let tree: Tree;
-  const { execSync } = require('child_process');
+  const execSync = realExecSync as unknown as Mock;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create a minimal tsconfig.base.json at the workspace root for loadConfigFile
     tree.write(
@@ -31,9 +34,8 @@ describe('upgrade-react-native-projects', () => {
     );
 
     // Mock loadConfigFile to read from the in-memory tree
-    jest
-      .spyOn(nxDevkitConfigUtils, 'loadConfigFile')
-      .mockImplementation(async (filePath: string) => {
+    vi.spyOn(nxDevkitConfigUtils, 'loadConfigFile').mockImplementation(
+      async (filePath: string) => {
         // Convert absolute path to relative path for tree.read
         const relativePath = path.relative(tree.root, filePath);
 
@@ -65,11 +67,12 @@ describe('upgrade-react-native-projects', () => {
           }
         }
         return null; // Should not reach here for valid app config files
-      });
+      }
+    );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   function createReactNativeProject(

@@ -1,7 +1,6 @@
 import type { BuilderOutput } from '@angular-devkit/architect';
 import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { assertPackageIsInstalled } from '../utilities/builder-package';
 import {
@@ -11,6 +10,7 @@ import {
 import type { ApplicationExecutorOptions } from './schema';
 import { normalizeOptions } from './utils/normalize-options';
 import { validateOptions } from './utils/validate-options';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
 
 export default async function* applicationExecutor(
   options: ApplicationExecutorOptions,

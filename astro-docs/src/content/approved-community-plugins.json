@@ -150,6 +150,11 @@
     "url": "https://github.com/enio-ireland/enio/tree/develop/packages/typedoc#readme"
   },
   {
+    "name": "@hyperfrontend/features",
+    "description": "SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.",
+    "url": "https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/features"
+  },
+  {
     "name": "@nxext/svelte",
     "description": "Nx plugin to use Svelte within nx workspaces",
     "url": "https://github.com/nxext/nx-extensions/tree/master/packages/svelte"
@@ -563,5 +568,15 @@
     "name": "@anarchitects/nx-typeorm",
     "description": "Nx plugin for TypeORM integration in Nx backend applications and libraries.",
     "url": "https://github.com/anarchitects/anarchitecture-plugins/tree/main/packages/typeorm"
+  },
+  {
+    "name": "nx-domainify",
+    "description": "Nx plugin that scaffolds Angular libraries using a domain-driven layout and ESLint module-boundary tags.",
+    "url": "https://github.com/wizardnet972/nx-domainify"
+  },
+  {
+    "name": "@itssky/nx-sonar",
+    "url": "https://github.com/xItsSky/nx-sonar",
+    "description": "A Nx plugin that runs SonarQube or SonarCloud scans on any project in your workspace"
   }
 ]

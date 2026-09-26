@@ -124,6 +124,64 @@ describe('addPlugin', () => {
     });
   });
 
+  it('should add the plugin when inferred projects resolve to conflicting names', async () => {
+    // When a single plugin runs in isolation, the project.json plugin does
+    // not run, so inferred projects might not resolve to their real,
+    // unique names. Any resulting duplicate-name conflict is irrelevant to
+    // determining the plugin options and should not fail the generator.
+    await fs.createFiles({
+      'libs/a/ui/project.json': '{}',
+      'libs/b/ui/project.json': '{}',
+      'libs/a/ui/next.config.js': '',
+      'libs/b/ui/next.config.js': '',
+    });
+    createNodes = [
+      '**/next.config.{ts,js,cjs,mjs}',
+      (_, { targetName }) => [
+        [
+          'libs/a/ui/next.config.js',
+          {
+            projects: {
+              'libs/a/ui': {
+                root: 'libs/a/ui',
+                targets: { [targetName]: { command: 'next build' } },
+              },
+            },
+          },
+        ],
+        [
+          'libs/b/ui/next.config.js',
+          {
+            projects: {
+              'libs/b/ui': {
+                root: 'libs/b/ui',
+                targets: { [targetName]: { command: 'next build' } },
+              },
+            },
+          },
+        ],
+      ],
+    ];
+
+    await addPlugin(
+      tree,
+      graph,
+      '@nx/next/plugin',
+      createNodes,
+      {
+        targetName: ['build'],
+      },
+      false
+    );
+
+    expect(readJson(tree, 'nx.json').plugins).toContainEqual({
+      plugin: '@nx/next/plugin',
+      options: {
+        targetName: 'build',
+      },
+    });
+  });
+
   it('should throw an error if no non-conflicting options are provided', async () => {
     graph.nodes.app1.data.targets.build = {};
 

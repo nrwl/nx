@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { recordInitWrite } from '../format';
 import { readFileSync, constants as FsConstants } from 'fs';
 import * as path from 'path';
 import { valid } from 'semver';
@@ -104,6 +105,10 @@ export function writeMinimalNxJson(host: Tree, version: string) {
         version: normalizeVersionForNxJson('nx', version),
       },
     });
+    recordInitWrite('nx.json');
+    // Only this file. The wrapper scripts written by `generateDotNxSetup`
+    // above (`.nx/nxw.js`, `nx`, `nx.bat`) are deliberately left out: they are
+    // vendored artifacts, and two of them have no formatter at all.
   }
 }
 

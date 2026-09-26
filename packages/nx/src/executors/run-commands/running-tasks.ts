@@ -14,12 +14,45 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
+import type { Task } from '../../config/task-graph';
 import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
+import { output as cliOutput } from '../../utils/output';
 import {
   NormalizedRunCommandsOptions,
   RunCommandsCommandOptions,
 } from './run-commands.impl';
+
+/**
+ * The one place this file puts task output on the terminal.
+ *
+ * Deliberately write-only: recording a chunk and printing it are separate steps
+ * whose ORDER matters at some call sites - the data handlers notify output
+ * listeners between the two - so a helper that bundled them would silently
+ * reorder the terminal write relative to those listeners. What is worth
+ * funnelling is the write itself, because it carries an invariant: anything
+ * reaching the terminal has to go through `cliOutput` or
+ * {@link CLIOutput.atLineStart} goes stale, and `addColorAndPrefix` splits on
+ * newlines without ever appending one, so these chunks routinely end mid-line.
+ */
+function streamChunk(
+  chunk: string,
+  streamOutput: boolean,
+  target: NodeJS.WriteStream = process.stdout
+) {
+  if (streamOutput) {
+    cliOutput.writeTaskOutputChunk(chunk, target);
+  }
+}
+
+/**
+ * The non-zero-exit warning, emitted from three call sites that each keep their
+ * output in a different accumulator. Deliberately has no trailing newline, so
+ * whatever prints next has to account for the cursor being mid-line.
+ */
+function commandExitedNonZeroWarning(command: string): string {
+  return `Warning: command "${command}" exited with non-zero status code`;
+}
 
 export class ParallelRunningTasks implements RunningTask {
   private readonly childProcesses: RunningNodeProcess[];
@@ -38,7 +71,7 @@ export class ParallelRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    taskId: string
+    task: Pick<Task, 'id' | 'ultracache'>
   ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
@@ -50,7 +83,7 @@ export class ParallelRunningTasks implements RunningTask {
           options.readyWhenStatus,
           options.streamOutput,
           options.envFile,
-          taskId
+          task
         )
     );
     this.readyWhenStatus = options.readyWhenStatus;
@@ -130,11 +163,9 @@ export class ParallelRunningTasks implements RunningTask {
       );
 
       if (code !== 0) {
-        const output = `Warning: command "${childProcess.command}" exited with non-zero status code`;
-        terminalOutput += output;
-        if (this.streamOutput) {
-          process.stderr.write(output);
-        }
+        const warning = commandExitedNonZeroWarning(childProcess.command);
+        terminalOutput += warning;
+        streamChunk(warning, this.streamOutput, process.stderr);
       }
 
       this.emitExit(code, terminalOutput);
@@ -177,11 +208,11 @@ export class ParallelRunningTasks implements RunningTask {
 
       if (hasFailure && failureDetails) {
         // Add failure message
-        const output = `Warning: command "${failureDetails.childProcess.command}" exited with non-zero status code`;
-        terminalOutput += output;
-        if (this.streamOutput) {
-          process.stderr.write(output);
-        }
+        const warning = commandExitedNonZeroWarning(
+          failureDetails.childProcess.command
+        );
+        terminalOutput += warning;
+        streamChunk(warning, this.streamOutput, process.stderr);
 
         this.emitExit(1, terminalOutput);
       } else {
@@ -221,7 +252,7 @@ export class SeriallyRunningTasks implements RunningTask {
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
     private readonly tuiEnabled: boolean,
-    private readonly taskId: string
+    private readonly task: Pick<Task, 'id' | 'ultracache'>
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -294,7 +325,7 @@ export class SeriallyRunningTasks implements RunningTask {
         options.color,
         calculateCwd(options.cwd, context),
         options.processEnv ?? options.env ?? {},
-        this.taskId,
+        this.task,
         options.usePty,
         options.streamOutput,
         options.tty,
@@ -312,11 +343,9 @@ export class SeriallyRunningTasks implements RunningTask {
       this.terminalOutputChunks.push(terminalOutput);
       this.code = code;
       if (code !== 0) {
-        const output = `Warning: command "${c.command}" exited with non-zero status code`;
-        if (options.streamOutput) {
-          process.stderr.write(output);
-        }
-        this.terminalOutputChunks.push(output);
+        const warning = commandExitedNonZeroWarning(c.command);
+        streamChunk(warning, options.streamOutput, process.stderr);
+        this.terminalOutputChunks.push(warning);
 
         // Stop running commands
         break;
@@ -329,7 +358,7 @@ export class SeriallyRunningTasks implements RunningTask {
     color: boolean,
     cwd: string,
     env: Record<string, string>,
-    taskId: string,
+    task: Pick<Task, 'id' | 'ultracache'>,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
@@ -361,7 +390,7 @@ export class SeriallyRunningTasks implements RunningTask {
       // Skip registration if we're in a forked executor - the fork wrapper already registered
       const pid = pseudoTtyProcess.getPid();
       if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-        registerTaskProcessStart(taskId, pid);
+        registerTaskProcessStart(task, pid);
       }
 
       return pseudoTtyProcess;
@@ -375,12 +404,17 @@ export class SeriallyRunningTasks implements RunningTask {
       [],
       streamOutput,
       envFile,
-      taskId
+      task
     );
   }
 }
 
 class RunningNodeProcess implements RunningTask {
+  /** This class's writes, funnelled through {@link streamChunk}. */
+  private stream(chunk: string, target: NodeJS.WriteStream = process.stdout) {
+    streamChunk(chunk, this.streamOutput, target);
+  }
+
   private terminalOutputChunks: string[] = [];
   private childProcess: ChildProcess;
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
@@ -401,17 +435,15 @@ class RunningNodeProcess implements RunningTask {
     cwd: string,
     env: Record<string, string>,
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
-    streamOutput = true,
+    private readonly streamOutput = true,
     envFile: string,
-    private taskId: string
+    private task: Pick<Task, 'id' | 'ultracache'>
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
     const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
     this.terminalOutputChunks.push(header);
-    if (streamOutput) {
-      process.stdout.write(header);
-    }
+    this.stream(header);
     this.childProcess = spawn(commandConfig.command, [], {
       shell: true,
       detached: process.platform !== 'win32',
@@ -430,10 +462,10 @@ class RunningNodeProcess implements RunningTask {
     // Register process for metrics collection
     // Skip registration if we're in a forked executor - the fork wrapper already registered
     if (this.childProcess.pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-      registerTaskProcessStart(taskId, this.childProcess.pid);
+      registerTaskProcessStart(this.task, this.childProcess.pid);
     }
 
-    this.addListeners(commandConfig, streamOutput);
+    this.addListeners(commandConfig);
   }
 
   getResults(): Promise<{ code: number; terminalOutput: string }> {
@@ -502,10 +534,7 @@ class RunningNodeProcess implements RunningTask {
     }
   }
 
-  private addListeners(
-    commandConfig: RunCommandsCommandOptions,
-    streamOutput: boolean
-  ) {
+  private addListeners(commandConfig: RunCommandsCommandOptions) {
     // Named handlers so they can be removed when the child exits.
     // Otherwise each RunningNodeProcess leaks process listeners; with
     // many run-commands tasks this triggers MaxListenersExceededWarning.
@@ -541,9 +570,8 @@ class RunningNodeProcess implements RunningTask {
       this.terminalOutputChunks.push(output);
       this.triggerOutputListeners(output);
 
-      if (streamOutput) {
-        process.stdout.write(output);
-      }
+      this.stream(output);
+
       if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, data)) {
         for (const cb of this.exitCallbacks) {
           cb(0, this.terminalOutputChunks.join(''));
@@ -556,9 +584,8 @@ class RunningNodeProcess implements RunningTask {
       this.terminalOutputChunks.push(output);
       this.triggerOutputListeners(output);
 
-      if (streamOutput) {
-        process.stderr.write(output);
-      }
+      this.stream(output, process.stderr);
+
       if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, err)) {
         for (const cb of this.exitCallbacks) {
           cb(1, this.terminalOutputChunks.join(''));
@@ -568,9 +595,7 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.on('error', (err) => {
       const output = addColorAndPrefix(err.toString(), commandConfig);
       this.terminalOutputChunks.push(output);
-      if (streamOutput) {
-        process.stderr.write(output);
-      }
+      this.stream(output, process.stderr);
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
       removeProcessListeners();
@@ -611,7 +636,7 @@ class RunningNodeProcess implements RunningTask {
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
   context: ExecutorContext,
-  taskId: string
+  task: Pick<Task, 'id' | 'ultracache'>
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(
@@ -629,7 +654,7 @@ export async function runSingleCommandWithPseudoTerminal(
   // Skip registration if we're in a forked executor - the fork wrapper already registered
   const pid = pseudoTtyProcess.getPid();
   if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-    registerTaskProcessStart(taskId, pid);
+    registerTaskProcessStart(task, pid);
   }
 
   registerProcessListener(pseudoTtyProcess, pseudoTerminal);

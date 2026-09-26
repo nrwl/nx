@@ -6,9 +6,9 @@ import libraryGenerator from '../library/library';
 import storybookConfigurationGenerator from './configuration';
 
 // nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
@@ -17,13 +17,13 @@ describe('react:storybook-configuration', () => {
   let appTree;
 
   beforeEach(async () => {
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.resetModules();
-    jest.restoreAllMocks();
+    vi.resetModules();
+    vi.restoreAllMocks();
   });
 
   it('should configure everything and install correct dependencies', async () => {

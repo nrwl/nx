@@ -1,6 +1,6 @@
 export {
   CompositeLifeCycle,
   TaskMetadata,
-  TaskResult,
   LifeCycle,
-} from 'nx/src/tasks-runner/life-cycle';
+} from '@nx/devkit/internal';
+export { TaskResult } from '@nx/devkit';

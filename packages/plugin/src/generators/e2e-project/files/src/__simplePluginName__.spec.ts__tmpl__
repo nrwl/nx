@@ -5,6 +5,9 @@ import { mkdirSync, rmSync } from 'fs';
 describe('<%= pluginName %>', () => {
   let projectDirectory: string;
 
+  // This hook shells out synchronously twice, so its budget has to cover both
+  // installs on a cold package manager cache. Otherwise work that succeeded
+  // still fails on return.
   beforeAll(() => {
     projectDirectory = createTestProject();
 
@@ -15,7 +18,7 @@ describe('<%= pluginName %>', () => {
       stdio: 'inherit',
       env: process.env,
     });
-  }, 30_000);
+  }, 300_000);
 
   afterAll(() => {
     if (projectDirectory) {

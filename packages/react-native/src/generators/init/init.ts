@@ -1,7 +1,8 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -110,6 +111,15 @@ export async function reactNativeInitGeneratorInternal(
 
 export function updateDependencies(host: Tree, schema: Schema) {
   const rnVersions = versions(host);
+  // @nx/react-native optionally depends on @nx/detox, which depends on
+  // @nx/jest, so jest-resolve is installed even without a jest setup. It
+  // depends on unrs-resolver and, from jest 30.5.0, on a jest-haste-map that
+  // depends on @parcel/watcher. Neither needs its build to run.
+  acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+    '@parcel/watcher': false,
+    'unrs-resolver': false,
+  });
+
   return addDependenciesToPackageJson(
     host,
     {

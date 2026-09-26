@@ -14,6 +14,12 @@ interface E2EWebServerDefaultValues {
   defaultE2EWebServerAddress: string;
   defaultE2ECiBaseUrl: string;
   defaultE2EPort: number;
+  /**
+   * Set when the port was explicitly requested rather than defaulted. The caller has
+   * already applied it to both URLs above, so this helper must not re-derive from
+   * targetDefaults — doing so overrides the request and desyncs the two URLs.
+   */
+  e2EPortIsExplicit?: boolean;
 }
 
 interface E2EWebServerPluginOptions {
@@ -90,14 +96,15 @@ async function getE2EWebServerInfoForPlugin(
     foundPlugin.options[pluginOptions.serveTargetName] ??
     defaultValues.defaultServeTargetName;
 
-  e2ePort =
-    readTargetDefaultsForTarget(serveTargetName, nxJson.targetDefaults)?.options
-      ?.port ?? e2ePort;
+  if (!defaultValues.e2EPortIsExplicit) {
+    e2ePort =
+      readTargetDefaultsForTarget(serveTargetName, nxJson.targetDefaults)
+        ?.options?.port ?? e2ePort;
+  }
 
-  const e2eWebServerAddress = defaultValues.defaultE2EWebServerAddress.replace(
-    /:\d+/,
-    `:${e2ePort}`
-  );
+  const e2eWebServerAddress = defaultValues.e2EPortIsExplicit
+    ? defaultValues.defaultE2EWebServerAddress
+    : defaultValues.defaultE2EWebServerAddress.replace(/:\d+/, `:${e2ePort}`);
 
   return {
     e2eWebServerAddress,

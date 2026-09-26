@@ -10,6 +10,13 @@
     }
   },
   "targets": {
+    "check-native-wasm": {
+      "cache": true,
+      "inputs": ["native", "{workspaceRoot}/scripts/check-wasm-target.sh"],
+      "outputs": [],
+      "parallelism": false,
+      "command": "./scripts/check-wasm-target.sh"
+    },
     "build-native-wasm": {
       "cache": true,
       "inputs": ["native"],
@@ -100,9 +107,6 @@
       }
     },
     "test-native": {},
-    "test": {
-      "inputs": ["...", "{workspaceRoot}/scripts/patched-jest-resolver.js"]
-    },
     "format-native": {
       "command": "cargo fmt",
       "cache": true,

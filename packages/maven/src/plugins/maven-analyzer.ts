@@ -1,14 +1,20 @@
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { spawn } from 'child_process';
 import { logger, readJsonFile } from '@nx/devkit';
-import { isCI } from 'nx/src/devkit-internals';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenAnalysisData, MavenPluginOptions } from './types';
 import { detectMavenExecutable } from '../utils/detect-maven-executable';
-import treeKill from 'tree-kill';
+import {
+  isCI,
+  killChildOnHostExit,
+  killProcessTreeGraceful,
+  safeSpawn,
+  workspaceDataDirectory,
+} from '@nx/devkit/internal';
 
 const DEFAULT_ANALYSIS_TIMEOUT_SECONDS = isCI() ? 600 : 120;
+// setTimeout silently clamps a delay past the 32-bit signed max to 1ms, which
+// would abort immediately — the opposite of what a large value asks for.
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
 
 let currentAbortController: AbortController | undefined;
 
@@ -23,12 +29,12 @@ export function cancelPendingMavenAnalysis(): void {
   }
 }
 
-function getAnalysisTimeoutMs(): number {
+export function getAnalysisTimeoutMs(): number {
   const envTimeout = process.env.NX_MAVEN_ANALYSIS_TIMEOUT;
   if (envTimeout) {
     const parsed = Number(envTimeout);
     if (!Number.isNaN(parsed) && parsed > 0) {
-      return parsed * 1000;
+      return Math.min(parsed * 1000, MAX_TIMEOUT_MS);
     }
   }
   return DEFAULT_ANALYSIS_TIMEOUT_SECONDS * 1000;
@@ -102,18 +108,21 @@ export async function runMavenAnalysis(
   logger.verbose(`[Maven Analyzer] Spawning Maven process...`);
   try {
     await new Promise<void>((resolve, reject) => {
-      const child = spawn(mavenExecutable, mavenArgs, {
+      const child = safeSpawn(mavenExecutable, mavenArgs, {
         cwd: workspaceRoot,
-        windowsHide: true,
-        shell: true,
         stdio: 'pipe', // Always use pipe so we can control output
       });
+      // A plugin worker torn down by `nx reset` would otherwise orphan the build.
+      killChildOnHostExit(child);
 
-      // Use tree-kill on abort to kill the entire process tree
+      // On abort, kill the entire process tree and settle immediately — a
+      // wedged process that outlives the kill signal would otherwise keep
+      // this promise pending and the abort error would never surface.
       const onAbort = () => {
         if (child.pid) {
-          treeKill(child.pid);
+          killProcessTreeGraceful(child.pid).catch(() => {});
         }
+        reject(new Error('Maven analysis aborted'));
       };
       signal.addEventListener('abort', onAbort, { once: true });
 

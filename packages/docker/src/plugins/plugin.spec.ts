@@ -1,7 +1,7 @@
 import { CreateNodesContext, workspaceRoot } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodes, getProjectNameFromPath } from './plugin';
-import * as gitUtils from 'nx/src/utils/git-utils';
+import { getLatestCommitSha } from '@nx/devkit/internal';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
@@ -27,10 +27,9 @@ describe('@nx/docker', () => {
   let tempFs: TempFs;
   let cwd: string;
 
-  const mockGetLatestCommitSha =
-    gitUtils.getLatestCommitSha as jest.MockedFunction<
-      typeof gitUtils.getLatestCommitSha
-    >;
+  const mockGetLatestCommitSha = getLatestCommitSha as jest.MockedFunction<
+    typeof getLatestCommitSha
+  >;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -781,6 +780,116 @@ describe('@nx/docker', () => {
   });
 
   describe('pattern interpolation', () => {
+    it('should not read Git when targets do not use Git tokens', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{"name":"my-project"}',
+      });
+
+      await createNodesFunction(['proj/Dockerfile'], {}, context);
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['{projectName}', '{imageRef}', '{unknown}'],
+            configurations: {
+              ci: { args: ['{projectRoot}'] },
+            },
+          },
+        },
+        context
+      );
+
+      expect(results[0][1].projects.proj.targets.build.options.args).toEqual([
+        '--tag proj',
+        'my-project',
+        'proj',
+        '{unknown}',
+      ]);
+      expect(mockGetLatestCommitSha).not.toHaveBeenCalled();
+    });
+
+    it.each(['abc123456789', null])(
+      'should resolve repeated Git tokens once per target when HEAD is %s',
+      async (sha) => {
+        mockGetLatestCommitSha.mockReturnValue(sha);
+        await tempFs.createFiles({
+          'proj/Dockerfile': 'FROM node:18',
+        });
+
+        const results = await createNodesFunction(
+          ['proj/Dockerfile'],
+          {
+            buildTarget: {
+              name: 'build',
+              configurations: {
+                ci: {
+                  args: ['{commitSha}', '{shortCommitSha}', '{commitSha}'],
+                },
+              },
+            },
+          },
+          context
+        );
+
+        expect(
+          results[0][1].projects.proj.targets.build.configurations.ci.args
+        ).toEqual([
+          '--tag proj',
+          String(sha),
+          String(sha ? sha.slice(0, 7) : null),
+          String(sha),
+        ]);
+        expect(mockGetLatestCommitSha).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    it('should keep Git observations separate for targets and cache misses', async () => {
+      await tempFs.createFiles({ 'proj/Dockerfile': 'FROM node:18' });
+      mockGetLatestCommitSha
+        .mockReturnValueOnce('build-first')
+        .mockReturnValueOnce('run-first')
+        .mockReturnValueOnce('build-second')
+        .mockReturnValueOnce('run-second');
+      const options = {
+        buildTarget: { name: 'build', args: ['{commitSha}'] },
+        runTarget: { name: 'run', args: ['{commitSha}'] },
+      };
+
+      const first = await createNodesFunction(
+        ['proj/Dockerfile'],
+        options,
+        context
+      );
+      const cached = await createNodesFunction(
+        ['proj/Dockerfile'],
+        options,
+        context
+      );
+      expect(cached).toEqual(first);
+      expect(mockGetLatestCommitSha).toHaveBeenCalledTimes(2);
+
+      const second = await createNodesFunction(
+        ['proj/Dockerfile'],
+        { ...options, buildTarget: { ...options.buildTarget, cwd: '.' } },
+        context
+      );
+      expect(first[0][1].projects.proj.targets.build.options.args).toContain(
+        'build-first'
+      );
+      expect(first[0][1].projects.proj.targets.run.options.args).toEqual([
+        'run-first',
+      ]);
+      expect(second[0][1].projects.proj.targets.build.options.args).toContain(
+        'build-second'
+      );
+      expect(second[0][1].projects.proj.targets.run.options.args).toEqual([
+        'run-second',
+      ]);
+      expect(mockGetLatestCommitSha).toHaveBeenCalledTimes(4);
+    });
+
     it('should not throw when commitSha is null', async () => {
       mockGetLatestCommitSha.mockReturnValue(null);
       await tempFs.createFiles({

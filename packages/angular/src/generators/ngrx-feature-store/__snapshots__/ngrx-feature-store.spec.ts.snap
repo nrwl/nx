@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ngrx-feature-store NgModule should generate into a subdirectory correctly when a path is passed as the name 1`] = `
+exports[`ngrx-feature-store > NgModule > should generate into a subdirectory correctly when a path is passed as the name 1`] = `
 "export * from './lib/+state/users/users.facade';
 export * from './lib/+state/users/users.models';
 export * from './lib/+state/users/users.selectors';
@@ -10,7 +10,7 @@ export * from './lib/feature-module-module';
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate into a subdirectory correctly when a path is passed as the name 2`] = `
+exports[`ngrx-feature-store > NgModule > should generate into a subdirectory correctly when a path is passed as the name 2`] = `
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
@@ -30,7 +30,7 @@ export const loadUsersFailure = createAction(
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate into a subdirectory correctly when a path is passed as the name 3`] = `
+exports[`ngrx-feature-store > NgModule > should generate into a subdirectory correctly when a path is passed as the name 3`] = `
 "import { Injectable, inject } from '@angular/core';
 import { createEffect, Actions, ofType } from '@ngrx/effects';
 import { switchMap, catchError, of } from 'rxjs';
@@ -54,7 +54,7 @@ export class UsersEffects {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate into a subdirectory correctly when a path is passed as the name 4`] = `
+exports[`ngrx-feature-store > NgModule > should generate into a subdirectory correctly when a path is passed as the name 4`] = `
 "import { Injectable, inject } from '@angular/core';
 import { select, Store, Action } from '@ngrx/store';
 
@@ -85,7 +85,7 @@ export class UsersFacade {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate into a subdirectory correctly when a path is passed as the name 5`] = `
+exports[`ngrx-feature-store > NgModule > should generate into a subdirectory correctly when a path is passed as the name 5`] = `
 "import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 import { createReducer, on, Action } from '@ngrx/store';
 
@@ -130,7 +130,7 @@ export function usersReducer(state: UsersState | undefined, action: Action) {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate into a subdirectory correctly when a path is passed as the name 6`] = `
+exports[`ngrx-feature-store > NgModule > should generate into a subdirectory correctly when a path is passed as the name 6`] = `
 "import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
@@ -172,7 +172,7 @@ export const selectEntity = createSelector(
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate into a subdirectory correctly when a path is passed as the name 7`] = `
+exports[`ngrx-feature-store > NgModule > should generate into a subdirectory correctly when a path is passed as the name 7`] = `
 "import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StoreModule } from '@ngrx/store';
@@ -189,7 +189,7 @@ export class FeatureModuleModule {}
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 1`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 1`] = `
 "import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StoreModule } from '@ngrx/store';
@@ -210,7 +210,7 @@ export class FeatureModuleModule {}
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 2`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 2`] = `
 "import { Injectable, inject } from '@angular/core';
 import { select, Store, Action } from '@ngrx/store';
 
@@ -241,7 +241,7 @@ export class UsersFacade {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 3`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 3`] = `
 "import { NgModule } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
@@ -252,12 +252,7 @@ import * as UsersActions from './users.actions';
 import { UsersEffects } from './users.effects';
 import { UsersFacade } from './users.facade';
 import { UsersEntity } from './users.models';
-import {
-  USERS_FEATURE_KEY,
-  UsersState,
-  initialUsersState,
-  usersReducer,
-} from './users.reducer';
+import { USERS_FEATURE_KEY, UsersState, initialUsersState, usersReducer } from './users.reducer';
 import * as UsersSelectors from './users.selectors';
 
 interface TestSchema {
@@ -284,11 +279,7 @@ describe('UsersFacade', () => {
       class CustomFeatureModule {}
 
       @NgModule({
-        imports: [
-          StoreModule.forRoot({}),
-          EffectsModule.forRoot([]),
-          CustomFeatureModule,
-        ],
+        imports: [StoreModule.forRoot({}), EffectsModule.forRoot([]), CustomFeatureModule],
       })
       class RootModule {}
       TestBed.configureTestingModule({ imports: [RootModule] });
@@ -343,7 +334,7 @@ describe('UsersFacade', () => {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 4`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 4`] = `
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
@@ -361,7 +352,7 @@ export const loadUsersFailure = createAction(
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 5`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 5`] = `
 "import { Injectable, inject } from '@angular/core';
 import { createEffect, Actions, ofType } from '@ngrx/effects';
 import { switchMap, catchError, of } from 'rxjs';
@@ -386,7 +377,7 @@ export class UsersEffects {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 6`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 6`] = `
 "import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Action } from '@ngrx/store';
@@ -404,11 +395,7 @@ describe('UsersEffects', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [],
-      providers: [
-        UsersEffects,
-        provideMockActions(() => actions),
-        provideMockStore(),
-      ],
+      providers: [UsersEffects, provideMockActions(() => actions), provideMockStore()],
     });
 
     effects = TestBed.inject(UsersEffects);
@@ -418,9 +405,7 @@ describe('UsersEffects', () => {
     it('should work', () => {
       actions = hot('-a-|', { a: UsersActions.initUsers() });
 
-      const expected = hot('-a-|', {
-        a: UsersActions.loadUsersSuccess({ users: [] }),
-      });
+      const expected = hot('-a-|', { a: UsersActions.loadUsersSuccess({ users: [] }) });
 
       expect(effects.init$).toBeObservable(expected);
     });
@@ -429,7 +414,7 @@ describe('UsersEffects', () => {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 7`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 7`] = `
 "/**
  * Interface for the 'Users' data
  */
@@ -440,7 +425,7 @@ export interface UsersEntity {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 8`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 8`] = `
 "import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 import { createReducer, on, Action } from '@ngrx/store';
 
@@ -459,8 +444,7 @@ export interface UsersPartialState {
   readonly [USERS_FEATURE_KEY]: UsersState;
 }
 
-export const usersAdapter: EntityAdapter<UsersEntity> =
-  createEntityAdapter<UsersEntity>();
+export const usersAdapter: EntityAdapter<UsersEntity> = createEntityAdapter<UsersEntity>();
 
 export const initialUsersState: UsersState = usersAdapter.getInitialState({
   // set initial required properties
@@ -469,18 +453,11 @@ export const initialUsersState: UsersState = usersAdapter.getInitialState({
 
 const reducer = createReducer(
   initialUsersState,
-  on(UsersActions.initUsers, (state) => ({
-    ...state,
-    loaded: false,
-    error: null,
-  })),
+  on(UsersActions.initUsers, (state) => ({ ...state, loaded: false, error: null })),
   on(UsersActions.loadUsersSuccess, (state, { users }) =>
     usersAdapter.setAll(users, { ...state, loaded: true }),
   ),
-  on(UsersActions.loadUsersFailure, (state, { error }) => ({
-    ...state,
-    error,
-  })),
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error })),
 );
 
 export function usersReducer(state: UsersState | undefined, action: Action) {
@@ -489,7 +466,7 @@ export function usersReducer(state: UsersState | undefined, action: Action) {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 9`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 9`] = `
 "import { Action } from '@ngrx/store';
 
 import * as UsersActions from './users.actions';
@@ -504,10 +481,7 @@ describe('Users Reducer', () => {
 
   describe('valid Users actions', () => {
     it('loadUsersSuccess should return the list of known Users', () => {
-      const users = [
-        createUsersEntity('PRODUCT-AAA'),
-        createUsersEntity('PRODUCT-zzz'),
-      ];
+      const users = [createUsersEntity('PRODUCT-AAA'), createUsersEntity('PRODUCT-zzz')];
       const action = UsersActions.loadUsersSuccess({ users });
 
       const result: UsersState = usersReducer(initialUsersState, action);
@@ -530,13 +504,12 @@ describe('Users Reducer', () => {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 10`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 10`] = `
 "import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
 // Lookup the 'Users' feature state managed by NgRx
-export const selectUsersState =
-  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+export const selectUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
 
 const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
@@ -550,14 +523,12 @@ export const selectUsersError = createSelector(
   (state: UsersState) => state.error,
 );
 
-export const selectAllUsers = createSelector(
-  selectUsersState,
-  (state: UsersState) => selectAll(state),
+export const selectAllUsers = createSelector(selectUsersState, (state: UsersState) =>
+  selectAll(state),
 );
 
-export const selectUsersEntities = createSelector(
-  selectUsersState,
-  (state: UsersState) => selectEntities(state),
+export const selectUsersEntities = createSelector(selectUsersState, (state: UsersState) =>
+  selectEntities(state),
 );
 
 export const selectSelectedId = createSelector(
@@ -573,13 +544,9 @@ export const selectEntity = createSelector(
 "
 `;
 
-exports[`ngrx-feature-store NgModule should generate the files with the correct content 11`] = `
+exports[`ngrx-feature-store > NgModule > should generate the files with the correct content 11`] = `
 "import { UsersEntity } from './users.models';
-import {
-  usersAdapter,
-  UsersPartialState,
-  initialUsersState,
-} from './users.reducer';
+import { usersAdapter, UsersPartialState, initialUsersState } from './users.reducer';
 import * as UsersSelectors from './users.selectors';
 
 describe('Users Selectors', () => {
@@ -643,7 +610,7 @@ describe('Users Selectors', () => {
 "
 `;
 
-exports[`ngrx-feature-store NgModule should have the correct entry point when --barrels=false 1`] = `
+exports[`ngrx-feature-store > NgModule > should have the correct entry point when --barrels=false 1`] = `
 "export * from './lib/+state/users.facade';
 export * from './lib/+state/users.models';
 export * from './lib/+state/users.selectors';
@@ -653,7 +620,7 @@ export * from './lib/feature-module-module';
 "
 `;
 
-exports[`ngrx-feature-store NgModule should have the correct entry point when --barrels=true 1`] = `
+exports[`ngrx-feature-store > NgModule > should have the correct entry point when --barrels=true 1`] = `
 "import * as UsersActions from './lib/+state/users.actions';
 
 import * as UsersFeature from './lib/+state/users.reducer';
@@ -669,7 +636,7 @@ export * from './lib/feature-module-module';
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 1`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 1`] = `
 "import { Injectable, inject } from '@angular/core';
 import { select, Store, Action } from '@ngrx/store';
 
@@ -700,7 +667,7 @@ export class UsersFacade {
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 2`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 2`] = `
 "import { NgModule } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
@@ -803,7 +770,7 @@ describe('UsersFacade', () => {
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 3`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 3`] = `
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
@@ -823,7 +790,7 @@ export const loadUsersFailure = createAction(
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 4`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 4`] = `
 "import { Injectable, inject } from '@angular/core';
 import { createEffect, Actions, ofType } from '@ngrx/effects';
 import { switchMap, catchError, of } from 'rxjs';
@@ -847,7 +814,7 @@ export class UsersEffects {
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 5`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 5`] = `
 "import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Action } from '@ngrx/store';
@@ -888,7 +855,7 @@ describe('UsersEffects', () => {
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 6`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 6`] = `
 "/**
  * Interface for the 'Users' data
  */
@@ -899,7 +866,7 @@ export interface UsersEntity {
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 7`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 7`] = `
 "import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 import { createReducer, on, Action } from '@ngrx/store';
 
@@ -944,7 +911,7 @@ export function usersReducer(state: UsersState | undefined, action: Action) {
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 8`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 8`] = `
 "import { Action } from '@ngrx/store';
 
 import * as UsersActions from './users.actions';
@@ -985,7 +952,7 @@ describe('Users Reducer', () => {
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 9`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 9`] = `
 "import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
@@ -1027,7 +994,7 @@ export const selectEntity = createSelector(
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 10`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 10`] = `
 "import { UsersEntity } from './users.models';
 import { usersAdapter, UsersPartialState, initialUsersState } from './users.reducer';
 import * as UsersSelectors from './users.selectors';
@@ -1089,7 +1056,7 @@ describe('Users Selectors', () => {
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 11`] = `
+exports[`ngrx-feature-store > Standalone APIs > should generate the files with the correct content 11`] = `
 "import { Route } from '@angular/router';
 import { Feature } from './feature/feature';
 import { provideStore, provideState } from '@ngrx/store';
@@ -1104,7 +1071,7 @@ export const featureRoutes: Route[] = [
 "
 `;
 
-exports[`ngrx-feature-store Standalone APIs should have the correct entry point when --barrels=false 1`] = `
+exports[`ngrx-feature-store > Standalone APIs > should have the correct entry point when --barrels=false 1`] = `
 "export * from './lib/+state/users.facade';
 export * from './lib/+state/users.models';
 export * from './lib/+state/users.selectors';
@@ -1115,7 +1082,7 @@ export * from './lib/lib.routes';
 export * from './lib/feature/feature';"
 `;
 
-exports[`ngrx-feature-store Standalone APIs should have the correct entry point when --barrels=true 1`] = `
+exports[`ngrx-feature-store > Standalone APIs > should have the correct entry point when --barrels=true 1`] = `
 "import * as UsersActions from './lib/+state/users.actions';
 
 import * as UsersFeature from './lib/+state/users.reducer';

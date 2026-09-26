@@ -35,13 +35,15 @@ export interface Tree {
   root: string;
 
   /**
-   * Read the contents of a file.
+   * Read the contents of a file. `null` when the file does not exist - an
+   * empty file reads as empty, not as missing.
    * @param filePath A path to a file.
    */
   read(filePath: string): Buffer | null;
 
   /**
-   * Read the contents of a file as string.
+   * Read the contents of a file as string. `null` when the file does not
+   * exist - an empty file reads as `''`, not as missing.
    * @param filePath A path to a file.
    * @param encoding the encoding for the result
    */

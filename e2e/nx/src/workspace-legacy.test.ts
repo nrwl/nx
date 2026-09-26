@@ -4,8 +4,8 @@ import {
   newProject,
   reservePort,
   runCLI,
-  runE2ETests,
   uniq,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 
 let proj: string;
@@ -30,7 +30,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     const reactApp = uniq('reactapp');
     const appPort = await reservePort();
     runCLI(
-      `generate @nx/react:app --name=${reactApp} --directory="." --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --devServerPort=${appPort} --no-interactive --linter=eslint`,
+      `generate @nx/react:app --name=${reactApp} --directory="." --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --port=${appPort} --no-interactive --linter=eslint`,
       {
         env: {
           NX_ADD_PLUGINS: 'false',
@@ -53,7 +53,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint e2e`)).not.toThrow();
-    if (runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       expect(() => runCLI(`e2e e2e`)).not.toThrow();
     }
   });

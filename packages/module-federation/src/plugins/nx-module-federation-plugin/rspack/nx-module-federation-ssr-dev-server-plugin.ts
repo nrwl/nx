@@ -24,9 +24,7 @@ import { ChildProcess, fork } from 'node:child_process';
 
 const PLUGIN_NAME = 'NxModuleFederationSSRDevServerPlugin';
 
-export class NxModuleFederationSSRDevServerPlugin
-  implements RspackPluginInstance
-{
+export class NxModuleFederationSSRDevServerPlugin implements RspackPluginInstance {
   private devServerProcess: ChildProcess | undefined;
   private nxBin = require.resolve('nx/bin/nx');
 

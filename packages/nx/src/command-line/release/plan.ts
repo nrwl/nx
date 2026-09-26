@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -309,24 +309,16 @@ async function createVersionPlanFileForBumps(
 }
 
 async function promptForVersion(message: string): Promise<string> {
-  try {
-    const reply = await prompt<{ version: string }>([
-      {
-        name: 'version',
-        message,
-        type: 'select',
-        choices: [...RELEASE_TYPES, 'none'],
-      },
-    ]);
-    return reply.version;
-  } catch {
-    output.log({
-      title: 'Cancelled version plan creation.',
-    });
-    // Ensure the cursor is always restored before exiting
-    process.stdout.write('\u001b[?25h');
-    process.exit(0);
-  }
+  return selectPrompt({
+    message,
+    choices: [...RELEASE_TYPES, 'none'],
+    onCancel: () => {
+      output.log({
+        title: 'Cancelled version plan creation.',
+      });
+      process.exit(0);
+    },
+  });
 }
 
 async function promptForMessage(versionPlanName: string): Promise<string> {
@@ -339,16 +331,12 @@ async function promptForMessage(versionPlanName: string): Promise<string> {
 
 async function _promptForMessage(versionPlanName: string): Promise<string> {
   try {
-    const reply = await prompt<{ message: string }>([
-      {
-        name: 'message',
-        message:
-          'What changelog message would you like associated with this change? (Leave blank to open an external editor for multi-line messages/easier editing)',
-        type: 'input',
-      },
-    ]);
+    const reply = await textPrompt({
+      message:
+        'What changelog message would you like associated with this change? (Leave blank to open an external editor for multi-line messages/easier editing)',
+    });
 
-    let message = reply.message.trim();
+    let message = reply.trim();
 
     if (!message.length) {
       const tmpDir = dirSync().name;

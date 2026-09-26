@@ -13,7 +13,8 @@ import type { NxArgs } from '../utils/command-line-utils';
 import { readJsonFile } from '../utils/fileutils';
 import { assertValidGitRevision } from '../utils/git-revision';
 import { getIgnoreObject } from '../utils/ignore';
-import { jsonDiff } from '../utils/json-diff';
+import { diffJson } from '../native';
+import { jsonDiff, type JsonChange } from '../utils/json-diff';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export interface Change {
@@ -64,6 +65,11 @@ const TEXT_LOCK_FILES = new Set([
 ]);
 const BINARY_LOCK_FILES = new Set(['bun.lockb']);
 
+/** Whether a touched file was deleted. Much cheaper than `getChanges()`. */
+export function isDeletedFile(file: string): boolean {
+  return !existsSync(join(workspaceRoot, file));
+}
+
 export function calculateFileChanges(
   files: string[],
   nxArgs?: NxArgs,
@@ -81,7 +87,7 @@ export function calculateFileChanges(
     return {
       file: f,
       getChanges: (): Change[] => {
-        if (!existsSync(join(workspaceRoot, f))) {
+        if (isDeletedFile(f)) {
           return [new DeletedFileChange()];
         }
 
@@ -118,7 +124,12 @@ export function calculateFileChanges(
             try {
               const atBase = readFileAtRevision(f, nxArgs.base);
               const atHead = readFileAtRevision(f, nxArgs.head);
-              return jsonDiff(JSON.parse(atBase), JSON.parse(atHead));
+              // Unset when either side is not strict JSON.
+              return (
+                (diffJson(atBase, atHead) as JsonChange[] | null) ?? [
+                  new WholeFileChange(),
+                ]
+              );
             } catch (e) {
               return [new WholeFileChange()];
             }
@@ -168,7 +179,7 @@ function defaultReadFileAtRevision(
   try {
     const filePathInGitRepository = getFilePathInGitRepository(file);
     return !revision
-      ? readFileSync(file, 'utf-8')
+      ? readFileSync(join(workspaceRoot, file), 'utf-8')
       : execFileSync(
           'git',
           ['show', `${revision}:${filePathInGitRepository}`],

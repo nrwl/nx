@@ -6,6 +6,8 @@ import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
 import java.io.File
+import java.util.Collections
+import java.util.WeakHashMap
 import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -34,6 +36,10 @@ private val kotlinCompileToolClass: Class<*>? by lazy {
 
 private fun isKotlinCompileTask(task: Task): Boolean =
     kotlinCompileToolClass?.isInstance(task) == true
+
+/** Weak Task keys, not `task.path`: paths collide across included builds. */
+private val dependentOutputPatternsCache: MutableMap<Task, Set<String>> =
+    Collections.synchronizedMap(WeakHashMap())
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -202,7 +208,11 @@ private fun dependencyOutputExtensions(task: Task): Set<String> {
  * dependentTasksOutputFiles patterns for one dependency: per-extension globs when nameable,
  * otherwise the wildcard catch-all for a declared directory output (a Copy is the common case).
  */
-private fun dependentOutputPatterns(task: Task): Set<String> {
+private fun dependentOutputPatterns(task: Task): Set<String> =
+    dependentOutputPatternsCache[task]
+        ?: computeDependentOutputPatterns(task).also { dependentOutputPatternsCache[task] = it }
+
+private fun computeDependentOutputPatterns(task: Task): Set<String> {
   val extensions = dependencyOutputExtensions(task)
   return when {
     extensions.isNotEmpty() ->
@@ -571,7 +581,12 @@ private fun getInputsForTaskImpl(
             .filterNot { nonInputDependentOutputExtensions.contains(it) }
             .map { "**/*.$it" }
 
-    val dependentPatterns = (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess)).toSet()
+    // Fail open for what screening or resolution lost: over-declaring costs a rebuild,
+    // under-declaring a stale hit.
+    val recoveredPathDeps = if (resolveDependsOn(task).unresolved > 0) setOf("**/*") else emptySet()
+
+    val dependentPatterns =
+        (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess) + recoveredPathDeps).toSet()
     // The catch-all subsumes every specific glob, so when present emit only it.
     val emittedPatterns = if ("**/*" in dependentPatterns) setOf("**/*") else dependentPatterns
     emittedPatterns.forEach { pattern ->
@@ -616,44 +631,6 @@ fun getOutputsForTask(task: Task, projectRoot: String, workspaceRoot: String): L
   }
 }
 
-fun getDependsOnTask(task: Task): Set<Task> {
-  // Try to safely get dependencies, with fallback for configuration cache issues
-  return try {
-    // First try to get dependencies from task.dependsOn property
-    val dependsOnFromProperty: Set<Task> =
-        try {
-          task.dependsOn.filterIsInstance<Task>().toSet()
-        } catch (e: Exception) {
-          task.logger.info(
-              "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}")
-          emptySet()
-        }
-
-    // Then try to get dependencies from taskDependencies (more comprehensive but riskier with
-    // config cache)
-    val dependsOnFromTaskDependencies: Set<Task> =
-        try {
-          task.taskDependencies.getDependencies(task)
-        } catch (e: UnsupportedOperationException) {
-          task.logger.info(
-              "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions")
-          emptySet()
-        } catch (e: Exception) {
-          task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
-          emptySet()
-        }
-
-    val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromProperty)
-
-    task.logger.info("Dependencies for ${task.path}: ${combinedDependsOn.map { it.path }}")
-
-    combinedDependsOn
-  } catch (e: Exception) {
-    task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
-    emptySet()
-  }
-}
-
 /**
  * Get dependsOn for task, handling configuration timing safely. Rewrites dependency task names
  * based on targetNameOverrides (e.g., test -> ci) and applies targetNamePrefix.
@@ -679,7 +656,8 @@ fun getDependsOnForTask(
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
   // When dependsOnTasks is provided, we should not use cache since dependencies might be different
   val cache = taskDependencyCache.get()
-  val taskKey = task.path
+  // task.path collides across included builds; the build-tree path does not.
+  val taskKey = "${getNxProjectName(task.project)}:${task.name}"
   if (dependsOnTasks == null && cache.containsKey(taskKey)) {
     task.logger.debug("Returning cached dependencies for ${task.path}")
     return cache[taskKey]
@@ -690,21 +668,23 @@ fun getDependsOnForTask(
     val sameProjectDependsOn = mutableListOf<DependsOnEntry>()
     val crossProjectByTarget = mutableMapOf<String, MutableList<String>>()
 
-    tasks.forEach { depTask ->
+    // A project configured from an ancestor build file owns no build file of its own, but is still
+    // a real project — attribute its edges to whichever file configures it.
+    val taskProjectBuildFile = effectiveBuildFile(taskProject)
+
+    tasks.distinct().forEach { depTask ->
       val depProject = depTask.project
 
       if (task.name != "buildDependents" &&
           depProject != taskProject &&
           dependencies != null &&
-          taskProject.buildFile.exists()) {
+          taskProjectBuildFile != null) {
         dependencies.add(
             Dependency(
-                taskProject.projectDir.path,
-                depProject.projectDir.path,
-                taskProject.buildFile.path))
+                taskProject.projectDir.path, depProject.projectDir.path, taskProjectBuildFile.path))
       }
 
-      if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
+      if (effectiveBuildFile(depProject) != null) {
         val targetName = resolveTargetName(depTask, targetNameOverrides, targetNamePrefix)
         if (depProject == taskProject) {
           sameProjectDependsOn.add(DependsOnEntry(target = targetName))
@@ -728,13 +708,7 @@ fun getDependsOnForTask(
   if (dependsOnTasks == null) {
     try {
       cache[taskKey] = null
-      val combinedDependsOn = getDependsOnTask(task)
-      val result =
-          if (combinedDependsOn.isNotEmpty()) {
-            mapTasksToObjects(combinedDependsOn).ifEmpty { null }
-          } else {
-            null
-          }
+      val result = mapTasksToObjects(getDependsOnTask(task)).ifEmpty { null }
       cache[taskKey] = result
       return result
     } catch (e: Exception) {
@@ -749,13 +723,7 @@ fun getDependsOnForTask(
     }
   } else {
     return try {
-      val result =
-          if (dependsOnTasks.isNotEmpty()) {
-            mapTasksToObjects(dependsOnTasks).ifEmpty { null }
-          } else {
-            null
-          }
-      result
+      mapTasksToObjects(dependsOnTasks).ifEmpty { null }
     } catch (e: Exception) {
       task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
       task.logger.debug("Stack trace:", e)

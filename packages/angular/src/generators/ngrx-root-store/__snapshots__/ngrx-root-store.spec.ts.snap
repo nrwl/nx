@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`NgRxRootStoreGenerator NgModule should add a facade when --facade=true 1`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add a facade when --facade=true 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -41,7 +41,7 @@ export class AppModule {}
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should add a facade when --facade=true 2`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add a facade when --facade=true 2`] = `
 "import { Injectable, inject } from '@angular/core';
 import { select, Store, Action } from '@ngrx/store';
 
@@ -72,7 +72,7 @@ export class UsersFacade {
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 1`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add a root module and root state when --minimal=false 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -112,7 +112,7 @@ export class AppModule {}
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 2`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add a root module and root state when --minimal=false 2`] = `
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
@@ -130,7 +130,7 @@ export const loadUsersFailure = createAction(
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 3`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add a root module and root state when --minimal=false 3`] = `
 "import { Injectable, inject } from '@angular/core';
 import { createEffect, Actions, ofType } from '@ngrx/effects';
 import { switchMap, catchError, of } from 'rxjs';
@@ -155,7 +155,7 @@ export class UsersEffects {
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 4`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add a root module and root state when --minimal=false 4`] = `
 "import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Action } from '@ngrx/store';
@@ -173,11 +173,7 @@ describe('UsersEffects', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [],
-      providers: [
-        UsersEffects,
-        provideMockActions(() => actions),
-        provideMockStore(),
-      ],
+      providers: [UsersEffects, provideMockActions(() => actions), provideMockStore()],
     });
 
     effects = TestBed.inject(UsersEffects);
@@ -187,9 +183,7 @@ describe('UsersEffects', () => {
     it('should work', () => {
       actions = hot('-a-|', { a: UsersActions.initUsers() });
 
-      const expected = hot('-a-|', {
-        a: UsersActions.loadUsersSuccess({ users: [] }),
-      });
+      const expected = hot('-a-|', { a: UsersActions.loadUsersSuccess({ users: [] }) });
 
       expect(effects.init$).toBeObservable(expected);
     });
@@ -198,7 +192,7 @@ describe('UsersEffects', () => {
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 5`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add a root module and root state when --minimal=false 5`] = `
 "import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 import { createReducer, on, Action } from '@ngrx/store';
 
@@ -217,8 +211,7 @@ export interface UsersPartialState {
   readonly [USERS_FEATURE_KEY]: UsersState;
 }
 
-export const usersAdapter: EntityAdapter<UsersEntity> =
-  createEntityAdapter<UsersEntity>();
+export const usersAdapter: EntityAdapter<UsersEntity> = createEntityAdapter<UsersEntity>();
 
 export const initialUsersState: UsersState = usersAdapter.getInitialState({
   // set initial required properties
@@ -227,18 +220,11 @@ export const initialUsersState: UsersState = usersAdapter.getInitialState({
 
 const reducer = createReducer(
   initialUsersState,
-  on(UsersActions.initUsers, (state) => ({
-    ...state,
-    loaded: false,
-    error: null,
-  })),
+  on(UsersActions.initUsers, (state) => ({ ...state, loaded: false, error: null })),
   on(UsersActions.loadUsersSuccess, (state, { users }) =>
     usersAdapter.setAll(users, { ...state, loaded: true }),
   ),
-  on(UsersActions.loadUsersFailure, (state, { error }) => ({
-    ...state,
-    error,
-  })),
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error })),
 );
 
 export function usersReducer(state: UsersState | undefined, action: Action) {
@@ -247,13 +233,12 @@ export function usersReducer(state: UsersState | undefined, action: Action) {
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 6`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add a root module and root state when --minimal=false 6`] = `
 "import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
 // Lookup the 'Users' feature state managed by NgRx
-export const selectUsersState =
-  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+export const selectUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
 
 const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
@@ -267,14 +252,12 @@ export const selectUsersError = createSelector(
   (state: UsersState) => state.error,
 );
 
-export const selectAllUsers = createSelector(
-  selectUsersState,
-  (state: UsersState) => selectAll(state),
+export const selectAllUsers = createSelector(selectUsersState, (state: UsersState) =>
+  selectAll(state),
 );
 
-export const selectUsersEntities = createSelector(
-  selectUsersState,
-  (state: UsersState) => selectEntities(state),
+export const selectUsersEntities = createSelector(selectUsersState, (state: UsersState) =>
+  selectEntities(state),
 );
 
 export const selectSelectedId = createSelector(
@@ -290,13 +273,9 @@ export const selectEntity = createSelector(
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 7`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add a root module and root state when --minimal=false 7`] = `
 "import { UsersEntity } from './users.models';
-import {
-  usersAdapter,
-  UsersPartialState,
-  initialUsersState,
-} from './users.reducer';
+import { usersAdapter, UsersPartialState, initialUsersState } from './users.reducer';
 import * as UsersSelectors from './users.selectors';
 
 describe('Users Selectors', () => {
@@ -360,7 +339,7 @@ describe('Users Selectors', () => {
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should add an empty root module when --minimal=true 1`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should add an empty root module when --minimal=true 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -393,7 +372,7 @@ export class AppModule {}
 "
 `;
 
-exports[`NgRxRootStoreGenerator NgModule should instrument the store devtools when "addDevTools: true" 1`] = `
+exports[`NgRxRootStoreGenerator > NgModule > should instrument the store devtools when "addDevTools: true" 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -428,7 +407,7 @@ export class AppModule {}
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add a facade when --facade=true 1`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add a facade when --facade=true 1`] = `
 "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
@@ -447,7 +426,7 @@ export const appConfig: ApplicationConfig = {
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add a facade when --facade=true 2`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add a facade when --facade=true 2`] = `
 "import { Injectable, inject } from '@angular/core';
 import { select, Store, Action } from '@ngrx/store';
 
@@ -478,7 +457,7 @@ export class UsersFacade {
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 1`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add a root module and root state when --minimal=false 1`] = `
 "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
@@ -496,7 +475,7 @@ export const appConfig: ApplicationConfig = {
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 2`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add a root module and root state when --minimal=false 2`] = `
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
@@ -516,7 +495,7 @@ export const loadUsersFailure = createAction(
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 3`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add a root module and root state when --minimal=false 3`] = `
 "import { Injectable, inject } from '@angular/core';
 import { createEffect, Actions, ofType } from '@ngrx/effects';
 import { switchMap, catchError, of } from 'rxjs';
@@ -540,7 +519,7 @@ export class UsersEffects {
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 4`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add a root module and root state when --minimal=false 4`] = `
 "import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Action } from '@ngrx/store';
@@ -581,7 +560,7 @@ describe('UsersEffects', () => {
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 5`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add a root module and root state when --minimal=false 5`] = `
 "import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 import { createReducer, on, Action } from '@ngrx/store';
 
@@ -626,7 +605,7 @@ export function usersReducer(state: UsersState | undefined, action: Action) {
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 6`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add a root module and root state when --minimal=false 6`] = `
 "import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
@@ -668,7 +647,7 @@ export const selectEntity = createSelector(
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 7`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add a root module and root state when --minimal=false 7`] = `
 "import { UsersEntity } from './users.models';
 import { usersAdapter, UsersPartialState, initialUsersState } from './users.reducer';
 import * as UsersSelectors from './users.selectors';
@@ -730,7 +709,7 @@ describe('Users Selectors', () => {
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should add an empty root module when --minimal=true 1`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should add an empty root module when --minimal=true 1`] = `
 "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
@@ -746,7 +725,7 @@ export const appConfig: ApplicationConfig = {
 "
 `;
 
-exports[`NgRxRootStoreGenerator Standalone APIs should instrument the store devtools when "addDevTools: true" 1`] = `
+exports[`NgRxRootStoreGenerator > Standalone APIs > should instrument the store devtools when "addDevTools: true" 1`] = `
 "import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';

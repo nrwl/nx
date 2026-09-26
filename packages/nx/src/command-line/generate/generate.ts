@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { relative } from 'path';
 
 import { readNxJson } from '../../config/configuration';
@@ -146,49 +146,49 @@ async function promptForCollection(
   } else if (!interactive && choices.length > 1) {
     throwInvalidInvocation(Array.from(choicesMap));
   } else if (interactive && choices.length > 1) {
-    const noneOfTheAbove = `\nNone of the above`;
+    const noneOfTheAbove = `None of the above`;
+    // Blank line before the last entry. The newline has to trail the choice
+    // *before* the gap: a leading one would land between the following
+    // choice's radio marker and its text, splitting that row in two.
+    const beforeGap = choices.length - 1;
     choices.push(noneOfTheAbove);
-    let { generator, customCollection } = await prompt<{
-      generator: string;
-      customCollection?: string;
-    }>([
-      {
-        name: 'generator',
-        message: `Which generator would you like to use?`,
-        type: 'autocomplete',
-        // enquirer's typings are incorrect here... It supports (string | Choice)[], but is typed as (string[] | Choice[])
-        choices: choices as string[],
+    const generator = await selectPrompt({
+      message: `Which generator would you like to use?`,
+      // Local-plugin entries carry a separate display label; the rest are
+      // plain collection names. Only the label takes the newline, so the
+      // value still resolves as a collection name.
+      choices: choices.map((c, i) => {
+        const choice =
+          typeof c === 'string'
+            ? { value: c, label: c }
+            : { value: c.value, label: c.message };
+        return i === beforeGap && !choice.label.endsWith('\n')
+          ? { ...choice, label: `${choice.label}\n` }
+          : choice;
+      }),
+    });
+
+    if (generator !== noneOfTheAbove) {
+      return generator;
+    }
+
+    const customCollection = await textPrompt({
+      message: `Which collection would you like to use?`,
+      validate: (value) => {
+        try {
+          getGeneratorInformation(
+            value,
+            generatorName,
+            workspaceRoot,
+            projectsConfiguration.projects
+          );
+          return undefined;
+        } catch {
+          return `Could not find ${value}:${generatorName}`;
+        }
       },
-      {
-        name: 'customCollection',
-        type: 'input',
-        message: `Which collection would you like to use?`,
-        skip: function () {
-          // Skip this question if the user did not answer None of the above
-          return this.state.answers.generator !== noneOfTheAbove;
-        },
-        validate: function (value) {
-          if (this.skipped) {
-            return true;
-          }
-          try {
-            getGeneratorInformation(
-              value,
-              generatorName,
-              workspaceRoot,
-              projectsConfiguration.projects
-            );
-            return true;
-          } catch {
-            logger.error(`\nCould not find ${value}:${generatorName}`);
-            return false;
-          }
-        },
-      },
-    ]);
-    return customCollection
-      ? `${customCollection}:${generatorName}`
-      : generator;
+    });
+    return `${customCollection}:${generatorName}`;
   } else if (deprecatedChoices.size > 0) {
     throw new Error(
       [

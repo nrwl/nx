@@ -1,0 +1,435 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["../../.oxlintrc.json"],
+  // A later override configuring the same rule replaces its options wholesale
+  // (same as eslint flat config), so the scoped migrate overrides below must
+  // restate the repo-wide restrictions.
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "create-nx-workspace",
+            "message": "Please import utils from nx or @nx/devkit instead."
+          },
+          {
+            "name": "node-fetch",
+            "message": "Please default to native fetch instead of 'node-fetch'."
+          },
+          {
+            "name": "fs-extra",
+            "message": "Please use equivalent utilities from `node:fs` instead."
+          },
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["**/devkit-exports"],
+            "message": "Do not import from devkit-exports from the nx package"
+          },
+          {
+            "group": ["**/native-bindings", "**/native-bindings.js"],
+            "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              },
+              {
+                "name": "fs-extra",
+                "message": "Please use equivalent utilities from `node:fs` instead."
+              },
+              {
+                "name": "chalk",
+                "message": "Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`."
+              },
+              {
+                "name": "typescript",
+                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "allowTypeImports": true
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/devkit-exports"],
+                "message": "Do not import from devkit-exports from the nx package"
+              },
+              {
+                "group": ["nx/**"],
+                "message": "Circular import in 'nx' found. Use relative path."
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // bin/nx.ts is the handoff point to the LOCAL nx installation: its
+      // dynamic `import('nx/...')` calls must resolve the installed package,
+      // not this tree, so the circular-import ban does not apply. eslint never
+      // saw these — its no-restricted-imports skips dynamic import()
+      // expressions; oxlint checks them.
+      "files": ["bin/nx.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              },
+              {
+                "name": "fs-extra",
+                "message": "Please use equivalent utilities from `node:fs` instead."
+              },
+              {
+                "name": "chalk",
+                "message": "Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`."
+              },
+              {
+                "name": "typescript",
+                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "allowTypeImports": true
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/devkit-exports"],
+                "message": "Do not import from devkit-exports from the nx package"
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // migrate.ts and run/ need no exemption here: their dedicated overrides
+      // below replace this rule's options wholesale (see the header note).
+      "files": ["src/command-line/migrate/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              },
+              {
+                "name": "fs-extra",
+                "message": "Please use equivalent utilities from `node:fs` instead."
+              },
+              {
+                "name": "chalk",
+                "message": "Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`."
+              },
+              {
+                "name": "typescript",
+                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "allowTypeImports": true
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/devkit-exports"],
+                "message": "Do not import from devkit-exports from the nx package"
+              },
+              {
+                "group": ["nx/**"],
+                "message": "Circular import in 'nx' found. Use relative path."
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+              },
+              {
+                // Depth-independent: matches './run/*' from migrate/ itself and
+                // '../run/*', '../../run/*', ... from any nested subtree. From
+                // migrate/ itself '../run/*' points at the sibling
+                // command-line/run; blocking that too is fine, migrate code has
+                // no business in the run command's internals either.
+                "group": ["**/run/*", "**/run/*/**"],
+                "message": "Import migrate/run's public surface by importing the run directory itself, not its internal modules directly."
+              },
+              {
+                "group": ["**/execute-migration", "**/execute-migration.js"],
+                "message": "Import the execution engine through the migrate module, which re-exports its whole surface."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // migrate.ts imports execute-migration directly to be the module that
+      // re-exports it, so this override drops the engine pattern and keeps the
+      // run barrel boundary.
+      "files": ["src/command-line/migrate/migrate.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              },
+              {
+                "name": "fs-extra",
+                "message": "Please use equivalent utilities from `node:fs` instead."
+              },
+              {
+                "name": "chalk",
+                "message": "Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`."
+              },
+              {
+                "name": "typescript",
+                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "allowTypeImports": true
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/devkit-exports"],
+                "message": "Do not import from devkit-exports from the nx package"
+              },
+              {
+                "group": ["nx/**"],
+                "message": "Circular import in 'nx' found. Use relative path."
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+              },
+              {
+                "group": ["**/run/*", "**/run/*/**"],
+                "message": "Import migrate/run's public surface by importing the run directory itself, not its internal modules directly."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // run/ owns the durable run-state format. It takes the engine directly:
+      // routing it through migrate.ts would close the cycle the pattern below
+      // blocks.
+      "files": ["src/command-line/migrate/run/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              },
+              {
+                "name": "fs-extra",
+                "message": "Please use equivalent utilities from `node:fs` instead."
+              },
+              {
+                "name": "chalk",
+                "message": "Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`."
+              },
+              {
+                "name": "typescript",
+                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "allowTypeImports": true
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/devkit-exports"],
+                "message": "Do not import from devkit-exports from the nx package"
+              },
+              {
+                "group": ["nx/**"],
+                "message": "Circular import in 'nx' found. Use relative path."
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+              },
+              {
+                "group": ["**/migrate", "**/migrate.js"],
+                "message": "Importing migrate.ts from migrate/run closes an import cycle: migrate.ts already imports run's barrel. Import the shared helper modules under migrate/ directly instead."
+              },
+              {
+                "group": [
+                  "**/utils/output",
+                  "**/utils/output.js",
+                  "**/utils/logger",
+                  "**/utils/logger.js"
+                ],
+                "message": "Write agent-facing output through run/agent-output, which collapses line breaks in untrusted values. This stdout also carries the <nx_migrate_*> blocks the driving agent parses, so a value that keeps its own break can forge one."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // agent-output.ts is the module the utils/output ban points everyone at,
+      // so it is exempt from the run/ override; the migrate-wide restrictions
+      // still apply.
+      "files": ["src/command-line/migrate/run/agent-output.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              },
+              {
+                "name": "fs-extra",
+                "message": "Please use equivalent utilities from `node:fs` instead."
+              },
+              {
+                "name": "chalk",
+                "message": "Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`."
+              },
+              {
+                "name": "typescript",
+                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "allowTypeImports": true
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/devkit-exports"],
+                "message": "Do not import from devkit-exports from the nx package"
+              },
+              {
+                "group": ["nx/**"],
+                "message": "Circular import in 'nx' found. Use relative path."
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+              },
+              {
+                "group": ["**/run/*", "**/run/*/**"],
+                "message": "Import migrate/run's public surface by importing the run directory itself, not its internal modules directly."
+              },
+              {
+                "group": ["**/execute-migration", "**/execute-migration.js"],
+                "message": "Import the execution engine through the migrate module, which re-exports its whole surface."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Spec files are exempt from the internal boundaries but keep the
+      // package-wide dependency bans.
+      // Specs exercise the js plugin by package name (dynamic imports too);
+      // the nx boundary group is already absent here for the same reason.
+      "files": ["**/*.spec.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              },
+              {
+                "name": "fs-extra",
+                "message": "Please use equivalent utilities from `node:fs` instead."
+              },
+              {
+                "name": "chalk",
+                "message": "Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/devkit-exports"],
+                "message": "Do not import from devkit-exports from the nx package"
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["nxw.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["*", "*/**", "!fs"],
+                "message": "The Nx wrapper is ran before packages are installed. It should only import node builtins.",
+                "allowTypeImports": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

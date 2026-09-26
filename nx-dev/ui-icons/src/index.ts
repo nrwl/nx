@@ -132,6 +132,7 @@ export * from './lib/technologies/esbuild';
 export * from './lib/technologies/eslint';
 export * from './lib/technologies/expo';
 export * from './lib/technologies/express';
+export * from './lib/technologies/oxlint';
 export * from './lib/technologies/fastify';
 export * from './lib/technologies/go';
 export * from './lib/technologies/gradle';

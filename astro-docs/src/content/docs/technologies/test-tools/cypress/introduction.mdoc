@@ -22,7 +22,7 @@ The `@nx/cypress` plugin supports the following package versions.
 
 | Package   | Supported Versions |
 | --------- | ------------------ |
-| `cypress` | >= 13 < 16         |
+| `cypress` | >= 13 < 17         |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -47,7 +47,7 @@ This will install the correct version of `@nx/cypress`.
 ### How @nx/cypress infers tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
+Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/mental-model#inferred-tasks).
 {% /aside %}
 
 The `@nx/cypress` plugin will create a task for any project that has a Cypress configuration file present. Any of the following files will be recognized as a Cypress configuration file:
@@ -57,9 +57,11 @@ The `@nx/cypress` plugin will create a task for any project that has a Cypress c
 - `cypress.config.mjs`
 - `cypress.config.cjs`
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/cypress configuration
 
@@ -93,9 +95,14 @@ The options shown above control the names of the inferred Cypress tasks. The fol
 | `ciComponentTestingTargetName` | `undefined` (task is not inferred by default) |
 | `openTargetName`               | `"open-cypress"`                              |
 
-### Splitting E2E tasks by file
+The e2e and component-test tasks are cached and track Cypress screenshot and video outputs.
+The `openTargetName` task opens the interactive Cypress application.
+The `ciTargetName` task uses the [Atomizer](/docs/kb/split-e2e-tasks).
+Set `ciComponentTestingTargetName` to atomize component tests as well.
 
-The `@nx/cypress/plugin` will automatically split your e2e tasks by file. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/cypress/plugin`.
+
+### Splitting E2E tasks by file
 
 To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:
 
@@ -184,7 +191,7 @@ To set up a separate project, you can generate a separate project with a project
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
-You can run your e2e test against a production build by using the `production` [configuration](/docs/concepts/executors-and-configurations#use-task-configurations)
+You can run your e2e test against a production build by using the `production` [configuration](/docs/kb/executors-and-configurations#use-task-configurations)
 
 ```shell
 nx e2e frontend-e2e --configuration=production
@@ -338,6 +345,24 @@ nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY=
 {% aside type="caution" title="Command-line args vs configuration options" %}
 Providing a flag will override any option with the same name set in the project or workspace configuration.
 {% /aside %}
+
+### Reading environment variables in tests on Cypress 16
+
+Cypress 16 removed `Cypress.env()`.
+Cypress 13 to 15 keep it, so tests on those versions read `env` values synchronously as before.
+On Cypress 16, read `env` values with the asynchronous `cy.env()` command, which takes the list of keys to read:
+
+```ts
+cy.env(['API_URL']).then(({ API_URL }) => {
+  cy.request(`${API_URL}/health`);
+});
+```
+
+For non-sensitive values that a test needs synchronously, use the Cypress 16 `expose` configuration
+(the `expose` config key, the `--expose` Cypress arg, or the `expose` test configuration) and read
+them with `Cypress.expose('KEY')`.
+The `env` values passed with `--env` or the executor's `env` option are not readable with
+`Cypress.expose()`.
 
 ## Set up CI
 

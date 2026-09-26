@@ -1,17 +1,22 @@
-import { Tree, updateJson, writeJson } from '@nx/devkit';
-import { ProjectGraph, readJson } from '@nx/devkit';
+import {
+  Tree,
+  updateJson,
+  writeJson,
+  ProjectGraph,
+  readJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import hostGenerator from './host';
 
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    createProjectGraphAsync: jest.fn().mockResolvedValue({
+    createProjectGraphAsync: vi.fn().mockResolvedValue({
       dependencies: {},
       nodes: {},
     }),
-    readCachedProjectGraph: jest.fn().mockImplementation(
+    readCachedProjectGraph: vi.fn().mockImplementation(
       (): ProjectGraph => ({
         dependencies: {},
         nodes: {
@@ -215,6 +220,40 @@ describe('hostGenerator', () => {
       const packageJson = readJson(tree, 'package.json');
       console.log(packageJson);
       expect(packageJson.devDependencies['@nx/web']).toBeDefined();
+    });
+
+    it('should install @swc-node/register so the TS config loads without native type stripping', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await hostGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        linter: 'none',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        skipFormat: true,
+        bundler: 'rspack',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc-node/register']).toBeDefined();
+      expect(packageJson.devDependencies['@swc/core']).toBeDefined();
+    });
+
+    it('should not install @swc-node/register for a JS config', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await hostGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        linter: 'none',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        skipFormat: true,
+        bundler: 'rspack',
+        typescriptConfiguration: false,
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc-node/register']).toBeUndefined();
     });
 
     it('should generate host files and configs for SSR', async () => {

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -16,8 +16,7 @@ import generator from './generator';
 import pluginGenerator from '../plugin/plugin';
 import generatorGenerator from '../generator/generator';
 import executorGenerator from '../executor/executor';
-
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 
 describe('lint-checks generator', () => {
   let tree: Tree;

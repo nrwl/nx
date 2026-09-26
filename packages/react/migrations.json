@@ -39,6 +39,18 @@
       "description": "Create AI instructions to help migrate workspaces from React 18 to 19.",
       "prompt": "./dist/src/migrations/update-23-1-0/ai-instructions-for-react-19.md",
       "documentation": "./dist/src/migrations/update-23-1-0/upgrade-to-react-19.md"
+    },
+    "update-23-2-0-add-optional-module-federation-packages": {
+      "version": "23.2.0-beta.4",
+      "description": "Add optional Module Federation packages when existing targets require them.",
+      "implementation": "./dist/src/migrations/update-23-2-0/add-optional-module-federation-packages",
+      "documentation": "./dist/src/migrations/update-23-2-0/add-optional-module-federation-packages.md"
+    },
+    "update-23-2-0-add-svgr-webpack-if-used": {
+      "version": "23.2.0-beta.4",
+      "description": "Add `@svgr/webpack` when a webpack config references it.",
+      "implementation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used",
+      "documentation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used.md"
     }
   },
   "packageJsonUpdates": {

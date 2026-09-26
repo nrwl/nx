@@ -60,7 +60,7 @@ Even if a project has an ESLint configuration file, it will only have an inferre
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/eslint configuration
 
@@ -73,14 +73,22 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
     {
       "plugin": "@nx/eslint/plugin",
       "options": {
-        "targetName": "lint"
+        "targetName": "lint",
+        "extensions": ["ts", "tsx", "js", "jsx", "html", "vue"]
       }
     }
   ]
 }
 ```
 
-- The `targetName` option controls the name of the inferred ESLint tasks. The default name is `lint`.
+| Option       | Type     | Default                                           | Description                                     |
+| ------------ | -------- | ------------------------------------------------- | ----------------------------------------------- |
+| `targetName` | string   | `lint`                                            | Name of the ESLint task.                        |
+| `extensions` | string[] | `ts, cts, mts, tsx, js, cjs, mjs, jsx, html, vue` | File extensions Nx checks before adding a task. |
+
+The lint task runs ESLint from the project root and is cached, with inputs and outputs based on your ESLint configuration.
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/eslint/plugin`.
 
 ## Lint
 

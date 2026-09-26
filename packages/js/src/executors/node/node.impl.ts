@@ -1,4 +1,10 @@
-import { createAsyncIterable } from '@nx/devkit/internal';
+import {
+  createAsyncIterable,
+  daemonClient,
+  killProcessTreeGraceful,
+  fileExists,
+  interpolate,
+} from '@nx/devkit/internal';
 import chalk from 'chalk';
 import { ChildProcess, fork } from 'child_process';
 import {
@@ -11,18 +17,14 @@ import {
   readTargetOptions,
   runExecutor,
 } from '@nx/devkit';
-import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
 import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
 import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
-import { killProcessTreeGraceful } from 'nx/src/native';
 import { LineAwareWriter } from './lib/line-aware-writer';
 import { createCoalescingDebounce } from './lib/coalescing-debounce';
-import { fileExists } from 'nx/src/utils/fileutils';
-import { interpolate } from 'nx/src/tasks-runner/utils';
 import { detectModuleFormat } from './lib/detect-module-format';
 import { getOutputFileName } from './lib/output-file';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
@@ -376,9 +378,15 @@ export async function* nodeExecutor(
       );
       while (true) {
         const event = await output.next();
+
+        if (event.done) {
+          break;
+        }
+
         await addToQueue(null, Promise.resolve(event.value));
         await debouncedProcessQueue.trigger();
-        if (event.done && !options.watch) {
+
+        if (!options.watch) {
           break;
         }
       }

@@ -18,7 +18,13 @@ we stop receiving these pings, we assume the main job has died, and we will fail
 This is useful not just for worst-case scenarios, but it also keeps your CI config simple:
 
 ```yaml
-- run: npx nx start-ci-run --distribute-on="5 linux-medium-js" # start agents and tell Nx to send the below affected tasks to NxCloud rather than execute in-place
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 5 linux-medium-js
+```
+
+```yaml
+- run: npx nx start-nx-agents # provisions the agents that the affected tasks below are distributed to
 - run: npm ci
 - run: npx nx affected -t build,lint,test
 # That's it - we don't need an extra step to tell NxCloud that we're done running Nx commands.
@@ -30,10 +36,18 @@ In summary, for 99% of cases, you will never have to think about the heartbeat o
 
 ### Caveats
 
-In some specific cases, though, the heartbeat process will not work properly. In that case, you will need to [manage completion yourself](/docs/reference/nx-cloud-cli#requireexplicitcompletion):
+In some specific cases, though, the heartbeat process will not work properly. In that case, turn off [`lifecycle.heartbeat`](/docs/reference/nx-cloud/ci-config#lifecycleheartbeat) and manage completion yourself:
 
 ```yaml
-- run: npx nx start-ci-run --distribute-on="5 linux-medium-js" --require-explicit-completion # this option disables the heartbeat
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 5 linux-medium-js
+lifecycle:
+  heartbeat: false
+```
+
+```yaml
+- run: npx nx start-nx-agents
 - run: npm ci
 - run: npx nx affected -t build,lint,test
 - run: npx nx complete-ci-run # this now tells NxCloud to turn off the agents
@@ -47,7 +61,7 @@ When you might need to do this:
 We've noticed that some CI providers tend to be more aggressive with background process management when moving between steps. Assume you have the following configuration:
 
 ```yaml
-- run: npx nx start-ci-run --distribute-on="5 linux-medium-js"
+- run: npx nx start-nx-agents
 - run: npm ci
 - run: npx nx affected -t build,lint,test # This is the point where we turn on the heartbeat.
 - run: ./deploy-my-projects.sh
@@ -84,14 +98,14 @@ Workflows involving multiple machines/jobs are the main source of heartbeat-rela
 
 The only fix in this scenario is to handle completion yourself and run `npx nx complete-ci-run` as the last command on your last machine in the pipeline.
 
-### Heartbeat vs. `--stop-agents-after`
+### Heartbeat vs. `lifecycle.stop-after`
 
-While both the heartbeat and `--stop-agents-after` tell Nx Cloud when it can shut down agents, they have different roles:
+While both the heartbeat and `lifecycle.stop-after` tell Nx Cloud when it can shut down agents, they have different roles:
 
-1.  `--stop-agents-after` is useful purely to avoid wasting unnecessary compute.
-    - So, while you might still have agents actively running tasks, Nx Cloud can tell that you won't be sending it any more tasks in the future because of how you configured `--stop-agents-after`.
+1.  `lifecycle.stop-after` is useful purely to avoid wasting unnecessary compute.
+    - So, while you might still have agents actively running tasks, Nx Cloud can tell that you won't be sending it any more tasks in the future because of how you configured `lifecycle.stop-after`.
     - So, it can turn off any agents that are no longer running tasks.
-    - [Read more about configuring `--stop-agents-after`](/docs/reference/nx-cloud-cli#stopagentsafter).
+    - [Read more about configuring `lifecycle.stop-after`](/docs/reference/nx-cloud/ci-config#lifecyclestop-after).
 2.  The heartbeat, on the other hand, marks the completion of the main job.
     - It makes sure Nx Cloud instantly knows when the main job exited so it can update the status of its CI run.
     - In case of errors, it makes sure that it can instantly abandon any in-progress tasks.

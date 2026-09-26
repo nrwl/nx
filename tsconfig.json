@@ -339,6 +339,12 @@
     },
     {
       "path": "./e2e/nx-build"
+    },
+    {
+      "path": "./packages/oxlint"
+    },
+    {
+      "path": "./e2e/oxlint"
     }
   ],
   "extends": "./tsconfig.base.json",

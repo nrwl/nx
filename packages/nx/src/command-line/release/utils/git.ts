@@ -636,7 +636,7 @@ function getAllAuthorsForCommit(commit: RawGitCommit): GitCommitAuthor[] {
 // https://www.conventionalcommits.org/en/v1.0.0/
 // https://regex101.com/r/FSfNvA/1
 const ConventionalCommitRegex =
-  /(?<type>[a-z]+)(\((?<scope>.+)\))?(?<breaking>!)?: (?<description>.+)/i;
+  /^(?<type>[^\s():!]+)(?:\s*\((?<scope>.+)\))?(?<breaking>!)?: (?<description>.+)$/u;
 const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
 // GitHub style PR references
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;

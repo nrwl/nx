@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execSync } from 'node:child_process';
 import { orange, output } from '../../../../utils/output';
 import type { PostGitTask } from '../../changelog';
@@ -234,14 +234,14 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
             `---`,
             `Request Data:`,
             `Repo: ${this.getRemoteRepoData<GitLabRepoData>()?.slug}`,
-            `Token Header Data: ${this.tokenHeader}`,
+            `Token Header: ${this.getRedactedTokenHeader()}`,
             `Body: ${JSON.stringify(result.requestData)}`,
           ],
         });
       } else {
-        console.log(error);
+        console.log(this.inspectWithRedactedToken(error));
         console.error(
-          `An unknown error occurred while trying to create a release on GitLab, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitLab token from the error message!)`
+          `An unknown error occurred while trying to create a release on GitLab, please report this on https://github.com/nrwl/nx (NOTE: your GitLab token is redacted above, but please double-check before sharing)`
         );
       }
     }
@@ -273,29 +273,19 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
 
   private async promptForContinueInGitLab(): Promise<boolean> {
     try {
-      const reply = await prompt<{ open: 'Yes' | 'No' }>([
-        {
-          name: 'open',
-          message:
-            'Do you want to create the release manually in your browser?',
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'It will open the GitLab release page for you',
-            },
-            {
-              name: 'No',
-            },
-          ],
-          initial: 0,
-        },
-      ]);
-      return reply.open === 'Yes';
+      const open = await selectPrompt({
+        message: 'Do you want to create the release manually in your browser?',
+        choices: [
+          {
+            value: 'Yes',
+            hint: 'It will open the GitLab release page for you',
+          },
+          { value: 'No' },
+        ],
+        onCancel: () => process.exit(1),
+      });
+      return open === 'Yes';
     } catch {
-      // Ensure the cursor is always restored before exiting
-      process.stdout.write('\u001b[?25h');
-      // Handle the case where the user exits the prompt with ctrl+c
       process.exit(1);
     }
   }

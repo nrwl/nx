@@ -66,6 +66,12 @@
       "description": "Do not add dependencies to `package.json`.",
       "x-priority": "internal"
     },
+    "passWithNoTests": {
+      "type": "boolean",
+      "default": false,
+      "description": "Exit with a zero status when the project has no test files.",
+      "x-priority": "internal"
+    },
     "zoneless": {
       "type": "boolean",
       "description": "Whether the Angular project is zoneless. When not provided, it is auto-detected from the project configuration.",

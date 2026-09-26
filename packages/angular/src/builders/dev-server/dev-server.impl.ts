@@ -11,9 +11,6 @@ import {
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { existsSync } from 'fs';
-import { readNxJson } from 'nx/src/config/configuration';
-import { isNpmProject } from 'nx/src/project-graph/operators';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { relative } from 'path';
 import { combineLatest, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -28,6 +25,11 @@ import { patchBuilderContext } from '../../executors/utilities/patch-builder-con
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { normalizeOptions, validateOptions } from './lib';
 import type { NormalizedSchema, Schema } from './schema';
+import {
+  readNxJsonFromDisk as readNxJson,
+  isNpmProject,
+  readCachedProjectConfiguration,
+} from '@nx/devkit/internal';
 
 type BuildTargetOptions = {
   tsConfig: string;
@@ -209,9 +211,8 @@ export function executeDevServerBuilder(
                         '@nx/webpack',
                         '@nx/angular:dev-server'
                       );
-                      const { WebpackNxBuildCoordinationPlugin } = await import(
-                        '@nx/webpack/internal'
-                      );
+                      const { WebpackNxBuildCoordinationPlugin } =
+                        await import('@nx/webpack/internal');
                       baseWebpackConfig.plugins.push(
                         new WebpackNxBuildCoordinationPlugin(
                           `nx run-many --target=${
@@ -235,9 +236,8 @@ export function executeDevServerBuilder(
                     'webpack-merge',
                     '@nx/angular:dev-server'
                   );
-                  const { mergeCustomWebpackConfig } = await import(
-                    '../utilities/webpack.js'
-                  );
+                  const { mergeCustomWebpackConfig } =
+                    await import('../utilities/webpack.js');
                   return mergeCustomWebpackConfig(
                     baseWebpackConfig,
                     pathToWebpackConfig,
@@ -293,9 +293,8 @@ async function loadIndexHtmlFileTransformer(
   if (isUsingWebpackBuilder) {
     assertPackageIsInstalled('@nx/webpack', '@nx/angular:dev-server');
     assertPackageIsInstalled('webpack-merge', '@nx/angular:dev-server');
-    const { resolveIndexHtmlTransformer } = await import(
-      '../utilities/webpack.js'
-    );
+    const { resolveIndexHtmlTransformer } =
+      await import('../utilities/webpack.js');
     return resolveIndexHtmlTransformer(
       pathToIndexFileTransformer,
       tsConfig,

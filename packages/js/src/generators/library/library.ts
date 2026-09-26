@@ -1,13 +1,17 @@
 import {
+  acknowledgeBuildScripts,
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-  promptWhenInteractive,
+  isInteractive,
+  selectPrompt,
   addBuildTargetDefaults,
   logShowProjectCommand,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -28,15 +32,18 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
+import { addLintingToProject } from '../../utils/add-linting-to-project';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
 import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
-import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import {
+  acknowledgeSwcBuildScripts,
+  getSwcDependencies,
+} from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
@@ -102,8 +109,6 @@ export async function libraryGeneratorInternal(
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
       addTsConfigBase: true,
       addTsPlugin,
-      // In the new setup, Prettier is prompted for and installed during `create-nx-workspace`.
-      formatter: isUsingTsSolutionSetup(tree) ? 'none' : 'prettier',
     })
   );
   const options = await normalizeOptions(tree, schema);
@@ -188,6 +193,8 @@ export async function libraryGeneratorInternal(
       testEnvironment: options.testEnvironment,
       runtimeTsconfigFileName: 'tsconfig.lib.json',
       compiler: options.compiler === 'swc' ? 'swc' : 'babel',
+      passWithNoTests: options.passWithNoTests,
+      skipPackageJson: options.skipPackageJson,
       addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
@@ -397,6 +404,18 @@ export async function addLint(
   tree: Tree,
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
+  // Everything below reaches into `@nx/eslint`'s config utilities, which have
+  // no equivalent for other linters. Dispatch before touching any of it.
+  if (options.linter !== 'eslint') {
+    return addLintingToProject(tree, {
+      linter: options.linter,
+      project: options.name,
+      addPlugin: options.addPlugin,
+      rootProject: options.rootProject,
+      unitTestRunner: options.unitTestRunner,
+    });
+  }
+
   const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
   const {
     addOverrideToLintConfig,
@@ -789,31 +808,19 @@ async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   if (isUsingTsSolutionConfig) {
-    options.unitTestRunner ??= await promptWhenInteractive<{
-      unitTestRunner: 'none' | 'jest' | 'vitest';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'unitTestRunner',
-        message: `Which unit test runner would you like to use?`,
-        choices: [{ name: 'none' }, { name: 'vitest' }, { name: 'jest' }],
-        initial: 0,
-      },
-      { unitTestRunner: 'none' }
-    ).then(({ unitTestRunner }) => unitTestRunner);
+    options.unitTestRunner ??= isInteractive()
+      ? await selectPrompt<'none' | 'jest' | 'vitest'>({
+          message: `Which unit test runner would you like to use?`,
+          choices: [{ value: 'none' }, { value: 'vitest' }, { value: 'jest' }],
+        })
+      : 'none';
   } else {
-    options.unitTestRunner ??= await promptWhenInteractive<{
-      unitTestRunner: 'none' | 'jest' | 'vitest';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'unitTestRunner',
-        message: `Which unit test runner would you like to use?`,
-        choices: [{ name: 'jest' }, { name: 'vitest' }, { name: 'none' }],
-        initial: 0,
-      },
-      { unitTestRunner: undefined }
-    ).then(({ unitTestRunner }) => unitTestRunner);
+    options.unitTestRunner ??= isInteractive()
+      ? await selectPrompt<'none' | 'jest' | 'vitest'>({
+          message: `Which unit test runner would you like to use?`,
+          choices: [{ value: 'jest' }, { value: 'vitest' }, { value: 'none' }],
+        })
+      : undefined;
 
     if (!options.unitTestRunner && options.bundler === 'vite') {
       options.unitTestRunner = 'vitest';
@@ -913,6 +920,10 @@ async function normalizeOptions(
 
   return {
     ...options,
+    // Read from `options`, not a hoisted local: the `npm-scripts` block resets
+    // it to 'none' after `normalizeLinterOption` runs. Naming the key also
+    // satisfies the normalized type, since the spread carries `linter?`.
+    linter: options.linter,
     fileName,
     name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectNames,
@@ -930,6 +941,11 @@ function addProjectDependencies(
   options: NormalizedLibraryGeneratorOptions
 ): GeneratorCallback {
   if (options.bundler == 'esbuild') {
+    // esbuild's install script only validates the prebuilt binary that ships as
+    // an optional dependency.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      esbuild: false,
+    });
     return addDependenciesToPackageJson(
       tree,
       {},
@@ -965,6 +981,7 @@ function addProjectDependencies(
       true
     );
   } else if (options.bundler === 'swc') {
+    acknowledgeSwcBuildScripts(tree);
     const { dependencies, devDependencies } = getSwcDependencies();
     return addDependenciesToPackageJson(
       tree,

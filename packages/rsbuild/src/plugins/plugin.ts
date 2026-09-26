@@ -2,6 +2,8 @@ import {
   getNamedInputs,
   calculateHashesForCreateNodes,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -15,8 +17,6 @@ import {
   getPackageManagerCommand,
   detectPackageManager,
 } from '@nx/devkit';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import {
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
   addBuildAndWatchDepsTargets,
@@ -189,19 +189,21 @@ async function createRsbuildTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  const buildInputs: TargetConfiguration['inputs'] = [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['@rsbuild/core'],
+    },
+  ];
+
   targets[options.buildTargetName] = {
     command: `rsbuild build`,
     options: { cwd: projectRoot, args: ['--mode=production'] },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      {
-        externalDependencies: ['@rsbuild/core'],
-      },
-    ],
+    inputs: [...buildInputs],
     outputs: buildOutputs,
     metadata: {
       technologies: ['rsbuild'],
@@ -219,6 +221,7 @@ async function createRsbuildTargets(
 
   targets[options.devTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rsbuild dev`,
     options: {
       cwd: projectRoot,
@@ -228,6 +231,7 @@ async function createRsbuildTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rsbuild preview`,
     dependsOn: [`${options.buildTargetName}`, `^${options.buildTargetName}`],
     options: {
@@ -303,8 +307,10 @@ function getOutputs(
   // `output.distPath.root` is the directory Rsbuild emits the build into, so
   // it is the build output as-is. (Don't take its `dirname` - that points at
   // the parent directory, which can capture sibling projects' outputs.)
+  // Rsbuild 2 also accepts `distPath` as a string, shorthand for `distPath.root`.
+  const distPath = rsbuildConfig?.output?.distPath;
   const buildOutputPath = normalizeOutputPath(
-    rsbuildConfig?.output?.distPath?.root,
+    typeof distPath === 'string' ? distPath : distPath?.root,
     projectRoot,
     workspaceRoot,
     'dist'

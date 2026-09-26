@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ProvenanceError } from '../../utils/provenance';
 import {
   classifyMigrateFetchFallback,
@@ -87,6 +88,11 @@ describe('GA4 event name length cap', () => {
       'migrate_generate_complete',
       'migrate_run_start',
       'migrate_run_complete',
+      'migrate_orchestrator_init',
+      'migrate_orchestrator_dispense',
+      'migrate_orchestrator_complete',
+      'migrate_single_migration_recorded',
+      'migrate_single_migration_invocation',
       ...Object.keys(PROMPT_NAMES).map((p) => `migrate_prompt_${p}`),
       ...Object.keys(GENERATE_ERROR_CODES).map(
         (c) => `migrate_generate_error_${c}`
@@ -105,9 +111,9 @@ describe('GA4 event name length cap', () => {
 // the WASM build, which the no-op guard relies on. Module-level state persists
 // across calls, so each test loads a fresh module instance.
 let mockCustomDimensions: unknown;
-let mockReportEvent: jest.Mock;
+let mockReportEvent: Mock;
 
-jest.mock('../../analytics', () => ({
+vi.mock('../../analytics', () => ({
   get customDimensions() {
     return mockCustomDimensions;
   },
@@ -115,9 +121,9 @@ jest.mock('../../analytics', () => ({
 }));
 
 describe('migrate-analytics events', () => {
-  function load() {
-    jest.resetModules();
-    return require('./migrate-analytics') as typeof import('./migrate-analytics');
+  async function load() {
+    vi.resetModules();
+    return (await import('./migrate-analytics')) as typeof import('./migrate-analytics');
   }
 
   // Params for the first emitted event of the given name.
@@ -131,14 +137,14 @@ describe('migrate-analytics events', () => {
   }
 
   beforeEach(() => {
-    mockReportEvent = jest.fn();
+    mockReportEvent = vi.fn();
     mockCustomDimensions = new Proxy({}, { get: (_t, key) => key });
   });
 
   describe('WASM no-op guard', () => {
-    it('emits nothing when customDimensions is null', () => {
+    it('emits nothing when customDimensions is null', async () => {
       mockCustomDimensions = null;
-      const a = load();
+      const a = await load();
       a.reportMigrateGenerateStart({ targetPackage: 'nx' });
       a.reportMigratePrompt('include', 'all');
       a.reportMigrateGenerateComplete({
@@ -160,8 +166,8 @@ describe('migrate-analytics events', () => {
   });
 
   describe('reportMigratePrompt', () => {
-    it('encodes the prompt name in the event name and emits the choice', () => {
-      const a = load();
+    it('encodes the prompt name in the event name and emits the choice', async () => {
+      const a = await load();
       a.reportMigratePrompt('multi_major', 'latest-in-current');
       expect(paramsFor('migrate_prompt_multi_major')).toEqual({
         promptChoice: 'latest-in-current',
@@ -170,8 +176,8 @@ describe('migrate-analytics events', () => {
   });
 
   describe('reportMigrateGenerateStart', () => {
-    it('emits the target package and flags', () => {
-      const a = load();
+    it('emits the target package and flags', async () => {
+      const a = await load();
       a.reportMigrateGenerateStart({
         targetPackage: '@nx/workspace',
         interactive: false,
@@ -186,8 +192,8 @@ describe('migrate-analytics events', () => {
   });
 
   describe('reportMigrateGenerateComplete', () => {
-    it('reports the resolved include and its source', () => {
-      const a = load();
+    it('reports the resolved include and its source', async () => {
+      const a = await load();
       a.setMigrateIncludeSource('nx-json');
       a.reportMigrateGenerateComplete({
         targetVersion: '23.1.0',
@@ -208,22 +214,25 @@ describe('migrate-analytics events', () => {
       { stats: { registryCount: 1, installCount: 1 }, expected: 'mixed' },
       { stats: { registryCount: 0, installCount: 0 }, expected: undefined },
       { stats: undefined, expected: undefined },
-    ])('derives fetch_method=$expected from $stats', ({ stats, expected }) => {
-      const a = load();
-      a.reportMigrateGenerateComplete({
-        targetVersion: '22.1.0',
-        requestedTargetVersion: '22.1.0',
-        installedTargetVersion: '22.0.0',
-        include: 'all',
-        fetchStats: stats,
-      });
-      expect(paramsFor('migrate_generate_complete')?.fetchMethod).toBe(
-        expected
-      );
-    });
+    ])(
+      'derives fetch_method=$expected from $stats',
+      async ({ stats, expected }) => {
+        const a = await load();
+        a.reportMigrateGenerateComplete({
+          targetVersion: '22.1.0',
+          requestedTargetVersion: '22.1.0',
+          installedTargetVersion: '22.0.0',
+          include: 'all',
+          fetchStats: stats,
+        });
+        expect(paramsFor('migrate_generate_complete')?.fetchMethod).toBe(
+          expected
+        );
+      }
+    );
 
-    it('passes through the first fetch fallback reason', () => {
-      const a = load();
+    it('passes through the first fetch fallback reason', async () => {
+      const a = await load();
       a.reportMigrateGenerateComplete({
         targetVersion: '22.1.0',
         requestedTargetVersion: '22.1.0',
@@ -241,8 +250,8 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('includes the multi-major choice only when 2+ majors are crossed', () => {
-      const a = load();
+    it('includes the multi-major choice only when 2+ majors are crossed', async () => {
+      const a = await load();
       a.reportMigrateGenerateComplete({
         targetVersion: '23.0.0',
         requestedTargetVersion: '23.0.0',
@@ -255,8 +264,8 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('omits the multi-major choice when fewer than 2 majors are crossed', () => {
-      const a = load();
+    it('omits the multi-major choice when fewer than 2 majors are crossed', async () => {
+      const a = await load();
       a.reportMigrateGenerateComplete({
         targetVersion: '23.0.0',
         requestedTargetVersion: '23.0.0',
@@ -270,8 +279,8 @@ describe('migrate-analytics events', () => {
   });
 
   describe('reportMigrateGenerateError', () => {
-    it('encodes the phase in the event name, records once, and folds in include context plus the error name', () => {
-      const a = load();
+    it('encodes the phase in the event name, records once, and folds in include context plus the error name', async () => {
+      const a = await load();
       a.setMigrateInclude('optional');
       a.setMigrateIncludeSource('flag');
       a.reportMigrateGenerateError('package_updates', new TypeError('boom'));
@@ -287,8 +296,8 @@ describe('migrate-analytics events', () => {
       );
     });
 
-    it('prefers a Node system code over the constructor name', () => {
-      const a = load();
+    it('prefers a Node system code over the constructor name', async () => {
+      const a = await load();
       const err = Object.assign(new Error('no file'), { code: 'ENOENT' });
       a.reportMigrateGenerateError('fetch_migrations', err);
       expect(
@@ -296,8 +305,8 @@ describe('migrate-analytics events', () => {
       ).toBe('ENOENT');
     });
 
-    it('rejects a non-identifier code (path/message) and falls back to the name', () => {
-      const a = load();
+    it('rejects a non-identifier code (path/message) and falls back to the name', async () => {
+      const a = await load();
       const err = Object.assign(new TypeError('x'), {
         code: '/Users/alice/secret-project',
       });
@@ -308,8 +317,8 @@ describe('migrate-analytics events', () => {
       ).toBe('TypeError');
     });
 
-    it('extracts a package-qualified nx location from the stack', () => {
-      const a = load();
+    it('extracts a package-qualified nx location from the stack', async () => {
+      const a = await load();
       const err = new Error('x');
       err.stack =
         'Error: x\n    at fn (/Users/me/proj/node_modules/nx/dist/src/command-line/migrate/migrate.js:1830:18)';
@@ -319,8 +328,8 @@ describe('migrate-analytics events', () => {
       ).toBe('nx/src/command-line/migrate/migrate.js:1830:18');
     });
 
-    it('captures first-party @nx/* frames too', () => {
-      const a = load();
+    it('captures first-party @nx/* frames too', async () => {
+      const a = await load();
       const err = new Error('x');
       err.stack =
         'Error: x\n    at fn (/Users/me/proj/node_modules/@nx/devkit/dist/src/generators/run.js:5:1)';
@@ -330,8 +339,8 @@ describe('migrate-analytics events', () => {
       ).toBe('@nx/devkit/src/generators/run.js:5:1');
     });
 
-    it('normalizes Windows backslash stack paths', () => {
-      const a = load();
+    it('normalizes Windows backslash stack paths', async () => {
+      const a = await load();
       const err = new Error('x');
       err.stack =
         'Error: x\r\n    at fn (C:\\proj\\node_modules\\nx\\dist\\src\\command-line\\migrate\\migrate.js:1830:18)';
@@ -341,8 +350,8 @@ describe('migrate-analytics events', () => {
       ).toBe('nx/src/command-line/migrate/migrate.js:1830:18');
     });
 
-    it('omits the location for non-first-party (third-party migration) frames', () => {
-      const a = load();
+    it('omits the location for non-first-party (third-party migration) frames', async () => {
+      const a = await load();
       const err = new Error('x');
       err.stack =
         'Error: x\n    at fn (/Users/me/proj/node_modules/@acme/plugin/migrations/x.js:5:1)';
@@ -354,8 +363,8 @@ describe('migrate-analytics events', () => {
   });
 
   describe('run lifecycle', () => {
-    it('tracks whether a migrate run started and reports the migration count', () => {
-      const a = load();
+    it('tracks whether a migrate run started and reports the migration count', async () => {
+      const a = await load();
       expect(a.hasMigrateRunStarted()).toBe(false);
       a.reportMigrateRunStart({ createCommits: true, migrationCount: 5 });
       expect(a.hasMigrateRunStarted()).toBe(true);
@@ -365,8 +374,8 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('reports the agentic outcome, agent, and applied tally on completion', () => {
-      const a = load();
+    it('reports the agentic outcome, agent, and applied tally on completion', async () => {
+      const a = await load();
       a.reportMigrateRunComplete({
         agenticOutcome: 'enabled',
         agentUsed: 'claude',
@@ -383,8 +392,8 @@ describe('migrate-analytics events', () => {
   });
 
   describe('reportMigrateRunError', () => {
-    it('encodes the step in the event name and records once with the error name', () => {
-      const a = load();
+    it('encodes the step in the event name and records once with the error name', async () => {
+      const a = await load();
       a.reportMigrateRunError({
         code: 'migration_exec',
         error: new Error('a'),
@@ -397,8 +406,8 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('reports the run size when provided', () => {
-      const a = load();
+    it('reports the run size when provided', async () => {
+      const a = await load();
       a.reportMigrateRunError({
         code: 'migration_exec',
         migrationCount: 12,
@@ -409,15 +418,15 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('omits the run size at non-loop error sites', () => {
-      const a = load();
+    it('omits the run size at non-loop error sites', async () => {
+      const a = await load();
       a.reportMigrateRunError({ code: 'npm_install', error: new Error('x') });
       const params = paramsFor('migrate_run_error_npm_install');
       expect(params?.migrationCount).toBeUndefined();
     });
 
-    it('reports the migration name only for first-party packages', () => {
-      const a = load();
+    it('reports the migration name only for first-party packages', async () => {
+      const a = await load();
       a.reportMigrateRunError({
         code: 'migration_exec',
         migrationPackage: '@nx/js',
@@ -428,8 +437,8 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('omits the migration name for third-party packages', () => {
-      const a = load();
+    it('omits the migration name for third-party packages', async () => {
+      const a = await load();
       a.reportMigrateRunError({
         code: 'migration_exec',
         migrationPackage: 'some-third-party',
@@ -438,6 +447,64 @@ describe('migrate-analytics events', () => {
       expect(paramsFor('migrate_run_error_migration_exec')).not.toHaveProperty(
         'migrationName'
       );
+    });
+  });
+
+  describe('orchestrator events', () => {
+    it('reports the migration count and commit flag on init', async () => {
+      const a = await load();
+      a.reportMigrateOrchestratorInit({
+        migrationCount: 4,
+        createCommits: true,
+      });
+      expect(paramsFor('migrate_orchestrator_init')).toEqual({
+        createCommits: true,
+        migrationCount: 4,
+      });
+    });
+
+    it('reports the dispense action and attempt', async () => {
+      const a = await load();
+      a.reportMigrateOrchestratorDispense({
+        action: 'next-step',
+        attempt: 2,
+      });
+      expect(paramsFor('migrate_orchestrator_dispense')).toEqual({
+        promptChoice: 'next-step',
+        migrationCount: 2,
+      });
+    });
+
+    it('reports the terminal tallies and total dispense count on complete', async () => {
+      const a = await load();
+      a.reportMigrateOrchestratorComplete({
+        completed: 3,
+        skipped: 1,
+        dispenseCount: 9,
+      });
+      expect(paramsFor('migrate_orchestrator_complete')).toEqual({
+        appliedCount: 3,
+        taskCount: 1,
+        migrationCount: 9,
+      });
+    });
+
+    it('encodes recorded vs standalone in the single-migration event name', async () => {
+      const a = await load();
+      a.reportMigrateSingleMigrationInvocation({
+        migrationType: 'hybrid',
+        orchestrated: true,
+      });
+      a.reportMigrateSingleMigrationInvocation({
+        migrationType: 'prompt',
+        orchestrated: false,
+      });
+      expect(paramsFor('migrate_single_migration_recorded')).toEqual({
+        promptChoice: 'hybrid',
+      });
+      expect(paramsFor('migrate_single_migration_invocation')).toEqual({
+        promptChoice: 'prompt',
+      });
     });
   });
 });

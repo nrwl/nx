@@ -21,7 +21,7 @@ export function ThemePanel(): JSX.Element {
     <Menu as="div" className="relative inline-block text-left">
       <div>
         <MenuButton
-          className="inline-flex w-full justify-center rounded-md p-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 dark:text-sky-500"
+          className="focus-visible:ring-opacity-75 inline-flex w-full justify-center rounded-md p-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-white dark:text-sky-500"
           data-cy="theme-open-modal-button"
         >
           <span className="sr-only">Theme switcher</span>
@@ -45,7 +45,7 @@ export function ThemePanel(): JSX.Element {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <MenuItems className="absolute right-0 z-50 mt-2 w-36 origin-top-right rounded-md bg-white text-slate-500 shadow-lg ring-1 ring-slate-900/10 ring-opacity-5 focus:outline-none dark:bg-slate-800 dark:text-slate-400 dark:ring-0">
+        <MenuItems className="ring-opacity-5 absolute right-0 z-50 mt-2 w-36 origin-top-right rounded-md bg-white text-slate-500 shadow-lg ring-1 ring-slate-900/10 focus:outline-none dark:bg-slate-800 dark:text-slate-400 dark:ring-0">
           <div className="px-1 py-1">
             <MenuItem>
               {({ focus }) => (

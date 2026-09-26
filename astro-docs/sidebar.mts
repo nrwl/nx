@@ -71,10 +71,6 @@ const learnGroups: SidebarItems = [
             label: 'Reducing boilerplate',
             link: 'getting-started/tutorials/reducing-configuration-boilerplate',
           },
-          {
-            label: 'Gradle monorepo',
-            link: 'getting-started/tutorials/gradle-tutorial',
-          },
         ],
       },
     ],
@@ -94,21 +90,11 @@ const learnGroups: SidebarItems = [
         label: 'Types of configuration',
         link: 'concepts/types-of-configuration',
       },
-      {
-        label: 'Executors and configurations',
-        link: 'concepts/executors-and-configurations',
-      },
       { label: 'Nx plugins', link: 'concepts/nx-plugins' },
-      { label: 'Inferred tasks', link: 'concepts/inferred-tasks' },
       {
         label: 'Building blocks of fast CI',
         link: 'concepts/ci-concepts/building-blocks-fast-ci',
       },
-      {
-        label: 'Parallelization and distribution',
-        link: 'concepts/ci-concepts/parallelization-distribution',
-      },
-      { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
     ],
   },
   {
@@ -120,7 +106,11 @@ const learnGroups: SidebarItems = [
         label: 'Cache task results',
         link: 'features/cache-task-results',
       },
-      { label: 'Enhance your LLM', link: 'features/enhance-ai' },
+      { label: 'Enhance your coding agent', link: 'features/enhance-ai' },
+      {
+        label: 'Multi-language support',
+        link: 'features/multi-language-support',
+      },
       {
         label: 'Code organization',
         collapsed: true,
@@ -157,76 +147,28 @@ const learnGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Orchestration & CI',
+        label: 'Continuous integration (CI)',
         collapsed: true,
         items: [
           {
             label: 'Overview',
             link: 'features/ci-features',
           },
-          { label: 'Affected', link: 'features/ci-features/affected' },
           {
-            label: 'Remote cache (Nx Replay)',
+            label: 'Run affected tasks',
+            link: 'features/ci-features/affected',
+          },
+          {
+            label: 'Remote caching',
             link: 'features/ci-features/remote-cache',
           },
-          {
-            label: 'Self-healing CI',
-            link: 'features/ci-features/self-healing-ci',
-          },
-          { label: 'Flaky tasks', link: 'features/ci-features/flaky-tasks' },
           {
             label: 'Distribute task execution (Nx Agents)',
             link: 'features/ci-features/distribute-task-execution',
           },
           {
-            label: 'Split E2E tasks',
-            link: 'features/ci-features/split-e2e-tasks',
-          },
-          {
-            label: 'Dynamically allocate agents',
-            link: 'features/ci-features/dynamic-agents',
-          },
-          {
-            label: 'Optimize your TTG',
-            link: 'guides/nx-cloud/optimize-your-ttg',
-          },
-          {
-            label: 'Record commands',
-            link: 'guides/nx-cloud/record-commands',
-          },
-          {
-            label: 'GitHub integration',
-            link: 'features/ci-features/github-integration',
-          },
-          {
-            label: 'CIPE affected project graph',
-            link: 'guides/nx-cloud/cipe-affected-project-graph',
-          },
-          { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
-          { label: 'Google auth', link: 'guides/nx-cloud/google-auth' },
-          {
-            label: 'Resource usage',
-            link: 'features/ci-features/resource-usage',
-          },
-          {
-            label: 'Dedicated compute cluster',
-            link: 'features/ci-features/dedicated-compute-cluster',
-          },
-          {
-            label: 'Sandboxing',
-            link: 'features/ci-features/sandboxing',
-          },
-          {
-            label: 'Docker layer caching',
-            link: 'features/ci-features/docker-layer-caching',
-          },
-          {
-            label: 'Docker read-through cache',
-            link: 'features/ci-features/docker-read-through-cache',
-          },
-          {
-            label: 'npm read-through cache',
-            link: 'features/ci-features/npm-read-through-cache',
+            label: 'Self-healing CI',
+            link: 'features/ci-features/self-healing-ci',
           },
         ],
       },
@@ -307,19 +249,15 @@ const learnGroups: SidebarItems = [
           },
           {
             label: 'Automate importing projects',
-            link: 'guides/adopting-nx/import-project',
+            link: 'kb/import-project',
           },
           {
             label: 'Manual migrations',
-            link: 'guides/adopting-nx/manual',
+            link: 'kb/manual-migration',
           },
           {
             label: 'Preserving Git histories',
-            link: 'guides/adopting-nx/preserving-git-histories',
-          },
-          {
-            label: 'Migrating from Turborepo',
-            link: 'guides/adopting-nx/from-turborepo',
+            link: 'kb/preserving-git-histories',
           },
         ],
       },
@@ -456,6 +394,7 @@ const technologiesGroups: SidebarItems = [
             link: 'technologies/module-federation/introduction',
           },
           { label: 'ESLint', link: 'technologies/eslint/introduction' },
+          { label: 'Oxlint', link: 'technologies/oxlint/introduction' },
         ],
       },
       {
@@ -578,11 +517,17 @@ const referenceGroups: SidebarItems = [
         link: 'reference/environment-variables',
       },
       { label: 'nxignore', link: 'reference/nxignore' },
+      { label: 'Nx Daemon', link: 'reference/nx-daemon' },
+      { label: 'Code formatting', link: 'reference/code-formatting' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
       { label: 'Nx Console settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
+      {
+        label: 'CI configuration file',
+        link: 'reference/nx-cloud/ci-config',
+      },
       { label: 'Telemetry', link: 'reference/telemetry' },
       {
         label: 'TypeScript',
@@ -664,6 +609,11 @@ const referenceGroups: SidebarItems = [
           ...getTechnologyAPIItems('eslint', undefined, 'ESLint'),
           ...getTechnologyAPIItems('eslint-plugin', 'eslint', 'ESLint Plugin'),
         ],
+      },
+      {
+        label: 'Oxlint',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('oxlint', undefined, 'Oxlint')],
       },
       {
         label: 'Webpack',

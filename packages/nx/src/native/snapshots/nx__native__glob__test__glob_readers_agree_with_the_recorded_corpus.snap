@@ -1,0 +1,408 @@
+---
+source: packages/nx/src/native/glob.rs
+expression: report
+---
+**
+  convert: ["**"]
+  partition: ("", Some("**"))
+  prefix: None
+**/*
+  convert: ["**/*"]
+  partition: ("", Some("**/*"))
+  prefix: None
+*.json
+  convert: ["*.json"]
+  partition: ("", Some("*.json"))
+  prefix: None
+?
+  convert: ["?"]
+  partition: ("", Some("?"))
+  prefix: None
+a/?/b
+  convert: ["a/?/b"]
+  partition: ("a", Some("?/b"))
+  prefix: Some("a")
+libs/?/x
+  convert: ["libs/?/x"]
+  partition: ("libs", Some("?/x"))
+  prefix: Some("libs")
+libs/**/*.ts
+  convert: ["libs/**/*.ts"]
+  partition: ("libs", Some("**/*.ts"))
+  prefix: Some("libs")
+libs/*/src
+  convert: ["libs/*/src"]
+  partition: ("libs", Some("*/src"))
+  prefix: Some("libs")
+libs/a
+  convert: ["libs/a"]
+  partition: ("libs/a", None)
+  prefix: Some("libs/a")
+libs/a/
+  convert: ["libs/a/"]
+  partition: ("libs/a/", None)
+  prefix: Some("libs/a")
+libs/a/x.ts
+  convert: ["libs/a/x.ts"]
+  partition: ("libs/a/x.ts", None)
+  prefix: Some("libs/a/x.ts")
+libs/a/**
+  convert: ["libs/a/**"]
+  partition: ("libs/a", Some("**"))
+  prefix: Some("libs/a")
+!libs/a/**
+  convert: ["!libs/a/**"]
+  partition: ("libs/a", Some("!**"))
+  prefix: None
+!(libs)/**
+  convert: ["!libs/", "*/**"]
+  partition: ("", Some("!(libs)/**"))
+  prefix: None
+./libs/**
+  convert: ["./libs/**"]
+  partition: ("./libs", Some("**"))
+  prefix: None
+libs//a/**
+  convert: ["libs//a/**"]
+  partition: ("libs//a", Some("**"))
+  prefix: Some("libs/a")
+libs/./a/**
+  convert: ["libs/./a/**"]
+  partition: ("libs/./a", Some("**"))
+  prefix: None
+libs/../a/**
+  convert: ["libs/../a/**"]
+  partition: ("libs/../a", Some("**"))
+  prefix: None
+/abs/**
+  convert: ["/abs/**"]
+  partition: ("/abs", Some("**"))
+  prefix: None
+dist/gen/
+  convert: ["dist/gen/"]
+  partition: ("dist/gen/", None)
+  prefix: Some("dist/gen")
+dist//gen/**
+  convert: ["dist//gen/**"]
+  partition: ("dist//gen", Some("**"))
+  prefix: Some("dist/gen")
+apps/web//generated/**
+  convert: ["apps/web//generated/**"]
+  partition: ("apps/web//generated", Some("**"))
+  prefix: Some("apps/web/generated")
+src/**/*.ts
+  convert: ["src/**/*.ts"]
+  partition: ("src", Some("**/*.ts"))
+  prefix: Some("src")
+tsconfig*.json
+  convert: ["tsconfig*.json"]
+  partition: ("", Some("tsconfig*.json"))
+  prefix: None
+jest.config.[jt]s
+  convert: ["jest.config.[jt]s"]
+  partition: ("", Some("jest.config.[jt]s"))
+  prefix: None
+vite.config.*
+  convert: ["vite.config.*"]
+  partition: ("", Some("vite.config.*"))
+  prefix: None
+@scope/pkg/*.js
+  convert: ["@scope/pkg/*.js"]
+  partition: ("@scope/pkg", Some("*.js"))
+  prefix: Some("@scope/pkg")
+dist/@scope/pkg
+  convert: ["dist/@scope/pkg"]
+  partition: ("dist/@scope/pkg", None)
+  prefix: Some("dist/@scope/pkg")
+dist/libs/@scope/pkg
+  convert: ["dist/libs/@scope/pkg"]
+  partition: ("dist/libs/@scope/pkg", None)
+  prefix: Some("dist/libs/@scope/pkg")
+node_modules/@scope/pkg/package.json
+  convert: ["node_modules/@scope/pkg/package.json"]
+  partition: ("node_modules/@scope/pkg/package.json", None)
+  prefix: Some("node_modules/@scope/pkg/package.json")
+libs/app/@gen/schema.json
+  convert: ["libs/app/@gen/schema.json"]
+  partition: ("libs/app/@gen/schema.json", None)
+  prefix: Some("libs/app/@gen/schema.json")
+a+b/**
+  convert: ["a+b/**"]
+  partition: ("a+b", Some("**"))
+  prefix: Some("a+b")
+dist/libs/a+b
+  convert: ["dist/libs/a+b"]
+  partition: ("dist/libs/a+b", None)
+  prefix: Some("dist/libs/a+b")
+libs/x/src/+state
+  convert: ["libs/x/src/+state"]
+  partition: ("libs/x/src/+state", None)
+  prefix: Some("libs/x/src/+state")
+libs/src/index.+spec.ts
+  convert: ["libs/src/index.+spec.ts"]
+  partition: ("libs/src/index.+spec.ts", None)
+  prefix: Some("libs/src/index.+spec.ts")
+libs/c++/x.cpp
+  convert: ["libs/c++/x.cpp"]
+  partition: ("libs/c++/x.cpp", None)
+  prefix: Some("libs/c++/x.cpp")
+co,ma/x.ts
+  convert: ["co,ma/x.ts"]
+  partition: ("co,ma/x.ts", None)
+  prefix: Some("co,ma/x.ts")
+pi|pe/x
+  convert: ["pi|pe/x"]
+  partition: ("pi|pe/x", None)
+  prefix: Some("pi|pe/x")
+paren)/x.ts
+  convert: ["paren)/x.ts"]
+  partition: ("paren)/x.ts", None)
+  prefix: Some("paren)/x.ts")
+brack]/x
+  convert: ["brack]/x"]
+  partition: ("brack]/x", None)
+  prefix: Some("brack]/x")
+brace}/x
+  convert: ["brace}/x"]
+  partition: ("", Some("brace}/x"))
+  prefix: error
+paren(/x.ts
+  convert: error
+  partition: ("", Some("paren(/x.ts"))
+  prefix: error
+!(
+  convert: error
+  partition: ("", Some("!("))
+  prefix: error
+?(
+  convert: error
+  partition: ("", Some("?("))
+  prefix: error
+{,
+  convert: error
+  partition: ("", Some("{,"))
+  prefix: error
+@babel/plugin-transform-destructuring@7.27.3(@babel/core@7.27.4)
+  convert: error
+  partition: ("@babel", Some("plugin-transform-destructuring@7.27.3(@babel/core@7.27.4)"))
+  prefix: error
+libs/?(a)/x
+  convert: ["libs//x", "libs/a/x"]
+  partition: ("libs", Some("?(a)/x"))
+  prefix: Some("libs")
+libs/+(a|b)/x
+  convert: ["libs/{a,b}/x"]
+  partition: ("libs", Some("+(a|b)/x"))
+  prefix: Some("libs")
+libs/@(a|b)/x
+  convert: ["libs/{a,b}/x"]
+  partition: ("libs", Some("@(a|b)/x"))
+  prefix: Some("libs")
+libs/!(a|b)/x
+  convert: ["!libs/{a,b}/", "libs/*/x"]
+  partition: ("libs", Some("!(a|b)/x"))
+  prefix: Some("libs")
+libs/!(a).ts
+  convert: ["!libs/a.ts", "libs/*.ts"]
+  partition: ("libs", Some("!(a).ts"))
+  prefix: Some("libs")
+libs/!(a)*
+  convert: ["!libs/a*", "libs/*"]
+  partition: ("libs", Some("!(a)*"))
+  prefix: Some("libs")
+libs/*(a|b)/x
+  convert: ["libs/*/x", "libs/{a,b}/x"]
+  partition: ("libs", Some("*(a|b)/x"))
+  prefix: Some("libs")
+libs/(a|b)/x
+  convert: ["libs/{a,b}/x"]
+  partition: ("libs", Some("(a|b)/x"))
+  prefix: Some("libs")
+libs/{a,b}/x
+  convert: ["libs/{a,b}/x"]
+  partition: ("libs", Some("{a,b}/x"))
+  prefix: Some("libs")
+libs/{,a}/x
+  convert: ["libs//x", "libs/a/x"]
+  partition: ("libs", Some("{,a}/x"))
+  prefix: Some("libs")
+{libs/a,e2e}/x
+  convert: ["{libs/a,e2e}/x"]
+  partition: ("", Some("{libs/a,e2e}/x"))
+  prefix: None
+libs/[ab]/x
+  convert: ["libs/[ab]/x"]
+  partition: ("libs", Some("[ab]/x"))
+  prefix: Some("libs")
+libs/[!ab]/x
+  convert: ["libs/[!ab]/x"]
+  partition: ("libs", Some("[!ab]/x"))
+  prefix: Some("libs")
+libs/\*/x
+  convert: ["libs/\\*/x"]
+  partition: ("libs/*/x", None)
+  prefix: Some("libs/*/x")
+libs/a\ b/x
+  convert: ["libs/a\\ b/x"]
+  partition: ("libs/a b/x", None)
+  prefix: Some("libs/a b/x")
+libs/f\oo/*.ts
+  convert: ["libs/f\\oo/*.ts"]
+  partition: ("libs/foo", Some("*.ts"))
+  prefix: Some("libs/foo")
+path/to\\file.css
+  convert: ["path/to\\\\file.css"]
+  partition: ("path/to\\file.css", None)
+  prefix: Some("path/to\\file.css")
+libs/prefix*(suffix)/**
+  convert: ["libs/prefix*suffix/**"]
+  partition: ("libs", Some("prefix*(suffix)/**"))
+  prefix: Some("libs")
+prefix?(suffix)
+  convert: ["prefix", "prefixsuffix"]
+  partition: ("", Some("prefix?(suffix)"))
+  prefix: None
+truncated/foo+/**/!(ignored).ts
+  convert: ["!truncated/foo+/**/ignored.ts", "truncated/foo+/**/*.ts"]
+  partition: ("truncated/foo+", Some("**/!(ignored).ts"))
+  prefix: Some("truncated/foo+")
+libs/**/*.?spec.ts
+  convert: ["libs/**/*.?spec.ts"]
+  partition: ("libs", Some("**/*.?spec.ts"))
+  prefix: Some("libs")
+libs/**/?(*.)@spec.ts?(.snap)
+  convert: ["libs/**/*.@spec.ts", "libs/**/*.@spec.ts.snap", "libs/**/@spec.ts", "libs/**/@spec.ts.snap"]
+  partition: ("libs", Some("**/?(*.)@spec.ts?(.snap)"))
+  prefix: Some("libs")
+libs/?(*.)+spec.ts?(.snap)
+  convert: ["libs/*.+spec.ts", "libs/*.+spec.ts.snap", "libs/+spec.ts", "libs/+spec.ts.snap"]
+  partition: ("libs", Some("?(*.)+spec.ts?(.snap)"))
+  prefix: Some("libs")
+e2e/react/**/+(*.)+(spec|test).+(ts|js)?(x)
+  convert: ["e2e/react/**/*.{spec,test}.{ts,js}", "e2e/react/**/*.{spec,test}.{ts,js}x"]
+  partition: ("e2e/react", Some("**/+(*.)+(spec|test).+(ts|js)?(x)"))
+  prefix: Some("e2e/react")
+e2e/深/左/**/+(*.)+(spec|test).+(ts|js)?(x)
+  convert: ["e2e/深/左/**/*.{spec,test}.{ts,js}", "e2e/深/左/**/*.{spec,test}.{ts,js}x"]
+  partition: ("e2e/深/左", Some("**/+(*.)+(spec|test).+(ts|js)?(x)"))
+  prefix: Some("e2e/深/左")
+libs/雪/x.ts
+  convert: ["libs/雪/x.ts"]
+  partition: ("libs/雪/x.ts", None)
+  prefix: Some("libs/雪/x.ts")
+e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)
+  convert: ["e2e\\react\\**\\*.{spec,test}.{ts,js}", "e2e\\react\\**\\*.{spec,test}.{ts,js}x"]
+  partition: ("", Some("e2e\\react\\**\\+(*.)+(spec|test).+(ts|js)?(x)"))
+  prefix: None
+e2e\react/**/*.spec.ts
+  convert: ["e2e\\react/**/*.spec.ts"]
+  partition: ("e2ereact", Some("**/*.spec.ts"))
+  prefix: Some("e2ereact")
+e2e\react\!(*.test).ts
+  convert: ["!e2e\\react\\*.test.ts", "*.ts"]
+  partition: ("", Some("e2e\\react\\!(*.test).ts"))
+  prefix: None
+**/?(*.)+(spec|test).[jt]s?(x)?(.snap)
+  convert: ["**/*.{spec,test}.[jt]s", "**/*.{spec,test}.[jt]s.snap", "**/*.{spec,test}.[jt]sx", "**/*.{spec,test}.[jt]sx.snap", "**/{spec,test}.[jt]s", "**/{spec,test}.[jt]s.snap", "**/{spec,test}.[jt]sx", "**/{spec,test}.[jt]sx.snap"]
+  partition: ("", Some("**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"))
+  prefix: None
+!**/?(*.)+(spec|test).[jt]s?(x)?(.snap)
+  convert: ["!**/*.{spec,test}.[jt]s", "!**/*.{spec,test}.[jt]s.snap", "!**/*.{spec,test}.[jt]sx", "!**/*.{spec,test}.[jt]sx.snap", "!**/{spec,test}.[jt]s", "!**/{spec,test}.[jt]s.snap", "!**/{spec,test}.[jt]sx", "!**/{spec,test}.[jt]sx.snap"]
+  partition: ("", Some("!**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"))
+  prefix: None
+**/*.spec.ts{,.snap}
+  convert: ["**/*.spec.ts", "**/*.spec.ts.snap"]
+  partition: ("", Some("**/*.spec.ts{,.snap}"))
+  prefix: None
+**/*.spec.ts{.snapshot,.snap}
+  convert: ["**/*.spec.ts{.snapshot,.snap}"]
+  partition: ("", Some("**/*.spec.ts{.snapshot,.snap}"))
+  prefix: None
+**/*.{test,spec}.?(c|m)[jt]s?(x)
+  convert: ["**/*.{test,spec}.[jt]s", "**/*.{test,spec}.[jt]sx", "**/*.{test,spec}.{c,m}[jt]s", "**/*.{test,spec}.{c,m}[jt]sx"]
+  partition: ("", Some("**/*.{test,spec}.?(c|m)[jt]s?(x)"))
+  prefix: None
+**/__tests__/**/*.?([mc])[jt]s?(x)
+  convert: ["**/__tests__/**/*.[jt]s", "**/__tests__/**/*.[jt]sx", "**/__tests__/**/*.[mc][jt]s", "**/__tests__/**/*.[mc][jt]sx"]
+  partition: ("", Some("**/__tests__/**/*.?([mc])[jt]s?(x)"))
+  prefix: None
+**/__test?(s)__/**/*
+  convert: ["**/__test__/**/*", "**/__tests__/**/*"]
+  partition: ("", Some("**/__test?(s)__/**/*"))
+  prefix: None
+**/!(*.module).ts
+  convert: ["!**/*.module.ts", "**/*.ts"]
+  partition: ("", Some("**/!(*.module).ts"))
+  prefix: None
+**/*.*(component,module).ts?(x)
+  convert: ["**/*.*{component,module}.ts", "**/*.*{component,module}.tsx"]
+  partition: ("", Some("**/*.*(component,module).ts?(x)"))
+  prefix: None
+!(e2e|test)/*.ts
+  convert: ["!{e2e,test}/", "*/*.ts"]
+  partition: ("", Some("!(e2e|test)/*.ts"))
+  prefix: None
+packages/!(package-a)*/package.json
+  convert: ["!packages/package-a*/", "packages/*/package.json"]
+  partition: ("packages", Some("!(package-a)*/package.json"))
+  prefix: Some("packages")
+{packages/!(package-a)*/package.json,packages/*/package.json}
+  convert: ["!{packages/package-a*/", "{packages/*/package.json,packages/*/package.json}"]
+  partition: ("", Some("{packages/!(package-a)*/package.json,packages/*/package.json}"))
+  prefix: Some("packages")
+dist/!(cache|cache2)/**/!(README|LICENSE).(js|ts)
+  convert: ["!dist/*/**/{README,LICENSE}.{js,ts}", "!dist/{cache,cache2}/", "dist/*/**/*.{js,ts}"]
+  partition: ("dist", Some("!(cache|cache2)/**/!(README|LICENSE).(js|ts)"))
+  prefix: Some("dist")
+dist/!(main|cache)/
+  convert: ["!dist/{main,cache}/", "dist/*/"]
+  partition: ("dist", Some("!(main|cache)/"))
+  prefix: Some("dist")
+dist/*.(js|ts)
+  convert: ["dist/*.{js,ts}"]
+  partition: ("dist", Some("*.(js|ts)"))
+  prefix: Some("dist")
+{a,@(b|c).{d,e}}
+  convert: ["{a,{b,c}.{d,e}}"]
+  partition: ("", Some("{a,@(b|c).{d,e}}"))
+  prefix: None
+!{a,b}.md
+  convert: ["!{a,b}.md"]
+  partition: ("", Some("!{a,b}.md"))
+  prefix: None
+{a,b/c}.ts
+  convert: ["{a,b/c}.ts"]
+  partition: ("", Some("{a,b/c}.ts"))
+  prefix: None
+{nx,tsconfig.base}.json
+  convert: ["{nx,tsconfig.base}.json"]
+  partition: ("", Some("{nx,tsconfig.base}.json"))
+  prefix: None
+tools/{a,b}/{x,y}.ts
+  convert: ["tools/{a,b}/{x,y}.ts"]
+  partition: ("tools", Some("{a,b}/{x,y}.ts"))
+  prefix: Some("tools")
+apps/web/app/(marketing)/**
+  convert: ["apps/web/app/marketing/**"]
+  partition: ("apps/web/app", Some("(marketing)/**"))
+  prefix: Some("apps/web/app/marketing")
+dist/app/(group)/page.js
+  convert: ["dist/app/group/page.js"]
+  partition: ("dist/app", Some("(group)/page.js"))
+  prefix: Some("dist/app/group/page.js")
+.next/server/app/[id]
+  convert: [".next/server/app/[id]"]
+  partition: (".next/server/app", Some("[id]"))
+  prefix: Some(".next/server/app")
+.next/server/app/[...slug]/page.js
+  convert: [".next/server/app/[...slug]/page.js"]
+  partition: (".next/server/app", Some("[...slug]/page.js"))
+  prefix: Some(".next/server/app")
+@nrwl/
+  convert: ["@nrwl/"]
+  partition: ("@nrwl/", None)
+  prefix: Some("@nrwl")
+/back\\slash
+  convert: ["/back\\\\slash"]
+  partition: ("/back\\slash", None)
+  prefix: None

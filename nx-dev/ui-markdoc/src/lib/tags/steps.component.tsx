@@ -15,7 +15,7 @@ export function Steps({ children }: StepsProps) {
           {/* Vertical line connecting steps */}
           {index < stepsCount - 1 && (
             <div
-              className="absolute left-5 top-10 h-full w-0.5 bg-zinc-200 dark:bg-zinc-700"
+              className="absolute top-10 left-5 h-full w-0.5 bg-zinc-200 dark:bg-zinc-700"
               aria-hidden="true"
             />
           )}

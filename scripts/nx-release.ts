@@ -99,6 +99,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/node',
     'packages/nuxt',
     'packages/nx',
+    'packages/oxlint',
     'packages/playwright',
     'packages/plugin',
     'packages/react',

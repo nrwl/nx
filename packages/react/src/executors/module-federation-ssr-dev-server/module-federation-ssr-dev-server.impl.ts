@@ -4,19 +4,26 @@ import {
   createAsyncIterable,
 } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { startRemoteIterators } from '@nx/module-federation/internal';
 import { waitForPortOpen } from '@nx/web/internal';
-import { ssrDevServerExecutor } from '@nx/webpack/internal';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import { normalizeOptions, startRemotes } from './lib';
 import { ModuleFederationSsrDevServerOptions } from './schema';
+import { assertPackageIsInstalled } from '../../utils/assert-package';
 import { warnReactMfSsrDevServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
+
+const executorName = '@nx/react:module-federation-ssr-dev-server';
 
 export default async function* moduleFederationSsrDevServer(
   ssrDevServerOptions: ModuleFederationSsrDevServerOptions,
   context: ExecutorContext
 ) {
+  assertPackageIsInstalled('@nx/module-federation', executorName);
+  assertPackageIsInstalled('@nx/webpack', executorName);
+  const { startRemoteIterators } =
+    await import('@nx/module-federation/internal');
+  const { ssrDevServerExecutor } = await import('@nx/webpack/internal');
+
   warnReactMfSsrDevServerExecutorDeprecation();
   const options = normalizeOptions(ssrDevServerOptions);
   // TODO(JamesHenry): remove type assertion once the nx repo is updated to use https://github.com/nrwl/nx/pull/33095

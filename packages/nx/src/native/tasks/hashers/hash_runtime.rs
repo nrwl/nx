@@ -2,6 +2,9 @@ use crate::native::hasher::hash;
 use crate::native::utils::command::create_shell_command;
 use dashmap::DashMap;
 use std::collections::HashMap;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+use std::process::Command;
 use tracing::trace;
 
 pub fn hash_runtime(
@@ -18,7 +21,7 @@ pub fn hash_runtime(
 
     let mut command_builder = create_shell_command();
 
-    command_builder.arg(command);
+    append_shell_command(&mut command_builder, command);
 
     command_builder.current_dir(workspace_root);
     env.iter().for_each(|(key, value)| {
@@ -37,6 +40,24 @@ pub fn hash_runtime(
     cache.insert(cache_key, hash_result.clone());
 
     Ok(hash_result)
+}
+
+// Rust escapes inner quotes as \" when it quotes an argument, and `cmd /C`
+// keeps that escape, so any quoted token inside the command reaches its
+// program mangled. Hand cmd the raw line wrapped in one outer quote pair
+// instead, which it strips as documented for /C.
+#[cfg(target_os = "windows")]
+fn append_shell_command(command_builder: &mut Command, command: &str) {
+    if command.contains('"') {
+        command_builder.raw_arg(format!("\"{command}\""));
+    } else {
+        command_builder.arg(command);
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn append_shell_command(command_builder: &mut Command, command: &str) {
+    command_builder.arg(command);
 }
 
 fn runtime_cache_key(command: &str, env: &HashMap<String, String>) -> String {
@@ -60,6 +81,17 @@ mod tests {
 
         let result = hash_runtime(workspace_root, command, &env, &cache).unwrap();
         assert_eq!(result, "10571312846059850300");
+    }
+
+    #[test]
+    fn hashes_output_of_command_with_quoted_argument() {
+        let workspace_root = if cfg!(windows) { "C:\\" } else { "/tmp" };
+        let command = "node -e \"console.log('a b')\"";
+        let env: HashMap<String, String> = HashMap::new();
+        let cache = DashMap::new();
+
+        let result = hash_runtime(workspace_root, command, &env, &cache).unwrap();
+        assert_eq!(result, hash(b"a b"));
     }
 
     #[test]

@@ -3,13 +3,16 @@ import {
   NxJsonConfiguration,
   workspaceRoot,
 } from '@nx/devkit';
-import { ExecFileOptions, execFile } from 'node:child_process';
+import { SpawnOptions } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, isAbsolute } from 'node:path';
-import { LARGE_BUFFER } from 'nx/src/executors/run-commands/run-commands.impl';
 import { GradlePluginOptions } from '../plugin/utils/gradle-plugin-options';
-import { signalToCode } from 'nx/src/utils/exit-codes';
-import treeKill from 'tree-kill';
+import {
+  killChildOnHostExit,
+  killProcessTreeGraceful,
+  safeSpawn,
+  signalToCode,
+} from '@nx/devkit/internal';
 
 export const fileSeparator = process.platform.startsWith('win')
   ? 'file:///'
@@ -37,42 +40,46 @@ export function getGradleExecFile(): string {
 export function execGradleAsync(
   gradleBinaryPath: string,
   args: ReadonlyArray<string>,
-  execOptions: ExecFileOptions = {}
+  execOptions: Omit<SpawnOptions, 'shell'> = {}
 ): Promise<Buffer> {
-  // Extract signal so we can handle cancellation with tree-kill
+  // Extract signal so we can handle cancellation with a process-tree kill
   // instead of Node's default which only kills the immediate child.
   const { signal, ...restOptions } = execOptions;
 
-  return new Promise<Buffer>((res, rej: (stdout: Buffer) => void) => {
-    const cp = execFile(
-      gradleBinaryPath,
-      args,
-      {
-        cwd: dirname(gradleBinaryPath),
-        shell: true,
-        windowsHide: true,
-        env: process.env,
-        maxBuffer: LARGE_BUFFER,
-        ...restOptions,
-      },
-      undefined
-    );
+  return new Promise<Buffer>((res, rej: (e: Buffer | Error) => void) => {
+    // Without the filter, empty args reach gradle as literal empty arguments.
+    const cp = safeSpawn(gradleBinaryPath, args.filter(Boolean), {
+      cwd: dirname(gradleBinaryPath),
+      env: process.env,
+      ...restOptions,
+    });
 
-    // Use tree-kill on abort to kill the entire process tree
-    // (cmd.exe → gradlew.bat → java.exe), not just the shell.
+    // A plugin worker torn down by `nx reset` would otherwise orphan the build.
+    killChildOnHostExit(cp);
+    let stdout = Buffer.from('');
+
+    // On abort, kill the entire process tree (gradlew spawns java) and settle
+    // immediately — a wedged JVM that outlives the kill signal would otherwise
+    // keep this promise pending and the abort error would never surface.
     const onAbort = () => {
       if (cp.pid) {
-        treeKill(cp.pid);
+        killProcessTreeGraceful(cp.pid).catch(() => {});
       }
+      rej(stdout);
     };
     signal?.addEventListener('abort', onAbort, { once: true });
-
-    let stdout = Buffer.from('');
     cp.stdout?.on('data', (data) => {
       stdout += data;
     });
     cp.stderr?.on('data', (data) => {
       stdout += data;
+    });
+
+    // Without a shell the child is gradlew itself, so spawn can fail outright —
+    // Node then emits `error` and never `exit`.
+    cp.on('error', (err) => {
+      signal?.removeEventListener('abort', onAbort);
+      rej(err);
     });
 
     cp.on('exit', (code, s) => {

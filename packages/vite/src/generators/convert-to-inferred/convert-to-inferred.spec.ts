@@ -1,7 +1,3 @@
-import {
-  getRelativeProjectJsonSchemaPath,
-  updateProjectConfiguration,
-} from 'nx/src/generators/utils/project-configuration';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertToInferred } from './convert-to-inferred';
 import {
@@ -15,10 +11,12 @@ import {
   type Tree,
   updateNxJson,
   writeJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import type { VitePluginOptions } from '../../plugins/plugin';
+import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
 let fs: TempFs;
 
@@ -473,16 +471,22 @@ describe('Vite - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
+      // project.json modifications: config shared across the migrated `bundle`
+      // projects is now centralized, so the project target is a pure deviation.
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets).toMatchInlineSnapshot(`
-        {
-          "bundle": {
+      expect(updatedProject.targets).toMatchInlineSnapshot(`{}`);
+      // the shared config lives in nx.json targetDefaults instead
+      expect(readNxJson(tree).targetDefaults?.bundle).toMatchInlineSnapshot(`
+        [
+          {
+            "filter": {
+              "plugin": "@nx/vite/plugin",
+            },
             "options": {
               "config": "./vite.config.ts",
             },
           },
-        }
+        ]
       `);
 
       // nx.json modifications

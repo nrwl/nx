@@ -10,9 +10,9 @@ import type { StorybookConfigurationOptions } from './schema';
 import { storybookConfigurationGenerator } from './storybook-configuration';
 
 // nested code imports graph from the repo, which might have inaccurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
+vi.mock('nx/src/project-graph/project-graph', async () => ({
+  ...(await vi.importActual<any>('nx/src/project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
@@ -35,7 +35,7 @@ describe('StorybookConfiguration generator', () => {
   beforeEach(async () => {
     tree = await createStorybookTestWorkspaceForLib(libName);
 
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should only configure storybook', async () => {

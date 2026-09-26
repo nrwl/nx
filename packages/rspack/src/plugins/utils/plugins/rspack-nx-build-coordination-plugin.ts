@@ -1,8 +1,7 @@
 import { exec } from 'child_process';
 import type { Compiler } from '@rspack/core';
-import { daemonClient, isDaemonEnabled } from 'nx/src/daemon/client/client';
-import { BatchFunctionRunner } from 'nx/src/command-line/watch/watch';
-import { output } from 'nx/src/utils/output';
+import { daemonClient, BatchFunctionRunner } from '@nx/devkit/internal';
+import { isDaemonEnabled, output } from '@nx/devkit';
 
 export class RspackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'rspack-build' = 'none';

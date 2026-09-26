@@ -11,6 +11,7 @@ import {
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
+import { normalizeLinterOption } from '@nx/js/internal';
 
 export async function normalizeOptions(
   host: Tree,
@@ -18,9 +19,10 @@ export async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   schema.standalone = schema.standalone ?? true;
   // Create a schema with populated default values
+  // No `linter` default here: it would mask the resolution below, which is what
+  // detects the workspace's linter and prompts when there is nothing to detect.
   const options: Schema = {
     buildable: false,
-    linter: 'eslint',
     publishable: false,
     skipFormat: false,
     // Publishable libs cannot use `full` yet, so if its false then use the passed value or default to `full`
@@ -65,7 +67,7 @@ export async function normalizeOptions(
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
     ...options,
-    linter: options.linter ?? 'eslint',
+    linter: await normalizeLinterOption(host, options.linter),
     unitTestRunner,
     prefix: options.prefix ?? 'lib',
     name: projectName,

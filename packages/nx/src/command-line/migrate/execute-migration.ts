@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import { spawn } from 'child_process';
-import { dirname, join } from 'path';
+import { StringDecoder } from 'string_decoder';
+import { dirname, join, relative } from 'path';
 import { lt } from 'semver';
 import { handleImport } from '../../utils/handle-import';
 import { MigrationsJson } from '../../config/misc-interfaces';
@@ -12,6 +13,7 @@ import {
 } from '../../generators/tree';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
+import { singleLine } from './text';
 import {
   ArrayPackageGroup,
   NxMigrationsConfiguration,
@@ -26,11 +28,13 @@ import {
 import { output } from '../../utils/output';
 import { existsSync } from 'fs';
 import { getNxRequirePaths } from '../../utils/installation-directory';
+import { needsShellQuoting } from '../../utils/shell-quoting';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { normalizeVersion } from './version-utils';
+import { terminalOutput, type MigrateOutputSink } from './deferred-output';
 
 // Migration execution engine shared by the CLI migrate loop, the Console
 // API, and the single-migration child process.
@@ -76,42 +80,78 @@ export function readPackageMigrationConfig(
   }
 }
 
+/**
+ * With a `sink`, stdin is ignored and stdout and stderr are collected for a
+ * caller sharing the terminal. On POSIX the child stays in nx's process
+ * group. Without a sink, the install owns the terminal.
+ */
 export function runInstall(
   nxWorkspaceRoot?: string,
-  phase: MigrationInstallPhase = 'pre-migration'
+  phase: MigrationInstallPhase = 'pre-migration',
+  rerunCommand?: string,
+  sink?: MigrateOutputSink
 ): Promise<void> {
   const cwd = nxWorkspaceRoot ?? process.cwd();
   const packageManager = detectPackageManager(cwd);
   const pmCommands = getPackageManagerCommand(packageManager, cwd);
+  const out = sink ?? terminalOutput;
 
   const installCommand = `${pmCommands.install} ${
     pmCommands.ignoreScriptsFlag ?? ''
   }`;
-  output.log({
+  out.notice('log', {
     title: `Running '${installCommand}' to make sure necessary packages are installed`,
   });
 
   return new Promise<void>((resolve, reject) => {
-    // For npm, pipe stderr so we can detect peer dependency errors while still
-    // mirroring it live to the user's terminal. Other package managers inherit
-    // stderr directly since we don't need to inspect their output.
+    // npm's stderr is piped so peer dependency errors can be detected in it.
+    // Without a sink it is mirrored live and other package managers inherit
+    // stderr directly, since their output is not inspected.
     const shouldCaptureStderr = packageManager === 'npm';
     const child = spawn(installCommand, {
       shell: true,
-      stdio: ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
+      stdio: sink
+        ? ['ignore', 'pipe', 'pipe']
+        : ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
       windowsHide: true,
       cwd,
     });
 
+    // Decoded per stream: a chunk boundary can split a multi-byte character,
+    // and a sequence still incomplete at the end is what `end()` returns.
+    const stdoutText = new StringDecoder('utf8');
+    const stderrText = new StringDecoder('utf8');
+    child.stdout?.on('data', (chunk: Buffer) =>
+      out.raw(stdoutText.write(chunk))
+    );
+    child.stdout?.on('end', () => out.raw(stdoutText.end()));
     const stderrChunks: Buffer[] = [];
     child.stderr?.on('data', (chunk: Buffer) => {
-      process.stderr.write(chunk);
-      stderrChunks.push(chunk);
+      if (sink) {
+        out.raw(stderrText.write(chunk));
+      } else {
+        process.stderr.write(chunk);
+      }
+      if (shouldCaptureStderr) stderrChunks.push(chunk);
+    });
+    if (sink) child.stderr.on('end', () => out.raw(stderrText.end()));
+
+    // With a sink the rejection waits for `close`, which follows the streams'
+    // `end`: a caller must be able to render what it collected on rejection.
+    let spawnError: Error | null = null;
+    child.on('error', (error) => {
+      if (sink) {
+        spawnError = error;
+      } else {
+        reject(error);
+      }
     });
 
-    child.on('error', reject);
-
     child.on('close', (code) => {
+      if (spawnError) {
+        reject(spawnError);
+        return;
+      }
       if (code === 0) {
         resolve();
         return;
@@ -124,7 +164,7 @@ export function runInstall(
           // (CLI migrate, `nx repair`, single-migration runner, etc.) surfaces
           // it consistently. Top-level callers catch `NpmPeerDepsInstallError`
           // and return a non-zero exit code without re-logging.
-          logNpmPeerDepsError(phase);
+          logNpmPeerDepsError(phase, rerunCommand, out);
           reject(new NpmPeerDepsInstallError());
           return;
         }
@@ -163,7 +203,25 @@ export function isNpmPeerDepsError(stderr: string): boolean {
   );
 }
 
-export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
+// The single-migration rerun command lands in copyable guidance (see
+// `logNpmPeerDepsError` below), so quote ids a shell would split or expand.
+// Single quotes stay literal in POSIX shells and PowerShell alike; double
+// quotes would leave $-expansion active in both. The embedded-quote escape is
+// the POSIX '\'' sequence, the one character PowerShell disagrees on (it wants
+// ''). cmd.exe is knowingly not covered: it does not group on single quotes,
+// and no quoting suppresses its %VAR% expansion.
+export function formatSingleMigrationRerunCommand(migrationId: string): string {
+  const id = needsShellQuoting(migrationId)
+    ? `'${migrationId.replace(/'/g, String.raw`'\''`)}'`
+    : migrationId;
+  return `nx migrate --run-migration=${id}`;
+}
+
+export function logNpmPeerDepsError(
+  phase: MigrationInstallPhase,
+  rerunCommand = 'nx migrate --run-migrations',
+  out: MigrateOutputSink = terminalOutput
+): void {
   const peerDepsResolutionSteps = [
     'Recommended approaches (in order of preference):',
     '',
@@ -177,32 +235,32 @@ export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
   ];
   const manualInstallHint = [
     'If you installed the dependencies manually, pass "--skip-install" to avoid re-installing them:',
-    '   nx migrate --run-migrations --skip-install',
+    `   ${rerunCommand} --skip-install`,
   ];
 
   if (phase === 'pre-migration') {
-    output.error({
+    out.notice('error', {
       title:
         'You need to resolve the peer dependency conflicts before the migration can continue',
       bodyLines: [
         ...peerDepsResolutionSteps,
         '',
-        'Once the conflicts are resolved, re-run the migrations:',
-        '   nx migrate --run-migrations',
+        'Once the conflicts are resolved, re-run the migration command:',
+        `   ${rerunCommand}`,
         '',
         ...manualInstallHint,
       ],
     });
   } else {
-    output.error({
+    out.notice('error', {
       title:
         'Some migrations have been applied, but installing the updated dependencies failed',
       bodyLines: [
         ...peerDepsResolutionSteps,
         '',
         'Once the conflicts are resolved, run "npm install" to install the updated dependencies.',
-        'If the migration was interrupted before completing, re-run the remaining migrations:',
-        '   nx migrate --run-migrations',
+        'If the migration run was interrupted before completing, re-run it:',
+        `   ${rerunCommand}`,
         '',
         ...manualInstallHint,
       ],
@@ -210,13 +268,27 @@ export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
   }
 }
 
+export function logSkippedPostMigrationInstall(
+  root: string,
+  out: MigrateOutputSink = terminalOutput
+): void {
+  const packageManager = detectPackageManager(root);
+  const installCommand = getPackageManagerCommand(packageManager, root).install;
+  out.notice('warn', {
+    title: 'Migrations updated your dependencies, but the install was skipped',
+    bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
+  });
+}
+
 export class ChangedDepInstaller {
   private initialDeps: string;
   private _skippedInstall = false;
+  private _installed = false;
 
   constructor(
     private readonly root: string,
-    private readonly shouldSkipInstall = false
+    private readonly shouldSkipInstall = false,
+    private readonly rerunCommand?: string
   ) {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
@@ -225,13 +297,23 @@ export class ChangedDepInstaller {
     return this._skippedInstall;
   }
 
+  /**
+   * Whether an install actually ran. Distinct from `!skippedInstall`, which is
+   * only about the skip-install flag: dependencies that never changed leave
+   * both false.
+   */
+  public get installed(): boolean {
+    return this._installed;
+  }
+
   public async installDepsIfChanged(): Promise<void> {
     const currentDeps = getStringifiedPackageJsonDeps(this.root);
     if (this.initialDeps !== currentDeps) {
       if (this.shouldSkipInstall) {
         this._skippedInstall = true;
       } else {
-        await runInstall(this.root, 'post-migration');
+        await runInstall(this.root, 'post-migration', this.rerunCommand);
+        this._installed = true;
       }
     }
     this.initialDeps = currentDeps;
@@ -248,11 +330,12 @@ export async function runNxOrAngularMigration(
   },
   isVerbose: boolean,
   captureGeneratorOutput = false,
-  resolvedCollection?: { collection: MigrationsJson; collectionPath: string }
+  resolvedCollection?: ResolvedMigrationCollection
 ): Promise<{
   changes: FileChange[];
   nextSteps: string[];
   agentContext: string[];
+  skipAgentic: boolean;
   logs: string;
   madeChanges: boolean;
 }> {
@@ -261,6 +344,8 @@ export async function runNxOrAngularMigration(
   let changes: FileChange[] = [];
   let nextSteps: string[] = [];
   let agentContext: string[] = [];
+  // Angular schematics have no return channel, so they can never waive it.
+  let skipAgentic = false;
   let logs = '';
   // Angular's `ngResult.changes` is synthesized from the schematic's
   // DryRunEvent stream so Nx and Angular paths can share commit/validation
@@ -268,24 +353,32 @@ export async function runNxOrAngularMigration(
   let madeChanges = false;
   logger.info(pc.dim('→ Running generator…'));
   if (!isAngularMigration(collection, migration.name)) {
-    ({ nextSteps, changes, agentContext, logs } = await runNxMigration(
-      root,
-      collectionPath,
-      collection,
-      migration.name,
-      migration.version,
-      captureGeneratorOutput
-    ));
+    ({ nextSteps, changes, agentContext, skipAgentic, logs } =
+      await runNxMigration(
+        root,
+        collectionPath,
+        collection,
+        migration.name,
+        migration.version,
+        captureGeneratorOutput
+      ));
     madeChanges = changes.length > 0;
 
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(singleLine(`Ran ${migration.name} from ${migration.package}`));
     if (migration.description) {
-      logger.info(`  ${migration.description}`);
+      logger.info(singleLine(`  ${migration.description}`));
     }
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
+      return {
+        changes,
+        nextSteps,
+        agentContext,
+        skipAgentic,
+        logs,
+        madeChanges,
+      };
     }
 
     logger.info('Changes:');
@@ -306,25 +399,38 @@ export async function runNxOrAngularMigration(
     madeChanges = ngResult.madeChanges;
     logs = ngResult.loggingQueue.join('\n');
 
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(singleLine(`Ran ${migration.name} from ${migration.package}`));
     if (migration.description) {
-      logger.info(`  ${migration.description}`);
+      logger.info(singleLine(`  ${migration.description}`));
     }
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
+      return {
+        changes,
+        nextSteps,
+        agentContext,
+        skipAgentic,
+        logs,
+        madeChanges,
+      };
     }
 
     logger.info('Changes:');
-    ngResult.loggingQueue.forEach((log) => logger.info('  ' + log));
+    ngResult.loggingQueue.forEach((log) => logger.info(singleLine('  ' + log)));
     logger.info('');
   }
 
-  return { changes, nextSteps, agentContext, logs, madeChanges };
+  return { changes, nextSteps, agentContext, skipAgentic, logs, madeChanges };
 }
 
-export function getStringifiedPackageJsonDeps(root: string): string {
+/**
+ * The workspace's declared dependencies, serialized for equality comparison,
+ * or `null` when package.json could not be read or parsed. Callers that
+ * persist the value across processes need that distinction: an unreadable
+ * package.json is not an empty dependency set.
+ */
+export function readPackageJsonDeps(root: string): string | null {
   try {
     const { dependencies, devDependencies } = readJsonFile<PackageJson>(
       join(root, 'package.json')
@@ -332,10 +438,14 @@ export function getStringifiedPackageJsonDeps(root: string): string {
 
     return JSON.stringify([dependencies, devDependencies]);
   } catch {
-    // We don't really care if the .nx/installation property changes,
-    // whenever nxw is invoked it will handle the dep updates.
-    return '';
+    return null;
   }
+}
+
+export function getStringifiedPackageJsonDeps(root: string): string {
+  // We don't really care if the .nx/installation property changes,
+  // whenever nxw is invoked it will handle the dep updates.
+  return readPackageJsonDeps(root) ?? '';
 }
 
 export async function runNxMigration(
@@ -367,29 +477,36 @@ export async function runNxMigration(
   } else {
     result = await fn(host, {});
   }
-  const { nextSteps, agentContext } = parseMigrationReturn(result);
+  const { nextSteps, agentContext, skipAgentic } = parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
-  return { changes, nextSteps, agentContext, logs };
+  return { changes, nextSteps, agentContext, skipAgentic, logs };
 }
 
 export function parseMigrationReturn(value: unknown): {
   nextSteps: string[];
   agentContext: string[];
+  skipAgentic: boolean;
 } {
   if (Array.isArray(value)) {
-    return { nextSteps: filterStrings(value), agentContext: [] };
+    return {
+      nextSteps: filterStrings(value),
+      agentContext: [],
+      skipAgentic: false,
+    };
   }
   if (value && typeof value === 'object') {
     const obj = value as Record<string, unknown>;
     return {
       nextSteps: filterStrings(obj.nextSteps),
       agentContext: filterStrings(obj.agentContext),
+      // Strict, so a truthy non-boolean can't opt a migration out of its AI step.
+      skipAgentic: obj.skipAgentic === true,
     };
   }
   // Catches `void`, mistakenly-returned generator callbacks, malformed values.
-  return { nextSteps: [], agentContext: [] };
+  return { nextSteps: [], agentContext: [], skipAgentic: false };
 }
 
 // Bucket-level tolerance: a single non-string entry shouldn't discard the
@@ -401,7 +518,15 @@ export function filterStrings(value: unknown): string[] {
   return value.filter((v): v is string => typeof v === 'string');
 }
 
-export function readMigrationCollection(packageName: string, root: string) {
+export interface ResolvedMigrationCollection {
+  collection: MigrationsJson;
+  collectionPath: string;
+}
+
+export function readMigrationCollection(
+  packageName: string,
+  root: string
+): ResolvedMigrationCollection {
   const collectionPath = readPackageMigrationConfig(
     packageName,
     root
@@ -412,6 +537,25 @@ export function readMigrationCollection(packageName: string, root: string) {
     collection,
     collectionPath,
   };
+}
+
+// Workspace-relative because the agent runs with cwd at the workspace root;
+// absolute only for layouts that resolve outside it (hoisted/symlinked).
+export function resolveDocumentationFileToWorkspacePath(
+  root: string,
+  migrationsDir: string,
+  documentation: string
+): string | undefined {
+  let documentationFile: string;
+  try {
+    documentationFile = require.resolve(documentation, {
+      paths: [migrationsDir],
+    });
+  } catch {
+    return undefined;
+  }
+  const relativePath = relative(root, documentationFile);
+  return relativePath.startsWith('..') ? documentationFile : relativePath;
 }
 
 export function getImplementationPath(

@@ -6,10 +6,9 @@ import {
 } from '@nx/devkit';
 import {
   HelperDependency,
-  createLockFile,
   createPackageJson,
+  generatePrunedDeployOutput,
   getHelperDependenciesFromProjectGraph,
-  getLockFileName,
   readTsConfig,
 } from '@nx/js';
 import type { Compiler, RspackPluginInstance } from '@rspack/core';
@@ -69,26 +68,27 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
 
+          const packageManager = detectPackageManager(this.context.root);
+
+          generatePrunedDeployOutput(
+            packageJson,
+            this.projectGraph,
+            this.projectGraph.nodes[this.context.projectName].data.root,
+            {
+              emit: (assetPath, content) =>
+                compilation.emitAsset(
+                  assetPath,
+                  new sources.RawSource(content)
+                ),
+              packageManager,
+              workspaceRoot: this.context.root,
+            }
+          );
+
           compilation.emitAsset(
             'package.json',
             new sources.RawSource(serializeJson(packageJson))
           );
-          const packageManager = detectPackageManager(this.context.root);
-
-          if (packageManager === 'bun') {
-            compilation
-              .getLogger('GeneratePackageJsonPlugin')
-              .warn(
-                'Bun lockfile generation is not supported. Only package.json will be generated.'
-              );
-          } else {
-            compilation.emitAsset(
-              getLockFileName(packageManager),
-              new sources.RawSource(
-                createLockFile(packageJson, this.projectGraph, packageManager)
-              )
-            );
-          }
         }
       );
     });

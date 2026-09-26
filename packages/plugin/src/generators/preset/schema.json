@@ -25,6 +25,11 @@
       "type": "string",
       "description": "Name of package which creates a workspace"
     },
+    "linter": {
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
+      "type": "string",
+      "enum": ["none", "eslint", "oxlint"]
+    },
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."

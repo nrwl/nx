@@ -10,6 +10,7 @@ import type { Tree } from '../../../generators/tree';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
 import { calculateFileChanges } from '../../../project-graph/file-utils';
 import { NxArgs } from '../../../utils/command-line-utils';
+import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   type NxReleaseConfig,
@@ -134,6 +135,7 @@ export class ReleaseGraph {
     Set<string>
   >();
   private originalFilteredProjects = new Set<string>();
+  private matchedProjectsForFilter = new Set<string>();
 
   /**
    * Store the affected graph per commit per project
@@ -163,6 +165,20 @@ export class ReleaseGraph {
    * @internal - Called by createReleaseGraph(), not meant for external use
    */
   async init(options: CreateReleaseGraphOptions): Promise<void> {
+    if (this.filters.projects?.length) {
+      this.matchedProjectsForFilter = new Set(
+        findMatchingProjects(
+          [...this.filters.projects],
+          options.projectGraph.nodes
+        )
+      );
+      if (this.matchedProjectsForFilter.size === 0) {
+        throw new Error(
+          `Your --projects filter "${this.filters.projects}" did not match any projects in the workspace`
+        );
+      }
+    }
+
     // Step 1: Setup project to release group mapping
     this.setupProjectReleaseGroupMapping();
 
@@ -259,7 +275,7 @@ export class ReleaseGraph {
       for (const project of releaseGroup.projects) {
         if (
           this.filters.projects?.length &&
-          !this.filters.projects.includes(project)
+          !this.matchedProjectsForFilter.has(project)
         ) {
           continue;
         }
@@ -318,7 +334,7 @@ export class ReleaseGraph {
 
         if (filters.groups?.includes(groupName)) {
           projectsToProcess.add(project);
-        } else if (filters.projects?.includes(project)) {
+        } else if (this.matchedProjectsForFilter.has(project)) {
           projectsToProcess.add(project);
         }
 
@@ -628,57 +644,139 @@ export class ReleaseGraph {
   ): Promise<void> {
     for (const [, releaseGroupNode] of this.groupGraph) {
       for (const projectName of releaseGroupNode.group.projects) {
-        const projectGraphNode = projectGraph.nodes[projectName];
-
         if (!this.allProjectsToProcess.has(projectName)) {
           continue;
         }
 
-        const versionActions = this.projectsToVersionActions.get(projectName)!;
-        const finalConfigForProject =
-          this.finalConfigsByProject.get(projectName)!;
-
-        let latestMatchingGitTag:
-          | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
-          | undefined;
-        const releaseTagPattern = releaseGroupNode.group.releaseTag.pattern;
-
-        if (finalConfigForProject.currentVersionResolver === 'git-tag') {
-          latestMatchingGitTag = await getLatestGitTagForPattern(
-            releaseTagPattern,
-            {
-              projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
-              releaseGroupName: releaseGroupNode.group.name,
-            },
-            this.resolveRepositoryTags.bind(this),
-            {
-              checkAllBranchesWhen:
-                releaseGroupNode.group.releaseTag.checkAllBranchesWhen,
-              preid: preid,
-              requireSemver: releaseGroupNode.group.releaseTag.requireSemver,
-              strictPreid: releaseGroupNode.group.releaseTag.strictPreid,
-            }
-          );
-          this.cachedLatestMatchingGitTag.set(
-            projectName,
-            latestMatchingGitTag
-          );
-        }
-
-        const currentVersion = await resolveCurrentVersion(
+        const currentVersion = await this.resolveCurrentVersionForProject(
           tree,
-          projectGraphNode,
+          projectGraph,
           releaseGroupNode.group,
-          versionActions,
-          this.projectLoggers.get(projectName)!,
-          this.currentVersionsPerFixedReleaseGroup,
-          finalConfigForProject,
-          releaseTagPattern,
-          latestMatchingGitTag
+          projectName,
+          preid
         );
         this.cachedCurrentVersions.set(projectName, currentVersion);
       }
     }
+  }
+
+  /**
+   * Resolve the current version of a single project via its configured
+   * `currentVersionResolver` (honoring `fallbackCurrentVersionResolver`),
+   * performing the git-tag lookup when applicable.
+   *
+   * Extracted from `resolveCurrentVersionsForProjects` so it can also be
+   * invoked on-demand for projects that are NOT part of `allProjectsToProcess`.
+   */
+  private async resolveCurrentVersionForProject(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    releaseGroup: ReleaseGroupWithName,
+    projectName: string,
+    preid: string
+  ): Promise<string | null> {
+    const projectGraphNode = projectGraph.nodes[projectName];
+    const versionActions = this.projectsToVersionActions.get(projectName)!;
+    const finalConfigForProject = this.finalConfigsByProject.get(projectName)!;
+
+    let latestMatchingGitTag:
+      | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
+      | undefined;
+    const releaseTagPattern = releaseGroup.releaseTag.pattern;
+
+    if (finalConfigForProject.currentVersionResolver === 'git-tag') {
+      latestMatchingGitTag = await getLatestGitTagForPattern(
+        releaseTagPattern,
+        {
+          projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
+          releaseGroupName: releaseGroup.name,
+        },
+        this.resolveRepositoryTags.bind(this),
+        {
+          checkAllBranchesWhen: releaseGroup.releaseTag.checkAllBranchesWhen,
+          preid: preid,
+          requireSemver: releaseGroup.releaseTag.requireSemver,
+          strictPreid: releaseGroup.releaseTag.strictPreid,
+        }
+      );
+      this.cachedLatestMatchingGitTag.set(projectName, latestMatchingGitTag);
+    }
+
+    return resolveCurrentVersion(
+      tree,
+      projectGraphNode,
+      releaseGroup,
+      versionActions,
+      this.projectLoggers.get(projectName)!,
+      this.currentVersionsPerFixedReleaseGroup,
+      finalConfigForProject,
+      releaseTagPattern,
+      latestMatchingGitTag
+    );
+  }
+
+  /**
+   * Resolve and cache the current version of a dependency that is not already
+   * being versioned. Ecosystem-specific VersionActions call this lazily when
+   * they need a concrete version that is absent from `dependenciesToUpdate`.
+   *
+   * @internal
+   */
+  async resolveCurrentVersionForDependency(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    projectName: string,
+    preid: string
+  ): Promise<string> {
+    if (this.cachedCurrentVersions.has(projectName)) {
+      const currentVersion = this.cachedCurrentVersions.get(projectName);
+      if (currentVersion) {
+        return currentVersion;
+      }
+      const currentVersionResolver =
+        this.finalConfigsByProject.get(projectName)?.currentVersionResolver;
+      throw new Error(
+        `Cannot resolve a concrete current version for dependency project "${projectName}" because its "currentVersionResolver" is set to "${currentVersionResolver}" and did not resolve a version. Configure a resolver that can determine the current version.`
+      );
+    }
+
+    const releaseGroup = this.projectToReleaseGroup.get(projectName);
+    if (
+      !releaseGroup ||
+      !this.projectsToVersionActions.has(projectName) ||
+      !this.finalConfigsByProject.has(projectName)
+    ) {
+      throw new Error(
+        `Cannot resolve a concrete current version for dependency project "${projectName}" because it is not configured for Nx Release. Include the project in an Nx Release group so that its current version resolver can be configured.`
+      );
+    }
+
+    let currentVersion: string | null;
+    try {
+      currentVersion = await this.resolveCurrentVersionForProject(
+        tree,
+        projectGraph,
+        releaseGroup,
+        projectName,
+        preid
+      );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `Cannot resolve a concrete current version for dependency project "${projectName}". ${errorMessage}`
+      );
+    }
+
+    if (!currentVersion) {
+      const finalConfigForProject =
+        this.finalConfigsByProject.get(projectName)!;
+      throw new Error(
+        `Cannot resolve a concrete current version for dependency project "${projectName}" because its "currentVersionResolver" is set to "${finalConfigForProject.currentVersionResolver}" and did not resolve a version. Configure a resolver that can determine the current version.`
+      );
+    }
+
+    this.cachedCurrentVersions.set(projectName, currentVersion);
+    return currentVersion;
   }
 
   /**
@@ -1046,7 +1144,16 @@ Valid values are: ${validReleaseVersionPrefixes
     } as NxArgs);
 
     // Use the same affected detection logic as `nx affected`
-    affectedGraph = await filterAffected(projectGraph, touchedFiles);
+    affectedGraph = await filterAffected(
+      projectGraph,
+      touchedFiles,
+      undefined,
+      undefined,
+      // Release evaluates historical commits against the current project
+      // graph. A project configuration which no longer exists must not make
+      // every surviving release project relevant to that commit.
+      false
+    );
     this.affectedGraphPerCommit.set(shortHash, affectedGraph);
 
     return affectedGraph;

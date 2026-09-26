@@ -1,8 +1,10 @@
-import { updateJson } from 'nx/src/devkit-exports';
+import { updateJson, workspaceRoot } from 'nx/src/devkit-exports';
+import { FsTree } from 'nx/src/generators/tree';
 import { createTreeWithEmptyWorkspace } from '../../testing';
 import {
   assertSupportedInstalledPackageVersion,
   assertSupportedPackageVersion,
+  getResolvedPackageVersion,
   throwForUnsupportedVersion,
 } from './version-floor';
 import * as installedVersion from './installed-version';
@@ -89,6 +91,327 @@ describe('assertSupportedPackageVersion', () => {
       assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
     ).not.toThrow();
   });
+
+  it('asks to install dependencies when the declared range straddles the floor and no installed version resolves', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.5.0 <3.0.0' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Unable to determine the installed version of `some-pkg`/);
+  });
+
+  it('does not throw when the exact declared version is a prerelease of the floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '2.0.0-rc.1' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('throws when the exact declared version is a prerelease below the floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '1.9.0-rc.1' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Unsupported version of `some-pkg` detected/);
+  });
+
+  it('does not throw when the declared range only reaches the floor through its prereleases', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=2.0.0-rc.1 <2.0.0' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('does not throw when the installed version is a prerelease of the floor within a prerelease-only range', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=2.0.0-rc.1 <2.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.0.0-rc.2' })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('conservatively asks to install dependencies for a prerelease range below the floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.9.0-rc.1 <2.0.0' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Unable to determine the installed version of `some-pkg`/);
+  });
+
+  it('does not throw when the declared range minimum is a prerelease of the floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=2.0.0-rc.1 <3.0.0' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('throws when a compound declared range is entirely below the floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.0.0 <1.6.0' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Unsupported version of `some-pkg` detected/);
+  });
+
+  it('throws when the installed version satisfies the declared range and is below the floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '1.5.0' })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Installed: 1\.5\.0/);
+  });
+
+  it('does not throw when the installed version satisfies the declared range and meets the floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('ignores an installed version that does not satisfy the declared range (declared intent wins)', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '~1.5.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Installed: ~1\.5\.0/);
+  });
+
+  it.each(['file:../some-pkg', 'link:../some-pkg', 'workspace:*'])(
+    'throws when the package is declared as `%s` and the installed version is below the floor',
+    (declared) => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': declared },
+      }));
+      tree.write(
+        'node_modules/some-pkg/package.json',
+        JSON.stringify({ name: 'some-pkg', version: '1.5.0' })
+      );
+
+      expect(() =>
+        assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+      ).toThrow(/Installed: 1\.5\.0/);
+    }
+  );
+
+  it.each(['file:../some-pkg', 'link:../some-pkg', 'workspace:*'])(
+    'does not throw when the package is declared as `%s` and the installed version meets the floor',
+    (declared) => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': declared },
+      }));
+      tree.write(
+        'node_modules/some-pkg/package.json',
+        JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+      );
+
+      expect(() =>
+        assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+      ).not.toThrow();
+    }
+  );
+
+  it('ignores an installed version that does not satisfy the range an npm alias declares', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': 'npm:some-pkg@~1.5.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Installed: npm:some-pkg@~1\.5\.0/);
+  });
+
+  it('treats an installed prerelease as its release version', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '1.5.0-beta.1' })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Installed: 1\.5\.0-beta\.1/);
+  });
+
+  it('does not throw when an installed prerelease meets the floor within a plain range', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.5.0-rc.1' })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('ignores an installed package.json with a non-string version', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: 42 })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Unable to determine the installed version of `some-pkg`/);
+  });
+
+  it('ignores an installed package.json with an object version', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: { value: '2.5.0' } })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Unable to determine the installed version of `some-pkg`/);
+  });
+
+  it('does not throw when an installed floor prerelease matches an upper prerelease bound', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '<=2.0.0-rc.1' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.0.0-rc.1' })
+    );
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('falls back to module resolution when the tree has no node_modules (e.g. Yarn PnP)', () => {
+    const spy = jest
+      .spyOn(installedVersion, 'getInstalledPackageVersion')
+      .mockReturnValue('1.5.0');
+    try {
+      const tree = new FsTree(workspaceRoot, false);
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+      }));
+
+      expect(() =>
+        assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+      ).toThrow(/Installed: 1\.5\.0/);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('does not resolve from the process for a tree not rooted at the workspace', () => {
+    const spy = jest
+      .spyOn(installedVersion, 'getInstalledPackageVersion')
+      .mockReturnValue('1.5.0');
+    try {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+      }));
+
+      expect(() =>
+        assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+      ).toThrow(/Unable to determine the installed version of `some-pkg`/);
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });
 
 describe('assertSupportedInstalledPackageVersion', () => {
@@ -159,5 +482,217 @@ describe('assertSupportedInstalledPackageVersion', () => {
     expect(() =>
       assertSupportedInstalledPackageVersion('some-pkg', '2.0.0')
     ).toThrow(/Unsupported version of `some-pkg` detected/);
+  });
+});
+
+describe('getResolvedPackageVersion', () => {
+  it('returns null when the package is not declared', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+    );
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBeNull();
+  });
+
+  it('falls back to `latestKnownVersion` when the package is not declared', () => {
+    const tree = createTreeWithEmptyWorkspace();
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg', '^3.0.0')).toBe('3.0.0');
+  });
+
+  it('returns the declared floor when nothing is installed', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+    }));
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('1.0.0');
+  });
+
+  it('returns the declared floor when the range lists its upper bound first', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '<3.0.0 >=1.5.0' },
+    }));
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('1.5.0');
+  });
+
+  it('falls back to the coerced declaration when nothing satisfies the declared range', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=2.0.0 <1.0.0' },
+    }));
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('2.0.0');
+  });
+
+  it('returns the installed version when it satisfies the declared range', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+    );
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('2.5.0');
+  });
+
+  it('returns the installed prerelease when its release version satisfies the declared range', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '^2.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.1.0-beta.1' })
+    );
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('2.1.0-beta.1');
+  });
+
+  it('returns the declared floor when the installed version does not satisfy the declared range', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '^3.0.0' },
+    }));
+    tree.write(
+      'node_modules/some-pkg/package.json',
+      JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+    );
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('3.0.0');
+  });
+
+  it.each(['latest', 'next'])(
+    'returns the installed version when the package is declared as `%s`',
+    (distTag) => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': distTag },
+      }));
+      tree.write(
+        'node_modules/some-pkg/package.json',
+        JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+      );
+
+      expect(getResolvedPackageVersion(tree, 'some-pkg', '^3.0.0')).toBe(
+        '2.5.0'
+      );
+    }
+  );
+
+  it.each(['latest', 'next'])(
+    'falls back to `latestKnownVersion` when the package is declared as `%s` and nothing is installed',
+    (distTag) => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': distTag },
+      }));
+
+      expect(getResolvedPackageVersion(tree, 'some-pkg', '^3.0.0')).toBe(
+        '3.0.0'
+      );
+      expect(getResolvedPackageVersion(tree, 'some-pkg')).toBeNull();
+    }
+  );
+
+  it.each([
+    ['^3.0.0', '3.0.0'],
+    ['^2.0.0', '2.5.0'],
+  ])(
+    'resolves an npm alias declaring `%s` with 2.5.0 installed to %s',
+    (range, expected) => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': `npm:some-pkg@${range}` },
+      }));
+      tree.write(
+        'node_modules/some-pkg/package.json',
+        JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+      );
+
+      expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe(expected);
+    }
+  );
+
+  it.each([
+    'file:../some-pkg',
+    'link:../some-pkg',
+    'workspace:*',
+    'npm:@scope/some-pkg',
+  ])(
+    'returns the installed version when the package is declared as `%s`',
+    (declared) => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': declared },
+      }));
+      tree.write(
+        'node_modules/some-pkg/package.json',
+        JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+      );
+
+      expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('2.5.0');
+    }
+  );
+
+  it('returns null when the package is declared as a path and nothing is installed', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': 'file:../some-pkg' },
+    }));
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBeNull();
+  });
+
+  it('falls back to module resolution when the tree has no node_modules (e.g. Yarn PnP)', () => {
+    const spy = jest
+      .spyOn(installedVersion, 'getInstalledPackageVersion')
+      .mockReturnValue('2.5.0');
+    try {
+      const tree = new FsTree(workspaceRoot, false);
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+      }));
+
+      expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('2.5.0');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('does not resolve from the process for a tree not rooted at the workspace', () => {
+    const spy = jest
+      .spyOn(installedVersion, 'getInstalledPackageVersion')
+      .mockReturnValue('2.5.0');
+    try {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': '>=1.0.0 <3.0.0' },
+      }));
+
+      expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('1.0.0');
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

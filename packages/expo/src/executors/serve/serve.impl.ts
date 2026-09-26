@@ -87,13 +87,38 @@ function serveAsync(
       }
     );
 
+    let settled = false;
+    const settleResolve = (cp: ChildProcess) => {
+      if (settled) return;
+      settled = true;
+      resolve(cp);
+    };
+    const settleReject = (err: unknown) => {
+      if (settled) return;
+      settled = true;
+      reject(err);
+    };
+
+    // Expo bundles on first request, so waiting on a bundle log line deadlocks
+    // against a consumer that only requests once we report ready (@nx/cypress).
+    // /status answers packager-status:running once Metro's bundler is ready.
+    void (async () => {
+      while (!settled) {
+        if ((await isPackagerRunning(options.port)) === 'running') {
+          settleResolve(childProcess);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    })();
+
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(data);
       if (
         data.toString().includes('Bundling complete') ||
         data.toString().includes('Bundled')
       ) {
-        resolve(childProcess);
+        settleResolve(childProcess);
       }
     });
     childProcess.stderr.on('data', (data) => {
@@ -101,14 +126,14 @@ function serveAsync(
     });
 
     childProcess.on('error', (err) => {
-      reject(err);
+      settleReject(err);
     });
     childProcess.on('exit', (code, signal) => {
       if (code === null) code = signalToCode(signal);
       if (code === 0) {
-        resolve(childProcess);
+        settleResolve(childProcess);
       } else {
-        reject(code);
+        settleReject(code);
       }
     });
   });

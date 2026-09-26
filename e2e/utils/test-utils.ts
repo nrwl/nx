@@ -5,8 +5,7 @@ import {
   runCLIAsync,
   runCommand,
 } from './command-utils';
-import { uniq } from './create-project-utils';
-import { tmpProjPath } from './create-project-utils';
+import { uniq, tmpProjPath } from './create-project-utils';
 import { readFile, fileExists, updateFile } from './file-utils';
 
 type GeneratorsWithDefaultTests =

@@ -17,6 +17,13 @@ fun getNxProjectName(project: Project): String =
     else project.buildTreePath
 
 /**
+ * The build file that configures [project]: its own, or the nearest ancestor's — `project(':core')
+ * { }` configures from an ancestor.
+ */
+fun effectiveBuildFile(project: Project): File? =
+    generateSequence(project) { it.parent }.map { it.buildFile }.firstOrNull { it.exists() }
+
+/**
  * Make [path] relative to [workspaceRoot] with `/` separators so reports are machine-portable and
  * canonical. The workspace root itself becomes `.`; paths outside the workspace are kept absolute.
  */
@@ -100,11 +107,7 @@ private fun createNodeForProjectImpl(
     externalNodes = emptyMap()
   }
   val buildFileRelativePath =
-      if (project.buildFile.exists()) {
-        project.buildFile.relativeTo(File(workspaceRoot)).invariantSeparatorsPath
-      } else {
-        null
-      }
+      effectiveBuildFile(project)?.relativeTo(File(workspaceRoot))?.invariantSeparatorsPath
   // Dependency paths are collected as absolute paths; relativize so the report
   // stays valid when reused from another machine (e.g. CI cache distribution).
   val portableDependencies =

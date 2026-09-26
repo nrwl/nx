@@ -73,13 +73,7 @@ exports[`@nx/eslint:workspace-rules-project should generate the required files 4
     "types": ["jest", "node"],
     "isolatedModules": true
   },
-  "include": [
-    "jest.config.ts",
-    "jest.config.cts",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/*.d.ts"
-  ]
+  "include": ["jest.config.ts", "jest.config.cts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
 }
 "
 `;

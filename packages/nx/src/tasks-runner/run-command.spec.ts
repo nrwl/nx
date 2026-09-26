@@ -1,8 +1,17 @@
 import { TasksRunner } from './tasks-runner';
-import { getRunner } from './run-command';
+import {
+  getRunner,
+  selectTasksForProjects,
+  setEnvVarsBasedOnArgs,
+} from './run-command';
+import type { NxArgs } from '../utils/command-line-utils';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { join } from 'path';
-import { nxCloudTasksRunnerShell } from '../nx-cloud/nx-cloud-tasks-runner-shell';
+// getRunner loads the runner with a bare require, so compare against the
+// instance from the same channel rather than the vite-imported copy.
+const {
+  nxCloudTasksRunnerShell,
+} = require('../nx-cloud/nx-cloud-tasks-runner-shell');
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
 describe('getRunner', () => {
@@ -12,11 +21,13 @@ describe('getRunner', () => {
 
   beforeEach(() => {
     nxJson = {};
-    mockRunner = jest.fn();
+    mockRunner = vi.fn();
   });
 
   it('uses default runner when no tasksRunnerOptions are present', () => {
-    jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
+    // getRunner loads the runner with a bare require, so fetch the expected
+    // instance through the same channel rather than mocking the module.
+    const expected = require('./default-tasks-runner').default;
 
     const { tasksRunner } = withEnvironmentVariables(
       {
@@ -25,7 +36,7 @@ describe('getRunner', () => {
       () => getRunner({}, {})
     );
 
-    expect(tasksRunner).toEqual(mockRunner);
+    expect(tasksRunner).toEqual(expected);
   });
 
   it('uses nx-cloud when no tasksRunnerOptions are present and accessToken is specified', () => {
@@ -96,8 +107,6 @@ describe('getRunner', () => {
   });
 
   it('reads options from base properties if no runner options provided', () => {
-    jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
-
     const { runnerOptions } = getRunner(
       {},
       {
@@ -119,5 +128,126 @@ describe('getRunner', () => {
         "useDaemonProcess": false,
       }
     `);
+  });
+});
+
+describe('setEnvVarsBasedOnArgs', () => {
+  /**
+   * Streamed output interleaves between tasks, so it cannot be wrapped in the
+   * collapsible log groups that CI relies on. These cover which of the two wins.
+   */
+  function resolveStreaming(
+    env: Record<string, string | undefined>,
+    nxArgs: Partial<NxArgs> = {}
+  ) {
+    return withEnvironmentVariables(
+      {
+        GITHUB_ACTIONS: undefined,
+        NX_BATCH_MODE: undefined,
+        NX_PREFIX_OUTPUT: undefined,
+        NX_SKIP_LOG_GROUPING: undefined,
+        NX_STREAM_OUTPUT: undefined,
+        NX_TUI: undefined,
+        ...env,
+      },
+      () => {
+        setEnvVarsBasedOnArgs(nxArgs as NxArgs, false);
+        return process.env.NX_STREAM_OUTPUT === 'true';
+      }
+    );
+  }
+
+  it('streams in batch mode when log grouping does not apply', () => {
+    expect(resolveStreaming({ NX_BATCH_MODE: 'true' })).toBe(true);
+  });
+
+  it('does not stream in batch mode on GitHub Actions, so output can be grouped', () => {
+    expect(
+      resolveStreaming({ NX_BATCH_MODE: 'true', GITHUB_ACTIONS: 'true' })
+    ).toBe(false);
+  });
+
+  it('does not stream for --batch on GitHub Actions', () => {
+    expect(resolveStreaming({ GITHUB_ACTIONS: 'true' }, { batch: true })).toBe(
+      false
+    );
+  });
+
+  it('streams in batch mode on GitHub Actions when grouping is skipped', () => {
+    expect(
+      resolveStreaming({
+        NX_BATCH_MODE: 'true',
+        GITHUB_ACTIONS: 'true',
+        NX_SKIP_LOG_GROUPING: 'true',
+      })
+    ).toBe(true);
+  });
+
+  it('streams when the user explicitly asks for it, even on GitHub Actions', () => {
+    expect(
+      resolveStreaming(
+        { NX_BATCH_MODE: 'true', GITHUB_ACTIONS: 'true' },
+        { specifiedOutputStyle: 'stream' }
+      )
+    ).toBe(true);
+  });
+
+  it('streams for stream-without-prefixes on GitHub Actions', () => {
+    expect(
+      resolveStreaming(
+        { GITHUB_ACTIONS: 'true' },
+        { specifiedOutputStyle: 'stream-without-prefixes' }
+      )
+    ).toBe(true);
+  });
+
+  it('streams when the TUI is active regardless of grouping', () => {
+    expect(resolveStreaming({ GITHUB_ACTIONS: 'true', NX_TUI: 'true' })).toBe(
+      true
+    );
+  });
+});
+
+describe('selectTasksForProjects', () => {
+  const node = (name: string, targets: Record<string, any>) => ({
+    name,
+    type: 'lib' as const,
+    data: { root: `libs/${name}`, targets },
+  });
+  const run = (dependsOn?: string[]) => ({
+    executor: 'nx:run-commands',
+    ...(dependsOn ? { dependsOn } : {}),
+  });
+  const projectGraph = {
+    nodes: {
+      app: node('app', { build: run(['^build']), test: run() }),
+      lib: node('lib', { build: run(), test: run() }),
+    },
+    dependencies: {
+      app: [{ source: 'app', target: 'lib', type: 'static' }],
+      lib: [],
+    },
+  } as any;
+
+  // The projects' own tasks initiate; what they pull in only runs for them.
+  it("initiates the named projects' tasks of the targets, not their dependencies", () => {
+    const selection = selectTasksForProjects(
+      projectGraph,
+      ['app'],
+      { targets: ['build', 'test'] } as NxArgs,
+      {},
+      {},
+      false
+    );
+    expect(Object.keys(selection.taskGraph.tasks).sort()).toEqual([
+      'app:build',
+      'app:test',
+      'lib:build',
+    ]);
+    expect(selection.initiatingTaskIds.sort()).toEqual([
+      'app:build',
+      'app:test',
+    ]);
+    expect(selection.taskIds).toBeUndefined();
   });
 });

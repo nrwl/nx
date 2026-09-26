@@ -367,7 +367,7 @@ export default function TargetConfigurationDetails({
                   </span>
                 </Tooltip>
               </h4>
-              <div className="group/line overflow-hidden whitespace-nowrap pl-5">
+              <div className="group/line overflow-hidden pl-5 whitespace-nowrap">
                 <TargetConfigurationProperty data={{ parallelism: false }}>
                   <TargetSourceInfo
                     className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
@@ -418,7 +418,7 @@ export default function TargetConfigurationDetails({
                         data={generator}
                         disabled={true}
                         disabledTooltip={
-                          <p className="max-w-sm whitespace-pre-wrap py-2 font-mono text-sm normal-case text-slate-700 dark:text-slate-400">
+                          <p className="max-w-sm py-2 font-mono text-sm whitespace-pre-wrap text-slate-700 normal-case dark:text-slate-400">
                             The Sync Generator is disabled in the{' '}
                             <code className="font-bold italic">
                               sync.disabledTaskSyncGenerators

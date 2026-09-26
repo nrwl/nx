@@ -1,4 +1,5 @@
 import {
+  FileChange,
   isWholeFileChange,
   WholeFileChange,
 } from '../../../../project-graph/file-utils';
@@ -8,8 +9,12 @@ import {
   JsonChange,
 } from '../../../../utils/json-diff';
 import { logger } from '../../../../utils/logger';
-import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
 import {
+  DependencyChanges,
+  TouchedProjectLocator,
+} from '../../../../project-graph/affected/affected-project-graph-models';
+import {
+  ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
@@ -18,7 +23,41 @@ import { getPackageNameFromImportPath } from '../../../../utils/get-package-name
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, _, nxJson, packageJson, projectGraph): string[] => {
+> = (touchedFiles, _nodes, nxJson, _packageJson, projectGraph): string[] =>
+  touchedNpmPackages(touchedFiles, nxJson, projectGraph) ??
+  Object.keys(projectGraph.nodes);
+
+/**
+ * The same change as task selection consumes it: the packages that moved,
+ * which a plan names as `External`, and the workspace projects the root
+ * package.json depends on directly.
+ */
+export function packageJsonDependencyChanges(
+  touchedFiles: FileChange<WholeFileChange | JsonChange>[],
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+): DependencyChanges {
+  const touched = touchedNpmPackages(touchedFiles, nxJson, projectGraph);
+  if (touched === null) {
+    return { externals: [], changedExternalTypes: ['npm'], projects: [] };
+  }
+  return {
+    externals: touched.filter((name) => name in projectGraph.externalNodes),
+    changedExternalTypes: [],
+    projects: touched.filter((name) => name in projectGraph.nodes),
+  };
+}
+
+/**
+ * External nodes and workspace projects the root package.json change names,
+ * or null when it cannot be pinned to them: a removed dependency, a global
+ * package, or an override selector matching nothing in the graph.
+ */
+function touchedNpmPackages(
+  touchedFiles: FileChange<WholeFileChange | JsonChange>[],
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+): string[] | null {
   const packageJsonChange = touchedFiles.find((f) => f.file === 'package.json');
   if (!packageJsonChange) return [];
 
@@ -28,6 +67,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
   const changes = packageJsonChange.getChanges();
 
   const npmPackages = Object.values(projectGraph.externalNodes);
+  let packagesByName: Map<string, ProjectGraphExternalNode[]> | undefined;
 
   const missingTouchedNpmPackages: string[] = [];
 
@@ -37,10 +77,8 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies') &&
       c.path.length === 2
     ) {
-      // A package was deleted so mark all workspace projects as touched.
       if (c.type === JsonDiffType.Deleted) {
-        touched = Object.keys(projectGraph.nodes);
-        break;
+        return null;
       } else {
         let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
           npmPackages.find((pkg) => pkg.data.packageName === c.path[1]);
@@ -66,7 +104,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
 
         if ('packageName' in npmPackage.data) {
           if (globalPackages.has(npmPackage.data.packageName)) {
-            return Object.keys(projectGraph.nodes);
+            return null;
           }
         }
       }
@@ -76,31 +114,30 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         c.path[0] === 'resolutions' ||
         (c.path[0] === 'pnpm' && c.path[1] === 'overrides'))
     ) {
-      // Changes to overrides, resolutions, or pnpm.overrides
-      // Find which package was changed and mark projects that depend on it as affected
-      const packageName = c.path[0] === 'pnpm' ? c.path[2] : c.path[1];
+      const packageSelector = getPackageSelector(c);
+      if (!packageSelector) continue;
 
-      if (packageName) {
-        // Look for the npm package in external nodes
-        let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
-          npmPackages.find((pkg) => pkg.data.packageName === packageName);
+      packagesByName ??= groupPackagesByName(npmPackages);
+      const matchingNpmPackages = findPackagesForSelector(
+        packageSelector,
+        packagesByName,
+        c.path[0] === 'pnpm'
+      );
 
-        if (npmPackage) {
-          touched.push(npmPackage.name);
-
-          // If it's a global package, all projects are affected
-          if (
-            'packageName' in npmPackage.data &&
-            globalPackages.has(npmPackage.data.packageName)
-          ) {
-            return Object.keys(projectGraph.nodes);
-          }
-        } else {
-          // If the package isn't found in external nodes, it might affect all projects
-          // since overrides can affect transitive dependencies
-          return Object.keys(projectGraph.nodes);
-        }
+      // An unresolved selector can still target a transitive dependency.
+      if (!matchingNpmPackages.length) {
+        return null;
       }
+
+      if (
+        matchingNpmPackages.some((pkg) =>
+          globalPackages.has(pkg.data.packageName)
+        )
+      ) {
+        return null;
+      }
+
+      touched.push(...matchingNpmPackages.map((pkg) => pkg.name));
     } else if (isWholeFileChange(c)) {
       // Whole file was touched, so all npm packages are touched.
       touched = npmPackages.map((pkg) => pkg.name);
@@ -115,8 +152,58 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       )} were not found. Please open an issue in GitHub including the package.json file.`
     );
   }
-  return touched;
-};
+  return [...new Set(touched)];
+}
+
+function getPackageSelector(change: JsonChange): string | undefined {
+  if (
+    typeof change.value.lhs !== 'string' &&
+    typeof change.value.rhs !== 'string'
+  ) {
+    return;
+  }
+
+  const selectorIndex = change.path[0] === 'pnpm' ? 2 : change.path.length - 1;
+  const selector = change.path[selectorIndex];
+  return selector === '.' ? change.path[selectorIndex - 1] : selector;
+}
+
+function groupPackagesByName(
+  npmPackages: ProjectGraphExternalNode[]
+): Map<string, ProjectGraphExternalNode[]> {
+  const packagesByName = new Map<string, ProjectGraphExternalNode[]>();
+  for (const pkg of npmPackages) {
+    const packageName = pkg.data.packageName;
+    if (!packageName) continue;
+    const packages = packagesByName.get(packageName);
+    if (packages) {
+      packages.push(pkg);
+    } else {
+      packagesByName.set(packageName, [pkg]);
+    }
+  }
+  return packagesByName;
+}
+
+function findPackagesForSelector(
+  selector: string,
+  packagesByName: Map<string, ProjectGraphExternalNode[]>,
+  isPnpmOverride: boolean
+): ProjectGraphExternalNode[] {
+  if (isPnpmOverride) {
+    // Pnpm does not treat `>` as a parent delimiter when it starts a range.
+    const parentDelimiterIndex = selector.search(/[^ |@]>/);
+    if (parentDelimiterIndex !== -1) {
+      selector = selector.slice(parentDelimiterIndex + 2);
+    }
+  }
+
+  const packageName = selector.match(
+    /(?:^|\/)(@[^/@>\s]+\/[^/@>\s]+|[^/@>\s]+)(?:@[^/]*)?$/
+  )?.[1];
+
+  return packageName ? (packagesByName.get(packageName) ?? []) : [];
+}
 
 function getGlobalPackages(plugins: NxJsonConfiguration['plugins']) {
   return (plugins ?? [])

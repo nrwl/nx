@@ -26,6 +26,7 @@ import {
   warnLegacyDependsOnMagicString,
 } from './legacy-depends-on-warning';
 import { isGlobPattern } from '../utils/globs';
+import { isLongRunningTargetName } from '../utils/long-running-target';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitTargetFromNodes } from '../utils/split-target';
@@ -374,17 +375,23 @@ export function getOutputsForTargetAndConfiguration(
 
     const result = new Set<string>();
     for (const output of targetConfiguration.outputs) {
-      const interpolatedOutput = interpolate(output, {
-        projectRoot: node.data.root,
-        projectName: node.name,
-        project: { ...node.data, name: node.name }, // this is legacy
-        options,
-      });
+      // A leading `!` is negation, not part of the path: strip it so
+      // `{workspaceRoot}` still sits where interpolate requires it.
+      const isNegated = output.startsWith('!');
+      const interpolatedOutput = interpolate(
+        isNegated ? output.substring(1) : output,
+        {
+          projectRoot: node.data.root,
+          projectName: node.name,
+          project: { ...node.data, name: node.name }, // this is legacy
+          options,
+        }
+      );
       if (
         !!interpolatedOutput &&
         !interpolatedOutput.match(/{(projectRoot|workspaceRoot|(options.*))}/)
       ) {
-        result.add(interpolatedOutput);
+        result.add(isNegated ? `!${interpolatedOutput}` : interpolatedOutput);
       }
     }
     return Array.from(result);
@@ -534,6 +541,21 @@ export function getCustomHasher(
   return factory ? factory() : null;
 }
 
+/**
+ * `taskGraph` pruned to `required`, which must already hold its dependencies.
+ * Unknown ids are ignored: a sync generator can remove a task after selection.
+ */
+export function pruneToSelectedTasks(
+  taskGraph: TaskGraph,
+  required: Iterable<string>
+): TaskGraph {
+  const keep = new Set(required);
+  return removeTasksFromTaskGraph(
+    taskGraph,
+    Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))
+  );
+}
+
 export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]
@@ -661,15 +683,10 @@ export function isCacheableTask(task: Task): boolean {
 }
 
 function longRunningTask(task: Task) {
-  const t = task.target.target;
   return (
     task.continuous ||
     (!!task.overrides['watch'] && task.overrides['watch'] !== 'false') ||
-    t.endsWith(':watch') ||
-    t.endsWith('-watch') ||
-    t === 'serve' ||
-    t === 'dev' ||
-    t === 'start'
+    isLongRunningTargetName(task.target.target)
   );
 }
 

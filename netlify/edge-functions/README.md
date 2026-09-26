@@ -27,7 +27,7 @@ This ensures:
 
 **Environment variables** (configured in Netlify):
 
-- `NEXT_PUBLIC_FRAMER_URL`: The Framer site URL (e.g., `https://ready-knowledge-238309.framer.app`)
+- `NEXT_PUBLIC_FRAMER_URL`: The Framer site URL (e.g., `https://nx.framer.website`)
 
 ### `additional-sitemaps.ts`
 

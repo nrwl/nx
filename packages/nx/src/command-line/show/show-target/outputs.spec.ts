@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   GraphBuilder,
   setupBeforeEach,
@@ -33,7 +34,7 @@ describe('show target outputs', () => {
 
     await showTargetOutputsHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.outputPaths).toContain('apps/my-app/dist');
     expect(parsed.outputPaths).toContain('dist/apps/my-app');
   });
@@ -60,7 +61,7 @@ describe('show target outputs', () => {
 
     await showTargetOutputsHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.outputPaths).toContain('dist/apps/my-app');
   });
 
@@ -88,7 +89,7 @@ describe('show target outputs', () => {
       check: ['apps/my-app/dist/main.js'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('apps/my-app/dist/main.js');
     expect(logged).toContain('is an output');
     expect(process.exitCode).toBe(0);
@@ -118,7 +119,7 @@ describe('show target outputs', () => {
       check: ['apps/my-app'],
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('directory containing');
@@ -150,7 +151,7 @@ describe('show target outputs', () => {
       check: ['apps/my-app/dist/main.js'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('apps/my-app/dist/main.js');
     expect(logged).toContain('is an output');
     expect(process.exitCode).toBe(0);
@@ -187,7 +188,7 @@ describe('show target outputs', () => {
       check: ['apps/my-app/dist/nested'],
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('directory containing');
@@ -216,7 +217,7 @@ describe('show target outputs', () => {
 
     await showTargetOutputsHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.outputPaths).toContain('dist/apps/my-app');
     expect(parsed.unresolvedOutputs).toBeUndefined();
   });
@@ -242,7 +243,7 @@ describe('show target outputs', () => {
 
     await showTargetOutputsHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.outputPaths).toContain('apps/my-app/dist');
     expect(parsed.outputPaths).not.toContain('{options.outputFile}');
     expect(parsed.unresolvedOutputs).toContain('{options.outputFile}');
@@ -273,7 +274,7 @@ describe('show target outputs', () => {
 
     await showTargetOutputsHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.outputPaths).toContain('dist/apps/my-app');
     // The output resolves under the default configuration, so it must not also
     // be reported as unresolved.
@@ -308,7 +309,7 @@ describe('show target outputs', () => {
       json: true,
     });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.outputPaths).toContain('dist/apps/my-app/main.js');
     expect(parsed.unresolvedOutputs).toBeUndefined();
   });
@@ -337,7 +338,7 @@ describe('show target outputs', () => {
       check: ['libs/other'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('libs/other');
     expect(logged).toContain('not');
     expect(process.exitCode).toBe(1);
@@ -367,7 +368,7 @@ describe('show target outputs', () => {
       check: ['apps/my-app/dist/main.js', 'libs/other/file.js'],
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('were outputs');
@@ -404,7 +405,7 @@ describe('show target outputs', () => {
 
       await showTargetOutputsHandler({ target: 'my-*:build', json: true });
 
-      const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+      const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
       expect(parsed.project).toEqual('my-app');
       expect(parsed.outputPaths).toContain('dist/apps/my-app');
     });
@@ -417,7 +418,7 @@ describe('show target outputs', () => {
         check: ['dist/apps/my-app/main.js'],
       });
 
-      const allLogged = (console.log as jest.Mock).mock.calls
+      const allLogged = (console.log as Mock).mock.calls
         .map((c) => c[0])
         .join('\n');
       expect(allLogged).toContain('is an output of');

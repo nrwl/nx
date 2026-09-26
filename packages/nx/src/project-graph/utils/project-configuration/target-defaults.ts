@@ -201,6 +201,9 @@ type EffectiveTarget = {
   // incompatible-replaced and dropped when the winner uses the
   // `options.commands` form (#36067).
   options?: { command?: unknown; commands?: unknown };
+  // True when the layers are incompatible, so the default layer
+  // wholesale-replaces the specified one during the real merge.
+  replacesSpecified: boolean;
 };
 
 function effectiveTargetForLookup(
@@ -217,7 +220,7 @@ function effectiveTargetForLookup(
 
   if (resolvedSpecified && resolvedDefault) {
     if (!isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
-      return effectiveFromWinner(resolvedDefault);
+      return effectiveFromWinner(resolvedDefault, true);
     }
     return {
       executor: resolvedDefault.executor ?? resolvedSpecified.executor,
@@ -225,22 +228,27 @@ function effectiveTargetForLookup(
       options:
         runCommandsCommandIdentity(resolvedDefault) ??
         runCommandsCommandIdentity(resolvedSpecified),
+      replacesSpecified: false,
     };
   }
   if (resolvedSpecified) {
-    return effectiveFromWinner(resolvedSpecified);
+    return effectiveFromWinner(resolvedSpecified, false);
   }
   if (resolvedDefault) {
-    return effectiveFromWinner(resolvedDefault);
+    return effectiveFromWinner(resolvedDefault, false);
   }
   return undefined;
 }
 
-function effectiveFromWinner(target: TargetConfiguration): EffectiveTarget {
+function effectiveFromWinner(
+  target: TargetConfiguration,
+  replacesSpecified: boolean
+): EffectiveTarget {
   return {
     executor: target.executor,
     command: target.command,
     options: runCommandsCommandIdentity(target),
+    replacesSpecified,
   };
 }
 
@@ -260,17 +268,27 @@ function runCommandsCommandIdentity(
   };
 }
 
+// Whether an entry states what the target runs. run-commands identity lives in
+// these two option keys, which are also what the identity stamp overwrites.
+function authorsCommandIdentity(target: TargetConfiguration): boolean {
+  return (
+    target.options?.command !== undefined ||
+    target.options?.commands !== undefined
+  );
+}
+
 /**
  * Returns one synthetic defaults target per matching `targetDefaults` entry for
  * `targetName` at `root` (empty when no defaults apply). Emitting per entry
  * rather than a single pre-merged target lets source maps attribute fields to
  * the specific array element they came from; the entries merge downstream in
- * document order. Each synthetic stamps the effective executor/command (and the
- * winner's run-commands options identity) so neither merge neighbor can
- * incompatible-replace it and drop its contributions.
+ * document order. A synthetic normally stamps the effective executor/command
+ * (and the winner's run-commands options identity) so neither merge neighbor
+ * can incompatible-replace it and drop its contributions; an entry naming its
+ * own command keeps that command instead, per {@link authorsCommandIdentity}.
  *
- * @param effective The shape the real merge will land on. Used both as the
- *   executor filter context and as the locked identity stamped onto the
+ * @param effective The shape the real merge will land on. Used as the executor
+ *   filter context and, in most cases, as the identity stamped onto the
  *   synthetic.
  */
 function buildSyntheticTargetsForRoot(
@@ -297,6 +315,8 @@ function buildSyntheticTargetsForRoot(
     target: TargetConfiguration;
   }[] = [];
   for (const { index, config } of resolved.matches) {
+    // Read before desugaring, which synthesises an executor for `command`.
+    const authoredExecutor = config.executor;
     const synthetic = resolveCommandSyntacticSugar(deepClone(config), root);
 
     // Compatibility guard, per entry: an entry incompatible with the effective
@@ -312,19 +332,35 @@ function buildSyntheticTargetsForRoot(
       continue;
     }
 
-    // Pre-stamp executor/command from the effective shape so the
-    // synthetic can't be incompatible-replaced during the real merge.
-    if (effective.executor !== undefined) {
-      synthetic.executor = effective.executor;
-    }
-    if (effective.command !== undefined) {
-      synthetic.command = effective.command;
-    }
-    // run-commands compatibility keys off options.command/commands, not the
-    // top-level command. Stamp the winner's so the synthetic stays compatible
-    // when the winning target uses the options.commands form (#36067).
-    if (effective.options !== undefined) {
-      synthetic.options = { ...synthetic.options, ...effective.options };
+    // Stamping over an entry that names its own command would discard it
+    // (#36700), so the stamp is limited to the replacing path it was added
+    // for (#36142).
+    const wouldOverwriteAuthoredCommand =
+      effective.options !== undefined && authorsCommandIdentity(synthetic);
+
+    if (effective.replacesSpecified || !wouldOverwriteAuthoredCommand) {
+      // Pre-stamp executor/command from the effective shape so the
+      // synthetic can't be incompatible-replaced during the real merge.
+      if (effective.executor !== undefined) {
+        synthetic.executor = effective.executor;
+      }
+      if (effective.command !== undefined) {
+        synthetic.command = effective.command;
+      }
+      // run-commands compatibility keys off options.command/commands, not the
+      // top-level command. Stamp the winner's so the synthetic stays compatible
+      // when the winning target uses the options.commands form (#36067). Both
+      // keys are cleared first, since `isCompatibleTarget` reads `command` in
+      // preference to `commands` and a leftover one would defeat the stamp.
+      if (effective.options !== undefined) {
+        const { command, commands, ...rest } = synthetic.options ?? {};
+        synthetic.options = { ...rest, ...effective.options };
+      }
+    } else if (authoredExecutor === undefined) {
+      // Unstamped, an executor desugaring synthesised for the `command`
+      // shorthand reads as a rival run-commands target and replaces the one
+      // this entry should merge into.
+      delete synthetic.executor;
     }
 
     synthetics.push({ key: resolved.key, index, target: synthetic });

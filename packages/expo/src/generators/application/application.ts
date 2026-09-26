@@ -53,7 +53,6 @@ export async function expoApplicationGeneratorInternal(
     ...schema,
     skipFormat: true,
     addTsPlugin,
-    formatter: schema.formatter,
     platform: 'web',
   });
 

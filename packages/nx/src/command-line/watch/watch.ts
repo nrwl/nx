@@ -1,5 +1,9 @@
 import { spawn } from 'child_process';
-import { ChangedFile, daemonClient } from '../../daemon/client/client';
+import {
+  ChangedFile,
+  daemonClient,
+  WatcherFailedError,
+} from '../../daemon/client/client';
 import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import { output } from '../../utils/output';
 
@@ -237,6 +241,16 @@ export async function watch(args: WatchArguments) {
           title: 'Nx version changed. Please restart your command.',
         });
         process.exit(1);
+      } else if (err instanceof WatcherFailedError) {
+        output.error({
+          title: 'The Nx Daemon stopped watching for file changes',
+          bodyLines: [
+            err.message,
+            'On Linux this is usually the inotify watch limit. See https://askubuntu.com/questions/1088272/inotify-add-watch-failed-no-space-left-on-device',
+            'Please restart your watch command.',
+          ],
+        });
+        process.exit(1);
       } else if (err !== null) {
         output.error({
           title: 'Watch error',
@@ -245,6 +259,8 @@ export async function watch(args: WatchArguments) {
             err.message,
           ],
         });
+        // `data` is null on the error path; falling through dereferences it.
+        return;
       }
 
       // Only pass the projects to the queue if the command has a replacement for projects

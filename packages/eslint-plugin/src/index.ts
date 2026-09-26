@@ -1,3 +1,4 @@
+import type { TSESLint } from '@typescript-eslint/utils';
 import typescript from './configs/typescript';
 import javascript from './configs/javascript';
 import reactTmp from './configs/react-tmp';
@@ -64,7 +65,8 @@ const configs = {
   },
 };
 
-const rules = {
+// Keep the annotation: the inferred type names RuleModule via a pnpm store path (TS2883).
+const rules: Record<string, TSESLint.RuleModule<string, unknown[]>> = {
   [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,
   [nxPluginChecksRuleName]: nxPluginChecksRule,
   [dependencyChecksRuleName]: dependencyChecks,

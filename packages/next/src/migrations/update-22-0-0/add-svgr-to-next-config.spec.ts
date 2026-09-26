@@ -199,11 +199,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               {
                 issuer: { not: /.(css|scss|sass)$/ },
                 resourceQuery: {
-                  not: [
-                    /__next_metadata__/,
-                    /__next_metadata_route__/,
-                    /__next_metadata_image_meta__/,
-                  ],
+                  not: [/__next_metadata__/, /__next_metadata_route__/, /__next_metadata_image_meta__/],
                 },
                 use: [
                   {
@@ -218,9 +214,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               },
             ],
           });
-          return originalWebpack
-            ? originalWebpack(webpackConfig, ctx)
-            : webpackConfig;
+          return originalWebpack ? originalWebpack(webpackConfig, ctx) : webpackConfig;
         };
         return config;
       };
@@ -301,11 +295,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               {
                 issuer: { not: /.(css|scss|sass)$/ },
                 resourceQuery: {
-                  not: [
-                    /__next_metadata__/,
-                    /__next_metadata_route__/,
-                    /__next_metadata_image_meta__/,
-                  ],
+                  not: [/__next_metadata__/, /__next_metadata_route__/, /__next_metadata_image_meta__/],
                 },
                 use: [
                   {
@@ -320,9 +310,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               },
             ],
           });
-          return originalWebpack
-            ? originalWebpack(webpackConfig, ctx)
-            : webpackConfig;
+          return originalWebpack ? originalWebpack(webpackConfig, ctx) : webpackConfig;
         };
         return config;
       };
@@ -399,11 +387,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               {
                 issuer: { not: /.(css|scss|sass)$/ },
                 resourceQuery: {
-                  not: [
-                    /__next_metadata__/,
-                    /__next_metadata_route__/,
-                    /__next_metadata_image_meta__/,
-                  ],
+                  not: [/__next_metadata__/, /__next_metadata_route__/, /__next_metadata_image_meta__/],
                 },
                 use: [
                   {
@@ -418,9 +402,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               },
             ],
           });
-          return originalWebpack
-            ? originalWebpack(webpackConfig, ctx)
-            : webpackConfig;
+          return originalWebpack ? originalWebpack(webpackConfig, ctx) : webpackConfig;
         };
         return config;
       };
@@ -529,11 +511,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               {
                 issuer: { not: /.(css|scss|sass)$/ },
                 resourceQuery: {
-                  not: [
-                    /__next_metadata__/,
-                    /__next_metadata_route__/,
-                    /__next_metadata_image_meta__/,
-                  ],
+                  not: [/__next_metadata__/, /__next_metadata_route__/, /__next_metadata_image_meta__/],
                 },
                 use: [
                   {
@@ -548,9 +526,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               },
             ],
           });
-          return originalWebpack
-            ? originalWebpack(webpackConfig, ctx)
-            : webpackConfig;
+          return originalWebpack ? originalWebpack(webpackConfig, ctx) : webpackConfig;
         };
         return config;
       };
@@ -633,11 +609,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               {
                 issuer: { not: /.(css|scss|sass)$/ },
                 resourceQuery: {
-                  not: [
-                    /__next_metadata__/,
-                    /__next_metadata_route__/,
-                    /__next_metadata_image_meta__/,
-                  ],
+                  not: [/__next_metadata__/, /__next_metadata_route__/, /__next_metadata_image_meta__/],
                 },
                 use: [
                   {
@@ -652,9 +624,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               },
             ],
           });
-          return originalWebpack
-            ? originalWebpack(webpackConfig, ctx)
-            : webpackConfig;
+          return originalWebpack ? originalWebpack(webpackConfig, ctx) : webpackConfig;
         };
         return config;
       };
@@ -731,11 +701,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               {
                 issuer: { not: /.(css|scss|sass)$/ },
                 resourceQuery: {
-                  not: [
-                    /__next_metadata__/,
-                    /__next_metadata_route__/,
-                    /__next_metadata_image_meta__/,
-                  ],
+                  not: [/__next_metadata__/, /__next_metadata_route__/, /__next_metadata_image_meta__/],
                 },
                 use: [
                   {
@@ -750,9 +716,7 @@ module.exports = composePlugins(...plugins)(nextConfig);
               },
             ],
           });
-          return originalWebpack
-            ? originalWebpack(webpackConfig, ctx)
-            : webpackConfig;
+          return originalWebpack ? originalWebpack(webpackConfig, ctx) : webpackConfig;
         };
         return config;
       };

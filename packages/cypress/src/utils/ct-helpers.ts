@@ -5,15 +5,15 @@ import {
   stripIndents,
   TargetConfiguration,
   workspaceRoot,
+  readProjectsConfigurationFromProjectGraph,
 } from '@nx/devkit';
 import { extname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { readNxJson } from 'nx/src/config/configuration';
+  readNxJsonFromDisk as readNxJson,
+} from '@nx/devkit/internal';
 
 export const CY_FILE_MATCHER = new RegExp(/\.cy\.[tj]sx?$/);
 /**

@@ -69,3 +69,12 @@ const result = await update(tree);
 expect(result.nextSteps).toContainEqual(expect.stringContaining('...'));
 expect(result.agentContext).toContainEqual(expect.stringContaining('...'));
 ```
+
+- A migration returning `skipAgentic` asserts both directions, since the waiving path is the one that changes what `nx migrate` does.
+
+```ts
+// the path that leaves nothing for the AI step
+expect((await update(tree)).skipAgentic).toBe(true);
+// a path that still needs it
+expect((await update(treeWithUnhandledShape))?.skipAgentic).toBeFalsy();
+```

@@ -290,7 +290,13 @@ async function addNxProjectGraphPluginToBuildGradle(
             '\\.'
           )}\\)`
         )
-      : new RegExp(`\\s*plugin\\(["']${gradleProjectGraphPluginName}["']\\)`);
+      : // Both DSL forms, so a re-run doesn't append a duplicate apply.
+        new RegExp(
+          `\\s*plugin\\s*[:(]\\s*["']${gradleProjectGraphPluginName.replace(
+            /\./g,
+            '\\.'
+          )}["']`
+        );
 
     if (buildGradleContent.includes('allprojects {')) {
       if (!applyPluginPattern.test(buildGradleContent)) {
@@ -298,7 +304,7 @@ async function addNxProjectGraphPluginToBuildGradle(
           ? `plugin(${versionCatalogPluginAccessor})`
           : isKotlinDsl
             ? `plugin("${gradleProjectGraphPluginName}")`
-            : `plugin "${gradleProjectGraphPluginName}"`;
+            : `plugin: "${gradleProjectGraphPluginName}"`;
 
         buildGradleContent = buildGradleContent.replace(
           /allprojects\s*\{/,

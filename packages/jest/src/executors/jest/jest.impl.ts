@@ -15,8 +15,8 @@ import {
 } from '@nx/devkit';
 import { getSummary } from './summary';
 import { readFileSync } from 'fs';
-import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 import { warnJestExecutorDeprecation } from '../../utils/deprecation';
+import { type BatchResults } from '@nx/devkit/internal';
 process.env.NODE_ENV ??= 'test';
 
 export async function jestExecutor(

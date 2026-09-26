@@ -8,6 +8,10 @@ topics:
   - 'Angular'
 ---
 
+{% aside type="caution" title="Deprecated: Angular Module Federation" %}
+The `@nx/angular` `host` and `remote` generators and Module Federation executors used on this page are deprecated in Nx v23 and will be removed in v24. Existing workspaces keep working in the meantime. To move an existing setup off them, see [Migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation). For the recommended path for new Angular micro frontends, see [Micro Frontends with Angular](/docs/kb/angular-micro-frontends).
+{% /aside %}
+
 Walk you through creating a Module Federated setup with Server Side Rendering (SSR) for Angular and React using Nx and its generators.
 
 ## Steps
@@ -24,7 +28,7 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 ✔ Would you like remote caching to make your build faster? · skip
 ```
 
-{% linkcard title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." href="/docs/kb/setup-ci" /%}
+{% linkcard title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." href="/docs/getting-started/setup-ci" /%}
 
 ### Install your framework plugin
 
@@ -151,6 +155,6 @@ npx nx serve store --devRemotes=checkout
 
 To learn more about Module Federation, we have some resources you might find useful:
 
-- [Concepts: Nx Module Federation Technical Overview](/docs/kb/nx-module-federation-technical-overview)
+- [Reference: NxModuleFederationPlugin](/docs/kb/nx-module-federation-plugin)
 - [Guide: Faster Builds with Module Federation](/docs/kb/faster-builds-with-module-federation)
 - [Video: Speed up your Angular serve and build times with Module Federation and Nx](https://www.youtube.com/watch?v=JkcaGzhRjkc)

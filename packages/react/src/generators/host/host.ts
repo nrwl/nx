@@ -29,8 +29,13 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
+  addSwcRegisterDependencies,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
+import {
+  expressVersion,
+  httpProxyMiddlewareVersion,
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
@@ -59,6 +64,9 @@ export async function hostGenerator(
     // TODO(colum): remove when Webpack MF works with Crystal
     addPlugin: !schema.bundler || schema.bundler === 'rspack' ? true : false,
     bundler: schema.bundler ?? 'rspack',
+    // The schema carries no default, so supply one here: remotes are numbered up
+    // from the host's port (`options.port + 1` below), which needs a concrete value.
+    port: schema.port ?? schema.devServerPort ?? 4200,
   };
 
   // Check to see if remotes are provided and also check if --dynamic is provided
@@ -102,7 +110,7 @@ export async function hostGenerator(
   const remotesWithPorts: { name: string; port: number }[] = [];
 
   if (schema.remotes) {
-    let remotePort = options.devServerPort + 1;
+    let remotePort = options.port + 1;
     for (const remote of schema.remotes) {
       const remoteName = await normalizeRemoteName(host, remote, options);
       remotesWithPorts.push({ name: remoteName, port: remotePort });
@@ -114,7 +122,7 @@ export async function hostGenerator(
         unitTestRunner: options.unitTestRunner,
         e2eTestRunner: options.e2eTestRunner,
         linter: options.linter,
-        devServerPort: remotePort,
+        port: remotePort,
         ssr: options.ssr,
         skipFormat: true,
         typescriptConfiguration: options.typescriptConfiguration,
@@ -143,7 +151,7 @@ export async function hostGenerator(
     if (options.bundler !== 'rspack') {
       const setupSsrTask = await setupSsrGenerator(host, {
         project: options.projectName,
-        serverPort: options.devServerPort,
+        serverPort: options.port,
         skipFormat: true,
       });
       tasks.push(setupSsrTask);
@@ -181,11 +189,25 @@ export async function hostGenerator(
     {
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
+      // The webpack path also generates a `serve-static` target running the
+      // `module-federation-static-server` executor, which proxies via express.
+      ...(options.bundler !== 'rspack'
+        ? {
+            express: expressVersion,
+            'http-proxy-middleware': httpProxyMiddlewareVersion,
+          }
+        : {}),
     },
     undefined,
     true
   );
   tasks.push(installTask);
+
+  // The TS config templates use extensionless relative imports and
+  // `__dirname`, which Node's native type stripping cannot load.
+  if (options.typescriptConfiguration) {
+    tasks.push(addSwcRegisterDependencies(host));
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

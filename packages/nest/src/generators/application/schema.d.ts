@@ -1,14 +1,15 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface ApplicationGeneratorOptions {
   directory: string;
   name?: string;
   frontendProject?: string;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   tags?: string;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'jest' | 'none';
   enableTypedLinting?: boolean;
   /**

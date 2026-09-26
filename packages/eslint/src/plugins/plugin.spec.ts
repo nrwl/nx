@@ -1,8 +1,23 @@
+import {
+  calculateHashesForCreateNodes,
+  globWithWorkspaceContext,
+} from '@nx/devkit/internal';
 import { CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
 import { mkdirSync, rmSync } from 'fs';
+
+jest.mock('@nx/devkit/internal', () => {
+  const actual = jest.requireActual('@nx/devkit/internal');
+  return {
+    ...actual,
+    calculateHashesForCreateNodes: jest.fn(
+      actual.calculateHashesForCreateNodes
+    ),
+    globWithWorkspaceContext: jest.fn(actual.globWithWorkspaceContext),
+  };
+});
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
@@ -49,9 +64,115 @@ describe('@nx/eslint/plugin', () => {
   afterEach(() => {
     jest.resetModules();
     resolveESLintClassSpy.mockClear();
+    jest.mocked(calculateHashesForCreateNodes).mockClear();
+    jest.mocked(globWithWorkspaceContext).mockClear();
     tempFs.cleanup();
     tempFs = null;
     rmSync('tmp/project-graph-cache', { recursive: true, force: true });
+  });
+
+  describe('config hash inputs', () => {
+    async function captureInputs(files: string[]) {
+      const captured = new Error('Hash inputs captured');
+      jest.mocked(globWithWorkspaceContext).mockResolvedValueOnce([]);
+      jest
+        .mocked(calculateHashesForCreateNodes)
+        .mockRejectedValueOnce(captured);
+      await expect(createNodesV2[1](files, {}, context)).rejects.toBe(captured);
+      const [roots, , , inputs] = jest
+        .mocked(calculateHashesForCreateNodes)
+        .mock.calls.at(-1);
+      return Object.fromEntries(
+        roots.map((root, index) => [root, inputs[index]])
+      );
+    }
+
+    it('hashes strict descendant configs in discovery order, including duplicates', async () => {
+      const configs = [
+        'libs/a/nested/eslint.config.js',
+        'libs/ab/eslint.config.js',
+        'eslint.config.js',
+        'libs/a/eslint.config.js',
+        'libs/a/nested/.eslintrc.json',
+        'libs/a/nested/eslint.config.js',
+      ];
+      expect(
+        await captureInputs([
+          ...configs,
+          'libs/a/nested/project.json',
+          'project.json',
+          'libs/a/project.json',
+          'libs/project.json',
+          'apps/absent/project.json',
+        ])
+      ).toEqual({
+        'libs/a/nested': ['libs/a/nested/.eslintignore', 'package-lock.json'],
+        '.': [...configs, '.eslintignore', 'package-lock.json'],
+        'libs/a': [
+          configs[0],
+          configs[4],
+          configs[5],
+          'libs/a/.eslintignore',
+          'package-lock.json',
+        ],
+        libs: [
+          configs[0],
+          configs[1],
+          configs[3],
+          configs[4],
+          configs[5],
+          'libs/.eslintignore',
+          'package-lock.json',
+        ],
+        'apps/absent': ['apps/absent/.eslintignore', 'package-lock.json'],
+      });
+    });
+
+    it('normalizes descendant paths without extending the literal-dot exception', async () => {
+      const configs = [
+        'eslint.config.js',
+        'a/eslint.config.js',
+        'a/b/eslint.config.js',
+        'a//c/eslint.config.js',
+        'a/./d/eslint.config.js',
+        'ab/eslint.config.js',
+      ];
+      const descendants = [configs[2], configs[3], configs[4]];
+      expect(
+        await captureInputs([
+          ...configs,
+          'project.json',
+          '././project.json',
+          './a/project.json',
+          'a//project.json',
+          'a/child/../project.json',
+          'a/b/project.json',
+        ])
+      ).toEqual({
+        '.': [...configs, '.eslintignore', 'package-lock.json'],
+        './.': ['.eslintignore', 'package-lock.json'],
+        './a': [...descendants, 'a/.eslintignore', 'package-lock.json'],
+        'a/': [...descendants, 'a/.eslintignore', 'package-lock.json'],
+        'a/child/..': [...descendants, 'a/.eslintignore', 'package-lock.json'],
+        'a/b': ['a/b/.eslintignore', 'package-lock.json'],
+      });
+    });
+
+    it('uses the scoped config list supplied to each invocation', async () => {
+      const project = 'libs/a/project.json';
+      const nested = 'libs/a/nested/eslint.config.js';
+      expect(await captureInputs([project, nested])).toEqual({
+        'libs/a': [nested, 'libs/a/.eslintignore', 'package-lock.json'],
+      });
+      expect(await captureInputs([project, 'libs/b/eslint.config.js'])).toEqual(
+        {
+          'libs/a': ['libs/a/.eslintignore', 'package-lock.json'],
+        }
+      );
+      expect(await captureInputs([project, nested])).toEqual({
+        'libs/a': [nested, 'libs/a/.eslintignore', 'package-lock.json'],
+      });
+    });
   });
 
   it('should not create any nodes when there are no eslint configs', async () => {

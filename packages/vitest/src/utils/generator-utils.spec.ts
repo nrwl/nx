@@ -1,6 +1,15 @@
-import { addProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readNxJson,
+  readProjectConfiguration,
+  Tree,
+  updateNxJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { createOrEditViteConfig } from './generator-utils';
+import {
+  addOrChangeTestTarget,
+  createOrEditViteConfig,
+} from './generator-utils';
 
 jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
   isUsingTsSolutionSetup: jest.fn(() => false),
@@ -19,6 +28,90 @@ describe('createOrEditViteConfig', () => {
   });
 
   describe('vitest config generation', () => {
+    it('should escape special characters in testInclude patterns', () => {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'my-app',
+          includeVitest: true,
+          coverageProvider: 'none',
+          testInclude: ["specs/it's.spec.ts", 'src\\new.spec.ts'],
+        },
+        true,
+        { vitestFileName: true, skipPackageJson: true }
+      );
+
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+
+      expect(config).toContain(
+        `include: ['specs/it\\'s.spec.ts', 'src\\\\new.spec.ts'],`
+      );
+    });
+
+    it('should escape line terminators in emitted literals', () => {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'my-app',
+          includeVitest: true,
+          coverageProvider: 'none',
+          testInclude: ['specs/a\nb.spec.ts'],
+        },
+        true,
+        { vitestFileName: true, skipPackageJson: true }
+      );
+
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+
+      expect(config).toContain(`include: ['specs/a\\nb.spec.ts'],`);
+    });
+
+    it('should emit resolve.alias entries for resolveAlias', () => {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'my-app',
+          includeVitest: true,
+          coverageProvider: 'none',
+          resolveAlias: {
+            '@': './src',
+            '@proj/lib': '../../libs/lib/src/index.ts',
+          },
+        },
+        true,
+        { vitestFileName: true, skipPackageJson: true }
+      );
+
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+
+      expect(config).toContain(`import { join } from 'node:path';`);
+      expect(config).toContain(`'@': join(import.meta.dirname, './src'),`);
+      expect(config).toContain(
+        `'@proj/lib': join(import.meta.dirname, '../../libs/lib/src/index.ts'),`
+      );
+    });
+
+    it('should not add resolve.alias to an existing config', () => {
+      tree.write('apps/my-app/vitest.config.ts', 'export default {};');
+
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'my-app',
+          includeVitest: true,
+          coverageProvider: 'none',
+          resolveAlias: { '@': './src' },
+        },
+        true,
+        { vitestFileName: true, skipPackageJson: true }
+      );
+
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+
+      expect(config).not.toContain('alias');
+      expect(config).not.toContain('node:path');
+    });
+
     it('should generate vitest config with v8 coverage provider', () => {
       createOrEditViteConfig(
         tree,
@@ -245,5 +338,92 @@ describe('createOrEditViteConfig', () => {
 
       expect(config).toMatchSnapshot();
     });
+  });
+});
+
+describe('addOrChangeTestTarget', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'my-app-e2e', {
+      root: 'apps/my-app-e2e',
+      sourceRoot: 'apps/my-app-e2e/src',
+      projectType: 'application',
+    });
+  });
+
+  function registerVitestPlugin(options?: Record<string, string>) {
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [
+      options ? { plugin: '@nx/vitest', options } : '@nx/vitest',
+    ];
+    updateNxJson(tree, nxJson);
+  }
+
+  function targetsOf(project: string) {
+    return readProjectConfiguration(tree, project).targets ?? {};
+  }
+
+  it('should add the requested target when the plugin infers a different name', () => {
+    registerVitestPlugin();
+
+    addOrChangeTestTarget(
+      tree,
+      { project: 'my-app-e2e', testTarget: 'e2e', coverageProvider: 'none' },
+      false
+    );
+
+    expect(targetsOf('my-app-e2e').e2e).toEqual({
+      executor: '@nx/vitest:test',
+      outputs: ['{options.reportsDirectory}'],
+      options: { reportsDirectory: 'coverage/apps/my-app-e2e' },
+    });
+  });
+
+  it('should not add a target when the plugin infers the requested name', () => {
+    registerVitestPlugin();
+
+    addOrChangeTestTarget(
+      tree,
+      { project: 'my-app-e2e', coverageProvider: 'none' },
+      false
+    );
+
+    expect(targetsOf('my-app-e2e').test).toBeUndefined();
+  });
+
+  it('should match the requested target against the plugin testTargetName', () => {
+    registerVitestPlugin({ testTargetName: 'e2e' });
+
+    addOrChangeTestTarget(
+      tree,
+      { project: 'my-app-e2e', testTarget: 'e2e', coverageProvider: 'none' },
+      false
+    );
+
+    expect(targetsOf('my-app-e2e').e2e).toBeUndefined();
+  });
+
+  it('should match the requested target against the plugin ciTargetName', () => {
+    registerVitestPlugin({ ciTargetName: 'e2e-ci' });
+
+    addOrChangeTestTarget(
+      tree,
+      { project: 'my-app-e2e', testTarget: 'e2e-ci', coverageProvider: 'none' },
+      false
+    );
+
+    expect(targetsOf('my-app-e2e')['e2e-ci']).toBeUndefined();
+  });
+
+  it('should keep the caller verdict when nx.json registers no plugins', () => {
+    addOrChangeTestTarget(
+      tree,
+      { project: 'my-app-e2e', coverageProvider: 'none' },
+      true
+    );
+
+    expect(targetsOf('my-app-e2e').test).toBeUndefined();
   });
 });

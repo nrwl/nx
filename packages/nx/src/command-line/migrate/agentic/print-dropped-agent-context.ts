@@ -4,18 +4,6 @@ import {
   renderListItem,
 } from './prompts/shared-rendering';
 
-/**
- * Surfaces a migration's `agentContext` to stdout in an XML-tagged block so an
- * outer AI agent driving `nx migrate` can ingest the hints when no inner agent
- * step ran to consume them.
- *
- * Used only when `agentic.kind === 'inside-agent'`. Under `enabled`, the inner
- * step consumes `agentContext` via the prompt builders. Under `disabled` the
- * run is human-driven and printing agent-targeted context would only add noise.
- *
- * The label format is unambiguous so the outer agent can locate the block
- * within the mixed stdout stream (logger output, migration progress, etc.).
- */
 export interface DroppedAgentContextInput {
   migration: { package: string; name: string; prompt?: string };
   agentContext: string[];
@@ -53,7 +41,7 @@ export function formatDroppedAgentContextForOuterAgent(
 // migrations.json — a name with `"` / `<` / `>` / `&` would produce malformed
 // XML the outer agent can't parse. `'` is not strictly required for
 // double-quoted attribute values but is included for defense.
-function escapeXmlAttr(value: string): string {
+export function escapeXmlAttr(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -62,6 +50,12 @@ function escapeXmlAttr(value: string): string {
     .replace(/'/g, '&apos;');
 }
 
+/**
+ * Both the classic loop and the single-migration worker call this only under
+ * `agentic.kind === 'inside-agent'`. Under `enabled` the inner agent step
+ * consumes `agentContext` through the prompt builders; under `disabled` the
+ * run is human-driven and agent-targeted context is only noise.
+ */
 export function printDroppedAgentContextForOuterAgent(
   input: DroppedAgentContextInput
 ): void {

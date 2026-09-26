@@ -11,8 +11,8 @@ import { PackageJson } from '../../../utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
-jest.mock('node:fs', () => {
-  const memFs = require('memfs').fs;
+vi.mock('node:fs', async () => {
+  const memFs = (await import('memfs')).fs;
   return {
     ...memFs,
     existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),
@@ -20,16 +20,16 @@ jest.mock('node:fs', () => {
 });
 
 const { readFileSync: realReadFileSync } =
-  jest.requireActual<typeof import('fs')>('fs');
+  await vi.importActual<typeof import('fs')>('fs');
 function loadJsonFixture(path: string) {
   return JSON.parse(realReadFileSync(path, 'utf-8'));
 }
 
-jest.mock('../../../utils/workspace-root', () => ({
+vi.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('../../../hasher/file-hasher', () => ({
+vi.mock('../../../hasher/file-hasher', () => ({
   hashArray: (values: string[]) => values.join('|'),
 }));
 

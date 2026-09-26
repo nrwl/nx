@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
@@ -19,7 +19,7 @@ export interface Schema {
   parent?: string;
   tags?: string;
   strict?: boolean;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   unitTestRunner?: UnitTestRunner;
   compilationMode?: 'full' | 'partial';
   enableTypedLinting?: boolean;

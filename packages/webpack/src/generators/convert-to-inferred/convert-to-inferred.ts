@@ -10,6 +10,7 @@ import {
   runTasksInSerial,
   type ProjectConfiguration,
   type Tree,
+  logger as devkitLogger,
 } from '@nx/devkit';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
@@ -23,7 +24,6 @@ import {
   servePostTargetTransformerFactory,
   type MigrationContext,
 } from './utils';
-import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
 interface Schema {
   project?: string;

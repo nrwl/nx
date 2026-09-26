@@ -7,9 +7,9 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './replace-provide-server-routing';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
 }));
@@ -103,12 +103,7 @@ export const config = mergeApplicationConfig(appConfig, serverConfig);
       import { serverRoutes } from './app.routes.server';
 
       const serverConfig: ApplicationConfig = {
-        providers: [
-          provideServerRendering(
-            withRoutes(serverRoutes),
-            withAppShell(AppShellComponent),
-          ),
-        ],
+        providers: [provideServerRendering(withRoutes(serverRoutes), withAppShell(AppShellComponent))],
       };
 
       export const config = mergeApplicationConfig(appConfig, serverConfig);
@@ -179,12 +174,7 @@ export const config = mergeApplicationConfig(appConfig, serverConfig);
       import { serverRoutes } from './app.routes.server';
 
       const serverConfig: ApplicationConfig = {
-        providers: [
-          provideServerRendering(
-            withRoutes(serverRoutes),
-            withAppShell(AppShellComponent),
-          ),
-        ],
+        providers: [provideServerRendering(withRoutes(serverRoutes), withAppShell(AppShellComponent))],
       };
 
       export const config = mergeApplicationConfig(appConfig, serverConfig);

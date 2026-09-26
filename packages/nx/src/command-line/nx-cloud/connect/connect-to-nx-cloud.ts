@@ -1,5 +1,5 @@
-import { join } from 'path';
 import { handleImport } from '../../../utils/handle-import';
+import { selectPrompt } from '../../../utils/prompt-helpers';
 import { output } from '../../../utils/output';
 import { readNxJson } from '../../../config/configuration';
 import { FsTree, flushChanges } from '../../../generators/tree';
@@ -9,7 +9,6 @@ import {
 } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { createNxCloudOnboardingURL } from '../../../nx-cloud/utilities/url-shorten';
 import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
-import { writeJsonFile } from '../../../utils/fileutils';
 import { runNxSync } from '../../../utils/child-process';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { NxArgs } from '../../../utils/command-line-utils';
@@ -18,6 +17,7 @@ import {
   MessageOptionKey,
   recordStat,
   messages,
+  nxCloudDemoHyperlink,
   nxCloudHyperlink,
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
@@ -268,13 +268,6 @@ export async function connectToNxCloudWithPrompt(command: string) {
   let useCloud = false;
   if (setNxCloud === 'yes') {
     useCloud = await connectToNxCloudCommand({ generateToken: false }, command);
-  } else if (setNxCloud === 'never') {
-    const nxJsonPath = join(workspaceRoot, 'nx.json');
-    const nxJson = readNxJson();
-    if (nxJson) {
-      nxJson.neverConnectToCloud = true;
-      writeJsonFile(nxJsonPath, nxJson);
-    }
   }
   await recordStat({
     command,
@@ -311,25 +304,27 @@ async function nxCloudPrompt(
 ): Promise<MessageOptionKey> {
   const { message, choices, initial, footer, hint } = messages.getPrompt(key);
 
-  const promptConfig = {
-    name: 'NxCloud',
-    message,
-    type: 'autocomplete',
-    choices,
-    initial,
-  } as any; // meeroslav: types in enquirer are not up to date
-  if (footer) {
-    promptConfig.footer = () =>
-      pc.dim(`${footer} ${nxCloudHyperlink(utmContent)}`);
-  }
-  if (hint) {
-    promptConfig.hint = () => pc.dim(hint);
-  }
+  // No separate footer/hint slot, so both are folded into the message.
+  const suffix = [
+    hint,
+    footer && `${footer} ${nxCloudHyperlink(utmContent)}`,
+    `See it in action: ${nxCloudDemoHyperlink(utmContent)}`,
+  ]
+    .filter(Boolean)
+    .map((t) => pc.dim(t));
 
-  const enquirer = await handleImport('enquirer');
-  return await enquirer
-    .prompt([promptConfig])
-    .then((a: { NxCloud: MessageOptionKey }) => {
-      return a.NxCloud;
-    });
+  return (await selectPrompt({
+    message: [message, ...suffix].join('\n'),
+    // These choices are `{ value, name }` where `name` is the display text,
+    // the inverse of enquirer's usual `{ name, message }`. Prefer `value` so
+    // the answer is the key the caller compares against, not the label.
+    choices: (choices as any[]).map((c) =>
+      typeof c === 'string'
+        ? { value: c, label: c }
+        : { value: c.value ?? c.name, label: c.message ?? c.name ?? c.value }
+    ),
+    initial:
+      (choices as any[])[initial ?? 0]?.value ??
+      (choices as any[])[initial ?? 0]?.name,
+  })) as MessageOptionKey;
 }

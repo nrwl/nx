@@ -1,39 +1,46 @@
 ---
-title: 'Managing Configuration Files'
-description: 'Learn how Nx helps manage different types of configuration files in your workspace, including both Nx-specific and tool-specific configurations at global and project levels.'
+title: Managing configuration files
+description: Learn how workspace, project, and tool configuration combine to define Nx projects and tasks.
 sidebar:
   order: 1
 filter: 'type:Concepts'
 ---
 
-Besides providing caching and task orchestration, Nx also helps incorporate numerous tools and frameworks into your repo. With all these pieces of software commingling, you can end up with a lot of configuration files. Nx plugins help to abstract away some of the difficulties of managing this configuration, but the configuration is all still accessible, in case there is a particular setting that you need to change.
+An Nx workspace contains configuration for Nx and for the tools used by each project.
+Nx plugins read both sources and combine them into resolved project configuration.
+You can inspect or override that configuration when a project needs different behavior.
 
-## Different kinds of configuration
+## Kinds of configuration
 
-When discussing configuration, it helps to categorize the configuration settings in two dimensions:
+Configuration varies along two dimensions:
 
-- **Type** - The two different types we'll discuss are Nx configuration and tooling configuration. Tooling can be any framework or tool that you use in your repo (i.e. React, Jest, Playwright, Typescript, etc)
-- **Specificity** - There are two different levels of specificity: global and project-specific. Project-specific configuration is merged into and overwrites global configuration.
+- Type: Nx configuration controls task orchestration and caching, while tool configuration controls
+  tools such as Vite, ESLint, and TypeScript.
+- Scope: Workspace configuration applies broadly, while project configuration applies to one
+  project.
 
-For example, Jest has a global `/jest.config.ts` file and a project-specific `/apps/my-app/jest.config.ts` file that extends it.
+A workspace might contain these files:
 
-|                  | Nx                          | Tooling                       |
-| ---------------- | --------------------------- | ----------------------------- |
-| Global           | `/nx.json`                  | `/jest.config.ts`             |
-| Project-specific | `/apps/my-app/project.json` | `/apps/my-app/jest.config.ts` |
+| Scope     | Nx configuration               | TypeScript configuration        |
+| --------- | ------------------------------ | ------------------------------- |
+| Workspace | `/nx.json`                     | `/tsconfig.base.json`           |
+| Project   | `/packages/myapp/package.json` | `/packages/myapp/tsconfig.json` |
 
-## How does Nx help manage tooling configuration?
+Projects can store Nx-specific settings in the `nx` section of `package.json`.
+`project.json` is also supported for project configuration, but most task settings don't need to be
+defined in either file when a plugin can infer them.
 
-In a repository with many different projects and many different tools, there will be a lot of tooling configuration. Nx helps reduce the complexity of managing that configuration in two ways:
+## How plugins reduce configuration
 
-1. Abstracting away common tooling configuration settings so that if your project is using the tool in the most common way, you won't need to worry about configuration at all. The default settings for any Nx plugin executor are intended to work without modification for most projects in the community.
+1. Abstracting away common tooling configuration settings so that if your project is using the tool in the most common way, you won't need to worry about configuration at all. The default settings for any Nx plugin are intended to work without modification for most projects in the community.
 2. Allowing you to [provide `targetDefaults`](/docs/kb/reduce-repetitive-configuration) so that the most common settings for projects in your repo can all be defined in one place. Then, only projects that are exceptions need to overwrite those settings. With the judicious application of this method, larger repositories can actually have less lines of configuration after adding Nx than before.
 
-## Determining the value of a configuration property
+Use `targetDefaults` in `nx.json` for settings shared by matching targets.
+Project-level configuration should contain only exceptions or tasks that no plugin can infer.
 
 If you need to track down the value of a specific configuration property (say `runInBand` for `jest` on the `/apps/my-app` project) you need to look in the following locations. The configuration settings are merged with priority being given to the file higher up in the list.
 
-1. In `/apps/my-app/project.json`, the `options` listed under the `test` target that uses the `@nx/jest:jest` executor.
+1. In `/apps/my-app/project.json`, the `options` listed under the `test` target.
 2. In `/nx.json`, the `targetDefaults` entries matching the `test` target.
 3. One of the `test` target options references `/apps/my-app/jest.config.ts`
 4. Which extends `/jest.config.ts`
@@ -48,20 +55,45 @@ repo/
 └── nx.json
 ```
 
-{% aside type="tip" title="Let Nx resolve it for you" %}
-Instead of tracing these files by hand, run `nx show target` to print the fully merged configuration for a target — for example `nx show target my-app:test`. Add `--verbose` to also see where each value came from (which file or plugin contributed it):
-
-```shell
-nx show target my-app:test --verbose
+```jsonc title="packages/myapp/package.json"
+{
+  "name": "myapp",
+  "nx": {
+    "targets": {
+      "build": {
+        "inputs": ["production", "^production", "{workspaceRoot}/brand/**"],
+      },
+    },
+  },
+}
 ```
 
-{% /aside %}
+The project-level `inputs` value overrides the corresponding inferred or default value for
+`myapp:build`.
 
-## More information
+## Resolve a target configuration
+
+Nx merges target configuration in this order, from least specific to most specific:
+
+1. Configuration inferred by plugins listed in `nx.json`.
+1. Matching `targetDefaults` from `nx.json`.
+1. Project configuration from `package.json` or `project.json`.
+
+Tool configuration remains the source of truth for the tool itself.
+A plugin translates relevant values from that file into Nx target metadata before Nx applies the
+Nx-specific overrides.
+
+Run `nx show target <project>:<target>` to inspect the resolved target.
+Add `--verbose` to see which file or plugin contributed each value:
+
+```shell
+nx show target myapp:build --verbose
+```
 
 {% aside type="tip" title="Learn by doing" %}
-Try the [Configuring Tasks](/docs/getting-started/tutorials/configuring-tasks) tutorial to apply these concepts in your own workspace.
+Follow the [configuring tasks tutorial](/docs/getting-started/tutorials/configuring-tasks) to inspect
+and override inferred configuration.
 {% /aside %}
 
-- [Nx Configuration](/docs/reference/nx-json)
-- [Project Configuration](/docs/reference/project-configuration)
+For configuration schemas, see [`nx.json` reference](/docs/reference/nx-json) and
+[project configuration](/docs/reference/project-configuration).

@@ -61,10 +61,7 @@ describe('turnOffDtsByDefault', () => {
       expect(tree.read('app/webpack.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withModuleFederation } = require('@nx/angular/module-federation');
-        module.exports = withModuleFederation(config, {
-          dts: false,
-          runtimePlugins: [],
-        });
+        module.exports = withModuleFederation(config, { dts: false, runtimePlugins: [] });
         "
       `);
     });
@@ -89,19 +86,13 @@ describe('turnOffDtsByDefault', () => {
       expect(tree.read('app/webpack.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { withModuleFederation } from '@nx/angular/module-federation';
-        export default withModuleFederation(
-          { remotes: [] },
-          { dts: false, runtimePlugins: [] },
-        );
+        export default withModuleFederation({ remotes: [] }, { dts: false, runtimePlugins: [] });
         "
       `);
       expect(tree.read('app/webpack.config.server.js', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withModuleFederation } = require('@nx/angular/module-federation');
-        module.exports = withModuleFederation(
-          { remotes: [] },
-          { dts: false, runtimePlugins: [] },
-        );
+        module.exports = withModuleFederation({ remotes: [] }, { dts: false, runtimePlugins: [] });
         "
       `);
     });
@@ -235,19 +226,13 @@ describe('turnOffDtsByDefault', () => {
       expect(tree.read('app/webpack.config.custom.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { withModuleFederationForSSR } from '@nx/angular/module-federation';
-        export default withModuleFederationForSSR(config, {
-          dts: false,
-          runtimePlugins: [],
-        });
+        export default withModuleFederationForSSR(config, { dts: false, runtimePlugins: [] });
         "
       `);
       expect(tree.read('app/webpack.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
-        module.exports = withModuleFederationForSSR(config, {
-          dts: false,
-          runtimePlugins: [],
-        });
+        module.exports = withModuleFederationForSSR(config, { dts: false, runtimePlugins: [] });
         "
       `);
     });
@@ -275,20 +260,14 @@ describe('turnOffDtsByDefault', () => {
         export default composePlugins(
           withNx(),
           withReact(),
-          withModuleFederationForSSR(
-            { remotes: [] },
-            { dts: false, runtimePlugins: [] },
-          ),
+          withModuleFederationForSSR({ remotes: [] }, { dts: false, runtimePlugins: [] }),
         );
         "
       `);
       expect(tree.read('app/webpack.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
-        module.exports = withModuleFederationForSSR(
-          { remotes: [] },
-          { dts: false, runtimePlugins: [] },
-        );
+        module.exports = withModuleFederationForSSR({ remotes: [] }, { dts: false, runtimePlugins: [] });
         "
       `);
     });

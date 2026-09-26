@@ -59,7 +59,7 @@ nx affected -t build,test,lint
 nx affected -t e2e-local
 
 # Format code
-npx nx prettier -- FILES
+npx oxfmt FILES
 
 # Final validation
 pnpm nx prepush

@@ -12,14 +12,14 @@ import {
 } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path/posix';
-import { FsTree } from 'nx/src/generators/tree';
+import { FsTree } from '@nx/devkit/internal';
 import {
   getPackageManagerWorkspacesPatterns,
   getProjectPackageManagerWorkspaceState,
   isUsingPackageManagerWorkspaces,
 } from '../package-manager-workspaces';
 import { getNeededCompilerOptionOverrides } from './configuration';
-import type { JsonInput } from 'nx/src/native';
+import type { JsonInput } from '@nx/devkit/internal';
 
 export const TS_SOLUTION_SETUP_TSCONFIG_INPUT: JsonInput = {
   json: '{workspaceRoot}/tsconfig.json',

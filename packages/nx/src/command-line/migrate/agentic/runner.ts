@@ -1,19 +1,36 @@
-import { ChildProcess, execSync, spawn, SpawnOptions } from 'child_process';
-import { extname } from 'path';
+import { type ChildProcess, spawn } from 'child_process';
+import * as pc from 'picocolors';
+import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
 import { reportMigratePrompt } from '../migrate-analytics';
-import { migratePrompt } from '../safe-prompt';
+import { migrateChoice } from '../safe-prompt';
+import {
+  AGENT_GRACEFUL_EXIT_MS,
+  closeAgentSession,
+  type ExitInfo,
+  FORCE_KILL_WAIT_MS,
+  raceWithTimeout,
+  waitForExit,
+} from './close-agent-session';
 import {
   HandoffReadFailureReason,
   readHandoffWithReason,
   waitForValidHandoff,
 } from './handoff';
+import { restoreTermiosAfterAgent } from './terminal-repair';
 import {
   AgentDefinition,
   DetectedInstalledAgent,
   HandoffOutcome,
   InvocationContext,
 } from './types';
+import {
+  type AdaptedSpawn,
+  adaptSpawnForWindowsShim,
+  WINDOWS_COMMAND_LINE_BUDGET,
+  WINDOWS_COMMAND_LINE_LIMIT,
+  withinCommandLineBudget,
+} from './windows-cmd';
 
 /**
  * Carries the underlying failure mode into the ambiguous-outcome prompt so the
@@ -29,20 +46,16 @@ interface AmbiguousCause {
   handoff?: { reason: HandoffReadFailureReason; detail?: string };
 }
 
-// How long to wait for the agent to exit gracefully after sending SIGINT once
-// a valid handoff has been written. Long enough for an interactive agent to
-// finish its current render and clean up; short enough that a frozen child
-// still gets escalated to SIGTERM in a sensible time.
-const AGENT_GRACEFUL_EXIT_MS = 5_000;
-
 export interface RunAgenticArgs {
   detected: DetectedInstalledAgent;
   definition: AgentDefinition;
   invocationContext: InvocationContext;
   handoffFilePath: string;
+  /** Directory the handoff sits in; passing a parent instead skips the symlink guard. */
+  handoffsDir: string;
   /** Override the handoff-file poll interval (test seam). */
   handoffPollIntervalMs?: number;
-  /** Override the SIGINT-to-SIGTERM grace period (test seam). */
+  /** Override the SIGINT-to-SIGKILL grace period (test seam). */
   gracefulExitMs?: number;
   /** Override the post-force-kill safety bound (test seam). */
   forceKillWaitMs?: number;
@@ -61,18 +74,16 @@ export async function runAgentic(
     definition,
     invocationContext,
     handoffFilePath,
+    handoffsDir,
     handoffPollIntervalMs,
     gracefulExitMs = AGENT_GRACEFUL_EXIT_MS,
     forceKillWaitMs = FORCE_KILL_WAIT_MS,
   } = args;
-  const spec = definition.buildInteractive(invocationContext);
-
-  const adapted = adaptSpawnForWindowsShim(detected.binary, spec.args, {
-    stdio: 'inherit',
-    cwd: spec.cwd ?? invocationContext.workspaceRoot,
-    env: spec.env ? { ...process.env, ...spec.env } : process.env,
-    windowsHide: true,
-  });
+  const adapted = adaptWithinCommandLineBudget(
+    detected,
+    definition,
+    invocationContext
+  );
 
   let child: ChildProcess;
   // Local alias so `@nx/workspace-require-windows-hide` recognizes the
@@ -82,16 +93,17 @@ export async function runAgentic(
   try {
     child = spawn(adapted.binary, adapted.args, spawnOptions);
   } catch (err) {
-    return resolveFromHandoffOrPrompt(handoffFilePath, false, {
+    return resolveFromHandoffOrPrompt(handoffFilePath, handoffsDir, false, {
       spawnError: err instanceof Error ? err.message : String(err),
     });
   }
 
   // Counts SIGINTs while the agent runs. Non-zero after exit means the
-  // user pressed Ctrl+C → skip the ambiguous abort/continue prompt, because
-  // enquirer misbehaves in the TTY state left by a SIGINT-killed child
-  // (ERR_USE_AFTER_CLOSE, setRawMode EIO) and the errors surface from async
-  // chains that `await` cannot catch.
+  // user pressed Ctrl+C → skip the ambiguous abort/continue prompt. Prompting
+  // in the TTY state left by a SIGINT-killed child misbehaved under enquirer
+  // (ERR_USE_AFTER_CLOSE, setRawMode EIO) from async chains `await` could not
+  // catch. Whether @clack/prompts shares that fault is unverified, so the skip
+  // stays; reproducing it needs a real terminal.
   let userInterruptCount = 0;
   const swallowSigint = () => {
     userInterruptCount++;
@@ -100,7 +112,7 @@ export async function runAgentic(
 
   const handoffWatchAbort = new AbortController();
   const exitPromise = waitForExit(child);
-  const handoffPromise = waitForValidHandoff(handoffFilePath, {
+  const handoffPromise = waitForValidHandoff(handoffFilePath, handoffsDir, {
     signal: handoffWatchAbort.signal,
     intervalMs: handoffPollIntervalMs,
   });
@@ -140,8 +152,61 @@ export async function runAgentic(
 
   return resolveFromHandoffOrPrompt(
     handoffFilePath,
+    handoffsDir,
     userInterruptCount > 0,
     exitInfoToCause(exitInfo)
+  );
+}
+
+/**
+ * Builds Windows shim arguments within budget, trying the shorter context
+ * before aborting. Rejects overflow to avoid truncated instructions.
+ * Leaves command lines unmeasured off the shim path.
+ */
+function adaptWithinCommandLineBudget(
+  detected: DetectedInstalledAgent,
+  definition: AgentDefinition,
+  invocationContext: InvocationContext
+): AdaptedSpawn {
+  const adapt = (ctx: InvocationContext): AdaptedSpawn => {
+    const spec = definition.buildInteractive(ctx);
+    return adaptSpawnForWindowsShim(detected.binary, spec.args, {
+      stdio: 'inherit',
+      cwd: spec.cwd ?? ctx.workspaceRoot,
+      env: spec.env ? { ...process.env, ...spec.env } : process.env,
+      windowsHide: true,
+    });
+  };
+
+  const adapted = adapt(invocationContext);
+  if (withinCommandLineBudget(adapted)) {
+    return adapted;
+  }
+
+  const reduced = adapt({
+    ...invocationContext,
+    inlineSystemContext: invocationContext.inlineSystemContextFallback,
+  });
+  if (withinCommandLineBudget(reduced)) {
+    logger.info(
+      pc.dim(
+        `  Passing the agent a reduced system context. The full one does not fit on a Windows command line alongside these paths.`
+      )
+    );
+    return reduced;
+  }
+
+  output.error({
+    title: `${detected.displayName} cannot be started for this migration step`,
+    bodyLines: [
+      `Launching it needs a ${reduced.commandLineLength}-character command line. cmd.exe runs at most ${WINDOWS_COMMAND_LINE_LIMIT} characters, and nx stops at ${WINDOWS_COMMAND_LINE_BUDGET} to leave room for what it cannot measure from here.`,
+      `The length is paths: the workspace root, at ${invocationContext.workspaceRoot.length} characters, and the migration's package and name, each repeated across several of them.`,
+      ``,
+      `Re-run with \`--agentic=false\` to apply the remaining migrations yourself. Moving the workspace to a shorter path can help too, but only for agents that put it on the command line.`,
+    ],
+  });
+  throw new Error(
+    `Cannot start ${detected.displayName}: the command line exceeds the Windows limit.`
   );
 }
 
@@ -161,189 +226,13 @@ function exitInfoToCause(info: ExitInfo): AmbiguousCause {
   return cause;
 }
 
-function restoreTermiosAfterAgent(): void {
-  if (process.platform === 'win32') return;
-  if (!process.stdin.isTTY) return;
-  try {
-    // `stty sane` resets termios to a known cooked state via the kernel —
-    // independent of Node's libuv mode tracking (Node's setRawMode(false)
-    // short-circuits when libuv's per-handle mode is already NORMAL, even
-    // if the OS-level termios was changed out-of-band by the agent).
-    execSync('stty sane < /dev/tty', {
-      stdio: ['ignore', 'ignore', 'ignore'],
-      windowsHide: true,
-    });
-    // Carriage-return + clear to end of screen, to wipe any agent TUI
-    // cells below our row that subsequent log lines won't overwrite
-    // (e.g. a status footer past where our text wraps).
-    process.stdout.write('\r\x1B[J');
-  } catch {
-    // best-effort — if stty isn't on PATH or /dev/tty isn't accessible,
-    // the worst case is the pre-existing staircase + cell-bleed output.
-  }
-}
-
-// Safety bound after force-kill. SIGKILL normally reaps in microseconds;
-// the bound exists for uninterruptible kernel calls or taskkill returning
-// before the process actually exits.
-const FORCE_KILL_WAIT_MS = 500;
-
-/**
- * Stops the agent process after a successful handoff. Platform-branched:
- *
- * - POSIX: SIGINT (graceful, equivalent to user Ctrl+C) → wait
- *   `gracefulExitMs` for the child to exit → SIGKILL → wait
- *   `FORCE_KILL_WAIT_MS` (bounded) → return. SIGTERM is intentionally
- *   skipped: a process that ignores SIGINT for 5s will hit the same
- *   handler on SIGTERM, the extra step only delays the inevitable.
- *
- * - Windows: skip SIGINT entirely. `child.kill('*')` on Windows is a
- *   `TerminateProcess` call regardless of the signal name (Windows has
- *   no POSIX signals), and on the `cmd.exe /d /s /c "..."` shim path it
- *   would terminate cmd.exe while leaving the agent orphaned (parent
- *   death doesn't cascade to children on Windows). `taskkill /T /F`
- *   walks the process tree and kills cmd.exe AND the agent atomically;
- *   that's the only reliable shutdown path here. `taskkill` failures
- *   (binary missing, race with already-dead pid) are swallowed; the
- *   safety bound returns regardless.
- */
-async function closeAgentSession(
-  child: ChildProcess,
-  exitPromise: Promise<ExitInfo>,
-  gracefulExitMs: number,
-  forceKillWaitMs: number
-): Promise<void> {
-  if (child.exitCode !== null || child.signalCode !== null) return;
-
-  if (process.platform === 'win32') {
-    await forceKillWindowsTree(child, exitPromise, forceKillWaitMs);
-    return;
-  }
-
-  // POSIX path.
-  try {
-    child.kill('SIGINT');
-  } catch {
-    // child already gone between the check above and here
-    return;
-  }
-  let escalation: NodeJS.Timeout | undefined;
-  try {
-    await Promise.race([
-      exitPromise,
-      new Promise<void>((resolve) => {
-        escalation = setTimeout(resolve, gracefulExitMs);
-      }),
-    ]);
-  } finally {
-    if (escalation) clearTimeout(escalation);
-  }
-  if (child.exitCode !== null || child.signalCode !== null) return;
-
-  // Graceful timeout elapsed without the agent exiting. SIGKILL is
-  // uncatchable; bound the post-kill wait so a pathological uninterruptible
-  // syscall can't hang us forever.
-  try {
-    child.kill('SIGKILL');
-  } catch {
-    /* child already gone */
-  }
-  await raceWithTimeout(exitPromise, forceKillWaitMs);
-}
-
-async function forceKillWindowsTree(
-  child: ChildProcess,
-  exitPromise: Promise<ExitInfo>,
-  forceKillWaitMs: number
-): Promise<void> {
-  const pid = child.pid;
-  // `child.pid` is undefined only when spawn itself failed; the early-return
-  // guard in `closeAgentSession` should short-circuit that path. Reaching
-  // here without a pid means a narrow race between handoff-detection and
-  // error-event propagation — without a pid we can't taskkill, so wait
-  // briefly and return.
-  if (pid !== undefined) {
-    try {
-      execSync(`taskkill /T /F /PID ${pid}`, {
-        stdio: 'ignore',
-        windowsHide: true,
-        // Bound so a hung Windows shell can't block the orchestrator.
-        timeout: 2_000,
-      });
-    } catch {
-      /* taskkill missing, pid already dead, or timed out — fall through */
-    }
-  }
-  await raceWithTimeout(exitPromise, forceKillWaitMs);
-}
-
-async function raceWithTimeout(
-  promise: Promise<unknown>,
-  timeoutMs: number
-): Promise<void> {
-  let timer: NodeJS.Timeout | undefined;
-  try {
-    await Promise.race([
-      promise,
-      new Promise<void>((resolve) => {
-        timer = setTimeout(resolve, timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
-
-interface ExitInfo {
-  code?: number | null;
-  signal?: NodeJS.Signals | null;
-  error?: Error;
-}
-
-// Merge window so a paired exit + error both land in the same ExitInfo
-// (e.g. error from IPC followed by exit when the process actually
-// terminates). For error-only paths like spawn ENOENT — where Node fires
-// error but never exit — this timer is the SOLE settlement mechanism.
-const EXIT_MERGE_WINDOW_MS = 10;
-
-function waitForExit(child: ChildProcess): Promise<ExitInfo> {
-  return new Promise<ExitInfo>((resolve) => {
-    const info: ExitInfo = {};
-    let pending: NodeJS.Timeout | null = null;
-    let settled = false;
-    const settle = () => {
-      if (settled) return;
-      settled = true;
-      if (pending) clearTimeout(pending);
-      resolve(info);
-    };
-    const onFirst = () => {
-      if (settled || pending) return;
-      pending = setTimeout(settle, EXIT_MERGE_WINDOW_MS);
-    };
-    child.on('exit', (code, signal) => {
-      info.code = code;
-      info.signal = signal;
-      onFirst();
-    });
-    // `error` fires when spawn itself fails (e.g. binary disappeared between
-    // detection and run) OR alongside `exit` when the process started but
-    // emitted an error event later. Treat both as exit with no handoff so
-    // the ambiguous flow kicks in; field-merge so we don't drop the loser's
-    // contribution when both fire.
-    child.on('error', (error) => {
-      info.error = error;
-      onFirst();
-    });
-  });
-}
-
 async function resolveFromHandoffOrPrompt(
   handoffFilePath: string,
+  handoffsDir: string,
   userInterrupted = false,
   cause: AmbiguousCause = {}
 ): Promise<HandoffOutcome> {
-  const read = readHandoffWithReason(handoffFilePath);
+  const read = readHandoffWithReason(handoffFilePath, handoffsDir);
   if (read.ok === true) {
     return {
       kind: read.handoff.status,
@@ -357,23 +246,14 @@ async function resolveFromHandoffOrPrompt(
   };
   if (userInterrupted) {
     // User pressed Ctrl+C. Don't show the abort/continue prompt — they
-    // already told us what they want, and the TTY state after a
-    // SIGINT-killed child trips enquirer's setRawMode-EIO and
-    // ERR_USE_AFTER_CLOSE bugs. The orchestrator's standard failure
+    // already told us what they want. Prompting in the TTY state left by a
+    // SIGINT-killed child also tripped enquirer's setRawMode-EIO and
+    // ERR_USE_AFTER_CLOSE bugs; whether @clack/prompts shares that fault is
+    // unverified, so the skip stays. The orchestrator's standard failure
     // cascade surfaces the abort outcome.
     //
-    // Forward the underlying cause as pre-rendered summary lines so the
-    // caller can log it before "Aborted by user" — a Ctrl+C that masked
-    // a SEPARATE crash still needs to show the user what crashed. Scrub
-    // fields that are just the Ctrl+C itself reverberating: exit code
-    // 130 (SIGINT) / 143 (SIGTERM from our escalation) and signals
-    // SIGINT / SIGTERM reflect the user's own keystroke (and our
-    // graceful-exit handling of it); surfacing them as "agent crashed"
-    // would be noise. Anything else — code 1, code 137 (OOM), an
-    // unrelated signal — is a separate diagnostic worth keeping. Note
-    // that `spawnError` is structurally impossible here: the spawn-throw
-    // path returns directly without registering the SIGINT listener, so
-    // `userInterrupted` can never be true on that branch.
+    // After user interruption, suppress conventional stop statuses and retain
+    // independent failure diagnostics for the caller to display.
     const exitWasCtrlC =
       cause.exitCode === 130 ||
       cause.exitCode === 143 ||
@@ -397,65 +277,16 @@ async function resolveFromHandoffOrPrompt(
   return promptAmbiguous(fullCause);
 }
 
-/**
- * Node's `spawn` cannot directly execute `.cmd` / `.bat` shims on Windows;
- * `which` resolves to those when an agent was installed via npm. Wrap them in
- * a `cmd.exe /d /s /c` invocation with `windowsVerbatimArguments` so quoting
- * follows the cmd.exe convention rather than Node's default cooking.
- *
- * On non-Windows or for non-shim binaries this is a passthrough.
- */
-export function adaptSpawnForWindowsShim(
-  binary: string,
-  args: readonly string[],
-  options: SpawnOptions
-): { binary: string; args: string[]; options: SpawnOptions } {
-  if (process.platform !== 'win32') {
-    return { binary, args: [...args], options };
-  }
-  const ext = extname(binary).toLowerCase();
-  if (ext !== '.cmd' && ext !== '.bat') {
-    return { binary, args: [...args], options };
-  }
-
-  const cmdLine = [escapeCmdCommand(binary), ...args.map(escapeCmdArg)].join(
-    ' '
-  );
-  return {
-    binary: process.env.comspec || 'cmd.exe',
-    // Outer pair of quotes is required so cmd.exe /c does not strip the inner
-    // quotes around the binary path.
-    args: ['/d', '/s', '/c', `"${cmdLine}"`],
-    options: { ...options, windowsVerbatimArguments: true },
-  };
-}
-
-const CMD_META_CHARS = /([()\][%!^"`<>&|;, ])/g;
-
-// Backslash-escape embedded quotes per MS C runtime convention, wrap in
-// quotes, then caret-escape cmd.exe metacharacters.
-function escapeCmdArg(arg: string): string {
-  const quoted = `"${arg
-    .replace(/(\\*)"/g, '$1$1\\"')
-    .replace(/(\\*)$/, '$1$1')}"`;
-  return quoted.replace(CMD_META_CHARS, '^$1');
-}
-
-function escapeCmdCommand(arg: string): string {
-  // cmd.exe interprets the command portion through an extra parsing pass;
-  // apply the caret-escape twice so the .cmd shim sees the original.
-  return escapeCmdArg(arg).replace(CMD_META_CHARS, '^$1');
-}
-
 async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
   // stderr blank line so the spacer lands in the same stream as output.warn
-  // and the enquirer prompt — buffered stdout could otherwise reorder it
-  // and glue the prompt to the agent's trailing exit message.
+  // and the prompt — buffered stdout could otherwise reorder it and glue the
+  // prompt to the agent's trailing exit message.
   process.stderr.write('\n');
-  // Cause rendered ABOVE the prompt rather than inlined into prompt.message:
-  // enquirer's select redraw uses different math for clear (wrap-aware) vs
-  // restore (raw \n-split count), so a multi-line message can leave orphaned
-  // cells on arrow-key re-renders. Keeping message single-line sidesteps it.
+  // Cause rendered ABOVE the prompt rather than inlined into its message:
+  // enquirer's select redraw used different math for clear (wrap-aware) vs
+  // restore (raw \n-split count), so a multi-line message could leave orphaned
+  // cells on arrow-key re-renders. Kept single-line because that constraint is
+  // unverified under @clack/prompts, not because the cause still applies.
   const causeLines = describeAmbiguousCause(cause);
   if (causeLines.length > 0) {
     output.warn({
@@ -463,24 +294,21 @@ async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
       bodyLines: causeLines,
     });
   }
-  // `migratePrompt` injects `options.cancel` so Ctrl+C and Esc exit cleanly
-  // via `process.exit(130)` before enquirer's broken cancel cleanup runs.
-  // Any other rejection we treat as abort.
+  // Cancelling exits 130 from inside the prompt; any other rejection is an
+  // abort.
   try {
-    const response = await migratePrompt<{ choice: 'abort' | 'continue' }>({
-      name: 'choice',
-      type: 'select',
+    const choice = await migrateChoice<'abort' | 'continue'>({
       message: 'How should nx migrate proceed?',
       choices: [
-        { name: 'abort', message: 'Treat as failed — abort the run' },
+        { value: 'abort', label: 'Treat as failed — abort the run' },
         {
-          name: 'continue',
-          message: 'Treat as completed — mark done and continue',
+          value: 'continue',
+          label: 'Treat as completed — mark done and continue',
         },
       ],
     });
-    reportMigratePrompt('ambiguous_agent_outcome', response.choice);
-    return response.choice === 'continue'
+    reportMigratePrompt('ambiguous_agent_outcome', choice);
+    return choice === 'continue'
       ? { kind: 'ambiguous-continue' }
       : { kind: 'ambiguous-abort' };
   } catch {

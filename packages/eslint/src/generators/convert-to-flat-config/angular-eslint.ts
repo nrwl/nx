@@ -117,8 +117,8 @@ function readAngularEslintVersion(tree: Tree): string | undefined {
 // Pin the umbrella to the major already installed, falling back to the latest
 // major nx generates when none is present. @nx/eslint can't read the canonical
 // pin from @nx/angular without inverting the package dependency (@nx/angular
-// depends on @nx/eslint), so the fallback is hardcoded; keep it in sync with
-// `angularEslintVersion` in packages/angular/src/utils/versions.ts.
+// depends on @nx/eslint), so the fallback is hardcoded; keep its major in sync
+// with `angularEslintVersion` in packages/angular/src/utils/versions.ts.
 export function resolveAngularEslintVersion(tree: Tree): string {
   const version = readAngularEslintVersion(tree);
   const major = version ? coerce(version)?.major : undefined;

@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { getWebpackE2EWebServerInfo } from './e2e-web-server-info-utils';
+import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('getWebpackE2EWebServerInfo', () => {
   let tree: Tree;
@@ -212,5 +212,49 @@ describe('getWebpackE2EWebServerInfo', () => {
         "e2eWebServerCommand": "npx nx run app:webpack-serve",
       }
     `);
+  });
+
+  it('should let an explicitly requested port win over targetDefaults', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.targetDefaults = { serve: { options: { port: 4300 } } };
+    updateNxJson(tree, nxJson);
+
+    // ACT — the generator wrote `port: 4321` onto the serve target, so e2e must
+    // target 4321 too; targetDefaults is only a fallback for when nothing was asked.
+    const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
+      tree,
+      'app',
+      'app/webpack.config.ts',
+      false,
+      4321
+    );
+
+    // ASSERT
+    expect(e2eWebServerInfo.e2eWebServerAddress).toBe('http://localhost:4321');
+    expect(e2eWebServerInfo.e2eCiBaseUrl).toBe('http://localhost:4321');
+  });
+
+  it('should still apply targetDefaults when no port was requested', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.targetDefaults = { serve: { options: { port: 4300 } } };
+    updateNxJson(tree, nxJson);
+
+    // ACT — a generator with no `port` option passes nothing, so targetDefaults
+    // must still win. Passing a literal default here would read as a request.
+    const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
+      tree,
+      'app',
+      'app/webpack.config.ts',
+      false,
+      undefined
+    );
+
+    // ASSERT
+    expect(e2eWebServerInfo.e2eWebServerAddress).toBe('http://localhost:4300');
+    expect(e2eWebServerInfo.e2eCiBaseUrl).toBe('http://localhost:4300');
   });
 });

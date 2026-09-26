@@ -1,6 +1,7 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import type { Mock } from 'vitest';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-jest.mock('../../../utils/remix-config');
+vi.mock('../../../utils/remix-config');
 import * as remixConfigUtils from '../../../utils/remix-config';
 
 import { Tree } from '@nx/devkit';
@@ -18,7 +19,7 @@ describe('meta v2', () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       tree.write('.gitignore', `/node_modules/dist`);
 
-      (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
+      (remixConfigUtils.getRemixConfigValues as Mock) = vi.fn(() =>
         Promise.resolve({
           ignoredRouteFiles: ['**/.*'],
         })

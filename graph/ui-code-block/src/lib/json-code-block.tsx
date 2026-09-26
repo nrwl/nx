@@ -35,7 +35,7 @@ export function JsonCodeBlock(props: JsonCodeBlockProps): JSX.Element {
   );
   return (
     <div className="code-block group relative w-full">
-      <div className="absolute right-0 top-0 z-10 flex">
+      <div className="absolute top-0 right-0 z-10 flex">
         <CopyToClipboardButton
           text={jsonString}
           tooltipAlignment="right"

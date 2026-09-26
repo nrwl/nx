@@ -1,4 +1,5 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import type { Mock } from 'vitest';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import { readProjectConfiguration, Tree } from '@nx/devkit';
@@ -7,9 +8,9 @@ import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 describe('react app generator (legacy)', () => {
   let appTree: Tree;
@@ -23,7 +24,7 @@ describe('react app generator (legacy)', () => {
     strict: true,
     addPlugin: false,
   };
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 
@@ -130,6 +131,66 @@ describe('react app generator (legacy)', () => {
       );
       "
     `);
+  });
+
+  it('should not write a dev-server port that was never requested', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'default-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+
+    // @nx/webpack:dev-server already defaults to 4200; restating it here would be noise.
+    expect(
+      readProjectConfiguration(appTree, 'default-app').targets.serve.options
+    ).not.toHaveProperty('port');
+  });
+
+  it('should write an explicitly requested port to the serve target', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'pinned-app',
+      bundler: 'webpack',
+      port: 4321,
+      skipFormat: true,
+    });
+
+    expect(
+      readProjectConfiguration(appTree, 'pinned-app').targets.serve.options.port
+    ).toBe(4321);
+  });
+
+  it('should write port 0, which asks the dev server for a free port', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'ephemeral-app',
+      bundler: 'webpack',
+      port: 0,
+      skipFormat: true,
+    });
+
+    // 0 is schema-valid and meaningful; a truthiness guard here would drop it and
+    // silently serve on the executor's 4200.
+    expect(
+      readProjectConfiguration(appTree, 'ephemeral-app').targets.serve.options
+        .port
+    ).toBe(0);
+  });
+
+  it('should accept the deprecated devServerPort from programmatic callers', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'aliased-app',
+      bundler: 'webpack',
+      devServerPort: 4322,
+      skipFormat: true,
+    });
+
+    expect(
+      readProjectConfiguration(appTree, 'aliased-app').targets.serve.options
+        .port
+    ).toBe(4322);
   });
 
   it('should setup vite', async () => {

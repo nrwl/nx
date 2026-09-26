@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getPackageManagerCommand,
@@ -10,6 +10,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
 import type { LibraryGeneratorSchema } from './schema';
@@ -42,6 +43,40 @@ describe('lib', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the esbuild build script for the esbuild bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          bundler: 'esbuild',
+          unitTestRunner: 'none',
+          linter: 'none',
+        } as LibraryGeneratorSchema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?esbuild['"]?: false/
+      );
+    });
+
+    it('should deny the @swc/core build script for the swc bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          bundler: 'swc',
+          unitTestRunner: 'none',
+          linter: 'none',
+        } as LibraryGeneratorSchema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@swc\/core['"]: false/
+      );
+    });
   });
 
   it.each`
@@ -101,6 +136,10 @@ describe('lib', () => {
       // unitTestRunner property is ignored.
       // It only works with our executors.
       expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
+
+      // `npm-scripts` forces `linter: 'none'` after `normalizeLinterOption` has
+      // already resolved it — nothing else catches a regression there.
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeFalsy();
     });
 
     it('should generate an empty ts lib using --config=project', async () => {
@@ -923,9 +962,7 @@ describe('lib', () => {
 
                   // Reading the SWC compilation config and remove the "exclude"
                   // for the test files to be compiled by SWC
-                  const { exclude: _, ...swcJestConfig } = JSON.parse(
-                    readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'),
-                  );
+                  const { exclude: _, ...swcJestConfig } = JSON.parse(readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'));
 
                   // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
                   // If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
@@ -1494,7 +1531,7 @@ describe('lib', () => {
         });
 
         it("should warn the user if their defined groups don't match the new project", async () => {
-          const outputSpy = jest
+          const outputSpy = vi
             .spyOn(output, 'warn')
             .mockImplementationOnce(() => {
               return undefined as never;
@@ -1623,6 +1660,26 @@ describe('lib', () => {
 
         expect(tree.exists('my-lib/.babelrc')).toBeFalsy();
       });
+    });
+  });
+
+  describe('--unit-test-runner vitest', () => {
+    it('should not add dependencies when --skipPackageJson', async () => {
+      const before = readJson(tree, 'package.json');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        unitTestRunner: 'vitest',
+        // `addLint` writes its own dependencies regardless of the flag.
+        linter: 'none',
+        skipPackageJson: true,
+        skipFormat: true,
+      });
+
+      // Guards against the assertion passing because the vitest setup never ran.
+      expect(tree.exists('my-lib/vitest.config.mts')).toBeTruthy();
+      expect(readJson(tree, 'package.json')).toEqual(before);
     });
   });
 
@@ -1941,12 +1998,9 @@ describe('lib', () => {
           directory,
         });
 
-        expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
-          .toMatchInlineSnapshot(`
-          "packages:
-            - '${expected}'
-          "
-        `);
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(
+          `packages:\n  - '${expected}'\n`
+        );
       }
     );
 
@@ -2240,9 +2294,7 @@ describe('lib', () => {
                   const { readFileSync } = require('fs');
 
                   // Reading the SWC compilation config for the spec files
-                  const swcJestConfig = JSON.parse(
-                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
-                  );
+                  const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
                   // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
                   swcJestConfig.swcrc = false;

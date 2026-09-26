@@ -2,6 +2,7 @@ import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
   processTargetOutputs,
+  interpolate,
 } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
@@ -11,7 +12,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { basename, dirname, relative } from 'node:path/posix';
-import { interpolate } from 'nx/src/tasks-runner/utils';
 import { createNodes, type EslintPluginOptions } from '../../plugins/plugin';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';

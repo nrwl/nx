@@ -1,18 +1,19 @@
+import type { MockedFunction } from 'vitest';
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { shouldPrintConfigureAiAgentsDisclaimer } from './configure-ai-agents-disclaimer';
 import { agentsMdPath, getAgentRulesWrapped } from './constants';
 
-jest.mock('./detect-ai-agent', () => ({
-  detectAiAgent: jest.fn(() => null),
+vi.mock('./detect-ai-agent', () => ({
+  detectAiAgent: vi.fn(() => null),
 }));
 
 import { detectAiAgent } from './detect-ai-agent';
 
 describe('shouldPrintConfigureAiAgentsDisclaimer', () => {
   const outdated = [{ name: 'claude' as const, displayName: 'Claude Code' }];
-  const mockedDetectAiAgent = detectAiAgent as jest.MockedFunction<
+  const mockedDetectAiAgent = detectAiAgent as MockedFunction<
     typeof detectAiAgent
   >;
 

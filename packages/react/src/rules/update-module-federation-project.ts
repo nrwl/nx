@@ -16,7 +16,7 @@ export function updateModuleFederationProject(
     js?: boolean;
     projectName: string;
     appProjectRoot: string;
-    devServerPort?: number;
+    port?: number;
     typescriptConfiguration?: boolean;
     dynamic?: boolean;
     bundler?: 'rspack' | 'webpack';
@@ -65,16 +65,16 @@ export function updateModuleFederationProject(
     }
   }
 
+  // Must precede the executor assignment below, which dereferences targets.serve:
+  // a plugin-driven workspace has no serve target in project.json to inherit.
+  projectConfig.targets.serve ??= {};
+  projectConfig.targets.serve.options ??= {};
   if (options.bundler !== 'rspack') {
     projectConfig.targets.serve.executor =
       '@nx/react:module-federation-dev-server';
   }
-  projectConfig.targets.serve ??= {};
-  projectConfig.targets.serve.options ??= {};
   projectConfig.targets.serve.options.port =
-    options.bundler === 'rspack' && options.ssr && isHost
-      ? 4000
-      : options.devServerPort;
+    options.bundler === 'rspack' && options.ssr && isHost ? 4000 : options.port;
 
   // `serve-static` for remotes that don't need to be in development mode
   if (options.bundler !== 'rspack') {

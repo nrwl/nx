@@ -1,4 +1,5 @@
 import type { LoaderContext } from '@rspack/core';
+import { normalize } from 'node:path';
 import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
 import {
   StyleUrlsResolver,
@@ -51,9 +52,11 @@ export default function loader(
     if (resourceDeps !== undefined) {
       // The compiler tracked this file's template and stylesheet
       // dependencies; registering them keeps the module rebuilding when a
-      // resource changes, at no parsing cost.
+      // resource changes, at no parsing cost. The compiler reports them with
+      // POSIX separators, which the file watcher does not match on Windows,
+      // so normalize them to native separators.
       for (const dependency of resourceDeps) {
-        this.addDependency(dependency);
+        this.addDependency(normalize(dependency));
       }
     } else {
       const templateUrls = templateUrlsResolver.resolve(

@@ -8,13 +8,13 @@ import {
 import { checkCompatibleWithPlugins } from './check-compatible-with-plugins';
 import { createProjectGraphAsync } from '../../../project-graph/project-graph';
 
-jest.mock('../../../project-graph/project-graph', () => ({
-  createProjectGraphAsync: jest.fn(),
+vi.mock('../../../project-graph/project-graph', () => ({
+  createProjectGraphAsync: vi.fn(),
 }));
 
 describe('checkCompatibleWithPlugins', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should return empty object if no errors are thrown', async () => {
