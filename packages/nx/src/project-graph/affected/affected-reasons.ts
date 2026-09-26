@@ -170,20 +170,21 @@ export function formatAffectedExplanation(
     return `Nothing affected.`;
   }
 
-  // Something the change reached directly is what a reader is looking for; an
-  // entry pulled in through a dependency is a consequence of one of those, and
-  // in a large answer there are far more of the second kind.
-  const reachedThroughDependency = (name: string) => {
-    const forName = reasons[name] ?? [];
-    return (
-      forName.length > 0 &&
-      forName.every(
+  // Upstream first, the selection last: the reader's own tasks stay at the
+  // bottom however long the chain above them grows. Within a group, what the
+  // change reached directly comes before what a dependency pulled in.
+  const upstreamFirst = (group: Record<string, AffectedReason[]>) => {
+    const reachedThroughDependency = (name: string) =>
+      group[name].length > 0 &&
+      group[name].every(
         (r) => r.kind === 'dependency' || r.kind === 'dependent-output'
-      )
-    );
+      );
+    const sorted = Object.keys(group).sort();
+    return [
+      ...sorted.filter((n) => !reachedThroughDependency(n)),
+      ...sorted.filter(reachedThroughDependency),
+    ];
   };
-  const direct = names.filter((n) => !reachedThroughDependency(n));
-  const indirect = names.filter(reachedThroughDependency);
 
   const lines = [`${heading} (${names.length}):`, ''];
   const render = (name: string) => {
@@ -198,19 +199,16 @@ export function formatAffectedExplanation(
     lines.push('');
   };
 
-  // No heading between the groups: each entry's reasons already name the
-  // dependency that pulled it in, so a label would only repeat them.
-  direct.forEach(render);
-  indirect.forEach(render);
-
-  const carriedNames = Object.keys(carried).sort();
+  const carriedNames = upstreamFirst(carried);
   if (carriedNames.length) {
     lines.push(
       `Not selected, but carried the change to a selected ${noun} (${carriedNames.length}):`,
       ''
     );
     carriedNames.forEach(render);
+    lines.push(`Selected (${names.length}):`, '');
   }
+  upstreamFirst(reasons).forEach(render);
 
   // Same shape as the run summary, which reports the tasks it ran and the ones
   // it ran only to get there.

@@ -204,7 +204,9 @@ describe('formatAffectedExplanation', () => {
     expect(out).not.toContain('depend on');
   });
 
-  it('lists a producer outside the selection in its own section', () => {
+  // A trace: however long the chain above grows, the reader's own task stays
+  // right above the summary.
+  it('lists the chain first and the selection last', () => {
     const out = formatAffectedExplanation(
       {
         affected: {
@@ -219,8 +221,18 @@ describe('formatAffectedExplanation', () => {
     expect(out).toContain(
       'Not selected, but carried the change to a selected task (1):'
     );
-    expect(out.indexOf('app:build')).toBeLessThan(out.indexOf('app:prebuild'));
+    expect(out).toContain('Selected (1):');
+    expect(out.indexOf('app:prebuild')).toBeLessThan(out.indexOf('app:build'));
+    expect(out.trimEnd().split('\n').slice(-5, -1).join('\n')).toContain(
+      '  app:build'
+    );
     expect(out).toContain('1 affected task.');
+  });
+
+  it('adds no section labels when nothing was carried', () => {
+    const out = formatAffectedExplanation(selected, 'Affected tasks');
+    expect(out).not.toContain('Selected (');
+    expect(out).not.toContain('Not selected');
   });
 
   it('sorts an entry reached only through a dependency to the bottom', () => {
