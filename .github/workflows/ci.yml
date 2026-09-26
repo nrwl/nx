@@ -23,6 +23,8 @@ env:
   COREPACK_DEFAULT_TO_LATEST: '0'
   # Select affected tasks instead of whole projects.
   NX_LEGACY_AFFECTED: 'false'
+  # Hash tasks from Nx Cloud I/O snapshots (ultracache).
+  NX_IO_SNAPSHOTS: 'true'
 
 jobs:
   main-linux:
