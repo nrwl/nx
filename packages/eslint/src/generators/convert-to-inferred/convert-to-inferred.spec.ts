@@ -21,12 +21,12 @@ import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 let fs: TempFs;
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -175,7 +175,7 @@ function createTestProject(
     `${projectOpts.appRoot}/src/foo.ts`,
     `export const myValue = 2;`
   );
-  jest.doMock(
+  vi.doMock(
     join(fs.tempDir, `${projectOpts.appRoot}/.eslintrc.json`),
     () => ({
       default: {
@@ -279,7 +279,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await expect(
         convertToInferred(tree, { project: project.name, skipFormat: true })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (.invalid-eslint-config.json) is not a default config file known by ESLint."`
+        `[Error: The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (.invalid-eslint-config.json) is not a default config file known by ESLint.]`
       );
     });
 
@@ -291,7 +291,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await expect(
         convertToInferred(tree, { project: project.name, skipFormat: true })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (myapp/nested/.eslintrc.json) must point to a file in the project root or a parent directory."`
+        `[Error: The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (myapp/nested/.eslintrc.json) must point to a file in the project root or a parent directory.]`
       );
     });
 
@@ -427,7 +427,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
     });
 
     it('should remove include when all projects are included', async () => {
-      jest.doMock(
+      vi.doMock(
         '.eslintrc.base.json',
         () => ({
           ignorePatterns: ['**/*'],
