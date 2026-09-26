@@ -1,6 +1,5 @@
-use crate::native::db::connection::NxDbConnection;
+use crate::native::db::connection::{DbValue, NxDbConnection};
 use napi::bindgen_prelude::External;
-use rusqlite::params;
 use std::sync::{Arc, Mutex};
 
 /// One row per plugin that built the latest graph, stamped with its `computedAt`.
@@ -52,26 +51,29 @@ impl NxPluginCapabilities {
         computed_at: i64,
         capabilities: Vec<CachedPluginCapabilities>,
     ) -> anyhow::Result<()> {
-        let mut db = self.db.lock().unwrap();
+        let db = self.db.lock().unwrap();
         db.transaction(|conn| {
-            conn.execute("DELETE FROM nx_plugin_capabilities", [])?;
-            let mut insert = conn.prepare(
-                "INSERT INTO nx_plugin_capabilities (
-                    position, computed_at, create_nodes_pattern,
-                    has_create_dependencies, has_create_metadata,
-                    has_pre_tasks_execution, has_post_tasks_execution
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            )?;
+            conn.execute("DELETE FROM nx_plugin_capabilities", &[])?;
             for (position, plugin) in capabilities.iter().enumerate() {
-                insert.execute(params![
-                    position as i64,
-                    computed_at,
-                    plugin.create_nodes_pattern,
-                    plugin.has_create_dependencies,
-                    plugin.has_create_metadata,
-                    plugin.has_pre_tasks_execution,
-                    plugin.has_post_tasks_execution,
-                ])?;
+                conn.execute(
+                    "INSERT INTO nx_plugin_capabilities (
+                        position, computed_at, create_nodes_pattern,
+                        has_create_dependencies, has_create_metadata,
+                        has_pre_tasks_execution, has_post_tasks_execution
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    &[
+                        DbValue::Integer(position as i64),
+                        DbValue::Integer(computed_at),
+                        match &plugin.create_nodes_pattern {
+                            Some(pattern) => DbValue::from(pattern.as_str()),
+                            None => DbValue::Null,
+                        },
+                        DbValue::from(plugin.has_create_dependencies),
+                        DbValue::from(plugin.has_create_metadata),
+                        DbValue::from(plugin.has_pre_tasks_execution),
+                        DbValue::from(plugin.has_post_tasks_execution),
+                    ],
+                )?;
             }
             Ok(())
         })?;
@@ -82,33 +84,26 @@ impl NxPluginCapabilities {
     /// null when what is recorded belongs to another build or nothing is.
     #[napi]
     pub fn get(&self, computed_at: i64) -> anyhow::Result<Option<Vec<CachedPluginCapabilities>>> {
-        let db = self.db.lock().unwrap();
-        let mut query = db.prepare(
+        let rows = self.db.lock().unwrap().query_rows(
             "SELECT computed_at, create_nodes_pattern,
                     has_create_dependencies, has_create_metadata,
                     has_pre_tasks_execution, has_post_tasks_execution
              FROM nx_plugin_capabilities ORDER BY position",
+            &[],
         )?;
-        let rows = query.query_map([], |row| {
-            Ok((
-                row.get::<_, i64>(0)?,
-                CachedPluginCapabilities {
-                    create_nodes_pattern: row.get(1)?,
-                    has_create_dependencies: row.get(2)?,
-                    has_create_metadata: row.get(3)?,
-                    has_pre_tasks_execution: row.get(4)?,
-                    has_post_tasks_execution: row.get(5)?,
-                },
-            ))
-        })?;
 
         let mut capabilities = Vec::new();
         for row in rows {
-            let (stamp, plugin) = row?;
-            if stamp != computed_at {
+            if row.get_i64(0)? != computed_at {
                 return Ok(None);
             }
-            capabilities.push(plugin);
+            capabilities.push(CachedPluginCapabilities {
+                create_nodes_pattern: row.get_optional_str(1)?,
+                has_create_dependencies: row.get_i64(2)? != 0,
+                has_create_metadata: row.get_i64(3)? != 0,
+                has_pre_tasks_execution: row.get_i64(4)? != 0,
+                has_post_tasks_execution: row.get_i64(5)? != 0,
+            });
         }
         Ok(if capabilities.is_empty() {
             None

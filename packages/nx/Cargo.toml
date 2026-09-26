@@ -122,7 +122,11 @@ reqwest = { version = "0.12.22", default-features = false, features = [
   # (process.env writes from JS). See telemetry/service.rs.
   "hickory-dns",
 ] }
-rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
+turso_core = { version = "0.7.2", default-features = false, features = [
+  "fs",
+  "time",
+  "uuid",
+] }
 notify = "=9.0.0-rc.5"
 machine-uid = "0.5.2"
 interprocess = { version = "=2.2.3", features = ["tokio"] }
