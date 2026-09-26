@@ -434,7 +434,7 @@ describe('explaining a change carried by a dependency-only task', () => {
     expect(result.explanation.affected['app:build']).toEqual([
       { kind: 'dependent-output', producer: 'app:prebuild' },
     ]);
-    expect(result.explanation.dependencies['app:prebuild']).toContainEqual(
+    expect(result.explanation.upstream['app:prebuild']).toContainEqual(
       expect.objectContaining({
         kind: 'input-file',
         file: 'packages/js/src/index.ts',
@@ -490,6 +490,30 @@ describe('the run graph selection hands over', () => {
     );
     // lib:test runs only because app:test needs it.
     expect(result.taskSelection.initiatingTaskIds).toEqual(['app:test']);
+  });
+});
+
+describe('explaining what a run needs first', () => {
+  // A lib change cannot reach app:test, so lib:test runs only because the
+  // affected app:test depends on it.
+  it('lists a kept task the change never reached, with what needs it', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/js/src/index.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      extraTargetDependencies: { test: ['^test'] },
+      explain: true,
+    });
+    expect(Object.keys(explanation.affected)).toEqual(['app:test']);
+    expect(explanation.required).toEqual({ 'lib:test': ['app:test'] });
   });
 });
 

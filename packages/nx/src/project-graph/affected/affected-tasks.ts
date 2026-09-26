@@ -352,7 +352,10 @@ export async function selectAffectedTasks(
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
-    explanation,
+    explanation: explanation && {
+      ...explanation,
+      required: requiredOnly(keep, taskGraph, explanation),
+    },
     taskSelection: {
       // Edges that disagree on a dependency's overrides leave it to a build
       // from the owning projects, which settles them the way the run always has.
@@ -513,14 +516,45 @@ function explainTasks(
 
   const result: AffectedExplanation = {
     affected: Object.fromEntries(affected.map((id) => [id, reasonsFor(id)])),
-    dependencies: {},
+    upstream: {},
   };
   const producers = affected.flatMap((id) => explanation.producersOf[id] ?? []);
   while (producers.length) {
     const id = producers.pop();
-    if (id in result.affected || id in result.dependencies) continue;
-    result.dependencies[id] = reasonsFor(id);
+    if (id in result.affected || id in result.upstream) continue;
+    result.upstream[id] = reasonsFor(id);
     producers.push(...(explanation.producersOf[id] ?? []));
   }
   return result;
+}
+
+/**
+ * The tasks a run keeps that the change reached none of, each with the kept
+ * tasks that depend on it: what runs only so the others can.
+ */
+function requiredOnly(
+  keep: string[],
+  taskGraph: TaskGraph,
+  explanation: AffectedExplanation
+): Record<string, string[]> {
+  const kept = new Set(keep);
+  const neededBy: Record<string, string[]> = {};
+  for (const id of keep) {
+    for (const dependency of [
+      ...(taskGraph.dependencies[id] ?? []),
+      ...(taskGraph.continuousDependencies?.[id] ?? []),
+    ]) {
+      if (kept.has(dependency)) {
+        (neededBy[dependency] ??= []).push(id);
+      }
+    }
+  }
+  return Object.fromEntries(
+    keep
+      .filter(
+        (id) => !(id in explanation.affected) && !(id in explanation.upstream)
+      )
+      .sort()
+      .map((id) => [id, (neededBy[id] ?? []).sort()])
+  );
 }

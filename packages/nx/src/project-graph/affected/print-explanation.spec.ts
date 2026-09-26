@@ -9,7 +9,7 @@ const explanation: AffectedExplanation = {
   affected: {
     'app:build': [{ kind: 'dependent-output', producer: 'app:prebuild' }],
   },
-  dependencies: {
+  upstream: {
     'app:prebuild': [{ kind: 'input-file', file: 'apps/app/src/x.ts' }],
   },
 };

@@ -185,7 +185,7 @@ describe('formatAffectedExplanation', () => {
     'app:build': [{ kind: 'dependent-output', producer: 'ui:build' }],
     'ui:build': [{ kind: 'input-file', file: 'libs/ui/src/x.ts' }],
   };
-  const selected = { affected: reasons, dependencies: {} };
+  const selected = { affected: reasons, upstream: {} };
 
   /**
    * Only the command that is about to run the closure reports it. `nx affected`
@@ -212,25 +212,59 @@ describe('formatAffectedExplanation', () => {
         affected: {
           'app:build': [{ kind: 'dependent-output', producer: 'app:prebuild' }],
         },
-        dependencies: {
+        upstream: {
           'app:prebuild': [{ kind: 'input-file', file: 'libs/app/src/x.ts' }],
         },
       },
       'Affected tasks'
     );
-    expect(out).toContain('Upstream, carried the change here (1):');
+    expect(out).toContain('Touched, their own inputs changed (1):');
     expect(out).toContain('Your targets (1):');
+    expect(out).toContain('    - affected: reads outputs the change reached');
     expect(out.indexOf('app:prebuild')).toBeLessThan(out.indexOf('app:build'));
-    expect(out.trimEnd().split('\n').slice(-5, -1).join('\n')).toContain(
-      '  app:build'
-    );
+    const entries = out.split('\n').filter((line) => /^  \S/.test(line));
+    expect(entries.at(-1)).toBe('  app:build');
     expect(out).toContain('1 affected task.');
   });
 
   it('adds no section labels when nothing was carried', () => {
     const out = formatAffectedExplanation(selected, 'Affected tasks');
     expect(out).not.toContain('Your targets');
-    expect(out).not.toContain('Upstream,');
+    expect(out).not.toContain('Touched,');
+  });
+
+  // Run order: what is only needed first, then what the change touched, then
+  // what it reached through those, then the reader's own targets.
+  it('lays the run out in layers, each dependency with what needs it', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'app:build': [{ kind: 'dependent-output', producer: 'app:gen' }],
+          'lib:build': [{ kind: 'input-file', file: 'libs/lib/x.ts' }],
+        },
+        upstream: {
+          'app:gen': [{ kind: 'input-file', file: 'apps/app/schema.json' }],
+        },
+        required: {
+          'core:build': ['a:build', 'b:build', 'c:build'],
+          'tools:build': ['app:build'],
+        },
+      },
+      'Affected tasks',
+      4
+    );
+    const at = (text: string) => out.indexOf(text);
+    expect(out).toContain('Dependencies, needed to run first (2):');
+    expect(out).toContain(
+      '  core:build, needed by a:build, b:build and 1 more'
+    );
+    expect(out).toContain('  tools:build, needed by app:build');
+    expect(at('Dependencies,')).toBeLessThan(at('Touched,'));
+    expect(at('Touched,')).toBeLessThan(at('Your targets (2):'));
+    // Touched targets before the ones reached through them.
+    expect(at('  lib:build')).toBeLessThan(at('  app:build'));
+    expect(out).toContain('    - touched: its own inputs changed');
+    expect(out).toContain('2 affected tasks and 4 tasks they depend on.');
   });
 
   // The reader's task sits at the bottom, so it names the file its chain
@@ -241,7 +275,7 @@ describe('formatAffectedExplanation', () => {
         affected: {
           'docs:build': [{ kind: 'dependent-output', producer: 'docs:gen' }],
         },
-        dependencies: {
+        upstream: {
           'docs:gen': [{ kind: 'dependent-output', producer: 'lib:build' }],
           'lib:build': [{ kind: 'input-file', file: 'libs/lib/src/x.ts' }],
         },
@@ -266,7 +300,7 @@ describe('formatAffectedExplanation', () => {
           cycle: [{ kind: 'dependency', dependency: 'app' }],
           lib: files.map((file) => ({ kind: 'project-file' as const, file })),
         },
-        dependencies: {},
+        upstream: {},
       },
       'Affected projects'
     );
@@ -288,22 +322,22 @@ describe('explainSelection', () => {
   };
 
   it('follows the chain from the selection through what it drops', () => {
-    const { affected, dependencies } = explainSelection(
+    const { affected, upstream } = explainSelection(
       reasons,
       (name) => name === 'a:build'
     );
     expect(Object.keys(affected)).toEqual(['a:build']);
-    expect(Object.keys(dependencies).sort()).toEqual(['b:gen', 'c:gen']);
+    expect(Object.keys(upstream).sort()).toEqual(['b:gen', 'c:gen']);
   });
 
   it('survives a cycle between dropped entries', () => {
-    const { dependencies } = explainSelection(
+    const { upstream } = explainSelection(
       {
         ...reasons,
         'c:gen': [{ kind: 'dependent-output', producer: 'b:gen' }],
       },
       (name) => name === 'a:build'
     );
-    expect(Object.keys(dependencies).sort()).toEqual(['b:gen', 'c:gen']);
+    expect(Object.keys(upstream).sort()).toEqual(['b:gen', 'c:gen']);
   });
 });
