@@ -1,5 +1,4 @@
 import type { Change, FileChange } from '../file-utils';
-import type { TouchedProject } from './affected-reasons';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import {
   ProjectGraph,
@@ -23,8 +22,8 @@ export interface DependencyChanges {
    * packages, so every node of that type counts as moved. A locator names the
    * ecosystem it reads, since a change to one cannot move another's nodes. */
   changedExternalTypes: string[];
-  /** Workspace projects the change names outright, with why. */
-  projects: TouchedProject[];
+  /** Workspace projects the change names outright. */
+  projects: string[];
 }
 
 export interface TouchedProjectLocator<T extends Change = Change> {
@@ -35,5 +34,5 @@ export interface TouchedProjectLocator<T extends Change = Change> {
     packageJson?: any,
     projectGraph?: ProjectGraph,
     projectDeletionAffectsAllProjects?: boolean
-  ): TouchedProject[] | Promise<TouchedProject[]>;
+  ): string[] | Promise<string[]>;
 }

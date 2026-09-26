@@ -6,56 +6,26 @@ import {
 } from '../../../../utils/json-diff';
 import { getRootTsConfigFileName } from '../../utils/typescript';
 import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
-import type { TouchedProject } from '../../../../project-graph/affected/affected-reasons';
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 
 export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, a, b, c, graph): TouchedProject[] => {
-  const rootTsConfig = getRootTsConfigFileName();
-  const { projects, byPathMapping } = locateTouchedProjectsFromTsConfig(
-    touchedFiles,
-    a,
-    b,
-    c,
-    graph
-  );
-  return projects.map((project) => ({
-    project,
-    kind: byPathMapping ? ('tsconfig-paths' as const) : ('tsconfig' as const),
-    file: rootTsConfig ?? undefined,
-  }));
-};
-
-const locateTouchedProjectsFromTsConfig = (
-  touchedFiles: Parameters<
-    TouchedProjectLocator<WholeFileChange | JsonChange>
-  >[0],
-  _a: Parameters<TouchedProjectLocator>[1],
-  _b: Parameters<TouchedProjectLocator>[2],
-  _c: Parameters<TouchedProjectLocator>[3],
-  graph: Parameters<TouchedProjectLocator>[4]
-): { projects: string[]; byPathMapping: boolean } => {
-  const none = { projects: [], byPathMapping: false };
-  const everything = () => ({
-    projects: Object.keys(graph.nodes),
-    byPathMapping: false,
-  });
+> = (touchedFiles, _a, _b, _c, graph): string[] => {
   const rootTsConfig = getRootTsConfigFileName();
   if (!rootTsConfig) {
-    return none;
+    return [];
   }
   const tsConfigJsonChanges = touchedFiles.find(
     (change) => change.file === rootTsConfig
   );
   if (!tsConfigJsonChanges) {
-    return none;
+    return [];
   }
 
   const changes = tsConfigJsonChanges.getChanges();
 
   if (!allChangesArePathChanges(changes)) {
-    return everything();
+    return Object.keys(graph.nodes);
   }
 
   const touched: string[] = [];
@@ -68,13 +38,13 @@ const locateTouchedProjectsFromTsConfig = (
 
     // If a path is deleted, everything is touched
     if (change.type === JsonDiffType.Deleted) {
-      return everything();
+      return Object.keys(graph.nodes);
     }
     touched.push(
       ...getProjectsAffectedByPaths(change, Object.values(graph.nodes))
     );
   }
-  return { projects: touched, byPathMapping: true };
+  return touched;
 };
 
 function allChangesArePathChanges(

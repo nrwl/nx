@@ -2,9 +2,7 @@ use napi::bindgen_prelude::*;
 use std::path::Path;
 use tracing::trace;
 
-use super::locators::{
-    AffectedOptions, KIND_DELETED_PROJECT_CONFIGURATION, TouchedProject, all_projects_touched_by,
-};
+use super::locators::{AffectedOptions, all_project_names};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::ProjectGraph;
 
@@ -16,9 +14,7 @@ pub(super) fn projects_from_project_glob_changes(
     graph: &ProjectGraph,
     touched_files: &[String],
     options: &AffectedOptions,
-) -> Result<Vec<TouchedProject>> {
-    // Load-bearing: with both the included and excluded sets empty, `is_match`
-    // returns `!excluded.is_match(..)`, i.e. true for every file.
+) -> Result<Vec<String>> {
     if options.project_glob_patterns.is_empty() {
         return Ok(Vec::new());
     }
@@ -49,12 +45,7 @@ pub(super) fn projects_from_project_glob_changes(
             continue;
         }
         if options.project_deletion_affects_all_projects {
-            return Ok(all_projects_touched_by(
-                graph,
-                KIND_DELETED_PROJECT_CONFIGURATION,
-                Some(file),
-                None,
-            ));
+            return Ok(all_project_names(graph));
         }
     }
 
@@ -63,21 +54,8 @@ pub(super) fn projects_from_project_glob_changes(
 
 #[cfg(test)]
 mod tests {
-    use super::super::locators::names;
     use super::*;
     use crate::native::test_utils::{files, graph, project};
-
-    fn projects_from_project_glob_changes(
-        graph: &ProjectGraph,
-        touched_files: &[String],
-        options: &AffectedOptions,
-    ) -> Result<Vec<String>> {
-        Ok(names(super::projects_from_project_glob_changes(
-            graph,
-            touched_files,
-            options,
-        )?))
-    }
 
     fn glob_options(deletion_affects_all: bool) -> AffectedOptions {
         AffectedOptions {

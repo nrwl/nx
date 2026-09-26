@@ -285,7 +285,7 @@ export async function selectAffectedTasks(
     nxJson,
     packageJson
   );
-  const namedProjects = new Set(dependencies.projects.map((t) => t.project));
+  const namedProjects = new Set(dependencies.projects);
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
   const customHashed = new Set(
@@ -414,28 +414,55 @@ function hasCustomHasher(
  * A lockfile or package.json change reaches a hash as `External(name)`, a
  * package rather than a path, so it is handed to the plans as package names.
  */
+/** Dependency changes, plus why each named project was named, for `--explain`. */
+type NamedDependencyChanges = DependencyChanges & {
+  named: Map<string, AffectedReason[]>;
+};
+
 function dependencyChanges(
   projectGraph: ProjectGraph,
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration,
   packageJson: any = readPackageJson()
-): DependencyChanges {
-  const changes = [
-    lockFileDependencyChanges(
-      touchedFiles,
-      projectGraph.nodes,
-      nxJson,
-      packageJson,
-      projectGraph
-    ),
-    packageJsonDependencyChanges(touchedFiles, nxJson, projectGraph),
-  ];
+): NamedDependencyChanges {
+  const lockFile = lockFileDependencyChanges(
+    touchedFiles,
+    projectGraph.nodes,
+    nxJson,
+    packageJson,
+    projectGraph
+  );
+  const packageJsonChanges = packageJsonDependencyChanges(
+    touchedFiles,
+    nxJson,
+    projectGraph
+  );
+  const changes = [lockFile, packageJsonChanges];
+
+  const named = new Map<string, AffectedReason[]>();
+  const name = (project: string, reason: AffectedReason) =>
+    named.set(project, [...(named.get(project) ?? []), reason]);
+  const changedLockFile = touchedFiles.find((f) =>
+    (AUTO_AFFECTED_LOCK_FILES as readonly string[]).includes(f.file)
+  )?.file;
+  for (const project of lockFile.projects) {
+    name(project, { kind: 'lockfile', file: changedLockFile });
+  }
+  for (const project of packageJsonChanges.projects) {
+    name(project, {
+      kind: 'npm-package',
+      package: project,
+      file: 'package.json',
+    });
+  }
+
   return {
     externals: [...new Set(changes.flatMap((c) => c.externals))],
     changedExternalTypes: [
       ...new Set(changes.flatMap((c) => c.changedExternalTypes)),
     ],
-    projects: changes.flatMap((c) => c.projects),
+    projects: [...new Set(changes.flatMap((c) => c.projects))],
+    named,
   };
 }
 
@@ -451,7 +478,7 @@ function dependencyChanges(
 function explainTasks(
   affected: string[],
   explanation: AffectedTaskExplanation,
-  dependencies: DependencyChanges,
+  dependencies: NamedDependencyChanges,
   changedPaths: string[],
   taskGraph: TaskGraph,
   customHashed: Set<string>
@@ -462,10 +489,7 @@ function explainTasks(
       file === 'package.json' ||
       (AUTO_AFFECTED_LOCK_FILES as readonly string[]).includes(file)
   );
-  const named = new Map<string, AffectedReason[]>();
-  for (const { project, ...reason } of dependencies.projects) {
-    named.set(project, [...(named.get(project) ?? []), reason]);
-  }
+  const named = dependencies.named;
 
   const reasonsFor = (taskId: string): AffectedReason[] => {
     const forTask: AffectedReason[] = [];

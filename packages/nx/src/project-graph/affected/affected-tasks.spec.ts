@@ -316,6 +316,31 @@ describe('computeAffectedTasks', () => {
     ]);
   });
 
+  // The project is named by config, not by an input, so the reason says so.
+  it('explains a project projectsAffectedByDependencyUpdates names', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        pluginsConfig: {
+          '@nx/js': { projectsAffectedByDependencyUpdates: ['lib'] },
+        },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'pnpm-lock.yaml',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+    expect(explanation.affected['lib:test']).toContainEqual({
+      kind: 'lockfile',
+      file: 'pnpm-lock.yaml',
+    });
+  });
+
   it('selects nothing when the change reaches no input', async () => {
     expect(await affectedFor(['docs/README.md'])).toEqual([]);
   });

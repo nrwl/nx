@@ -1,10 +1,6 @@
 import type { ProjectGraph } from '../../config/project-graph';
-import { DeletedFileChange, WholeFileChange } from '../file-utils';
-import {
-  filterAffected,
-  filterAffectedWithReasons,
-} from './affected-project-graph';
-import { runTouchedProjectLocators } from './affected-projects';
+import { DeletedFileChange } from '../file-utils';
+import { filterAffected } from './affected-project-graph';
 
 vi.mock('../plugins/get-plugins', async () => ({
   ...(await vi.importActual('../plugins/get-plugins')),
@@ -178,104 +174,5 @@ describe('filterAffected()', () => {
       'npm:happy-nrwl@1',
       'npm:happy-nrwl@2',
     ]);
-  });
-});
-
-describe('filterAffectedWithReasons()', () => {
-  const nxJson = { plugins: [] } as any;
-  // app reaches ui by two edges, and ui uses an external.
-  const graph: ProjectGraph = {
-    nodes: {
-      ui: { name: 'ui', type: 'lib', data: { root: 'libs/ui' } },
-      app: { name: 'app', type: 'app', data: { root: 'apps/app' } },
-    },
-    externalNodes: {
-      'npm:happy-nrwl': {
-        name: 'npm:happy-nrwl',
-        type: 'npm',
-        data: { packageName: 'happy-nrwl', version: '1' },
-      },
-    },
-    dependencies: {
-      ui: [{ source: 'ui', target: 'npm:happy-nrwl', type: 'static' }],
-      app: [
-        { source: 'app', target: 'ui', type: 'static' },
-        { source: 'app', target: 'ui', type: 'implicit' },
-      ],
-      'npm:happy-nrwl': [],
-    },
-  };
-  const packageBump = [
-    {
-      file: 'package.json',
-      getChanges: () => [
-        {
-          type: 'JsonPropertyModified',
-          path: ['dependencies', 'happy-nrwl'],
-          value: { lhs: '1.0.0', rhs: '2.0.0' },
-        },
-      ],
-    },
-  ] as any;
-  const packageJson = { dependencies: { 'happy-nrwl': '2.0.0' } };
-
-  it('reports each dependency edge once, however many join the pair', async () => {
-    const { reasons } = await filterAffectedWithReasons(
-      graph,
-      [
-        {
-          file: 'libs/ui/src/index.ts',
-          getChanges: () => [new WholeFileChange()],
-        },
-      ],
-      nxJson,
-      {}
-    );
-    expect(reasons).toEqual({
-      ui: [{ kind: 'project-file', file: 'libs/ui/src/index.ts' }],
-      app: [{ kind: 'dependency', dependency: 'ui' }],
-    });
-  });
-
-  // The JS locators return through the napi struct, which drops any field it
-  // does not declare.
-  it('keeps the package name a JS locator reports across napi', async () => {
-    const touched = await runTouchedProjectLocators(
-      graph,
-      packageBump,
-      nxJson,
-      packageJson
-    );
-    expect(touched).toContainEqual({
-      project: 'npm:happy-nrwl',
-      kind: 'npm-package',
-      package: 'npm:happy-nrwl',
-      file: 'package.json',
-    });
-  });
-
-  it('names the package a project reached, and lists no external', async () => {
-    const { reasons } = await filterAffectedWithReasons(
-      graph,
-      packageBump,
-      nxJson,
-      packageJson
-    );
-    expect(Object.keys(reasons).sort()).toEqual(['app', 'ui']);
-    expect(reasons.ui).toEqual([
-      { kind: 'npm-package', package: 'npm:happy-nrwl' },
-    ]);
-  });
-
-  // A project whose own package moved is where the change landed; one that
-  // depends on it was reached through it.
-  it('counts a project reached from a moved package as touched', async () => {
-    const { touched } = await filterAffectedWithReasons(
-      graph,
-      packageBump,
-      nxJson,
-      packageJson
-    );
-    expect(touched).toEqual(['ui']);
   });
 });

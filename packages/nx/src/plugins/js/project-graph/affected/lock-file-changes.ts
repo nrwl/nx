@@ -2,7 +2,6 @@ import {
   DependencyChanges,
   TouchedProjectLocator,
 } from '../../../../project-graph/affected/affected-project-graph-models';
-import type { TouchedProject } from '../../../../project-graph/affected/affected-reasons';
 import {
   FileChange,
   isLockFileChange,
@@ -33,46 +32,29 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
   nxJson,
   packageJson,
   projectGraph
-): TouchedProject[] => {
+): string[] => {
   const { projectsAffectedByDependencyUpdates } = readJsPluginConfig(nxJson);
   const changedLockFile = findChangedLockFile(fileChanges);
-  const allProjects = Object.values(projectGraphNodes).map((p) => p.name);
-  const fromLockFile = (projects: string[]): TouchedProject[] =>
-    projects.map((project) => ({
-      project,
-      kind: 'lockfile' as const,
-      file: changedLockFile?.file,
-    }));
+  const allProjectNames = Object.values(projectGraphNodes).map((p) => p.name);
 
   if (projectsAffectedByDependencyUpdates === 'auto') {
     if (!changedLockFile) {
       return [];
     }
     // External node names, which the reverse walk in filterAffected carries
-    // back to the projects depending on them, so the name is the package.
-    const externals = changedExternalNodes(
-      changedLockFile,
-      projectGraph,
-      packageJson
+    // back to the projects depending on them.
+    return (
+      changedExternalNodes(changedLockFile, projectGraph, packageJson) ??
+      allProjectNames
     );
-    return externals
-      ? externals.map((name) => ({
-          project: name,
-          kind: 'npm-package' as const,
-          package: name,
-          file: changedLockFile.file,
-        }))
-      : fromLockFile(allProjects);
   } else if (Array.isArray(projectsAffectedByDependencyUpdates)) {
-    return fromLockFile(
-      findMatchingProjects(
-        projectsAffectedByDependencyUpdates,
-        projectGraphNodes
-      )
+    return findMatchingProjects(
+      projectsAffectedByDependencyUpdates,
+      projectGraphNodes
     );
   }
 
-  return changedLockFile ? fromLockFile(allProjects) : [];
+  return changedLockFile ? allProjectNames : [];
 };
 
 /**
@@ -103,11 +85,7 @@ export function lockFileDependencyChanges(
       projects: findMatchingProjects(
         projectsAffectedByDependencyUpdates,
         projectGraphNodes
-      ).map((project) => ({
-        project,
-        kind: 'lockfile' as const,
-        file: changedLockFile.file,
-      })),
+      ),
     };
   }
   const externals =

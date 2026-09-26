@@ -3,17 +3,7 @@ import {
   LockFileChange,
   WholeFileChange,
 } from '../../../../project-graph/file-utils';
-import type { TouchedProject } from '../../../../project-graph/affected/affected-reasons';
-import { getTouchedProjectsFromLockFile as locategetTouchedProjectsFromLockFile } from './lock-file-changes';
-// These specs assert *which* projects a locator selects. The locator now returns
-// a reason per project, so unwrap to names here rather than restating 70-odd
-// assertions; the reasons themselves are covered in affected-reasons.spec.ts.
-const getTouchedProjectsFromLockFile = (
-  ...args: Parameters<typeof locategetTouchedProjectsFromLockFile>
-) =>
-  (locategetTouchedProjectsFromLockFile(...args) as TouchedProject[]).map(
-    (t) => t.project
-  );
+import { getTouchedProjectsFromLockFile } from './lock-file-changes';
 import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 import { output } from '../../../../utils/output';
 
