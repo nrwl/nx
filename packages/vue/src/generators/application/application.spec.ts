@@ -27,9 +27,9 @@ describe('application generator', () => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
-    jest
-      .spyOn(devkitExports, 'getPackageManagerCommand')
-      .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+    vi.spyOn(devkitExports, 'getPackageManagerCommand').mockReturnValue({
+      exec: 'npx',
+    } as PackageManagerCommands);
   });
 
   afterEach(() => {
