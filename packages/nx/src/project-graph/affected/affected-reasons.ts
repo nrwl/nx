@@ -272,12 +272,7 @@ export function formatAffectedExplanation(
       `Affected, ${noun === 'task' ? 'they read outputs' : 'they depend on a project'} the change reached`,
       upstreamNames.filter((name) => !touched(name))
     );
-    lines.push(
-      noun === 'task'
-        ? `Your targets (${names.length}):`
-        : `Affected projects (${names.length}):`,
-      ''
-    );
+    lines.push(`${heading} (${names.length}):`, '');
     touchedFirst(names).forEach((name) => render(name, true));
   }
 
