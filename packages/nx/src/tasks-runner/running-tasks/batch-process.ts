@@ -107,6 +107,12 @@ export class BatchProcess {
           for (const cb of this.batchResultsCallbacks) {
             cb(message.results);
           }
+          // The worker runs a single batch. Its IPC channel would otherwise
+          // keep it alive until cleanup kills it, which waits out the grace
+          // period on Windows, where SIGTERM is a no-op.
+          if (this.childProcess.connected) {
+            this.childProcess.disconnect();
+          }
           break;
         }
         case BatchMessageType.RunTasks: {
