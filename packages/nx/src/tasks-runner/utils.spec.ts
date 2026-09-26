@@ -5,6 +5,7 @@ import {
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
   interpolate,
+  pruneToSelectedTasks,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
@@ -1135,3 +1136,43 @@ class GraphBuilder {
     };
   }
 }
+
+describe('pruneToSelectedTasks', () => {
+  const graph: TaskGraph = {
+    roots: ['lib:build', 'other:build'],
+    tasks: {
+      'app:build': { id: 'app:build' } as Task,
+      'lib:build': { id: 'lib:build' } as Task,
+      'other:build': { id: 'other:build' } as Task,
+    },
+    dependencies: {
+      'app:build': ['lib:build'],
+      'lib:build': [],
+      'other:build': [],
+    },
+    continuousDependencies: {
+      'app:build': [],
+      'lib:build': [],
+      'other:build': [],
+    },
+  };
+
+  it('keeps only the required tasks, and their edges', () => {
+    const pruned = pruneToSelectedTasks(graph, ['app:build', 'lib:build']);
+    expect(Object.keys(pruned.tasks).sort()).toEqual([
+      'app:build',
+      'lib:build',
+    ]);
+    expect(pruned.dependencies['app:build']).toEqual(['lib:build']);
+    expect(pruned.roots).toEqual(['lib:build']);
+  });
+
+  /**
+   * A sync generator can remove a task between selecting it and rebuilding the
+   * graph, so an unknown id is dropped rather than thrown on.
+   */
+  it('ignores ids the graph does not contain', () => {
+    const pruned = pruneToSelectedTasks(graph, ['gone:build', 'lib:build']);
+    expect(Object.keys(pruned.tasks)).toEqual(['lib:build']);
+  });
+});

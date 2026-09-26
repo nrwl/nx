@@ -425,6 +425,73 @@ export declare class WorkspaceContext {
   stopWatching(): void
 }
 
+export interface AffectedOptions {
+  /**
+   * `createNodes` globs of every loaded plugin. Resolved in TypeScript because
+   * `getPlugins` is async and spawns plugin workers.
+   */
+  projectGlobPatterns: Array<string>
+  projectDeletionAffectsAllProjects: boolean
+  workspaceRoot: string
+}
+
+export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph, changedFiles: Array<string>, options: AffectedTasksOptions): AffectedTaskSelection
+
+export interface AffectedTaskSelection {
+  /** Every affected task, sorted. */
+  affected: Array<string>
+  /** `affected` plus everything it depends on, sorted: what a run keeps. */
+  required: Array<string>
+}
+
+export interface AffectedTasksOptions {
+  /**
+   * `createNodes` globs of every loaded plugin. Resolved in TypeScript because
+   * `getPlugins` is async and spawns plugin workers.
+   */
+  projectGlobPatterns: Array<string>
+  workspaceRoot: string
+  /**
+   * Tasks touched whatever their plan says: those of projects a dependency
+   * change names outright (`projectsAffectedByDependencyUpdates`, or a
+   * workspace project the root package.json depends on), and those whose
+   * executor hashes outside its plan. Ids not in the task graph are ignored.
+   */
+  alwaysTouchedTaskIds: Array<string>
+  /**
+   * External node names whose version or integrity moved. A plan carries them
+   * as `External(name)`, so a package is matched the way a path is.
+   */
+  changedExternals: Array<string>
+  /**
+   * Ecosystems whose manifest changed without the change being pinnable to
+   * packages, `npm` for a lock file. Every node of that type counts as
+   * moved, and a node of any other type does not: a pnpm lock file cannot
+   * have moved a Maven artifact.
+   */
+  changedExternalTypes: Array<string>
+  /**
+   * Projects `--exclude` names. Their tasks are dropped from the selection
+   * after the walk, so they still carry a change to the tasks reading them.
+   */
+  excludedProjects: Array<string>
+  /**
+   * The targets the command asked for. The graph also holds what they depend
+   * on, which carries a change but is only ever run as a dependency.
+   */
+  targets: Array<string>
+  /**
+   * Where a field-filtered JSON input's file is read at both ends of the diff.
+   * Unset, as for `--files`, such a file counts as changed whole.
+   */
+  revisions?: FileRevisions
+  /**
+   * The runner's `selectivelyHashTsConfig`: a task hashes only its own
+   * project's tsconfig `paths` entries, rather than none.
+   */
+  selectivelyHashTsConfig: boolean
+}
+
 export interface BatchInfo {
   executorName: string
   taskIds: Array<string>
@@ -496,6 +563,18 @@ export interface DepsOutputsInput {
  */
 export declare function detectAiAgent(): string | null
 
+/**
+ * `jsonDiff(JSON.parse(lhs), JSON.parse(rhs))`, or `null` when either side is
+ * not strict JSON, where `JSON.parse` would throw.
+ */
+export declare function diffJson(lhs: string, rhs: string): Array<JsonChange> | null
+
+/**
+ * Only the projects that own a changed file, one entry per file, in input
+ * order. `nx release` version plans ignore implicit and config-derived touches.
+ */
+export declare function directlyTouchedProjects(projectGraph: ExternalObject<ProjectGraph>, touchedFiles: Array<string>): Array<string>
+
 export interface EnvironmentInput {
   env: string
 }
@@ -555,6 +634,11 @@ export interface ExternalDependenciesInput {
 }
 
 export interface ExternalNode {
+  /**
+   * The ecosystem the node belongs to, `npm` for a package the JS lock-file
+   * parsers found. Optional because a plugin may leave it unset.
+   */
+  type?: string
   packageName?: string
   version: string
   hash?: string
@@ -568,6 +652,15 @@ export interface FileData {
 export interface FileMap {
   projectFileMap: Record<string, Array<FileData>>
   nonProjectFiles: Array<FileData>
+}
+
+/**
+ * Where a changed file's two versions are read: `base` from git, `head` from
+ * git or, unset, the working tree.
+ */
+export interface FileRevisions {
+  base: string
+  head?: string
 }
 
 export interface FileSetInput {
@@ -789,6 +882,18 @@ export declare function isAiAgent(): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
 
+/** One entry of `jsonDiff`'s result: `type` is a `JsonDiffType` value. */
+export interface JsonChange {
+  type: string
+  path: Array<string>
+  value: JsonChangeValue
+}
+
+export interface JsonChangeValue {
+  lhs?: any
+  rhs?: any
+}
+
 export interface JsonInput {
   json: string
   fields?: Array<string>
@@ -820,6 +925,15 @@ export interface Link {
   text: string
   href: string
 }
+
+/**
+ * Runs every locator and returns the touched project names, in locator order,
+ * unsorted overall and with duplicates. Callers dedupe by walking the graph.
+ *
+ * Every branch is deterministic, and must stay so: this order reaches
+ * `result.nodes` insertion order and so `nx show projects --affected`.
+ */
+export declare function locateTouchedProjects(projectGraph: ExternalObject<ProjectGraph>, nxJson: NxJson, touchedFiles: Array<string>, options: AffectedOptions, jsLocators: Array<(files: string[]) => Promise<string[]>>): Promise<Array<string>>
 
 export declare function logDebug(message: string): void
 

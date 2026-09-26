@@ -229,6 +229,32 @@ You can also visualize the affected projects using the [Nx graph](/docs/features
 nx graph --affected
 ```
 
+## Selecting affected tasks instead of projects
+
+By default Nx selects whole projects, so every task of every affected project runs. Set `NX_LEGACY_AFFECTED=false` to select individual tasks instead, based on whether your change reaches what each task reads:
+
+```shell
+NX_LEGACY_AFFECTED=false nx affected -t test
+```
+
+Changing one spec file then runs that project's `test` task rather than the `test` task of every project that depends on it. Tasks that read most of a project, like `lint`, narrow very little.
+
+Task selection can also pick up a task that project selection misses. A `dependsOn` that names another project's target, like `{ "projects": ["lib"], "target": "build" }`, adds an edge the project graph doesn't record. When the task reads that target's output through `dependentTasksOutputFiles`, task selection follows the edge and project selection can't.
+
+Set the variable for the whole CI job, so `nx show projects --affected -t test` and `nx affected -t test` in the same script see the same affected set. The run also executes the tasks the affected ones depend on, and those can restore from cache when nothing in them changed.
+
+{% aside type="caution" title="What changes when you opt in" %}
+Nx selects a task when your change reaches one of its inputs, rather than by where the task sits in the task graph.
+
+**`dependsOn` alone doesn't make a task affected.** A change to a dependency reaches a task only through the task's own inputs, for example `^production` or the dependency's build output through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks). An edge that only orders the two tasks doesn't carry the change across.
+
+**A target with `"cache": false` and its own `inputs` can stop running** when only its dependency changed. Add `^default` or `dependentTasksOutputFiles` to its inputs so the dependency's files reach its hash.
+
+**A task whose executor defines a custom hasher is always selected** for the targets you run. Its hash comes from code outside its inputs, so Nx can't tell which changes reach it.
+
+**Sync generators that change files during a run don't update the selection.** Nx selects tasks before syncing, so run the command again after a sync applies changes.
+{% /aside %}
+
 ## Best paired with remote caching and distribution
 
 Using `nx affected` is a powerful tool to reduce the amount of compute that needs to be run. However, this might not be sufficient to significantly speed up your CI pipeline. For example:

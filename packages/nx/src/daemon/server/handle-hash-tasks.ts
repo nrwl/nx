@@ -4,6 +4,7 @@ import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
 import type { IoSnapshotVersion } from '../message-types/io-snapshot-version';
 import { getIoSnapshotsForVersion } from './io-snapshots-state';
+import { planningContextFor } from './planning-context';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -38,7 +39,8 @@ async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
       projectGraph,
       nxJson,
       rustReferences,
-      runnerOptions
+      runnerOptions,
+      planningContextFor(projectGraph, nxJson)
     );
   }
   return storedHasher;

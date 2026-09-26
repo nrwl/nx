@@ -24,6 +24,7 @@ use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
 };
+use crate::native::tasks::plan_memo::PlanMemo;
 use crate::native::tasks::snapshot_eligibility::{
     self, EligibilityInputs, IoSnapshotEligibilityOptions, SnapshotTask,
 };
@@ -126,6 +127,9 @@ pub struct HashPlanner {
     project_by_root: OnceLock<HashMap<String, String>>,
     /// Interner backing every plan this planner produces.
     instruction_pool: Arc<InstructionPool>,
+    /// Whole-task plans from earlier calls, reused while the task graph
+    /// around them and the snapshot set are unchanged.
+    plan_memo: PlanMemo,
 }
 
 /// Instruction ids contributed by one (project, propagated input) dependency subtree.
@@ -248,6 +252,7 @@ impl HashPlanner {
             acyclic_dependency_projects: OnceLock::new(),
             project_by_root: OnceLock::new(),
             instruction_pool: Arc::new(InstructionPool::new()),
+            plan_memo: PlanMemo::default(),
         }
     }
 
@@ -272,11 +277,20 @@ impl HashPlanner {
         custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
+        let memo = self.plan_memo.begin(
+            &task_graph,
+            snapshots.map(|snapshots| {
+                let resolution = snapshots.resolution_ref();
+                (resolution.requested_commit.clone(), resolution.fetched_at)
+            }),
+            custom_hasher_task_ids,
+        );
+        let to_plan = memo.missing(&task_ids);
         let snapshot_tasks = snapshots.map(|snapshots| {
             // Continuous dependencies are planned into their dependents, so
             // their entries are needed too.
-            let mut scope: Vec<&str> = task_ids.clone();
-            for id in &task_ids {
+            let mut scope: Vec<&str> = to_plan.clone();
+            for id in &to_plan {
                 scope.extend(
                     collect_continuous_dependencies(&task_graph, id)
                         .iter()
@@ -307,7 +321,7 @@ impl HashPlanner {
 
         let pool = &self.instruction_pool;
         let parallel_start = std::time::Instant::now();
-        let result: anyhow::Result<HashMap<String, Vec<u32>>> = task_ids
+        let result: anyhow::Result<HashMap<String, Vec<u32>>> = to_plan
             .par_iter()
             .map(|id| {
                 let task = &task_graph
@@ -424,9 +438,10 @@ impl HashPlanner {
 
         if result.is_ok() {
             tracing::debug!(
-                "get_plans_internal COMPLETED in {:?} - processed {} tasks (setup: {:?}, parallel_planning: {:?}, pool: {} unique instructions)",
+                "get_plans_internal COMPLETED in {:?} - processed {} tasks, {} reused (setup: {:?}, parallel_planning: {:?}, pool: {} unique instructions)",
                 total_duration,
                 task_ids.len(),
+                task_ids.len() - to_plan.len(),
                 setup_duration,
                 parallel_duration,
                 self.instruction_pool.len()
@@ -439,6 +454,7 @@ impl HashPlanner {
             );
         }
 
+        let result = result.map(|planned| memo.finish(planned, &task_ids));
         result.map(|plans| {
             let deferred = deferred_tasks(&plans, pool, &task_graph);
             HashPlans {
@@ -1793,6 +1809,7 @@ mod tests {
                 external_nodes: HashMap::from([(
                     "npm:external".into(),
                     ExternalNode {
+                        r#type: Some("npm".into()),
                         package_name: Some("external".into()),
                         version: "1".into(),
                         hash: None,
@@ -2204,6 +2221,7 @@ mod tests {
                     (
                         name,
                         ExternalNode {
+                            r#type: Some("npm".into()),
                             package_name: None,
                             version: "1.0.0".to_string(),
                             hash: None,
@@ -2374,5 +2392,110 @@ mod tests {
         assert!(paths_overlap("", "anything"));
         assert!(!paths_overlap("dist", "distribution"));
         assert!(!paths_overlap("apps/web/dist", "apps/webapp"));
+    }
+}
+
+#[cfg(test)]
+mod plan_memo_tests {
+    use super::*;
+    use crate::native::project_graph::types::{Project, Target};
+    use crate::native::test_utils::task_graph;
+    use crate::native::types::DepsOutputsInput;
+    use napi::bindgen_prelude::Either9;
+
+    /// `app:build` reads `lib:build`'s outputs, so its plan embeds them.
+    fn planner() -> HashPlanner {
+        let project = |root: &str, inputs| Project {
+            root: root.into(),
+            targets: HashMap::from([(
+                "build".into(),
+                Target {
+                    inputs: Some(inputs),
+                    ..Default::default()
+                },
+            )]),
+            ..Default::default()
+        };
+        let graph = ProjectGraph {
+            nodes: HashMap::from([
+                (
+                    "lib".into(),
+                    project("libs/lib", vec![Either9::B("{projectRoot}/**/*".into())]),
+                ),
+                (
+                    "app".into(),
+                    project(
+                        "apps/app",
+                        vec![
+                            Either9::B("{projectRoot}/**/*".into()),
+                            Either9::G(DepsOutputsInput {
+                                dependent_tasks_output_files: "**/*.js".into(),
+                                transitive: None,
+                            }),
+                        ],
+                    ),
+                ),
+            ]),
+            dependencies: HashMap::from([
+                ("app".into(), vec!["lib".into()]),
+                ("lib".into(), vec![]),
+            ]),
+            external_nodes: HashMap::new(),
+        };
+        HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        )
+    }
+
+    fn graph(lib_outputs: &[&str]) -> TaskGraph {
+        task_graph(
+            &[("lib:build", lib_outputs), ("app:build", &[])],
+            &[("app:build", &["lib:build"])],
+        )
+    }
+
+    fn plans(
+        planner: &HashPlanner,
+        ids: &[&str],
+        graph: TaskGraph,
+    ) -> HashMap<String, Vec<HashInstruction>> {
+        planner
+            .get_plans_materialized(ids.to_vec(), graph, None, &[])
+            .unwrap()
+    }
+
+    /// What selection then the run do: plan every task, then some of them again.
+    #[test]
+    fn a_second_call_answers_as_a_fresh_planner_would() {
+        let reused = planner();
+        plans(&reused, &["lib:build", "app:build"], graph(&["dist/lib"]));
+        assert_eq!(
+            plans(&reused, &["app:build"], graph(&["dist/lib"])),
+            plans(&planner(), &["app:build"], graph(&["dist/lib"]))
+        );
+        assert!(
+            reused
+                .plan_memo
+                .begin(&graph(&["dist/lib"]), None, &[])
+                .missing(&["app:build"])
+                .is_empty()
+        );
+    }
+
+    /// The consumer's plan embeds the producer's outputs, so it is planned again.
+    #[test]
+    fn a_changed_producer_output_is_planned_again() {
+        let reused = planner();
+        plans(&reused, &["lib:build", "app:build"], graph(&["dist/lib"]));
+        let replanned = plans(&reused, &["app:build"], graph(&["dist/lib-v2"]));
+        assert_eq!(
+            replanned,
+            plans(&planner(), &["app:build"], graph(&["dist/lib-v2"]))
+        );
+        assert!(replanned["app:build"].iter().any(|instruction| matches!(
+            instruction,
+            HashInstruction::TaskOutput(_, outputs) if outputs == &["dist/lib-v2"]
+        )));
     }
 }

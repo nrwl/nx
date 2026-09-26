@@ -11,10 +11,10 @@ import {
   ProjectGraph as NativeProjectGraph,
   NxWorkspaceFilesExternals,
   TaskHasher,
-  transferProjectGraph,
 } from '../native';
 import type { IgnoredIndexReader } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
+import type { TaskPlanningContext } from './task-planning-context';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
@@ -44,11 +44,13 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
     externals: NxWorkspaceFilesExternals,
-    options: { selectivelyHashTsConfig: boolean }
+    options: { selectivelyHashTsConfig: boolean },
+    planningContext?: TaskPlanningContext
   ) {
-    this.projectGraphRef = transferProjectGraph(
-      transformProjectGraphForRust(projectGraph)
-    );
+    // A shared planner was built over its ref, so the two stay paired.
+    this.projectGraphRef =
+      planningContext?.projectGraphRef ??
+      transformProjectGraphForRust(projectGraph);
 
     this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
     this.projectFileMapRef = externals.projectFiles;
@@ -66,7 +68,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       }
     }
 
-    this.planner = new HashPlanner(nxJson, this.projectGraphRef);
+    this.planner =
+      planningContext?.planner ?? new HashPlanner(nxJson, this.projectGraphRef);
     this.hasher = new TaskHasher(
       workspaceRoot,
       this.projectGraphRef,

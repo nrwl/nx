@@ -58,6 +58,26 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
+import type { TaskPlanningContext } from '../hasher/task-planning-context';
+
+/** What a command runs. */
+export interface TaskSelection {
+  taskGraph: TaskGraph;
+  /**
+   * The tasks the command asked for, as opposed to ones pulled in as
+   * dependencies. A graph rebuilt after a sync is built from their projects.
+   */
+  initiatingTaskIds: string[];
+  /**
+   * What a rebuilt graph is pruned to: the selected tasks and everything they
+   * depend on. Unset keeps the whole rebuilt graph.
+   */
+  taskIds?: string[];
+  /** The planner selection used. It remembers those plans, so hashing the run reuses them. */
+  planningContext?: TaskPlanningContext;
+  /** The I/O snapshot set selection planned with; the run hashes with the same one. */
+  ioSnapshotOutcome?: IoSnapshotOutcome | null;
+}
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
@@ -89,7 +109,7 @@ import {
   validateNoAtomizedTasks,
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
-import { shouldStreamOutput } from './utils';
+import { pruneToSelectedTasks, shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
 import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
@@ -439,17 +459,18 @@ async function getTerminalOutputLifeCycle(
   }
 }
 
-function createTaskGraphAndRunValidations(
+/**
+ * `targets` on whole projects, as `run-many` runs them: every task of the
+ * projects' targets and what they depend on, with those tasks initiating.
+ */
+export function selectTasksForProjects(
   projectGraph: ProjectGraph,
-  extraTargetDependencies: TargetDependencies,
   projectNames: string[],
   nxArgs: NxArgs,
   overrides: any,
-  extraOptions: {
-    excludeTaskDependencies: boolean;
-    loadDotEnvFiles: boolean;
-  }
-) {
+  extraTargetDependencies: TargetDependencies,
+  excludeTaskDependencies: boolean
+): TaskSelection {
   const taskGraph = createTaskGraph(
     projectGraph,
     extraTargetDependencies,
@@ -457,9 +478,26 @@ function createTaskGraphAndRunValidations(
     nxArgs.targets,
     nxArgs.configuration,
     overrides,
-    extraOptions.excludeTaskDependencies
+    excludeTaskDependencies
   );
+  const projects = new Set(projectNames);
+  return {
+    taskGraph,
+    initiatingTaskIds: Object.values(taskGraph.tasks)
+      .filter(
+        (t) =>
+          projects.has(t.target.project) &&
+          nxArgs.targets.includes(t.target.target)
+      )
+      .map((t) => t.id),
+  };
+}
 
+function runValidations(
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  nxArgs: NxArgs
+): TaskGraph {
   assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
 
   const cycle = findCycle(taskGraph);
@@ -491,7 +529,7 @@ function createTaskGraphAndRunValidations(
 }
 
 export async function runCommand(
-  projectsToRun: ProjectGraphProjectNode[],
+  taskSelection: TaskSelection,
   currentProjectGraph: ProjectGraph,
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
@@ -512,8 +550,8 @@ export async function runCommand(
       });
 
       const startTime = Date.now();
-      const { taskResults, completed } = await runCommandForTasks(
-        projectsToRun,
+      const { taskResults, completed } = await runTasksForCommand(
+        taskSelection,
         currentProjectGraph,
         { nxJson },
         {
@@ -557,8 +595,8 @@ export async function runCommand(
   return status;
 }
 
-export async function runCommandForTasks(
-  projectsToRun: ProjectGraphProjectNode[],
+export async function runTasksForCommand(
+  taskSelection: TaskSelection,
   currentProjectGraph: ProjectGraph,
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
@@ -572,26 +610,25 @@ export async function runCommandForTasks(
   // never lands in the middle of task output.
   const nxKeyPromise = getNxKeyInformation().catch(() => null);
 
-  const projectNames = projectsToRun.map((t) => t.name);
-  const projectNameSet = new Set(projectNames);
-
   const { projectGraph, taskGraph } = await ensureWorkspaceIsInSyncAndGetGraphs(
     currentProjectGraph,
     nxJson,
-    projectNames,
     nxArgs,
     overrides,
     extraTargetDependencies,
-    extraOptions
+    extraOptions,
+    taskSelection
   );
 
   const tasks = Object.values(taskGraph.tasks);
 
-  const initiatingTasks = tasks.filter(
-    (t) =>
-      projectNameSet.has(t.target.project) &&
-      nxArgs.targets.includes(t.target.target)
-  );
+  // A sync generator can remove a selected task, so absent ids are skipped.
+  const initiatingTasks = taskSelection.initiatingTaskIds
+    .map((id) => taskGraph.tasks[id])
+    .filter(Boolean);
+  const projectNames = [
+    ...new Set(initiatingTasks.map((t) => t.target.project)),
+  ];
 
   const { lifeCycle, renderIsDone, printSummary, restoreTerminal } =
     await getTerminalOutputLifeCycle(
@@ -616,6 +653,8 @@ export async function runCommandForTasks(
       loadDotEnvFiles: extraOptions.loadDotEnvFiles,
       initiatingProject,
       initiatingTasks,
+      planningContext: taskSelection.planningContext,
+      ioSnapshotOutcome: taskSelection.ioSnapshotOutcome,
     });
 
     await renderIsDone.finally(() => restoreTerminal?.());
@@ -685,23 +724,16 @@ function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
 async function ensureWorkspaceIsInSyncAndGetGraphs(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
-  projectNames: string[],
   nxArgs: NxArgs,
   overrides: any,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean },
+  taskSelection: TaskSelection
 ): Promise<{
   projectGraph: ProjectGraph;
   taskGraph: TaskGraph;
 }> {
-  let taskGraph = createTaskGraphAndRunValidations(
-    projectGraph,
-    extraTargetDependencies ?? {},
-    projectNames,
-    nxArgs,
-    overrides,
-    extraOptions
-  );
+  let taskGraph = runValidations(projectGraph, taskSelection.taskGraph, nxArgs);
 
   if (nxArgs.skipSync || isCI()) {
     return { projectGraph, taskGraph };
@@ -853,15 +885,32 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       await confirmRunningTasksWithSyncFailures();
     }
 
-    // Re-create project graph and task graph
+    // Rebuild rather than carry: a sync generator may remove tasks or move inferred
+    // outputs, so the old graph and planning context are stale.
+    taskSelection.planningContext = undefined;
+    const projectNames = [
+      ...new Set(
+        taskSelection.initiatingTaskIds
+          .filter((id) => taskGraph.tasks[id])
+          .map((id) => taskGraph.tasks[id].target.project)
+      ),
+    ];
     projectGraph = await createProjectGraphAsync();
-    taskGraph = createTaskGraphAndRunValidations(
+    const rebuilt = selectTasksForProjects(
       projectGraph,
-      extraTargetDependencies ?? {},
       projectNames,
       nxArgs,
       overrides,
-      extraOptions
+      extraTargetDependencies ?? {},
+      extraOptions.excludeTaskDependencies
+    ).taskGraph;
+    taskGraph = runValidations(
+      projectGraph,
+      // Before validation, so a cycle or atomizer error names what will actually run.
+      taskSelection.taskIds
+        ? pruneToSelectedTasks(rebuilt, taskSelection.taskIds)
+        : rebuilt,
+      nxArgs
     );
 
     const successTitle = anySyncGeneratorsFailed
@@ -995,6 +1044,8 @@ export async function invokeTasksRunner({
   loadDotEnvFiles,
   initiatingProject,
   initiatingTasks,
+  planningContext,
+  ioSnapshotOutcome: loadedIoSnapshotOutcome,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -1005,6 +1056,9 @@ export async function invokeTasksRunner({
   loadDotEnvFiles: boolean;
   initiatingProject: string | null;
   initiatingTasks: Task[];
+  planningContext?: TaskPlanningContext;
+  /** Already loaded for this command; `undefined` loads it here. */
+  ioSnapshotOutcome?: IoSnapshotOutcome | null;
 }): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
@@ -1015,7 +1069,10 @@ export async function invokeTasksRunner({
 
   // Must precede hashing: the set is the snapshot source for task hashes,
   // and observed outputs join the task outputs the hasher and cache see.
-  const ioSnapshotOutcome = await loadIoSnapshotsForRun(nxJson, runnerOptions);
+  const ioSnapshotOutcome =
+    loadedIoSnapshotOutcome !== undefined
+      ? loadedIoSnapshotOutcome
+      : await loadIoSnapshotsForRun(nxJson, runnerOptions);
   const ioSnapshots = snapshotsOf(ioSnapshotOutcome);
   if (ioSnapshots) {
     applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
@@ -1025,7 +1082,8 @@ export async function invokeTasksRunner({
     projectGraph,
     nxJson,
     runnerOptions,
-    ioSnapshots
+    ioSnapshots,
+    planningContext
   );
 
   // this is used for two reasons: to fetch all remote cache hits AND
@@ -1248,6 +1306,24 @@ function reportIoSnapshots(
     outcome.status
   );
   output.note({ title: summary.line, bodyLines: summary.bodyLines });
+}
+
+/**
+ * What affected task selection reads from the runner options, so it plans as
+ * the run hashes. The snapshot set is loaded once, for selection and the run.
+ */
+export async function runnerInputsForSelection(
+  nxArgs: NxArgs,
+  nxJson: NxJsonConfiguration
+): Promise<{
+  ioSnapshotOutcome: IoSnapshotOutcome | null;
+  selectivelyHashTsConfig: boolean;
+}> {
+  const { runnerOptions } = getRunner(nxArgs, nxJson);
+  return {
+    ioSnapshotOutcome: await loadIoSnapshotsForRun(nxJson, runnerOptions),
+    selectivelyHashTsConfig: runnerOptions?.selectivelyHashTsConfig ?? false,
+  };
 }
 
 export function getRunner(

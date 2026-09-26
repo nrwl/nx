@@ -15,6 +15,7 @@ vi.mock('./project-graph-incremental-recomputation', () => ({
   }),
 }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
+vi.mock('./planning-context', () => ({ planningContextFor: () => ({}) }));
 const mockGetStored = vi.fn((commit: string, fetchedAt: number) => ({
   commit,
   resolution: { fetchedAt },

@@ -6,9 +6,12 @@ import {
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import {
   createTaskGraph,
+  createTaskGraphWithDependencyOverrides,
   filterDummyTasks,
   getNonDummyDeps,
+  filterTaskGraphToSelection,
 } from './create-task-graph';
+import { pruneToSelectedTasks } from './utils';
 
 describe('createTaskGraph', () => {
   let projectGraph: ProjectGraph;
@@ -4553,5 +4556,246 @@ describe('getNonDummyDeps', () => {
     expect(getNonDummyDeps('app9:__nx_dummy_task__', dependencies)).toEqual([
       'app21:build',
     ]);
+  });
+});
+
+describe('createTaskGraphWithDependencyOverrides', () => {
+  const build = (dependsOn?: any[]) => ({
+    executor: 'nx:run-commands',
+    ...(dependsOn ? { dependsOn } : {}),
+  });
+  const node = (name: string, targets: Record<string, any>) => ({
+    name,
+    type: 'lib' as const,
+    data: { root: `libs/${name}`, targets },
+  });
+  const edge = (source: string, target: string) => ({
+    source,
+    target,
+    type: 'static',
+  });
+  const cli = { flag: true, __overrides_unparsed__: ['--flag'] };
+
+  // app -> mid -> lib, where mid has no build target.
+  function graphWith(appDependsOn: any[]): ProjectGraph {
+    return {
+      nodes: {
+        app: node('app', { build: build(appDependsOn) }),
+        mid: node('mid', { lint: build() }),
+        lib: node('lib', { build: build() }),
+      },
+      dependencies: {
+        app: [edge('app', 'mid')],
+        mid: [edge('mid', 'lib')],
+        lib: [],
+      },
+    };
+  }
+
+  it('builds the same graph createTaskGraph does', () => {
+    const graph = graphWith(['^build']);
+    const { taskGraph } = createTaskGraphWithDependencyOverrides(
+      graph,
+      {},
+      ['app', 'lib'],
+      ['build'],
+      undefined,
+      cli
+    );
+    expect(taskGraph).toEqual(
+      createTaskGraph(graph, {}, ['app', 'lib'], ['build'], undefined, cli)
+    );
+  });
+
+  // lib:build is created as initial here, so it holds the CLI overrides, but
+  // the edge records what it would get as app:build's dependency. The edge
+  // crosses mid, which has no build, and is recorded against app:build.
+  it('records what each edge would give its task, even one that already exists', () => {
+    const { taskGraph, dependencyOverrides } =
+      createTaskGraphWithDependencyOverrides(
+        graphWith(['^build']),
+        {},
+        ['app', 'lib'],
+        ['build'],
+        undefined,
+        cli
+      );
+    expect(taskGraph.tasks['lib:build'].overrides).toEqual(cli);
+    expect(dependencyOverrides['lib:build']).toEqual([
+      { from: 'app:build', overrides: { __overrides_unparsed__: [] } },
+    ]);
+    expect(dependencyOverrides['app:build']).toBeUndefined();
+  });
+
+  it('records forwarded params as the CLI overrides', () => {
+    const { dependencyOverrides } = createTaskGraphWithDependencyOverrides(
+      graphWith([{ dependencies: true, target: 'build', params: 'forward' }]),
+      {},
+      ['app'],
+      ['build'],
+      undefined,
+      cli
+    );
+    expect(dependencyOverrides['lib:build']).toEqual([
+      { from: 'app:build', overrides: cli },
+    ]);
+  });
+});
+
+describe('filterTaskGraphToSelection', () => {
+  const cli = { outputPath: 'dist/custom', __overrides_unparsed__: [] };
+  const node = (name: string, targets: Record<string, any>) => ({
+    name,
+    type: 'lib' as const,
+    data: { root: `libs/${name}`, targets },
+  });
+  const edge = (source: string, target: string) => ({
+    source,
+    target,
+    type: 'static',
+  });
+  // app and app2 depend on lib; lib's outputs follow its outputPath option.
+  const libBuild = {
+    executor: 'nx:run-commands',
+    options: { outputPath: 'dist/lib' },
+    outputs: ['{options.outputPath}'],
+  };
+  function graph(appBuild: Record<string, unknown>): ProjectGraph {
+    return {
+      nodes: {
+        app: node('app', {
+          build: { executor: 'nx:run-commands', ...appBuild },
+        }),
+        app2: node('app2', {
+          build: {
+            executor: 'nx:run-commands',
+            options: { mode: 'b' },
+            dependsOn: [
+              { dependencies: true, target: 'build', options: 'forward' },
+            ],
+          },
+        }),
+        lib: node('lib', { build: libBuild }),
+      },
+      dependencies: {
+        app: [edge('app', 'lib')],
+        app2: [edge('app2', 'lib')],
+        lib: [],
+      },
+    };
+  }
+
+  function filtered(
+    projectGraph: ProjectGraph,
+    candidates: string[],
+    initial: string[]
+  ) {
+    const { taskGraph, dependencyOverrides } =
+      createTaskGraphWithDependencyOverrides(
+        projectGraph,
+        {},
+        candidates,
+        ['build'],
+        undefined,
+        cli
+      );
+    return filterTaskGraphToSelection(
+      projectGraph,
+      taskGraph,
+      dependencyOverrides,
+      new Set(initial),
+      new Set([...initial, 'lib:build'])
+    );
+  }
+
+  // lib:build is initial in the full graph, so it took the CLI outputPath. The
+  // run builds it only as app:build's dependency, which does not forward it.
+  it('matches building from the initial tasks and pruning', () => {
+    const projectGraph = graph({ dependsOn: ['^build'] });
+    const expected = pruneToSelectedTasks(
+      createTaskGraph(projectGraph, {}, ['app'], ['build'], undefined, cli),
+      ['app:build', 'lib:build']
+    );
+
+    const result = filtered(projectGraph, ['app', 'lib'], ['app:build']);
+
+    expect(result.tasks).toEqual(expected.tasks);
+    expect(result.tasks['lib:build'].outputs).toEqual(['dist/lib']);
+    expect(result.dependencies).toEqual(expected.dependencies);
+    expect(result.continuousDependencies).toEqual(
+      expected.continuousDependencies
+    );
+    expect([...result.roots].sort()).toEqual([...expected.roots].sort());
+  });
+
+  // Which edge creates lib:build depends on the order createTaskGraph visits
+  // them, so edges that disagree leave the graph to be built again.
+  it('gives up when the edges into a dependency disagree', () => {
+    const projectGraph = graph({
+      options: { mode: 'a' },
+      dependsOn: [{ dependencies: true, target: 'build', options: 'forward' }],
+    });
+    expect(
+      filtered(
+        projectGraph,
+        ['app', 'app2', 'lib'],
+        ['app:build', 'app2:build']
+      )
+    ).toBeUndefined();
+  });
+
+  // b and c form a cycle without the target, so the dummy tasks standing in
+  // for them are dropped, yet the run still reaches x:build through them and
+  // x:build's forwarding edge may be the one that creates x:gen. Every edge
+  // into x:gen counts, not just those left in the final graph.
+  it('counts edges from tasks reached only through a dropped dummy cycle', () => {
+    const run = (dependsOn?: any[]) => ({
+      executor: 'nx:run-commands',
+      options: {},
+      ...(dependsOn ? { dependsOn } : {}),
+    });
+    const projectGraph = {
+      nodes: {
+        a: node('a', {
+          build: run(['^build', { projects: ['x'], target: 'gen' }]),
+        }),
+        b: node('b', {}),
+        c: node('c', {}),
+        x: node('x', {
+          build: run([{ target: 'gen', params: 'forward' }]),
+          gen: run(),
+        }),
+      },
+      dependencies: {
+        a: [edge('a', 'b')],
+        b: [edge('b', 'c')],
+        c: [edge('c', 'b'), edge('c', 'x')],
+        x: [],
+      },
+    } as ProjectGraph;
+    const { taskGraph, dependencyOverrides } =
+      createTaskGraphWithDependencyOverrides(
+        projectGraph,
+        {},
+        ['a'],
+        ['build'],
+        undefined,
+        cli
+      );
+    const keep = new Set(['a:build', 'x:gen']);
+
+    const result = filterTaskGraphToSelection(
+      projectGraph,
+      taskGraph,
+      dependencyOverrides,
+      new Set(['a:build']),
+      keep
+    );
+
+    const expected = pruneToSelectedTasks(
+      createTaskGraph(projectGraph, {}, ['a'], ['build'], undefined, cli),
+      [...keep]
+    );
+    expect(result?.tasks ?? expected.tasks).toEqual(expected.tasks);
   });
 });

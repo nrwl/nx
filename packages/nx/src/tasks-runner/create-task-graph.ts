@@ -4,6 +4,7 @@ import {
   getOutputs,
   interpolate,
   createTaskId,
+  removeTasksFromTaskGraph,
 } from './utils';
 import {
   projectHasTarget,
@@ -17,16 +18,29 @@ import { findCycles } from './task-graph-utils';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
+/**
+ * For each task, the overrides every `dependsOn` edge into it would give it,
+ * whether or not that edge created the task. `from` is the task the edge
+ * leaves; an edge crossing a project without the target is recorded against
+ * the task it started from.
+ */
+export type DependencyOverrides = Record<
+  string,
+  Array<{ from: string; overrides: Record<string, unknown> }>
+>;
+
 export class ProcessTasks {
   private readonly seen = new Set<string>();
   readonly tasks: { [id: string]: Task } = {};
   readonly dependencies: { [k: string]: string[] } = {};
   readonly continuousDependencies: { [k: string]: string[] } = {};
+  readonly dependencyOverrides: DependencyOverrides = {};
   private readonly allTargetNames: string[];
 
   constructor(
     private readonly extraTargetDependencies: TargetDependencies,
-    private readonly projectGraph: ProjectGraph
+    private readonly projectGraph: ProjectGraph,
+    private readonly recordDependencyOverrides = false
   ) {
     const allTargetNames = new Set<string>();
     for (const projectName in projectGraph.nodes) {
@@ -256,6 +270,7 @@ export class ProcessTasks {
         );
       }
       if (task.id !== selfTaskId) {
+        this.recordEdge(task, selfTaskId, taskOverrides);
         if (this.tasks[selfTaskId].continuous) {
           this.continuousDependencies[task.id].push(selfTaskId);
         } else {
@@ -311,6 +326,7 @@ export class ProcessTasks {
           ];
 
         if (task.id !== depTargetId) {
+          this.recordEdge(task, depTargetId, taskOverrides);
           if (depTargetConfiguration.continuous) {
             this.continuousDependencies[task.id].push(depTargetId);
           } else {
@@ -355,6 +371,23 @@ export class ProcessTasks {
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
     }
+  }
+
+  private recordEdge(
+    task: Task,
+    dependencyId: string,
+    overrides: Record<string, unknown>
+  ) {
+    if (!this.recordDependencyOverrides) {
+      return;
+    }
+    // A dummy task keeps its creator's target, so `from` is the real task the edge started from.
+    const from = createTaskId(
+      task.target.project,
+      task.target.target,
+      task.target.configuration
+    );
+    (this.dependencyOverrides[dependencyId] ??= []).push({ from, overrides });
   }
 
   private createDummyTask(id: string, task: Task): Task {
@@ -435,7 +468,91 @@ export function createTaskGraph(
   overrides: Record<string, unknown>,
   excludeTaskDependencies: boolean = false
 ): TaskGraph {
-  const p = new ProcessTasks(extraTargetDependencies, projectGraph);
+  return buildTaskGraph(
+    new ProcessTasks(extraTargetDependencies, projectGraph),
+    projectNames,
+    targets,
+    configuration,
+    overrides,
+    excludeTaskDependencies
+  );
+}
+
+/** `createTaskGraph`, plus the overrides each dependency edge would give. */
+export function createTaskGraphWithDependencyOverrides(
+  projectGraph: ProjectGraph,
+  extraTargetDependencies: TargetDependencies,
+  projectNames: string[],
+  targets: string[],
+  configuration: string | undefined,
+  overrides: Record<string, unknown>,
+  excludeTaskDependencies: boolean = false
+): { taskGraph: TaskGraph; dependencyOverrides: DependencyOverrides } {
+  const p = new ProcessTasks(extraTargetDependencies, projectGraph, true);
+  const taskGraph = buildTaskGraph(
+    p,
+    projectNames,
+    targets,
+    configuration,
+    overrides,
+    excludeTaskDependencies
+  );
+  return { taskGraph, dependencyOverrides: p.dependencyOverrides };
+}
+
+/**
+ * `taskGraph` pruned to `keep`, as if built from `initial` alone: a kept dependency
+ * takes the overrides its edges give it. Undefined when those edges disagree or are missing.
+ */
+export function filterTaskGraphToSelection(
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  dependencyOverrides: DependencyOverrides,
+  initial: Set<string>,
+  keep: Set<string>
+): TaskGraph | undefined {
+  const tasks: Record<string, Task> = {};
+  for (const id of keep) {
+    const task = taskGraph.tasks[id];
+    if (initial.has(id)) {
+      tasks[id] = { ...task };
+      continue;
+    }
+    const edges = dependencyOverrides[id] ?? [];
+    if (!edges.length) {
+      return undefined;
+    }
+    const first = JSON.stringify(edges[0].overrides);
+    if (edges.some((e) => JSON.stringify(e.overrides) !== first)) {
+      return undefined;
+    }
+    const project = projectGraph.nodes[task.target.project];
+    const overrides = interpolateOverrides(
+      edges[0].overrides,
+      project.name,
+      project.data
+    );
+    tasks[id] = {
+      ...task,
+      overrides,
+      outputs: getOutputs(projectGraph.nodes, task.target, overrides),
+    };
+  }
+  const pruned = removeTasksFromTaskGraph(
+    taskGraph,
+    Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))
+  );
+  return { ...pruned, tasks };
+}
+
+function buildTaskGraph(
+  p: ProcessTasks,
+  projectNames: string[],
+  targets: string[],
+  configuration: string | undefined,
+  overrides: Record<string, unknown>,
+  excludeTaskDependencies: boolean
+): TaskGraph {
   const roots = p.processTasks(
     projectNames,
     targets,

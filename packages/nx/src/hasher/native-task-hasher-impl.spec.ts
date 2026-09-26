@@ -11,6 +11,10 @@ import {
 } from '../native';
 import { join } from 'path';
 import { TaskGraph } from '../config/task-graph';
+import {
+  createTaskPlanningContext,
+  TaskPlanningContext,
+} from './task-planning-context';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 
@@ -1939,5 +1943,109 @@ describe('native task hasher', () => {
       'gen:compile'
     ].value;
     expect(again).toEqual(upfront);
+  });
+});
+
+describe('native task hasher with a shared planner', () => {
+  let tempFs: TempFs;
+  beforeEach(async () => {
+    tempFs = new TempFs('NativeTaskHasherPlans');
+    await tempFs.createFiles({
+      'libs/parent/filea.ts': 'a',
+      'libs/child/fileb.ts': 'b',
+      'nx.json': JSON.stringify({}),
+    });
+  });
+  afterEach(() => tempFs.cleanup());
+
+  // The planner remembers selection's plans. parent:build reads child:build's
+  // outputs, so a graph without that edge must not get the remembered plan.
+  it('hashes as a fresh hasher does, after selection planned a different graph', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: [
+              'default',
+              { dependentTasksOutputFiles: '**/*.js', transitive: true },
+            ],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{workspaceRoot}/dist/child'],
+          },
+        },
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const nxJson = {} as NxJsonConfiguration;
+    const graphs = {
+      withEdge: createTaskGraph(
+        projectGraph,
+        { build: ['^build'] },
+        ['parent', 'child'],
+        ['build'],
+        undefined,
+        {}
+      ),
+      withoutEdge: createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['build'],
+        undefined,
+        {}
+      ),
+    };
+    const hasherWith = (context?: TaskPlanningContext) =>
+      new NativeTaskHasherImpl(
+        tempFs.tempDir,
+        nxJson,
+        projectGraph,
+        workspaceFiles.rustReferences,
+        { selectivelyHashTsConfig: false },
+        context
+      );
+    const hashOf = async (hasher: NativeTaskHasherImpl, graph: TaskGraph) =>
+      (
+        await hasher.hashTasks([graph.tasks['parent:build']], graph, {
+          'parent:build': {},
+        })
+      )[0].value;
+
+    const context = createTaskPlanningContext(projectGraph, nxJson);
+    context.planner.getPlansReference(
+      Object.keys(graphs.withEdge.tasks),
+      graphs.withEdge
+    );
+    const shared = hasherWith(context);
+
+    const reused = await hashOf(shared, graphs.withEdge);
+    expect(reused).toEqual(await hashOf(hasherWith(), graphs.withEdge));
+    const replanned = await hashOf(shared, graphs.withoutEdge);
+    expect(replanned).toEqual(await hashOf(hasherWith(), graphs.withoutEdge));
+    expect(replanned).not.toEqual(reused);
   });
 });
