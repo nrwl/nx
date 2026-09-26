@@ -20,6 +20,8 @@ common-env-vars: &common-env-vars
   NX_DEV_URL: 'https://canary.nx.dev'
   # Cap gradle workers so co-located e2e tasks don't oversubscribe the agent.
   GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
+  # Hash tasks from Nx Cloud I/O snapshots (ultracache).
+  NX_IO_SNAPSHOTS: 'true'
 
 common-init-steps: &common-init-steps
   - name: Checkout
