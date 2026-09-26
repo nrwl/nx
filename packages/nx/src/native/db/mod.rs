@@ -8,7 +8,7 @@ use std::fs::{create_dir_all, read_dir, remove_file};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::{mem, process};
-use tracing::{debug, trace, trace_span};
+use tracing::{trace, trace_span};
 
 #[napi]
 pub fn connect_to_nx_db(
@@ -28,20 +28,17 @@ pub fn connect_to_nx_db(
 
     trace_span!("process", id = process::id()).in_scope(|| {
         trace!("Creating connection to {:?}", db_path);
-        let c = match open_locked(&db_path) {
-            Err(e) if initialize::is_unsupported_filesystem(&e) => {
-                let local_dir = std::env::temp_dir()
-                    .join("nx-db")
-                    .join(hash(cache_dir_buf.to_string_lossy().as_bytes()));
-                debug!(
-                    "{:?} does not support multi-process access, using {:?} instead",
-                    cache_dir_buf, local_dir
-                );
-                create_dir_all(&local_dir)?;
-                open_locked(&local_dir.join(db_path.file_name().expect("db path has a file name")))?
+        let c = open_locked(&db_path).map_err(|e| {
+            if initialize::is_unsupported_filesystem(&e) {
+                anyhow::anyhow!(
+                    "Nx cannot use {:?} for its database: it is on a network filesystem (such as NFS, SMB, or WSL's /mnt drives) that does not support access from several processes at once.\n\
+                     Set NX_WORKSPACE_DATA_DIRECTORY to a directory on a local disk and run the command again.",
+                    cache_dir_buf
+                )
+            } else {
+                e
             }
-            result => result?,
-        };
+        })?;
 
         cleanup_stale_db_files(&cache_dir_buf, &db_file_name);
 
@@ -172,6 +169,7 @@ mod tests {
                     ])
                     .env(WORKER_DB_ENV, &db_path)
                     .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
                     .spawn()
             })
             .collect::<std::io::Result<Vec<_>>>()?;
@@ -179,8 +177,9 @@ mod tests {
             let output = child.wait_with_output()?;
             assert!(
                 output.status.success(),
-                "worker failed:\n{}",
-                String::from_utf8_lossy(&output.stdout)
+                "worker failed:\n{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
             );
         }
 

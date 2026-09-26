@@ -98,29 +98,11 @@ impl DbRow {
 const BUSY_DELAYS_MS: [u64; 12] = [1, 2, 5, 10, 15, 20, 25, 25, 25, 50, 50, 100];
 const BUSY_TIMEOUT: Duration = Duration::from_secs(12);
 
-fn is_busy(e: &anyhow::Error) -> bool {
-    matches!(
-        e.downcast_ref::<LimboError>(),
-        Some(LimboError::Busy | LimboError::BusySnapshot)
-    )
-}
+/// Another process changed the schema; re-reading it makes the retry succeed.
+const MAX_SCHEMA_RETRIES: usize = 3;
 
-/// Runs `op` until it stops reporting busy or `BUSY_TIMEOUT` has been spent sleeping.
-fn retry_while_busy<T>(mut op: impl FnMut() -> Result<T>) -> Result<T> {
-    let mut waited = Duration::ZERO;
-    for attempt in 0.. {
-        match op() {
-            Err(e) if is_busy(&e) && waited < BUSY_TIMEOUT => {
-                let delay =
-                    Duration::from_millis(BUSY_DELAYS_MS[attempt.min(BUSY_DELAYS_MS.len() - 1)]);
-                trace!("Database busy, retrying in {:?}", delay);
-                std::thread::sleep(delay);
-                waited += delay;
-            }
-            result => return result,
-        }
-    }
-    unreachable!()
+fn limbo_error(e: &anyhow::Error) -> Option<&LimboError> {
+    e.downcast_ref::<LimboError>()
 }
 
 #[derive(Default)]
@@ -147,11 +129,44 @@ impl NxDbConnection {
             .ok_or_else(|| anyhow::anyhow!("No database connection available"))
     }
 
+    /// Runs `op` until it stops reporting busy or `BUSY_TIMEOUT` has been spent sleeping.
+    fn retry_while_busy<T>(&self, mut op: impl FnMut() -> Result<T>) -> Result<T> {
+        let mut waited = Duration::ZERO;
+        let mut busy_attempts = 0;
+        let mut schema_retries = 0;
+        loop {
+            match op() {
+                Err(e)
+                    if matches!(limbo_error(&e), Some(LimboError::SchemaUpdated))
+                        && schema_retries < MAX_SCHEMA_RETRIES =>
+                {
+                    schema_retries += 1;
+                    trace!("Database schema changed, reparsing and retrying");
+                    self.conn()?.maybe_reparse_schema()?;
+                }
+                Err(e)
+                    if matches!(
+                        limbo_error(&e),
+                        Some(LimboError::Busy | LimboError::BusySnapshot)
+                    ) && waited < BUSY_TIMEOUT =>
+                {
+                    let index = busy_attempts.min(BUSY_DELAYS_MS.len() - 1);
+                    let delay = Duration::from_millis(BUSY_DELAYS_MS[index]);
+                    trace!("Database busy, retrying in {:?}", delay);
+                    std::thread::sleep(delay);
+                    waited += delay;
+                    busy_attempts += 1;
+                }
+                result => return result,
+            }
+        }
+    }
+
     fn retrying<T>(&self, mut op: impl FnMut() -> Result<T>) -> Result<T> {
         if self.in_transaction.get() {
             op()
         } else {
-            retry_while_busy(op)
+            self.retry_while_busy(op)
         }
     }
 
@@ -197,10 +212,10 @@ impl NxDbConnection {
         Ok(rows.into_iter().next())
     }
 
-    /// Takes the write lock up front, so a busy error can only mean "retry the whole
-    /// transaction", which this does. `operation` may therefore run more than once.
+    /// Takes the write lock up front, so a busy or schema-changed error can only mean
+    /// "retry the whole transaction", which this does. `operation` may run more than once.
     pub fn transaction<T>(&self, mut operation: impl FnMut(&Self) -> Result<T>) -> Result<T> {
-        retry_while_busy(|| {
+        self.retry_while_busy(|| {
             self.in_transaction.set(true);
             if let Err(e) = self.execute("BEGIN IMMEDIATE", &[]) {
                 self.in_transaction.set(false);
@@ -222,9 +237,10 @@ impl NxDbConnection {
 
     pub fn close(self) -> Result<()> {
         trace!("Closing database connection");
-        // turso connections are closed on drop
-        drop(self.conn);
-        drop(self._db);
+        // Drop alone skips turso's shutdown checkpoint, including the WAL truncate.
+        if let Some(conn) = &self.conn {
+            conn.close()?;
+        }
         Ok(())
     }
 }
