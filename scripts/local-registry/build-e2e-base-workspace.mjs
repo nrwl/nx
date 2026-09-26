@@ -175,6 +175,9 @@ function registryEnv(cacheRoot) {
     // cache for this reason (#36802); the template needs the same or it is built
     // from stale bits the specs will never install.
     pnpm_config_cache_dir: join(cacheRoot, 'pnpm'),
+    // pnpm 12 serializes store writes per process only, so concurrent installs into a
+    // shared store can delete each other's half-written files ("failed to import …").
+    pnpm_config_store_dir: join(cacheRoot, 'pnpm-store'),
     // The nx packages were just published to verdaccio (publish date = now). A
     // user's `min-release-age` would filter them out as "too fresh" and fail to
     // resolve create-nx-workspace. Harmless in CI, where it isn't set.
@@ -191,11 +194,47 @@ function registryEnv(cacheRoot) {
     YARN_ENABLE_GLOBAL_CACHE: 'false',
     BUN_CONFIG_REGISTRY: registry,
     BUN_CONFIG_TOKEN: authToken,
+    // The initial commit can leave enough loose objects for git to start gc in the
+    // background, which deletes them while the template is packed (ENOENT under
+    // .git/objects) or removed (ENOTEMPTY).
+    ...gitConfigEnv({ 'gc.auto': '0', 'maintenance.auto': 'false' }),
   };
 }
 
+/**
+ * Git config as `GIT_CONFIG_*` env vars, appended after any the caller already set.
+ * @param {Record<string, string>} entries
+ */
+function gitConfigEnv(entries) {
+  const start = Number(process.env.GIT_CONFIG_COUNT ?? 0);
+  /** @type {Record<string, string>} */
+  const env = {};
+  Object.entries(entries).forEach(([key, value], i) => {
+    env[`GIT_CONFIG_KEY_${start + i}`] = key;
+    env[`GIT_CONFIG_VALUE_${start + i}`] = value;
+  });
+  env.GIT_CONFIG_COUNT = String(start + Object.keys(entries).length);
+  return env;
+}
+
+/**
+ * One retry, so a single flaky install or pack doesn't fail the task.
+ * @param {{ pm: string, preset: string }} combo
+ */
+async function buildTemplate(combo) {
+  try {
+    return await buildTemplateOnce(combo);
+  } catch (e) {
+    console.warn(
+      `Retrying the ${combo.pm}/${combo.preset} base workspace after: ${e.message}\n` +
+        `${String(e.stdout ?? '').slice(-4000)}\n${String(e.stderr ?? '').slice(-4000)}`
+    );
+    return await buildTemplateOnce(combo);
+  }
+}
+
 /** @param {{ pm: string, preset: string }} combo */
-async function buildTemplate({ pm, preset }) {
+async function buildTemplateOnce({ pm, preset }) {
   const slug = `${pm}-${preset}`;
   const work = mkdtempSync(join(tmpdir(), `nx-e2e-base-${slug}-`));
   const cacheRoot = mkdtempSync(join(tmpdir(), `nx-e2e-base-cache-${slug}-`));

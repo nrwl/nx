@@ -7,9 +7,9 @@ import {
 } from './version-utils';
 
 // Mock the project graph
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockResolvedValue({
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockResolvedValue({
     externalNodes: {},
   }),
 }));
