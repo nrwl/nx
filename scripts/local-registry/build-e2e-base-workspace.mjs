@@ -175,6 +175,9 @@ function registryEnv(cacheRoot) {
     // cache for this reason (#36802); the template needs the same or it is built
     // from stale bits the specs will never install.
     pnpm_config_cache_dir: join(cacheRoot, 'pnpm'),
+    // pnpm 12 serializes store writes per process only, so concurrent installs into a
+    // shared store can delete each other's half-written files ("failed to import …").
+    pnpm_config_store_dir: join(cacheRoot, 'pnpm-store'),
     // The nx packages were just published to verdaccio (publish date = now). A
     // user's `min-release-age` would filter them out as "too fresh" and fail to
     // resolve create-nx-workspace. Harmless in CI, where it isn't set.
@@ -215,9 +218,7 @@ function gitConfigEnv(entries) {
 }
 
 /**
- * pnpm 12 intermittently fails to import a large native binary (`failed to import
- * "/tmp/.pnpm-store/v11/files/…": No such file or directory`), so one retry keeps a
- * single flake from failing the task.
+ * One retry, so a single flaky install or pack doesn't fail the task.
  * @param {{ pm: string, preset: string }} combo
  */
 async function buildTemplate(combo) {
