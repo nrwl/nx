@@ -3,6 +3,7 @@
 //!
 //! Globs are matched rather than resolved to file lists, since a deleted file is in no file index.
 
+use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 
@@ -265,6 +266,240 @@ fn json_files_in_diff<'c>(
         .map(|&index| changed.files[index].as_str())
         .filter(|file| glob.is_match(file))
         .collect())
+}
+
+/// A changed file that reached a task, and the input pattern it reached it by.
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct InputMatch {
+    pub file: String,
+    /// The fileset that matched. Absent for an instruction with no pattern to
+    /// name, such as the root tsconfig.
+    pub pattern: Option<String>,
+}
+
+/// What reached one task: the files its filesets matched and the packages it
+/// hashes that moved.
+#[napi(object)]
+#[derive(Clone, Debug, Default)]
+pub struct TaskInputMatches {
+    pub files: Vec<InputMatch>,
+    /// External node names the plan hashes one by one that moved.
+    pub packages: Vec<String>,
+    /// The plan hashes every external dependency, and one moved.
+    pub all_externals: bool,
+    /// Changed config files of the projects whose configuration the plan hashes.
+    pub project_configs: Vec<String>,
+}
+
+impl TaskInputMatches {
+    fn matched(&self) -> bool {
+        !self.files.is_empty()
+            || !self.packages.is_empty()
+            || self.all_externals
+            || !self.project_configs.is_empty()
+    }
+}
+
+/// Per task, every changed file its plan matched with the pattern responsible,
+/// every moved package it hashes, and every changed config it hashes.
+///
+/// `changed_project_configs` is the subset of `changed_files` that is project
+/// configuration still on disk.
+pub(crate) fn compute_input_matches(
+    graph: &ProjectGraph,
+    hash_plans: &HashPlans,
+    changed_files: &[String],
+    changed_project_configs: &[String],
+    externals: &ChangedExternals,
+    contents: &ChangedContents,
+) -> anyhow::Result<HashMap<String, TaskInputMatches>> {
+    let roots = ProjectRoots::new(graph);
+    let changed = ChangedFiles::new(&roots, changed_files);
+    let mut reconfigured: HashMap<&str, Vec<String>> = HashMap::new();
+    for file in changed_project_configs {
+        if let Some(project) = roots.owner_of(&normalize_js_path(file)) {
+            reconfigured.entry(project).or_default().push(file.clone());
+        }
+    }
+
+    // Per instruction, what it matched. Only instructions that matched
+    // something are kept.
+    let matched: HashMap<u32, TaskInputMatches> = referenced_ids(hash_plans)
+        .par_iter()
+        .map(|&id| {
+            let hits = instruction_matches_detail(
+                hash_plans.pool.get(id).value(),
+                &changed,
+                changed_files,
+                &reconfigured,
+                externals,
+                contents,
+            )?;
+            Ok::<_, anyhow::Error>((id, hits))
+        })
+        .filter(|entry| entry.as_ref().map_or(true, |(_, hits)| hits.matched()))
+        .collect::<anyhow::Result<HashMap<_, _>>>()?;
+
+    Ok(hash_plans
+        .plans
+        .par_iter()
+        .filter_map(|(task_id, plan)| {
+            let mut merged = TaskInputMatches::default();
+            for hits in plan.iter().filter_map(|id| matched.get(id)) {
+                merged.files.extend(hits.files.iter().cloned());
+                merged.packages.extend(hits.packages.iter().cloned());
+                merged.all_externals |= hits.all_externals;
+                merged
+                    .project_configs
+                    .extend(hits.project_configs.iter().cloned());
+            }
+            if !merged.matched() {
+                return None;
+            }
+            merged
+                .files
+                .sort_by(|a, b| a.file.cmp(&b.file).then(a.pattern.cmp(&b.pattern)));
+            merged
+                .files
+                .dedup_by(|a, b| a.file == b.file && a.pattern == b.pattern);
+            merged.packages.sort_unstable();
+            merged.packages.dedup();
+            merged.project_configs.sort_unstable();
+            merged.project_configs.dedup();
+            Some((task_id.clone(), merged))
+        })
+        .collect())
+}
+
+/// What an instruction matched: the files and which pattern reached each, or
+/// the package that moved.
+///
+/// Mirrors `instruction_matches`, but reports rather than short-circuits. The
+/// whole glob set decides the match, so negations still exclude; the individual
+/// positives are then tested only to name the one responsible.
+fn instruction_matches_detail(
+    instruction: &HashInstruction,
+    changed: &ChangedFiles,
+    raw_files: &[String],
+    reconfigured: &HashMap<&str, Vec<String>>,
+    externals: &ChangedExternals,
+    contents: &ChangedContents,
+) -> anyhow::Result<TaskInputMatches> {
+    let of_files = |files: Vec<InputMatch>| TaskInputMatches {
+        files,
+        ..Default::default()
+    };
+    let collect = |globs: &[String], project: Option<&str>| -> anyhow::Result<Vec<InputMatch>> {
+        let candidates = under_literal_prefix(globs, changed, changed.candidates(project));
+        if candidates.is_empty() {
+            return Ok(vec![]);
+        }
+        let full = build_glob_set(&fileset_patterns(globs))?;
+        // Keyed by the entry as declared, so the reason names what the user
+        // wrote rather than the `/**` twin a glob-free path expands to.
+        let positives: Vec<(&String, _)> = globs
+            .iter()
+            .filter(|glob| !glob.starts_with('!'))
+            .map(|glob| {
+                build_glob_set(&fileset_patterns(std::slice::from_ref(glob))).map(|set| (glob, set))
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?;
+
+        let mut matches = Vec::new();
+        for i in candidates {
+            let file = &changed.files[i];
+            if !full.is_match(file) {
+                continue;
+            }
+            matches.push(InputMatch {
+                // The path as it was given, so it reads back like the diff.
+                file: raw_files[i].clone(),
+                pattern: positives
+                    .iter()
+                    .find(|(_, set)| set.is_match(file))
+                    .map(|(glob, _)| (*glob).clone()),
+            });
+        }
+        Ok(matches)
+    };
+
+    match instruction {
+        HashInstruction::WorkspaceFileSet(file_sets) => {
+            collect(&globs_from_workspace_globs(file_sets), None).map(of_files)
+        }
+        HashInstruction::ProjectFileSet(project, file_sets) => {
+            collect(file_sets, Some(project)).map(of_files)
+        }
+        HashInstruction::IgnoredFileSet(globs) => {
+            let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
+            collect(&globs, None).map(of_files)
+        }
+        HashInstruction::JsonFileSet(json)
+            if json.fields.is_some() || json.exclude_fields.is_some() =>
+        {
+            Ok(of_files(
+                json_files_in_diff(json, changed)?
+                    .into_iter()
+                    .filter(|file| contents.json_file_changed(file, json))
+                    .map(|file| InputMatch {
+                        file: file.to_string(),
+                        pattern: Some(json.json_path.clone()),
+                    })
+                    .collect(),
+            ))
+        }
+        HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
+            Some(project) => collect(std::slice::from_ref(&json.json_path), Some(project)),
+            None => collect(
+                &globs_from_workspace_globs(std::slice::from_ref(&json.json_path)),
+                None,
+            ),
+        }
+        .map(of_files),
+        HashInstruction::TsConfiguration(project) => Ok(TaskInputMatches {
+            files: if contents.ts_config_changed(project) {
+                changed
+                    .files
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, file)| ROOT_TSCONFIG_FILES.contains(&file.as_str()))
+                    .map(|(i, _)| InputMatch {
+                        file: raw_files[i].clone(),
+                        pattern: None,
+                    })
+                    .collect()
+            } else {
+                vec![]
+            },
+            packages: if externals.includes("typescript") {
+                vec!["typescript".to_string()]
+            } else {
+                vec![]
+            },
+            ..Default::default()
+        }),
+        HashInstruction::External(name) => Ok(TaskInputMatches {
+            packages: if externals.includes(name) {
+                vec![name.clone()]
+            } else {
+                vec![]
+            },
+            ..Default::default()
+        }),
+        HashInstruction::AllExternalDependencies => Ok(TaskInputMatches {
+            all_externals: externals.any(),
+            ..Default::default()
+        }),
+        HashInstruction::ProjectConfiguration(project) => Ok(TaskInputMatches {
+            project_configs: reconfigured
+                .get(project.as_str())
+                .cloned()
+                .unwrap_or_default(),
+            ..Default::default()
+        }),
+        _ => Ok(TaskInputMatches::default()),
+    }
 }
 
 #[cfg(test)]
@@ -861,6 +1096,67 @@ mod tests {
                 &[]
             ),
             vec!["a:build"]
+        );
+    }
+
+    #[test]
+    fn input_matches_name_the_file_and_the_pattern_responsible() {
+        let g = graph(&[("a", "libs/a")]);
+        let p = plans(
+            "a:build",
+            vec![HashInstruction::ProjectFileSet(
+                "a".into(),
+                strings(&["libs/a/**/*.ts", "!libs/a/**/*.spec.ts"]),
+            )],
+        );
+        let hits = compute_input_matches(
+            &g,
+            &p,
+            &strings(&["libs/a/src/x.ts", "libs/a/src/x.spec.ts"]),
+            &[],
+            &no_externals(),
+            &ChangedContents::default(),
+        )
+        .unwrap();
+        let hit = &hits["a:build"].files;
+        assert_eq!(hit.len(), 1, "the negated spec file is excluded");
+        assert_eq!(hit[0].file, "libs/a/src/x.ts");
+        assert_eq!(hit[0].pattern.as_deref(), Some("libs/a/**/*.ts"));
+    }
+
+    #[test]
+    fn input_matches_name_the_moved_package_and_the_all_externals_hash() {
+        let g = graph(&[("a", "libs/a")]);
+        let p = hash_plans(&[
+            (
+                "a:build",
+                vec![
+                    HashInstruction::External("npm:lodash".into()),
+                    HashInstruction::External("npm:react".into()),
+                ],
+            ),
+            ("a:lint", vec![HashInstruction::AllExternalDependencies]),
+            (
+                "a:test",
+                vec![HashInstruction::External("npm:react".into())],
+            ),
+        ]);
+        let moved = strings(&["npm:lodash"]);
+        let hits = compute_input_matches(
+            &g,
+            &p,
+            &[],
+            &[],
+            &ChangedExternals::new(&moved, &[], &g.external_nodes),
+            &ChangedContents::default(),
+        )
+        .unwrap();
+        assert_eq!(hits["a:build"].packages, strings(&["npm:lodash"]));
+        assert!(!hits["a:build"].all_externals);
+        assert!(hits["a:lint"].all_externals);
+        assert!(
+            !hits.contains_key("a:test"),
+            "an unmoved package is no reason"
         );
     }
 }

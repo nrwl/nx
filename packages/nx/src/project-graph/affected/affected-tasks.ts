@@ -4,6 +4,8 @@ import type { ProjectConfiguration } from '../../config/workspace-json-project-j
 import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
+  explainAffectedTasks,
+  type AffectedTaskExplanation,
   type FileRevisions,
   type IoSnapshots,
 } from '../../native';
@@ -34,6 +36,7 @@ import type { NxArgs } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { logger } from '../../utils/logger';
 import { DaemonProjectGraphError, ProjectGraphError } from '../error-types';
+import type { AffectedExplanation, AffectedReason } from './affected-reasons';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createTaskPlanningContext,
@@ -46,6 +49,7 @@ import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { getProjectGlobPatterns } from './affected-projects';
 import { lockFileDependencyChanges } from '../../plugins/js/project-graph/affected/lock-file-changes';
 import { packageJsonDependencyChanges } from '../../plugins/js/project-graph/affected/npm-packages';
+import { AUTO_AFFECTED_LOCK_FILES } from '../../plugins/js/lock-file/lock-file';
 
 /**
  * Whether `nx affected` selects the individual tasks whose inputs a change
@@ -68,6 +72,12 @@ export interface AffectedTasksResult {
   taskGraph: TaskGraph;
   /** What the run executes: the affected tasks and what they depend on. */
   taskSelection: TaskSelection;
+  /**
+   * Why each task is affected, plus the tasks outside the selection that
+   * carried the change to it, such as a `prebuild` under `-t build`. Only
+   * when `explain`.
+   */
+  explanation?: AffectedExplanation;
 }
 
 export interface ComputeAffectedTasksOptions {
@@ -88,6 +98,8 @@ export interface ComputeAffectedTasksOptions {
   /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
   ioSnapshotOutcome?: IoSnapshotOutcome | null;
   selectivelyHashTsConfig?: boolean;
+  /** Collect why each task was selected. Costs an extra native pass. */
+  explain?: boolean;
 }
 
 export type FileChangeArgs = Pick<NxArgs, 'base' | 'head' | 'files'>;
@@ -141,7 +153,9 @@ export async function computeAffectedTasks(
     };
   }
 
-  if (!isOnDaemon() && daemonClient.enabled()) {
+  // Explaining runs nothing, so there is no run to share the daemon's plans
+  // with, and reasons would have to cross back from it.
+  if (!opts.explain && !isOnDaemon() && daemonClient.enabled()) {
     try {
       const selection = await daemonClient.selectAffectedTasks(request);
       return {
@@ -174,12 +188,14 @@ export async function computeAffectedTasks(
       touchedFiles: opts.touchedFiles,
       packageJson: opts.packageJson,
       ioSnapshots,
+      explain: opts.explain,
     }
   );
   return {
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     taskGraph: selection.taskGraph,
+    explanation: selection.explanation,
     taskSelection: {
       ...selection.taskSelection,
       // The planner remembers what selection planned, so the run's hashing reuses it.
@@ -206,15 +222,18 @@ export async function selectAffectedTasks(
     ),
     packageJson,
     ioSnapshots,
+    explain = false,
   }: {
     touchedFiles?: FileChange[];
     packageJson?: any;
     ioSnapshots?: IoSnapshots;
+    explain?: boolean;
   } = {}
 ): Promise<{
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;
   taskSelection: TaskSelection;
+  explanation?: AffectedExplanation;
 }> {
   const { targets } = request;
   // Only projects that have one of the targets: with a single target,
@@ -269,30 +288,33 @@ export async function selectAffectedTasks(
   const namedProjects = new Set(dependencies.projects);
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+  const customHashed = new Set(
+    taskIds.filter((id) => hasCustomHasher(taskGraph.tasks[id], projects))
+  );
+  const options = {
+    projectGlobPatterns: await getProjectGlobPatterns(nxJson),
+    workspaceRoot,
+    alwaysTouchedTaskIds: taskIds.filter(
+      (id) =>
+        namedProjects.has(taskGraph.tasks[id].target.project) ||
+        customHashed.has(id)
+    ),
+    changedExternals: dependencies.externals,
+    changedExternalTypes: dependencies.changedExternalTypes,
+    excludedProjects: request.exclude.length
+      ? findMatchingProjects(request.exclude, projectGraph.nodes)
+      : [],
+    targets,
+    revisions: fileRevisions(request.fileChangeArgs),
+    selectivelyHashTsConfig: request.selectivelyHashTsConfig ?? false,
+  };
   const selection = nativeAffectedTasks(
     planningContext.projectGraphRef,
     plans,
     taskGraph,
     request.changedFiles,
-    {
-      projectGlobPatterns: await getProjectGlobPatterns(nxJson),
-      workspaceRoot,
-      alwaysTouchedTaskIds: taskIds.filter(
-        (id) =>
-          namedProjects.has(taskGraph.tasks[id].target.project) ||
-          hasCustomHasher(taskGraph.tasks[id], projects)
-      ),
-      changedExternals: dependencies.externals,
-      changedExternalTypes: dependencies.changedExternalTypes,
-      excludedProjects: request.exclude.length
-        ? findMatchingProjects(request.exclude, projectGraph.nodes)
-        : [],
-      targets,
-      revisions: fileRevisions(request.fileChangeArgs),
-      selectivelyHashTsConfig: request.selectivelyHashTsConfig ?? false,
-    }
+    options
   );
-
   // The run builds from the owning projects, so only their requested tasks
   // take the CLI overrides there; every other task is a dependency.
   const owning = new Set(
@@ -309,9 +331,32 @@ export async function selectAffectedTasks(
     ? selection.required.filter((id) => initial.has(id))
     : selection.required;
 
+  // A second native pass, so the selection path stays a membership test.
+  const explanation = explain
+    ? explainTasks(
+        selection.affected,
+        explainAffectedTasks(
+          planningContext.projectGraphRef,
+          plans,
+          taskGraph,
+          request.changedFiles,
+          options
+        ),
+        dependencies,
+        request.changedFiles,
+        taskGraph,
+        customHashed,
+        keep
+      )
+    : undefined;
+
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
+    explanation: explanation && {
+      ...explanation,
+      required: requiredOnly(keep, taskGraph, explanation),
+    },
     taskSelection: {
       // Edges that disagree on a dependency's overrides leave it to a build
       // from the owning projects, which settles them the way the run always has.
@@ -370,27 +415,192 @@ function hasCustomHasher(
  * A lockfile or package.json change reaches a hash as `External(name)`, a
  * package rather than a path, so it is handed to the plans as package names.
  */
+/** Dependency changes, plus why each named project was named, for `--explain`. */
+type NamedDependencyChanges = DependencyChanges & {
+  named: Map<string, AffectedReason[]>;
+};
+
 function dependencyChanges(
   projectGraph: ProjectGraph,
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration,
   packageJson: any = readPackageJson()
-): DependencyChanges {
-  const changes = [
-    lockFileDependencyChanges(
-      touchedFiles,
-      projectGraph.nodes,
-      nxJson,
-      packageJson,
-      projectGraph
-    ),
-    packageJsonDependencyChanges(touchedFiles, nxJson, projectGraph),
-  ];
+): NamedDependencyChanges {
+  const lockFile = lockFileDependencyChanges(
+    touchedFiles,
+    projectGraph.nodes,
+    nxJson,
+    packageJson,
+    projectGraph
+  );
+  const packageJsonChanges = packageJsonDependencyChanges(
+    touchedFiles,
+    nxJson,
+    projectGraph
+  );
+  const changes = [lockFile, packageJsonChanges];
+
+  const named = new Map<string, AffectedReason[]>();
+  const name = (project: string, reason: AffectedReason) =>
+    named.set(project, [...(named.get(project) ?? []), reason]);
+  const changedLockFile = touchedFiles.find((f) =>
+    (AUTO_AFFECTED_LOCK_FILES as readonly string[]).includes(f.file)
+  )?.file;
+  for (const project of lockFile.projects) {
+    name(project, { kind: 'lockfile', file: changedLockFile });
+  }
+  for (const project of packageJsonChanges.projects) {
+    name(project, {
+      kind: 'npm-package',
+      // The name package.json uses, which need not be the project's.
+      package:
+        projectGraph.nodes[project]?.data.metadata?.js?.packageName ?? project,
+      file: 'package.json',
+    });
+  }
+
   return {
     externals: [...new Set(changes.flatMap((c) => c.externals))],
     changedExternalTypes: [
       ...new Set(changes.flatMap((c) => c.changedExternalTypes)),
     ],
     projects: [...new Set(changes.flatMap((c) => c.projects))],
+    named,
   };
+}
+
+/**
+ * Why each selected task is in the answer, and why each task outside it that
+ * a reason names as a producer is too.
+ *
+ * Assembled after the fact rather than accumulated during selection, so the
+ * selection path costs nothing when `--explain` is off. Every reason that
+ * applies is listed: a task can match a changed file, hash a package that
+ * moved, and read an affected producer, all at once.
+ */
+function explainTasks(
+  affected: string[],
+  explanation: AffectedTaskExplanation,
+  dependencies: NamedDependencyChanges,
+  changedPaths: string[],
+  taskGraph: TaskGraph,
+  customHashed: Set<string>,
+  /** What the run keeps: a reached task in it is listed even if nothing reads its outputs. */
+  keep: string[]
+): AffectedExplanation {
+  // What a plan hashing every external saw change.
+  const dependencyFiles = changedPaths.filter(
+    (file) =>
+      file === 'package.json' ||
+      (AUTO_AFFECTED_LOCK_FILES as readonly string[]).includes(file)
+  );
+  const named = dependencies.named;
+
+  const reasonsFor = (taskId: string): AffectedReason[] => {
+    const forTask: AffectedReason[] = [];
+    const matches = explanation.inputMatches[taskId];
+
+    for (const match of matches?.files ?? []) {
+      forTask.push({
+        kind: 'input-file',
+        file: match.file,
+        pattern: match.pattern,
+      });
+    }
+    for (const pkg of matches?.packages ?? []) {
+      forTask.push({ kind: 'npm-package', package: pkg });
+    }
+    if (matches?.allExternals) {
+      for (const file of dependencyFiles) {
+        forTask.push({ kind: 'external-dependencies', file });
+      }
+    }
+    for (const file of matches?.projectConfigs ?? []) {
+      forTask.push({ kind: 'project-configuration', file });
+    }
+
+    // Only the reached producers: the walk records the edges it crossed.
+    for (const producer of explanation.producersOf[taskId] ?? []) {
+      forTask.push({ kind: 'dependent-output', producer });
+    }
+
+    const project = taskGraph.tasks[taskId]?.target.project;
+    for (const reason of (project && named.get(project)) ?? []) {
+      forTask.push(reason);
+    }
+    if (customHashed.has(taskId)) {
+      forTask.push({ kind: 'custom-hasher' });
+    }
+
+    // A deleted config seeded every task. Only worth saying when nothing
+    // narrower applies, or it would repeat on every line.
+    if (!forTask.length) {
+      for (const file of explanation.deletedProjectConfigs) {
+        forTask.push({ kind: 'deleted-project-configuration', file });
+      }
+    }
+
+    return forTask;
+  };
+
+  const result: AffectedExplanation = {
+    affected: Object.fromEntries(affected.map((id) => [id, reasonsFor(id)])),
+    upstream: {},
+    touched: [],
+  };
+  // Reached: touched, or carried to through outputs, which leaves an edge.
+  const reached = new Set([
+    ...explanation.touched,
+    ...Object.keys(explanation.producersOf),
+  ]);
+  for (const id of keep) {
+    if (reached.has(id) && !(id in result.affected)) {
+      result.upstream[id] = reasonsFor(id);
+    }
+  }
+  const producers = [
+    ...Object.keys(result.affected),
+    ...Object.keys(result.upstream),
+  ].flatMap((id) => explanation.producersOf[id] ?? []);
+  while (producers.length) {
+    const id = producers.pop();
+    if (id in result.affected || id in result.upstream) continue;
+    result.upstream[id] = reasonsFor(id);
+    producers.push(...(explanation.producersOf[id] ?? []));
+  }
+  result.touched = explanation.touched.filter(
+    (id) => id in result.affected || id in result.upstream
+  );
+  return result;
+}
+
+/**
+ * The tasks a run keeps that the change reached none of, each with the kept
+ * tasks that depend on it: what runs only so the others can.
+ */
+function requiredOnly(
+  keep: string[],
+  taskGraph: TaskGraph,
+  explanation: AffectedExplanation
+): Record<string, string[]> {
+  const kept = new Set(keep);
+  const neededBy: Record<string, string[]> = {};
+  for (const id of keep) {
+    for (const dependency of [
+      ...(taskGraph.dependencies[id] ?? []),
+      ...(taskGraph.continuousDependencies?.[id] ?? []),
+    ]) {
+      if (kept.has(dependency)) {
+        (neededBy[dependency] ??= []).push(id);
+      }
+    }
+  }
+  return Object.fromEntries(
+    keep
+      .filter(
+        (id) => !(id in explanation.affected) && !(id in explanation.upstream)
+      )
+      .sort()
+      .map((id) => [id, (neededBy[id] ?? []).sort()])
+  );
 }

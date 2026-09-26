@@ -255,6 +255,67 @@ Nx selects a task when your change reaches one of its inputs, rather than by whe
 **Sync generators that change files during a run don't update the selection.** Nx selects tasks before syncing, so run the command again after a sync applies changes.
 {% /aside %}
 
+## Understanding why something is affected
+
+When a task is in the affected set and you can't see why, add `--explain`. Nx prints what it selected and what put it there, then exits without running anything:
+
+```shell
+NX_LEGACY_AFFECTED=false nx affected -t build --explain
+```
+
+`--explain` explains task selection, so it needs `NX_LEGACY_AFFECTED=false` and targets passed with `-t`. Without task selection, it stops with an error.
+
+```text
+ NX   Affected tasks (3)
+
+Dependencies, needed to run first (2):
+
+  admin:prebuild, needed by admin:build
+  app:prebuild, needed by app:build
+
+Affected tasks (3):
+
+  ui:build
+    - touched: its own inputs changed
+    - input libs/ui/**/* matched libs/ui/src/index.ts
+
+  admin:build
+    - affected: reads outputs the change reached
+    - reads the outputs of ui:build, which the change reached
+    - traced to libs/ui/src/index.ts
+
+  app:build
+    - affected: reads outputs the change reached
+    - reads the outputs of ui:build, which the change reached
+    - traced to libs/ui/src/index.ts
+
+3 affected tasks and 2 tasks they depend on.
+```
+
+The output follows the order the run goes in, and the tasks you asked for always come last:
+
+- `Dependencies` run only because a task below needs them. Your change didn't reach them, so they can restore from cache.
+- `Touched` tasks had one of their own inputs changed.
+- Under `Affected, they read outputs`, each task reads the outputs of one your change reached.
+- `Affected tasks` comes last and holds the tasks you asked for, each marked touched or affected.
+
+The layers above the last section list tasks you didn't ask for, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`.
+Each entry lists every reason that applies, so a task reached through two different producers reports both.
+An entry reached only through other entries ends with the changed file its chain starts from.
+To follow the chain step by step, look up the task named in a reason.
+
+The last line counts the tasks Nx runs only so the selected ones can run.
+
+Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
+The JSON has four keys:
+
+- `affected` holds the tasks you asked for.
+- `upstream` holds the tasks above them.
+- `touched` lists which of those your change reached directly.
+- `required` maps each dependency to the tasks that need it.
+
+`nx show projects --affected -t build --explain` explains its answer the same way. It reports a selection rather than running one, so it leaves off the Dependencies layer and the last line.
+
 ## Best paired with remote caching and distribution
 
 Using `nx affected` is a powerful tool to reduce the amount of compute that needs to be run. However, this might not be sufficient to significantly speed up your CI pipeline. For example:

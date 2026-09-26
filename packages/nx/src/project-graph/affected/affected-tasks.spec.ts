@@ -29,7 +29,11 @@ vi.mock('../../tasks-runner/utils', async (importOriginal) => {
   };
 });
 import { computeAffectedTasks, selectsAffectedTasks } from './affected-tasks';
-import { LockFileChange, WholeFileChange } from '../file-utils';
+import {
+  DeletedFileChange,
+  LockFileChange,
+  WholeFileChange,
+} from '../file-utils';
 import { ProjectGraphError } from '../error-types';
 import type { ProjectGraph } from '../../config/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
@@ -117,6 +121,29 @@ describe('computeAffectedTasks', () => {
     );
   });
 
+  it('explains a task reached through a changed project config', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/package.json',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+    for (const task of ['lib:test', 'app:test']) {
+      expect(explanation.affected[task]).toContainEqual({
+        kind: 'project-configuration',
+        file: 'packages/nx/package.json',
+      });
+    }
+  });
+
   /**
    * The project the config described is gone from the graph, so no surviving
    * task has a fileset that names it and nothing narrower than everything is
@@ -127,6 +154,29 @@ describe('computeAffectedTasks', () => {
       'packages/nx/does-not-exist/project.json',
     ]);
     expect(affected).toEqual(['app:test', 'lib:test']);
+  });
+
+  it('explains a deleted project config where nothing narrower applies', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/does-not-exist/project.json',
+          getChanges: () => [new DeletedFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+    expect(explanation.affected['lib:test']).toEqual([
+      {
+        kind: 'deleted-project-configuration',
+        file: 'packages/nx/does-not-exist/project.json',
+      },
+    ]);
   });
 
   /**
@@ -252,11 +302,43 @@ describe('computeAffectedTasks', () => {
           ],
         },
       ] as any,
+      explain: true,
     });
     expect([...result.affectedTaskIds].sort()).toEqual([
       'hashes_all:test',
       'uses_moved:test',
     ]);
+    expect(result.explanation.affected['uses_moved:test']).toEqual([
+      { kind: 'npm-package', package: 'npm:moved' },
+    ]);
+    expect(result.explanation.affected['hashes_all:test']).toEqual([
+      { kind: 'external-dependencies', file: 'package-lock.json' },
+    ]);
+  });
+
+  // The project is named by config, not by an input, so the reason says so.
+  it('explains a project projectsAffectedByDependencyUpdates names', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        pluginsConfig: {
+          '@nx/js': { projectsAffectedByDependencyUpdates: ['lib'] },
+        },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'pnpm-lock.yaml',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+    expect(explanation.affected['lib:test']).toContainEqual({
+      kind: 'lockfile',
+      file: 'pnpm-lock.yaml',
+    });
   });
 
   it('selects nothing when the change reaches no input', async () => {
@@ -280,6 +362,111 @@ describe('computeAffectedTasks', () => {
     });
     expect([...result.affectedTaskIds]).toEqual(['app:test']);
     expect(result.taskSelection.taskIds).toEqual(['app:test']);
+  });
+
+  /**
+   * Every reason that applies: the input a changed file matched, the affected
+   * producer whose outputs a task reads, and the package a dependency change
+   * moved, or the file that moved it for a plan hashing every external.
+   */
+  it('explains each task with what reached it', async () => {
+    const explain = async (files: string[]) =>
+      (
+        await computeAffectedTasks({
+          projectGraph: graph(),
+          nxJson: {
+            namedInputs: { production: ['{projectRoot}/src/**/*'] },
+          } as any,
+          targets: ['test'],
+          touchedFiles: files.map((file) => ({
+            file,
+            getChanges: () => [new WholeFileChange()],
+          })) as any,
+          explain: true,
+        })
+      ).explanation.affected;
+
+    const byFile = await explain(['packages/nx/src/index.ts']);
+    expect(byFile['lib:test']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/nx/src/index.ts',
+      })
+    );
+    // app:test inlines lib's production fileset through ^production, so the
+    // same file reaches it as an input rather than through a producer.
+    expect(byFile['app:test']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/nx/src/index.ts',
+      })
+    );
+
+    // Neither target declares externalDependencies, so each plan hashes every
+    // external and the lockfile reaches both directly: no seed, no dependency
+    // edge to report.
+    const byLockfile = await explain(['pnpm-lock.yaml']);
+    for (const task of ['lib:test', 'app:test']) {
+      expect(byLockfile[task]).toEqual([
+        { kind: 'external-dependencies', file: 'pnpm-lock.yaml' },
+      ]);
+    }
+  });
+});
+
+describe('explaining a change carried by a dependency-only task', () => {
+  // Under -t build, prebuild is only a dependency, so it is not selected. It
+  // is still what the change reached, and the build's reason names it.
+  it('lists the producer a reason names, outside the selection', async () => {
+    const result = await computeAffectedTasks({
+      projectGraph: {
+        nodes: {
+          app: {
+            name: 'app',
+            type: 'app',
+            data: {
+              root: 'packages/js',
+              targets: {
+                prebuild: {
+                  executor: 'nx:run-commands',
+                  inputs: ['{projectRoot}/src/**/*'],
+                  outputs: ['{workspaceRoot}/dist/gen'],
+                },
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['prebuild'],
+                  inputs: [{ dependentTasksOutputFiles: '**/*' }],
+                },
+              },
+            },
+          },
+        },
+        dependencies: { app: [] },
+        externalNodes: {},
+      } as any,
+      nxJson: {} as any,
+      targets: ['build'],
+      touchedFiles: [
+        {
+          file: 'packages/js/src/index.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+
+    expect(Object.keys(result.explanation.affected)).toEqual(['app:build']);
+    expect(result.explanation.affected['app:build']).toEqual([
+      { kind: 'dependent-output', producer: 'app:prebuild' },
+    ]);
+    // Selection's own touched set: the prebuild matched, the build did not.
+    expect(result.explanation.touched).toEqual(['app:prebuild']);
+    expect(result.explanation.upstream['app:prebuild']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/js/src/index.ts',
+      })
+    );
   });
 });
 
@@ -330,6 +517,75 @@ describe('the run graph selection hands over', () => {
     );
     // lib:test runs only because app:test needs it.
     expect(result.taskSelection.initiatingTaskIds).toEqual(['app:test']);
+  });
+});
+
+describe('explaining what a run needs first', () => {
+  // prebuild's own input changed, but build only orders after it rather than
+  // reading its outputs: it runs as a dependency the change still touched.
+  it('lists a touched dependency as touched, not as untouched', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: {
+        nodes: {
+          app: {
+            name: 'app',
+            type: 'app',
+            data: {
+              root: 'packages/js',
+              targets: {
+                prebuild: {
+                  executor: 'nx:run-commands',
+                  inputs: ['{projectRoot}/bin/**/*'],
+                },
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['prebuild'],
+                  inputs: ['{projectRoot}/src/**/*'],
+                },
+              },
+            },
+          },
+        },
+        dependencies: { app: [] },
+        externalNodes: {},
+      } as any,
+      nxJson: {} as any,
+      targets: ['build'],
+      touchedFiles: ['packages/js/src/index.ts', 'packages/js/bin/nx.ts'].map(
+        (file) => ({ file, getChanges: () => [new WholeFileChange()] })
+      ) as any,
+      explain: true,
+    });
+    expect(explanation.required).toEqual({});
+    expect(explanation.upstream['app:prebuild']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/js/bin/nx.ts',
+      })
+    );
+    expect(explanation.touched).toContain('app:prebuild');
+  });
+
+  // A lib change cannot reach app:test, so lib:test runs only because the
+  // affected app:test depends on it.
+  it('lists a kept task the change never reached, with what needs it', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/js/src/index.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      extraTargetDependencies: { test: ['^test'] },
+      explain: true,
+    });
+    expect(Object.keys(explanation.affected)).toEqual(['app:test']);
+    expect(explanation.required).toEqual({ 'lib:test': ['app:test'] });
   });
 });
 
@@ -443,6 +699,24 @@ describe('tasks with a custom hasher', () => {
   it('are always selected', async () => {
     customHashers.add('lib');
     expect(await affectedFor(['docs/README.md'])).toEqual(['lib:test']);
+  });
+
+  it('say why they were selected', async () => {
+    customHashers.add('lib');
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        { file: 'docs/README.md', getChanges: () => [new WholeFileChange()] },
+      ] as any,
+      explain: true,
+    });
+    expect(explanation.affected).toEqual({
+      'lib:test': [{ kind: 'custom-hasher' }],
+    });
   });
 });
 
@@ -611,6 +885,35 @@ describe('computeAffectedTasks with the daemon on', () => {
 
     expect(daemon.selectAffectedTasks).not.toHaveBeenCalled();
     expect(result.taskSelection.planningContext).toBeDefined();
+  });
+
+  // Reasons are assembled from native plans, which stay in whichever process
+  // planned them, and an explanation runs nothing to share them with.
+  it('explains in-process rather than asking the daemon', async () => {
+    daemon.enabled.mockReturnValueOnce(true);
+
+    const result = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/src/x.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+
+    expect(daemon.selectAffectedTasks).not.toHaveBeenCalled();
+    expect(result.explanation.affected['lib:test']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/nx/src/x.ts',
+      })
+    );
   });
 });
 

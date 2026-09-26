@@ -9,6 +9,11 @@ import {
   computeAffectedTasks,
   selectsAffectedTasks,
 } from '../../project-graph/affected/affected-tasks';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
+import {
+  EXPLAIN_NEEDS_TASK_SELECTION,
+  isExplaining,
+} from '../../project-graph/affected/affected-reasons';
 import {
   FileChange,
   calculateFileChanges,
@@ -40,6 +45,17 @@ export async function showProjectsHandler(
     nxJson
   );
 
+  const explainsTasks =
+    args.affected &&
+    selectsAffectedTasks() &&
+    !!args.withTarget?.length &&
+    !args.projects;
+  if (isExplaining(nxArgs.explain) && !explainsTasks) {
+    throw new Error(
+      `${EXPLAIN_NEEDS_TASK_SELECTION} With show projects it also needs --affected, and does not combine with --projects.`
+    );
+  }
+
   // Affected touches dependencies so it needs to be processed first.
   if (args.affected) {
     const touchedFiles = await getTouchedFiles(nxArgs);
@@ -57,7 +73,22 @@ export async function showProjectsHandler(
           files: nxArgs.files,
         },
         ...(await runCommandModule().runnerInputsForSelection(nxArgs, nxJson)),
+        explain: isExplaining(nxArgs.explain),
       });
+      if (isExplaining(nxArgs.explain)) {
+        // Runs nothing, so neither what a run would need first nor how many
+        // tasks it would drag in is part of the answer.
+        const { required: _, ...explanation } = affectedTasks.explanation;
+        printAffectedExplanation(
+          explanation,
+          'Affected tasks',
+          // show projects declares its own --json, which has no executor to
+          // pass through to.
+          args.json ? 'stdout' : nxArgs.explain
+        );
+        await output.drain();
+        return;
+      }
       const { taskGraph, initiatingTaskIds } = affectedTasks.taskSelection;
       const owning = new Set(
         initiatingTaskIds.map((id) => taskGraph.tasks[id].target.project)
