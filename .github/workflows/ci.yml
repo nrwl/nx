@@ -21,6 +21,10 @@ env:
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
+  # Select affected tasks instead of whole projects.
+  NX_LEGACY_AFFECTED: 'false'
+  # Record and hash tasks with Nx Cloud I/O snapshots (ultracache).
+  NX_CLOUD_USE_IO_SNAPSHOTS: 'true'
 
 jobs:
   main-linux:
