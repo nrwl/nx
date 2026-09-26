@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { CreateNodesContext } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
@@ -6,14 +7,14 @@ import { createNodesV2 } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 
 // Mock fs to provide stable test environment
-jest.mock('node:fs', () => ({
-  ...jest.requireActual('node:fs'),
-  readdirSync: jest.fn(() => [
+vi.mock('node:fs', async () => ({
+  ...(await vi.importActual<any>('node:fs')),
+  readdirSync: vi.fn(() => [
     'package.json',
     'vitest.config.ts',
     'tsconfig.lib.json',
   ]),
-  existsSync: jest.fn((path) => {
+  existsSync: vi.fn((path) => {
     if (path.endsWith('package.json') || path.endsWith('project.json')) {
       return true;
     }
@@ -21,10 +22,10 @@ jest.mock('node:fs', () => ({
   }),
 }));
 
-jest.mock('vitest/node', () => ({
-  createVitest: jest.fn().mockImplementation(() => {
+vi.mock('vitest/node', () => ({
+  createVitest: vi.fn().mockImplementation(() => {
     return {
-      getRelevantTestSpecifications: jest.fn().mockResolvedValue([
+      getRelevantTestSpecifications: vi.fn().mockResolvedValue([
         {
           moduleId: 'src/test-1.ts',
         },
@@ -40,27 +41,27 @@ jest.mock('vitest/node', () => ({
 // Return the files unsorted to also exercise the plugin's sort.
 // Mocked with an explicit factory (requireActual hits a circular init through
 // the devkit barrels); the hashing stubs cover calculateHashesForCreateNodes.
-jest.mock('nx/src/utils/workspace-context', () => ({
-  globWithWorkspaceContext: jest
+vi.mock('nx/src/utils/workspace-context', () => ({
+  globWithWorkspaceContext: vi
     .fn()
     .mockResolvedValue(['src/test-2.ts', 'src/test-1.ts']),
-  hashWithWorkspaceContext: jest.fn().mockResolvedValue('hash'),
-  hashMultiGlobWithWorkspaceContext: jest.fn(
+  hashWithWorkspaceContext: vi.fn().mockResolvedValue('hash'),
+  hashMultiGlobWithWorkspaceContext: vi.fn(
     (_workspaceRoot: string, globGroups: string[][]) =>
       Promise.resolve(globGroups.map((_, idx) => `hash-${idx}`))
   ),
 }));
 
-jest.mock('node:fs/promises', () => ({
-  ...jest.requireActual('node:fs/promises'),
-  readFile: jest.fn(),
+vi.mock('node:fs/promises', async () => ({
+  ...(await vi.importActual<any>('node:fs/promises')),
+  readFile: vi.fn(),
 }));
 
 // Mock readJsonFile from @nx/devkit to return stable project name
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  detectPackageManager: jest.fn().mockReturnValue('npm'),
-  readJsonFile: jest.fn((path) => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn().mockReturnValue('npm'),
+  readJsonFile: vi.fn((path) => {
     if (path.endsWith('package.json')) {
       return { name: 'vite' };
     }
@@ -71,8 +72,8 @@ jest.mock('@nx/devkit', () => ({
   }),
 }));
 
-jest.mock('vite', () => ({
-  resolveConfig: jest.fn().mockImplementation(() => {
+vi.mock('vite', () => ({
+  resolveConfig: vi.fn().mockImplementation(() => {
     return Promise.resolve({
       path: 'vitest.config.ts',
       config: {},
@@ -81,15 +82,15 @@ jest.mock('vite', () => ({
   }),
 }));
 
-jest.mock('../utils/executor-utils', () => ({
-  loadViteDynamicImport: jest.fn().mockResolvedValue({
-    resolveConfig: jest.fn().mockResolvedValue({
+vi.mock('../utils/executor-utils', () => ({
+  loadViteDynamicImport: vi.fn().mockResolvedValue({
+    resolveConfig: vi.fn().mockResolvedValue({
       path: 'vitest.config.ts',
       config: {},
       dependencies: [],
     }),
   }),
-  loadVitestConfigDynamicImport: jest.fn().mockResolvedValue({
+  loadVitestConfigDynamicImport: vi.fn().mockResolvedValue({
     configDefaults: {
       include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
       exclude: ['**/node_modules/**', '**/.git/**'],
@@ -120,7 +121,7 @@ describe('@nx/vitest', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
     });
 
     it('should create nodes', async () => {
@@ -178,7 +179,7 @@ describe('@nx/vitest', () => {
       // The workspace context glob does not guarantee sorted output. Simulate
       // that by returning paths in non-alphabetic order; the plugin must sort
       // them so atomized target insertion order is stable across runs.
-      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+      (globWithWorkspaceContext as Mock).mockResolvedValueOnce([
         'src/c.test.ts',
         'src/a.test.ts',
         'src/b.test.ts',
@@ -227,12 +228,12 @@ describe('@nx/vitest', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
     });
 
     it('should include d.ts in dependentTasksOutputFiles when typecheck is enabled', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
@@ -291,12 +292,12 @@ describe('@nx/vitest', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
     });
 
     it('should NOT create a project for root config with projects array', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
@@ -321,8 +322,8 @@ describe('@nx/vitest', () => {
     });
 
     it('should NOT create a project for root config with empty projects array', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
@@ -356,22 +357,22 @@ describe('@nx/vitest', () => {
         },
         workspaceRoot: '',
       };
-      (globWithWorkspaceContext as jest.Mock).mockClear();
-      (readFile as jest.Mock).mockReset();
+      (globWithWorkspaceContext as Mock).mockClear();
+      (readFile as Mock).mockReset();
       // Reset to the default so a per-test workspace-file override can't leak
       // into later tests and force them onto the runtime path.
-      (existsSync as jest.Mock).mockImplementation(
+      (existsSync as Mock).mockImplementation(
         (path: string) =>
           path.endsWith('package.json') || path.endsWith('project.json')
       );
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
     });
 
     it('should glob test files instead of booting Vitest for a glob-safe config', async () => {
-      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+      (globWithWorkspaceContext as Mock).mockResolvedValueOnce([
         'src/from-glob.spec.ts',
       ]);
 
@@ -387,8 +388,8 @@ describe('@nx/vitest', () => {
     });
 
     it('should fall back to Vitest when a plugin exposes configureVitest', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
@@ -426,15 +427,15 @@ describe('@nx/vitest', () => {
     });
 
     it('should also glob type tests when typecheck is enabled', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
           test: { typecheck: { enabled: true } },
         }),
       });
-      (globWithWorkspaceContext as jest.Mock)
+      (globWithWorkspaceContext as Mock)
         .mockResolvedValueOnce(['src/a.spec.ts'])
         .mockResolvedValueOnce(['src/a.test-d.ts']);
 
@@ -462,8 +463,8 @@ describe('@nx/vitest', () => {
     ])(
       'should fall back to Vitest when %s is set',
       async (_label, testConfig) => {
-        (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-          resolveConfig: jest.fn().mockResolvedValue({
+        (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+          resolveConfig: vi.fn().mockResolvedValue({
             path: 'vitest.config.ts',
             config: {},
             dependencies: [],
@@ -491,8 +492,8 @@ describe('@nx/vitest', () => {
     ])(
       'should fall back to Vitest when a browser instance overrides %s',
       async (_label, instanceConfig) => {
-        (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-          resolveConfig: jest.fn().mockResolvedValue({
+        (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+          resolveConfig: vi.fn().mockResolvedValue({
             path: 'vitest.config.ts',
             config: {},
             dependencies: [],
@@ -520,8 +521,8 @@ describe('@nx/vitest', () => {
     );
 
     it('should still glob when browser instances do not override discovery', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
@@ -530,7 +531,7 @@ describe('@nx/vitest', () => {
           },
         }),
       });
-      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+      (globWithWorkspaceContext as Mock).mockResolvedValueOnce([
         'src/from-glob.spec.ts',
       ]);
 
@@ -547,8 +548,8 @@ describe('@nx/vitest', () => {
     });
 
     it('should still glob when browser mode is disabled', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
@@ -562,7 +563,7 @@ describe('@nx/vitest', () => {
           },
         }),
       });
-      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+      (globWithWorkspaceContext as Mock).mockResolvedValueOnce([
         'src/from-glob.spec.ts',
       ]);
 
@@ -588,7 +589,7 @@ describe('@nx/vitest', () => {
       async (workspaceFile) => {
         // Vitest 3 auto-loads these files to define sub-projects even though
         // the resolved config object declares none.
-        (existsSync as jest.Mock).mockImplementation(
+        (existsSync as Mock).mockImplementation(
           (path: string) =>
             path.endsWith('package.json') ||
             path.endsWith('project.json') ||
@@ -610,21 +611,20 @@ describe('@nx/vitest', () => {
     it('should fall back to Vitest when a non-root config sets test.projects', async () => {
       // A root config with `test.projects` skips the project entirely, so the
       // fallback for it is only reachable from a nested config.
-      (existsSync as jest.Mock).mockReturnValue(false);
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (existsSync as Mock).mockReturnValue(false);
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'libs/lib1/vitest.config.ts',
           config: {},
           dependencies: [],
           test: { projects: ['packages/*'] },
         }),
       });
-      // `jest.resetModules()` between tests hands the plugin's dynamic
+      // `vi.resetModules()` between tests hands the plugin's dynamic
       // `import('vitest/node')` a fresh mock, so reach for the current one.
-      const { createVitest } =
-        jest.requireMock<typeof import('vitest/node')>('vitest/node');
-      (createVitest as jest.Mock).mockImplementationOnce(() => ({
-        getRelevantTestSpecifications: jest
+      const { createVitest } = await import('vitest/node');
+      (createVitest as Mock).mockImplementationOnce(() => ({
+        getRelevantTestSpecifications: vi
           .fn()
           .mockResolvedValue([{ moduleId: 'libs/lib1/src/test-1.ts' }]),
       }));
@@ -648,9 +648,9 @@ describe('@nx/vitest', () => {
     ])(
       'should fall back to Vitest when an include pattern uses %s',
       async (_shape, pattern) => {
-        (existsSync as jest.Mock).mockReturnValue(false);
-        (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-          resolveConfig: jest.fn().mockResolvedValue({
+        (existsSync as Mock).mockReturnValue(false);
+        (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+          resolveConfig: vi.fn().mockResolvedValue({
             path: 'vitest.config.ts',
             config: {},
             dependencies: [],
@@ -684,9 +684,9 @@ describe('@nx/vitest', () => {
     ])(
       'should fall back to Vitest when %s carries a glob-divergent shape',
       async (_field, testConfig) => {
-        (existsSync as jest.Mock).mockReturnValue(false);
-        (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-          resolveConfig: jest.fn().mockResolvedValue({
+        (existsSync as Mock).mockReturnValue(false);
+        (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+          resolveConfig: vi.fn().mockResolvedValue({
             path: 'vitest.config.ts',
             config: {},
             dependencies: [],
@@ -707,16 +707,15 @@ describe('@nx/vitest', () => {
     );
 
     it("should enumerate from test.dir on the 'vitest' opt-out path", async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
           test: { dir: 'tests' },
         }),
       });
-      const { createVitest } =
-        jest.requireMock<typeof import('vitest/node')>('vitest/node');
+      const { createVitest } = await import('vitest/node');
 
       await createNodesFunction(
         ['vitest.config.ts'],
@@ -741,8 +740,8 @@ describe('@nx/vitest', () => {
       // A `command`-branched `dir` resolves differently under build and serve.
       // Vitest runs the project under serve, so the opt-out must atomize the
       // serve directory (`tests`), not the build one (`src`).
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi
           .fn()
           .mockImplementation((_config: unknown, command: string) =>
             Promise.resolve({
@@ -753,8 +752,7 @@ describe('@nx/vitest', () => {
             })
           ),
       });
-      const { createVitest } =
-        jest.requireMock<typeof import('vitest/node')>('vitest/node');
+      const { createVitest } = await import('vitest/node');
 
       await createNodesFunction(
         ['vitest.config.ts'],
@@ -778,8 +776,8 @@ describe('@nx/vitest', () => {
     });
 
     it('should honor a config include/exclude over Vitest defaults', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
@@ -789,7 +787,7 @@ describe('@nx/vitest', () => {
           },
         }),
       });
-      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+      (globWithWorkspaceContext as Mock).mockResolvedValueOnce([
         'custom/a.spec.ts',
       ]);
 
@@ -809,18 +807,18 @@ describe('@nx/vitest', () => {
     });
 
     it('should keep only in-source files that contain the vitest marker', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
           test: { includeSource: ['src/**/*.ts'] },
         }),
       });
-      (globWithWorkspaceContext as jest.Mock)
+      (globWithWorkspaceContext as Mock)
         .mockResolvedValueOnce([]) // regular include
         .mockResolvedValueOnce(['src/a.ts', 'src/b.ts']); // includeSource
-      (readFile as jest.Mock)
+      (readFile as Mock)
         .mockResolvedValueOnce('export const x = 1;')
         .mockResolvedValueOnce('if (import.meta.vitest) { /* test */ }');
 
@@ -837,19 +835,19 @@ describe('@nx/vitest', () => {
 
     it('should read in-source candidates past the concurrency batch boundary', async () => {
       const sourceFiles = Array.from({ length: 30 }, (_, i) => `src/f${i}.ts`);
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
           test: { includeSource: ['src/**/*.ts'] },
         }),
       });
-      (globWithWorkspaceContext as jest.Mock)
+      (globWithWorkspaceContext as Mock)
         .mockResolvedValueOnce([]) // regular include
         .mockResolvedValueOnce(sourceFiles); // includeSource
       // Markers straddle the 25-file batch: f3 (first batch), f27 (second).
-      (readFile as jest.Mock).mockImplementation(async (file: string) =>
+      (readFile as Mock).mockImplementation(async (file: string) =>
         file.endsWith('src/f3.ts') || file.endsWith('src/f27.ts')
           ? 'if (import.meta.vitest) { /* test */ }'
           : 'export const x = 1;'
@@ -868,18 +866,18 @@ describe('@nx/vitest', () => {
     });
 
     it('should skip in-source candidates that cannot be read', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
           test: { includeSource: ['src/**/*.ts'] },
         }),
       });
-      (globWithWorkspaceContext as jest.Mock)
+      (globWithWorkspaceContext as Mock)
         .mockResolvedValueOnce([]) // regular include
         .mockResolvedValueOnce(['src/unreadable.ts']); // includeSource
-      (readFile as jest.Mock).mockRejectedValueOnce(
+      (readFile as Mock).mockRejectedValueOnce(
         Object.assign(new Error('EACCES'), { code: 'EACCES' })
       );
 
@@ -895,7 +893,7 @@ describe('@nx/vitest', () => {
     });
 
     it('should drop test files that escape the project root', async () => {
-      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+      (globWithWorkspaceContext as Mock).mockResolvedValueOnce([
         '../outside.spec.ts',
         'src/inside.spec.ts',
       ]);
@@ -914,15 +912,15 @@ describe('@nx/vitest', () => {
     });
 
     it('should skip the regular test glob when typecheck.only is set', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
           test: { typecheck: { enabled: true, only: true } },
         }),
       });
-      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+      (globWithWorkspaceContext as Mock).mockResolvedValueOnce([
         'src/a.test-d.ts',
       ]);
 
@@ -945,8 +943,8 @@ describe('@nx/vitest', () => {
     });
 
     it('should skip in-source tests when typecheck.only is set', async () => {
-      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
           path: 'vitest.config.ts',
           config: {},
           dependencies: [],
@@ -956,7 +954,7 @@ describe('@nx/vitest', () => {
           },
         }),
       });
-      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+      (globWithWorkspaceContext as Mock).mockResolvedValueOnce([
         'src/a.test-d.ts',
       ]);
 

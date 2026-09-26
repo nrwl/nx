@@ -1,15 +1,15 @@
 // Needed so the current environment is not used
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  getPackageManagerCommand: jest.fn(() => ({
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  getPackageManagerCommand: vi.fn(() => ({
     exec: 'npx',
   })),
 }));
 
 // Needed so the current environment is not used
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(() => false),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(() => false),
 }));
 
 import { CreateNodesContext } from '@nx/devkit';
@@ -21,7 +21,11 @@ import { hashObject, workspaceDataDirectory } from '@nx/devkit/internal';
 import { rmSync } from 'fs';
 import { createNodesV2 } from './plugin';
 import { join } from 'path';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/webpack/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -52,7 +56,8 @@ describe('@nx/webpack/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    resetCjsMocks();
+    vi.resetModules();
     tempFs.cleanup();
     if (originalCacheProjectGraph !== undefined) {
       process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
@@ -402,8 +407,11 @@ describe('@nx/webpack/plugin', () => {
   });
 
   function mockWebpackConfig(config: any) {
-    jest.mock(join(tempFs.tempDir, 'my-app/webpack.config.js'), () => config, {
-      virtual: true,
-    });
+    // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+    mockCjsModule(
+      import.meta.url,
+      join(tempFs.tempDir, 'my-app/webpack.config.js'),
+      config
+    );
   }
 });

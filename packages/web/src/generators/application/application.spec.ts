@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
@@ -20,24 +21,24 @@ import { Schema } from './schema';
 import { PackageManagerCommands } from '@nx/devkit/internal';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 describe('app', () => {
   let tree: Tree;
   let envBackup: string | undefined;
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
-    jest
-      .spyOn(devkitExports, 'getPackageManagerCommand')
-      .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+    vi.spyOn(devkitExports, 'getPackageManagerCommand').mockReturnValue({
+      exec: 'npx',
+    } as PackageManagerCommands);
 
     tree = createTreeWithEmptyWorkspace();
   });

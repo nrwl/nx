@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   detectPackageManager,
   readJson,
@@ -7,9 +8,9 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ensureDependencies } from './ensure-dependencies';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  detectPackageManager: jest.fn(),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn(),
 }));
 
 describe('ensureDependencies', () => {
@@ -17,7 +18,7 @@ describe('ensureDependencies', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    (detectPackageManager as jest.Mock).mockReturnValue('npm');
+    (detectPackageManager as Mock).mockReturnValue('npm');
   });
 
   it('should support swc', () => {
@@ -36,7 +37,7 @@ describe('ensureDependencies', () => {
   });
 
   it('should deny the @swc/core build scripts when using pnpm', () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
     updateJson(tree, 'package.json', (json) => {
       json.packageManager = 'pnpm@11.2.2';
       return json;
@@ -50,7 +51,7 @@ describe('ensureDependencies', () => {
   });
 
   it('should deny the core-js build script when using babel with pnpm', () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
     updateJson(tree, 'package.json', (json) => {
       json.packageManager = 'pnpm@11.2.2';
       return json;
@@ -64,7 +65,7 @@ describe('ensureDependencies', () => {
   });
 
   it('should not write pnpm-workspace.yaml when not using the swc compiler', () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
     updateJson(tree, 'package.json', (json) => {
       json.packageManager = 'pnpm@11.2.2';
       return json;
