@@ -521,6 +521,51 @@ describe('the run graph selection hands over', () => {
 });
 
 describe('explaining what a run needs first', () => {
+  // prebuild's own input changed, but build only orders after it rather than
+  // reading its outputs: it runs as a dependency the change still touched.
+  it('lists a touched dependency as touched, not as untouched', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: {
+        nodes: {
+          app: {
+            name: 'app',
+            type: 'app',
+            data: {
+              root: 'packages/js',
+              targets: {
+                prebuild: {
+                  executor: 'nx:run-commands',
+                  inputs: ['{projectRoot}/bin/**/*'],
+                },
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['prebuild'],
+                  inputs: ['{projectRoot}/src/**/*'],
+                },
+              },
+            },
+          },
+        },
+        dependencies: { app: [] },
+        externalNodes: {},
+      } as any,
+      nxJson: {} as any,
+      targets: ['build'],
+      touchedFiles: ['packages/js/src/index.ts', 'packages/js/bin/nx.ts'].map(
+        (file) => ({ file, getChanges: () => [new WholeFileChange()] })
+      ) as any,
+      explain: true,
+    });
+    expect(explanation.required).toEqual({});
+    expect(explanation.upstream['app:prebuild']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/js/bin/nx.ts',
+      })
+    );
+    expect(explanation.touched).toContain('app:prebuild');
+  });
+
   // A lib change cannot reach app:test, so lib:test runs only because the
   // affected app:test depends on it.
   it('lists a kept task the change never reached, with what needs it', async () => {
