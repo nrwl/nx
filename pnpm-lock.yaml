@@ -3141,13 +3141,13 @@ importers:
   packages/nest:
     dependencies:
       '@nestjs/common':
-        specifier: '>=10.0.0 <12.0.0'
+        specifier: '>=10.0.0 <13.0.0'
         version: 11.1.24(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
       '@nestjs/core':
-        specifier: '>=10.0.0 <12.0.0'
+        specifier: '>=10.0.0 <13.0.0'
         version: 11.1.24(@nestjs/common@11.1.24(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/platform-express@9.4.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/schematics':
-        specifier: ^11.0.0
+        specifier: '>=11.0.0 <13.0.0'
         version: 11.0.5(chokidar@4.0.3)(typescript@6.0.3)
       '@nx/devkit':
         specifier: workspace:*
