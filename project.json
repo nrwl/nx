@@ -64,7 +64,8 @@
         "native",
         {
           "runtime": "node ./scripts/local-registry/package-manager-versions.mjs"
-        }
+        },
+        { "dependentTasksOutputFiles": "**/*" }
       ],
       "dependsOn": ["local-registry-e2e", "populate-local-registry-storage"],
       "command": "node ./scripts/local-registry/build-e2e-base-workspace.mjs",
