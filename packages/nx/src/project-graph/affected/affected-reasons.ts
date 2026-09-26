@@ -67,6 +67,11 @@ export interface AffectedExplanation {
    */
   upstream: Record<string, AffectedReason[]>;
   /**
+   * The entries of `affected` and `upstream` the change reached directly, as
+   * selection decided it; every other entry was reached only through another.
+   */
+  touched: string[];
+  /**
    * Tasks a run keeps only because others need them: the change reached none
    * of them. Each maps to the kept tasks that depend on it. Only when the
    * caller is about to run the selection.
@@ -80,9 +85,14 @@ export interface AffectedExplanation {
  */
 export function explainSelection(
   reasons: Record<string, AffectedReason[]>,
+  touched: string[],
   isSelected: (name: string) => boolean
 ): AffectedExplanation {
-  const explanation: AffectedExplanation = { affected: {}, upstream: {} };
+  const explanation: AffectedExplanation = {
+    affected: {},
+    upstream: {},
+    touched: [],
+  };
   for (const [name, forName] of Object.entries(reasons)) {
     if (isSelected(name)) {
       explanation.affected[name] = forName;
@@ -103,6 +113,9 @@ export function explainSelection(
     explanation.upstream[name] = reasons[name];
     pending.push(...upstream(reasons[name]));
   }
+  explanation.touched = touched.filter(
+    (name) => name in explanation.affected || name in explanation.upstream
+  );
   return explanation;
 }
 
@@ -165,7 +178,12 @@ export function formatAffectedReason(reason: AffectedReason): string {
  * blank line is indistinguishable from a bug when you are troubleshooting.
  */
 export function formatAffectedExplanation(
-  { affected, upstream, required = {} }: AffectedExplanation,
+  {
+    affected,
+    upstream,
+    touched: touchedNames,
+    required = {},
+  }: AffectedExplanation,
   heading: string,
   /**
    * Tasks that will run only to satisfy the selected ones. Absent unless the
@@ -180,10 +198,8 @@ export function formatAffectedExplanation(
   }
 
   const reasonsOf = (name: string) => affected[name] ?? upstream[name] ?? [];
-  // Touched: the change reached its own inputs. Otherwise it was reached only
-  // through another entry.
-  const touched = (name: string) =>
-    !reasonsOf(name).length || !reasonsOf(name).every(isUpstreamReason);
+  const touchedSet = new Set(touchedNames);
+  const touched = (name: string) => touchedSet.has(name);
   const touchedFirst = (group: string[]) => [
     ...group.filter(touched),
     ...group.filter((name) => !touched(name)),

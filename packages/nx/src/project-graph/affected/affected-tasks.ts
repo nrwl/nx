@@ -517,6 +517,7 @@ function explainTasks(
   const result: AffectedExplanation = {
     affected: Object.fromEntries(affected.map((id) => [id, reasonsFor(id)])),
     upstream: {},
+    touched: [],
   };
   const producers = affected.flatMap((id) => explanation.producersOf[id] ?? []);
   while (producers.length) {
@@ -525,6 +526,9 @@ function explainTasks(
     result.upstream[id] = reasonsFor(id);
     producers.push(...(explanation.producersOf[id] ?? []));
   }
+  result.touched = explanation.touched.filter(
+    (id) => id in result.affected || id in result.upstream
+  );
   return result;
 }
 

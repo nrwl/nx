@@ -305,7 +305,7 @@ To follow the chain step by step, look up the task named in a reason.
 The last line counts the closure: tasks Nx runs only so the selected ones can run.
 
 Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
-The JSON has three keys: `affected` for your targets, `upstream` for the touched and affected tasks above them, and `required` for the dependencies.
+The JSON has four keys: `affected` for your targets, `upstream` for the tasks above them, `touched` for the ones among both that your change reached directly, and `required` for the dependencies.
 
 `nx show projects --affected --explain` explains its answer the same way, but it reports a selection rather than running one, so it leaves the last line off.
 

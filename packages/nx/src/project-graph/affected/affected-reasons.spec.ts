@@ -185,7 +185,7 @@ describe('formatAffectedExplanation', () => {
     'app:build': [{ kind: 'dependent-output', producer: 'ui:build' }],
     'ui:build': [{ kind: 'input-file', file: 'libs/ui/src/x.ts' }],
   };
-  const selected = { affected: reasons, upstream: {} };
+  const selected = { affected: reasons, upstream: {}, touched: ['ui:build'] };
 
   /**
    * Only the command that is about to run the closure reports it. `nx affected`
@@ -215,6 +215,7 @@ describe('formatAffectedExplanation', () => {
         upstream: {
           'app:prebuild': [{ kind: 'input-file', file: 'libs/app/src/x.ts' }],
         },
+        touched: ['app:prebuild'],
       },
       'Affected tasks'
     );
@@ -245,6 +246,7 @@ describe('formatAffectedExplanation', () => {
         upstream: {
           'app:gen': [{ kind: 'input-file', file: 'apps/app/schema.json' }],
         },
+        touched: ['app:gen', 'lib:build'],
         required: {
           'core:build': ['a:build', 'b:build', 'c:build'],
           'tools:build': ['app:build'],
@@ -279,6 +281,7 @@ describe('formatAffectedExplanation', () => {
           'docs:gen': [{ kind: 'dependent-output', producer: 'lib:build' }],
           'lib:build': [{ kind: 'input-file', file: 'libs/lib/src/x.ts' }],
         },
+        touched: ['lib:build'],
       },
       'Affected tasks'
     );
@@ -301,6 +304,7 @@ describe('formatAffectedExplanation', () => {
           lib: files.map((file) => ({ kind: 'project-file' as const, file })),
         },
         upstream: {},
+        touched: ['lib'],
       },
       'Affected projects'
     );
@@ -322,12 +326,15 @@ describe('explainSelection', () => {
   };
 
   it('follows the chain from the selection through what it drops', () => {
-    const { affected, upstream } = explainSelection(
+    const { affected, upstream, touched } = explainSelection(
       reasons,
+      ['c:gen', 'd:gen'],
       (name) => name === 'a:build'
     );
     expect(Object.keys(affected)).toEqual(['a:build']);
     expect(Object.keys(upstream).sort()).toEqual(['b:gen', 'c:gen']);
+    // Only what the output holds: d:gen is touched but outside every chain.
+    expect(touched).toEqual(['c:gen']);
   });
 
   it('survives a cycle between dropped entries', () => {
@@ -336,6 +343,7 @@ describe('explainSelection', () => {
         ...reasons,
         'c:gen': [{ kind: 'dependent-output', producer: 'b:gen' }],
       },
+      [],
       (name) => name === 'a:build'
     );
     expect(Object.keys(upstream).sort()).toEqual(['b:gen', 'c:gen']);

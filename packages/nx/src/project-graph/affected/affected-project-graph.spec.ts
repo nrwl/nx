@@ -266,4 +266,16 @@ describe('filterAffectedWithReasons()', () => {
       { kind: 'npm-package', package: 'npm:happy-nrwl' },
     ]);
   });
+
+  // A project whose own package moved is where the change landed; one that
+  // depends on it was reached through it.
+  it('counts a project reached from a moved package as touched', async () => {
+    const { touched } = await filterAffectedWithReasons(
+      graph,
+      packageBump,
+      nxJson,
+      packageJson
+    );
+    expect(touched).toEqual(['ui']);
+  });
 });

@@ -11,6 +11,8 @@ export interface AffectedProjectsWithReasons {
   graph: ProjectGraph;
   /** Every reason that applies, per project. Empty for none. */
   reasons: Record<string, AffectedReason[]>;
+  /** The projects the change reached directly, sorted; the rest came through a dependency. */
+  touched: string[];
 }
 
 export async function filterAffected(
@@ -75,7 +77,9 @@ export async function filterAffectedWithReasons(
     seen.add(key);
     (reasons[project] ??= []).push(reason);
   };
+  const touchedProjects = new Set<string>();
   for (const { project, ...reason } of touched) {
+    touchedProjects.add(project);
     record(project, reason);
   }
 
@@ -90,11 +94,16 @@ export async function filterAffectedWithReasons(
         nxJson,
         touchedProjects: touched.map((t) => t.project),
       },
-      record
+      (project, reason) => {
+        // Reached from an external node: its own dependency moved.
+        if (reason.kind === 'npm-package') touchedProjects.add(project);
+        record(project, reason);
+      }
     ),
     reasons: Object.fromEntries(
       Object.entries(reasons).filter(([name]) => !!graph.nodes[name])
     ),
+    touched: [...touchedProjects].filter((name) => !!graph.nodes[name]).sort(),
   };
 }
 
