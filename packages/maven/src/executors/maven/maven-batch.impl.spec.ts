@@ -1,3 +1,4 @@
+import type { MockedFunction } from 'vitest';
 import {
   ExecutorContext,
   TaskGraph,
@@ -11,17 +12,17 @@ import { existsSync } from 'fs';
 import mavenBatchExecutor from './maven-batch.impl';
 import { MavenExecutorSchema } from './schema';
 
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
-  spawn: jest.fn(),
+vi.mock('child_process', async () => ({
+  ...(await vi.importActual<any>('child_process')),
+  spawn: vi.fn(),
 }));
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn(),
+vi.mock('fs', async () => ({
+  ...(await vi.importActual<any>('fs')),
+  existsSync: vi.fn(),
 }));
 
-const spawnMock = spawn as jest.MockedFunction<typeof spawn>;
-const existsSyncMock = existsSync as jest.MockedFunction<typeof existsSync>;
+const spawnMock = spawn as MockedFunction<typeof spawn>;
+const existsSyncMock = existsSync as MockedFunction<typeof existsSync>;
 
 interface FakeChildOptions {
   stderrLines: string[];
