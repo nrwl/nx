@@ -218,10 +218,8 @@ describe('formatAffectedExplanation', () => {
       },
       'Affected tasks'
     );
-    expect(out).toContain(
-      'Not selected, but carried the change to a selected task (1):'
-    );
-    expect(out).toContain('Selected (1):');
+    expect(out).toContain('Upstream, carried the change here (1):');
+    expect(out).toContain('Your targets (1):');
     expect(out.indexOf('app:prebuild')).toBeLessThan(out.indexOf('app:build'));
     expect(out.trimEnd().split('\n').slice(-5, -1).join('\n')).toContain(
       '  app:build'
@@ -231,8 +229,48 @@ describe('formatAffectedExplanation', () => {
 
   it('adds no section labels when nothing was carried', () => {
     const out = formatAffectedExplanation(selected, 'Affected tasks');
-    expect(out).not.toContain('Selected (');
-    expect(out).not.toContain('Not selected');
+    expect(out).not.toContain('Your targets');
+    expect(out).not.toContain('Upstream,');
+  });
+
+  // The reader's task sits at the bottom, so it names the file its chain
+  // starts from rather than making them follow the chain up the output.
+  it('traces a chain-only entry back to the changed file', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'docs:build': [{ kind: 'dependent-output', producer: 'docs:gen' }],
+        },
+        dependencies: {
+          'docs:gen': [{ kind: 'dependent-output', producer: 'lib:build' }],
+          'lib:build': [{ kind: 'input-file', file: 'libs/lib/src/x.ts' }],
+        },
+      },
+      'Affected tasks'
+    );
+    const docs = out.slice(out.indexOf('  docs:build'));
+    expect(docs).toContain('    - traced to libs/lib/src/x.ts');
+    // An entry that names its file already needs no trace.
+    expect(out.match(/traced to/g)).toHaveLength(2);
+  });
+
+  it('ends a trace on a cycle and caps a long list', () => {
+    const files = ['a.ts', 'b.ts', 'c.ts', 'd.ts'];
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          app: [
+            { kind: 'dependency', dependency: 'lib' },
+            { kind: 'dependency', dependency: 'cycle' },
+          ],
+          cycle: [{ kind: 'dependency', dependency: 'app' }],
+          lib: files.map((file) => ({ kind: 'project-file' as const, file })),
+        },
+        dependencies: {},
+      },
+      'Affected projects'
+    );
+    expect(out).toContain('    - traced to a.ts, b.ts, c.ts and 1 more');
   });
 
   it('sorts an entry reached only through a dependency to the bottom', () => {
