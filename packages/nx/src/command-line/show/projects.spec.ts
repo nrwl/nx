@@ -383,6 +383,17 @@ describe('show projects', () => {
    * a question and runs nothing, so naming a closure it will not execute would
    * describe a run that is not happening.
    */
+  // Without a target there is no task selection, and nothing to explain.
+  it('refuses to explain without a target', async () => {
+    await expect(
+      showProjectsHandler({
+        affected: true,
+        explain: true,
+        files: ['libs/ui/src/x.ts'],
+      } as any)
+    ).rejects.toThrow('needs task selection');
+  });
+
   it('does not report the dependency closure when explaining', async () => {
     graph = new GraphBuilder()
       .addProjectConfiguration({ root: 'libs/ui', name: 'ui' }, 'lib')

@@ -19,10 +19,7 @@ import {
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
-import {
-  filterAffected,
-  filterAffectedWithReasons,
-} from '../../project-graph/affected/affected-project-graph';
+import { filterAffected } from '../../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
 import type { NxJsonConfiguration } from '../../config/nx-json';
@@ -34,7 +31,7 @@ import {
 } from '../../project-graph/affected/affected-tasks';
 import type { TaskSelection } from '../../tasks-runner/run-command';
 import {
-  explainSelection,
+  EXPLAIN_NEEDS_TASK_SELECTION,
   isExplaining,
   type AffectedExplanation,
 } from '../../project-graph/affected/affected-reasons';
@@ -78,6 +75,10 @@ export async function affected(
     command === 'affected' &&
     !!nxArgs.targets?.length;
 
+  if (isExplaining(nxArgs.explain) && !useTasks) {
+    throw new Error(EXPLAIN_NEEDS_TASK_SELECTION);
+  }
+
   // Outside the try so errors reach handleErrors, as they did from inside runCommand.
   let projectGraph: ProjectGraph;
   let taskSelection: TaskSelection | undefined;
@@ -118,15 +119,6 @@ export async function affected(
     }
   } else {
     projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    if (isExplaining(nxArgs.explain)) {
-      printAffectedExplanation(
-        await explainAffectedProjects(nxArgs, projectGraph, nxJson),
-        'Affected projects',
-        nxArgs.explain
-      );
-      await output.drain();
-      process.exit(0);
-    }
     projects = await getAffectedGraphNodes(nxArgs, projectGraph);
     if (command === 'affected' && !nxArgs.graph) {
       taskSelection = selectTasksForProjects(
@@ -231,34 +223,6 @@ function initiatingProjects(selection: TaskSelection): string[] {
       )
     ),
   ];
-}
-
-/**
- * Explains the projects the run acts on: the diff, less `--exclude`, and only
- * the projects with a requested target.
- */
-export async function explainAffectedProjects(
-  nxArgs: NxArgs,
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
-): Promise<AffectedExplanation> {
-  const { reasons, touched } = await filterAffectedWithReasons(
-    projectGraph,
-    calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
-    nxJson
-  );
-  const excluded = new Set(
-    nxArgs.exclude
-      ? findMatchingProjects(nxArgs.exclude, projectGraph.nodes)
-      : []
-  );
-  return explainSelection(
-    reasons,
-    touched,
-    (name) =>
-      !excluded.has(name) &&
-      projectsWithTarget([projectGraph.nodes[name]], nxArgs).length > 0
-  );
 }
 
 function projectsWithTarget(

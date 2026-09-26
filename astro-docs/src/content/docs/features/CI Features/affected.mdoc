@@ -257,11 +257,13 @@ Nx selects a task when your change reaches one of its inputs, rather than by whe
 
 ## Understanding why something is affected
 
-When something is in the affected set and you can't see why, add `--explain`. Nx prints what it selected and what put it there, then exits without running anything:
+When a task is in the affected set and you can't see why, add `--explain`. Nx prints what it selected and what put it there, then exits without running anything:
 
 ```shell
-nx affected -t build --explain
+NX_LEGACY_AFFECTED=false nx affected -t build --explain
 ```
+
+`--explain` explains task selection, so it needs `NX_LEGACY_AFFECTED=false` and targets passed with `-t`. Without task selection, it stops with an error.
 
 ```text
  NX   Affected tasks (3)
@@ -307,7 +309,7 @@ The last line counts the closure: tasks Nx runs only so the selected ones can ru
 Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
 The JSON has four keys: `affected` for the tasks you asked for, `upstream` for the tasks above them, `touched` for the ones among both that your change reached directly, and `required` for the dependencies.
 
-`nx show projects --affected --explain` explains its answer the same way, but it reports a selection rather than running one, so it leaves the last line off.
+`nx show projects --affected -t build --explain` explains its answer the same way. It reports a selection rather than running one, so it leaves off the Dependencies layer and the last line.
 
 ## Best paired with remote caching and distribution
 

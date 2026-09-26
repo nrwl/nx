@@ -289,7 +289,7 @@ export function withExplainOption<T>(
   return yargs.option('explain', {
     type: 'string',
     describe:
-      'Print why each project or task was considered affected, instead of running anything. Pass a file path to save the reasons as JSON instead. Pass "stdout" to print the JSON to the terminal.',
+      'Print why each task was considered affected, instead of running anything. Needs task selection (NX_LEGACY_AFFECTED=false). Pass a file path to save the reasons as JSON instead. Pass "stdout" to print the JSON to the terminal.',
     // Same shape as `--graph`: the value is a destination, and a bare
     // `--explain` has to arrive as a boolean. `nx affected` leaves `--json`
     // undeclared so it still reaches the executor.

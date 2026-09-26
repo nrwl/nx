@@ -1,18 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The walk itself is covered by affected-project-graph.spec; these tests pin
-// what the command does with its answer.
 vi.mock('../../project-graph/affected/affected-project-graph', () => ({
   filterAffected: vi.fn(),
-  filterAffectedWithReasons: async () => ({
-    reasons: {
-      nx: [{ kind: 'project-file', file: 'packages/nx/src/x.ts' }],
-      devkit: [{ kind: 'dependency', dependency: 'nx' }],
-      docs: [{ kind: 'dependency', dependency: 'nx' }],
-      js: [{ kind: 'dependency', dependency: 'devkit' }],
-    },
-    touched: ['nx'],
-  }),
 }));
 vi.mock('../../project-graph/file-utils', async (importOriginal) => ({
   ...((await importOriginal()) as object),
@@ -50,57 +39,9 @@ vi.mock('../../project-graph/affected/affected-tasks', () => ({
   computeAffectedTasks: tasks.computeAffectedTasks,
 }));
 
-import { affected, explainAffectedProjects } from './affected';
+import { affected } from './affected';
 
-const project = (name: string, targets: string[]) => ({
-  name,
-  type: 'lib',
-  data: {
-    root: `packages/${name}`,
-    targets: Object.fromEntries(targets.map((t) => [t, {}])),
-  },
-});
-
-// docs has no build target, and js is only reached through devkit.
-const projectGraph = {
-  nodes: {
-    nx: project('nx', ['build']),
-    devkit: project('devkit', ['build']),
-    docs: project('docs', ['serve']),
-    js: project('js', ['build']),
-  },
-  dependencies: {},
-  externalNodes: {},
-} as any;
-
-const explain = (nxArgs: object) =>
-  explainAffectedProjects(
-    { targets: ['build'], files: ['packages/nx/src/x.ts'], ...nxArgs } as any,
-    projectGraph,
-    {} as any
-  );
-
-describe('explainAffectedProjects', () => {
-  it('explains only the projects the run acts on', async () => {
-    const { affected, upstream } = await explain({});
-    expect(Object.keys(affected).sort()).toEqual(['devkit', 'js', 'nx']);
-    expect(upstream).toEqual({});
-  });
-
-  // An excluded project still carried the change, so its dependents' reasons
-  // name it and it has to be found somewhere in the output.
-  it('moves an excluded project a reason names upstream', async () => {
-    const { affected, upstream } = await explain({ exclude: ['nx'] });
-    expect(Object.keys(affected).sort()).toEqual(['devkit', 'js']);
-    expect(Object.keys(upstream)).toEqual(['nx']);
-  });
-
-  it('drops an excluded project nothing selected depends on', async () => {
-    const { affected, upstream } = await explain({ exclude: ['js'] });
-    expect(Object.keys(affected).sort()).toEqual(['devkit', 'nx']);
-    expect(upstream).toEqual({});
-  });
-});
+const projectGraph = { nodes: {}, dependencies: {}, externalNodes: {} } as any;
 
 describe('nx affected --explain', () => {
   const taskExplanation = {
@@ -178,14 +119,11 @@ describe('nx affected --explain', () => {
     expect(JSON.parse(written.join(''))).toEqual(taskExplanation);
   });
 
-  it('explains projects the way the run filters them', async () => {
-    await expect(run({ explain: 'stdout', exclude: ['nx'] })).rejects.toThrow(
-      'exit 0'
+  // Project selection has no task layers to explain.
+  it('refuses to explain when projects are selected', async () => {
+    await expect(run({ explain: true })).rejects.toThrow(
+      'needs task selection'
     );
-
-    const { affected: selected, upstream } = JSON.parse(written.join(''));
-    expect(Object.keys(selected).sort()).toEqual(['devkit', 'js']);
-    expect(Object.keys(upstream)).toEqual(['nx']);
     expect(runCommand).not.toHaveBeenCalled();
   });
 });
