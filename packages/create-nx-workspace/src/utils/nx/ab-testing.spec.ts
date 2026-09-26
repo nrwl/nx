@@ -57,7 +57,7 @@ describe('ab-testing', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.env = { ...originalEnv };
     });
 
@@ -65,11 +65,10 @@ describe('ab-testing', () => {
       process.env = originalEnv;
     });
 
-    it('should return 0 for docs generation', () => {
+    it('should return 0 for docs generation', async () => {
       process.env.NX_GENERATE_DOCS_PROCESS = 'true';
-      const { getFlowVariant: freshGetFlowVariant } = jest.requireActual(
-        './ab-testing'
-      ) as typeof import('./ab-testing');
+      const { getFlowVariant: freshGetFlowVariant } =
+        await import('./ab-testing');
       expect(freshGetFlowVariant()).toBe('0');
     });
   });
@@ -78,7 +77,7 @@ describe('ab-testing', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.env = { ...originalEnv };
     });
 
@@ -86,11 +85,10 @@ describe('ab-testing', () => {
       process.env = originalEnv;
     });
 
-    it('should return 0 for docs generation', () => {
+    it('should return 0 for docs generation', async () => {
       process.env.NX_GENERATE_DOCS_PROCESS = 'true';
-      const { getBannerVariant: freshGetBannerVariant } = jest.requireActual(
-        './ab-testing'
-      ) as typeof import('./ab-testing');
+      const { getBannerVariant: freshGetBannerVariant } =
+        await import('./ab-testing');
       expect(freshGetBannerVariant('https://cloud.nx.app/connect/abc')).toBe(
         '0'
       );
@@ -111,7 +109,7 @@ describe('ab-testing', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.env = { ...originalEnv };
     });
 
@@ -121,10 +119,11 @@ describe('ab-testing', () => {
 
     it.each(['0', '1', '2'])(
       'should return the same prompt for flow variant %s',
-      (flowVariant) => {
-        jest.resetModules();
+      async (flowVariant) => {
+        vi.resetModules();
         process.env.NX_CNW_FLOW_VARIANT = flowVariant;
-        const { PromptMessages: FreshPromptMessages } = require('./ab-testing');
+        const { PromptMessages: FreshPromptMessages } =
+          await import('./ab-testing');
         const pm = new FreshPromptMessages();
         expect(pm.getPrompt('setupNxCloudV2').code).toBe(
           'cloud-ci-providers-speed'
@@ -132,11 +131,10 @@ describe('ab-testing', () => {
       }
     );
 
-    it('should return the same prompt for docs generation', () => {
+    it('should return the same prompt for docs generation', async () => {
       process.env.NX_GENERATE_DOCS_PROCESS = 'true';
-      const { PromptMessages: FreshPromptMessages } = jest.requireActual(
-        './ab-testing'
-      ) as typeof import('./ab-testing');
+      const { PromptMessages: FreshPromptMessages } =
+        await import('./ab-testing');
       const pm = new FreshPromptMessages();
       expect(pm.getPrompt('setupNxCloudV2').code).toBe(
         'cloud-ci-providers-speed'
@@ -151,7 +149,7 @@ describe('NX_CLOUD_HYPERLINK', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...originalEnv };
   });
 
@@ -159,11 +157,10 @@ describe('NX_CLOUD_HYPERLINK', () => {
     process.env = originalEnv;
   });
 
-  it('embeds UTM attribution in the link target while keeping the visible text clean', () => {
+  it('embeds UTM attribution in the link target while keeping the visible text clean', async () => {
     process.env.FORCE_HYPERLINK = '1';
-    const { NX_CLOUD_HYPERLINK: link, NX_CLOUD_URL: url } = jest.requireActual(
-      './ab-testing'
-    ) as typeof import('./ab-testing');
+    const { NX_CLOUD_HYPERLINK: link, NX_CLOUD_URL: url } =
+      await import('./ab-testing');
 
     expect(link).toContain(`${BEL}${url}${OSC}`);
     expect(link).toContain(
@@ -171,19 +168,18 @@ describe('NX_CLOUD_HYPERLINK', () => {
     );
   });
 
-  it('falls back to the bare URL when hyperlinks are unsupported', () => {
+  it('falls back to the bare URL when hyperlinks are unsupported', async () => {
     process.env.FORCE_HYPERLINK = '0';
-    const { NX_CLOUD_HYPERLINK: link, NX_CLOUD_URL: url } = jest.requireActual(
-      './ab-testing'
-    ) as typeof import('./ab-testing');
+    const { NX_CLOUD_HYPERLINK: link, NX_CLOUD_URL: url } =
+      await import('./ab-testing');
 
     expect(link).toBe(url);
   });
 
-  it('points the demo link at the demo with the same attribution', () => {
+  it('points the demo link at the demo with the same attribution', async () => {
     process.env.FORCE_HYPERLINK = '1';
     const { NX_CLOUD_DEMO_HYPERLINK: link, NX_CLOUD_DEMO_URL: url } =
-      jest.requireActual('./ab-testing') as typeof import('./ab-testing');
+      await import('./ab-testing');
 
     expect(link).toContain(`${BEL}${url}${OSC}`);
     expect(link).toContain(

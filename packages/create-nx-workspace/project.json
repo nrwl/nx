@@ -32,6 +32,13 @@
         "{workspaceRoot}/scripts/replace-versions.js",
         "{workspaceRoot}/scripts/chmod.js"
       ]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "implicitDependencies": [
