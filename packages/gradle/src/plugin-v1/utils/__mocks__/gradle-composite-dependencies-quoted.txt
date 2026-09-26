@@ -1,0 +1,7 @@
+compileClasspath - Compile classpath for source set 'main'.
++--- io.test.project:app -> project ':app'
+\--- io.test.project:commons -> project ':commons'
+
+implementationDependenciesMetadata
++--- io.test.project:app -> project ':app'
+\--- io.test.project:commons -> project ':commons'
