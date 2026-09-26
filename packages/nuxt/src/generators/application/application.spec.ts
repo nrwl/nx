@@ -9,6 +9,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
+import { vitestVersion } from '@nx/vitest/src/utils/versions';
 import { applicationGenerator } from './application';
 
 describe('app', () => {
@@ -213,7 +214,7 @@ describe('app', () => {
           ).toMatchSnapshot();
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
-          expect(packageJson.devDependencies['vitest']).toEqual('~4.1.0');
+          expect(packageJson.devDependencies['vitest']).toEqual(vitestVersion);
         });
 
         it('should fall back to a .ts vitest config on eslintrc', async () => {

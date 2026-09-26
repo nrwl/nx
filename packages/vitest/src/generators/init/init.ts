@@ -19,7 +19,7 @@ import { coerce, major } from 'semver';
 import { InitGeneratorSchema } from './schema';
 import {
   nxVersion,
-  vitestVersion,
+  versions,
   viteV5Version,
   viteV6Version,
   viteV7Version,
@@ -60,7 +60,9 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
     {},
     {
       '@nx/vitest': nxVersion,
-      vitest: vitestVersion,
+      // The range about to be installed is passed for the case where the
+      // workspace has no vite of its own; it constrains the vitest major.
+      vitest: versions(tree, { viteRange: viteVersionToUse }).vitestVersion,
       vite: viteVersionToUse,
     },
     undefined,

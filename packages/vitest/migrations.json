@@ -34,6 +34,15 @@
       "description": "Replace `__dirname` with `import.meta.dirname` in `vite.config.mts`/`vitest.config.mts` files so they work with Vite's `configLoader: 'native'`.",
       "implementation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname",
       "documentation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname.md"
+    },
+    "migrate-to-vitest-5": {
+      "version": "23.3.0-beta.6",
+      "requires": {
+        "vitest": ">=5.0.0"
+      },
+      "description": "Migrate workspaces past breaking changes for Vitest 5.",
+      "implementation": "./dist/src/migrations/update-23-3-0/migrate-to-vitest-5",
+      "prompt": "./dist/src/migrations/update-23-3-0/ai-instructions-for-vitest-5.md"
     }
   },
   "packageJsonUpdates": {
@@ -137,6 +146,86 @@
         },
         "@analogjs/vitest-angular": {
           "version": "~2.6.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-vitest-v5": {
+      "version": "23.3.0-beta.6",
+      "requires": {
+        "vitest": ">=4.0.0 <5.0.0"
+      },
+      "incompatibleWith": {
+        "vite": "<6.4.0",
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
+      },
+      "packages": {
+        "vitest": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-vitest-v5-coverage-v8": {
+      "version": "23.3.0-beta.6",
+      "requires": {
+        "@vitest/coverage-v8": ">=4.0.0 <5.0.0"
+      },
+      "incompatibleWith": {
+        "vite": "<6.4.0",
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
+      },
+      "packages": {
+        "@vitest/coverage-v8": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-vitest-v5-coverage-istanbul": {
+      "version": "23.3.0-beta.6",
+      "requires": {
+        "@vitest/coverage-istanbul": ">=4.0.0 <5.0.0"
+      },
+      "incompatibleWith": {
+        "vite": "<6.4.0",
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
+      },
+      "packages": {
+        "@vitest/coverage-istanbul": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-vitest-v5-ui": {
+      "version": "23.3.0-beta.6",
+      "requires": {
+        "@vitest/ui": ">=4.0.0 <5.0.0"
+      },
+      "incompatibleWith": {
+        "vite": "<6.4.0",
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
+      },
+      "packages": {
+        "@vitest/ui": {
+          "version": "^5.0.0",
           "alwaysAddToPackageJson": false
         }
       }
