@@ -49,9 +49,9 @@ export interface AffectedExplanation {
   /** The selection, and every reason each entry is in it. */
   affected: Record<string, AffectedReason[]>;
   /**
-   * Entries a reason names as the way the change arrived that are not in the
-   * selection themselves, followed transitively, so every chain can be traced
-   * within the same output.
+   * Tasks the change reached that are not in the selection: those a run keeps,
+   * and every producer a reason names, followed transitively, so every chain
+   * can be traced within the same output.
    */
   upstream: Record<string, AffectedReason[]>;
   /**

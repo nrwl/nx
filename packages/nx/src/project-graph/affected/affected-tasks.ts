@@ -315,24 +315,6 @@ export async function selectAffectedTasks(
     request.changedFiles,
     options
   );
-  // A second native pass, so the selection path stays a membership test.
-  const explanation = explain
-    ? explainTasks(
-        selection.affected,
-        explainAffectedTasks(
-          planningContext.projectGraphRef,
-          plans,
-          taskGraph,
-          request.changedFiles,
-          options
-        ),
-        dependencies,
-        request.changedFiles,
-        taskGraph,
-        customHashed
-      )
-    : undefined;
-
   // The run builds from the owning projects, so only their requested tasks
   // take the CLI overrides there; every other task is a dependency.
   const owning = new Set(
@@ -348,6 +330,25 @@ export async function selectAffectedTasks(
   const keep = request.excludeTaskDependencies
     ? selection.required.filter((id) => initial.has(id))
     : selection.required;
+
+  // A second native pass, so the selection path stays a membership test.
+  const explanation = explain
+    ? explainTasks(
+        selection.affected,
+        explainAffectedTasks(
+          planningContext.projectGraphRef,
+          plans,
+          taskGraph,
+          request.changedFiles,
+          options
+        ),
+        dependencies,
+        request.changedFiles,
+        taskGraph,
+        customHashed,
+        keep
+      )
+    : undefined;
 
   return {
     affectedTaskIds: new Set(selection.affected),
@@ -481,7 +482,9 @@ function explainTasks(
   dependencies: NamedDependencyChanges,
   changedPaths: string[],
   taskGraph: TaskGraph,
-  customHashed: Set<string>
+  customHashed: Set<string>,
+  /** What the run keeps: a reached task in it is listed even if nothing reads its outputs. */
+  keep: string[]
 ): AffectedExplanation {
   // What a plan hashing every external saw change.
   const dependencyFiles = changedPaths.filter(
@@ -543,7 +546,20 @@ function explainTasks(
     upstream: {},
     touched: [],
   };
-  const producers = affected.flatMap((id) => explanation.producersOf[id] ?? []);
+  // Reached: touched, or carried to through outputs, which leaves an edge.
+  const reached = new Set([
+    ...explanation.touched,
+    ...Object.keys(explanation.producersOf),
+  ]);
+  for (const id of keep) {
+    if (reached.has(id) && !(id in result.affected)) {
+      result.upstream[id] = reasonsFor(id);
+    }
+  }
+  const producers = [
+    ...Object.keys(result.affected),
+    ...Object.keys(result.upstream),
+  ].flatMap((id) => explanation.producersOf[id] ?? []);
   while (producers.length) {
     const id = producers.pop();
     if (id in result.affected || id in result.upstream) continue;
