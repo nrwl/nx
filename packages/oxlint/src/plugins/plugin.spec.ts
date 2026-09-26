@@ -1,7 +1,9 @@
 import { CreateDependenciesContext, CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { mkdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { join } from 'node:path';
 import {
   createDependencies,
   createNodesV2,
@@ -12,6 +14,9 @@ jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
   workspaceDataDirectory: 'tmp/oxlint-project-graph-cache',
 }));
+
+const LINTABLE_FILES =
+  '{projectRoot}/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}';
 
 describe('@nx/oxlint plugin', () => {
   let context: CreateNodesContext;
@@ -127,10 +132,9 @@ describe('@nx/oxlint plugin', () => {
 
     expect(results.projects['libs/a'].targets.lint.inputs).toEqual(
       expect.arrayContaining([
-        // Without these the task stops hashing the project's own source, so Nx
+        // Without this the task stops hashing the project's own source, so Nx
         // replays a cached pass after an edit.
-        'default',
-        '^default',
+        { fileset: LINTABLE_FILES },
         '{workspaceRoot}/.oxlintrc.json',
         '{workspaceRoot}/configs/base.json',
         { externalDependencies: ['oxlint'] },
@@ -138,9 +142,9 @@ describe('@nx/oxlint plugin', () => {
     );
   });
 
-  // Oxlint layers .eslintignore files from every ancestor of a linted file,
-  // which changes which files are linted.
-  it('should declare ancestor .eslintignore files as inputs', async () => {
+  // Oxlint cannot lint a README or a JSON file, and no named input is used,
+  // so a workspace's `default` definition does not decide what re-lints.
+  it('should hash only lintable files and not use named inputs', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
       'libs/a/project.json': `{"name":"a"}`,
@@ -150,11 +154,303 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
     const inputs = results.projects['libs/a'].targets.lint.inputs;
 
-    expect(inputs).toContain('{workspaceRoot}/.eslintignore');
-    expect(inputs).toContain('{workspaceRoot}/libs/.eslintignore');
-    // The project's own directory is covered by `default`.
-    expect(inputs).not.toContain('{workspaceRoot}/libs/a/.eslintignore');
+    expect(inputs.filter((i) => typeof i === 'string')).not.toContain(
+      'default'
+    );
+    expect(inputs).not.toContain('^default');
+    expect(inputs).toContainEqual({ fileset: LINTABLE_FILES });
+    expect(inputs).toContainEqual({
+      fileset:
+        '{projectRoot}/**/{.oxlintrc.json,.oxlintrc.jsonc,oxlint.config.ts,oxlint.config.mts,.eslintignore,.gitignore,tsconfig*.json}',
+    });
   });
+
+  // Only the boundaries bridge reads other projects, so without it a change
+  // in a dependency must not re-lint the dependents.
+  it('should not hash dependencies without the boundaries bridge', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs.some((i) => (i as any).dependencies === true)).toBe(false);
+  });
+
+  it('should hash dependencies when the boundaries bridge is configured', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"jsPlugins":["@nx/oxlint/boundaries-plugin"],"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs).toContainEqual({
+      fileset: LINTABLE_FILES,
+      dependencies: true,
+    });
+    expect(inputs).toContainEqual({
+      fileset: '{projectRoot}/package.json',
+      dependencies: true,
+    });
+  });
+
+  // Oxlint layers ignore files from every ancestor of a linted file, which
+  // changes which files are linted.
+  it.each(['.eslintignore', '.gitignore'])(
+    'should declare ancestor %s files as inputs',
+    async (filename) => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+      expect(inputs).toContain(`{workspaceRoot}/${filename}`);
+      expect(inputs).toContain(`{workspaceRoot}/libs/${filename}`);
+      // The project's own directory is covered by its own fileset.
+      expect(inputs).not.toContain(`{workspaceRoot}/libs/a/${filename}`);
+    }
+  );
+
+  // Oxlint lints every file below the directory it runs in, so without this a
+  // nested project's files are linted twice and hashed only by the inner task.
+  it('should exclude nested projects from the outer lint', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+      'libs/a/nested/project.json': `{"name":"a-nested"}`,
+      'libs/a/nested/src/index.ts': `export const n = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.command).toBe(
+      'oxlint . --ignore-pattern /nested'
+    );
+    // The nested project still lints its own files, through its own target.
+    expect(results.projects['libs/a/nested'].targets.lint.command).toBe(
+      'oxlint .'
+    );
+  });
+
+  // A pattern is anchored only when it contains a slash, so a bare single-segment
+  // root would also match a same-named directory the outer project owns.
+  it('should emit the nested root as an anchored pattern', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/nested/project.json': `{"name":"a-nested"}`,
+      'libs/a/nested/index.ts': `export const n = 1;`,
+      // Owned by `a`, not by the nested project, and must keep being linted.
+      'libs/a/src/nested/deep.ts': `export const d = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.command).toBe(
+      'oxlint . --ignore-pattern /nested'
+    );
+  });
+
+  // A root-level project walks `./src` while still running from the workspace
+  // root, and a pattern anchors to the cwd rather than to the walk root.
+  it('should anchor a nested root under a standalone root project', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'package.json': `{"name":"root-workspace","nx":{}}`,
+      'src/index.ts': `export const a = 1;`,
+      'src/nested/project.json': `{"name":"nested"}`,
+      'src/nested/index.ts': `export const n = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['.'].targets.lint.command).toBe(
+      'oxlint ./src --ignore-pattern /src/nested'
+    );
+  });
+
+  // Excluding a root already prunes everything under it, so a deeper root would
+  // be redundant — and would rehash every ancestor task when it is added.
+  it('should not emit a nested root already covered by a shallower one', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'a/project.json': `{"name":"a"}`,
+      'a/index.ts': `export const a = 1;`,
+      'a/b/project.json': `{"name":"b"}`,
+      'a/b/index.ts': `export const b = 1;`,
+      'a/b/c/project.json': `{"name":"c"}`,
+      'a/b/c/index.ts': `export const c = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['a'].targets.lint.command).toBe(
+      'oxlint . --ignore-pattern /b'
+    );
+    expect(results.projects['a/b'].targets.lint.command).toBe(
+      'oxlint . --ignore-pattern /c'
+    );
+    expect(results.projects['a/b/c'].targets.lint.command).toBe('oxlint .');
+  });
+
+  // cwd and the walk root differ only for a root-level project, and a pattern
+  // anchors to the cwd. That is the one load-bearing shape the string assertions
+  // cannot see, so run it.
+  (process.platform === 'win32' ? it.skip : it)(
+    'should exclude only the nested root when a root project lints ./src',
+    async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'package.json': `{"name":"root-workspace","nx":{}}`,
+        'src/index.ts': `export const a = 1;`,
+        'src/nested/project.json': `{"name":"nested"}`,
+        'src/nested/index.ts': `export const n = 1;`,
+        // Owned by the root project, and shares the nested root's basename.
+        'src/deep/nested/keep.ts': `export const k = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const command = results.projects['.'].targets.lint.command;
+      const oxlint = join(
+        require.resolve('oxlint/package.json'),
+        '..',
+        'bin',
+        'oxlint'
+      );
+
+      const linted = execFileSync(
+        'sh',
+        ['-c', command.replace(/^oxlint /, `"${oxlint}" --debug=files `)],
+        { cwd: tempFs.tempDir, encoding: 'utf-8' }
+      )
+        .trim()
+        .split('\n')
+        .sort();
+
+      expect(linted).toEqual(['src/deep/nested/keep.ts', 'src/index.ts']);
+    }
+  );
+
+  // A root reaches the shell verbatim, so a directory name is shell code unless
+  // it is escaped. Escaped, not dropped: the exclusion still applies.
+  (process.platform === 'win32' ? it.skip : it)(
+    'should escape a nested root containing shell metacharacters',
+    async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/a/n$(touch PWNED)/project.json': `{"name":"a-evil"}`,
+        'libs/a/n$(touch PWNED)/index.ts': `export const e = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const command = results.projects['libs/a'].targets.lint.command;
+      const cwd = join(tempFs.tempDir, 'libs/a');
+
+      const argv = execFileSync('sh', ['-c', `printf '%s\\n' ${command}`], {
+        cwd,
+        encoding: 'utf-8',
+      })
+        .trim()
+        .split('\n');
+
+      // The name survives intact as one argument, and nothing ran.
+      expect(argv).toEqual([
+        'oxlint',
+        '.',
+        '--ignore-pattern',
+        '/n$(touch PWNED)',
+      ]);
+      expect(existsSync(join(cwd, 'PWNED'))).toBe(false);
+    }
+  );
+
+  // The string assertions above cannot see what a shell and Oxlint actually do
+  // with the emitted argument, which is where both the anchoring and the quoting
+  // matter. Run the real command and check the resulting file set.
+  (process.platform === 'win32' ? it.skip : it)(
+    'should exclude only the nested root when the command is executed',
+    async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/index.ts': `export const a = 1;`,
+        'libs/a/nested/project.json': `{"name":"a-nested"}`,
+        'libs/a/nested/index.ts': `export const n = 1;`,
+        'libs/a/src/nested/deep.ts': `export const d = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const command = results.projects['libs/a'].targets.lint.command;
+      const oxlint = join(
+        require.resolve('oxlint/package.json'),
+        '..',
+        'bin',
+        'oxlint'
+      );
+
+      const linted = execFileSync(
+        'sh',
+        ['-c', command.replace(/^oxlint /, `"${oxlint}" --debug=files `)],
+        { cwd: join(tempFs.tempDir, 'libs/a'), encoding: 'utf-8' }
+      )
+        .trim()
+        .split('\n')
+        .sort();
+
+      expect(linted).toEqual(['index.ts', 'src/nested/deep.ts']);
+    }
+  );
+
+  // `--ignore-pattern` takes a gitignore pattern, not a path, so a `[` or `*` in a
+  // directory name is pattern syntax. Unescaped, `/a[b]` excludes `ab` and leaves
+  // `a[b]` walked -- a silent over-exclusion and a missed prune at once.
+  (process.platform === 'win32' ? it.skip : it)(
+    'should exclude a nested root whose name contains glob metacharacters',
+    async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/index.ts': `export const a = 1;`,
+        'libs/a/n[x]/project.json': `{"name":"a-nested"}`,
+        'libs/a/n[x]/index.ts': `export const n = 1;`,
+        // Owned by `a`. An unescaped `/n[x]` is a character class matching this.
+        'libs/a/nx/keep.ts': `export const k = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const command = results.projects['libs/a'].targets.lint.command;
+      const oxlint = join(
+        require.resolve('oxlint/package.json'),
+        '..',
+        'bin',
+        'oxlint'
+      );
+
+      const linted = execFileSync(
+        'sh',
+        ['-c', command.replace(/^oxlint /, `"${oxlint}" --debug=files `)],
+        { cwd: join(tempFs.tempDir, 'libs/a'), encoding: 'utf-8' }
+      )
+        .trim()
+        .split('\n')
+        .sort();
+
+      expect(linted).toEqual(['index.ts', 'nx/keep.ts']);
+    }
+  );
 
   it('should declare local jsPlugins as file inputs but never as externalDependencies', async () => {
     createFiles({
@@ -280,8 +576,10 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
-  // Without the root short-circuit, `lintPath` falls through to `.` and the root
-  // project gets `oxlint .`, re-linting every sub-project on top of its own target.
+  // Without the root short-circuit a root project with no `src` or `lib` takes `.`
+  // as its lint path and gets a task of its own. The nested-project exclusions
+  // keep that task off the sub-projects' files, but the redundant target remains,
+  // so the short-circuit is what removes it.
   it('should not give a root project a task when it has no src or lib', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,

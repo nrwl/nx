@@ -230,6 +230,124 @@ describe('Workspace Context', () => {
     });
   });
 
+  describe('hashing glob groups', () => {
+    let context: WorkspaceContext;
+    let fs: TempFs;
+
+    beforeEach(async () => {
+      fs = new TempFs('workspace-files');
+      await fs.createFiles({
+        'package.json': '{}',
+        'pnpm-lock.yaml': '',
+        'tsconfig.base.json': '{}',
+        'eslint.config.js': '',
+        'libs/a/.eslintignore': '',
+        'libs/a/tsconfig.json': '{}',
+        'libs/a/src/index.ts': 'a',
+        'libs/a/src/index.spec.ts': 'a',
+        'libs/a/nested/tsconfig.json': '{}',
+        'libs/a/nested/src/deep.ts': 'deep',
+        'libs/a-b/src/index.ts': 'a-b',
+        'libs/a.ts': '',
+        'libs/b/eslint.config.js': '',
+        'libs/b/src/index.ts': 'b',
+        'apps/@scope/pkg/src/main.ts': 'scoped',
+      });
+      context = new WorkspaceContext(
+        fs.tempDir,
+        cacheDirectoryForWorkspace(fs.tempDir)
+      );
+    });
+
+    afterEach(() => {
+      context = null;
+      fs.reset();
+    });
+
+    const groups = [
+      [
+        'libs/a/**/*',
+        'eslint.config.js',
+        'libs/a/.eslintignore',
+        'pnpm-lock.yaml',
+        'tsconfig.base.json',
+        'libs/a/tsconfig.json',
+      ],
+      ['libs/a/nested/**/*', 'pnpm-lock.yaml', 'libs/a/tsconfig.json'],
+      ['libs/a-b/**/*', 'pnpm-lock.yaml', 'libs/a-b/.eslintignore'],
+      ['libs/b/**/*', 'libs/b/eslint.config.js', 'eslint.config.js'],
+      ['apps/@scope/pkg/**/*', 'pnpm-lock.yaml'],
+      ['**/*', 'pnpm-lock.yaml'],
+      ['libs/**/*.spec.ts', 'pnpm-lock.yaml'],
+      ['libs/missing/**/*', 'missing.json'],
+    ];
+
+    it('should match the single-glob hasher for every group', () => {
+      const hashes = context.hashFilesMatchingGlobs(groups);
+      expect(hashes).toHaveLength(groups.length);
+      groups.forEach((globs, i) => {
+        // A non-empty exclude keeps the single-glob hasher on its scanning path.
+        expect(hashes[i]).toEqual(
+          context.hashFilesMatchingGlob(globs, ['never/**'])
+        );
+      });
+    });
+
+    it('should hash the same with or without an exclude for a single group', () => {
+      for (const globs of groups) {
+        expect(context.hashFilesMatchingGlob(globs)).toEqual(
+          context.hashFilesMatchingGlob(globs, ['never/**'])
+        );
+      }
+    });
+
+    it('should treat an empty group as every file, as the scan does', () => {
+      const [empty, everything] = context.hashFilesMatchingGlobs([
+        [],
+        ['**/*'],
+      ]);
+      expect(empty).toEqual(everything);
+      expect(context.hashFilesMatchingGlob([])).toEqual(everything);
+      expect(context.hashFilesMatchingGlob([], ['never/**'])).toEqual(
+        everything
+      );
+    });
+
+    it('should not let sibling or nested projects leak into a root', () => {
+      const [a, nested, aDash] = context.hashFilesMatchingGlobs([
+        ['libs/a/**/*'],
+        ['libs/a/nested/**/*'],
+        ['libs/a-b/**/*'],
+      ]);
+      expect(new Set([a, nested, aDash]).size).toBe(3);
+
+      fs.writeFile('libs/a-b/src/other.ts', 'changed');
+      const next = new WorkspaceContext(
+        fs.tempDir,
+        cacheDirectoryForWorkspace(fs.tempDir)
+      );
+      const [a2, nested2, aDash2] = next.hashFilesMatchingGlobs([
+        ['libs/a/**/*'],
+        ['libs/a/nested/**/*'],
+        ['libs/a-b/**/*'],
+      ]);
+      expect(a2).toEqual(a);
+      expect(nested2).toEqual(nested);
+      expect(aDash2).not.toEqual(aDash);
+    });
+
+    it('should change when a shared literal input changes', () => {
+      const [before] = context.hashFilesMatchingGlobs([groups[0]]);
+      fs.writeFile('tsconfig.base.json', '{"changed":true}');
+      const next = new WorkspaceContext(
+        fs.tempDir,
+        cacheDirectoryForWorkspace(fs.tempDir)
+      );
+      const [after] = next.hashFilesMatchingGlobs([groups[0]]);
+      expect(after).not.toEqual(before);
+    });
+  });
+
   describe('globbing', () => {
     let context: WorkspaceContext;
     let fs: TempFs;
@@ -359,4 +477,33 @@ describe('Workspace Context', () => {
   //     expect(() => getWorkspaceFilesNative(fs.tempDir, globs)).not.toThrow();
   //   });
   // });
+});
+
+describe('WorkspaceContext.ready', () => {
+  it('resolves once the files exist without blocking the event loop while the walk runs', async () => {
+    const { WorkspaceContext } = require('../index');
+    const { TempFs } = require('../../internal-testing-utils/temp-fs');
+    const fs = new TempFs('workspace-context-ready');
+    const files: Record<string, string> = {};
+    for (let i = 0; i < 4000; i++)
+      files[`dir-${i % 40}/file-${i}.ts`] = `export const v${i} = ${i};`;
+    await fs.createFiles(files);
+    const ctx = new WorkspaceContext(
+      fs.tempDir,
+      fs.tempDir + '/.nx/workspace-data'
+    );
+
+    let ticks = 0;
+    const timer = setInterval(() => ticks++, 1);
+    try {
+      await ctx.ready();
+      expect(ctx.glob(['dir-3/**']).length).toBe(100);
+      // A blocked loop cannot run timers; the walk of 4000 files is long enough
+      // for at least one tick to land while it runs.
+      expect(ticks).toBeGreaterThan(0);
+    } finally {
+      clearInterval(timer);
+      fs.cleanup();
+    }
+  });
 });

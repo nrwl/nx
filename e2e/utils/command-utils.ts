@@ -9,7 +9,6 @@ import { existsSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { gte } from 'semver';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   ensureCypressInstallation,
@@ -19,13 +18,12 @@ import { fileExists, readJson, updateJson } from './file-utils';
 import {
   detectPackageManager,
   getNpmMajorVersion,
-  getPnpmVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
-import { logError, logInfo } from './log-utils';
+import { logError, logInfo, secondsSince } from './log-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -129,7 +127,6 @@ export function getPackageManagerCommand({
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const yarnMajorVersion = getYarnMajorVersion(path);
-  const pnpmVersion = getPnpmVersion();
   const publishedVersion = getPublishedVersion();
   const isYarnWorkspace = fileExists(join(path, 'package.json'))
     ? readJson('package.json').workspaces
@@ -188,7 +185,7 @@ export function getPackageManagerCommand({
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
       list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
-      exec: pnpmVersion && gte(pnpmVersion, '6.13.0') ? 'pnpm exec' : 'pnpx',
+      exec: 'pnpm exec',
     },
     bun: {
       // See note in runCreateWorkspace in create-project-utils.ts for why we don't set @{version} for `bunx create-nx-workspace` right now
@@ -208,19 +205,34 @@ export function getPackageManagerCommand({
   }[packageManager.trim() as PackageManager];
 }
 
-export async function runE2ETests(runner?: 'cypress' | 'playwright') {
+export async function shouldRunCypressTests(): Promise<boolean> {
+  if (!isE2ERunEnabled()) {
+    return false;
+  }
+  const startTime = performance.now();
+  // Cypress unzips into a cache shared by the whole machine, so this has to
+  // finish before the suite starts running tests.
+  await ensureCypressInstallation();
+  logInfo(`Cypress ready (${secondsSince(startTime)}s)`);
+  return true;
+}
+
+export async function shouldRunPlaywrightTests(): Promise<boolean> {
+  if (!isE2ERunEnabled()) {
+    return false;
+  }
+  const startTime = performance.now();
+  // Playwright is deliberately not awaited: `npx playwright install
+  // --with-deps` takes longer than a test's timeout, so waiting on it here
+  // fails the suite outright.
+  ensurePlaywrightBrowsersInstallation().then(() =>
+    logInfo(`Playwright ready (${secondsSince(startTime)}s)`)
+  );
+  return true;
+}
+
+function isE2ERunEnabled(): boolean {
   if (process.env.NX_E2E_RUN_E2E === 'true') {
-    // Cypress unzips into a cache shared by the whole machine, so this has to
-    // finish before the suite starts running tests.
-    if (!runner || runner === 'cypress') {
-      await ensureCypressInstallation();
-    }
-    // Playwright is deliberately not awaited: `npx playwright install
-    // --with-deps` takes longer than a test's timeout, so waiting on it here
-    // fails the suite outright.
-    if (!runner || runner === 'playwright') {
-      ensurePlaywrightBrowsersInstallation();
-    }
     return true;
   }
 
@@ -255,7 +267,7 @@ export function runCommandAsync(
           NX_DAEMON: opts.daemon === false ? 'false' : 'true',
           // Use new versioning by default in e2e tests
           NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
-          ...(opts.env || getStrippedEnvironmentVariables()),
+          ...(opts.env || getStrippedEnvironmentVariables(opts.cwd)),
           FORCE_COLOR: 'false',
         },
         encoding: 'utf-8',
@@ -471,7 +483,7 @@ export function runCLI(
         NX_DAEMON: opts.daemon === false ? 'false' : 'true',
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
-        ...getStrippedEnvironmentVariables(),
+        ...getStrippedEnvironmentVariables(opts.cwd),
         ...opts.env,
       },
       encoding: 'utf-8',
@@ -479,8 +491,7 @@ export function runCLI(
       maxBuffer: 50 * 1024 * 1024,
       timeout: timeoutMs,
     });
-    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
-    logInfo(`Run Command: ${command} (${elapsed}s)`);
+    logInfo(`Run Command: ${command} (${secondsSince(startTime)}s)`);
 
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
@@ -532,7 +543,7 @@ export function runLernaCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
-        ...(opts.env || getStrippedEnvironmentVariables()),
+        ...(opts.env || getStrippedEnvironmentVariables(opts.cwd)),
       },
       encoding: 'utf-8',
       stdio: 'pipe',

@@ -6,9 +6,14 @@ topics:
   - 'Continuous integration'
 ---
 
-Assignment rules allow you to control which tasks can run on which agents. Save on agent costs by provisioning different sizes of agents to suite the individual needs of your tasks. Ensure resource intensive targets like `e2e-ci` and `build` have what they need by using larger agents and with a specified parallelism. Lighter tasks like `lint` and `test` can run on smaller agents.
+Use assignment rules to control which agent types a task can run on.
+For example, send resource-intensive targets like `e2e-ci` and `build` to larger agents and keep lighter tasks like `lint` and `test` on smaller ones.
 
-Assignment rules are written in `yaml` and reach Nx Cloud through [`dte.assignment-rules`](/docs/reference/nx-cloud/ci-config#dteassignment-rules) in `.nx/ci-config.yaml`. You can use assignment rules with [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+On Nx Agents, you don't need assignment rules to size how many tasks run at once.
+[_Dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works) fills each agent by the CPU and memory its tasks use.
+To keep tasks that share a resource, such as a port, off the same agent at the same time, use [`dte.scheduling-constraints`](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints).
+
+Assignment rules are written in `yaml` and reach Nx Cloud through [`dte.assignment-rules`](/docs/reference/nx-cloud/ci-config#dteassignment-rules) in `.nx/ci-config.yaml`.
 
 The rules reach a run in one of three ways, and the wrapper differs between them:
 
@@ -51,14 +56,12 @@ assignment-rules:
       - production
     run-on:
       - agent: linux-medium
-        parallelism: 5
 
   - targets:
       - lint
       - build
     run-on:
       - agent: linux-large
-        parallelism: 10
 ```
 
 {% /tabitem %}
@@ -85,9 +88,9 @@ assignment-rules:
 {% /tabitem %}
 {% /tabs %}
 
-The above rule will match any task that has a project named `app1`, any targets that begin with `e2e-ci`, and a configuration named `production`. Any tasks that match this rule will only be allowed to run on agents with `linux-medium-js` launch templates. Agents assigned these tasks will also be able to execute up to `5` tasks in parallel.
+The above rule will match any task that has a project named `app1`, any targets that begin with `e2e-ci`, and a configuration named `production`. Any tasks that match this rule will only be allowed to run on agents with `linux-medium-js` launch templates. When you bring your own compute, agents assigned these tasks can execute up to `5` tasks in parallel.
 
-The second rule above will match any task that has a `lint` or `build` target. These tasks only run on `linux-large` agents and up to 10 tasks can be executed in parallel by agents of that type.
+The second rule above will match any task that has a `lint` or `build` target. These tasks only run on `linux-large` agents, and with your own compute, up to 10 of them run in parallel on agents of that type.
 
 You can mix and match any of the criteria in an assignment rule provided that you follow the constraints:
 
@@ -135,7 +138,7 @@ A list of string globs that matches against configurations in your workspace.
 Specification of which agent and how to run your tasks:
 
 - **agent**: the type of agent to run on (`linux-medium`, `linux-large`)
-- **parallelism**: the number of parallel executions allowed for agents of a given type
+- **parallelism**: the number of parallel executions allowed for agents of a given type when you bring your own compute
 
 ### Glob reference
 
@@ -198,6 +201,8 @@ The following rule will match the following tasks:
 - starts with `lint` (i.e `lint-js`)
 
 ### Configuring parallelism through assignment rules
+
+Nx Agents pack tasks by CPU and memory use, so this section applies when you [bring your own compute](#using-assignment-rules-when-you-bring-your-own-compute).
 
 You can specify how many tasks of a certain type can run in parallel on a particular agent. Each agent object within the `run-on` list can have the `parallelism` property. Configuring parallelism through your assignment rules will override the other parallelism configurations in your workspace. For a given command run with DTE, parallelism is determined by in the following order:
 

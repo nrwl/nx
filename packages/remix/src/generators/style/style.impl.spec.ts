@@ -1,6 +1,7 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-jest.mock('../../utils/remix-config');
+vi.mock('../../utils/remix-config');
 import * as remixConfigUtils from '../../utils/remix-config';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -15,7 +16,7 @@ describe('style', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', `/node_modules/dist`);
-    (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
+    (remixConfigUtils.getRemixConfigValues as Mock) = vi.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
       })
@@ -63,7 +64,7 @@ describe('style', () => {
   it('should place styles correctly when app dir is changed', async () => {
     await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
 
-    (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
+    (remixConfigUtils.getRemixConfigValues as Mock) = vi.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
         appDirectory: 'apps/demo/my-custom-dir',

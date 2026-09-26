@@ -5,6 +5,7 @@ import {
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
   interpolate,
+  pruneToSelectedTasks,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
@@ -1051,6 +1052,64 @@ describe('expandInitiatingTasksThroughNoop', () => {
       'Task "other:build" references project "other", which does not exist in the project graph.'
     );
   });
+  describe('negated outputs', () => {
+    const node = {
+      name: 'proj',
+      type: 'lib' as const,
+      data: {
+        root: 'apps/proj',
+        targets: {
+          build: {
+            outputs: [
+              '{workspaceRoot}/dist/obj/proj',
+              '!{workspaceRoot}/dist/obj/proj/project.assets.json',
+              '{projectRoot}/obj',
+              '!{projectRoot}/obj/*.nuget.g.props',
+            ],
+          },
+        },
+      },
+    };
+
+    it('should interpolate a negated {workspaceRoot} output instead of rejecting it', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          { project: 'proj', target: 'build' },
+          {},
+          node
+        )
+      ).toEqual([
+        'dist/obj/proj',
+        '!dist/obj/proj/project.assets.json',
+        'apps/proj/obj',
+        '!apps/proj/obj/*.nuget.g.props',
+      ]);
+    });
+
+    it('should keep the negation on a root project, where {projectRoot} interpolates to nothing', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          { project: 'root', target: 'build' },
+          {},
+          {
+            name: 'root',
+            type: 'lib' as const,
+            data: {
+              root: '.',
+              targets: {
+                build: {
+                  outputs: [
+                    '{projectRoot}/obj',
+                    '!{projectRoot}/obj/project.assets.json',
+                  ],
+                },
+              },
+            },
+          }
+        )
+      ).toEqual(['obj', '!obj/project.assets.json']);
+    });
+  });
 });
 
 class GraphBuilder {
@@ -1077,3 +1136,43 @@ class GraphBuilder {
     };
   }
 }
+
+describe('pruneToSelectedTasks', () => {
+  const graph: TaskGraph = {
+    roots: ['lib:build', 'other:build'],
+    tasks: {
+      'app:build': { id: 'app:build' } as Task,
+      'lib:build': { id: 'lib:build' } as Task,
+      'other:build': { id: 'other:build' } as Task,
+    },
+    dependencies: {
+      'app:build': ['lib:build'],
+      'lib:build': [],
+      'other:build': [],
+    },
+    continuousDependencies: {
+      'app:build': [],
+      'lib:build': [],
+      'other:build': [],
+    },
+  };
+
+  it('keeps only the required tasks, and their edges', () => {
+    const pruned = pruneToSelectedTasks(graph, ['app:build', 'lib:build']);
+    expect(Object.keys(pruned.tasks).sort()).toEqual([
+      'app:build',
+      'lib:build',
+    ]);
+    expect(pruned.dependencies['app:build']).toEqual(['lib:build']);
+    expect(pruned.roots).toEqual(['lib:build']);
+  });
+
+  /**
+   * A sync generator can remove a task between selecting it and rebuilding the
+   * graph, so an unknown id is dropped rather than thrown on.
+   */
+  it('ignores ids the graph does not contain', () => {
+    const pruned = pruneToSelectedTasks(graph, ['gone:build', 'lib:build']);
+    expect(Object.keys(pruned.tasks)).toEqual(['lib:build']);
+  });
+});

@@ -33,7 +33,17 @@
   },
   "sandbox": {
     "filesystem": {
-      "allowWrite": ["~/.nx-pr-reviews", "~/.nx-sandboxes"]
+      "allowWrite": [
+        "~/.nx-pr-reviews",
+        "~/.nx-sandboxes",
+        "/tmp/.nx",
+        "~/.nx"
+      ],
+      "allowRead": ["/tmp/.nx", "~/.nx"]
+    },
+    "network": {
+      "allowedDomains": ["www.google-analytics.com"],
+      "allowUnixSockets": ["/tmp/.nx", "~/.nx"]
     }
   },
   "extraKnownMarketplaces": {

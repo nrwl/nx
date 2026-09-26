@@ -35,6 +35,7 @@ type NpmDependency = {
 };
 
 type NpmDependencyV3 = NpmDependency & {
+  inBundle?: boolean;
   dependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -110,8 +111,13 @@ function getNodes(data: NpmLockFile): {
 
   if (data.lockfileVersion > 1) {
     Object.entries(data.packages).forEach(([path, snapshot]) => {
-      // skip workspaces packages
-      if (path === '' || !path.includes('node_modules') || snapshot.link) {
+      // skip workspaces and snapshots bundled into their parent package
+      if (
+        path === '' ||
+        !path.includes('node_modules') ||
+        snapshot.link ||
+        snapshot.inBundle
+      ) {
         return;
       }
 
@@ -850,12 +856,15 @@ function buildV3Index(
   if (!packages) return index;
   const marker = 'node_modules/';
   for (const key of Object.keys(packages)) {
+    const snapshot = packages[key];
+    // Bundled snapshots are not independently installable package candidates.
+    if (snapshot.inBundle) continue;
     const i = key.lastIndexOf(marker);
     if (i === -1) continue; // root "" / workspace paths never matched endsWith
     const name = key.slice(i + marker.length);
     let bucket = index.get(name);
     if (!bucket) index.set(name, (bucket = []));
-    bucket.push(packages[key]);
+    bucket.push(snapshot);
   }
   return index;
 }

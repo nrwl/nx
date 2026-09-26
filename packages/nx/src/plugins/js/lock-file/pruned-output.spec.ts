@@ -138,6 +138,49 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(yaml).not.toContain('packages/*');
   });
 
+  it('carries minimumReleaseAge and minimumReleaseAgeExclude on pnpm 11', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'minimumReleaseAge: 0',
+        'minimumReleaseAgeExclude:',
+        '  - esbuild',
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir);
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      packages: [],
+      minimumReleaseAge: 0,
+      minimumReleaseAgeExclude: ['esbuild'],
+    });
+  });
+
+  // pnpm 11.0.4+ turns on strict mode for an explicit minimumReleaseAge
+  // unless minimumReleaseAgeStrict: false is also declared, so dropping a
+  // declared `false` here would make the pruned output's install stricter
+  // than the source workspace's.
+  it('carries minimumReleaseAgeStrict alongside minimumReleaseAge on pnpm 11', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      ['minimumReleaseAge: 1440', 'minimumReleaseAgeStrict: false', ''].join(
+        '\n'
+      )
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir);
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      packages: [],
+      minimumReleaseAge: 1440,
+      minimumReleaseAgeStrict: false,
+    });
+  });
+
   it('carries no settings on pnpm 10 (those are read from package.json)', () => {
     mockPnpmVersion('10.5.0');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');

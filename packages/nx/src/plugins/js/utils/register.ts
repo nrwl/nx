@@ -1,7 +1,8 @@
 import { dirname, isAbsolute, join, resolve, sep } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
+import { readJsonFile } from '../../../utils/fileutils';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
@@ -51,13 +52,6 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
     return;
   }
 
-  // ts-node reads compilerOptions from this env var. Setting nodenext
-  // module/resolution avoids surprises when ts-node is the chosen loader.
-  process.env.TS_NODE_COMPILER_OPTIONS ??= JSON.stringify({
-    moduleResolution: 'nodenext',
-    module: 'nodenext',
-  });
-
   // Prefer @swc-node/register/esm (faster) over ts-node/esm.
   const swcEsm = tryResolveLoader('@swc-node/register/esm');
   const tsNodeEsm = tryResolveLoader('ts-node/esm');
@@ -83,8 +77,59 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
   }
 
   const url = require('node:url') as typeof import('node:url');
+  if (!swcEsm) {
+    // ts-node/esm reads TS_NODE_COMPILER_OPTIONS from its hooks thread, which
+    // snapshots process.env only when the first hook in the process registers,
+    // possibly long before this call. A registered setter module runs on the
+    // hooks thread itself, so the value lands there without mutating this
+    // process's env (which an existing hooks thread would never see, and
+    // child processes would inherit).
+    module.register(
+      'data:text/javascript,' +
+        encodeURIComponent(
+          `process.env.TS_NODE_COMPILER_OPTIONS = ${JSON.stringify(
+            resolveTsNodeEsmCompilerOptions(
+              process.env.TS_NODE_COMPILER_OPTIONS
+            )
+          )};`
+        )
+    );
+  }
   module.register(url.pathToFileURL(loaderPath));
   isTsEsmLoaderRegistered = true;
+}
+
+/**
+ * Effective `TS_NODE_COMPILER_OPTIONS` value for `ts-node/esm`. CommonJS emit
+ * can never work for the true-ESM loads the loader exists for (`import.meta`
+ * fails with TS1343), and CommonJS-format files are deferred to the `require`
+ * pipeline untouched, so `module`/`moduleResolution` are forced to `nodenext`
+ * over any inherited value. Values that are not a JSON object pass through
+ * unchanged for ts-node to handle.
+ *
+ * Exported so the merge semantics can be exercised directly in unit tests.
+ */
+export function resolveTsNodeEsmCompilerOptions(
+  raw: string | undefined
+): string {
+  if (raw === undefined) {
+    return JSON.stringify({ moduleResolution: 'nodenext', module: 'nodenext' });
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      !Array.isArray(parsed)
+    ) {
+      return JSON.stringify({
+        ...parsed,
+        module: 'nodenext',
+        moduleResolution: 'nodenext',
+      });
+    }
+  } catch {}
+  return raw;
 }
 
 /**
@@ -1383,7 +1428,7 @@ function resolvePathsBaseUrl(tsconfigPath: string): string {
     const absolute = resolve(queue.shift()!);
     const dir = dirname(absolute);
     try {
-      const raw = JSON.parse(readFileSync(absolute, 'utf-8'));
+      const raw = readJsonFile(absolute);
       chain.push({ dir, raw });
       const exts: string[] = raw.extends
         ? Array.isArray(raw.extends)

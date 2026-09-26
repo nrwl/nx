@@ -1,6 +1,8 @@
 import { ProjectConfiguration, TargetConfiguration } from '@nx/devkit';
 import { mergeTargetConfigurations } from '@nx/devkit/internal';
+import { minimatch } from 'minimatch';
 import {
+  createNodes,
   DotNetPluginOptions,
   TargetConfigurationWithName,
 } from './create-nodes';
@@ -612,6 +614,36 @@ describe('@nx/dotnet - createNodes', () => {
       expect(buildTargetName).toBe('compile');
       expect(testTargetName).toBe('test');
       expect(cleanTargetName).toBe('cleanup');
+    });
+  });
+
+  describe('config file glob', () => {
+    const [glob] = createNodes;
+    const matches = (path: string) => minimatch(path, glob);
+
+    it.each([
+      'apps/api/Api.csproj',
+      'libs/core/Core.fsproj',
+      'Directory.Build.props',
+      'apps/Directory.Packages.props',
+      'Directory.Build.rsp',
+      'build/Common.Build.props',
+      'eng/Versions.targets',
+      'global.json',
+      'nuget.config',
+      'NuGet.Config',
+      '.editorconfig',
+      'apps/api/.editorconfig',
+    ])('should match %s', (path) => {
+      expect(matches(path)).toBe(true);
+    });
+
+    it.each([
+      'apps/api/Program.cs',
+      'package.json',
+      'apps/api/appsettings.json',
+    ])('should not match %s', (path) => {
+      expect(matches(path)).toBe(false);
     });
   });
 });

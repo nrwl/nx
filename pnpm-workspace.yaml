@@ -8,6 +8,10 @@ packages:
   - 'astro-docs'
   # examples/ contains standalone pnpm workspaces with their own lockfiles
   - 'packages/nx/native-packages/*'
+# pnpm 11 defaults this to "install", so `pnpm run <script>` silently installs -
+# preinstall/postinstall included - when it thinks node_modules drifted. Nx runs
+# script targets through `pnpm run`, so that lands inside unrelated tasks.
+verifyDepsBeforeRun: warn
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - 'nx'
@@ -33,17 +37,18 @@ overrides:
   websocket-driver: '^0.7.5'
   tar: '^7.5.22'
   seroval: '^1.5.6'
-  # astro/ipx/next pull their own sharp; the libvips CVEs (GHSA-f88m-g3jw-g9cj)
-  # are only patched from 0.35.0 on.
-  'sharp@<0.35.0': '^0.35.3'
+  # astro/ipx/next pull their own sharp, all below 0.35. The libheif RCE behind
+  # GHSA-26w7-cxv4-gfx2 is only patched from 0.35.4 on.
+  'sharp@<0.35.4': '^0.35.4'
   # Only the 0.1.x line is affected by the ReDoS (GHSA-37ch-88jc-xwx2);
   # express 5 / nestjs pull 8.x and 3.x, which must stay put.
   'path-to-regexp@<0.1.13': '^0.1.13'
+  # nest 9 / express 4.18 pin body-parser below the DoS fix (GHSA-qwcr-r2fm-qrc7);
+  # express 5 pulls the 2.x line, which the advisory does not cover.
+  'body-parser@<1.20.3': '^1.20.3'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
-patchedDependencies:
-  '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
 catalog:
   '@babel/core': '^7.29.6'
   '@clack/prompts': '^1.7.0'
@@ -57,6 +62,7 @@ catalog:
   gpt3-tokenizer: '^1.1.5'
   http-proxy-middleware: '^3.0.7'
   http-server: '^14.1.0'
+  https-proxy-agent: '^7.0.6'
   jsonc-parser: '^3.2.0'
   minimatch: '10.2.5'
   next-seo: '^5.13.0'
@@ -70,7 +76,7 @@ catalog:
   tmp: '~0.2.7'
   tree-kill: '^1.2.2'
   verdaccio: '^6.3.2'
-  webpack: '5.105.2'
+  webpack: '5.109.2'
   webpack-dev-server: '5.2.4'
   which: '^3.0.1'
   yargs: '^17.6.2'

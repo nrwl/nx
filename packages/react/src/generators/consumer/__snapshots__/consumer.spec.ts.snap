@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/react:consumer generates a consumer for the rsbuild bundler: project.json 1`] = `
+exports[`@nx/react:consumer > generates a consumer for the rsbuild bundler > project.json 1`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-consumer",
@@ -27,7 +27,7 @@ exports[`@nx/react:consumer generates a consumer for the rsbuild bundler: projec
 }
 `;
 
-exports[`@nx/react:consumer generates a consumer for the rsbuild bundler: rsbuild tree 1`] = `
+exports[`@nx/react:consumer > generates a consumer for the rsbuild bundler > rsbuild tree 1`] = `
 {
   "apps/my-consumer/index.html": "<!doctype html>
 <html lang="en">
@@ -230,7 +230,7 @@ export function lazyProvider<Props = unknown>(alias: string, exposeName: string)
 }
 `;
 
-exports[`@nx/react:consumer generates a consumer for the rspack bundler: project.json 1`] = `
+exports[`@nx/react:consumer > generates a consumer for the rspack bundler > project.json 1`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-consumer",
@@ -257,7 +257,7 @@ exports[`@nx/react:consumer generates a consumer for the rspack bundler: project
 }
 `;
 
-exports[`@nx/react:consumer generates a consumer for the rspack bundler: rspack tree 1`] = `
+exports[`@nx/react:consumer > generates a consumer for the rspack bundler > rspack tree 1`] = `
 {
   "apps/my-consumer/index.html": "<!doctype html>
 <html lang="en">
@@ -290,8 +290,10 @@ exports[`@nx/react:consumer generates a consumer for the rspack bundler: rspack 
     "@rspack/cli": "^2.0.3",
     "@rspack/core": "^2.0.3",
     "@rspack/dev-server": "2.0.1",
+    "@rspack/plugin-react-refresh": "^2.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "react-refresh": "~0.14.0",
     "typescript": "~6.0.3"
   }
 }
@@ -323,6 +325,7 @@ exports[`@nx/react:consumer generates a consumer for the rspack bundler: rspack 
   "apps/my-consumer/rspack.config.ts": "import { defineConfig } from '@rspack/cli';
 import { rspack } from '@rspack/core';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import { ReactRefreshRspackPlugin } from '@rspack/plugin-react-refresh';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -360,7 +363,9 @@ export default defineConfig((_env, argv) => {
             options: {
               jsc: {
                 parser: { syntax: 'typescript', tsx: true },
-                transform: { react: { runtime: 'automatic', development: isDev } },
+                transform: {
+                  react: { runtime: 'automatic', development: isDev, refresh: isDev },
+                },
               },
               env: { targets: 'Chrome >= 87, Firefox >= 78, Edge >= 88, Safari >= 14' },
             },
@@ -369,6 +374,7 @@ export default defineConfig((_env, argv) => {
       ],
     },
     plugins: [
+      isDev && new ReactRefreshRspackPlugin(),
       new rspack.HtmlRspackPlugin({ template: './index.html' }),
       new ModuleFederationPlugin({
         name: NAME,
@@ -376,7 +382,7 @@ export default defineConfig((_env, argv) => {
         // src/mf.ts at module load time.
         shared: ['react', 'react-dom'],
       }),
-    ],
+    ].filter(Boolean),
   };
 });
 ",
@@ -494,7 +500,7 @@ export function lazyProvider<Props = unknown>(alias: string, exposeName: string)
 }
 `;
 
-exports[`@nx/react:consumer generates a consumer for the vite bundler: project.json 1`] = `
+exports[`@nx/react:consumer > generates a consumer for the vite bundler > project.json 1`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-consumer",
@@ -521,7 +527,7 @@ exports[`@nx/react:consumer generates a consumer for the vite bundler: project.j
 }
 `;
 
-exports[`@nx/react:consumer generates a consumer for the vite bundler: vite tree 1`] = `
+exports[`@nx/react:consumer > generates a consumer for the vite bundler > vite tree 1`] = `
 {
   "apps/my-consumer/index.html": "<!doctype html>
 <html lang="en">

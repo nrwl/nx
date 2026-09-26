@@ -1,6 +1,14 @@
+import type { Socket } from 'net';
 import type { Mock } from 'vitest';
 import { win32 } from 'node:path';
-import { getPluginOsSocketPath, getPluginSocketFileName } from './socket-utils';
+import { deserialize as v8_deserialize } from 'v8';
+import {
+  getPluginOsSocketPath,
+  getPluginSocketFileName,
+  sendMessage,
+  serialize,
+  serializeWithFallback,
+} from './socket-utils';
 import {
   getPluginSocketDir,
   getRefusedConfiguredSocketDir,
@@ -95,5 +103,122 @@ describe('socket path validation', () => {
       expect(message).toContain('could not be used');
       expect(message).not.toContain('Set NX_SOCKET_DIR to a shorter path');
     }
+  });
+});
+
+describe('serializeWithFallback', () => {
+  // JSON.stringify throws on a BigInt; v8 serializes it fine.
+  const jsonHostile = { value: 1n };
+  // v8 refuses to clone a function; JSON.stringify silently drops it.
+  const v8Hostile = { fn: () => {} };
+
+  const asJson = (serialized: Buffer) => serialized.toString('utf8');
+
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  it('uses the preferred format when it can represent the data', () => {
+    expect(asJson(serializeWithFallback({ a: 1 }, 'json'))).toBe('{"a":1}');
+    expect(v8_deserialize(serializeWithFallback({ a: 1 }, 'v8'))).toEqual({
+      a: 1,
+    });
+  });
+
+  it('falls back to v8 when JSON serialization fails', () => {
+    expect(v8_deserialize(serializeWithFallback(jsonHostile, 'json'))).toEqual(
+      jsonHostile
+    );
+  });
+
+  it('falls back to JSON when v8 serialization fails', () => {
+    expect(asJson(serializeWithFallback(v8Hostile, 'v8'))).toBe('{}');
+  });
+
+  it('emits v8 bytes directly rather than a binary string', () => {
+    // The daemon writes this straight to the socket. Round-tripping through
+    // `.toString('binary')` reintroduced the max-string-length ceiling the
+    // fallback exists to avoid.
+    const serialized = serializeWithFallback({ a: 1 }, 'v8');
+    expect(Buffer.isBuffer(serialized)).toBe(true);
+    expect(serialized[0]).toBe(0xff);
+  });
+
+  it('reports the preferred format failure before falling back', () => {
+    serializeWithFallback(jsonHostile, 'json');
+
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Do not know how to serialize a BigInt')
+    );
+  });
+
+  it('throws when neither format can represent the data', () => {
+    const circularWithFunction: any = { fn: () => {} };
+    circularWithFunction.self = circularWithFunction;
+
+    expect(() => serializeWithFallback(circularWithFunction, 'json')).toThrow(
+      'could not be cloned'
+    );
+  });
+});
+
+describe('serialize', () => {
+  const jsonHostile = { value: 1n };
+
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  it('does not fall back when a format is forced', () => {
+    // `processInBackground` forces JSON because its payloads cannot be cloned
+    // by v8 - silently switching formats there would trade one failure for
+    // another, less obvious one.
+    expect(() => serialize(jsonHostile, 'json')).toThrow(
+      'Do not know how to serialize a BigInt'
+    );
+    expect(() => serialize({ fn: () => {} }, 'v8')).toThrow(
+      'could not be cloned'
+    );
+  });
+
+  it('honours a forced format when the v8 serializer is enabled', () => {
+    const previous = process.env.NX_USE_V8_SERIALIZER;
+    process.env.NX_USE_V8_SERIALIZER = 'true';
+
+    try {
+      expect(serialize({ a: 1 }, 'json').toString('utf8')).toBe('{"a":1}');
+    } finally {
+      if (previous === undefined) {
+        delete process.env.NX_USE_V8_SERIALIZER;
+      } else {
+        process.env.NX_USE_V8_SERIALIZER = previous;
+      }
+    }
+  });
+});
+
+describe('sendMessage', () => {
+  it('frames the serialized payload as one message', () => {
+    const writes: Buffer[] = [];
+    const socket = {
+      write: (data: Buffer) => writes.push(data),
+    } as unknown as Socket;
+
+    sendMessage(socket, { a: 1 }, 'json');
+
+    const [header, payload] = writes;
+    expect(header.toString('ascii')).toBe(`NX_MSG_${payload.length}:`);
+    expect(payload.toString('utf8')).toBe('{"a":1}');
+  });
+
+  it('passes the forced format through to the serializer', () => {
+    const writes: Buffer[] = [];
+    const socket = {
+      write: (data: Buffer) => writes.push(data),
+    } as unknown as Socket;
+
+    sendMessage(socket, { a: 1 }, 'v8');
+
+    expect(writes[1][0]).toBe(0xff);
   });
 });

@@ -7,21 +7,21 @@ describe('ESM Loader', () => {
   let tempFs: TempFs;
   let cwd: string;
   const mockContext = {};
-  const mockNextResolve = jest.fn();
+  const mockNextResolve = vi.fn();
 
   beforeEach(() => {
     cwd = process.cwd();
     tempFs = new TempFs('esm-loader');
     process.chdir(tempFs.tempDir);
     setupWorkspaceContext(tempFs.tempDir);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     delete process.env.NX_MAPPINGS;
   });
 
   afterEach(() => {
     tempFs.cleanup();
     process.chdir(cwd);
-    jest.resetModules();
+    vi.resetModules();
   });
 
   describe('resolve', () => {

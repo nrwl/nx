@@ -198,19 +198,28 @@ async function createWebpackTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  const buildInputs: TargetConfiguration['inputs'] = [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['webpack-cli'],
+    },
+    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+  ];
+
   targets[options.buildTargetName] = {
     command: `webpack-cli build`,
     options: { cwd: projectRoot, env: { NODE_ENV: 'production' } },
+    configurations: {
+      development: {
+        env: { NODE_ENV: 'development' },
+      },
+    },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      {
-        externalDependencies: ['webpack-cli'],
-      },
-      TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+      ...buildInputs,
       // The build can emit a pruned pnpm deploy output (NxAppWebpackPlugin
       // with generatePackageJson), whose install settings come from these
       // otherwise-unhashed root sources.
@@ -238,6 +247,7 @@ async function createWebpackTargets(
 
   targets[options.serveTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -259,6 +269,7 @@ async function createWebpackTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -280,6 +291,7 @@ async function createWebpackTargets(
 
   targets[options.serveStaticTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
     options: {

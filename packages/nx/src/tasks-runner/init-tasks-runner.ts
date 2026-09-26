@@ -10,9 +10,12 @@ import { loadRootEnvFiles } from '../utils/dotenv';
 import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
 import { createTaskHasher } from '../hasher/create-task-hasher';
+import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
+import type { IoSnapshots } from '../native';
 import type { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
+import { SharedRunningTask } from './running-tasks/shared-running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 
 async function createOrchestrator(
@@ -20,7 +23,8 @@ async function createOrchestrator(
   projectGraph: ProjectGraph,
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
-  lifeCycle: LifeCycle
+  lifeCycle: LifeCycle,
+  ioSnapshots: IoSnapshots | undefined
 ) {
   loadRootEnvFiles();
 
@@ -40,8 +44,6 @@ async function createOrchestrator(
 
   const { runnerOptions: options } = getRunner({}, nxJson);
 
-  let hasher = createTaskHasher(projectGraph, nxJson, options);
-
   const taskGraph: TaskGraph = {
     roots: tasks.map((task) => task.id),
     tasks: tasks.reduce((acc, task) => {
@@ -57,6 +59,14 @@ async function createOrchestrator(
       return acc;
     }, {} as any),
   };
+
+  // As in run-command, unhashed tasks hash from the caller's set. Applying is
+  // idempotent, so both graphs may share the same Task objects.
+  if (ioSnapshots) {
+    applyIoSnapshotOutputs(projectGraph, fullTaskGraph, ioSnapshots);
+    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
+  }
+  const hasher = createTaskHasher(projectGraph, nxJson, options, ioSnapshots);
 
   const nxArgs = {
     ...options,
@@ -75,7 +85,11 @@ async function createOrchestrator(
     nxArgs,
     false,
     daemonClient,
-    undefined,
+    // No argv on this path, so the output-style middleware never ran and both
+    // fields are unset - this always renders `static-failures-only`. `nx.json`'s
+    // `outputStyle` does not reach them; it merges under its own name.
+    nxArgs.specifiedOutputStyle,
+    nxArgs.resolvedOutputStyle ?? 'static-failures-only',
     fullTaskGraph
   );
 
@@ -86,19 +100,28 @@ async function createOrchestrator(
   return orchestrator;
 }
 
+// Nothing awaits the dispose chains below, so an unhandled rejection would take
+// down a long-lived agent process.
+function logDisposeFailure(e: unknown) {
+  console.error('Failed to dispose the task orchestrator:', e);
+}
+
 export async function runDiscreteTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
-  lifeCycle: LifeCycle
+  lifeCycle: LifeCycle,
+  /** The set to hash from, e.g. from `importIoSnapshots`; omitted hashes natively. */
+  ioSnapshots?: IoSnapshots
 ): Promise<Array<Promise<TaskResult[]>>> {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
     nxJson,
-    lifeCycle
+    lifeCycle,
+    ioSnapshots
   );
 
   let groupId = 0;
@@ -140,7 +163,16 @@ export async function runDiscreteTasks(
     }
   );
 
-  return [...batchResults, ...taskResults];
+  const results = [...batchResults, ...taskResults];
+  // Callers like Nx Cloud agents create an orchestrator per invocation in a
+  // long-lived process; release its process-level listeners once all tasks
+  // settle, otherwise every invocation's orchestrator stays reachable forever.
+  // Not awaited, so callers keep consuming handles as they settle; the forked
+  // runner's exit handler still reaps children until dispose() runs.
+  Promise.allSettled(results)
+    .then(() => orchestrator.dispose())
+    .catch(logDisposeFailure);
+  return results;
 }
 
 export async function runContinuousTasks(
@@ -148,20 +180,40 @@ export async function runContinuousTasks(
   projectGraph: ProjectGraph,
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
-  lifeCycle: LifeCycle
+  lifeCycle: LifeCycle,
+  /** The set to hash from, e.g. from `importIoSnapshots`; omitted hashes natively. */
+  ioSnapshots?: IoSnapshots
 ) {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
     nxJson,
-    lifeCycle
+    lifeCycle,
+    ioSnapshots
   );
-  return tasks.reduce(
+  const runningTasks = tasks.reduce(
     (current, task, index) => {
       current[task.id] = orchestrator.startContinuousTask(task, index);
       return current;
     },
     {} as Record<string, Promise<RunningTask>>
   );
+  // Unlike runDiscreteTasks, this must resolve at task start: callers keep
+  // the RunningTask handles to kill later, so disposal has to be deferred
+  // until every task actually exits.
+  Promise.allSettled(
+    Object.entries(runningTasks).map(async ([taskId, promise]) => {
+      const runningTask = await promise;
+      // A shared task is owned by another nx process; this orchestrator has
+      // no child to protect for it, so disposal does not wait on it.
+      if (runningTask instanceof SharedRunningTask) {
+        return;
+      }
+      await orchestrator.waitForContinuousTaskExit(taskId);
+    })
+  )
+    .then(() => orchestrator.dispose())
+    .catch(logDisposeFailure);
+  return runningTasks;
 }

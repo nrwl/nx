@@ -1,41 +1,59 @@
 ---
 title: 'Distribute Task Execution (Nx Agents)'
-description: 'Learn how to use Nx Agents to distribute task execution across multiple machines, optimizing CI pipeline speed and efficiency through intelligent task allocation.'
-keywords: [distributed tasks]
+description: 'Nx Agents distribute CI tasks across machines, and dynamic task packing fills each machine by CPU and memory use, so pull requests finish faster on fewer machine-minutes.'
+keywords: [distributed tasks, dynamic task packing, task packing, CI cost]
 sidebar:
   order: 12
 filter: 'type:Features'
 ---
 
+With Nx Agents, the tasks in your CI run spread across several machines.
+_Dynamic task packing_ keeps each machine close to its CPU and memory limits.
+You pay for machine-minutes, not for how busy a machine is, so the same work packed onto fewer, busier machines costs less and finishes sooner.
+
+In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
+
 {% youtube
-src="https://youtu.be/XS-exYYP_Gg"
-title="Nx Agents Walkthrough"
+src="https://youtu.be/9JkEbqgS8cY"
+title="How Nx Agents Distribute Tasks Across Machines in CI"
 /%}
 
-Nx Agents is a **distributed task execution system that intelligently allocates tasks across multiple machines**, optimizing your CI pipeline for speed and efficiency. While using [Nx Affected](/docs/features/ci-features/affected) and [remote caching](/docs/features/ci-features/remote-cache) can significantly speed up your CI pipeline, you might still encounter bottlenecks as your codebase scales. Combining affected runs and remote caching with task distribution is key to maintaining low CI times. Nx Agents handles this distribution efficiently, avoiding the complexity and maintenance required if you were to set it up manually.
+## Why CI pipelines waste compute
 
-![Nx Cloud visualization of how tasks are being distributed with Nx Agents](../../../../assets/features/nx-agents-live-chart.avif)
+Most pipelines use static partitioning (binning and sharding), splitting work into fixed jobs, such as one machine per task type, with e2e tests split into shards across more machines.
+Each machine still runs only the tasks assigned to it, so a shard that gets two long e2e tests holds up the whole run while the other machines finish early or sit mostly idle.
 
-Nx Agents offer several key advantages:
+![Fixed jobs: a unit test VM, three e2e shards, and a build VM run 21 tasks in 10 minutes and 31 machine-minutes. One shard runs two long e2e tests back to back while the other VMs finish early.](../../../../assets/features/nx-agents-fixed-jobs.svg)
 
-- **Declarative Configuration:** No maintenance is required as your monorepo evolves, thanks to a declarative setup.
-- **Efficient Task Replay:** By leveraging [remote caching](/docs/features/ci-features/remote-cache), tasks can be replayed efficiently across machines, enhancing distribution speed.
-- **Intelligent Task Distribution:** Tasks are distributed based on historical run times and dependencies, ensuring correct and optimal execution.
-- **Dynamic Resource Allocation:** Agents are [allocated dynamically based on the size of the PR](/docs/features/ci-features/dynamic-agents), balancing cost and speed.
-- **Seamless CI Integration:** Easily adopt Nx Agents with your [existing CI provider](/docs/kb/setup-ci), requiring minimal setup changes.
-- **Simple Activation:** Enable distribution with just a [single line of code](#enable-nx-agents) in your CI configuration.
+## How dynamic task packing works
+
+Nx Cloud uses what it knows about your projects and tasks to decide which task runs where, and when:
+
+- Task order and the critical path come from the [task graph](/docs/concepts/mental-model#the-task-graph), so long chains start first.
+- Each task's duration and its CPU and memory profile come from previous runs.
+- Each agent gets new work whenever it has room for it, instead of a batch fixed at the start of the run.
+
+![Nx Cloud packs the same 21 tasks onto three agents, with one e2e test per agent at a time, finishing in 6 minutes on 18 machine-minutes.](../../../../assets/features/nx-agents-task-packing.svg)
+
+A lint task and a memory-heavy e2e test can share an agent because Nx Cloud knows they fit together.
+When an agent fails during setup, other agents pick up its tasks.
+Task logs and outputs are replayed to your main CI job, so the steps that come after keep working.
+
+Apart from the number of agents, dynamic task packing needs no configuration.
+There's no `--parallel` value to tune and no mapping of projects to machines to maintain.
+
+Other CI providers, such as GitHub Actions, schedule jobs rather than tasks.
+They support static partitioning, such as splitting a test suite into shards, but they can't see the task graph or how much CPU and memory each task uses, so they can't pack work across machines as it runs.
 
 ## Enable Nx Agents
 
-To enable task distribution with Nx Agents, make sure your Nx workspace is connected to Nx Cloud. If you haven't connected your workspace to Nx Cloud yet, run the following command:
+Connect your workspace to Nx Cloud if you haven't already:
 
 ```shell
 npx nx@latest connect
 ```
 
-{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=website&utm_campaign=distribute-task-execution" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
-
-For the full pipeline walkthrough, see [Setting Up CI](/docs/getting-started/setup-ci).
+{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=distribute-task-execution" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
 Choose one of the following setup paths.
 
@@ -93,7 +111,6 @@ Favor correctness over cleverness. Keep coordinator-only responsibilities in the
    - Agent-required vars to pass via `--with-env-vars`.
    - Vars that must be configured in Nx Cloud UI.
    - Secrets that must not be forwarded.
-   - Set `NX_CLOUD_CONTINUOUS_ASSIGNMENT: true` in the global environment for the main orchestration job unless the existing pipeline has a documented reason not to.
    - Do not recommend `--with-env-vars=auto` unless the workflow already uses it or the user explicitly accepts broad forwarding.
    - Never print full env in agent setup.
 
@@ -115,7 +132,8 @@ When migrating to Nx Agents, distinguish these three concepts:
 
 2. Per-machine concurrency:
    - "This machine should only run N tasks at once because of CPU, memory, ports, browsers, Docker, services, etc."
-   - With Nx Agents, each agent is its own machine. Translate this to per-agent concurrency with command `--parallel` or minimal target-specific assignment-rule `parallelism`.
+   - Nx Cloud packs tasks onto each agent from their measured CPU and memory use, so CPU and memory limits need no configuration. Drop old `--parallel` values.
+   - When tasks share a machine-local resource such as a port, a browser, or a database, keep them apart with `dte.scheduling-constraints` in `.nx/ci-config.yaml` (`cannot-run-with`).
 
 3. Global serialization:
    - "Only one of these tasks may run anywhere in the whole CI run."
@@ -164,33 +182,13 @@ If separate commands are preserved, explicitly state which Nx dependency relatio
 - Combine multiple Nx commands only when semantics remain equivalent.
 - Do not combine commands with different configs, target sets, `--no-dte`, retry behavior, coverage behavior, self-healing behavior, failure aggregation, or event conditionals.
 - Preserve intentional parallel shell fan-out only when consolidation would change behavior or when required semantics cannot be represented by the Nx task graph.
-- Preserve performance intent through Nx scheduling, command `--parallel`, or minimal target-specific assignment-rule parallelism.
+- Preserve performance intent through Nx scheduling and agent count. Nx Cloud decides per-agent concurrency.
 
 ## Assignment rules policy
 
-- Do not get fancy with assignment rules.
-- Do not use assignment rules to route specific projects or target families to custom agent pools unless the existing setup already does and it is necessary.
-- The maximum new use of assignment rules is target-specific parallelism when many commands have been combined into one Nx command and the original workflow had materially different parallelism per target.
-- If target-specific parallelism is not needed, omit assignment rules.
-- If assignment rules are used, keep them minimal, target-only where possible, and verify every referenced agent template exists in every relevant `distribute-on` tier.
-
-## Parallelism policy
-
-Translate old single-runner `--parallel=N` limits into per-agent task concurrency unless there is concrete evidence that the work must be globally serialized.
-
-Treat command `--parallel=N` and assignment-rule `parallelism: N` as equivalent per-agent task concurrency controls.
-
-With Nx Agents, command `--parallel` is the default per-agent task concurrency for the command unless an assignment rule overrides it.
-
-Assignment-rule parallelism is not an additional multiplier on top of command parallelism. It is a target/template-scoped override.
-
-Agent count is the separate scaling axis. Total distributed capacity comes from:
-
-`agent count * per-agent parallelism`
-
-Do not lower assignment-rule parallelism merely because multiple agents are used. Tune agent count separately.
-
-If agents are equivalently specced to the old CI runner, an agent can reasonably run with the same `--parallel` value that the old main job used.
+- Do not add assignment rules for concurrency. Nx Cloud packs tasks by resource use.
+- Use assignment rules only when a target needs a different agent type, such as a larger machine or one with a GPU, and the existing setup already routes it that way.
+- Verify every referenced agent template exists in every relevant `distribute-on` tier.
 
 ## Base image policy
 
@@ -225,7 +223,7 @@ After making changes, produce:
    - Nx Cloud UI / external setup
 7. The generated or updated `.nx/workflows/agents.yaml`.
 8. The generated or updated distribution config if needed.
-9. Minimal assignment rules only if needed for target-specific parallelism.
+9. Scheduling constraints and assignment rules only where the analysis requires them.
 10. Shutdown/heartbeat recommendation.
 11. Validation performed and validation still required.
 
@@ -241,17 +239,14 @@ Before finalizing, verify:
 - `NX_BASE` / `NX_HEAD` works for PR/MR, push, merge queue, and manual dispatch.
 - For each preserved ordering constraint, classify it as task ordering, per-machine concurrency, or global serialization.
 - Preserve global serialization only when evidence exists for a global shared resource, external environment, deployment, rate limit, mutable shared artifact, commit/push behavior, or unmodeled dependency.
-- Translate old runner-local limits into per-agent concurrency when the constrained resource is machine-local.
+- Old runner-local CPU and memory limits are dropped. Shared machine-local resources become `scheduling-constraints`.
 - For manually sharded pipelines, verify whether Nx target dependencies already model the old job ordering before preserving separate coordinator jobs.
 - For consolidated target sets, generate a task graph with `nx run-many -t <targets> --graph=graph.json` and inspect the dependency edges.
 - Do not preserve old job boundaries solely for job names, check readability, failure attribution, or step-level gating if Nx already models the dependency.
 - For any preserved separate Nx commands, document why they could not be safely combined.
 - For any combined commands, verify target ordering is represented in `targetDefaults`, resolved project target `dependsOn`, or generated task graph edges.
-- If per-target performance settings were lost by consolidation, restore only target-specific parallelism with minimal assignment rules.
-- Verify assignment-rule `parallelism` is used only as a scoped override of command `--parallel`, not as a multiplier.
 - Agent init steps do not race on shared files, caches, or `$NX_CLOUD_ENV`.
 - Required tools missing from the default base image are installed during agent init.
-- Non-cacheable or OOM-heavy targets are not over-parallelized.
 - YAML syntax, anchors, env interpolation, and CI-provider expressions are valid.
 - A trial CI run shows agents start, receive tasks, restore outputs, and shut down correctly.
 
@@ -265,112 +260,103 @@ Be conservative. Explain tradeoffs. When unsure, call out the uncertainty instea
 {% /tabitem %}
 {% tabitem label="Manual" %}
 
-Check out the [connect to Nx Cloud recipe](/docs/kb/setup-ci) for more details.
-
-Then, adjust your CI pipeline configuration to **enable task distribution**. If you don't have a CI config yet, you can generate a new one using the following command:
+If you don't have a CI workflow yet, generate one:
 
 ```shell
 npx nx g ci-workflow
 ```
 
-Declare how tasks are distributed in a `.nx/ci-config.yaml` file:
+Add a `.nx/ci-config.yaml` file that sets how many agents to use:
 
 ```yaml
 # .nx/ci-config.yaml
 dte:
-  distribute-on: 3 linux-medium-js
+  distribute-on: 3 linux-large-js
+  scheduling-constraints:
+    # e2e tasks share a resource, so never run two of them on one agent at once
+    - targets: ['e2e*']
+      cannot-run-with:
+        - targets: ['e2e*']
 lifecycle:
   stop-after:
     - build
 ```
 
-Then start the run with `start-nx-agents`:
+`linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
+Leave out `scheduling-constraints` unless your tasks share a resource such as a port or a database.
 
-```yaml {% meta="{15}" %}
+Then start the agents early in your CI job, before installing dependencies:
+
+```yaml {% meta="{13}" %}
 // .github/workflows/ci.yml
 name: CI
-...
+# ... triggers
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      ...
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
-
       - run: pnpm dlx nx-cloud start-nx-agents
-
-      # Cache node_modules
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: 'pnpm'
-      ...
-
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      # ... install dependencies
       - run: pnpm exec nx affected -t lint test build
 ```
 
-This tells Nx Cloud to:
-
-- Provision Nx Agents (`npx nx-cloud start-nx-agents`)
-- Collect all Nx commands that are being issued (e.g., `pnpm exec nx affected -t lint test build`)
-- Distribute them across 3 agents (`3 linux-medium-js`), where `linux-medium-js` is a predefined agent [launch template](/docs/kb/launch-templates)
-
+Every Nx command in the job then runs its tasks across the three agents.
+For the full pipeline, see [setting up CI](/docs/getting-started/setup-ci).
+For workflows on other CI providers, see [CI workflow examples](/docs/kb/ci-workflow-examples).
 For every configuration option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
-
-### Configure Nx Agents on your CI Provider
-
-Every organization manages their CI/CD pipelines differently, so the guides don't cover org-specific aspects of CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly using Nx Agents and [remote caching](/docs/features/ci-features/remote-cache).
-
-Read our [setup guides for your CI provider of choice](/docs/kb/setup-ci).
 
 {% /tabitem %}
 {% /tabs %}
 
-## How Nx Agents work
+## Scale agents with PR size
 
-![Distribute Task Execution with Nx Agents](../../../../assets/features/nx-agents-orchestration-diagram.svg)
+A small pull request doesn't need as many agents as a change that affects the whole workspace.
+Give `distribute-on` a map of changesets, ordered from smallest to largest, and Nx Cloud picks one based on the share of projects the pull request affects:
 
-_**Nx Agents are declarative**_ in that you only specify the number of agents and the type of agent you want to use. Nx Cloud then picks up the Nx commands that are being issued on your CI and distributes them automatically. This results in **low maintenance and a much more efficient distribution strategy**. A non-declarative approach would be one where you define which tasks or projects get executed on which machine, requiring you to adjust the configuration as your codebase changes.
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on:
+    small-changeset: 3 linux-large-js # 1-25% of projects affected
+    medium-changeset: 6 linux-large-js # 26-50%
+    large-changeset: 10 linux-large-js # 51-75%
+    extra-large-changeset: 15 linux-large-js # 76-100%
+```
 
-_**Nx Agents use a task-centric approach**_ to distribution. Current CI systems use VM-centric approaches, where tasks must be predefined for specific machines, often leading to inefficiencies as your codebase grows. Instead of defining which tasks run on which machine upfront, Nx Agents dynamically process tasks based on availability and task dependencies/ordering. Tasks are picked up by agents based on the task's required processing time (from historical data) and task dependency/ordering (from the Nx graph). This results in a faster and resource efficient processing, and is also more resilient to failures since any other agent can pick up work if one agent fails during bootup. Read more [on our blog post](https://nx.dev/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness).
+Each changeset covers an equal share of that range, so their order matters.
+Name them however you like, except `default`, which is reserved for a single changeset used on every pull request.
 
-_**Nx Agents use continuous assignment**_ to keep agents busy throughout a CI run. Instead of locking work into fixed upfront batches, Nx Cloud assigns ready tasks to agents as they become available. This packs heavy and light tasks across machines, reduces idle time when task durations vary, and avoids custom sharding logic.
-
-{% aside type="note" %}
-Continuous assignment currently requires `NX_CLOUD_CONTINUOUS_ASSIGNMENT=true` in CI. Nx Cloud will enable it by default for all workspaces soon.
-{% /aside %}
-
-_**Nx Agents are cost and resource-efficient**_ because tasks are automatically distributed, **optimizing for speed while keeping resource utilization high**. You can also [dynamically adjust the number of agents](/docs/features/ci-features/dynamic-agents) based on the size of the PR, and we're working on [some more AI-powered features](/docs/features/ci-features/self-healing-ci) to optimize this even further. In addition, [remote caching](/docs/features/ci-features/remote-cache) guarantees tasks are not run twice, and artifacts are shared efficiently among agents.
-
-Nx Agents are non-invasive. You don't need to overhaul your existing CI configuration or your Nx workspace to use them. You add a `.nx/ci-config.yaml` file and the `start-nx-agents` command to your existing CI provider. All artifacts and logs are played back to the main job, so your existing post-processing steps keep working as before.
-
-For a more thorough explanation of how Nx Agents optimize your CI pipeline, read this [guide to parallelization and distribution in CI](/docs/concepts/ci-concepts/parallelization-distribution).
-
-## Nx Agents features
+## Related guides
 
 {% cardgrid %}
 
-{% linkcard title="Create Custom Launch Templates" description="Define your own launch templates to set up agents in the exact right way"  href="/docs/kb/launch-templates" /%}
+{% linkcard title="Create custom launch templates" description="Set up agents with the exact tools and machine size your tasks need" href="/docs/kb/launch-templates" /%}
 
-{% linkcard title="Enforce a Custom Node Version" description="Pin the Node version on your agents from .nvmrc, Volta, or mise"  href="/docs/kb/launch-template-examples#custom-node-version" /%}
+{% linkcard title="Enforce a custom Node version" description="Pin the Node version on your agents from .nvmrc, Volta, or mise" href="/docs/kb/launch-template-examples#custom-node-version" /%}
 
-{% linkcard title="Dynamically Allocate Agents" description="Assign a different number of agents to a pipeline based on the size of the PR"  href="/docs/features/ci-features/dynamic-agents" /%}
+{% linkcard title="Assignment rules" description="Send specific tasks to specific agent types, such as larger machines" href="/docs/kb/assignment-rules" /%}
 
-{% linkcard title="Automatically Split E2E Tasks" description="Split large e2e tasks into a separate task for each spec file"  href="/docs/features/ci-features/split-e2e-tasks" /%}
+{% linkcard title="Split slow tasks by file" description="Turn a large e2e or test suite into one task per file so agents can share the work" href="/docs/kb/split-e2e-tasks" /%}
 
-{% linkcard title="Detect and Retry Flaky Tasks" description="Re-run flaky tests and tasks in CI whenever they fail" href="/docs/features/ci-features/flaky-tasks" /%}
+{% linkcard title="Detect and retry flaky tasks" description="Rerun flaky tasks on a different agent when they fail" href="/docs/kb/flaky-tasks" /%}
+
+{% linkcard title="Resource usage" description="See how much CPU and memory each task and agent uses" href="/docs/kb/resource-usage" /%}
+
+{% linkcard title="Dedicated compute cluster" description="Reserve an isolated cluster for Docker-in-Docker and read-through caches" href="/docs/kb/dedicated-compute-cluster" /%}
+
+{% linkcard title="Bring your own compute" description="Distribute tasks on agents you run yourself" href="/docs/kb/bring-your-own-compute" /%}
 
 {% /cardgrid %}
 
-## Relevant repositories and examples
+## Learn more
 
-By integrating Nx Agents into your CI pipeline, you can significantly reduce build times, optimize resource use, and maintain a scalable, efficient development workflow.
-
-- [Reliable CI: A New Execution Model Fixing Both Flakiness and Slowness](https://nx.dev/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness)
-- [Nx: On how to make your CI 16 times faster with a small config change](https://github.com/vsavkin/interstellar)
-- ["Lerna & Distributed Task Execution" Example](https://github.com/vsavkin/lerna-dte)
+- [Reliable CI: a new execution model fixing both flakiness and slowness](https://nx.dev/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness)

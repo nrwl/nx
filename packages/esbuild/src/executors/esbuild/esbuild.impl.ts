@@ -1,13 +1,7 @@
 import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/internal';
-import {
-  cacheDir,
-  joinPathFragments,
-  logger,
-  stripIndents,
-  writeJsonFile,
-} from '@nx/devkit';
+import { cacheDir, logger, stripIndents, writeJsonFile } from '@nx/devkit';
 import {
   copyAssets,
   copyPackageJson,
@@ -30,7 +24,7 @@ import {
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/internal';
-import { rmSync } from 'node:fs';
+import { deleteOutputDir } from '../../utils/fs';
 import { join, relative } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${pc.red(
@@ -53,7 +47,7 @@ export async function* esbuildExecutor(
 
   const options = await normalizeOptions(_options, context);
   if (options.deleteOutputPath)
-    rmSync(options.outputPath, { recursive: true, force: true });
+    deleteOutputDir(context.root, options.outputPath);
 
   const assetsResult = await copyAssets(options, context);
 
@@ -215,7 +209,7 @@ export async function* esbuildExecutor(
             ? 'meta.json'
             : `meta.${options.format[i]}.json`;
         writeJsonFile(
-          joinPathFragments(options.outputPath, filename),
+          join(context.root, options.outputPath, filename),
           buildResult.metafile
         );
       }

@@ -51,23 +51,6 @@ describe('application generator', () => {
         "sourceRoot": "my-node-app/src",
         "tags": [],
         "targets": {
-          "build": {
-            "configurations": {
-              "development": {
-                "env": {
-                  "NODE_ENV": "development",
-                },
-              },
-            },
-            "executor": "nx:run-commands",
-            "options": {
-              "command": "webpack-cli build",
-              "cwd": "my-node-app",
-              "env": {
-                "NODE_ENV": "production",
-              },
-            },
-          },
           "copy-workspace-modules": {
             "cache": true,
             "dependsOn": [
@@ -422,23 +405,6 @@ describe('application generator', () => {
           "name": "@proj/myapp",
           "nx": {
             "targets": {
-              "build": {
-                "configurations": {
-                  "development": {
-                    "env": {
-                      "NODE_ENV": "development",
-                    },
-                  },
-                },
-                "executor": "nx:run-commands",
-                "options": {
-                  "command": "webpack-cli build",
-                  "cwd": "myapp",
-                  "env": {
-                    "NODE_ENV": "production",
-                  },
-                },
-              },
               "copy-workspace-modules": {
                 "cache": true,
                 "dependsOn": [
@@ -628,23 +594,6 @@ describe('application generator', () => {
           "sourceRoot": "myapp/src",
           "tags": [],
           "targets": {
-            "build": {
-              "configurations": {
-                "development": {
-                  "env": {
-                    "NODE_ENV": "development",
-                  },
-                },
-              },
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "webpack-cli build",
-                "cwd": "myapp",
-                "env": {
-                  "NODE_ENV": "production",
-                },
-              },
-            },
             "copy-workspace-modules": {
               "cache": true,
               "dependsOn": [

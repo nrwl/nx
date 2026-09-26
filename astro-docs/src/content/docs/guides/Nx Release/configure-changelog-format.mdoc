@@ -46,6 +46,8 @@ There are a few options available to modify the default changelog renderer outpu
 
 Whether the commit authors should be added to the bottom of the changelog in a "Thank You" section. Defaults to `true`.
 
+Nx excludes bots and known AI coding agents, even when they author commits or add `Co-authored-by:` trailers.
+
 #### `applyUsernameToAuthors`
 
 If authors is enabled, controls whether or not to try to map the authors to their GitHub usernames using https://ungh.cc (from https://github.com/unjs/ungh) and the email addresses found in the commits. Defaults to `true`.

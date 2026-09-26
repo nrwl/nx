@@ -189,7 +189,7 @@ export default ESLintUtils.RuleCreator(
       noImportsOfLazyLoadedLibraries: `Static imports of lazy-loaded libraries are forbidden.\n\nLibrary "{{targetProjectName}}" is lazy-loaded in these files:\n{{filePaths}}`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{imp}}"`,
-      nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{imp}}". Nested import found at {{childProjectName}}`,
+      nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{imp}}". Nested import of "{{packageName}}" found at {{childProjectName}}`,
       noTransitiveDependencies: `Only packages defined in the "package.json" can be imported. Transitive or unresolvable dependencies are not allowed.`,
       onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
       emptyOnlyTagsConstraintViolation:
@@ -754,14 +754,13 @@ export default ESLintUtils.RuleCreator(
           }
           if (
             checkNestedExternalImports &&
-            constraint.bannedExternalImports &&
-            constraint.bannedExternalImports.length
+            (constraint.bannedExternalImports?.length ||
+              constraint.allowedExternalImports)
           ) {
             const matches = hasBannedDependencies(
               transitiveExternalDeps,
               projectGraph,
-              constraint,
-              imp
+              constraint
             );
             if (matches.length > 0) {
               matches.forEach(([target, violatingSource, constraint]) => {
@@ -772,6 +771,7 @@ export default ESLintUtils.RuleCreator(
                     sourceTag: isComboDepConstraint(constraint)
                       ? constraint.allSourceTags.join('" and "')
                       : constraint.sourceTag,
+                    packageName: target.data.packageName,
                     childProjectName: violatingSource.name,
                     imp,
                   },

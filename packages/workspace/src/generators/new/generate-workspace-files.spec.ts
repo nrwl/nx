@@ -13,19 +13,19 @@ import { generateWorkspaceFiles } from './generate-workspace-files';
 
 const nxSchema = readJsonFile(require.resolve('nx/schemas/nx-schema.json'));
 
-jest.mock(
+vi.mock(
   'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
-  () => ({
-    ...jest.requireActual(
+  async () => ({
+    ...(await vi.importActual<any>(
       'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud'
-    ),
+    )),
     connectToNxCloud: async () => {
       return 'TEST_NX_CLOUD_TOKEN';
     },
   })
 );
-jest.mock('nx/src/nx-cloud/utilities/url-shorten', () => ({
-  ...jest.requireActual('nx/src/nx-cloud/utilities/url-shorten'),
+vi.mock('nx/src/nx-cloud/utilities/url-shorten', async () => ({
+  ...(await vi.importActual<any>('nx/src/nx-cloud/utilities/url-shorten')),
   createNxCloudOnboardingURL: async (source, token, meta, forceManual) => {
     return `https://test.nx.app/connect?source=${source}&token=${token}`;
   },
@@ -36,10 +36,10 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   beforeEach(() => {
     tree = createTree();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Mock getPackageManagerVersion to avoid needing tree.root = process.cwd()
     // which would cause prettier to load plugins from the real .prettierrc
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.0.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.0.0');
   });
 
   it('should create files', async () => {
@@ -321,7 +321,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should configure the pnpm settings in pnpm-workspace.yaml and not create an .npmrc file for pnpm <7', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('6.1.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('6.1.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -345,7 +345,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should configure the pnpm settings in pnpm-workspace.yaml and .npmrc for pnpm >7 <10.6.0', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('9.1.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('9.1.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -374,7 +374,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should configure the pnpm settings in pnpm-workspace.yaml and not create an .npmrc file for pnpm 10.6.0+', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.6.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.6.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -400,9 +400,161 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     expect(tree.exists('proj/.npmrc')).toBeFalsy();
   });
 
+  it('should record the build scripts the preset dependencies pull in for pnpm 11+', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.AngularMonorepo,
+      bundler: 'rspack',
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      allowBuilds:
+        nx: true
+        '@parcel/watcher': false
+        '@nx/angular-rspack-compiler': true
+        core-js: false
+        esbuild: false
+        lmdb: false
+        msgpackr-extract: false
+      "
+    `);
+  });
+
+  it('should not record the build scripts of preset dependencies that are not installed', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.AngularMonorepo,
+      bundler: 'webpack',
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      allowBuilds:
+        nx: true
+      "
+    `);
+  });
+
+  it('should only list the build scripts to run for pnpm 10.6.0+', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.6.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.AngularMonorepo,
+      bundler: 'rspack',
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      onlyBuiltDependencies:
+        - nx
+        - '@nx/angular-rspack-compiler'
+      "
+    `);
+  });
+
+  it('should record the build scripts of a preset that installs @nx/webpack and @nx/jest', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.ReactMonorepo,
+      bundler: 'webpack',
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+      workspaces: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      allowBuilds:
+        nx: true
+        '@parcel/watcher': false
+        unrs-resolver: false
+      "
+    `);
+  });
+
+  it('should record the build scripts the react-native preset pulls in through @nx/detox', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.ReactNative,
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+      workspaces: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      allowBuilds:
+        nx: true
+        '@parcel/watcher': false
+        unrs-resolver: false
+      "
+    `);
+  });
+
+  it('should record the build scripts the expo preset pulls in through @nx/detox', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.Expo,
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+      workspaces: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      allowBuilds:
+        nx: true
+        '@parcel/watcher': false
+        unrs-resolver: false
+      "
+    `);
+  });
+
   it('should configure the pnpm settings in pnpm-workspace.yaml with allowBuilds for pnpm 11+', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',

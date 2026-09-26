@@ -312,15 +312,10 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
 
   it("should return empty array if any dependents don't have banned import", () => {
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        {
-          sourceTag: 'a',
-          bannedExternalImports: ['angular'],
-        },
-        'react-native'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, {
+        sourceTag: 'a',
+        bannedExternalImports: ['angular'],
+      })
     ).toStrictEqual([]);
   });
 
@@ -331,12 +326,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react-native'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
     ).toStrictEqual([[bannedTarget, d, constraint]]);
   });
 
@@ -347,40 +337,11 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
     ).toStrictEqual([
       [nonBannedTarget, target, constraint],
       [nonBannedTarget, c, constraint],
     ]);
-  });
-
-  it('should return undefined if no baneed external imports found', () => {
-    const constraint: DepConstraint = {
-      sourceTag: 'a',
-      bannedExternalImports: ['angular'],
-    };
-
-    expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react-native'
-      ).length
-    ).toBe(0);
-    expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react'
-      ).length
-    ).toBe(0);
   });
 });
 
@@ -434,6 +395,26 @@ describe('is terminal run', () => {
       'C:\\Program Files\\nodejs\\node.exe',
       'C:\\dev\\my-repo\\node_modules\\nx\\bin\\eslint',
       'my-file.ts',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run inside an ESLint concurrency worker on Mac', () => {
+    // ESLint's `--concurrency` lints in worker threads. Node sets a worker's
+    // argv[1] to the worker script, so the eslint binary is not what is seen
+    // here. Workers are started per `lintFiles()` call and end with it, so the
+    // project graph memo cannot outlive a single lint run.
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/eslint/lib/eslint/worker.js',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run inside an ESLint concurrency worker on Windows', () => {
+    mockProcessArgv([
+      'C:\\Program Files\\nodejs\\node.exe',
+      'C:\\dev\\my-repo\\node_modules\\eslint\\lib\\eslint\\worker.js',
     ]);
     expect(isTerminalRun()).toBe(true);
   });

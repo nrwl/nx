@@ -1,36 +1,8 @@
-import { defineConfig, type Plugin } from 'vitest/config';
-import { resolve } from 'path';
-
-const nativeIndex = resolve(import.meta.dirname, 'src/native/index.js');
-const nativeBindings = resolve(
-  import.meta.dirname,
-  'src/native/native-bindings.js'
-);
-
-/**
- * `src/native/index.js` is the napi loader with the file-cache Module._load
- * patch; it requires TS files ('../utils/versions') so it cannot run outside
- * a transform. Route every import of it to the self-contained generated
- * loader `native-bindings.js` instead, which is externalized below so node
- * requires the .node binding natively.
- */
-const nativeShim: Plugin = {
-  name: 'nx-native-shim',
-  enforce: 'pre',
-  async resolveId(source, importer, options) {
-    if (source === nativeBindings || importer === nativeBindings) return null;
-    const r = await this.resolve(source, importer, options);
-    if (r && (r.id === nativeIndex || r.id.startsWith(nativeIndex + '?'))) {
-      return nativeBindings;
-    }
-    return null;
-  },
-};
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/nx/unit',
-  plugins: [nativeShim],
   resolve: {
     // Prefer local TS source for nx's
     // own exports map.
@@ -56,6 +28,9 @@ export default defineConfig({
     include: ['**/*.spec.ts'],
     exclude: ['src/native/tui/**', '**/node_modules/**'],
     setupFiles: ['./vitest.setup.mts'],
+    // Isolated plugin workers boot via swc (see isolated-plugin.ts). Under the
+    // previous ts-node boot they cost ~2.8s each, which pushed the graph
+    // recompute spec past this limit on CI - keep the two changes together.
     testTimeout: 35000,
     // Native .node bindings are not thread-safe across vitest worker threads.
     pool: 'forks',
@@ -73,7 +48,15 @@ export default defineConfig({
     ],
     server: {
       deps: {
-        external: [/src\/native\/native-bindings\.js/, /\.node$/],
+        // The napi loader runs under node, not vite, for every import and
+        // every lazy `require('../native')` alike, so a worker holds a single
+        // copy of the binding. Two copies are two jemalloc heaps, and a value
+        // freed by the heap that did not allocate it kills the worker.
+        external: [
+          /src\/native\/index\.js/,
+          /src\/native\/native-bindings\.js/,
+          /\.node$/,
+        ],
       },
     },
   },

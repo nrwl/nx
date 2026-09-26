@@ -8,10 +8,10 @@ import {
   readJson,
   runCLI,
   runCommand,
-  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
@@ -49,7 +49,7 @@ describe('Cypress E2E Test runner', () => {
 
       // Making sure the package.json file contains the Cypress dependency
       const packageJson = readJson('package.json');
-      expect(packageJson.devDependencies['cypress']).toBeTruthy();
+      expect(packageJson.devDependencies['cypress']).toMatch(/^\^16\./);
 
       // Making sure the cypress folders & files are created
       checkFilesExist(`apps/${myapp}-e2e/cypress.config.ts`);
@@ -81,19 +81,20 @@ describe('Cypress E2E Test runner', () => {
         `
 describe('env vars', () => {
   it('should have cli args', () => {
-    assert.equal(Cypress.env('cliArg'), 'i am from the cli args');
+    cy.env(['cliArg']).then(({ cliArg }) => {
+      assert.equal(cliArg, 'i am from the cli args');
+    });
   });
 
   it('should have cypress.env.json vars', () => {
-    assert.equal(
-      Cypress.env('cypressEnvJson'),
-      'i am from the cypress.env.json file'
-    );
+    cy.env(['cypressEnvJson']).then(({ cypressEnvJson }) => {
+      assert.equal(cypressEnvJson, 'i am from the cypress.env.json file');
+    });
   });
 });`
       );
 
-      if (await runE2ETests('cypress')) {
+      if (await shouldRunCypressTests()) {
         // contains the correct output and works
         const run1 = runCLI(
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
@@ -142,21 +143,21 @@ export default defineConfig({
           `
         describe('env vars', () => {
           it('should not have cli args', () => {
-            assert.equal(Cypress.env('cliArg'), undefined);
+            cy.env(['cliArg']).then(({ cliArg }) => {
+              assert.equal(cliArg, undefined);
+            });
           });
 
           it('should have cypress.env.json vars', () => {
-            assert.equal(
-              Cypress.env('cypressEnvJson'),
-              'i am from the cypress.env.json file'
-            );
+            cy.env(['cypressEnvJson']).then(({ cypressEnvJson }) => {
+              assert.equal(cypressEnvJson, 'i am from the cypress.env.json file');
+            });
           });
 
           it('should have cypress config vars', () => {
-            assert.equal(
-              Cypress.env('fromCyConfig'),
-              'i am from the cypress config file'
-            );
+            cy.env(['fromCyConfig']).then(({ fromCyConfig }) => {
+              assert.equal(fromCyConfig, 'i am from the cypress config file');
+            });
           });
         });`
         );
@@ -175,7 +176,7 @@ export default defineConfig({
         `generate @nx/next:app apps/${appName} --e2eTestRunner=none --no-interactive `
       );
       runCLI(
-        `generate @nx/next:component apps/${appName}/components/btn --no-interactive`
+        `generate @nx/next:component apps/${appName}/src/components/btn --no-interactive`
       );
 
       runCLI(
@@ -185,7 +186,7 @@ export default defineConfig({
         `generate @nx/cypress:configuration --project=${appName} --devServerTarget=${appName}:dev --baseUrl=http://localhost:3000 --no-interactive`
       );
 
-      if (await runE2ETests('cypress')) {
+      if (await shouldRunCypressTests()) {
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );
@@ -214,7 +215,7 @@ export default defineConfig({
         `generate @nx/cypress:e2e --project=${appName} --baseUrl=http://localhost:4200 --no-interactive`
       );
 
-      if (await runE2ETests('cypress')) {
+      if (await shouldRunCypressTests()) {
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );

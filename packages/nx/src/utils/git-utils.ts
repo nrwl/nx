@@ -1,13 +1,14 @@
 import {
   ExecFileOptions,
+  exec,
   execFile,
   execFileSync,
   execSync,
 } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
-import { dirname, join, posix, relative, sep } from 'path';
-import { logger } from './logger';
+import { dirname, join, posix, relative, resolve, sep } from 'path';
+import { isOwnedRealDirectory } from './owned-private-dir';
 
 function execFileAsync(
   file: string,
@@ -314,7 +315,271 @@ export function parseVcsRemoteUrl(url: string): VcsRemoteInfo | null {
   return null;
 }
 
+/**
+ * Where `directory`'s repository keeps its working root and its shared config.
+ *
+ * Walking up for `.git` is what lets the caller answer "which repo, and where
+ * am I inside it" without spawning git. It also reports the root as the caller
+ * referred to it, where `git rev-parse --show-toplevel` reports the realpath —
+ * relevant wherever a path crosses a symlink, macOS's /tmp being the common
+ * case.
+ *
+ * A linked worktree and a submodule both have `.git` as a FILE holding
+ * `gitdir: <path>`, and their remotes live in the shared common dir rather than
+ * in that per-worktree gitdir, which `commondir` names when it is not the
+ * gitdir itself.
+ */
+/**
+ * Contents of `path`, or null unless it is a regular file belonging to us.
+ *
+ * Three flags carry three separate guarantees, and the read needs all of them:
+ * `O_NOFOLLOW` refuses a symlink, keeping the read inside the repository;
+ * `O_NONBLOCK` stops a FIFO blocking the open forever, which at module scope of
+ * `cache-directory.ts` would hang every command in the workspace before it
+ * printed anything; and taking the type and owner from `fstat` on the
+ * descriptor that is then read leaves no window for the path to be swapped
+ * between the check and the read.
+ */
+function readOwnedFileSync(path: string): string | null {
+  let fd: number | undefined;
+  try {
+    fd = fs.openSync(
+      path,
+      fs.constants.O_RDONLY |
+        (fs.constants.O_NOFOLLOW ?? 0) |
+        (fs.constants.O_NONBLOCK ?? 0)
+    );
+    const stats = fs.fstatSync(fd);
+    if (
+      !stats.isFile() ||
+      (typeof process.getuid === 'function' && stats.uid !== process.getuid())
+    ) {
+      return null;
+    }
+    return fs.readFileSync(fd, 'utf8');
+  } catch {
+    return null;
+  } finally {
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
+  }
+}
+
+export function locateGitDir(
+  directory: string
+): { gitRoot: string; commonDir: string } | null {
+  let current = resolve(directory);
+
+  // Terminates at the filesystem root, where `dirname` is a fixed point.
+  while (dirname(current) !== current) {
+    const located = gitDirAt(current);
+    if (located !== undefined) {
+      return located;
+    }
+    current = dirname(current);
+  }
+
+  // The root itself: check it directly rather than walking past it.
+  return gitDirAt(current) ?? null;
+}
+
+/**
+ * The repository whose working root is `directory`, or:
+ *
+ * - `null` when a `.git` is there but is not one we will read, which ends the
+ *   walk rather than continuing past it -- git would not look further either.
+ * - `undefined` when there is no `.git` there at all, so the caller keeps
+ *   walking up.
+ */
+function gitDirAt(
+  directory: string
+): { gitRoot: string; commonDir: string } | null | undefined {
+  const dotGit = join(directory, '.git');
+  let entry: fs.Stats | undefined;
+  try {
+    entry = fs.statSync(dotGit);
+  } catch {
+    return undefined;
+  }
+
+  if (entry.isDirectory()) {
+    // A directory named `.git` is not a repository. Git checks this before
+    // reading config, and asking git is what this function replaced -- so
+    // without it a `.git` planted in any writable ancestor (`/tmp` is 1777)
+    // decides the workspace identity for everything beneath it.
+    if (
+      !fs.existsSync(join(dotGit, 'HEAD')) ||
+      !fs.existsSync(join(dotGit, 'objects'))
+    ) {
+      return null;
+    }
+    // Shape says it is a repository; ownership says it is ours. A real
+    // repository belonging to another user passes the check above, and git
+    // refuses exactly that (`safe.directory`, CVE-2022-24765). `lstat`
+    // inside also refuses a symlink standing in for `.git`.
+    return isOwnedRealDirectory(dotGit)
+      ? { gitRoot: directory, commonDir: dotGit }
+      : null;
+  }
+
+  if (entry.isFile()) {
+    const pointer = readOwnedFileSync(dotGit)?.match(/^gitdir:\s*(.+)$/m);
+    if (!pointer) {
+      return null;
+    }
+    const gitDir = resolve(directory, pointer[1].trim());
+    // No commondir file: the gitdir is its own common dir.
+    const shared = readOwnedFileSync(join(gitDir, 'commondir'))?.trim();
+    const commonDir = shared ? resolve(gitDir, shared) : gitDir;
+    // `gitdir:` and `commondir` are paths taken from file contents, so this
+    // branch can be pointed anywhere; the directory checks above apply to it
+    // just as much.
+    return isOwnedRealDirectory(commonDir)
+      ? { gitRoot: directory, commonDir }
+      : null;
+  }
+
+  return undefined;
+}
+
+/**
+ * Remote name -> url from a git config file, or null when this parser cannot
+ * answer for the whole file.
+ *
+ * Null on `include`/`includeIf` specifically: git resolves those by reading
+ * other files, so a remote could live somewhere this does not look, and
+ * answering from a partial view would be worse than paying for git.
+ */
+function parseGitConfigRemotes(
+  contents: string
+): Record<string, string> | null {
+  const remotes: Record<string, string> = {};
+  let remoteName: string | null = null;
+
+  for (const rawLine of contents.split('\n')) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#') || line.startsWith(';')) {
+      continue;
+    }
+
+    if (line.startsWith('[')) {
+      const close = line.indexOf(']');
+      const section = (
+        close === -1 ? line.slice(1) : line.slice(1, close)
+      ).trim();
+      if (/^include(If)?\b/i.test(section)) {
+        return null;
+      }
+      // `git remote -v` prints the rewritten url; resolving `insteadOf` here
+      // would mean reimplementing the longest-prefix match, so defer instead.
+      // A rewrite in the *global* config stays an accepted divergence: this
+      // parser deliberately never opens `~/.gitconfig`.
+      if (/^url\s+"/i.test(section)) {
+        return null;
+      }
+      const named = section.match(/^remote\s+"(.*)"$/i);
+      remoteName = named ? named[1] : null;
+      continue;
+    }
+
+    if (!remoteName) {
+      continue;
+    }
+    const equals = line.indexOf('=');
+    if (equals === -1) {
+      continue;
+    }
+    if (line.slice(0, equals).trim().toLowerCase() !== 'url') {
+      continue;
+    }
+    const raw = line.slice(equals + 1).trim();
+    // Git ends a value at an unquoted `#`/`;` and honours `\` escapes. Both are
+    // enough to change the url, and reimplementing them is how a parser starts
+    // answering confidently wrong, so hand the file to git when either appears.
+    if (/[#;\\]/.test(raw)) {
+      return null;
+    }
+    const value = raw.replace(/^"(.*)"$/, '$1');
+    if (value.includes('"')) {
+      return null;
+    }
+    // `remote.<name>.url` is multi-valued and git fetches from the first, so
+    // taking the first here matches it.
+    if (remotes[remoteName] === undefined) {
+      remotes[remoteName] = value;
+    }
+  }
+
+  return remotes;
+}
+
+/** `origin`, then `upstream`, then `base`, then whichever came first. */
+function selectRemote(
+  found: Record<string, VcsRemoteInfo>,
+  first: VcsRemoteInfo | null
+): VcsRemoteInfo | null {
+  for (const remote of ['origin', 'upstream', 'base']) {
+    if (found[remote]) {
+      return found[remote];
+    }
+  }
+  return first;
+}
+
+/**
+ * The remote read straight from `.git/config`, or null when that cannot settle
+ * it and git itself has to be asked.
+ *
+ * Worth having because this runs on the import path of every Nx process:
+ * `cacheDir` is resolved at module scope, which reaches the repo identity, and
+ * `git remote -v` spawns a shell and git to answer a question a file read
+ * answers in microseconds.
+ */
+function remoteInfoFromGitConfig(directory: string): VcsRemoteInfo | null {
+  try {
+    const located = locateGitDir(directory);
+    if (!located) {
+      return null;
+    }
+
+    const contents = readOwnedFileSync(join(located.commonDir, 'config'));
+    if (contents === null) {
+      return null;
+    }
+    const remotes = parseGitConfigRemotes(contents);
+    if (!remotes) {
+      return null;
+    }
+
+    const found: Record<string, VcsRemoteInfo> = {};
+    let first: VcsRemoteInfo | null = null;
+    for (const [name, url] of Object.entries(remotes)) {
+      const info = parseVcsRemoteUrl(url);
+      if (info && !found[name]) {
+        found[name] = info;
+        first ??= info;
+      }
+    }
+
+    return selectRemote(found, first);
+  } catch {
+    return null;
+  }
+}
+
 export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
+  const fromConfig = remoteInfoFromGitConfig(directory ?? process.cwd());
+  if (fromConfig) {
+    return fromConfig;
+  }
+
+  // Reached when there is no readable config, no remote in it, or an `include`
+  // this parser will not follow. Note for anyone running a spec that asserts no
+  // subprocess: a repository with no remote at all lands here every time, so
+  // the shell-out is on the failure path rather than gone.
   try {
     const gitRemote = execSync('git remote -v', {
       stdio: 'pipe',
@@ -329,7 +594,6 @@ export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
     }
 
     const lines = gitRemote.split('\n').filter((line) => line.trim());
-    const remotesPriority = ['origin', 'upstream', 'base'];
     const foundRemotes: { [key: string]: VcsRemoteInfo } = {};
     let firstRemote: VcsRemoteInfo | null = null;
 
@@ -349,21 +613,21 @@ export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
       }
     }
 
-    // Return high-priority remote if found
-    for (const remote of remotesPriority) {
-      if (foundRemotes[remote]) {
-        return foundRemotes[remote];
-      }
-    }
-
-    // Return first found remote
-    return firstRemote;
+    return selectRemote(foundRemotes, firstRemote);
   } catch (e) {
     return null;
   }
 }
 
 export function getGitRootPath(cwd?: string): string {
+  const located = locateGitDir(cwd ?? process.cwd());
+  if (located) {
+    return located.gitRoot;
+  }
+
+  // Outside a repository this throws, which is what `getGitRootRelativePath`
+  // turns into null. Kept as the fallback rather than the primary so the common
+  // case pays no subprocess.
   return execFileSync('git', ['rev-parse', '--show-toplevel'], {
     cwd,
     windowsHide: true,
@@ -684,6 +948,11 @@ export function commitChanges(
       // We don't want to throw during create-nx-workspace
       // because maybe there was an error when setting up git
       // initially.
+      // Required here, not imported: `logger` reaches `daemon/*`, and this
+      // module is on the import path of `cache-directory`, whose bindings
+      // `daemon/tmp-dir.ts` reads at module scope. A static import would make
+      // that a cycle. This is the only logger use in the file.
+      const { logger }: typeof import('./logger') = require('./logger');
       logger.verbose(`Git may not be set up correctly for this new workspace.
         ${err}`);
     } else {
@@ -716,48 +985,121 @@ export function tryCommitChanges(
   excludePaths: string[] = []
 ): string | null {
   try {
-    execSync('git add -A', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-      cwd: directory,
-      windowsHide: true,
-    });
+    for (const { command, input } of commitCommands(
+      commitMessage,
+      excludePaths
+    )) {
+      execSync(command, {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        input,
+        cwd: directory,
+        windowsHide: true,
+      });
+    }
+  } catch (err) {
+    throw commitFailure(err);
+  }
+  return getLatestCommitSha(directory);
+}
+
+/**
+ * `tryCommitChanges` for a process that has to stay responsive while git
+ * runs: a signing prompt or a hook can hold the commit for minutes.
+ */
+export async function tryCommitChangesAsync(
+  commitMessage: string,
+  directory: string,
+  excludePaths: string[] = []
+): Promise<string | null> {
+  try {
+    for (const { command, input } of commitCommands(
+      commitMessage,
+      excludePaths
+    )) {
+      await execAsync(command, directory, input);
+    }
+  } catch (err) {
+    throw commitFailure(err);
+  }
+  return getLatestCommitSha(directory);
+}
+
+function commitCommands(
+  commitMessage: string,
+  excludePaths: string[]
+): { command: string; input?: string }[] {
+  return [
+    { command: 'git add -A' },
     // Exclusion happens as an unstage rather than an add-time pathspec:
     // `git add` refuses a pathspec naming an ignored directory (exit 1) even
     // as an exclusion, and an add-time pathspec cannot cover entries that
     // were already staged before this call. The reset is relative to cwd, so
     // a workspace nested inside a larger repo excludes its own path; a path
     // with no index entry is a quiet no-op, unborn HEAD included.
-    for (const excludePath of excludePaths) {
-      execSync(`git reset -q -- "${excludePath}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-        cwd: directory,
-        windowsHide: true,
-      });
-    }
-    execSync('git commit --no-verify -F -', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-      input: commitMessage,
-      cwd: directory,
-      windowsHide: true,
-    });
-  } catch (err) {
-    const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString();
-    const stdout = (err as { stdout?: Buffer | string })?.stdout?.toString();
-    const detail = [stderr, stdout]
-      .map((s) => s?.trim())
-      .filter(Boolean)
-      .join('\n');
-    // `{ cause }` preserves structured fields (.signal, .status, .code)
-    // for callers to inspect; otherwise only stderr/stdout text survives.
-    throw new Error(
-      detail || (err instanceof Error ? err.message : String(err)),
-      { cause: err }
+    ...excludePaths.map((excludePath) => ({
+      command: `git reset -q -- "${excludePath}"`,
+    })),
+    { command: 'git commit --no-verify -F -', input: commitMessage },
+  ];
+}
+
+function commitFailure(err: unknown): Error {
+  const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString();
+  const stdout = (err as { stdout?: Buffer | string })?.stdout?.toString();
+  const detail = [stderr, stdout]
+    .map((s) => s?.trim())
+    .filter(Boolean)
+    .join('\n');
+  // `{ cause }` preserves structured fields (.signal, .status, .code)
+  // for callers to inspect; otherwise only stderr/stdout text survives.
+  return new Error(
+    detail || (err instanceof Error ? err.message : String(err)),
+    { cause: err }
+  );
+}
+
+function execAsync(command: string, cwd: string, input?: string) {
+  return new Promise<void>((res, rej) => {
+    const child = exec(
+      command,
+      { encoding: 'utf8', cwd, windowsHide: true },
+      // The streams ride on the error as `execSync` reports them, so
+      // `commitFailure` shapes both the same way.
+      (err, stdout, stderr) =>
+        err ? rej(Object.assign(err, { stdout, stderr })) : res()
     );
-  }
-  return getLatestCommitSha(directory);
+    // Closed for every command, since `git commit -F -` reads to end of
+    // input. A child that exits before reading raises EPIPE here, which the
+    // exit callback already reports.
+    child.stdin?.on('error', () => {});
+    child.stdin?.end(input ?? '');
+  });
+}
+
+/**
+ * `git reset --hard <ref>` then `git clean -fd`, keeping `keepPaths` (git
+ * exclusion patterns, repo-relative) out of the clean. Throws with git's
+ * stderr when either fails. `ref` is a sha a caller validated with `GIT_SHA`,
+ * never user input.
+ */
+export function resetWorkingTree(
+  ref: string,
+  keepPaths: string[],
+  directory: string
+): void {
+  const options = {
+    encoding: 'utf8' as const,
+    stdio: 'pipe' as const,
+    cwd: directory,
+    windowsHide: true,
+  };
+  execFileSync('git', ['reset', '--hard', ref], options);
+  execFileSync(
+    'git',
+    ['clean', '-fd', ...keepPaths.flatMap((keepPath) => ['-e', keepPath])],
+    options
+  );
 }
 
 export function getLatestCommitSha(directory?: string): string | null {

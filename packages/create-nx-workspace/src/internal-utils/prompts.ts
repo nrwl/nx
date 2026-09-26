@@ -40,12 +40,10 @@ export async function determineNxCloud(
 
 export async function determineNxCloudV2(
   parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
-): Promise<'yes' | 'skip' | 'never'> {
+): Promise<'yes' | 'skip'> {
   // Provided via flag
   if (parsedArgs.nxCloud) {
-    if (parsedArgs.nxCloud === 'skip') return 'skip';
-    if (parsedArgs.nxCloud === 'never') return 'never';
-    return 'yes';
+    return parsedArgs.nxCloud === 'skip' ? 'skip' : 'yes';
   }
 
   // Non-interactive mode
@@ -54,9 +52,7 @@ export async function determineNxCloudV2(
   }
 
   const result = await nxCloudPrompt('setupNxCloudV2');
-  if (result === 'never') return 'never';
-  if (result === 'skip') return 'skip';
-  return 'yes';
+  return result === 'skip' ? 'skip' : 'yes';
 }
 
 export async function determineIfGitHubWillBeUsed(
@@ -153,7 +149,11 @@ export async function determineAiAgents(
     return [];
   }
   const detected = detectAiAgentName();
-  if (detected) {
+  // Detection is broader than what the generator can configure — `copilot-cli`
+  // is reported so CNW can switch to agent output, but has no generator branch,
+  // and `copilot` is the VS Code extension, whose branch installs Nx Console.
+  // Mirrors the same guard in nx's `ai/detect-ai-agent.ts`.
+  if (detected && supportedAgents.includes(detected as Agent)) {
     return [detected as Agent];
   }
   return [];

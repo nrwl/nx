@@ -664,6 +664,289 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures[1].message).toEqual(message);
     });
 
+    it('should error when importing a project that transitively depends on a banned external package', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+          import('@mycompany/impl');
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at implName';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should not error when importing a project whose transitive external dependencies are not banned', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+          import('@mycompany/impl');
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-awesome-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    describe.each([
+      {
+        name: 'a mixed banned and allowed constraint',
+        constraint: {
+          sourceTag: 'api',
+          bannedExternalImports: ['npm-package'],
+          allowedExternalImports: ['npm-package2'],
+        },
+      },
+      {
+        name: 'an allowed-only constraint',
+        constraint: {
+          sourceTag: 'api',
+          allowedExternalImports: ['npm-package2'],
+        },
+      },
+      {
+        name: 'an empty allowed constraint',
+        constraint: { sourceTag: 'api', allowedExternalImports: [] },
+      },
+    ])('nested external imports with $name', ({ constraint }) => {
+      it('should error when importing a project that transitively depends on an external package outside the allowed list', () => {
+        const failures = runRule(
+          { depConstraints: [constraint], checkNestedExternalImports: true },
+          `${process.cwd()}/proj/libs/api/src/index.ts`,
+          `
+              import '@mycompany/impl';
+              import('@mycompany/impl');
+            `,
+          {
+            ...graph,
+            dependencies: {
+              ...graph.dependencies,
+              implName: [
+                {
+                  source: 'implName',
+                  target: 'npm:npm-awesome-package',
+                  type: DependencyType.static,
+                },
+              ],
+            },
+          },
+          fileMap
+        );
+
+        const message =
+          'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-awesome-package" found at implName';
+        expect(failures.length).toEqual(2);
+        expect(failures[0].message).toEqual(message);
+        expect(failures[1].message).toEqual(message);
+      });
+    });
+
+    it('should not error when importing a project whose transitive external dependencies are in the allowed list', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['npm-awesome-*'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+          import('@mycompany/impl');
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-awesome-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should report the project owning the nested import when the banned package is more than one hop away', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'impl2Name',
+                type: DependencyType.static,
+              },
+            ],
+            impl2Name: [
+              {
+                source: 'impl2Name',
+                target: 'npm:npm-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toEqual(
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at impl2Name'
+      );
+    });
+
+    it('should report a single violation when multiple dependency edges reach the same banned package', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-package',
+                type: DependencyType.static,
+              },
+              {
+                source: 'implName',
+                target: 'npm:npm-package',
+                type: DependencyType.dynamic,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toEqual(
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at implName'
+      );
+    });
+
+    it('should report a single violation when multiple versions of the same banned package are reached', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+        `,
+        {
+          ...graph,
+          externalNodes: {
+            ...graph.externalNodes,
+            'npm:npm-package@2.0.0': {
+              name: 'npm:npm-package@2.0.0',
+              type: 'npm',
+              data: {
+                packageName: 'npm-package',
+                version: '2.0.0',
+              },
+            },
+          },
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-package',
+                type: DependencyType.static,
+              },
+              {
+                source: 'implName',
+                target: 'npm:npm-package@2.0.0',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toEqual(
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at implName'
+      );
+    });
+
     it('should error when importing transitive npm packages', () => {
       const failures = runRule(
         {

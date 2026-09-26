@@ -1,7 +1,8 @@
 // Mock `@nx/devkit` so that (1) the project graph is empty during generation and
-// (2) the detected package manager is pinned. Pinning keeps inferred lock-file
-// outputs (e.g. prune-lockfile) deterministic regardless of which package
-// manager runs the tests. Individual tests can override `detectPackageManager`.
+// (2) the detected package manager can be pinned. `beforeEach` pins it to npm,
+// which keeps inferred lock-file outputs (e.g. prune-lockfile) deterministic
+// regardless of which package manager runs the tests. Individual tests can
+// override `detectPackageManager`.
 jest.mock('@nx/devkit', () => {
   const actual = jest.requireActual('@nx/devkit');
   return {
@@ -9,7 +10,7 @@ jest.mock('@nx/devkit', () => {
     createProjectGraphAsync: jest
       .fn()
       .mockResolvedValue({ nodes: {}, dependencies: {} }),
-    detectPackageManager: jest.fn(() => 'npm'),
+    detectPackageManager: jest.fn(),
     getPackageManagerCommand: jest.fn((pm = 'npm') =>
       actual.getPackageManagerCommand(pm)
     ),
@@ -27,6 +28,7 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import {
   PNPM_INSTALL_SETTINGS_INPUTS,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
@@ -48,6 +50,8 @@ describe('app', () => {
     tree = createTreeWithEmptyWorkspace();
 
     jest.clearAllMocks();
+    // `clearAllMocks` keeps configured return values, so re-pin the default.
+    (detectPackageManager as jest.Mock).mockReturnValue('npm');
   });
 
   afterEach(() => {
@@ -56,6 +60,48 @@ describe('app', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    beforeEach(() => {
+      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    });
+
+    it('should deny the esbuild build script for the esbuild bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-node-app',
+          bundler: 'esbuild',
+          framework: 'none',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+          linter: 'none',
+          addPlugin: true,
+        } as Schema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?esbuild['"]?: false/
+      );
+    });
+
+    it('should not record an esbuild decision for the webpack bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-node-app',
+          bundler: 'webpack',
+          framework: 'none',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+          linter: 'none',
+          addPlugin: true,
+        } as Schema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        'esbuild'
+      );
+    });
   });
 
   describe('not nested', () => {
@@ -1254,7 +1300,7 @@ describe('app', () => {
   });
 
   describe('Nest.js with webpack bundler', () => {
-    it('should generate correct build target configuration with webpack-cli args', async () => {
+    it('should not write an explicit build target since the inferred one handles NODE_ENV', async () => {
       await applicationGenerator(tree, {
         directory: 'my-nest-app',
         bundler: 'webpack',
@@ -1263,15 +1309,7 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(tree, 'my-nest-app');
-      const buildTarget = project.targets.build;
-
-      expect(buildTarget.executor).toBe('nx:run-commands');
-      expect(buildTarget.options.command).toBe('webpack-cli build');
-      expect(buildTarget.options.env).toEqual({ NODE_ENV: 'production' });
-      expect(buildTarget.options.cwd).toEqual(project.root);
-      expect(buildTarget.configurations.development.env).toEqual({
-        NODE_ENV: 'development',
-      });
+      expect(project.targets.build).toBeUndefined();
     });
   });
 

@@ -7,19 +7,25 @@ import path = require('path');
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { serverLogger } from '../../../daemon/logger';
+import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import {
   consumeMessagesFromSocket,
+  describeMessage,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
 import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
+import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
+import { stubTerminalOutputs } from '../task-results-stub';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
+import type { NxPluginCapabilities } from '../nx-plugin-capabilities';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
@@ -100,6 +106,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private worker: ChildProcess | null = null;
   private socket: Socket | null = null;
   private _alive = false;
+  private _released = false;
   private _connectPromise: Promise<LoadResultPayload> | null = null;
   private txId = 0;
   private pendingCount = 0;
@@ -120,7 +127,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private readonly shouldRegisterTSTranspiler: boolean;
 
   private lifecycle: PluginLifecycleManager;
-  private exitHandler: (() => void) | null = null;
+  private exitHandler:
+    | ((code: number | null, signal: NodeJS.Signals | null) => void)
+    | null = null;
 
   /**
    * Creates and loads an isolated plugin worker.
@@ -143,9 +152,15 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       index
     );
 
-    const loadResult = await instance.spawnAndConnect();
-    instance.setupHooks(loadResult);
-    return instance;
+    try {
+      const loadResult = await instance.spawnAndConnect();
+      instance.setupHooks(loadResult);
+      return instance;
+    } catch (e) {
+      // A timed-out worker is still running, and the caller is about to drop this instance.
+      instance.shutdown();
+      throw e;
+    }
   }
 
   private constructor(
@@ -163,6 +178,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.shouldRegisterTSTranspiler = shouldRegisterTSTranspiler;
   }
 
+  capabilities(): NxPluginCapabilities {
+    return {
+      createNodesPattern: this.createNodes?.[0],
+      hasCreateDependencies: !!this.createDependencies,
+      hasCreateMetadata: !!this.createMetadata,
+      hasPreTasksExecution: !!this.preTasksExecution,
+      hasPostTasksExecution: !!this.postTasksExecution,
+    };
+  }
+
   private async spawnAndConnect(): Promise<LoadResultPayload> {
     const { worker, socket } = await startPluginWorker(this.name);
     this.worker = worker;
@@ -170,29 +195,68 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     this.registerProcessMetrics();
 
-    this.exitHandler = () => {
-      this._alive = false;
-      this._connectPromise = null;
-      if (this.worker?.stdout) {
-        this.worker.stdout.unpipe(process.stdout);
-      }
-      if (this.worker?.stderr) {
-        this.worker.stderr.unpipe(process.stderr);
-      }
-      // Reject all pending requests
-      const error = new Error(
-        `Plugin worker "${this.name}" exited unexpectedly.`
+    this.exitHandler = (code: number | null, signal: NodeJS.Signals | null) => {
+      this.markUnusable();
+      this.failPendingRequests(
+        new Error(
+          `Plugin worker "${this.name}" exited unexpectedly ${describeWorkerExit(
+            code,
+            signal
+          )}.`
+        )
       );
-      for (const { onError } of this.responseHandlers.values()) {
-        onError(error);
-      }
-      this.responseHandlers.clear();
     };
     worker.on('exit', this.exitHandler);
 
-    socket.on('data', consumeMessagesFromSocket(this.handleSocketData));
+    socket.on(
+      'data',
+      consumeMessagesFromSocket(this.handleSocketData, (err) => {
+        // The worker may still be running here; it is the stream that failed, so
+        // reporting this as an exit would send whoever reads it hunting for a
+        // dead process.
+        this.handleFramingFailure(socket, err);
+      })
+    );
 
     return this.sendLoadMessage();
+  }
+
+  /**
+   * Drops the worker from service without judging why. The next hook call
+   * respawns it through `ensureAlive`.
+   */
+  private markUnusable(): void {
+    this._alive = false;
+    this._connectPromise = null;
+    if (this.worker?.stdout) {
+      this.worker.stdout.unpipe(process.stdout);
+    }
+    if (this.worker?.stderr) {
+      this.worker.stderr.unpipe(process.stderr);
+    }
+  }
+
+  private failPendingRequests(error: Error): void {
+    for (const { onError } of this.responseHandlers.values()) {
+      onError(error);
+    }
+    this.responseHandlers.clear();
+  }
+
+  private handleFramingFailure(socket: Socket, error: Error): void {
+    const framingError = new Error(
+      `Plugin worker "${this.name}" sent a message the host could not read, ` +
+        `so its connection was dropped. ${error.message}`
+    );
+
+    this.markUnusable();
+    socket.destroy();
+
+    if (this.responseHandlers.size === 0) {
+      console.error(framingError.message);
+    } else {
+      this.failPendingRequests(framingError);
+    }
   }
 
   /**
@@ -221,8 +285,21 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     await this._connectPromise;
   }
 
-  private handleSocketData = (raw: string) => {
-    const message = parseMessage<any>(raw);
+  private handleSocketData = (raw: Buffer) => {
+    let message: any;
+    try {
+      message = parseMessage<any>(raw);
+    } catch (e) {
+      // Runs inside a synchronous socket 'data' callback, so a throw here
+      // becomes an uncaughtException in the host process rather than a failed
+      // plugin call.
+      logger.error(
+        `[plugin-client] "${this.name}" sent a message that could not be parsed: ${
+          e instanceof Error ? e.message : e
+        }\nReceived: ${describeMessage(raw)}`
+      );
+      return;
+    }
     if (isPluginWorkerNotification(message)) {
       handlePluginWorkerNotification(message);
       return;
@@ -312,7 +389,14 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         hook,
         async (...args: TArgs) => {
           await this.ensureAlive();
-          return hookFn(...args);
+          try {
+            return await hookFn(...args);
+          } finally {
+            // A released plugin still answers, then shuts its worker straight back down.
+            if (this._released) {
+              shutdown(hook);
+            }
+          }
         },
         () => shutdown(hook)
       );
@@ -381,7 +465,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         this as { postTasksExecution: IsolatedPlugin['postTasksExecution'] }
       ).postTasksExecution = wrap('postTasksExecution', async (context) => {
         const result = await this.sendRequest('postTasksExecution', {
-          context,
+          context: stubTerminalOutputs(context),
         });
         if (result.success === false) {
           throw result.error;
@@ -477,8 +561,19 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     }
   }
 
+  /**
+   * Like `shutdown`, but for good: a later hook call still answers, then shuts
+   * the worker back down instead of leaving a respawned one running.
+   */
+  dispose(): void {
+    this._released = true;
+    this.shutdown();
+  }
+
   shutdown(): void {
-    if (!this._alive) return;
+    // Not `_alive`: that is only set once the worker answers a load, so gating
+    // on it would leave a worker that never got that far running.
+    if (!this.worker && !this.socket) return;
     this._alive = false;
     this._connectPromise = null;
 
@@ -550,14 +645,10 @@ async function startPluginWorker(name: string) {
     ...process.env,
     ...(isWorkerTypescript
       ? {
-          TS_NODE_PROJECT: path.join(
+          SWC_NODE_PROJECT: path.join(
             __dirname,
             '../../../../tsconfig.lib.json'
           ),
-          TS_NODE_COMPILER_OPTIONS: JSON.stringify({
-            moduleResolution: 'node',
-            module: 'commonjs',
-          }),
         }
       : {}),
   };
@@ -577,7 +668,9 @@ async function startPluginWorker(name: string) {
       // Spawn the worker with the same resolve conditions Nx uses for plugin
       // entries so the plugin's transitive workspace imports resolve to source.
       ...getPluginResolveConditionNodeArgs(),
-      ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
+      // swc transpiles without type-checking: ~7x faster to boot, and this is
+      // paid once per worker spawn.
+      ...(isWorkerTypescript ? ['--require', '@swc-node/register'] : []),
       workerPath,
       ipcPath,
       name,
@@ -625,7 +718,7 @@ async function startPluginWorker(name: string) {
   }
 }
 
-async function connectToWorker(
+export async function connectToWorker(
   worker: ChildProcess,
   ipcPath: string,
   name: string
@@ -635,10 +728,28 @@ async function connectToWorker(
 
   // If the worker exits before we connect, abort polling immediately
   // rather than burning through attempts against a dead socket.
-  worker.once('exit', (code) => {
+  worker.once('exit', (code, signal) => {
     if (!abortController.signal.aborted) {
-      earlyExitError = new Error(
-        `Plugin worker for "${name}" exited with code ${code} before the connection was established.`
+      // The worker sets this code only after an EPERM/EACCES on its own bind,
+      // so it is proof of a refusal rather than an inference from the
+      // environment — the only evidence available under an agent whose sandbox
+      // sets no variable `isSandbox()` reads.
+      const refused = code === SOCKET_REFUSED_EXIT_CODE;
+      earlyExitError = markWorkerStartupFailure(
+        new Error(
+          [
+            `Plugin worker for "${name}" exited ${describeWorkerExit(
+              code,
+              signal
+            )} before the connection was established.`,
+            // The worker's own stderr may be lost with the process, so the
+            // cause and the fix are repeated here.
+            ...(refused || isSandbox()
+              ? sandboxSocketHint({ certain: refused })
+              : []),
+          ].join('\n')
+        ),
+        refused
       );
       abortController.abort();
     }
@@ -660,7 +771,65 @@ async function connectToWorker(
   if (earlyExitError) {
     throw earlyExitError;
   }
-  throw new Error(`Failed to start plugin worker for plugin ${name}`);
+  throw markWorkerStartupFailure(
+    new Error(`Failed to start plugin worker for plugin ${name}`)
+  );
+}
+
+/**
+ * Marks a failure to *start or reach* a worker, as distinct from a plugin that
+ * loaded and then threw. Only the former can be retried in-process: swallowing
+ * the latter would rerun a plugin that already failed on its own merits and
+ * bury the real error.
+ */
+export const PLUGIN_WORKER_STARTUP_FAILURE = Symbol.for(
+  'nx.pluginWorkerStartupFailure'
+);
+
+/**
+ * Set when the worker exited with the socket-refused code. Narrower than
+ * {@link PLUGIN_WORKER_STARTUP_FAILURE}, which covers every way a worker can
+ * fail to come up, and is what lets the caller degrade on a refusal without
+ * also degrading for an OOM kill or a broken install.
+ */
+export const PLUGIN_WORKER_SOCKET_REFUSED = Symbol.for(
+  'nx.pluginWorkerSocketRefused'
+);
+
+/**
+ * Describes how a worker died for an error message. A `null` code with a signal
+ * is an outside kill rather than anything the worker chose, and SIGKILL is what
+ * an out-of-memory kill looks like, so both are called out by name.
+ */
+export function describeWorkerExit(
+  code: number | null,
+  signal: NodeJS.Signals | null
+): string {
+  if (signal) {
+    return signal === 'SIGKILL'
+      ? `(killed by ${signal}, commonly an out-of-memory kill)`
+      : `(killed by ${signal})`;
+  }
+  if (code !== null) {
+    return `(exit code ${code})`;
+  }
+  return '(no exit code or signal reported)';
+}
+
+function markWorkerStartupFailure(error: Error, refused = false): Error {
+  error[PLUGIN_WORKER_STARTUP_FAILURE] = true;
+  if (refused) {
+    error[PLUGIN_WORKER_SOCKET_REFUSED] = true;
+  }
+  return error;
+}
+
+export function isPluginWorkerStartupFailure(error: unknown): boolean {
+  return Boolean(error?.[PLUGIN_WORKER_STARTUP_FAILURE]);
+}
+
+export function isPluginWorkerSocketRefusal(error: unknown): boolean {
+  return Boolean(error?.[PLUGIN_WORKER_SOCKET_REFUSED]);
 }
 
 function getTypeName(u: unknown): string {

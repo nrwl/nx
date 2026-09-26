@@ -96,7 +96,7 @@ to = "/docs/guides/nx-cloud/bring-your-own-compute"
 # DOC-549: GitHub source control guide merged into the GitHub Actions integration page
 [[redirects]]
 from = "/docs/guides/nx-cloud/source-control-integration/github"
-to = "/docs/features/ci-features/github-integration"
+to = "/docs/kb/github-integration"
 
 # DOC-549: decisions overview renamed to monorepo-vs-polyrepo
 [[redirects]]
@@ -219,7 +219,7 @@ to = "/docs/kb/gradle-tutorial"
 # Resource usage consolidated into the Nx Cloud add-ons platform feature pages
 [[redirects]]
 from = "/docs/guides/nx-cloud/ci-resource-usage"
-to = "/docs/features/ci-features/resource-usage"
+to = "/docs/kb/resource-usage"
 
 # NXC-4453: Knowledge Base "Installation" section renamed to "Installation and updates"
 [[redirects]]
@@ -313,6 +313,13 @@ to = "/docs/kb/what-is-a-monorepo"
 [[redirects]]
 from = "/docs/concepts/typescript-project-linking"
 to = "/docs/kb/typescript-project-linking"
+
+# force = true so this wins over the hidden extending-nx/index.mdoc stub page.
+[[redirects]]
+from = "/docs/extending-nx"
+to = "/docs/kb/extending-nx"
+status = 301
+force = true
 
 [[redirects]]
 from = "/docs/extending-nx/compose-executors"
@@ -452,7 +459,7 @@ to = "/docs/kb/personal-access-tokens"
 
 [[redirects]]
 from = "/docs/guides/nx-cloud/setup-ci"
-to = "/docs/kb/setup-ci"
+to = "/docs/getting-started/setup-ci"
 
 [[redirects]]
 from = "/docs/guides/nx-cloud/source-control-integration"
@@ -1162,6 +1169,98 @@ to = "/docs/technologies/module-federation/introduction"
 [[redirects]]
 from = "/docs/concepts/decisions"
 to = "/docs/kb/monorepo-vs-polyrepo"
+
+# DOC-660: bare /docs/<slug> forms of these kb pages are indexed and ranking,
+# but only the old deep paths were redirected.
+[[redirects]]
+from = "/docs/what-is-a-monorepo"
+to = "/docs/kb/what-is-a-monorepo"
+
+[[redirects]]
+from = "/docs/angular-nx-version-matrix"
+to = "/docs/kb/angular-nx-version-matrix"
+
+# DOC-675: Enable AI features moved from the Nx Cloud guides into the knowledge base
+[[redirects]]
+from = "/docs/guides/nx-cloud/enable-ai-features"
+to = "/docs/kb/enable-ai-features"
+
+# DOC-713/DOC-714: secondary CI pages moved to the Knowledge Base, CI group renamed
+[[redirects]]
+from = "/docs/features/ci-features/flaky-tasks"
+to = "/docs/kb/flaky-tasks"
+
+[[redirects]]
+from = "/docs/features/ci-features/split-e2e-tasks"
+to = "/docs/kb/split-e2e-tasks"
+
+[[redirects]]
+from = "/docs/features/ci-features/resource-usage"
+to = "/docs/kb/resource-usage"
+
+[[redirects]]
+from = "/docs/features/ci-features/github-integration"
+to = "/docs/kb/github-integration"
+
+[[redirects]]
+from = "/docs/features/ci-features/sandboxing"
+to = "/docs/kb/sandboxing"
+
+[[redirects]]
+from = "/docs/features/ci-features/dedicated-compute-cluster"
+to = "/docs/kb/dedicated-compute-cluster"
+
+[[redirects]]
+from = "/docs/features/ci-features/docker-layer-caching"
+to = "/docs/kb/docker-layer-caching"
+
+[[redirects]]
+from = "/docs/features/ci-features/docker-read-through-cache"
+to = "/docs/kb/docker-read-through-cache"
+
+[[redirects]]
+from = "/docs/features/ci-features/npm-read-through-cache"
+to = "/docs/kb/npm-read-through-cache"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/optimize-your-ttg"
+to = "/docs/kb/optimize-your-ttg"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/record-commands"
+to = "/docs/kb/record-commands"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/cipe-affected-project-graph"
+to = "/docs/kb/cipe-affected-project-graph"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/encryption"
+to = "/docs/kb/encryption"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/google-auth"
+to = "/docs/kb/google-auth"
+
+[[redirects]]
+from = "/docs/features/ci-features/dynamic-agents"
+to = "/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size"
+
+[[redirects]]
+from = "/docs/getting-started/nx-cloud"
+to = "/docs/features/ci-features"
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts/parallelization-distribution"
+to = "/docs/concepts/ci-concepts/building-blocks-fast-ci"
+
+[[redirects]]
+from = "/docs/platform-features/orchestration-ci"
+to = "/docs/platform-features/continuous-integration-ci"
+
+[[redirects]]
+from = "/docs/kb/setup-ci"
+to = "/docs/getting-started/setup-ci"
 
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]

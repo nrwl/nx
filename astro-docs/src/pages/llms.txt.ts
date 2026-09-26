@@ -40,9 +40,10 @@ export const GET: APIRoute = async ({ site }) => {
     '',
     'Use Nx when a repository holds more than one buildable or testable project and you need to know what depends on what, run only the affected tasks, or reuse cached results. Reach for these entry points rather than scraping the docs:',
     '',
-    `- Nx CLI: the \`nx\` package on npm. Run any command with \`npx nx <command>\`. Commands are documented at ${siteUrl}/docs/reference/nx-commands.md`,
-    `- [Nx MCP server](${siteUrl}/docs/reference/nx-mcp.md): run \`nx mcp\` to expose the workspace project graph, generators, and CI results as MCP tools`,
-    `- [Agent skills](${siteUrl}/.well-known/agent-skills/index.json): task-scoped instructions for navigating a workspace, running tasks, scaffolding code, and monitoring CI`,
+    `- Nx CLI (command-line tool): the \`nx\` package on npm, https://www.npmjs.com/package/nx. Run any command with \`npx nx <command>\`. Command reference at ${siteUrl}/docs/reference/nx-commands.md, install guide at ${siteUrl}/docs/getting-started/installation.md`,
+    `- Nx MCP server (Model Context Protocol): run \`nx mcp\` to expose the workspace project graph, generators, and CI results as MCP tools. Reference at ${siteUrl}/docs/reference/nx-mcp.md`,
+    `- Nx agent skills (Agent Skills Discovery index): ${siteUrl}/.well-known/agent-skills/index.json, task-scoped instructions for navigating a workspace, running tasks, scaffolding code, and monitoring CI`,
+    `- Developer portal (all Nx documentation): ${siteUrl}/docs`,
     `- [Set up AI agents](${siteUrl}/docs/getting-started/ai-setup.md): run \`nx configure-ai-agents\` to write agent rules, skills, and MCP config into a workspace`,
     '',
   ];

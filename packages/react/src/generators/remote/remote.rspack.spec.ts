@@ -11,11 +11,11 @@ import remote from './remote';
 import host from '../host/host';
 import { getRootTsConfigPathInTree } from '@nx/js';
 
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    readCachedProjectGraph: jest.fn().mockImplementation(
+    readCachedProjectGraph: vi.fn().mockImplementation(
       (): ProjectGraph => ({
         dependencies: {},
         nodes: {
@@ -267,6 +267,42 @@ describe('remote generator', () => {
 
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['@nx/web']).toBeDefined();
+    });
+
+    it('should install @swc-node/register so the TS config loads without native type stripping', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await remote(tree, {
+        directory: 'test',
+        devServerPort: 4201,
+        e2eTestRunner: 'cypress',
+        linter: 'eslint',
+        skipFormat: true,
+        style: 'css',
+        unitTestRunner: 'jest',
+        bundler: 'rspack',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc-node/register']).toBeDefined();
+      expect(packageJson.devDependencies['@swc/core']).toBeDefined();
+    });
+
+    it('should not install @swc-node/register for a JS config', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await remote(tree, {
+        directory: 'test',
+        devServerPort: 4201,
+        e2eTestRunner: 'cypress',
+        linter: 'eslint',
+        skipFormat: true,
+        style: 'css',
+        unitTestRunner: 'jest',
+        bundler: 'rspack',
+        typescriptConfiguration: false,
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc-node/register']).toBeUndefined();
     });
 
     it('should not set the remote as the default project', async () => {

@@ -292,10 +292,23 @@ function* logicalTargetDefaultEntries(
 // keys win), and such target names are vanishingly rare — accepted rather than
 // worked around.
 const GLOB_CHARACTERS = new Set(['*', '|', '{', '}', '(', ')', '[']);
+function hasGlobCharacter(key: string): boolean {
+  for (const c of key) if (GLOB_CHARACTERS.has(c)) return true;
+  return false;
+}
 function isExecutorLikeKey(key: string): boolean {
-  if (!key.includes(':')) return false;
-  for (const c of key) if (GLOB_CHARACTERS.has(c)) return false;
-  return true;
+  return key.includes(':') && !hasGlobCharacter(key);
+}
+
+/**
+ * Shape-level test: whether a `targetDefaults` key is a plain target name
+ * rather than executor-shaped (`a:b`) or a glob. Executor strings are not
+ * required to contain `:`, so a plain-named key can still resolve as an
+ * executor key when some target's effective executor equals it; callers
+ * needing that guarantee must exclude executor collisions themselves.
+ */
+export function isExactTargetNameKey(key: string): boolean {
+  return !key.includes(':') && !hasGlobCharacter(key);
 }
 
 /**

@@ -89,13 +89,11 @@ describe('Migration to remove default Karma configuration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest
-      .spyOn(devkit, 'formatFiles')
-      .mockImplementation(() => Promise.resolve());
+    vi.spyOn(devkit, 'formatFiles').mockImplementation(() => Promise.resolve());
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   function addAngularProject(

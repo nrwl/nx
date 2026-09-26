@@ -1,6 +1,6 @@
 ---
 title: Remote caching
-description: Share cached task results across developer machines and CI with Nx Cloud remote caching.
+description: Share cached task results across developer machines and CI with Nx Cloud remote caching, so CI skips work that already ran and costs less.
 sidebar:
   order: 11
 filter: 'type:Features'
@@ -21,6 +21,9 @@ On a remote cache hit, Nx restores the terminal output and declared task artifac
 or distribution directory.
 The command behaves like a local cache hit without running the task again.
 
+Every cache hit is a task your CI machines don't run, so remote caching shortens pipelines and cuts machine-minutes, which reduces cost.
+Paired with [distributed task execution](/docs/features/ci-features/distribute-task-execution), most workspaces use about 50% fewer machine-minutes than with remote caching alone.
+
 ## Configure remote caching
 
 Connect your workspace to Nx Cloud:
@@ -29,7 +32,7 @@ Connect your workspace to Nx Cloud:
 npx nx@latest connect
 ```
 
-{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=website&utm_campaign=remote-cache" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
+{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=remote-cache" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
 For authentication and CI setup details, see [Setting Up CI](/docs/getting-started/setup-ci).
 
@@ -45,7 +48,7 @@ Remote caching complements [affected tasks](/docs/features/ci-features/affected)
 Affected calculations remove projects that don't need a task, while caching avoids rerunning matching
 tasks in the remaining graph.
 
-[Nx Agents](/docs/features/ci-features/distribute-task-execution) use remote caching to share artifacts
+Nx Agents use remote caching to share artifacts
 between machines.
 When a task depends on output produced by another agent, Nx restores that output before running the
 dependent task.
@@ -64,7 +67,7 @@ For more information, see [how caching works](/docs/concepts/how-caching-works#w
 
 Cache correctness depends on accurate `inputs` and `outputs`.
 A missing input can produce a stale cache hit, while an undeclared output won't be restored.
-[Task sandboxing](/docs/features/ci-features/sandboxing) can identify file access that isn't represented
+[Task sandboxing](/docs/kb/sandboxing) can identify file access that isn't represented
 in the task configuration.
 
 ## Remote cache security
@@ -81,7 +84,7 @@ them.
 For the permission model and protection against cache poisoning, see
 [cache security](/docs/kb/cache-security).
 
-For end-to-end encryption setup, see [encryption](/docs/guides/nx-cloud/encryption).
+For end-to-end encryption setup, see [encryption](/docs/kb/encryption).
 Nx publishes current compliance information on the [Nx security site](https://security.nx.app).
 
 ## Remote cache availability
@@ -100,3 +103,17 @@ options.
 
 Use `--skipRemoteCache` when one command shouldn't read from or write to the remote cache.
 For related local cache options, see [skip task caching](/docs/kb/skipping-cache).
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Cache security" description="Prevent cache poisoning and control what reaches the cache" href="/docs/kb/cache-security" /%}
+
+{% linkcard title="CI access tokens" description="Scope cache access for CI with read-only and read-write tokens" href="/docs/kb/access-tokens" /%}
+
+{% linkcard title="End-to-end encryption" description="Encrypt cached artifacts before they leave your machines" href="/docs/kb/encryption" /%}
+
+{% linkcard title="Self-hosted remote cache" description="Run your own cache server against the OpenAPI specification" href="/docs/kb/self-hosted-caching" /%}
+
+{% /cardgrid %}

@@ -71,6 +71,9 @@
         "transitive": true
       },
       {
+        "dependentTasksOutputFiles": "dist/local-registry/proj-backup/*.tar"
+      },
+      {
         "json": "{workspaceRoot}/tsconfig.json",
         "fields": ["compilerOptions", "extends", "files", "include"]
       }
@@ -108,15 +111,6 @@
     }
   },
   "targetDefaults": {
-    "oxlint": {
-      "inputs": [
-        "...",
-        "{workspaceRoot}/.eslintignore",
-        {
-          "externalDependencies": ["oxlint", "@nx/oxlint"]
-        }
-      ]
-    },
     "cleanup-tsconfig": {
       "executor": "nx:run-commands",
       "options": {
@@ -149,7 +143,11 @@
       "cache": true
     },
     "test-native": {
-      "inputs": ["native", "{projectRoot}/**/*.snap"],
+      "inputs": [
+        "native",
+        "{projectRoot}/**/*.snap",
+        "{projectRoot}/src/native/**/fixtures/**/*"
+      ],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
@@ -199,6 +197,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ]
     },
@@ -210,6 +209,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ]
     },
@@ -220,6 +220,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ],
       "options": {
@@ -230,6 +231,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ]
     },
@@ -360,6 +362,7 @@
     },
     {
       "plugin": "@nx/dotnet",
+      "exclude": ["examples/**/*"],
       "options": {
         "build": {
           "targetName": "build:dotnet"
@@ -396,7 +399,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3238,
+  "bust": 3239,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
@@ -496,6 +499,9 @@
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/migration-markdown-assets"
       },
       {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/generator-template-assets"
+      },
+      {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/no-ignored-tracked-files"
       },
       {
@@ -503,6 +509,9 @@
       },
       {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/relative-image-imports"
+      },
+      {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/headings-in-tabs"
       },
       {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/types-versions-exports-sync"
@@ -539,7 +548,28 @@
             "NX_AI_FILES_USE_LOCAL",
             "NX_WINDOWS_PTY_SUPPORT",
             "NX_ORIGINAL_FORCE_COLOR",
-            "NX_MIGRATE_ORCHESTRATOR"
+            "NX_MIGRATE_ORCHESTRATOR",
+            "NX_MIGRATE_BROKER",
+            "NX_CSS_MODULE_HASH_FUNCTION",
+            "NX_BUILDABLE_LIBRARIES_TASK_GRAPH",
+            "NX_BUILD_LIBS_FROM_SOURCE",
+            "NX_BUILD_TARGET",
+            "NX_CNW_FLOW_VARIANT",
+            "NX_CYPRESS_COMPONENT_TEST",
+            "NX_CYPRESS_TARGET_CONFIGURATION",
+            "NX_E2E_PRESET_VERSION",
+            "NX_FILE_TO_RUN",
+            "NX_GENERATED_TSCONFIG_PATH",
+            "NX_MAPPINGS",
+            "NX_MF_DEV_REMOTES",
+            "NX_MF_DEV_SERVER_STATIC_REMOTES",
+            "NX_NEXT_DIR",
+            "NX_NEXT_OUTPUT_PATH",
+            "NX_NEXT_PUBLIC_DIR",
+            "NX_REACT_NATIVE_DEBUG",
+            "NX_SERVE_STATIC_BUILD_RUNNING",
+            "NX_SKIP_GH_PUSH",
+            "NX_TSCONFIG_PATH"
           ]
         }
       }

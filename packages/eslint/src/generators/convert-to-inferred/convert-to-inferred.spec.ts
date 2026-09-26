@@ -967,6 +967,85 @@ describe('Eslint - Convert Executors To Plugin', () => {
       }
     });
 
+    it('centralizes shared lint config without changing the effective target (equivalence)', async () => {
+      // Two projects share a non-inferred option, so it must be hoisted once
+      // into targetDefaults and still resolve identically for each project.
+      const app1 = createTestProject(tree, {
+        appName: 'app1',
+        appRoot: 'app1',
+      });
+      app1.targets.lint.options.cacheLocation = 'cache-dir';
+      updateProjectConfiguration(tree, app1.name, app1);
+      const app2 = createTestProject(tree, {
+        appName: 'app2',
+        appRoot: 'app2',
+      });
+      app2.targets.lint.options.cacheLocation = 'cache-dir';
+      updateProjectConfiguration(tree, app2.name, app2);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      // present exactly once, centrally, scoped to the eslint plugin's targets
+      const targetDefault = readNxJson(tree).targetDefaults?.lint;
+      expect(Array.isArray(targetDefault)).toBe(true);
+      const hoisted = (targetDefault as any[]).find(
+        (entry) => entry?.filter?.plugin === '@nx/eslint/plugin'
+      );
+      expect(hoisted?.options?.['cache-location']).toBe('cache-dir');
+      for (const name of ['app1', 'app2']) {
+        const projectTarget =
+          readProjectConfiguration(tree, name).targets?.lint ?? {};
+        // centralized once, not duplicated in the per-project file. That the
+        // hoisted plugin-scoped default actually RESOLVES onto the inferred
+        // target (through Nx's real targetDefaults pipeline, including the
+        // resolveSourcePlugin gate) is verified in the engine spec's
+        // "through the REAL Nx resolution pipeline" tests; a JS-spread merge
+        // here could not observe that gate.
+        expect(projectTarget.options?.['cache-location']).toBeUndefined();
+      }
+    });
+
+    it('centralizes shared lint configurations without dropping named configuration behavior', async () => {
+      const app1 = createTestProject(tree, {
+        appName: 'app1',
+        appRoot: 'app1',
+      });
+      app1.targets.lint.configurations = {
+        ci: {
+          quiet: true,
+        },
+      };
+      updateProjectConfiguration(tree, app1.name, app1);
+      const app2 = createTestProject(tree, {
+        appName: 'app2',
+        appRoot: 'app2',
+      });
+      app2.targets.lint.configurations = {
+        ci: {
+          quiet: true,
+        },
+      };
+      updateProjectConfiguration(tree, app2.name, app2);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const targetDefault = readNxJson(tree).targetDefaults?.lint;
+      expect(Array.isArray(targetDefault)).toBe(true);
+      const hoisted = (targetDefault as any[]).find(
+        (entry) => entry?.filter?.plugin === '@nx/eslint/plugin'
+      );
+      expect(hoisted?.configurations?.ci).toEqual({
+        quiet: true,
+      });
+      // centralized once, not duplicated per project (effective resolution is
+      // covered by the engine spec's real-pipeline tests).
+      for (const name of ['app1', 'app2']) {
+        const projectTarget =
+          readProjectConfiguration(tree, name).targets?.lint ?? {};
+        expect(projectTarget.configurations?.ci).toBeUndefined();
+      }
+    });
+
     it('should add Eslint options found in targetDefaults for the executor to the project.json', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);

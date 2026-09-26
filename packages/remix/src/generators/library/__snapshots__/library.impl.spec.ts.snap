@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with jest 1`] = `
+exports[`Remix Library Generator > --unitTestRunner > should create the correct config files for testing with jest 1`] = `
 "module.exports = {
   setupFilesAfterEnv: ['./src/test-setup.ts'],
   displayName: 'test',
@@ -15,23 +15,23 @@ exports[`Remix Library Generator --unitTestRunner should create the correct conf
 "
 `;
 
-exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with jest 2`] = `
+exports[`Remix Library Generator > --unitTestRunner > should create the correct config files for testing with jest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with vitest 1`] = `null`;
+exports[`Remix Library Generator > --unitTestRunner > should create the correct config files for testing with vitest 1`] = `null`;
 
-exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with vitest 2`] = `
+exports[`Remix Library Generator > --unitTestRunner > should create the correct config files for testing with vitest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Library Generator should generate a library correctly 1`] = `
+exports[`Remix Library Generator > should generate a library correctly 1`] = `
 [
   "test.module.css",
   "test.spec.tsx",
@@ -39,7 +39,7 @@ exports[`Remix Library Generator should generate a library correctly 1`] = `
 ]
 `;
 
-exports[`Remix Library Generator should generate a library correctly 2`] = `
+exports[`Remix Library Generator > should generate a library correctly 2`] = `
 {
   "@proj/test": [
     "./test/src/index.ts",

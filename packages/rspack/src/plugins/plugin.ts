@@ -17,6 +17,7 @@ import {
   workspaceRoot,
   hashArray,
   getPackageManagerCommand,
+  TargetConfiguration,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
@@ -204,6 +205,15 @@ async function createRspackTargets(
     });
   }
 
+  const buildInputs: TargetConfiguration['inputs'] = [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['@rspack/cli'],
+    },
+  ];
+
   targets[options.buildTargetName] = {
     command: `rspack build`,
     options: {
@@ -211,15 +221,15 @@ async function createRspackTargets(
       args: ['--node-env=production'],
       env,
     },
+    configurations: {
+      development: {
+        args: ['--node-env=development'],
+      },
+    },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      {
-        externalDependencies: ['@rspack/cli'],
-      },
+      ...buildInputs,
       // The build can emit a pruned pnpm deploy output (NxAppRspackPlugin
       // with generatePackageJson), whose install settings come from these
       // otherwise-unhashed root sources.
@@ -234,6 +244,7 @@ async function createRspackTargets(
 
   targets[options.serveTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
@@ -244,6 +255,7 @@ async function createRspackTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
@@ -255,6 +267,7 @@ async function createRspackTargets(
   targets[options.serveStaticTargetName] = {
     dependsOn: [`${options.buildTargetName}`],
     continuous: true,
+    inputs: [...buildInputs],
     executor: '@nx/web:file-server',
     options: {
       buildTarget: options.buildTargetName,

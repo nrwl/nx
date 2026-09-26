@@ -19,7 +19,6 @@ import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {
   getEsBuildConfig,
-  getNestWebpackBuildConfig,
   getServeConfig,
   getWebpackBuildConfig,
   getPruneTargets,
@@ -59,10 +58,6 @@ export function addProject(
       ]);
       project.targets.build = getWebpackBuildConfig(tree, project, options);
       ensurePnpmDeployInputs(tree, options, project.targets.build);
-    } else if (options.isNest) {
-      // If we are using Nest that has the webpack plugin we need to override the
-      // build target so that NODE_ENV can be set to production or development so the serve target can be run in development mode
-      project.targets.build = getNestWebpackBuildConfig(project);
     }
   }
   project.targets = {

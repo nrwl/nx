@@ -1,21 +1,36 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { assertMinimumCypressVersion } from '@nx/cypress/internal';
-import { Tree, updateJson } from '@nx/devkit';
+import {
+  assertMinimumCypressVersion,
+  getInstalledCypressMajorVersion,
+} from '@nx/cypress/internal';
+import { readJson, Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { componentGenerator } from '../component/component';
 import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
 import { EOL } from 'node:os';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createRequire } from 'node:module';
 
-jest.mock('@nx/cypress/internal');
+vi.mock('@nx/cypress/internal');
+// The generator also `require`s @nx/cypress/internal; share the automocks.
+mockCjsModule(import.meta.url, '@nx/cypress/internal', {
+  ...createRequire(import.meta.url)('@nx/cypress/internal'),
+  assertMinimumCypressVersion,
+  getInstalledCypressMajorVersion,
+});
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
-  let mockedAssertMinimumCypressVersion: jest.Mock<
+  let mockedAssertMinimumCypressVersion: Mock<
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
+  let mockedInstalledCypressMajorVersion: Mock<
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     // silence warnings about missing .gitignore file
@@ -243,6 +258,64 @@ describe(MyLib.name, () => {
         .read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
         .replaceAll(EOL, '\n')
     ).toEqual(expected);
+  });
+
+  it('should add @angular/platform-browser-dynamic for cypress below 16', async () => {
+    mockedInstalledCypressMajorVersion.mockReturnValue(15);
+    await generateTestLibrary(tree, {
+      directory: 'my-lib',
+      unitTestRunner: UnitTestRunner.None,
+      linter: 'none',
+      skipFormat: true,
+    });
+    await componentGenerator(tree, {
+      path: 'my-lib/src/lib/my-lib/my-lib',
+      name: 'my-lib',
+      skipFormat: true,
+    });
+
+    await componentTestGenerator(tree, {
+      componentName: 'MyLib',
+      componentFileName: './my-lib',
+      componentDir: 'src/lib/my-lib',
+      project: 'my-lib',
+      skipFormat: true,
+    });
+
+    expect(
+      readJson(tree, 'package.json').devDependencies[
+        '@angular/platform-browser-dynamic'
+      ]
+    ).toBeDefined();
+  });
+
+  it('should not add @angular/platform-browser-dynamic for cypress 16', async () => {
+    mockedInstalledCypressMajorVersion.mockReturnValue(16);
+    await generateTestLibrary(tree, {
+      directory: 'my-lib',
+      unitTestRunner: UnitTestRunner.None,
+      linter: 'none',
+      skipFormat: true,
+    });
+    await componentGenerator(tree, {
+      path: 'my-lib/src/lib/my-lib/my-lib',
+      name: 'my-lib',
+      skipFormat: true,
+    });
+
+    await componentTestGenerator(tree, {
+      componentName: 'MyLib',
+      componentFileName: './my-lib',
+      componentDir: 'src/lib/my-lib',
+      project: 'my-lib',
+      skipFormat: true,
+    });
+
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies['@angular/platform-browser-dynamic']).toBeUndefined();
+    expect(
+      devDependencies['@angular/platform-browser-dynamic']
+    ).toBeUndefined();
   });
 
   it('should throw an error when the cypress version does not support the angular version', async () => {

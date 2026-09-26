@@ -71,6 +71,12 @@ export interface NxAppRspackPluginOptions {
   commonChunk?: boolean;
 
   /**
+   * Hash algorithm used to generate CSS module class names. Defaults to `md5`,
+   * which FIPS-restricted OpenSSL rejects. Changing it renames generated class names.
+   */
+  cssModuleHashFunction?: string;
+
+  /**
    * The deploy path for the application. e.g. `/my-app/`
    */
   deployUrl?: string;

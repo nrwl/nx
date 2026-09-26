@@ -11,16 +11,11 @@
  * Daemon logs are not here — they live in the workspace data dir alongside the
  * `disabled` marker, which is why that path survives a socket-root change.
  */
-import {
-  mkdirSync,
-  realpathSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from 'node:fs';
-import { basename, dirname, join, resolve } from 'path';
+import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
+  canonicalDir,
   describeRefusal,
   type DirRefusal,
   type GuardResult,
@@ -118,7 +113,25 @@ export function markDaemonAsDisabled(reason: string) {
   writeFileSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'), reason);
 }
 
+let disabledForThisProcess: string | undefined;
+
+/**
+ * Turns the daemon off for this process only, leaving no marker behind.
+ *
+ * For a cause that belongs to the environment rather than to the workspace: a
+ * sandbox refusing the socket says nothing about the next run from an ordinary
+ * terminal, and the marker `markDaemonAsDisabled` writes would follow the
+ * checkout there. It would also survive the user doing exactly what Nx told
+ * them to do, since nothing clears it but `nx reset`.
+ */
+export function disableDaemonForThisProcess(reason: string) {
+  disabledForThisProcess = reason;
+}
+
 export function isDaemonDisabled() {
+  if (disabledForThisProcess !== undefined) {
+    return true;
+  }
   try {
     statSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'));
     return true;
@@ -141,40 +154,6 @@ function defaultSocketRoot(): string {
 
 function homeSocketRoot(): string | undefined {
   return NX_HOME_TMP_DIR ? join(NX_HOME_TMP_DIR, 'sockets') : undefined;
-}
-
-/**
- * The spelling to compare a directory by. `resolve` does not dereference
- * symlinks, and on macOS `/tmp` is a symlink to `/private/tmp`, so an
- * exact-match list would wave through an alias of a root it means to refuse.
- *
- * Resolves the longest ancestor that exists and re-appends the rest: Nx's own
- * roots are absent before its first run, and canonicalizing whole paths only
- * would degrade this to a string match on exactly a fresh machine.
- *
- * Only `ENOENT` walks up — any other errno means the path exists and cannot be
- * read through, which `ensureOwnedPrivateDir` cannot establish either.
- */
-function canonicalDir(dir: string): string {
-  const resolved = resolve(dir);
-  const missing: string[] = [];
-  let candidate = resolved;
-
-  for (;;) {
-    try {
-      return join(realpathSync(candidate), ...missing);
-    } catch (e: any) {
-      if (e?.code !== 'ENOENT') {
-        return resolved;
-      }
-      const parent = dirname(candidate);
-      if (parent === candidate) {
-        return resolved;
-      }
-      missing.unshift(basename(candidate));
-      candidate = parent;
-    }
-  }
 }
 
 /**

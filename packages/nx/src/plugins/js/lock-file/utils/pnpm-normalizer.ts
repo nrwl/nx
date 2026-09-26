@@ -88,6 +88,34 @@ export function extractMainLockfileDocument(content: string): string {
   return content.slice(separatorIndex + YAML_DOCUMENT_SEPARATOR.length);
 }
 
+// The package-manager document (`packageManagerDependencies`) must ship with a
+// pruned lockfile whenever the pruned manifest keeps `packageManager`: pnpm
+// refuses a frozen install when the pin is not recorded in the lockfile.
+export function extractEnvLockfileDocument(content: string): string | null {
+  content = content.replace(/\r\n/g, '\n');
+  if (!content.startsWith(YAML_DOCUMENT_START)) {
+    return null;
+  }
+  const separatorIndex = content.indexOf(
+    YAML_DOCUMENT_SEPARATOR,
+    YAML_DOCUMENT_START.length
+  );
+  if (separatorIndex === -1) {
+    return null;
+  }
+  return content.slice(YAML_DOCUMENT_START.length, separatorIndex);
+}
+
+export function joinPnpmLockfileDocuments(
+  envDocument: string | null,
+  mainDocument: string
+): string {
+  if (envDocument === null) {
+    return mainDocument;
+  }
+  return `${YAML_DOCUMENT_START}${envDocument}${YAML_DOCUMENT_SEPARATOR}${mainDocument}`;
+}
+
 // https://github.com/pnpm/pnpm/blob/50e37072f42bcca6d393a74bed29f7f0e029805d/lockfile/lockfile-file/src/write.ts#L22
 const LOCKFILE_YAML_FORMAT = {
   blankLines: true,

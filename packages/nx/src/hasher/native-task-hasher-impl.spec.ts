@@ -3,8 +3,30 @@ import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspac
 import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
+import {
+  closeDbConnection,
+  connectToNxDb,
+  HashPlanner,
+  IoSnapshotStore,
+} from '../native';
+import { join } from 'path';
+import { TaskGraph } from '../config/task-graph';
+import {
+  createTaskPlanningContext,
+  TaskPlanningContext,
+} from './task-planning-context';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+
+vi.mock('../tasks-runner/utils', async () => {
+  const actual = await vi.importActual('../tasks-runner/utils');
+  return {
+    ...actual,
+    // The real lookup reads this repo's built `packages/nx/dist` executor
+    // schema, which nx:test does not declare as an input.
+    getExecutorForTask: vi.fn(() => ({})),
+  };
+});
 
 // Helper to normalize hash results for deterministic snapshot comparison
 // (parallel processing may produce inputs in arbitrary order)
@@ -1391,4 +1413,639 @@ describe('native task hasher', () => {
   //   );
   //   console.dir(hashes, { depth: null });
   // });
+
+  // parent:compile -> child:compile (no outputs); app:serve reads app:build's
+  // outputs and serves e2e:e2e, so those two wait for the up-front batch.
+  async function upfrontFixture() {
+    await tempFs.createFiles({
+      'apps/app/project.json': JSON.stringify({ name: 'app' }),
+      'apps/app/main.ts': 'app',
+      'apps/e2e/project.json': JSON.stringify({ name: 'e2e' }),
+      'apps/e2e/app.spec.ts': 'e2e',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+      'apps/app': 'app',
+      'apps/e2e': 'e2e',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: { compile: { executor: 'nx:run-commands' } },
+      },
+    });
+    // parent reads its dependency's outputs but child:compile emits none
+    // (a `build` target would get the legacy default outputs).
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: ['default', { dependentTasksOutputFiles: '**/*.d.ts' }],
+          },
+        },
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/src/index.ts');
+    // app:serve reads app:build's outputs; e2e is served by app:serve.
+    builder.addNode({
+      name: 'app',
+      type: 'app',
+      data: {
+        root: 'apps/app',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{workspaceRoot}/dist/apps/app'],
+          },
+          serve: {
+            executor: 'nx:run-commands',
+            continuous: true,
+            dependsOn: ['build'],
+            inputs: ['default', { dependentTasksOutputFiles: '**/*.d.ts' }],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'e2e',
+      type: 'app',
+      data: {
+        root: 'apps/e2e',
+        targets: {
+          e2e: {
+            executor: 'nx:run-commands',
+            inputs: ['default'],
+            dependsOn: [{ projects: 'app', target: 'serve' }],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      { compile: ['^compile'] },
+      ['parent', 'e2e'],
+      ['compile', 'e2e'],
+      undefined,
+      {}
+    );
+    const impl = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    return { taskGraph, impl };
+  }
+
+  it('hashes up front only the tasks whose plan holds no output of another task', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const tasks = Object.values(taskGraph.tasks);
+    const hashes = await impl.hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+
+    // parent:compile depends on child:compile, which emits nothing, so its
+    // plan holds no outputs; app:serve reads app:build's, and e2e inherits that.
+    expect(Object.keys(taskGraph.tasks).sort()).toEqual([
+      'app:build',
+      'app:serve',
+      'child:compile',
+      'e2e:e2e',
+      'parent:compile',
+    ]);
+    expect(Object.keys(hashes).sort()).toEqual([
+      'app:build',
+      'child:compile',
+      'parent:compile',
+    ]);
+    expect(taskGraph.dependencies['e2e:e2e']).toEqual([]);
+  });
+
+  function countPlanning(impl: NativeTaskHasherImpl) {
+    const original = impl.planner.getPlansReference.bind(impl.planner);
+    const counter = { calls: 0 };
+    impl.planner.getPlansReference = (
+      ...args: Parameters<HashPlanner['getPlansReference']>
+    ) => {
+      counter.calls++;
+      return original(...args);
+    };
+    return counter;
+  }
+
+  it('hashes a deferred task from the up-front plans without planning again', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const tasks = Object.values(taskGraph.tasks);
+    await impl.hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+    const planning = countPlanning(impl);
+
+    const reused = await impl.hashTask(
+      taskGraph.tasks['e2e:e2e'],
+      taskGraph,
+      {}
+    );
+
+    expect(planning.calls).toBe(0);
+    const { taskGraph: freshGraph, impl: fresh } = await upfrontFixture();
+    const planned = await fresh.hashTask(
+      freshGraph.tasks['e2e:e2e'],
+      freshGraph,
+      {}
+    );
+    expect(reused.value).toEqual(planned.value);
+    expect(reused.details).toEqual(planned.details);
+  });
+
+  // The entry digest covers the writes, not the reads, because a read
+  // reaches the hash as the file group it becomes. That is only true while
+  // every read-driven difference has another carrier, so assert it directly
+  // rather than by reading the planner: two entries differing in one read
+  // must hash differently, with the digest identical.
+  it('moves a task hash by a changed read while the entry digest holds', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/one.txt': 'one',
+      'libs/child/two.txt': 'two',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-read-db'),
+      'io-snapshots'
+    );
+    const snapshotSet = (inputs: string[]) => {
+      new IoSnapshotStore(snapshotDb).import({
+        requestedCommit: commit,
+        snapshotsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: ['dist/child'] },
+        }),
+      });
+      return new IoSnapshotStore(snapshotDb).get(commit);
+    };
+    const task = taskGraph.tasks['child:compile'];
+    const hashWith = async (inputs: string[]) =>
+      impl.hashTask(
+        task,
+        taskGraph,
+        {},
+        tempFs.tempDir,
+        true,
+        snapshotSet(inputs)
+      );
+
+    const one = await hashWith(['libs/child/one.txt']);
+    const two = await hashWith(['libs/child/two.txt']);
+
+    const digestOf = (hash: typeof one) =>
+      Object.keys(hash.details).filter((key) => key.startsWith('io-snapshot:'));
+    expect(digestOf(one)).toEqual(digestOf(two));
+    expect(digestOf(one)).toEqual([expect.stringMatching(/^io-snapshot:\d+$/)]);
+    expect(two.value).not.toBe(one.value);
+    expect(two.inputs.files).toContain('libs/child/two.txt');
+    expect(two.inputs.files).not.toContain('libs/child/one.txt');
+  });
+
+  it('hashes a task from its snapshot instead of its declared fileset', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-db'),
+      'io-snapshots'
+    );
+    const snapshotSet = (inputs: string[]) => {
+      new IoSnapshotStore(snapshotDb).import({
+        requestedCommit: commit,
+        snapshotsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: [] },
+        }),
+      });
+      return new IoSnapshotStore(snapshotDb).get(commit);
+    };
+    const snapshots = snapshotSet(['libs/child/observed.txt']);
+    const task = taskGraph.tasks['child:compile'];
+
+    const native = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true
+    );
+    const fromSnapshot = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      snapshots
+    );
+
+    expect(fromSnapshot.value).not.toBe(native.value);
+    // The observed read plus the always-on workspace files; none of the
+    // declared fileset's files.
+    expect(fromSnapshot.inputs.files).toContain('libs/child/observed.txt');
+    expect(
+      fromSnapshot.inputs.files.filter((f) => f.startsWith('libs/child/'))
+    ).toEqual(['libs/child/observed.txt']);
+    const digests = (hash: typeof native) =>
+      Object.keys(hash.details).filter((key) => key.startsWith('io-snapshot:'));
+    expect(digests(fromSnapshot)).toEqual([
+      expect.stringMatching(/^io-snapshot:\d+$/),
+    ]);
+    expect(digests(native)).toEqual([]);
+
+    // The observed file is what the hash follows now, not the declared fileset.
+    await tempFs.createFiles({ 'libs/child/observed.txt': 'changed' });
+    const changed = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      snapshots
+    );
+    expect(changed.value).not.toBe(fromSnapshot.value);
+    closeDbConnection(snapshotDb);
+  });
+
+  it('keeps hashing from its own version after the commit is re-imported', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/one.txt': 'one',
+      'libs/child/two.txt': 'two',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-versions-db'),
+      'io-snapshots'
+    );
+    const store = new IoSnapshotStore(snapshotDb);
+    const importReads = (inputs: string[]) =>
+      store.import({
+        requestedCommit: commit,
+        snapshotsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: [] },
+        }),
+      });
+    const first = importReads(['libs/child/one.txt']);
+    // Read back lazily, as the daemon and a reading client do.
+    const pinned = store.getVersion(commit, first.resolution.fetchedAt);
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    importReads(['libs/child/two.txt']);
+
+    const task = taskGraph.tasks['child:compile'];
+    const hashWith = (snapshots: typeof first) =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, snapshots);
+    const fromPinned = await hashWith(pinned);
+    expect(fromPinned.inputs.files).toContain('libs/child/one.txt');
+    expect(fromPinned.inputs.files).not.toContain('libs/child/two.txt');
+    expect((await hashWith(store.get(commit))).inputs.files).toContain(
+      'libs/child/two.txt'
+    );
+    closeDbConnection(snapshotDb);
+  });
+
+  it('moves a task hash by a lockfile-only edit when the snapshot read the lockfile', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.20"}' });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-lockfile-db'),
+      'io-snapshots'
+    );
+    new IoSnapshotStore(snapshotDb).import({
+      requestedCommit: commit,
+      snapshotsJson: JSON.stringify({
+        'child:compile': { commit, inputs: ['package-lock.json'], outputs: [] },
+      }),
+    });
+    const snapshots = new IoSnapshotStore(snapshotDb).get(commit);
+    const task = taskGraph.tasks['child:compile'];
+    const hash = () =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, snapshots);
+
+    const before = await hash();
+    expect(before.inputs.files).toContain('package-lock.json');
+
+    await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.21"}' });
+    expect((await hash()).value).not.toBe(before.value);
+    closeDbConnection(snapshotDb);
+  });
+
+  it('plans again for a task graph other than the up-front batch, and for a task the batch never planned', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const planned = Object.values(taskGraph.tasks).filter(
+      (t) => t.id !== 'e2e:e2e'
+    );
+    await impl.hashTasksUpfront(
+      planned,
+      taskGraph,
+      Object.fromEntries(planned.map((t) => [t.id, {}]))
+    );
+    const planning = countPlanning(impl);
+
+    // e2e:e2e was left out of the batch, so it has no plan to reuse.
+    await impl.hashTask(taskGraph.tasks['e2e:e2e'], taskGraph, {});
+    expect(planning.calls).toBe(1);
+
+    // A changed output set is a different task graph to the planner; an
+    // override is not, since plans never read it.
+    const changed: TaskGraph = {
+      ...taskGraph,
+      tasks: {
+        ...taskGraph.tasks,
+        'app:serve': {
+          ...taskGraph.tasks['app:serve'],
+          outputs: ['{workspaceRoot}/dist/apps/app-serve'],
+        },
+      },
+    };
+    await impl.hashTask(changed.tasks['app:serve'], changed, {});
+    expect(planning.calls).toBe(2);
+
+    const overridden: TaskGraph = {
+      ...taskGraph,
+      tasks: {
+        ...taskGraph.tasks,
+        'app:serve': {
+          ...taskGraph.tasks['app:serve'],
+          overrides: { port: 4201 },
+        },
+      },
+    };
+    await impl.hashTask(overridden.tasks['app:serve'], overridden, {});
+    expect(planning.calls).toBe(2);
+  });
+
+  it('hashes a disk-backed fileset up front unless it reaches a dependency output', async () => {
+    await tempFs.createFiles({
+      'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
+      'libs/gen/index.ts': 'gen',
+      'libs/plain/project.json': JSON.stringify({ name: 'plain' }),
+      'libs/plain/index.ts': 'plain',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/gen': 'gen',
+      'libs/plain': 'plain',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    // gen:compile reads what gen:codegen writes, so it waits for it.
+    // plain:compile reads a generated file no task in the run produces.
+    builder.addNode({
+      name: 'gen',
+      type: 'lib',
+      data: {
+        root: 'libs/gen',
+        targets: {
+          codegen: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/generated'],
+          },
+          compile: {
+            executor: 'nx:run-commands',
+            dependsOn: ['codegen'],
+            inputs: [
+              'default',
+              { fileset: '{projectRoot}/generated/**/*', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'plain',
+      type: 'lib',
+      data: {
+        root: 'libs/plain',
+        targets: {
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: [
+              'default',
+              { fileset: '{projectRoot}/.env.generated', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['gen', 'plain'],
+      ['compile'],
+      undefined,
+      {}
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    expect(tasks.map((t) => t.id).sort()).toEqual([
+      'gen:codegen',
+      'gen:compile',
+      'plain:compile',
+    ]);
+    const hashes = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+
+    expect(Object.keys(hashes).sort()).toEqual([
+      'gen:codegen',
+      'plain:compile',
+    ]);
+  });
+
+  it("takes the file map's word for a tracked includeIgnored file only up front", async () => {
+    await tempFs.createFiles({
+      'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
+      'libs/gen/generated/tracked.ts': 'before',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/gen': 'gen',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'gen',
+      type: 'lib',
+      data: {
+        root: 'libs/gen',
+        targets: {
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: [
+              { fileset: '{projectRoot}/generated/**/*', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['gen'],
+      ['compile'],
+      undefined,
+      {}
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    const envs = Object.fromEntries(tasks.map((t) => [t.id, {}]));
+    const impl = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const upfront = (await impl.hashTasksUpfront(tasks, taskGraph, envs))[
+      'gen:compile'
+    ].value;
+    const [same] = await impl.hashTasks(tasks, taskGraph, envs);
+    expect(same.value).toEqual(upfront);
+
+    // A task rewrote the tracked file; the file map was not told. Hashing
+    // after that reads the disk, the up-front batch still trusts the map.
+    await tempFs.writeFile('libs/gen/generated/tracked.ts', 'after');
+    const [reread] = await impl.hashTasks(tasks, taskGraph, envs);
+    expect(reread.value).not.toEqual(upfront);
+    const again = (await impl.hashTasksUpfront(tasks, taskGraph, envs))[
+      'gen:compile'
+    ].value;
+    expect(again).toEqual(upfront);
+  });
+});
+
+describe('native task hasher with a shared planner', () => {
+  let tempFs: TempFs;
+  beforeEach(async () => {
+    tempFs = new TempFs('NativeTaskHasherPlans');
+    await tempFs.createFiles({
+      'libs/parent/filea.ts': 'a',
+      'libs/child/fileb.ts': 'b',
+      'nx.json': JSON.stringify({}),
+    });
+  });
+  afterEach(() => tempFs.cleanup());
+
+  // The planner remembers selection's plans. parent:build reads child:build's
+  // outputs, so a graph without that edge must not get the remembered plan.
+  it('hashes as a fresh hasher does, after selection planned a different graph', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: [
+              'default',
+              { dependentTasksOutputFiles: '**/*.js', transitive: true },
+            ],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{workspaceRoot}/dist/child'],
+          },
+        },
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const nxJson = {} as NxJsonConfiguration;
+    const graphs = {
+      withEdge: createTaskGraph(
+        projectGraph,
+        { build: ['^build'] },
+        ['parent', 'child'],
+        ['build'],
+        undefined,
+        {}
+      ),
+      withoutEdge: createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['build'],
+        undefined,
+        {}
+      ),
+    };
+    const hasherWith = (context?: TaskPlanningContext) =>
+      new NativeTaskHasherImpl(
+        tempFs.tempDir,
+        nxJson,
+        projectGraph,
+        workspaceFiles.rustReferences,
+        { selectivelyHashTsConfig: false },
+        context
+      );
+    const hashOf = async (hasher: NativeTaskHasherImpl, graph: TaskGraph) =>
+      (
+        await hasher.hashTasks([graph.tasks['parent:build']], graph, {
+          'parent:build': {},
+        })
+      )[0].value;
+
+    const context = createTaskPlanningContext(projectGraph, nxJson);
+    context.planner.getPlansReference(
+      Object.keys(graphs.withEdge.tasks),
+      graphs.withEdge
+    );
+    const shared = hasherWith(context);
+
+    const reused = await hashOf(shared, graphs.withEdge);
+    expect(reused).toEqual(await hashOf(hasherWith(), graphs.withEdge));
+    const replanned = await hashOf(shared, graphs.withoutEdge);
+    expect(replanned).toEqual(await hashOf(hasherWith(), graphs.withoutEdge));
+    expect(replanned).not.toEqual(reused);
+  });
 });

@@ -14,6 +14,7 @@ describe('Remix E2E Tests', () => {
   describe('--integrated (npm)', () => {
     beforeAll(() => {
       newProject({
+        keepBackup: true,
         packages: [
           '@nx/remix',
           '@nx/react',
@@ -45,6 +46,7 @@ describe('Remix E2E Tests', () => {
   describe('--integrated (yarn)', () => {
     beforeAll(async () => {
       newProject({
+        keepBackup: true,
         packages: [
           '@nx/remix',
           '@nx/react',
@@ -55,6 +57,9 @@ describe('Remix E2E Tests', () => {
           '@nx/eslint',
         ],
         packageManager: 'yarn',
+        // Remix rejects TypeScript 6, so keep this workspace on the 5.x line
+        // that @nx/remix pins (packages/remix/src/utils/versions.ts).
+        typescriptVersion: '~5.9.2',
       });
     });
 
@@ -211,7 +216,13 @@ describe('Remix E2E Tests', () => {
     let proj: string;
 
     beforeAll(() => {
-      proj = newProject({ packages: ['@nx/remix'] });
+      proj = newProject({
+        keepBackup: true,
+        packages: ['@nx/remix'],
+        // Remix rejects TypeScript 6, so keep this workspace on the 5.x line
+        // that @nx/remix pins (packages/remix/src/utils/versions.ts).
+        typescriptVersion: '~5.9.2',
+      });
     });
 
     afterAll(() => {

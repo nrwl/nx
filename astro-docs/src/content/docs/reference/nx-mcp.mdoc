@@ -71,8 +71,8 @@ If you're using Cursor or VS Code, install the [Nx Console extension](/docs/gett
 
 ### Claude Code
 
-{% aside type="tip" title="Using Claude Code sandboxes?" %}
-With Claude Code sandboxes, you need to allow Unix socket access. See [Nx Fails in Claude Code Sandbox](/docs/kb/nx-sandbox-unix-sockets) for more information.
+{% aside type="tip" title="Using an agent sandbox?" %}
+Claude Code, Codex, and the GitHub Copilot CLI all sandbox the commands they run, and each blocks Unix sockets until you allow them. See [Nx fails in an AI agent sandbox](/docs/kb/nx-sandbox-unix-sockets) for the per-agent setting.
 {% /aside %}
 
 {% tabs syncKey="nx-version" %}

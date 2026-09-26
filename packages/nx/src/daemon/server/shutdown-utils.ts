@@ -3,13 +3,13 @@ import type { Server, Socket } from 'net';
 import { serverLogger } from '../logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
-import type { Watcher } from '../../native';
+import { stopWatchingWorkspaceContext } from '../../utils/workspace-context';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
-import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
+import { writeMessage } from '../../utils/consume-messages-from-socket';
 import { cleanupLatestNx } from './latest-nx';
 import { flushAnalytics } from '../../analytics';
 import { spawn } from 'child_process';
@@ -64,26 +64,6 @@ async function startNewDaemonInBackground() {
   serverLogger.log('Started new daemon process in background');
 }
 
-let watcherInstance: Watcher | undefined;
-
-export function storeWatcherInstance(instance: Watcher) {
-  watcherInstance = instance;
-}
-
-export function getWatcherInstance() {
-  return watcherInstance;
-}
-
-let outputWatcherInstance: Watcher | undefined;
-
-export function storeOutputWatcherInstance(instance: Watcher) {
-  outputWatcherInstance = instance;
-}
-
-export function getOutputWatcherInstance() {
-  return outputWatcherInstance;
-}
-
 interface HandleServerProcessTerminationParams {
   server: Server;
   reason: string;
@@ -126,19 +106,8 @@ async function performShutdown(
       }
     });
 
-    if (watcherInstance) {
-      await watcherInstance.stop();
-      serverLogger.watcherLog(
-        `Stopping the watcher for ${workspaceRoot} (sources)`
-      );
-    }
-
-    if (outputWatcherInstance) {
-      await outputWatcherInstance.stop();
-      serverLogger.watcherLog(
-        `Stopping the watcher for ${workspaceRoot} (outputs)`
-      );
-    }
+    stopWatchingWorkspaceContext();
+    serverLogger.watcherLog(`Stopping the watch for ${workspaceRoot}`);
 
     deleteDaemonJsonProcessCache();
     cleanupPlugins();
@@ -166,14 +135,14 @@ export function resetInactivityTimeout(cb: () => void): void {
 
 export function respondToClient(
   socket: Socket,
-  response: string,
+  response: Buffer,
   description: string
 ) {
   return new Promise(async (res) => {
     if (description) {
       serverLogger.requestLog(`Responding to the client.`, description);
     }
-    socket.write(response + MESSAGE_END_SEQ, (err) => {
+    writeMessage(socket, response, (err) => {
       if (err) {
         serverLogger.log(
           `Socket write error (client likely disconnected): ${err.message}`
@@ -208,7 +177,11 @@ export async function respondWithError(
   console.error(normalizedError.stack);
 
   // Respond with the original error
-  await respondToClient(socket, serializeResult(error, null, null), null);
+  await respondToClient(
+    socket,
+    Buffer.from(serializeResult(error, null, null), 'utf8'),
+    null
+  );
 }
 
 export async function respondWithErrorAndExit(

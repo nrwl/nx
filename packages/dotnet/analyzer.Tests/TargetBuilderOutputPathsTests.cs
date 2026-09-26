@@ -49,6 +49,42 @@ public class TargetBuilderOutputPathsTests
             nxJson: null,
             directoryBuildInputs: directoryBuildInputs ?? new List<string>());
 
+    /// <summary>
+    /// The paths a target captures. The obj entry is emitted as a glob with the
+    /// restore-only exclusions, covered by <see cref="TargetBuilderRestoreOutputsTests"/>,
+    /// and the option token by <see cref="TargetBuilderTestResultsOutputTests"/>; here
+    /// the glob suffix is dropped and the rest would only pad every expected array.
+    /// </summary>
+    private static string[] Declared(Target target) =>
+        target.Outputs!
+            .Where(o => !o.StartsWith('!') && !o.Contains("{options."))
+            .Select(o => o.EndsWith("/**/*") ? o[..^5] : o)
+            .ToArray();
+
+    /// <summary>
+    /// The properties MSBuild actually evaluates for a project under the
+    /// artifacts layout, measured from `dotnet msbuild -getProperty:` on a real
+    /// project. BaseOutputPath and BaseIntermediateOutputPath are always set,
+    /// and both carry ArtifactsProjectName, which defaults to the MSBuild
+    /// project name and is unrelated to the Nx project name.
+    /// </summary>
+    private static Dictionary<string, string> ArtifactsProperties(
+        string msbuildProjectName,
+        string artifactsDir = "artifacts",
+        string binOutputName = "bin")
+    {
+        var artifactsRoot = Path.Combine(WorkspaceRoot, artifactsDir);
+        return new Dictionary<string, string>
+        {
+            ["UseArtifactsOutput"] = "true",
+            ["ArtifactsPath"] = artifactsRoot,
+            ["ArtifactsProjectName"] = msbuildProjectName,
+            ["MSBuildProjectName"] = msbuildProjectName,
+            ["BaseOutputPath"] = Path.Combine(artifactsRoot, binOutputName, msbuildProjectName) + Path.DirectorySeparatorChar,
+            ["BaseIntermediateOutputPath"] = Path.Combine(artifactsRoot, "obj", msbuildProjectName) + Path.DirectorySeparatorChar,
+        };
+    }
+
     // --- Original #33971: Microsoft.NET.Sdk.Web ---------------------------
 
     [Fact]
@@ -68,7 +104,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -85,7 +121,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -134,7 +170,7 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/dist/foo/bin",
                 "{workspaceRoot}/dist/intermediates/foo/obj",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -158,7 +194,7 @@ public class TargetBuilderOutputPathsTests
                 "{projectRoot}/bin",
                 "{workspaceRoot}/dist/intermediates/foo/obj",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     // --- Sanity: SDK artifacts layout -------------------------------------
@@ -167,13 +203,8 @@ public class TargetBuilderOutputPathsTests
     public void Build_ArtifactsOutput_EmitsWorkspaceRootOutputs()
     {
         var projectDirectory = ProjectDir("apps", "foo");
-        var properties = new Dictionary<string, string>
-        {
-            ["UseArtifactsOutput"] = "true",
-            // ArtifactsPath defaults to "artifacts" relative to workspace root.
-        };
 
-        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+        var targets = BuildTargets(ArtifactsProperties("foo"), projectDirectory, projectName: "foo");
 
         Assert.Equal(
             new[]
@@ -181,20 +212,18 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/artifacts/bin/foo",
                 "{workspaceRoot}/artifacts/obj/foo",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
     public void Build_ArtifactsOutput_WithCustomArtifactsPath_EmitsWorkspaceRootOutputs()
     {
         var projectDirectory = ProjectDir("apps", "foo");
-        var properties = new Dictionary<string, string>
-        {
-            ["UseArtifactsOutput"] = "true",
-            ["ArtifactsPath"] = Path.Combine(WorkspaceRoot, "build-output"),
-        };
 
-        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+        var targets = BuildTargets(
+            ArtifactsProperties("foo", artifactsDir: "build-output"),
+            projectDirectory,
+            projectName: "foo");
 
         Assert.Equal(
             new[]
@@ -202,7 +231,66 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/build-output/bin/foo",
                 "{workspaceRoot}/build-output/obj/foo",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
+    }
+
+    [Fact]
+    public void Build_ArtifactsOutput_WithRenamedNxProject_UsesTheMSBuildProjectName()
+    {
+        // ArtifactsProjectName defaults to MSBuildProjectName, so a project
+        // renamed for Nx via <Nx><Name> still writes to artifacts/bin/<csproj
+        // name>. Deriving the output from the Nx name pointed it at a directory
+        // the build never writes.
+        var projectDirectory = ProjectDir("apps", "foo");
+
+        var targets = BuildTargets(
+            ArtifactsProperties("Renamed"),
+            projectDirectory,
+            projectName: "my-renamed-api");
+
+        Assert.Equal(
+            new[]
+            {
+                "{workspaceRoot}/artifacts/bin/Renamed",
+                "{workspaceRoot}/artifacts/obj/Renamed",
+            },
+            Declared(targets["build"]));
+    }
+
+    [Fact]
+    public void Build_ArtifactsOutput_HonoursArtifactsProjectNameAndBinOutputName()
+    {
+        // Both segments are overridable; MSBuild folds them into BaseOutputPath.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = ArtifactsProperties("Override", binOutputName: "binaries");
+        properties["ArtifactsProjectName"] = "custom-name";
+        properties["ArtifactsBinOutputName"] = "binaries";
+        properties["BaseOutputPath"] =
+            Path.Combine(WorkspaceRoot, "artifacts", "binaries", "custom-name") + Path.DirectorySeparatorChar;
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[]
+            {
+                "{workspaceRoot}/artifacts/binaries/custom-name",
+                "{workspaceRoot}/artifacts/obj/Override",
+            },
+            Declared(targets["build"]));
+    }
+
+    [Fact]
+    public void Publish_ArtifactsOutput_HonoursArtifactsPublishOutputName()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = ArtifactsProperties("Foo");
+        properties["ArtifactsPublishOutputName"] = "published";
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{workspaceRoot}/artifacts/published/Foo", "{workspaceRoot}/artifacts/obj/Foo" },
+            Declared(targets["publish"]));
     }
 
     // --- OpenApiDocumentsDirectory: the generated document is a build output --
@@ -221,7 +309,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -239,7 +327,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -260,7 +348,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -281,7 +369,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/contracts/foo/foo.json", "{workspaceRoot}/contracts/foo/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -301,7 +389,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo.json", "{projectRoot}/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -319,7 +407,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo.json", "{projectRoot}/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -337,7 +425,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/apps/contracts/foo.json", "{workspaceRoot}/apps/contracts/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -355,7 +443,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -376,7 +464,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -394,7 +482,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
-            targets["build:release"].Outputs);
+            Declared(targets["build:release"]));
     }
 
     [Fact]
@@ -413,13 +501,13 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin/publish", "{projectRoot}/obj" },
-            exeTargets["publish"].Outputs);
+            Declared(exeTargets["publish"]));
         Assert.Equal(
             new[] { "{projectRoot}/bin/*.nupkg", "{projectRoot}/obj" },
-            libTargets["pack"].Outputs);
+            Declared(libTargets["pack"]));
         Assert.Equal(
             new[] { "{projectRoot}/TestResults" },
-            testTargets["test"].Outputs);
+            Declared(testTargets["test"]));
     }
 
     [Fact]
@@ -440,7 +528,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -461,7 +549,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/PublicApi.json", "{projectRoot}/openapi/PublicApi_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Theory]
@@ -489,7 +577,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", $"{{projectRoot}}/openapi/{expectedStem}.json", $"{{projectRoot}}/openapi/{expectedStem}_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     // --- Publish output: configuration is rewritten to match the target -----
@@ -504,6 +592,7 @@ public class TargetBuilderOutputPathsTests
         var projectDirectory = ProjectDir("apps", "foo");
         var properties = new Dictionary<string, string>
         {
+            ["Configuration"] = "Debug",
             ["PublishDir"] = "bin\\Debug\\publish\\",
         };
 
@@ -511,7 +600,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin/Release/publish", "{projectRoot}/obj" },
-            targets["publish"].Outputs);
+            Declared(targets["publish"]));
     }
 
     [Fact]
@@ -522,6 +611,7 @@ public class TargetBuilderOutputPathsTests
         var projectDirectory = ProjectDir("apps", "foo");
         var properties = new Dictionary<string, string>
         {
+            ["Configuration"] = "Debug",
             ["PublishDir"] = "dist-publish",
         };
 
@@ -529,23 +619,19 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/dist-publish", "{projectRoot}/obj" },
-            targets["publish"].Outputs);
+            Declared(targets["publish"]));
     }
 
     [Fact]
     public void Publish_ArtifactsLayout_EmitsWorkspaceRootPublishPath()
     {
         var projectDirectory = ProjectDir("apps", "foo");
-        var properties = new Dictionary<string, string>
-        {
-            ["UseArtifactsOutput"] = "true",
-        };
 
-        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+        var targets = BuildTargets(ArtifactsProperties("foo"), projectDirectory, projectName: "foo", isExe: true);
 
         Assert.Equal(
             new[] { "{workspaceRoot}/artifacts/publish/foo", "{workspaceRoot}/artifacts/obj/foo" },
-            targets["publish"].Outputs);
+            Declared(targets["publish"]));
     }
 
     // --- Pack output: nupkg glob plus the intermediate (obj) directory ------
@@ -561,22 +647,133 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin/*.nupkg", "{projectRoot}/obj" },
-            targets["pack"].Outputs);
+            Declared(targets["pack"]));
+    }
+
+    [Fact]
+    public void Pack_RewritesEvaluatedDebugPackageOutputPathToRelease()
+    {
+        // MSBuild always sets PackageOutputPath, evaluated at the default
+        // (Debug) configuration, but the pack target runs --configuration
+        // Release. Declaring the evaluated value pointed the output at
+        // bin/Debug while the .nupkg was written to bin/Release.
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["Configuration"] = "Debug",
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["PackageOutputPath"] = "bin\\Debug/",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin/Release/*.nupkg", "{projectRoot}/obj" },
+            Declared(targets["pack"]));
     }
 
     [Fact]
     public void Pack_ArtifactsLayout_EmitsWorkspaceRootPackageAndObjPaths()
     {
         var projectDirectory = ProjectDir("libs", "foo");
-        var properties = new Dictionary<string, string>
+
+        var targets = BuildTargets(ArtifactsProperties("foo"), projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{workspaceRoot}/artifacts/package/*.nupkg", "{workspaceRoot}/artifacts/obj/foo" },
+            Declared(targets["pack"]));
+    }
+
+    [Fact]
+    public void Pack_ArtifactsOutput_HonoursArtifactsPackageOutputName()
+    {
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = ArtifactsProperties("foo");
+        properties["ArtifactsPackageOutputName"] = "packages";
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{workspaceRoot}/artifacts/packages/*.nupkg", "{workspaceRoot}/artifacts/obj/foo" },
+            Declared(targets["pack"]));
+    }
+
+    // --- Regressions: comparer preservation and configuration matching -------
+
+    [Fact]
+    public void Pack_NonCanonicallyCasedPackageOutputPath_IsStillHonoured()
+    {
+        // CollectProperties hands the builders a case-insensitive dictionary,
+        // because MSBuild reports whatever spelling the project (or an
+        // environment variable, which is a global property) declared. The
+        // Release copy must keep that comparer or pack silently declares bin/.
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["UseArtifactsOutput"] = "true",
+            ["configuration"] = "Debug",
+            ["packageoutputpath"] = "custompkg/",
         };
 
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{workspaceRoot}/artifacts/package/*.nupkg", "{workspaceRoot}/artifacts/obj/foo" },
-            targets["pack"].Outputs);
+            new[] { "{projectRoot}/custompkg/*.nupkg", "{projectRoot}/obj" },
+            Declared(targets["pack"]));
+    }
+
+    [Fact]
+    public void Publish_NonCanonicallyCasedPublishDir_IsStillHonoured()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["configuration"] = "Debug",
+            ["publishdir"] = "custompub/",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{projectRoot}/custompub", "{projectRoot}/obj" },
+            Declared(targets["publish"]));
+    }
+
+    [Fact]
+    public void Pack_LeavesLiteralReleaseDirectoryAlone()
+    {
+        // The directory is named "release" in its own right, not produced from
+        // $(Configuration) - rewriting it to "Release" pointed the glob at a
+        // directory pack never writes (and never matches on a case-sensitive
+        // filesystem).
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["Configuration"] = "Debug",
+            ["PackageOutputPath"] = "nupkgs/release/",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/nupkgs/release/*.nupkg", "{projectRoot}/obj" },
+            Declared(targets["pack"]));
+    }
+
+    [Fact]
+    public void Publish_LeavesLiteralReleaseDirectoryAlone()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["Configuration"] = "Debug",
+            ["PublishDir"] = "out/release/",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{projectRoot}/out/release", "{projectRoot}/obj" },
+            Declared(targets["publish"]));
     }
 }

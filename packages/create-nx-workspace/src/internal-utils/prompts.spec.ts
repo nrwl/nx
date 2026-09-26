@@ -1,11 +1,13 @@
 import {
   confirmThirdPartyPreset,
+  determineAiAgents,
   determineFormatterOptions,
   determineLinterOptions,
   determineNxCloudV2,
   determineTemplate,
 } from './prompts';
 import * as clack from '@clack/prompts';
+import { detectAiAgentName } from '../utils/ai/ai-output';
 
 jest.mock('../utils/ci/is-ci', () => ({
   isCI: jest.fn(() => false),
@@ -201,16 +203,19 @@ describe('determineNxCloudV2', () => {
 
   // The message choices are `{ value, name }` with `name` as the display text.
   // Mapping `name` into clack's `value` made every answer resolve to 'yes',
-  // because the caller compares against 'skip' / 'never'.
+  // because the caller compares against 'skip'.
   it('offers the choice keys as values, not their labels', async () => {
     (clack.autocomplete as jest.Mock).mockResolvedValueOnce('skip');
 
     await determineNxCloudV2({ _: [], $0: '', interactive: true });
 
     const { options } = (clack.autocomplete as jest.Mock).mock.calls[0][0];
-    expect(options.map((o: { value: string }) => o.value)).toEqual(
-      expect.arrayContaining(['yes', 'skip', 'never'])
-    );
+    // Exact, not arrayContaining: the opt-out choice ('never') must stay gone,
+    // since it wrote `neverConnectToCloud` on an agent's behalf (NXC-4900).
+    expect(options.map((o: { value: string }) => o.value)).toEqual([
+      'yes',
+      'skip',
+    ]);
     expect(options.every((o: { value: string }) => o.value !== o.label)).toBe(
       true
     );
@@ -222,7 +227,6 @@ describe('determineNxCloudV2', () => {
   it.each([
     ['Yes', 'yes'],
     ['Skip for now', 'skip'],
-    ["No, don't ask again", 'never'],
   ])('resolves the %s option to %s', async (label, expected) => {
     (clack.autocomplete as jest.Mock).mockImplementationOnce(
       async ({ options }: { options: { value: string; label: string }[] }) =>
@@ -309,5 +313,33 @@ describe('determineFormatterOptions', () => {
         ]),
       })
     );
+  });
+});
+
+describe('determineAiAgents', () => {
+  const mockDetect = detectAiAgentName as jest.Mock;
+
+  afterEach(() => mockDetect.mockReset());
+
+  it('should configure an agent the generator has a branch for', async () => {
+    mockDetect.mockReturnValue('claude');
+
+    expect(await determineAiAgents({} as any)).toEqual(['claude']);
+  });
+
+  it('should not configure copilot-cli, which detection reports but the generator cannot set up', async () => {
+    // Detection is broader than `supportedAgents`. Passing this through would
+    // run setupAiAgentsGenerator with an agent no `hasAgent` branch matches:
+    // no rules file, but still the unconditional .claude/* .gitignore entries.
+    // Copilot CLI configuration is tracked separately (NXC-4622).
+    mockDetect.mockReturnValue('copilot-cli');
+
+    expect(await determineAiAgents({} as any)).toEqual([]);
+  });
+
+  it('should return nothing when no agent is detected', async () => {
+    mockDetect.mockReturnValue(null);
+
+    expect(await determineAiAgents({} as any)).toEqual([]);
   });
 });

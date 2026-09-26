@@ -1,5 +1,5 @@
 ---
-// Copied from https://github.com/withastro/starlight/blob/f14eb0c/packages/starlight/components/PageFrame.astro with modifications.
+// Copied from @astrojs/starlight@0.42.0 components/PageFrame.astro with modifications.
 import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
 import { Footer } from '@nx/nx-dev-ui-common/src/lib/footer';
 import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
@@ -33,7 +33,7 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
     hasSidebar && (
       <nav class="sidebar print:hidden" aria-label={Astro.locals.t('sidebarNav.accessibleLabel')}>
         <MobileMenuToggle />
-        <div id="starlight__sidebar" class="sidebar-pane">
+        <sl-sidebar-pane popover="" id="starlight__sidebar" class="sidebar-pane">
           <div class="sidebar-content sl-flex">
             <slot name="sidebar" />
             <!-- CTA Buttons for Mobile Menu - Show when not in header (below xl breakpoint) -->
@@ -49,7 +49,7 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
                     Contact
                   </a>
                   <a
-                    href="https://cloud.nx.app?utm_source=nx-dev&utm_medium=header&utm_campaign=try-nx-cloud"
+                    href="https://cloud.nx.app?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-login&utm_content=docs-header"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition no-underline bg-blue-500 dark:bg-sky-500 text-white hover:bg-blue-600 dark:hover:bg-sky-600 shadow-sm"
@@ -61,7 +61,7 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
               </div>
             </div>
           </div>
-        </div>
+        </sl-sidebar-pane>
       </nav>
     )
   }
@@ -120,7 +120,12 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
     }
 
     .sidebar-pane {
-      visibility: var(--sl-sidebar-visibility, hidden);
+      /* User agents apply opinionated styles to popovers, which we don't want. */
+      border: unset;
+      padding: unset;
+      height: unset;
+      color: unset;
+
       position: fixed;
       z-index: var(--sl-z-index-menu);
       inset-block: var(--sl-nav-height) 0;
@@ -128,14 +133,11 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       width: 100%;
       background-color: var(--sl-color-bg-sidebar);
       overflow-y: auto;
+      scrollbar-gutter: stable;
     }
 
     .page.has-conf-banner .sidebar-pane {
       inset-block-start: calc(var(--sl-nav-height) + var(--conf-banner-h));
-    }
-
-    :global([aria-expanded='true']) ~ .sidebar-pane {
-      --sl-sidebar-visibility: visible;
     }
 
     .sidebar-content {
@@ -178,7 +180,7 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
 
     /* The fixed mobile menu (hamburger) toggle is positioned from the viewport
        top, so it hides under the conf banner unless we clear it too. */
-    .page.has-conf-banner :global(starlight-menu-button button) {
+    .page.has-conf-banner :global(.sl-menu-button) {
       top: calc(
         (var(--sl-nav-height) - var(--sl-menu-button-size)) / 2 +
           var(--conf-banner-h)
@@ -190,7 +192,8 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
         padding-inline-end: var(--sl-nav-pad-x);
       }
       .sidebar-pane {
-        --sl-sidebar-visibility: visible;
+        /* Visible on larger screens instead of deferring to popover state. */
+        display: block;
         width: var(--sl-sidebar-width);
         background-color: var(--sl-color-bg-sidebar);
         border-inline-end: 1px solid var(--sl-color-hairline-shade);

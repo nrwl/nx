@@ -1,3 +1,4 @@
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
@@ -26,6 +27,61 @@ describe('app', () => {
   afterEach(() => {
     if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
     else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the @swc/core build script for the swc custom server setup', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, { directory: uniq(), style: 'css' })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@swc\/core['"]: false/
+      );
+    });
+
+    it('should deny the unrs-resolver build script pulled in by eslint-config-next', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: uniq(),
+          style: 'css',
+          linter: 'eslint',
+          unitTestRunner: 'none',
+        })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?unrs-resolver['"]?: false/
+      );
+    });
+
+    it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: uniq(),
+          style: 'scss',
+          unitTestRunner: 'none',
+        })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@parcel\/watcher['"]: false/
+      );
+    });
+
+    it('should not record a @parcel/watcher decision without scss', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: uniq(),
+          style: 'css',
+          unitTestRunner: 'none',
+        })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        '@parcel/watcher'
+      );
+    });
   });
 
   it('should add a .gitkeep file to the public directory', async () => {
@@ -175,9 +231,23 @@ describe('app', () => {
       });
 
       expect(readProjectConfiguration(tree, name).root).toEqual(name);
+      expect(readProjectConfiguration(tree, name).sourceRoot).toEqual(
+        `${name}/src`
+      );
       expect(readProjectConfiguration(tree, `${name}-e2e`).root).toEqual(
         `${name}-e2e`
       );
+    });
+
+    it('should set sourceRoot to the project root when --src=false', async () => {
+      const name = uniq();
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        src: false,
+      });
+
+      expect(readProjectConfiguration(tree, name).sourceRoot).toEqual(name);
     });
 
     it('should generate an unstyled component page', async () => {
@@ -892,7 +962,7 @@ describe('app', () => {
         `);
       const packageJson = readJson(tree, 'myapp/package.json');
       expect(packageJson.name).toBe('@proj/myapp');
-      expect(packageJson.nx).toBeUndefined();
+      expect(packageJson.nx).toEqual({ sourceRoot: 'myapp/src' });
       // Make sure keys are in idiomatic order
       expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
           [
@@ -900,6 +970,7 @@ describe('app', () => {
             "version",
             "private",
             "dependencies",
+            "nx",
           ]
         `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
@@ -1049,6 +1120,7 @@ describe('app', () => {
       const packageJson = readJson(tree, 'myapp/package.json');
       expect(packageJson.name).toBe('@proj/myapp');
       expect(packageJson.nx.name).toBe('myapp');
+      expect(packageJson.nx.sourceRoot).toBe('myapp/src');
       // Make sure keys are in idiomatic order
       expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
@@ -1082,7 +1154,7 @@ describe('app', () => {
           "name": "@proj/myapp",
           "projectType": "application",
           "root": "myapp",
-          "sourceRoot": "myapp",
+          "sourceRoot": "myapp/src",
           "tags": [],
           "targets": {},
         }
@@ -1105,6 +1177,64 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
+    });
+
+    it('should set sourceRoot in project.json to the project root when --src=false', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        appDir: true,
+        unitTestRunner: 'jest',
+        style: 'css',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: true,
+        src: false,
+        skipFormat: true,
+      });
+
+      expect(readProjectConfiguration(tree, '@proj/myapp').sourceRoot).toBe(
+        'myapp'
+      );
+      expect(tree.exists('myapp/app/page.tsx')).toBeTruthy();
+      expect(tree.exists('myapp/src/app/page.tsx')).toBeFalsy();
+    });
+
+    it('should set sourceRoot in package.json to the src directory by default', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        appDir: true,
+        unitTestRunner: 'jest',
+        style: 'css',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'myapp/package.json').nx).toEqual({
+        sourceRoot: 'myapp/src',
+      });
+      expect(tree.exists('myapp/src/app/page.tsx')).toBeTruthy();
+    });
+
+    it('should set sourceRoot in package.json to the project root when --src=false', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        appDir: true,
+        unitTestRunner: 'jest',
+        style: 'css',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        src: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'myapp/package.json').nx).toEqual({
+        sourceRoot: 'myapp',
+      });
+      expect(tree.exists('myapp/app/page.tsx')).toBeTruthy();
+      expect(tree.exists('myapp/src/app/page.tsx')).toBeFalsy();
     });
 
     it('should ignore "out-tsc" from eslint', async () => {

@@ -36,14 +36,14 @@ import {
   isMonorepo,
   printFinalMessage,
   readErrorStderr,
-  setNeverConnectToCloud,
   toErrorString,
   updateGitIgnore,
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
-import { Agent } from '../../ai/utils';
+import { Agent, agentConfigWriteBlockedLines } from '../../ai/utils';
+import { isPermissionDenied } from '../../utils/permission-errors';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
 import { MessageOptionKey, recordStat } from '../../utils/ab-testing';
 import { ensureAnalyticsPreferenceSet } from '../../utils/analytics-prompt';
@@ -58,6 +58,7 @@ import {
   determineErrorCode,
   DetectedPlugin,
 } from './utils/ai-output';
+import { isSandbox } from '../../utils/is-sandbox';
 
 export interface InitArgs {
   interactive: boolean;
@@ -177,8 +178,16 @@ async function runInit(
 
   // AI agent mode: apply defaults for non-interactive operation
   const aiMode = isAiAgent();
+  const isSandboxed = isSandbox();
   if (aiMode) {
     options.interactive = false; // Force non-interactive
+
+    if (isSandboxed) {
+      // During init, before configuring AI agents, the daemon and
+      // plugin socket connections are not available
+      process.env.NX_DAEMON = 'false';
+      process.env.NX_ISOLATE_PLUGINS = 'false';
+    }
 
     if (options.nxCloud === undefined) {
       options.nxCloud = false; // Default to skip Nx Cloud
@@ -431,27 +440,43 @@ async function runInit(
     }
   }
 
+  // AI agent mode configures the detected agent automatically (aiAgents is
+  // pre-filled above); interactive humans are always prompted — even in the
+  // minimum setup — since agent configuration also writes the sandbox
+  // allowances the Nx daemon needs when driven by an agent later.
   const selectedAgents = await determineAiAgents(
     options.aiAgents,
-    options.interactive && guided
+    options.interactive
   );
 
   if (selectedAgents && selectedAgents.length > 0) {
-    const tree = new FsTree(repoRoot, false);
-    const aiAgentsCallback = await setupAiAgentsGenerator(tree, {
-      directory: '.',
-      writeNxCloudRules: options.nxCloud !== false,
-      packageVersion: 'latest',
-      agents: [...selectedAgents],
-    });
+    try {
+      const tree = new FsTree(repoRoot, false);
+      const aiAgentsCallback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        writeNxCloudRules: options.nxCloud !== false,
+        packageVersion: 'latest',
+        agents: [...selectedAgents],
+      });
 
-    const changes = tree.listChanges();
-    flushChanges(repoRoot, changes);
+      const changes = tree.listChanges();
+      flushChanges(repoRoot, changes);
 
-    if (aiAgentsCallback) {
-      const results = await aiAgentsCallback();
-      results.messages.forEach((m) => output.log(m));
-      results.errors.forEach((e) => output.error(e));
+      if (aiAgentsCallback) {
+        const results = await aiAgentsCallback();
+        results.messages.forEach((m) => output.log(m));
+        results.errors.forEach((e) => output.error(e));
+      }
+    } catch (e) {
+      if (!isPermissionDenied(e)) {
+        throw e;
+      }
+      // Don't fail the whole init over this — everything else succeeded.
+      // Warned rather than thrown so the rest of the init result still stands.
+      output.warn({
+        title: 'AI agent configuration could not be written from this process',
+        bodyLines: agentConfigWriteBlockedLines(e),
+      });
     }
   }
 
@@ -467,8 +492,6 @@ async function runInit(
   }
   if (nxCloudChoice === 'yes') {
     await initCloud('nx-init');
-  } else if (nxCloudChoice === 'never') {
-    setNeverConnectToCloud(repoRoot);
   }
 
   const analyticsPrompt = await ensureAnalyticsPreferenceSet(

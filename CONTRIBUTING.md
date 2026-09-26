@@ -39,6 +39,23 @@ This repo contains a mix of different technologies, including:
 
 ## Development Workstation Setup
 
+For local development with [mise](https://mise.jdx.dev/), install the tools declared in `mise.toml`:
+
+```bash
+mise install
+```
+
+Activate mise in your shell, or prefix commands with `mise exec --`. The configuration keeps Java 24 as the default runtime and installs Temurin JDK 17 for Gradle compilation. Mise sets `JAVA17_HOME`, which `gradle.properties` uses to discover that compiler toolchain. Gradle's automatic JDK downloads are disabled, so installing Java 24 alone is insufficient.
+
+To verify toolchain discovery and start the documentation site with its build dependencies:
+
+```bash
+mise exec -- pnpm nx run ':gradle-batch-runner:gradle:javaToolchains' --skipNxCache
+mise exec -- pnpm nx serve astro-docs
+```
+
+The toolchain report should list JDK 17 as detected through `JAVA17_HOME` and Java 24 as the current JVM. With mise activated, you can run the same `pnpm nx` commands directly.
+
 If you are using `VSCode`, and provided you have [Docker](https://docker.com) installed on your machine, then you can leverage [Dev Containers](https://containers.dev) through this [VSCode extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), to easily setup your development environment, with everything needed to contribute to Nx, already installed (namely `NodeJS`, `Yarn`, `Rust`, `Cargo`, plus some useful extensions like `Nx Console`).
 
 To do so, simply:
@@ -286,8 +303,8 @@ Please follow the following guidelines:
   - Target a specific project with: `nx run proj:test` (i.e. `nx run angular:test` to target `packages/angular`)
   - Target a specific unit test file (i.e. `packages/angular/src/utils/ast-command-line-utils.spec.ts`)
     with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
-  - `packages/nx` runs on vitest instead: target a file with
-    `nx run nx:test -- src/utils/formatters/oxfmt.spec.ts` (paths relative to `packages/nx`)
+  - `packages/nx`, `packages/workspace`, `packages/rspack`, `packages/rsbuild`, `packages/angular`, `packages/react`, `packages/plugin`, `packages/js`, `packages/storybook`, `packages/remix`, `packages/next`, `packages/expo` and `packages/react-native` run on vitest instead: target a file with
+    `nx run nx:test -- src/utils/formatters/oxfmt.spec.ts` (paths relative to the package)
   - For more options on running tests - check `npx jest --help` or visit [jestjs.io](https://jestjs.io/)
   - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
 - Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`nx affected --target=e2e`)

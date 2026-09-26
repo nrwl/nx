@@ -1,20 +1,20 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+use std::collections::HashSet;
 use std::path::{MAIN_SEPARATOR, Path, PathBuf};
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 
 use crossbeam_channel::{Receiver, Sender, bounded, select, unbounded};
-use napi::bindgen_prelude::*;
-use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
-use notify::{RecursiveMode, Watcher as NotifyWatcher};
-use parking_lot::Mutex;
+use notify::{Config, EventKindMask, RecommendedWatcher, RecursiveMode, Watcher as NotifyWatcher};
 use tracing::{debug, trace};
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
-use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use crate::native::walker::create_walker;
+use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, TRANSIENT_FILE_GLOBS};
 use crate::native::watch::types::{
     EventType, RawWatchEvent, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
@@ -38,6 +38,10 @@ const IDLE_WINDOW: Duration = Duration::from_millis(100);
 /// Starvation cap from the start of a burst — flush even if events keep
 /// arriving faster than IDLE_WINDOW.
 const MAX_WAIT: Duration = Duration::from_millis(500);
+/// A rescan marker is held until the overflow burst settles so a storm that
+/// drops events across many flushes recovers with a single re-walk, not one
+/// per flush. This bounds that hold so an unending storm still recovers.
+const RESCAN_MAX_WAIT: Duration = Duration::from_secs(2);
 /// Grace for the kernel→notify hop before the first event arrives; short so an
 /// idle force-flush adds no latency. macOS FSEvents lags more than inotify.
 #[cfg(target_os = "macos")]
@@ -48,11 +52,11 @@ const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(10);
 /// Larger than FORCE_FLUSH_GRACE so inter-event gaps under load aren't mistaken
 /// for the burst ending; only paid while events keep arriving.
 const FORCE_FLUSH_QUIET: Duration = Duration::from_millis(50);
-/// Overall cap, kept under the 500ms reply timeout in `force_flush_pending` so
+/// Overall cap, kept under the 500ms reply timeout in `WatchSession::flush` so
 /// a late reply isn't read as "no changes".
 const FORCE_FLUSH_MAX: Duration = Duration::from_millis(250);
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
@@ -60,7 +64,7 @@ fn build_ignore_glob_set() -> Arc<NxGlobSet> {
 /// Returns Err on `MaxFilesWatch` — the inotify limit is fatal since
 /// every subsequent registration would fail too. Other errors are
 /// warn-logged and skipped.
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 fn register_watches<I, P>(
     watcher: &mut notify::RecommendedWatcher,
     paths: I,
@@ -81,7 +85,7 @@ where
     Ok(())
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> HashSet<PathBuf> {
     let walker = create_walker(&directory, use_ignores);
     let mut path_set: HashSet<PathBuf> = HashSet::new();
@@ -102,22 +106,62 @@ type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 pub(crate) type WatchEventCallback =
     Box<dyn Fn(std::result::Result<Vec<WatchEvent>, String>) + Send + Sync + 'static>;
 
-type ForceFlushReply = Sender<Vec<WatchEvent>>;
+/// How much of the kernel→notify hop a flush waits out before answering.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum FlushMode {
+    /// Only what has already reached the pipeline. Cheap; a write made just
+    /// before the call may still be in flight from the kernel.
+    Delivered,
+    /// Wait for the hop to settle (grace, quiet window, cap) so a write made
+    /// before the call is in the answer.
+    Settled,
+}
+
+struct FlushRequest {
+    mode: FlushMode,
+    reply: Sender<Vec<WatchEvent>>,
+}
+
+/// The ignore globs every workspace watch applies on top of the ignore
+/// files. A `!` entry admits a path back, see `always_watch`.
+pub(crate) fn default_watch_ignores() -> Vec<String> {
+    let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
+        .iter()
+        .map(|p| (*p).to_string())
+        .collect();
+    // Vite/Vitest write timestamp files that we don't want to watch.
+    globs.extend(TRANSIENT_FILE_GLOBS.iter().map(|g| (*g).to_string()));
+    globs
+}
 
 /// Session config + loop state. Built on the calling thread, then run
 /// by the flush thread.
 struct WatchPipeline {
     filterer: watch_filterer::WatchFilterer,
     notify_rx: Receiver<NotifyResult>,
+    /// Held to keep the registrations alive — dropping it stops delivery.
+    #[cfg_attr(any(target_os = "macos", target_os = "windows"), allow(dead_code))]
     watcher: notify::RecommendedWatcher,
     /// `origin` with a trailing path separator.
     origin_path: String,
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     ignore_globs: Arc<NxGlobSet>,
 
     accumulator: HashMap<PathBuf, WatchEventInternal>,
+    /// The backend reported dropped events (notify's Rescan flag, e.g. an
+    /// inotify queue overflow). Per-path events are incomplete from that
+    /// moment, so the next flush emits a single rescan event instead.
+    pending_rescan: bool,
+    /// Cap for holding a pending rescan across a sustained storm; `None` when
+    /// no rescan is pending.
+    rescan_deadline: Option<Instant>,
     burst_start: Option<Instant>,
     flush_deadline: Option<Instant>,
+    /// When the last event arrived. A flush firing within `IDLE_WINDOW` of it
+    /// was forced by the MAX_WAIT cap during an ongoing storm, not by silence —
+    /// the notify channel is empty by construction when the idle arm runs, so
+    /// this is how the pipeline tells a storm from a settle.
+    last_event_at: Instant,
 }
 
 impl WatchPipeline {
@@ -126,20 +170,37 @@ impl WatchPipeline {
         additional_globs: &[String],
         use_ignore: bool,
     ) -> std::result::Result<Self, String> {
+        // Canonicalize once, up front, so the filterer, the origin-prefix strip
+        // in the transform (origin_path below), and the watch registration all
+        // agree on the workspace root. Event paths arrive realpath'd
+        // (canonicalize_event_paths on Linux, FSEvents on macOS), so a symlinked
+        // NX_WORKSPACE_ROOT_PATH left un-canonicalized would no longer match
+        // filter_path's origin prefix — every realpath'd event would be dropped
+        // and the daemon would see no changes at all.
+        let origin = dunce::canonicalize(&origin)
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or(origin);
+
         let filterer = watch_filterer::create_filter(&origin, additional_globs, use_ignore)
             .map_err(|e| format!("failed to create watch filter: {e}"))?;
 
         let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
-        let mut watcher = notify::recommended_watcher(move |event| {
-            let _ = notify_tx.send(event);
-        })
+        let mut watcher = RecommendedWatcher::new(
+            move |event| {
+                let _ = notify_tx.send(event);
+            },
+            Config::default().with_event_kinds(EventKindMask::CORE),
+        )
         .map_err(|e| format!("failed to create file watcher: {e}"))?;
 
-        #[cfg(target_os = "macos")]
+        // FSEvents and ReadDirectoryChangesW recurse in the kernel. notify
+        // accepts RecursiveMode::Recursive on inotify and kqueue too, but
+        // emulates it by registering every directory - without nx's ignores.
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
         if let Err(e) = watcher.watch(Path::new(&origin), RecursiveMode::Recursive) {
             tracing::error!(?e, "failed to watch root directory");
         }
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
         register_watches(&mut watcher, enumerate_watch_paths(&origin, use_ignore))
             .map_err(|e| format!("failed to register initial watches: {e}"))?;
 
@@ -153,11 +214,14 @@ impl WatchPipeline {
             notify_rx,
             watcher,
             origin_path,
-            #[cfg(not(target_os = "macos"))]
+            #[cfg(not(any(target_os = "macos", target_os = "windows")))]
             ignore_globs: build_ignore_glob_set(),
             accumulator: HashMap::new(),
+            pending_rescan: false,
+            rescan_deadline: None,
             burst_start: None,
             flush_deadline: None,
+            last_event_at: Instant::now(),
         })
     }
 
@@ -181,24 +245,67 @@ impl WatchPipeline {
         }
     }
 
-    fn snapshot_events(&self) -> Vec<WatchEvent> {
-        self.accumulator.values().map(|e| e.into()).collect()
+    fn snapshot_events(&self, include_rescan: bool) -> Vec<WatchEvent> {
+        let mut events: Vec<WatchEvent> = self.accumulator.values().map(|e| e.into()).collect();
+        // The rescan marker accompanies the accumulated batch rather than
+        // replacing it: the daemon's ignore-file and server-process intercepts
+        // read the raw events before per-path routing, so dropping them would
+        // leave the native filterer's ignore rules stale after an overflow.
+        if include_rescan && self.pending_rescan {
+            events.push(WatchEvent {
+                path: String::new(),
+                r#type: EventType::rescan,
+            });
+        }
+        events
+    }
+
+    /// Whether events are still streaming, told by recency rather than the
+    /// notify channel (which the idle arm always finds empty). A flush within
+    /// `IDLE_WINDOW` of the last event was cap-forced mid-storm, not idle.
+    fn storm_ongoing(&self) -> bool {
+        self.last_event_at.elapsed() < IDLE_WINDOW
+    }
+
+    /// Whether a pending rescan should be emitted now rather than held. It is
+    /// held while a storm is still delivering (`storm_ongoing`) so many dropped
+    /// flushes coalesce into one re-walk, and released once the storm settles
+    /// or `RESCAN_MAX_WAIT` elapses.
+    fn rescan_due(&self, storm_ongoing: bool) -> bool {
+        self.pending_rescan
+            && (!storm_ongoing
+                || self
+                    .rescan_deadline
+                    .is_some_and(|deadline| Instant::now() >= deadline))
+    }
+
+    fn has_pending(&self) -> bool {
+        !self.accumulator.is_empty() || self.pending_rescan
     }
 
     fn reset_burst(&mut self) {
         self.accumulator.clear();
+        self.pending_rescan = false;
+        self.rescan_deadline = None;
         self.burst_start = None;
         self.flush_deadline = None;
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     fn new_directories_from_event(&self, event: &RawWatchEvent) -> Vec<PathBuf> {
         use crate::native::watch::types::meta_is_dir;
-        use notify::{EventKind, event::CreateKind};
+        use notify::{
+            EventKind,
+            event::{CreateKind, ModifyKind, RenameMode},
+        };
 
+        // A directory moved into place arrives as a rename, and inotify does
+        // not carry the old path's registration over to it.
         if !matches!(
             event.kind(),
-            EventKind::Create(CreateKind::Folder) | EventKind::Create(CreateKind::Any)
+            EventKind::Create(CreateKind::Folder)
+                | EventKind::Create(CreateKind::Any)
+                | EventKind::Modify(ModifyKind::Name(RenameMode::To | RenameMode::Any))
         ) {
             return Vec::new();
         }
@@ -213,7 +320,7 @@ impl WatchPipeline {
     /// Synchronously register watches for new directories, walk them to
     /// backfill files written before the watch was active, and recurse
     /// into any nested subdirectories. Returns Err on `MaxFilesWatch`.
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     fn register_and_backfill_new_dirs(
         &mut self,
         dirs: &[PathBuf],
@@ -265,6 +372,23 @@ impl WatchPipeline {
                 return Ok(());
             }
         };
+        self.last_event_at = Instant::now();
+
+        if event.need_rescan() {
+            // The backend can raise the flag hundreds of times before the
+            // flush drains, but they coalesce into one rescan. Log only the
+            // first of a burst: warning per raw flag floods the daemon log
+            // and slows the drain path that the overflow is already straining.
+            if !self.pending_rescan {
+                tracing::warn!("backend dropped events (rescan flag); scheduling a rescan flush");
+            }
+            self.pending_rescan = true;
+            let now = Instant::now();
+            self.rescan_deadline.get_or_insert(now + RESCAN_MAX_WAIT);
+            let bs = *self.burst_start.get_or_insert(now);
+            self.flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
+            return Ok(());
+        }
 
         let raw = RawWatchEvent::new(event);
 
@@ -275,17 +399,20 @@ impl WatchPipeline {
         // Trace only events that survive the filter — Access reads and
         // other floods are dropped above, so we don't pollute the log
         // with their misleading age_ms (mtime there is the prior write,
-        // not the event).
-        for (path, metadata) in raw.paths() {
-            trace!(
-                ?path,
-                kind = ?raw.kind(),
-                age_ms = event_age_ms(metadata),
-                "ingest"
-            );
+        // not the event). Guarded so the age_ms stat is never paid when
+        // trace logging is off, which is the normal case.
+        if tracing::enabled!(tracing::Level::TRACE) {
+            for (path, metadata) in raw.paths() {
+                trace!(
+                    ?path,
+                    kind = ?raw.kind(),
+                    age_ms = event_age_ms(metadata),
+                    "ingest"
+                );
+            }
         }
 
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
         {
             let new_dirs = self.new_directories_from_event(&raw);
             if !new_dirs.is_empty() {
@@ -313,8 +440,41 @@ impl WatchPipeline {
         Ok(())
     }
 
-    /// Drives the pipeline until force_flush_rx disconnects.
-    fn run(mut self, force_flush_rx: Receiver<ForceFlushReply>, callback: WatchEventCallback) {
+    /// Build a pipeline whose notify channel is driven by the returned sender
+    /// instead of a real backend, so a test can inject a precise event sequence
+    /// through `run()`.
+    #[cfg(test)]
+    fn with_test_channel(origin: &str) -> (Self, Sender<NotifyResult>) {
+        let filterer = watch_filterer::create_filter(origin, &[], false).expect("test filter");
+        let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
+        let watcher = RecommendedWatcher::new(
+            |_res| {},
+            Config::default().with_event_kinds(EventKindMask::CORE),
+        )
+        .expect("test watcher");
+        let mut origin_path = origin.to_string();
+        if !origin_path.ends_with(MAIN_SEPARATOR) {
+            origin_path.push(MAIN_SEPARATOR);
+        }
+        let pipeline = WatchPipeline {
+            filterer,
+            notify_rx,
+            watcher,
+            origin_path,
+            #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+            ignore_globs: build_ignore_glob_set(),
+            accumulator: HashMap::new(),
+            pending_rescan: false,
+            rescan_deadline: None,
+            burst_start: None,
+            flush_deadline: None,
+            last_event_at: Instant::now(),
+        };
+        (pipeline, notify_tx)
+    }
+
+    /// Drives the pipeline until flush_rx disconnects.
+    fn run(mut self, flush_rx: Receiver<FlushRequest>, callback: WatchEventCallback) {
         loop {
             let idle_wait = self
                 .flush_deadline
@@ -334,14 +494,15 @@ impl WatchPipeline {
                         break;
                     }
                 },
-                recv(force_flush_rx) -> res => match res {
-                    Ok(reply) => {
-                        // Collect concurrent ForceFlush replies so they all
-                        // get the same snapshot; drain pending notify events
-                        // first so the snapshot reflects everything submitted.
-                        let mut replies = vec![reply];
-                        while let Ok(extra) = force_flush_rx.try_recv() {
-                            replies.push(extra);
+                recv(flush_rx) -> res => match res {
+                    Ok(request) => {
+                        // Concurrent requests all get the same snapshot; the
+                        // strongest mode among them decides how long to wait.
+                        let mut mode = request.mode;
+                        let mut replies = vec![request.reply];
+                        while let Ok(extra) = flush_rx.try_recv() {
+                            mode = mode.max(extra.mode);
+                            replies.push(extra.reply);
                         }
                         let mut fatal: Option<String> = None;
 
@@ -351,39 +512,55 @@ impl WatchPipeline {
                         // returns after one short grace; once a burst is in
                         // progress each event restarts the longer
                         // FORCE_FLUSH_QUIET window so a trickle isn't cut
-                        // mid-stream. Bounded by FORCE_FLUSH_MAX.
+                        // mid-stream. Bounded by FORCE_FLUSH_MAX. A Delivered
+                        // flush takes only what is already in the channel.
                         let deadline = handler_started_at + FORCE_FLUSH_MAX;
-                        let mut burst_in_progress = !self.accumulator.is_empty();
+                        let mut burst_in_progress = self.has_pending();
                         while fatal.is_none() {
                             let now = Instant::now();
                             if now >= deadline {
                                 break;
                             }
-                            let window = if burst_in_progress {
-                                FORCE_FLUSH_QUIET
-                            } else {
-                                FORCE_FLUSH_GRACE
+                            let wait = match mode {
+                                FlushMode::Delivered => Duration::ZERO,
+                                FlushMode::Settled if burst_in_progress => FORCE_FLUSH_QUIET,
+                                FlushMode::Settled => FORCE_FLUSH_GRACE,
                             };
-                            let wait = window.min(deadline - now);
-                            match self.notify_rx.recv_timeout(wait) {
-                                Ok(event) => {
-                                    burst_in_progress = true;
-                                    if let Err(msg) = self.ingest_event(event) {
-                                        fatal = Some(msg);
+                            let wait = wait.min(deadline - now);
+                            // A request arriving mid-wait joins this snapshot
+                            // rather than queueing behind it for a second wait.
+                            select! {
+                                recv(self.notify_rx) -> res => match res {
+                                    Ok(event) => {
+                                        burst_in_progress = true;
+                                        if let Err(msg) = self.ingest_event(event) {
+                                            fatal = Some(msg);
+                                        }
                                     }
-                                }
-                                Err(crossbeam_channel::RecvTimeoutError::Timeout) => break,
-                                Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
-                                    fatal = Some("watcher channel disconnected".to_string());
-                                }
+                                    Err(_) => {
+                                        fatal = Some("watcher channel disconnected".to_string());
+                                    }
+                                },
+                                recv(flush_rx) -> res => match res {
+                                    Ok(late) => {
+                                        mode = mode.max(late.mode);
+                                        replies.push(late.reply);
+                                    }
+                                    Err(_) => break,
+                                },
+                                default(wait) => break,
                             }
                         }
-                        let watch_events = self.snapshot_events();
+                        // A flush answers a read, so deliver the rescan now
+                        // rather than holding it — the caller needs current
+                        // state.
+                        let watch_events = self.snapshot_events(true);
                         debug!(
                             count = watch_events.len(),
                             replies = replies.len(),
+                            ?mode,
                             elapsed = ?handler_started_at.elapsed(),
-                            "force-flush END"
+                            "flush END"
                         );
                         for e in &watch_events {
                             debug!("  [{:?}] {}", e.r#type, e.path);
@@ -392,7 +569,7 @@ impl WatchPipeline {
                         for r in replies {
                             match r.send(watch_events.clone()) {
                                 Ok(()) => any_delivered = true,
-                                Err(e) => tracing::warn!(?e, "force-flush reply failed"),
+                                Err(e) => tracing::warn!(?e, "flush reply failed"),
                             }
                         }
                         if any_delivered {
@@ -403,134 +580,86 @@ impl WatchPipeline {
                             break;
                         }
                     }
-                    Err(_) => break, // struct dropped or stop() called
+                    Err(_) => break, // every session handle dropped
                 },
                 default(idle_wait) => {
-                    if !self.accumulator.is_empty() {
-                        let events = self.snapshot_events();
+                    if self.has_pending() {
+                        // Hold a pending rescan while a storm is still
+                        // delivering, so a burst that overflows across many
+                        // flushes coalesces into one re-walk instead of one per
+                        // flush.
+                        let rescan_due = self.rescan_due(self.storm_ongoing());
+                        let events = self.snapshot_events(rescan_due);
                         debug!(count = events.len(), "idle-window emitting events");
                         for e in &events {
                             debug!("  [{:?}] {}", e.r#type, e.path);
                         }
-                        callback(Ok(events));
+                        if !events.is_empty() {
+                            callback(Ok(events));
+                        }
+
+                        // Clear the per-path burst either way. Keep the pending
+                        // rescan when it was held; the queued events drive the
+                        // next flush, and the cap releases it if the storm never
+                        // settles.
+                        self.accumulator.clear();
+                        self.burst_start = None;
+                        self.flush_deadline = None;
+                        if rescan_due || !self.pending_rescan {
+                            self.pending_rescan = false;
+                            self.rescan_deadline = None;
+                        } else {
+                            // Poll within IDLE_WINDOW, capped by the deadline, so
+                            // the rescan releases shortly after the storm settles
+                            // even if only filtered events (which return early
+                            // without refreshing flush_deadline) kept it held.
+                            self.flush_deadline = self
+                                .rescan_deadline
+                                .map(|d| d.min(Instant::now() + IDLE_WINDOW));
+                        }
+                    } else {
+                        self.reset_burst();
                     }
-                    self.reset_burst();
                 }
             }
         }
     }
 }
 
-#[napi]
-pub struct Watcher {
-    pub origin: String,
-    additional_globs: Vec<String>,
-    use_ignore: bool,
-    /// `Mutex<Option>` so `stop()` can drop the sender via `&self`.
-    /// When dropped, the flush loop's force_flush_rx reports
-    /// `Disconnected` on its next select and the loop exits.
-    force_flush_tx: Mutex<Option<Sender<ForceFlushReply>>>,
+/// A handle to a running watch pipeline. Cheap to clone; the pipeline thread
+/// runs until the last handle drops, then exits on its next select.
+#[derive(Clone)]
+pub(crate) struct WatchSession {
+    flush_tx: Sender<FlushRequest>,
 }
 
-#[napi]
-impl Watcher {
-    /// Always applies HARDCODED_IGNORE_PATTERNS plus watcher-specific
-    /// patterns (vite/vitest timestamp files), regardless of `use_ignore`.
-    #[napi(constructor)]
-    pub fn new(
+impl WatchSession {
+    /// Registers the watches and starts the pipeline thread. Watches are live
+    /// when this returns, so a write landing right after is reported.
+    pub(crate) fn start(
         origin: String,
-        additional_globs: Option<Vec<String>>,
-        use_ignore: Option<bool>,
-    ) -> Watcher {
-        let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
-            .iter()
-            .map(|p| (*p).to_string())
-            .collect();
-
-        // Vite/Vitest write timestamp files that we don't want to watch.
-        globs.extend([
-            "vitest.config.ts.timestamp*.mjs".into(),
-            "vite.config.ts.timestamp*.mjs".into(),
-            "vitest.config.mts.timestamp*.mjs".into(),
-            "vite.config.mts.timestamp*.mjs".into(),
-        ]);
-
-        if let Some(additional_globs) = additional_globs {
-            globs.extend(additional_globs);
-        }
-
+        additional_globs: &[String],
+        use_ignore: bool,
+        callback: WatchEventCallback,
+    ) -> std::result::Result<Self, String> {
         let origin = if cfg!(windows) {
             origin.replace('/', "\\")
         } else {
             origin
         };
-
-        Watcher {
-            origin,
-            additional_globs: globs,
-            use_ignore: use_ignore.unwrap_or(true),
-            force_flush_tx: Mutex::new(None),
-        }
+        let pipeline = WatchPipeline::new(origin.clone(), additional_globs, use_ignore)?;
+        let (flush_tx, flush_rx) = unbounded::<FlushRequest>();
+        std::thread::spawn(move || pipeline.run(flush_rx, callback));
+        debug!(%origin, "watching started");
+        Ok(WatchSession { flush_tx })
     }
 
-    #[napi]
-    pub fn watch(
-        &mut self,
-        #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
-        callback_tsfn: ThreadsafeFunction<Vec<WatchEvent>>,
-    ) -> Result<()> {
-        // Adapt the napi ThreadsafeFunction to the generic callback the
-        // loop uses, so the loop is testable without a JS runtime.
-        let callback: WatchEventCallback = Box::new(move |res| match res {
-            Ok(events) => {
-                callback_tsfn.call(Ok(events), ThreadsafeFunctionCallMode::NonBlocking);
-            }
-            Err(msg) => {
-                callback_tsfn.call(
-                    Err(Error::new(Status::GenericFailure, msg)),
-                    ThreadsafeFunctionCallMode::NonBlocking,
-                );
-            }
-        });
-        self.watch_inner(callback)
-    }
-
-    pub(crate) fn watch_inner(&mut self, callback: WatchEventCallback) -> Result<()> {
-        crate::native::logger::enable_logger();
-
-        let pipeline =
-            WatchPipeline::new(self.origin.clone(), &self.additional_globs, self.use_ignore)
-                .map_err(|msg| Error::new(Status::GenericFailure, msg))?;
-
-        let (force_flush_tx, force_flush_rx) = unbounded::<ForceFlushReply>();
-        *self.force_flush_tx.lock() = Some(force_flush_tx);
-
-        std::thread::spawn(move || pipeline.run(force_flush_rx, callback));
-
-        debug!(origin = %self.origin, "watching started");
-        Ok(())
-    }
-
-    #[napi]
-    pub async fn stop(&self) -> Result<()> {
-        *self.force_flush_tx.lock() = None;
-        debug!(origin = %self.origin, "watching stopped");
-        Ok(())
-    }
-
-    /// Synchronously drains the accumulator. Used by the daemon before
-    /// serving a cached project graph so events buffered inside the
-    /// IDLE_WINDOW debounce don't go missing. Returns an empty vec if
-    /// the watcher hasn't started, the loop has exited, or no events
-    /// are buffered.
-    #[napi]
-    pub fn force_flush_pending(&self) -> Vec<WatchEvent> {
-        let tx = match self.force_flush_tx.lock().clone() {
-            Some(tx) => tx,
-            None => return Vec::new(),
-        };
-        let (reply_tx, reply_rx) = bounded::<Vec<WatchEvent>>(1);
-        if tx.send(reply_tx).is_err() {
+    /// Synchronously drains the accumulator. Events it returns are not
+    /// delivered through the callback. Returns an empty vec if the loop has
+    /// exited or nothing is buffered.
+    pub(crate) fn flush(&self, mode: FlushMode) -> Vec<WatchEvent> {
+        let (reply, reply_rx) = bounded::<Vec<WatchEvent>>(1);
+        if self.flush_tx.send(FlushRequest { mode, reply }).is_err() {
             return Vec::new();
         }
         reply_rx
@@ -544,27 +673,22 @@ mod tests {
     use super::*;
     use crate::native::watch::types::EventType;
     use std::fs;
-    use std::sync::Mutex;
+    use std::sync::{Arc, Mutex};
     use std::time::Duration;
     use tempfile::tempdir;
 
-    // Tests drive the public Watcher API end-to-end with real fs ops
-    // through `watch_inner` (the non-napi inner of `watch`). The
+    // Tests drive a real watch session end-to-end with real fs ops. The
     // callback appends every emitted batch into a shared Vec.
 
     type Captured = Arc<Mutex<Vec<WatchEvent>>>;
 
-    fn start_watcher(dir: &Path) -> (Watcher, Captured) {
+    fn start_watcher(dir: &Path) -> (WatchSession, Captured) {
         // Canonicalize: on macOS `/tmp` symlinks to `/private/tmp`, so
         // events arrive with the canonical prefix while origin would
         // not. The filterer's `path.starts_with(origin)` check needs
-        // them to agree.
-        let canonical = dir.canonicalize().expect("canonicalize tempdir");
-        let mut w = Watcher::new(
-            canonical.to_str().expect("utf-8 path").to_string(),
-            None,
-            Some(false), // disable gitignore so the platform's tmp tree can't influence the test
-        );
+        // them to agree. dunce, not std: std returns a `\\?\` verbatim
+        // path on Windows, which no workspace root ever has.
+        let canonical = dunce::canonicalize(dir).expect("canonicalize tempdir");
         let captured: Captured = Arc::new(Mutex::new(Vec::new()));
         let captured_for_cb = captured.clone();
         let callback: WatchEventCallback = Box::new(move |res| {
@@ -572,7 +696,14 @@ mod tests {
                 captured_for_cb.lock().unwrap().extend(events);
             }
         });
-        w.watch_inner(callback).expect("start watch");
+        // Gitignore off, so the platform's tmp tree cannot influence the test.
+        let w = WatchSession::start(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &default_watch_ignores(),
+            false,
+            callback,
+        )
+        .expect("start watch");
         // Drop any startup events FSEvents leaks from before the watch began.
         std::thread::sleep(Duration::from_millis(300));
         captured.lock().unwrap().clear();
@@ -588,6 +719,714 @@ mod tests {
 
     fn find_event<'a>(events: &'a [WatchEvent], name: &str) -> Option<&'a WatchEvent> {
         events.iter().find(|e| e.path.ends_with(name))
+    }
+
+    /// Poll both delivery paths until `path` shows up. Force-flush and the
+    /// idle-window callback race, and force-flush resets the accumulator, so
+    /// an event is reported through exactly one of them.
+    fn wait_for_path(watcher: &WatchSession, captured: &Captured, path: &str, msg: &str) {
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            let flushed = watcher.flush(FlushMode::Settled);
+            let seen = flushed.iter().any(|e| e.path == path)
+                || captured.lock().unwrap().iter().any(|e| e.path == path);
+            if seen {
+                return;
+            }
+            assert!(Instant::now() < deadline, "{msg}");
+            std::thread::sleep(Duration::from_millis(50));
+        }
+    }
+
+    #[test]
+    fn rescan_flag_accompanies_accumulated_events() {
+        use notify::event::{CreateKind, Flag};
+
+        let dir = tempdir().expect("tempdir");
+        let canonical = dunce::canonicalize(dir.path()).expect("canonicalize tempdir");
+        let mut pipeline = WatchPipeline::new(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &[],
+            false,
+        )
+        .expect("pipeline");
+
+        let file = canonical.join("file.txt");
+        fs::write(&file, "x").expect("write");
+        let create = notify::Event::new(notify::EventKind::Create(CreateKind::File)).add_path(file);
+        pipeline.ingest_event(Ok(create)).expect("ingest create");
+        assert!(pipeline.has_pending());
+
+        let overflow = notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
+        pipeline.ingest_event(Ok(overflow)).expect("ingest rescan");
+
+        // The rescan marker rides alongside the accumulated per-path event, not
+        // in place of it, so the daemon's ignore-file/server-process intercepts
+        // still see the path they key on.
+        let events = pipeline.snapshot_events(true);
+        assert_eq!(events.len(), 2);
+        let rescan = events
+            .iter()
+            .find(|e| matches!(e.r#type, EventType::rescan))
+            .expect("rescan marker present");
+        assert_eq!(rescan.path, "");
+        let created = events
+            .iter()
+            .find(|e| matches!(e.r#type, EventType::create))
+            .expect("accumulated create preserved");
+        assert!(created.path.ends_with("file.txt"));
+
+        pipeline.reset_burst();
+        assert!(!pipeline.has_pending());
+    }
+
+    #[test]
+    fn rescan_flag_rearms_per_burst_so_a_later_overflow_is_not_swallowed() {
+        // The overflow warn is logged once per burst, gated on the
+        // pending_rescan false->true transition. This pins that the gate
+        // re-arms after a flush: a second overflow within a burst coalesces
+        // into the one already-scheduled re-walk (recovered, logged once),
+        // and a genuine new burst after a flush re-arms the flag (logged and
+        // recovered again). The flag can never persist across a flush, so no
+        // real overflow goes unlogged.
+        use notify::event::Flag;
+
+        let dir = tempdir().expect("tempdir");
+        let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let mut pipeline = WatchPipeline::new(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &[],
+            false,
+        )
+        .expect("pipeline");
+        let overflow = || notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
+
+        // First overflow of a burst: the flag was clear, so the gate logs.
+        assert!(!pipeline.pending_rescan);
+        pipeline.ingest_event(Ok(overflow())).expect("rescan 1");
+        assert!(pipeline.pending_rescan, "first overflow arms the flag");
+
+        // A second flag in the same burst coalesces: one marker, no re-log.
+        pipeline.ingest_event(Ok(overflow())).expect("rescan 1b");
+        let events = pipeline.snapshot_events(true);
+        assert_eq!(events.len(), 1, "coalesced to a single rescan marker");
+        assert!(matches!(events[0].r#type, EventType::rescan));
+
+        // The flush clears the flag.
+        pipeline.reset_burst();
+        assert!(!pipeline.pending_rescan, "flush clears the flag");
+
+        // A new burst re-arms: the gate would log again and the marker fires
+        // again, so the later overflow is neither swallowed nor unrecovered.
+        pipeline.ingest_event(Ok(overflow())).expect("rescan 2");
+        assert!(pipeline.pending_rescan, "a new burst re-arms the flag");
+        let events = pipeline.snapshot_events(true);
+        assert_eq!(events.len(), 1);
+        assert!(matches!(events[0].r#type, EventType::rescan));
+    }
+
+    #[test]
+    fn dot_ignore_is_not_an_ignore_source() {
+        // `.ignore` is a ripgrep convention nx never adopted, and create_walker
+        // now turns it off. The watcher must not read it either, or it drops a
+        // file the walk keeps and never reports it at all.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let pkg = origin.join("pkg");
+        fs::create_dir_all(&pkg).expect("mkdir pkg");
+        fs::write(pkg.join(".ignore"), "conflict.log\n").expect("write .ignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File))
+                .add_path(pkg.join("conflict.log")),
+        );
+        assert!(
+            filterer.check_event(&event),
+            "a .ignore entry must not exclude conflict.log"
+        );
+    }
+
+    #[test]
+    fn nested_nxignore_outranks_a_same_dir_gitignore_negation() {
+        // The ignore crate ranks a custom ignore file (.nxignore) above
+        // .gitignore. A nested pkg/.nxignore that excludes a path a
+        // pkg/.gitignore un-ignores must win, or the watcher admits a file the
+        // walk drops and reports it deleted on the next rescan.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let pkg = origin.join("pkg");
+        fs::create_dir_all(&pkg).expect("mkdir pkg");
+        fs::write(pkg.join(".gitignore"), "!keep.tmp\n").expect("write .gitignore");
+        fs::write(pkg.join(".nxignore"), "keep.tmp\n").expect("write .nxignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(pkg.join("keep.tmp")),
+        );
+        assert!(
+            !filterer.check_event(&event),
+            ".nxignore excludes keep.tmp and outranks the .gitignore negation"
+        );
+    }
+
+    #[test]
+    fn nested_nxignore_outranks_a_deeper_gitignore_negation() {
+        // The crate keeps the deepest match per CLASS and then prefers the
+        // higher class, so a .nxignore beats a .gitignore at any depth. Pins
+        // rank-before-depth in the git_ignores sort: ordering by depth first
+        // lets the deeper negation un-ignore the file.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let deep = origin.join("pkg").join("deep");
+        fs::create_dir_all(&deep).expect("mkdir deep");
+        fs::write(origin.join("pkg").join(".nxignore"), "keep.tmp\n").expect("write .nxignore");
+        fs::write(deep.join(".gitignore"), "!keep.tmp\n").expect("write .gitignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(deep.join("keep.tmp")),
+        );
+        assert!(
+            !filterer.check_event(&event),
+            "the shallower .nxignore outranks the deeper .gitignore negation"
+        );
+    }
+
+    #[test]
+    fn a_nested_nxignore_outranks_the_root_nxignore() {
+        // Same class, so the deeper file wins — the root .nxignore is an
+        // ordinary git_ignores entry, not a slot above everything. The walk
+        // resolves it this way, and a watcher that admitted the file would
+        // report it deleted on the next rescan.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let pkg = origin.join("pkg");
+        fs::create_dir_all(&pkg).expect("mkdir pkg");
+        fs::write(origin.join(".nxignore"), "!keep.tmp\n").expect("write root .nxignore");
+        fs::write(pkg.join(".nxignore"), "keep.tmp\n").expect("write nested .nxignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(pkg.join("keep.tmp")),
+        );
+        assert!(
+            !filterer.check_event(&event),
+            "the nested .nxignore excludes keep.tmp and outranks the root negation"
+        );
+    }
+
+    #[test]
+    fn the_root_nxignore_does_not_gate_the_stream_when_git_ignores_are_off() {
+        // The stream carries what the workspace rules would drop, so the
+        // ignored index — whose walk reads `.nxignore`d files — hears their
+        // changes. The file map and `nx watch` apply those rules downstream.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        fs::write(origin.join(".nxignore"), "scratch.tmp\n").expect("write .nxignore");
+
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File))
+                .add_path(origin.join("scratch.tmp")),
+        );
+        let reporting = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], false)
+            .expect("filter");
+        assert!(reporting.check_event(&event));
+        // With the git sources on, it ranks among them as it always did.
+        let walking = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        assert!(!walking.check_event(&event));
+    }
+
+    #[test]
+    fn a_path_outside_origin_is_rejected_not_admitted() {
+        // canonicalize_event_paths can resolve a symlink out of the workspace.
+        // Such a path must be rejected, not admitted: admitting emits an
+        // out-of-workspace path into the file map and nx watch. Rejecting also
+        // avoids the matched_path_or_any_parents panic on a path outside the
+        // matcher root — reverting the origin guard makes the veto panic here.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dir.path().join("workspace");
+        fs::create_dir_all(&origin).expect("mkdir origin");
+        let origin = dunce::canonicalize(&origin).expect("canonicalize");
+        let outside = dir
+            .path()
+            .join("elsewhere")
+            .join("node_modules")
+            .join("x.js");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(outside),
+        );
+        assert!(!filterer.check_event(&event));
+    }
+
+    /// Create a directory symlink cross-platform. Windows needs
+    /// SeCreateSymbolicLinkPrivilege (Developer Mode or an elevated process); a
+    /// caller that gets an error skips rather than fails, so a symlink test still
+    /// runs on every platform that allows it instead of being compiled out.
+    fn make_dir_symlink(target: &Path, link: &Path) -> std::io::Result<()> {
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(target, link)
+        }
+        #[cfg(windows)]
+        {
+            std::os::windows::fs::symlink_dir(target, link)
+        }
+        #[cfg(not(any(unix, windows)))]
+        {
+            let _ = (target, link);
+            Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "directory symlinks are unsupported on this platform",
+            ))
+        }
+    }
+
+    #[test]
+    fn new_canonicalizes_origin_so_a_symlinked_root_strips_to_relative() {
+        // NX_WORKSPACE_ROOT_PATH can be a symlink. Event paths arrive realpath'd
+        // (canonicalize_event_paths on Linux, FSEvents on macOS), so if
+        // origin_path kept the symlink form, relative_to_origin would fail its
+        // prefix strip and emit absolute paths into the file map and nx watch.
+        // new() canonicalizes once and threads that through create_filter and
+        // origin_path so the filter and the transform agree.
+        let dir = tempdir().expect("tempdir");
+        let real = dir.path().join("workspace");
+        fs::create_dir_all(&real).expect("mkdir real");
+        let real = dunce::canonicalize(&real).expect("canonicalize real");
+
+        let link = dir.path().join("linked");
+        if let Err(e) = make_dir_symlink(&real, &link) {
+            eprintln!(
+                "skipping new_canonicalizes_origin_so_a_symlinked_root_strips_to_relative: \
+                 cannot create a directory symlink here ({e})"
+            );
+            return;
+        }
+
+        let pipeline = WatchPipeline::new(link.to_str().expect("utf-8").to_string(), &[], false)
+            .expect("pipeline");
+
+        let mut expected = real.to_str().expect("utf-8").to_string();
+        if !expected.ends_with(MAIN_SEPARATOR) {
+            expected.push(MAIN_SEPARATOR);
+        }
+        assert_eq!(
+            pipeline.origin_path, expected,
+            "origin_path must be canonical so realpath'd events strip to workspace-relative"
+        );
+    }
+
+    // Real-backend proof of the same fix: start the watcher on a symlinked root
+    // and confirm a write under it is delivered with a workspace-relative path.
+    // This exercises the platform's actual backend, where the failure modes
+    // differ — on Linux the event arrives realpath'd and an un-canonical origin
+    // emits an absolute path; on macOS FSEvents echoes the watched path (so the
+    // fix is a no-op there). Skips on Windows without symlink privilege.
+    #[test]
+    fn a_symlinked_root_delivers_relative_events_end_to_end() {
+        let dir = tempdir().expect("tempdir");
+        let real = dir.path().join("workspace");
+        fs::create_dir_all(real.join("src")).expect("mkdir workspace/src");
+
+        let link = dir.path().join("linked");
+        if let Err(e) = make_dir_symlink(&real, &link) {
+            eprintln!(
+                "skipping a_symlinked_root_delivers_relative_events_end_to_end: \
+                 cannot create a directory symlink here ({e})"
+            );
+            return;
+        }
+
+        // Start on the SYMLINK, non-canonical, as NX_WORKSPACE_ROOT_PATH may be.
+        let captured: Captured = Arc::new(Mutex::new(Vec::new()));
+        let captured_for_cb = captured.clone();
+        let callback: WatchEventCallback = Box::new(move |res| {
+            if let Ok(events) = res {
+                captured_for_cb.lock().unwrap().extend(events);
+            }
+        });
+        let w = WatchSession::start(
+            link.to_str().expect("utf-8").to_string(),
+            &default_watch_ignores(),
+            false,
+            callback,
+        )
+        .expect("start watch");
+        std::thread::sleep(Duration::from_millis(300));
+        captured.lock().unwrap().clear();
+
+        fs::write(link.join("src").join("x.ts"), "export const x = 1;").expect("write");
+
+        // Proves both delivery and that the path is workspace-relative: an
+        // absolute path would carry the root/drive and never normalize to
+        // "src/x.ts". Separators are normalized so the check holds on Windows.
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            let norm = |p: &str| p.replace('\\', "/");
+            let flushed = w.flush(FlushMode::Settled);
+            let seen = flushed.iter().any(|e| norm(&e.path) == "src/x.ts")
+                || captured
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .any(|e| norm(&e.path) == "src/x.ts");
+            if seen {
+                break;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "a write under a symlinked root must be delivered with a relative path"
+            );
+            std::thread::sleep(Duration::from_millis(20));
+        }
+    }
+
+    #[test]
+    fn git_info_exclude_is_honoured_like_the_walker() {
+        // `.git/info/exclude` is where local, uncommittable exclusions live
+        // (scratch dirs, secrets). create_walker honours it, so the filterer
+        // must too — otherwise those files reach the daemon, get hashed into
+        // the file map, and are broadcast to nx watch. The .gitignore control
+        // proves the exclude path is what does the filtering.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let origin_str = origin.to_str().expect("utf-8 path");
+        fs::create_dir_all(origin.join(".git/info")).expect("mkdir .git/info");
+        fs::write(origin.join(".git/info/exclude"), "secrets/\n").expect("write exclude");
+
+        let filterer = watch_filterer::create_filter(origin_str, &[], true).expect("filter");
+
+        let event = |rel: &str| {
+            RawWatchEvent::new(
+                notify::Event::new(EventKind::Create(CreateKind::File)).add_path(origin.join(rel)),
+            )
+        };
+
+        assert!(
+            !filterer.check_event(&event("secrets/deploy.key")),
+            "a path excluded via .git/info/exclude must be filtered, matching the walker"
+        );
+        assert!(
+            filterer.check_event(&event("src/index.ts")),
+            "an unexcluded path still passes"
+        );
+    }
+
+    #[test]
+    fn a_user_gitignore_negation_cannot_beat_the_hardcoded_veto() {
+        // A Yarn Berry zero-install ships `!.yarn/cache` in a real .gitignore.
+        // The filterer must veto it anyway, matching create_walker: a USER ignore
+        // file cannot un-ignore a hardcoded path, or the watcher admits
+        // .yarn/cache files the walk drops and reports them deleted every rescan.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let origin_str = origin.to_str().expect("utf-8 path");
+        fs::write(
+            origin.join(".gitignore"),
+            "!.yarn/cache\n*.log\n!kept.log\n",
+        )
+        .expect("write .gitignore");
+
+        let filterer = watch_filterer::create_filter(origin_str, &[], true).expect("filter");
+
+        let event = |rel: &str| {
+            RawWatchEvent::new(
+                notify::Event::new(EventKind::Create(CreateKind::File)).add_path(origin.join(rel)),
+            )
+        };
+
+        assert!(
+            !filterer.check_event(&event(".yarn/cache/pkg.zip")),
+            "a .gitignore `!.yarn/cache` negation must not un-ignore a hardcoded path"
+        );
+        assert!(
+            !filterer.check_event(&event("node_modules/pkg/index.js")),
+            "node_modules stays vetoed even without an explicit rule"
+        );
+        assert!(
+            filterer.check_event(&event("kept.log")),
+            "a non-hardcoded gitignore whitelist is still honoured — the veto is hardcoded-only"
+        );
+        assert!(
+            !filterer.check_event(&event("dropped.log")),
+            "the *.log ignore still drops a non-whitelisted log — the control that makes kept.log meaningful"
+        );
+    }
+
+    #[test]
+    fn nx_own_globs_outrank_the_hardcoded_veto() {
+        // watchOutputFiles passes `!.nx/workspace-data/.../server-process.json`
+        // as an additional glob (use_ignore=false). `.nx/workspace-data` is a
+        // hardcoded ignore, so if the veto beat nx's own glob the outputs watcher
+        // would never see server-process.json and would lose its prompt shutdown
+        // signal — server.ts's 20ms poll is the backstop, not this. nx's internal
+        // globs are an opt-in and must win; the veto only stops USER ignore files
+        // un-ignoring hardcoded paths.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let origin_str = origin.to_str().expect("utf-8 path");
+
+        let filterer = watch_filterer::create_filter(
+            origin_str,
+            &[
+                "!.nx/workspace-data/d/server-process.json".to_string(),
+                "*.log".to_string(),
+                "!kept.log".to_string(),
+            ],
+            false,
+        )
+        .expect("filter");
+
+        let event = |rel: &str| {
+            RawWatchEvent::new(
+                notify::Event::new(EventKind::Create(CreateKind::File)).add_path(origin.join(rel)),
+            )
+        };
+
+        assert!(
+            filterer.check_event(&event(".nx/workspace-data/d/server-process.json")),
+            "nx's own whitelist must punch through the hardcoded veto so the outputs watcher sees server-process.json"
+        );
+        assert!(
+            !filterer.check_event(&event(".nx/workspace-data/d/other.dat")),
+            "other .nx/workspace-data churn stays vetoed — only the whitelisted path punches through"
+        );
+        assert!(
+            !filterer.check_event(&event("node_modules/pkg/index.js")),
+            "node_modules stays vetoed"
+        );
+        assert!(
+            filterer.check_event(&event("kept.log")),
+            "a non-hardcoded additional-glob whitelist is honoured"
+        );
+        assert!(
+            !filterer.check_event(&event("dropped.log")),
+            "a non-whitelisted *.log additional glob still blocks — the control that makes kept.log meaningful"
+        );
+    }
+
+    #[test]
+    fn run_coalesces_a_sustained_storm_into_one_rescan() {
+        // Drives run() so it binds the storm-detection wiring, not just the
+        // rescan_due helper. A sustained overflow denser than IDLE_WINDOW and
+        // longer than MAX_WAIT forces several cap flushes; all but the settling
+        // one must hold the rescan, so the daemon re-walks once, not per flush.
+        use notify::event::Flag;
+
+        let dir = tempdir().expect("tempdir");
+        let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let (pipeline, tx) = WatchPipeline::with_test_channel(canonical.to_str().expect("utf-8"));
+
+        let (ff_tx, ff_rx) = bounded::<FlushRequest>(0);
+        let captured: Captured = Arc::new(Mutex::new(Vec::new()));
+        let cap = captured.clone();
+        let handle = std::thread::spawn(move || {
+            pipeline.run(
+                ff_rx,
+                Box::new(move |res| {
+                    if let Ok(events) = res {
+                        cap.lock().unwrap().extend(events);
+                    }
+                }),
+            );
+        });
+
+        let overflow = || notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
+        // Sustained storm: > MAX_WAIT (so several cap flushes fire) with events
+        // < IDLE_WINDOW apart (so each cap flush sees an ongoing storm).
+        let storm_end = Instant::now() + Duration::from_millis(1200);
+        while Instant::now() < storm_end {
+            tx.send(Ok(overflow())).expect("send overflow");
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        // Settle so the held rescan is released exactly once.
+        std::thread::sleep(Duration::from_millis(400));
+        drop(tx);
+        drop(ff_tx);
+        handle.join().expect("join");
+
+        let rescans = captured
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|e| matches!(e.r#type, EventType::rescan))
+            .count();
+        assert_eq!(
+            rescans, 1,
+            "a sustained storm should coalesce into a single rescan; got {rescans}"
+        );
+    }
+
+    #[test]
+    fn rescan_is_held_until_the_storm_settles() {
+        // A sustained overflow drops events across many flushes. The marker is
+        // held while the storm is still delivering so it coalesces into a single
+        // re-walk, and released when the storm settles or the cap fires.
+        use notify::event::Flag;
+
+        let dir = tempdir().expect("tempdir");
+        let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let mut pipeline = WatchPipeline::new(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &[],
+            false,
+        )
+        .expect("pipeline");
+        let overflow = || notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
+
+        pipeline
+            .ingest_event(Ok(overflow()))
+            .expect("ingest rescan");
+        assert!(pipeline.pending_rescan);
+
+        // Held while the storm is still delivering: no marker emitted.
+        assert!(
+            !pipeline.rescan_due(true),
+            "held while the storm is ongoing"
+        );
+        assert!(
+            pipeline
+                .snapshot_events(pipeline.rescan_due(true))
+                .is_empty(),
+            "no marker while held"
+        );
+
+        // Released once the storm settles.
+        assert!(
+            pipeline.rescan_due(false),
+            "released when the storm settles"
+        );
+        let events = pipeline.snapshot_events(pipeline.rescan_due(false));
+        assert_eq!(events.len(), 1);
+        assert!(matches!(events[0].r#type, EventType::rescan));
+
+        // The cap releases a held rescan even if the storm never settles.
+        pipeline.rescan_deadline = Some(Instant::now() - Duration::from_secs(1));
+        assert!(
+            pipeline.rescan_due(true),
+            "cap releases a held rescan during an unending storm"
+        );
+    }
+
+    #[test]
+    fn is_dir_from_kind_only_answers_definitive_kinds() {
+        use crate::native::watch::types::is_dir_from_kind;
+        use notify::EventKind;
+        use notify::event::{CreateKind, DataChange, ModifyKind, RemoveKind, RenameMode};
+
+        // Definitive kinds are answered without a stat.
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Create(CreateKind::File)),
+            Some(false)
+        );
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Create(CreateKind::Folder)),
+            Some(true)
+        );
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Remove(RemoveKind::File)),
+            Some(false)
+        );
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Remove(RemoveKind::Folder)),
+            Some(true)
+        );
+        // FSEvents does not distinguish files from directories, so macOS
+        // classifies a data change from the stat instead of the kind.
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Modify(ModifyKind::Data(DataChange::Any))),
+            if cfg!(target_os = "macos") {
+                None
+            } else {
+                Some(false)
+            }
+        );
+
+        // Ambiguous kinds must fall back to a stat, never guess.
+        assert_eq!(is_dir_from_kind(&EventKind::Create(CreateKind::Any)), None);
+        assert_eq!(is_dir_from_kind(&EventKind::Remove(RemoveKind::Any)), None);
+        assert_eq!(is_dir_from_kind(&EventKind::Modify(ModifyKind::Any)), None);
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Modify(ModifyKind::Name(RenameMode::To))),
+            None
+        );
+    }
+
+    #[test]
+    fn filter_uses_kind_derived_is_dir_not_the_stat() {
+        // A directory-only ignore pattern (`ignored_dir/`) matches only when
+        // the filterer is told the path is a directory. This exercises the
+        // is_dir_at wiring end to end through check_event: the on-disk path is
+        // a real directory, so a stat would call BOTH events directories, but
+        // the event kind must decide. A Create(Folder) is filtered; a
+        // Create(File) for the same path passes, because the trailing-slash
+        // pattern is dir-only. If is_dir_at ignored the kind (or the helper
+        // returned the wrong value) the File case would be wrongly filtered.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let origin_str = origin.to_str().expect("utf-8 path");
+        let target = origin.join("ignored_dir");
+        fs::create_dir_all(&target).expect("mkdir target");
+
+        let filterer =
+            watch_filterer::create_filter(origin_str, &["ignored_dir/".to_string()], false)
+                .expect("filter");
+
+        let as_folder = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::Folder)).add_path(target.clone()),
+        );
+        let as_file = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(target.clone()),
+        );
+
+        assert!(
+            !filterer.check_event(&as_folder),
+            "Create(Folder) for ignored_dir/ should be filtered (is_dir from kind = true)"
+        );
+        assert!(
+            filterer.check_event(&as_file),
+            "Create(File) named ignored_dir should pass the dir-only pattern (is_dir from kind = false), even though it is a directory on disk"
+        );
     }
 
     #[test]
@@ -731,10 +1570,10 @@ mod tests {
     }
 
     #[test]
-    fn concurrent_force_flush_pending_callers_do_not_time_out() {
-        // Regression: pre-fix the loop dropped "extra" ForceFlush
-        // replies, so concurrent callers blocked on the 500 ms
-        // recv_timeout. Now every queued reply gets the same snapshot.
+    fn concurrent_flush_callers_do_not_time_out() {
+        // Regression: pre-fix the loop dropped "extra" flush replies, so
+        // concurrent callers blocked on the 500 ms recv_timeout. Now every
+        // queued reply gets the same snapshot.
         let dir = tempdir().expect("tempdir");
         let (watcher, _captured) = start_watcher(dir.path());
         let watcher = Arc::new(watcher);
@@ -743,7 +1582,7 @@ mod tests {
         let mut handles = Vec::new();
         for _ in 0..8 {
             let w = watcher.clone();
-            handles.push(std::thread::spawn(move || w.force_flush_pending()));
+            handles.push(std::thread::spawn(move || w.flush(FlushMode::Settled)));
         }
         let results: Vec<Vec<WatchEvent>> =
             handles.into_iter().map(|h| h.join().unwrap()).collect();
@@ -752,7 +1591,7 @@ mod tests {
         assert_eq!(results.len(), 8);
         assert!(
             elapsed < Duration::from_millis(250),
-            "concurrent force_flush_pending took {elapsed:?} — likely caller(s) hit the 500ms timeout"
+            "concurrent flushes took {elapsed:?} — likely caller(s) hit the 500ms timeout"
         );
     }
 
@@ -784,7 +1623,7 @@ mod tests {
     }
 
     #[test]
-    fn force_flush_pending_captures_in_flight_writes() {
+    fn a_flush_captures_in_flight_writes() {
         // Write + immediate flush, hammered to surface the race.
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("nx.json");
@@ -794,7 +1633,7 @@ mod tests {
 
         for i in 0..20 {
             fs::write(&target, format!("v{i}")).expect("rewrite");
-            let events = watcher.force_flush_pending();
+            let events = watcher.flush(FlushMode::Settled);
             assert!(
                 events.iter().any(|e| e.path == "nx.json"),
                 "iteration {i}: missed nx.json event — got {events:?}"
@@ -809,12 +1648,7 @@ mod tests {
         // watch() returns is never missed. No settling sleep on purpose —
         // start_watcher() is not used because it sleeps after registration.
         let dir = tempdir().expect("tempdir");
-        let canonical = dir.path().canonicalize().expect("canonicalize tempdir");
-        let mut watcher = Watcher::new(
-            canonical.to_str().expect("utf-8 path").to_string(),
-            None,
-            Some(false),
-        );
+        let canonical = dunce::canonicalize(dir.path()).expect("canonicalize tempdir");
         let captured: Captured = Arc::new(Mutex::new(Vec::new()));
         let captured_for_cb = captured.clone();
         let callback: WatchEventCallback = Box::new(move |res| {
@@ -822,33 +1656,27 @@ mod tests {
                 captured_for_cb.lock().unwrap().extend(events);
             }
         });
-        watcher.watch_inner(callback).expect("start watch");
+        let watcher = WatchSession::start(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &default_watch_ignores(),
+            false,
+            callback,
+        )
+        .expect("start watch");
 
         fs::write(canonical.join("boot.txt"), "x").expect("write");
 
-        let deadline = Instant::now() + Duration::from_secs(2);
-        loop {
-            let flushed = watcher.force_flush_pending();
-            let seen = flushed.iter().any(|e| e.path == "boot.txt")
-                || captured
-                    .lock()
-                    .unwrap()
-                    .iter()
-                    .any(|e| e.path == "boot.txt");
-            if seen {
-                break;
-            }
-            assert!(
-                Instant::now() < deadline,
-                "write immediately after watch registration was never reported"
-            );
-            std::thread::sleep(Duration::from_millis(50));
-        }
+        wait_for_path(
+            &watcher,
+            &captured,
+            "boot.txt",
+            "write immediately after watch registration was never reported",
+        );
     }
 
     #[test]
-    fn force_flush_pending_captures_trickling_burst() {
-        // Regression: force-flush used to drain only already-arrived events,
+    fn a_flush_captures_a_trickling_burst() {
+        // Regression: a flush used to drain only already-arrived events,
         // cutting a burst delivered with gaps mid-stream and serving a stale
         // graph. Writes are spaced 20ms apart — past the 10ms Linux grace but
         // under FORCE_FLUSH_QUIET — so the last write must still be captured.
@@ -865,7 +1693,7 @@ mod tests {
 
         // Flush while writes are still trickling in.
         std::thread::sleep(Duration::from_millis(5));
-        let events = watcher.force_flush_pending();
+        let events = watcher.flush(FlushMode::Settled);
         writer.join().unwrap();
 
         assert!(
@@ -905,6 +1733,26 @@ mod tests {
             matches!(new_evt.r#type, EventType::create),
             "rename destination should classify as Create; got {:?}",
             new_evt.r#type
+        );
+    }
+
+    #[test]
+    fn files_in_directories_created_after_watch_start_are_reported() {
+        // Per-directory backends register new directories as they appear;
+        // recursive ones leave it to the kernel. Both have to report a file
+        // written into a directory that did not exist when watching began.
+        let dir = tempdir().expect("tempdir");
+        let (watcher, captured) = start_watcher(dir.path());
+
+        let nested = dir.path().join("libs/new-lib/src");
+        fs::create_dir_all(&nested).expect("mkdir nested");
+        fs::write(nested.join("index.ts"), "x").expect("write");
+
+        wait_for_path(
+            &watcher,
+            &captured,
+            "libs/new-lib/src/index.ts",
+            "file in a directory created after watch start was never reported",
         );
     }
 
