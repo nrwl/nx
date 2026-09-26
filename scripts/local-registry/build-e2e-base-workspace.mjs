@@ -214,8 +214,26 @@ function gitConfigEnv(entries) {
   return env;
 }
 
+/**
+ * pnpm 12 intermittently fails to import a large native binary (`failed to import
+ * "/tmp/.pnpm-store/v11/files/…": No such file or directory`), so one retry keeps a
+ * single flake from failing the task.
+ * @param {{ pm: string, preset: string }} combo
+ */
+async function buildTemplate(combo) {
+  try {
+    return await buildTemplateOnce(combo);
+  } catch (e) {
+    console.warn(
+      `Retrying the ${combo.pm}/${combo.preset} base workspace after: ${e.message}\n` +
+        `${String(e.stdout ?? '').slice(-4000)}\n${String(e.stderr ?? '').slice(-4000)}`
+    );
+    return await buildTemplateOnce(combo);
+  }
+}
+
 /** @param {{ pm: string, preset: string }} combo */
-async function buildTemplate({ pm, preset }) {
+async function buildTemplateOnce({ pm, preset }) {
   const slug = `${pm}-${preset}`;
   const work = mkdtempSync(join(tmpdir(), `nx-e2e-base-${slug}-`));
   const cacheRoot = mkdtempSync(join(tmpdir(), `nx-e2e-base-cache-${slug}-`));
