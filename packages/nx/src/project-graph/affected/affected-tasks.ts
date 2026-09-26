@@ -452,7 +452,9 @@ function dependencyChanges(
   for (const project of packageJsonChanges.projects) {
     name(project, {
       kind: 'npm-package',
-      package: project,
+      // The name package.json uses, which need not be the project's.
+      package:
+        projectGraph.nodes[project]?.data.metadata?.js?.packageName ?? project,
       file: 'package.json',
     });
   }
