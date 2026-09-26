@@ -86,7 +86,7 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
 | `targetName` | string   | `lint`                                            | Name of the ESLint task.                        |
 | `extensions` | string[] | `ts, cts, mts, tsx, js, cjs, mjs, jsx, html, vue` | File extensions Nx checks before adding a task. |
 
-The lint task runs ESLint from the project root and is cached, with inputs and outputs based on your ESLint configuration.
+The lint task runs ESLint from the project root and is cached, with inputs and outputs based on your ESLint configuration. With a flat config, Nx also tracks the packages your `eslint.config.*` files import, and any local files they import, so updating an ESLint plugin or shared config invalidates the cache.
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/eslint/plugin`.
 

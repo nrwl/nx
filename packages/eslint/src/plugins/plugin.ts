@@ -31,6 +31,10 @@ import {
   isFlatConfig,
 } from '../utils/config-file';
 import { resolveESLintClass } from '../utils/resolve-eslint-class';
+import {
+  collectFlatConfigInputs,
+  type FlatConfigInputs,
+} from './flat-config-inputs';
 
 export interface EslintPluginOptions {
   targetName?: string;
@@ -65,6 +69,7 @@ const internalCreateNodesV2 = async (
   projectRootsByEslintRoots: Map<string, string[]>,
   lintableFilesPerProjectRoot: Map<string, string[]>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
+  flatConfigInputsByConfigFile: Map<string, FlatConfigInputs>,
   projectsCache: PluginCache<EslintProjects>,
   hashByRoot: Map<string, string>,
   pmc: ReturnType<typeof getPackageManagerCommand>
@@ -124,7 +129,8 @@ const internalCreateNodesV2 = async (
         options,
         context,
         pmc,
-        tsconfigChainsByProjectRoot.get(projectRoot) ?? []
+        tsconfigChainsByProjectRoot.get(projectRoot) ?? [],
+        flatConfigInputsByConfigFile
       );
 
       if (project) {
@@ -177,6 +183,10 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       projectRoots,
       context.workspaceRoot
     );
+    const flatConfigInputsByConfigFile = collectFlatConfigInputs(
+      eslintConfigFiles.filter(isFlatConfig),
+      context.workspaceRoot
+    );
     const lockFilePattern = getLockFileName(
       detectPackageManager(context.workspaceRoot)
     );
@@ -204,8 +214,21 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
         ];
       })
     );
+    // Ancestor configs are not part of the hashed globs, but what they import
+    // shapes the inferred inputs, so the cache key carries the derived result.
     const hashByRoot = new Map<string, string>(
-      projectRoots.map((r, i) => [r, hashes[i]])
+      projectRoots.map((root, i) => {
+        const normalizedRoot = normalize(root);
+        const flatConfigInputs = eslintConfigFiles
+          .filter(
+            (_, index) =>
+              configDirectories[index] === '.' ||
+              configDirectories[index] === normalizedRoot ||
+              normalizedRoot.startsWith(configDirectories[index] + sep)
+          )
+          .map((config) => flatConfigInputsByConfigFile.get(config) ?? null);
+        return [root, hashObject({ files: hashes[i], flatConfigInputs })];
+      })
     );
     try {
       if (eslintConfigFiles.length === 0) {
@@ -232,6 +255,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
             projectRootsByEslintRoots,
             lintableFilesPerProjectRoot,
             tsconfigChainsByProjectRoot,
+            flatConfigInputsByConfigFile,
             targetsCache,
             hashByRoot,
             pmc
@@ -415,7 +439,8 @@ function getProjectUsingESLintConfig(
   options: EslintPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  tsconfigChainOutsideProjectRoot: string[]
+  tsconfigChainOutsideProjectRoot: string[],
+  flatConfigInputsByConfigFile: Map<string, FlatConfigInputs>
 ): CreateNodesResult['projects'][string] | null {
   const rootEslintConfig = [
     baseEsLintConfigFile,
@@ -453,7 +478,8 @@ function getProjectUsingESLintConfig(
       options,
       pmc,
       standaloneSrcPath,
-      tsconfigChainOutsideProjectRoot
+      tsconfigChainOutsideProjectRoot,
+      flatConfigInputsByConfigFile
     ),
   };
 }
@@ -465,10 +491,30 @@ function buildEslintTargets(
   options: EslintPluginOptions,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   standaloneSrcPath?: string,
-  tsconfigChainOutsideProjectRoot: string[] = []
+  tsconfigChainOutsideProjectRoot: string[] = [],
+  flatConfigInputsByConfigFile: Map<string, FlatConfigInputs> = new Map()
 ) {
   const isRootProject = projectRoot === '.';
   const targets: Record<string, TargetConfiguration> = {};
+
+  const externalDependencies = new Set(['eslint']);
+  const importedConfigFiles = new Set<string>();
+  for (const config of eslintConfigs) {
+    const derived = flatConfigInputsByConfigFile.get(config);
+    if (!derived) continue;
+    derived.externalDependencies.forEach((dep) =>
+      externalDependencies.add(dep)
+    );
+    derived.files.forEach((file) => importedConfigFiles.add(file));
+  }
+  const importedConfigFilesOutsideProjectRoot = Array.from(
+    importedConfigFiles
+  ).filter(
+    (file) =>
+      !eslintConfigs.includes(file) &&
+      !isRootProject &&
+      !file.startsWith(`${projectRoot}/`)
+  );
 
   const targetConfig: TargetConfiguration = {
     command: `eslint ${
@@ -491,8 +537,11 @@ function buildEslintTargets(
       ...tsconfigChainOutsideProjectRoot.map(
         (file) => `{workspaceRoot}/${file}`
       ),
+      ...importedConfigFilesOutsideProjectRoot.map(
+        (file) => `{workspaceRoot}/${file}`
+      ),
       '{workspaceRoot}/tools/eslint-rules/**/*',
-      { externalDependencies: ['eslint'] },
+      { externalDependencies: Array.from(externalDependencies) },
     ],
     outputs: ['{options.outputFile}'],
     metadata: {
