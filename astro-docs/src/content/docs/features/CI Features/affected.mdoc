@@ -280,7 +280,7 @@ nx affected -t build --explain
 
 Each entry lists every reason that applies, so a task reached through two different dependencies reports both.
 To follow a chain, look up the task named in a reason.
-When that entry isn't part of the run, such as a `prebuild` under `-t build` or a project you passed to `--exclude`, it's listed in a separate section after the selection.
+When that entry isn't part of the run, such as a `prebuild` under `-t build` or a project you passed to `--exclude`, it's listed in a separate section above the selection, so your own tasks stay at the bottom however long the chain gets.
 Entries reached only through a dependency sort to the bottom, since they follow from the ones above them.
 
 The last line counts the closure: tasks Nx runs only so the selected ones can run.
