@@ -31,6 +31,10 @@ export function addProjectDependencies(
       '@nx/esbuild': nxVersion,
       esbuild: esbuildVersion,
     },
+    // The @rspack/* packages come from rspackInitGenerator.
+    rspack: {
+      '@nx/rspack': nxVersion,
+    },
   };
 
   const exprPkgVersions = expressVersions(tree);
