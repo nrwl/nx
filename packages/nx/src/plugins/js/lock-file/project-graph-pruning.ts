@@ -15,6 +15,7 @@ import {
   normalizeLocalPathSpec,
   uncontainLocalPathSpec,
 } from './pruned-output';
+import { parseNpmAlias } from './utils/package-json';
 
 /**
  * Prune project graph's external nodes and their dependencies
@@ -249,20 +250,6 @@ export function findNodeMatchingVersion(
     return graph.externalNodes[`npm:${packageName}`];
   }
   return nodes.find((n) => satisfies(n.data.version, versionExpr));
-}
-
-// `npm:<name>` or `npm:<name>@<range>`, where the name may be scoped
-function parseNpmAlias(
-  versionExpr: string
-): { name: string; range: string } | undefined {
-  if (!versionExpr.startsWith('npm:')) {
-    return undefined;
-  }
-  const spec = versionExpr.slice('npm:'.length);
-  const at = spec.lastIndexOf('@');
-  return at > 0
-    ? { name: spec.slice(0, at), range: spec.slice(at + 1) || '*' }
-    : { name: spec, range: '*' };
 }
 
 // The npm lock file parser records an aliased dependency's version as

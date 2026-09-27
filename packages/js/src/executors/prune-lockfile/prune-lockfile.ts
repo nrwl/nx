@@ -9,14 +9,15 @@ import {
 } from '@nx/devkit';
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { intersects, validRange } from 'semver';
 import {
+  applyNpmOverridesToDependencies,
   dropEmptyPeerDependencySections,
   generatePrunedDeployOutput,
   getCatalogManager,
   getWorkspacePackagesFromGraph,
   interpolate,
   movePeerDependencyToDependencies,
+  resolveNpmOverrideReferences,
   type PackageJson,
   type PackageJsonDependencySection,
 } from '@nx/devkit/internal';
@@ -114,11 +115,9 @@ function mergeAllowScripts(packageJson: PackageJson) {
  * npm, like `allowScripts`, reads `overrides` only from the install root. In a
  * workspace it resolved the whole tree, this project included, with the root's
  * overrides and ignored the project's own, so the pruned lock file follows the
- * root's; the project's would leave `npm ci` finding it out of sync. An
- * override naming a direct dependency must match that dependency's spec or npm
- * rejects it (EOVERRIDE), and npm resolved the dependency with the override, so
- * the dependency takes the override's spec. A `$name` override refers to the
- * root's own dependency, which the pruned manifest lacks, so it is resolved.
+ * root's; the project's would leave `npm ci` finding it out of sync. A `$name`
+ * override refers to the root's own dependency, which the pruned manifest
+ * lacks, so it is resolved.
  */
 function applyRootOverrides(packageJson: PackageJson) {
   const rootPackageJson: PackageJson = readJsonFile(
@@ -131,102 +130,11 @@ function applyRootOverrides(packageJson: PackageJson) {
   ) {
     return;
   }
-  const overrides = resolveOverrideReferences(
+  packageJson.overrides = resolveNpmOverrideReferences(
     rootPackageJson.overrides,
     rootPackageJson
   );
-  packageJson.overrides = overrides;
-
-  const sections: PackageJsonDependencySection[] = [
-    'dependencies',
-    'optionalDependencies',
-    'devDependencies',
-    'peerDependencies',
-  ];
-  for (const section of sections) {
-    const deps = packageJson[section];
-    if (!deps) {
-      continue;
-    }
-    for (const [name, spec] of Object.entries(deps)) {
-      const rule = getOverrideRule(overrides, name, spec);
-      if (!rule || rule.value === '*') {
-        continue;
-      }
-      // The rewritten spec can match another rule. npm rejects that for a
-      // direct dependency, and no rule set gives the project the version it
-      // resolved while every other dependency on the name keeps its own.
-      const conflict = getOverrideRule(overrides, name, rule.value);
-      if (conflict && conflict.value !== '*' && conflict.value !== rule.value) {
-        throw new Error(
-          `The root override "${rule.key}" resolves the ${section} entry ${name}@${spec} to ${rule.value}. In the pruned output ${name}@${rule.value} is a direct dependency that the override "${conflict.key}" changes to ${conflict.value}, which npm rejects (EOVERRIDE). Narrow "${conflict.key}" so it does not match ${rule.value}.`
-        );
-      }
-      deps[name] = rule.value;
-    }
-  }
-}
-
-/**
- * The override rule npm applies to a direct dependency, mirroring its
- * OverrideSet: the first root rule for the name whose key range (`name@range`,
- * `*` when absent) intersects the dependency's spec. npm accepts the rule for a
- * spec it cannot compare as a range, such as a tag or a directory. A value of
- * `*` leaves the spec as it is.
- */
-function getOverrideRule(
-  overrides: PackageJson['overrides'],
-  name: string,
-  spec: string
-): { key: string; value: string } | undefined {
-  for (const [key, override] of Object.entries(overrides)) {
-    const at = key.indexOf('@', 1);
-    if ((at === -1 ? key : key.slice(0, at)) !== name) {
-      continue;
-    }
-    const keySpec = at === -1 ? '*' : key.slice(at + 1) || '*';
-    if (keySpec !== '*') {
-      const range = spec.startsWith('npm:') ? getAliasRange(spec) : spec;
-      if (validRange(range) && !intersects(range, keySpec)) {
-        continue;
-      }
-    }
-    // npm reads an empty value as `*`, and an object without `.` as the key
-    const own = typeof override === 'string' ? override : override?.['.'];
-    return { key, value: typeof own === 'string' ? own || '*' : keySpec };
-  }
-  return undefined;
-}
-
-function getAliasRange(spec: string): string {
-  const at = spec.lastIndexOf('@');
-  return at > 'npm:'.length ? spec.slice(at + 1) : '*';
-}
-
-function resolveOverrideReferences(
-  overrides: PackageJson['overrides'],
-  rootPackageJson: PackageJson
-): PackageJson['overrides'] {
-  const resolve = (value: unknown) => {
-    if (typeof value === 'string' && value.startsWith('$')) {
-      const name = value.slice(1);
-      // npm's lookup order for a reference
-      return (
-        rootPackageJson.devDependencies?.[name] ||
-        rootPackageJson.optionalDependencies?.[name] ||
-        rootPackageJson.dependencies?.[name] ||
-        rootPackageJson.peerDependencies?.[name] ||
-        value
-      );
-    }
-    if (value && typeof value === 'object') {
-      return Object.fromEntries(
-        Object.entries(value).map(([key, nested]) => [key, resolve(nested)])
-      );
-    }
-    return value;
-  };
-  return resolve(overrides) as PackageJson['overrides'];
+  applyNpmOverridesToDependencies(packageJson, packageJson.overrides);
 }
 
 export function resolveCatalogReferences(

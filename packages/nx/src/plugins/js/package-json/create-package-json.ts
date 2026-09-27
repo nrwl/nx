@@ -20,6 +20,7 @@ import {
   getTargetInputs,
 } from '../../../hasher/task-hasher';
 import { output } from '../../../utils/output';
+import { dropNpmOverridesOfDirectDependencies } from './npm-overrides';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -225,28 +226,14 @@ export function createPackageJson(
 
   // npm
   if (rootPackageJson.overrides && !options.skipOverrides) {
-    // npm throws EOVERRIDE when an override key is also a direct dependency
-    // (unless specs match). The pruned dist pins exact versions and already
-    // resolved everything via the lockfile, so drop those redundant overrides.
-    const mergedOverrides = {
-      ...rootPackageJson.overrides,
-      ...packageJson.overrides,
-    };
-    const overrides: typeof mergedOverrides = {};
-    let hasOverrides = false;
-    for (const name in mergedOverrides) {
-      if (
-        packageJson.dependencies?.[name] ||
-        packageJson.devDependencies?.[name] ||
-        packageJson.peerDependencies?.[name] ||
-        packageJson.optionalDependencies?.[name]
-      ) {
-        continue;
-      }
-      overrides[name] = mergedOverrides[name];
-      hasOverrides = true;
-    }
-    if (hasOverrides) {
+    // npm throws EOVERRIDE when an override changes a direct dependency's spec.
+    // The pruned dist pins exact versions and already resolved everything via
+    // the lockfile, so those overrides are redundant.
+    const overrides = dropNpmOverridesOfDirectDependencies(
+      { ...rootPackageJson.overrides, ...packageJson.overrides },
+      packageJson
+    );
+    if (Object.keys(overrides).length) {
       packageJson.overrides = overrides;
     } else {
       delete packageJson.overrides;
