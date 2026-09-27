@@ -149,25 +149,36 @@ function applyRootOverrides(packageJson: PackageJson) {
       continue;
     }
     for (const [name, spec] of Object.entries(deps)) {
-      const value = getOverrideValue(overrides, name, spec);
-      if (value) {
-        deps[name] = value;
+      const rule = getOverrideRule(overrides, name, spec);
+      if (!rule || rule.value === '*') {
+        continue;
       }
+      // The rewritten spec can match another rule. npm rejects that for a
+      // direct dependency, and no rule set gives the project the version it
+      // resolved while every other dependency on the name keeps its own.
+      const conflict = getOverrideRule(overrides, name, rule.value);
+      if (conflict && conflict.value !== '*' && conflict.value !== rule.value) {
+        throw new Error(
+          `The root override "${rule.key}" resolves the ${section} entry ${name}@${spec} to ${rule.value}. In the pruned output ${name}@${rule.value} is a direct dependency that the override "${conflict.key}" changes to ${conflict.value}, which npm rejects (EOVERRIDE). Narrow "${conflict.key}" so it does not match ${rule.value}.`
+        );
+      }
+      deps[name] = rule.value;
     }
   }
 }
 
 /**
- * The spec npm gives a direct dependency, mirroring its OverrideSet: the first
- * root rule for the name whose key range (`name@range`, `*` when absent)
- * intersects the dependency's spec. npm accepts the rule for a spec it cannot
- * compare as a range, such as a tag or a directory.
+ * The override rule npm applies to a direct dependency, mirroring its
+ * OverrideSet: the first root rule for the name whose key range (`name@range`,
+ * `*` when absent) intersects the dependency's spec. npm accepts the rule for a
+ * spec it cannot compare as a range, such as a tag or a directory. A value of
+ * `*` leaves the spec as it is.
  */
-function getOverrideValue(
+function getOverrideRule(
   overrides: PackageJson['overrides'],
   name: string,
   spec: string
-): string | undefined {
+): { key: string; value: string } | undefined {
   for (const [key, override] of Object.entries(overrides)) {
     const at = key.indexOf('@', 1);
     if ((at === -1 ? key : key.slice(0, at)) !== name) {
@@ -180,9 +191,9 @@ function getOverrideValue(
         continue;
       }
     }
-    const value =
-      typeof override === 'string' ? override : override?.['.'] || keySpec;
-    return value && value !== '*' ? value : undefined;
+    // npm reads an empty value as `*`, and an object without `.` as the key
+    const own = typeof override === 'string' ? override : override?.['.'];
+    return { key, value: typeof own === 'string' ? own || '*' : keySpec };
   }
   return undefined;
 }
@@ -199,11 +210,12 @@ function resolveOverrideReferences(
   const resolve = (value: unknown) => {
     if (typeof value === 'string' && value.startsWith('$')) {
       const name = value.slice(1);
+      // npm's lookup order for a reference
       return (
-        rootPackageJson.dependencies?.[name] ??
-        rootPackageJson.devDependencies?.[name] ??
-        rootPackageJson.optionalDependencies?.[name] ??
-        rootPackageJson.peerDependencies?.[name] ??
+        rootPackageJson.devDependencies?.[name] ||
+        rootPackageJson.optionalDependencies?.[name] ||
+        rootPackageJson.dependencies?.[name] ||
+        rootPackageJson.peerDependencies?.[name] ||
         value
       );
     }

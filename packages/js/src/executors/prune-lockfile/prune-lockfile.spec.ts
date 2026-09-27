@@ -216,8 +216,8 @@ describe('pruneLockfileExecutor - npm overrides', () => {
   });
 
   async function prune(
-    rootPackageJson: PackageJson,
-    projectPackageJson: PackageJson,
+    rootPackageJson: Partial<PackageJson>,
+    projectPackageJson: Partial<PackageJson>,
     lockFileName = 'package-lock.json'
   ): Promise<PackageJson> {
     tempFs.createFilesSync({
@@ -324,6 +324,46 @@ describe('pruneLockfileExecutor - npm overrides', () => {
       'js-yaml': '4.3.2',
       debug: '^4.3.4',
       '@scope/foo': '1.2.0',
+    });
+  });
+
+  it('fails when the rewritten direct dependency matches another override', async () => {
+    // npm resolves debug@^3.2.7 to 4.3.4 in the workspace, but as the root's
+    // direct dependency 4.3.4 matches debug@^4, which npm rejects (EOVERRIDE)
+    await expect(
+      prune(
+        {
+          name: 'root',
+          overrides: { 'debug@^3': '4.3.4', 'debug@^4': '4.3.5' },
+        },
+        { name: 'app', dependencies: { debug: '^3.2.7' } }
+      )
+    ).rejects.toThrow(
+      'The root override "debug@^3" resolves the dependencies entry debug@^3.2.7 to 4.3.4. In the pruned output debug@4.3.4 is a direct dependency that the override "debug@^4" changes to 4.3.5'
+    );
+  });
+
+  it('resolves $ references in the order npm looks them up', async () => {
+    const packageJson = await prune(
+      {
+        name: 'root',
+        dependencies: { ms: '2.0.0', debug: '4.3.4', uuid: '11.0.0' },
+        optionalDependencies: { ms: '2.1.3' },
+        devDependencies: { debug: '4.3.5' },
+        peerDependencies: { uuid: '10.0.0' },
+        overrides: { ms: '$ms', debug: '$debug', uuid: '$uuid' },
+      },
+      {
+        name: 'app',
+        dependencies: { ms: '^2.0.0', debug: '^4.0.0', uuid: '>=10' },
+      }
+    );
+
+    // devDependencies, then optionalDependencies, dependencies, peerDependencies
+    expect(packageJson.dependencies).toEqual({
+      ms: '2.1.3',
+      debug: '4.3.5',
+      uuid: '11.0.0',
     });
   });
 
