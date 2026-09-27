@@ -98,9 +98,9 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
-            HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
-                HashInputsBuilder::default()
-            }
+            HashInstruction::IoSnapshot(_)
+            | HashInstruction::ProjectConfiguration(_)
+            | HashInstruction::Cwd(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
             // explicitly before falling through to `.into()`.
             other => unreachable!(
@@ -285,9 +285,10 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
-    // `includeIgnored` filesets: a path index over the file map so tracked
-    // files skip the disk, built only once a plan carries a disk-backed
-    // group. Their content lives in the context's IgnoredIndex.
+    // Disk-backed filesets (`includeIgnored` and snapshot reads): a path index
+    // over the file map so tracked files skip the disk, built only once a plan
+    // carries a disk-backed group. Their content lives in the context's
+    // IgnoredIndex.
     workspace_file_index: WorkspaceFileIndex,
 }
 #[napi]
@@ -332,7 +333,7 @@ impl TaskHasher {
     }
 
     /// Hands the index the directories the plans read from disk: the literal
-    /// prefix of every includeIgnored glob, and every declared output root.
+    /// prefix of every disk-backed glob, and every declared output root.
     /// The index remembers hashes under all of them and lists the ones
     /// something asks to list, which is the filesets and not the outputs.
     /// Anything it refuses is read from disk instead.
@@ -579,7 +580,7 @@ impl TaskHasher {
         // is an atomic load, and it lets the loop skip hash_instruction
         // entirely when inputs are not collected.
         let instruction_keys: Arc<[SharedStr]> = (0..pool.len() as u32)
-            .map(|id| SharedStr::from(pool.key(id)))
+            .map(|id| SharedStr::from(pool.label(id)))
             .collect();
         let key_ranks = instruction_key_ranks(&instruction_keys);
         // Classify once per instruction, so cache hits do not need the pool's
@@ -597,7 +598,8 @@ impl TaskHasher {
                 | HashInstruction::TaskOutput(_, _)
                 | HashInstruction::External(_)
                 | HashInstruction::AllExternalDependencies
-                | HashInstruction::JsonFileSet(_) => Some(OnceCell::new()),
+                | HashInstruction::JsonFileSet(_)
+                | HashInstruction::IoSnapshot(_) => Some(OnceCell::new()),
             })
             .collect();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
@@ -648,10 +650,12 @@ impl TaskHasher {
                             Some(value) => value,
                             None => {
                                 let instruction_ref = pool.get(id);
+                                let label = pool.label(id);
                                 let (hash_value, inputs) = self.hash_instruction(
                                     task_id,
                                     instruction_ref.value(),
                                     HashInstructionArgs {
+                                        label: &label,
                                         js_env,
                                         ts_config_hash: &ts_config_hash,
                                         project_root_mappings: &project_root_mappings,
@@ -722,6 +726,7 @@ impl TaskHasher {
         task_id: &str,
         instruction: &HashInstruction,
         HashInstructionArgs {
+            label,
             js_env,
             ts_config_hash,
             project_root_mappings,
@@ -803,17 +808,16 @@ impl TaskHasher {
                         accept,
                     )
                 };
-                let expansion =
-                    expand_cached(&instruction.to_string(), files_expansion_cache, || {
-                        expand_globs(
-                            workspace_root,
-                            globs,
-                            &Source::fileset(
-                                &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
-                                &list_directory,
-                            ),
-                        )
-                    })?;
+                let expansion = expand_cached(label, files_expansion_cache, || {
+                    expand_globs(
+                        workspace_root,
+                        globs,
+                        &Source::fileset(
+                            &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
+                            &list_directory,
+                        ),
+                    )
+                })?;
                 let hashed = hash_files(
                     workspace_root,
                     &expansion,
@@ -955,6 +959,15 @@ impl TaskHasher {
                 };
                 (hashed_external, inputs)
             }
+            HashInstruction::IoSnapshot(_) => {
+                let inputs = if collect_inputs {
+                    instruction.into()
+                } else {
+                    empty
+                };
+                // The rendered text, so the prefix lives in one place.
+                (hash(instruction.to_string().as_bytes()), inputs)
+            }
             HashInstruction::AllExternalDependencies => {
                 // Identical for every task, so fold once and reuse (individual externals
                 // are already cached in external_cache).
@@ -1017,6 +1030,9 @@ impl TaskHasher {
 }
 
 struct HashInstructionArgs<'a> {
+    /// `InstructionPool::label` of the instruction: the details key, and the
+    /// key a disk-backed group's expansion is shared under within one call.
+    label: &'a str,
     js_env: &'a HashMap<String, String>,
     ts_config_hash: &'a str,
     project_root_mappings: &'a ProjectRootMappings,

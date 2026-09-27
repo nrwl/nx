@@ -22,10 +22,10 @@ import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { Schema } from './schema';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => {
+vi.mock('@nx/devkit', async () => {
   return {
-    ...jest.requireActual('@nx/devkit'),
-    createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
+    ...(await vi.importActual<any>('@nx/devkit')),
+    createProjectGraphAsync: vi.fn().mockImplementation(() => projectGraph),
   };
 });
 

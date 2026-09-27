@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ci-workflow generator connected to nxCloud circleci pipeline should match snapshot 1`] = `
+exports[`ci-workflow generator > connected to nxCloud > circleci pipeline > should match snapshot 1`] = `
 "version: 2.1
 
 orbs:
@@ -46,7 +46,7 @@ workflows:
 "
 `;
 
-exports[`ci-workflow generator connected to nxCloud github pipeline should match snapshot 1`] = `
+exports[`ci-workflow generator > connected to nxCloud > github pipeline > should match snapshot 1`] = `
 "name: CI
 
 on:
@@ -94,7 +94,7 @@ jobs:
 "
 `;
 
-exports[`ci-workflow generator not connected to nxCloud circleci pipeline should match snapshot 1`] = `
+exports[`ci-workflow generator > not connected to nxCloud > circleci pipeline > should match snapshot 1`] = `
 "version: 2.1
 
 orbs:
@@ -140,7 +140,7 @@ workflows:
 "
 `;
 
-exports[`ci-workflow generator not connected to nxCloud github pipeline should match snapshot 1`] = `
+exports[`ci-workflow generator > not connected to nxCloud > github pipeline > should match snapshot 1`] = `
 "name: CI
 
 on:

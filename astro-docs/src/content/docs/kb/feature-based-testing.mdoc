@@ -123,7 +123,7 @@ For example, when `feat-cart` changes, only `feat-cart:e2e` runs and `feat-produ
 
 ### Combining with automated task splitting (Atomizer)
 
-Typically, teams enable [Atomizer, also known as task splitting](/docs/features/ci-features/split-e2e-tasks), for a quick win to improve CI times when using [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+Typically, teams enable [Atomizer, also known as task splitting](/docs/kb/split-e2e-tasks), for a quick win to improve CI times when using [Nx Agents](/docs/features/ci-features/distribute-task-execution).
 Combining both strategies yields the best results.
 Here's how they complement each other:
 
@@ -136,7 +136,7 @@ For example, if `feat-cart` has 10 test files and `feat-products` has 15 test fi
 2. Atomizer splits `feat-cart:e2e-ci` into 10 parallel tasks, one per test file
 3. These tasks get distributed across your CI agents for faster execution
 
-Learn more about [setting up Automated Task Splitting](/docs/features/ci-features/split-e2e-tasks).
+Learn more about [setting up Automated Task Splitting](/docs/kb/split-e2e-tasks).
 
 ### Keep the top-Level test project
 

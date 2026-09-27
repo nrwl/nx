@@ -11,12 +11,12 @@ mod expansion;
 
 pub(crate) use entries::{Negation, Positive};
 pub use expansion::FilesExpansion;
-pub(crate) use expansion::validate_files_globs;
+#[cfg(test)]
+use expansion::NOTHING_TRACKED;
 pub(crate) use expansion::{
     FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
 };
-#[cfg(test)]
-use expansion::{NOTHING_TRACKED, parse_group, validate_files_glob};
+pub(crate) use expansion::{parse_group, validate_files_glob, validate_files_globs};
 
 #[cfg(test)]
 pub(crate) mod tests {

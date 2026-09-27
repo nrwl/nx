@@ -428,36 +428,36 @@ describe('target merging', () => {
   });
 
   describe('cache', () => {
-    // Once a consumer reads it, `backfill: false` decides whether a recorded
+    // Once a consumer reads it, `mode: 'warn'` decides whether a recorded
     // snapshot may stand in for declared inputs, so losing it in a merge would
     // silently change how the task hashes.
-    it('should drop an inherited backfill when the target replaces the sandbox', () => {
+    it('should drop an inherited mode when the target replaces the ultracache', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'nx:run-commands',
-          sandbox: { ignoredReads: ['tmp/**'] },
+          ultracache: { ignoredReads: ['tmp/**'] },
         },
         {
           executor: 'nx:run-commands',
-          sandbox: { backfill: false },
+          ultracache: { mode: 'warn' },
         }
       );
-      expect(result.sandbox).toEqual({ ignoredReads: ['tmp/**'] });
+      expect(result.ultracache).toEqual({ ignoredReads: ['tmp/**'] });
     });
 
-    it('should keep an inherited backfill under the spread token', () => {
+    it('should keep an inherited mode under the spread token', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'nx:run-commands',
-          sandbox: { '...': true, ignoredReads: ['tmp/**'] },
+          ultracache: { '...': true, ignoredReads: ['tmp/**'] },
         },
         {
           executor: 'nx:run-commands',
-          sandbox: { backfill: false },
+          ultracache: { mode: 'warn' },
         }
       );
-      expect(result.sandbox).toEqual({
-        backfill: false,
+      expect(result.ultracache).toEqual({
+        mode: 'warn',
         ignoredReads: ['tmp/**'],
       });
     });
@@ -476,51 +476,51 @@ describe('target merging', () => {
     });
   });
 
-  describe('sandbox', () => {
-    it('should take the base sandbox when the target does not define one', () => {
+  describe('ultracache', () => {
+    it('should take the base ultracache when the target does not define one', () => {
       const result = mergeTargetConfigurations(
         { executor: 'nx:run-commands' },
         {
           executor: 'nx:run-commands',
-          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+          ultracache: { mode: 'off', ignoredReads: ['tmp/**'] },
         }
       );
-      expect(result.sandbox).toEqual({
-        enabled: false,
+      expect(result.ultracache).toEqual({
+        mode: 'off',
         ignoredReads: ['tmp/**'],
       });
     });
 
-    it('should replace the base sandbox wholesale when the target defines one', () => {
+    it('should replace the base ultracache wholesale when the target defines one', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'nx:run-commands',
-          sandbox: { ignoredWrites: ['scratch/**'] },
+          ultracache: { ignoredWrites: ['scratch/**'] },
         },
         {
           executor: 'nx:run-commands',
-          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+          ultracache: { mode: 'off', ignoredReads: ['tmp/**'] },
         }
       );
-      expect(result.sandbox).toEqual({ ignoredWrites: ['scratch/**'] });
+      expect(result.ultracache).toEqual({ ignoredWrites: ['scratch/**'] });
     });
 
-    it('should shallow-merge with the base sandbox via the spread token', () => {
+    it('should shallow-merge with the base ultracache via the spread token', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'nx:run-commands',
-          sandbox: {
+          ultracache: {
             '...': true,
             ignoredWrites: ['scratch/**'],
           },
         },
         {
           executor: 'nx:run-commands',
-          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+          ultracache: { mode: 'off', ignoredReads: ['tmp/**'] },
         }
       );
-      expect(result.sandbox).toEqual({
-        enabled: false,
+      expect(result.ultracache).toEqual({
+        mode: 'off',
         ignoredReads: ['tmp/**'],
         ignoredWrites: ['scratch/**'],
       });
@@ -529,30 +529,30 @@ describe('target merging', () => {
     it('should not be merged for incompatible targets', () => {
       const result = mergeTargetConfigurations(
         { executor: 'foo' },
-        { executor: 'bar', sandbox: { enabled: false } }
+        { executor: 'bar', ultracache: { mode: 'off' } }
       );
-      expect(result.sandbox).not.toBeDefined();
+      expect(result.ultracache).not.toBeDefined();
     });
 
-    // The guard above already skips a base-only sandbox, so this is the case
+    // The guard above already skips a base-only ultracache, so this is the case
     // that decides whether the base is discarded: the target overrode the
     // executor, so the base describes a different program.
-    it('should not inherit the base sandbox when an incompatible target declares its own', () => {
+    it('should not inherit the base ultracache when an incompatible target declares its own', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'foo',
-          sandbox: { '...': true, ignoredWrites: ['scratch/**'] },
+          ultracache: { '...': true, ignoredWrites: ['scratch/**'] },
         },
         {
           executor: 'bar',
-          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+          ultracache: { mode: 'off', ignoredReads: ['tmp/**'] },
         }
       );
-      // The base contributes nothing — no `enabled`, no inherited
+      // The base contributes nothing — no `mode`, no inherited
       // `ignoredReads`. The `'...'` survives because there was no base to
-      // expand it against; unlike the target level, `mergeSandbox` does not
+      // expand it against; unlike the target level, `mergeUltracache` does not
       // strip an unresolved token.
-      expect(result.sandbox).toEqual({
+      expect(result.ultracache).toEqual({
         '...': true,
         ignoredWrites: ['scratch/**'],
       });
@@ -562,14 +562,14 @@ describe('target merging', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'nx:run-commands',
-          sandbox: { ignoredReads: ['...', 'tmp/**'] },
+          ultracache: { ignoredReads: ['...', 'tmp/**'] },
         },
         {
           executor: 'nx:run-commands',
-          sandbox: { ignoredReads: ['dist/**'] },
+          ultracache: { ignoredReads: ['dist/**'] },
         }
       );
-      expect(result.sandbox).toEqual({
+      expect(result.ultracache).toEqual({
         ignoredReads: ['dist/**', 'tmp/**'],
       });
     });
@@ -578,53 +578,53 @@ describe('target merging', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'nx:run-commands',
-          sandbox: {
+          ultracache: {
             '...': true,
             ignoredWrites: ['...', 'scratch/**'],
           },
         },
         {
           executor: 'nx:run-commands',
-          sandbox: { enabled: false, ignoredWrites: ['dist/**'] },
+          ultracache: { mode: 'off', ignoredWrites: ['dist/**'] },
         }
       );
-      expect(result.sandbox).toEqual({
-        enabled: false,
+      expect(result.ultracache).toEqual({
+        mode: 'off',
         ignoredWrites: ['dist/**', 'scratch/**'],
       });
     });
 
-    it('should keep a falsy sandbox so validation can reject it', () => {
+    it('should keep a falsy ultracache so validation can reject it', () => {
       const result = mergeTargetConfigurations(
-        { executor: 'nx:run-commands', sandbox: false as any },
+        { executor: 'nx:run-commands', ultracache: false as any },
         { executor: 'nx:run-commands' }
       );
-      expect('sandbox' in result).toBe(true);
-      expect(result.sandbox).toBe(false);
+      expect('ultracache' in result).toBe(true);
+      expect(result.ultracache).toBe(false);
     });
 
-    it('should not turn an array sandbox into an empty object', () => {
+    it('should not turn an array ultracache into an empty object', () => {
       const result = mergeTargetConfigurations(
-        { executor: 'nx:run-commands', sandbox: [] as any },
+        { executor: 'nx:run-commands', ultracache: [] as any },
         { executor: 'nx:run-commands' }
       );
-      expect(result.sandbox).toEqual([]);
+      expect(result.ultracache).toEqual([]);
     });
 
     it('should let the base win for a glob array authored before the spread', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'nx:run-commands',
-          sandbox: { ignoredReads: ['tmp/**'], '...': true },
+          ultracache: { ignoredReads: ['tmp/**'], '...': true },
         },
         {
           executor: 'nx:run-commands',
-          sandbox: { ignoredReads: ['dist/**'], enabled: false },
+          ultracache: { ignoredReads: ['dist/**'], mode: 'off' },
         }
       );
-      expect(result.sandbox).toEqual({
+      expect(result.ultracache).toEqual({
         ignoredReads: ['dist/**'],
-        enabled: false,
+        mode: 'off',
       });
     });
 
@@ -632,29 +632,29 @@ describe('target merging', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'nx:run-commands',
-          sandbox: { '...': true, ignoredReads: ['tmp/**'] },
+          ultracache: { '...': true, ignoredReads: ['tmp/**'] },
         },
         {
           executor: 'nx:run-commands',
-          sandbox: { ignoredReads: ['dist/**'], enabled: false },
+          ultracache: { ignoredReads: ['dist/**'], mode: 'off' },
         }
       );
-      expect(result.sandbox).toEqual({
+      expect(result.ultracache).toEqual({
         ignoredReads: ['tmp/**'],
-        enabled: false,
+        mode: 'off',
       });
     });
 
     it('should not mutate the target it was given', () => {
       const target = {
         executor: 'nx:run-commands',
-        sandbox: { ignoredReads: ['...', 'tmp/**'] },
+        ultracache: { ignoredReads: ['...', 'tmp/**'] },
       };
       const before = JSON.stringify(target);
 
       mergeTargetConfigurations(target, {
         executor: 'nx:run-commands',
-        sandbox: { ignoredReads: ['dist/**'] },
+        ultracache: { ignoredReads: ['dist/**'] },
       });
 
       expect(JSON.stringify(target)).toEqual(before);
@@ -664,16 +664,16 @@ describe('target merging', () => {
       const result = mergeTargetConfigurations(
         {
           executor: 'nx:run-commands',
-          sandbox: { ignoredReads: ['...'], ignoredWrites: ['...'] },
+          ultracache: { ignoredReads: ['...'], ignoredWrites: ['...'] },
         },
         {
           executor: 'nx:run-commands',
-          sandbox: { ignoredReads: ['dist/**'], ignoredWrites: ['out/**'] },
+          ultracache: { ignoredReads: ['dist/**'], ignoredWrites: ['out/**'] },
         }
       );
-      expect(result.sandbox.ignoredReads).not.toContain('...');
-      expect(result.sandbox.ignoredWrites).not.toContain('...');
-      expect(result.sandbox).toEqual({
+      expect(result.ultracache.ignoredReads).not.toContain('...');
+      expect(result.ultracache.ignoredWrites).not.toContain('...');
+      expect(result.ultracache).toEqual({
         ignoredReads: ['dist/**'],
         ignoredWrites: ['out/**'],
       });

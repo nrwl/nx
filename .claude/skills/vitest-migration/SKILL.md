@@ -262,13 +262,12 @@ an edit:
 }
 ```
 
-These are not optional bookkeeping. Nothing infers a setup file outside the
-project root — `default` is project-scoped and `^production` is
-dependency-scoped — so leaving them off does not fail loudly; it serves a
-**stale cache hit** the next time someone edits the shared setup. (nx#36920
-teaches `@nx/vitest` to infer `setup.mts` and its tsconfig, but only from
-`23.3.0-beta.5`; this repo's pinned `@nx/vitest` predates it. Even after the
-bump, the resolver and the clack mock still need declaring.)
+These are not optional bookkeeping. `@nx/vitest` infers `setup.mts` and its
+tsconfig (nx#36920), but nothing infers the resolver the config imports or the
+clack mock the setup loads by path — `default` is project-scoped — so leaving
+them off does not fail loudly; it serves a **stale cache hit** the next time
+someone edits them. Keep the whole `tools/vitest/**/*` glob rather than naming
+the resolver alone, so a helper added there later is covered too.
 
 ---
 

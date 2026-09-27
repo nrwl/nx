@@ -326,8 +326,8 @@ Caching pays off locally, and it pays off more in CI, where the same tasks run o
 
 - Nx reduces wasted time in CI with the [`affected` command](/docs/features/ci-features/affected).
 - [Remote caching](/docs/features/ci-features/remote-cache) reuses task artifacts across CI runs when the task inputs match.
-- Nx Agents [efficiently distribute tasks across machines](/docs/concepts/ci-concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/docs/features/ci-features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/docs/features/ci-features/flaky-tasks).
+- Nx Agents [efficiently distribute tasks across machines](/docs/concepts/ci-concepts/building-blocks-fast-ci) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+- Nx Atomizer [automatically splits](/docs/kb/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/docs/kb/flaky-tasks).
 
 ### Connect to Nx Cloud
 
@@ -430,7 +430,7 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 ![Run details](../../../assets/guides/adopting-nx/nx-cloud-run-details.avif)
 
-For more information about how Nx can improve your CI pipeline, check out our [CI setup guides](/docs/kb/setup-ci).
+For more information about how Nx can improve your CI pipeline, check out our [CI setup guides](/docs/getting-started/setup-ci).
 
 ## Learn more
 

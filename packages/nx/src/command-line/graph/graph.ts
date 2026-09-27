@@ -45,13 +45,16 @@ import {
   handleProjectGraphError,
 } from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import { pruneToSelectedTasks } from '../../tasks-runner/utils';
+import {
+  selectTasksForProjects,
+  type TaskSelection,
+} from '../../tasks-runner/run-command';
+import type { NxArgs } from '../../utils/command-line-utils';
+import { runnableForTarget } from '../../utils/project-graph-utils';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import {
-  expandFilesInput,
-  HashPlanner,
-  transferProjectGraph,
-} from '../../native';
+import { expandFilesInput, HashPlanner } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -260,6 +263,14 @@ export async function generateGraph(
     focus?: string;
     exclude?: string[];
     affected?: boolean;
+    /**
+     * What the command would run for `targets`, or how to build it. A builder
+     * is only called where an output needs it, so the live graph can still
+     * open, and show the error, when the task graph cannot be built.
+     */
+    taskSelection?: TaskSelection | (() => TaskSelection);
+    /** The `-c` the tasks run with; their ids carry it. */
+    configuration?: string;
   },
   affectedProjects: string[]
 ): Promise<void> {
@@ -310,6 +321,26 @@ export async function generateGraph(
     }
   }
   let prunedGraph = pruneExternalNodes(rawGraph);
+
+  // `nx graph --targets` has no command to take a selection from, so it draws
+  // the projects' targets.
+  const jsonTaskSelection = () =>
+    args.targets?.length
+      ? (resolveSelection(args.taskSelection) ??
+        selectTasksForProjects(
+          rawGraph,
+          args.projects?.length
+            ? args.projects
+            : [...runnableForTarget(rawGraph.nodes, args.targets)],
+          {
+            targets: args.targets,
+            configuration: args.configuration,
+          } as NxArgs,
+          {},
+          {},
+          false
+        ))
+      : undefined;
 
   const projects = Object.values(
     prunedGraph.nodes
@@ -388,12 +419,7 @@ export async function generateGraph(
   if (args.print || args.file === 'stdout') {
     console.log(
       JSON.stringify(
-        await createJsonOutput(
-          prunedGraph,
-          rawGraph,
-          args.projects,
-          args.targets
-        ),
+        await createJsonOutput(prunedGraph, rawGraph, jsonTaskSelection()),
         null,
         2
       )
@@ -431,7 +457,9 @@ export async function generateGraph(
       const taskGraphClientResponse = args.targets
         ? await createTaskGraphForTargetsAndProjects(
             args.targets,
-            args.projects
+            args.projects,
+            args.configuration,
+            args.taskSelection
           )
         : await createTaskGraphClientResponse();
 
@@ -467,8 +495,7 @@ export async function generateGraph(
       const json = await createJsonOutput(
         prunedGraph,
         rawGraph,
-        args.projects,
-        args.targets
+        jsonTaskSelection()
       );
 
       writeJsonFile(fullFilePath, json);
@@ -505,7 +532,14 @@ export async function generateGraph(
         affectedProjects,
         args.focus,
         args.groupByFolder,
-        excludePatterns
+        excludePatterns,
+        typeof args.taskSelection === 'object' && args.taskSelection.taskIds
+          ? {
+              targets: args.targets,
+              configuration: args.configuration,
+              taskIds: args.taskSelection.taskIds,
+            }
+          : undefined
       );
       app = result.app;
       url = result.url;
@@ -623,7 +657,8 @@ async function startServer(
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
-  exclude: string[] = []
+  exclude: string[] = [],
+  selection?: TaskSelectionForGraph
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
 
@@ -687,7 +722,8 @@ async function startServer(
     if (sanitizePath === 'task-graph.json') {
       const projectsParam = parsedUrl.searchParams.get('projects');
       const targetsParam = parsedUrl.searchParams.get('targets');
-      const configuration = parsedUrl.searchParams.get('configuration');
+      const configuration =
+        parsedUrl.searchParams.get('configuration') || undefined;
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
 
@@ -697,12 +733,14 @@ async function startServer(
           ? projectsParam.split(' ').filter(Boolean)
           : undefined;
 
+        const request = selectedFor(targetNames, configuration, selection);
         return res.end(
           JSON.stringify(
             await createTaskGraphForTargetsAndProjects(
               targetNames,
               projectNames,
-              configuration
+              request.configuration,
+              { taskIds: request.taskIds }
             )
           )
         );
@@ -1118,7 +1156,7 @@ async function createTaskGraphClientResponse(
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph))
+      transformProjectGraphForRust(graph)
     );
     performance.mark('task hash plan generation:start');
 
@@ -1206,14 +1244,66 @@ function clearTaskGraphCache() {
   expandedTaskInputsCache.clear();
 }
 
+export interface TaskSelectionForGraph {
+  targets: string[];
+  configuration?: string;
+  taskIds: string[];
+}
+
 /**
- * Creates a single task graph for multiple projects with multiple targets
- * If no projects specified, returns graph for all projects with the targets
+ * The selection applies only to a page asking for its exact targets with its configuration
+ * or none (the ids carry it); anything else would prune to nothing, so it is shown whole.
+ */
+export function selectedFor(
+  targets: string[],
+  configuration: string | undefined,
+  selection: TaskSelectionForGraph | undefined
+): { configuration?: string; taskIds?: string[] } {
+  const applies =
+    selection &&
+    targets.length === selection.targets.length &&
+    targets.every((target) => selection.targets.includes(target)) &&
+    (configuration === undefined || configuration === selection.configuration);
+  return applies
+    ? { configuration: selection.configuration, taskIds: selection.taskIds }
+    : { configuration };
+}
+
+function resolveSelection<T>(
+  selection: T | (() => T) | undefined
+): T | undefined {
+  return typeof selection === 'function' ? (selection as () => T)() : selection;
+}
+
+/**
+ * The task graph to draw: the selection's own when it has one, otherwise built
+ * and, given ids, pruned to them. The live graph rebuilds per request, so it
+ * passes only ids.
+ */
+export function taskGraphForSelection(
+  build: () => TaskGraph,
+  selection?: { taskGraph?: TaskGraph; taskIds?: string[] }
+): TaskGraph {
+  if (selection?.taskGraph) {
+    return selection.taskGraph;
+  }
+  const taskGraph = build();
+  return selection?.taskIds
+    ? pruneToSelectedTasks(taskGraph, selection.taskIds)
+    : taskGraph;
+}
+
+/**
+ * The task graph client response for `targetNames`: `selection`'s graph when given,
+ * else built for `projectNames` (default: every project with one of the targets).
  */
 async function createTaskGraphForTargetsAndProjects(
   targetNames: string[],
   projectNames?: string[],
-  configuration?: string
+  configuration?: string,
+  selection?:
+    | { taskGraph?: TaskGraph; taskIds?: string[] }
+    | (() => TaskSelection)
 ): Promise<TaskGraphClientResponse> {
   // Get project graph
   let graph: ProjectGraph;
@@ -1241,21 +1331,25 @@ async function createTaskGraphForTargetsAndProjects(
   }
 
   try {
-    // Create single task graph
-    const taskGraph = createTaskGraph(
-      graph,
-      {},
-      projectsToUse,
-      targetNames,
-      configuration,
-      {}
+    const taskGraph = taskGraphForSelection(
+      () =>
+        createTaskGraph(
+          graph,
+          {},
+          projectsToUse,
+          targetNames,
+          configuration,
+          {}
+        ),
+      // Built in here, so an error is reported in the page like any other.
+      resolveSelection(selection)
     );
 
     performance.mark(`task graph generation:end`);
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph))
+      transformProjectGraphForRust(graph)
     );
     performance.mark('task hash plan generation:start');
 
@@ -1537,22 +1631,14 @@ function getExpandedWorkspaceRoots(
 async function createJsonOutput(
   prunedGraph: ProjectGraph,
   rawGraph: ProjectGraph,
-  projects: string[],
-  targets?: string[]
+  taskSelection?: TaskSelection
 ): Promise<GraphJson> {
   const response: GraphJson = {
     graph: prunedGraph,
   };
 
-  if (targets?.length) {
-    const taskGraph = createTaskGraph(
-      rawGraph,
-      {},
-      projects,
-      targets,
-      undefined,
-      {}
-    );
+  if (taskSelection) {
+    const taskGraph = taskSelection.taskGraph;
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
     let tasks = Object.values(taskGraph.tasks);

@@ -121,6 +121,7 @@
     "@rollup/plugin-typescript": "^12.1.0",
     "@rollup/plugin-url": "^8.0.2",
     "@rsbuild/core": "2.0.15",
+    "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@rspack/dev-server": "catalog:rspack",
     "@rspack/plugin-react-refresh": "catalog:rspack",

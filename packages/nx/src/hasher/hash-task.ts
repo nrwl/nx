@@ -1,7 +1,12 @@
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
-import { IS_WASM, TaskDetails } from '../native';
+import {
+  IS_WASM,
+  getIoSnapshotDeferredTaskIds,
+  type IoSnapshots,
+  TaskDetails,
+} from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
@@ -27,12 +32,18 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
-  tasksDetails: TaskDetails | null
+  tasksDetails: TaskDetails | null,
+  ioSnapshots?: IoSnapshots
 ) {
   performance.mark('hashMultipleTasks:start');
 
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+  // A snapshot can make a task depend on producer outputs its declared
+  // inputs never mentioned; those hash after their producers too.
+  const deferredBySnapshot = ioSnapshots
+    ? new Set(getIoSnapshotDeferredTaskIds(ioSnapshots, taskGraph))
+    : null;
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
@@ -49,6 +60,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     .filter(
       ({ task, customHasher }) =>
         !customHasher &&
+        !deferredBySnapshot?.has(task.id) &&
         !readsDependencyOutputs(task, taskGraph, projectGraph, nxJson)
     )
     .map((t) => t.task);

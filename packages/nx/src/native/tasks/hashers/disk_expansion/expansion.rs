@@ -104,7 +104,7 @@ pub(crate) fn expand_globs(
 /// A group's entries split at their literal prefixes, positives then
 /// negations. Each brace group becomes one entry per alternative first, so
 /// what a parser sees never holds a `{a,b}`.
-pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negation>)> {
+pub(crate) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negation>)> {
     let mut positives = Vec::new();
     let mut negations = Vec::new();
     for glob in globs {

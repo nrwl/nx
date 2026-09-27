@@ -1,3 +1,4 @@
+import type { Mock, MockInstance } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import * as http from 'node:http';
 import { createServer as createHttpServer, type Server } from 'node:http';
@@ -16,13 +17,13 @@ import waitForWebserverExecutor from './wait-for-webserver.impl';
 // Replaces the module registry entry rather than spying on the namespace, which
 // the transpiler copies per importer. The spy calls through, so a test can read
 // what the request became on the wire instead of only what it was asked for.
-jest.mock('node:https', () => {
-  const actual = jest.requireActual('node:https');
-  return { ...actual, request: jest.fn(actual.request) };
+vi.mock('node:https', async () => {
+  const actual = await vi.importActual<any>('node:https');
+  return { ...actual, request: vi.fn(actual.request) };
 });
-jest.mock('node:http', () => {
-  const actual = jest.requireActual('node:http');
-  return { ...actual, request: jest.fn(actual.request) };
+vi.mock('node:http', async () => {
+  const actual = await vi.importActual<any>('node:http');
+  return { ...actual, request: vi.fn(actual.request) };
 });
 
 const context = {} as ExecutorContext;
@@ -31,11 +32,11 @@ type AnyServer = Server | ReturnType<typeof createTcpServer>;
 const openServers = new Set<AnyServer>();
 
 describe('waitForWebserverExecutor', () => {
-  let errorSpy: jest.SpyInstance;
+  let errorSpy: MockInstance;
   let savedProxyEnv: Record<string, string | undefined>;
 
   beforeEach(() => {
-    errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
+    errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     // Every url probe reads these now, so a developer with a proxy configured
     // would otherwise have loopback probes routed at it for the whole file.
     savedProxyEnv = {};
@@ -114,7 +115,7 @@ describe('waitForWebserverExecutor', () => {
     // ::1 first (macOS); on Linux 127.0.0.1 comes first and the connection
     // succeeds either way. Assert the request options instead, which is
     // deterministic on every platform.
-    const requestSpy = http.request as jest.Mock;
+    const requestSpy = http.request as Mock;
     requestSpy.mockClear();
     const server = createHttpServer((_req, res) => res.end('ok'));
     await listen(server, 0);
@@ -682,7 +683,7 @@ describe('waitForWebserverExecutor', () => {
   ])(
     'polls https urls with ignoreHTTPSErrors $ignoreHTTPSErrors',
     async ({ ignoreHTTPSErrors, rejectUnauthorized }) => {
-      const request = https.request as unknown as jest.Mock;
+      const request = https.request as unknown as Mock;
       const port = await closedPort();
 
       const result = await waitForWebserverExecutor(
@@ -750,7 +751,7 @@ describe('waitForWebserverExecutor', () => {
       // every platform.
       const { originUrl, proxyUrl } = await startSplitRoutes();
       process.env.HTTP_PROXY = proxyUrl;
-      const requestSpy = http.request as jest.Mock;
+      const requestSpy = http.request as Mock;
       requestSpy.mockClear();
 
       const result = await waitForWebserverExecutor(
@@ -828,7 +829,7 @@ describe('waitForWebserverExecutor', () => {
     it('tunnels an https url through the proxy and addresses the origin', async () => {
       const { tunnelled, release, proxyUrl } = await startTunnellingProxy();
       process.env.HTTPS_PROXY = proxyUrl;
-      const request = https.request as unknown as jest.Mock;
+      const request = https.request as unknown as Mock;
 
       const result = await waitForWebserverExecutor(
         { servers: [{ url: 'https://example.test:8443' }], timeout: 300 },
@@ -914,7 +915,7 @@ describe('waitForWebserverExecutor', () => {
       // version's own probe passes.
       const { release, proxyUrl } = await startTunnellingProxy();
       process.env.HTTPS_PROXY = proxyUrl;
-      const request = https.request as unknown as jest.Mock;
+      const request = https.request as unknown as Mock;
       request.mockClear();
       const root = writePlaywrightFixture('1.36.0');
 
@@ -934,7 +935,7 @@ describe('waitForWebserverExecutor', () => {
     it('keeps certificate verification for a tunnelled probe on versions that honor it', async () => {
       const { release, proxyUrl } = await startTunnellingProxy();
       process.env.HTTPS_PROXY = proxyUrl;
-      const request = https.request as unknown as jest.Mock;
+      const request = https.request as unknown as Mock;
       request.mockClear();
       const root = writePlaywrightFixture('1.59.0');
 
@@ -1014,7 +1015,7 @@ describe('waitForWebserverExecutor', () => {
     it('gives up on a proxy that accepts the connection and never answers', async () => {
       const { release, proxyUrl } = await startTunnellingProxy(false);
       process.env.HTTPS_PROXY = proxyUrl;
-      const request = https.request as unknown as jest.Mock;
+      const request = https.request as unknown as Mock;
 
       const result = await waitForWebserverExecutor(
         { servers: [{ url: 'https://example.test:8443' }], timeout: 300 },

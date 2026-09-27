@@ -71,7 +71,7 @@ export class ParallelRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    task: Pick<Task, 'id' | 'sandbox'>
+    task: Pick<Task, 'id' | 'ultracache'>
   ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
@@ -252,7 +252,7 @@ export class SeriallyRunningTasks implements RunningTask {
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
     private readonly tuiEnabled: boolean,
-    private readonly task: Pick<Task, 'id' | 'sandbox'>
+    private readonly task: Pick<Task, 'id' | 'ultracache'>
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -358,7 +358,7 @@ export class SeriallyRunningTasks implements RunningTask {
     color: boolean,
     cwd: string,
     env: Record<string, string>,
-    task: Pick<Task, 'id' | 'sandbox'>,
+    task: Pick<Task, 'id' | 'ultracache'>,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
@@ -437,7 +437,7 @@ class RunningNodeProcess implements RunningTask {
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
     private readonly streamOutput = true,
     envFile: string,
-    private task: Pick<Task, 'id' | 'sandbox'>
+    private task: Pick<Task, 'id' | 'ultracache'>
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
@@ -636,7 +636,7 @@ class RunningNodeProcess implements RunningTask {
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
   context: ExecutorContext,
-  task: Pick<Task, 'id' | 'sandbox'>
+  task: Pick<Task, 'id' | 'ultracache'>
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(
