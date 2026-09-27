@@ -1124,6 +1124,38 @@ describe('createPackageJson', () => {
       });
     });
 
+    it('should resolve npm override references the dist cannot resolve', () => {
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              devDependencies: { 'ms-pin': 'npm:ms@2.1.3' },
+              overrides: { random: { ms: '$ms-pin' } },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
+      );
+
+      // the dist has no ms-pin, so npm there fails to resolve `$ms-pin`
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        }).overrides
+      ).toEqual({ random: { ms: 'npm:ms@2.1.3' } });
+    });
+
     it('should add resolutions (yarn)', () => {
       spies.push(
         vi

@@ -20,7 +20,10 @@ import {
   getTargetInputs,
 } from '../../../hasher/task-hasher';
 import { output } from '../../../utils/output';
-import { dropNpmOverridesOfDirectDependencies } from './npm-overrides';
+import {
+  dropNpmOverridesOfDirectDependencies,
+  resolveNpmOverrideReferences,
+} from './npm-overrides';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -226,9 +229,13 @@ export function createPackageJson(
 
   // npm
   if (rootPackageJson.overrides && !options.skipOverrides) {
-    // npm rejects an override that changes a direct dependency's spec (EOVERRIDE)
+    // `$name` resolves against the install root, which the dist replaces, and
+    // npm rejects an override that changes a direct dependency's spec
     const overrides = dropNpmOverridesOfDirectDependencies(
-      { ...rootPackageJson.overrides, ...packageJson.overrides },
+      resolveNpmOverrideReferences(
+        { ...rootPackageJson.overrides, ...packageJson.overrides },
+        rootPackageJson
+      ),
       packageJson
     );
     if (Object.keys(overrides).length) {
