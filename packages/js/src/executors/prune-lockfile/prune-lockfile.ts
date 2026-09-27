@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
+import { intersects, validRange } from 'semver';
 import {
   dropEmptyPeerDependencySections,
   generatePrunedDeployOutput,
@@ -32,6 +33,9 @@ export default async function pruneLockfileExecutor(
   const packageJson = resolveCatalogReferences(getPackageJson(schema, context));
   mergeAllowScripts(packageJson);
   const packageManager = detectPackageManager(workspaceRoot);
+  if (packageManager === 'npm') {
+    applyRootOverrides(packageJson);
+  }
 
   const { project } = parseTargetString(schema.buildTarget, context);
   const projectRoot = context.projectGraph.nodes[project].data.root;
@@ -104,6 +108,113 @@ function mergeAllowScripts(packageJson: PackageJson) {
     ...rootPackageJson.allowScripts,
     ...packageJson.allowScripts,
   };
+}
+
+/**
+ * npm, like `allowScripts`, reads `overrides` only from the install root. In a
+ * workspace it resolved the whole tree, this project included, with the root's
+ * overrides and ignored the project's own, so the pruned lock file follows the
+ * root's; the project's would leave `npm ci` finding it out of sync. An
+ * override naming a direct dependency must match that dependency's spec or npm
+ * rejects it (EOVERRIDE), and npm resolved the dependency with the override, so
+ * the dependency takes the override's spec. A `$name` override refers to the
+ * root's own dependency, which the pruned manifest lacks, so it is resolved.
+ */
+function applyRootOverrides(packageJson: PackageJson) {
+  const rootPackageJson: PackageJson = readJsonFile(
+    join(workspaceRoot, 'package.json')
+  );
+  delete packageJson.overrides;
+  if (
+    !rootPackageJson.overrides ||
+    !Object.keys(rootPackageJson.overrides).length
+  ) {
+    return;
+  }
+  const overrides = resolveOverrideReferences(
+    rootPackageJson.overrides,
+    rootPackageJson
+  );
+  packageJson.overrides = overrides;
+
+  const sections: PackageJsonDependencySection[] = [
+    'dependencies',
+    'optionalDependencies',
+    'devDependencies',
+    'peerDependencies',
+  ];
+  for (const section of sections) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const [name, spec] of Object.entries(deps)) {
+      const value = getOverrideValue(overrides, name, spec);
+      if (value) {
+        deps[name] = value;
+      }
+    }
+  }
+}
+
+/**
+ * The spec npm gives a direct dependency, mirroring its OverrideSet: the first
+ * root rule for the name whose key range (`name@range`, `*` when absent)
+ * intersects the dependency's spec. npm accepts the rule for a spec it cannot
+ * compare as a range, such as a tag or a directory.
+ */
+function getOverrideValue(
+  overrides: PackageJson['overrides'],
+  name: string,
+  spec: string
+): string | undefined {
+  for (const [key, override] of Object.entries(overrides)) {
+    const at = key.indexOf('@', 1);
+    if ((at === -1 ? key : key.slice(0, at)) !== name) {
+      continue;
+    }
+    const keySpec = at === -1 ? '*' : key.slice(at + 1) || '*';
+    if (keySpec !== '*') {
+      const range = spec.startsWith('npm:') ? getAliasRange(spec) : spec;
+      if (validRange(range) && !intersects(range, keySpec)) {
+        continue;
+      }
+    }
+    const value =
+      typeof override === 'string' ? override : override?.['.'] || keySpec;
+    return value && value !== '*' ? value : undefined;
+  }
+  return undefined;
+}
+
+function getAliasRange(spec: string): string {
+  const at = spec.lastIndexOf('@');
+  return at > 'npm:'.length ? spec.slice(at + 1) : '*';
+}
+
+function resolveOverrideReferences(
+  overrides: PackageJson['overrides'],
+  rootPackageJson: PackageJson
+): PackageJson['overrides'] {
+  const resolve = (value: unknown) => {
+    if (typeof value === 'string' && value.startsWith('$')) {
+      const name = value.slice(1);
+      return (
+        rootPackageJson.dependencies?.[name] ??
+        rootPackageJson.devDependencies?.[name] ??
+        rootPackageJson.optionalDependencies?.[name] ??
+        rootPackageJson.peerDependencies?.[name] ??
+        value
+      );
+    }
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, nested]) => [key, resolve(nested)])
+      );
+    }
+    return value;
+  };
+  return resolve(overrides) as PackageJson['overrides'];
 }
 
 export function resolveCatalogReferences(

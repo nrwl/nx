@@ -202,6 +202,166 @@ describe('pruneLockfileExecutor - allowScripts', () => {
   });
 });
 
+describe('pruneLockfileExecutor - npm overrides', () => {
+  let tempFs: TempFs;
+
+  beforeEach(() => {
+    tempFs = new TempFs('prune-lockfile');
+    mockWorkspaceRoot = tempFs.tempDir;
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
+    vi.clearAllMocks();
+  });
+
+  async function prune(
+    rootPackageJson: PackageJson,
+    projectPackageJson: PackageJson,
+    lockFileName = 'package-lock.json'
+  ): Promise<PackageJson> {
+    tempFs.createFilesSync({
+      'package.json': JSON.stringify(rootPackageJson),
+      [lockFileName]:
+        lockFileName === 'package-lock.json'
+          ? JSON.stringify({ name: 'root', lockfileVersion: 3 })
+          : '',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify(projectPackageJson),
+    });
+    tempFs.createDirSync('dist/app');
+    await pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+    return JSON.parse(
+      readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
+    );
+  }
+
+  it('takes the root overrides, which npm applied, over the project ones it ignored', async () => {
+    const packageJson = await prune(
+      {
+        name: 'root',
+        overrides: { ms: '2.1.3', express: { 'body-parser': '1.20.3' } },
+      },
+      {
+        name: 'app',
+        dependencies: { express: '^4.21.0' },
+        overrides: { nanoid: '5.1.16' },
+      }
+    );
+
+    expect(packageJson.overrides).toEqual({
+      ms: '2.1.3',
+      express: { 'body-parser': '1.20.3' },
+    });
+  });
+
+  it('sets a direct dependency to the override npm resolved it with', async () => {
+    const packageJson = await prune(
+      { name: 'root', overrides: { uuid: '^11.1.1' } },
+      { name: 'app', dependencies: { uuid: '11.1.0' } }
+    );
+
+    expect(packageJson.dependencies).toEqual({ uuid: '^11.1.1' });
+    expect(packageJson.overrides).toEqual({ uuid: '^11.1.1' });
+    // the lock file is pruned for the manifest npm will install
+    expect(generatePrunedDeployOutput).toHaveBeenCalledWith(
+      expect.objectContaining({ dependencies: { uuid: '^11.1.1' } }),
+      expect.anything(),
+      PROJECT_ROOT,
+      expect.anything()
+    );
+  });
+
+  it("uses an object override's own spec for the direct dependency", async () => {
+    const packageJson = await prune(
+      { name: 'root', overrides: { foo: { '.': '2.0.0', bar: '1.0.0' } } },
+      { name: 'app', dependencies: { foo: '^1.0.0' } }
+    );
+
+    expect(packageJson.dependencies).toEqual({ foo: '2.0.0' });
+    expect(packageJson.overrides).toEqual({
+      foo: { '.': '2.0.0', bar: '1.0.0' },
+    });
+  });
+
+  it('applies a name@range override only to a dependency its range intersects', async () => {
+    const packageJson = await prune(
+      {
+        name: 'root',
+        overrides: {
+          'js-yaml@^4.0.0': '4.3.2',
+          'debug@^2': '2.6.9',
+          '@scope/foo@^1': '1.2.0',
+        },
+      },
+      {
+        name: 'app',
+        dependencies: {
+          'js-yaml': '^4.3.1',
+          debug: '^4.3.4',
+          '@scope/foo': '^1.0.0',
+        },
+      }
+    );
+
+    expect(packageJson.dependencies).toEqual({
+      'js-yaml': '4.3.2',
+      debug: '^4.3.4',
+      '@scope/foo': '1.2.0',
+    });
+  });
+
+  it('resolves $ references against the root dependencies', async () => {
+    const packageJson = await prune(
+      {
+        name: 'root',
+        devDependencies: { typescript: '5.4.5' },
+        overrides: { typescript: '$typescript' },
+      },
+      { name: 'app', devDependencies: { typescript: '^5.0.0' } }
+    );
+
+    expect(packageJson.devDependencies).toEqual({ typescript: '5.4.5' });
+    expect(packageJson.overrides).toEqual({ typescript: '5.4.5' });
+  });
+
+  it('drops project overrides when the root has none', async () => {
+    const packageJson = await prune(
+      { name: 'root' },
+      { name: 'app', overrides: { nanoid: '5.1.16' } }
+    );
+
+    expect(packageJson.overrides).toBeUndefined();
+  });
+
+  it('leaves the manifest alone for other package managers', async () => {
+    const packageJson = await prune(
+      { name: 'root', overrides: { uuid: '^11.1.1' } },
+      { name: 'app', dependencies: { uuid: '11.1.0' } },
+      'pnpm-lock.yaml'
+    );
+
+    expect(packageJson.dependencies).toEqual({ uuid: '11.1.0' });
+    expect(packageJson.overrides).toBeUndefined();
+  });
+});
+
 describe('pruneLockfileExecutor - workspace module dependencies', () => {
   const mockGetWorkspacePackages =
     getWorkspacePackagesFromGraph as MockedFunction<

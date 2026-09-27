@@ -124,7 +124,8 @@ function handleWorkspaceModules(
   const catalogManager = getCatalogManager(workspaceRoot);
   // Only the pnpm prune path ships non-workspace local-path targets, so only
   // pnpm manifests get their file:/link: specs relocated.
-  const isPnpmWorkspace = detectPackageManager(workspaceRoot) === 'pnpm';
+  const packageManager = detectPackageManager(workspaceRoot);
+  const isPnpmWorkspace = packageManager === 'pnpm';
   const processedModules = new Set<string>();
   const workspaceModulesDir = join(outputDirectory, 'workspace_modules');
 
@@ -255,6 +256,13 @@ function handleWorkspaceModules(
       }
     }
     dropEmptyPeerDependencySections(copiedPackageJson);
+    // npm reads a linked directory's manifest from disk and, as for a project
+    // root, installs its devDependencies. The pruned lock file carries none of
+    // them, so `npm ci` would reject the output.
+    if (packageManager === 'npm' && copiedPackageJson.devDependencies) {
+      delete copiedPackageJson.devDependencies;
+      packageJsonModified = true;
+    }
 
     if (packageJsonModified) {
       writeFileSync(
