@@ -1,16 +1,18 @@
+import type { Mock, MockInstance } from 'vitest';
 // Mock `@nx/devkit` so that (1) the project graph is empty during generation and
-// (2) the detected package manager is pinned. Pinning keeps inferred lock-file
-// outputs (e.g. prune-lockfile) deterministic regardless of which package
-// manager runs the tests. Individual tests can override `detectPackageManager`.
-jest.mock('@nx/devkit', () => {
-  const actual = jest.requireActual('@nx/devkit');
+// (2) the detected package manager can be pinned. `beforeEach` pins it to npm,
+// which keeps inferred lock-file outputs (e.g. prune-lockfile) deterministic
+// regardless of which package manager runs the tests. Individual tests can
+// override `detectPackageManager`.
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
   return {
     ...actual,
-    createProjectGraphAsync: jest
+    createProjectGraphAsync: vi
       .fn()
       .mockResolvedValue({ nodes: {}, dependencies: {} }),
-    detectPackageManager: jest.fn(() => 'npm'),
-    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+    detectPackageManager: vi.fn(),
+    getPackageManagerCommand: vi.fn((pm = 'npm') =>
       actual.getPackageManagerCommand(pm)
     ),
   };
@@ -27,6 +29,8 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import {
   PNPM_INSTALL_SETTINGS_INPUTS,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
@@ -47,7 +51,9 @@ describe('app', () => {
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
+    // `clearAllMocks` keeps configured return values, so re-pin the default.
+    (detectPackageManager as Mock).mockReturnValue('npm');
   });
 
   afterEach(() => {
@@ -56,6 +62,48 @@ describe('app', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    beforeEach(() => {
+      (detectPackageManager as Mock).mockReturnValue('pnpm');
+    });
+
+    it('should deny the esbuild build script for the esbuild bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-node-app',
+          bundler: 'esbuild',
+          framework: 'none',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+          linter: 'none',
+          addPlugin: true,
+        } as Schema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?esbuild['"]?: false/
+      );
+    });
+
+    it('should not record an esbuild decision for the webpack bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-node-app',
+          bundler: 'webpack',
+          framework: 'none',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+          linter: 'none',
+          addPlugin: true,
+        } as Schema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        'esbuild'
+      );
+    });
   });
 
   describe('not nested', () => {
@@ -714,17 +762,16 @@ describe('app', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
-        .spyOn(devkitModule, 'formatFiles')
+      formatFilesSpy = vi
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files by default', async () => {
@@ -1368,7 +1415,7 @@ describe('app', () => {
 
   describe('pnpm deploy-settings inputs', () => {
     beforeEach(() => {
-      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      (detectPackageManager as Mock).mockReturnValue('pnpm');
       tree.write('pnpm-lock.yaml', 'lockfileVersion: 9.0\n');
     });
 
@@ -1483,7 +1530,7 @@ describe('app', () => {
     });
 
     it('adds none of them in a non-pnpm workspace', async () => {
-      (detectPackageManager as jest.Mock).mockReturnValue('npm');
+      (detectPackageManager as Mock).mockReturnValue('npm');
       tree.delete('pnpm-lock.yaml');
 
       await applicationGenerator(tree, {

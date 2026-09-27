@@ -1,5 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import type { LoaderContext } from 'astro/loaders';
+import { generatedDocFileURL } from './generated-doc-file-url';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import {
@@ -83,7 +84,9 @@ export async function loadNxSpecialPackage(
       id: `${packageName}-generators`,
       body: markdown,
       // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
-      rendered: await renderMarkdown(markdown),
+      rendered: await renderMarkdown(markdown, {
+        fileURL: generatedDocFileURL(`reference/${packageName}/generators`),
+      }),
       collection: 'nx-reference-packages',
       data: {
         title: `${npmPackageName} Generators`,
@@ -111,7 +114,9 @@ export async function loadNxSpecialPackage(
       id: `${packageName}-executors`,
       body: markdown,
       // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
-      rendered: await renderMarkdown(markdown),
+      rendered: await renderMarkdown(markdown, {
+        fileURL: generatedDocFileURL(`reference/${packageName}/executors`),
+      }),
       collection: 'nx-reference-packages',
       data: {
         title: `${npmPackageName} Executors`,
@@ -139,7 +144,9 @@ export async function loadNxSpecialPackage(
       id: `${packageName}-migrations`,
       body: markdown,
       // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
-      rendered: await renderMarkdown(markdown),
+      rendered: await renderMarkdown(markdown, {
+        fileURL: generatedDocFileURL(`reference/${packageName}/migrations`),
+      }),
       collection: 'nx-reference-packages',
       data: {
         title: `${npmPackageName} Migrations`,

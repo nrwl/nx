@@ -8,10 +8,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './add-trust-proxy-headers';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
-  formatFiles: jest.fn(),
+  formatFiles: vi.fn(),
 }));
 
 const TODO_COMMENT =

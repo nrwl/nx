@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`hostGenerator bundler=rspack should generate host files and configs for SSR 1`] = `
+exports[`hostGenerator > bundler=rspack > should generate host files and configs for SSR 1`] = `
 "// @ts-check
 
 /**
@@ -24,7 +24,7 @@ module.exports = moduleFederationConfig;
 "
 `;
 
-exports[`hostGenerator bundler=rspack should generate host files and configs for SSR when --typescriptConfiguration=true 1`] = `
+exports[`hostGenerator > bundler=rspack > should generate host files and configs for SSR when --typescriptConfiguration=true 1`] = `
 "import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
@@ -45,7 +45,7 @@ export default config;
 "
 `;
 
-exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=false 1`] = `
+exports[`hostGenerator > bundler=rspack > should generate host files and configs when --typescriptConfiguration=false 1`] = `
 "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
 const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
 const {
@@ -94,7 +94,7 @@ module.exports = {
 "
 `;
 
-exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=false 2`] = `
+exports[`hostGenerator > bundler=rspack > should generate host files and configs when --typescriptConfiguration=false 2`] = `
 "/**
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
@@ -117,7 +117,7 @@ module.exports = {
 "
 `;
 
-exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=true 1`] = `
+exports[`hostGenerator > bundler=rspack > should generate host files and configs when --typescriptConfiguration=true 1`] = `
 "import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
 import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
 import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack';
@@ -163,7 +163,7 @@ export default {
 "
 `;
 
-exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=true 2`] = `
+exports[`hostGenerator > bundler=rspack > should generate host files and configs when --typescriptConfiguration=true 2`] = `
 "import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {

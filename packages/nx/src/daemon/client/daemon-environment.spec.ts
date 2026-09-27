@@ -1,10 +1,13 @@
+import { delimiter } from 'node:path';
 import {
   applyDaemonEnvFromClient,
   getAppliedDaemonClientEnv,
+  getChangedEnvKeys,
   getDaemonClientEnvGeneration,
   getDaemonEnv,
   getDaemonSpawnEnv,
   hashDaemonClientEnv,
+  normalizeDaemonEnvironmentForGraph,
 } from './daemon-environment';
 
 describe('daemon environment', () => {
@@ -566,6 +569,71 @@ describe('daemon environment', () => {
       const base = hashDaemonClientEnv();
       process.env.NX_VERBOSE_LOGGING = 'true';
       expect(hashDaemonClientEnv()).toEqual(base);
+    });
+  });
+
+  describe('normalizeDaemonEnvironmentForGraph', () => {
+    it('yields equal identities for two invocations differing only by the Berry folder', () => {
+      const first = normalizeDaemonEnvironmentForGraph({
+        BERRY_BIN_FOLDER: '/tmp/xfs-aaa',
+        PATH: ['/tmp/xfs-aaa', '/usr/bin'].join(delimiter),
+      });
+      const second = normalizeDaemonEnvironmentForGraph({
+        BERRY_BIN_FOLDER: '/tmp/xfs-bbb',
+        PATH: ['/tmp/xfs-bbb', '/usr/bin'].join(delimiter),
+      });
+
+      expect(first).toEqual(second);
+      expect(first.PATH).toEqual('/usr/bin');
+    });
+
+    it('keeps Yarn and direct invocation as different graph identities', () => {
+      const berry = '/tmp/xfs-command';
+      const yarnIdentity = normalizeDaemonEnvironmentForGraph({
+        BERRY_BIN_FOLDER: berry,
+        PATH: [berry, '/usr/bin'].join(delimiter),
+      });
+      const directIdentity = normalizeDaemonEnvironmentForGraph({
+        PATH: '/usr/bin',
+      });
+
+      expect(yarnIdentity).not.toEqual(directIdentity);
+    });
+
+    it('matches the Berry folder case-insensitively with either separator on win32', () => {
+      const normalized = normalizeDaemonEnvironmentForGraph(
+        {
+          BERRY_BIN_FOLDER: 'C:/Temp/xfs-aaa',
+          Path: ['c:\\temp\\XFS-AAA', 'C:\\Windows'].join(';'),
+        },
+        'win32'
+      );
+
+      expect(normalized.Path).toEqual('C:\\Windows');
+    });
+
+    it('returns the env untouched without a Berry folder and never mutates its input', () => {
+      const env = { PATH: '/usr/bin', FOO: 'bar' };
+      expect(normalizeDaemonEnvironmentForGraph(env)).toEqual(env);
+
+      const berryEnv = {
+        BERRY_BIN_FOLDER: '/tmp/xfs-aaa',
+        PATH: ['/tmp/xfs-aaa', '/usr/bin'].join(delimiter),
+      };
+      const berryEnvCopy = { ...berryEnv };
+      normalizeDaemonEnvironmentForGraph(berryEnv);
+      expect(berryEnv).toEqual(berryEnvCopy);
+    });
+  });
+
+  describe('getChangedEnvKeys', () => {
+    it('reports added, removed and changed keys once each', () => {
+      expect(
+        getChangedEnvKeys(
+          { A: '1', B: '2', C: '3' },
+          { B: '2', C: 'changed', D: '4' }
+        ).sort()
+      ).toEqual(['A', 'C', 'D']);
     });
   });
 });

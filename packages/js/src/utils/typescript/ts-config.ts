@@ -20,13 +20,23 @@ export function readTsConfig(
     tsModule = require('typescript');
   }
 
+  // A tree-backed `sys` (readTsConfigFromTree) reads via `FsTree.read`, which
+  // re-roots an absolute path and breaks, so only absolutize the default sys.
+  const usingDefaultSys = !sys || sys === tsModule.sys;
   sys ??= tsModule.sys;
 
-  const readResult = tsModule.readConfigFile(tsConfigPath, sys.readFile);
+  // Resolve to absolute so `${configDir}` in `paths` expands to absolute
+  // values. A relative basePath produces the TS5090 "no baseUrl" error.
+  //
+  // Don't also pass `configPath` as `configFileName` (5th arg). It doesn't
+  // affect `${configDir}`, only shifts emit output paths (dist/src vs dist).
+  const configPath = usingDefaultSys ? resolve(tsConfigPath) : tsConfigPath;
+
+  const readResult = tsModule.readConfigFile(configPath, sys.readFile);
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
     sys,
-    dirname(tsConfigPath)
+    dirname(configPath)
   );
 }
 

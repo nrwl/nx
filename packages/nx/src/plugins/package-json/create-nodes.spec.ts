@@ -29,6 +29,91 @@ describe('nx package.json workspaces plugin', () => {
     vol.reset();
   });
 
+  it('uses the Nx configuration supplied for each invocation', async () => {
+    vol.fromJSON(
+      {
+        'nx.json': JSON.stringify({
+          targetDefaults: {
+            'nx-release-publish': { options: { tag: 'disk' } },
+          },
+        }),
+        'package.json': JSON.stringify({ workspaces: ['packages/*'] }),
+        'packages/a/package.json': JSON.stringify({ name: 'a' }),
+        'packages/b/package.json': JSON.stringify({ name: 'b' }),
+      },
+      '/root'
+    );
+
+    for (const tag of ['first', 'second']) {
+      const results = await createNodes[1](
+        ['packages/a/package.json', 'packages/b/package.json'],
+        undefined,
+        {
+          ...context,
+          nxJsonConfiguration: {
+            targetDefaults: { 'nx-release-publish': { options: { tag } } },
+          },
+        }
+      );
+
+      expect(results).toHaveLength(2);
+      for (const [, result] of results) {
+        const project = Object.values(result.projects)[0];
+        expect(project.targets['nx-release-publish'].options.tag).toBe(tag);
+      }
+    }
+  });
+
+  it('reads package and sibling project changes on repeated invocations', async () => {
+    vol.fromJSON(
+      {
+        'package.json': JSON.stringify({ workspaces: ['packages/*'] }),
+        'packages/a/package.json': JSON.stringify({
+          name: 'a',
+          version: '1.0.0',
+          scripts: { build: 'echo first' },
+        }),
+      },
+      '/root'
+    );
+
+    const inferProject = async () => {
+      const [[, result]] = await createNodes[1](
+        ['packages/a/package.json'],
+        undefined,
+        context
+      );
+      return result.projects['packages/a'];
+    };
+
+    const initial = await inferProject();
+    expect(initial.metadata.js.packageVersion).toBe('1.0.0');
+    expect(initial.targets.build.metadata.scriptContent).toBe('echo first');
+
+    vol.writeFileSync(
+      '/root/packages/a/package.json',
+      JSON.stringify({
+        name: 'a',
+        version: '2.0.0',
+        scripts: { build: 'echo second' },
+      })
+    );
+    vol.writeFileSync(
+      '/root/packages/a/project.json',
+      JSON.stringify({ targets: { build: { command: 'echo override' } } })
+    );
+
+    const withSibling = await inferProject();
+    expect(withSibling.metadata.js.packageVersion).toBe('2.0.0');
+    expect(withSibling.targets.build).toBeUndefined();
+
+    vol.unlinkSync('/root/packages/a/project.json');
+    const withoutSibling = await inferProject();
+    expect(withoutSibling.targets.build.metadata.scriptContent).toBe(
+      'echo second'
+    );
+  });
+
   it('should build projects from package.json files', () => {
     vol.fromJSON(
       {

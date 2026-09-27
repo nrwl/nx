@@ -1,4 +1,8 @@
-import { printsFullTaskOutput, isStaticOutputStyle } from './output';
+import {
+  printsFullTaskOutput,
+  isStaticOutputStyle,
+  printsTaskOutput,
+} from './output';
 
 describe('printsFullTaskOutput', () => {
   // This predicate decides whether a successful task's body is printed or
@@ -16,6 +20,7 @@ describe('printsFullTaskOutput', () => {
     ['tui', true],
     ['static', true],
     ['static-failures-only', false],
+    ['summary', false],
   ])('%s prints full output: %s', (outputStyle, expected) => {
     expect(printsFullTaskOutput({ outputStyle })).toBe(expected);
   });
@@ -75,4 +80,48 @@ describe('isStaticOutputStyle', () => {
   it('treats an absent style as not-static, so streaming stays negotiable', () => {
     expect(isStaticOutputStyle(undefined)).toBe(false);
   });
+});
+
+describe('printsTaskOutput', () => {
+  // `summary` addresses each task's log by path instead of printing it, so
+  // anything that would put task bytes on the terminal has to check here first.
+  // The batch fold is the one that bypasses the life cycle and would otherwise
+  // dump a whole worker log into a run that asked for paths.
+  it('is false only for summary', () => {
+    expect(printsTaskOutput('summary')).toBe(false);
+    for (const style of [
+      'static',
+      'static-failures-only',
+      'stream',
+      'stream-without-prefixes',
+      'dynamic',
+      'dynamic-legacy',
+      'tui',
+      undefined,
+    ]) {
+      expect(printsTaskOutput(style)).toBe(true);
+    }
+  });
+});
+describe('the specified/resolved split', () => {
+  // Rows 1 and 2 render identically and stream differently. That difference is
+  // the whole reason the style is carried as two values: one enum cannot say
+  // both "render as failures-only" and "the user did not ask for static, so a
+  // continuous task may still stream". Collapsing them broke 36 e2e tasks.
+  it.each([
+    [undefined, 'static-failures-only', false, false],
+    ['static-failures-only', 'static-failures-only', true, false],
+    ['static', 'static', true, true],
+    ['summary', 'summary', false, false],
+    ['stream', 'stream', false, true],
+    ['tui', 'tui', false, true],
+  ])(
+    'specified=%s resolved=%s suppressesStreaming=%s printsFull=%s',
+    (specified, resolved, suppresses, printsFull) => {
+      expect(isStaticOutputStyle(specified as any)).toBe(suppresses);
+      expect(printsFullTaskOutput({ outputStyle: resolved as any })).toBe(
+        printsFull
+      );
+    }
+  );
 });

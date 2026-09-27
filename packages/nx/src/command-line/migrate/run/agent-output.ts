@@ -61,12 +61,12 @@ function blockPayload(payload: object): string {
 function writeBlock(
   tag: string,
   attrs: [string, string][],
-  json: string
+  body: string
 ): void {
   const attrText = attrs
     .map(([name, value]) => ` ${name}="${escapeXmlAttr(singleLine(value))}"`)
     .join('');
-  process.stdout.write(`\n<${tag}${attrText}>\n${json}\n</${tag}>\n\n`);
+  process.stdout.write(`\n<${tag}${attrText}>\n${body}\n</${tag}>\n\n`);
 }
 
 export function emitStepBlock(
@@ -92,4 +92,18 @@ export function emitPromptBlock(migrationId: string, payload: object): void {
     [['migration', migrationId]],
     blockPayload(payload)
   );
+}
+
+/**
+ * Markdown, not JSON: the block carries the runbook file's bytes, so the agent
+ * reads what a resume re-emits from disk. Every `<` opening or closing an
+ * `<nx_migrate_*>` tag is neutralized wherever it sits: a positional check
+ * (line starts plus a blank-character class) can be sidestepped by characters
+ * that render as nothing but match no enumerable class. The renderer never
+ * emits the literal sequence (runbook.spec pins that), so only tampered bytes
+ * change.
+ */
+export function emitRunbookBlock(runId: string, content: string): void {
+  const neutralized = content.replace(/<(?=\/?nx_migrate_)/gi, '\\u003c');
+  writeBlock('nx_migrate_runbook', [['run-id', runId]], neutralized);
 }

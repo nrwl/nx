@@ -1,3 +1,4 @@
+import type { Configuration } from '@rspack/core';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -254,6 +255,467 @@ describe('createConfig', () => {
       expect(browserPlugin['sharedAngularPlugin']).toBeDefined();
       expect(browserPlugin['sharedAngularPlugin']).toBe(
         serverPlugin['sharedAngularPlugin']
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  async function createSsrProjectRoot(
+    ssrPackageVersion = '22.0.0',
+    rspackCoreVersion: string | null = '2.0.0'
+  ): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
+    await mkdir(join(root, 'src'), { recursive: true });
+    await writeFile(join(root, 'src', 'main.server.ts'), '');
+    await writeFile(join(root, 'src', 'server.ts'), '');
+    // The engine wiring is only set up when @angular/ssr is installed.
+    const ssrPackageDir = join(root, 'node_modules', '@angular', 'ssr');
+    await mkdir(ssrPackageDir, { recursive: true });
+    await writeFile(
+      join(ssrPackageDir, 'package.json'),
+      JSON.stringify({
+        name: '@angular/ssr',
+        version: ssrPackageVersion,
+        main: 'index.js',
+      })
+    );
+    await writeFile(join(ssrPackageDir, 'index.js'), '');
+    // The manifest virtual module is only used when the project's own
+    // @rspack/core supports it.
+    if (rspackCoreVersion !== null) {
+      const rspackPackageDir = join(root, 'node_modules', '@rspack', 'core');
+      await mkdir(rspackPackageDir, { recursive: true });
+      await writeFile(
+        join(rspackPackageDir, 'package.json'),
+        JSON.stringify({
+          name: '@rspack/core',
+          version: rspackCoreVersion,
+          main: 'index.js',
+        })
+      );
+      await writeFile(join(rspackPackageDir, 'index.js'), '');
+    }
+    return root;
+  }
+
+  function findServerExportsRule(
+    config: Configuration
+  ): { options: Record<string, unknown> } | undefined {
+    return config.module?.rules?.find(
+      (rule) =>
+        typeof rule === 'object' &&
+        rule !== null &&
+        'loader' in rule &&
+        typeof rule.loader === 'string' &&
+        rule.loader.includes('platform-server-exports')
+    ) as { options: Record<string, unknown> } | undefined;
+  }
+
+  it.each(['2.0.0', '1.5.0'])(
+    'should wire the server entry loader with the engine manifest inputs when the project @rspack/core is %s',
+    async (rspackCoreVersion) => {
+      const root = await createSsrProjectRoot('22.0.0', rspackCoreVersion);
+      try {
+        const configs = await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          baseHref: '/app/',
+          security: { allowedHosts: ['example.com'] },
+        });
+
+        expect(configs).toHaveLength(2);
+        const serverExportsRule = findServerExportsRule(configs[1]);
+
+        expect(serverExportsRule).toBeDefined();
+        expect(serverExportsRule.options.engineWiring).toMatchObject({
+          mainServerEntry: join(root, 'src', 'main.server.ts'),
+          baseHref: '/app/',
+          // Posix-normalized by the config, so a native join would fail on
+          // Windows.
+          browserOutputRelativePath: '../browser',
+          indexOutputName: 'index.html',
+          allowedHosts: ['example.com'],
+          manifestModuleRequest: expect.stringContaining(
+            '__ng-rspack-ssr-entry-manifest__'
+          ),
+        });
+        expect(
+          configs[1].plugins?.some(
+            (plugin) => plugin?.constructor.name === 'EngineManifestPlugin'
+          )
+        ).toBe(true);
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it.each([
+    ['does not support virtual modules', '1.4.5'],
+    ['is not installed', null],
+  ])(
+    'should inline the manifest registration when the project @rspack/core %s',
+    async (_, rspackCoreVersion) => {
+      const root = await createSsrProjectRoot('22.0.0', rspackCoreVersion);
+      try {
+        const configs = await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+        });
+
+        const serverExportsRule = findServerExportsRule(configs[1]);
+        expect(serverExportsRule.options.engineWiring).toBeDefined();
+        expect(
+          (serverExportsRule.options.engineWiring as Record<string, unknown>)
+            .manifestModuleRequest
+        ).toBeUndefined();
+        expect(
+          configs[1].plugins?.some(
+            (plugin) => plugin?.constructor.name === 'EngineManifestPlugin'
+          )
+        ).toBe(false);
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it.each(['20.3.16', '21.0.6', '21.1.0', '21.1.4'])(
+    'should reject the "security.allowedHosts" option when @angular/ssr %s does not support it',
+    async (ssrVersion) => {
+      const root = await createSsrProjectRoot(ssrVersion);
+      try {
+        await expect(
+          _createConfig({
+            ...configBase,
+            root,
+            server: './src/main.server.ts',
+            ssr: { entry: './src/server.ts' },
+            security: { allowedHosts: ['example.com'] },
+          })
+        ).rejects.toThrow(
+          `The "security.allowedHosts" option requires "@angular/ssr" version 21.2.0 or greater, 21.1.5 or greater within 21.1, or 20.3.17 or greater within 20.3. You are currently using version ${ssrVersion}.`
+        );
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it.each(['20.3.17', '21.1.5', '21.2.0'])(
+    'should accept the "security.allowedHosts" option when @angular/ssr %s supports it',
+    async (ssrVersion) => {
+      const root = await createSsrProjectRoot(ssrVersion);
+      try {
+        const configs = await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          security: { allowedHosts: ['example.com'] },
+        });
+
+        const serverExportsRule = findServerExportsRule(configs[1]);
+        expect(serverExportsRule.options.engineWiring).toMatchObject({
+          allowedHosts: ['example.com'],
+        });
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it('should ignore an empty "security.allowedHosts" when @angular/ssr does not support the option', async () => {
+    const root = await createSsrProjectRoot('21.1.0');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        security: { allowedHosts: [] },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule.options.engineWiring).toBeDefined();
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should allow the dev-server hosts in the engine manifest while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        devServer: { allowedHosts: ['.example.com', 'foo.dev'] },
+        security: { allowedHosts: ['prod.example.com'] },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule.options.engineWiring).toMatchObject({
+        allowedHosts: [
+          'example.com',
+          '*.example.com',
+          'foo.dev',
+          'localhost',
+          '*.localhost',
+          '127.0.0.1',
+          '[::1]',
+        ],
+      });
+      expect(
+        (serverExportsRule.options.engineWiring as Record<string, unknown>)
+          .disableHostCheck
+      ).toBeUndefined();
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should keep the dev-server hosts in the engine manifest when the host check is disabled', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        devServer: {
+          disableHostCheck: true,
+          allowedHosts: ['.example.com', 'foo.dev'],
+        },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule.options.engineWiring).toMatchObject({
+        allowedHosts: [
+          'example.com',
+          '*.example.com',
+          'foo.dev',
+          'localhost',
+          '*.localhost',
+          '127.0.0.1',
+          '[::1]',
+        ],
+        disableHostCheck: true,
+      });
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should disable the engine host check when every dev-server host is allowed', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        devServer: { allowedHosts: true },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule.options.engineWiring).toMatchObject({
+        allowedHosts: ['localhost', '*.localhost', '127.0.0.1', '[::1]'],
+        disableHostCheck: true,
+      });
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it.each([
+    ['0.0.0.0', ['0.0.0.0']],
+    ['::', ['[::]']],
+    ['[::]', ['[::]']],
+    ['fe80::1', ['[fe80::1]']],
+    ['host.docker.internal', ['host.docker.internal']],
+    ['192.168.1.10', ['192.168.1.10']],
+  ] as [string, string[]][])(
+    'should seed the engine allowlist with the dev-server host "%s"',
+    async (host, expected) => {
+      const root = await createSsrProjectRoot();
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      try {
+        const configs = await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          devServer: { host },
+        });
+
+        const serverExportsRule = findServerExportsRule(configs[1]);
+        expect(serverExportsRule.options.engineWiring).toMatchObject({
+          allowedHosts: [
+            'localhost',
+            '*.localhost',
+            '127.0.0.1',
+            '[::1]',
+            ...expected,
+          ],
+        });
+      } finally {
+        vi.unstubAllEnvs();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it.each(['20.3.17', '20.3.24', '21.1.5', '21.2.0'])(
+    'should warn when @angular/ssr %s cannot disable the engine host check',
+    async (ssrVersion) => {
+      const root = await createSsrProjectRoot(ssrVersion);
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      try {
+        await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          devServer: { disableHostCheck: true },
+        });
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'cannot disable the application engine host validation'
+          )
+        );
+      } finally {
+        vi.unstubAllEnvs();
+        warnSpy.mockRestore();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it.each(['20.3.25', '21.2.1', '22.0.0'])(
+    'should not warn about the engine host check when @angular/ssr %s can disable it',
+    async (ssrVersion) => {
+      const root = await createSsrProjectRoot(ssrVersion);
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      try {
+        await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          devServer: { disableHostCheck: true },
+        });
+
+        expect(warnSpy).not.toHaveBeenCalledWith(
+          expect.stringContaining(
+            'cannot disable the application engine host validation'
+          )
+        );
+      } finally {
+        vi.unstubAllEnvs();
+        warnSpy.mockRestore();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it('should not wire the engine when locale inlining is enabled', async () => {
+    const root = await createSsrProjectRoot();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        localize: ['fr'],
+        i18nMetadata: {
+          sourceLocale: 'en-US',
+          locales: { fr: { translation: [] } },
+        },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule).toBeDefined();
+      expect(serverExportsRule.options.engineWiring).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Locale inlining ("localize") disables the "@angular/ssr" application engine wiring'
+        )
+      );
+    } finally {
+      warnSpy.mockRestore();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should reject an output mode when @angular/ssr is not installed', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+
+      await expect(
+        _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          outputMode: 'server',
+        })
+      ).rejects.toThrow(
+        'The "outputMode" option requires the "@angular/ssr" package to be installed.'
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should reject locale inlining when an output mode is set', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+
+      await expect(
+        _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          outputMode: 'server',
+          localize: ['fr'],
+          i18nMetadata: {
+            sourceLocale: 'en-US',
+            locales: { fr: { translation: [] } },
+          },
+        })
+      ).rejects.toThrow(
+        'Locale inlining ("localize") is not supported when "outputMode" is set. Please build each locale separately.'
       );
     } finally {
       await rm(root, { recursive: true, force: true });

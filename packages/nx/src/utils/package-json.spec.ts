@@ -2,7 +2,13 @@ vi.mock('child_process');
 
 import { join } from 'path';
 import * as childProcess from 'child_process';
-import { mkdtempSync, rmSync } from 'fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../generators/tree';
@@ -153,6 +159,9 @@ describe('installPackageToTmp', () => {
     installPackageToTmp('@nx/cypress', '1.0.0', 'pnpm');
     expect(execSyncSpy.mock.calls[0][0]).toBe(
       'pnpm add -Dw --config.frozen-lockfile=false @nx/cypress@1.0.0 --config.auto-install-peers=false --ignore-scripts'
+    );
+    expect(execSyncSpy.mock.calls[0][1].env).toEqual(
+      expect.objectContaining({ PNPM_CONFIG_AUTO_INSTALL_PEERS: 'false' })
     );
 
     // yarn: Berry does not auto-install peers, so no flag is added
@@ -671,6 +680,55 @@ describe('readModulePackageJson', () => {
       expect(() => readModulePackageJson(s)).not.toThrow();
     }
   );
+
+  it('resolves a package named like the calling package from the given paths', () => {
+    // This spec runs inside the `nx` package, whose exports map lets Node
+    // self-reference `nx/...`. The explicit require paths must still win, as
+    // they do for the temp install `nx migrate` reads `nx@<target>` from.
+    const dir = realpathSync(
+      mkdtempSync(join(tmpdir(), 'nx-read-module-package-json-'))
+    );
+    try {
+      mkdirSync(join(dir, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(dir, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '0.0.0-fixture' })
+      );
+
+      const { path, packageJson } = readModulePackageJson('nx', [dir]);
+
+      expect(path).toBe(join(dir, 'node_modules', 'nx', 'package.json'));
+      expect(packageJson.version).toBe('0.0.0-fixture');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('walks up from the entry point when the package does not export package.json', () => {
+    const dir = realpathSync(
+      mkdtempSync(join(tmpdir(), 'nx-read-module-package-json-'))
+    );
+    try {
+      const pkgDir = join(dir, 'node_modules', 'nx');
+      mkdirSync(pkgDir, { recursive: true });
+      writeFileSync(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({
+          name: 'nx',
+          version: '0.0.0-fixture',
+          exports: { '.': './index.js' },
+        })
+      );
+      writeFileSync(join(pkgDir, 'index.js'), 'module.exports = {};');
+
+      const { path, packageJson } = readModulePackageJson('nx', [dir]);
+
+      expect(path).toBe(join(pkgDir, 'package.json'));
+      expect(packageJson.version).toBe('0.0.0-fixture');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('getDependencyVersionFromPackageJson', () => {
@@ -968,6 +1026,30 @@ catalogs:
 });
 
 describe('readNxMigrateConfig', () => {
+  it.each([
+    '../../../../etc/profile',
+    '/etc/profile',
+    'migrations/../../../escape.json',
+  ])('should reject the escaping migrations path %s', (migrations) => {
+    expect(() =>
+      readNxMigrateConfig({
+        name: 'hostile',
+        version: '1.0.0',
+        'nx-migrations': { migrations },
+      })
+    ).toThrow(/Invalid migrations path .* in package "hostile@1.0.0"/);
+  });
+
+  it('should reject an escaping migrations path given in the string shorthand', () => {
+    expect(() =>
+      readNxMigrateConfig({
+        name: 'hostile',
+        version: '1.0.0',
+        'nx-migrations': '../../../../etc/profile',
+      } as any)
+    ).toThrow(/Invalid migrations path/);
+  });
+
   it('should carry supportsOptionalMigrations from the nx-migrations config', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': {

@@ -12,6 +12,8 @@ A package is added only when a matching target exists:
 
 Targets that inherit their executor from an `nx.json` `targetDefaults` entry are detected too.
 
+On pnpm 11 and above, adding `@nx/webpack` or `@nx/rspack` also writes `pnpm-workspace.yaml`. Both reach `@parcel/watcher` through sass, and pnpm 11 refuses to install a package whose build script is neither allowed nor denied, so the migration records an `allowBuilds` decision for it. A decision already in the file is left untouched.
+
 #### Examples
 
 For a workspace with an `@nx/angular:webpack-browser` build target, the migration adds the webpack packages to `devDependencies`.

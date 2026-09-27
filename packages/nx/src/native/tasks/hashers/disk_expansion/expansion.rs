@@ -1,0 +1,265 @@
+//! Turning parsed entries into the files they name: what an expansion may
+//! lean on instead of the disk, the loop that resolves each entry, and the
+//! disk step it falls back to. The traversal itself is `create_walker`'s;
+//! what is here is the per-entry decision and the stamp it reads.
+
+use std::path::Path;
+use std::sync::Arc;
+
+use anyhow::{Result, bail};
+use dashmap::DashMap;
+
+use super::entries::{Negation, Positive};
+use crate::native::glob::{build_glob_set, expand_literal_braces, normalize_glob};
+use crate::native::walker::{PathPredicate, read_directory};
+
+/// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
+/// call: a group is listed or walked afresh for the next one.
+pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
+
+/// Lists a directory, asked of whoever knows: the ignored index answers from
+/// a listing it keeps or from the disk, a caller without one reads the disk.
+/// `accept` is passed in so the answer is filtered as it is gathered. `None`
+/// when the directory cannot be read at all.
+pub(crate) type ListDirectory<'a> =
+    Box<dyn Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a>;
+
+/// Reads the disk every time, for a caller with no index behind it.
+fn disk_files(workspace_root: &Path) -> ListDirectory<'_> {
+    Box::new(move |dir, accept| read_directory(workspace_root, dir, accept))
+}
+
+/// For a caller with no workspace context: every path is checked on disk.
+pub(crate) const NOTHING_TRACKED: PathPredicate<'static> = &|_| false;
+
+/// What an expansion may lean on instead of the disk. The two callers differ
+/// only here. Either way a path is read wherever it points: a `dist` linked
+/// into a build cache holds the files a task wrote.
+pub(crate) struct Source<'a> {
+    /// Whether the file map already holds this exact path as a file, so it
+    /// needs no stat. A directory never answers yes: the file map holds only
+    /// files.
+    tracked_file: PathPredicate<'a>,
+    /// How a directory is listed, see `ListDirectory`.
+    list_directory: ListDirectory<'a>,
+}
+
+impl<'a> Source<'a> {
+    /// An `includeIgnored` fileset. It is hashed alongside tracked files, so
+    /// the context can vouch for a path.
+    pub(crate) fn fileset(
+        tracked_file: PathPredicate<'a>,
+        list_directory: impl Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a,
+    ) -> Self {
+        Self {
+            tracked_file,
+            list_directory: Box::new(list_directory),
+        }
+    }
+
+    /// A fileset read straight from disk, with no index to ask.
+    pub(crate) fn fileset_reading_disk(
+        tracked_file: PathPredicate<'a>,
+        workspace_root: &'a Path,
+    ) -> Self {
+        Self {
+            tracked_file,
+            list_directory: disk_files(workspace_root),
+        }
+    }
+
+    /// The same, for a caller with no workspace context either.
+    pub(crate) fn fileset_from_disk(workspace_root: &'a Path) -> Self {
+        Self::fileset_reading_disk(NOTHING_TRACKED, workspace_root)
+    }
+
+    /// A dependency's declared outputs. They were written by a task that has
+    /// run, so the file map predates them and nothing is taken on trust.
+    pub(crate) fn declared_outputs(workspace_root: &'a Path) -> Self {
+        Self {
+            tracked_file: NOTHING_TRACKED,
+            list_directory: disk_files(workspace_root),
+        }
+    }
+}
+
+pub struct FilesExpansion {
+    /// Existing files matched by the group, sorted, workspace-relative.
+    pub files: Vec<String>,
+}
+
+/// Expands a group of globs into the files it names. `source` says what the
+/// expansion may lean on instead of the disk, see `expand_entries`. Every
+/// positive glob is resolved from its literal prefix, then the negations
+/// filter the result.
+pub(crate) fn expand_globs(
+    workspace_root: &Path,
+    globs: &[String],
+    source: &Source,
+) -> Result<FilesExpansion> {
+    let (positives, negations) = parse_group(globs)?;
+    expand_entries(workspace_root, &positives, &negations, source)
+}
+
+/// A group's entries split at their literal prefixes, positives then
+/// negations. Each brace group becomes one entry per alternative first, so
+/// what a parser sees never holds a `{a,b}`.
+pub(crate) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negation>)> {
+    let mut positives = Vec::new();
+    let mut negations = Vec::new();
+    for glob in globs {
+        // Decided before the braces expand, so an alternative that begins
+        // with `!` cannot turn a positive entry into an exclusion.
+        let negated = glob.starts_with('!');
+        for entry in expand_literal_braces(glob) {
+            match negated {
+                true => negations.push(Negation::parse(&entry)?),
+                false => positives.push(Positive::parse(&entry)?),
+            }
+        }
+    }
+    Ok((positives, negations))
+}
+
+/// Resolves already-split entries into the files they name. `source` says
+/// which of the two callers this is: a fileset, which may lean on the
+/// workspace context and an index, or declared outputs, which are taken
+/// straight from disk. The source shortens two steps here: `tracked_file`
+/// skips the stat on an exact path, and `list_directory` may answer from a
+/// listing instead of walking. Walks skip the same directories the
+/// workspace walker never enters, but an exact path or a prefix inside one of
+/// them is read as-is.
+pub(crate) fn expand_entries(
+    workspace_root: &Path,
+    positives: &[Positive],
+    negations: &[Negation],
+    source: &Source,
+) -> Result<FilesExpansion> {
+    let Source {
+        tracked_file,
+        list_directory,
+    } = source;
+
+    // One question asked at every place a path joins `found`, so no entry
+    // reaches the result without it.
+    let excluded = |path: &str| negations.iter().any(|n| n.excludes(path));
+
+    let mut found: Vec<String> = Vec::new();
+    for entry in positives {
+        let root = &entry.root;
+        let remainder = entry.remainder.as_deref();
+        let has_pattern = remainder.is_some();
+        if !has_pattern && tracked_file(root) {
+            if !excluded(root) {
+                found.push(root.clone());
+            }
+            continue;
+        }
+        let start = workspace_root.join(root);
+        let Ok(metadata) = std::fs::metadata(&start) else {
+            continue;
+        };
+        if metadata.is_file() {
+            if !has_pattern && !excluded(root) {
+                found.push(root.clone());
+            }
+            continue;
+        }
+        // A directory named by its exact path means everything under it, the
+        // same in a fileset as in a declared output; with a pattern, only the
+        // remainder after the prefix is matched.
+        // Excluded files are dropped before they are stat'ed.
+        let accept: Box<dyn Fn(&str) -> bool + Sync> = if let Some(pattern) = remainder {
+            // An empty root is the workspace root: the whole path is matched.
+            let prefix_len = if root.is_empty() { 0 } else { root.len() + 1 };
+            let set = build_glob_set(&[pattern])?;
+            Box::new(move |path: &str| {
+                path.len() > prefix_len && set.is_match(&path[prefix_len..]) && !excluded(path)
+            })
+        } else {
+            Box::new(move |path: &str| !excluded(path))
+        };
+        if let Some(under) = list_directory(root, &*accept) {
+            // Filtered again: a source is asked to apply `accept` so it can
+            // skip work, not trusted to have done it.
+            found.extend(under.into_iter().filter(|path| accept(path)));
+        }
+    }
+
+    // Sorted and deduped rather than gathered into a set: one pass at the end
+    // beats a tree insert per path, and two entries may name the same file.
+    found.sort_unstable();
+    found.dedup();
+    Ok(FilesExpansion { files: found })
+}
+
+pub(crate) fn expand_cached(
+    key: &str,
+    cache: &FilesExpansionCache,
+    expand: impl FnOnce() -> Result<FilesExpansion>,
+) -> Result<Arc<FilesExpansion>> {
+    if let Some(cached) = cache.get(key) {
+        return Ok(Arc::clone(&cached));
+    }
+    let expansion = Arc::new(expand()?);
+    cache.insert(key.to_string(), Arc::clone(&expansion));
+    Ok(expansion)
+}
+
+/// What a fileset glob may not say: an absolute path, any `..` segment even
+/// one that stays inside (`dist/a/../b`), or any `.` segment. `partition_glob`
+/// answers only where literal text stops; these are this feature's rules,
+/// with its wording.
+fn validate_shape(glob: &str) -> Result<()> {
+    if Path::new(glob).is_absolute() || glob.starts_with('/') {
+        bail!(
+            "The includeIgnored fileset \"{glob}\" is an absolute path; globs are workspace-relative."
+        );
+    }
+    for segment in glob.split('/') {
+        if segment == ".." {
+            bail!(
+                "The includeIgnored fileset \"{glob}\" has a `..` segment; write it relative to the workspace root without `..`."
+            );
+        }
+        if segment == "." {
+            bail!(
+                "The includeIgnored fileset \"{glob}\" has a `.` segment; write it relative to the workspace root without `./`."
+            );
+        }
+    }
+    Ok(())
+}
+
+/// Rejects a glob that says it reads outside the workspace, or a negation
+/// that excludes nothing, before anything reads the disk. A glob with no
+/// leading directory (`**/*`, `*.gen`) is allowed: it reads from the
+/// workspace root, which is slow but not wrong.
+pub(crate) fn validate_files_glob(glob: &str) -> Result<()> {
+    if let Some(body) = glob.strip_prefix('!') {
+        let body = normalize_glob(body);
+        if body.is_empty() {
+            bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
+        }
+        for expanded in expand_literal_braces(&body) {
+            validate_shape(&expanded)?;
+        }
+        return Ok(());
+    }
+    for expanded in expand_literal_braces(&normalize_glob(glob)) {
+        validate_shape(&expanded)?;
+    }
+    Ok(())
+}
+
+/// `validate_files_glob` for every entry of a project's group, plus the one
+/// rule that needs the whole group: it must not only exclude.
+pub(crate) fn validate_files_globs(project: &str, globs: &[String]) -> Result<()> {
+    if !globs.is_empty() && globs.iter().all(|glob| glob.starts_with('!')) {
+        bail!(
+            "The includeIgnored fileset \"{}\" applied to \"{project}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters the positive includeIgnored filesets resolved with it: the project's own, or the `dependencies: true` group it is propagated to each dependency with.",
+            globs[0]
+        );
+    }
+    globs.iter().try_for_each(|glob| validate_files_glob(glob))
+}

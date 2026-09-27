@@ -1,11 +1,11 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migrateMfImportsToNewPackage from './migrate-mf-imports-to-new-package';
 
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    createProjectGraphAsync: jest.fn().mockResolvedValue(
+    createProjectGraphAsync: vi.fn().mockResolvedValue(
       Promise.resolve({
         dependencies: {
           shell: [

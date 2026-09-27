@@ -26,10 +26,14 @@ If only `website-23` gets the commit, the next patch release from `23.1.x` wipes
 
 ### 1. Determine the branches
 
+The `+` on each refspec is required. A release force-pushes `website-<major>` from
+the release branch, so a non-forced fetch is rejected as non-fast-forward and leaves
+`origin/website-<major>` pointing at the pre-release commit.
+
 ```bash
-git fetch origin master
-git fetch origin 'refs/heads/website-*:refs/remotes/origin/website-*'
-git fetch origin 'refs/heads/*.x:refs/remotes/origin/*.x'
+git fetch origin '+refs/heads/master:refs/remotes/origin/master'
+git fetch origin '+refs/heads/website-*:refs/remotes/origin/website-*'
+git fetch origin '+refs/heads/*.x:refs/remotes/origin/*.x'
 ```
 
 - **Website branch**: highest `origin/website-<N>` where `<N>` is an integer.
@@ -44,6 +48,16 @@ git fetch origin 'refs/heads/*.x:refs/remotes/origin/*.x'
     | grep -E "^origin/${MAJOR}\.[0-9]+\.x$" | sort -V | tail -1
   ```
   If no release branch exists for that major, say so and continue with the website branch only.
+
+Confirm the remote-tracking refs actually match the remote before touching them:
+
+```bash
+git ls-remote origin refs/heads/<website-branch> refs/heads/<release-branch>
+git rev-parse origin/<website-branch> origin/<release-branch>
+```
+
+If the shas differ, the fetch did not take - stop and re-fetch. Every later step
+(the anchor commit, the cherry-pick list, any conflict) is wrong otherwise.
 
 Report both branch names before doing any work.
 

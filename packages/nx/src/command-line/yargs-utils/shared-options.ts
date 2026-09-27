@@ -1,4 +1,5 @@
 import { readNxJson } from '../../config/nx-json';
+import { isAiAgent } from '../../native';
 import { shouldUseTui } from '../../tasks-runner/is-tui-enabled';
 import { NxArgs } from '../../utils/command-line-utils';
 import type { Argv, ParserConfigurationOptions } from 'yargs';
@@ -330,6 +331,7 @@ const allOutputStyles = [
   'dynamic-legacy',
   'static',
   'static-failures-only',
+  'summary',
   'stream',
   'stream-without-prefixes',
 ] as const;
@@ -344,13 +346,14 @@ export function withOutputStyleOption<T>(
     'tui',
     'static',
     'static-failures-only',
+    'summary',
     'stream',
     'stream-without-prefixes',
   ]
 ) {
   return yargs
     .option('outputStyle', {
-      describe: `Defines how Nx emits outputs tasks logs. **tui**: enables the Nx Terminal UI, recommended for local development environments. **dynamic-legacy**: use dynamic-legacy output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended for local development environments where tui is not supported. **static**: uses static output life cycle, no previous content is rewritten or modified as new outputs are added, and every task prints its full output regardless of status. **static-failures-only**: same as **static**, but successful and cached tasks collapse to a single line, so only failing tasks (and, for a single-project run, the project you asked for) print their full output. This is what Nx uses by default in CI and other non-interactive environments. **stream**: nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr. **stream-without-prefixes**: nx prefixes the project name the target is running on, use this option remove the project name prefix from output.`,
+      describe: `Defines how Nx emits outputs tasks logs. **tui**: enables the Nx Terminal UI, recommended for local development environments. **dynamic-legacy**: use dynamic-legacy output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended for local development environments where tui is not supported. **static**: uses static output life cycle, no previous content is rewritten or modified as new outputs are added, and every task prints its full output regardless of status. **static-failures-only**: same as **static**, but successful and cached tasks collapse to a single line, so only failing tasks (and, for a single-project run, the project you asked for) print their full output. This is what Nx uses by default in CI and other non-interactive environments. **summary**: prints only run counts and one line per failing task, naming the file on disk that holds its full output. No task output is printed inline, so the size of a run's output does not depend on how much its tasks logged. This is the default when Nx detects it is being driven by an AI agent. **stream**: nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr. **stream-without-prefixes**: nx prefixes the project name the target is running on, use this option remove the project name prefix from output.`,
       type: 'string',
       choices,
     })
@@ -363,16 +366,34 @@ export function withOutputStyleOption<T>(
         ) {
           args.outputStyle = process.env.NX_DEFAULT_OUTPUT_STYLE;
         }
+        // Everything above this line is the user naming a style; everything
+        // below infers one. Splitting them here is what lets the rest of the
+        // codebase ask either question without re-deriving it from a single
+        // overloaded field.
+        (args as any).specifiedOutputStyle = args.outputStyle;
       },
       (args) => {
+        // Resolution, in precedence order. `shouldUseTui` reads
+        // `specifiedOutputStyle`, so it sees only what the user named and is
+        // not fed a value inferred here - which is what used to make this
+        // ordering circular. It also reads `NX_TUI` before its own agent check,
+        // so an explicit opt-in beats the agent default without needing a
+        // special case: agent detection is ambient (`REPL_ID` is exported into
+        // a human's shell), and a human asking for a renderer outranks it.
         const useTui = shouldUseTui(readNxJson(), args as NxArgs);
+        process.env.NX_TUI = useTui.toString();
+
+        const resolved: OutputStyle =
+          (args.outputStyle as OutputStyle) ??
+          (useTui ? 'tui' : isAiAgent() ? 'summary' : 'static-failures-only');
+        (args as any).resolvedOutputStyle = resolved;
+
+        // `outputStyle` stays what yargs parsed, except for the TUI, whose
+        // `check` runs after kebab-case normalization and needs both spellings.
         if (useTui) {
-          // We have to set both of these because `check` runs after the normalization that
-          // handles the kebab-case'd args -> camelCase'd args translation.
           (args as any)['output-style'] = 'tui';
           (args as any).outputStyle = 'tui';
         }
-        process.env.NX_TUI = useTui.toString();
       },
     ]) as Argv<T & { outputStyle: OutputStyle }>;
 }

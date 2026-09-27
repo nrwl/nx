@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   detectPackageManager,
   readJson,
@@ -9,24 +10,29 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { moveGenerator } from './move';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => ({
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => ({
     nodes: {},
     dependencies: {},
   })),
-  detectPackageManager: jest.fn(),
+  detectPackageManager: vi.fn(),
 }));
 
 // nx-ignore-next-line
 const { libraryGenerator } = require('@nx/js');
 
+// The mock replaces detectPackageManager with a bare vi.fn(); tests want the
+// real behavior, and importActual is async so it cannot be called inline.
+const { detectPackageManager: actualDetectPackageManager } =
+  await vi.importActual<any>('@nx/devkit');
+
 describe('move', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
-      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    (detectPackageManager as Mock).mockImplementation((...args) =>
+      actualDetectPackageManager(...args)
     );
   });
 
@@ -226,7 +232,7 @@ describe('move', () => {
   });
 
   it('should add new destination to the pnpm workspaces config when it does not match any existing pattern and it was previously included', async () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
     tree.write(
       'pnpm-workspace.yaml',
       `packages:

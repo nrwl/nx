@@ -33,6 +33,7 @@ import {
   normalize,
   relative,
   resolve,
+  sep,
 } from 'node:path';
 import { getLockFileName } from '@nx/js';
 import {
@@ -338,7 +339,7 @@ async function buildJestTargets(
     ? resolve(dirname(absConfigFilePath), rawConfig.rootDir)
     : resolve(context.workspaceRoot, projectRoot);
 
-  const cache = (target.cache = true);
+  let cache = (target.cache = true);
   const inputs = (target.inputs = await getInputs(
     namedInputs,
     rawConfig,
@@ -356,14 +357,21 @@ async function buildJestTargets(
     options?.ciGroupName ?? deriveGroupNameFromTarget(options?.ciTargetName);
 
   if (disableJestRuntime) {
-    const outputs = (target.outputs = getOutputs(
+    const { outputs, cacheable } = getOutputs(
       projectRoot,
+      // Mirrors jest-config `normalize`: resolve against rootDir after the
+      // `<rootDir>` token, leaving an absolute path untouched.
       rawConfig.coverageDirectory
-        ? join(context.workspaceRoot, projectRoot, rawConfig.coverageDirectory)
+        ? resolve(
+            rootDir,
+            replaceRootDirInPath(rootDir, rawConfig.coverageDirectory)
+          )
         : undefined,
       undefined,
       context
-    ));
+    );
+    target.outputs = outputs;
+    cache = target.cache = cacheable;
 
     if (options?.ciTargetName) {
       const { specs, testMatch } = await getTestPaths(
@@ -447,7 +455,7 @@ async function buildJestTargets(
       if (targetGroup.length > 0) {
         targets[options.ciTargetName] = {
           executor: 'nx:noop',
-          cache: true,
+          cache,
           inputs,
           outputs,
           dependsOn,
@@ -481,7 +489,8 @@ async function buildJestTargets(
           _: [],
           $0: undefined,
         },
-        rawConfig,
+        // Jest resolves a relative rootDir only when it reads the file itself.
+        rawConfig.rootDir ? { ...rawConfig, rootDir } : rawConfig,
         undefined,
         dirname(absConfigFilePath)
       );
@@ -490,12 +499,14 @@ async function buildJestTargets(
       throw e;
     }
 
-    const outputs = (target.outputs = getOutputs(
+    const { outputs, cacheable } = getOutputs(
       projectRoot,
       config.globalConfig?.coverageDirectory,
       config.globalConfig?.outputFile,
       context
-    ));
+    );
+    target.outputs = outputs;
+    cache = target.cache = cacheable;
 
     if (options?.ciTargetName) {
       // nx-ignore-next-line
@@ -587,7 +598,7 @@ async function buildJestTargets(
         }
         targets[options.ciTargetName] = {
           executor: 'nx:noop',
-          cache: true,
+          cache,
           inputs,
           outputs,
           dependsOn,
@@ -906,28 +917,37 @@ function getOutputs(
   coverageDirectory: string | undefined,
   outputFile: string | undefined,
   context: CreateNodesContext
-): string[] {
+): { outputs: string[]; cacheable: boolean } {
   function getOutput(path: string): string {
     const relativePath = relative(
       join(context.workspaceRoot, projectRoot),
       path
     );
     if (relativePath.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, relativePath));
+      return joinPathFragments('{workspaceRoot}', projectRoot, relativePath);
     } else {
-      return join('{projectRoot}', relativePath);
+      return joinPathFragments('{projectRoot}', relativePath);
     }
   }
 
-  const outputs = [];
+  const outputPaths = [coverageDirectory, outputFile].filter(
+    (path): path is string => !!path
+  );
+  // Outputs outside the workspace cannot be cached: keep the target runnable
+  // but uncached.
+  const cacheable = outputPaths.every(
+    (path) => !isPathOutside(relative(context.workspaceRoot, path))
+  );
 
-  for (const outputOption of [coverageDirectory, outputFile]) {
-    if (outputOption) {
-      outputs.push(getOutput(outputOption));
-    }
-  }
+  return { outputs: cacheable ? outputPaths.map(getOutput) : [], cacheable };
+}
 
-  return outputs;
+function isPathOutside(relativePath: string): boolean {
+  return (
+    relativePath === '..' ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+  );
 }
 
 function normalizeOptions(options: JestPluginOptions): JestPluginOptions {

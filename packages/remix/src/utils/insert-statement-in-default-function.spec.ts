@@ -35,6 +35,6 @@ describe('insertStatementInDefaultFunction', () => {
         'util.ts',
         `const someVar = "whatever";`
       )
-    ).toThrowErrorMatchingInlineSnapshot(`"No default export found!"`);
+    ).toThrowErrorMatchingInlineSnapshot(`[Error: No default export found!]`);
   });
 });

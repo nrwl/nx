@@ -766,6 +766,116 @@ describe('NPM lock file utility', () => {
     });
   });
 
+  describe('bundled dependencies', () => {
+    it('should never use bundled snapshots when pruning', () => {
+      const rootLockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { socks: '2.8.9' },
+          },
+          'node_modules/npm': {
+            version: '11.6.2',
+            resolved: 'https://registry.npmjs.org/npm/-/npm-11.6.2.tgz',
+            integrity: 'sha512-registry-npm',
+            dependencies: { socks: '2.8.9' },
+          },
+          'node_modules/npm/node_modules/socks': {
+            version: '2.8.9',
+            inBundle: true,
+            dependencies: { 'ip-address': '^10.0.0' },
+          },
+          'node_modules/npm/node_modules/socks/node_modules/ip-address': {
+            version: '10.2.0',
+            inBundle: true,
+          },
+          'node_modules/socks': {
+            version: '2.8.9',
+            resolved: 'https://registry.npmjs.org/socks/-/socks-2.8.9.tgz',
+            integrity: 'sha512-registry-socks',
+            dependencies: { 'ip-address': '^10.0.0' },
+          },
+          'node_modules/ip-address': {
+            version: '10.4.0',
+            resolved:
+              'https://registry.npmjs.org/ip-address/-/ip-address-10.4.0.tgz',
+            integrity: 'sha512-registry-ip-address',
+          },
+        },
+      };
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { socks: '2.8.9' },
+      };
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(rootLockFile),
+        hash
+      );
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(rootLockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+      const builder = new ProjectGraphBuilder({
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      });
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+
+      const graph = builder.getUpdatedProjectGraph();
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(
+          prunedGraph,
+          JSON.stringify(rootLockFile),
+          packageJson
+        )
+      );
+
+      expect(result.packages['node_modules/socks'].resolved).toBe(
+        'https://registry.npmjs.org/socks/-/socks-2.8.9.tgz'
+      );
+      expect(externalNodes['npm:socks'].data.hash).toBe(
+        'sha512-registry-socks'
+      );
+      expect(externalNodes).not.toHaveProperty('npm:ip-address@10.2.0');
+      expect(
+        Object.values(result.packages).some(
+          (snapshot: Record<string, unknown>) => snapshot?.inBundle
+        )
+      ).toBe(false);
+    });
+  });
+
   describe('pruning', () => {
     let rootLockFile;
 

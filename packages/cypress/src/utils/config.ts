@@ -286,10 +286,7 @@ export function resolveCypressConfigObject(
   );
 
   if (exportDefaultStatement) {
-    return resolveCypressConfigObjectFromExportExpression(
-      exportDefaultStatement.expression,
-      sourceFile
-    );
+    return resolveObjectLiteral(exportDefaultStatement.expression, sourceFile);
   }
 
   const moduleExportsStatement = sourceFile.statements.find(
@@ -302,7 +299,7 @@ export function resolveCypressConfigObject(
   );
 
   if (moduleExportsStatement) {
-    return resolveCypressConfigObjectFromExportExpression(
+    return resolveObjectLiteral(
       moduleExportsStatement.expression.right,
       sourceFile
     );
@@ -311,45 +308,62 @@ export function resolveCypressConfigObject(
   return null;
 }
 
-function resolveCypressConfigObjectFromExportExpression(
-  exportExpression: Expression,
-  sourceFile: SourceFile
+/**
+ * Resolves the object literal an expression stands for in a Cypress config
+ * file: the literal itself, the argument of a `defineConfig()` call, or a
+ * variable declared at the top level of the file that holds either. Anything
+ * else (a spread, a function call, an import) resolves to `null`.
+ */
+export function resolveObjectLiteral(
+  expression: Expression,
+  sourceFile: SourceFile,
+  visitedIdentifiers = new Set<string>()
 ): ObjectLiteralExpression | null {
   const ts = ensureTypescript();
 
-  if (ts.isObjectLiteralExpression(exportExpression)) {
-    return exportExpression;
-  }
-
-  if (ts.isIdentifier(exportExpression)) {
-    // try to locate the identifier in the source file
-    const variableStatements = sourceFile.statements.filter((statement) =>
-      ts.isVariableStatement(statement)
-    );
-
-    for (const variableStatement of variableStatements) {
-      for (const declaration of variableStatement.declarationList
-        .declarations) {
-        if (
-          ts.isIdentifier(declaration.name) &&
-          declaration.name.getText() === exportExpression.getText() &&
-          ts.isObjectLiteralExpression(declaration.initializer)
-        ) {
-          return declaration.initializer;
-        }
-      }
-    }
-
-    return null;
+  if (ts.isObjectLiteralExpression(expression)) {
+    return expression;
   }
 
   if (
-    ts.isCallExpression(exportExpression) &&
-    ts.isIdentifier(exportExpression.expression) &&
-    exportExpression.expression.getText() === 'defineConfig' &&
-    ts.isObjectLiteralExpression(exportExpression.arguments[0])
+    ts.isCallExpression(expression) &&
+    ts.isIdentifier(expression.expression) &&
+    expression.expression.text === 'defineConfig' &&
+    expression.arguments[0]
   ) {
-    return exportExpression.arguments[0];
+    return resolveObjectLiteral(
+      expression.arguments[0],
+      sourceFile,
+      visitedIdentifiers
+    );
+  }
+
+  if (ts.isIdentifier(expression)) {
+    // `const a = b; const b = a;` would otherwise loop forever.
+    if (visitedIdentifiers.has(expression.text)) {
+      return null;
+    }
+    visitedIdentifiers.add(expression.text);
+
+    for (const statement of sourceFile.statements) {
+      if (!ts.isVariableStatement(statement)) {
+        continue;
+      }
+      for (const declaration of statement.declarationList.declarations) {
+        if (
+          ts.isIdentifier(declaration.name) &&
+          declaration.name.text === expression.text
+        ) {
+          return declaration.initializer
+            ? resolveObjectLiteral(
+                declaration.initializer,
+                sourceFile,
+                visitedIdentifiers
+              )
+            : null;
+        }
+      }
+    }
   }
 
   return null;

@@ -8,7 +8,12 @@ import { execSync } from 'child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { getGitRepositoryStatus, GIT_SHA, tryCommitChanges } from './git-utils';
+import {
+  getGitRepositoryStatus,
+  GIT_SHA,
+  tryCommitChanges,
+  tryCommitChangesAsync,
+} from './git-utils';
 
 const SCRATCH = '.nx/migrate-runs';
 
@@ -58,6 +63,20 @@ describe('tryCommitChanges exclusions (real git)', () => {
 
     expect(sha).toMatch(GIT_SHA);
     expect(committedPaths(root)).toEqual(['.gitignore', 'a.txt']);
+  });
+
+  it('commits the same tree through the async helper', async () => {
+    initRepo(root);
+    writeFileSync(join(root, '.gitignore'), `${SCRATCH}\n`);
+    mkdirSync(join(root, SCRATCH), { recursive: true });
+    writeFileSync(join(root, SCRATCH, 'run.json'), '{}');
+    writeFileSync(join(root, 'a.txt'), 'a');
+
+    const sha = await tryCommitChangesAsync('subject\n\nbody', root, [SCRATCH]);
+
+    expect(sha).toMatch(GIT_SHA);
+    expect(committedPaths(root)).toEqual(['.gitignore', 'a.txt']);
+    expect(git(root, 'log -1 --pretty=%B').trim()).toBe('subject\n\nbody');
   });
 
   it('keeps scratch out of the commit after its ignore rule went missing', () => {

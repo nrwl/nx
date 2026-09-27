@@ -133,6 +133,38 @@ describe('installDepsChangedSinceDispense', () => {
     expect(mockRunInstall).toHaveBeenCalledTimes(1);
   });
 
+  it('hands the output sink to the install and to the skip notice', async () => {
+    mockReadPackageJsonDeps.mockReturnValue('{"a":1}');
+    const baseline = depsHash('/ws');
+    mockReadPackageJsonDeps.mockReturnValue('{"a":2}');
+    const sink = { notice: vi.fn(), line: vi.fn(), raw: vi.fn() };
+
+    await installDepsChangedSinceDispense(
+      '/ws',
+      dir,
+      seed({ depsHashAtDispense: baseline }),
+      false,
+      'rerun',
+      sink
+    );
+    await installDepsChangedSinceDispense(
+      '/ws',
+      dir,
+      seed({ depsHashAtDispense: baseline }),
+      true,
+      'rerun',
+      sink
+    );
+
+    expect(mockRunInstall).toHaveBeenCalledWith(
+      '/ws',
+      'post-migration',
+      'rerun',
+      sink
+    );
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws', sink);
+  });
+
   it('installs nothing when the dependencies match the baseline', async () => {
     mockReadPackageJsonDeps.mockReturnValue('{"a":1}');
 
@@ -164,7 +196,7 @@ describe('installDepsChangedSinceDispense', () => {
     await installDepsChangedSinceDispense('/ws', dir, seed({}), true);
 
     expect(mockRunInstall).not.toHaveBeenCalled();
-    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws');
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws', undefined);
   });
 
   it('installs when the probe fails rather than reading the failure as unchanged', async () => {
@@ -197,7 +229,7 @@ describe('installDepsChangedSinceDispense', () => {
     );
 
     expect(mockRunInstall).not.toHaveBeenCalled();
-    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws');
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws', undefined);
   });
 
   it('re-points the baseline once the install lands so the next actor does not repeat it', async () => {

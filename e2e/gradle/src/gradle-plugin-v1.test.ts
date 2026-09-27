@@ -21,6 +21,7 @@ describe('Gradle Plugin V1', () => {
       let gradleProjectName = uniq('my-gradle-project');
       beforeAll(() => {
         newProject({
+          keepBackup: true,
           packages: ['@nx/js'],
         });
         createGradleProject(gradleProjectName, type);

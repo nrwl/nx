@@ -68,15 +68,19 @@ async function installPackage(
     // pnpm 11+ fails the install when the plugin's own dependency tree
     // carries unacknowledged build scripts, and the plugin's generators can
     // only record allowBuilds decisions after this install. Warn and skip
-    // for this one install, like pnpm 10 did.
+    // for this one install, like pnpm 10 did. pnpm 12 gave `--config` a
+    // meaning of its own and takes the setting from the environment instead.
+    const env = { ...process.env };
     if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
       command += ' --config.strictDepBuilds=false';
+      env.PNPM_CONFIG_STRICT_DEP_BUILDS = 'false';
     }
     await new Promise<void>((resolve) =>
       exec(
         command,
         {
           windowsHide: true,
+          env,
         },
         (error, stdout, stderr) => {
           if (error) {

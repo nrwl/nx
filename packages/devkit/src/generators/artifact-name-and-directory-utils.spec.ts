@@ -21,7 +21,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     setCwd('');
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     originalInitCwd = process.env.INIT_CWD;
   });
@@ -38,7 +38,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         path: 'myComponent',
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The provided directory resolved relative to the current working directory "some/path" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root."`
+      `[Error: The provided directory resolved relative to the current working directory "some/path" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root.]`
     );
 
     restoreCwd();
@@ -257,8 +257,8 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         allowedFileExtensions: ['jsx', 'tsx'],
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(`
-      "The provided file path has an extension (.ts) that is not supported by this generator.
-      The supported extensions are: .jsx, .tsx."
+      [Error: The provided file path has an extension (.ts) that is not supported by this generator.
+      The supported extensions are: .jsx, .tsx.]
     `);
   });
 
@@ -274,7 +274,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         js: true,
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The provided file path has an extension (.tsx) that conflicts with the provided "--js" option."`
+      `[Error: The provided file path has an extension (.tsx) that conflicts with the provided "--js" option.]`
     );
   });
 
@@ -290,7 +290,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         js: false,
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The provided file path has an extension (.jsx) that conflicts with the provided "--js" option."`
+      `[Error: The provided file path has an extension (.jsx) that conflicts with the provided "--js" option.]`
     );
   });
 
@@ -307,7 +307,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         jsOptionName: 'language',
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The provided file path has an extension (.tsx) that conflicts with the provided "--language" option."`
+      `[Error: The provided file path has an extension (.tsx) that conflicts with the provided "--language" option.]`
     );
   });
 });

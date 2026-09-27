@@ -1,5 +1,4 @@
 import { rmSync } from 'node:fs';
-import { join } from 'node:path';
 
 import { daemonClient } from '../../daemon/client/client';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from '../../daemon/tmp-dir';
@@ -146,8 +145,7 @@ function removeInstalledNxCloudClient() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      const cloudClientDir = getCloudClientLocation();
-      rmSync(join(cloudClientDir, 'cloud'), { recursive: true, force: true });
+      rmSync(getCloudClientLocation(), { recursive: true, force: true });
     }
   );
 }

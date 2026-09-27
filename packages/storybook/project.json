@@ -8,6 +8,13 @@
       "outputs": ["{projectRoot}/README.md"],
       "command": "node ./scripts/copy-readme.js storybook packages/storybook/readme-template.md packages/storybook/README.md",
       "inputs": ["copyReadme"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   }
 }

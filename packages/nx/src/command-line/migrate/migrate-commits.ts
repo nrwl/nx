@@ -6,12 +6,14 @@ import {
   getGitRemoteNames,
   hasUncommittedChanges,
   tryCommitChanges,
+  tryCommitChangesAsync,
 } from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import type { ResolvedAgentic } from './agentic/types';
 import { MIGRATE_RUNS_RELATIVE_DIR } from './agentic/types';
 import { migrateConfirm } from './safe-prompt';
+import { terminalOutput, type MigrateOutputSink } from './deferred-output';
 
 // `git add -A` captures an orchestrated run's scratch state whenever the
 // ignore rule that normally hides it goes missing mid-run (a checkout, a
@@ -26,9 +28,8 @@ const MIGRATE_COMMIT_EXCLUDES = [MIGRATE_RUNS_RELATIVE_DIR];
  *   HEAD` failed transiently — by contract the diff is no longer in the
  *   working tree.
  * - `no-changes`: commits were requested but there was nothing to commit.
- * - `failed`: the commit attempt itself errored. The diff remains in the
- *   working tree; the executor uses this signal to track pending migrations
- *   so the next successful commit can annotate its body.
+ * - `failed`: the attempt errored, possibly after the commit landed; tracked
+ *   as pending so the next successful commit can annotate its body.
  * - `disabled`: commits are off for this run.
  */
 export type CommitResult =
@@ -53,7 +54,8 @@ export async function commitMigrationIfRequested(
   commitPrefix: string,
   installDepsIfChanged: () => Promise<void>,
   pendingMigrations: ReadonlyArray<{ package: string; name: string }> = [],
-  failureGuidance = 'The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.'
+  failureGuidance = 'Any uncommitted changes will be included in the next successful commit, which will reference this migration; if they remain uncommitted, the end-of-run output will list this migration so you can commit or revert them manually.',
+  out: MigrateOutputSink = terminalOutput
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
   await installDepsIfChanged();
@@ -61,7 +63,7 @@ export async function commitMigrationIfRequested(
   // dir, or the prompt half made no change: log neutrally, not as an error.
   // The probe excludes what the commit excludes, else the commit fails empty.
   if (!hasUncommittedChanges(root, MIGRATE_COMMIT_EXCLUDES)) {
-    logger.info(pc.dim(`- No changes to commit for ${migration.name}.`));
+    out.line('dim', `- No changes to commit for ${migration.name}.`);
     return { status: 'no-changes' };
   }
   const commitMessage = buildCommitMessage(
@@ -69,22 +71,24 @@ export async function commitMigrationIfRequested(
     pendingMigrations
   );
   try {
-    const sha = tryCommitChanges(commitMessage, root, MIGRATE_COMMIT_EXCLUDES);
+    const sha = await tryCommitChangesAsync(
+      commitMessage,
+      root,
+      MIGRATE_COMMIT_EXCLUDES
+    );
     if (sha) return { status: 'committed', sha };
     // null = commit landed but `git rev-parse HEAD` failed (see
-    // `tryCommitChanges`). Degraded-but-correct — log yellow, not red.
-    logger.info(
-      pc.yellow(
-        `The commit for ${migration.name} was created, but its sha could not be resolved (\`git rev-parse HEAD\` failed transiently). Continuing without recording the sha for this step.`
-      )
+    // `tryCommitChangesAsync`). Degraded-but-correct — log yellow, not red.
+    out.line(
+      'yellow',
+      `The commit for ${migration.name} was created, but its sha could not be resolved (\`git rev-parse HEAD\` failed transiently). Continuing without recording the sha for this step.`
     );
     return { status: 'committed', sha: null };
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
-    logger.info(
-      pc.red(
-        `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. ${failureGuidance}`
-      )
+    out.line(
+      'red',
+      `The commit for ${migration.name} failed:\n${reason}\nCheck \`git status\` and \`git log\`; the commit may have landed despite this error. ${failureGuidance}`
     );
     return { status: 'failed', reason };
   }
@@ -252,6 +256,19 @@ function defaultBranchToCompare(
     .filter((name) => baseRef.startsWith(`${name}/`))
     .sort((a, b) => b.length - a.length)[0];
   return remote ? baseRef.slice(remote.length + 1) : baseRef;
+}
+
+export function currentBranchIfDefault(root: string): string | null {
+  const currentBranch = getGitCurrentBranch(root);
+  if (!currentBranch) {
+    return null;
+  }
+  const defaultBranch = defaultBranchToCompare(
+    getBaseRef(readNxJson(root)),
+    currentBranch,
+    root
+  );
+  return currentBranch === defaultBranch ? currentBranch : null;
 }
 
 /**

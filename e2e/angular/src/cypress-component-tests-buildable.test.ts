@@ -1,4 +1,4 @@
-import { runCLI, runE2ETests } from '@nx/e2e-utils';
+import { runCLI, shouldRunCypressTests } from '@nx/e2e-utils';
 import {
   setupCypressComponentTests,
   cleanupCypressComponentTests,
@@ -30,7 +30,7 @@ describe('Angular Cypress Component Tests - Buildable Lib', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
-    if (await runE2ETests('cypress')) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );

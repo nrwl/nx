@@ -28,6 +28,7 @@ import {
   resolveCommandSyntacticSugar,
   resolveNxTokensInOptions,
 } from './target-merging';
+import { isObject, NX_SPREAD_TOKEN } from './utils';
 
 import type { ConfigurationSourceMaps } from './source-maps';
 
@@ -254,6 +255,120 @@ function warnAboutLegacyCachedTargets(
   });
 }
 
+/**
+ * Nothing downstream rejects a key it does not know — the Rust hasher drops it,
+ * the Cloud runner reads only the keys it reads, and the Kotlin API decodes with
+ * `ignoreUnknownKeys`. So a typo is silent everywhere else, and this is the only
+ * place a misspelled option can be reported at all. `'...'` is listed because a
+ * spread with no base to resolve against survives merging.
+ */
+const KNOWN_ULTRACACHE_KEYS = new Set<string>([
+  'mode',
+  'ignoredReads',
+  'ignoredWrites',
+  NX_SPREAD_TOKEN,
+]);
+
+const ULTRACACHE_MODES = ['on', 'warn', 'error', 'off'] as const;
+
+function describeUltracacheValue(value: unknown): string {
+  if (Array.isArray(value)) return 'an array';
+  if (value === null) return 'null';
+  return `a ${typeof value}`;
+}
+
+/**
+ * Describes every way an `ultracache` violates the shape the schema forbids.
+ *
+ * The schema is editor-only, and everything downstream — the Rust task hasher,
+ * the cloud runner's Go and Kotlin deserializers — is strict. A bad value that
+ * gets this far is reported far from its source, or silently drops the task's
+ * tracking, so it is worth reporting here where the project, target and file
+ * are all still in hand.
+ *
+ * Returns messages rather than throwing: only a WorkspaceValidityError is
+ * collected by `validateAndNormalizeProjectRootMap`, and anything else escapes
+ * as far as the daemon, which exits on an error it cannot classify.
+ */
+function validateTargetUltracache(
+  ultracache: unknown,
+  projectName: string,
+  projectRoot: string,
+  targetName: string,
+  sourceMaps: ConfigurationSourceMaps
+): string[] {
+  if (ultracache === undefined) {
+    return [];
+  }
+
+  const targetSourceMaps = sourceMaps?.[projectRoot];
+  const [file, plugin] =
+    targetSourceMaps?.[`targets.${targetName}.ultracache`] ??
+    targetSourceMaps?.[`targets.${targetName}`] ??
+    [];
+  const origin = file
+    ? ` (defined in ${file})`
+    : plugin
+      ? ` (defined by ${plugin})`
+      : '';
+  const where = `"${targetName}" in project "${projectName}"${origin}`;
+
+  if (!isObject(ultracache)) {
+    return [
+      `The "ultracache" configuration for target ${where} must be an object, but it is ${describeUltracacheValue(
+        ultracache
+      )}.`,
+    ];
+  }
+
+  const errors: string[] = [];
+
+  for (const key of Object.keys(ultracache)) {
+    if (!KNOWN_ULTRACACHE_KEYS.has(key)) {
+      errors.push(
+        `"ultracache.${key}" for target ${where} is not an ultracache option. Supported options are "mode", "ignoredReads" and "ignoredWrites".`
+      );
+    }
+  }
+
+  if (
+    ultracache.mode !== undefined &&
+    !ULTRACACHE_MODES.includes(ultracache.mode as any)
+  ) {
+    const supported = ULTRACACHE_MODES.map((mode) => `"${mode}"`).join(', ');
+    errors.push(
+      `"ultracache.mode" for target ${where} must be one of ${supported}, but it is ${
+        typeof ultracache.mode === 'string'
+          ? `"${ultracache.mode}"`
+          : describeUltracacheValue(ultracache.mode)
+      }.`
+    );
+  }
+
+  for (const key of ['ignoredReads', 'ignoredWrites'] as const) {
+    const value = ultracache[key];
+    if (value === undefined) continue;
+    if (!Array.isArray(value)) {
+      errors.push(
+        `"ultracache.${key}" for target ${where} must be an array of glob patterns, but it is ${describeUltracacheValue(
+          value
+        )}.`
+      );
+      continue;
+    }
+    const badIndex = value.findIndex((glob) => typeof glob !== 'string');
+    if (badIndex !== -1) {
+      errors.push(
+        `"ultracache.${key}[${badIndex}]" for target ${where} must be a glob pattern string, but it is ${describeUltracacheValue(
+          value[badIndex]
+        )}.`
+      );
+    }
+  }
+
+  return errors;
+}
+
 function normalizeTargets(
   project: ProjectConfiguration,
   sourceMaps: ConfigurationSourceMaps,
@@ -281,6 +396,16 @@ function normalizeTargets(
     );
 
     const target = project.targets[targetName];
+
+    targetErrorMessage.push(
+      ...validateTargetUltracache(
+        target.ultracache,
+        project.name ?? project.root,
+        project.root,
+        targetName,
+        sourceMaps
+      ).map((message) => `- ${message}`)
+    );
 
     const targetDefaults = nxJsonConfiguration.targetDefaults;
     if (isLegacyCachedTarget(targetName, targetDefaults, target)) {

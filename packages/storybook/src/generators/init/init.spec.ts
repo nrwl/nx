@@ -7,13 +7,14 @@ import {
   readNxJson,
 } from '@nx/devkit';
 import { findTargetDefault } from '@nx/devkit/internal';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { initGenerator } from './init';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
 }));
@@ -26,6 +27,16 @@ describe('@nx/storybook:init', () => {
       dependencies: {},
     };
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  it('should deny the esbuild build script pulled in by storybook', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      initGenerator(tree, { addPlugin: false })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?esbuild['"]?: false/
+    );
   });
 
   it('should add build-storybook to cacheable operations if NX_ADD_PLUGINS=false', async () => {

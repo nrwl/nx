@@ -21,6 +21,7 @@ describe('Nx Import Gradle', () => {
   const tempImportE2ERoot = join(e2eCwd, 'nx-import');
   beforeEach(() => {
     newProject({
+      keepBackup: true,
       packages: ['@nx/js'],
     });
 

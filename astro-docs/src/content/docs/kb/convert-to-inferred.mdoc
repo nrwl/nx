@@ -12,7 +12,7 @@ The main benefits of migrating to inferred tasks are
 
 - reducing the amount of configuration needed in `project.json`
 - inferring the correct cache settings based on the tool configuration files
-- [splitting tasks (Atomizer)](/docs/features/ci-features/split-e2e-tasks) for plugins that support it
+- [splitting tasks (Atomizer)](/docs/kb/split-e2e-tasks) for plugins that support it
 
 {% youtube
 src="https://youtu.be/wADNsVItnsM"
@@ -320,7 +320,7 @@ Make sure that the tasks are all passing before migrating another plugin.
 
 ## Enable atomizer (task splitting)
 
-These plugins come with the [Atomizer](/docs/features/ci-features/split-e2e-tasks) feature.
+These plugins come with the [Atomizer](/docs/kb/split-e2e-tasks) feature.
 
 - `@nx/cypress`
 - `@nx/jest`
@@ -329,9 +329,9 @@ These plugins come with the [Atomizer](/docs/features/ci-features/split-e2e-task
 
 The Atomizer splits potentially slow tasks into separate tasks per file. This feature along with [task distribution](/docs/features/ci-features/distribute-task-execution) can speed up CI by distributing the split tasks among many agents.
 
-To enable Atomizer, make sure that you are [connected to Nx Cloud](/docs/kb/setup-ci), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/docs/plugin-registry) for more details.
+To enable Atomizer, make sure that you are [connected to Nx Cloud](/docs/getting-started/setup-ci), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/docs/plugin-registry) for more details.
 
-{% call_to_action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/docs/kb/setup-ci" /%}
+{% call_to_action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/docs/getting-started/setup-ci" /%}
 
 ## Troubleshooting
 

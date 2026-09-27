@@ -66,8 +66,8 @@ export function withRunCreationLock<T>(root: string, fn: () => T): T {
 /**
  * Reads the run state fresh under the lock, hands it to `apply`, and writes the
  * result back. `apply` returning null means "no change" and skips the write.
- * `apply` must be pure and synchronous; a corrupt or newer-format run.json
- * propagates from the read.
+ * `apply` runs exactly once, synchronously, so it may capture out-params; a
+ * corrupt or newer-format run.json propagates from the read.
  */
 export function updateRunState(
   runDirPath: string,

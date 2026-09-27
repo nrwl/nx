@@ -135,14 +135,15 @@ public class TargetBuilderDirectoryBuildInputsTests
     public void EmptyDirectoryBuildInputs_LeavesExistingInputsIntact()
     {
         // No Directory.* files for this project. The base inputs the analyzer
-        // always emits (productionInput, ^productionInput, .editorconfig, etc.)
-        // must still be there.
+        // always emits (productionInput, ^productionInput, etc.) must still be
+        // there, and no .editorconfig is assumed: the ancestor walk declares the
+        // ones that exist.
         var targets = BuildTargets(isExe: false, isTest: false, directoryBuildInputs: new List<string>());
 
         var buildInputs = StringInputs(targets["build"]).ToList();
         Assert.Contains("default", buildInputs);
         Assert.Contains("^default", buildInputs);
-        Assert.Contains("{workspaceRoot}/.editorconfig", buildInputs);
+        Assert.DoesNotContain("{workspaceRoot}/.editorconfig", buildInputs);
         // No Directory.* files leaked in.
         Assert.DoesNotContain(buildInputs, i => i.Contains("Directory."));
     }

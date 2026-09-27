@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import * as stream from 'node:stream';
 import * as yargs from 'yargs';
 
@@ -16,6 +17,7 @@ import {
   withTuiOptions,
 } from './shared-options';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
+import { isAiAgent } from '../../native';
 
 const argv = yargs.default([]);
 
@@ -45,6 +47,29 @@ describe('shared-options', () => {
           maxParallel: 2,
         })
       );
+    });
+
+    it('should split a --files value on every comma, while stdin keeps a comma-bearing path whole', async () => {
+      // yargs runs `coerce` only on an instance's first parse, so each case
+      // needs an instance of its own to see production's ordering.
+      const split = await withAffectedOptions(yargs.default([])).parseAsync([
+        'affected',
+        '--files',
+        'libs/a,b/src/index.ts',
+      ]);
+      expect(split.files).toEqual(['libs/a', 'b/src/index.ts']);
+
+      const stdinMock = new stream.PassThrough();
+      vi.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
+      stdinMock.push('libs/a,b/src/index.ts\n');
+      stdinMock.push(null);
+
+      const piped = await withAffectedOptions(yargs.default([])).parseAsync([
+        'affected',
+        '--stdin',
+      ]);
+      expect(piped.files).toEqual(['libs/a,b/src/index.ts']);
+      stdinMock.end();
     });
 
     it('should parse newline-delimited files from stdin', async () => {
@@ -221,6 +246,63 @@ describe('shared-options', () => {
           const command = withOutputStyleOption(argv);
           const result = await command.parseAsync([]);
           expect(result.outputStyle).toBeUndefined();
+        }
+      ));
+
+    it('should default to summary when driven by an AI agent', async () => {
+      (isAiAgent as Mock).mockReturnValue(true);
+      try {
+        await withEnvironmentVariables(
+          { NX_TUI: false, CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+          async () => {
+            const command = withOutputStyleOption(argv);
+            const result = await command.parseAsync([]);
+            // The agent default is inferred, not named: it resolves the render
+            // style without claiming the user asked for it, which is what keeps
+            // the streaming decision reading absence.
+            expect(result.resolvedOutputStyle).toEqual('summary');
+            expect(result.specifiedOutputStyle).toBeUndefined();
+          }
+        );
+      } finally {
+        (isAiAgent as Mock).mockReturnValue(false);
+      }
+    });
+
+    it('should let an explicit style beat the AI agent default', async () => {
+      (isAiAgent as Mock).mockReturnValue(true);
+      try {
+        await withEnvironmentVariables(
+          { NX_TUI: false, CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+          async () => {
+            const command = withOutputStyleOption(argv);
+            const result = await command.parseAsync(['--output-style=static']);
+            // Assert the field the run renders with: `outputStyle` holds what
+            // yargs parsed, so it reads 'static' whether or not the agent
+            // default overrode it.
+            expect(result.resolvedOutputStyle).toEqual('static');
+            expect(result.specifiedOutputStyle).toEqual('static');
+            expect(result.outputStyle).toEqual('static');
+          }
+        );
+      } finally {
+        (isAiAgent as Mock).mockReturnValue(false);
+      }
+    });
+
+    it('should not default to summary when not an AI agent', async () =>
+      // NX_TUI is the string 'false', not the boolean: a boolean unsets the
+      // variable, and `shouldUseTui` then falls through to defaulting ON, so
+      // this would resolve to 'tui' and never exercise the non-agent default.
+      withEnvironmentVariables(
+        { NX_TUI: 'false', CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+        async () => {
+          const command = withOutputStyleOption(argv);
+          const result = await command.parseAsync([]);
+          // `outputStyle` is never written by resolution, so asserting on it
+          // alone passes even if summary became the default for everyone.
+          expect(result.resolvedOutputStyle).toEqual('static-failures-only');
+          expect(result.outputStyle).not.toEqual('summary');
         }
       ));
 

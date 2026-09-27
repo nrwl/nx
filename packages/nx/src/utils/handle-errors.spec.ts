@@ -72,6 +72,19 @@ describe('handleErrors', () => {
     expect(body).toContain('cause message');
   });
 
+  it('should display a cause that is not an Error', async () => {
+    const spy = vi.spyOn(output, 'error').mockImplementation(() => {});
+    await handleErrors(true, async () => {
+      throw new Error('misc error', {
+        cause: { message: 'plain object cause' },
+      });
+    });
+    const { bodyLines } = spy.mock.calls[0][0];
+    const body = bodyLines.join('\n');
+    expect(body).toContain('plain object cause');
+    expect(body).not.toContain('[object Object]');
+  });
+
   it('surfaces minimum-release-age remediation as body lines', async () => {
     const spy = vi.spyOn(output, 'error').mockImplementation(() => {});
     await handleErrors(false, async () => {

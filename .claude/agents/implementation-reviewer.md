@@ -31,6 +31,8 @@ Run from the repo root:
 .claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
 .claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
 .claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+.claude/tools/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
+                                                                     # read-only; NOT the PR's diff
 .claude/tools/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
 .claude/tools/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
 ```

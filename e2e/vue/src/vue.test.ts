@@ -4,9 +4,9 @@ import {
   newProject,
   reservePort,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Vue Plugin', () => {
@@ -40,7 +40,7 @@ describe('Vue Plugin', () => {
       `Successfully ran target build for project ${app}`
     );
 
-    if (await runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
@@ -82,7 +82,7 @@ describe('Vue Plugin', () => {
       `Successfully ran target build for project ${app}`
     );
 
-    if (await runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {

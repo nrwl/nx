@@ -77,6 +77,7 @@ import {
   modifyYarnRcYmlToFitNewDirectory,
   packageRegistryPack,
   packageRegistryView,
+  parseRegistryViewJson,
   parseVersionFromPackageManagerField,
   resolvePackageVersionUsingRegistry,
   PackageManager,
@@ -1020,18 +1021,37 @@ describe('package-manager', () => {
       );
     });
 
-    it('should return pnpm publish command with scoped registry when provided for pnpm version >= 9.15.7 < 10.0.0 || >= 10.5.0', () => {
-      vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
-        switch (p) {
-          case 'pnpm --ignore-workspace --version':
-            return '9.15.7';
-        }
-      });
-      const commands = getPackageManagerCommand('pnpm');
-      expect(commands.publish(...publishCmdParam)).toEqual(
-        'pnpm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
-      );
-    });
+    it.each(['9.15.7', '10.5.0', '10.99.0'])(
+      'should return pnpm publish command with scoped registry when provided for pnpm version %s',
+      (pnpmVersion) => {
+        vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+          switch (p) {
+            case 'pnpm --ignore-workspace --version':
+              return pnpmVersion;
+          }
+        });
+        const commands = getPackageManagerCommand('pnpm');
+        expect(commands.publish(...publishCmdParam)).toEqual(
+          'pnpm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+        );
+      }
+    );
+
+    it.each(['11.0.0', '12.1.0'])(
+      'should return pnpm publish command with config-scoped registry for pnpm version %s',
+      (pnpmVersion) => {
+        vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+          switch (p) {
+            case 'pnpm --ignore-workspace --version':
+              return pnpmVersion;
+          }
+        });
+        const commands = getPackageManagerCommand('pnpm');
+        expect(commands.publish(...publishCmdParam)).toEqual(
+          'pnpm publish "dist/packages/my-pkg" --json --"config.@org:registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+        );
+      }
+    );
 
     it('should return pnpm publish command without use scoped registry for pnpm version < 9.15.7', () => {
       vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
@@ -1475,6 +1495,26 @@ describe('package-manager', () => {
 
       const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(workspaceRoot);
+    });
+  });
+
+  describe('parseRegistryViewJson', () => {
+    it('returns a bare value unchanged', () => {
+      expect(parseRegistryViewJson('{"version":"1.0.0"}')).toEqual({
+        version: '1.0.0',
+      });
+    });
+
+    it('unwraps the one-element array npm 12 prints for an exact spec', () => {
+      expect(parseRegistryViewJson('[{"version":"1.0.0"}]')).toEqual({
+        version: '1.0.0',
+      });
+    });
+
+    it('keeps a multi-version array intact', () => {
+      expect(
+        parseRegistryViewJson('[{"version":"1.0.0"},{"version":"1.1.0"}]')
+      ).toEqual([{ version: '1.0.0' }, { version: '1.1.0' }]);
     });
   });
 

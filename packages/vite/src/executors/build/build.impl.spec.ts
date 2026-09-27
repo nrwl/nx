@@ -1,51 +1,52 @@
+import type { Mock } from 'vitest';
 import type { ExecutorContext } from '@nx/devkit';
 import { detectPackageManager, writeJsonFile } from '@nx/devkit';
 import { generatePrunedDeployOutput } from '@nx/js';
 import { viteBuildExecutor } from './build.impl';
 import { ViteBuildExecutorOptions } from './schema';
 
-jest.mock('../../utils/deprecation', () => ({
-  warnViteBuildExecutorDeprecation: jest.fn(),
+vi.mock('../../utils/deprecation', () => ({
+  warnViteBuildExecutorDeprecation: vi.fn(),
 }));
 
-jest.mock('../../utils/executor-utils', () => ({
-  createBuildableTsConfig: jest.fn(() => 'apps/my-app/tsconfig.json'),
-  validateTypes: jest.fn(),
-  loadViteDynamicImport: jest.fn().mockResolvedValue({
+vi.mock('../../utils/executor-utils', () => ({
+  createBuildableTsConfig: vi.fn(() => 'apps/my-app/tsconfig.json'),
+  validateTypes: vi.fn(),
+  loadViteDynamicImport: vi.fn().mockResolvedValue({
     mergeConfig: (a: any, b: any) => ({ ...a, ...b }),
-    build: jest.fn().mockResolvedValue({ output: [{ fileName: 'main.js' }] }),
-    resolveConfig: jest
+    build: vi.fn().mockResolvedValue({ output: [{ fileName: 'main.js' }] }),
+    resolveConfig: vi
       .fn()
       .mockResolvedValue({ root: undefined, plugins: [], build: {} }),
     createBuilder: undefined,
   }),
 }));
 
-jest.mock('../../utils/options-utils', () => ({
-  getProjectTsConfigPath: jest.fn(() => undefined),
-  normalizeViteConfigFilePath: jest.fn(() => undefined),
+vi.mock('../../utils/options-utils', () => ({
+  getProjectTsConfigPath: vi.fn(() => undefined),
+  normalizeViteConfigFilePath: vi.fn(() => undefined),
 }));
 
-jest.mock('@nx/js/internal', () => ({
-  isUsingTsSolutionSetup: jest.fn(() => true),
+vi.mock('@nx/js/internal', () => ({
+  isUsingTsSolutionSetup: vi.fn(() => true),
 }));
 
-jest.mock('@nx/js', () => ({
-  ...jest.requireActual('@nx/js'),
-  copyAssets: jest.fn(),
-  createPackageJson: jest.fn(() => manifest),
-  generatePrunedDeployOutput: jest.fn(),
+vi.mock('@nx/js', async () => ({
+  ...(await vi.importActual<any>('@nx/js')),
+  copyAssets: vi.fn(),
+  createPackageJson: vi.fn(() => manifest),
+  generatePrunedDeployOutput: vi.fn(),
 }));
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  detectPackageManager: jest.fn(),
-  writeJsonFile: jest.fn(),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn(),
+  writeJsonFile: vi.fn(),
 }));
 
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn(() => false),
+vi.mock('fs', async () => ({
+  ...(await vi.importActual<any>('fs')),
+  existsSync: vi.fn(() => false),
 }));
 
 // createPackageJson is mocked to always return this, so builtPackageJson
@@ -84,7 +85,7 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     manifest = { name: 'my-app', version: '1.0.0' };
   });
 
@@ -95,7 +96,7 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
   }
 
   it('generates the pruned deploy output before the manifest is written', async () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
 
     await runExecutor();
 
@@ -112,12 +113,12 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
     // The deploy output rewrites the manifest's local-path specifiers, so the
     // manifest must be written after it.
     expect(
-      (generatePrunedDeployOutput as jest.Mock).mock.invocationCallOrder[0]
-    ).toBeLessThan((writeJsonFile as jest.Mock).mock.invocationCallOrder[0]);
+      (generatePrunedDeployOutput as Mock).mock.invocationCallOrder[0]
+    ).toBeLessThan((writeJsonFile as Mock).mock.invocationCallOrder[0]);
   });
 
   it('leaves the bun decision to the deploy output', async () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('bun');
+    (detectPackageManager as Mock).mockReturnValue('bun');
 
     await runExecutor();
 

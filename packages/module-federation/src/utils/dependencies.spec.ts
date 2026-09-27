@@ -3,11 +3,11 @@ import { getDependentPackagesForProject } from './dependencies';
 
 describe('getDependentPackagesForProject', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should collect npm packages and workspaces libraries without duplicates', () => {
-    jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+    vi.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
       '@myorg/lib1': ['libs/lib1/src/index.ts'],
       '@myorg/lib2': ['libs/lib2/src/index.ts'],
     });
@@ -54,7 +54,7 @@ describe('getDependentPackagesForProject', () => {
   });
 
   it('should collect workspaces libraries recursively', () => {
-    jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+    vi.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
       '@myorg/lib1': ['libs/lib1/src/index.ts'],
       '@myorg/lib2': ['libs/lib2/src/index.ts'],
       '@myorg/lib3': ['libs/lib3/src/index.ts'],
@@ -104,7 +104,7 @@ describe('getDependentPackagesForProject', () => {
   });
 
   it('should ignore TS path mappings with wildcards', () => {
-    jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+    vi.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
       '@myorg/lib1': ['libs/lib1/src/index.ts'],
       '@myorg/lib1/*': ['libs/lib1/src/lib/*'],
       '@myorg/lib2': ['libs/lib2/src/index.ts'],
@@ -157,7 +157,7 @@ describe('getDependentPackagesForProject', () => {
   });
 
   it('should strip version suffix from npm dependency names for bun compatibility', () => {
-    jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({});
+    vi.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({});
 
     const dependencies = getDependentPackagesForProject(
       {
@@ -194,7 +194,7 @@ describe('getDependentPackagesForProject', () => {
   });
 
   it('should skip non-npm external dependencies like cargo:', () => {
-    jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+    vi.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
       '@myorg/lib1': ['libs/lib1/src/index.ts'],
     });
 

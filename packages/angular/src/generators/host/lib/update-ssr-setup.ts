@@ -14,7 +14,10 @@ import {
   typesCorsVersion,
 } from '../../../utils/versions';
 import type { Schema } from '../schema';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import {
+  getInstalledAngularVersionInfo,
+  supportsSsrAllowedHosts,
+} from '../../utils/version-utils';
 
 export async function updateSsrSetup(
   tree: Tree,
@@ -40,6 +43,7 @@ export async function updateSsrSetup(
     zoneless: options.zoneless,
     useDefaultImport: angularMajorVersion >= 21,
     angularMajorVersion,
+    supportsAllowedHosts: supportsSsrAllowedHosts(tree),
     tmpl: '',
   });
 

@@ -14,7 +14,7 @@ public static partial class TargetBuilder
         string targetName,
         string fileName,
         string projectName,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
@@ -59,13 +59,14 @@ public static partial class TargetBuilder
             [
                 productionInput,
                 $"^{productionInput}",
-                "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
-            Outputs = new[] { outputPath, intermediatePath }
+            Outputs = new[] { outputPath }
                 .Where(p => p is not null)
+                .Concat(GetIntermediateOutputs(intermediatePath))
                 .Concat(openApiDocumentsOutputs)
                 .ToArray()!,
             Metadata = new TargetMetadata
@@ -81,7 +82,7 @@ public static partial class TargetBuilder
         string projectName,
         string fileName,
         bool isTest,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
@@ -108,7 +109,7 @@ public static partial class TargetBuilder
         string projectName,
         string fileName,
         bool isTest,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,

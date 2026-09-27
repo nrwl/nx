@@ -1,10 +1,12 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   GeneratorCallback,
   joinPathFragments,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { extraEslintDependencies } from '@nx/react';
 import { NormalizedSchema } from './normalize-options';
 import {
@@ -116,6 +118,13 @@ export async function addLinting(
   if (options.linter === 'eslint' && !options.skipPackageJson) {
     const eslintConfigNextVersion =
       await getEslintConfigNextDependenciesVersionsToInstall(host);
+
+    // eslint-config-next pulls in unrs-resolver via
+    // eslint-import-resolver-typescript, whose postinstall only fetches a
+    // fallback binding for platforms its prebuilt optional dependencies miss.
+    acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+      'unrs-resolver': false,
+    });
 
     tasks.push(
       addDependenciesToPackageJson(

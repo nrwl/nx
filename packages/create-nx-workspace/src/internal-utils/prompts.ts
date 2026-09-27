@@ -40,12 +40,10 @@ export async function determineNxCloud(
 
 export async function determineNxCloudV2(
   parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
-): Promise<'yes' | 'skip' | 'never'> {
+): Promise<'yes' | 'skip'> {
   // Provided via flag
   if (parsedArgs.nxCloud) {
-    if (parsedArgs.nxCloud === 'skip') return 'skip';
-    if (parsedArgs.nxCloud === 'never') return 'never';
-    return 'yes';
+    return parsedArgs.nxCloud === 'skip' ? 'skip' : 'yes';
   }
 
   // Non-interactive mode
@@ -54,9 +52,7 @@ export async function determineNxCloudV2(
   }
 
   const result = await nxCloudPrompt('setupNxCloudV2');
-  if (result === 'never') return 'never';
-  if (result === 'skip') return 'skip';
-  return 'yes';
+  return result === 'skip' ? 'skip' : 'yes';
 }
 
 export async function determineIfGitHubWillBeUsed(

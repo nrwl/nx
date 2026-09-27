@@ -2,6 +2,9 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
+import type { IoSnapshotVersion } from '../message-types/io-snapshot-version';
+import { getIoSnapshotsForVersion } from './io-snapshots-state';
+import { planningContextFor } from './planning-context';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -10,14 +13,17 @@ import { readNxJson } from '../../config/configuration';
 let storedProjectGraph: any = null;
 let storedHasher: InProcessTaskHasher | null = null;
 
-export async function handleHashTasks(payload: {
+interface HashTasksPayload {
   runnerOptions: any;
   tasks: Task[];
   taskGraph: TaskGraph;
   perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
   cwd: string;
   collectInputs?: boolean;
-}) {
+  ioSnapshots?: IoSnapshotVersion;
+}
+
+async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
   const { error, projectGraph, rustReferences } =
     await getCachedSerializedProjectGraphPromise();
 
@@ -33,18 +39,41 @@ export async function handleHashTasks(payload: {
       projectGraph,
       nxJson,
       rustReferences,
-      payload.runnerOptions
+      runnerOptions,
+      planningContextFor(projectGraph, nxJson)
     );
   }
-  const response = await storedHasher.hashTasks(
+  return storedHasher;
+}
+
+export async function handleHashTasks(payload: HashTasksPayload) {
+  const hasher = await getHasher(payload.runnerOptions);
+  const response = await hasher.hashTasks(
     payload.tasks,
     payload.taskGraph,
     payload.perTaskEnvs,
     payload.cwd,
-    payload.collectInputs
+    payload.collectInputs,
+    getIoSnapshotsForVersion(payload.ioSnapshots)
   );
   return {
     response,
     description: 'handleHashTasks',
+  };
+}
+
+export async function handleHashTasksUpfront(payload: HashTasksPayload) {
+  const hasher = await getHasher(payload.runnerOptions);
+  const response = await hasher.hashTasksUpfront(
+    payload.tasks,
+    payload.taskGraph,
+    payload.perTaskEnvs,
+    payload.cwd,
+    payload.collectInputs,
+    getIoSnapshotsForVersion(payload.ioSnapshots)
+  );
+  return {
+    response,
+    description: 'handleHashTasksUpfront',
   };
 }
