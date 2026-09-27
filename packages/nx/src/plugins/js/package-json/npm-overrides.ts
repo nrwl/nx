@@ -20,12 +20,8 @@ const DEPENDENCY_SECTIONS: PackageJsonDependencySection[] = [
   'peerDependencies',
 ];
 
-/**
- * The root rule npm applies to a dependency on `name` with `spec`, as its
- * OverrideSet does: the first rule for the name whose key range (`name@range`,
- * `*` when absent) intersects the spec. npm accepts the rule for a spec it
- * cannot compare as a range, such as a tag or a directory.
- */
+// npm's OverrideSet.getEdgeRule: the first rule for the name whose key range,
+// `*` when absent, intersects the spec; a spec that isn't a range matches any.
 function findNpmOverrideRule(
   overrides: NpmOverrides,
   name: string,
@@ -48,10 +44,7 @@ function findNpmOverrideRule(
   return undefined;
 }
 
-/**
- * The root's `$name` references, which point at its own dependencies, resolved
- * in the order npm looks them up.
- */
+/** The root's `$name` references resolved in npm's lookup order. */
 export function resolveNpmOverrideReferences(
   overrides: NpmOverrides,
   rootPackageJson: PackageJson
@@ -76,12 +69,8 @@ export function resolveNpmOverrideReferences(
 }
 
 /**
- * For a manifest that declares the ranges npm resolved through `overrides` in
- * the workspace, and becomes the install root: a rule may not change a direct
- * dependency's spec there (EOVERRIDE), so the dependency takes the spec the
- * rule gave it. Throws when that spec matches another rule that changes it,
- * since no rule set then gives the package the version it resolved while every
- * other dependent on the name keeps its own.
+ * Gives each direct dependency the spec its override sets, since npm rejects a
+ * rule that changes a root dependency's spec (EOVERRIDE).
  */
 export function applyNpmOverridesToDependencies(
   packageJson: PackageJson,
@@ -105,10 +94,8 @@ export function applyNpmOverridesToDependencies(
 }
 
 /**
- * For a manifest that pins what the lock file resolved: drop the part of each
- * rule npm would apply to a direct dependency and reject (EOVERRIDE), which is
- * the version a string or `.` sets. The rules a package sets for its own
- * dependencies stay, as do rules that leave the spec as it is.
+ * Drops the version a rule sets for a direct dependency, which npm rejects
+ * (EOVERRIDE); the rules it sets for the dependency's own dependencies stay.
  */
 export function dropNpmOverridesOfDirectDependencies(
   overrides: NpmOverrides,

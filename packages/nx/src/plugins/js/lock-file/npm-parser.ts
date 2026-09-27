@@ -378,10 +378,8 @@ function findTarget(
     return fallback;
   }
   // Walk one level up the nesting chain by dropping the trailing
-  // `node_modules/<pkg>` segment. From a workspace directory, step to its
-  // parent directory instead: a workspace nested in another resolves through
-  // the outer one's node_modules before the root's. Slash-index arithmetic
-  // avoids the split/slice/join array allocation on every hop.
+  // `node_modules/<pkg>` segment, or from a workspace directory to its parent,
+  // as Node does. Slash-index arithmetic avoids an array allocation per hop.
   const lastNodeModules = sourcePath.lastIndexOf('node_modules/');
   return findTarget(
     lastNodeModules === -1

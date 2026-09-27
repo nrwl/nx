@@ -112,12 +112,8 @@ function mergeAllowScripts(packageJson: PackageJson) {
 }
 
 /**
- * npm, like `allowScripts`, reads `overrides` only from the install root. In a
- * workspace it resolved the whole tree, this project included, with the root's
- * overrides and ignored the project's own, so the pruned lock file follows the
- * root's; the project's would leave `npm ci` finding it out of sync. A `$name`
- * override refers to the root's own dependency, which the pruned manifest
- * lacks, so it is resolved.
+ * npm, like `allowScripts`, applies only the install root's `overrides`, so the
+ * pruned output takes the workspace root's rather than the project's own.
  */
 function applyRootOverrides(packageJson: PackageJson) {
   const rootPackageJson: PackageJson = readJsonFile(

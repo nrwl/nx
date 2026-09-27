@@ -11,11 +11,6 @@ import type {
 import { findNodeMatchingVersion } from '../project-graph-pruning';
 import { NormalizedPackageJson } from './package-json';
 
-/**
- * Places the root lock file's snapshots at their paths in the pruned npm lock
- * file, where the pruned package is the root.
- */
-
 export type MappedPackage = {
   path: string;
   name: string;
@@ -88,14 +83,8 @@ export function mapSnapshots(
   ).sort((a, b) => a.path.localeCompare(b.path));
 }
 
-/**
- * The version placed at `node_modules/<name>`: the one the pruned package
- * depends on directly, as npm gives its root package, otherwise the version the
- * root lock file hoisted. In a workspace npm nests a member's own dependency
- * under the member when another one holds the root slot; the pruned package is
- * the root here, so its version takes the slot, and the hoisted version it
- * displaces is nested below its dependents like any other.
- */
+// The pruned package's own dependencies take `node_modules/<name>`, as npm does
+// for a root package; other names keep the version the root lock file hoisted.
 function getRootNodes(
   graph: ProjectGraph,
   packageJson: NormalizedPackageJson
@@ -124,16 +113,8 @@ function getRootNodes(
   return rootNodes;
 }
 
-/**
- * Nesting each version under its dependents and then elevating it as far as it
- * goes never checks what a package resolves from where it lands, so a nearer
- * copy of a name can shadow the version it depends on: z@1 nested under x
- * picks up x's m@1 instead of the m@2 it needs. Where a package's dependency
- * resolves to another version, or to nothing, nest the version it depends on
- * directly under it. That copy can shadow the name for packages below it, so
- * those are checked again. Peer dependencies are left alone: a copy of a peer
- * under every dependent would duplicate it rather than share it.
- */
+// Nests the version a package depends on under it wherever it would otherwise
+// resolve another version, or none. Peers stay shared, not copied per dependent.
 function repairResolution(
   mappedPackages: MappedPackage[],
   graph: ProjectGraph,
@@ -260,9 +241,7 @@ function nestMappedPackages(
   }
 
   nestedNodes.forEach((node) => {
-    // Only a package places another: the pruned package is the root, and the
-    // edges of workspace projects, which the pruned graph still carries, lead
-    // nowhere in the pruned tree.
+    // workspace projects are not in the pruned tree, so their edges place nothing
     const parents = invertedGraph.dependencies[node.name]
       .map(({ target }) => target)
       .filter((target) => invertedGraph.externalNodes[target]);

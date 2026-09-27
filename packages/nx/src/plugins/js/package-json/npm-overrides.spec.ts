@@ -11,7 +11,7 @@ function manifest(sections: Partial<PackageJson>): PackageJson {
 
 describe('npm overrides', () => {
   describe('applyNpmOverridesToDependencies', () => {
-    it("gives a direct dependency the spec its override sets, the string or an object's `.`", () => {
+    it("should give a direct dependency the spec its override sets, the string or an object's `.`", () => {
       const packageJson = manifest({
         dependencies: { uuid: '11.1.0', foo: '^1.0.0', bar: '^1.0.0' },
       });
@@ -29,7 +29,7 @@ describe('npm overrides', () => {
       });
     });
 
-    it('applies a name@range override only to a dependency its range intersects', () => {
+    it('should apply a name@range override only to a dependency its range intersects', () => {
       const packageJson = manifest({
         dependencies: {
           'js-yaml': '^4.3.1',
@@ -54,7 +54,7 @@ describe('npm overrides', () => {
       });
     });
 
-    it('fails when the rewritten spec matches another override that changes it', () => {
+    it('should fail when the rewritten spec matches another override that changes it', () => {
       // npm resolves debug@^3.2.7 to 4.3.4, but as a direct dependency 4.3.4
       // matches debug@^4, which npm rejects (EOVERRIDE)
       expect(() =>
@@ -69,7 +69,7 @@ describe('npm overrides', () => {
   });
 
   describe('dropNpmOverridesOfDirectDependencies', () => {
-    it('drops a rule that sets a direct dependency version and keeps the rest', () => {
+    it('should drop a rule that sets a direct dependency version and keep the rest', () => {
       expect(
         dropNpmOverridesOfDirectDependencies(
           { typescript: '5.0.0', foo: '1.0.0' },
@@ -78,7 +78,7 @@ describe('npm overrides', () => {
       ).toEqual({ foo: '1.0.0' });
     });
 
-    it("keeps the rules an override sets for a direct dependency's own dependencies", () => {
+    it("should keep the rules an override sets for a direct dependency's own dependencies", () => {
       expect(
         dropNpmOverridesOfDirectDependencies(
           {
@@ -105,7 +105,7 @@ describe('npm overrides', () => {
       });
     });
 
-    it('keeps a rule that leaves the direct dependency spec as it is', () => {
+    it('should keep a rule that leaves the direct dependency spec as it is', () => {
       const overrides = {
         'debug@^2': '2.6.8',
         ms: '2.1.3',
@@ -122,7 +122,7 @@ describe('npm overrides', () => {
       ).toEqual(overrides);
     });
 
-    it('drops each rule npm would apply to the direct dependency in turn', () => {
+    it('should drop each rule npm would apply to the direct dependency in turn', () => {
       expect(
         dropNpmOverridesOfDirectDependencies(
           {
@@ -138,7 +138,7 @@ describe('npm overrides', () => {
   });
 
   describe('resolveNpmOverrideReferences', () => {
-    it('resolves $ references in the order npm looks them up', () => {
+    it('should resolve $ references in the order npm looks them up', () => {
       expect(
         resolveNpmOverrideReferences(
           {

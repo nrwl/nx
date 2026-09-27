@@ -226,9 +226,7 @@ export function createPackageJson(
 
   // npm
   if (rootPackageJson.overrides && !options.skipOverrides) {
-    // npm throws EOVERRIDE when an override changes a direct dependency's spec.
-    // The pruned dist pins exact versions and already resolved everything via
-    // the lockfile, so those overrides are redundant.
+    // npm rejects an override that changes a direct dependency's spec (EOVERRIDE)
     const overrides = dropNpmOverridesOfDirectDependencies(
       { ...rootPackageJson.overrides, ...packageJson.overrides },
       packageJson

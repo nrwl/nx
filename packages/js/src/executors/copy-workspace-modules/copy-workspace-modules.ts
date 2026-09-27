@@ -256,9 +256,8 @@ function handleWorkspaceModules(
       }
     }
     dropEmptyPeerDependencySections(copiedPackageJson);
-    // npm reads a linked directory's manifest from disk and, as for a project
-    // root, installs its devDependencies. The pruned lock file carries none of
-    // them, so `npm ci` would reject the output.
+    // npm installs a linked directory's devDependencies, which the pruned lock
+    // file does not carry, so `npm ci` would reject the output
     if (packageManager === 'npm' && copiedPackageJson.devDependencies) {
       delete copiedPackageJson.devDependencies;
       packageJsonModified = true;

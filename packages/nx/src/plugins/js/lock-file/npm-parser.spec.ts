@@ -5,6 +5,7 @@ import {
   stringifyNpmLockfile,
 } from './npm-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
+import { NormalizedPackageJson } from './utils/package-json';
 import { vol } from 'memfs';
 import { ProjectGraph } from '../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
@@ -1920,7 +1921,7 @@ describe('NPM lock file utility', () => {
       ...(dependencies && { dependencies }),
     });
 
-    function buildGraph(lockFile: object): ProjectGraph {
+    function graphFromLockFile(lockFile: object): ProjectGraph {
       const hash = uniq('mock-hash');
       const content = JSON.stringify(lockFile);
       const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
@@ -1969,8 +1970,8 @@ describe('NPM lock file utility', () => {
       }
     }
 
-    function prune(lockFile: object, packageJson: any) {
-      const graph = buildGraph(lockFile);
+    function prune(lockFile: object, packageJson: NormalizedPackageJson) {
+      const graph = graphFromLockFile(lockFile);
       return JSON.parse(
         stringifyNpmLockfile(
           pruneProjectGraph(graph, packageJson),
@@ -1980,7 +1981,7 @@ describe('NPM lock file utility', () => {
       ).packages;
     }
 
-    it("gives a workspace's own nested version the root slot and nests the one it displaces", () => {
+    it("should give a workspace's own nested version the root slot and nest the one it displaces", () => {
       // npm nests nested's debug@2.6.9 under its workspace because other's
       // debug@4 holds the root slot, which agent-base in nested also needs.
       const lockFile = {
@@ -2035,7 +2036,7 @@ describe('NPM lock file utility', () => {
       ).toEqual('2.1.2');
     });
 
-    it('nests a copy where a nearer version would shadow the one a package resolves', () => {
+    it('should nest a copy where a nearer version would shadow the one a package resolves', () => {
       // z@1 sits under x next to x's own m@1, so npm gave z its own m@2.
       const lockFile = {
         name: 'app',
@@ -2057,6 +2058,7 @@ describe('NPM lock file utility', () => {
 
       const packages = prune(lockFile, {
         name: 'app',
+        version: '0.0.1',
         dependencies: { m: '2.0.0', x: '1.0.0', z: '2.0.0' },
       });
 
