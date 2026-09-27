@@ -1,3 +1,4 @@
+import type { MockedFunction } from 'vitest';
 import { type ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { readFileSync } from 'fs';
@@ -16,36 +17,42 @@ import pruneLockfileExecutor, {
 // module load and isn't updated by `TempFs.setWorkspaceRoot`. Point it at the
 // per-test temp dir via a getter; everything else stays real.
 let mockWorkspaceRoot = '';
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   get workspaceRoot() {
     return mockWorkspaceRoot;
   },
 }));
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  getCatalogManager: jest.fn(),
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  getCatalogManager: vi.fn(),
 }));
 
 // The real entry point reads the workspace's own root lockfile, which no temp
 // fixture provides; stub it with the contract the executor depends on.
-jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
-  ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
-  generatePrunedDeployOutput: jest.fn((packageJson) => {
-    // a successful prune strips the manifest's baked pnpm config, and the
-    // executor writes the manifest afterwards
-    jest
-      .requireActual('nx/src/plugins/js/lock-file/pruned-output')
-      .stripPrunedLockfilePnpmConfig(packageJson);
-  }),
-}));
-jest.mock('nx/src/plugins/js/utils/get-workspace-packages-from-graph', () => ({
-  ...jest.requireActual(
-    'nx/src/plugins/js/utils/get-workspace-packages-from-graph'
-  ),
-  getWorkspacePackagesFromGraph: jest.fn(() => new Map()),
-}));
+vi.mock('nx/src/plugins/js/lock-file/lock-file', async () => {
+  const { stripPrunedLockfilePnpmConfig } = await vi.importActual<any>(
+    'nx/src/plugins/js/lock-file/pruned-output'
+  );
+  return {
+    ...(await vi.importActual<any>('nx/src/plugins/js/lock-file/lock-file')),
+    generatePrunedDeployOutput: vi.fn((packageJson) => {
+      // a successful prune strips the manifest's baked pnpm config, and the
+      // executor writes the manifest afterwards
+      stripPrunedLockfilePnpmConfig(packageJson);
+    }),
+  };
+});
+vi.mock(
+  'nx/src/plugins/js/utils/get-workspace-packages-from-graph',
+  async () => ({
+    ...(await vi.importActual<any>(
+      'nx/src/plugins/js/utils/get-workspace-packages-from-graph'
+    )),
+    getWorkspacePackagesFromGraph: vi.fn(() => new Map()),
+  })
+);
 
 const PROJECT_ROOT = 'apps/app';
 
@@ -59,7 +66,7 @@ describe('pruneLockfileExecutor - allowScripts', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   function setupWorkspace(
@@ -197,7 +204,7 @@ describe('pruneLockfileExecutor - allowScripts', () => {
 
 describe('pruneLockfileExecutor - workspace module dependencies', () => {
   const mockGetWorkspacePackages =
-    getWorkspacePackagesFromGraph as jest.MockedFunction<
+    getWorkspacePackagesFromGraph as MockedFunction<
       typeof getWorkspacePackagesFromGraph
     >;
   let tempFs: TempFs;
@@ -209,7 +216,7 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('rewrites only graph workspace packages, leaving non-workspace file: deps alone', async () => {
@@ -506,14 +513,14 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
 });
 
 describe('resolveCatalogReferences', () => {
-  const mockGetCatalogManager = getCatalogManager as jest.MockedFunction<
+  const mockGetCatalogManager = getCatalogManager as MockedFunction<
     typeof getCatalogManager
   >;
 
   function makeManager(catalog: Record<string, string>) {
     return {
       isCatalogReference: (version: string) => version.startsWith('catalog:'),
-      resolveCatalogReference: jest.fn(
+      resolveCatalogReference: vi.fn(
         (_root: string, packageName: string, _version: string) =>
           catalog[packageName] ?? null
       ),

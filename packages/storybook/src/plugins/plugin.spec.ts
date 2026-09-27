@@ -1,14 +1,18 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
-import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { mkdirSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { createNodesV2 } from './plugin';
 
 // Outside the repo tree: an in-workspace path would be an undeclared task output.
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: require('node:path').join(
     require('node:os').tmpdir(),
     'nx-storybook-plugin-cache'
@@ -37,6 +41,13 @@ describe('@nx/storybook/plugin', () => {
     };
     tempFs.createFileSync('package.json', JSON.stringify({ name: 'repo' }));
     tempFs.createFileSync('package-lock.json', '{}');
+    // The swc-node hook compiles real configs with `importHelpers`; a temp root
+    // can't resolve `@swc/helpers` on its own.
+    mkdirSync(join(tempFs.tempDir, 'node_modules/@swc'), { recursive: true });
+    symlinkSync(
+      dirname(require.resolve('@swc/helpers/package.json')),
+      join(tempFs.tempDir, 'node_modules/@swc/helpers')
+    );
     tempFs.createFileSync(
       'my-app/project.json',
       JSON.stringify({ name: 'my-app' })
@@ -126,7 +137,8 @@ describe('@nx/storybook/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
+    resetCjsMocks();
     tempFs.cleanup();
   });
 
@@ -951,10 +963,9 @@ export default config;
     mainTsPath: string,
     mainTsConfig: StorybookConfig
   ) {
-    jest.mock(
-      join(tempFs.tempDir, mainTsPath),
-      () => ({ default: mainTsConfig }),
-      { virtual: true }
-    );
+    // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+    mockCjsModule(import.meta.url, join(tempFs.tempDir, mainTsPath), {
+      default: mainTsConfig,
+    });
   }
 });

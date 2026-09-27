@@ -6,6 +6,10 @@ import {
 } from '../../config/project-graph';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
 import {
+  computeAffectedTasks,
+  selectsAffectedTasks,
+} from '../../project-graph/affected/affected-tasks';
+import {
   FileChange,
   calculateFileChanges,
 } from '../../project-graph/file-utils';
@@ -39,7 +43,37 @@ export async function showProjectsHandler(
   // Affected touches dependencies so it needs to be processed first.
   if (args.affected) {
     const touchedFiles = await getTouchedFiles(nxArgs);
-    graph = await getAffectedGraph(touchedFiles, nxJson, graph);
+
+    // With a target, list projects owning an affected task for it, matching `affected -t`.
+    if (selectsAffectedTasks() && args.withTarget?.length && !args.projects) {
+      const affectedTasks = await computeAffectedTasks({
+        projectGraph: graph,
+        nxJson,
+        targets: args.withTarget,
+        touchedFiles,
+        fileChangeArgs: {
+          base: nxArgs.base,
+          head: nxArgs.head,
+          files: nxArgs.files,
+        },
+        ...(await runCommandModule().runnerInputsForSelection(nxArgs, nxJson)),
+      });
+      const { taskGraph, initiatingTaskIds } = affectedTasks.taskSelection;
+      const owning = new Set(
+        initiatingTaskIds.map((id) => taskGraph.tasks[id].target.project)
+      );
+      // The graph selection ran against: with the daemon on, the daemon's, not `graph`.
+      graph = {
+        ...affectedTasks.projectGraph,
+        nodes: Object.fromEntries(
+          Object.entries(affectedTasks.projectGraph.nodes).filter(([name]) =>
+            owning.has(name)
+          )
+        ),
+      };
+    } else {
+      graph = await getAffectedGraph(touchedFiles, nxJson, graph);
+    }
   }
 
   const filter = filterNodes((node) => {
@@ -114,4 +148,9 @@ function getAffectedGraph(
 
 async function getTouchedFiles(nxArgs: NxArgs): Promise<FileChange[]> {
   return calculateFileChanges(parseFiles(nxArgs).files, nxArgs);
+}
+
+/** Loaded only when task selection needs it. */
+function runCommandModule(): typeof import('../../tasks-runner/run-command') {
+  return require('../../tasks-runner/run-command');
 }

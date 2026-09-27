@@ -1,4 +1,5 @@
-jest.mock('../../utils/remix-config');
+import type { Mock } from 'vitest';
+vi.mock('../../utils/remix-config');
 import * as remixConfigUtils from '../../utils/remix-config';
 
 import { addProjectConfiguration } from '@nx/devkit';
@@ -7,7 +8,7 @@ import errorBoundaryGenerator from './error-boundary.impl';
 
 describe('ErrorBoundary', () => {
   beforeEach(() => {
-    (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
+    (remixConfigUtils.getRemixConfigValues as Mock) = vi.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
       })

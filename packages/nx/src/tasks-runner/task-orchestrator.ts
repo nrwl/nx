@@ -1480,7 +1480,7 @@ export class TaskOrchestrator {
           {
             root: workspaceRoot, // only root is needed in runCommands
           } as any,
-          task.id
+          task
         );
 
         this.runningRunCommandsTasks.set(task.id, runningTask);

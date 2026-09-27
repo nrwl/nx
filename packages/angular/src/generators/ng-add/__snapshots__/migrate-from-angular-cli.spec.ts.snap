@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`workspace move to nx layout should create a root eslint config 1`] = `
+exports[`workspace > move to nx layout > should create a root eslint config 1`] = `
 {
   "ignorePatterns": [
     "**/*",
@@ -78,7 +78,7 @@ exports[`workspace move to nx layout should create a root eslint config 1`] = `
 }
 `;
 
-exports[`workspace move to nx layout should create nx.json 1`] = `
+exports[`workspace > move to nx layout > should create nx.json 1`] = `
 {
   "defaultBase": "main",
   "defaultProject": "myApp",
@@ -147,7 +147,7 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
 }
 `;
 
-exports[`workspace move to nx layout should update tsconfig.base.json if present 1`] = `
+exports[`workspace > move to nx layout > should update tsconfig.base.json if present 1`] = `
 {
   "compilerOptions": {
     "paths": {},
@@ -160,7 +160,7 @@ exports[`workspace move to nx layout should update tsconfig.base.json if present
 }
 `;
 
-exports[`workspace move to nx layout should work if angular-cli workspace had tsconfig.base.json 1`] = `
+exports[`workspace > move to nx layout > should work if angular-cli workspace had tsconfig.base.json 1`] = `
 {
   "compilerOptions": {
     "paths": {},

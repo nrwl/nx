@@ -12,6 +12,11 @@ vi.mock('../tasks-runner/utils', async (importOriginal) => ({
 vi.mock('../tasks-runner/task-env', () => ({
   getTaskSpecificEnv: () => ({}),
 }));
+const deferredBySnapshot = vi.hoisted(() => ({ ids: [] as string[] }));
+vi.mock('../native', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../native')>()),
+  getIoSnapshotDeferredTaskIds: () => deferredBySnapshot.ids,
+}));
 
 describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
   const nxJson = {
@@ -92,5 +97,23 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
     expect(taskGraph.tasks['app:e2e'].hash).toBeUndefined();
     expect(taskGraph.tasks['app:test'].hash).toBeUndefined();
     expect(taskGraph.tasks['app:custom'].hash).toBeUndefined();
+  });
+
+  it('holds back a task whose snapshot reads producer outputs, even when its inputs never said so', async () => {
+    const { projectGraph, taskGraph } = graph();
+    deferredBySnapshot.ids = ['app:test'];
+    const hashTasksUpfront = vi.fn(async () => ({}));
+    await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+      { hashTasksUpfront } as unknown as TaskHasher,
+      projectGraph,
+      taskGraph,
+      nxJson,
+      null,
+      {} as any
+    );
+    deferredBySnapshot.ids = [];
+    expect(hashTasksUpfront.mock.calls[0][0].map((t) => t.id)).toEqual([
+      'app:build',
+    ]);
   });
 });

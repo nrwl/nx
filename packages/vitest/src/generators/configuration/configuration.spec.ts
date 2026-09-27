@@ -11,9 +11,9 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { configurationGenerator } from './configuration';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
 }));
@@ -166,7 +166,7 @@ export default defineConfig({
 });
 `;
     tree.write('vitest.config.ts', rootConfig);
-    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     await configurationGenerator(tree, {
       project: 'mylib',
@@ -193,7 +193,7 @@ export default defineConfig({
 export default defineConfig(() => ({ test: { globals: true } }));
 `;
     tree.write('vitest.config.ts', rootConfig);
-    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     await configurationGenerator(tree, {
       project: 'mylib',
@@ -224,7 +224,7 @@ export default defineConfig({
 });
 `;
     tree.write('vitest.config.ts', rootConfig);
-    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     await configurationGenerator(tree, {
       project: 'mylib',
@@ -255,7 +255,7 @@ export default defineConfig({
 });
 `;
     tree.write('vite.config.ts', viteConfig);
-    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     await configurationGenerator(tree, {
       project: 'mylib',
@@ -286,7 +286,7 @@ export default defineConfig({
 });
 `;
     tree.write('vite.config.ts', viteConfig);
-    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     await configurationGenerator(tree, {
       project: 'mylib',
@@ -319,7 +319,7 @@ export default defineConfig({
 export default defineConfig(() => ({ plugins: [] }));
 `
     );
-    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     await configurationGenerator(tree, {
       project: 'mylib',

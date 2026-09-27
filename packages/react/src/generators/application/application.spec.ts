@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   detectPackageManager,
@@ -20,20 +21,20 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    createProjectGraphAsync: jest
+    createProjectGraphAsync: vi
       .fn()
       .mockImplementation(() => Promise.resolve(projectGraph)),
-    detectPackageManager: jest.fn(),
+    detectPackageManager: vi.fn(),
   };
 });
 
@@ -52,17 +53,19 @@ describe('app', () => {
     strict: true,
     addPlugin: true,
   };
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
-  beforeEach(() => {
+  beforeEach(async () => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
-    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
-      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    const actual =
+      await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
+    (detectPackageManager as Mock).mockImplementation(
+      actual.detectPackageManager
     );
   });
 
@@ -1574,7 +1577,7 @@ describe('app', () => {
     });
 
     it('should add project to workspaces when using TS solution (pnpm)', async () => {
-      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      (detectPackageManager as Mock).mockReturnValue('pnpm');
       updateJson(appTree, 'package.json', (json) => {
         delete json.workspaces;
         return json;

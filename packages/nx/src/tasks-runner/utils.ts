@@ -541,6 +541,21 @@ export function getCustomHasher(
   return factory ? factory() : null;
 }
 
+/**
+ * `taskGraph` pruned to `required`, which must already hold its dependencies.
+ * Unknown ids are ignored: a sync generator can remove a task after selection.
+ */
+export function pruneToSelectedTasks(
+  taskGraph: TaskGraph,
+  required: Iterable<string>
+): TaskGraph {
+  const keep = new Set(required);
+  return removeTasksFromTaskGraph(
+    taskGraph,
+    Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))
+  );
+}
+
 export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]

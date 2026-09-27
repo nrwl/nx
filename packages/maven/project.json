@@ -13,6 +13,13 @@
     },
     "copy-assets": {
       "dependsOn": ["maven-batch-runner:_package"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "tags": ["maven:dev.nx.maven"],

@@ -54,7 +54,10 @@ export function servePostTargetTransformerFactory(
   };
 }
 
-type RspackConfigDevServerOptions = RspackOptionsNormalized['devServer'];
+type RspackConfigDevServerOptions = Exclude<
+  RspackOptionsNormalized['devServer'],
+  false
+>;
 type ExtractedOptions = {
   default: RspackConfigDevServerOptions;
   [configName: string]: RspackConfigDevServerOptions;

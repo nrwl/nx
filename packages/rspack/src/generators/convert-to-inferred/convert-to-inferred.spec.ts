@@ -12,7 +12,11 @@ import {
   type Tree,
   detectPackageManager,
 } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -23,12 +27,12 @@ import { getLockFileName } from '@nx/js';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -69,39 +73,29 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-jest.mock('nx/src/devkit-internals', () => {
-  // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
-  const getActual = () =>
-    jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
-  const getActualDevkitInternals = () =>
-    jest.requireActual('nx/src/devkit-internals');
-
-  return new Proxy(
-    {},
-    {
-      get(target, prop) {
-        if (prop === 'getExecutorInformation') {
-          // Read the executor schema from source so this unit test does not
-          // depend on @nx/rspack being built. executors.json points `schema`
-          // at ./dist (only present after copy-assets); readTargetOptions only
-          // consumes `schema`.
-          return jest.fn().mockImplementation((_pkg, executorName) => ({
-            schema: JSON.parse(
-              readFileSync(
-                join(__dirname, '../../executors', executorName, 'schema.json'),
-                'utf-8'
-              )
-            ),
-          }));
-        }
-        if (prop === 'retrieveProjectConfigurations') {
-          return getActual().retrieveProjectConfigurations;
-        }
-        // For all other properties, return from the actual module
-        return getActualDevkitInternals()[prop];
-      },
-    }
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
+  const { retrieveProjectConfigurations } = await vi.importActual<any>(
+    'nx/src/project-graph/utils/retrieve-workspace-files'
   );
+  return {
+    ...actual,
+    retrieveProjectConfigurations,
+    // Read the executor schema from source so this unit test does not
+    // depend on @nx/rspack being built. executors.json points `schema`
+    // at ./dist (only present after copy-assets); readTargetOptions only
+    // consumes `schema`.
+    getExecutorInformation: vi
+      .fn()
+      .mockImplementation((_pkg, executorName) => ({
+        schema: JSON.parse(
+          readFileSync(
+            join(__dirname, '../../executors', executorName, 'schema.json'),
+            'utf-8'
+          )
+        ),
+      })),
+  };
 });
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
@@ -163,9 +157,12 @@ function writeRspackConfig(
 ) {
   tree.write(`${projectRoot}/rspack.config.js`, rspackConfig);
   fs.createFileSync(`${projectRoot}/rspack.config.js`, rspackConfig);
-  jest.doMock(join(fs.tempDir, projectRoot, 'rspack.config.js'), () => ({}), {
-    virtual: true,
-  });
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
+    join(fs.tempDir, projectRoot, 'rspack.config.js'),
+    {}
+  );
 }
 
 function createProject(
@@ -283,7 +280,8 @@ describe('convert-to-inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    resetCjsMocks();
+    vi.resetModules();
   });
 
   describe('--project', () => {
