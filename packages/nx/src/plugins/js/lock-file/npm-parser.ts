@@ -16,6 +16,7 @@ import {
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import { findNodeMatchingVersion } from './project-graph-pruning';
 
 /**
  * NPM
@@ -378,11 +379,18 @@ function findTarget(
     return fallback;
   }
   // Walk one level up the nesting chain by dropping the trailing
-  // `node_modules/<pkg>` segment. Slash-index arithmetic avoids the
-  // split/slice/join array allocation on every hop.
+  // `node_modules/<pkg>` segment. From a workspace directory, step to its
+  // parent directory instead: a workspace nested in another resolves through
+  // the outer one's node_modules before the root's. Slash-index arithmetic
+  // avoids the split/slice/join array allocation on every hop.
   const lastNodeModules = sourcePath.lastIndexOf('node_modules/');
   return findTarget(
-    lastNodeModules === -1 ? '' : sourcePath.substring(0, lastNodeModules),
+    lastNodeModules === -1
+      ? sourcePath.substring(
+          0,
+          sourcePath.lastIndexOf('/', sourcePath.length - 2) + 1
+        )
+      : sourcePath.substring(0, lastNodeModules),
     keyMap,
     targetName,
     versionRange,
@@ -466,7 +474,7 @@ export function stringifyNpmLockfile(
   const { lockfileVersion } = JSON.parse(rootLockFileContent) as NpmLockFile;
   const workspaceModulesFromGraph = getWorkspacePackagesFromGraph(graph);
 
-  const mappedPackages = mapSnapshots(rootLockFile, graph);
+  const mappedPackages = mapSnapshots(rootLockFile, graph, packageJson);
   const workspaceModules = mapWorkspaceModules(
     packageJson,
     rootLockFile,
@@ -518,7 +526,11 @@ function mapWorkspaceModules(
   // Walk transitive workspace deps so every workspace package
   // copy-workspace-modules writes to disk has matching lockfile entries.
   // Without this, `npm ci` errors with "Missing: <pkg> from lock file".
-  const queue: string[] = Object.keys(packageJson.dependencies ?? {});
+  // Seed from every section copy-workspace-modules copies a module from.
+  const queue: string[] = [
+    ...WORKSPACE_DEP_TYPES,
+    'devDependencies' as const,
+  ].flatMap((depType) => Object.keys(packageJson[depType] ?? {}));
   const visited = new Set<string>();
   while (queue.length > 0) {
     const pkgName = queue.shift()!;
@@ -613,13 +625,16 @@ function getPackageParent(
 type MappedPackage = {
   path: string;
   name: string;
+  // the graph node placed at `path`
+  node?: string;
   valueV3?: NpmDependencyV3;
   valueV1?: NpmDependencyV1;
 };
 
 function mapSnapshots(
   rootLockFile: NpmLockFile,
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  packageJson: NormalizedPackageJson
 ): MappedPackage[] {
   const nestedNodes = new Set<ProjectGraphExternalNode>();
   const visitedNodes = new Map<
@@ -631,15 +646,18 @@ function mapSnapshots(
   >();
   const remappedPackages: Map<string, MappedPackage> = new Map();
   const packageIndex = buildV3Index(rootLockFile.packages);
+  const rootNodes = getRootNodes(graph, packageJson);
 
   // add first level children
   Object.values(graph.externalNodes).forEach((node) => {
-    if (node.name === `npm:${node.data.packageName}`) {
+    if (rootNodes.get(node.data.packageName) === node) {
       const mappedPackage = mapPackage(
         rootLockFile,
         packageIndex,
         node.data.packageName,
-        node.data.version
+        node.data.version,
+        '',
+        node.name
       );
       remappedPackages.set(mappedPackage.path, mappedPackage);
       visitedNodes.set(node, {
@@ -668,7 +686,135 @@ function mapSnapshots(
   } else {
     remappedPackagesArray = Array.from(remappedPackages.values());
   }
-  return remappedPackagesArray.sort((a, b) => a.path.localeCompare(b.path));
+  return repairResolution(
+    remappedPackagesArray,
+    graph,
+    rootLockFile,
+    packageIndex
+  ).sort((a, b) => a.path.localeCompare(b.path));
+}
+
+/**
+ * The version placed at `node_modules/<name>`: the one the pruned package
+ * depends on directly, as npm gives its root package, otherwise the version the
+ * root lock file hoisted. In a workspace npm nests a member's own dependency
+ * under the member when another one holds the root slot; the pruned package is
+ * the root here, so its version takes the slot, and the hoisted version it
+ * displaces is nested below its dependents like any other.
+ */
+function getRootNodes(
+  graph: ProjectGraph,
+  packageJson: NormalizedPackageJson
+): Map<string, ProjectGraphExternalNode> {
+  const rootNodes = new Map<string, ProjectGraphExternalNode>();
+  const declared = {
+    ...packageJson.peerDependencies,
+    ...packageJson.optionalDependencies,
+    ...packageJson.devDependencies,
+    ...packageJson.dependencies,
+  };
+  for (const [name, versionExpr] of Object.entries(declared)) {
+    const node = findNodeMatchingVersion(graph, name, versionExpr);
+    if (node) {
+      rootNodes.set(name, node);
+    }
+  }
+  for (const node of Object.values(graph.externalNodes)) {
+    if (
+      node.name === `npm:${node.data.packageName}` &&
+      !rootNodes.has(node.data.packageName)
+    ) {
+      rootNodes.set(node.data.packageName, node);
+    }
+  }
+  return rootNodes;
+}
+
+/**
+ * Nesting each version under its dependents and then elevating it as far as it
+ * goes never checks what a package resolves from where it lands, so a nearer
+ * copy of a name can shadow the version it depends on: z@1 nested under x
+ * picks up x's m@1 instead of the m@2 it needs. Where a package's dependency
+ * resolves to another version, or to nothing, nest the version it depends on
+ * directly under it. That copy can shadow the name for packages below it, so
+ * those are checked again. Peer dependencies are left alone: a copy of a peer
+ * under every dependent would duplicate it rather than share it.
+ */
+function repairResolution(
+  mappedPackages: MappedPackage[],
+  graph: ProjectGraph,
+  rootLockFile: NpmLockFile,
+  packageIndex: V3Index
+): MappedPackage[] {
+  const placed = new Map(mappedPackages.map((p) => [p.path, p]));
+  const queue = Array.from(placed.keys());
+  while (queue.length) {
+    const path = queue.pop();
+    const mapped = placed.get(path);
+    if (!mapped?.node || !graph.externalNodes[mapped.node]) {
+      continue;
+    }
+    const declared = new Set(
+      Object.keys({
+        ...mapped.valueV3?.dependencies,
+        ...mapped.valueV3?.optionalDependencies,
+        ...mapped.valueV1?.requires,
+      })
+    );
+    const targets = new Map<string, ProjectGraphExternalNode[]>();
+    for (const { target } of graph.dependencies[mapped.node] ?? []) {
+      const targetNode = graph.externalNodes[target];
+      const name = targetNode?.data.packageName;
+      if (!targetNode || !declared.has(name)) {
+        continue;
+      }
+      targets.set(name, [...(targets.get(name) ?? []), targetNode]);
+    }
+    for (const [name, candidates] of targets) {
+      const resolved = placed.get(resolvePlacedPath(placed, path, name));
+      if (resolved && candidates.some((c) => c.name === resolved.node)) {
+        continue;
+      }
+      const copy = mapPackage(
+        rootLockFile,
+        packageIndex,
+        name,
+        candidates[0].data.version,
+        path + '/',
+        candidates[0].name
+      );
+      placed.set(copy.path, copy);
+      queue.push(copy.path);
+      for (const below of placed.keys()) {
+        if (below !== copy.path && below.startsWith(`${path}/node_modules/`)) {
+          queue.push(below);
+        }
+      }
+    }
+  }
+  return Array.from(placed.values());
+}
+
+// Node's lookup from a package at `path`: its own node_modules, then each
+// enclosing package's, then the root's.
+function resolvePlacedPath(
+  placed: Map<string, MappedPackage>,
+  path: string,
+  name: string
+): string | undefined {
+  for (let dir = path; ;) {
+    const candidate = dir
+      ? `${dir}/node_modules/${name}`
+      : `node_modules/${name}`;
+    if (placed.has(candidate)) {
+      return candidate;
+    }
+    if (!dir) {
+      return undefined;
+    }
+    const parent = dir.lastIndexOf('/node_modules/');
+    dir = parent === -1 ? '' : dir.slice(0, parent);
+  }
 }
 
 function mapPackage(
@@ -676,7 +822,8 @@ function mapPackage(
   packageIndex: V3Index,
   packageName: string,
   version: string,
-  parentPath = ''
+  parentPath = '',
+  node?: string
 ): MappedPackage {
   const lockfileVersion = rootLockFile.lockfileVersion;
 
@@ -695,6 +842,7 @@ function mapPackage(
   return {
     path: parentPath + `node_modules/${packageName}`,
     name: packageName,
+    node,
     valueV1,
     valueV3,
   };
@@ -721,16 +869,20 @@ function nestMappedPackages(
   }
 
   nestedNodes.forEach((node) => {
+    // Only a package places another: the pruned package is the root, and the
+    // edges of workspace projects, which the pruned graph still carries, lead
+    // nowhere in the pruned tree.
+    const parents = invertedGraph.dependencies[node.name]
+      .map(({ target }) => target)
+      .filter((target) => invertedGraph.externalNodes[target]);
     if (!visitedNodes.has(node)) {
       visitedNodes.set(node, {
         packagePaths: new Set(),
-        unresolvedParents: new Set(
-          invertedGraph.dependencies[node.name].map(({ target }) => target)
-        ),
+        unresolvedParents: new Set(parents),
       });
     }
 
-    invertedGraph.dependencies[node.name].forEach(({ target }) => {
+    parents.forEach((target) => {
       if (!visitedNodes.get(node).unresolvedParents.has(target)) {
         return;
       }
@@ -746,12 +898,14 @@ function nestMappedPackages(
             packageIndex,
             node.data.packageName,
             node.data.version,
-            path + '/'
+            path + '/',
+            node.name
           );
           result.set(mappedPackage.path, mappedPackage);
           visitedNodes.get(node).packagePaths.add(mappedPackage.path);
-          visitedNodes.get(node).unresolvedParents.delete(target);
         });
+        // a parent placed nowhere contributes no path, but no longer blocks
+        visitedNodes.get(node).unresolvedParents.delete(target);
       }
     });
     if (!visitedNodes.get(node).unresolvedParents.size) {
@@ -760,12 +914,9 @@ function nestMappedPackages(
   });
 
   if (initialSize === nestedNodes.size) {
-    throw new Error(
-      [
-        'Following packages could not be mapped to the NPM lockfile:',
-        ...Array.from(nestedNodes).map((n) => `- ${n.name}`),
-      ].join('\n')
-    );
+    // What is left waits on parents that are never placed; repairResolution
+    // places whatever a placed package still needs.
+    return;
   } else {
     nestMappedPackages(
       invertedGraph,

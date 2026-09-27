@@ -1147,6 +1147,60 @@ describe('NPM lock file utility', () => {
       );
       expect(Object.keys(externalNodes).length).toEqual(5);
     });
+
+    it('should resolve a nested workspace through the outer workspace node_modules', () => {
+      const lockFileContent = JSON.stringify({
+        name: 'root',
+        lockfileVersion: 3,
+        packages: {
+          '': { name: 'root', workspaces: ['apps/outer', 'apps/outer/inner'] },
+          'apps/outer': { name: 'outer', version: '0.0.1' },
+          'apps/outer/inner': {
+            name: 'inner',
+            version: '0.0.1',
+            dependencies: { a: '2.0.0' },
+          },
+          'apps/outer/inner/node_modules/a': {
+            version: '2.0.0',
+            dependencies: { b: '^2.0.0' },
+          },
+          'apps/outer/node_modules/b': { version: '2.0.0' },
+          'node_modules/a': { version: '1.0.0', dependencies: { b: '^1.0.0' } },
+          'node_modules/b': { version: '1.0.0' },
+        },
+      });
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        lockFileContent,
+        hash
+      );
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: { nonProjectFiles: [], projectFileMap: {} },
+        filesToProcess: { nonProjectFiles: [], projectFileMap: {} },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+
+      const dependencies = getNpmLockfileDependencies(
+        lockFileContent,
+        hash,
+        ctx,
+        keyMap
+      );
+
+      // Node resolves b from apps/outer/node_modules before the root's b@1
+      expect(dependencies).toContainEqual(
+        expect.objectContaining({
+          source: 'npm:a@2.0.0',
+          target: 'npm:b@2.0.0',
+        })
+      );
+      expect(dependencies).toContainEqual(
+        expect.objectContaining({ source: 'npm:a', target: 'npm:b' })
+      );
+    });
   });
 
   describe('mixed keys', () => {
@@ -1808,6 +1862,208 @@ describe('NPM lock file utility', () => {
 
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
+    });
+
+    it('should include workspace modules the app declares outside dependencies', () => {
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': { name: 'test-app', version: '1.0.0' },
+          'libs/lib-a': { name: '@myorg/lib-a', version: '0.0.1' },
+          'node_modules/@myorg/lib-a': { resolved: 'libs/lib-a', link: true },
+          'libs/lib-b': { name: '@myorg/lib-b', version: '0.0.1' },
+          'node_modules/@myorg/lib-b': { resolved: 'libs/lib-b', link: true },
+        },
+      };
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        devDependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+        optionalDependencies: { '@myorg/lib-b': 'file:libs/lib-b' },
+      };
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {},
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages).toHaveProperty('node_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('node_modules/@myorg/lib-b');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
+    });
+  });
+
+  describe('resolution in the pruned lock file', () => {
+    const pkg = (name: string, version: string, dependencies?: object) => ({
+      version,
+      resolved: `https://registry.npmjs.org/${name}/-/${name}-${version}.tgz`,
+      integrity: `sha512-${name}-${version}`,
+      ...(dependencies && { dependencies }),
+    });
+
+    function buildGraph(lockFile: object): ProjectGraph {
+      const hash = uniq('mock-hash');
+      const content = JSON.stringify(lockFile);
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        content,
+        hash
+      );
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: { nonProjectFiles: [], projectFileMap: {} },
+        filesToProcess: { nonProjectFiles: [], projectFileMap: {} },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const builder = new ProjectGraphBuilder({
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      });
+      for (const dep of getNpmLockfileDependencies(
+        content,
+        hash,
+        ctx,
+        keyMap
+      )) {
+        builder.addDependency(dep.source, dep.target, dep.type);
+      }
+      return builder.getUpdatedProjectGraph();
+    }
+
+    // Node's lookup: <dir>/node_modules/<name> for the package's own path and
+    // every package path above it, then the root.
+    function resolvedVersion(
+      packages: Record<string, { version?: string }>,
+      from: string,
+      name: string
+    ) {
+      for (let dir = from; ;) {
+        const path = dir
+          ? `${dir}/node_modules/${name}`
+          : `node_modules/${name}`;
+        if (packages[path]) return packages[path].version;
+        if (!dir) return undefined;
+        const parent = dir.lastIndexOf('/node_modules/');
+        dir = parent === -1 ? '' : dir.slice(0, parent);
+      }
+    }
+
+    function prune(lockFile: object, packageJson: any) {
+      const graph = buildGraph(lockFile);
+      return JSON.parse(
+        stringifyNpmLockfile(
+          pruneProjectGraph(graph, packageJson),
+          JSON.stringify(lockFile),
+          packageJson
+        )
+      ).packages;
+    }
+
+    it("gives a workspace's own nested version the root slot and nests the one it displaces", () => {
+      // npm nests nested's debug@2.6.9 under its workspace because other's
+      // debug@4 holds the root slot, which agent-base in nested also needs.
+      const lockFile = {
+        name: 'repo',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+          '': { name: 'repo', workspaces: ['apps/*'] },
+          'apps/nested': {
+            name: 'nested',
+            version: '0.0.1',
+            dependencies: { debug: '2.6.9', 'agent-base': '6.0.2' },
+          },
+          'apps/nested/node_modules/debug': pkg('debug', '2.6.9', {
+            ms: '2.0.0',
+          }),
+          'apps/nested/node_modules/ms': pkg('ms', '2.0.0'),
+          'apps/other': {
+            name: 'other',
+            version: '0.0.1',
+            dependencies: { debug: '4.3.4' },
+          },
+          'node_modules/agent-base': pkg('agent-base', '6.0.2', {
+            debug: '4',
+          }),
+          'node_modules/debug': pkg('debug', '4.3.4', { ms: '2.1.2' }),
+          'node_modules/ms': pkg('ms', '2.1.2'),
+          'node_modules/nested': { resolved: 'apps/nested', link: true },
+          'node_modules/other': { resolved: 'apps/other', link: true },
+        },
+      };
+
+      const packages = prune(lockFile, {
+        name: 'nested',
+        version: '0.0.1',
+        dependencies: { debug: '2.6.9', 'agent-base': '6.0.2' },
+      });
+
+      expect(packages['node_modules/debug'].version).toEqual('2.6.9');
+      expect(resolvedVersion(packages, 'node_modules/debug', 'ms')).toEqual(
+        '2.0.0'
+      );
+      expect(
+        resolvedVersion(packages, 'node_modules/agent-base', 'debug')
+      ).toEqual('4.3.4');
+      expect(
+        resolvedVersion(
+          packages,
+          'node_modules/agent-base/node_modules/debug',
+          'ms'
+        )
+      ).toEqual('2.1.2');
+    });
+
+    it('nests a copy where a nearer version would shadow the one a package resolves', () => {
+      // z@1 sits under x next to x's own m@1, so npm gave z its own m@2.
+      const lockFile = {
+        name: 'app',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+          '': {
+            name: 'app',
+            dependencies: { m: '2.0.0', x: '1.0.0', z: '2.0.0' },
+          },
+          'node_modules/m': pkg('m', '2.0.0'),
+          'node_modules/x': pkg('x', '1.0.0', { m: '1.0.0', z: '1.0.0' }),
+          'node_modules/x/node_modules/m': pkg('m', '1.0.0'),
+          'node_modules/x/node_modules/z': pkg('z', '1.0.0', { m: '^2.0.0' }),
+          'node_modules/x/node_modules/z/node_modules/m': pkg('m', '2.0.0'),
+          'node_modules/z': pkg('z', '2.0.0'),
+        },
+      };
+
+      const packages = prune(lockFile, {
+        name: 'app',
+        dependencies: { m: '2.0.0', x: '1.0.0', z: '2.0.0' },
+      });
+
+      expect(
+        resolvedVersion(packages, 'node_modules/x/node_modules/z', 'm')
+      ).toEqual('2.0.0');
+      expect(resolvedVersion(packages, 'node_modules/x', 'm')).toEqual('1.0.0');
     });
   });
 });
