@@ -65,13 +65,16 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
       : readBunLockFile(lockFilePath);
   const lockFileHash = getLockFileHash(lockFileContents);
 
-  if (!lockFileNeedsReprocessing(lockFileHash, externalNodesHashFile)) {
-    const { nodes, keyMap } = readCachedExternalNodes();
-    cachedExternalNodes = nodes;
-    cachedKeyMap = keyMap;
+  const cached = readCache<ExternalNodesCache>(
+    externalNodesCache,
+    lockFileHash
+  );
+  if (cached) {
+    cachedExternalNodes = cached.nodes;
+    cachedKeyMap = deserializeKeyMap(cached.keyMap, cached.nodes);
 
     return {
-      externalNodes: nodes,
+      externalNodes: cached.nodes,
     };
   }
 
@@ -84,7 +87,10 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
   cachedExternalNodes = externalNodes;
   cachedKeyMap = keyMap;
 
-  writeExternalNodesCache(lockFileHash, externalNodes, keyMap);
+  writeCache(externalNodesCache, lockFileHash, {
+    nodes: externalNodes,
+    keyMap: serializeKeyMap(keyMap),
+  });
 
   return {
     externalNodes,
@@ -119,8 +125,12 @@ export const createDependencies: CreateDependencies = (
       ...Object.keys(ctx.externalNodes),
     ]);
 
-    if (!lockFileNeedsReprocessing(dependenciesHash, dependenciesHashFile)) {
-      lockfileDependencies = readCachedDependencies();
+    const cachedDependencies = readCache<RawProjectGraphDependency[]>(
+      dependenciesCache,
+      dependenciesHash
+    );
+    if (cachedDependencies) {
+      lockfileDependencies = cachedDependencies;
     } else {
       lockfileDependencies = getLockFileDependencies(
         packageManager,
@@ -130,7 +140,7 @@ export const createDependencies: CreateDependencies = (
         cachedKeyMap
       );
 
-      writeDependenciesCache(dependenciesHash, lockfileDependencies);
+      writeCache(dependenciesCache, dependenciesHash, lockfileDependencies);
     }
   }
 
@@ -169,7 +179,7 @@ function serializeKeyMap(keyMap: Map<string, any>): Record<string, any> {
   return serialized;
 }
 
-// Deserialize keyMap from JSON format using ctx.externalNodes
+// Deserialize keyMap from JSON format
 function deserializeKeyMap(
   serialized: Record<string, any>,
   externalNodes: Record<string, ProjectGraphExternalNode>
@@ -195,65 +205,29 @@ function deserializeKeyMap(
   return keyMap;
 }
 
-function lockFileNeedsReprocessing(lockHash: string, hashFilePath: string) {
-  try {
-    return readFileSync(hashFilePath).toString() !== lockHash;
-  } catch {
-    return true;
-  }
-}
-
-// External nodes cache functions
-function writeExternalNodesCache(
-  hash: string,
-  nodes: ProjectGraph['externalNodes'],
-  keyMap: Map<string, any>
-) {
-  const serializedKeyMap = serializeKeyMap(keyMap);
-  const cacheData = { nodes, keyMap: serializedKeyMap };
-  const content = safeStringify(cacheData);
-  if (content === undefined) {
-    logger.warn(
-      `Failed to serialize external nodes cache. Skipping cache write.`
-    );
-    tryRemoveFile(externalNodesCache);
-    tryRemoveFile(externalNodesHashFile);
-    return;
-  }
-  safeWriteFileCache(externalNodesCache, content);
-  if (existsSync(externalNodesCache)) {
-    safeWriteFileCache(externalNodesHashFile, hash);
-  }
-}
-
-function readCachedExternalNodes(): {
+interface ExternalNodesCache {
   nodes: ProjectGraph['externalNodes'];
-  keyMap: Map<string, any>;
-} {
-  const { nodes, keyMap } = JSON.parse(
-    readFileSync(externalNodesCache, 'utf-8')
-  );
-  return { nodes, keyMap: deserializeKeyMap(keyMap, nodes) };
+  keyMap: Record<string, any>;
 }
 
-// Dependencies cache functions
-function writeDependenciesCache(
-  hash: string,
-  dependencies: RawProjectGraphDependency[]
-) {
-  const content = safeStringify(dependencies);
+function readCache<T>(path: string, key: string): T | undefined {
+  try {
+    const cache = JSON.parse(readFileSync(path, 'utf-8'));
+    return cache.key === key ? cache.data : undefined;
+  } catch {
+    // Another process can be mid-write, so an unreadable cache is a miss.
+    return undefined;
+  }
+}
+
+function writeCache(path: string, key: string, data: unknown) {
+  const content = safeStringify({ key, data });
   if (content === undefined) {
-    logger.warn(
-      `Failed to serialize dependencies cache. Skipping cache write.`
-    );
-    tryRemoveFile(dependenciesCache);
-    tryRemoveFile(dependenciesHashFile);
+    logger.warn(`Failed to serialize ${path}. Skipping cache write.`);
+    tryRemoveFile(path);
     return;
   }
-  safeWriteFileCache(dependenciesCache, content);
-  if (existsSync(dependenciesCache)) {
-    safeWriteFileCache(dependenciesHashFile, hash);
-  }
+  safeWriteFileCache(path, content);
 }
 
 function safeStringify(data: unknown): string | undefined {
@@ -274,24 +248,10 @@ function tryRemoveFile(path: string): void {
   }
 }
 
-function readCachedDependencies(): RawProjectGraphDependency[] {
-  return JSON.parse(readFileSync(dependenciesCache).toString());
-}
-
-// Cache file paths
-const externalNodesHashFile = join(
-  workspaceDataDirectory,
-  'lockfile-nodes.hash'
-);
-const dependenciesHashFile = join(
-  workspaceDataDirectory,
-  'lockfile-dependencies.hash'
-);
-const externalNodesCache = join(
-  workspaceDataDirectory,
-  'parsed-lock-file.nodes.json'
-);
+// Each cache file holds its key, so key and data come from one write.
+// Older Nx versions read other names with a hash file; keep these distinct.
+const externalNodesCache = join(workspaceDataDirectory, 'lockfile-nodes.json');
 const dependenciesCache = join(
   workspaceDataDirectory,
-  'parsed-lock-file.dependencies.json'
+  'lockfile-dependencies.json'
 );

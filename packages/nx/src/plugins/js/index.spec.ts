@@ -1,4 +1,10 @@
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
 
@@ -133,6 +139,29 @@ describe('nx/js/dependencies-and-lockfile', () => {
 
     expect(await createDependencies(second, secondNodes)).toEqual([
       { source: 'npm:a', target: 'npm:x', type: 'static' },
+      { source: 'npm:b', target: 'npm:x@2.0.0', type: 'static' },
+    ]);
+  });
+
+  it('should recompute a cache that another process left partially written', async () => {
+    writeWorkspace({ a: '1.0.0', b: '1.0.0' });
+    const first = await loadPluginInNewProcess();
+    const firstNodes = await createExternalNodes(first);
+    await createDependencies(first, firstNodes);
+
+    for (const file of readdirSync(workspaceDataDirectory)) {
+      if (file.endsWith('.json')) {
+        const path = join(workspaceDataDirectory, file);
+        writeFileSync(path, readFileSync(path, 'utf-8').slice(0, 100));
+      }
+    }
+
+    const second = await loadPluginInNewProcess();
+    const secondNodes = await createExternalNodes(second);
+
+    expect(secondNodes).toEqual(firstNodes);
+    expect(await createDependencies(second, secondNodes)).toEqual([
+      { source: 'npm:a', target: 'npm:x@1.0.0', type: 'static' },
       { source: 'npm:b', target: 'npm:x@2.0.0', type: 'static' },
     ]);
   });
