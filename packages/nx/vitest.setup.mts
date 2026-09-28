@@ -166,6 +166,8 @@ vi.doMock(workspaceContextPath, async () => {
     ),
     updateContextWithChangedFiles: realFn('updateContextWithChangedFiles'),
     trackedFilesInContext: guarded('trackedFilesInContext', () => []),
+    recordOutputsInContext: guarded('recordOutputsInContext', () => undefined),
+    outputsUnchangedInContext: guarded('outputsUnchangedInContext', () => []),
     updateFilesInContext: realFn('updateFilesInContext'),
     updateProjectFiles: realFn('updateProjectFiles'),
     resetWorkspaceContext: realFn('resetWorkspaceContext'),
