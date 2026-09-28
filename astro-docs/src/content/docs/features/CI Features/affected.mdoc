@@ -289,7 +289,7 @@ Affected tasks (3):
     - reads the outputs of ui:build, which the change reached
     - traced to libs/ui/src/index.ts
 
-3 affected tasks and 2 tasks they depend on. Not affected: 9 of 12 build tasks.
+3 out of 12 build tasks were affected.
 ```
 
 The output follows the order the run goes in, and the tasks you asked for always come last:
@@ -304,7 +304,7 @@ Each entry lists every reason that applies, so a task reached through two differ
 An entry reached only through other entries ends with the changed file its chain starts from.
 To follow the chain step by step, look up the task named in a reason.
 
-The last line counts the tasks Nx runs only so the selected ones can run, and how many tasks of your targets the change didn't affect.
+The last line says how many tasks of your targets the change affected.
 
 Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
 The JSON has four keys:
@@ -314,7 +314,7 @@ The JSON has four keys:
 - `touched` lists which of those your change reached directly.
 - `required` maps each dependency to the tasks that need it.
 
-`nx show projects --affected -t build --explain` explains its answer the same way. It reports a selection rather than running one, so it leaves off the Dependencies layer and the last line.
+`nx show projects --affected -t build --explain` explains its answer the same way. It reports a selection rather than running one, so it leaves off the Dependencies layer.
 
 ## Best paired with remote caching and distribution
 

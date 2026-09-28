@@ -100,7 +100,7 @@ describe('nx affected --explain', () => {
       ...args,
     });
 
-  it('reports the tasks and their closure, then exits without running', async () => {
+  it('reports the tasks, then exits without running', async () => {
     tasks.enabled = true;
     await expect(run({ explain: true })).rejects.toThrow('exit 0');
 
@@ -108,9 +108,7 @@ describe('nx affected --explain', () => {
       expect.objectContaining({ explain: true })
     );
     expect(runCommand).not.toHaveBeenCalled();
-    expect(written.join('')).toContain(
-      '2 affected tasks and 1 task they depend on.'
-    );
+    expect(written.join('')).toContain('2 affected tasks.');
   });
 
   it('prints the task explanation as JSON for stdout', async () => {

@@ -378,11 +378,6 @@ describe('show projects', () => {
     expect(console.log).toHaveBeenCalledWith('proj2');
     expect(console.log).toHaveBeenCalledTimes(2);
   });
-  /**
-   * `nx affected` runs the closure and says how big it is. This command answers
-   * a question and runs nothing, so naming a closure it will not execute would
-   * describe a run that is not happening.
-   */
   // Without a target there is no task selection, and nothing to explain.
   it('refuses to explain without a target', async () => {
     await expect(
@@ -392,30 +387,6 @@ describe('show projects', () => {
         files: ['libs/ui/src/x.ts'],
       } as any)
     ).rejects.toThrow('needs task selection');
-  });
-
-  it('does not report the dependency closure when explaining', async () => {
-    graph = new GraphBuilder()
-      .addProjectConfiguration({ root: 'libs/ui', name: 'ui' }, 'lib')
-      .addProjectConfiguration({ root: 'libs/core', name: 'core' }, 'lib')
-      .build();
-
-    const written: string[] = [];
-    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: any) => {
-      written.push(String(chunk));
-      return true;
-    });
-
-    await showProjectsHandler({
-      affected: true,
-      withTarget: ['build'],
-      explain: true,
-      files: ['libs/ui/src/x.ts'],
-    } as any);
-
-    const printed = written.join('');
-    expect(printed).toContain('1 affected task.');
-    expect(printed).not.toContain('depend on');
   });
 });
 

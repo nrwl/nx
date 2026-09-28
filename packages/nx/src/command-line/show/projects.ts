@@ -76,8 +76,7 @@ export async function showProjectsHandler(
         explain: isExplaining(nxArgs.explain),
       });
       if (isExplaining(nxArgs.explain)) {
-        // Runs nothing, so neither what a run would need first nor how many
-        // tasks it would drag in is part of the answer.
+        // Runs nothing, so what a run would need first is not part of the answer.
         const { required: _, ...explanation } = affectedTasks.explanation;
         printAffectedExplanation(
           explanation,

@@ -52,32 +52,32 @@ describe('formatAffectedExplanation', () => {
   };
   const selected = { affected: reasons, upstream: {}, touched: ['ui:build'] };
 
-  /**
-   * Only the command that is about to run the closure reports it. `nx affected`
-   * does; `nx show projects` answers a question and runs nothing, so a count of
-   * what it would drag in would describe a run that is not happening.
-   */
-  it('names the closure when the caller is going to run it', () => {
-    expect(
-      formatAffectedExplanation(selected, 'Affected tasks', 149)
-    ).toContain('2 affected tasks and 149 tasks they depend on.');
-  });
-
-  it('says how many requested tasks were not affected', () => {
+  // Out of the requested targets' tasks, so it says what selection saved.
+  it('counts what was affected out of the requested tasks', () => {
     const out = formatAffectedExplanation(
-      { ...selected, requested: { targets: ['build'], total: 58 } },
-      'Affected tasks',
-      149
+      { ...selected, requested: { targets: ['build', 'test'], total: 58 } },
+      'Affected tasks'
     );
-    expect(out).toContain(
-      '2 affected tasks and 149 tasks they depend on. Not affected: 56 of 58 build tasks.'
-    );
+    expect(out).toContain('2 out of 58 build, test tasks were affected.');
   });
 
-  it('reports the selection alone when no closure is passed', () => {
-    const out = formatAffectedExplanation(selected, 'Affected tasks');
-    expect(out).toContain('2 affected tasks.');
-    expect(out).not.toContain('depend on');
+  it('agrees in number with a single task', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: { 'ui:build': reasons['ui:build'] },
+        upstream: {},
+        touched: ['ui:build'],
+        requested: { targets: ['build'], total: 1 },
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain('1 out of 1 build task was affected.');
+  });
+
+  it('reports the selection alone without a requested count', () => {
+    expect(formatAffectedExplanation(selected, 'Affected tasks')).toContain(
+      '2 affected tasks.'
+    );
   });
 
   // A trace: however long the chain above grows, the reader's own task stays
@@ -128,8 +128,7 @@ describe('formatAffectedExplanation', () => {
           'tools:build': ['app:build'],
         },
       },
-      'Affected tasks',
-      4
+      'Affected tasks'
     );
     const at = (text: string) => out.indexOf(text);
     expect(out).toContain('Dependencies, needed to run first (2):');
@@ -142,7 +141,7 @@ describe('formatAffectedExplanation', () => {
     // Touched targets before the ones reached through them.
     expect(at('  lib:build')).toBeLessThan(at('  app:build'));
     expect(out).toContain('    - touched: its own inputs changed');
-    expect(out).toContain('2 affected tasks and 4 tasks they depend on.');
+    expect(out).toContain('2 affected tasks.');
   });
 
   // The reader's task sits at the bottom, so it names the file its chain

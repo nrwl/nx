@@ -112,12 +112,7 @@ export function formatAffectedExplanation(
     required = {},
     requested,
   }: AffectedExplanation,
-  heading: string,
-  /**
-   * Tasks that will run only to satisfy the selected ones. Absent unless the
-   * caller is about to run them, so `show projects` never passes it.
-   */
-  dependencyCount?: number
+  heading: string
 ): string {
   const names = Object.keys(affected).sort();
   if (!names.length) {
@@ -199,22 +194,14 @@ export function formatAffectedExplanation(
     touchedFirst(names).forEach((name) => render(name, true));
   }
 
-  // Same shape as the run summary, which reports the tasks it ran and the ones
-  // it ran only to get there.
-  const plural = names.length === 1 ? 'task' : 'tasks';
-  const summary =
-    dependencyCount === undefined
-      ? `${names.length} affected ${plural}.`
-      : `${names.length} affected ${plural} and ${dependencyCount} ${
-          dependencyCount === 1 ? 'task' : 'tasks'
-        } they depend on.`;
-  // What selection saved: the requested tasks it left out.
-  const skipped = requested
-    ? ` Not affected: ${requested.total - names.length} of ${requested.total} ${requested.targets.join(', ')} ${
+  // Out of the requested targets' tasks, so the line says what selection saved.
+  const n = names.length;
+  const summary = requested
+    ? `${n} out of ${requested.total} ${requested.targets.join(', ')} ${
         requested.total === 1 ? 'task' : 'tasks'
-      }.`
-    : '';
-  lines.push(summary + skipped);
+      } ${n === 1 ? 'was' : 'were'} affected.`
+    : `${n} affected ${n === 1 ? 'task' : 'tasks'}.`;
+  lines.push(summary);
   return lines.join('\n');
 }
 

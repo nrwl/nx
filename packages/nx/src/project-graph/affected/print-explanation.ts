@@ -15,10 +15,7 @@ import {
 export function printAffectedExplanation(
   explanation: AffectedExplanation,
   heading: string,
-  destination: string | boolean | undefined,
-  /** Tasks that run only to satisfy the selected ones. Only `nx affected`
-   * runs them, so `show projects` leaves this off. */
-  dependencyCount?: number
+  destination: string | boolean | undefined
 ): void {
   if (destination === 'stdout') {
     console.log(JSON.stringify(explanation, null, 2));
@@ -30,11 +27,7 @@ export function printAffectedExplanation(
     return;
   }
 
-  const rendered = formatAffectedExplanation(
-    explanation,
-    heading,
-    dependencyCount
-  );
+  const rendered = formatAffectedExplanation(explanation, heading);
   const count = Object.keys(explanation.affected).length;
   if (!count) {
     output.log({ title: rendered });
