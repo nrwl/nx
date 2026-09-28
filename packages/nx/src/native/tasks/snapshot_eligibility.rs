@@ -9,19 +9,6 @@ use crate::native::tasks::hashers::{parse_group, validate_files_glob};
 use crate::native::tasks::types::{TaskGraph, TaskUltracacheConfiguration, UltracacheMode};
 use xxhash_rust::xxh3::Xxh3;
 
-/// Each task's ultracache configuration by task id: all the eligibility walk
-/// reads from a task, so callers need not transfer whole tasks.
-pub(crate) type UltraCacheConfig<'a> = HashMap<&'a str, Option<&'a TaskUltracacheConfiguration>>;
-
-fn borrow_ultracache(
-    tasks: &HashMap<String, Option<TaskUltracacheConfiguration>>,
-) -> UltraCacheConfig<'_> {
-    tasks
-        .iter()
-        .map(|(id, ultracache)| (id.as_str(), ultracache.as_ref()))
-        .collect()
-}
-
 /// What the eligibility walk needs beyond each task's ultracache configuration.
 /// Custom hashers are decided in JS, where executors are resolved.
 #[derive(Default)]
@@ -136,17 +123,19 @@ impl Resolved {
 
 /// Decides per task whether its entry can be hashed; each withheld task gets
 /// one diagnostic naming why. A set-level read failure yields one diagnostic
-/// and no tasks.
-pub(crate) fn resolve(
+/// and no tasks. Takes each task's id and ultracache configuration: all the
+/// walk reads from a task, so callers need not transfer whole tasks.
+pub(crate) fn resolve<'a>(
     snapshots: &IoSnapshots,
-    ultra_cache_config: &UltraCacheConfig<'_>,
+    ultra_cache_config: impl IntoIterator<Item = (&'a str, Option<&'a TaskUltracacheConfiguration>)>,
     inputs: &EligibilityInputs,
 ) -> Resolved {
     let resolution = snapshots.resolution_ref();
 
     let mut tasks = HashMap::new();
     let mut diagnostics = Vec::new();
-    let task_ids: Vec<&str> = ultra_cache_config.keys().copied().collect();
+    let ultra_cache_config: Vec<_> = ultra_cache_config.into_iter().collect();
+    let task_ids: Vec<&str> = ultra_cache_config.iter().map(|(id, _)| *id).collect();
     let entries = match snapshots.entries_for(&task_ids) {
         Ok(entries) => entries,
         Err(err) => {
@@ -161,11 +150,10 @@ pub(crate) fn resolve(
         }
     };
 
-    for task_id in task_ids {
+    for (task_id, ultracache) in ultra_cache_config {
         // `On` is the only mode that lets a recording stand in for what the
         // target declared; `Warn` and `Error` still record, but report against
         // the declaration rather than replacing it.
-        let ultracache = ultra_cache_config[task_id];
         match ultracache.and_then(|ultracache| ultracache.mode.as_ref()) {
             Some(UltracacheMode::Off) => {
                 diagnostics.push(IoSnapshotDiagnostic::task("disabled", task_id));
@@ -250,7 +238,9 @@ pub fn get_io_snapshot_report(
 ) -> IoSnapshotReport {
     resolve(
         snapshots,
-        &borrow_ultracache(&tasks),
+        tasks
+            .iter()
+            .map(|(id, ultracache)| (id.as_str(), ultracache.as_ref())),
         &options.unwrap_or_default().into(),
     )
     .report()
@@ -367,7 +357,9 @@ pub fn get_observed_io_snapshot_outputs(
 ) -> HashMap<String, Vec<String>> {
     resolve(
         snapshots,
-        &borrow_ultracache(&tasks),
+        tasks
+            .iter()
+            .map(|(id, ultracache)| (id.as_str(), ultracache.as_ref())),
         &options.unwrap_or_default().into(),
     )
     .tasks
