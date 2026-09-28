@@ -525,7 +525,7 @@ describe('orchestrator', () => {
         .mockReturnValueOnce('dirty')
         .mockReturnValue('clean');
       mockGetLatestCommitSha
-        .mockReturnValueOnce('before-sha') // before checkpoint
+        .mockReturnValueOnce('bead0005bead0005bead0005bead0005bead0005') // before checkpoint
         .mockReturnValue('face0006face0006face0006face0006face0006'); // after checkpoint and dispense ref
 
       await runOrchestratorInit({
@@ -549,10 +549,10 @@ describe('orchestrator', () => {
         sha: 'face0006face0006face0006face0006face0006',
         stepIds: [],
       });
-      // The diff base is the checkpoint, not the HEAD the user's uncommitted
-      // changes sat on top of.
+      // The diff base precedes the checkpoint, so the dependency changes the
+      // checkpoint captured are inside the run's diff.
       expect(state.gitRefAtInit).toBe(
-        'face0006face0006face0006face0006face0006'
+        'bead0005bead0005bead0005bead0005bead0005'
       );
     });
 
@@ -612,7 +612,7 @@ describe('orchestrator', () => {
         .mockReturnValueOnce('dirty')
         .mockReturnValue('clean');
       mockGetLatestCommitSha
-        .mockReturnValueOnce('before-sha')
+        .mockReturnValueOnce('bead0005bead0005bead0005bead0005bead0005')
         .mockReturnValue('face0006face0006face0006face0006face0006');
 
       await runOrchestratorInit({
@@ -1315,12 +1315,13 @@ describe('orchestrator', () => {
         .mockReturnValueOnce('dirty')
         .mockReturnValue('clean');
       mockGetLatestCommitSha
-        .mockReturnValueOnce('before-sha')
+        .mockReturnValueOnce('bead0005bead0005bead0005bead0005bead0005')
         .mockReturnValue('face0006face0006face0006face0006face0006');
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:a', 'pending')],
         createCommits: true,
         checkpointFailed: true,
+        gitRefAtInit: 'bead0005bead0005bead0005bead0005bead0005',
         plan: migrationsJson.migrations,
       });
 
@@ -1334,10 +1335,10 @@ describe('orchestrator', () => {
       const state = readRunState(dir);
       expect(state.checkpointFailed).toBe(false);
       expect(state.commits.some((c) => c.kind === 'checkpoint')).toBe(true);
-      // The late checkpoint captured what the init one missed, so the run's
-      // diffs are taken against it from here on.
+      // The late checkpoint commits on the HEAD init recorded, so the diff
+      // base already precedes it.
       expect(state.gitRefAtInit).toBe(
-        'face0006face0006face0006face0006face0006'
+        'bead0005bead0005bead0005bead0005bead0005'
       );
     });
 
@@ -7786,6 +7787,7 @@ describe('orchestrator', () => {
       opts: {
         createCommits?: boolean;
         gitRefAtInit?: string | false;
+        checkpoint?: string;
         passStatus?: MigrateStepStatus;
         issues?: MigrateRunIssue[];
       } = {}
@@ -7800,6 +7802,13 @@ describe('orchestrator', () => {
         ...(opts.gitRefAtInit === false
           ? {}
           : { gitRefAtInit: opts.gitRefAtInit ?? BASE }),
+        ...(opts.checkpoint
+          ? {
+              commits: [
+                { kind: 'checkpoint', sha: opts.checkpoint, stepIds: [] },
+              ],
+            }
+          : {}),
         ...(opts.issues ? { issues: opts.issues } : {}),
       });
     }
@@ -7848,8 +7857,32 @@ describe('orchestrator', () => {
         `\`npx nx affected --base ${BASE} -t <targets>\``
       );
       expect(instructions).toContain(`\`git diff ${BASE}\``);
+      expect(instructions).not.toContain('checkpoint');
       expect(instructions).toContain(
         `<handoff_path>\n${passHandoffPath(dir)}\n</handoff_path>`
+      );
+    });
+
+    it('tells the pass what the checkpoint commit holds when one landed', async () => {
+      const CHECKPOINT = 'c0dec0dec0dec0dec0dec0dec0dec0dec0dec0de';
+      mockGetLatestCommitSha.mockReturnValue(HEAD);
+      mockGetWorkingTreeStatus.mockReturnValue('clean');
+      const dir = afterMigrations({
+        createCommits: true,
+        checkpoint: CHECKPOINT,
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const instructions = readFileSync(
+        join(dir, 'prompts', 'step-2', 'instructions.md'),
+        'utf-8'
+      );
+      // The base still precedes the checkpoint; the agent learns which
+      // commits landed outside the run's steps.
+      expect(instructions).toContain(`nx affected --base ${BASE} -t <targets>`);
+      expect(instructions).toContain(
+        `The commits from ${BASE} up to and including the checkpoint ${CHECKPOINT} landed outside the run's steps`
       );
     });
 

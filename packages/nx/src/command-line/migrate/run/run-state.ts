@@ -289,9 +289,10 @@ export interface MigrateRunState {
   // Whether generator changes get a validation pass dispensed over them,
   // captured like the install policy above.
   validate?: boolean;
-  // HEAD when the run started, after the checkpoint commit when one landed:
-  // the base every whole-run diff is taken against. Absent when the probe
-  // failed, or on a run created before the field existed.
+  // HEAD when the run started, before the checkpoint commit when one landed:
+  // the base every whole-run diff is taken against, so the dependency changes
+  // the checkpoint captured are inside it. Absent when the probe failed, or
+  // on a run created before the field existed.
   gitRefAtInit?: string;
   // A bare file name despite the field name; it is joined to the run directory.
   runbookPath?: string;

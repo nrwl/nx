@@ -486,7 +486,13 @@ export async function runOrchestratorInit(
   // leaves the committed changes orphaned but never lost, and the reserved
   // directory unlocked, which discovery ignores; the next init re-checkpoints
   // a now-clean tree as a no-op.
-  const checkpoint = createCommits ? checkpointEntry(root, commitPrefix) : null;
+  // Read before the checkpoint so its content (the planning phase's package
+  // bump and lockfile churn) is inside the whole-run diff the pass selects
+  // from; on the run because a step's gitRefBefore moves on re-dispense.
+  const gitRefAtInit = getLatestCommitSha(root);
+  const checkpoint = createCommits
+    ? checkpointEntry(root, commitPrefix, gitRefAtInit)
+    : null;
   // The preflight checkpoint swallows its own failures, so the tree itself is
   // the only reliable signal: anything still uncommitted here predates every
   // step's gitRefBefore and rules out clean retries for the whole run. A
@@ -495,8 +501,6 @@ export async function runOrchestratorInit(
   const checkpointFailed =
     createCommits && getWorkingTreeStatus(root) !== 'clean';
   const branch = getGitCurrentBranch(root);
-  // Recorded on the run because a step's gitRefBefore moves on re-dispense.
-  const gitRefAtInit = checkpoint?.sha ?? getLatestCommitSha(root);
   const state: MigrateRunState = {
     formatVersion: CURRENT_RUN_STATE_FORMAT_VERSION,
     runId,
@@ -870,7 +874,11 @@ function ensureCheckpoint(
   try {
     // The checkpoint commit is a git side effect, so it runs before the lock;
     // the ledger append and flag clear then apply to the fresh on-disk state.
-    const checkpoint = checkpointEntry(root, state.commitPrefix);
+    const checkpoint = checkpointEntry(
+      root,
+      state.commitPrefix,
+      getLatestCommitSha(root)
+    );
     // The retried checkpoint captured everything, so clean retries are safe
     // again. Only a verified-clean tree clears the flag: a failed probe proves
     // nothing was captured.
@@ -887,11 +895,9 @@ function ensureCheckpoint(
       ) {
         return null;
       }
-      // The late checkpoint becomes the run's diff base: the state it captured
-      // predates every step, and no step has moved HEAD past it yet.
-      const next = checkpoint
-        ? { ...appendCommit(fresh, checkpoint), gitRefAtInit: checkpoint.sha }
-        : fresh;
+      // gitRefAtInit stays: no step has moved HEAD since init, so the late
+      // checkpoint sits right after it and inside the whole-run diff.
+      const next = checkpoint ? appendCommit(fresh, checkpoint) : fresh;
       return cleared ? { ...next, checkpointFailed: false } : next;
     });
   } finally {
@@ -900,19 +906,20 @@ function ensureCheckpoint(
 }
 
 // Commits pre-existing working-tree state so the first migration's commit can't
-// absorb it, returning the ledger entry only when a commit verifiably landed.
-// A clean tree is a no-op. Failure detection is the caller's job: the commit
-// helper swallows failures, so callers re-check the tree afterwards.
+// absorb it, returning the ledger entry only when a commit verifiably landed
+// past `before`, the HEAD the caller read. A clean tree is a no-op. Failure
+// detection is the caller's job: the commit helper swallows failures, so
+// callers re-check the tree afterwards.
 function checkpointEntry(
   root: string,
-  commitPrefix: string
+  commitPrefix: string,
+  before: string | null
 ): MigrateCommitLedgerEntry | null {
   // Skip only on a verified-clean tree; on a failed probe the commit attempt
   // below re-probes and may succeed once the transient failure passes.
   if (getWorkingTreeStatus(root) === 'clean') {
     return null;
   }
-  const before = getLatestCommitSha(root);
   commitCheckpointBeforeMigrations(root, commitPrefix);
   const after = getLatestCommitSha(root);
   if (after && after !== before) {
@@ -2901,6 +2908,8 @@ function awaitFinalValidationLines(
     buildFinalValidationInstructions({
       runId: state.runId,
       baseRef: state.gitRefAtInit ?? null,
+      checkpointRef:
+        state.commits.find((c) => c.kind === 'checkpoint')?.sha ?? null,
       nxInvocation: `${pmExecPrefix(root)} nx`,
       handoffFileAbsolutePath: filePath,
     })

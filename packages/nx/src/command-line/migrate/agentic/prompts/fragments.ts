@@ -97,10 +97,10 @@ export function renderValidationScopeRuleLines(): string[] {
 // run, so it needs the whole run's delta, not one step's file list.
 export function renderFinalValidationScopeRuleLines(): string[] {
   return [
-    `- Your job is to validate the workspace after every migration has run: run its lint, build and unit-test tasks, fix what the migrations broke, and report the rest.`,
+    `- Your job is to validate the workspace after every migration has run: run its lint, build and unit-test tasks, fix what the upgrade broke, and report the rest.`,
     `- Discover targets before running them: \`nx show project <name> --json\` is authoritative, since it includes targets inferred by plugins. Target names vary between workspaces; \`lint\`, \`build\` and \`test\` are the common ones, and an equivalent (\`typecheck\` for a project with no \`build\`, for example) stands in when one is missing. Never run e2e, serve, deploy, publish or release targets.`,
     `- Run tasks through \`nx affected --base <ref> -t <targets>\` with the base ref the step's instructions name, in full: no sampling, no time budget. \`nx run <project>:<target>\` and \`nx run-many -t <target> -p <projects>\` are fine to rerun a failure. Unscoped \`nx run-many\` is allowed only when the instructions say the base ref is unknown.`,
-    `- Fix only breakage the migrations caused, judged from the run's diff. A failure the diff cannot explain is reported as an issue and left alone; it may predate the run.`,
+    `- Fix only breakage the upgrade caused, judged from the run's diff: the dependency changes it made and the migrations' changes. A failure the diff cannot explain is reported as an issue and left alone; it may predate the run.`,
     `- Do not refactor, do not update dependencies, do not rewrite tests to pass, and do not rerun migrations. If the migrated workspace cannot run \`nx\` at all, stop and report that to the user instead of repairing the install.`,
     `- Read-only and artifact-writing inspection commands are permitted: \`nx show\`, \`nx graph --file <path>\`, \`git diff\`, reading files.`,
     `- Do not run other \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, \`nx format:write\`, generators, etc.).`,

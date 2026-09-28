@@ -720,16 +720,22 @@ describe('migrate orchestrator (dark launch)', () => {
       'final validation pass over the workspace is awaiting your outcome'
     );
     expect(passOutput).toContain('<nx_migrate_prompt step="step-2">');
-    // The plan file written before init dirtied the tree, so the checkpoint
-    // commit is the base the pass diffs against.
+    // The plan file written before init dirtied the tree, so a checkpoint
+    // commit landed; the pass diffs against its parent so the checkpoint's
+    // own content is in the diff.
     const parked = readRunStateFile(init.runId);
     expect(parked.commits[0].kind).toBe('checkpoint');
-    expect(parked.gitRefAtInit).toBe(parked.commits[0].sha);
+    expect(parked.gitRefAtInit).toBe(
+      runCommand(`git rev-parse ${parked.commits[0].sha}~1`).trim()
+    );
     const instructions = readFile(
       `.nx/migrate-runs/${init.runId}/prompts/step-2/instructions.md`
     );
     expect(instructions).toContain(
       `nx affected --base ${parked.gitRefAtInit} -t <targets>`
+    );
+    expect(instructions).toContain(
+      `up to and including the checkpoint ${parked.commits[0].sha} landed outside the run's steps`
     );
     expect(instructions).toContain(
       `<handoff_path>\n${handoffPathFrom(pass)}\n</handoff_path>`
