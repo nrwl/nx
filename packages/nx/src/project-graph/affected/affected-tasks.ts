@@ -356,6 +356,7 @@ export async function selectAffectedTasks(
     explanation: explanation && {
       ...explanation,
       required: requiredOnly(keep, taskGraph, explanation),
+      requested: requestedTasks(taskIds, taskGraph, targets, options),
     },
     taskSelection: {
       // Edges that disagree on a dependency's overrides leave it to a build
@@ -603,4 +604,24 @@ function requiredOnly(
       .sort()
       .map((id) => [id, (neededBy[id] ?? []).sort()])
   );
+}
+
+/**
+ * How many tasks of the requested targets selection chose among. Tasks of
+ * excluded projects are left out, since they were never candidates.
+ */
+function requestedTasks(
+  taskIds: string[],
+  taskGraph: TaskGraph,
+  targets: string[],
+  options: { excludedProjects: string[] }
+): AffectedExplanation['requested'] {
+  const excluded = new Set(options.excludedProjects);
+  return {
+    targets,
+    total: taskIds.filter((id) => {
+      const { project, target } = taskGraph.tasks[id].target;
+      return targets.includes(target) && !excluded.has(project);
+    }).length,
+  };
 }

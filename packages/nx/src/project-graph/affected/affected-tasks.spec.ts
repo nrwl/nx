@@ -345,6 +345,31 @@ describe('computeAffectedTasks', () => {
     expect(await affectedFor(['docs/README.md'])).toEqual([]);
   });
 
+  // The denominator is what selection chose among, so an excluded project's
+  // tasks are not counted as left out.
+  it('counts the requested tasks it chose among, less excluded ones', async () => {
+    const explain = async (exclude: string[]) =>
+      (
+        await computeAffectedTasks({
+          projectGraph: graph(),
+          nxJson: {
+            namedInputs: { production: ['{projectRoot}/src/**/*'] },
+          } as any,
+          targets: ['test'],
+          touchedFiles: [
+            {
+              file: 'packages/js/src/index.ts',
+              getChanges: () => [new WholeFileChange()],
+            },
+          ] as any,
+          exclude,
+          explain: true,
+        })
+      ).explanation.requested;
+    expect(await explain([])).toEqual({ targets: ['test'], total: 2 });
+    expect(await explain(['lib'])).toEqual({ targets: ['test'], total: 1 });
+  });
+
   it('drops an excluded project from both the selection and what a run keeps', async () => {
     const result = await computeAffectedTasks({
       projectGraph: graph(),

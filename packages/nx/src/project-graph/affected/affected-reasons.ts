@@ -65,6 +65,8 @@ export interface AffectedExplanation {
    * caller is about to run the selection.
    */
   required?: Record<string, string[]>;
+  /** The requested targets, and how many of their tasks selection chose among. */
+  requested?: { targets: string[]; total: number };
 }
 
 /** One line of `--explain` output, without the leading bullet. */
@@ -108,6 +110,7 @@ export function formatAffectedExplanation(
     upstream,
     touched: touchedNames,
     required = {},
+    requested,
   }: AffectedExplanation,
   heading: string,
   /**
@@ -199,13 +202,19 @@ export function formatAffectedExplanation(
   // Same shape as the run summary, which reports the tasks it ran and the ones
   // it ran only to get there.
   const plural = names.length === 1 ? 'task' : 'tasks';
-  lines.push(
+  const summary =
     dependencyCount === undefined
       ? `${names.length} affected ${plural}.`
       : `${names.length} affected ${plural} and ${dependencyCount} ${
           dependencyCount === 1 ? 'task' : 'tasks'
-        } they depend on.`
-  );
+        } they depend on.`;
+  // What selection saved: the requested tasks it left out.
+  const skipped = requested
+    ? ` Not affected: ${requested.total - names.length} of ${requested.total} ${requested.targets.join(', ')} ${
+        requested.total === 1 ? 'task' : 'tasks'
+      }.`
+    : '';
+  lines.push(summary + skipped);
   return lines.join('\n');
 }
 

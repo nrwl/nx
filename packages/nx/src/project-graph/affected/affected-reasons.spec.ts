@@ -63,6 +63,17 @@ describe('formatAffectedExplanation', () => {
     ).toContain('2 affected tasks and 149 tasks they depend on.');
   });
 
+  it('says how many requested tasks were not affected', () => {
+    const out = formatAffectedExplanation(
+      { ...selected, requested: { targets: ['build'], total: 58 } },
+      'Affected tasks',
+      149
+    );
+    expect(out).toContain(
+      '2 affected tasks and 149 tasks they depend on. Not affected: 56 of 58 build tasks.'
+    );
+  });
+
   it('reports the selection alone when no closure is passed', () => {
     const out = formatAffectedExplanation(selected, 'Affected tasks');
     expect(out).toContain('2 affected tasks.');
