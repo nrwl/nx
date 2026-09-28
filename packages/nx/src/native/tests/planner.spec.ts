@@ -17,7 +17,7 @@ import { withEnvironmentVariables } from '../../internal-testing-utils/with-envi
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { toRustProjectGraph } from '../transform-objects';
-import { ultracacheByTaskId } from '../../io-snapshots/overrides';
+import { getUltraCacheConfig } from '../../io-snapshots/overrides';
 import { DependencyType } from '../../config/project-graph';
 
 let tempFs = new TempFs('task-planner');
@@ -2518,7 +2518,7 @@ describe('task planner', () => {
       });
       const report = getIoSnapshotReport(
         withheld,
-        ultracacheByTaskId(taskGraph),
+        getUltraCacheConfig(taskGraph),
         {
           customHasherTaskIds: ['child:build'],
         }
@@ -2536,7 +2536,7 @@ describe('task planner', () => {
           'parent:build': { inputs: ['libs/parent/filea.ts', negation] },
         });
         expect(
-          getIoSnapshotReport(negated, ultracacheByTaskId(taskGraph))
+          getIoSnapshotReport(negated, getUltraCacheConfig(taskGraph))
             .diagnostics
         ).toContainEqual(
           expect.objectContaining({
@@ -2574,7 +2574,7 @@ describe('task planner', () => {
           planner.getPlans(['parent:build'], taskGraph, snapshots)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(snapshots, ultracacheByTaskId(taskGraph))
+          getIoSnapshotReport(snapshots, getUltraCacheConfig(taskGraph))
             .diagnostics
         ).toContainEqual(
           expect.objectContaining({ reason, taskId: 'parent:build' })
@@ -2594,7 +2594,7 @@ describe('task planner', () => {
         expect.stringMatching(/^files:\[\*\*\/\*\.gen,/)
       );
       expect(
-        getIoSnapshotReport(snapshots, ultracacheByTaskId(taskGraph)).used
+        getIoSnapshotReport(snapshots, getUltraCacheConfig(taskGraph)).used
       ).toContain('parent:build');
     });
 
@@ -2644,7 +2644,7 @@ describe('task planner', () => {
         'parent:build',
       ]);
       expect(
-        getIoSnapshotReport(snapshots, ultracacheByTaskId(taskGraph)).used
+        getIoSnapshotReport(snapshots, getUltraCacheConfig(taskGraph)).used
       ).toEqual(['parent:build']);
     });
 
@@ -2661,7 +2661,7 @@ describe('task planner', () => {
         expect(
           getIoSnapshotReport(
             snapshots,
-            ultracacheByTaskId(taskGraph)
+            getUltraCacheConfig(taskGraph)
           ).diagnostics.find((d) => d.taskId === 'parent:build')
         ).toMatchObject({ reason: 'escapes-workspace', glob });
       }

@@ -46,7 +46,7 @@ function customHasherTaskIds(
  * Each task's ultracache configuration: all the native eligibility walk reads
  * from a task. `null`, not `undefined`: the native map drops `undefined` keys.
  */
-export function ultracacheByTaskId(
+export function getUltraCacheConfig(
   taskGraph: TaskGraph
 ): Record<string, TaskUltracacheConfiguration | null> {
   return Object.fromEntries(
@@ -80,7 +80,7 @@ export function buildIoSnapshotOverrides(
 ): IoSnapshotReport {
   return getIoSnapshotReport(
     snapshots,
-    ultracacheByTaskId(taskGraph),
+    getUltraCacheConfig(taskGraph),
     ioSnapshotEligibilityOptions(projectGraph, taskGraph)
   );
 }
