@@ -25,6 +25,8 @@ export type AffectedReasonKind =
   | 'external-dependencies'
   /** A lockfile changed and `projectsAffectedByDependencyUpdates` names its project. */
   | 'lockfile'
+  /** A dependency change could not be pinned to packages, so a whole ecosystem moved. */
+  | 'moved-ecosystem'
   /** Its executor hashes outside the plan, so it is always selected. */
   | 'custom-hasher';
 
@@ -36,6 +38,8 @@ export interface AffectedReason {
   pattern?: string;
   /** The package whose version moved. */
   package?: string;
+  /** The package ecosystem, such as `npm`, that moved whole. */
+  ecosystem?: string;
   /** The task whose outputs this task reads. */
   producer?: string;
 }
@@ -80,6 +84,12 @@ export function formatAffectedReason(reason: AffectedReason): string {
       return `lockfile ${reason.file} changed`;
     case 'npm-package':
       return `depends on ${reason.package}, whose version changed`;
+    case 'moved-ecosystem':
+      return `${
+        reason.file ?? 'a dependency manifest'
+      } changed and couldn't be narrowed to packages, so every ${
+        reason.ecosystem
+      } package counts as moved`;
     case 'input-file':
       return reason.pattern
         ? `input ${reason.pattern} matched ${reason.file}`
@@ -141,8 +151,8 @@ export function formatAffectedExplanation(
     if (!forName.length) {
       lines.push(`    - selected, but no reason was recorded`);
     }
-    for (const reason of forName) {
-      lines.push(`    - ${formatAffectedReason(reason)}`);
+    for (const line of reasonLines(forName)) {
+      lines.push(`    - ${line}`);
     }
     // Every reason names another entry, so say where the chain starts: the
     // reader should not have to follow it up the output to find the file.
@@ -203,6 +213,51 @@ export function formatAffectedExplanation(
     : `${n} affected ${n === 1 ? 'task' : 'tasks'}.`;
   lines.push(summary);
   return lines.join('\n');
+}
+
+/**
+ * One line per reason, except that more than three files matching one input,
+ * or more than three moved packages, share a line naming the first three: a
+ * refactor or a dependency bump would otherwise print a line per file under
+ * every task. The JSON keeps them all.
+ */
+function reasonLines(reasons: AffectedReason[]): string[] {
+  const grouped = new Map<string, AffectedReason[]>();
+  const keyOf = (reason: AffectedReason) =>
+    reason.kind === 'input-file'
+      ? `input-file\0${reason.pattern ?? ''}`
+      : reason.kind === 'npm-package'
+        ? 'npm-package'
+        : undefined;
+  for (const reason of reasons) {
+    const key = keyOf(reason);
+    if (key) {
+      grouped.set(key, [...(grouped.get(key) ?? []), reason]);
+    }
+  }
+
+  const lines: string[] = [];
+  const done = new Set<string>();
+  for (const reason of reasons) {
+    const key = keyOf(reason);
+    const group = key ? grouped.get(key) : undefined;
+    if (!group || group.length <= 3) {
+      lines.push(formatAffectedReason(reason));
+      continue;
+    }
+    if (done.has(key)) continue;
+    done.add(key);
+    const names = group.map((r) => r.file ?? r.package);
+    const listed = `${names.slice(0, 3).join(', ')} and ${names.length - 3} more`;
+    lines.push(
+      reason.kind === 'input-file'
+        ? `input ${reason.pattern ?? ''}${reason.pattern ? ' ' : ''}matched ${
+            names.length
+          } changed files: ${listed}`
+        : `depends on ${names.length} packages whose versions changed: ${listed}`
+    );
+  }
+  return lines;
 }
 
 /** A reason that names another entry rather than a change. */

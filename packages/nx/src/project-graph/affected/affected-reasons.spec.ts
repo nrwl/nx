@@ -14,6 +14,8 @@ describe('formatAffectedReason', () => {
       { kind: 'lockfile', file: 'pnpm-lock.yaml' },
       { kind: 'npm-package', package: 'npm:lodash' },
       { kind: 'custom-hasher' },
+      { kind: 'moved-ecosystem', ecosystem: 'npm', file: 'pnpm-lock.yaml' },
+      { kind: 'moved-ecosystem', ecosystem: 'npm' },
       { kind: 'external-dependencies', file: 'pnpm-lock.yaml' },
       { kind: 'input-file', file: 'libs/a/x.ts', pattern: '{projectRoot}/**' },
       { kind: 'dependent-output', producer: 'ui:build' },
@@ -187,6 +189,62 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain('    - traced to a.ts, b.ts, c.ts and 1 more');
+  });
+
+  // A refactor or a dependency bump would otherwise print a line per file or
+  // package under every task.
+  it('shares one line among more than three files or packages', () => {
+    const files = ['a.ts', 'b.ts', 'c.ts', 'd.ts', 'e.ts'].map(
+      (f) => `libs/ui/${f}`
+    );
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'ui:build': [
+            ...files.map((file) => ({
+              kind: 'input-file' as const,
+              file,
+              pattern: 'libs/ui/**/*',
+            })),
+            { kind: 'input-file', file: 'tsconfig.base.json' },
+            ...['npm:a', 'npm:b', 'npm:c', 'npm:d'].map((pkg) => ({
+              kind: 'npm-package' as const,
+              package: pkg,
+            })),
+          ],
+        },
+        upstream: {},
+        touched: ['ui:build'],
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain(
+      '    - input libs/ui/**/* matched 5 changed files: libs/ui/a.ts, libs/ui/b.ts, libs/ui/c.ts and 2 more'
+    );
+    expect(out).toContain('    - input matched tsconfig.base.json');
+    expect(out).toContain(
+      '    - depends on 4 packages whose versions changed: npm:a, npm:b, npm:c and 1 more'
+    );
+    expect(out).not.toContain('libs/ui/d.ts');
+  });
+
+  it('keeps three or fewer on lines of their own', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'ui:build': ['a.ts', 'b.ts', 'c.ts'].map((f) => ({
+            kind: 'input-file' as const,
+            file: `libs/ui/${f}`,
+            pattern: 'libs/ui/**/*',
+          })),
+        },
+        upstream: {},
+        touched: ['ui:build'],
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain('    - input libs/ui/**/* matched libs/ui/c.ts');
+    expect(out).not.toContain('changed files:');
   });
 
   it('sorts an entry reached only through a dependency to the bottom', () => {

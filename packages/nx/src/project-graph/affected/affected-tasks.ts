@@ -511,6 +511,13 @@ function explainTasks(
     for (const pkg of matches?.packages ?? []) {
       forTask.push({ kind: 'npm-package', package: pkg });
     }
+    for (const ecosystem of matches?.movedEcosystems ?? []) {
+      for (const file of dependencyFiles.length
+        ? dependencyFiles
+        : [undefined]) {
+        forTask.push({ kind: 'moved-ecosystem', ecosystem, file });
+      }
+    }
     if (matches?.allExternals) {
       for (const file of dependencyFiles) {
         forTask.push({ kind: 'external-dependencies', file });

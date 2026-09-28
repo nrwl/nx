@@ -49,6 +49,18 @@ impl<'a> ChangedExternals<'a> {
                 .is_some_and(|kind| self.types.contains(kind))
     }
 
+    /// The ecosystem that counts `name` as moved when the change could not be
+    /// pinned to packages; `None` when it names this package or misses it.
+    fn moved_with_ecosystem(&self, name: &str) -> Option<&str> {
+        if self.names.contains(name) {
+            return None;
+        }
+        self.external_nodes
+            .get(name)
+            .and_then(|node| node.r#type.as_deref())
+            .filter(|kind| self.types.contains(kind))
+    }
+
     /// `AllExternalDependencies` hashes every node, so any moved external
     /// reaches it whatever its type.
     fn any(&self) -> bool {
@@ -290,6 +302,9 @@ pub struct TaskInputMatches {
     pub all_externals: bool,
     /// Changed config files of the projects whose configuration the plan hashes.
     pub project_configs: Vec<String>,
+    /// Ecosystems a change moved whole, without naming packages, that the plan
+    /// hashes packages of. Reported once rather than per package.
+    pub moved_ecosystems: Vec<String>,
 }
 
 impl TaskInputMatches {
@@ -298,6 +313,7 @@ impl TaskInputMatches {
             || !self.packages.is_empty()
             || self.all_externals
             || !self.project_configs.is_empty()
+            || !self.moved_ecosystems.is_empty()
     }
 }
 
@@ -353,6 +369,9 @@ pub(crate) fn compute_input_matches(
                 merged
                     .project_configs
                     .extend(hits.project_configs.iter().cloned());
+                merged
+                    .moved_ecosystems
+                    .extend(hits.moved_ecosystems.iter().cloned());
             }
             if !merged.matched() {
                 return None;
@@ -367,6 +386,8 @@ pub(crate) fn compute_input_matches(
             merged.packages.dedup();
             merged.project_configs.sort_unstable();
             merged.project_configs.dedup();
+            merged.moved_ecosystems.sort_unstable();
+            merged.moved_ecosystems.dedup();
             Some((task_id.clone(), merged))
         })
         .collect())
@@ -389,6 +410,18 @@ fn instruction_matches_detail(
     let of_files = |files: Vec<InputMatch>| TaskInputMatches {
         files,
         ..Default::default()
+    };
+    // A package moved by name, or only because its whole ecosystem did.
+    let of_external = |name: &str| match externals.moved_with_ecosystem(name) {
+        Some(ecosystem) => TaskInputMatches {
+            moved_ecosystems: vec![ecosystem.to_string()],
+            ..Default::default()
+        },
+        None if externals.includes(name) => TaskInputMatches {
+            packages: vec![name.to_string()],
+            ..Default::default()
+        },
+        None => TaskInputMatches::default(),
     };
     let collect = |globs: &[String], project: Option<&str>| -> anyhow::Result<Vec<InputMatch>> {
         let candidates = under_literal_prefix(globs, changed, changed.candidates(project));
@@ -472,21 +505,9 @@ fn instruction_matches_detail(
             } else {
                 vec![]
             },
-            packages: if externals.includes("typescript") {
-                vec!["typescript".to_string()]
-            } else {
-                vec![]
-            },
-            ..Default::default()
+            ..of_external("typescript")
         }),
-        HashInstruction::External(name) => Ok(TaskInputMatches {
-            packages: if externals.includes(name) {
-                vec![name.clone()]
-            } else {
-                vec![]
-            },
-            ..Default::default()
-        }),
+        HashInstruction::External(name) => Ok(of_external(name)),
         HashInstruction::AllExternalDependencies => Ok(TaskInputMatches {
             all_externals: externals.any(),
             ..Default::default()
@@ -1158,5 +1179,32 @@ mod tests {
             !hits.contains_key("a:test"),
             "an unmoved package is no reason"
         );
+    }
+
+    /// An unpinned change moves every package of its ecosystem; naming each one
+    /// under every task would bury the explanation.
+    #[test]
+    fn input_matches_report_an_unpinned_ecosystem_once() {
+        let g = externals_graph(&[("npm:lodash", "npm"), ("npm:react", "npm")]);
+        let p = plans(
+            "a:build",
+            vec![
+                HashInstruction::External("npm:lodash".into()),
+                HashInstruction::External("npm:react".into()),
+            ],
+        );
+        let moved = strings(&["npm:react"]);
+        let types = strings(&["npm"]);
+        let hits = compute_input_matches(
+            &g,
+            &p,
+            &[],
+            &[],
+            &ChangedExternals::new(&moved, &types, &g.external_nodes),
+            &ChangedContents::default(),
+        )
+        .unwrap();
+        assert_eq!(hits["a:build"].packages, strings(&["npm:react"]));
+        assert_eq!(hits["a:build"].moved_ecosystems, strings(&["npm"]));
     }
 }

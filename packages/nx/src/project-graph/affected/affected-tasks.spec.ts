@@ -200,6 +200,39 @@ describe('computeAffectedTasks', () => {
     ]);
   });
 
+  // With no base to diff, the lockfile change moves every npm package; naming
+  // each one under every task hashing it would bury the explanation.
+  it('explains an unpinned lockfile change once, not per package', async () => {
+    const projectGraph = graph();
+    projectGraph.externalNodes = Object.fromEntries(
+      ['left-pad', 'right-pad'].map((name) => [
+        `npm:${name}`,
+        {
+          type: 'npm',
+          name: `npm:${name}`,
+          data: { packageName: name, version: '1.0.0' },
+        },
+      ])
+    ) as any;
+    projectGraph.nodes.lib.data.targets.test.inputs = [
+      { externalDependencies: ['left-pad', 'right-pad'] },
+    ] as any;
+    const { explanation } = await computeAffectedTasks({
+      projectGraph,
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        { file: 'pnpm-lock.yaml', getChanges: () => [new WholeFileChange()] },
+      ] as any,
+      explain: true,
+    });
+    expect(explanation.affected['lib:test']).toEqual([
+      { kind: 'moved-ecosystem', ecosystem: 'npm', file: 'pnpm-lock.yaml' },
+    ]);
+  });
+
   /**
    * The package a lockfile change moved is matched against the External
    * instructions in each plan, the way a changed path is matched against

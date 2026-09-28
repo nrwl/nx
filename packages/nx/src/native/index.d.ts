@@ -1208,6 +1208,11 @@ export interface TaskInputMatches {
   allExternals: boolean
   /** Changed config files of the projects whose configuration the plan hashes. */
   projectConfigs: Array<string>
+  /**
+   * Ecosystems a change moved whole, without naming packages, that the plan
+   * hashes packages of. Reported once rather than per package.
+   */
+  movedEcosystems: Array<string>
 }
 
 /**
