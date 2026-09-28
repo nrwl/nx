@@ -19,6 +19,18 @@ const { root, workspaceDataDirectory } = vi.hoisted(() => {
   };
 });
 
+vi.mock('node:child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:child_process')>();
+  return {
+    ...actual,
+    // `bun bun.lockb` prints the binary lockfile as a yarn lockfile, so specs
+    // write yarn lockfile text to bun.lockb and this returns it unchanged.
+    execSync: ((command: string, options) =>
+      command.startsWith('bun ') && command.endsWith('bun.lockb')
+        ? require('node:fs').readFileSync(command.slice('bun '.length), 'utf-8')
+        : actual.execSync(command, options)) as typeof actual.execSync,
+  };
+});
 vi.mock('../../utils/workspace-root', () => ({ workspaceRoot: root }));
 vi.mock('../../utils/cache-directory', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../utils/cache-directory')>()),
@@ -87,10 +99,11 @@ async function loadPluginInNewProcess() {
 }
 
 async function createExternalNodes(
-  plugin: Awaited<ReturnType<typeof loadPluginInNewProcess>>
+  plugin: Awaited<ReturnType<typeof loadPluginInNewProcess>>,
+  lockFile = 'pnpm-lock.yaml'
 ): Promise<Record<string, ProjectGraphExternalNode>> {
   const [, createNodes] = plugin.createNodes;
-  const [[, result]] = await createNodes(['pnpm-lock.yaml'], undefined, {
+  const [[, result]] = await createNodes([lockFile], undefined, {
     nxJsonConfiguration: {},
     workspaceRoot: root,
   });
@@ -163,6 +176,52 @@ describe('nx/js/dependencies-and-lockfile', () => {
     expect(await createDependencies(second, secondNodes)).toEqual([
       { source: 'npm:a', target: 'npm:x@1.0.0', type: 'static' },
       { source: 'npm:b', target: 'npm:x@2.0.0', type: 'static' },
+    ]);
+  });
+
+  it('should create dependencies from the lockfile that createNodes read', async () => {
+    writeWorkspace({ a: '1.0.0', b: '1.0.0' });
+    // An earlier graph computation cached these nodes.
+    await createExternalNodes(await loadPluginInNewProcess());
+    const plugin = await loadPluginInNewProcess();
+    const nodes = await createExternalNodes(plugin);
+
+    // An install adds a package before createDependencies runs.
+    writeWorkspace({ a: '1.0.0', b: '1.0.0', c: '1.0.0' });
+
+    expect(await createDependencies(plugin, nodes)).toEqual([
+      { source: 'npm:a', target: 'npm:x@1.0.0', type: 'static' },
+      { source: 'npm:b', target: 'npm:x@2.0.0', type: 'static' },
+    ]);
+  });
+
+  it('should parse dependencies in the lockfile format that createNodes read', async () => {
+    write('package.json', JSON.stringify({ devDependencies: { a: '1.0.0' } }));
+    write(
+      'bun.lockb',
+      `# yarn lockfile v1
+
+a@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/a/-/a-1.0.0.tgz"
+  integrity sha512-a
+  dependencies:
+    x "1.0.0"
+
+x@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/x/-/x-1.0.0.tgz"
+  integrity sha512-x
+`
+    );
+    const plugin = await loadPluginInNewProcess();
+    const nodes = await createExternalNodes(plugin, 'bun.lockb');
+
+    // Bun migrates to the text lockfile before createDependencies runs.
+    write('bun.lock', '{}');
+
+    expect(await createDependencies(plugin, nodes)).toEqual([
+      { source: 'npm:a', target: 'npm:x', type: 'static' },
     ]);
   });
 });

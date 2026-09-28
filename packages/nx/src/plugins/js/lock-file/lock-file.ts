@@ -93,10 +93,11 @@ const BUN_LOCK_PATH = join(workspaceRoot, BUN_LOCK_FILE);
 const BUN_TEXT_LOCK_PATH = join(workspaceRoot, BUN_TEXT_LOCK_FILE);
 
 /**
- * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
+ * Parses the lockfile into external nodes, plus the keyMap that getLockFileDependencies reads.
  */
 export function getLockFileNodes(
   packageManager: PackageManager,
+  lockFile: string,
   contents: string,
   lockFileHash: string,
   context: CreateNodesContext
@@ -111,7 +112,7 @@ export function getLockFileNodes(
         : undefined;
 
     return getLockFileNodesForName(
-      getLockFileName(packageManager),
+      lockFile,
       contents,
       lockFileHash,
       packageJson
@@ -161,10 +162,11 @@ export function getLockFileNodesForName(
 }
 
 /**
- * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
+ * Parses the lockfile into dependencies between external nodes.
  */
 export function getLockFileDependencies(
   packageManager: PackageManager,
+  lockFile: string,
   contents: string,
   lockFileHash: string,
   context: CreateDependenciesContext,
@@ -196,8 +198,7 @@ export function getLockFileDependencies(
       );
     }
     if (packageManager === 'bun') {
-      const lockFilePath = getLockFilePath(packageManager);
-      if (lockFilePath.endsWith(BUN_TEXT_LOCK_FILE)) {
+      if (lockFile === BUN_TEXT_LOCK_FILE) {
         // Bun parser doesn't use keyMap
         return getBunTextLockfileDependencies(contents, lockFileHash, context);
       } else {

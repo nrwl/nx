@@ -17,7 +17,10 @@ import { RawProjectGraphDependency } from '../../project-graph/project-graph-bui
 import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { combineGlobPatterns } from '../../utils/globs';
 import { logger } from '../../utils/logger';
-import { detectPackageManager } from '../../utils/package-manager';
+import {
+  detectPackageManager,
+  type PackageManager,
+} from '../../utils/package-manager';
 import { safeWriteFileCache } from '../../utils/plugin-cache-utils';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -34,8 +37,16 @@ import { jsPluginConfig } from './utils/config';
 
 export const name = 'nx/js/dependencies-and-lockfile';
 
-// Separate in-memory caches
-let cachedExternalNodes: ProjectGraph['externalNodes'] | undefined;
+// An install can rewrite the lockfile between createNodes and
+// createDependencies, so both parse the one createNodes read.
+let cachedLockFile:
+  | {
+      packageManager: PackageManager;
+      lockFile: string;
+      lockFileContents: string;
+      lockFileHash: string;
+    }
+  | undefined;
 let cachedKeyMap: Map<string, any> | undefined;
 
 export const createNodes: CreateNodes = [
@@ -64,13 +75,13 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
       ? readFileSync(lockFilePath, 'utf-8')
       : readBunLockFile(lockFilePath);
   const lockFileHash = getLockFileHash(lockFileContents);
+  cachedLockFile = { packageManager, lockFile, lockFileContents, lockFileHash };
 
   const cached = readCache<ExternalNodesCache>(
     externalNodesCache,
     lockFileHash
   );
   if (cached) {
-    cachedExternalNodes = cached.nodes;
     cachedKeyMap = deserializeKeyMap(cached.keyMap, cached.nodes);
 
     return {
@@ -80,11 +91,11 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
 
   const { nodes: externalNodes, keyMap } = getLockFileNodes(
     packageManager,
+    lockFile,
     lockFileContents,
     lockFileHash,
     context
   );
-  cachedExternalNodes = externalNodes;
   cachedKeyMap = keyMap;
 
   writeCache(externalNodesCache, lockFileHash, {
@@ -103,23 +114,17 @@ export const createDependencies: CreateDependencies = (
 ) => {
   const pluginConfig = jsPluginConfig(ctx.nxJsonConfiguration);
 
-  const packageManager = detectPackageManager(workspaceRoot);
-
   let lockfileDependencies: RawProjectGraphDependency[] = [];
   // lockfile may not exist yet
   if (
     pluginConfig.analyzeLockfile &&
-    lockFileExists(packageManager) &&
-    cachedExternalNodes
+    cachedLockFile &&
+    lockFileExists(cachedLockFile.packageManager)
   ) {
-    const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
-    const lockFileContents =
-      packageManager !== 'bun'
-        ? readFileSync(lockFilePath, 'utf-8')
-        : readBunLockFile(lockFilePath);
-    const lockFileHash = getLockFileHash(lockFileContents);
+    const { packageManager, lockFile, lockFileContents, lockFileHash } =
+      cachedLockFile;
     // Cached dependencies name their external nodes, and those names also
-    // depend on node_modules hoisting and on the lockfile createNodes read.
+    // depend on node_modules hoisting.
     const dependenciesHash = hashArray([
       lockFileHash,
       ...Object.keys(ctx.externalNodes),
@@ -134,6 +139,7 @@ export const createDependencies: CreateDependencies = (
     } else {
       lockfileDependencies = getLockFileDependencies(
         packageManager,
+        lockFile,
         lockFileContents,
         lockFileHash,
         ctx,
