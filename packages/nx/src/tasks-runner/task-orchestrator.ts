@@ -400,8 +400,8 @@ export class TaskOrchestrator {
           .filter(
             (t) =>
               !t.hash &&
-              this.taskGraph.dependencies[t.id].every((depId) =>
-                this.completedTasks.has(depId)
+              this.taskGraph.dependencies[t.id].every(({ id }) =>
+                this.completedTasks.has(id)
               )
           );
         if (unhashed.length > 0) {
@@ -758,8 +758,9 @@ export class TaskOrchestrator {
 
       const eligible: Task[] = [];
       for (const task of rootTasks) {
-        const depIds = batch.taskGraph.dependencies[task.id];
-        const hasNonCachedDep = depIds.some((id) => nonCachedTaskIds.has(id));
+        const hasNonCachedDep = batch.taskGraph.dependencies[task.id].some(
+          ({ id }) => nonCachedTaskIds.has(id)
+        );
 
         if (
           hasNonCachedDep &&
@@ -1878,11 +1879,7 @@ export class TaskOrchestrator {
   }
 
   private async waitForReadyDependencies(task: Task): Promise<void> {
-    const producerIds = getReadyProducerIds(
-      task,
-      this.fullTaskGraph,
-      this.projectGraph
-    );
+    const producerIds = getReadyProducerIds(task, this.fullTaskGraph);
     for (const producerId of producerIds) {
       const producer = this.fullTaskGraph.tasks[producerId];
       const readyWhen = this.getReadyWhen(producer);
@@ -2501,7 +2498,9 @@ export class TaskOrchestrator {
     return this.tasksSchedule
       .getIncompleteTasks()
       .some((t) =>
-        this.taskGraph.continuousDependencies[t.id]?.includes(taskId)
+        this.taskGraph.continuousDependencies[t.id]?.some(
+          (edge) => edge.id === taskId
+        )
       );
   }
 
@@ -2711,7 +2710,7 @@ export class TaskOrchestrator {
       const continuousDependencies =
         this.taskGraph.continuousDependencies[task.id];
       for (const continuousDependency of continuousDependencies) {
-        neededContinuousTasks.add(continuousDependency);
+        neededContinuousTasks.add(continuousDependency.id);
       }
     }
 

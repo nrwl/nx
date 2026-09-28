@@ -163,6 +163,17 @@ pub struct TaskResult {
     pub terminal_output: Option<String>,
 }
 
+/// An edge from a task to one of the tasks it depends on
+#[napi(object)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub struct TaskGraphEdge {
+    /// ID of the task depended on
+    pub id: String,
+    /// What the dependent waits for on a continuous dependency. Defaults to `started`.
+    #[napi(ts_type = "'started' | 'ready'")]
+    pub wait_for: Option<String>,
+}
+
 /// Graph of Tasks to be executed
 #[napi(object)]
 pub struct TaskGraph {
@@ -170,9 +181,9 @@ pub struct TaskGraph {
     pub roots: Vec<String>,
     /// Map of Task IDs to Tasks
     pub tasks: HashMap<String, Task>,
-    /// Map of Task IDs to IDs of tasks which the task depends on
-    pub dependencies: HashMap<String, Vec<String>>,
-    pub continuous_dependencies: HashMap<String, Vec<String>>,
+    /// Map of Task IDs to the edges to tasks which the task depends on
+    pub dependencies: HashMap<String, Vec<TaskGraphEdge>>,
+    pub continuous_dependencies: HashMap<String, Vec<TaskGraphEdge>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]

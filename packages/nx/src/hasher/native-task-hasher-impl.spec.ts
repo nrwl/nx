@@ -1796,6 +1796,39 @@ describe('native task hasher', () => {
     expect(planning.calls).toBe(2);
   });
 
+  it('hashes from the edges it is given, not the ones the up-front batch planned', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const tasks = Object.values(taskGraph.tasks);
+    await impl.hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+    const served = await impl.hashTask(
+      taskGraph.tasks['e2e:e2e'],
+      taskGraph,
+      {}
+    );
+    const unserved: TaskGraph = {
+      ...taskGraph,
+      continuousDependencies: {
+        ...taskGraph.continuousDependencies,
+        'e2e:e2e': [],
+      },
+    };
+
+    const reused = await impl.hashTask(unserved.tasks['e2e:e2e'], unserved, {});
+
+    expect(reused.value).not.toEqual(served.value);
+    const { impl: fresh } = await upfrontFixture();
+    const planned = await fresh.hashTask(
+      unserved.tasks['e2e:e2e'],
+      unserved,
+      {}
+    );
+    expect(reused.value).toEqual(planned.value);
+  });
+
   it('hashes a disk-backed fileset up front unless it reaches a dependency output', async () => {
     await tempFs.createFiles({
       'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
