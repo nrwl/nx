@@ -11,7 +11,7 @@ import {
   validateOutputs,
 } from './utils';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 
 describe('utils', () => {
@@ -946,11 +946,11 @@ describe('expandInitiatingTasksThroughNoop', () => {
   ): TaskGraph {
     const taskMap: Record<string, Task> = {};
     for (const t of tasks) taskMap[t] = mkTask(t);
-    const deps: Record<string, string[]> = {};
-    const cdeps: Record<string, string[]> = {};
+    const deps: Record<string, TaskGraphEdge[]> = {};
+    const cdeps: Record<string, TaskGraphEdge[]> = {};
     for (const t of tasks) {
-      deps[t] = dependencies[t] ?? [];
-      cdeps[t] = continuousDependencies[t] ?? [];
+      deps[t] = (dependencies[t] ?? []).map((id) => ({ id }));
+      cdeps[t] = (continuousDependencies[t] ?? []).map((id) => ({ id }));
     }
     return {
       tasks: taskMap,
@@ -1199,7 +1199,7 @@ describe('pruneToSelectedTasks', () => {
       'other:build': { id: 'other:build' } as Task,
     },
     dependencies: {
-      'app:build': ['lib:build'],
+      'app:build': [{ id: 'lib:build' }],
       'lib:build': [],
       'other:build': [],
     },
@@ -1216,7 +1216,7 @@ describe('pruneToSelectedTasks', () => {
       'app:build',
       'lib:build',
     ]);
-    expect(pruned.dependencies['app:build']).toEqual(['lib:build']);
+    expect(pruned.dependencies['app:build']).toEqual([{ id: 'lib:build' }]);
     expect(pruned.roots).toEqual(['lib:build']);
   });
 

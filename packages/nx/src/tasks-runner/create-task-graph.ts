@@ -11,7 +11,7 @@ import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
 } from '../utils/project-graph-utils';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import { TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
@@ -33,8 +33,8 @@ export type DependencyOverrides = Record<
 export class ProcessTasks {
   private readonly seen = new Set<string>();
   readonly tasks: { [id: string]: Task } = {};
-  readonly dependencies: { [k: string]: string[] } = {};
-  readonly continuousDependencies: { [k: string]: string[] } = {};
+  readonly dependencies: { [k: string]: TaskGraphEdge[] } = {};
+  readonly continuousDependencies: { [k: string]: TaskGraphEdge[] } = {};
   // `from\0to` continuous edges by whether their `dependsOn` entry has
   // `inputs: false`. Keyed from the creator's target, like `recordEdge`, so
   // an edge through a dummy task names the real task.
@@ -100,12 +100,12 @@ export class ProcessTasks {
       }
       for (let d of Object.keys(this.dependencies)) {
         this.dependencies[d] = this.dependencies[d].filter(
-          (dd) => !!initialTasks[dd]
+          (dd) => !!initialTasks[dd.id]
         );
       }
       for (let d of Object.keys(this.continuousDependencies)) {
         this.continuousDependencies[d] = this.continuousDependencies[d].filter(
-          (dd) => !!initialTasks[dd]
+          (dd) => !!initialTasks[dd.id]
         );
       }
     }
@@ -114,11 +114,10 @@ export class ProcessTasks {
 
     for (const taskId of Object.keys(this.dependencies)) {
       if (this.dependencies[taskId].length > 0) {
-        this.dependencies[taskId] = [
-          ...new Set(
-            this.dependencies[taskId].filter((d) => d !== taskId)
-          ).values(),
-        ];
+        this.dependencies[taskId] = mergeEdges(
+          this.dependencies[taskId],
+          taskId
+        );
       }
     }
 
@@ -126,11 +125,10 @@ export class ProcessTasks {
 
     for (const taskId of Object.keys(this.continuousDependencies)) {
       if (this.continuousDependencies[taskId].length > 0) {
-        this.continuousDependencies[taskId] = [
-          ...new Set(
-            this.continuousDependencies[taskId].filter((d) => d !== taskId)
-          ).values(),
-        ];
+        this.continuousDependencies[taskId] = mergeEdges(
+          this.continuousDependencies[taskId],
+          taskId
+        );
       }
     }
 
@@ -273,7 +271,7 @@ export class ProcessTasks {
         if (this.tasks[selfTaskId].continuous) {
           this.addContinuousEdge(task, selfTaskId, dependencyConfig);
         } else {
-          this.dependencies[task.id].push(selfTaskId);
+          this.dependencies[task.id].push({ id: selfTaskId });
         }
       }
     }
@@ -329,7 +327,7 @@ export class ProcessTasks {
           if (depTargetConfiguration.continuous) {
             this.addContinuousEdge(task, depTargetId, dependencyConfig);
           } else {
-            this.dependencies[task.id].push(depTargetId);
+            this.dependencies[task.id].push({ id: depTargetId });
           }
         }
         if (!this.tasks[depTargetId]) {
@@ -362,8 +360,8 @@ export class ProcessTasks {
             DUMMY_TASK_TARGET,
           undefined
         );
-        this.dependencies[task.id].push(dummyId);
-        this.continuousDependencies[task.id].push(dummyId);
+        this.dependencies[task.id].push({ id: dummyId });
+        this.continuousDependencies[task.id].push({ id: dummyId });
         this.dependencies[dummyId] ??= [];
         this.continuousDependencies[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
@@ -377,7 +375,9 @@ export class ProcessTasks {
     dependencyId: string,
     dependencyConfig: TargetDependencyConfig
   ) {
-    this.continuousDependencies[task.id].push(dependencyId);
+    this.continuousDependencies[task.id].push(
+      continuousEdge(dependencyId, dependencyConfig)
+    );
     const { project, target, configuration } = task.target;
     const edge = `${createTaskId(project, target, configuration)}\0${dependencyId}`;
     (dependencyConfig.inputs === false
@@ -393,13 +393,15 @@ export class ProcessTasks {
   continuousDependenciesWithoutInputs(): { [k: string]: string[] } | undefined {
     let without: { [k: string]: string[] } | undefined;
     for (const [taskId, deps] of Object.entries(this.continuousDependencies)) {
-      const excluded = deps.filter((dep) => {
-        const edge = `${taskId}\0${dep}`;
-        return (
-          this.continuousEdgesWithoutInputs.has(edge) &&
-          !this.continuousEdgesWithInputs.has(edge)
-        );
-      });
+      const excluded = deps
+        .map((dep) => dep.id)
+        .filter((dep) => {
+          const edge = `${taskId}\0${dep}`;
+          return (
+            this.continuousEdgesWithoutInputs.has(edge) &&
+            !this.continuousEdgesWithInputs.has(edge)
+          );
+        });
       if (excluded.length > 0) {
         (without ??= {})[taskId] = excluded;
       }
@@ -628,11 +630,42 @@ function interpolateOverrides<T = any>(
   return interpolatedArgs;
 }
 
+function continuousEdge(
+  id: string,
+  dependencyConfig: TargetDependencyConfig
+): TaskGraphEdge {
+  return dependencyConfig.waitFor === 'ready'
+    ? { id, waitFor: 'ready' }
+    : { id };
+}
+
+/**
+ * One edge per task, self edges dropped. A producer reached twice waits for
+ * ready when any of its edges does.
+ */
+function mergeEdges(edges: TaskGraphEdge[], selfId: string): TaskGraphEdge[] {
+  const byId = new Map<string, TaskGraphEdge>();
+  for (const edge of edges) {
+    if (edge.id === selfId) {
+      continue;
+    }
+    const existing = byId.get(edge.id);
+    if (!existing) {
+      byId.set(edge.id, edge);
+    } else if (edge.waitFor === 'ready') {
+      existing.waitFor = 'ready';
+    }
+  }
+  return [...byId.values()];
+}
+
 /**
  * This function is used to filter out the dummy tasks from the dependencies
  * It will manipulate the dependencies object in place
  */
-export function filterDummyTasks(dependencies: { [k: string]: string[] }) {
+export function filterDummyTasks(dependencies: {
+  [k: string]: TaskGraphEdge[];
+}) {
   const cycles = findCycles({ dependencies });
   for (const [key, deps] of Object.entries(dependencies)) {
     if (!key.endsWith(DUMMY_TASK_TARGET)) {
@@ -658,32 +691,29 @@ export function filterDummyTasks(dependencies: { [k: string]: string[] }) {
  * this function is used to get the non dummy dependencies of a task recursively
  */
 export function getNonDummyDeps(
-  currentTask: string,
-  dependencies: { [k: string]: string[] },
+  currentEdge: TaskGraphEdge,
+  dependencies: { [k: string]: TaskGraphEdge[] },
   cycles?: Set<string>,
   seen: Set<string> = new Set()
-): string[] {
-  if (seen.has(currentTask)) {
+): TaskGraphEdge[] {
+  const currentTask = currentEdge.id;
+  if (!currentTask.endsWith(DUMMY_TASK_TARGET)) {
+    return [currentEdge];
+  }
+  if (seen.has(currentTask) || cycles?.has(currentTask)) {
     return [];
   }
   seen.add(currentTask);
-  if (currentTask.endsWith(DUMMY_TASK_TARGET)) {
-    if (cycles?.has(currentTask)) {
-      return [];
-    }
-    const deps = dependencies[currentTask] ?? [];
-    if (!Array.isArray(deps)) {
-      throw new Error(
-        `Expected dependencies of task ${currentTask} to be an array, but got ${typeof deps}`
-      );
-    }
-    // if not a cycle, recursively get the non dummy dependencies
-    return deps.flatMap((dep) =>
-      getNonDummyDeps(dep, dependencies, cycles, seen)
+  const deps = dependencies[currentTask] ?? [];
+  if (!Array.isArray(deps)) {
+    throw new Error(
+      `Expected dependencies of task ${currentTask} to be an array, but got ${typeof deps}`
     );
-  } else {
-    return [currentTask];
   }
+  // if not a cycle, recursively get the non dummy dependencies
+  return deps.flatMap((dep) =>
+    getNonDummyDeps(dep, dependencies, cycles, seen)
+  );
 }
 
 function createTaskOverrides(

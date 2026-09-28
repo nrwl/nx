@@ -1099,6 +1099,7 @@ mod tests {
             ]),
             dependencies: HashMap::new(),
             continuous_dependencies: HashMap::new(),
+            continuous_dependencies_without_inputs: None,
             roots: vec![],
         }
     }

@@ -39,9 +39,9 @@ pub(crate) fn walk_dependencies<'a: 'b, 'b>(
             task_graph.continuous_dependencies.get(current),
         ];
         for dep in edges.into_iter().flatten().flatten() {
-            if seen.insert(dep.as_str()) {
-                visit(dep.as_str());
-                stack.push(dep.as_str());
+            if seen.insert(dep.id.as_str()) {
+                visit(dep.id.as_str());
+                stack.push(dep.id.as_str());
             }
         }
     }
@@ -50,18 +50,15 @@ pub(crate) fn walk_dependencies<'a: 'b, 'b>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::tasks::types::Task;
+    use crate::native::tasks::types::{Task, TaskGraphEdge};
+    use crate::native::test_utils::{edges_to, strings};
     use std::collections::HashMap;
 
-    fn strings(values: &[&str]) -> Vec<String> {
-        values.iter().map(|v| v.to_string()).collect()
-    }
-
     fn graph(deps: &[(&str, &[&str])], continuous: &[(&str, &[&str])]) -> TaskGraph {
-        let edges = |pairs: &[(&str, &[&str])]| -> HashMap<String, Vec<String>> {
+        let edges = |pairs: &[(&str, &[&str])]| -> HashMap<String, Vec<TaskGraphEdge>> {
             pairs
                 .iter()
-                .map(|(id, d)| (id.to_string(), strings(d)))
+                .map(|(id, d)| (id.to_string(), edges_to(d)))
                 .collect()
         };
         let mut ids: Vec<&str> = deps

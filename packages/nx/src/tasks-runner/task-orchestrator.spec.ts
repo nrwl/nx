@@ -134,7 +134,10 @@ describe('TaskOrchestrator', () => {
       const taskGraph: TaskGraph = {
         roots: ['dep:build'],
         tasks: { 'dep:build': dep, 'consumer:build': consumer },
-        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        dependencies: {
+          'dep:build': [],
+          'consumer:build': [{ id: 'dep:build' }],
+        },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
       const { orchestrator, hasher, hashesAtCacheTime } = createOrchestrator(
@@ -169,7 +172,10 @@ describe('TaskOrchestrator', () => {
       const taskGraph: TaskGraph = {
         roots: ['dep:build'],
         tasks: { 'dep:build': dep, 'consumer:build': consumer },
-        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        dependencies: {
+          'dep:build': [],
+          'consumer:build': [{ id: 'dep:build' }],
+        },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
       const { orchestrator } = createOrchestrator(taskGraph);
@@ -199,7 +205,10 @@ describe('TaskOrchestrator', () => {
       const taskGraph: TaskGraph = {
         roots: ['dep:build'],
         tasks: { 'dep:build': dep, 'consumer:build': consumer },
-        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        dependencies: {
+          'dep:build': [],
+          'consumer:build': [{ id: 'dep:build' }],
+        },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
       const { orchestrator } = createOrchestrator(taskGraph);
@@ -225,7 +234,10 @@ describe('TaskOrchestrator', () => {
       const taskGraph: TaskGraph = {
         roots: ['dep:build'],
         tasks: { 'dep:build': dep, 'consumer:build': consumer },
-        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        dependencies: {
+          'dep:build': [],
+          'consumer:build': [{ id: 'dep:build' }],
+        },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
       const { orchestrator } = createOrchestrator(taskGraph);
@@ -251,7 +263,10 @@ describe('TaskOrchestrator', () => {
       const taskGraph: TaskGraph = {
         roots: ['dep:build'],
         tasks: { 'dep:build': dep, 'consumer:build': consumer },
-        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        dependencies: {
+          'dep:build': [],
+          'consumer:build': [{ id: 'dep:build' }],
+        },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
       const { orchestrator, hasher } = createOrchestrator(
@@ -286,7 +301,10 @@ describe('TaskOrchestrator', () => {
           'dep:build': createTask('dep:build'),
           'reader:build': createTask('reader:build'),
         },
-        dependencies: { 'dep:build': [], 'reader:build': ['dep:build'] },
+        dependencies: {
+          'dep:build': [],
+          'reader:build': [{ id: 'dep:build' }],
+        },
         continuousDependencies: { 'dep:build': [], 'reader:build': [] },
       };
       const { orchestrator, hasher, hashesAtCacheTime } = createOrchestrator(
@@ -1761,7 +1779,10 @@ describe('TaskOrchestrator', () => {
       const fullTaskGraph: TaskGraph = {
         tasks: { 'app:serve': serve, 'e2e:e2e': e2e },
         dependencies: { 'app:serve': [], 'e2e:e2e': [] },
-        continuousDependencies: { 'app:serve': [], 'e2e:e2e': ['app:serve'] },
+        continuousDependencies: {
+          'app:serve': [],
+          'e2e:e2e': [{ id: 'app:serve', waitFor }],
+        },
         roots: ['app:serve', 'e2e:e2e'],
       };
       // An Nx Cloud agent worker runs one discrete task with a flat graph
@@ -1793,14 +1814,7 @@ describe('TaskOrchestrator', () => {
           e2e: {
             name: 'e2e',
             type: 'app',
-            data: {
-              root: 'e2e',
-              targets: {
-                e2e: {
-                  dependsOn: [{ projects: ['app'], target: 'serve', waitFor }],
-                },
-              },
-            },
+            data: { root: 'e2e', targets: { e2e: {} } },
           },
         },
         dependencies: {

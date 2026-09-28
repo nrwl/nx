@@ -55,7 +55,7 @@ export { createNodesFromFiles } from './project-graph/plugins';
 /**
  * @category Tasks
  */
-export type { Task, TaskGraph } from './config/task-graph';
+export type { Task, TaskGraph, TaskGraphEdge } from './config/task-graph';
 
 /**
  * @category Tasks

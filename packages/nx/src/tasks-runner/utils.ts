@@ -7,7 +7,7 @@ import {
 } from '../command-line/run/executor-utils';
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import { hashObject } from '../hasher/file-hasher';
 import {
   ProjectConfiguration,
@@ -485,10 +485,10 @@ export function expandInitiatingTasksThroughNoop(
 
     if (getExecutorNameForTask(task, projectGraph) === 'nx:noop') {
       for (const dep of taskGraph.dependencies[taskId] ?? []) {
-        queue.push(dep);
+        queue.push(dep.id);
       }
       for (const dep of taskGraph.continuousDependencies[taskId] ?? []) {
-        queue.push(dep);
+        queue.push(dep.id);
       }
     } else {
       expanded.add(taskId);
@@ -575,16 +575,16 @@ function pruneEdges(
 function removeIdsFromTaskGraph<T>(
   graph: {
     roots: string[];
-    dependencies: Record<string, string[]>;
-    continuousDependencies: Record<string, string[]>;
+    dependencies: Record<string, TaskGraphEdge[]>;
+    continuousDependencies: Record<string, TaskGraphEdge[]>;
   },
   ids: string[],
   mapWithIds: Record<string, T>
 ): {
   mapWithIds: Record<string, T>;
   roots: string[];
-  dependencies: Record<string, string[]>;
-  continuousDependencies: Record<string, string[]>;
+  dependencies: Record<string, TaskGraphEdge[]>;
+  continuousDependencies: Record<string, TaskGraphEdge[]>;
 } {
   const filteredMapWithIds = {};
   const dependencies = {};
@@ -594,10 +594,10 @@ function removeIdsFromTaskGraph<T>(
     if (!removedSet.has(id)) {
       filteredMapWithIds[id] = mapWithIds[id];
       dependencies[id] = graph.dependencies[id].filter(
-        (depId) => !removedSet.has(depId)
+        (dep) => !removedSet.has(dep.id)
       );
       continuousDependencies[id] = graph.continuousDependencies[id].filter(
-        (depId) => !removedSet.has(depId)
+        (dep) => !removedSet.has(dep.id)
       );
     }
   }
@@ -622,13 +622,13 @@ export function calculateReverseDeps(
 
   Object.keys(taskGraph.dependencies).forEach((taskId) => {
     taskGraph.dependencies[taskId].forEach((d) => {
-      reverseTaskDeps[d].push(taskId);
+      reverseTaskDeps[d.id].push(taskId);
     });
   });
 
   Object.keys(taskGraph.continuousDependencies).forEach((taskId) => {
     taskGraph.continuousDependencies[taskId].forEach((d) => {
-      reverseTaskDeps[d].push(taskId);
+      reverseTaskDeps[d.id].push(taskId);
     });
   });
 

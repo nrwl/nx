@@ -64,10 +64,13 @@ function makeGraph(
       .map((t) => t.id),
     tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
     dependencies: Object.fromEntries(
-      tasks.map((t) => [t.id, deps[t.id] ?? []])
+      tasks.map((t) => [t.id, (deps[t.id] ?? []).map((id) => ({ id }))])
     ),
     continuousDependencies: Object.fromEntries(
-      tasks.map((t) => [t.id, continuousDeps[t.id] ?? []])
+      tasks.map((t) => [
+        t.id,
+        (continuousDeps[t.id] ?? []).map((id) => ({ id })),
+      ])
     ),
   } as unknown as TaskGraph;
 }

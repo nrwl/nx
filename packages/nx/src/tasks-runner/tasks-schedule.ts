@@ -385,11 +385,7 @@ export class TasksSchedule {
   private readyProducersOf(task: Task) {
     let producers = this.readyProducers.get(task.id);
     if (!producers) {
-      const all = getReadyProducerIds(
-        task,
-        this.fullTaskGraph,
-        this.projectGraph
-      );
+      const all = getReadyProducerIds(task, this.fullTaskGraph);
       const probed = filterProbedProducers(
         all,
         this.fullTaskGraph,
@@ -426,7 +422,7 @@ export class TasksSchedule {
     return (
       task.parallelism !== false &&
       this.taskGraph.dependencies[task.id].every(
-        (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
+        ({ id }) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
       ) &&
       this.hasContinuousDependenciesStarted(task.id)
     );
@@ -434,13 +430,13 @@ export class TasksSchedule {
 
   private hasContinuousDependenciesStarted(taskId: string): boolean {
     return this.taskGraph.continuousDependencies[taskId].every(
-      (id) => this.runningTasks.has(id) && !this.pendingStart.has(id)
+      ({ id }) => this.runningTasks.has(id) && !this.pendingStart.has(id)
     );
   }
 
   private canBeScheduled(taskId: string): boolean {
     const hasDependenciesCompleted = this.taskGraph.dependencies[taskId].every(
-      (id) => this.completedTasks.has(id)
+      ({ id }) => this.completedTasks.has(id)
     );
     const hasContinuousDependenciesStarted =
       this.hasContinuousDependenciesStarted(taskId);

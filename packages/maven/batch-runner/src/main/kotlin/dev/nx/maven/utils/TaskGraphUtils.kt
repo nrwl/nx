@@ -1,6 +1,7 @@
 package dev.nx.maven.utils
 
 import dev.nx.maven.data.TaskGraph
+import dev.nx.maven.data.TaskGraphEdge
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger("TaskGraphUtils")
@@ -53,19 +54,19 @@ fun removeTasksFromTaskGraph(
   val filteredTasks = graph.tasks.filterKeys { !tasksToRemove.contains(it) }
 
   // Filter dependencies, removing tasks to remove from all dependency lists
-  val filteredDependencies = mutableMapOf<String, List<String>>()
+  val filteredDependencies = mutableMapOf<String, List<TaskGraphEdge>>()
   for ((taskId, deps) in graph.dependencies) {
     if (!tasksToRemove.contains(taskId)) {
-      filteredDependencies[taskId] = deps.filterNot { tasksToRemove.contains(it) }
+      filteredDependencies[taskId] = deps.filterNot { tasksToRemove.contains(it.id) }
     }
   }
 
   // Filter continuous dependencies similarly
-  val filteredContinuousDependencies = mutableMapOf<String, List<String>>()
+  val filteredContinuousDependencies = mutableMapOf<String, List<TaskGraphEdge>>()
   for ((taskId, deps) in graph.continuousDependencies) {
     if (!tasksToRemove.contains(taskId)) {
       filteredContinuousDependencies[taskId] =
-        deps.filterNot { tasksToRemove.contains(it) }
+        deps.filterNot { tasksToRemove.contains(it.id) }
     }
   }
 
@@ -90,13 +91,13 @@ fun removeTasksFromTaskGraph(
  * @return Reverse map: taskId -> list of tasks that depend on it
  */
 private fun buildReverseDependencyMap(
-  dependencyMap: Map<String, List<String>>
+  dependencyMap: Map<String, List<TaskGraphEdge>>
 ): Map<String, MutableList<String>> {
   val reverseDeps = mutableMapOf<String, MutableList<String>>()
 
   for ((taskId, dependencies) in dependencyMap) {
     for (dep in dependencies) {
-      reverseDeps.computeIfAbsent(dep) { mutableListOf() }.add(taskId)
+      reverseDeps.computeIfAbsent(dep.id) { mutableListOf() }.add(taskId)
     }
   }
 

@@ -213,7 +213,7 @@ function resolveTaskGraphDependencies(
     const directDeps = [
       ...(taskGraph.dependencies[rootId] ?? []),
       ...(taskGraph.continuousDependencies[rootId] ?? []),
-    ];
+    ].map((edge) => edge.id);
     const directDepSet = new Set<string>(directDeps);
 
     const depSourceIndices = directDeps.map((depTaskId) => {

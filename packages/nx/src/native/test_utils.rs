@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use crate::native::tasks::types::{
-    HashInstruction, HashPlans, InstructionPool, Task, TaskGraph, TaskTarget,
+    HashInstruction, HashPlans, InstructionPool, Task, TaskGraph, TaskGraphEdge, TaskTarget,
 };
 
 pub(crate) fn project(root: &str) -> Project {
@@ -42,6 +42,16 @@ pub(crate) fn files(paths: &[&str]) -> Vec<String> {
 
 pub(crate) fn strings(v: &[&str]) -> Vec<String> {
     v.iter().map(|s| s.to_string()).collect()
+}
+
+/// Edges to `ids`, each waiting for the start of its task.
+pub(crate) fn edges_to(ids: &[&str]) -> Vec<TaskGraphEdge> {
+    ids.iter()
+        .map(|id| TaskGraphEdge {
+            id: id.to_string(),
+            wait_for: None,
+        })
+        .collect()
 }
 
 /// Plans for each task, interned into one shared pool.
@@ -86,7 +96,7 @@ pub(crate) fn task_graph(tasks: &[(&str, &[&str])], deps: &[(&str, &[&str])]) ->
             .collect(),
         dependencies: deps
             .iter()
-            .map(|(id, d)| (id.to_string(), strings(d)))
+            .map(|(id, d)| (id.to_string(), edges_to(d)))
             .collect(),
         continuous_dependencies: HashMap::new(),
         continuous_dependencies_without_inputs: None,
