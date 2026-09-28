@@ -1,6 +1,7 @@
 import type {
   ChangeBatch,
   NxWorkspaceFilesExternals,
+  TaskOutputs,
   WorkspaceContext,
   WorkspaceContextOptions,
 } from '../native';
@@ -173,6 +174,26 @@ export function trackedFilesInContext(
 ): string[] {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext?.trackedFiles(paths) ?? [];
+}
+
+/** Remembers each task's outputs as they are on disk now. */
+export function recordOutputsInContext(
+  workspaceRoot: string,
+  entries: TaskOutputs[]
+) {
+  ensureContextAvailable(workspaceRoot);
+  workspaceContext?.recordOutputs(entries);
+}
+
+/** Whether each task's outputs are still as last recorded for its hash. */
+export function outputsUnchangedInContext(
+  workspaceRoot: string,
+  entries: TaskOutputs[]
+): boolean[] {
+  ensureContextAvailable(workspaceRoot);
+  return (
+    workspaceContext?.outputsUnchanged(entries) ?? entries.map(() => false)
+  );
 }
 
 export function updateFilesInContext(

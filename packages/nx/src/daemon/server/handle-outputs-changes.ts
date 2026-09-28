@@ -3,11 +3,7 @@ import {
   classifyDotEnvChanges,
   queuePendingDotEnvEvents,
 } from './dotenv-graph-changes';
-import {
-  clearRecordedOutputsHashes,
-  disableOutputsTracking,
-  processFileChangesInOutputs,
-} from './outputs-tracking';
+import { disableOutputsTracking } from './outputs-tracking';
 import {
   currentProjectGraph,
   getRecomputationGeneration,
@@ -19,7 +15,6 @@ import {
   type WatchEventsListener,
 } from '../../utils/workspace-context';
 
-let outputsWatcherError: Error | undefined;
 let outputsWatcherTerminalError: Error | undefined;
 
 /**
@@ -45,7 +40,6 @@ export const handleOutputsChanges: WatchEventsListener = async (
         error.message
       );
       console.error(error);
-      outputsWatcherError = error;
       disableOutputsTracking();
       if (err) {
         // A native error is terminal: the watch loop has exited, so the
@@ -61,24 +55,21 @@ export const handleOutputsChanges: WatchEventsListener = async (
     }
 
     if (changeEvents.some((event) => event.type === 'rescan')) {
-      // Dropped events cannot be classified: any recorded output hash and any
-      // gitignored dotenv file may have changed unseen. Start the tracker
-      // over and invalidate the graph rather than trust either.
+      // Dropped events cannot be classified: any gitignored dotenv file may
+      // have changed unseen. Recorded outputs are compared by stamp, so they
+      // need nothing.
       serverLogger.watcherLog(
-        'The outputs watcher reported dropped events; clearing recorded output hashes and invalidating the graph cache.'
+        'The outputs watcher reported dropped events; invalidating the graph cache.'
       );
-      clearRecordedOutputsHashes();
       invalidateGraphCache();
       return;
     }
 
     // A dotenv change that a task chain loads must refresh the graph so
-    // createNodes re-resolves config reading process.env. This runs above the
-    // outputsWatcherError guard: the two concerns are independent, and a
-    // disabled outputs tracker must not leave the graph stale on a dotenv edit.
-    // A change to a file the workspace watcher tracks already schedules a
-    // recomputation that reads the new content; invalidating for it here too
-    // would discard that recomputation at commit and force a second one. It is
+    // createNodes re-resolves config reading process.env. A change to a file
+    // the workspace watcher tracks already schedules a recomputation that
+    // reads the new content; invalidating for it here too would discard that
+    // recomputation at commit and force a second one. It is
     // queued instead of dropped: the two watchers deliver independently, so a
     // computation already in flight may have read the file before the edit,
     // and only the pre-serve replay can prove that. The context answers from
@@ -116,17 +107,9 @@ export const handleOutputsChanges: WatchEventsListener = async (
       console.error(e);
       invalidateGraphCache();
     }
-
-    if (outputsWatcherError) {
-      return;
-    }
-
-    serverLogger.watcherLog('Processing file changes in outputs');
-    processFileChangesInOutputs(changeEvents);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected outputs watcher error`, err.message);
     console.error(err);
-    outputsWatcherError = err;
     disableOutputsTracking();
   }
 };
