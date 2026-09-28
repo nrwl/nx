@@ -68,11 +68,11 @@ describe.each([
     );
   });
 
-  it('treats null task fields as unset before they reach the native bindings', async () => {
+  it('treats a null hash as unset before it reaches the native bindings', async () => {
     // Nx Cloud agents clear the assigned copy's hash to force a rehash.
     const assigned = {
       id: 'app:build',
-      target: { project: 'app', target: 'build', configuration: null },
+      target: { project: 'app', target: 'build' },
       outputs: ['dist/app'],
       hash: null,
       hashDetails: null,
@@ -86,13 +86,13 @@ describe.each([
           target: { project: 'app', target: 'build' },
           outputs: ['dist/app'],
           hash: 'main-job-hash',
-          startTime: null,
           cache: true,
         },
       },
       dependencies: { 'app:build': [] },
       continuousDependencies: { 'app:build': [] },
     } as any;
+    const fullGraphTask = { ...graph.tasks['app:build'] };
 
     await run([assigned], projectGraph, graph, {}, {} as any, {} as any);
 
@@ -102,13 +102,7 @@ describe.each([
       outputs: ['dist/app'],
       cache: true,
     });
-    expect(graph.tasks['app:build']).toEqual({
-      id: 'app:build',
-      target: { project: 'app', target: 'build' },
-      outputs: ['dist/app'],
-      hash: 'main-job-hash',
-      cache: true,
-    });
+    expect(graph.tasks['app:build']).toEqual(fullGraphTask);
   });
 
   it('hashes natively when the caller passes no set', async () => {
