@@ -33,7 +33,7 @@ pub enum GlobGroup<'a> {
     Class(Cow<'a, str>),
     // `{a,b}`
     Alternates(Cow<'a, str>),
-    // `\*`; never produced on Windows, where `\` is a separator
+    // `\*`
     Escaped(Cow<'a, str>),
 }
 

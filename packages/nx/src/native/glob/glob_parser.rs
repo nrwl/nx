@@ -22,7 +22,7 @@ fn special_char_alone<'a>(
 }
 
 /// A closed `[...]` class, taken whole so a `(` or `)` in it is a member
-/// rather than a group: `[(]` names a literal `(` where `\(` cannot, on Windows.
+/// rather than a group: `[(]` names a literal `(`, like `\(`.
 fn bracket_class<'a>(input: &'a str) -> IResult<&'a str, GlobGroup<'a>, VerboseError<&'a str>> {
     context("bracket_class", |input: &'a str| {
         tag("[")(input)?;
