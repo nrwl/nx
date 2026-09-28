@@ -303,7 +303,7 @@ fn observed_outputs(entry: &TaskIoSnapshot) -> (Vec<String>, Vec<String>) {
                     !escapes_workspace(g)
                         && !path::escapes_workspace(std::path::Path::new(g))
                         && !under_ignored_dir(g)
-                        && !g.split(['/', '\\']).any(segment_could_disguise)
+                        && !g.split('/').any(segment_could_disguise)
                 })
         });
     outputs.sort();
@@ -314,14 +314,15 @@ fn observed_outputs(entry: &TaskIoSnapshot) -> (Vec<String>, Vec<String>) {
 }
 
 /// Whether a segment could hide an excluded name behind glob syntax: a class,
-/// an unexpanded brace group, `?`, or a partial `*` (`.gi[t]`, `{..,*}`,
-/// `node_modul?s`, `node_modul*s`). A bare `*` or `**` is a plain wildcard
-/// rather than a disguise, so `under_ignored_dir` judges those instead.
+/// an unexpanded brace group, `?`, a partial `*` or an escape (`.gi[t]`,
+/// `{..,*}`, `node_modul?s`, `node_modul*s`, `.gi\t`). A bare `*` or `**` is a
+/// plain wildcard rather than a disguise, so `under_ignored_dir` judges those.
 fn segment_could_disguise(segment: &str) -> bool {
     if segment.contains(['[', '{', '?']) {
         return true;
     }
-    if !segment.contains('*') || segment.trim_matches('*').is_empty() {
+    let partial_wildcard = segment.contains('*') && !segment.trim_matches('*').is_empty();
+    if !partial_wildcard && !segment.contains('\\') {
         return false;
     }
     // Lowercased like `under_ignored_dir`, so `NODE_MODUL*S` cannot pass
@@ -339,7 +340,7 @@ const IGNORED_DIRS: [&str; 3] = ["node_modules", ".nx", ".git"];
 
 /// Case-insensitive: `.GIT/hooks` restores into `.git` on macOS and Windows.
 fn under_ignored_dir(path: &str) -> bool {
-    path.split(['/', '\\']).any(|segment| {
+    path.split('/').any(|segment| {
         IGNORED_DIRS
             .iter()
             .any(|dir| segment.eq_ignore_ascii_case(dir))
@@ -570,6 +571,32 @@ mod tests {
         // Nx Cloud drops these before upload, so a rejection here means the
         // two sides disagree and the run should say so.
         assert_eq!(dropped, vec!["../outside/y", "node_modules/.cache/x"]);
+    }
+
+    #[test]
+    fn an_escape_cannot_disguise_an_ignored_dir() {
+        let disguised = [
+            r".gi\t/config",
+            r"node_module\s/x",
+            r".GI\T/hooks/x",
+            r"apps/\.nx/cache/x",
+        ];
+        let kept = [r"libs/\!notes.md", r"dist/a\(b\).js", r"a\\b/x"];
+        let (outputs, dropped) = observed_outputs(&TaskIoSnapshot {
+            commit: "c".into(),
+            inputs: vec![],
+            outputs: disguised
+                .iter()
+                .chain(&kept)
+                .map(|g| g.to_string())
+                .collect(),
+        });
+        let mut expected_dropped: Vec<String> = disguised.iter().map(|g| g.to_string()).collect();
+        expected_dropped.sort();
+        let mut expected_kept: Vec<String> = kept.iter().map(|g| g.to_string()).collect();
+        expected_kept.sort();
+        assert_eq!(dropped, expected_dropped);
+        assert_eq!(outputs, expected_kept);
     }
 
     #[test]
