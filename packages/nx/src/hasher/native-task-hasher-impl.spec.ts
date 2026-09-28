@@ -1623,6 +1623,41 @@ describe('native task hasher', () => {
     expect(two.inputs.files).not.toContain('libs/child/one.txt');
   });
 
+  it('hashes a snapshot read of a parenthesized directory through a class', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/(group)/page.md': 'paren',
+      'libs/child/xgroupx/page.md': 'lookalike',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-paren-db'),
+      'io-snapshots'
+    );
+    new IoSnapshotStore(snapshotDb).import({
+      requestedCommit: commit,
+      snapshotsJson: JSON.stringify({
+        'child:compile': {
+          commit,
+          inputs: ['libs/child/[(]group[)]/page.md'],
+          outputs: [],
+        },
+      }),
+    });
+    const hash = await impl.hashTask(
+      taskGraph.tasks['child:compile'],
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      new IoSnapshotStore(snapshotDb).get(commit)
+    );
+
+    expect(hash.inputs.files.filter((f) => f.includes('group'))).toEqual([
+      'libs/child/(group)/page.md',
+    ]);
+  });
+
   it('hashes a task from its snapshot instead of its declared fileset', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });

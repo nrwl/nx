@@ -553,6 +553,14 @@ mod test {
     }
 
     #[test]
+    fn a_class_matches_a_literal_parenthesis() {
+        let glob_set = build_glob_set(&["app/[(]marketing[)]/**"]).unwrap();
+        assert!(glob_set.is_match("app/(marketing)/page.tsx"));
+        assert!(!glob_set.is_match("app/xmarketingx/page.tsx"));
+        assert!(!glob_set.is_match("app/marketing/page.tsx"));
+    }
+
+    #[test]
     fn supports_multiple_brace_groups() {
         // The vite/vitest generators write this include; for a workspace-root
         // project it reaches the native glob unprefixed, so it starts with `{`,
