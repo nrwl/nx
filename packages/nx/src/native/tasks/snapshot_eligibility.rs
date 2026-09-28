@@ -11,11 +11,11 @@ use xxhash_rust::xxh3::Xxh3;
 
 /// Each task's ultracache configuration by task id: all the eligibility walk
 /// reads from a task, so callers need not transfer whole tasks.
-pub(crate) type UltracacheByTask<'a> = HashMap<&'a str, Option<&'a TaskUltracacheConfiguration>>;
+pub(crate) type UltraCacheConfig<'a> = HashMap<&'a str, Option<&'a TaskUltracacheConfiguration>>;
 
 fn borrow_ultracache(
     tasks: &HashMap<String, Option<TaskUltracacheConfiguration>>,
-) -> UltracacheByTask<'_> {
+) -> UltraCacheConfig<'_> {
     tasks
         .iter()
         .map(|(id, ultracache)| (id.as_str(), ultracache.as_ref()))
@@ -136,14 +136,14 @@ impl Resolved {
 /// and no tasks.
 pub(crate) fn resolve(
     snapshots: &IoSnapshots,
-    ultracache_by_task: &UltracacheByTask<'_>,
+    ultra_cache_config: &UltraCacheConfig<'_>,
     inputs: &EligibilityInputs,
 ) -> Resolved {
     let resolution = snapshots.resolution_ref();
 
     let mut tasks = HashMap::new();
     let mut diagnostics = Vec::new();
-    let mut task_ids: Vec<&str> = ultracache_by_task.keys().copied().collect();
+    let mut task_ids: Vec<&str> = ultra_cache_config.keys().copied().collect();
     task_ids.sort();
     let entries = match snapshots.entries_for(&task_ids) {
         Ok(entries) => entries,
@@ -163,7 +163,7 @@ pub(crate) fn resolve(
         // `On` is the only mode that lets a recording stand in for what the
         // target declared; `Warn` and `Error` still record, but report against
         // the declaration rather than replacing it.
-        let ultracache = ultracache_by_task[task_id];
+        let ultracache = ultra_cache_config[task_id];
         match ultracache.and_then(|ultracache| ultracache.mode.as_ref()) {
             Some(UltracacheMode::Off) => {
                 diagnostics.push(IoSnapshotDiagnostic::task("disabled", task_id));

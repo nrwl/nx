@@ -26,7 +26,7 @@ use crate::native::tasks::inputs::{
 };
 use crate::native::tasks::plan_memo::PlanMemo;
 use crate::native::tasks::snapshot_eligibility::{
-    self, EligibilityInputs, IoSnapshotEligibilityOptions, SnapshotTask, UltracacheByTask,
+    self, EligibilityInputs, IoSnapshotEligibilityOptions, SnapshotTask, UltraCacheConfig,
 };
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
@@ -297,14 +297,14 @@ impl HashPlanner {
                         .map(|task| task.id.as_str()),
                 );
             }
-            let ultracache_by_task: UltracacheByTask = scope
+            let ultra_cache_config: UltraCacheConfig = scope
                 .iter()
                 .filter_map(|id| task_graph.tasks.get_key_value(*id))
                 .map(|(id, task)| (id.as_str(), task.ultracache.as_ref()))
                 .collect();
             snapshot_eligibility::resolve(
                 snapshots,
-                &ultracache_by_task,
+                &ultra_cache_config,
                 &EligibilityInputs {
                     custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
                 },
