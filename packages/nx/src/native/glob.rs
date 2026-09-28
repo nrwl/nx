@@ -212,6 +212,7 @@ pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Resul
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::native::utils::Normalize;
 
     /// Pins convert_glob, partition_glob and the narrowing prefix for a corpus
     /// of real globs, so a change to them shows up as a snapshot diff.
@@ -225,7 +226,11 @@ mod test {
                 Err(_) => "error".into(),
             };
             let prefix = match build_glob_set(&[glob]) {
-                Ok(set) => format!("{:?}", set.literal_prefix()),
+                // Normalized so a prefix rebuilt from components prints `/` on Windows too.
+                Ok(set) => format!(
+                    "{:?}",
+                    set.literal_prefix().map(|p| p.to_normalized_string())
+                ),
                 Err(_) => "error".into(),
             };
             report.push_str(&format!(
