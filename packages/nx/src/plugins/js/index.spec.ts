@@ -124,6 +124,21 @@ async function createDependencies(
   });
 }
 
+const yarnLockFile = `# yarn lockfile v1
+
+a@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/a/-/a-1.0.0.tgz"
+  integrity sha512-a
+  dependencies:
+    x "1.0.0"
+
+x@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/x/-/x-1.0.0.tgz"
+  integrity sha512-x
+`;
+
 describe('nx/js/dependencies-and-lockfile', () => {
   beforeEach(() => {
     write('nx.json', '{}');
@@ -197,23 +212,7 @@ describe('nx/js/dependencies-and-lockfile', () => {
 
   it('should parse dependencies in the lockfile format that createNodes read', async () => {
     write('package.json', JSON.stringify({ devDependencies: { a: '1.0.0' } }));
-    write(
-      'bun.lockb',
-      `# yarn lockfile v1
-
-a@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/a/-/a-1.0.0.tgz"
-  integrity sha512-a
-  dependencies:
-    x "1.0.0"
-
-x@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/x/-/x-1.0.0.tgz"
-  integrity sha512-x
-`
-    );
+    write('bun.lockb', yarnLockFile);
     const plugin = await loadPluginInNewProcess();
     const nodes = await createExternalNodes(plugin, 'bun.lockb');
 
@@ -223,5 +222,23 @@ x@1.0.0:
     expect(await createDependencies(plugin, nodes)).toEqual([
       { source: 'npm:a', target: 'npm:x', type: 'static' },
     ]);
+  });
+
+  it('should not create dependencies from a lockfile that createNodes skipped', async () => {
+    write('package.json', JSON.stringify({ devDependencies: { a: '1.0.0' } }));
+    write('yarn.lock', yarnLockFile);
+    const plugin = await loadPluginInNewProcess();
+    expect(
+      await createDependencies(
+        plugin,
+        await createExternalNodes(plugin, 'yarn.lock')
+      )
+    ).toEqual([{ source: 'npm:a', target: 'npm:x', type: 'static' }]);
+
+    // The workspace switches to pnpm before its first pnpm install.
+    write('nx.json', JSON.stringify({ cli: { packageManager: 'pnpm' } }));
+    expect(await createExternalNodes(plugin, 'yarn.lock')).toBeUndefined();
+
+    expect(await createDependencies(plugin, {})).toEqual([]);
   });
 });

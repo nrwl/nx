@@ -52,6 +52,9 @@ let cachedKeyMap: Map<string, any> | undefined;
 export const createNodes: CreateNodes = [
   combineGlobPatterns(LOCKFILES),
   (files, _, context) => {
+    // A long-lived process must not reuse a lockfile this computation skipped.
+    cachedLockFile = undefined;
+    cachedKeyMap = undefined;
     return createNodesFromFiles(internalCreateNodes, files, _, context);
   },
 ];
