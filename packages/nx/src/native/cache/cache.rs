@@ -1,8 +1,10 @@
 use std::fs::{create_dir_all, read_dir, read_to_string, remove_file, symlink_metadata, write};
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
 use tracing::{debug, trace};
+
+use crate::native::utils::path::escapes_workspace;
 
 use fs_extra::remove_items;
 use rayon::prelude::*;
@@ -737,26 +739,6 @@ fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> anyhow::Res
             Ok(relative.to_normalized_string())
         })
         .collect()
-}
-
-/// Whether a relative path climbs above its base via `..`.
-fn escapes_workspace(path: &Path) -> bool {
-    let mut depth: i32 = 0;
-    for component in path.components() {
-        match component {
-            Component::ParentDir => {
-                depth -= 1;
-                if depth < 0 {
-                    return true;
-                }
-            }
-            Component::Normal(_) => depth += 1,
-            Component::CurDir => {}
-            // A relative path shouldn't contain a root/prefix; treat as escaping.
-            Component::RootDir | Component::Prefix(_) => return true,
-        }
-    }
-    false
 }
 
 #[cfg(test)]

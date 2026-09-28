@@ -1,7 +1,7 @@
 use crate::native::utils::normalize_trait::Normalize;
 use std::collections::BTreeMap;
 use std::ops::Bound;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 impl Normalize for Path {
     fn to_normalized_string(&self) -> String {
@@ -52,10 +52,44 @@ pub fn get_child_files<'a, T>(
         .take_while(move |(path, _)| path.starts_with(directory))
 }
 
+/// Whether a relative path climbs above its base via `..`, or has a root or
+/// drive prefix (`/x`, and on Windows `\x` or `C:x`) that `join` would follow.
+pub(crate) fn escapes_workspace(path: &Path) -> bool {
+    let mut depth: i32 = 0;
+    for component in path.components() {
+        match component {
+            Component::ParentDir => {
+                depth -= 1;
+                if depth < 0 {
+                    return true;
+                }
+            }
+            Component::Normal(_) => depth += 1,
+            Component::CurDir => {}
+            // A relative path shouldn't contain a root/prefix; treat as escaping.
+            Component::RootDir | Component::Prefix(_) => return true,
+        }
+    }
+    false
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
     use std::path::PathBuf;
+
+    #[test]
+    fn a_path_escapes_the_workspace_by_climbing_or_by_a_root() {
+        for inside in ["dist/app", "libs/a/../b", "./dist", "!x"] {
+            assert!(!escapes_workspace(Path::new(inside)), "{inside}");
+        }
+        for outside in ["../x", "libs/../../x", "/etc/passwd"] {
+            assert!(escapes_workspace(Path::new(outside)), "{outside}");
+        }
+        // `\` roots a path only where it is a separator.
+        assert_eq!(escapes_workspace(Path::new(r"\!Backup")), cfg!(windows));
+        assert_eq!(escapes_workspace(Path::new("C:x")), cfg!(windows));
+    }
 
     #[test]
     fn normalizes_a_js_path_on_any_os() {

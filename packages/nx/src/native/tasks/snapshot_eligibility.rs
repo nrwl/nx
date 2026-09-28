@@ -7,6 +7,7 @@ use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{parse_group, validate_files_glob};
 use crate::native::tasks::types::{TaskGraph, TaskUltracacheConfiguration, UltracacheMode};
+use crate::native::utils::path;
 use xxhash_rust::xxh3::Xxh3;
 
 /// What the eligibility walk needs beyond each task's ultracache configuration.
@@ -300,6 +301,7 @@ fn observed_outputs(entry: &TaskIoSnapshot) -> (Vec<String>, Vec<String>) {
             !glob.starts_with('!')
                 && expand_literal_braces(glob).iter().all(|g| {
                     !escapes_workspace(g)
+                        && !path::escapes_workspace(std::path::Path::new(g))
                         && !under_ignored_dir(g)
                         && !g.split(['/', '\\']).any(segment_could_disguise)
                 })
@@ -568,6 +570,21 @@ mod tests {
         // Nx Cloud drops these before upload, so a rejection here means the
         // two sides disagree and the run should say so.
         assert_eq!(dropped, vec!["../outside/y", "node_modules/.cache/x"]);
+    }
+
+    #[test]
+    fn a_root_level_escaped_write_is_kept_only_where_it_stays_relative() {
+        let (outputs, dropped) = observed_outputs(&TaskIoSnapshot {
+            commit: "c".into(),
+            inputs: vec![],
+            outputs: vec![r"\!Backup".into()],
+        });
+        // On Windows `\` roots the path, so joining it would leave the workspace.
+        if cfg!(windows) {
+            assert_eq!((outputs, dropped), (vec![], vec![r"\!Backup".to_string()]));
+        } else {
+            assert_eq!((outputs, dropped), (vec![r"\!Backup".to_string()], vec![]));
+        }
     }
 
     #[test]
