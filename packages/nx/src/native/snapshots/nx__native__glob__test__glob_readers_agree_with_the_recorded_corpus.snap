@@ -1,5 +1,6 @@
 ---
 source: packages/nx/src/native/glob.rs
+assertion_line: 238
 expression: report
 ---
 **
@@ -291,7 +292,7 @@ libs/雪/x.ts
   partition: ("libs/雪/x.ts", None)
   prefix: Some("libs/雪/x.ts")
 e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)
-  convert: ["e2e\\react\\**\\*.{spec,test}.{ts,js}", "e2e\\react\\**\\*.{spec,test}.{ts,js}x"]
+  convert: ["e2e\\react\\**\\+*.{spec,test}.{ts,js}", "e2e\\react\\**\\+*.{spec,test}.{ts,js}x"]
   partition: ("", Some("e2e\\react\\**\\+(*.)+(spec|test).+(ts|js)?(x)"))
   prefix: None
 e2e\react/**/*.spec.ts
@@ -299,7 +300,7 @@ e2e\react/**/*.spec.ts
   partition: ("e2ereact", Some("**/*.spec.ts"))
   prefix: Some("e2ereact")
 e2e\react\!(*.test).ts
-  convert: ["!e2e\\react\\*.test.ts", "*.ts"]
+  convert: ["e2e\\react\\!*.test.ts"]
   partition: ("", Some("e2e\\react\\!(*.test).ts"))
   prefix: None
 **/?(*.)+(spec|test).[jt]s?(x)?(.snap)

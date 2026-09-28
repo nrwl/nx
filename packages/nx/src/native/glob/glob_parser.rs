@@ -36,6 +36,24 @@ fn bracket_class<'a>(input: &'a str) -> IResult<&'a str, GlobGroup<'a>, VerboseE
     })(input)
 }
 
+/// A `\` and the character after it, kept as text so globset reads the escape:
+/// `\(` is a literal `(`, not a group. On Windows `\` separates instead.
+fn escaped_char<'a>(input: &'a str) -> IResult<&'a str, GlobGroup<'a>, VerboseError<&'a str>> {
+    context("escaped_char", |input: &'a str| {
+        let (rest, _) = tag("\\")(input)?;
+        match rest.chars().next() {
+            Some(c) if cfg!(not(windows)) => {
+                let len = 1 + c.len_utf8();
+                Ok((&input[len..], GlobGroup::Literal(input[..len].into())))
+            }
+            _ => Err(nom::Err::Error(VerboseError::from_error_kind(
+                input,
+                ErrorKind::Char,
+            ))),
+        }
+    })(input)
+}
+
 fn simple_group(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
         "simple_group",
@@ -108,7 +126,13 @@ fn non_special_character(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseErr
             alt((
                 take_until("{,"),
                 take_while1(|c| {
-                    c != '?' && c != '+' && c != '@' && c != '!' && c != '(' && c != '['
+                    c != '?'
+                        && c != '+'
+                        && c != '@'
+                        && c != '!'
+                        && c != '('
+                        && c != '['
+                        && !(cfg!(not(windows)) && c == '\\')
                 }),
                 is_not("*("),
             )),
@@ -273,6 +297,7 @@ fn extglob_segment(input: &str) -> IResult<&str, Vec<GlobGroup<'_>>, VerboseErro
             context(
                 "glob_group",
                 alt((
+                    escaped_char,
                     bracket_class,
                     simple_group,
                     zero_or_more_group,
@@ -460,6 +485,29 @@ mod test {
         for unclosed in ["dist/paren(/x.js", "?(", "a/@(b/c)"] {
             assert!(parse_glob(unclosed).is_err(), "{unclosed}");
         }
+    }
+
+    #[test]
+    #[cfg(not(windows))]
+    fn a_backslash_escapes_a_parenthesis() {
+        use GlobGroup::*;
+        assert_eq!(
+            segments(r"app/\(marketing\)/x\!(y)"),
+            [
+                vec![Literal("app".into())],
+                vec![
+                    Escaped(r"\(".into()),
+                    Literal("marketing".into()),
+                    Escaped(r"\)".into())
+                ],
+                vec![
+                    Literal("x".into()),
+                    Escaped(r"\!".into()),
+                    NonSpecialGroup("y".into())
+                ],
+            ]
+        );
+        assert_eq!(super::literal_segment(r"\(a\)").as_deref(), Some("(a)"));
     }
 
     #[test]

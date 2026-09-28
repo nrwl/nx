@@ -553,6 +553,14 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(windows))]
+    fn a_backslash_escaped_parenthesis_matches_literally() {
+        let glob_set = build_glob_set(&[r"app/\(marketing\)/**"]).unwrap();
+        assert!(glob_set.is_match("app/(marketing)/page.tsx"));
+        assert!(!glob_set.is_match("app/marketing/page.tsx"));
+    }
+
+    #[test]
     fn a_class_matches_a_literal_parenthesis() {
         let glob_set = build_glob_set(&["app/[(]marketing[)]/**"]).unwrap();
         assert!(glob_set.is_match("app/(marketing)/page.tsx"));
