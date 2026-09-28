@@ -9,11 +9,11 @@ use fs_extra::error::ErrorKind;
 use rayon::prelude::*;
 use tracing::{debug, trace};
 
-/// Pool for copying and removing the entries of a directory tree in parallel,
-/// kept apart from the global rayon pool. A third of the available parallelism
-/// and never fewer than two threads, as `workspace/files_hashing.rs` sizes its
-/// hashing: the work is bound by per-file latency, and more threads than that
-/// only contend in the filesystem.
+/// Pool for copying the entries of a directory tree in parallel, kept apart
+/// from the global rayon pool. A third of the available parallelism and never
+/// fewer than two threads, as `workspace/files_hashing.rs` sizes its hashing:
+/// the copy is bound by per-file latency, and more threads than that only
+/// contend in the filesystem.
 static COPY_POOL: LazyLock<rayon::ThreadPool> = LazyLock::new(|| {
     let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
     rayon::ThreadPoolBuilder::new()
@@ -126,27 +126,11 @@ fn create_dir_all_within(boundary: &Path, dir: &Path) -> io::Result<()> {
 /// unlinked, not its target); directories recurse, a missing path is a no-op.
 fn remove_path(path: &Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {
-        Ok(meta) if meta.file_type().is_dir() => remove_dir_all_parallel(path),
+        Ok(meta) if meta.file_type().is_dir() => fs::remove_dir_all(path),
         Ok(_) => fs::remove_file(path),
         Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
         Err(e) => Err(e),
     }
-}
-
-/// `fs::remove_dir_all` with the top-level subdirectories removed in parallel
-/// on the copy pool. Every traversal is the standard library's, so a symlink
-/// swapped in under `dir` is unlinked, never followed. An entry the listing
-/// cannot read is left for the final `fs::remove_dir_all`, which reports it.
-fn remove_dir_all_parallel(dir: &Path) -> io::Result<()> {
-    let subdirs: Vec<PathBuf> = fs::read_dir(dir)?
-        .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_dir()))
-        .map(|entry| entry.path())
-        .collect();
-
-    COPY_POOL.install(|| subdirs.par_iter().try_for_each(fs::remove_dir_all))?;
-
-    fs::remove_dir_all(dir)
 }
 
 /// Restore the given expanded outputs from `outputs_path` into `workspace_root`.
