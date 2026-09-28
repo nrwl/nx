@@ -5,6 +5,7 @@ import {
   type IoSnapshotEligibilityOptions,
   type IoSnapshotReport,
   type IoSnapshots,
+  type TaskUltracacheConfiguration,
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getExecutorForTask } from '../tasks-runner/utils';
@@ -41,6 +42,21 @@ function customHasherTaskIds(
   return ids;
 }
 
+/**
+ * Each task's ultracache configuration: all the native eligibility walk reads
+ * from a task. `null`, not `undefined`: the native map drops `undefined` keys.
+ */
+export function getUltraCacheConfig(
+  taskGraph: TaskGraph
+): Record<string, TaskUltracacheConfiguration | null> {
+  return Object.fromEntries(
+    Object.entries(taskGraph.tasks).map(([id, task]) => [
+      id,
+      task.ultracache ?? null,
+    ])
+  );
+}
+
 /** The eligibility walk's view of the run's tasks, as JS resolves it. */
 export function ioSnapshotEligibilityOptions(
   projectGraph: ProjectGraph,
@@ -64,7 +80,7 @@ export function buildIoSnapshotOverrides(
 ): IoSnapshotReport {
   return getIoSnapshotReport(
     snapshots,
-    taskGraph,
+    getUltraCacheConfig(taskGraph),
     ioSnapshotEligibilityOptions(projectGraph, taskGraph)
   );
 }

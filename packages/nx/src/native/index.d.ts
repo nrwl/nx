@@ -722,7 +722,7 @@ export declare function getHardcodedIgnorePatterns(): Array<string>
 export declare function getIoSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
 
 /** The eligibility report, for the run summary. */
-export declare function getIoSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, options?: IoSnapshotEligibilityOptions | undefined | null): IoSnapshotReport
+export declare function getIoSnapshotReport(snapshots: IoSnapshots, tasks: Record<string, TaskUltracacheConfiguration | null>, options?: IoSnapshotEligibilityOptions | undefined | null): IoSnapshotReport
 
 /**
  * If `workspace_root` is inside a git worktree, returns the main repo root.
@@ -734,7 +734,7 @@ export declare function getMainWorktreeRoot(workspaceRoot: string): string | nul
  * Observed outputs per eligible task, for the runner to union into
  * `task.outputs`.
  */
-export declare function getObservedIoSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, Array<string>>
+export declare function getObservedIoSnapshotOutputs(snapshots: IoSnapshots, tasks: Record<string, TaskUltracacheConfiguration | null>, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, Array<string>>
 
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 

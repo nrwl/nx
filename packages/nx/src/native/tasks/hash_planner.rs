@@ -299,13 +299,15 @@ impl HashPlanner {
             }
             scope.sort_unstable();
             scope.dedup();
-            snapshot_eligibility::resolve_scoped(
+            snapshot_eligibility::resolve(
                 snapshots,
-                &task_graph,
+                scope
+                    .iter()
+                    .filter_map(|id| task_graph.tasks.get_key_value(*id))
+                    .map(|(id, task)| (id.as_str(), task.ultracache.as_ref())),
                 &EligibilityInputs {
                     custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
                 },
-                Some(&scope),
             )
             .tasks
         });
