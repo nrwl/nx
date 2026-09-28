@@ -10,6 +10,7 @@ import { addVitestTempFilesToGitIgnore } from '../../utils/ignore-vitest-temp-fi
 import { major } from 'semver';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import type {
+  CallExpression,
   ExportSpecifier,
   ImportSpecifier,
   PropertyAccessExpression,
@@ -195,6 +196,12 @@ function rewriteRemovedEntryPoints(
   );
   reportUnrewritableSpecifiers(sourceFile, specifiers, filePath, unhandled);
 
+  const opaqueStarts = new Set(
+    query<StringLiteral>(sourceFile, OPAQUE_DECLARATIONS).map((node) =>
+      node.getStart(sourceFile)
+    )
+  );
+
   let updated = contents;
   let changed = false;
   // Right-to-left so earlier offsets stay valid as the text shifts.
@@ -202,16 +209,15 @@ function rewriteRemovedEntryPoints(
     const entryPoint = REMOVED_ENTRY_POINTS[specifier.text];
     if (!entryPoint) continue;
 
-    const relocated = boundNamesOf(specifier).filter((name) =>
-      REMOVED_SYMBOLS.has(name)
+    const blocker = whyNotRewritable(
+      specifier,
+      entryPoint,
+      opaqueStarts,
+      sourceFile
     );
-    if (!entryPoint.replacement || relocated.length) {
+    if (blocker) {
       unhandled.push(
-        `${filePath} imports from \`${specifier.text}\`, which Vitest 5 removed: ${
-          relocated.length
-            ? `\`${relocated.join('`, `')}\` no longer exists anywhere, it went with the old benchmark API`
-            : entryPoint.note
-        }.`
+        `${filePath} imports from \`${specifier.text}\`, which Vitest 5 removed: ${blocker}.`
       );
       continue;
     }
@@ -226,7 +232,38 @@ function rewriteRemovedEntryPoints(
   if (changed) tree.write(filePath, updated);
 }
 
-/** The names an import or export declaration binds from its module. */
+/**
+ * Declarations that take a whole module instead of naming what they use, so
+ * there is no symbol list to check against the ones Vitest 5 removed.
+ */
+const OPAQUE_DECLARATIONS = [
+  'ImportDeclaration:has(NamespaceImport) > StringLiteral',
+  'ExportDeclaration:has(NamespaceExport) > StringLiteral',
+  'ImportDeclaration:has(ImportClause > Identifier) > StringLiteral',
+  'ExportDeclaration:not(:has(ExportSpecifier)) > StringLiteral',
+].join(', ');
+
+/** The reason this specifier cannot be repointed, if there is one. */
+function whyNotRewritable(
+  specifier: StringLiteral,
+  entryPoint: { replacement?: string; note: string },
+  opaqueStarts: Set<number>,
+  sourceFile: SourceFile
+): string | undefined {
+  if (!entryPoint.replacement) {
+    return entryPoint.note;
+  }
+  if (opaqueStarts.has(specifier.getStart(sourceFile))) {
+    return `${entryPoint.note}, but this declaration takes the whole module rather than naming what it uses, so the symbols cannot be checked here`;
+  }
+  const removed = boundNamesOf(specifier).filter((name) =>
+    REMOVED_SYMBOLS.has(name)
+  );
+  return removed.length
+    ? `\`${removed.join('`, `')}\` no longer exists anywhere, it went with the old benchmark API`
+    : undefined;
+}
+
 function boundNamesOf(specifier: StringLiteral): string[] {
   return query<ImportSpecifier | ExportSpecifier>(
     specifier.parent,
@@ -245,12 +282,20 @@ function detectSequentialUsage(
   sourceFile: SourceFile,
   unhandled: string[]
 ): void {
-  // Both AST forms of a property key. `sequential` reached off anything other
-  // than a test or suite callee is someone else's API, so it is left alone.
+  // Both AST forms of a property key, and only in an options object handed to
+  // a test or suite call. A loose `{ sequential: true }` is someone else's API.
   const optionKeys = query(
     sourceFile,
     'PropertyAssignment > :matches(Identifier[name=sequential], StringLiteral[value=sequential])'
-  );
+  ).filter((key) => {
+    // PropertyAssignment < ObjectLiteralExpression < CallExpression.
+    const call = key.parent?.parent?.parent as CallExpression | undefined;
+    return (
+      !!call &&
+      'arguments' in call &&
+      TEST_CALLEES.has(call.expression.getText(sourceFile).split('.')[0])
+    );
+  });
   const modifiers = query<PropertyAccessExpression>(
     sourceFile,
     'PropertyAccessExpression:has(Identifier[name=sequential])'

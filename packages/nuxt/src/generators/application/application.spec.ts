@@ -9,7 +9,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
-import { vitestVersion } from '@nx/vitest/src/utils/versions';
 import { applicationGenerator } from './application';
 
 describe('app', () => {
@@ -214,7 +213,9 @@ describe('app', () => {
           ).toMatchSnapshot();
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
-          expect(packageJson.devDependencies['vitest']).toEqual(vitestVersion);
+          // Literal, not the constant that decides it: a regression back to
+          // vitest 4 has to fail here.
+          expect(packageJson.devDependencies['vitest']).toEqual('~5.0.1');
         });
 
         it('should fall back to a .ts vitest config on eslintrc', async () => {

@@ -74,6 +74,32 @@ import { populateGlobal } from 'vitest/environments';
       ]);
     });
 
+    // The symbols are unknowable from the declaration, and vitest/node does
+    // not export all of vitest/reporters.
+    it('should not repoint a namespace import', async () => {
+      const contents = `import * as reporters from 'vitest/reporters';\n`;
+      tree.write('libs/mylib/src/ns.ts', contents);
+
+      const result = await migrateToVitest5(tree);
+
+      expect(tree.read('libs/mylib/src/ns.ts', 'utf-8')).toBe(contents);
+      expect(result.agentContext).toEqual([
+        expect.stringContaining('vitest/reporters'),
+      ]);
+    });
+
+    it('should not repoint a star re-export', async () => {
+      const contents = `export * from 'vitest/reporters';\n`;
+      tree.write('libs/mylib/src/star.ts', contents);
+
+      const result = await migrateToVitest5(tree);
+
+      expect(tree.read('libs/mylib/src/star.ts', 'utf-8')).toBe(contents);
+      expect(result.agentContext).toEqual([
+        expect.stringContaining('vitest/reporters'),
+      ]);
+    });
+
     it('should rewrite re-export specifiers too', async () => {
       tree.write(
         'libs/mylib/src/index.ts',
@@ -100,6 +126,19 @@ import { createVitest } from 'vitest/node';
   });
 
   describe('sequential usage', () => {
+    it('should leave a sequential property that is not a test option alone', async () => {
+      tree.write(
+        'libs/mylib/src/queue.ts',
+        `const options = { sequential: true };
+myQueue.run({ sequential: true });
+`
+      );
+
+      const result = await migrateToVitest5(tree);
+
+      expect(result.agentContext).toBeUndefined();
+    });
+
     it('should hand test.sequential to the agent rather than guess', async () => {
       tree.write(
         'libs/mylib/src/a.spec.ts',

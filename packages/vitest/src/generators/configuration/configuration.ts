@@ -326,7 +326,8 @@ getTestBed().initTestEnvironment(
   // workspace files in favor of inlining the projects into a root vitest.config
   // via `test.projects` (https://vitest.dev/guide/migration.html#workspace-is-replaced-with-projects).
   // Emit that shape for vitest 4+ and when the installed version can't be
-  // detected (new installs resolve to v4); vitest 3 keeps the workspace file.
+  // detected (a new install resolves to 4 or 5); vitest 3 keeps the workspace
+  // file.
   if (!isRootProject) {
     const projectGlobs = `'**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'`;
     const vitestMajorVersion = getInstalledVitestMajorVersion(tree);
