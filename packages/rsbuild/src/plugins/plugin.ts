@@ -16,6 +16,7 @@ import {
   joinPathFragments,
   getPackageManagerCommand,
   detectPackageManager,
+  normalizePath,
 } from '@nx/devkit';
 import {
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
@@ -335,12 +336,12 @@ function normalizeOutputPath(
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      return `{workspaceRoot}/${normalizePath(relative(workspaceRoot, outputPath))}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }
