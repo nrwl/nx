@@ -112,8 +112,14 @@ export const createDependencies: CreateDependencies = (
         ? readFileSync(lockFilePath, 'utf-8')
         : readBunLockFile(lockFilePath);
     const lockFileHash = getLockFileHash(lockFileContents);
+    // Cached dependencies name their external nodes, and those names also
+    // depend on node_modules hoisting and on the lockfile createNodes read.
+    const dependenciesHash = hashArray([
+      lockFileHash,
+      ...Object.keys(ctx.externalNodes),
+    ]);
 
-    if (!lockFileNeedsReprocessing(lockFileHash, dependenciesHashFile)) {
+    if (!lockFileNeedsReprocessing(dependenciesHash, dependenciesHashFile)) {
       lockfileDependencies = readCachedDependencies();
     } else {
       lockfileDependencies = getLockFileDependencies(
@@ -124,7 +130,7 @@ export const createDependencies: CreateDependencies = (
         cachedKeyMap
       );
 
-      writeDependenciesCache(lockFileHash, lockfileDependencies);
+      writeDependenciesCache(dependenciesHash, lockfileDependencies);
     }
   }
 
