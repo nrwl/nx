@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { parseDocument, YAMLMap } from 'yaml';
+import { Document, isScalar, parseDocument, YAMLMap } from 'yaml';
 import { gte } from 'semver';
 import type { Tree } from '../generators/tree';
 import type { PackageManager } from './package-manager';
@@ -10,8 +10,10 @@ import {
   parseVersionFromPackageManagerField,
 } from './package-manager';
 import { readJsonFile } from './fileutils';
+import { isCI } from './is-ci';
 import { parseJson } from './json';
 import { output } from './output';
+import { multiselectPrompt } from './prompt-helpers';
 
 const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
 
@@ -64,8 +66,11 @@ export function acknowledgeBuildScripts(
  * package.json, the same shape pnpm reads from a workspace root; pnpm ignores
  * the field on dependencies, so it is read from the registry here.
  *
- * A `true` entry lets pnpm run that package's install scripts on every later
- * install, so the entries recorded here are printed for the user to see.
+ * A declared `false` is recorded as is: it only skips a script. A declared
+ * `true` would let a publisher authorize code execution in the workspace, so
+ * it is a request: in a terminal the owner picks which to allow, elsewhere
+ * every request is recorded as `false`. Decisions the owner already recorded
+ * are kept either way, and everything recorded is printed.
  *
  * Resolves to whether the package declared any decision. Nothing is recorded
  * for package managers other than pnpm, pnpm < 11, packages that declare
@@ -86,20 +91,57 @@ export async function acknowledgeDeclaredBuildScripts(
   if (!pnpmVersion || !gte(pnpmVersion, '11.0.0')) {
     return false;
   }
-  const entries = await readDeclaredBuildScripts(packageName, version);
-  if (Object.keys(entries).length === 0) {
+  const declared = await readDeclaredBuildScripts(packageName, version);
+  if (Object.keys(declared).length === 0) {
     return false;
   }
+
+  const decided = readRecordedDecisions(host);
+  const requests = Object.keys(declared).filter(
+    (pkg) => declared[pkg] && !(pkg in decided)
+  );
+  const prompted = requests.length > 0 && canPrompt();
+  const allowed = prompted
+    ? await multiselectPrompt({
+        message: `${packageName}@${version} asks to run the install scripts of these packages. Which ones do you allow?`,
+        choices: requests,
+        required: false,
+      })
+    : [];
+  const entries = { ...declared };
+  for (const pkg of requests) {
+    entries[pkg] = allowed.includes(pkg);
+  }
+
   const recorded = acknowledgePnpmBuildScripts(host, entries);
   if (Object.keys(recorded).length > 0) {
+    const blocked = requests.filter((pkg) => !entries[pkg] && pkg in recorded);
     output.note({
       title: `Recorded the build-script decisions ${packageName}@${version} declares in ${PNPM_WORKSPACE_FILE}`,
-      bodyLines: Object.entries(recorded).map(
-        ([pkg, allowed]) => `${pkg}: ${allowed}`
-      ),
+      bodyLines: [
+        ...Object.entries(recorded).map(([pkg, value]) =>
+          blocked.includes(pkg)
+            ? `${pkg}: false (the package asked to run it)`
+            : `${pkg}: ${value}`
+        ),
+        ...(blocked.length > 0
+          ? [
+              `To run a blocked script, set its entry to true in ${PNPM_WORKSPACE_FILE} and run "pnpm rebuild <package>".`,
+            ]
+          : []),
+      ],
     });
   }
   return true;
+}
+
+function canPrompt(): boolean {
+  return (
+    process.env.NX_INTERACTIVE !== 'false' &&
+    !isCI() &&
+    !!process.stdout.isTTY &&
+    !!process.stdin.isTTY
+  );
 }
 
 async function readDeclaredBuildScripts(
@@ -143,18 +185,8 @@ function acknowledgePnpmBuildScripts(
   host: Host,
   entries: Record<string, boolean>
 ): Record<string, boolean> {
-  const parsed = parseDocument(
-    host.exists(PNPM_WORKSPACE_FILE) ? host.read(PNPM_WORKSPACE_FILE) : ''
-  );
-  // A file that doesn't parse cleanly or whose root isn't a mapping is
-  // malformed for pnpm; leave it alone rather than crashing or replacing the
-  // user's content. pnpm's own error on the file is the actionable signal.
-  // Empty and comment-only files have no contents at all; setIn creates the
-  // mapping for them while keeping whatever comments they carry.
-  if (
-    parsed.errors.length > 0 ||
-    (parsed.contents != null && !(parsed.contents instanceof YAMLMap))
-  ) {
+  const parsed = parseWorkspaceFile(host);
+  if (!parsed) {
     return {};
   }
 
@@ -172,6 +204,43 @@ function acknowledgePnpmBuildScripts(
     host.write(PNPM_WORKSPACE_FILE, parsed.toString());
   }
   return recorded;
+}
+
+/**
+ * Parses pnpm-workspace.yaml, or null when pnpm itself would reject it. A file
+ * that doesn't parse cleanly or whose root isn't a mapping is left alone
+ * rather than crashed on or replaced; pnpm's own error on the file is the
+ * actionable signal. Empty and comment-only files have no contents at all;
+ * setIn creates the mapping for them while keeping whatever comments they
+ * carry.
+ */
+function parseWorkspaceFile(host: Host): Document | null {
+  const parsed = parseDocument(
+    host.exists(PNPM_WORKSPACE_FILE) ? host.read(PNPM_WORKSPACE_FILE) : ''
+  );
+  if (
+    parsed.errors.length > 0 ||
+    (parsed.contents != null && !(parsed.contents instanceof YAMLMap))
+  ) {
+    return null;
+  }
+  return parsed;
+}
+
+/** The `allowBuilds` entries that carry a real decision, not a placeholder. */
+function readRecordedDecisions(host: Host): Record<string, boolean> {
+  const allowBuilds = parseWorkspaceFile(host)?.get('allowBuilds');
+  if (!(allowBuilds instanceof YAMLMap)) {
+    return {};
+  }
+  const decisions: Record<string, boolean> = {};
+  for (const pair of allowBuilds.items) {
+    const value = isScalar(pair.value) ? pair.value.value : pair.value;
+    if (typeof value === 'boolean') {
+      decisions[String(isScalar(pair.key) ? pair.key.value : pair.key)] = value;
+    }
+  }
+  return decisions;
 }
 
 interface Host {

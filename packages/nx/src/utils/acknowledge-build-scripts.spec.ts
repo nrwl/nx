@@ -11,13 +11,17 @@ import {
   getPackageManagerVersion,
   packageRegistryView,
 } from './package-manager';
+import { isCI } from './is-ci';
 import { output } from './output';
+import { multiselectPrompt } from './prompt-helpers';
 
 vi.mock('./package-manager', async () => ({
   ...(await vi.importActual('./package-manager')),
   getPackageManagerVersion: vi.fn(),
   packageRegistryView: vi.fn(),
 }));
+vi.mock('./is-ci', () => ({ isCI: vi.fn(() => true) }));
+vi.mock('./prompt-helpers', () => ({ multiselectPrompt: vi.fn() }));
 
 describe('acknowledgeBuildScripts', () => {
   let tree: Tree;
@@ -295,9 +299,142 @@ describe('acknowledgeDeclaredBuildScripts', () => {
       "allowBuilds:
         nx: true
         esbuild: false
-        workerd: true
+        workerd: false
       "
     `);
+  });
+
+  it('should block a requested build script outside a terminal and say how to allow it', async () => {
+    const note = vi.spyOn(output, 'note').mockImplementation(() => {});
+    vi.mocked(packageRegistryView).mockResolvedValueOnce(
+      JSON.stringify({ esbuild: false, workerd: true })
+    );
+
+    await acknowledgeDeclaredBuildScripts(tree, 'pnpm', '@org/preset', '1.2.3');
+
+    expect(multiselectPrompt).not.toHaveBeenCalled();
+    expect(note).toHaveBeenCalledWith({
+      title:
+        'Recorded the build-script decisions @org/preset@1.2.3 declares in pnpm-workspace.yaml',
+      bodyLines: [
+        'esbuild: false',
+        'workerd: false (the package asked to run it)',
+        'To run a blocked script, set its entry to true in pnpm-workspace.yaml and run "pnpm rebuild <package>".',
+      ],
+    });
+    note.mockRestore();
+  });
+
+  describe('in a terminal', () => {
+    let stdoutTTY: PropertyDescriptor | undefined;
+    let stdinTTY: PropertyDescriptor | undefined;
+
+    beforeEach(() => {
+      vi.mocked(isCI).mockReturnValue(false);
+      stdoutTTY = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
+      stdinTTY = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      vi.mocked(multiselectPrompt).mockReset();
+    });
+
+    afterEach(() => {
+      vi.mocked(isCI).mockReturnValue(true);
+      restore(process.stdout, stdoutTTY);
+      restore(process.stdin, stdinTTY);
+      delete process.env.NX_INTERACTIVE;
+    });
+
+    function restore(
+      stream: NodeJS.WriteStream | NodeJS.ReadStream,
+      descriptor?: PropertyDescriptor
+    ) {
+      if (descriptor) {
+        Object.defineProperty(stream, 'isTTY', descriptor);
+      } else {
+        delete (stream as any).isTTY;
+      }
+    }
+
+    it('should ask the owner which requested build scripts to allow', async () => {
+      vi.mocked(packageRegistryView).mockResolvedValueOnce(
+        JSON.stringify({ esbuild: false, workerd: true, '@org/preset': true })
+      );
+      vi.mocked(multiselectPrompt).mockResolvedValueOnce(['workerd']);
+
+      await acknowledgeDeclaredBuildScripts(
+        tree,
+        'pnpm',
+        '@org/preset',
+        '1.2.3'
+      );
+
+      expect(multiselectPrompt).toHaveBeenCalledWith({
+        message:
+          '@org/preset@1.2.3 asks to run the install scripts of these packages. Which ones do you allow?',
+        choices: ['workerd', '@org/preset'],
+        required: false,
+      });
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+        "allowBuilds:
+          nx: true
+          esbuild: false
+          workerd: true
+          "@org/preset": false
+        "
+      `);
+    });
+
+    it('should not ask about entries the owner already decided', async () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        'allowBuilds:\n  nx: true\n  workerd: true\n'
+      );
+      vi.mocked(packageRegistryView).mockResolvedValueOnce(
+        JSON.stringify({ esbuild: false, workerd: true })
+      );
+
+      await acknowledgeDeclaredBuildScripts(
+        tree,
+        'pnpm',
+        '@org/preset',
+        '1.2.3'
+      );
+
+      expect(multiselectPrompt).not.toHaveBeenCalled();
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+        "allowBuilds:
+          nx: true
+          workerd: true
+          esbuild: false
+        "
+      `);
+    });
+
+    it('should not ask when the generator runs with --no-interactive', async () => {
+      process.env.NX_INTERACTIVE = 'false';
+      vi.mocked(packageRegistryView).mockResolvedValueOnce(
+        JSON.stringify({ workerd: true })
+      );
+
+      await acknowledgeDeclaredBuildScripts(
+        tree,
+        'pnpm',
+        '@org/preset',
+        '1.2.3'
+      );
+
+      expect(multiselectPrompt).not.toHaveBeenCalled();
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toContain(
+        'workerd: false'
+      );
+    });
   });
 
   it('should report the entries it recorded', async () => {
@@ -311,7 +448,11 @@ describe('acknowledgeDeclaredBuildScripts', () => {
     expect(note).toHaveBeenCalledWith({
       title:
         'Recorded the build-script decisions @org/preset@1.2.3 declares in pnpm-workspace.yaml',
-      bodyLines: ['esbuild: false', 'workerd: true'],
+      bodyLines: [
+        'esbuild: false',
+        'workerd: false (the package asked to run it)',
+        'To run a blocked script, set its entry to true in pnpm-workspace.yaml and run "pnpm rebuild <package>".',
+      ],
     });
     note.mockRestore();
   });
@@ -382,7 +523,7 @@ describe('acknowledgeDeclaredBuildScripts', () => {
       "allowBuilds:
         nx: true
         esbuild: false
-        workerd: true
+        workerd: false
       "
     `);
   });
@@ -397,7 +538,7 @@ describe('acknowledgeDeclaredBuildScripts', () => {
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
       "allowBuilds:
         nx: true
-        workerd: true
+        workerd: false
       "
     `);
   });

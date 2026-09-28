@@ -11,12 +11,15 @@ import { Preset } from '../utils/presets';
 import { newGenerator, NormalizedSchema } from './new';
 import * as getNpmPackageVersion from './../utils/get-npm-package-version';
 import * as generatePreset from './generate-preset';
-import { packageRegistryView } from 'nx/src/utils/package-manager';
 
 jest.mock('nx/src/utils/package-manager', () => ({
   ...jest.requireActual('nx/src/utils/package-manager'),
   packageRegistryView: jest.fn(),
 }));
+// Reached through the mock registry rather than a static import: specs outside
+// packages/nx may not import nx/src directly.
+const { packageRegistryView }: { packageRegistryView: jest.Mock } =
+  jest.requireMock('nx/src/utils/package-manager');
 
 const DEFAULT_PACKAGE_VERSION = '1.0.0';
 
@@ -300,9 +303,11 @@ describe('new', () => {
       );
 
       it('should record the build-script decisions a preset declares before the first pnpm install', async () => {
-        jest
-          .mocked(packageRegistryView)
-          .mockResolvedValue(JSON.stringify({ esbuild: false, workerd: true }));
+        // No terminal to ask in, so a declared `true` is recorded as blocked.
+        process.env.NX_INTERACTIVE = 'false';
+        packageRegistryView.mockResolvedValue(
+          JSON.stringify({ esbuild: false, workerd: true })
+        );
 
         await newGenerator(tree, {
           ...defaultOptions,
@@ -326,9 +331,10 @@ describe('new', () => {
             nx: true,
             '3rd-party-package': false,
             esbuild: false,
-            workerd: true,
+            workerd: false,
           },
         });
+        delete process.env.NX_INTERACTIVE;
       });
 
       it('should not query the registry for a preset when not using pnpm', async () => {
