@@ -509,10 +509,25 @@ function mapWorkspaceModules(
 ) {
   const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
   const snapshotsByName = new Map<string, NpmDependencyV3 & NpmDependencyV1>();
-  for (const snapshot of Object.values(
-    rootLockFile.packages || rootLockFile.dependencies || {}
-  )) {
-    if (snapshot.name) snapshotsByName.set(snapshot.name, snapshot);
+  if (rootLockFile.packages) {
+    // Workspace packages are keyed by their directory. npm only writes `name`
+    // when it differs from the directory's basename, so also resolve names
+    // through the `node_modules/<name>` links that point at each directory.
+    for (const [path, snapshot] of Object.entries(rootLockFile.packages)) {
+      if (snapshot.name) snapshotsByName.set(snapshot.name, snapshot);
+      const linkedName = getTopLevelLinkName(path, snapshot);
+      if (linkedName && !snapshotsByName.has(linkedName)) {
+        const target = rootLockFile.packages[snapshot.resolved];
+        if (target) snapshotsByName.set(linkedName, target);
+      }
+    }
+  } else {
+    // v1 lockfiles key every entry by package name
+    for (const [name, snapshot] of Object.entries(
+      rootLockFile.dependencies || {}
+    )) {
+      snapshotsByName.set(name, snapshot);
+    }
   }
 
   // Walk transitive workspace deps so every workspace package
@@ -545,6 +560,20 @@ function mapWorkspaceModules(
     }
   }
   return output;
+}
+
+/**
+ * Returns the package name of a top-level `node_modules/<name>` entry that
+ * links to a workspace directory, or undefined for any other entry.
+ */
+function getTopLevelLinkName(
+  path: string,
+  snapshot: NpmDependencyV3
+): string | undefined {
+  if (!snapshot.link || !snapshot.resolved) return undefined;
+  if (!path.startsWith('node_modules/')) return undefined;
+  const name = path.slice('node_modules/'.length);
+  return name.includes('/node_modules/') ? undefined : name;
 }
 
 function mapV3Snapshots(
