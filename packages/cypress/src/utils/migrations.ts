@@ -1,19 +1,28 @@
 import {
   getProjects,
   globAsync,
+  normalizePath,
+  readNxJson,
   type ProjectConfiguration,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
+import {
+  interpolate,
+  mergeTargetConfigurations,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
-import { posix } from 'path';
+import { isAbsolute, posix, relative } from 'path';
 import type {
   Expression,
   ModuleDeclaration,
   Node,
   ObjectLiteralExpression,
   PropertyAssignment,
+  PropertyName,
   SourceFile,
+  StringLiteralLike,
 } from 'typescript';
 import type { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from './config';
@@ -26,39 +35,74 @@ export async function* cypressProjectConfigs(tree: Tree): AsyncGenerator<{
   cypressConfigPath: string;
 }> {
   const projects = getProjects(tree);
+  const targetDefaults = readNxJson(tree)?.targetDefaults;
 
   for (const [projectName, projectConfig] of projects) {
-    const targetsWithExecutor = Object.values(
+    const cypressConfigPaths = new Set<string>();
+    for (const [targetName, target] of Object.entries(
       projectConfig.targets ?? {}
-    ).filter((target) => target.executor === '@nx/cypress:cypress');
-    if (targetsWithExecutor.length > 0) {
-      const cypressConfigPaths = new Set<string>();
-      for (const target of targetsWithExecutor) {
-        for (const [, options] of allTargetOptions<CypressExecutorOptions>(
-          target
-        )) {
-          if (options.cypressConfig) {
-            cypressConfigPaths.add(options.cypressConfig);
+    )) {
+      if (target.command) {
+        continue;
+      }
+      const merged = mergeTargetConfigurations(
+        target,
+        readTargetDefaultsForTarget(
+          targetName,
+          targetDefaults,
+          target.executor,
+          {
+            projectName,
+            projectNode: {
+              name: projectName,
+              type: projectConfig.projectType === 'application' ? 'app' : 'lib',
+              data: projectConfig,
+            },
           }
+        ) ?? undefined
+      );
+      if (merged.executor !== '@nx/cypress:cypress') {
+        continue;
+      }
+      for (const [, options] of allTargetOptions<CypressExecutorOptions>(
+        merged
+      )) {
+        if (options.cypressConfig) {
+          cypressConfigPaths.add(
+            toTreePath(
+              tree,
+              interpolate(options.cypressConfig, {
+                workspaceRoot: '.',
+                projectRoot: projectConfig.root,
+                projectName,
+              })
+            )
+          );
         }
       }
-      for (const cypressConfigPath of cypressConfigPaths) {
-        yield { projectName, projectConfig, cypressConfigPath };
-      }
-    } else {
-      // might be using the crystal plugin
+    }
+    if (cypressConfigPaths.size === 0) {
       const result = await globAsync(tree, [
         posix.join(projectConfig.root, CYPRESS_CONFIG_FILE_NAME_PATTERN),
       ]);
       if (result.length > 0) {
-        yield {
-          projectName,
-          projectConfig,
-          cypressConfigPath: result[0],
-        };
+        cypressConfigPaths.add(result[0]);
       }
     }
+    for (const cypressConfigPath of cypressConfigPaths) {
+      yield { projectName, projectConfig, cypressConfigPath };
+    }
   }
+}
+
+function toTreePath(tree: Tree, path: string): string {
+  if (!isAbsolute(path)) {
+    return posix.normalize(path);
+  }
+  const relativePath = relative(tree.root, path);
+  return relativePath.startsWith('..') || isAbsolute(relativePath)
+    ? path
+    : normalizePath(relativePath);
 }
 
 export function getObjectProperty(
@@ -108,6 +152,77 @@ export function updateObjectProperty(
         : p
     )
   );
+}
+
+// Resolves the module specifier that binds the `nxComponentTestingPreset`
+// identifier in a cypress config, covering both ESM `import` and CJS
+// `require` forms. Returns null when no such binding is found.
+export function getComponentTestingPresetImport(
+  sourceFile: SourceFile
+): string | null {
+  ts ??= ensureTypescript();
+
+  for (const statement of sourceFile.statements) {
+    if (ts.isImportDeclaration(statement) && statement.importClause) {
+      const namedBindings = statement.importClause.namedBindings;
+      if (
+        namedBindings &&
+        ts.isNamedImports(namedBindings) &&
+        ts.isStringLiteral(statement.moduleSpecifier) &&
+        namedBindings.elements.some(
+          (element) => element.name.text === 'nxComponentTestingPreset'
+        )
+      ) {
+        return statement.moduleSpecifier.text;
+      }
+    }
+
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        const initializer = declaration.initializer;
+        if (
+          !initializer ||
+          !ts.isCallExpression(initializer) ||
+          !ts.isIdentifier(initializer.expression) ||
+          initializer.expression.text !== 'require' ||
+          !ts.isObjectBindingPattern(declaration.name)
+        ) {
+          continue;
+        }
+        const moduleSpecifier = initializer.arguments[0];
+        if (
+          moduleSpecifier &&
+          ts.isStringLiteral(moduleSpecifier) &&
+          declaration.name.elements.some(
+            (element) =>
+              ts.isIdentifier(element.name) &&
+              element.name.text === 'nxComponentTestingPreset'
+          )
+        ) {
+          return moduleSpecifier.text;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+// Returns null for a computed name that is not a string literal.
+export function getPropertyName(name: PropertyName): string | null {
+  ts ??= ensureTypescript();
+
+  if (ts.isIdentifier(name) || isStringLiteralName(name)) {
+    return name.text;
+  }
+  if (ts.isComputedPropertyName(name) && isStringLiteralName(name.expression)) {
+    return name.expression.text;
+  }
+  return null;
+}
+
+function isStringLiteralName(node: Node): node is StringLiteralLike {
+  return ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
 }
 
 function* allTargetOptions<T>(
