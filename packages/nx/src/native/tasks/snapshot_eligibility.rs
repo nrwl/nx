@@ -122,10 +122,13 @@ impl Resolved {
             .map(|(id, _)| id.clone())
             .collect();
         tasks_with_outputs.sort();
+        // Stable, so a task's own diagnostics keep the order the walk found them.
+        let mut diagnostics = self.diagnostics.clone();
+        diagnostics.sort_by(|a, b| a.task_id.cmp(&b.task_id));
         IoSnapshotReport {
             used,
             tasks_with_outputs,
-            diagnostics: self.diagnostics.clone(),
+            diagnostics,
             resolution: self.resolution.clone(),
         }
     }
@@ -143,8 +146,7 @@ pub(crate) fn resolve(
 
     let mut tasks = HashMap::new();
     let mut diagnostics = Vec::new();
-    let mut task_ids: Vec<&str> = ultra_cache_config.keys().copied().collect();
-    task_ids.sort();
+    let task_ids: Vec<&str> = ultra_cache_config.keys().copied().collect();
     let entries = match snapshots.entries_for(&task_ids) {
         Ok(entries) => entries,
         Err(err) => {
