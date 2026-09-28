@@ -507,7 +507,6 @@ export async function runOrchestratorInit(
     commitPrefix,
     ...(skipInstall ? { skipInstall: true } : {}),
     validate: validate !== false,
-    finalValidation: finalValidation !== false,
     ...(gitRefAtInit ? { gitRefAtInit } : {}),
     runbookPath: RUNBOOK_FILE_NAME,
     ...(branch ? { branch } : {}),
@@ -1088,7 +1087,9 @@ function runbookContext(
     // The same `!== false` read the flag itself gets, so a run recorded
     // without the field renders validation on.
     validate: state.validate !== false,
-    finalValidation: state.finalValidation !== false,
+    // The pass guidance follows the plan: an opted-out run, or one recorded
+    // before the pass existed, has no pass step to dispense.
+    finalValidation: state.steps.some((s) => s.kind === 'final-validation'),
   };
 }
 

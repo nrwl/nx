@@ -203,8 +203,9 @@ export function renderRunbook(ctx: RunbookContext): string {
     `Report through the handoff file: problems you observed go in an`,
     `\`issues\` array, whether you fixed them in this same piece of work`,
     `(mark those \`"resolved"\`) or left them for later; progress on an issue`,
-    `the digest marks assigned to the current step goes in an \`issueUpdates\``,
-    `array. Both are optional and sit next to \`status\` and \`summary\`:`,
+    `the digest marks assigned or deferred to the current step goes in an`,
+    `\`issueUpdates\` array. Both are optional and sit next to \`status\` and`,
+    `\`summary\`:`,
     ``,
     `{`,
     `  "issues": [{`,
@@ -228,8 +229,16 @@ export function renderRunbook(ctx: RunbookContext): string {
     `- Omit \`disposition\` to record the issue for a later applicable step to`,
     `  pick up. Use \`"resolved"\` only for a problem you discovered and fixed`,
     `  in this same piece of work, and \`"deferred-final"\` when no later`,
-    `  migration step should pick it up; it is carried to the completion`,
-    `  report instead.`,
+    ...(ctx.finalValidation
+      ? [
+          `  migration step should pick it up; it is carried to the final`,
+          `  validation pass, and the completion report lists what that pass`,
+          `  leaves unresolved.`,
+        ]
+      : [
+          `  migration step should pick it up; it is carried to the completion`,
+          `  report instead.`,
+        ]),
     `- \`issueUpdates\` may only reference issues the digest marks assigned or`,
     `  deferred to the current step.`,
     `- Nx assigns issue ids and folds repeated reports of the same problem`,

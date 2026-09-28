@@ -2340,11 +2340,16 @@ describe('orchestrator', () => {
       expect(runbookPresentAtPublish).toBe(true);
     });
 
-    it('records the final-validation policy on the run, on unless the flag is false', async () => {
+    it('plans the pass unless --final-validation is false and renders the runbook to match', async () => {
       await runOrchestratorInit(
         initInput({ migrations: [genMig('@nx/js', 'a')] })
       );
-      expect(findActiveRun(root).active.state.finalValidation).toBe(true);
+      expect(
+        findActiveRun(root).active.state.steps.map((s) => [s.kind, s.status])
+      ).toEqual([
+        ['migration', 'pending'],
+        ['final-validation', 'pending'],
+      ]);
       rmSync(migrateRunsDir(root), { recursive: true, force: true });
 
       await runOrchestratorInit({
@@ -2352,7 +2357,6 @@ describe('orchestrator', () => {
         finalValidation: false,
       });
       const { state } = findActiveRun(root).active;
-      expect(state.finalValidation).toBe(false);
       expect(state.steps.map((s) => [s.kind, s.status])).toEqual([
         ['migration', 'pending'],
       ]);
@@ -2430,6 +2434,8 @@ describe('orchestrator', () => {
       );
       const onDisk = readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8');
       expect(onDisk).toContain('# Nx migrate run run-1');
+      // A run planned before the pass existed has no pass step to promise.
+      expect(onDisk).not.toContain('validation pass over the whole workspace');
       expect(parseRunbookBlocks()[0].content).toBe(onDisk);
       // A state written before runbooks has no runbookPath; the re-render backfills it.
       expect(readRunState(dir).runbookPath).toBe('RUNBOOK.md');

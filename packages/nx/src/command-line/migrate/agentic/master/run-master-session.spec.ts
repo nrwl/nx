@@ -111,6 +111,7 @@ function state(
   return {
     status,
     steps: stepStatuses.map((s) => ({
+      kind: 'migration' as const,
       status: s,
       dispenseCount: s === 'pending' ? 0 : 1,
     })),
@@ -438,16 +439,22 @@ describe('runMasterSession', () => {
   });
 
   it('exits 0 with the tally and the completion event when the run completed', async () => {
-    mockReadRunState.mockReturnValue(
-      state('completed', ['succeeded', 'skipped', 'succeeded'])
-    );
+    const completed = state('completed', ['succeeded', 'skipped', 'succeeded']);
+    // The pass counts in the tally the run prints, not as a migration.
+    mockReadRunState.mockReturnValue({
+      ...completed,
+      steps: [
+        ...completed.steps,
+        { kind: 'final-validation', status: 'succeeded', dispenseCount: 1 },
+      ],
+    } as MigrateRunState);
 
     expect(await runMasterSession(input())).toBeUndefined();
 
     expect(logSpy).toHaveBeenCalledWith({
       title: `Migrate run ${runId} is complete.`,
       bodyLines: [
-        '  applied: 2',
+        '  applied: 3',
         '  adopted: 0',
         '  skipped: 1',
         '  unresolved: 0',
@@ -498,8 +505,8 @@ describe('runMasterSession', () => {
     mockReadRunState.mockReturnValue({
       status: 'completed',
       steps: [
-        { status: 'succeeded' },
-        { status: 'succeeded', adopted: true },
+        { kind: 'migration', status: 'succeeded' },
+        { kind: 'migration', status: 'succeeded', adopted: true },
         {
           status: 'unresolved',
           kind: 'migration',

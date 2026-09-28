@@ -756,7 +756,6 @@ describe('run-state', () => {
         checkpointFailed: true,
         skipInstall: true,
         validate: false,
-        finalValidation: false,
         gitRefAtInit: 'abc0'.repeat(10),
         runbookPath: 'RUNBOOK.md',
         branch: 'feature/upgrade',
@@ -842,13 +841,11 @@ describe('run-state', () => {
       mkdirSync(dir, { recursive: true });
 
       // A truthy string must not stand in for a flag that gates a validation pass.
-      for (const flag of ['validate', 'finalValidation']) {
-        writeFileSync(
-          join(dir, 'run.json'),
-          JSON.stringify(buildState({ [flag]: 'yes' } as never))
-        );
-        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
-      }
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ validate: 'yes' } as never))
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
       // The ref is interpolated into a command the agent runs verbatim.
       writeFileSync(

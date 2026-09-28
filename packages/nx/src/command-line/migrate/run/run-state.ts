@@ -289,10 +289,6 @@ export interface MigrateRunState {
   // Whether generator changes get a validation pass dispensed over them,
   // captured like the install policy above.
   validate?: boolean;
-  // Whether the run ends with a validation pass over the whole workspace,
-  // captured the same way. Absent (a run created before the field existed)
-  // means on.
-  finalValidation?: boolean;
   // HEAD when the run started, after the checkpoint commit when one landed:
   // the base every whole-run diff is taken against. Absent when the probe
   // failed, or on a run created before the field existed.
@@ -711,7 +707,6 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     isOptionalBoolean(parsed.checkpointFailed) &&
     isOptionalBoolean(parsed.skipInstall) &&
     isOptionalBoolean(parsed.validate) &&
-    isOptionalBoolean(parsed.finalValidation) &&
     isOptionalSha(parsed.gitRefAtInit) &&
     isOptionalMatching(RUNBOOK_NAME, parsed.runbookPath) &&
     isOptionalString(parsed.branch) &&

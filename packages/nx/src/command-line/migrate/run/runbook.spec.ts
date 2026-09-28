@@ -126,10 +126,14 @@ describe('renderRunbook', () => {
 
     expect(withPass).toContain('validation pass over the whole workspace');
     expect(withPass).toContain('`nx affected --base <ref> -t <targets>`');
+    expect(withPass).toContain('carried to the final\n  validation pass');
     expect(withoutPass).not.toContain(
       'validation pass over the whole workspace'
     );
     expect(withoutPass).not.toContain('nx affected --base');
+    expect(withoutPass).toContain(
+      'carried to the completion\n  report instead'
+    );
   });
 
   it('defers the formatter command to the dispensed step and names the exact replacements', () => {
