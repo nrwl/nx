@@ -959,6 +959,31 @@ mod tests {
     }
 
     #[test]
+    fn ignore_files_apply_when_the_root_has_a_hardcoded_ignored_name() {
+        // The walk never vetoes its own root, so the filter must not either or
+        // it admits every file the walk's ignore rules drop.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path())
+            .expect("canonicalize")
+            .join("node_modules");
+        fs::create_dir_all(&origin).expect("mkdir node_modules");
+        fs::write(origin.join(".gitignore"), "secret.txt\n").expect("write .gitignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        let created = |name: &str| {
+            RawWatchEvent::new(
+                notify::Event::new(EventKind::Create(CreateKind::File)).add_path(origin.join(name)),
+            )
+        };
+        assert!(!filterer.check_event(&created("secret.txt")));
+        assert!(filterer.check_event(&created("other.txt")));
+    }
+
+    #[test]
     fn a_path_outside_origin_is_rejected_not_admitted() {
         // canonicalize_event_paths can resolve a symlink out of the workspace.
         // Such a path must be rejected, not admitted: admitting emits an

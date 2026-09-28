@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use tracing::trace;
 
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
-use crate::native::watch::git_utils::{collect_workspace_ignore_files, get_gitignore_files};
+use crate::native::watch::git_utils::get_ignore_files;
 use crate::native::watch::types::RawWatchEvent;
 use crate::native::watch::utils::get_nx_ignore;
 
@@ -167,7 +167,7 @@ pub(crate) fn create_filter(
     // paths, so a `\\?\` origin would reject every event. The disallowed_methods
     // clippy lint keeps lib code on dunce, but `lint-native` runs clippy without
     // --all-targets, so cfg(test) is unlinted — tests must hold this by hand.
-    let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
+    let ignore_files = use_ignore.then(|| get_ignore_files(origin));
 
     trace!(
         ?use_ignore,
@@ -178,36 +178,17 @@ pub(crate) fn create_filter(
 
     let mut git_ignores: Vec<(PathBuf, u8, Gitignore)> = Vec::new();
 
-    // Build per-directory Gitignore instances from .gitignore files
+    // Build per-directory Gitignore instances from .gitignore and nested
+    // .nxignore files. create_walker honours a nested `.nxignore`, and a file
+    // the watcher admits but the rescan walk drops is reported deleted. The
+    // root `.nxignore` is added below, so it is skipped here.
     if let Some(paths) = ignore_files {
-        for gitignore_path in paths {
-            let (gitignore, err) = Gitignore::new(&gitignore_path);
-            if let Some(err) = err {
-                trace!(
-                    ?err,
-                    ?gitignore_path,
-                    "error parsing gitignore, using partial result"
-                );
-            }
-            let dir = gitignore_path
-                .parent()
-                .unwrap_or(&gitignore_path)
-                .to_path_buf();
-            git_ignores.push((dir, 1, gitignore));
-        }
-    }
-
-    // Nested `.nxignore` — create_walker honours it, so a directory it excludes
-    // must not reach the watcher (it would be inserted into the file map and
-    // then reported deleted on the next rescan, since the rescan walk drops it).
-    // The root `.nxignore` is added below, outside the `use_ignore` gate, so it
-    // is skipped here rather than added twice.
-    if use_ignore {
         let root_nxignore = PathBuf::from(origin).join(".nxignore");
-        for path in collect_workspace_ignore_files(origin, &[".nxignore"]) {
+        for path in paths {
             if path == root_nxignore {
                 continue;
             }
+            let rank = if path.ends_with(".nxignore") { 2 } else { 1 };
             let (gitignore, err) = Gitignore::new(&path);
             if let Some(err) = err {
                 trace!(
@@ -217,9 +198,11 @@ pub(crate) fn create_filter(
                 );
             }
             let dir = path.parent().unwrap_or(&path).to_path_buf();
-            git_ignores.push((dir, 2, gitignore));
+            git_ignores.push((dir, rank, gitignore));
         }
+    }
 
+    if use_ignore {
         // `.git/info/exclude` and the global core.excludesFile: the canonical
         // homes for local, uncommittable exclusions (scratch, secrets). Both
         // are gitignore-format and apply workspace-wide, so they are rooted at
