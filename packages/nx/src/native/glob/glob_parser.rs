@@ -1,7 +1,7 @@
 use crate::native::glob::glob_group::GlobGroup;
 use nom::branch::alt;
 use nom::bytes::complete::{is_not, tag, take_till, take_until, take_while, take_while1};
-use nom::combinator::{eof, map, map_parser, not};
+use nom::combinator::{eof, map, map_parser, not, verify};
 use nom::error::{ErrorKind, ParseError, VerboseError, context, convert_error};
 use nom::multi::{many_till, separated_list0};
 use nom::sequence::{preceded, terminated};
@@ -124,7 +124,8 @@ fn non_special_character(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseErr
         "non_special_character",
         map(
             alt((
-                take_until("{,"),
+                // Stops at an escape, so `\{,` stays a literal `{,`.
+                verify(take_until("{,"), |text: &str| !text.contains('\\')),
                 take_while1(|c| {
                     c != '?'
                         && c != '+'
