@@ -168,7 +168,7 @@ describe('formatAffectedExplanation', () => {
     expect(out.match(/traced to/g)).toHaveLength(2);
   });
 
-  it('ends a trace on a cycle and caps a long list', () => {
+  it('ends a trace on a cycle and counts past the first', () => {
     const files = ['a.ts', 'b.ts', 'c.ts', 'd.ts'];
     const out = formatAffectedExplanation(
       {
@@ -188,12 +188,12 @@ describe('formatAffectedExplanation', () => {
       },
       'Affected tasks'
     );
-    expect(out).toContain('    - traced to a.ts, b.ts, c.ts and 1 more');
+    expect(out).toContain('    - traced to a.ts and 3 others');
   });
 
   // A refactor or a dependency bump would otherwise print a line per file or
   // package under every task.
-  it('shares one line among more than three files or packages', () => {
+  it('names the first file or package and counts the rest', () => {
     const files = ['a.ts', 'b.ts', 'c.ts', 'd.ts', 'e.ts'].map(
       (f) => `libs/ui/${f}`
     );
@@ -219,32 +219,36 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '    - input libs/ui/**/* matched 5 changed files: libs/ui/a.ts, libs/ui/b.ts, libs/ui/c.ts and 2 more'
+      '    - input libs/ui/**/* matched libs/ui/a.ts and 4 other files'
     );
     expect(out).toContain('    - input matched tsconfig.base.json');
     expect(out).toContain(
-      '    - depends on 4 packages whose versions changed: npm:a, npm:b, npm:c and 1 more'
+      '    - depends on npm:a and 3 other packages, whose versions changed'
     );
-    expect(out).not.toContain('libs/ui/d.ts');
+    expect(out).not.toContain('libs/ui/b.ts');
   });
 
-  it('keeps three or fewer on lines of their own', () => {
-    const out = formatAffectedExplanation(
-      {
-        affected: {
-          'ui:build': ['a.ts', 'b.ts', 'c.ts'].map((f) => ({
-            kind: 'input-file' as const,
-            file: `libs/ui/${f}`,
-            pattern: 'libs/ui/**/*',
-          })),
+  it('keeps a single match on its own line, and counts one other', () => {
+    const match = (f: string) => ({
+      kind: 'input-file' as const,
+      file: `libs/ui/${f}`,
+      pattern: 'libs/ui/**/*',
+    });
+    const explain = (files: string[]) =>
+      formatAffectedExplanation(
+        {
+          affected: { 'ui:build': files.map(match) },
+          upstream: {},
+          touched: ['ui:build'],
         },
-        upstream: {},
-        touched: ['ui:build'],
-      },
-      'Affected tasks'
+        'Affected tasks'
+      );
+    expect(explain(['a.ts'])).toContain(
+      '    - input libs/ui/**/* matched libs/ui/a.ts\n'
     );
-    expect(out).toContain('    - input libs/ui/**/* matched libs/ui/c.ts');
-    expect(out).not.toContain('changed files:');
+    expect(explain(['a.ts', 'b.ts'])).toContain(
+      '    - input libs/ui/**/* matched libs/ui/a.ts and 1 other file'
+    );
   });
 
   it('sorts an entry reached only through a dependency to the bottom', () => {

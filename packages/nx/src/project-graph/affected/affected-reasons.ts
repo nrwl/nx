@@ -159,10 +159,12 @@ export function formatAffectedExplanation(
     if (!touched(name)) {
       const origins = chainOrigins(name, reasonsOf);
       if (origins.length) {
-        const shown = origins.slice(0, 3).join(', ');
-        const more =
-          origins.length > 3 ? ` and ${origins.length - 3} more` : '';
-        lines.push(`    - traced to ${shown}${more}`);
+        const others = origins.length - 1;
+        lines.push(
+          `    - traced to ${origins[0]}${
+            others ? ` and ${others} ${others === 1 ? 'other' : 'others'}` : ''
+          }`
+        );
       }
     }
     lines.push('');
@@ -216,10 +218,10 @@ export function formatAffectedExplanation(
 }
 
 /**
- * One line per reason, except that more than three files matching one input,
- * or more than three moved packages, share a line naming the first three: a
- * refactor or a dependency bump would otherwise print a line per file under
- * every task. The JSON keeps them all.
+ * One line per reason, except that files matching one input, or moved
+ * packages, share a line naming the first and counting the rest: a refactor or
+ * a dependency bump would otherwise print a line per file under every task.
+ * The JSON keeps them all.
  */
 function reasonLines(reasons: AffectedReason[]): string[] {
   const grouped = new Map<string, AffectedReason[]>();
@@ -241,20 +243,22 @@ function reasonLines(reasons: AffectedReason[]): string[] {
   for (const reason of reasons) {
     const key = keyOf(reason);
     const group = key ? grouped.get(key) : undefined;
-    if (!group || group.length <= 3) {
+    if (!group || group.length === 1) {
       lines.push(formatAffectedReason(reason));
       continue;
     }
     if (done.has(key)) continue;
     done.add(key);
-    const names = group.map((r) => r.file ?? r.package);
-    const listed = `${names.slice(0, 3).join(', ')} and ${names.length - 3} more`;
+    const [first] = group;
+    const others = group.length - 1;
     lines.push(
-      reason.kind === 'input-file'
-        ? `input ${reason.pattern ?? ''}${reason.pattern ? ' ' : ''}matched ${
-            names.length
-          } changed files: ${listed}`
-        : `depends on ${names.length} packages whose versions changed: ${listed}`
+      first.kind === 'input-file'
+        ? `input ${first.pattern ? `${first.pattern} ` : ''}matched ${
+            first.file
+          } and ${others} other ${others === 1 ? 'file' : 'files'}`
+        : `depends on ${first.package} and ${others} other ${
+            others === 1 ? 'package' : 'packages'
+          }, whose versions changed`
     );
   }
   return lines;
