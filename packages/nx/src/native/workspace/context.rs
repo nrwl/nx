@@ -26,6 +26,7 @@ use crate::native::workspace::files_archive::{
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::glob_hashing::{hash_glob_groups, needs_scan};
 use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader};
+use crate::native::workspace::outputs_tracking::{OutputRecords, TaskOutputs};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
@@ -67,6 +68,8 @@ pub struct WorkspaceContext {
     files: FileState,
     /// The directories the hasher reads from disk, kept current by the watch.
     ignored: Arc<IgnoredIndex>,
+    /// What the daemon recorded of each task's outputs, read through `ignored`.
+    outputs: OutputRecords,
     batches: Publisher<PendingChanges>,
     #[cfg(not(target_arch = "wasm32"))]
     events: Publisher<Vec<WatchEvent>>,
@@ -1135,6 +1138,7 @@ impl WorkspaceContext {
         Ok(WorkspaceContext {
             files,
             ignored,
+            outputs: OutputRecords::default(),
             batches,
             #[cfg(not(target_arch = "wasm32"))]
             events,
@@ -1621,6 +1625,21 @@ impl WorkspaceContext {
             }
         }
         self.files.holds(paths)
+    }
+
+    /// Remembers each task's outputs as they are on disk now, so
+    /// `outputs_unchanged` can tell whether they still are.
+    #[napi]
+    pub fn record_outputs(&self, entries: Vec<TaskOutputs>) {
+        self.outputs
+            .record(&self.workspace_root_path, &self.reader(), entries);
+    }
+
+    /// Whether each task's outputs are still as last recorded for its hash.
+    #[napi]
+    pub fn outputs_unchanged(&self, entries: Vec<TaskOutputs>) -> Vec<bool> {
+        self.outputs
+            .unchanged(&self.workspace_root_path, &self.reader(), entries)
     }
 
     #[napi]

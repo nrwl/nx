@@ -391,6 +391,13 @@ export declare class WorkspaceContext {
    * other read of the files does, so a write already reported counts.
    */
   trackedFiles(paths: Array<string>): Array<string>
+  /**
+   * Remembers each task's outputs as they are on disk now, so
+   * `outputs_unchanged` can tell whether they still are.
+   */
+  recordOutputs(entries: Array<TaskOutputs>): void
+  /** Whether each task's outputs are still as last recorded for its hash. */
+  outputsUnchanged(entries: Array<TaskOutputs>): Array<boolean>
   getFilesInDirectory(directory: string): Array<string>
   /**
    * Subscribes to the context's changes: the callback is called whenever
@@ -1159,6 +1166,11 @@ export interface TaskHashDetails {
   implicitDeps?: Record<string, string>
   /** Hash of the runtime environment which the task was executed */
   runtime?: Record<string, string>
+}
+
+export interface TaskOutputs {
+  outputs: Array<string>
+  hash: string
 }
 
 /**
