@@ -18,6 +18,19 @@ import { RunningTask } from './running-tasks/running-task';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 
+// Nx Cloud agents pass `null` for unset fields, e.g. a `hash` cleared to force
+// a rehash. Native object fields accept `undefined` for `None`, never `null`.
+function removeNullTaskFields(task: Task): void {
+  for (const key of Object.keys(task) as (keyof Task)[]) {
+    if (task[key] === null) {
+      delete task[key];
+    }
+  }
+  if (task.target?.configuration === null) {
+    delete task.target.configuration;
+  }
+}
+
 async function createOrchestrator(
   tasks: Task[],
   projectGraph: ProjectGraph,
@@ -27,6 +40,10 @@ async function createOrchestrator(
   ioSnapshots: IoSnapshots | undefined
 ) {
   loadRootEnvFiles();
+
+  for (const task of [...tasks, ...Object.values(fullTaskGraph.tasks)]) {
+    removeNullTaskFields(task);
+  }
 
   const invokeRunnerTerminalLifecycle = new InvokeRunnerTerminalOutputLifeCycle(
     tasks
