@@ -82,6 +82,13 @@ function publishPreset(packageJson: Record<string, unknown>): {
     join(dir, 'preset.js'),
     'module.exports = async function preset() {};\nmodule.exports.default = module.exports;\n'
   );
+  // npm strips protected keys like _authToken from the environment it
+  // inherits, so the registry token has to come from a config file.
+  const registryPort = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';
+  writeFileSync(
+    join(dir, '.npmrc'),
+    `//localhost:${registryPort}/:_authToken=secretVerdaccioToken\n`
+  );
   execSync('npm publish', { cwd: dir, stdio: 'pipe', env: process.env });
   return { name, version };
 }
