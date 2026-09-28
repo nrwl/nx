@@ -69,7 +69,7 @@ describe('TasksSchedule', () => {
           'lib1:build': lib1Build,
         },
         dependencies: {
-          'app1:build': ['lib1:build'],
+          'app1:build': [{ id: 'lib1:build' }],
           'app2:build': [],
           'lib1:build': [],
         },
@@ -582,7 +582,7 @@ describe('TasksSchedule', () => {
             'lib1:build': lib1Build,
           },
           dependencies: {
-            'app1:build': ['lib1:build'],
+            'app1:build': [{ id: 'lib1:build' }],
             'app2:build': [],
             'lib1:build': [],
           },
@@ -952,7 +952,7 @@ describe('TasksSchedule', () => {
           'lib1:build': lib1Build,
         },
         dependencies: {
-          'app1:build': ['lib1:build'],
+          'app1:build': [{ id: 'lib1:build' }],
           'lib1:build': [],
         },
         continuousDependencies: {
@@ -1186,8 +1186,8 @@ describe('TasksSchedule', () => {
         },
         dependencies: {
           'lib1:build': [],
-          'app1:build': ['lib1:build'],
-          'app2:build': ['lib1:build'],
+          'app1:build': [{ id: 'lib1:build' }],
+          'app2:build': [{ id: 'lib1:build' }],
         },
         continuousDependencies: {
           'lib1:build': [],
@@ -1445,7 +1445,7 @@ describe('TasksSchedule', () => {
           'app1:serve': [],
         },
         continuousDependencies: {
-          'app1:build': ['app1:serve'],
+          'app1:build': [{ id: 'app1:serve', waitFor: 'ready' }],
           'lib1:build': [],
           'app1:serve': [],
         },
@@ -1472,9 +1472,6 @@ describe('TasksSchedule', () => {
               targets: {
                 build: {
                   executor: 'awesome-executors:build',
-                  dependsOn: [
-                    { projects: ['app1'], target: 'serve', waitFor: 'ready' },
-                  ],
                 },
                 serve: {
                   executor: 'awesome-executors:serve',
@@ -1520,8 +1517,8 @@ describe('TasksSchedule', () => {
         dependencies: { 'db:up': [], 'api:serve': [], 'e2e:e2e': [] },
         continuousDependencies: {
           'db:up': [],
-          'api:serve': ['db:up'],
-          'e2e:e2e': ['api:serve'],
+          'api:serve': [{ id: 'db:up', waitFor: 'ready' }],
+          'e2e:e2e': [{ id: 'api:serve' }],
         },
         roots: ['db:up'],
       };
@@ -1550,9 +1547,6 @@ describe('TasksSchedule', () => {
                 serve: {
                   executor: 'awesome-executors:serve',
                   continuous: true,
-                  dependsOn: [
-                    { projects: ['db'], target: 'up', waitFor: 'ready' },
-                  ],
                 },
               },
             },
@@ -1683,7 +1677,7 @@ describe('TasksSchedule', () => {
         },
         dependencies: { 'app1:build': [], 'lib1:build': [], 'app1:serve': [] },
         continuousDependencies: {
-          'app1:build': ['app1:serve'],
+          'app1:build': [{ id: 'app1:serve', waitFor: 'ready' }],
           'lib1:build': [],
           'app1:serve': [],
         },
@@ -1729,8 +1723,8 @@ describe('TasksSchedule', () => {
         dependencies: { 'db:up': [], 'api:build': [], 'e2e:build': [] },
         continuousDependencies: {
           'db:up': [],
-          'api:build': ['db:up'],
-          'e2e:build': ['api:build'],
+          'api:build': [{ id: 'db:up', waitFor: 'ready' }],
+          'e2e:build': [{ id: 'api:build' }],
         },
         roots: ['db:up'],
       };
@@ -1755,9 +1749,6 @@ describe('TasksSchedule', () => {
                 build: {
                   executor: 'awesome-executors:build',
                   continuous: true,
-                  dependsOn: [
-                    { projects: ['db'], target: 'up', waitFor: 'ready' },
-                  ],
                 },
               },
             },

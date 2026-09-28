@@ -227,7 +227,7 @@ async function getTerminalOutputLifeCycle(
       const mainContinuousDependencies =
         taskGraph.continuousDependencies[mainTaskId];
       if (mainContinuousDependencies.length > 0) {
-        pinnedTasks.push(mainContinuousDependencies[0]);
+        pinnedTasks.push(mainContinuousDependencies[0].id);
       }
       const [, target] = mainTaskId.split(':');
       titleText = `1 ${target} task`;

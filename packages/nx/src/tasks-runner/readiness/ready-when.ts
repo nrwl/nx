@@ -1,13 +1,6 @@
 import type { ProjectGraph } from '../../config/project-graph';
 import type { Task, TaskGraph } from '../../config/task-graph';
-import type {
-  ReadyWhen,
-  TargetDependencyConfig,
-} from '../../config/workspace-json-project-json';
-import {
-  getAllTargetNames,
-  normalizeDependencyConfigDefinition,
-} from '../utils';
+import type { ReadyWhen } from '../../config/workspace-json-project-json';
 
 const DEFAULT_READY_TIMEOUT = 60_000;
 // Node timers and the native probe both take a 32-bit count of milliseconds
@@ -164,104 +157,13 @@ export function filterProbedProducers(
   );
 }
 
-const allTargetNamesCache = new WeakMap<ProjectGraph, string[]>();
-
-// Walks like the task graph builder: at a dependency without the target, every
-// entry applies again to that project's dependencies, the plain ones included
 export function getReadyProducerIds(
   task: Task,
-  taskGraph: TaskGraph,
-  projectGraph: ProjectGraph
+  taskGraph: TaskGraph
 ): string[] {
-  const producerIds = taskGraph.continuousDependencies[task.id];
-  if (!producerIds?.length) {
-    return [];
-  }
-  const { project, target } = task.target;
-  const dependsOn: (TargetDependencyConfig | string)[] =
-    projectGraph.nodes[project]?.data?.targets?.[target]?.dependsOn ?? [];
-  if (!dependsOn.some(asksForReady)) {
-    return [];
-  }
-
-  const readyProjectsByTarget = new Map<string, Set<string>>();
-  const addReady = (target: string, project: string) => {
-    let projects = readyProjectsByTarget.get(target);
-    if (!projects) {
-      projects = new Set();
-      readyProjectsByTarget.set(target, projects);
-    }
-    projects.add(project);
-  };
-  const walkedTargets = new Set<string>();
-  const readyWalkedTargets = new Set<string>();
-  for (const definition of dependsOn) {
-    const ready = asksForReady(definition);
-    for (const entry of normalizeDependencyConfigDefinition(
-      definition,
-      project,
-      projectGraph,
-      cachedAllTargetNames(projectGraph)
-    )) {
-      // Same precedence as the builder: `projects` wins over `dependencies`
-      if (entry.projects) {
-        if (ready) {
-          for (const dependencyProject of entry.projects) {
-            addReady(entry.target, dependencyProject);
-          }
-        }
-      } else if (entry.dependencies) {
-        walkedTargets.add(entry.target);
-        if (ready) {
-          readyWalkedTargets.add(entry.target);
-        }
-      }
-    }
-  }
-
-  if (readyWalkedTargets.size > 0) {
-    const targets = Array.from(walkedTargets);
-    const readyByTarget = targets.map((t) => readyWalkedTargets.has(t));
-    const visited = new Set([project]);
-    const queue = [project];
-    while (queue.length) {
-      const current = queue.pop();
-      const deps = projectGraph.dependencies[current];
-      if (!deps) {
-        continue;
-      }
-      for (let i = 0; i < deps.length; i++) {
-        const depProject = deps[i].target;
-        const node = projectGraph.nodes[depProject];
-        if (!node) {
-          continue;
-        }
-        const depTargets = node.data?.targets;
-        for (let j = 0; j < targets.length; j++) {
-          if (depTargets?.[targets[j]]) {
-            if (readyByTarget[j]) {
-              addReady(targets[j], depProject);
-            }
-          } else if (!visited.has(depProject)) {
-            visited.add(depProject);
-            queue.push(depProject);
-          }
-        }
-      }
-    }
-  }
-
-  return producerIds.filter((producerId) => {
-    const producer = taskGraph.tasks[producerId]?.target;
-    return (
-      producer &&
-      readyProjectsByTarget.get(producer.target)?.has(producer.project)
-    );
-  });
-}
-
-function asksForReady(definition: TargetDependencyConfig | string): boolean {
-  return typeof definition !== 'string' && definition.waitFor === 'ready';
+  return (taskGraph.continuousDependencies[task.id] ?? [])
+    .filter((edge) => edge.waitFor === 'ready')
+    .map((edge) => edge.id);
 }
 
 // Producers with a probe that each task in the graph waits on, keyed by the
@@ -273,7 +175,7 @@ export function getReadyDependencies(
   const readyDependencies: Record<string, string[]> = {};
   for (const task of Object.values(taskGraph.tasks)) {
     const producerIds = filterProbedProducers(
-      getReadyProducerIds(task, taskGraph, projectGraph),
+      getReadyProducerIds(task, taskGraph),
       taskGraph,
       projectGraph
     );
@@ -282,15 +184,6 @@ export function getReadyDependencies(
     }
   }
   return readyDependencies;
-}
-
-function cachedAllTargetNames(projectGraph: ProjectGraph): string[] {
-  let names = allTargetNamesCache.get(projectGraph);
-  if (!names) {
-    names = getAllTargetNames(projectGraph);
-    allTargetNamesCache.set(projectGraph, names);
-  }
-  return names;
 }
 
 function isPositiveInteger(value: unknown): value is number {

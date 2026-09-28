@@ -376,10 +376,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
           tasks: { [devServer.id]: devServer, [e2eTest.id]: e2eTest },
           dependencies: {
             [devServer.id]: [],
-            [e2eTest.id]: [devServer.id],
+            [e2eTest.id]: [{ id: devServer.id }],
           },
           continuousDependencies: {
-            [e2eTest.id]: [devServer.id],
+            [e2eTest.id]: [{ id: devServer.id }],
           },
           roots: [devServer.id],
         },
@@ -647,10 +647,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
           tasks: { [devServer.id]: devServer, [e2eTest.id]: e2eTest },
           dependencies: {
             [devServer.id]: [],
-            [e2eTest.id]: [devServer.id],
+            [e2eTest.id]: [{ id: devServer.id }],
           },
           continuousDependencies: {
-            [e2eTest.id]: [devServer.id],
+            [e2eTest.id]: [{ id: devServer.id }],
           },
           roots: [devServer.id],
         },
