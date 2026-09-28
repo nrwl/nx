@@ -18,6 +18,7 @@ import {
   readJsonFile,
   type Target,
   type TargetConfiguration,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync, statSync } from 'node:fs';
@@ -962,14 +963,15 @@ function getOutput(
   angularWorkspaceRoot: string,
   projectRoot: string
 ): string {
-  const relativePath = relative(
-    join(workspaceRoot, angularWorkspaceRoot, projectRoot),
-    path
+  const relativePath = normalizePath(
+    relative(join(workspaceRoot, angularWorkspaceRoot, projectRoot), path)
   );
   if (relativePath.startsWith('..')) {
     return posix.join(
       '{workspaceRoot}',
-      join(angularWorkspaceRoot, projectRoot, relativePath)
+      angularWorkspaceRoot,
+      projectRoot,
+      relativePath
     );
   } else {
     return posix.join('{projectRoot}', relativePath);
