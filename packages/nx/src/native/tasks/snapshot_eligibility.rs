@@ -396,8 +396,18 @@ fn candidates_under(sorted: &[String], root: &str) -> Vec<String> {
 fn escapes_workspace(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     let bytes = path.as_bytes();
+    // A leading escape of a glob symbol names a root-level file like `!a.md`;
+    // any other leading `\` could spell `\/etc`, `\\server` or `\C:`.
+    let escaped_symbol = matches!(
+        bytes,
+        [
+            b'\\',
+            b'*' | b'?' | b'[' | b']' | b'{' | b'}' | b'(' | b')' | b'!',
+            ..
+        ]
+    );
     path.starts_with('/')
-        || path.starts_with('\\')
+        || (path.starts_with('\\') && !escaped_symbol)
         || (bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':')
         || path.split(['/', '\\']).any(|segment| segment == "..")
 }
@@ -584,10 +594,24 @@ mod tests {
             "C:/Users/x",
             "\\\\server\\share",
             "!../ignored",
+            r"\/etc/passwd",
+            r"\C:/Windows",
+            r"\../x",
         ] {
             assert!(escapes_workspace(glob), "{glob}");
         }
-        for glob in ["libs/a/..b/c.ts", "dist/**", "!libs/a/**/*.spec.ts", "a..b"] {
+        for glob in [
+            "libs/a/..b/c.ts",
+            "dist/**",
+            "!libs/a/**/*.spec.ts",
+            "a..b",
+            r"\!notes.md",
+            r"!\!notes.md",
+            r"\(group\)/page.tsx",
+            r"\[id\].ts",
+            r"\*x",
+            r"\{a,b\}",
+        ] {
             assert!(!escapes_workspace(glob), "{glob}");
         }
     }
