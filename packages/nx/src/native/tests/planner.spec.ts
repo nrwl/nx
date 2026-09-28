@@ -17,6 +17,7 @@ import { withEnvironmentVariables } from '../../internal-testing-utils/with-envi
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { toRustProjectGraph } from '../transform-objects';
+import { ultracacheByTaskId } from '../../io-snapshots/overrides';
 import { DependencyType } from '../../config/project-graph';
 
 let tempFs = new TempFs('task-planner');
@@ -2515,9 +2516,13 @@ describe('task planner', () => {
       const withheld = snapshotsFor({
         'parent:build': { inputs: ['libs/./parent/*.gen'] },
       });
-      const report = getIoSnapshotReport(withheld, taskGraph, {
-        customHasherTaskIds: ['child:build'],
-      });
+      const report = getIoSnapshotReport(
+        withheld,
+        ultracacheByTaskId(taskGraph),
+        {
+          customHasherTaskIds: ['child:build'],
+        }
+      );
       expect(report.used).toEqual([]);
       expect(report.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
         ['custom-hasher', 'child:build'],
@@ -2531,7 +2536,8 @@ describe('task planner', () => {
           'parent:build': { inputs: ['libs/parent/filea.ts', negation] },
         });
         expect(
-          getIoSnapshotReport(negated, taskGraph).diagnostics
+          getIoSnapshotReport(negated, ultracacheByTaskId(taskGraph))
+            .diagnostics
         ).toContainEqual(
           expect.objectContaining({
             reason: 'invalid-glob',
@@ -2568,7 +2574,8 @@ describe('task planner', () => {
           planner.getPlans(['parent:build'], taskGraph, snapshots)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(snapshots, taskGraph).diagnostics
+          getIoSnapshotReport(snapshots, ultracacheByTaskId(taskGraph))
+            .diagnostics
         ).toContainEqual(
           expect.objectContaining({ reason, taskId: 'parent:build' })
         );
@@ -2586,9 +2593,9 @@ describe('task planner', () => {
       expect(plan).toContainEqual(
         expect.stringMatching(/^files:\[\*\*\/\*\.gen,/)
       );
-      expect(getIoSnapshotReport(snapshots, taskGraph).used).toContain(
-        'parent:build'
-      );
+      expect(
+        getIoSnapshotReport(snapshots, ultracacheByTaskId(taskGraph)).used
+      ).toContain('parent:build');
     });
 
     it('hashes a task that read nothing from native instructions plus the marker', () => {
@@ -2636,9 +2643,9 @@ describe('task planner', () => {
       expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
         'parent:build',
       ]);
-      expect(getIoSnapshotReport(snapshots, taskGraph).used).toEqual([
-        'parent:build',
-      ]);
+      expect(
+        getIoSnapshotReport(snapshots, ultracacheByTaskId(taskGraph)).used
+      ).toEqual(['parent:build']);
     });
 
     it('refuses snapshot globs that leave the workspace and plans natively', () => {
@@ -2652,9 +2659,10 @@ describe('task planner', () => {
           planner.getPlans(['parent:build'], taskGraph, snapshots)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(snapshots, taskGraph).diagnostics.find(
-            (d) => d.taskId === 'parent:build'
-          )
+          getIoSnapshotReport(
+            snapshots,
+            ultracacheByTaskId(taskGraph)
+          ).diagnostics.find((d) => d.taskId === 'parent:build')
         ).toMatchObject({ reason: 'escapes-workspace', glob });
       }
     });

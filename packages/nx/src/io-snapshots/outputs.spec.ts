@@ -165,6 +165,26 @@ describe('io snapshot outputs', () => {
     ]);
   });
 
+  it('extends a task whose hash an Nx Cloud agent cleared to null', () => {
+    const taskGraph = graph([
+      {
+        ...task('web', 'build', ['dist/apps/web']),
+        hash: null,
+        hashDetails: null,
+      } as ReturnType<typeof task>,
+    ]);
+    const snapshots = snapshotsFor({
+      'web:build': { outputs: ['apps/web/.next/cache/**'] },
+    });
+
+    applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
+
+    expect(taskGraph.tasks['web:build'].outputs).toEqual([
+      'dist/apps/web',
+      'apps/web/.next/cache/**',
+    ]);
+  });
+
   it('merges into a set, so a declared duplicate collapses too', () => {
     const taskGraph = graph([
       task('web', 'build', ['dist/apps/web', 'dist/apps/web']),

@@ -28,13 +28,6 @@ async function createOrchestrator(
 ) {
   loadRootEnvFiles();
 
-  // Nx Cloud agents clear an assigned task's hash to `null` to force a rehash.
-  // Native object fields accept `undefined` for `None`, never `null`.
-  for (const task of tasks) {
-    if (task.hash === null) delete task.hash;
-    if (task.hashDetails === null) delete task.hashDetails;
-  }
-
   const invokeRunnerTerminalLifecycle = new InvokeRunnerTerminalOutputLifeCycle(
     tasks
   );

@@ -1,7 +1,7 @@
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import { getObservedIoSnapshotOutputs, type IoSnapshots } from '../native';
-import { ioSnapshotEligibilityOptions } from './overrides';
+import { ioSnapshotEligibilityOptions, ultracacheByTaskId } from './overrides';
 
 /** The sets already applied to each task graph object. */
 const applied = new WeakMap<TaskGraph, WeakSet<IoSnapshots>>();
@@ -26,7 +26,7 @@ export function applyIoSnapshotOutputs(
   // node_modules/.nx/.git; ineligible tasks are absent.
   const observed = getObservedIoSnapshotOutputs(
     snapshots,
-    taskGraph,
+    ultracacheByTaskId(taskGraph),
     ioSnapshotEligibilityOptions(projectGraph, taskGraph)
   );
   for (const [taskId, outputs] of Object.entries(observed)) {
