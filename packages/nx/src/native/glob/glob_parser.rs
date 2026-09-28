@@ -37,16 +37,16 @@ fn bracket_class<'a>(input: &'a str) -> IResult<&'a str, GlobGroup<'a>, VerboseE
 }
 
 /// A `\` and the character after it, kept as text so globset reads the escape:
-/// `\(` is a literal `(`, not a group. On Windows `\` separates instead.
+/// `\(` is a literal `(`, not a group.
 fn escaped_char<'a>(input: &'a str) -> IResult<&'a str, GlobGroup<'a>, VerboseError<&'a str>> {
     context("escaped_char", |input: &'a str| {
         let (rest, _) = tag("\\")(input)?;
         match rest.chars().next() {
-            Some(c) if cfg!(not(windows)) => {
+            Some(c) => {
                 let len = 1 + c.len_utf8();
                 Ok((&input[len..], GlobGroup::Literal(input[..len].into())))
             }
-            _ => Err(nom::Err::Error(VerboseError::from_error_kind(
+            None => Err(nom::Err::Error(VerboseError::from_error_kind(
                 input,
                 ErrorKind::Char,
             ))),
@@ -132,7 +132,7 @@ fn non_special_character(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseErr
                         && c != '!'
                         && c != '('
                         && c != '['
-                        && !(cfg!(not(windows)) && c == '\\')
+                        && c != '\\'
                 }),
                 is_not("*("),
             )),
@@ -226,7 +226,6 @@ fn lex_globset(text: &str) -> Vec<GlobGroup<'_>> {
             b'{' => closing_brace(text, i),
             // globset rejects a `}` that closes no group.
             b'}' => i + 1,
-            #[cfg(not(windows))]
             b'\\' => i + 1 + text[i + 1..].chars().next().map_or(0, char::len_utf8),
             _ => {
                 i += 1;
@@ -488,7 +487,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(windows))]
     fn a_backslash_escapes_a_parenthesis() {
         use GlobGroup::*;
         assert_eq!(
@@ -511,7 +509,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(windows))]
     fn a_backslash_escapes_the_next_character() {
         assert_eq!(super::literal_segment(r"\*").as_deref(), Some("*"));
         // An escape never resolves to `.` or `..`, which would dodge `..` checks.

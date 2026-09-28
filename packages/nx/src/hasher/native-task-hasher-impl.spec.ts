@@ -1623,10 +1623,7 @@ describe('native task hasher', () => {
     expect(two.inputs.files).not.toContain('libs/child/one.txt');
   });
 
-  it.each([
-    'libs/child/[(]group[)]/page.md',
-    ...(process.platform === 'win32' ? [] : ['libs/child/\\(group\\)/page.md']),
-  ])(
+  it.each(['libs/child/[(]group[)]/page.md', 'libs/child/\\(group\\)/page.md'])(
     'hashes a snapshot read of a parenthesized directory (%s)',
     async (input) => {
       const { taskGraph, impl } = await upfrontFixture();

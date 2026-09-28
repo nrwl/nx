@@ -46,8 +46,10 @@ impl NxGlobSetBuilder {
             glob_string
         };
 
+        // `\` escapes on every platform, so a glob means the same thing everywhere.
         let glob = GlobBuilder::new(&glob_string)
             .literal_separator(true)
+            .backslash_escape(true)
             .build()
             .map_err(anyhow::Error::from)?;
 
@@ -98,8 +100,6 @@ fn common_glob_prefix(globs: &[String]) -> Option<PathBuf> {
         if glob.starts_with('!') {
             continue;
         }
-        #[cfg(windows)]
-        let glob = glob.replace('\\', "/");
         let (directory, _) = partition_glob(&normalize_glob(glob.as_str()));
         // Drive letters and lossy names cannot safely index the raw file map.
         if directory.contains([':', '\u{fffd}'])
@@ -215,9 +215,7 @@ mod test {
 
     /// Pins convert_glob, partition_glob and the narrowing prefix for a corpus
     /// of real globs, so a change to them shows up as a snapshot diff.
-    /// Recorded off Windows, where `\` escapes rather than separates.
     #[test]
-    #[cfg(not(windows))]
     fn glob_readers_agree_with_the_recorded_corpus() {
         let corpus = include_str!("glob/fixtures/glob_corpus.txt");
         let mut report = String::new();
@@ -254,13 +252,9 @@ mod test {
     }
 
     #[test]
-    fn backslash_prefixes_follow_platform_separators() {
-        // Off Windows `\` escapes, as globset reads it: `\r` is `r`.
-        let expected = if cfg!(windows) {
-            [Some("e2e/react"); 3]
-        } else {
-            [None, Some("e2ereact"), Some("e2ereact*.spec.ts")]
-        };
+    fn a_backslash_in_a_prefix_escapes_on_every_platform() {
+        // `\` escapes, as globset reads it: `\r` is `r`.
+        let expected = [None, Some("e2ereact"), Some("e2ereact*.spec.ts")];
         for (pattern, expected) in [
             r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)",
             r"e2e\react/**/*.spec.ts",
@@ -553,7 +547,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(windows))]
     fn a_backslash_escaped_parenthesis_matches_literally() {
         let glob_set = build_glob_set(&[r"app/\(marketing\)/**"]).unwrap();
         assert!(glob_set.is_match("app/(marketing)/page.tsx"));
