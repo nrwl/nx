@@ -266,9 +266,21 @@ export function unloadDotEnvFile(
   override = false
 ) {
   const parsedDotEnvFile: NodeJS.ProcessEnv = {};
-  loadAndExpandDotEnvFile(filename, parsedDotEnvFile, override);
-  Object.keys(parsedDotEnvFile).forEach((envVarKey) => {
-    if (environmentVariables[envVarKey] === parsedDotEnvFile[envVarKey]) {
+  const myEnv = loadDotEnvFile({
+    path: filename,
+    processEnv: parsedDotEnvFile,
+    override,
+  });
+  // Reconstruct the file's values with the same external variables available
+  // during loading. Keep file literals ahead of their current values so expand
+  // does not mistake an already-expanded value for a shell override. Expand
+  // into a copy: only matching keys from this file should be removed below.
+  const { parsed = {} } = expand({
+    ...myEnv,
+    processEnv: { ...environmentVariables, ...parsedDotEnvFile },
+  });
+  Object.keys(parsed).forEach((envVarKey) => {
+    if (environmentVariables[envVarKey] === parsed[envVarKey]) {
       delete environmentVariables[envVarKey];
     }
   });

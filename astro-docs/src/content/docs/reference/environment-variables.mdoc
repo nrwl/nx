@@ -136,6 +136,24 @@ To load variables from an environment file that is not listed above, use one of 
 2. Use [dotenvx](https://github.com/dotenvx/dotenvx): `dotenvx run --env-file=.qa.env -- nx serve`
 3. Use the `envFile` option of the [run-commands executor](/docs/kb/run-commands-executor#envfile)
 
+### Variable expansion and precedence
+
+Nx uses `dotenv-expand` to resolve references to other environment variables. Expanded values follow the same file precedence as literal values.
+
+For example, a root `.env` file can reference a variable supplied by your shell:
+
+```dotenv
+API_URL=https://${API_HOST}/api
+```
+
+A project-specific file such as `apps/myapp/.env.build` can override that value:
+
+```dotenv
+API_URL=https://project.example.com/api
+```
+
+When you run `nx build myapp`, the project-specific value takes precedence over the expanded root value. If you explicitly set `API_URL` in the shell before starting Nx, that shell value takes precedence over both files.
+
 ### Ad-hoc environment variables
 
 You can also set environment variables for an individual command by using your operating system and shell.
