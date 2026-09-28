@@ -169,8 +169,8 @@ function repairResolution(
 
 // Node's lookup from a package at `path`: its own node_modules, then each
 // enclosing package's, then the root's.
-function resolvePlacedPath(
-  placed: Map<string, MappedPackage>,
+export function resolvePlacedPath(
+  placed: ReadonlyMap<string, unknown>,
   path: string,
   name: string
 ): string | undefined {

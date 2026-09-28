@@ -16,6 +16,7 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { mapSnapshots, type MappedPackage } from './utils/npm-placement';
+import { setNpmDependencyFlags } from './utils/npm-dep-flags';
 
 /**
  * NPM
@@ -491,7 +492,10 @@ export function stringifyNpmLockfile(
   }
   if (lockfileVersion > 1) {
     const packages = mapV3Snapshots(mappedPackages, packageJson);
-    output.packages = { ...packages, ...workspaceModules };
+    output.packages = setNpmDependencyFlags({
+      ...packages,
+      ...workspaceModules,
+    });
   }
   if (lockfileVersion < 3) {
     const dependencies = mapV1Snapshots(mappedPackages);
@@ -549,6 +553,9 @@ function mapWorkspaceModules(
       name: pkgName,
       version: `0.0.1`,
       dependencies: snapshot?.dependencies,
+      optionalDependencies: snapshot?.optionalDependencies,
+      peerDependencies: snapshot?.peerDependencies,
+      peerDependenciesMeta: snapshot?.peerDependenciesMeta,
     };
 
     for (const depType of WORKSPACE_DEP_TYPES) {
