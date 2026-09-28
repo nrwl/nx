@@ -547,6 +547,16 @@ mod test {
     }
 
     #[test]
+    fn a_double_backslash_matches_a_literal_backslash() {
+        let glob_set = build_glob_set(&[r"libs/a\\b/**", r"x\\(y)"]).unwrap();
+        assert!(glob_set.is_match(r"libs/a\b/c.ts"));
+        assert!(!glob_set.is_match("libs/a/b/c.ts"));
+        // `\\(` is a literal `\` followed by a real group.
+        assert!(glob_set.is_match(r"x\y"));
+        assert_eq!(literal_segment(r"a\\b").as_deref(), Some(r"a\b"));
+    }
+
+    #[test]
     fn a_backslash_escaped_parenthesis_matches_literally() {
         let glob_set = build_glob_set(&[r"app/\(marketing\)/**"]).unwrap();
         assert!(glob_set.is_match("app/(marketing)/page.tsx"));
