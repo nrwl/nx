@@ -6,6 +6,7 @@ import { join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
 import {
   ensureRunSubdir,
+  handoffsDirState,
   readAtomicallyPublishedFile,
 } from '../agentic/handoff';
 import { publishFileAtomically } from './atomic-write';
@@ -1124,6 +1125,10 @@ function issuesDir(runDirPath: string): string {
   return join(runDirPath, ISSUES_DIR_NAME);
 }
 
+function touchesArchives(application: IssueApplication): boolean {
+  return application.newIssues.length > 0 || application.updates.length > 0;
+}
+
 // `issueId` is nx-assigned (`issue-<n>`), so the join cannot leave the
 // directory.
 export function issueArchivePath(runDirPath: string, issueId: string): string {
@@ -1155,6 +1160,12 @@ export function archiveIssues(
   application: IssueApplication,
   reconstructedIds: string[] = []
 ): string[] {
+  if (!touchesArchives(application)) {
+    return reconstructedIds;
+  }
+  // Before the first read too: a symlink in the directory's place would send
+  // the reads and the writes wherever it points.
+  ensureRunSubdir(issuesDir(runDirPath));
   for (const { entry, report } of application.newIssues) {
     const record = { ...newIssueArchiveRecord(entry, report), updates: [] };
     writeIssueArchive(runDirPath, entry.id, record);
@@ -1185,6 +1196,18 @@ export function applicationArchivesIntact(
   runDirPath: string,
   application: IssueApplication
 ): boolean {
+  if (!touchesArchives(application)) {
+    return true;
+  }
+  // Archives reached through a symlink in the directory's place are not the
+  // run's own.
+  try {
+    if (handoffsDirState(issuesDir(runDirPath)) !== 'directory') {
+      return false;
+    }
+  } catch {
+    return false;
+  }
   const readRaw = (issueId: string): Record<string, unknown> | null => {
     try {
       const parsed = JSON.parse(
@@ -1409,7 +1432,8 @@ function writeIssueArchive(
   issueId: string,
   content: object
 ): void {
-  // A symlink in the directory's place would send the write wherever it points.
+  // Rechecked per write: the directory can be swapped after archiveIssues'
+  // check, and the temp file and rename would follow the symlink.
   ensureRunSubdir(issuesDir(runDirPath));
   const filePath = issueArchivePath(runDirPath, issueId);
   publishFileAtomically(filePath, (tmpPath) => writeJsonFile(tmpPath, content));

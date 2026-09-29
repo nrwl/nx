@@ -1273,7 +1273,7 @@ describe('runSingleMigrationWorker', () => {
 
       await expect(
         runSingleMigrationWorker(recordedInput('@nx/js:p', 'run-1'))
-      ).rejects.toThrow('something other than a directory');
+      ).rejects.toThrow(`Remove 'agent-work' from the migrate run`);
     });
 
     it('re-hands the payload stored by the earlier attempt on a hybrid retry', async () => {

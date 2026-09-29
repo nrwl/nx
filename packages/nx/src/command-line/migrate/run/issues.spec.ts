@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import {
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -2267,17 +2268,18 @@ describe('migrate run issues', () => {
             },
           ],
         })
-      ).toThrow('is not a regular file');
+      ).toThrow(`${issueArchivePath(dir, 'issue-1')} is not a regular file`);
     });
 
-    it('refuses to archive into an issues directory planted as a symlink', () => {
-      const outside = join(dir, 'outside');
-      mkdirSync(outside);
-      symlinkSync(outside, join(dir, 'issues'));
-
-      expect(() =>
-        archiveIssues(
-          dir,
+    it.each([
+      [
+        'a symlink, for a new issue',
+        (issuesPath: string) => {
+          const outside = join(dir, 'outside');
+          mkdirSync(outside);
+          symlinkSync(outside, issuesPath);
+        },
+        () =>
           application({
             newIssues: [
               {
@@ -2288,30 +2290,107 @@ describe('migrate run issues', () => {
                 },
               },
             ],
-          })
-        )
-      ).toThrow('something other than a directory');
+          }),
+      ],
+      [
+        // The update reads the archive before anything is written.
+        'a regular file, for an update',
+        (issuesPath: string) => writeFileSync(issuesPath, ''),
+        () =>
+          application({
+            state: stateWith(baseSteps(), [
+              issue('issue-1', { applicableStepIds: ['step-2'] }),
+            ]),
+            updates: [
+              {
+                issueId: 'issue-1',
+                stepId: 'step-2',
+                disposition: 'resolved' as const,
+              },
+            ],
+          }),
+      ],
+    ])(
+      'refuses to archive into an issues directory planted as %s',
+      (_, plant, app) => {
+        plant(join(dir, 'issues'));
+
+        expect(() => archiveIssues(dir, app())).toThrow(
+          `Remove 'issues' from the migrate run and try again`
+        );
+      }
+    );
+
+    it('rechecks the issues directory before each archive write', () => {
+      const outside = join(dir, 'outside');
+      mkdirSync(outside);
+      const rename = fs.renameSync;
+      // The first archive lands, then the directory is swapped for a symlink.
+      const spy = vi
+        .spyOn(fs, 'renameSync')
+        .mockImplementationOnce((from, to) => {
+          rename(from, to);
+          rename(join(dir, 'issues'), join(dir, 'issues-real'));
+          symlinkSync(outside, join(dir, 'issues'));
+        });
+      try {
+        expect(() =>
+          archiveIssues(
+            dir,
+            application({
+              newIssues: ['issue-1', 'issue-2'].map((id) => ({
+                entry: issue(id),
+                report: {
+                  summary: `summary of ${id}`,
+                  applicableMigrations: ['plain'],
+                },
+              })),
+            })
+          )
+        ).toThrow(`Remove 'issues' from the migrate run and try again`);
+      } finally {
+        spy.mockRestore();
+      }
+      expect(readdirSync(outside)).toEqual([]);
     });
 
-    it('does not count an archive planted as a symlink as intact', () => {
-      const app = application({
-        newIssues: [
-          {
-            entry: issue('issue-1'),
-            report: {
-              summary: 'summary of issue-1',
-              applicableMigrations: ['plain'],
+    it.each([
+      [
+        'the archive',
+        () => {
+          const elsewhere = join(dir, 'elsewhere.json');
+          renameSync(issueArchivePath(dir, 'issue-1'), elsewhere);
+          symlinkSync(elsewhere, issueArchivePath(dir, 'issue-1'));
+        },
+      ],
+      [
+        'the issues directory',
+        () => {
+          const elsewhere = join(dir, 'elsewhere');
+          renameSync(join(dir, 'issues'), elsewhere);
+          symlinkSync(elsewhere, join(dir, 'issues'));
+        },
+      ],
+    ])(
+      'does not count an archive behind a symlink planted at %s as intact',
+      (_, plant) => {
+        const app = application({
+          newIssues: [
+            {
+              entry: issue('issue-1'),
+              report: {
+                summary: 'summary of issue-1',
+                applicableMigrations: ['plain'],
+              },
             },
-          },
-        ],
-      });
-      archiveIssues(dir, app);
-      const elsewhere = join(dir, 'elsewhere.json');
-      renameSync(issueArchivePath(dir, 'issue-1'), elsewhere);
-      symlinkSync(elsewhere, issueArchivePath(dir, 'issue-1'));
+          ],
+        });
+        archiveIssues(dir, app);
+        plant();
 
-      expect(applicationArchivesIntact(dir, app)).toBe(false);
-    });
+        expect(applicationArchivesIntact(dir, app)).toBe(false);
+      }
+    );
 
     it('reports whether every archive holding the application details survives on disk', () => {
       // A real application never reports and updates the same issue (the parser

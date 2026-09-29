@@ -10,7 +10,7 @@ import {
   rmSync,
   type BigIntStats,
 } from 'fs';
-import { join } from 'path';
+import { basename, join } from 'path';
 import { rsort } from 'semver';
 import { normalizeVersion } from '../version-utils';
 import {
@@ -170,7 +170,7 @@ export function ensureRunSubdir(
   dir: string,
   notADirectory = () =>
     new Error(
-      `The migrate run has something other than a directory at ${dir}; remove it and try again.`
+      `Remove '${basename(dir)}' from the migrate run and try again; nx needs a directory at ${dir}.`
     )
 ): void {
   const state = handoffsDirState(dir);
