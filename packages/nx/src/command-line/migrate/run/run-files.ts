@@ -1,12 +1,11 @@
-// Every read, write, listing, removal and lock inside a migrate run folder goes
-// through this module; nothing else calls `fs` on a run-folder path. The agent
-// driving the run can write anywhere in the folder, so each operation requires
-// every folder between the run folder and its target to be a real directory,
-// and refuses a symlink or FIFO at the target. Not covered: the run folder
-// itself and its ancestors, and an entry swapped between a check and the
-// operation. The primitives come from agentic/handoff.ts, whose
-// readHandoffWithReason, shared with the per-step flow, is the one reader built
-// directly on them.
+// Reads, writes, listings, removals and locks inside an orchestrated migrate
+// run folder go through this module. Three callers use the agentic/handoff.ts
+// guards directly instead: readHandoffWithReason in that file, and the runbook
+// read and handoffs/ check in orchestrator.ts. The agent driving the run can
+// write anywhere in the folder. So each operation here requires every folder
+// from the run folder to its target to be a real directory, and none follows a
+// symlink or waits on a FIFO at the target. Not covered: the run folder itself
+// and its ancestors, and an entry swapped between a check and the operation.
 
 import {
   lstatSync,
