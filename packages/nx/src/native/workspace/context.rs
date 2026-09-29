@@ -625,13 +625,11 @@ impl FileState {
     /// Whether a watch feeds these files, so a walk must also find the ignore
     /// files its rules are built from.
     fn watching(&self) -> bool {
-        self.0.as_ref().is_some_and(|sync| {
-            sync.deref()
-                .0
-                .lock()
-                .expect("Should be able to lock files")
-                .watching
-        })
+        let Some(sync) = &self.0 else {
+            return false;
+        };
+        let (lock, _) = sync.deref();
+        lock.lock().expect("Should be able to lock files").watching
     }
 
     /// Marks a walk in progress. False, doing nothing, when one already is.
