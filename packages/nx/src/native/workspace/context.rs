@@ -11,6 +11,8 @@ use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_
 use crate::native::types::FileData;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::utils::file_lock::FileLock;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::native::utils::git::parent_gitignore_files;
 use crate::native::utils::{Normalize, NxCondvar, NxMutex, gather_stamp, path::get_child_files};
 use crate::native::walker::nx_walker;
 #[cfg(not(target_arch = "wasm32"))]
@@ -20,7 +22,7 @@ use crate::native::watch::types::{EventType, WatchEvent};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::watch::{
     FlushMode, WatchEventCallback, WatchSession, create_filter, create_filter_from,
-    default_watch_ignores, with_parent_ignore_files,
+    default_watch_ignores,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::workspace::files_archive::archive_modified_at;
@@ -1266,14 +1268,14 @@ impl WorkspaceContext {
         let globs = default_watch_ignores();
         let filter = match found {
             Some(found) => {
-                let found = found
+                let mut ignore_files: Vec<PathBuf> = found
                     .into_iter()
                     .map(|path| match path.strip_prefix(workspace_root_path) {
                         Ok(relative) => origin.join(relative),
                         Err(_) => path,
                     })
                     .collect();
-                let ignore_files = with_parent_ignore_files(&origin, found);
+                ignore_files.extend(parent_gitignore_files(&origin).into_iter().flatten());
                 create_filter_from(&origin_str, &globs, Some(ignore_files))
             }
             None => create_filter(&origin_str, &globs, true),

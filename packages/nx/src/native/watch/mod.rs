@@ -4,6 +4,5 @@ mod utils;
 mod watch_filterer;
 mod watcher;
 
-pub(crate) use git_utils::with_parent_ignore_files;
 pub(crate) use watch_filterer::{create_filter, create_filter_from};
 pub(crate) use watcher::{FlushMode, WatchEventCallback, WatchSession, default_watch_ignores};
