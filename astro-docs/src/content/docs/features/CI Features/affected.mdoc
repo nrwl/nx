@@ -285,7 +285,7 @@ Tasks are grouped by the changed files that reached them.
 A task is touched when one of its own inputs changed, and affected when it reads the outputs of a task your change reached.
 
 Tasks you didn't ask for can carry your change to the ones you did, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`.
-Those come first, under `Changing N files touched M tasks` and `Affected, they read outputs the change reached`, and the tasks you asked for always come last.
+Those come first, under `Changing N files touched M tasks` and `Touching the M tasks above changed outputs read by K tasks`, and the tasks you asked for always come last.
 A section with more than five tasks names up to five per group. Pass `--verbose` to list every task with its reasons.
 Each entry lists every reason that applies, so a task reached through two different producers reports both.
 When several changed files match one input, several packages moved, or a task reads several of the tasks above, they share one line that names the first and counts the rest. The JSON lists them all.

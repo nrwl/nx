@@ -143,6 +143,30 @@ describe('formatAffectedExplanation', () => {
     );
   });
 
+  it('heads the reached layer by what the touched layer changed', () => {
+    const explain = (touched: string[]) =>
+      formatAffectedExplanation(
+        {
+          affected: {
+            'app:e2e': [{ kind: 'dependent-output', producer: 'app:build' }],
+          },
+          upstream: {
+            'app:build': [{ kind: 'dependent-output', producer: 'app:gen' }],
+            'app:gen': [{ kind: 'input-file', file: 'x.ts' }],
+          },
+          touched,
+        },
+        'Affected tasks'
+      );
+    expect(explain(['app:gen'])).toContain(
+      'Touching the 1 task above changed outputs read by 1 task:'
+    );
+    // Nothing touched above it, so there are no tasks above to point at.
+    expect(explain([])).toContain(
+      'Outputs the change reached are read by 2 tasks:'
+    );
+  });
+
   it('names up to five tasks of a long section, or all under verbose', () => {
     const names = ['a', 'b', 'c', 'd', 'e', 'f'].map((p) => `${p}:e2e`);
     const explanation = {

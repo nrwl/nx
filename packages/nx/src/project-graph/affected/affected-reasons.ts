@@ -200,8 +200,11 @@ export function formatAffectedExplanation(
     touchedUpstream
   );
   const reachedUpstream = upstreamNames.filter((name) => !touched(name));
+  const tasks = (count: number) => `${count} ${count === 1 ? 'task' : 'tasks'}`;
   section(
-    `Affected, they read outputs the change reached (${reachedUpstream.length})`,
+    touchedUpstream.length
+      ? `Touching the ${tasks(touchedUpstream.length)} above changed outputs read by ${tasks(reachedUpstream.length)}`
+      : `Outputs the change reached are read by ${tasks(reachedUpstream.length)}`,
     reachedUpstream
   );
   // The heading already titles the output when nothing sits above.
