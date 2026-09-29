@@ -581,11 +581,10 @@ impl IgnoredIndexReader {
         &self.index
     }
 
-    /// The index once it has applied what the watch delivered, for a caller
-    /// about to read it many times in a row. See `files_under`.
-    pub(crate) fn caught_up(&self) -> &IgnoredIndex {
+    /// Applies what the watch delivered, for a caller about to read `index`
+    /// many times in a row. See `files_under`.
+    pub(crate) fn catch_up(&self) {
         (self.catch_up)();
-        &self.index
     }
 
     /// See `IgnoredIndex::track`.
