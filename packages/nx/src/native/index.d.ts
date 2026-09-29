@@ -159,8 +159,13 @@ export declare class NxCache {
   recordTerminalOutputs(records: Array<TerminalOutputRecord>): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
-  /** Restores `outputs` and returns each file written, stamped as it is now. */
-  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): Array<OutputFile>
+  /**
+   * Restores `outputs`. Returns each file written, stamped as it is now,
+   * when those are all the output files the workspace now holds: every
+   * output a path, and each one that exists replaced from the cache. A
+   * glob or a negation can leave other matching files in place.
+   */
+  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): Array<OutputFile> | null
   removeOldCacheRecords(): void
   checkCacheFsInSync(): boolean
 }
@@ -1183,8 +1188,9 @@ export interface TaskOutputs {
   outputs: Array<string>
   hash: string
   /**
-   * What the cache just wrote or restored for these outputs. Recorded as
-   * given, without walking, where `given_covers` allows.
+   * Every output file the cache just wrote or restored, which it passes
+   * only when that is all of them. Recorded as given, without reading the
+   * disk.
    */
   files?: Array<OutputFile>
 }

@@ -60,6 +60,86 @@ where
         })
 }
 
+/// What `nx_walker_sync` yields at or under any of `roots`, relative to
+/// `directory`, without walking the rest of it: a root is skipped where the
+/// full walk would never reach it (a vetoed or linked parent), and a linked
+/// root is yielded but not entered.
+pub fn nx_walker_sync_under(
+    directory: &Path,
+    roots: &[String],
+    ignores: Option<&[String]>,
+) -> Vec<PathBuf> {
+    let roots: Vec<String> = roots
+        .iter()
+        .map(|root| Path::new(root).to_normalized_string())
+        .collect();
+    let mut roots: Vec<&str> = roots
+        .iter()
+        .map(|root| root.trim_matches('/'))
+        .map(|root| if root == "." { "" } else { root })
+        .collect();
+    if roots.contains(&"") {
+        return nx_walker_sync(directory, ignores).collect();
+    }
+    roots.sort();
+    roots.dedup();
+    let nested = |root: &str| {
+        roots.iter().any(|other| {
+            root.strip_prefix(other)
+                .is_some_and(|rest| rest.starts_with('/'))
+        })
+    };
+    let roots: Vec<&str> = roots.iter().copied().filter(|root| !nested(root)).collect();
+
+    let mut ignore_patterns: Vec<String> = HARDCODED_IGNORE_PATTERNS
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
+    if let Some(ignores) = ignores {
+        ignore_patterns.extend(ignores.iter().map(|s| format!("**/{}", s)));
+    }
+    let ignored = build_glob_set(&ignore_patterns).expect("Should be valid globs");
+    let is_ignored = |path: &Path| ignored.is_match(path.to_string_lossy().as_ref());
+    if is_ignored(directory) {
+        return vec![];
+    }
+
+    let mut found = vec![];
+    for root in roots {
+        let mut path = directory.to_path_buf();
+        let parts: Vec<&str> = root.split('/').collect();
+        let reachable = parts.iter().enumerate().all(|(depth, part)| {
+            path.push(part);
+            let Ok(link) = std::fs::symlink_metadata(&path) else {
+                return false;
+            };
+            let is_root = depth == parts.len() - 1;
+            !is_ignored(&path) && (is_root || (link.is_dir() && !link.file_type().is_symlink()))
+        });
+        if !reachable {
+            continue;
+        }
+        if std::fs::symlink_metadata(&path).is_ok_and(|link| link.file_type().is_symlink()) {
+            found.push(PathBuf::from(root));
+            continue;
+        }
+        found.extend(
+            WalkDir::new(&path)
+                .into_iter()
+                .filter_entry(|entry| !is_ignored(entry.path()))
+                .filter_map(|entry| {
+                    entry
+                        .ok()?
+                        .path()
+                        .strip_prefix(directory)
+                        .ok()
+                        .map(|p| p.to_owned())
+                }),
+        );
+    }
+    found
+}
+
 /// Walk the directory and ignore files from .gitignore and .nxignore
 #[cfg(target_arch = "wasm32")]
 pub fn nx_walker<P>(directory: P, use_ignores: bool) -> impl Iterator<Item = NxFile>
@@ -314,35 +394,6 @@ fn transient_skips() -> Result<Arc<NxGlobSet>> {
         })
         .clone()
         .context("the transient-file globs always build")
-}
-
-/// Whether `walk_files` from `start` would list `path`, both
-/// workspace-relative, judged by name alone: the vetoes apply below `start`,
-/// never to it. A file list built without walking is held to this so it
-/// matches what a walk lists.
-pub(crate) fn walk_reaches(workspace_root: &Path, start: &str, path: &str) -> bool {
-    static HARDCODED: OnceLock<Arc<NxGlobSet>> = OnceLock::new();
-    let hardcoded = HARDCODED.get_or_init(|| {
-        build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
-    });
-    let Ok(transient) = transient_skips() else {
-        return false;
-    };
-    let start = start.trim_matches('/');
-    let below = if start.is_empty() {
-        Some(path)
-    } else {
-        path.strip_prefix(start)
-            .and_then(|rest| rest.strip_prefix('/'))
-    };
-    let Some(below) = below.filter(|below| !below.is_empty()) else {
-        return false;
-    };
-    let mut entry = workspace_root.join(start);
-    below.split('/').all(|part| {
-        entry.push(part);
-        !hardcoded.is_match(&entry) && !transient.is_match(&entry)
-    })
 }
 
 /// Files under `start`, workspace-relative, with the stamp read on the way
@@ -763,37 +814,55 @@ nested/child-two/
     }
 
     #[test]
-    fn walk_reaches_agrees_with_a_walk() {
+    #[cfg(unix)]
+    fn walking_under_roots_yields_what_the_full_walk_yields_there() {
         let temp = TempDir::new().unwrap();
-        let every = [
-            "dist/app/main.js",
-            "dist/app/.hidden",
-            "dist/app/nested/node_modules/dep/index.js",
-            "dist/app/.git/HEAD",
-            "dist/app/.nx/cache/x",
-            "dist/app/.yarn/cache/y.zip",
-            "dist/app/vite.config.ts.timestamp-1.mjs",
-            "node_modules/pkg/index.js",
-        ];
-        for file in every {
+        for file in [
+            "dist/app/a.js",
+            "dist/app/nested/b.js",
+            "dist/app/node_modules/dep/c.js",
+            "dist/app/cache/d.bin",
+            "dist/other/e.js",
+            "node_modules/pkg/dist/f.js",
+            "libs/lib/g.js",
+        ] {
             temp.child(file).write_str(file).unwrap();
         }
-        for start in ["dist/app", "dist/app/nested/node_modules", "node_modules"] {
-            let mut walked = read_directory(temp.path(), start, &|_| true).unwrap();
-            walked.sort();
-            let mut reached: Vec<_> = every
-                .iter()
-                .filter(|path| walk_reaches(temp.path(), start, path))
-                .map(|path| path.to_string())
-                .collect();
-            reached.sort();
-            assert_eq!(reached, walked, "from {start}");
+        let link = |target: &str, link: &str| {
+            std::os::unix::fs::symlink(temp.path().join(target), temp.path().join(link)).unwrap()
+        };
+        link("dist/app", "linked-app");
+        link("dist", "linked-dist");
+        link("dist/app/a.js", "dist/linked-a.js");
+
+        let full =
+            |ignores: Option<&[String]>| nx_walker_sync(temp.path(), ignores).collect::<Vec<_>>();
+        for roots in [
+            vec!["dist/app"],
+            vec!["dist", "dist/app"],
+            vec!["dist/app/node_modules", "node_modules/pkg/dist"],
+            vec!["linked-app", "linked-dist/app", "dist/linked-a.js"],
+            vec!["missing", "dist/app/a.js"],
+            vec![""],
+        ] {
+            for ignores in [
+                None,
+                Some(vec!["dist/app/cache".to_string()]),
+                Some(vec!["dist".to_string()]),
+            ] {
+                let roots: Vec<String> = roots.iter().map(|r| r.to_string()).collect();
+                let under = |path: &PathBuf| {
+                    roots.iter().any(|root| {
+                        root.is_empty() || path == Path::new(root) || path.starts_with(root)
+                    })
+                };
+                let mut expected: Vec<_> =
+                    full(ignores.as_deref()).into_iter().filter(under).collect();
+                let mut actual = nx_walker_sync_under(temp.path(), &roots, ignores.as_deref());
+                expected.sort();
+                actual.sort();
+                assert_eq!(actual, expected, "roots {roots:?}, ignores {ignores:?}");
+            }
         }
-        assert!(!walk_reaches(
-            temp.path(),
-            "dist/app",
-            "dist/application/a.js"
-        ));
-        assert!(!walk_reaches(temp.path(), "dist/app", "dist/app"));
     }
 }

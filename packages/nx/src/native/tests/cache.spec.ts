@@ -1,7 +1,7 @@
-import { TaskDetails, NxCache } from '../index';
+import { TaskDetails, NxCache, getFilesForOutputsBatch } from '../index';
 import { join } from 'path';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
-import { rmSync, statSync } from 'fs';
+import { rmSync, statSync, symlinkSync } from 'fs';
 import { getDbConnection } from '../../utils/db-connection';
 import { randomBytes } from 'crypto';
 
@@ -84,6 +84,60 @@ describe('Cache', () => {
     expect(restored).toEqual([
       { path: 'dist/output.txt', stamp: stampOf('dist/output.txt') },
     ]);
+  });
+
+  it('should copy exactly the output files getFilesForOutputs defines', () => {
+    for (const file of [
+      'dist/app/a.js',
+      'dist/app/nested/b.js',
+      'dist/app/cache/c.bin',
+      'dist/app/node_modules/dep/d.js',
+      'dist/app/e.map',
+    ]) {
+      tempFs.createFileSync(file, file);
+    }
+    symlinkSync(
+      join(tempFs.tempDir, 'dist/app/a.js'),
+      join(tempFs.tempDir, 'dist/app/linked-a.js')
+    );
+    symlinkSync(
+      join(tempFs.tempDir, 'dist/app/nested'),
+      join(tempFs.tempDir, 'dist/app/linked-nested')
+    );
+
+    for (const outputs of [
+      ['dist/app'],
+      ['dist/app', '!dist/app/cache'],
+      ['dist/app', '!dist/app/cache/**'],
+      ['dist/app/**', '!dist/app/cache/**'],
+      ['dist/app', '!**/*.map'],
+      ['dist/app/**/*.js'],
+      ['dist/app/a.js', 'dist/app/linked-a.js', 'dist/app/linked-nested'],
+    ]) {
+      const copied = cache
+        .put('123', 'output 123', outputs, 0)
+        .files.map((file) => file.path);
+      const [defined] = getFilesForOutputsBatch(tempFs.tempDir, [outputs]);
+      expect([...new Set(copied)].sort()).toEqual(defined);
+    }
+  });
+
+  it('should return restored files only when they are all the output files', () => {
+    tempFs.createFileSync('dist/app/a.js', 'a');
+    cache.put('123', 'output 123', ['dist/app', 'dist/other'], 0);
+
+    expect(
+      cache.copyFilesFromCache(cache.get('123'), ['dist/app', 'dist/other'])
+    ).toEqual([expect.objectContaining({ path: 'dist/app/a.js' })]);
+    // A glob restores its matches and leaves other matching files in place.
+    expect(cache.copyFilesFromCache(cache.get('123'), ['dist/app/*.js'])).toBe(
+      null
+    );
+    // An output the cache never held keeps whatever the workspace has there.
+    tempFs.createFileSync('dist/other/stale.js', 'stale');
+    expect(
+      cache.copyFilesFromCache(cache.get('123'), ['dist/app', 'dist/other'])
+    ).toBe(null);
   });
 
   it('should handle storing hashes that already exist in the cache', async () => {

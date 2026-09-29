@@ -14,7 +14,7 @@ use regex::Regex;
 use rusqlite::{params, types::Value};
 use sysinfo::Disks;
 
-use crate::native::cache::expand_outputs::_expand_outputs;
+use crate::native::cache::expand_outputs::{_expand_outputs, all_literal};
 use crate::native::cache::file_ops::{copy_outputs_into_workspace, copy_reporting};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
@@ -480,7 +480,8 @@ impl NxCache {
             if outputs.len() > 0 && result.code == 0 {
                 size += try_and_retry(|| {
                     self.restore(result.clone(), outputs.clone(), &mut Vec::new())
-                })?;
+                })?
+                .0;
             };
         }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
@@ -638,16 +639,19 @@ impl NxCache {
         Ok(())
     }
 
-    /// Restores `outputs` and returns each file written, stamped as it is now.
+    /// Restores `outputs`. Returns each file written, stamped as it is now,
+    /// when those are all the output files the workspace now holds: every
+    /// output a path, and each one that exists replaced from the cache. A
+    /// glob or a negation can leave other matching files in place.
     #[napi]
     pub fn copy_files_from_cache(
         &self,
         cached_result: CachedResult,
         outputs: Vec<String>,
-    ) -> anyhow::Result<Vec<OutputFile>> {
+    ) -> anyhow::Result<Option<Vec<OutputFile>>> {
         let mut files = vec![];
-        self.restore(cached_result, outputs, &mut files)?;
-        Ok(files)
+        let (_, exact) = self.restore(cached_result, outputs, &mut files)?;
+        Ok(exact.then_some(files))
     }
 
     fn restore(
@@ -655,11 +659,12 @@ impl NxCache {
         cached_result: CachedResult,
         outputs: Vec<String>,
         files: &mut Vec<OutputFile>,
-    ) -> anyhow::Result<i64> {
+    ) -> anyhow::Result<(i64, bool)> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
-        let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
+        let literal = all_literal(&outputs);
+        let expanded_outputs = _expand_outputs(outputs_path, outputs.clone())?;
 
         trace!(
             "Restoring {} outputs from cache {:?} -> {:?}",
@@ -675,7 +680,14 @@ impl NxCache {
             &|_, dest| note_copied(&self.workspace_root, dest, &copied),
         )?;
         files.extend(copied.into_inner().unwrap_or_else(|e| e.into_inner()));
-        Ok(size)
+        let exact = literal && {
+            let mut restored = expanded_outputs;
+            let mut present = _expand_outputs(&self.workspace_root, outputs)?;
+            restored.sort();
+            present.sort();
+            restored == present
+        };
+        Ok((size, exact))
     }
 
     #[napi]

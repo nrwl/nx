@@ -8,15 +8,13 @@ use std::fs::Metadata;
 use std::path::Path;
 
 use dashmap::DashMap;
-use hashbrown::HashMap;
 use rayon::prelude::*;
 use tracing::trace;
 
-use crate::native::cache::expand_outputs::get_files_for_outputs_via;
+use crate::native::cache::expand_outputs::{copied_files, output_files_via};
 use crate::native::glob::glob_transform::partition_glob;
 use crate::native::hasher::hash_file_path;
 use crate::native::utils::Normalize;
-use crate::native::walker::walk_reaches;
 use crate::native::workspace::ignored_index::{
     FileStamp, IgnoredIndex, IgnoredIndexReader, now_secs, stamp_of,
 };
@@ -25,8 +23,9 @@ use crate::native::workspace::ignored_index::{
 pub struct TaskOutputs {
     pub outputs: Vec<String>,
     pub hash: String,
-    /// What the cache just wrote or restored for these outputs. Recorded as
-    /// given, without walking, where `given_covers` allows.
+    /// Every output file the cache just wrote or restored, which it passes
+    /// only when that is all of them. Recorded as given, without reading the
+    /// disk.
     pub files: Option<Vec<OutputFile>>,
 }
 
@@ -88,9 +87,8 @@ fn key(outputs: &[String]) -> String {
     outputs.join("\n")
 }
 
-/// The path an output is read from, as `get_files_for_outputs_via` resolves
-/// it: one that exists as written, with `/` separators, else the root of the
-/// glob.
+/// The directory an output is tracked under: the path it names where that
+/// exists as written, with `/` separators, else the root of its glob.
 fn read_root(root: &Path, output: &str) -> String {
     if root.join(output).exists() {
         Path::new(output).to_normalized_string()
@@ -99,80 +97,30 @@ fn read_root(root: &Path, output: &str) -> String {
     }
 }
 
-/// Whether what the cache copies for `outputs` covers every file a check
-/// reads, where a check reads each directory whole. The cache honours a
-/// negation, does not follow a link on a glob's path, and never walks into
-/// what `walk_reaches` vetoes, so any of those falls back to a walk. The
-/// workspace root is never trusted, as a copy walks it with vetoes a check
-/// does not apply to its start. A missing path is trusted: both sides are
-/// empty.
-fn given_covers(root: &Path, canonical_root: Option<&Path>, outputs: &[String]) -> bool {
-    outputs.iter().all(|output| {
-        // The cache reads a path with glob syntax as a glob even where it
-        // exists as written, so it can copy less than a check reads.
-        if output.starts_with('!')
-            || (root.join(output).exists() && partition_glob(output).1.is_some())
-        {
-            return false;
-        }
-        let dir = read_root(root, output);
-        let full = root.join(&dir);
-        walk_reaches(root, "", &dir)
-            && (std::fs::symlink_metadata(&full).is_err()
-                || canonical_root.is_some_and(|canonical_root| {
-                    dunce::canonicalize(&full).is_ok_and(|real| real == canonical_root.join(&dir))
-                }))
+/// The output files `outputs` defines, each directory answered from the
+/// index's listing.
+fn listed(root: &Path, index: &IgnoredIndex, outputs: &[String]) -> Option<Vec<String>> {
+    output_files_via(root, outputs.to_vec(), &|dir| {
+        index.files_under(root, dir, true, &|_| true)
     })
+    .ok()
 }
 
-/// The files of `given` that `outputs` names, each with its stamp. A file
-/// output left out of `given` is stat'ed.
-fn expand_given(
-    root: &Path,
-    outputs: &[String],
-    given: Vec<OutputFile>,
-) -> Option<Vec<(String, FileStamp)>> {
-    let stamps: HashMap<String, FileStamp> = given
+/// The output files `outputs` defines, read from disk.
+fn on_disk(root: &Path, outputs: &[String]) -> Option<Vec<String>> {
+    output_files_via(root, outputs.to_vec(), &|dir| copied_files(root, dir)).ok()
+}
+
+/// The given files with their stamps, in the order an expansion lists them.
+fn given_stamps(given: Vec<OutputFile>) -> Vec<(String, FileStamp)> {
+    let mut stamped: Vec<_> = given
         .into_iter()
         .filter_map(|file| Some((file.stamp()?, file.path)))
         .map(|(stamp, path)| (path, stamp))
         .collect();
-    let paths = get_files_for_outputs_via(root, outputs.to_vec(), &|dir| {
-        Some(
-            stamps
-                .keys()
-                .filter(|path| walk_reaches(root, dir, path))
-                .cloned()
-                .collect(),
-        )
-    })
-    .ok()?;
-    Some(
-        paths
-            .into_iter()
-            .filter_map(|path| {
-                let stamp = match stamps.get(&path) {
-                    Some(stamp) => *stamp,
-                    None => stamp_of(&std::fs::metadata(root.join(&path)).ok()?),
-                };
-                Some((path, stamp))
-            })
-            .collect(),
-    )
-}
-
-/// The existing files `outputs` names. `cached` answers from the index's
-/// listings; otherwise every directory is read from disk.
-fn expand(
-    root: &Path,
-    index: &IgnoredIndex,
-    outputs: &[String],
-    cached: bool,
-) -> Option<Vec<String>> {
-    get_files_for_outputs_via(root, outputs.to_vec(), &|dir| {
-        index.files_under(root, dir, cached, &|_| true)
-    })
-    .ok()
+    stamped.sort_by(|a, b| a.0.cmp(&b.0));
+    stamped.dedup_by(|a, b| a.0 == b.0);
+    stamped
 }
 
 impl OutputRecords {
@@ -192,28 +140,10 @@ impl OutputRecords {
                 }
             }
         }
-        let canonical_root = dunce::canonicalize(root).ok();
-        let entries: Vec<_> = entries
-            .into_iter()
-            .map(|mut entry| {
-                let given = entry
-                    .files
-                    .take()
-                    .filter(|_| given_covers(root, canonical_root.as_deref(), &entry.outputs));
-                (entry, given)
-            })
-            .collect();
-        if entries.iter().any(|(_, given)| given.is_none()) {
-            reader.catch_up();
-        }
-        let index = reader.index();
-        entries.into_par_iter().for_each(|(entry, given)| {
-            let stamped = match given {
-                Some(given) => expand_given(root, &entry.outputs, given),
-                // Read from disk: the watch may not have delivered the task's
-                // own writes yet, and a listing missing them would record too
-                // little.
-                None => expand(root, index, &entry.outputs, false).map(|paths| {
+        entries.into_par_iter().for_each(|entry| {
+            let stamped = match entry.files {
+                Some(given) => Some(given_stamps(given)),
+                None => on_disk(root, &entry.outputs).map(|paths| {
                     paths
                         .into_par_iter()
                         .filter_map(|path| {
@@ -276,11 +206,13 @@ impl OutputRecords {
                             .zip(&recorded.files)
                             .all(|(path, file)| path == &file.path)
                 };
-                let listed = expand(root, index, &entry.outputs, true);
-                // A listing can lag a write the watch has not delivered, so
-                // only the disk may say the set of files changed.
-                if !listed.as_deref().is_some_and(same_files)
-                    && !expand(root, index, &entry.outputs, false)
+                // A listing can lag a write the watch has not delivered, or
+                // skip what the index never lists, so only the disk may say
+                // the set of files changed.
+                if !listed(root, index, &entry.outputs)
+                    .as_deref()
+                    .is_some_and(same_files)
+                    && !on_disk(root, &entry.outputs)
                         .as_deref()
                         .is_some_and(same_files)
                 {
@@ -542,119 +474,6 @@ mod tests {
         assert!(!check(&records, &temp, &reader, &["dist/app"], "h1"));
     }
 
-    #[test]
-    fn a_given_file_list_keeps_only_what_a_walk_lists() {
-        let temp = workspace();
-        for file in ["dist/app/node_modules/dep.js", "dist/other/d.txt"] {
-            temp.child(file).write_str(file).unwrap();
-        }
-        let (records, reader) = (OutputRecords::default(), watched());
-        records.record(
-            temp.path(),
-            &reader,
-            vec![TaskOutputs {
-                files: Some(given(
-                    &temp,
-                    &[
-                        "dist/app/a.txt",
-                        "dist/app/b.md",
-                        "dist/app/c.html",
-                        "dist/app/node_modules/dep.js",
-                        "dist/other/d.txt",
-                    ],
-                )),
-                ..entry(&["dist/app"], "h1")
-            }],
-        );
-        assert!(check(&records, &temp, &reader, &["dist/app"], "h1"));
-    }
-
-    #[test]
-    fn a_given_file_list_that_a_negation_trimmed_is_not_trusted() {
-        let temp = workspace();
-        temp.child("dist/app/cache/x.bin").write_str("x").unwrap();
-        let (records, reader) = (OutputRecords::default(), watched());
-        let outputs = ["dist/app", "!dist/app/cache"];
-        // What `put` copies: the cache honours the negation.
-        records.record(
-            temp.path(),
-            &reader,
-            vec![TaskOutputs {
-                files: Some(given(
-                    &temp,
-                    &["dist/app/a.txt", "dist/app/b.md", "dist/app/c.html"],
-                )),
-                ..entry(&outputs, "h1")
-            }],
-        );
-        assert!(check(&records, &temp, &reader, &outputs, "h1"));
-    }
-
-    #[test]
-    fn a_given_file_list_is_trusted_only_where_it_covers_what_a_check_reads() {
-        let temp = workspace();
-        let canonical_root = dunce::canonicalize(temp.path()).unwrap();
-        let covers = |outputs: &[&str]| {
-            given_covers(
-                temp.path(),
-                Some(&canonical_root),
-                &outputs.iter().map(|o| o.to_string()).collect::<Vec<_>>(),
-            )
-        };
-        assert!(covers(&["dist/app", "dist/app/*.txt", "dist/not-yet"]));
-        assert!(!covers(&["dist/app", "!dist/app/cache"]));
-        assert!(!covers(&["node_modules/pkg/dist/*.js"]));
-        assert!(!covers(&["*.txt"]));
-        std::fs::create_dir_all(temp.path().join("app/[id]")).unwrap();
-        assert!(!covers(&["app/[id]"]));
-        #[cfg(unix)]
-        {
-            let link = |target: &str, link: &str| {
-                std::os::unix::fs::symlink(temp.path().join(target), temp.path().join(link))
-                    .unwrap()
-            };
-            link("dist/app", "dist/link");
-            assert!(!covers(&["dist/link"]));
-            assert!(!covers(&["dist/link/*.txt"]));
-            // A link above the output, not only at it.
-            link("dist", "out");
-            assert!(!covers(&["out/app/*.txt"]));
-            assert!(covers(&["out/not-yet"]));
-        }
-    }
-
-    #[test]
-    fn a_batch_mixing_trusted_and_walked_entries_records_both() {
-        let temp = workspace();
-        temp.child("dist/other/cache/x.bin").write_str("x").unwrap();
-        temp.child("dist/other/d.txt").write_str("d").unwrap();
-        let (records, (reader, catch_ups)) = (OutputRecords::default(), counted());
-        let walked = ["dist/other", "!dist/other/cache"];
-        // The trusted list leaves out a file on disk, to show it was used.
-        let trusted = || TaskOutputs {
-            files: Some(given(&temp, &["dist/app/a.txt", "dist/app/b.md"])),
-            ..entry(&["dist/app"], "h1")
-        };
-        records.record(
-            temp.path(),
-            &reader,
-            vec![
-                trusted(),
-                TaskOutputs {
-                    files: Some(given(&temp, &["dist/other/d.txt"])),
-                    ..entry(&walked, "h2")
-                },
-            ],
-        );
-        assert_eq!(catch_ups.load(Ordering::SeqCst), 1);
-        assert!(!check(&records, &temp, &reader, &["dist/app"], "h1"));
-        assert!(check(&records, &temp, &reader, &walked, "h2"));
-
-        let before = catch_ups.load(Ordering::SeqCst);
-        records.record(temp.path(), &reader, vec![trusted()]);
-        assert_eq!(catch_ups.load(Ordering::SeqCst), before);
-    }
-
     // `\` is not a glob escape on Windows until #37215.
     #[cfg(unix)]
     #[test]
@@ -695,5 +514,88 @@ mod tests {
         assert!(check(&records, &temp, &reader, &["dist\\app"], "h1"));
         std::fs::remove_file(temp.path().join("dist/app/a.txt")).unwrap();
         assert!(!check(&records, &temp, &reader, &["dist\\app"], "h1"));
+    }
+
+    #[test]
+    fn an_output_holding_node_modules_is_checked_as_the_cache_copied_it() {
+        let temp = workspace();
+        temp.child("dist/app/node_modules/dep/index.js")
+            .write_str("dep")
+            .unwrap();
+        let (records, reader) = (OutputRecords::default(), watched());
+        records.record(
+            temp.path(),
+            &reader,
+            vec![TaskOutputs {
+                files: Some(given(
+                    &temp,
+                    &[
+                        "dist/app/a.txt",
+                        "dist/app/b.md",
+                        "dist/app/c.html",
+                        "dist/app/node_modules/dep/index.js",
+                    ],
+                )),
+                ..entry(&["dist/app"], "h1")
+            }],
+        );
+        assert!(check(&records, &temp, &reader, &["dist/app"], "h1"));
+        temp.child("dist/app/node_modules/dep/index.js")
+            .write_str("edited dep")
+            .unwrap();
+        assert!(!check(&records, &temp, &reader, &["dist/app"], "h1"));
+    }
+
+    #[test]
+    fn a_negated_output_is_read_as_the_cache_reads_it() {
+        let temp = workspace();
+        temp.child("dist/app/cache/x.bin").write_str("x").unwrap();
+        let (records, reader) = (OutputRecords::default(), watched());
+        let outputs = ["dist/app", "!dist/app/cache"];
+        // What `put` copies: the cache leaves the negated directory out.
+        records.record(
+            temp.path(),
+            &reader,
+            vec![TaskOutputs {
+                files: Some(given(
+                    &temp,
+                    &["dist/app/a.txt", "dist/app/b.md", "dist/app/c.html"],
+                )),
+                ..entry(&outputs, "h1")
+            }],
+        );
+        assert!(check(&records, &temp, &reader, &outputs, "h1"));
+
+        temp.child("dist/app/cache/x.bin")
+            .write_str("rewritten")
+            .unwrap();
+        temp.child("dist/app/cache/new.bin")
+            .write_str("new")
+            .unwrap();
+        assert!(check(&records, &temp, &reader, &outputs, "h1"));
+
+        temp.child("dist/app/a.txt").write_str("edited").unwrap();
+        assert!(!check(&records, &temp, &reader, &outputs, "h1"));
+    }
+
+    #[test]
+    fn a_given_list_is_recorded_without_reading_the_index() {
+        let temp = workspace();
+        let (records, (reader, catch_ups)) = (OutputRecords::default(), counted());
+        // The given list leaves out a file on disk, to show it was used.
+        records.record(
+            temp.path(),
+            &reader,
+            vec![
+                TaskOutputs {
+                    files: Some(given(&temp, &["dist/app/a.txt", "dist/app/b.md"])),
+                    ..entry(&["dist/app"], "h1")
+                },
+                entry(&["dist/app/*.html"], "h2"),
+            ],
+        );
+        assert_eq!(catch_ups.load(Ordering::SeqCst), 0);
+        assert!(!check(&records, &temp, &reader, &["dist/app"], "h1"));
+        assert!(check(&records, &temp, &reader, &["dist/app/*.html"], "h2"));
     }
 }
