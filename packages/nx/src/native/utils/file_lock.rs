@@ -44,13 +44,7 @@ impl FileLock {
         // Creates the directory where the lock file will be stored
         fs::create_dir_all(Path::new(&lock_file_path).parent().unwrap())?;
 
-        // Opens the lock file
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .open(&lock_file_path)?;
+        let file = open_lock_file(&lock_file_path)?;
 
         trace!("Locking file {}", lock_file_path);
 
@@ -96,12 +90,7 @@ impl FileLock {
             let lock_file_path = self.lock_file_path.clone();
             self.locked = false;
             let promise = env.spawn_future(async move {
-                let file = OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .create(true)
-                    .truncate(false)
-                    .open(&lock_file_path)?;
+                let file = open_lock_file(&lock_file_path)?;
                 fs4::fs_std::FileExt::lock_shared(&file)?;
                 fs4::fs_std::FileExt::unlock(&file)?;
                 Ok(())
@@ -153,12 +142,7 @@ impl FileLock {
     /// never returns (suspended, or on a filesystem that has stalled) cannot
     /// hold the caller forever.
     pub fn wait_blocking(&self, timeout: Duration) -> std::io::Result<bool> {
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .open(&self.lock_file_path)?;
+        let file = open_lock_file(&self.lock_file_path)?;
         let deadline = Instant::now() + timeout;
         loop {
             match fs4::fs_std::FileExt::try_lock_shared(&file) {
@@ -176,6 +160,30 @@ impl FileLock {
             std::thread::sleep(LOCK_POLL_INTERVAL);
         }
     }
+}
+
+/// Refuses a symlink at the lock path: following it would create or lock the
+/// link's target.
+#[cfg(not(target_arch = "wasm32"))]
+fn open_lock_file(lock_file_path: &str) -> std::io::Result<fs::File> {
+    let mut options = OpenOptions::new();
+    options.read(true).write(true).create(true).truncate(false);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::custom_flags(&mut options, nix::libc::O_NOFOLLOW);
+    // Windows has no O_NOFOLLOW: this opens the link itself, rejected below.
+    #[cfg(windows)]
+    std::os::windows::fs::OpenOptionsExt::custom_flags(
+        &mut options,
+        winapi::um::winbase::FILE_FLAG_OPEN_REPARSE_POINT,
+    );
+    let file = options.open(lock_file_path)?;
+    #[cfg(windows)]
+    if file.metadata()?.file_type().is_symlink() {
+        return Err(std::io::Error::other(format!(
+            "{lock_file_path} is a symlink"
+        )));
+    }
+    Ok(file)
 }
 
 #[napi]
@@ -252,6 +260,50 @@ mod test {
         // release it, since the lock is held by that handle.
         assert!(FileLock::new(path).unwrap().locked);
         drop(holder);
+    }
+
+    /// Windows needs SeCreateSymbolicLinkPrivilege (Developer Mode or an
+    /// elevated process); returns false without it so the caller skips.
+    fn plant_file_symlink(target: &Path, link: &Path) -> bool {
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(target, link).unwrap();
+        #[cfg(windows)]
+        {
+            const ERROR_PRIVILEGE_NOT_HELD: i32 = 1314;
+            match std::os::windows::fs::symlink_file(target, link) {
+                Err(e) if e.raw_os_error() == Some(ERROR_PRIVILEGE_NOT_HELD) => {
+                    eprintln!("skipping: cannot create a symlink here ({e})");
+                    return false;
+                }
+                result => result.unwrap(),
+            }
+        }
+        true
+    }
+
+    #[test]
+    fn new_refuses_a_symlink_at_the_lock_path() {
+        let tmp_dir = TempDir::new().unwrap();
+        let target = tmp_dir.child("target");
+        let lock = tmp_dir.child("lock");
+        if !plant_file_symlink(target.path(), lock.path()) {
+            return;
+        }
+
+        assert!(FileLock::new(lock.path().to_string_lossy().to_string()).is_err());
+        assert!(!target.exists(), "following the link creates its target");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn wait_blocking_refuses_a_symlink_planted_after_the_lock_was_created() {
+        let tmp_dir = TempDir::new().unwrap();
+        let lock = tmp_dir.child("lock");
+        let file_lock = FileLock::new(lock.path().to_string_lossy().to_string()).unwrap();
+        fs::remove_file(lock.path()).unwrap();
+        std::os::unix::fs::symlink(tmp_dir.child("target").path(), lock.path()).unwrap();
+
+        assert!(file_lock.wait_blocking(Duration::from_millis(200)).is_err());
     }
 
     #[test]
