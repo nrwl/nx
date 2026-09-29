@@ -181,14 +181,14 @@ fn hashes_to_files(hashes: NxFileHashes) -> Files {
 /// The files one walk produced, and the ignore files it applied getting them.
 /// `ignore_files` is `None` when the files came from an archive, or when the
 /// walk was not asked for them because nothing builds rules from them.
-struct Walked {
+struct WalkResult {
     files: Files,
     ignore_files: Option<Vec<PathBuf>>,
 }
 
-impl From<Files> for Walked {
+impl From<Files> for WalkResult {
     fn from(files: Files) -> Self {
-        Walked {
+        WalkResult {
             files,
             ignore_files: None,
         }
@@ -230,7 +230,7 @@ fn acquire_files(
     trust_archive: bool,
     wait_for: Duration,
     find_ignore_files: bool,
-) -> Walked {
+) -> WalkResult {
     let lock_path = Path::new(cache_dir).join(NX_FILES_LOCK);
     let mut lock = match FileLock::new(lock_path.to_string_lossy().to_string()) {
         Ok(lock) => lock,
@@ -467,7 +467,7 @@ fn gather_and_hash_files(
     workspace_root: &Path,
     cache_dir: String,
     find_ignore_files: bool,
-) -> Walked {
+) -> WalkResult {
     let archived_files = read_files_archive(&cache_dir);
 
     trace!("Gathering files in {}", workspace_root.display());
@@ -477,21 +477,21 @@ fn gather_and_hash_files(
     // re-hash it rather than trust the timestamp. See `selective_files_hash`.
     let gathered_at = gather_stamp();
     #[cfg(not(target_arch = "wasm32"))]
-    let (walked, ignore_files) = if find_ignore_files {
-        let (walked, ignore_files) = nx_walker_with_ignore_files(workspace_root);
-        (walked, Some(ignore_files))
+    let (found, ignore_files) = if find_ignore_files {
+        let (found, ignore_files) = nx_walker_with_ignore_files(workspace_root);
+        (found, Some(ignore_files))
     } else {
         (nx_walker(workspace_root, true).collect(), None)
     };
     #[cfg(target_arch = "wasm32")]
-    let (walked, ignore_files) = {
+    let (found, ignore_files) = {
         let _ = find_ignore_files;
         (nx_walker(workspace_root, true).collect(), None)
     };
     let file_hashes = if let Some(archived_files) = archived_files {
-        selective_files_hash(walked, &archived_files)
+        selective_files_hash(found, &archived_files)
     } else {
-        full_files_hash(walked)
+        full_files_hash(found)
     }
     .with_gathered_at(gathered_at);
 
@@ -502,7 +502,7 @@ fn gather_and_hash_files(
     let files = hashes_to_files(file_hashes);
     trace!("hashed and sorted files in {:?}", now.elapsed());
 
-    Walked {
+    WalkResult {
         files,
         ignore_files,
     }
@@ -682,7 +682,7 @@ impl FileState {
         &self,
         workspace_root: &Path,
         cache_dir: &str,
-        mut fresh: Walked,
+        mut fresh: WalkResult,
         mut initial: bool,
     ) -> ChangeBatch {
         let Some(sync) = &self.0 else {
@@ -3098,8 +3098,8 @@ mod tests {
             .unwrap();
         let root = dunce::canonicalize(temp.path()).unwrap();
 
-        let walked = gather_and_hash_files(&root, as_string(&TempDir::new().unwrap()), true);
-        let from_walk = WorkspaceContext::workspace_policy(&root, walked.ignore_files).unwrap();
+        let result = gather_and_hash_files(&root, as_string(&TempDir::new().unwrap()), true);
+        let from_walk = WorkspaceContext::workspace_policy(&root, result.ignore_files).unwrap();
         let by_walking = WorkspaceContext::workspace_policy(&root, None).unwrap();
         for path in [
             "a.ts",
