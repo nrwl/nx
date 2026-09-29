@@ -27,8 +27,8 @@ export interface LintTaskResult {
 
 /**
  * Lints every task with a single Oxlint run and splits the report back per
- * task. Flags are shared by the run, so a flag two tasks set to different
- * values is reported once and the last one wins.
+ * task. Oxlint takes one flag set per process, so the run uses the first
+ * task's flags and warns when another task resolves different ones.
  */
 export function runLintTasks(
   tasks: LintTask[],
