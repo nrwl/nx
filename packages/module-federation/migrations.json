@@ -131,6 +131,18 @@
       "version": "23.0.0-beta.25",
       "description": "Rewrites `@nx/module-federation/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/module-federation`'s exports map. Named imports/exports of public symbols are routed to `@nx/module-federation` and the rest to the new `@nx/module-federation/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/module-federation/internal`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-24-0-0-migrate-react-module-federation": {
+      "version": "24.0.0-beta.0",
+      "description": "Moves React apps off Nx Module Federation, removed in Nx v24, onto the official Module Federation plugins. Lists the projects that use it and hands them to an AI prompt; removes `@nx/module-federation` directly when nothing uses it.",
+      "implementation": "./dist/src/migrations/update-24-0-0/migrate-react-module-federation",
+      "prompt": "./dist/src/migrations/update-24-0-0/migrate-react-module-federation.md"
+    },
+    "update-24-0-0-migrate-angular-module-federation": {
+      "version": "24.0.0-beta.0",
+      "description": "Moves Angular apps off Nx Module Federation, removed in Nx v24, onto the official Module Federation plugins. Lists the projects that use it and hands them to an AI prompt; removes `@nx/module-federation` directly when nothing uses it.",
+      "implementation": "./dist/src/migrations/update-24-0-0/migrate-angular-module-federation",
+      "prompt": "./dist/src/migrations/update-24-0-0/migrate-angular-module-federation.md"
     }
   }
 }

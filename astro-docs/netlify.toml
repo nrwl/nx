@@ -699,11 +699,11 @@ to = "/docs/kb/angular-nx-version-matrix"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/dynamic-module-federation-with-angular"
-to = "/docs/kb/dynamic-module-federation-with-angular"
+to = "/docs/kb/migrate-angular-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/module-federation-with-ssr"
-to = "/docs/kb/angular-module-federation-with-ssr"
+to = "/docs/kb/migrate-angular-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/nx-and-angular"
@@ -771,7 +771,7 @@ to = "/docs/kb/flat-config"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/faster-builds-with-module-federation"
-to = "/docs/kb/faster-builds-with-module-federation"
+to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/manage-library-versions-with-module-federation"
@@ -787,7 +787,7 @@ to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/consumer-and-provider"
@@ -807,11 +807,11 @@ to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-plugin"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/using-tailwind-css-with-module-federation"
@@ -932,6 +932,26 @@ to = "/docs/kb/overview-angular"
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/overview-react"
 to = "/docs/kb/storybook-for-react"
+
+[[redirects]]
+from = "/docs/kb/angular-micro-frontends"
+to = "/docs/kb/migrate-angular-module-federation"
+
+[[redirects]]
+from = "/docs/kb/angular-module-federation-with-ssr"
+to = "/docs/kb/migrate-angular-module-federation"
+
+[[redirects]]
+from = "/docs/kb/dynamic-module-federation-with-angular"
+to = "/docs/kb/migrate-angular-module-federation"
+
+[[redirects]]
+from = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
+
+[[redirects]]
+from = "/docs/kb/faster-builds-with-module-federation"
+to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/kb/overview-react"
@@ -1136,7 +1156,7 @@ to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/kb/nx-module-federation-technical-overview"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/kb/create-a-host"
@@ -1152,7 +1172,7 @@ to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/kb/nx-module-federation-dev-server-plugin"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/kb/react-module-federation-with-ssr"

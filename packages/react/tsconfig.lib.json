@@ -22,19 +22,10 @@
     "jest.config.cts",
     "eslint.config.mjs"
   ],
-  "include": [
-    "*.ts",
-    "src/**/*.ts",
-    "mf/**/*.ts",
-    "plugins/**/*.ts",
-    "typings/**/*.d.ts"
-  ],
+  "include": ["*.ts", "src/**/*.ts", "plugins/**/*.ts", "typings/**/*.d.ts"],
   "references": [
     {
       "path": "../rollup/tsconfig.lib.json"
-    },
-    {
-      "path": "../module-federation/tsconfig.lib.json"
     },
     {
       "path": "../web/tsconfig.lib.json"

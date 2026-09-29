@@ -6,12 +6,8 @@ import { UnitTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import type { Schema as ApplicationOptions } from '../application/schema';
 import { componentGenerator } from '../component/component';
-import { host } from '../host/host';
-import type { Schema as HostOptions } from '../host/schema';
 import { libraryGenerator } from '../library/library';
 import type { Schema as LibraryOptions } from '../library/schema';
-import { remote } from '../remote/remote';
-import type { Schema as RemoteOptions } from '../remote/schema';
 
 export async function generateTestApplication(
   tree: Tree,
@@ -21,22 +17,6 @@ export async function generateTestApplication(
   await applicationGenerator(tree, {
     ...options,
   });
-}
-
-export async function generateTestHostApplication(
-  tree: Tree,
-  options: HostOptions
-): Promise<void> {
-  tree.write('.gitignore', '');
-  await host(tree, { ...options });
-}
-
-export async function generateTestRemoteApplication(
-  tree: Tree,
-  options: RemoteOptions
-): Promise<void> {
-  tree.write('.gitignore', '');
-  await remote(tree, { ...options });
 }
 
 export async function generateTestLibrary(

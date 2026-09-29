@@ -6,11 +6,9 @@ import {
   readNxJson,
   type Tree,
 } from '@nx/devkit';
-import {
-  expressVersion,
-  httpProxyMiddlewareVersion,
-  nxVersion,
-} from '../../utils/versions';
+import { expressVersion, nxVersion } from '../../utils/versions';
+
+const httpProxyMiddlewareVersion = '^3.0.5';
 
 const moduleFederationExecutors = new Set([
   '@nx/react:module-federation-dev-server',

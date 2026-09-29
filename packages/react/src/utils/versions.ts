@@ -47,15 +47,12 @@ export const tsLibVersion = '^2.3.0';
 export const postcssVersion = '8.4.38';
 export const autoprefixerVersion = '10.4.13';
 
-// SSR and Module Federation
+// SSR
 export const expressVersion = '^4.21.2';
 export const typesExpressVersion = '^4.17.21';
-export const httpProxyMiddlewareVersion = '^3.0.5';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
-export const moduleFederationNodeVersion = '^2.7.21';
-export const moduleFederationEnhancedVersion = '^2.1.0';
 
 // style preprocessors
 export const sassVersion = '^1.97.2';

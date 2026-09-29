@@ -34,6 +34,7 @@ import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { mergeServerTsConfig } from './lib/merge-server-tsconfig';
 import { updateTsconfig } from './lib/update-tsconfig';
+import { validateNoModuleFederation } from './lib/validate-no-module-federation';
 import { validateSupportedBuildExecutor } from './lib/validate-supported-executor';
 import type { ConvertToRspackSchema } from './schema';
 
@@ -46,7 +47,6 @@ const SUPPORTED_EXECUTORS = [
   '@nx/angular:webpack-browser',
   '@nx/angular:webpack-server',
   '@nx/angular:dev-server',
-  '@nx/angular:module-federation-dev-server',
 ];
 
 const RENAMED_OPTIONS = {
@@ -356,6 +356,7 @@ export async function convertToRspack(
   let customWebpackConfigPath: string | undefined;
 
   validateSupportedBuildExecutor(Object.values(project.targets));
+  validateNoModuleFederation(tree, project);
 
   let projectServePort = DEFAULT_PORT;
   const projectServeConfigurationOptions: Record<string, { port?: number }> =
@@ -411,8 +412,7 @@ export async function convertToRspack(
       targetsToRemove.push(targetName);
     } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
-      target.executor === '@nx/angular:dev-server' ||
-      target.executor === '@nx/angular:module-federation-dev-server'
+      target.executor === '@nx/angular:dev-server'
     ) {
       createConfigOptions.devServer = {};
       if (target.options) {
