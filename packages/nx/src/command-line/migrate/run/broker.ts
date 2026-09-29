@@ -299,11 +299,12 @@ function isAtSeam(
   step: MigrateStep | undefined,
   request: BrokerRequest
 ): boolean {
-  return (
-    step !== undefined &&
-    step.attempt === request.attempt &&
-    SEAM_STATUSES[request.kind].has(step.status)
-  );
+  if (step === undefined || step.attempt !== request.attempt) return false;
+  // A failed step commits only through its adopt.
+  if (request.kind === 'commit' && step.status === 'failed') {
+    return request.commitAs === 'adopt';
+  }
+  return SEAM_STATUSES[request.kind].has(step.status);
 }
 
 export function brokerDir(runDirPath: string): string {

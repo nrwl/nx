@@ -1590,7 +1590,7 @@ while (block.action !== 'complete') {
     if (process.env.FAKE_AGENT_FAIL_PROMPTS) {
       // The prompt failed on purpose, so a retry has no fix to offer: give
       // the step up through the option the dispense lists.
-      const giveUp = block.payload.instructions.match(/^  unresolved: .*?Then run: (\\S.*?--step-action=unresolved)/m);
+      const giveUp = block.payload.instructions.match(/^  unresolved: .*?[Tt]hen run: (\\S.*?--step-action=unresolved)/m);
       if (!giveUp) throw new Error('No unresolved option in: ' + block.payload.instructions);
       record({ gaveUp: block.step });
       block = lastBlock(run(giveUp[1]));

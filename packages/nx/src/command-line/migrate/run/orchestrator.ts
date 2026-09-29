@@ -1961,7 +1961,11 @@ function emitRetryFailed(
           runId,
           'adopt'
         )}`
-      : `  adopt: the migration was applied by hand; keep the current working-tree state as its result, then run: ${reconcileCommand(
+      : `  adopt: ${
+          committed
+            ? "a commit of this migration's changes was started and never recorded"
+            : 'the migration was applied by hand'
+        }; keep the current working-tree state as its result, then run: ${reconcileCommand(
           root,
           runId,
           'adopt'
@@ -2014,17 +2018,21 @@ function retryBudgetLine(step: MigrateStep, committed: boolean): string {
       ? 'this is the last one, so ask the user before using it'
       : 'ask the user before using the last one'
   }. When no user can answer, ${
-    committed ? 'adopt the commit' : 'give the step up with unresolved'
-  } and continue.`;
+    committed
+      ? 'adopt only once you have inspected the tree and finished the migration; otherwise stop and report'
+      : 'give the step up with unresolved and continue'
+  }.`;
 }
 
 // Opens a capped dispense and is the reason a retry past the cap is refused.
 function rearmCapLine(step: MigrateStep, committed: boolean): string {
   return `This migration has already been retried ${
     step.attempt - 1
-  } times without completing, and no further retry is accepted. Choose ${
-    committed ? 'adopt' : 'adopt, skip or unresolved'
-  }, or ask the user how to proceed.`;
+  } times without completing, and no further retry is accepted. ${
+    committed
+      ? 'Adopt only once you have inspected the tree and finished the migration; otherwise ask the user how to proceed, or stop and report.'
+      : 'Choose adopt, skip or unresolved, or ask the user how to proceed.'
+  }`;
 }
 
 // Whether the step's generator half may still have to run: it exists and no

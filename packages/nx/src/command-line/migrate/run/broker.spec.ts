@@ -948,6 +948,10 @@ describe('migrate commit broker', () => {
       ['the step is settled', { steps: [step({ status: 'succeeded' })] }],
       ['the step was given up on', { steps: [step({ status: 'unresolved' })] }],
       ['the step is unknown', { steps: [step({ id: 'step-9' })] }],
+      [
+        'the step failed and the request is not its adopt',
+        { steps: [step({ status: 'failed' })] },
+      ],
     ])(
       'answers stale without installing or committing when %s',
       async (_case, overrides) => {

@@ -206,7 +206,7 @@ function applyStepAction(
         if (commitMayBeInHistory(state, step)) {
           return {
             kind: 'error',
-            reason: `Cannot apply action '${action}' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'retry' to finish it, or 'adopt' to record it as applied.`,
+            reason: `Cannot apply action '${action}' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied once the migration is finished.`,
           };
         }
         return commit(state, index, {
@@ -258,7 +258,7 @@ function applyStepAction(
         if (commitMayBeInHistory(state, step)) {
           return {
             kind: 'error',
-            reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied.`,
+            reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied once the migration is finished.`,
           };
         }
         // A death records no outcome, so the failure given up on is the death

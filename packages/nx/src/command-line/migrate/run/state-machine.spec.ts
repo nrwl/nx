@@ -820,7 +820,7 @@ describe('applyStepEvent', () => {
       ['a landed commit covers the step', { commits: true }],
       ['a started commit is unaccounted for', { commitStarted: true }],
     ] as const)(
-      'rejects skip from failed while %s, steering to retry',
+      'rejects skip from failed while %s, steering to adopt',
       (_, shape) => {
         const state = {
           ...stateWithStep({
@@ -843,7 +843,7 @@ describe('applyStepEvent', () => {
 
         expect(result).toEqual({
           kind: 'error',
-          reason: expect.stringContaining("Use 'retry'"),
+          reason: expect.stringContaining("Use 'adopt'"),
         });
         expect(state).toEqual(before);
       }

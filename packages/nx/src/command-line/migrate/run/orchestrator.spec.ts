@@ -4438,7 +4438,7 @@ describe('orchestrator', () => {
         '--step-action=unresolved'
       );
       expect(block.payload.instructions).toContain(
-        'adopt the commit and continue'
+        'adopt only once you have inspected the tree and finished the migration'
       );
       expect(block.payload.next).toBeUndefined();
     });
@@ -5970,7 +5970,7 @@ describe('orchestrator', () => {
       );
       expect(block.payload.instructions).not.toContain('applied by hand');
       expect(block.payload.instructions).toContain(
-        'adopt the commit and continue'
+        'adopt only once you have inspected the tree and finished the migration'
       );
     });
 
@@ -5981,7 +5981,7 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('retry-failed');
       expect(block.payload.instructions).toContain(
-        'Choose adopt, or ask the user how to proceed.'
+        'Adopt only once you have inspected the tree and finished the migration'
       );
       expect(block.payload.instructions).not.toContain('--step-action=retry');
 
@@ -5994,7 +5994,7 @@ describe('orchestrator', () => {
       expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
       expect(lastBlock().action).toBe('error');
       expect(lastBlock().payload.instructions).toContain(
-        'Choose adopt, or ask the user how to proceed.'
+        'Adopt only once you have inspected the tree and finished the migration'
       );
     });
 
