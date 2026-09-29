@@ -24,12 +24,24 @@ where
     _copy_impl(src.as_ref(), dest.as_ref(), None)
 }
 
+/// Called with the source and destination of each file or link a copy writes.
+pub(crate) type OnCopied<'a> = &'a mut dyn FnMut(&Path, &Path);
+
+pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::Result<i64> {
+    copy_reporting(src, dest, boundary, &mut |_, _| {})
+}
+
 /// Copy `src` to `dest`.
 ///
 /// With `boundary = Some(root)` the copy is confined to `root` (cache restore):
 /// parents are realized as real dirs (any symlink under `root` is replaced) and
 /// existing entries are removed, not written through. `None` keeps the original.
-pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::Result<i64> {
+pub(crate) fn copy_reporting(
+    src: &Path,
+    dest: &Path,
+    boundary: Option<&Path>,
+    on_copied: OnCopied,
+) -> anyhow::Result<i64> {
     let dest: PathBuf = remove_trailing_single_dot(dest);
     let dest_parent = dest.parent().unwrap_or(&dest);
     let src: PathBuf = src.into();
@@ -59,13 +71,16 @@ pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::R
         trace!("Copying symlink: {:?}", &src);
         remove_existing_symlink(&dest)?;
         symlink(fs::read_link(&src)?, &dest)?;
+        on_copied(&src, &dest);
         0
     } else if src.is_dir() {
         trace!("Copying directory: {:?}", &src);
-        copy_dir_all(&src, &dest, boundary).map_err(anyhow::Error::new)?
+        copy_dir_all(&src, &dest, boundary, on_copied).map_err(anyhow::Error::new)?
     } else {
         trace!("Copying file: {:?}", &src);
-        fs::copy(&src, &dest)?
+        let size = fs::copy(&src, &dest)?;
+        on_copied(&src, &dest);
+        size
     };
 
     debug!("Copy completed: {:?} -> {:?} ({} bytes)", &src, &dest, size);
@@ -122,6 +137,7 @@ pub fn copy_outputs_into_workspace(
     workspace_root: &Path,
     outputs_path: &Path,
     expanded_outputs: &[String],
+    on_copied: OnCopied,
 ) -> anyhow::Result<i64> {
     let mut size = 0;
     for output in expanded_outputs {
@@ -132,7 +148,7 @@ pub fn copy_outputs_into_workspace(
             continue;
         }
         let to = workspace_root.join(output);
-        size += _copy_impl(&from, &to, Some(workspace_root))?;
+        size += copy_reporting(&from, &to, Some(workspace_root), on_copied)?;
     }
     Ok(size)
 }
@@ -182,6 +198,7 @@ fn copy_dir_all(
     src: impl AsRef<Path>,
     dst: impl AsRef<Path>,
     boundary: Option<&Path>,
+    on_copied: OnCopied,
 ) -> io::Result<u64> {
     trace!("Creating directory: {:?}", dst.as_ref());
     match boundary {
@@ -203,13 +220,14 @@ fn copy_dir_all(
 
         let size: u64 = if ty.is_dir() {
             trace!("Copying subdirectory: {:?}", entry.path());
-            let subdir_size = copy_dir_all(entry.path(), dest_path, boundary)?;
+            let subdir_size = copy_dir_all(entry.path(), dest_path, boundary, on_copied)?;
             dirs_copied += 1;
             subdir_size
         } else if ty.is_symlink() {
             trace!("Copying symlink: {:?}", entry.path());
             remove_existing_symlink(&dest_path)?;
-            symlink(fs::read_link(entry.path())?, dest_path)?;
+            symlink(fs::read_link(entry.path())?, &dest_path)?;
+            on_copied(&entry.path(), &dest_path);
             symlinks_copied += 1;
             0
         } else {
@@ -218,7 +236,8 @@ fn copy_dir_all(
             if boundary.is_some() {
                 remove_existing_symlink(&dest_path)?;
             }
-            let file_size = fs::copy(entry.path(), dest_path)?;
+            let file_size = fs::copy(entry.path(), &dest_path)?;
+            on_copied(&entry.path(), &dest_path);
             files_copied += 1;
             file_size
         };
@@ -333,7 +352,8 @@ mod test {
         cache.child("package.json").write_str("{evil}").unwrap();
 
         let expanded = vec!["dist/main.js".to_string()];
-        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &mut |_, _| {})
+            .unwrap();
 
         assert!(workspace.child("dist/main.js").exists());
         assert!(!workspace.child(".git/hooks/pre-commit").exists());
@@ -357,7 +377,8 @@ mod test {
         symlink(outside.path(), workspace.join("dist")).unwrap();
 
         let expanded = vec!["dist/payload.js".to_string()];
-        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &mut |_, _| {})
+            .unwrap();
 
         // The write must land in the workspace, not through the symlink.
         assert!(!outside.child("payload.js").exists());
@@ -407,7 +428,8 @@ mod test {
 
         let workspace = TempDir::new().unwrap();
         let expanded = vec!["dist".to_string()];
-        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &mut |_, _| {})
+            .unwrap();
 
         // The symlink is recreated verbatim — a pointer outside the workspace is
         // allowed; nothing was written *through* it.
@@ -438,7 +460,8 @@ mod test {
 
         let workspace = TempDir::new().unwrap();
         let expanded = vec!["dist/real.js".to_string(), "dist/link.js".to_string()];
-        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &mut |_, _| {})
+            .unwrap();
 
         let link = workspace.join("dist/link.js");
         assert!(

@@ -288,6 +288,35 @@ fn transient_skips() -> Result<Arc<NxGlobSet>> {
         .context("the transient-file globs always build")
 }
 
+/// Whether `walk_files` from `start` would list `path`, both
+/// workspace-relative, judged by name alone: the vetoes apply below `start`,
+/// never to it. A file list built without walking is held to this so it
+/// matches what a walk lists.
+pub(crate) fn walk_reaches(workspace_root: &Path, start: &str, path: &str) -> bool {
+    static HARDCODED: OnceLock<Arc<NxGlobSet>> = OnceLock::new();
+    let hardcoded = HARDCODED.get_or_init(|| {
+        build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
+    });
+    let Ok(transient) = transient_skips() else {
+        return false;
+    };
+    let start = start.trim_matches('/');
+    let below = if start.is_empty() {
+        Some(path)
+    } else {
+        path.strip_prefix(start)
+            .and_then(|rest| rest.strip_prefix('/'))
+    };
+    let Some(below) = below.filter(|below| !below.is_empty()) else {
+        return false;
+    };
+    let mut entry = workspace_root.join(start);
+    below.split('/').all(|part| {
+        entry.push(part);
+        !hardcoded.is_match(&entry) && !transient.is_match(&entry)
+    })
+}
+
 /// Files under `start`, workspace-relative, with the stamp read on the way
 /// for anything the context does not vouch for. The walker skips what it
 /// skips for every walk, but never the root it is given, so a glob rooted at
@@ -703,5 +732,40 @@ nested/child-two/
             "the shallower .nxignore should outrank the deeper .gitignore negation, got: {:?}",
             files
         );
+    }
+
+    #[test]
+    fn walk_reaches_agrees_with_a_walk() {
+        let temp = TempDir::new().unwrap();
+        let every = [
+            "dist/app/main.js",
+            "dist/app/.hidden",
+            "dist/app/nested/node_modules/dep/index.js",
+            "dist/app/.git/HEAD",
+            "dist/app/.nx/cache/x",
+            "dist/app/.yarn/cache/y.zip",
+            "dist/app/vite.config.ts.timestamp-1.mjs",
+            "node_modules/pkg/index.js",
+        ];
+        for file in every {
+            temp.child(file).write_str(file).unwrap();
+        }
+        for start in ["dist/app", "dist/app/nested/node_modules", "node_modules"] {
+            let mut walked = read_directory(temp.path(), start, &|_| true).unwrap();
+            walked.sort();
+            let mut reached: Vec<_> = every
+                .iter()
+                .filter(|path| walk_reaches(temp.path(), start, path))
+                .map(|path| path.to_string())
+                .collect();
+            reached.sort();
+            assert_eq!(reached, walked, "from {start}");
+        }
+        assert!(!walk_reaches(
+            temp.path(),
+            "dist/app",
+            "dist/application/a.js"
+        ));
+        assert!(!walk_reaches(temp.path(), "dist/app", "dist/app"));
     }
 }

@@ -4,15 +4,18 @@
 //! events only keep the index's listings current, so a late event for a
 //! task's own write, or a rescan, cannot drop a record.
 
+use std::fs::Metadata;
 use std::path::Path;
 
 use dashmap::DashMap;
+use hashbrown::HashMap;
 use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::cache::expand_outputs::get_files_for_outputs_via;
 use crate::native::glob::glob_transform::partition_glob;
 use crate::native::hasher::hash_file_path;
+use crate::native::walker::walk_reaches;
 use crate::native::workspace::ignored_index::{
     FileStamp, IgnoredIndex, IgnoredIndexReader, now_secs, stamp_of,
 };
@@ -21,6 +24,33 @@ use crate::native::workspace::ignored_index::{
 pub struct TaskOutputs {
     pub outputs: Vec<String>,
     pub hash: String,
+    /// What the cache just wrote or restored for these outputs. Recorded as
+    /// given, so the outputs are not walked again.
+    pub files: Option<Vec<OutputFile>>,
+}
+
+/// A workspace-relative file with the stamp it was left with.
+#[napi(object)]
+pub struct OutputFile {
+    pub path: String,
+    /// `<mtime nanos>:<size>`, a string because the nanoseconds do not fit a
+    /// JavaScript number.
+    pub stamp: String,
+}
+
+impl OutputFile {
+    pub(crate) fn new(path: String, metadata: &Metadata) -> Self {
+        let (mtime, size) = stamp_of(metadata);
+        Self {
+            path,
+            stamp: format!("{mtime}:{size}"),
+        }
+    }
+
+    fn stamp(&self) -> Option<FileStamp> {
+        let (mtime, size) = self.stamp.split_once(':')?;
+        Some((mtime.parse().ok()?, size.parse().ok()?))
+    }
 }
 
 #[derive(Default)]
@@ -57,6 +87,42 @@ fn key(outputs: &[String]) -> String {
     outputs.join("\n")
 }
 
+/// The files of `given` that `outputs` names, each with its stamp. A file
+/// output left out of `given` is stat'ed.
+fn expand_given(
+    root: &Path,
+    outputs: &[String],
+    given: Vec<OutputFile>,
+) -> Option<Vec<(String, FileStamp)>> {
+    let stamps: HashMap<String, FileStamp> = given
+        .into_iter()
+        .filter_map(|file| Some((file.stamp()?, file.path)))
+        .map(|(stamp, path)| (path, stamp))
+        .collect();
+    let paths = get_files_for_outputs_via(root, outputs.to_vec(), &|dir| {
+        Some(
+            stamps
+                .keys()
+                .filter(|path| walk_reaches(root, dir, path))
+                .cloned()
+                .collect(),
+        )
+    })
+    .ok()?;
+    Some(
+        paths
+            .into_iter()
+            .filter_map(|path| {
+                let stamp = match stamps.get(&path) {
+                    Some(stamp) => *stamp,
+                    None => stamp_of(&std::fs::metadata(root.join(&path)).ok()?),
+                };
+                Some((path, stamp))
+            })
+            .collect(),
+    )
+}
+
 /// The existing files `outputs` names. `cached` answers from the index's
 /// listings; otherwise every directory is read from disk.
 fn expand(
@@ -72,7 +138,8 @@ fn expand(
 }
 
 impl OutputRecords {
-    /// Remembers each task's outputs as they are on disk now.
+    /// Remembers each task's outputs: the files it was given, or else what is
+    /// on disk now.
     pub(crate) fn record(
         &self,
         root: &Path,
@@ -87,29 +154,42 @@ impl OutputRecords {
                 }
             }
         }
-        reader.catch_up();
+        if entries.iter().any(|entry| entry.files.is_none()) {
+            reader.catch_up();
+        }
         let index = reader.index();
         entries.into_par_iter().for_each(|entry| {
-            // Read from disk: the watch may not have delivered the task's own
-            // writes yet, and a listing missing them would record too little.
-            let Some(paths) = expand(root, index, &entry.outputs, false) else {
+            let stamped = match entry.files {
+                Some(given) => expand_given(root, &entry.outputs, given),
+                // Read from disk: the watch may not have delivered the task's
+                // own writes yet, and a listing missing them would record too
+                // little.
+                None => expand(root, index, &entry.outputs, false).map(|paths| {
+                    paths
+                        .into_par_iter()
+                        .filter_map(|path| {
+                            let stamp = stamp_of(&std::fs::metadata(root.join(&path)).ok()?);
+                            Some((path, stamp))
+                        })
+                        .collect()
+                }),
+            };
+            let Some(stamped) = stamped else {
                 self.records.remove(&key(&entry.outputs));
                 return;
             };
             let made_at = now_secs();
-            let files = paths
+            let files = stamped
                 .into_par_iter()
-                .filter_map(|path| {
-                    let full_path = root.join(&path);
-                    let stamp = stamp_of(&std::fs::metadata(&full_path).ok()?);
+                .map(|(path, stamp)| {
                     let content = needs_content(stamp, made_at)
-                        .then(|| hash_file_path(&full_path))
+                        .then(|| hash_file_path(root.join(&path)))
                         .flatten();
-                    Some(RecordedFile {
+                    RecordedFile {
                         path,
                         stamp,
                         content,
-                    })
+                    }
                 })
                 .collect();
             self.records.insert(
@@ -208,7 +288,18 @@ mod tests {
         TaskOutputs {
             outputs: outputs.iter().map(|o| o.to_string()).collect(),
             hash: hash.to_string(),
+            files: None,
         }
+    }
+
+    fn given(temp: &TempDir, paths: &[&str]) -> Vec<OutputFile> {
+        paths
+            .iter()
+            .map(|path| {
+                let metadata = std::fs::metadata(temp.path().join(path)).unwrap();
+                OutputFile::new(path.to_string(), &metadata)
+            })
+            .collect()
     }
 
     fn check(
@@ -362,6 +453,59 @@ mod tests {
             .unwrap();
 
         records.record(temp.path(), &reader, vec![entry(&["dist/app"], "h1")]);
+        assert!(check(&records, &temp, &reader, &["dist/app"], "h1"));
+    }
+
+    #[test]
+    fn a_given_file_list_is_recorded_as_given() {
+        let temp = workspace();
+        let (records, reader) = (OutputRecords::default(), watched());
+        let files = ["dist/app/a.txt", "dist/app/b.md", "dist/app/c.html"];
+        let record = |files: Vec<OutputFile>| {
+            records.record(
+                temp.path(),
+                &reader,
+                vec![TaskOutputs {
+                    files: Some(files),
+                    ..entry(&["dist/app"], "h1")
+                }],
+            )
+        };
+
+        record(given(&temp, &files));
+        assert!(check(&records, &temp, &reader, &["dist/app"], "h1"));
+
+        // The stamps are taken as given, not read again.
+        let mut stale = given(&temp, &files);
+        stale[0].stamp = "0:0".to_string();
+        record(stale);
+        assert!(!check(&records, &temp, &reader, &["dist/app"], "h1"));
+    }
+
+    #[test]
+    fn a_given_file_list_keeps_only_what_a_walk_lists() {
+        let temp = workspace();
+        for file in ["dist/app/node_modules/dep.js", "dist/other/d.txt"] {
+            temp.child(file).write_str(file).unwrap();
+        }
+        let (records, reader) = (OutputRecords::default(), watched());
+        records.record(
+            temp.path(),
+            &reader,
+            vec![TaskOutputs {
+                files: Some(given(
+                    &temp,
+                    &[
+                        "dist/app/a.txt",
+                        "dist/app/b.md",
+                        "dist/app/c.html",
+                        "dist/app/node_modules/dep.js",
+                        "dist/other/d.txt",
+                    ],
+                )),
+                ..entry(&["dist/app"], "h1")
+            }],
+        );
         assert!(check(&records, &temp, &reader, &["dist/app"], "h1"));
     }
 }
