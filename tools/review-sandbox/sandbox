@@ -572,19 +572,19 @@ function cmdStart(argv) {
     `${id}\n\n` +
       `mode=${sb.mode} isolation=${sb.isolation} exec=${sb.exec}\n` +
       `Read source ONLY through this CLI:\n` +
-      `  .claude/tools/sandbox read ${id} <path> [--range a,b] [--ref <sha>]\n` +
-      `  .claude/tools/sandbox grep ${id} <pattern> [subdir] [--ref <sha>]\n` +
-      `  .claude/tools/sandbox find ${id} <glob> [subdir] [--ref <sha>]\n` +
+      `  tools/review-sandbox/sandbox read ${id} <path> [--range a,b] [--ref <sha>]\n` +
+      `  tools/review-sandbox/sandbox grep ${id} <pattern> [subdir] [--ref <sha>]\n` +
+      `  tools/review-sandbox/sandbox find ${id} <glob> [subdir] [--ref <sha>]\n` +
       (sb.baseRef
-        ? `  .claude/tools/sandbox diff ${id} [--name-only] [-- <path>...]   # base..HEAD\n`
+        ? `  tools/review-sandbox/sandbox diff ${id} [--name-only] [-- <path>...]   # base..HEAD\n`
         : '') +
       (sb.exec !== 'none'
-        ? `  .claude/tools/sandbox exec ${id} -- <cmd>` +
+        ? `  tools/review-sandbox/sandbox exec ${id} -- <cmd>` +
           (sb.exec === 'screened' ? '   (obvious writes are rejected)' : '') +
           '\n'
         : '') +
-      `  .claude/tools/sandbox view ${id}          # screened id for read-only agents\n` +
-      `  .claude/tools/sandbox stop ${id}\n`
+      `  tools/review-sandbox/sandbox view ${id}          # screened id for read-only agents\n` +
+      `  tools/review-sandbox/sandbox stop ${id}\n`
   );
 }
 
