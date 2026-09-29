@@ -679,7 +679,7 @@ impl FileState {
                     _ if !watching => None,
                     None if has_policy => None,
                     found => WorkspaceContext::workspace_policy(workspace_root, found)
-                        .inspect_err(|e| warn!("{e}; the files are not filtered"))
+                        .inspect_err(|e| warn!("{e}; keeping the previous rules, if any"))
                         .ok(),
                 }
             };
@@ -946,10 +946,6 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
         }
     }
 
-    debug_assert!(
-        !state.watching || state.policy.is_some(),
-        "a watching context applied changes before its walk built the ignore rules"
-    );
     let policy = state.policy.clone();
     let hashed: Vec<(&Change, String)> = changes
         .par_iter()
@@ -3093,6 +3089,54 @@ mod tests {
             gather_and_hash_files(&root, cache, true).ignore_files,
             Some(vec![PathBuf::from(".gitignore")])
         );
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn names_held_by(files: &FileState) -> Vec<String> {
+        let sync = files.0.as_ref().unwrap();
+        let state = sync.0.lock().unwrap();
+        names_in(state.files.clone())
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn an_ignored_write_queued_during_the_first_walk_never_lands() {
+        let temp = workspace_with(&["a.ts", "dist/out.js"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let cache = as_string(&TempDir::new().unwrap());
+
+        let files = FileState::new(&root, true, Arc::new(IgnoredIndex::new(None)));
+        files.deliver(vec![Change {
+            path: "dist/out.js".into(),
+            kind: ChangeKind::Created,
+        }]);
+        let gathered = gather_and_hash_files(&root, cache.clone(), true);
+        files.finish_walk(&root, &cache, gathered, true);
+
+        assert_eq!(names_held_by(&files), vec![".gitignore", "a.ts"]);
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn files_from_an_archive_still_get_rules_before_queued_writes_land() {
+        // No ignore-file list comes with an archive, so the rules come from the
+        // fallback walk.
+        let temp = workspace_with(&["a.ts", "dist/out.js"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let cache = as_string(&TempDir::new().unwrap());
+
+        let files = FileState::new(&root, true, Arc::new(IgnoredIndex::new(None)));
+        files.deliver(vec![Change {
+            path: "dist/out.js".into(),
+            kind: ChangeKind::Created,
+        }]);
+        let archived = gather_and_hash_files(&root, cache.clone(), false);
+        assert!(archived.ignore_files.is_none());
+        files.finish_walk(&root, &cache, archived, true);
+
+        assert_eq!(names_held_by(&files), vec![".gitignore", "a.ts"]);
     }
 
     #[test]
