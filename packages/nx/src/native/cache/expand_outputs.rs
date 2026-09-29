@@ -4,6 +4,7 @@ use tracing::{debug, trace};
 
 use crate::native::glob::{build_glob_set, glob_transform::partition_glob};
 use crate::native::utils::Normalize;
+use crate::native::utils::path::escapes_workspace;
 use crate::native::walker::nx_walker_sync_under;
 
 #[napi]
@@ -170,6 +171,33 @@ pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::R
     Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
+/// Outputs as the cache reads them: an absolute one made workspace-relative.
+/// An output outside the workspace is an error.
+pub(crate) fn normalize_outputs(
+    workspace_root: &Path,
+    outputs: Vec<String>,
+) -> anyhow::Result<Vec<String>> {
+    outputs
+        .into_iter()
+        .map(|output| {
+            let path = Path::new(&output);
+            let outside = || anyhow::anyhow!("Cache output is outside the workspace: {}", output);
+            if path.is_absolute() {
+                let relative = path.strip_prefix(workspace_root).map_err(|_| outside())?;
+                if escapes_workspace(relative) {
+                    return Err(outside());
+                }
+                return Ok(relative.to_normalized_string());
+            }
+            if escapes_workspace(path) {
+                return Err(outside());
+            }
+            // A relative output is a glob, where `\` escapes on every OS.
+            Ok(output)
+        })
+        .collect()
+}
+
 /// Whether every entry names a path rather than a pattern or a negation.
 pub(crate) fn all_literal(entries: &[String]) -> bool {
     entries
@@ -194,6 +222,12 @@ pub(crate) fn output_files_via(
     read: &(dyn Fn(&str) -> Option<Vec<String>> + Sync),
 ) -> anyhow::Result<Vec<String>> {
     let mut files = vec![];
+    // Unlike the cache, which refuses the task, skip an output outside the
+    // workspace and read the rest.
+    let entries: Vec<String> = entries
+        .into_iter()
+        .filter_map(|entry| normalize_outputs(directory, vec![entry]).ok()?.pop())
+        .collect();
     for entry in _expand_outputs(directory, entries)? {
         let entry = Path::new(&entry).to_normalized_string();
         let path = directory.join(&entry);

@@ -11,7 +11,7 @@ use dashmap::DashMap;
 use rayon::prelude::*;
 use tracing::trace;
 
-use crate::native::cache::expand_outputs::{copied_files, output_files_via};
+use crate::native::cache::expand_outputs::{copied_files, normalize_outputs, output_files_via};
 use crate::native::glob::glob_transform::partition_glob;
 use crate::native::hasher::hash_file_path;
 use crate::native::utils::Normalize;
@@ -133,7 +133,10 @@ impl OutputRecords {
         entries: Vec<TaskOutputs>,
     ) {
         for entry in &entries {
-            for output in entry.outputs.iter().filter(|o| !o.starts_with('!')) {
+            let Ok(outputs) = normalize_outputs(root, entry.outputs.clone()) else {
+                continue;
+            };
+            for output in outputs.iter().filter(|o| !o.starts_with('!')) {
                 let dir = read_root(root, output);
                 if !root.join(&dir).is_file() {
                     reader.track(root, &dir);
@@ -474,27 +477,35 @@ mod tests {
         assert!(!check(&records, &temp, &reader, &["dist/app"], "h1"));
     }
 
-    // `\` is not a glob escape on Windows until #37215.
-    #[cfg(unix)]
     #[test]
     fn an_escaped_output_is_read_where_its_escapes_resolve() {
         let temp = workspace();
-        temp.child("app/[id]/page.js").write_str("page").unwrap();
-        let (records, reader) = (OutputRecords::default(), watched());
-        let outputs = ["app/\\[id\\]"];
-        records.record(
-            temp.path(),
-            &reader,
-            vec![TaskOutputs {
-                files: Some(given(&temp, &["app/[id]/page.js"])),
-                ..entry(&outputs, "h1")
-            }],
-        );
-        assert!(check(&records, &temp, &reader, &outputs, "h1"));
-        temp.child("app/[id]/page.js").write_str("edited").unwrap();
-        assert!(!check(&records, &temp, &reader, &outputs, "h1"));
+        for (dir, output) in [
+            ("app/[id]", r"app/\[id\]"),
+            ("app/(group)", r"app/\(group\)/**"),
+        ] {
+            let page = format!("{dir}/page.js");
+            temp.child(&page).write_str("page").unwrap();
+            let (records, reader) = (OutputRecords::default(), watched());
+            records.record(
+                temp.path(),
+                &reader,
+                vec![TaskOutputs {
+                    files: Some(given(&temp, &[page.as_str()])),
+                    ..entry(&[output], "h1")
+                }],
+            );
+            assert!(check(&records, &temp, &reader, &[output], "h1"), "{output}");
+            temp.child(&page).write_str("edited").unwrap();
+            assert!(
+                !check(&records, &temp, &reader, &[output], "h1"),
+                "{output}"
+            );
+        }
     }
 
+    // A path that exists as written is read as that path, though `\` escapes
+    // in a glob.
     #[cfg(windows)]
     #[test]
     fn a_backslash_output_that_exists_is_read_as_its_path() {

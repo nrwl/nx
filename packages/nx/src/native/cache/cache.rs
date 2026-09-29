@@ -6,15 +6,13 @@ use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
 use tracing::{debug, trace};
 
-use crate::native::utils::path::escapes_workspace;
-
 use fs_extra::remove_items;
 use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::{params, types::Value};
 use sysinfo::Disks;
 
-use crate::native::cache::expand_outputs::{_expand_outputs, all_literal};
+use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
 use crate::native::cache::file_ops::{copy_outputs_into_workspace, copy_reporting};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
@@ -834,31 +832,6 @@ where
             }
         }
     }
-}
-
-/// Normalize declared output paths for cache use: relativize an in-workspace
-/// absolute path to the workspace root. Errors if any path resolves outside the
-/// workspace (absolute elsewhere, or relative climbing out via `..`).
-fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> anyhow::Result<Vec<String>> {
-    outputs
-        .into_iter()
-        .map(|output| {
-            let path = Path::new(&output);
-            let outside = || anyhow::anyhow!("Cache output is outside the workspace: {}", output);
-            if path.is_absolute() {
-                let relative = path.strip_prefix(workspace_root).map_err(|_| outside())?;
-                if escapes_workspace(relative) {
-                    return Err(outside());
-                }
-                return Ok(relative.to_normalized_string());
-            }
-            if escapes_workspace(path) {
-                return Err(outside());
-            }
-            // A relative output is a glob, where `\` escapes on every OS.
-            Ok(output)
-        })
-        .collect()
 }
 
 #[cfg(test)]

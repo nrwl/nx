@@ -122,6 +122,21 @@ describe('Cache', () => {
     }
   });
 
+  it('should define the output files of an absolute output as the cache copies them', () => {
+    tempFs.createFileSync('dist/app/a.js', 'a');
+    tempFs.createFileSync('dist/main.js', 'main');
+    for (const outputs of [
+      [join(tempFs.tempDir, 'dist/app')],
+      [join(tempFs.tempDir, 'dist/main.js')],
+    ]) {
+      const copied = cache
+        .put('123', 'output 123', outputs, 0)
+        .files.map((file) => file.path);
+      const [defined] = getFilesForOutputsBatch(tempFs.tempDir, [outputs]);
+      expect(defined).toEqual(copied);
+    }
+  });
+
   it('should return restored files only when they are all the output files', () => {
     tempFs.createFileSync('dist/app/a.js', 'a');
     cache.put('123', 'output 123', ['dist/app', 'dist/other'], 0);

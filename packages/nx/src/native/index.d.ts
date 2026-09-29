@@ -1184,17 +1184,6 @@ export interface TaskHashDetails {
   runtime?: Record<string, string>
 }
 
-export interface TaskOutputs {
-  outputs: Array<string>
-  hash: string
-  /**
-   * Every output file the cache just wrote or restored, which it passes
-   * only when that is all of them. Recorded as given, without reading the
-   * disk.
-   */
-  files?: Array<OutputFile>
-}
-
 /**
  * What reached one task: the files its filesets matched and the packages it
  * hashes that moved.
@@ -1212,6 +1201,17 @@ export interface TaskInputMatches {
    * hashes packages of. Reported once rather than per package.
    */
   movedEcosystems: Array<string>
+}
+
+export interface TaskOutputs {
+  outputs: Array<string>
+  hash: string
+  /**
+   * Every output file the cache just wrote or restored, which it passes
+   * only when that is all of them. Recorded as given, without reading the
+   * disk.
+   */
+  files?: Array<OutputFile>
 }
 
 /**
