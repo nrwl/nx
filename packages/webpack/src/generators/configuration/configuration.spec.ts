@@ -1,6 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { addProjectConfiguration, Tree } from '@nx/devkit';
+import { addProjectConfiguration, readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import configurationGenerator from './configuration';
@@ -47,6 +47,35 @@ describe('webpackProject', () => {
 
     expect(tree.read('libs/mypkg/webpack.config.js', 'utf-8')).toContain(
       `tsConfig: 'libs/mypkg/tsconfig.custom.json'`
+    );
+  });
+
+  it('should write a .babelrc when the compiler is babel', async () => {
+    await configurationGenerator(tree, {
+      project: 'mypkg',
+      addPlugin: true,
+      compiler: 'babel',
+    });
+
+    expect(readJson(tree, 'libs/mypkg/.babelrc')).toEqual({
+      presets: ['@nx/js/babel'],
+    });
+    expect(tree.read('libs/mypkg/webpack.config.js', 'utf-8')).toContain(
+      `compiler: 'babel'`
+    );
+  });
+
+  it('should use --babelConfig instead of writing a .babelrc', async () => {
+    await configurationGenerator(tree, {
+      project: 'mypkg',
+      addPlugin: true,
+      compiler: 'babel',
+      babelConfig: 'libs/mypkg/babel.config.json',
+    });
+
+    expect(tree.exists('libs/mypkg/.babelrc')).toBeFalsy();
+    expect(tree.read('libs/mypkg/webpack.config.js', 'utf-8')).toContain(
+      `babelConfig: 'libs/mypkg/babel.config.json'`
     );
   });
 });

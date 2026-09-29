@@ -5,7 +5,6 @@ import {
   detectPackageManager,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
@@ -27,12 +26,7 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin = true;
 
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));

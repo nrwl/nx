@@ -39,7 +39,7 @@ describe('@nx/storybook:init', () => {
     );
   });
 
-  it('should add build-storybook to cacheable operations if NX_ADD_PLUGINS=false', async () => {
+  it('should infer targets when a legacy caller disables plugins', async () => {
     await initGenerator(tree, {
       addPlugin: false,
     });
@@ -47,7 +47,10 @@ describe('@nx/storybook:init', () => {
     const buildStorybookDefault = findTargetDefault(nxJson.targetDefaults, {
       target: 'build-storybook',
     });
-    expect(buildStorybookDefault?.cache).toEqual(true);
+    expect(buildStorybookDefault).toBeUndefined();
+    expect(nxJson.plugins).toContainEqual(
+      expect.objectContaining({ plugin: '@nx/storybook/plugin' })
+    );
     delete process.env.NX_ADD_PLUGINS;
   });
 

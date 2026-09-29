@@ -15,14 +15,12 @@ import {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   type MatchedTargetRef,
 } from '@nx/js/internal';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { addTscAppBuildPlugin } from './add-tsc-build-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {
   getEsBuildConfig,
   getTscBuildConfig,
   getServeConfig,
-  getWebpackBuildConfig,
   getPruneTargets,
 } from './create-targets';
 
@@ -52,15 +50,6 @@ export function addProject(
     ]);
     project.targets.build = getEsBuildConfig(tree, project, options);
     ensurePnpmDeployInputs(tree, options, project.targets.build);
-  } else if (options.bundler === 'webpack') {
-    if (!hasWebpackPlugin(tree) && options.addPlugin === false) {
-      addBuildTargetDefaults(tree, `@nx/webpack:webpack`, 'build', [
-        TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-        ...pnpmDeployInputs,
-      ]);
-      project.targets.build = getWebpackBuildConfig(tree, project, options);
-      ensurePnpmDeployInputs(tree, options, project.targets.build);
-    }
   } else if (options.bundler === 'tsc') {
     if (options.addPlugin) {
       options.buildTargetName = addTscAppBuildPlugin(

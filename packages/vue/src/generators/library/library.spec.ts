@@ -579,7 +579,6 @@ module.exports = [
           "module",
           "types",
           "exports",
-          "nx",
         ]
       `);
       expect(tree.read('my-lib/package.json', 'utf-8')).toMatchInlineSnapshot(`
@@ -595,22 +594,6 @@ module.exports = [
               "default": "./src/index.ts"
             },
             "./package.json": "./package.json"
-          },
-          "nx": {
-            "targets": {
-              "lint": {
-                "executor": "@nx/eslint:lint"
-              },
-              "test": {
-                "executor": "@nx/vitest:test",
-                "outputs": [
-                  "{options.reportsDirectory}"
-                ],
-                "options": {
-                  "reportsDirectory": "coverage/my-lib"
-                }
-              }
-            }
           }
         }
         "

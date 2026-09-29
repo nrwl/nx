@@ -258,7 +258,13 @@ describe('lib', () => {
       const json = readProjectConfiguration(tree, 'my-lib');
       expect(json.root).toEqual('my-lib');
       expect(json.targets.build).toBeDefined();
-      expect(json.targets.test).toBeDefined();
+      // The test target comes from the inferred `@nx/jest/plugin`.
+      expect(json.targets.test).toBeUndefined();
+      expect(
+        readNxJson(tree).plugins.map((p) =>
+          typeof p === 'string' ? p : p.plugin
+        )
+      ).toContain('@nx/jest/plugin');
     });
 
     it('should not generate a module file and index.ts should be empty', async () => {

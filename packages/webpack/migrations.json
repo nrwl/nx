@@ -31,6 +31,12 @@
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.0",
+      "description": "Convert removed @nx/webpack executors to inferred tasks.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
     "update-24-0-0-migrate-compose-plugins": {
       "version": "24.0.0-beta.3",
       "description": "Converts webpack configs that use the removed `composePlugins`, `withNx`, `withWeb` and `withReact` helpers with `@nx/webpack:convert-config-to-webpack-plugin`, then hands an AI prompt the projects it could not convert and the `.old` configs it left behind.",

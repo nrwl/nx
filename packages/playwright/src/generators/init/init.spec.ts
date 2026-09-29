@@ -81,13 +81,17 @@ describe('@nx/playwright:init', () => {
     `);
   });
 
-  it('should not add plugin if NX_ADD_PLUGINS variable is set', async () => {
+  it('should add inference when a legacy caller disables plugins', async () => {
     await initGenerator(tree, {
       skipFormat: true,
       addPlugin: false,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
-    expect(nxJson.plugins).toMatchInlineSnapshot(`undefined`);
+    expect(nxJson.plugins).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ plugin: '@nx/playwright/plugin' }),
+      ])
+    );
   });
 });

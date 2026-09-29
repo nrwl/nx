@@ -66,7 +66,6 @@ export async function e2eProjectGeneratorInternal(
   // Detect Jest 30+ to use .cts config files (CommonJS TypeScript)
   const jestMajorVersion = getInstalledJestMajorVersion(host);
   const useCommonJsConfig = jestMajorVersion === null || jestMajorVersion >= 30;
-  const jestConfigExt = useCommonJsConfig ? 'cts' : 'ts';
 
   const dependsOn = [
     `${options.project}:${options.buildTarget ?? 'build'}`,
@@ -93,12 +92,9 @@ export async function e2eProjectGeneratorInternal(
           options.testRunner === 'vitest'
             ? { dependsOn }
             : {
-                executor: '@nx/jest:jest',
+                command: 'jest --passWithNoTests',
+                options: { cwd: options.e2eProjectRoot },
                 outputs: ['{projectRoot}/test-output/jest/coverage'],
-                options: {
-                  jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
-                  passWithNoTests: true,
-                },
                 dependsOn,
               },
       },
@@ -113,12 +109,9 @@ export async function e2eProjectGeneratorInternal(
           options.testRunner === 'vitest'
             ? { dependsOn }
             : {
-                executor: '@nx/jest:jest',
+                command: 'jest --passWithNoTests',
+                options: { cwd: options.e2eProjectRoot },
                 outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
-                options: {
-                  jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
-                  passWithNoTests: true,
-                },
                 dependsOn,
               },
       },

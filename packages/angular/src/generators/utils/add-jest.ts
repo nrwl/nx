@@ -58,7 +58,6 @@ export async function addJest(
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
     addPlugin: options.addPlugin ?? false,
-    addExplicitTargets: !options.addPlugin,
   });
 
   const setupFile = joinPathFragments(

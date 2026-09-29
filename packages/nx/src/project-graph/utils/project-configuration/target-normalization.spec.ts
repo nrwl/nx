@@ -16,6 +16,17 @@ import {
 } from './target-normalization';
 
 describe('normalizeTarget', () => {
+  it('keeps targets with removed executors loadable for migrations', () => {
+    const project = { name: 'app', root: 'apps/app' };
+    const target = {
+      executor: '@nx/next:build',
+      options: { outputPath: 'dist/apps/app' },
+    };
+    expect(
+      normalizeTarget(target, project, workspaceRoot, { app: project }, '')
+    ).toMatchObject(target);
+  });
+
   it('should support {projectRoot}, {workspaceRoot}, and {projectName} tokens', () => {
     const config = {
       name: 'project',

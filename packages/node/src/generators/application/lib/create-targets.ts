@@ -13,43 +13,6 @@ import {
 import { NormalizedSchema } from './normalized-schema';
 import { getLockFileName } from '@nx/js';
 
-export function getWebpackBuildConfig(
-  tree: Tree,
-  project: ProjectConfiguration,
-  options: NormalizedSchema
-): TargetConfiguration {
-  const sourceRoot = getProjectSourceRoot(project, tree);
-  return {
-    executor: `@nx/webpack:webpack`,
-    outputs: ['{options.outputPath}'],
-    defaultConfiguration: 'production',
-    options: {
-      target: 'node',
-      compiler: 'tsc',
-      outputPath: options.outputPath,
-      main: joinPathFragments(
-        sourceRoot,
-        'main' + (options.js ? '.js' : '.ts')
-      ),
-      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      assets: [joinPathFragments(sourceRoot, 'assets')],
-      webpackConfig: joinPathFragments(
-        options.appProjectRoot,
-        'webpack.config.js'
-      ),
-      generatePackageJson: options.isUsingTsSolutionConfig ? undefined : true,
-    },
-    configurations: {
-      development: {
-        outputHashing: 'none',
-      },
-      production: {
-        ...(options.docker && { generateLockfile: true }),
-      },
-    },
-  };
-}
-
 /** Explicit form of the build target @nx/js/typescript infers from tsconfig.app.json. */
 export function getTscBuildConfig(
   tree: Tree,

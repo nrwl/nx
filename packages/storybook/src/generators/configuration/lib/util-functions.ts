@@ -36,52 +36,6 @@ import {
 
 const DEFAULT_PORT = 4400;
 
-export function addStorybookTarget(
-  tree: Tree,
-  projectName: string,
-  uiFramework: UiFramework,
-  interactionTests: boolean
-) {
-  const projectConfig = readProjectConfiguration(tree, projectName);
-  projectConfig.targets['storybook'] = {
-    executor: '@nx/storybook:storybook',
-    options: {
-      port: DEFAULT_PORT,
-      configDir: `${projectConfig.root}/.storybook`,
-    },
-    configurations: {
-      ci: {
-        quiet: true,
-      },
-    },
-  };
-
-  projectConfig.targets['build-storybook'] = {
-    executor: '@nx/storybook:build',
-    outputs: ['{options.outputDir}'],
-    options: {
-      outputDir: joinPathFragments('dist/storybook', projectName),
-      configDir: `${projectConfig.root}/.storybook`,
-    },
-    configurations: {
-      ci: {
-        quiet: true,
-      },
-    },
-  };
-
-  if (interactionTests === true) {
-    projectConfig.targets['test-storybook'] = {
-      executor: 'nx:run-commands',
-      options: {
-        command: `test-storybook -c ${projectConfig.root}/.storybook --url=http://localhost:${DEFAULT_PORT}`,
-      },
-    };
-  }
-
-  updateProjectConfiguration(tree, projectName, projectConfig);
-}
-
 export function addAngularStorybookTarget(
   tree: Tree,
   projectName: string,

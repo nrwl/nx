@@ -106,6 +106,43 @@ describe('rspack configuration generator', () => {
     });
   });
 
+  it('should write a plugin-based rspack config for react', async () => {
+    setupReactProject('apps/app');
+    tree.write('apps/app/src/assets/.gitkeep', '');
+
+    await configurationGenerator(tree, {
+      project: 'app',
+      framework: 'react',
+      target: 'web',
+      newProject: false,
+    });
+
+    expect(tree.read('apps/app/rspack.config.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+        "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+        const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+        const { join } = require('path');
+
+        module.exports = {
+          output: {
+            path: join(__dirname, '../../dist/apps/app'),
+          },
+          plugins: [
+            new NxAppRspackPlugin({
+              tsConfig: 'apps/app/tsconfig.json',
+              main: 'apps/app/src/main.tsx',
+              index: 'apps/app/src/index.html',
+              assets: ['apps/app/src/assets'],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactRspackPlugin(),
+          ],
+        };
+        "
+      `);
+  });
+
   describe('non-standalone project', () => {
     it('should extend the root tsconfig.base.json instead of inlining the base options', async () => {
       setupReactProject('apps/app');

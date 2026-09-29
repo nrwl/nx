@@ -26,22 +26,21 @@ export function addAppFiles(tree: Tree, options: NormalizedSchema) {
         tree,
         options.appProjectRoot
       ),
-      webpackPluginOptions:
-        hasWebpackPlugin(tree) && options.addPlugin !== false
-          ? {
-              outputPath: options.isUsingTsSolutionConfig
-                ? 'dist'
-                : joinPathFragments(
-                    offsetFromRoot(options.appProjectRoot),
-                    'dist',
-                    options.rootProject ? options.name : options.appProjectRoot
-                  ),
-              main: './src/main' + (options.js ? '.js' : '.ts'),
-              tsConfig: './tsconfig.app.json',
-              assets: ['./src/assets'],
-              generatePackageJson: !options.isUsingTsSolutionConfig,
-            }
-          : null,
+      webpackPluginOptions: hasWebpackPlugin(tree)
+        ? {
+            outputPath: options.isUsingTsSolutionConfig
+              ? 'dist'
+              : joinPathFragments(
+                  offsetFromRoot(options.appProjectRoot),
+                  'dist',
+                  options.rootProject ? options.name : options.appProjectRoot
+                ),
+            main: './src/main' + (options.js ? '.js' : '.ts'),
+            tsConfig: './tsconfig.app.json',
+            assets: ['./src/assets'],
+            generatePackageJson: !options.isUsingTsSolutionConfig,
+          }
+        : null,
     }
   );
 

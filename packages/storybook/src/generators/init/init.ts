@@ -94,10 +94,7 @@ export async function initGeneratorInternal(tree: Tree, schema: Schema) {
   assertSupportedStorybookVersion(tree);
 
   const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin = true;
 
   if (schema.addPlugin) {
     await addPlugin(

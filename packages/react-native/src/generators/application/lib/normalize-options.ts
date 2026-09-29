@@ -1,4 +1,4 @@
-import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
+import { joinPathFragments, names, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -41,11 +41,7 @@ export async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
   });
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
+  options.addPlugin = true;
 
   const { className, fileName } = names(projectNames.projectSimpleName);
   const iosProjectRoot = joinPathFragments(appProjectRoot, 'ios');

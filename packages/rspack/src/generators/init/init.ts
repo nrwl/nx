@@ -5,7 +5,6 @@ import {
   createProjectGraphAsync,
   detectPackageManager,
   GeneratorCallback,
-  readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -30,11 +29,7 @@ export async function rspackInitGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin = true;
 
   if (schema.addPlugin) {
     await addPlugin(

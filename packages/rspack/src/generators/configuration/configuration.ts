@@ -9,8 +9,6 @@ import {
 } from '@nx/devkit';
 import { relative } from 'path';
 import {
-  addOrChangeBuildTarget,
-  addOrChangeServeTarget,
   deleteWebpackConfig,
   determineFrameworkAndTarget,
   findExistingTargetsInProject,
@@ -24,7 +22,6 @@ import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
 import { getProjectType, getTsConfigBaseOptions } from '@nx/js/internal';
 import { Framework } from '../init/schema';
-import { warnRspackExecutorGenerating } from '../../utils/deprecation';
 import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
@@ -182,26 +179,6 @@ export async function configurationGenerator(
     );
   }
 
-  const willScaffoldExecutorTargets =
-    !projectAlreadyHasRspackTargets.build ||
-    ((options.framework !== 'none' || options.devServer) &&
-      options.framework !== 'nest' &&
-      !projectAlreadyHasRspackTargets.serve);
-  if (willScaffoldExecutorTargets) {
-    warnRspackExecutorGenerating();
-  }
-
-  if (!projectAlreadyHasRspackTargets.build) {
-    addOrChangeBuildTarget(tree, options, buildTargetName);
-  }
-
-  if (
-    (options.framework !== 'none' || options.devServer) &&
-    options.framework !== 'nest' &&
-    !projectAlreadyHasRspackTargets.serve
-  ) {
-    addOrChangeServeTarget(tree, options, serveTargetName);
-  }
   writeRspackConfigFile(tree, options, foundStylePreprocessorOptions);
   await formatFiles(tree);
   return task;

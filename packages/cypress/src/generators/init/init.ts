@@ -148,9 +148,7 @@ export async function cypressInitGeneratorInternal(
 
   const nxJson = readNxJson(tree);
 
-  options.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+  options.addPlugin = true;
 
   if (options.addPlugin) {
     await addPlugin(

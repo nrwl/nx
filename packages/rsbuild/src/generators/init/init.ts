@@ -2,7 +2,6 @@ import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
-  readNxJson,
   createProjectGraphAsync,
   addDependenciesToPackageJson,
   detectPackageManager,
@@ -51,11 +50,8 @@ export async function initGeneratorInternal(
 ) {
   assertSupportedRsbuildVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  // Rsbuild has no executors, so its tasks only exist through the plugin.
+  schema.addPlugin = true;
 
   if (schema.addPlugin) {
     await addPlugin(

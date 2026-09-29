@@ -43,7 +43,6 @@ export interface AddLintingToProjectOptions {
   /** ESLint-only. Ignored by other linters. */
   enableTypedLinting?: boolean;
   /** ESLint-only. Oxlint is inference-only, so it writes no explicit target. */
-  addExplicitTargets?: boolean;
   /**
    * ESLint-only. The `@nx/dependency-checks` rule lints `package.json`, which
    * Oxlint cannot read.
@@ -130,7 +129,6 @@ export async function addLintingToProject(
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
       enableTypedLinting: options.enableTypedLinting,
-      addExplicitTargets: options.addExplicitTargets,
       addPackageJsonDependencyChecks: options.addPackageJsonDependencyChecks,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
