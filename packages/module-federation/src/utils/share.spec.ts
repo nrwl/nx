@@ -1,4 +1,4 @@
-import type { Mock } from 'vitest';
+import type { Mock, MockInstance } from 'vitest';
 vi.mock('./typescript', { spy: true });
 vi.mock('fs', async () => {
   const actual = await vi.importActual<any>('fs');
@@ -39,10 +39,12 @@ import * as tsUtils from './typescript';
 
 import * as nxFileutils from '@nx/devkit';
 import {
+  filterPackagesDeclaredInRootPackageJson,
   getNpmPackageSharedConfig,
   sharePackages,
   shareWorkspaceLibraries,
 } from './share';
+import { DEFAULT_ANGULAR_PACKAGES_TO_SHARE } from '../with-module-federation/angular/utils';
 
 describe('MF Share Utils', () => {
   afterEach(() => vi.clearAllMocks());
@@ -1015,6 +1017,138 @@ describe('MF Share Utils', () => {
 
       // ASSERT
       expect(config).toBeUndefined();
+    });
+  });
+
+  describe('filterPackagesDeclaredInRootPackageJson', () => {
+    let warnSpy: MockInstance;
+
+    beforeEach(() => {
+      warnSpy = vi
+        .spyOn(nxFileutils.logger, 'warn')
+        .mockImplementation(() => {});
+    });
+
+    afterEach(() => warnSpy.mockRestore());
+
+    function mockRootPackageJson(pkgJson: Record<string, unknown>) {
+      (fs.existsSync as Mock).mockReturnValue(true);
+      (nxFileutils.readJsonFile as Mock).mockReturnValue(pkgJson);
+      (fs.readdirSync as Mock).mockReturnValue([]);
+    }
+
+    function declare(packages: readonly string[]): Record<string, string> {
+      return Object.fromEntries(packages.map((pkg) => [pkg, '~13.2.0']));
+    }
+
+    it('should drop packages the root package.json does not declare', () => {
+      // ARRANGE - a generated Angular workspace declares no @angular/animations
+      mockRootPackageJson({
+        dependencies: declare(
+          DEFAULT_ANGULAR_PACKAGES_TO_SHARE.filter(
+            (pkg) => pkg !== '@angular/animations'
+          )
+        ),
+      });
+
+      // ACT
+      const packages = filterPackagesDeclaredInRootPackageJson(
+        DEFAULT_ANGULAR_PACKAGES_TO_SHARE
+      );
+
+      // ASSERT
+      expect(DEFAULT_ANGULAR_PACKAGES_TO_SHARE).toContain(
+        '@angular/animations'
+      );
+      expect(packages).not.toContain('@angular/animations');
+      expect(packages).toContain('@angular/core');
+    });
+
+    it('should keep every declared package so sharing is unchanged', () => {
+      // ARRANGE
+      mockRootPackageJson({
+        dependencies: declare(DEFAULT_ANGULAR_PACKAGES_TO_SHARE),
+      });
+
+      // ACT
+      const packages = filterPackagesDeclaredInRootPackageJson(
+        DEFAULT_ANGULAR_PACKAGES_TO_SHARE
+      );
+
+      // ASSERT
+      expect(packages).toEqual(DEFAULT_ANGULAR_PACKAGES_TO_SHARE);
+    });
+
+    it('should keep packages declared only in devDependencies', () => {
+      // ARRANGE
+      mockRootPackageJson({ devDependencies: { '@angular/core': '~13.2.0' } });
+
+      // ACT
+      const packages = filterPackagesDeclaredInRootPackageJson([
+        '@angular/core',
+      ]);
+
+      // ASSERT
+      expect(packages).toEqual(['@angular/core']);
+    });
+
+    it('should drop packages declared with an empty version', () => {
+      // ARRANGE
+      mockRootPackageJson({ dependencies: { '@angular/core': '' } });
+
+      // ACT
+      const packages = filterPackagesDeclaredInRootPackageJson([
+        '@angular/core',
+      ]);
+
+      // ASSERT
+      expect(packages).toEqual([]);
+    });
+
+    it('should not read the root package.json for an empty list', () => {
+      // ARRANGE
+      (fs.existsSync as Mock).mockImplementation((p: string) =>
+        p.endsWith('.node')
+      );
+
+      // ACT & ASSERT
+      expect(filterPackagesDeclaredInRootPackageJson([])).toEqual([]);
+    });
+
+    it('should not warn when sharing the filtered defaults', () => {
+      // ARRANGE
+      mockRootPackageJson({
+        dependencies: declare(
+          DEFAULT_ANGULAR_PACKAGES_TO_SHARE.filter(
+            (pkg) => pkg !== '@angular/animations'
+          )
+        ),
+      });
+
+      // ACT
+      sharePackages(
+        filterPackagesDeclaredInRootPackageJson(
+          DEFAULT_ANGULAR_PACKAGES_TO_SHARE
+        )
+      );
+
+      // ASSERT
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should still warn when an unfiltered package has no version', () => {
+      // ARRANGE
+      mockRootPackageJson({ dependencies: { '@angular/core': '~13.2.0' } });
+
+      // ACT
+      sharePackages(['@angular/animations']);
+
+      // ASSERT
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Could not find a version for "@angular/animations"'
+        )
+      );
     });
   });
 });
