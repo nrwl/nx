@@ -55,7 +55,10 @@ const reviewRoot = (id) => `${WORK_ROOT}/${id}`;
 
 // Which session owns a container. `prune` refuses to kill anything it does not
 // own, so an unset id means "claim nothing" rather than "claim everything".
-const SESSION_ID = process.env.CLAUDE_CODE_SESSION_ID || '';
+// SANDBOX_SESSION_ID is what a caller outside Claude Code sets; review-pr's
+// Codex helper sets it to its run id, which no other harness supplies.
+const SESSION_ID =
+  process.env.SANDBOX_SESSION_ID || process.env.CLAUDE_CODE_SESSION_ID || '';
 const OWNER_LABEL = 'nx-sandbox.session';
 // Marks the shared host. `prune`'s orphan sweep skips it: it outlives every row
 // by design, so "no row references it" is its steady state, not a leak.
@@ -70,8 +73,14 @@ const ORPHAN_GRACE_MS = 120_000;
 function readState() {
   try {
     return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-  } catch {
-    return { version: 1, sandboxes: {} };
+  } catch (error) {
+    // Only absence means "no sandboxes". A corrupt or unreadable registry read
+    // as empty is worse than a crash: the next locked write persists that
+    // emptiness, dropping every row a running review still owns.
+    if (error.code === 'ENOENT') return { version: 1, sandboxes: {} };
+    throw new Error(
+      `cannot read sandbox registry ${STATE_FILE}: ${error.message}`
+    );
   }
 }
 
@@ -306,6 +315,13 @@ function hostNameFor(backend, image) {
   return `nx-sandbox-host-${(h >>> 0).toString(36)}`;
 }
 
+/** 'true' or 'false' for a container that exists, '' for one that does not. */
+function containerState(backend, name) {
+  return (
+    run(backend, ['inspect', '-f', '{{.State.Running}}', name]).stdout || ''
+  ).trim();
+}
+
 /**
  * Get the shared container for `image`, starting it if needed.
  *
@@ -318,17 +334,7 @@ function hostNameFor(backend, image) {
 function ensureHost(backend, iso, image) {
   const name = hostNameFor(backend, image);
 
-  const state = () =>
-    (
-      run(backend.bin, [
-        'inspect',
-        '-f',
-        '{{.State.Running}}',
-        name,
-      ]).stdout || ''
-    ).trim();
-
-  const running = state();
+  const running = containerState(backend.bin, name);
   if (running === 'true') return name;
   if (running === 'false') {
     // A stopped host still holds the warm store — restarting it is the whole
@@ -369,7 +375,7 @@ function ensureHost(backend, iso, image) {
   if (r.status === 0) return name;
   // Lost the race: whoever won has a container by this name, which is what we
   // wanted anyway. Anything else is a real failure.
-  if (state()) return name;
+  if (containerState(backend.bin, name)) return name;
   die(`failed to start the shared sandbox host:\n${r.stderr}`);
 }
 
@@ -445,6 +451,7 @@ function cmdStart(argv) {
     base: 'string',
     json: 'boolean',
     'allow-exec': 'boolean',
+    'require-exec': 'boolean',
   });
 
   const id = newId();
@@ -476,6 +483,12 @@ function cmdStart(argv) {
     const backend = pickBackend();
     const iso = isolationFor(backend);
     if (!backend) die(iso.why + '\nRun `sandbox doctor` for details.');
+    // A review that only reads source still works without an isolation runtime,
+    // so this refuses per caller rather than globally: `--require-exec` is for a
+    // caller whose whole reason to start is running checks, and it fails here
+    // instead of after a fetch and checkout it could never use.
+    if (opts['require-exec'] && iso.exec === 'none')
+      die(iso.why + '\nRun `sandbox doctor` for details.');
 
     const container = ensureHost(backend, iso, opts.image);
     const work = reviewRoot(id);
@@ -1037,11 +1050,25 @@ function cmdExec(argv) {
   // version of this — base self-healing while head silently ran without
   // node_modules — turned a forgotten setup call into "command not found" from
   // an agent, which reads as the change being broken.
-  ensureInstalled(
+  const install = ensureInstalled(
     sb,
     opts.base ? sb.base : sb.root,
     opts.base ? 'base' : 'head'
   );
+  // The install result decides how much a dependency-sensitive result is worth,
+  // and it is cached, so a later caller never sees it again unless it is said
+  // here. Both states still run the command; they change what it proves.
+  const side = opts.base ? 'base' : 'head';
+  if (install === 'OK_UNPINNED') {
+    process.stderr.write(
+      `sandbox ${side} install used an unpinned lockfile fallback\n`
+    );
+  }
+  if (install === 'FAILED') {
+    process.stderr.write(
+      `sandbox ${side} dependency install failed; dependency-sensitive checks may be unavailable\n`
+    );
+  }
   const r = execIn(sb, script, {
     stdio: 'inherit',
     dir: opts.base ? sb.base : sb.root,
@@ -1101,6 +1128,18 @@ function ownerRow(state, sb) {
  * view triggering an install records it where the next caller looks.
  */
 function ensureInstalled(sb, dir, label) {
+  // An install runs the PR's own lifecycle scripts, so it is execution and
+  // belongs behind the same gate as `exec`. Without this it was the one way
+  // untrusted code ran under plain runc on a Linux host with no gVisor.
+  if (sb.exec === 'none') {
+    die(
+      `install refused for ${sb.id}: ${
+        sb.viewOf
+          ? `this is a read-only view of ${sb.viewOf}`
+          : 'no usable isolation runtime'
+      }`
+    );
+  }
   const cached = ownerRow(readState(), sb).installed?.[label];
   if (cached) return cached;
 
@@ -1113,13 +1152,17 @@ function ensureInstalled(sb, dir, label) {
   const log = `/tmp/install-${sb.viewOf || sb.derivedFrom || sb.id}-${label}.log`;
   const r = execIn(
     sb,
-    `mise install >/dev/null 2>&1\n` +
-      `if   pnpm install --frozen-lockfile >${log} 2>&1; then echo OK\n` +
+    // `mise install` used to be silenced entirely. A toolchain it failed to
+    // fetch then surfaced much later as `nx: command not found` from an agent,
+    // which reads as the change being broken rather than the setup.
+    `mise install >${log} 2>&1 || { echo 'mise install failed:' >&2; tail -5 ${log} >&2; }\n` +
+      `if   pnpm install --frozen-lockfile >>${log} 2>&1; then echo OK\n` +
       `elif pnpm install                  >>${log} 2>&1; then echo OK_UNPINNED\n` +
       `else echo FAILED; tail -20 ${log}\n` +
       `fi`,
     { dir }
   );
+  if (r.stderr) process.stderr.write(r.stderr.toString().slice(-4000));
   const out = (r.stdout || '').toString().trim();
   const result = out.startsWith('OK_UNPINNED')
     ? 'OK_UNPINNED'
@@ -1281,10 +1324,10 @@ function removeHostWorktree(sb) {
  * safe to call on a half-registered sandbox during a failed `start`.
  */
 function releaseReviewTree(sb) {
-  if (sb.mode !== 'container' || !sb.work) return;
-  execIn(
+  if (sb.mode !== 'container' || !sb.work) return 'released';
+  const r = execIn(
     sb,
-    `rm -rf ${sb.work}\n` +
+    `rm -rf ${sb.work} || exit 1\n` +
       // Order matters: prune first so git forgets the administrative files for
       // the directories just deleted, then drop the refs those worktrees
       // pinned. Refs dropped while a worktree still claims them leave git
@@ -1295,6 +1338,10 @@ function releaseReviewTree(sb) {
       `xargs -r -n1 git -C ${HOST_REPO} update-ref -d || true`,
     { dir: WORK_ROOT, stdio: 'ignore' }
   );
+  if (r.status === 0) return 'released';
+  // A host that no longer exists took the subtree with it, so there is nothing
+  // left to reclaim and nothing to report.
+  return containerState(sb.backend, sb.container) === '' ? 'released' : 'failed';
 }
 
 function cmdStop(argv) {
@@ -1321,9 +1368,8 @@ function cmdStop(argv) {
   // destroy every other review running in it — and the warm store it carries is
   // the whole reason the next review is cheap. `prune --host` is the deliberate
   // way to take it down.
-  if (sb.mode === 'container' && !derived) {
-    releaseReviewTree(sb);
-  }
+  const released =
+    sb.mode === 'container' && !derived ? releaseReviewTree(sb) : 'released';
   removeHostWorktree(sb);
   for (const vid of children) removeHostWorktree(snapshot.sandboxes[vid]);
 
@@ -1340,6 +1386,16 @@ function cmdStop(argv) {
     }
     return n;
   });
+  // Report the failure only after the rows are gone, so a caller can retry the
+  // reclaim: `prune` sweeps a subtree whose row no longer exists. Silence here
+  // was worse than the leak, because `stop` is what a review trusts to prove it
+  // left nothing behind.
+  if (released === 'failed') {
+    die(
+      `stopped ${id} but could not reclaim ${sb.work} in ${sb.container}; ` +
+        `run \`sandbox prune\` to sweep it`
+    );
+  }
   process.stdout.write(
     `stopped ${id}${dropped ? ` (and ${dropped} derived id${dropped === 1 ? '' : 's'})` : ''}\n`
   );
@@ -1393,6 +1449,32 @@ function cmdPrune(argv = []) {
   // Liveness is probed before taking the lock; `docker inspect` per row is far
   // slower than the mutation itself.
   const probe = readState();
+  // One listing per backend, not one `inspect` per row. Per-row probing made a
+  // degraded daemon look like "every container is gone", and prune answered by
+  // deleting every row of reviews that were still running. A backend whose
+  // listing fails contributes no inventory, so its rows are left alone.
+  const errors = [];
+  const inventories = new Map();
+  const backendBins = new Set(
+    Object.values(probe.sandboxes)
+      .filter((sb) => sb.mode === 'container' && sb.backend)
+      .map((sb) => sb.backend)
+  );
+  const available = pickBackend();
+  if (available) backendBins.add(available.bin);
+  for (const bin of backendBins) {
+    const ps = run(bin, ['ps', '-a', '--format', '{{.Names}}']);
+    if (ps.status !== 0) {
+      errors.push(
+        `could not list containers with ${bin}: ${(ps.stderr || '').trim()}`
+      );
+      continue;
+    }
+    inventories.set(
+      bin,
+      new Set((ps.stdout || '').split('\n').filter(Boolean))
+    );
+  }
   const gone = [];
   for (const [id, sb] of Object.entries(probe.sandboxes)) {
     // A host worktree whose directory is already gone still holds a registration
@@ -1405,10 +1487,8 @@ function cmdPrune(argv = []) {
       continue;
     }
     if (sb.mode !== 'container') continue;
-    const alive =
-      run(sb.backend, ['inspect', sb.container], { stdio: 'ignore' }).status ===
-      0;
-    if (!alive) gone.push(id);
+    const names = inventories.get(sb.backend);
+    if (names && !names.has(sb.container)) gone.push(id);
   }
 
   const dropped = dryRun
@@ -1465,37 +1545,35 @@ function cmdPrune(argv = []) {
     }
   }
 
-  if (backend) {
-    const ps = run(backend.bin, ['ps', '-aq', '--filter', 'name=nx-sandbox-']);
-    // A failure here must not read as "no containers": that is how a broken
-    // daemon turns into a silent no-op that still reports success.
-    if (ps.status !== 0) {
-      process.stderr.write(
-        `sandbox: could not list containers, skipping the orphan sweep:\n${(ps.stderr || '').trim()}\n`
-      );
-    }
+  for (const [bin, names] of inventories) {
     const live = new Set(
       Object.values(state.sandboxes)
-        .filter((s) => s.container)
+        .filter((s) => s.backend === bin && s.container)
         .map((s) => s.container)
     );
-    for (const cid of (ps.stdout || '').split('\n').filter(Boolean)) {
-      const meta = run(backend.bin, [
+    for (const name of names) {
+      if (!name.startsWith('nx-sandbox-') || live.has(name)) continue;
+      const meta = run(bin, [
         'inspect',
         '-f',
-        `{{.Name}}\t{{index .Config.Labels "${OWNER_LABEL}"}}\t{{.Created}}`,
-        cid,
+        `{{index .Config.Labels "${HOST_LABEL}"}}\t` +
+          `{{index .Config.Labels "${OWNER_LABEL}"}}\t{{.Created}}`,
+        name,
       ]);
-      const [rawName, owner, created] = (meta.stdout || '').trim().split('\t');
-      const name = (rawName || '').replace(/^\//, '');
-      if (!name || live.has(name)) continue;
+      const [hostFlag, owner, created] = (meta.stdout || '').trim().split('\t');
+      // An unreadable container is not an absent one. Reporting it beats
+      // guessing its age and removing something still in use.
+      if (meta.status !== 0 || !Number.isFinite(Date.parse(created))) {
+        errors.push(`could not inspect container ${name} with ${bin}`);
+        continue;
+      }
 
       // The shared host outlives every row on purpose, so "no row references
       // it" is its normal resting state between reviews, not evidence of a
       // leak. Sweeping it here would throw away the warm store — the one thing
       // that makes the next review cheap — every time the queue drained. Even
       // `--force` does not reach it; `--host` is the only way down.
-      if (hosts.includes(name)) {
+      if (hostFlag === '1' || hosts.includes(name)) {
         skipped.push(`${name} (shared host; use --host to take it down)`);
         continue;
       }
@@ -1516,8 +1594,13 @@ function cmdPrune(argv = []) {
           continue;
         }
       }
-      if (!dryRun) run(backend.bin, ['rm', '-f', cid], { stdio: 'ignore' });
-      killed++;
+      if (dryRun) {
+        killed++;
+        continue;
+      }
+      if (run(bin, ['rm', '-f', name], { stdio: 'ignore' }).status === 0)
+        killed++;
+      else errors.push(`could not remove container ${name} with ${bin}`);
     }
   }
   // --store and --host both destroy state that live reviews are reading, so
@@ -1568,6 +1651,10 @@ function cmdPrune(argv = []) {
           `  (use --force to sweep items this session does not own)\n`
         : '')
   );
+  // After the summary, so a caller sees what was reclaimed before the reason it
+  // is incomplete. A review treats this exit status as its proof that cleanup
+  // finished, so a partial sweep must not report success.
+  if (errors.length) die(errors.join('\n'));
 }
 
 function cmdDoctor(argv = []) {
@@ -1651,6 +1738,11 @@ function execIn(sb, script, opts = {}) {
   // the image's default workdir with no mise shims, so `nx`/`pnpm` are not
   // found and every run fails identically — which a caller would misread as the
   // change being broken rather than the shell being wrong.
+  //
+  // The shims alone resolve whatever the image baked. `mise env` pins this
+  // worktree's own versions, including a bump the PR made, and it is evaluated
+  // before the script so a `cd` inside the script cannot lose them. The cd
+  // stays tolerant because checkout runs through here to create the directory.
   const mise =
     'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"';
   return run(
@@ -1661,7 +1753,8 @@ function execIn(sb, script, opts = {}) {
       sb.container,
       'bash',
       '-lc',
-      `${mise}\ncd ${dir} 2>/dev/null || true\n${script}`,
+      `${mise}\ncd ${dir} 2>/dev/null || true\n` +
+        `eval "$(mise env -s bash -C ${shq(dir)} 2>/dev/null)"\n${script}`,
     ],
     opts
   );
@@ -1736,7 +1829,9 @@ function gitRawIn(sb, args) {
 const USAGE = `sandbox — uniform access to a checkout, isolated or local
 
   start  --local <path> [--allow-exec]         register a host dir; exec=screened unless --allow-exec
-  start  --image <img> [--checkout <url> --ref <r> [--base <r>]]
+  start  --image <img> [--checkout <url> --ref <r> [--base <r>]] [--require-exec]
+                                               --require-exec refuses up front where nothing may
+                                               execute, for a caller that starts only to run checks
   read   <id> <path> [--range a,b] [--ref <sha>] [-n]
   grep   <id> <pattern> [subdir] [--ref <sha>]
   find   <id> <glob> [subdir] [--ref <sha>]
