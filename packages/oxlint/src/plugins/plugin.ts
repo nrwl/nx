@@ -852,16 +852,21 @@ function getProjectUsingOxlintConfig(
   tsconfigChainOutsideProjectRoot: string[],
   rootConfig: string | undefined
 ): CreateNodesResult['projects'][string] | null {
+  // Linter-agnostic on purpose: a nested ESLint project's files are still its
+  // own. The executor excludes the roots that are not linting in the same run.
+  const nestedProjectRoots = nestedRootsByParent.get(projectRoot) ?? [];
+
   let standaloneSrcPath: string | undefined;
   if (
     projectRoot === '.' &&
     existsSync(join(context.workspaceRoot, projectRoot, 'package.json'))
   ) {
-    if (existsSync(join(context.workspaceRoot, projectRoot, 'src'))) {
-      standaloneSrcPath = 'src';
-    } else if (existsSync(join(context.workspaceRoot, projectRoot, 'lib'))) {
-      standaloneSrcPath = 'lib';
-    }
+    // A directory that is itself a project belongs to that project.
+    standaloneSrcPath = ['src', 'lib'].find(
+      (dir) =>
+        existsSync(join(context.workspaceRoot, projectRoot, dir)) &&
+        !nestedProjectRoots.includes(dir)
+    );
   }
 
   if (projectRoot === '.' && !standaloneSrcPath) {
@@ -895,10 +900,6 @@ function getProjectUsingOxlintConfig(
       BOUNDARIES_PLUGIN_SPECIFIER
     )
   );
-
-  // Linter-agnostic on purpose: a nested ESLint project's files are still its
-  // own. The executor excludes the roots that are not linting in the same run.
-  const nestedProjectRoots = nestedRootsByParent.get(projectRoot) ?? [];
 
   const targetConfig: TargetConfiguration = {
     executor: '@nx/oxlint:lint',

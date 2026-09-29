@@ -405,6 +405,25 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
+  it('should not point a root project at a src that is its own project', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'package.json': `{"name":"root-workspace","nx":{}}`,
+      'src/project.json': `{"name":"src"}`,
+      'src/index.ts': `export const value = 1;`,
+      'lib/index.ts': `export const value = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['.'].targets.lint.options).toMatchObject({
+      lintFilePatterns: ['lib'],
+    });
+    expect(results.projects['src'].targets.lint.executor).toBe(
+      '@nx/oxlint:lint'
+    );
+  });
+
   // Without the root short-circuit a root project with no `src` or `lib` would
   // lint `.`. The run-time nested exclusion keeps it off sub-projects' files,
   // but the redundant target would remain, so the short-circuit removes it.
