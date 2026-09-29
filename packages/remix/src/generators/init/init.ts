@@ -5,7 +5,6 @@ import {
   detectPackageManager,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
@@ -50,11 +49,7 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
     tasks.push(installTask);
   }
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
+  options.addPlugin = true;
   if (options.addPlugin) {
     await addPlugin(
       tree,

@@ -21,11 +21,7 @@ import {
   assertSupportedReactNativeVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
-import {
-  createBuildTarget,
-  createNxWebpackPluginOptions,
-  createServeTarget,
-} from './lib/webpack-targets';
+import { createNxWebpackPluginOptions } from './lib/webpack-targets';
 
 import { WebConfigurationGeneratorSchema } from './schema';
 
@@ -150,29 +146,6 @@ async function addBundlerConfiguration(
         ensureDependencies,
       }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
       tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
-    }
-
-    if (!hasWebpackPlugin(tree)) {
-      // Mirrors warnWebpackExecutorGenerating from @nx/webpack/src/utils/deprecation.
-      // Inlined to avoid a cross-package import where react-native does not
-      // declare a TypeScript project reference to webpack.
-      logger.warn(
-        'Generating targets that use the deprecated `@nx/webpack:webpack` and `@nx/webpack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/webpack:convert-to-inferred` next to migrate these targets to the `@nx/webpack/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
-      );
-      const projectConfiguration = readProjectConfiguration(
-        tree,
-        normalizedSchema.project
-      );
-      projectConfiguration.targets = {
-        ...projectConfiguration.targets,
-        build: createBuildTarget(tree, normalizedSchema),
-        serve: createServeTarget(normalizedSchema),
-      };
-      updateProjectConfiguration(
-        tree,
-        normalizedSchema.project,
-        projectConfiguration
-      );
     }
 
     return tasks;

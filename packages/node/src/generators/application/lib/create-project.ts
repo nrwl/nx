@@ -15,12 +15,10 @@ import {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   type MatchedTargetRef,
 } from '@nx/js/internal';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {
   getEsBuildConfig,
   getServeConfig,
-  getWebpackBuildConfig,
   getPruneTargets,
 } from './create-targets';
 
@@ -50,15 +48,6 @@ export function addProject(
     ]);
     project.targets.build = getEsBuildConfig(tree, project, options);
     ensurePnpmDeployInputs(tree, options, project.targets.build);
-  } else if (options.bundler === 'webpack') {
-    if (!hasWebpackPlugin(tree) && options.addPlugin === false) {
-      addBuildTargetDefaults(tree, `@nx/webpack:webpack`, 'build', [
-        TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-        ...pnpmDeployInputs,
-      ]);
-      project.targets.build = getWebpackBuildConfig(tree, project, options);
-      ensurePnpmDeployInputs(tree, options, project.targets.build);
-    }
   }
   project.targets = {
     ...project.targets,

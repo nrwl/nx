@@ -318,3 +318,4 @@ export {
 // Only erased types are re-exported — `AfterAllProjectsVersioned` below, and
 // `FinalConfigForProject` via nx/src/devkit-internals.
 export type { AfterAllProjectsVersioned } from 'nx/release';
+export { migrateRemovedExecutors } from './src/generators/plugin-migrations/remove-executors';

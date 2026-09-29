@@ -62,24 +62,13 @@ describe('init', () => {
     expect(packageJson.dependencies[existing]).toBeDefined();
   });
 
-  it('should setup e2e target defaults', async () => {
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.namedInputs ??= {};
-      json.namedInputs.production = ['default'];
-      return json;
-    });
-
+  it('should register inference even when legacy callers disable it', async () => {
     await cypressInitGenerator(tree, { ...options, addPlugin: false });
-
-    expect(
-      getDefault(
-        readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
-        'e2e'
-      )
-    ).toEqual({
-      cache: true,
-      inputs: ['default', '^production'],
-    });
+    expect(readJson(tree, 'nx.json').plugins).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ plugin: '@nx/cypress/plugin' }),
+      ])
+    );
   });
 
   it('should setup @nx/cypress/plugin', async () => {

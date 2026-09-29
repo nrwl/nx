@@ -3,7 +3,6 @@ import {
   joinPathFragments,
   offsetFromRoot,
   readProjectConfiguration,
-  readNxJson,
   type Tree,
 } from '@nx/devkit';
 import { join } from 'path';
@@ -33,11 +32,7 @@ export default async function remixStorybookConfigurationInternal(
 ) {
   assertSupportedRemixVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin = true;
   const { root } = readProjectConfiguration(tree, schema.project);
 
   if (

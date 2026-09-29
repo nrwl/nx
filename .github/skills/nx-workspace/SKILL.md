@@ -188,16 +188,16 @@ Example output:
   "tags": ["type:app", "scope:client"],
   "targets": {
     "build": {
-      "executor": "@nx/vite:build",
-      "options": { "outputPath": "dist/apps/my-app" }
+      "command": "vite build",
+      "options": { "cwd": "apps/my-app" }
     },
     "serve": {
-      "executor": "@nx/vite:dev-server",
-      "options": { "buildTarget": "my-app:build" }
+      "command": "vite",
+      "options": { "cwd": "apps/my-app" }
     },
     "test": {
-      "executor": "@nx/vite:test",
-      "options": {}
+      "command": "vitest",
+      "options": { "cwd": "apps/my-app" }
     }
   },
   "implicitDependencies": []

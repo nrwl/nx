@@ -5,6 +5,7 @@ import {
   offsetFromRoot,
   readJson,
   readNxJson,
+  updateNxJson,
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
@@ -12,10 +13,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { VitestExecutorOptions } from '../executors/test/schema';
 import type { VitestPluginOptions } from '../plugins/plugin';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
-import { warnVitestExecutorGenerating } from './deprecation';
 import { nxVersion } from './versions';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
@@ -67,28 +66,16 @@ export function addOrChangeTestTarget(
 
   const project = readProjectConfiguration(tree, options.project);
 
-  const reportsDirectory = joinPathFragments(
-    'coverage',
-    project.root === '.' ? options.project : project.root
-  );
-  const testOptions: VitestExecutorOptions = {
-    reportsDirectory,
-  };
-
-  project.targets ??= {};
-
-  if (project.targets[target]) {
+  if (project.targets?.[target]) {
     throw new Error(`Target "${target}" already exists in the project.`);
-  } else {
-    warnVitestExecutorGenerating();
-    project.targets[target] = {
-      executor: '@nx/vitest:test',
-      outputs: ['{options.reportsDirectory}'],
-      options: testOptions,
-    };
   }
-
-  updateProjectConfiguration(tree, options.project, project);
+  nxJson.plugins ??= [];
+  nxJson.plugins.push({
+    plugin: '@nx/vitest',
+    include: [project.root === '.' ? '**/*' : `${project.root}/**/*`],
+    options: { testTargetName: target },
+  });
+  updateNxJson(tree, nxJson);
 }
 
 // Escape a value for emission inside a single-quoted source literal.

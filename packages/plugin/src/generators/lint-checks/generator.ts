@@ -90,12 +90,9 @@ export function addMigrationJsonChecks(
     relativeMigrationsJsonPath
   );
 
-  if (!eslintTarget) {
-    return;
-  }
-
   // Add path to lintFilePatterns if different than default "{projectRoot}"
   if (
+    eslintTarget &&
     eslintTargetConfiguration.options?.lintFilePatterns &&
     !eslintTargetConfiguration.options.lintFilePatterns.includes(
       migrationsJsonPath

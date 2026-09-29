@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   detectPackageManager,
   formatFiles,
   generateFiles,
@@ -14,7 +15,6 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import {
   acknowledgeBuildScripts,
@@ -23,7 +23,6 @@ import {
 } from '@nx/devkit/internal';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/internal';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
-import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   assertViteSupportsInstalledCypress,
   componentTestingVersions,
@@ -31,7 +30,7 @@ import {
   getInstalledCypressVersion,
 } from '../../utils/versions';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
-import init from '../init/init';
+import init, { addPlugin } from '../init/init';
 import { CypressComponentConfigurationSchema } from './schema';
 
 type NormalizeCTOptions = ReturnType<typeof normalizeOptions>;
@@ -76,6 +75,7 @@ export async function componentConfigurationGeneratorInternal(
     );
   }
 
+  await addPlugin(tree, await createProjectGraphAsync(), false);
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
@@ -86,10 +86,6 @@ export async function componentConfigurationGeneratorInternal(
   const projectConfig = readProjectConfiguration(tree, opts.project);
 
   addProjectFiles(tree, projectConfig, opts);
-  if (!hasPlugin || opts.addExplicitTargets) {
-    warnCypressExecutorGenerating();
-    addTargetToProject(tree, projectConfig, opts);
-  }
   updateNxJsonConfiguration(tree, hasPlugin);
 
   updateTsConfigForComponentTesting(tree, projectConfig);
@@ -106,13 +102,11 @@ function normalizeOptions(
   options: CypressComponentConfigurationSchema
 ) {
   const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+  const addPlugin = true;
 
   return {
-    addPlugin,
     ...options,
+    addPlugin,
     framework: options.framework ?? null,
     directory: options.directory ?? 'cypress',
   };
@@ -171,22 +165,6 @@ function addProjectFiles(
       ext: '',
     }
   );
-}
-
-function addTargetToProject(
-  tree: Tree,
-  projectConfig: ProjectConfiguration,
-  opts: NormalizeCTOptions
-) {
-  projectConfig.targets['component-test'] = {
-    executor: '@nx/cypress:cypress',
-    options: {
-      cypressConfig: joinPathFragments(projectConfig.root, 'cypress.config.ts'),
-      testingType: 'component',
-    },
-  };
-
-  updateProjectConfiguration(tree, opts.project, projectConfig);
 }
 
 function updateNxJsonConfiguration(tree: Tree, hasPlugin: boolean) {

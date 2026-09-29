@@ -104,7 +104,6 @@
   },
   "dependencies": {
     "@jest/reporters": "catalog:jest",
-    "@jest/test-result": "catalog:jest",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",

@@ -4,7 +4,6 @@ import {
   GeneratorCallback,
   joinPathFragments,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -24,11 +23,7 @@ import {
 import { join } from 'node:path/posix';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedViteVersion } from '../../utils/assert-supported-vite-version';
-import { warnViteExecutorGenerating } from '../../utils/deprecation';
 import {
-  addBuildTarget,
-  addPreviewTarget,
-  addServeTarget,
   createOrEditViteConfig,
   TargetFlags,
 } from '../../utils/generator-utils';
@@ -95,41 +90,8 @@ export async function viteConfigurationGeneratorInternal(
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, schema));
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin = true;
 
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin'
-  );
-
-  if (!hasPlugin) {
-    const willScaffoldExecutorTargets =
-      !projectAlreadyHasViteTargets.build ||
-      (!schema.includeLib &&
-        (!projectAlreadyHasViteTargets.serve ||
-          !projectAlreadyHasViteTargets.preview));
-    if (willScaffoldExecutorTargets) {
-      warnViteExecutorGenerating();
-    }
-
-    if (!projectAlreadyHasViteTargets.build) {
-      addBuildTarget(tree, schema, 'build');
-    }
-
-    if (!schema.includeLib) {
-      if (!projectAlreadyHasViteTargets.serve) {
-        addServeTarget(tree, schema, 'serve');
-      }
-      if (!projectAlreadyHasViteTargets.preview) {
-        addPreviewTarget(tree, schema, 'preview');
-      }
-    }
-  }
   if (projectType === 'library') {
     // update tsconfig.lib.json to include vite/client
     updateJson(

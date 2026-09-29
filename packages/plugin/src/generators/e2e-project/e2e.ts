@@ -184,20 +184,18 @@ async function addJest(host: Tree, options: NormalizedSchema) {
 
   const project = readProjectConfiguration(host, options.projectName);
   project.targets ??= {};
-  if (project.targets.e2e) {
-    const e2eTarget = project.targets.e2e;
+  // The test target is inferred, so this partial target merges onto it.
+  const e2eTarget = project.targets.e2e;
+  project.targets.e2e = {
+    ...e2eTarget,
+    dependsOn: [`^build`],
+    options: {
+      ...e2eTarget?.options,
+      runInBand: true,
+    },
+  };
 
-    project.targets.e2e = {
-      ...e2eTarget,
-      dependsOn: [`^build`],
-      options: {
-        ...e2eTarget.options,
-        runInBand: true,
-      },
-    };
-
-    updateProjectConfiguration(host, options.projectName, project);
-  }
+  updateProjectConfiguration(host, options.projectName, project);
 
   return jestTask;
 }
@@ -320,24 +318,23 @@ export { default as teardown } from './stop-local-registry';
 
   const project = readProjectConfiguration(host, options.projectName);
   project.targets ??= {};
-  if (project.targets.e2e) {
-    const e2eTarget = project.targets.e2e;
+  const e2eTarget = project.targets.e2e;
 
-    // The suites share a single tmp/test-project directory, so they have to run
-    // one at a time. Vitest 4 removed `poolOptions`, and nested options do not
-    // survive the executor's argv round-trip anyway, so use the scalar options.
-    project.targets.e2e = {
-      ...e2eTarget,
-      dependsOn: [`^build`],
-      options: {
-        ...e2eTarget.options,
-        maxWorkers: 1,
-        isolate: false,
-      },
-    };
+  // The suites share a single tmp/test-project directory, so they have to run
+  // one at a time. Vitest 4 removed `poolOptions`, and nested options do not
+  // survive the argv round-trip anyway, so use the scalar options. The test
+  // target is inferred, so this partial target merges onto it.
+  project.targets.e2e = {
+    ...e2eTarget,
+    dependsOn: [`^build`],
+    options: {
+      ...e2eTarget?.options,
+      maxWorkers: 1,
+      isolate: false,
+    },
+  };
 
-    updateProjectConfiguration(host, options.projectName, project);
-  }
+  updateProjectConfiguration(host, options.projectName, project);
 
   return vitestTask;
 }
