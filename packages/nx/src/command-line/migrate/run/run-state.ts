@@ -68,7 +68,6 @@ export type MigrateRunStatus = (typeof MIGRATE_RUN_STATUSES)[number];
 
 export interface MigrateRunRound {
   index: number;
-  planHash: string;
   planSnapshot: string;
 }
 
@@ -279,6 +278,9 @@ export interface MigrateRunState {
   validate?: boolean;
   // A bare file name despite the field name; it is joined to the run directory.
   runbookPath?: string;
+  // The branch checked out when the run started; absent on a detached HEAD or
+  // when git could not say.
+  branch?: string;
   rounds: MigrateRunRound[];
   steps: MigrateStep[];
   commits: MigrateCommitLedgerEntry[];
@@ -420,7 +422,6 @@ function isRoundShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
     typeof value.index === 'number' &&
-    typeof value.planHash === 'string' &&
     typeof value.planSnapshot === 'string' &&
     PLAN_SNAPSHOT_NAME.test(value.planSnapshot)
   );
@@ -673,6 +674,7 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     isOptionalBoolean(parsed.skipInstall) &&
     isOptionalBoolean(parsed.validate) &&
     isOptionalMatching(RUNBOOK_NAME, parsed.runbookPath) &&
+    isOptionalString(parsed.branch) &&
     (parsed.rounds as unknown[]).every(isRoundShape) &&
     (parsed.steps as unknown[]).every(isStepShape) &&
     hasUniqueStepIds(parsed.steps as unknown[]) &&
@@ -771,7 +773,7 @@ export function readRunState(runDirPath: string): MigrateRunState {
         ? `Nx ${singleLine(parsed.nxVersion)}`
         : 'a newer version of Nx';
     throw new NewerRunStateFormatError(
-      `This migrate run was created with ${createdBy} (run state format v${parsed.formatVersion}), which is newer than the Nx version currently running, ${nxVersion} (run state format v${CURRENT_RUN_STATE_FORMAT_VERSION}). Re-run your migrate command with ${createdBy} or later to resume this run.`
+      `This migrate run was created with ${createdBy} (run state format v${parsed.formatVersion}), which is newer than the Nx version currently running, ${nxVersion} (run state format v${CURRENT_RUN_STATE_FORMAT_VERSION}). Re-run your migrate command with ${createdBy} or later.`
     );
   }
   if (
@@ -875,9 +877,12 @@ export interface UninterpretableRunDir {
  */
 export function findActiveRun(root: string): {
   active: { runId: string; state: MigrateRunState } | null;
+  // Every resumable active run, `active` included, in directory order.
+  activeRunIds: string[];
   uninterpretable: UninterpretableRunDir[];
 } {
   let newest: { runId: string; state: MigrateRunState } | null = null;
+  const activeRunIds: string[] = [];
   const uninterpretable: UninterpretableRunDir[] = [];
   for (const entry of readDirEntries(migrateRunsDir(root))) {
     if (!entry.isDirectory()) continue;
@@ -906,11 +911,12 @@ export function findActiveRun(root: string): {
       });
       continue;
     }
+    activeRunIds.push(entry.name);
     if (!newest || state.createdAt > newest.state.createdAt) {
       newest = { runId: entry.name, state };
     }
   }
-  return { active: newest, uninterpretable };
+  return { active: newest, activeRunIds, uninterpretable };
 }
 
 /**

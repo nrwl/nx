@@ -510,9 +510,7 @@ describe('run-state', () => {
       ]) {
         writeFileSync(
           join(dir, 'run.json'),
-          JSON.stringify(
-            buildState({ rounds: [{ index: 0, planHash: 'h', planSnapshot }] })
-          )
+          JSON.stringify(buildState({ rounds: [{ index: 0, planSnapshot }] }))
         );
 
         expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
@@ -658,7 +656,7 @@ describe('run-state', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       const state = buildState({
-        rounds: [{ index: 0, planHash: 'hash', planSnapshot: 'plan-0.json' }],
+        rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
         steps: [
           {
             id: 'step-1',
@@ -693,6 +691,7 @@ describe('run-state', () => {
         skipInstall: true,
         validate: false,
         runbookPath: 'RUNBOOK.md',
+        branch: 'feature/upgrade',
         issues: [
           {
             id: 'issue-1',
@@ -811,6 +810,17 @@ describe('run-state', () => {
           })
         )
       );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+    });
+
+    it('refuses a non-string branch', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ branch: 42 as never }))
+      );
+
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
@@ -1175,6 +1185,7 @@ describe('run-state', () => {
     it('returns no active run when there are no runs', () => {
       expect(findActiveRun(root)).toEqual({
         active: null,
+        activeRunIds: [],
         uninterpretable: [],
       });
     });
@@ -1217,6 +1228,7 @@ describe('run-state', () => {
 
       expect(result.active?.runId).toBe('newer');
       expect(result.active?.state.status).toBe('active');
+      expect(result.activeRunIds.sort()).toEqual(['newer', 'older']);
       expect(result.uninterpretable).toEqual([
         { dirName: 'corrupt', reason: expect.stringContaining('JSON') },
       ]);
@@ -1250,6 +1262,7 @@ describe('run-state', () => {
       const result = findActiveRun(root);
 
       expect(result.active).toBeNull();
+      expect(result.activeRunIds).toEqual([]);
       expect(result.uninterpretable).toEqual([
         { dirName: 'evil;rm -rf', reason: 'its name is not a valid run id' },
       ]);
