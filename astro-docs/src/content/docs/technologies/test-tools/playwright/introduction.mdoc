@@ -137,12 +137,12 @@ nx g @nx/playwright:configuration --project=your-app-name --webServerCommand="np
 
 ### Choosing the web server per environment
 
-Application generators pass two servers to the Playwright configuration: the dev server for local
-runs and a production build for CI.
+Most application generators pass two servers to the Playwright configuration: the dev server for
+local runs and a production build for CI.
 The generated config reads the `CI` environment variable and picks between them.
 
 ```ts frame="none"
-// CI runs against a production build; locally the dev server is used.
+// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 const webServerAddress = isCI
   ? 'http://localhost:4300'
@@ -162,6 +162,12 @@ export default defineConfig({
 ```
 
 The dev server avoids a rebuild on every change, and the CI run tests the output you ship.
+
+These applications run against the dev server in CI as well:
+
+- Angular applications
+- React applications that use React Router (`--useReactRouter`)
+- Expo applications whose targets come from the `@nx/expo/plugin` plugin
 
 Pass `--ciWebServerCommand` and `--ciWebServerAddress` to choose the CI side yourself.
 Each one defaults to its local counterpart, so leaving both unset generates a config with a single
