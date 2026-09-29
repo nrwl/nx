@@ -11,6 +11,7 @@ import type {
   MigrateStepPromptOutcome,
 } from './run-state';
 import { singleLine } from '../text';
+import type { MigrateOrchestratorTallies } from '../migrate-analytics';
 import type { StepAction } from '../step-actions';
 
 export type { StepAction };
@@ -433,6 +434,16 @@ export function tallySteps(state: MigrateRunState): StepTally {
     }
   }
   return tally;
+}
+
+export function runTallies(state: MigrateRunState): MigrateOrchestratorTallies {
+  const tally = tallySteps(state);
+  return {
+    completed: tally.applied + tally.adopted,
+    skipped: tally.skipped,
+    unresolved: tally.unresolved.length,
+    dispenseCount: state.steps.reduce((n, s) => n + s.dispenseCount, 0),
+  };
 }
 
 // The failure a given-up step is reported with, in the issue ledger and the

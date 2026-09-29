@@ -33,6 +33,7 @@ export {
   completionSummaryLines,
   hasPendingCommitDebt,
   latestRound,
+  runTallies,
   tallySteps,
 } from './state-machine';
 export { hasUnresolvedIssues } from './issues';
