@@ -3062,12 +3062,8 @@ mod tests {
 
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
-    fn only_a_watching_context_has_its_walk_find_ignore_files() {
-        // Nothing builds rules for a context without a watch, so its walk
-        // skips the per-directory lookups.
+    fn only_a_watching_context_reports_watching() {
         let temp = workspace_with(&["a.ts"]);
-        temp.child(".gitignore").write_str("dist/\n").unwrap();
-        let root = dunce::canonicalize(temp.path()).unwrap();
 
         assert!(
             watching_context(&temp, &TempDir::new().unwrap())
@@ -3075,8 +3071,17 @@ mod tests {
                 .watching()
         );
         assert!(!context(&temp, &TempDir::new().unwrap()).files.watching());
+    }
 
-        let cache = as_string(&TempDir::new().unwrap());
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn gather_finds_ignore_files_only_when_asked() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let cache_dir = TempDir::new().unwrap();
+        let cache = as_string(&cache_dir);
+
         assert!(
             gather_and_hash_files(&root, cache.clone(), false)
                 .ignore_files
@@ -3101,7 +3106,8 @@ mod tests {
         let temp = workspace_with(&["a.ts", "dist/out.js"]);
         temp.child(".gitignore").write_str("dist/\n").unwrap();
         let root = dunce::canonicalize(temp.path()).unwrap();
-        let cache = as_string(&TempDir::new().unwrap());
+        let cache_dir = TempDir::new().unwrap();
+        let cache = as_string(&cache_dir);
 
         let files = FileState::new(&root, true, Arc::new(IgnoredIndex::new(None)));
         files.deliver(vec![Change {
@@ -3122,15 +3128,20 @@ mod tests {
         let temp = workspace_with(&["a.ts", "dist/out.js"]);
         temp.child(".gitignore").write_str("dist/\n").unwrap();
         let root = dunce::canonicalize(temp.path()).unwrap();
-        let cache = as_string(&TempDir::new().unwrap());
+        let cache_dir = TempDir::new().unwrap();
+        let cache = as_string(&cache_dir);
 
         let files = FileState::new(&root, true, Arc::new(IgnoredIndex::new(None)));
         files.deliver(vec![Change {
             path: "dist/out.js".into(),
             kind: ChangeKind::Created,
         }]);
-        let archived = gather_and_hash_files(&root, cache.clone(), false);
-        assert!(archived.ignore_files.is_none());
+        gather_and_hash_files(&root, cache.clone(), true);
+        let archived = acquire_files(&root, &cache, true, Duration::from_secs(1), true);
+        assert!(
+            archived.ignore_files.is_none(),
+            "loaded from the archive, not walked"
+        );
         files.finish_walk(&root, &cache, archived, true);
 
         assert_eq!(names_held_by(&files), vec![".gitignore", "a.ts"]);
