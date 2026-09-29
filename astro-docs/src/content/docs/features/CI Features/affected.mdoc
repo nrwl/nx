@@ -270,7 +270,7 @@ NX_LEGACY_AFFECTED=false nx affected -t build --explain
 
 Changing libs/ui/src/index.ts touches 1 build task (tasks where 1 or more direct inputs change):
   ui:build
-    - input libs/ui/**/* matches libs/ui/src/index.ts
+    - libs/ui/src/index.ts matches libs/ui/**/*
 
 Touching those tasks changes outputs read by 2 build tasks:
   admin:build

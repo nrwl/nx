@@ -86,8 +86,8 @@ export function formatAffectedReason(reason: AffectedReason): string {
       } package counts as moved`;
     case 'input-file':
       return reason.pattern
-        ? `input ${reason.pattern} matches ${reason.file}`
-        : `input matches ${reason.file}`;
+        ? `${reason.file} matches ${reason.pattern}`
+        : `${reason.file} matches an input`;
     case 'dependent-output':
       return `reads the outputs of ${reason.producer}, which the change reaches`;
     case 'external-dependencies':
@@ -293,9 +293,9 @@ function reasonLines(reasons: AffectedReason[]): string[] {
     switch (first.kind) {
       case 'input-file':
         lines.push(
-          `input ${first.pattern ? `${first.pattern} ` : ''}matches ${
-            first.file
-          } and ${others} other ${others === 1 ? 'file' : 'files'}`
+          `${first.file} and ${others} other ${
+            others === 1 ? 'file' : 'files'
+          } match ${first.pattern ?? 'an input'}`
         );
         break;
       case 'dependent-output':

@@ -30,7 +30,7 @@ describe('formatAffectedReason', () => {
   it('falls back when an input match names no pattern', () => {
     expect(
       formatAffectedReason({ kind: 'input-file', file: 'tsconfig.json' })
-    ).toBe('input matches tsconfig.json');
+    ).toBe('tsconfig.json matches an input');
   });
 });
 
@@ -82,7 +82,7 @@ describe('formatAffectedExplanation', () => {
         '',
         'Changing libs/ui/src/index.ts touches 1 build task (tasks where 1 or more direct inputs change):',
         '  ui:build',
-        '    - input libs/ui/**/* matches libs/ui/src/index.ts',
+        '    - libs/ui/src/index.ts matches libs/ui/**/*',
         '',
         'Touching those tasks changes outputs read by 2 build tasks:',
         '  admin:build',
@@ -241,9 +241,9 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '    - input libs/ui/**/* matches libs/ui/a.ts and 4 other files'
+      '    - libs/ui/a.ts and 4 other files match libs/ui/**/*'
     );
-    expect(out).toContain('    - input matches tsconfig.base.json');
+    expect(out).toContain('    - tsconfig.base.json matches an input');
     expect(out).toContain(
       '    - depends on npm:a and 3 other packages, whose versions change'
     );
@@ -286,9 +286,11 @@ describe('formatAffectedExplanation', () => {
         },
         'Affected tasks'
       );
-    expect(explain(['a.ts'])).toMatch(/matches libs\/ui\/a\.ts$/);
+    expect(explain(['a.ts'])).toMatch(
+      /- libs\/ui\/a\.ts matches libs\/ui\/\*\*\/\*$/
+    );
     expect(explain(['a.ts', 'b.ts'])).toContain(
-      '    - input libs/ui/**/* matches libs/ui/a.ts and 1 other file'
+      '    - libs/ui/a.ts and 1 other file match libs/ui/**/*'
     );
   });
 
