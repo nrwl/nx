@@ -4,14 +4,13 @@
 // it after a compaction or restart without reusing payloads from discarded
 // attempts.
 
-import {
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'fs';
+import { readdirSync, rmSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
+import {
+  ensureRunSubdir,
+  handoffsDirState,
+  readAtomicallyPublishedFile,
+} from '../agentic/handoff';
 import { publishFileAtomically } from './atomic-write';
 import type { MigrateStepAwaitingKind } from './run-state';
 
@@ -49,7 +48,8 @@ export function persistAgentWorkPayload(
   filePath: string,
   payload: object
 ): void {
-  mkdirSync(dirname(filePath), { recursive: true });
+  // A symlink in the directory's place would send the write wherever it points.
+  ensureRunSubdir(dirname(filePath));
   publishFileAtomically(filePath, (tmpPath) =>
     writeFileSync(tmpPath, JSON.stringify(payload, null, 2))
   );
@@ -57,9 +57,10 @@ export function persistAgentWorkPayload(
 
 /**
  * The stored payload, or null when nothing usable is on disk: the file is
- * missing (the park predates this mechanism), does not parse to a plain
- * object, or does not match what the step awaits. Null is undifferentiated on
- * purpose: every caller's remediation is the same freshly derived payload.
+ * missing (the park predates this mechanism), is not a regular file (a planted
+ * symlink or FIFO), does not parse to a plain object, or does not match what
+ * the step awaits. Null is undifferentiated on purpose: every caller's
+ * remediation is the same freshly derived payload.
  * The returned object is never re-emitted as text; both re-emission sites go
  * back through the block writer's escaping, so a tampered file cannot break
  * the framing.
@@ -70,7 +71,7 @@ export function readAgentWorkPayload(
 ): Record<string, unknown> | null {
   let content: string;
   try {
-    content = readFileSync(filePath, 'utf-8');
+    content = readAtomicallyPublishedFile(filePath);
   } catch {
     return null;
   }
@@ -130,12 +131,17 @@ export function latestStoredAgentWorkPayload(
 }
 
 // An unreadable directory reads as empty: the lookup falls back to a freshly
-// derived payload, and removal is best effort. The `-attempt-` infix keeps
-// `step-1` from matching `step-12`'s files.
+// derived payload, and removal is best effort. A symlink in the directory's
+// place also reads as empty, so it cannot redirect either of them. The
+// `-attempt-` infix keeps `step-1` from matching `step-12`'s files.
 function storedAttemptsForStep(runDirPath: string, stepId: string): number[] {
+  const dir = join(runDirPath, AGENT_WORK_DIR_NAME);
   let entries: string[];
   try {
-    entries = readdirSync(join(runDirPath, AGENT_WORK_DIR_NAME));
+    if (handoffsDirState(dir) !== 'directory') {
+      return [];
+    }
+    entries = readdirSync(dir);
   } catch {
     return [];
   }

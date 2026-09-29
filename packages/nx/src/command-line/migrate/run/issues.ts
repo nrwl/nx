@@ -2,9 +2,12 @@
 // `issueUpdates`; ids, fingerprints, routing, claims and archiving are nx's.
 
 import { createHash } from 'crypto';
-import { mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
+import {
+  ensureRunSubdir,
+  readAtomicallyPublishedFile,
+} from '../agentic/handoff';
 import { publishFileAtomically } from './atomic-write';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
@@ -1185,7 +1188,7 @@ export function applicationArchivesIntact(
   const readRaw = (issueId: string): Record<string, unknown> | null => {
     try {
       const parsed = JSON.parse(
-        readFileSync(issueArchivePath(runDirPath, issueId), 'utf-8')
+        readAtomicallyPublishedFile(issueArchivePath(runDirPath, issueId))
       );
       return isPlainObject(parsed) ? parsed : null;
     } catch {
@@ -1313,7 +1316,7 @@ function appendIssueUpdatesToArchive(
   let existing: Record<string, unknown>;
   let reconstructed = false;
   try {
-    const parsed = JSON.parse(readFileSync(filePath, 'utf-8'));
+    const parsed = JSON.parse(readAtomicallyPublishedFile(filePath));
     if (isHealthyArchive(parsed, issueId, state)) {
       existing = parsed;
     } else {
@@ -1321,8 +1324,10 @@ function appendIssueUpdatesToArchive(
       reconstructed = true;
     }
   } catch (e) {
-    const code = (e as NodeJS.ErrnoException).code;
-    if (code !== undefined && code !== 'ENOENT') {
+    if (
+      !(e instanceof SyntaxError) &&
+      (e as NodeJS.ErrnoException).code !== 'ENOENT'
+    ) {
       throw e;
     }
     existing = reconstructedArchiveShell(issueId, state);
@@ -1404,7 +1409,8 @@ function writeIssueArchive(
   issueId: string,
   content: object
 ): void {
-  mkdirSync(issuesDir(runDirPath), { recursive: true });
+  // A symlink in the directory's place would send the write wherever it points.
+  ensureRunSubdir(issuesDir(runDirPath));
   const filePath = issueArchivePath(runDirPath, issueId);
   publishFileAtomically(filePath, (tmpPath) => writeJsonFile(tmpPath, content));
 }

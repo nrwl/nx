@@ -7,7 +7,9 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  renameSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -2242,6 +2244,73 @@ describe('migrate run issues', () => {
       );
       expect(archived.summary).toBe('summary of issue-1');
       expect(archived.reconstructed).toBe(true);
+    });
+
+    it('refuses to append to an archive planted as a symlink', () => {
+      mkdirSync(join(dir, 'issues'), { recursive: true });
+      const elsewhere = join(dir, 'elsewhere.json');
+      writeFileSync(elsewhere, '{}');
+      symlinkSync(elsewhere, issueArchivePath(dir, 'issue-1'));
+      const state = stateWith(baseSteps(), [
+        issue('issue-1', { applicableStepIds: ['step-2'] }),
+      ]);
+
+      expect(() =>
+        archiveIssues(dir, {
+          state,
+          newIssues: [],
+          updates: [
+            {
+              issueId: 'issue-1',
+              stepId: 'step-2',
+              disposition: 'resolved' as const,
+            },
+          ],
+        })
+      ).toThrow('is not a regular file');
+    });
+
+    it('refuses to archive into an issues directory planted as a symlink', () => {
+      const outside = join(dir, 'outside');
+      mkdirSync(outside);
+      symlinkSync(outside, join(dir, 'issues'));
+
+      expect(() =>
+        archiveIssues(
+          dir,
+          application({
+            newIssues: [
+              {
+                entry: issue('issue-1'),
+                report: {
+                  summary: 'summary of issue-1',
+                  applicableMigrations: ['plain'],
+                },
+              },
+            ],
+          })
+        )
+      ).toThrow('something other than a directory');
+    });
+
+    it('does not count an archive planted as a symlink as intact', () => {
+      const app = application({
+        newIssues: [
+          {
+            entry: issue('issue-1'),
+            report: {
+              summary: 'summary of issue-1',
+              applicableMigrations: ['plain'],
+            },
+          },
+        ],
+      });
+      archiveIssues(dir, app);
+      const elsewhere = join(dir, 'elsewhere.json');
+      renameSync(issueArchivePath(dir, 'issue-1'), elsewhere);
+      symlinkSync(elsewhere, issueArchivePath(dir, 'issue-1'));
+
+      expect(applicationArchivesIntact(dir, app)).toBe(false);
     });
 
     it('reports whether every archive holding the application details survives on disk', () => {

@@ -168,6 +168,7 @@ import {
   readFileSync,
   renameSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -1259,6 +1260,20 @@ describe('runSingleMigrationWorker', () => {
       // The store runs before the emission, so no block was handed out that
       // the run state does not know how to recover.
       expect(stdout).not.toContain('<nx_migrate_prompt');
+    });
+
+    it('refuses to store the payload through a symlinked agent-work directory', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'dispensed')],
+        migrations: [promptMig('@nx/js', 'p')],
+      });
+      const outside = join(dir, 'outside');
+      mkdirSync(outside);
+      symlinkSync(outside, join(dir, 'agent-work'));
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:p', 'run-1'))
+      ).rejects.toThrow('something other than a directory');
     });
 
     it('re-hands the payload stored by the earlier attempt on a hybrid retry', async () => {

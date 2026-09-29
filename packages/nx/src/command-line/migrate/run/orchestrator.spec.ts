@@ -3440,6 +3440,23 @@ describe('orchestrator', () => {
       expect(lastBlock().action).toBe('complete');
     });
 
+    it('leaves the payloads behind a symlinked agent-work directory when the outcome folds', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      const outside = join(dir, 'outside');
+      mkdirSync(outside);
+      writeFileSync(join(outside, 'step-1-attempt-1.json'), '{}');
+      symlinkSync(outside, join(dir, 'agent-work'));
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('succeeded');
+      expect(existsSync(join(outside, 'step-1-attempt-1.json'))).toBe(true);
+    });
+
     it('keeps the stored agent-work payloads when the outcome folds as failed', async () => {
       // A retry re-hands the newest surviving copy, so a failed fold must
       // not throw it away.
@@ -3772,6 +3789,29 @@ describe('orchestrator', () => {
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
       expect(stdout).not.toContain('prompts/stale.md');
+      expect(stdout).toContain('"prompt": "prompts/p.md"');
+    });
+
+    it('refuses a stored payload planted as a symlink, synthesizing from the plan instead', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      const elsewhere = join(dir, 'elsewhere.json');
+      writeFileSync(
+        elsewhere,
+        JSON.stringify({
+          migrationId: '@nx/js:p',
+          prompt: 'prompts/p.md',
+          planted: true,
+        })
+      );
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      symlinkSync(elsewhere, join(dir, 'agent-work', 'step-1-attempt-1.json'));
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(stdout).not.toContain('"planted"');
       expect(stdout).toContain('"prompt": "prompts/p.md"');
     });
 

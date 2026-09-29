@@ -166,7 +166,13 @@ export function handoffsDirState(
  * Non-recursive mkdir: the run dir exists, and a symlink created after the
  * missing-path check fails with EEXIST instead of being followed.
  */
-export function ensureRunSubdir(dir: string, notADirectory: () => Error): void {
+export function ensureRunSubdir(
+  dir: string,
+  notADirectory = () =>
+    new Error(
+      `The migrate run has something other than a directory at ${dir}; remove it and try again.`
+    )
+): void {
   const state = handoffsDirState(dir);
   switch (state) {
     case 'directory':
@@ -237,7 +243,7 @@ const ATOMIC_READ_ATTEMPTS = 5;
  */
 export function readAtomicallyPublishedFile(
   filePath: string,
-  notRegularMessage: string
+  notRegularMessage = `${filePath} is not a regular file.`
 ): string {
   for (let attempt = 1; ; attempt++) {
     const stat = lstatSync(filePath, { bigint: true });
