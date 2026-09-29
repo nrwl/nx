@@ -86,9 +86,9 @@ describe('formatAffectedExplanation', () => {
         '',
         'Touching those tasks changes outputs read by 2 build tasks:',
         '  admin:build',
-        '    - reads the outputs of ui:build, which the change reaches',
+        '    - reads the outputs of ui:build',
         '  app:build',
-        '    - reads the outputs of ui:build, which the change reaches',
+        '    - reads the outputs of ui:build',
       ].join('\n')
     );
   });
@@ -266,7 +266,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '    - reads the outputs of web:build and 2 other tasks the change reaches'
+      '    - reads the outputs of web:build and 2 other tasks'
     );
     expect(out).not.toContain('web:build-base');
   });

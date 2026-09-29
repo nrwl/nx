@@ -89,7 +89,7 @@ export function formatAffectedReason(reason: AffectedReason): string {
         ? `${reason.file} matches ${reason.pattern}`
         : `${reason.file} matches an input`;
     case 'dependent-output':
-      return `reads the outputs of ${reason.producer}, which the change reaches`;
+      return `reads the outputs of ${reason.producer}`;
     case 'external-dependencies':
       return `hashes every external dependency, and ${reason.file} changes`;
     case 'custom-hasher':
@@ -302,7 +302,7 @@ function reasonLines(reasons: AffectedReason[]): string[] {
         lines.push(
           `reads the outputs of ${first.producer} and ${others} other ${
             others === 1 ? 'task' : 'tasks'
-          } the change reaches`
+          }`
         );
         break;
       case 'npm-package':
