@@ -233,6 +233,8 @@ fn acquire_files(
     wait_for: Duration,
     find_ignore_files: bool,
 ) -> GatheredFiles {
+    let walk_unshared =
+        || gather_and_hash_files(workspace_root, cache_dir.to_owned(), find_ignore_files);
     let lock_path = Path::new(cache_dir).join(NX_FILES_LOCK);
     let mut lock = match FileLock::new(lock_path.to_string_lossy().to_string()) {
         Ok(lock) => lock,
@@ -241,7 +243,7 @@ fn acquire_files(
                 "could not open {}, walking unshared: {e:?}",
                 lock_path.display()
             );
-            return gather_and_hash_files(workspace_root, cache_dir.to_owned(), find_ignore_files);
+            return walk_unshared();
         }
     };
 
@@ -258,19 +260,11 @@ fn acquire_files(
                         trace!(
                             "the walk holding the files lock outlasted the wait, walking unshared"
                         );
-                        return gather_and_hash_files(
-                            workspace_root,
-                            cache_dir.to_owned(),
-                            find_ignore_files,
-                        );
+                        return walk_unshared();
                     }
                     Err(e) => {
                         trace!("could not wait on the files lock, walking unshared: {e:?}");
-                        return gather_and_hash_files(
-                            workspace_root,
-                            cache_dir.to_owned(),
-                            find_ignore_files,
-                        );
+                        return walk_unshared();
                     }
                 }
             }
@@ -285,8 +279,7 @@ fn acquire_files(
 
         match lock.try_lock() {
             Ok(true) => {
-                let files =
-                    gather_and_hash_files(workspace_root, cache_dir.to_owned(), find_ignore_files);
+                let files = walk_unshared();
                 let _ = lock.unlock();
                 return files;
             }
@@ -303,19 +296,11 @@ fn acquire_files(
                         trace!(
                             "the walk holding the files lock outlasted the wait, walking unshared"
                         );
-                        return gather_and_hash_files(
-                            workspace_root,
-                            cache_dir.to_owned(),
-                            find_ignore_files,
-                        );
+                        return walk_unshared();
                     }
                     Err(e) => {
                         trace!("could not wait on the files lock, walking unshared: {e:?}");
-                        return gather_and_hash_files(
-                            workspace_root,
-                            cache_dir.to_owned(),
-                            find_ignore_files,
-                        );
+                        return walk_unshared();
                     }
                 }
                 let fresh =
@@ -330,11 +315,7 @@ fn acquire_files(
                 trace!("the other walk left no fresh archive, trying for the lock again");
                 if remaining().is_zero() {
                     trace!("no time left to wait for another walk, walking unshared");
-                    return gather_and_hash_files(
-                        workspace_root,
-                        cache_dir.to_owned(),
-                        find_ignore_files,
-                    );
+                    return walk_unshared();
                 }
             }
             Err(e) => {
@@ -342,11 +323,7 @@ fn acquire_files(
                     "could not take {}, walking unshared: {e:?}",
                     lock_path.display()
                 );
-                return gather_and_hash_files(
-                    workspace_root,
-                    cache_dir.to_owned(),
-                    find_ignore_files,
-                );
+                return walk_unshared();
             }
         }
     }
@@ -551,7 +528,6 @@ struct State {
     /// only by a watching context, whose batches reach its consumer
     /// asynchronously and so can arrive after `settle` has answered.
     pending: Outcomes,
-    track_pending: bool,
 }
 
 /// Who is asking to apply changes, which decides what happens during a walk.
@@ -588,7 +564,6 @@ impl FileState {
                 delivered: Vec::new(),
                 change_seq: 0,
                 pending: Outcomes::new(),
-                track_pending: watching,
             }),
             NxCondvar::new(),
         ))))
@@ -723,8 +698,8 @@ impl FileState {
             }
             state.files = fresh.files;
             #[cfg(not(target_arch = "wasm32"))]
-            if let Some(policy) = policy {
-                state.policy = Some(policy);
+            if policy.is_some() {
+                state.policy = policy;
             }
             if state.queued.iter().any(|c| c.kind == ChangeKind::Rescan) {
                 state.queued.retain(|c| c.kind != ChangeKind::Rescan);
@@ -923,7 +898,7 @@ impl FileState {
 fn seal(state: &mut State, outcomes: Outcomes) -> ChangeBatch {
     if !outcomes.is_empty() {
         state.change_seq += 1;
-        if state.track_pending {
+        if state.watching {
             for (path, outcome) in &outcomes {
                 state.pending.insert(path.clone(), outcome.clone());
             }
@@ -1256,7 +1231,8 @@ impl WorkspaceContext {
 
     /// The ignore rules a walk applies, as a predicate on a workspace-relative
     /// file path. Built against the canonical root, which is what event paths
-    /// are relative to. `found` is what the walk applied; `None` walks for it.
+    /// are relative to. `found` is what the walk applied, relative to the root;
+    /// `None` walks for it the same way.
     #[cfg(not(target_arch = "wasm32"))]
     fn workspace_policy(
         workspace_root_path: &Path,
@@ -1266,21 +1242,11 @@ impl WorkspaceContext {
             .unwrap_or_else(|_| workspace_root_path.to_path_buf());
         let origin_str = origin.to_string_lossy();
         let globs = default_watch_ignores();
-        let filter = match found {
-            Some(found) => {
-                let mut ignore_files: Vec<PathBuf> = found
-                    .into_iter()
-                    .map(|path| match path.strip_prefix(workspace_root_path) {
-                        Ok(relative) => origin.join(relative),
-                        Err(_) => path,
-                    })
-                    .collect();
-                ignore_files.extend(parent_gitignore_files(&origin).into_iter().flatten());
-                create_filter_from(&origin_str, &globs, Some(ignore_files))
-            }
-            None => create_filter(&origin_str, &globs, true),
-        }
-        .map_err(|e| format!("failed to build the workspace ignore rules: {e}"))?;
+        let found = found.unwrap_or_else(|| nx_walker_with_ignore_files(&origin).1);
+        let mut ignore_files: Vec<PathBuf> = found.iter().map(|path| origin.join(path)).collect();
+        ignore_files.extend(parent_gitignore_files(&origin).into_iter().flatten());
+        let filter = create_filter_from(&origin_str, &globs, Some(ignore_files))
+            .map_err(|e| format!("failed to build the workspace ignore rules: {e}"))?;
         Ok(Arc::new(move |path: &str| {
             filter.admits(&origin.join(path), false)
         }))
@@ -3102,7 +3068,8 @@ mod tests {
 
         let result = gather_and_hash_files(&root, as_string(&TempDir::new().unwrap()), true);
         let from_walk = WorkspaceContext::workspace_policy(&root, result.ignore_files).unwrap();
-        let by_walking = WorkspaceContext::workspace_policy(&root, None).unwrap();
+        let by_walking =
+            create_filter(&root.to_string_lossy(), &default_watch_ignores(), true).unwrap();
         for path in [
             "a.ts",
             "dist/out.js",
@@ -3110,7 +3077,11 @@ mod tests {
             "libs/a/kept.ts",
             ".pytest_cache/x",
         ] {
-            assert_eq!(from_walk(path), by_walking(path), "{path}");
+            assert_eq!(
+                from_walk(path),
+                by_walking.admits(&root.join(path), false),
+                "{path}"
+            );
         }
     }
 
@@ -3158,7 +3129,7 @@ mod tests {
         );
         assert_eq!(
             gather_and_hash_files(&root, cache, true).ignore_files,
-            Some(vec![root.join(".gitignore")])
+            Some(vec![PathBuf::from(".gitignore")])
         );
     }
 

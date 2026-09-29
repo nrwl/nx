@@ -112,8 +112,8 @@ where
 }
 
 /// `nx_walker` with ignores, plus the `.gitignore` and `.nxignore` of every
-/// directory it entered. Those are the files the walk applied, including one
-/// that ignores itself and so is missing from the files.
+/// directory it entered, relative to `directory`. Those are the files the walk
+/// applied, including one that ignores itself and so is missing from the files.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn nx_walker_with_ignore_files<P>(directory: P) -> (Vec<NxFile>, Vec<PathBuf>)
 where
@@ -154,11 +154,10 @@ fn walk_and_find_ignore_files(
             };
 
             if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
-                if collect_ignore_files {
+                if collect_ignore_files && let Ok(dir) = dir_entry.path().strip_prefix(directory) {
                     for name in [".gitignore", ".nxignore"] {
-                        let path = dir_entry.path().join(name);
-                        if path.is_file() {
-                            ignore_files.lock().push(path);
+                        if dir_entry.path().join(name).is_file() {
+                            ignore_files.lock().push(dir.join(name));
                         }
                     }
                 }
