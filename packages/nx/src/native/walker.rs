@@ -106,24 +106,46 @@ pub fn nx_walker<P>(directory: P, use_ignores: bool) -> impl Iterator<Item = NxF
 where
     P: AsRef<Path>,
 {
-    use std::thread;
+    walk_and_find_ignore_files(directory.as_ref(), use_ignores, false)
+        .0
+        .into_iter()
+}
+
+/// `nx_walker` with ignores, plus the `.gitignore` and `.nxignore` of every
+/// directory it entered, relative to `directory`. Those are the files the walk
+/// applied, including one that ignores itself and so is missing from the files.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn nx_walker_with_ignore_files<P>(directory: P) -> (Vec<NxFile>, Vec<PathBuf>)
+where
+    P: AsRef<Path>,
+{
+    walk_and_find_ignore_files(directory.as_ref(), true, true)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn walk_and_find_ignore_files(
+    directory: &Path,
+    use_ignores: bool,
+    collect_ignore_files: bool,
+) -> (Vec<NxFile>, Vec<PathBuf>) {
     use std::thread::available_parallelism;
 
     use crossbeam_channel::unbounded;
     use tracing::trace;
 
-    let directory = directory.as_ref();
     let mut walker = create_walker(directory, use_ignores);
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
     let (sender, receiver) = unbounded();
+    let ignore_files = Mutex::new(Vec::new());
 
     trace!(?directory, "walking");
 
     let now = std::time::Instant::now();
     walker.threads(cpus).build_parallel().run(|| {
         let tx = sender.clone();
+        let ignore_files = &ignore_files;
         Box::new(move |entry| {
             use ignore::WalkState::*;
 
@@ -132,6 +154,13 @@ where
             };
 
             if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
+                if collect_ignore_files && let Ok(dir) = dir_entry.path().strip_prefix(directory) {
+                    for name in [".gitignore", ".nxignore"] {
+                        if dir_entry.path().join(name).is_file() {
+                            ignore_files.lock().push(dir.join(name));
+                        }
+                    }
+                }
                 return Continue;
             };
 
@@ -160,9 +189,8 @@ where
     });
     trace!("walked in {:?}", now.elapsed());
 
-    let receiver_thread = thread::spawn(move || receiver.into_iter());
     drop(sender);
-    receiver_thread.join().unwrap()
+    (receiver.into_iter().collect(), ignore_files.into_inner())
 }
 
 /// Returns true when the entry should be hashed as a workspace file.
