@@ -178,17 +178,17 @@ fn hashes_to_files(hashes: NxFileHashes) -> Files {
     files.into_iter().collect()
 }
 
-/// The files one walk produced, and the ignore files it applied getting them.
+/// The workspace files, and the ignore files the walk applied gathering them.
 /// `ignore_files` is `None` when the files came from an archive, or when the
 /// walk was not asked for them because nothing builds rules from them.
-struct WalkResult {
+struct GatheredFiles {
     files: Files,
     ignore_files: Option<Vec<PathBuf>>,
 }
 
-impl From<Files> for WalkResult {
+impl From<Files> for GatheredFiles {
     fn from(files: Files) -> Self {
-        WalkResult {
+        GatheredFiles {
             files,
             ignore_files: None,
         }
@@ -230,7 +230,7 @@ fn acquire_files(
     trust_archive: bool,
     wait_for: Duration,
     find_ignore_files: bool,
-) -> WalkResult {
+) -> GatheredFiles {
     let lock_path = Path::new(cache_dir).join(NX_FILES_LOCK);
     let mut lock = match FileLock::new(lock_path.to_string_lossy().to_string()) {
         Ok(lock) => lock,
@@ -467,7 +467,7 @@ fn gather_and_hash_files(
     workspace_root: &Path,
     cache_dir: String,
     find_ignore_files: bool,
-) -> WalkResult {
+) -> GatheredFiles {
     let archived_files = read_files_archive(&cache_dir);
 
     trace!("Gathering files in {}", workspace_root.display());
@@ -502,7 +502,7 @@ fn gather_and_hash_files(
     let files = hashes_to_files(file_hashes);
     trace!("hashed and sorted files in {:?}", now.elapsed());
 
-    WalkResult {
+    GatheredFiles {
         files,
         ignore_files,
     }
@@ -682,7 +682,7 @@ impl FileState {
         &self,
         workspace_root: &Path,
         cache_dir: &str,
-        mut fresh: WalkResult,
+        mut fresh: GatheredFiles,
         mut initial: bool,
     ) -> ChangeBatch {
         let Some(sync) = &self.0 else {
