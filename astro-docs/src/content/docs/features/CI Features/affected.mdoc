@@ -266,38 +266,36 @@ NX_LEGACY_AFFECTED=false nx affected -t build --explain
 `--explain` explains task selection, so it needs `NX_LEGACY_AFFECTED=false` and targets passed with `-t`. Without task selection, it stops with an error.
 
 ```text
- NX   Affected tasks (3)
+ NX   3 out of 12 build tasks are affected
 
-  Changing libs/ui/src/index.ts touched 1 task:
-    ui:build
-      - input libs/ui/**/* matched libs/ui/src/index.ts
+Changing libs/ui/src/index.ts touches 1 build task (tasks where 1 or more direct inputs change):
+  ui:build
+    - input libs/ui/**/* matches libs/ui/src/index.ts
 
-  2 tasks read outputs the change reached:
-    admin:build
-      - reads the outputs of ui:build, which the change reached
-    app:build
-      - reads the outputs of ui:build, which the change reached
-
-3 out of 12 build tasks were affected.
+Touching those tasks changes outputs read by 2 build tasks:
+  admin:build
+    - reads the outputs of ui:build, which the change reaches
+  app:build
+    - reads the outputs of ui:build, which the change reaches
 ```
 
-A task is touched when one of its own inputs changed, and touched tasks are grouped by the changed files that reached them.
-A task is affected when it reads the outputs of a task your change reached.
+The title says how many tasks of your targets the change affects.
+The first section lists the tasks your change touches, meaning one of their own inputs changes.
+When several files change, it groups them by the files that reach them.
+The second lists the tasks affected because they read the outputs of a touched task.
 
-Tasks you didn't ask for can carry your change to the ones you did, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`.
-Those come first, under `Changing N files touched M tasks` and `Touching the M tasks above changed outputs read by K tasks`, and the tasks you asked for always come last.
+Both sections can include tasks you didn't ask for, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`, since they carry your change to the tasks you did ask for.
+Each heading counts your tasks apart from the others, and your tasks are listed first and in bold.
 A section with more than five tasks names up to five per group. Pass `--verbose` to list every task with its reasons.
 Each entry lists every reason that applies, so a task reached through two different producers reports both.
 When several changed files match one input, several packages moved, or a task reads several of the tasks above, they share one line that names the first and counts the rest. The JSON lists them all.
 To follow the chain step by step, look up the task named in a reason.
 
-The last line says how many tasks of your targets the change affected.
-
 Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
 The JSON has four keys:
 
 - `affected` holds the tasks you asked for.
-- `upstream` holds the tasks above them.
+- `upstream` holds the other tasks your change reached.
 - `touched` lists which of those your change reached directly.
 - `requested` counts the tasks of your targets that selection considered.
 

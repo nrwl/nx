@@ -30,7 +30,7 @@ describe('formatAffectedReason', () => {
   it('falls back when an input match names no pattern', () => {
     expect(
       formatAffectedReason({ kind: 'input-file', file: 'tsconfig.json' })
-    ).toBe('input matched tsconfig.json');
+    ).toBe('input matches tsconfig.json');
   });
 });
 
@@ -54,10 +54,9 @@ describe('formatAffectedExplanation', () => {
   };
   const selected = { affected: reasons, upstream: {}, touched: ['ui:build'] };
 
-  // Out of the requested targets' tasks, so it says what selection saved.
-  // Grouped by what changed, touched before affected, each task with the
-  // reasons the group heading does not already give.
-  it('groups a small output by what changed', () => {
+  // Touched tasks, then the tasks reached through their outputs. The tasks
+  // asked for are counted and listed first, not split into their own section.
+  it('lays out what was touched, then what read its outputs', () => {
     const out = formatAffectedExplanation(
       {
         affected: {
@@ -73,98 +72,104 @@ describe('formatAffectedExplanation', () => {
         },
         upstream: {},
         touched: ['ui:build'],
+        requested: { targets: ['build'], total: 12 },
       },
       'Affected tasks'
     );
     expect(out).toBe(
       [
-        'Affected tasks (3):',
+        '3 out of 12 build tasks are affected:',
         '',
-        '  Changing libs/ui/src/index.ts touched 1 task:',
-        '    ui:build',
-        '      - input libs/ui/**/* matched libs/ui/src/index.ts',
+        'Changing libs/ui/src/index.ts touches 1 build task (tasks where 1 or more direct inputs change):',
+        '  ui:build',
+        '    - input libs/ui/**/* matches libs/ui/src/index.ts',
         '',
-        '  2 tasks read outputs the change reached:',
-        '    admin:build',
-        '      - reads the outputs of ui:build, which the change reached',
-        '    app:build',
-        '      - reads the outputs of ui:build, which the change reached',
-        '',
-        '3 affected tasks.',
+        'Touching those tasks changes outputs read by 2 build tasks:',
+        '  admin:build',
+        '    - reads the outputs of ui:build, which the change reaches',
+        '  app:build',
+        '    - reads the outputs of ui:build, which the change reaches',
       ].join('\n')
     );
   });
 
-  it('puts the layers above the targets first, each titled', () => {
-    const out = formatAffectedExplanation(
-      {
-        affected: {
-          'app:build': [{ kind: 'dependent-output', producer: 'app:gen' }],
-        },
-        upstream: {
-          'app:gen': [{ kind: 'input-file', file: 'apps/app/schema.json' }],
-        },
-        touched: ['app:gen'],
-      },
-      'Affected tasks'
+  it('lists a target first among the tasks of its cause', () => {
+    const lockfile = [
+      { kind: 'external-dependencies' as const, file: 'pnpm-lock.yaml' },
+    ];
+    const upstream = Object.fromEntries(
+      ['a', 'b', 'c', 'd', 'e', 'f'].map((p) => [`${p}:build`, lockfile])
     );
-    const at = (text: string) => out.indexOf(text);
-    expect(out).toContain(
-      'Changing 1 file touched 1 task (tasks with 1 or more direct inputs changed):'
-    );
-    expect(at('    app:gen')).toBeLessThan(at('\nAffected tasks (1):'));
-    expect(out).toContain(
-      'Affected tasks (1):\n\n  1 task read outputs the change reached:\n    app:build\n'
-    );
-  });
-
-  it('heads the reached layer by what the touched layer changed', () => {
-    const explain = (touched: string[]) =>
-      formatAffectedExplanation(
-        {
-          affected: {
-            'app:e2e': [{ kind: 'dependent-output', producer: 'app:build' }],
-          },
-          upstream: {
-            'app:build': [{ kind: 'dependent-output', producer: 'app:gen' }],
-            'app:gen': [{ kind: 'input-file', file: 'x.ts' }],
-          },
-          touched,
-        },
-        'Affected tasks'
-      );
-    expect(explain(['app:gen'])).toContain(
-      'Touching the 1 task above changed outputs read by 1 task:\n  app:build\n    - reads the outputs of app:gen, which the change reached\n'
-    );
-    // Nothing touched above it, so there are no tasks above to point at.
-    expect(explain([])).toContain(
-      'Outputs the change reached are read by 2 tasks:'
-    );
-  });
-
-  it('names up to five tasks of a long section, or all under verbose', () => {
-    const names = ['a', 'b', 'c', 'd', 'e', 'f'].map((p) => `${p}:e2e`);
     const explanation = {
-      affected: Object.fromEntries(
-        names.map((name) => [
-          name,
-          [{ kind: 'external-dependencies' as const, file: 'package.json' }],
-        ])
-      ),
-      upstream: {},
-      touched: names,
+      affected: { 'z:e2e': lockfile },
+      upstream,
+      touched: [...Object.keys(upstream), 'z:e2e'],
+      requested: { targets: ['e2e'], total: 1 },
     };
-    expect(formatAffectedExplanation(explanation, 'Affected tasks')).toContain(
-      'Pass --verbose to list each with its reasons.\n\n  Changing package.json touched 6 tasks:\n    - a:e2e\n    - b:e2e\n    - c:e2e\n    - d:e2e\n    - e:e2e\n    - and 1 more\n'
+    const out = formatAffectedExplanation(explanation, 'Affected tasks');
+    expect(out).toContain(
+      'Changing pnpm-lock.yaml touches 1 e2e task and 6 other tasks (tasks where 1 or more direct inputs change). Pass --verbose to list each with its reasons.\n  - z:e2e\n  - a:build\n  - b:build\n  - c:build\n  - d:build\n  - and 2 more'
     );
     const verbose = formatAffectedExplanation(explanation, 'Affected tasks', {
       verbose: true,
     });
     expect(verbose).toContain(
-      '  Changing package.json touched 6 tasks:\n    a:e2e\n      - hashes every external dependency, and package.json changed\n'
+      '  z:e2e\n    - hashes every external dependency, and pnpm-lock.yaml changes\n'
     );
-    expect(verbose).toContain('    f:e2e\n');
+    expect(verbose).toContain('  f:build\n');
     expect(verbose).not.toContain('Pass --verbose');
+  });
+
+  it('styles each listed task, knowing which were asked for', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'app:e2e': [{ kind: 'dependent-output', producer: 'app:build' }],
+        },
+        upstream: { 'app:build': [{ kind: 'input-file', file: 'x.ts' }] },
+        touched: ['app:build'],
+      },
+      'Affected tasks',
+      { styleTask: (id, asked) => (asked ? `**${id}**` : `_${id}_`) }
+    );
+    expect(out).toContain('  **app:e2e**\n');
+    expect(out).toContain('  _app:build_\n');
+  });
+
+  it('groups touched tasks by file when several changed', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'a:test': [{ kind: 'input-file', file: 'a.ts' }],
+          'b:test': [{ kind: 'input-file', file: 'b.ts' }],
+        },
+        upstream: {},
+        touched: ['a:test', 'b:test'],
+        requested: { targets: ['test'], total: 2 },
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain(
+      'Changing 2 files touches 2 test tasks (tasks where 1 or more direct inputs change):\n\n  a.ts -> 1 test task:\n    a:test\n'
+    );
+  });
+
+  it('heads the reached tasks by what was touched, or by the change', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'app:e2e': [{ kind: 'dependent-output', producer: 'app:build' }],
+        },
+        upstream: {
+          'app:build': [{ kind: 'dependent-output', producer: 'app:gen' }],
+        },
+        touched: [],
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain(
+      'The change reaches outputs read by 1 requested task and 1 other task:\n  app:e2e\n'
+    );
   });
 
   it('says so when a touched task names no changed file', () => {
@@ -177,16 +182,16 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '  1 task was touched without a changed file to name:\n    b:e2e\n      - its executor uses a custom hasher, so it is always selected'
+      '1 requested task is touched with no changed file to name (tasks where 1 or more direct inputs change):\n  b:e2e\n    - its executor uses a custom hasher, so it is always selected'
     );
   });
 
-  it('counts what was affected out of the requested tasks', () => {
+  it('titles what is affected out of the requested tasks', () => {
     const out = formatAffectedExplanation(
       { ...selected, requested: { targets: ['build', 'test'], total: 58 } },
       'Affected tasks'
     );
-    expect(out).toContain('2 out of 58 build, test tasks were affected.');
+    expect(out).toMatch(/^2 out of 58 build, test tasks are affected:\n/);
   });
 
   it('agrees in number with a single task', () => {
@@ -199,19 +204,13 @@ describe('formatAffectedExplanation', () => {
       },
       'Affected tasks'
     );
-    expect(out).toContain('1 out of 1 build task was affected.');
+    expect(out).toMatch(/^1 out of 1 build task is affected:\n/);
   });
 
-  it('reports the selection alone without a requested count', () => {
-    expect(formatAffectedExplanation(selected, 'Affected tasks')).toContain(
-      '2 affected tasks.'
+  it('titles the selection alone without a requested count', () => {
+    expect(formatAffectedExplanation(selected, 'Affected tasks')).toMatch(
+      /^Affected tasks \(2\):\n/
     );
-  });
-
-  it('adds no section labels when nothing was carried', () => {
-    const out = formatAffectedExplanation(selected, 'Affected tasks');
-    expect(out.match(/Affected tasks \(/g)).toHaveLength(1);
-    expect(out).not.toContain('direct inputs changed');
   });
 
   // A refactor or a dependency bump would otherwise print a line per file or
@@ -242,11 +241,11 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '    - input libs/ui/**/* matched libs/ui/a.ts and 4 other files'
+      '    - input libs/ui/**/* matches libs/ui/a.ts and 4 other files'
     );
-    expect(out).toContain('    - input matched tsconfig.base.json');
+    expect(out).toContain('    - input matches tsconfig.base.json');
     expect(out).toContain(
-      '    - depends on npm:a and 3 other packages, whose versions changed'
+      '    - depends on npm:a and 3 other packages, whose versions change'
     );
     expect(out).not.toContain('libs/ui/b.ts');
   });
@@ -267,7 +266,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '    - reads the outputs of web:build and 2 other tasks the change reached'
+      '    - reads the outputs of web:build and 2 other tasks the change reaches'
     );
     expect(out).not.toContain('web:build-base');
   });
@@ -287,40 +286,10 @@ describe('formatAffectedExplanation', () => {
         },
         'Affected tasks'
       );
-    expect(explain(['a.ts'])).toContain(
-      '    - input libs/ui/**/* matched libs/ui/a.ts\n'
-    );
+    expect(explain(['a.ts'])).toMatch(/matches libs\/ui\/a\.ts$/);
     expect(explain(['a.ts', 'b.ts'])).toContain(
-      '    - input libs/ui/**/* matched libs/ui/a.ts and 1 other file'
+      '    - input libs/ui/**/* matches libs/ui/a.ts and 1 other file'
     );
-  });
-
-  // Each entry of a long layer repeats the same few files, so it reads as
-  // one line per cause; a short layer stays listed for following a chain.
-  it('summarizes a long layer above the targets by cause', () => {
-    const lockfile = [
-      { kind: 'external-dependencies' as const, file: 'pnpm-lock.yaml' },
-    ];
-    const upstream = Object.fromEntries(
-      ['a', 'b', 'c', 'd', 'e', 'f'].map((p) => [`${p}:build`, lockfile])
-    );
-    const explanation = {
-      affected: {
-        'app:e2e': [{ kind: 'dependent-output' as const, producer: 'a:build' }],
-      },
-      upstream,
-      touched: Object.keys(upstream),
-    };
-    const out = formatAffectedExplanation(explanation, 'Affected tasks');
-    expect(out).toContain(
-      'Changing 1 file touched 6 tasks (tasks with 1 or more direct inputs changed). Pass --verbose to list each with its reasons.\n\n  Changing pnpm-lock.yaml touched 6 tasks:\n    - a:build\n    - b:build\n    - c:build\n    - d:build\n    - e:build\n    - and 1 more\n'
-    );
-    expect(out).not.toContain('  f:build');
-    expect(
-      formatAffectedExplanation(explanation, 'Affected tasks', {
-        verbose: true,
-      })
-    ).toContain('  f:build');
   });
 
   // Hashing every external already covers every package that moved, and the
@@ -346,7 +315,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '    - hashes every external dependency, and package.json and pnpm-lock.yaml changed'
+      '    - hashes every external dependency, and package.json and pnpm-lock.yaml change'
     );
     expect(out).not.toContain("couldn't be narrowed");
   });

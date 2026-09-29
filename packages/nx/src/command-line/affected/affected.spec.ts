@@ -108,7 +108,7 @@ describe('nx affected --explain', () => {
       expect.objectContaining({ explain: true })
     );
     expect(runCommand).not.toHaveBeenCalled();
-    expect(written.join('')).toContain('2 affected tasks.');
+    expect(written.join('')).toContain('Affected tasks (2)');
   });
 
   it('prints the task explanation as JSON for stdout', async () => {

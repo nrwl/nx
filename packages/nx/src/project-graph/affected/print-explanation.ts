@@ -1,4 +1,5 @@
 import { writeFileSync } from 'fs';
+import * as pc from 'picocolors';
 import { output } from '../../utils/output';
 import {
   AffectedExplanation,
@@ -28,15 +29,21 @@ export function printAffectedExplanation(
     return;
   }
 
-  const rendered = formatAffectedExplanation(explanation, heading, options);
-  const count = Object.keys(explanation.affected).length;
-  if (!count) {
+  const rendered = formatAffectedExplanation(explanation, heading, {
+    ...options,
+    styleTask,
+  });
+  if (!Object.keys(explanation.affected).length) {
     output.log({ title: rendered });
     return;
   }
-  output.log({
-    title: `${heading} (${count})`,
-    // The heading and its blank line are already in the title.
-    bodyLines: rendered.split('\n').slice(2),
-  });
+  const [title, , ...bodyLines] = rendered.split('\n');
+  output.log({ title: title.replace(/:$/, ''), bodyLines });
+}
+
+// Colored like `nx show target`, with the tasks asked for in bold.
+function styleTask(id: string, requested: boolean): string {
+  const split = id.indexOf(':');
+  const colored = `${pc.cyan(id.slice(0, split))}:${pc.green(id.slice(split + 1))}`;
+  return requested ? pc.bold(colored) : colored;
 }
