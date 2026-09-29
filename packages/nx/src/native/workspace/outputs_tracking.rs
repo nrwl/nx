@@ -88,17 +88,34 @@ fn key(outputs: &[String]) -> String {
 }
 
 /// Whether what the cache copies for `outputs` covers every file a check
-/// reads. The cache honours a negation, and copies a linked root as a link
-/// and nothing under a vetoed root, where a check reads the whole directory.
-fn given_covers(root: &Path, outputs: &[String]) -> bool {
+/// reads, where a check reads each directory whole. The cache honours a
+/// negation, and neither copies through a link nor walks into what
+/// `walk_reaches` vetoes; the workspace root is never trusted, as a copy
+/// walks it with vetoes a check does not apply to its start.
+fn given_covers(root: &Path, canonical_root: Option<&Path>, outputs: &[String]) -> bool {
     outputs.iter().all(|output| {
         if output.starts_with('!') {
             return false;
         }
         let dir = partition_glob(output).0;
+        let full = root.join(&dir);
         walk_reaches(root, "", &dir)
-            && !std::fs::symlink_metadata(root.join(&dir)).is_ok_and(|link| link.is_symlink())
+            && (std::fs::symlink_metadata(&full).is_err()
+                || canonical_root.is_some_and(|canonical_root| {
+                    dunce::canonicalize(&full).is_ok_and(|real| real == canonical_root.join(&dir))
+                }))
     })
+}
+
+/// On Windows `\` separates, as the glob lexer reads it there, while
+/// listings and the cache's file list use `/`.
+fn with_forward_slashes(mut entry: TaskOutputs) -> TaskOutputs {
+    if cfg!(windows) {
+        for output in &mut entry.outputs {
+            *output = output.replace('\\', "/");
+        }
+    }
+    entry
 }
 
 /// The files of `given` that `outputs` names, each with its stamp. A file
@@ -160,6 +177,7 @@ impl OutputRecords {
         reader: &IgnoredIndexReader,
         entries: Vec<TaskOutputs>,
     ) {
+        let entries: Vec<_> = entries.into_iter().map(with_forward_slashes).collect();
         for entry in &entries {
             for output in entry.outputs.iter().filter(|o| !o.starts_with('!')) {
                 let dir = partition_glob(output).0;
@@ -168,13 +186,14 @@ impl OutputRecords {
                 }
             }
         }
+        let canonical_root = dunce::canonicalize(root).ok();
         let entries: Vec<_> = entries
             .into_iter()
             .map(|mut entry| {
                 let given = entry
                     .files
                     .take()
-                    .filter(|_| given_covers(root, &entry.outputs));
+                    .filter(|_| given_covers(root, canonical_root.as_deref(), &entry.outputs));
                 (entry, given)
             })
             .collect();
@@ -237,6 +256,7 @@ impl OutputRecords {
         let index = reader.index();
         entries
             .into_par_iter()
+            .map(with_forward_slashes)
             .map(|entry| {
                 let Some(recorded) = self.records.get(&key(&entry.outputs)) else {
                     return false;
@@ -557,22 +577,79 @@ mod tests {
     #[test]
     fn a_given_file_list_is_trusted_only_where_it_covers_what_a_check_reads() {
         let temp = workspace();
+        let canonical_root = dunce::canonicalize(temp.path()).unwrap();
         let covers = |outputs: &[&str]| {
             given_covers(
                 temp.path(),
+                Some(&canonical_root),
                 &outputs.iter().map(|o| o.to_string()).collect::<Vec<_>>(),
             )
         };
-        assert!(covers(&["dist/app", "dist/app/*.txt"]));
+        assert!(covers(&["dist/app", "dist/app/*.txt", "dist/not-yet"]));
         assert!(!covers(&["dist/app", "!dist/app/cache"]));
         assert!(!covers(&["node_modules/pkg/dist/*.js"]));
         assert!(!covers(&["*.txt"]));
         #[cfg(unix)]
         {
-            std::os::unix::fs::symlink(temp.path().join("dist/app"), temp.path().join("dist/link"))
-                .unwrap();
+            let link = |target: &str, link: &str| {
+                std::os::unix::fs::symlink(temp.path().join(target), temp.path().join(link))
+                    .unwrap()
+            };
+            link("dist/app", "dist/link");
             assert!(!covers(&["dist/link"]));
             assert!(!covers(&["dist/link/*.txt"]));
+            // A link above the output, not only at it.
+            link("dist", "out");
+            assert!(!covers(&["out/app/*.txt"]));
         }
+    }
+
+    #[test]
+    fn a_batch_mixing_trusted_and_walked_entries_records_both() {
+        let temp = workspace();
+        temp.child("dist/other/cache/x.bin").write_str("x").unwrap();
+        temp.child("dist/other/d.txt").write_str("d").unwrap();
+        let (records, reader) = (OutputRecords::default(), watched());
+        let walked = ["dist/other", "!dist/other/cache"];
+        records.record(
+            temp.path(),
+            &reader,
+            vec![
+                TaskOutputs {
+                    files: Some(given(
+                        &temp,
+                        &["dist/app/a.txt", "dist/app/b.md", "dist/app/c.html"],
+                    )),
+                    ..entry(&["dist/app"], "h1")
+                },
+                TaskOutputs {
+                    files: Some(given(&temp, &["dist/other/d.txt"])),
+                    ..entry(&walked, "h2")
+                },
+            ],
+        );
+        assert!(check(&records, &temp, &reader, &["dist/app"], "h1"));
+        assert!(check(&records, &temp, &reader, &walked, "h2"));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn backslash_outputs_are_read_with_forward_slashes() {
+        let temp = workspace();
+        let (records, reader) = (OutputRecords::default(), watched());
+        records.record(
+            temp.path(),
+            &reader,
+            vec![TaskOutputs {
+                files: Some(given(
+                    &temp,
+                    &["dist/app/a.txt", "dist/app/b.md", "dist/app/c.html"],
+                )),
+                ..entry(&["dist\\app"], "h1")
+            }],
+        );
+        assert!(check(&records, &temp, &reader, &["dist\\app"], "h1"));
+        std::fs::remove_file(temp.path().join("dist/app/a.txt")).unwrap();
+        assert!(!check(&records, &temp, &reader, &["dist\\app"], "h1"));
     }
 }
