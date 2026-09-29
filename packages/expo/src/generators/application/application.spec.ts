@@ -194,6 +194,74 @@ describe('app', () => {
     expect(eslintConfig).not.toContain('**/out-tsc');
   });
 
+  describe('playwright', () => {
+    it.each([
+      ['the generator adds the plugin', undefined, true, 'serve'],
+      [
+        'the plugin is registered as a string',
+        ['@nx/expo/plugin'],
+        true,
+        'serve',
+      ],
+      [
+        'the plugin is registered and addPlugin is false',
+        [
+          {
+            plugin: '@nx/expo/plugin',
+            options: { serveTargetName: 'expo:serve' },
+          },
+        ],
+        false,
+        'expo:serve',
+      ],
+    ])(
+      'should run e2e against the dev server in CI when %s',
+      async (_, plugins, addPlugin, serveTargetName) => {
+        if (plugins) {
+          updateJson(appTree, 'nx.json', (json) => ({ ...json, plugins }));
+        }
+
+        await expoApplicationGeneratorInternal(appTree, {
+          directory: 'my-app',
+          linter: 'none',
+          e2eTestRunner: 'playwright',
+          js: false,
+          unitTestRunner: 'none',
+          skipFormat: true,
+          addPlugin,
+        });
+
+        const config = appTree.read(
+          'my-app-e2e/playwright.config.mts',
+          'utf-8'
+        );
+        expect(config).not.toContain('isCI');
+        expect(config).toContain(
+          `command: 'npx nx run my-app:${serveTargetName}'`
+        );
+        expect(config).toContain(`url: 'http://localhost:8081'`);
+      }
+    );
+
+    it('should run e2e against the static server in CI without the plugin', async () => {
+      await expoApplicationGeneratorInternal(appTree, {
+        directory: 'my-app',
+        linter: 'none',
+        e2eTestRunner: 'playwright',
+        js: false,
+        unitTestRunner: 'none',
+        skipFormat: true,
+        addPlugin: false,
+      });
+
+      const config = appTree.read('my-app-e2e/playwright.config.mts', 'utf-8');
+      expect(config).toContain(
+        `command: isCI ? 'npx nx run my-app:serve-static' : 'npx nx run my-app:serve'`
+      );
+      expect(config).toContain(`url: 'http://localhost:4200'`);
+    });
+  });
+
   describe('detox', () => {
     beforeEach(() => {
       // Expo 54+ does not support detox, so we test with Expo 53
