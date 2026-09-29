@@ -1,34 +1,24 @@
-import { NextConfig } from 'next';
 import { composePlugins } from './compose-plugins';
-import { NextConfigFn } from './config';
 
-describe('composePlugins', () => {
-  it('should combine multiple plugins', async () => {
-    const nextConfig: NextConfig = {
-      env: {
-        original: 'original',
-      },
-    };
-    const a = (config: NextConfig): NextConfig => {
-      config.env['a'] = 'a';
-      return config;
-    };
-    const b = (config: NextConfig): NextConfig => {
-      config.env['b'] = 'b';
-      return config;
-    };
-    const fn = await composePlugins(a, b);
-    const output = await fn(nextConfig)('test', {});
-
-    expect(output).toEqual({
-      env: {
-        original: 'original',
-        a: 'a',
-        b: 'b',
-      },
+describe('removed Next composePlugins stub', () => {
+  it('returns the original config without invoking old wrappers', async () => {
+    const wrapper = vi.fn(() => {
+      throw new Error('requires removed Nx behavior');
     });
+    const config = Object.freeze({
+      distDir: 'custom',
+      env: { marker: 'preserved' },
+    });
+    const load = composePlugins(wrapper)(config);
+    for (const phase of [
+      'phase-development-server',
+      'phase-production-build',
+      'phase-production-server',
+    ]) {
+      expect(await load(phase, {})).toBe(config);
+    }
+    expect(wrapper).not.toHaveBeenCalled();
   });
-
   it('should not load the deprecation module, which is not copied into the .nx-helpers build output', async () => {
     vi.resetModules();
     vi.doMock('./deprecation', () => {
@@ -47,33 +37,5 @@ describe('composePlugins', () => {
       vi.doUnmock('./deprecation');
       vi.resetModules();
     }
-  });
-
-  it('should compose plugins that return an async function', async () => {
-    const nextConfig: NextConfig = {
-      env: {
-        original: 'original',
-      },
-    };
-    const a = (config: NextConfig): NextConfig => {
-      config.env['a'] = 'a';
-      return config;
-    };
-    const b = (config: NextConfig): NextConfigFn => {
-      return (phase: string) => {
-        config.env['b'] = phase;
-        return config;
-      };
-    };
-    const fn = await composePlugins(a, b);
-    const output = await fn(nextConfig)('test', {});
-
-    expect(output).toEqual({
-      env: {
-        original: 'original',
-        a: 'a',
-        b: 'test',
-      },
-    });
   });
 });

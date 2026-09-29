@@ -1,5 +1,6 @@
-import { composePlugins, withNx } from '@nx/webpack';
-import { withReact } from '@nx/react';
+import { NxAppWebpackPlugin } from '@nx/webpack/app-plugin';
+import type { Compiler } from 'webpack';
+import { NxReactWebpackPlugin } from '@nx/react/webpack-plugin';
 import { withModuleFederation } from '@nx/module-federation/webpack';
 import type { ModuleFederationConfig } from '@nx/module-federation';
 
@@ -31,10 +32,31 @@ const prodConfig: ModuleFederationConfig = {
   ],
 };
 
-// Nx plugins for webpack to build config object from Nx options and context.
 /**
  * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
  * The DTS Plugin can be enabled by setting dts: true
  * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
  */
-export default composePlugins(withNx(), withReact(), withModuleFederation(prodConfig, { dts: false }));
+export default async () => {
+  const configureFederation = await withModuleFederation(prodConfig, { dts: false });
+  const webpackConfig = configureFederation({
+    mode: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production'
+      ? process.env.NODE_ENV
+      : 'none',
+    output: {},
+    plugins: [],
+  }, undefined);
+  const runtimeChunk = webpackConfig.optimization?.runtimeChunk;
+  webpackConfig.plugins.unshift(
+    new NxAppWebpackPlugin(),
+    new NxReactWebpackPlugin(),
+    {
+      apply(compiler: Compiler) {
+        if (runtimeChunk !== undefined) {
+          compiler.options.optimization.runtimeChunk = runtimeChunk;
+        }
+      },
+    },
+  );
+  return webpackConfig;
+};

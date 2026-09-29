@@ -1,3 +1,4 @@
+import { webpackExecutorContext } from '../../plugins/nx-webpack-plugin/lib/normalize-options';
 import { eachValueFrom } from '@nx/devkit/internal';
 import {
   ExecutorContext,
@@ -32,8 +33,9 @@ export async function* devServerExecutor(
 
   const { root: projectRoot, sourceRoot } =
     context.projectsConfigurations.projects[context.projectName];
+  const executorOptions = getBuildOptions(serveOptions, context);
   const buildOptions = normalizeOptions(
-    getBuildOptions(serveOptions, context),
+    executorOptions,
     context.root,
     projectRoot,
     sourceRoot
@@ -65,9 +67,8 @@ export async function* devServerExecutor(
     );
 
     process.env.NX_TSCONFIG_PATH = buildOptions.tsConfig;
+    executorOptions.tsConfig = buildOptions.tsConfig;
   }
-
-  let config;
 
   const devServer = getDevServerOptions(
     context.root,
@@ -75,42 +76,53 @@ export async function* devServerExecutor(
     buildOptions
   );
 
-  if (buildOptions.webpackConfig) {
-    let userDefinedWebpackConfig = resolveUserDefinedWebpackConfig(
-      buildOptions.webpackConfig,
-      getRootTsConfigPath()
-    );
+  const config = await webpackExecutorContext.run(
+    {
+      options: executorOptions,
+      target: parseTargetString(serveOptions.buildTarget, context.projectGraph),
+    },
+    async () => {
+      let config;
+      if (buildOptions.webpackConfig) {
+        let userDefinedWebpackConfig = resolveUserDefinedWebpackConfig(
+          buildOptions.webpackConfig,
+          getRootTsConfigPath()
+        );
 
-    if (typeof userDefinedWebpackConfig.then === 'function') {
-      userDefinedWebpackConfig = await userDefinedWebpackConfig;
-    }
-
-    // Only add the dev server option if user is composable plugin.
-    // Otherwise, user should define `devServer` option directly in their webpack config.
-    if (
-      typeof userDefinedWebpackConfig === 'function' &&
-      (isNxWebpackComposablePlugin(userDefinedWebpackConfig) ||
-        !buildOptions.standardWebpackConfigFunction)
-    ) {
-      config = await userDefinedWebpackConfig(
-        { devServer },
-        {
-          options: buildOptions,
-          context,
-          configuration: serveOptions.buildTarget.split(':')[2],
+        if (typeof userDefinedWebpackConfig.then === 'function') {
+          userDefinedWebpackConfig = await userDefinedWebpackConfig;
         }
-      );
-    } else if (userDefinedWebpackConfig) {
-      // New behavior, we want the webpack config to export object
-      // If the config is a function, we assume it's a standard webpack config function and it's async
-      if (typeof userDefinedWebpackConfig === 'function') {
-        config = await userDefinedWebpackConfig(process.env.NODE_ENV, {});
-      } else {
-        config = userDefinedWebpackConfig;
+
+        // Only add the dev server option if user is composable plugin.
+        // Otherwise, user should define `devServer` option directly in their webpack config.
+        if (
+          typeof userDefinedWebpackConfig === 'function' &&
+          (isNxWebpackComposablePlugin(userDefinedWebpackConfig) ||
+            !buildOptions.standardWebpackConfigFunction)
+        ) {
+          config = await userDefinedWebpackConfig(
+            { devServer },
+            {
+              options: buildOptions,
+              context,
+              configuration: serveOptions.buildTarget.split(':')[2],
+            }
+          );
+        } else if (userDefinedWebpackConfig) {
+          // New behavior, we want the webpack config to export object
+          // If the config is a function, we assume it's a standard webpack config function and it's async
+          if (typeof userDefinedWebpackConfig === 'function') {
+            config = await userDefinedWebpackConfig(process.env.NODE_ENV, {});
+          } else {
+            config = userDefinedWebpackConfig;
+          }
+          config.devServer ??= devServer;
+        }
       }
-      config.devServer ??= devServer;
+
+      return config;
     }
-  }
+  );
 
   // Lazy-loaded: optional peers absent during project-graph discovery.
   const webpack = require('webpack') as typeof import('webpack');

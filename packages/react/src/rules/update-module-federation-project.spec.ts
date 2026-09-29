@@ -40,5 +40,9 @@ describe('updateModuleFederationProject', () => {
     expect(
       readProjectConfiguration(tree, 'shell').targets.serve.options.port
     ).toBe(4201);
+    expect(
+      readProjectConfiguration(tree, 'shell').targets.build.options
+        .standardWebpackConfigFunction
+    ).toBe(true);
   });
 });

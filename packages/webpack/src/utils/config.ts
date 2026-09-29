@@ -1,14 +1,7 @@
-import {
-  ExecutorContext,
-  readCachedProjectGraph,
-  readProjectsConfigurationFromProjectGraph,
-  workspaceRoot,
-} from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/internal';
+import type { ExecutorContext } from '@nx/devkit';
 import type { Configuration } from 'webpack';
-import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
+import type { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { warnWebpackComposeHelpersDeprecation } from './deprecation';
-import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 
 export const nxWebpackComposablePlugin = 'nxWebpackComposablePlugin';
 
@@ -35,14 +28,9 @@ export interface AsyncNxComposableWebpackPlugin {
   ): Configuration | Promise<Configuration>;
 }
 
-/**
- * @deprecated Will be removed in Nx v24. Use `NxAppWebpackPlugin` from
- * `@nx/webpack/app-plugin` in a standard webpack config and run
- * `nx g @nx/webpack:convert-to-inferred`. See
- * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
- */
+/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
 export function composePlugins(
-  ...plugins: (
+  ..._plugins: (
     | NxComposableWebpackPlugin
     | AsyncNxComposableWebpackPlugin
     | Promise<NxComposableWebpackPlugin | AsyncNxComposableWebpackPlugin>
@@ -50,83 +38,28 @@ export function composePlugins(
 ) {
   warnWebpackComposeHelpersDeprecation();
   return Object.assign(
-    async function combined(
-      config: Configuration,
-      ctx: NxWebpackExecutionContext
-    ): Promise<Configuration> {
-      // Webpack may be calling us as a standard config function.
-      // Build up Nx context from environment variables.
-      // This is to enable `@nx/webpack/plugin` to work with existing projects.
-      if (ctx['env']) {
-        ensureNxWebpackExecutionContext(ctx);
-        // Build this from scratch since what webpack passes us is the env, not config,
-        // and `withNX()` creates a new config object anyway.
-        config = {};
-      }
-
-      for (const plugin of plugins) {
-        const fn = await plugin;
-        config = await fn(config, ctx);
-      }
-      return config;
+    async (
+      config: Configuration = {},
+      ctx?: NxWebpackExecutionContext
+    ): Promise<Configuration> => {
+      // Only the legacy Nx executor passes a config; CLIs pass (env, argv).
+      return ctx?.context && typeof ctx.context === 'object' ? config : {};
     },
-    {
-      [nxWebpackComposablePlugin]: true,
-    }
+    { [nxWebpackComposablePlugin]: true }
   );
 }
 
-/**
- * @deprecated Will be removed in Nx v24. Use `NxAppWebpackPlugin` from
- * `@nx/webpack/app-plugin` in a standard webpack config and run
- * `nx g @nx/webpack:convert-to-inferred`. See
- * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
- */
-export function composePluginsSync(...plugins: NxComposableWebpackPlugin[]) {
+/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+export function composePluginsSync(..._plugins: NxComposableWebpackPlugin[]) {
   warnWebpackComposeHelpersDeprecation();
   return Object.assign(
-    function combined(
-      config: Configuration,
-      ctx: NxWebpackExecutionContext
-    ): Configuration {
-      for (const plugin of plugins) {
-        config = plugin(config, ctx);
-      }
-      return config;
+    (
+      config: Configuration = {},
+      ctx?: NxWebpackExecutionContext
+    ): Configuration => {
+      // Only the legacy Nx executor passes a config; CLIs pass (env, argv).
+      return ctx?.context && typeof ctx.context === 'object' ? config : {};
     },
-    {
-      [nxWebpackComposablePlugin]: true,
-    }
+    { [nxWebpackComposablePlugin]: true }
   );
-}
-
-function ensureNxWebpackExecutionContext(ctx: NxWebpackExecutionContext): void {
-  const projectName = process.env.NX_TASK_TARGET_PROJECT;
-  const targetName = process.env.NX_TASK_TARGET_TARGET;
-  const configurationName = process.env.NX_TASK_TARGET_CONFIGURATION;
-  const projectGraph = readCachedProjectGraph();
-  const projectNode = projectGraph.nodes[projectName];
-  ctx.options ??= {
-    root: workspaceRoot,
-    projectRoot: projectNode.data.root,
-    sourceRoot: getProjectSourceRoot(projectNode.data),
-    // These aren't actually needed since NxWebpackPlugin and withNx both support them being undefined.
-    assets: undefined,
-    outputPath: undefined,
-    tsConfig: undefined,
-    outputFileName: undefined,
-    useTsconfigPaths: undefined,
-  };
-  ctx.context ??= {
-    projectName,
-    targetName,
-    configurationName,
-    projectsConfigurations:
-      readProjectsConfigurationFromProjectGraph(projectGraph),
-    nxJsonConfiguration: readNxJson(workspaceRoot),
-    cwd: process.cwd(),
-    root: workspaceRoot,
-    isVerbose: process.env['NX_VERBOSE_LOGGING'] === 'true',
-    projectGraph,
-  };
 }

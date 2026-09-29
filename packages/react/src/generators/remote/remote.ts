@@ -256,6 +256,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
     if (options.bundler !== 'rspack') {
+      projectConfig.targets.server.options.standardWebpackConfigFunction = true;
       projectConfig.targets.server.options.webpackConfig = joinPathFragments(
         projectConfig.root,
         `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`

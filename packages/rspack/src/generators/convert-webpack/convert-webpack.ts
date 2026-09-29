@@ -40,6 +40,11 @@ export default async function (tree: Tree, options: Schema) {
         target.options.target = 'web';
       }
       const convertWebpackConfigOption = (options: Record<string, any>) => {
+        if (options.standardWebpackConfigFunction !== undefined) {
+          options.standardRspackConfigFunction =
+            options.standardWebpackConfigFunction;
+          delete options.standardWebpackConfigFunction;
+        }
         if (!options.webpackConfig) {
           return;
         }
@@ -51,14 +56,19 @@ export default async function (tree: Tree, options: Schema) {
           options.webpackConfig,
           rspackConfigPath,
         ]);
+        if (
+          tree
+            .read(options.webpackConfig, 'utf-8')
+            ?.includes('/webpack/app-plugin')
+        ) {
+          options.standardRspackConfigFunction = true;
+        }
 
         options.rspackConfig = rspackConfigPath;
         delete options.webpackConfig;
       };
 
-      if (target.options.webpackConfig) {
-        convertWebpackConfigOption(target.options);
-      }
+      convertWebpackConfigOption(target.options);
 
       if (target.configurations) {
         for (const [configurationName, configuration] of Object.entries(
@@ -202,6 +212,7 @@ function transformConfigFileWithPlugins(tree: Tree, configPath: string) {
 }
 
 function transformConfigFileWithHelpers(tree: Tree, configPath: string) {
+  transformPluginConfig(tree, configPath);
   transformEsmConfigFile(tree, configPath);
   transformCjsConfigFile(tree, configPath);
   cleanupEmptyImports(tree, configPath);

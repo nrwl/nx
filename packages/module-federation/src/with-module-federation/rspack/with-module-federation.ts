@@ -35,7 +35,7 @@ export async function withModuleFederation(
 
   return function makeConfig(
     config: Configuration,
-    { context }
+    _context?: unknown
   ): Configuration {
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';

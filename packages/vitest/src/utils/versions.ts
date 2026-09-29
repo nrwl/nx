@@ -73,3 +73,6 @@ export function getInstalledVitestMajorVersion(tree?: Tree): number | null {
   const installedVitestVersion = getInstalledVitestVersion(tree);
   return installedVitestVersion ? major(installedVitestVersion) : null;
 }
+
+export const viteTsconfigPathsVersion = '~4.3.2';
+export const viteStaticCopyVersion = '^3.3.0';
