@@ -1463,7 +1463,7 @@ Write `$TRIAGE_DIR/<NUMBER>.md`. **If the file already exists** (re-review):
 
 1. Read the existing file.
 2. Move the existing `## Review draft` content into a new entry at the top of `## Prior reviews`, prefixed with a header like `### attempt <N-1> — head_sha=<PRIOR_SHA> — <PRIOR_DATE>`.
-3. Preserve the `## Author follow-ups (not for the PR)`, `## Posted` and `## Failures` sections verbatim.
+3. Preserve the `## Author follow-ups (not for the PR)`, `## Posted` and `## Failures` sections verbatim, along with every other section the file already carries. The Codex `review-pr` skill writes its own private evidence into this same file, so rewriting it from the template below would drop that evidence.
 4. Replace `## Review draft` with the new `$REVIEW_BODY` (formatted in Step 6).
 5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, increment `attempt`. Preserve `posted_at` / `posted_url` (the user fills those in).
 
