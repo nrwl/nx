@@ -50,6 +50,24 @@ Alternatively, you can use the object format with the `fileset` property:
 }
 ```
 
+#### Glob syntax
+
+Write globs with `/` as the separator on every operating system, including Windows.
+A `\` escapes the character after it, so that character matches literally.
+Use it for names that contain glob characters, such as a Next.js route group:
+
+```jsonc
+{
+  "inputs": [
+    "{projectRoot}/app/\\(marketing\\)/**/*", // the app/(marketing) directory
+    "{projectRoot}/src/\\[id\\].ts", // a file named [id].ts
+  ],
+}
+```
+
+JSON strings need `\\` to write a single `\`.
+A Windows-style glob such as `{projectRoot}\src\**` matches nothing, because `\s` reads as a plain `s`.
+
 #### Directory paths
 
 A path with no glob pattern names that file, or that directory and everything under it. All three of these match every file in `src`:

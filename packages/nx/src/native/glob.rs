@@ -46,8 +46,10 @@ impl NxGlobSetBuilder {
             glob_string
         };
 
+        // `\` escapes on every platform, so a glob means the same thing everywhere.
         let glob = GlobBuilder::new(&glob_string)
             .literal_separator(true)
+            .backslash_escape(true)
             .build()
             .map_err(anyhow::Error::from)?;
 
@@ -98,8 +100,6 @@ fn common_glob_prefix(globs: &[String]) -> Option<PathBuf> {
         if glob.starts_with('!') {
             continue;
         }
-        #[cfg(windows)]
-        let glob = glob.replace('\\', "/");
         let (directory, _) = partition_glob(&normalize_glob(glob.as_str()));
         // Drive letters and lossy names cannot safely index the raw file map.
         if directory.contains([':', '\u{fffd}'])
@@ -212,12 +212,11 @@ pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Resul
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::native::utils::Normalize;
 
     /// Pins convert_glob, partition_glob and the narrowing prefix for a corpus
     /// of real globs, so a change to them shows up as a snapshot diff.
-    /// Recorded off Windows, where `\` escapes rather than separates.
     #[test]
-    #[cfg(not(windows))]
     fn glob_readers_agree_with_the_recorded_corpus() {
         let corpus = include_str!("glob/fixtures/glob_corpus.txt");
         let mut report = String::new();
@@ -227,7 +226,11 @@ mod test {
                 Err(_) => "error".into(),
             };
             let prefix = match build_glob_set(&[glob]) {
-                Ok(set) => format!("{:?}", set.literal_prefix()),
+                // Normalized so a prefix rebuilt from components prints `/` on Windows too.
+                Ok(set) => format!(
+                    "{:?}",
+                    set.literal_prefix().map(|p| p.to_normalized_string())
+                ),
                 Err(_) => "error".into(),
             };
             report.push_str(&format!(
@@ -254,13 +257,9 @@ mod test {
     }
 
     #[test]
-    fn backslash_prefixes_follow_platform_separators() {
-        // Off Windows `\` escapes, as globset reads it: `\r` is `r`.
-        let expected = if cfg!(windows) {
-            [Some("e2e/react"); 3]
-        } else {
-            [None, Some("e2ereact"), Some("e2ereact*.spec.ts")]
-        };
+    fn a_backslash_in_a_prefix_escapes_on_every_platform() {
+        // `\` escapes, as globset reads it: `\r` is `r`.
+        let expected = [None, Some("e2ereact"), Some("e2ereact*.spec.ts")];
         for (pattern, expected) in [
             r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)",
             r"e2e\react/**/*.spec.ts",
@@ -550,6 +549,78 @@ mod test {
         assert!(glob_set.is_match("packages/package-b/package.json"));
         assert!(glob_set.is_match("packages/package-c/package.json"));
         assert!(!glob_set.is_match("packages/package-a/package.json"));
+    }
+
+    #[test]
+    fn a_double_backslash_matches_a_literal_backslash() {
+        let glob_set = build_glob_set(&[r"libs/a\\b/**", r"x\\(y)"]).unwrap();
+        assert!(glob_set.is_match(r"libs/a\b/c.ts"));
+        assert!(!glob_set.is_match("libs/a/b/c.ts"));
+        // `\\(` is a literal `\` followed by a real group.
+        assert!(glob_set.is_match(r"x\y"));
+        assert_eq!(literal_segment(r"a\\b").as_deref(), Some(r"a\b"));
+    }
+
+    /// The Nx Cloud client escapes these before writing a path into a snapshot.
+    fn escape_literal(path: &str) -> String {
+        path.chars()
+            .flat_map(|c| {
+                let escape = matches!(
+                    c,
+                    '\\' | '*' | '?' | '[' | ']' | '{' | '}' | '(' | ')' | '!'
+                );
+                escape.then_some('\\').into_iter().chain([c])
+            })
+            .collect()
+    }
+
+    #[test]
+    fn every_escaped_literal_path_matches_only_itself() {
+        let names = [
+            "(group)", "a(b", "a)b", "!name", "a!b", "!(x)", "?(x)", "+(x)", "@(x)", "*(x)",
+            "a+(b)", "@scope", "a{,b}", "{a,b}", "a,b", "a|b", "[id]", "[!x]", "a*b", "a?b",
+            r"a\b", r"a\(b", "{,", "}", "]", "a b", "雪(x)",
+        ];
+        for name in names {
+            let path = format!("libs/{name}/x.ts");
+            let glob = escape_literal(&path);
+            let glob_set = build_glob_set(&[glob.as_str()])
+                .unwrap_or_else(|e| panic!("{glob:?} failed to build: {e}"));
+            assert!(glob_set.is_match(&path), "{glob:?} should match {path:?}");
+            assert!(
+                !glob_set.is_match("libs/x/x.ts"),
+                "{glob:?} matched a sibling"
+            );
+            assert_eq!(
+                literal_segment(&escape_literal(name)).as_deref(),
+                Some(name),
+                "{name:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_escaped_brace_and_comma_stay_literal() {
+        let glob_set = build_glob_set(&[r"libs/a\{,b\}/x.ts"]).unwrap();
+        assert!(glob_set.is_match("libs/a{,b}/x.ts"));
+        assert!(!glob_set.is_match("libs/a/x.ts"));
+        assert!(!glob_set.is_match("libs/ab/x.ts"));
+        assert_eq!(literal_segment(r"a\{,b\}").as_deref(), Some("a{,b}"));
+    }
+
+    #[test]
+    fn a_backslash_escaped_parenthesis_matches_literally() {
+        let glob_set = build_glob_set(&[r"app/\(marketing\)/**"]).unwrap();
+        assert!(glob_set.is_match("app/(marketing)/page.tsx"));
+        assert!(!glob_set.is_match("app/marketing/page.tsx"));
+    }
+
+    #[test]
+    fn a_class_matches_a_literal_parenthesis() {
+        let glob_set = build_glob_set(&["app/[(]marketing[)]/**"]).unwrap();
+        assert!(glob_set.is_match("app/(marketing)/page.tsx"));
+        assert!(!glob_set.is_match("app/xmarketingx/page.tsx"));
+        assert!(!glob_set.is_match("app/marketing/page.tsx"));
     }
 
     #[test]

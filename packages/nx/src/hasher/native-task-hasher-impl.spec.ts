@@ -1623,6 +1623,75 @@ describe('native task hasher', () => {
     expect(two.inputs.files).not.toContain('libs/child/one.txt');
   });
 
+  it.each(['libs/child/[(]group[)]/page.md', 'libs/child/\\(group\\)/page.md'])(
+    'hashes a snapshot read of a parenthesized directory (%s)',
+    async (input) => {
+      const { taskGraph, impl } = await upfrontFixture();
+      await tempFs.createFiles({
+        'libs/child/(group)/page.md': 'paren',
+        'libs/child/xgroupx/page.md': 'lookalike',
+      });
+      const commit = 'head'.padEnd(40, '0');
+      const snapshotDb = connectToNxDb(
+        join(tempFs.tempDir, 'io-snapshots-paren-db'),
+        'io-snapshots'
+      );
+      new IoSnapshotStore(snapshotDb).import({
+        requestedCommit: commit,
+        snapshotsJson: JSON.stringify({
+          'child:compile': {
+            commit,
+            inputs: [input],
+            outputs: [],
+          },
+        }),
+      });
+      const hash = await impl.hashTask(
+        taskGraph.tasks['child:compile'],
+        taskGraph,
+        {},
+        tempFs.tempDir,
+        true,
+        new IoSnapshotStore(snapshotDb).get(commit)
+      );
+
+      expect(hash.inputs.files.filter((f) => f.includes('group'))).toEqual([
+        'libs/child/(group)/page.md',
+      ]);
+    }
+  );
+
+  it.each([
+    ['\\!root.md', '!root.md'],
+    ['\\(root\\)/page.md', '(root)/page.md'],
+    ['\\[id\\].md', '[id].md'],
+    ['\\{a,b\\}.md', '{a,b}.md'],
+  ])('hashes a snapshot read of a root-level %s', async (input, file) => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ [file]: 'root' });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-root-db'),
+      'io-snapshots'
+    );
+    new IoSnapshotStore(snapshotDb).import({
+      requestedCommit: commit,
+      snapshotsJson: JSON.stringify({
+        'child:compile': { commit, inputs: [input], outputs: [] },
+      }),
+    });
+    const hash = await impl.hashTask(
+      taskGraph.tasks['child:compile'],
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      new IoSnapshotStore(snapshotDb).get(commit)
+    );
+
+    expect(hash.inputs.files).toContain(file);
+  });
+
   it('hashes a task from its snapshot instead of its declared fileset', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });

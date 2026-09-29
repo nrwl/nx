@@ -1,8 +1,10 @@
 use std::fs::{create_dir_all, read_dir, read_to_string, remove_file, symlink_metadata, write};
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
 use tracing::{debug, trace};
+
+use crate::native::utils::path::escapes_workspace;
 
 use fs_extra::remove_items;
 use rayon::prelude::*;
@@ -721,42 +723,21 @@ fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> anyhow::Res
         .into_iter()
         .map(|output| {
             let path = Path::new(&output);
-            let relative = if path.is_absolute() {
-                path.strip_prefix(workspace_root).map_err(|_| {
-                    anyhow::anyhow!("Cache output is outside the workspace: {}", output)
-                })?
-            } else {
-                path
-            };
-            if escapes_workspace(relative) {
-                return Err(anyhow::anyhow!(
-                    "Cache output is outside the workspace: {}",
-                    output
-                ));
+            let outside = || anyhow::anyhow!("Cache output is outside the workspace: {}", output);
+            if path.is_absolute() {
+                let relative = path.strip_prefix(workspace_root).map_err(|_| outside())?;
+                if escapes_workspace(relative) {
+                    return Err(outside());
+                }
+                return Ok(relative.to_normalized_string());
             }
-            Ok(relative.to_normalized_string())
+            if escapes_workspace(path) {
+                return Err(outside());
+            }
+            // A relative output is a glob, where `\` escapes on every OS.
+            Ok(output)
         })
         .collect()
-}
-
-/// Whether a relative path climbs above its base via `..`.
-fn escapes_workspace(path: &Path) -> bool {
-    let mut depth: i32 = 0;
-    for component in path.components() {
-        match component {
-            Component::ParentDir => {
-                depth -= 1;
-                if depth < 0 {
-                    return true;
-                }
-            }
-            Component::Normal(_) => depth += 1,
-            Component::CurDir => {}
-            // A relative path shouldn't contain a root/prefix; treat as escaping.
-            Component::RootDir | Component::Prefix(_) => return true,
-        }
-    }
-    false
 }
 
 #[cfg(test)]
@@ -900,6 +881,20 @@ mod test {
         )
         .unwrap();
         assert_eq!(out, vec!["dist".to_string(), "build/app".to_string()]);
+    }
+
+    #[test]
+    fn normalize_outputs_keeps_escapes_in_relative_outputs() {
+        let ws = Path::new(if cfg!(windows) {
+            r"C:\ws\root"
+        } else {
+            "/ws/root"
+        });
+        let outputs = vec![
+            r"app/\(group\)/**".to_string(),
+            r"dist/\[id\].js".to_string(),
+        ];
+        assert_eq!(normalize_outputs(ws, outputs.clone()).unwrap(), outputs);
     }
 
     #[cfg(windows)]

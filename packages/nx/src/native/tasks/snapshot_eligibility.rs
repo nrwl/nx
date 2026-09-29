@@ -7,6 +7,7 @@ use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{parse_group, validate_files_glob};
 use crate::native::tasks::types::{TaskGraph, TaskUltracacheConfiguration, UltracacheMode};
+use crate::native::utils::path;
 use xxhash_rust::xxh3::Xxh3;
 
 /// What the eligibility walk needs beyond each task's ultracache configuration.
@@ -300,8 +301,9 @@ fn observed_outputs(entry: &TaskIoSnapshot) -> (Vec<String>, Vec<String>) {
             !glob.starts_with('!')
                 && expand_literal_braces(glob).iter().all(|g| {
                     !escapes_workspace(g)
+                        && !path::escapes_workspace(std::path::Path::new(g))
                         && !under_ignored_dir(g)
-                        && !g.split(['/', '\\']).any(segment_could_disguise)
+                        && !g.split('/').any(segment_could_disguise)
                 })
         });
     outputs.sort();
@@ -312,14 +314,15 @@ fn observed_outputs(entry: &TaskIoSnapshot) -> (Vec<String>, Vec<String>) {
 }
 
 /// Whether a segment could hide an excluded name behind glob syntax: a class,
-/// an unexpanded brace group, `?`, or a partial `*` (`.gi[t]`, `{..,*}`,
-/// `node_modul?s`, `node_modul*s`). A bare `*` or `**` is a plain wildcard
-/// rather than a disguise, so `under_ignored_dir` judges those instead.
+/// an unexpanded brace group, `?`, a partial `*` or an escape (`.gi[t]`,
+/// `{..,*}`, `node_modul?s`, `node_modul*s`, `.gi\t`). A bare `*` or `**` is a
+/// plain wildcard rather than a disguise, so `under_ignored_dir` judges those.
 fn segment_could_disguise(segment: &str) -> bool {
     if segment.contains(['[', '{', '?']) {
         return true;
     }
-    if !segment.contains('*') || segment.trim_matches('*').is_empty() {
+    let partial_wildcard = segment.contains('*') && !segment.trim_matches('*').is_empty();
+    if !partial_wildcard && !segment.contains('\\') {
         return false;
     }
     // Lowercased like `under_ignored_dir`, so `NODE_MODUL*S` cannot pass
@@ -337,7 +340,7 @@ const IGNORED_DIRS: [&str; 3] = ["node_modules", ".nx", ".git"];
 
 /// Case-insensitive: `.GIT/hooks` restores into `.git` on macOS and Windows.
 fn under_ignored_dir(path: &str) -> bool {
-    path.split(['/', '\\']).any(|segment| {
+    path.split('/').any(|segment| {
         IGNORED_DIRS
             .iter()
             .any(|dir| segment.eq_ignore_ascii_case(dir))
@@ -396,8 +399,18 @@ fn candidates_under(sorted: &[String], root: &str) -> Vec<String> {
 fn escapes_workspace(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     let bytes = path.as_bytes();
+    // A leading escape of a glob symbol names a root-level file like `!a.md`;
+    // any other leading `\` could spell `\/etc`, `\\server` or `\C:`.
+    let escaped_symbol = matches!(
+        bytes,
+        [
+            b'\\',
+            b'*' | b'?' | b'[' | b']' | b'{' | b'}' | b'(' | b')' | b'!',
+            ..
+        ]
+    );
     path.starts_with('/')
-        || path.starts_with('\\')
+        || (path.starts_with('\\') && !escaped_symbol)
         || (bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':')
         || path.split(['/', '\\']).any(|segment| segment == "..")
 }
@@ -561,6 +574,47 @@ mod tests {
     }
 
     #[test]
+    fn an_escape_cannot_disguise_an_ignored_dir() {
+        let disguised = [
+            r".gi\t/config",
+            r"node_module\s/x",
+            r".GI\T/hooks/x",
+            r"apps/\.nx/cache/x",
+        ];
+        let kept = [r"libs/\!notes.md", r"dist/a\(b\).js", r"a\\b/x"];
+        let (outputs, dropped) = observed_outputs(&TaskIoSnapshot {
+            commit: "c".into(),
+            inputs: vec![],
+            outputs: disguised
+                .iter()
+                .chain(&kept)
+                .map(|g| g.to_string())
+                .collect(),
+        });
+        let mut expected_dropped: Vec<String> = disguised.iter().map(|g| g.to_string()).collect();
+        expected_dropped.sort();
+        let mut expected_kept: Vec<String> = kept.iter().map(|g| g.to_string()).collect();
+        expected_kept.sort();
+        assert_eq!(dropped, expected_dropped);
+        assert_eq!(outputs, expected_kept);
+    }
+
+    #[test]
+    fn a_root_level_escaped_write_is_kept_only_where_it_stays_relative() {
+        let (outputs, dropped) = observed_outputs(&TaskIoSnapshot {
+            commit: "c".into(),
+            inputs: vec![],
+            outputs: vec![r"\!Backup".into()],
+        });
+        // On Windows `\` roots the path, so joining it would leave the workspace.
+        if cfg!(windows) {
+            assert_eq!((outputs, dropped), (vec![], vec![r"\!Backup".to_string()]));
+        } else {
+            assert_eq!((outputs, dropped), (vec![r"\!Backup".to_string()], vec![]));
+        }
+    }
+
+    #[test]
     fn brace_groups_are_expanded_before_the_escape_check() {
         assert!(
             expand_literal_braces("{..,libs}/x.ts")
@@ -584,10 +638,24 @@ mod tests {
             "C:/Users/x",
             "\\\\server\\share",
             "!../ignored",
+            r"\/etc/passwd",
+            r"\C:/Windows",
+            r"\../x",
         ] {
             assert!(escapes_workspace(glob), "{glob}");
         }
-        for glob in ["libs/a/..b/c.ts", "dist/**", "!libs/a/**/*.spec.ts", "a..b"] {
+        for glob in [
+            "libs/a/..b/c.ts",
+            "dist/**",
+            "!libs/a/**/*.spec.ts",
+            "a..b",
+            r"\!notes.md",
+            r"!\!notes.md",
+            r"\(group\)/page.tsx",
+            r"\[id\].ts",
+            r"\*x",
+            r"\{a,b\}",
+        ] {
             assert!(!escapes_workspace(glob), "{glob}");
         }
     }
