@@ -21,8 +21,7 @@ use crate::native::walker::nx_walker_with_ignore_files;
 use crate::native::watch::types::{EventType, WatchEvent};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::watch::{
-    FlushMode, WatchEventCallback, WatchSession, create_filter, create_filter_from,
-    default_watch_ignores,
+    FlushMode, WatchEventCallback, WatchSession, create_filter, default_watch_ignores,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::workspace::files_archive::archive_modified_at;
@@ -1245,7 +1244,7 @@ impl WorkspaceContext {
         let found = found.unwrap_or_else(|| nx_walker_with_ignore_files(&origin).1);
         let mut ignore_files: Vec<PathBuf> = found.iter().map(|path| origin.join(path)).collect();
         ignore_files.extend(parent_gitignore_files(&origin).into_iter().flatten());
-        let filter = create_filter_from(&origin_str, &globs, Some(ignore_files))
+        let filter = create_filter(&origin_str, &globs, Some(ignore_files))
             .map_err(|e| format!("failed to build the workspace ignore rules: {e}"))?;
         Ok(Arc::new(move |path: &str| {
             filter.admits(&origin.join(path), false)
@@ -1264,7 +1263,7 @@ impl WorkspaceContext {
             .unwrap_or_else(|_| workspace_root_path.to_path_buf());
         let mut globs = default_watch_ignores();
         globs.extend(extra_globs.iter().cloned());
-        let filter = create_filter(&origin.to_string_lossy(), &globs, false)
+        let filter = create_filter(&origin.to_string_lossy(), &globs, None)
             .map_err(|e| format!("failed to build the watch gate: {e}"))?;
         Ok(crate::native::workspace::ignored_index::Watch {
             // Only ever asked about a prefix, which is a directory.
@@ -1307,7 +1306,7 @@ impl WorkspaceContext {
         });
         let mut globs = default_watch_ignores();
         globs.extend(extra_globs);
-        WatchSession::start(workspace_root, &globs, false, callback)
+        WatchSession::start(workspace_root, &globs, callback)
     }
 
     /// Pulls what the watch pipeline holds into the files. Returns the batch
@@ -3046,43 +3045,6 @@ mod tests {
             ctx.incremental_update(vec!["libs/a/generated.ts".into()], vec![])
                 .is_empty()
         );
-    }
-
-    #[test]
-    #[cfg(not(target_arch = "wasm32"))]
-    fn the_rules_built_from_the_walk_match_the_rules_built_by_walking_for_them() {
-        let temp = workspace_with(&[
-            "a.ts",
-            "dist/out.js",
-            "libs/a/generated.ts",
-            ".pytest_cache/x",
-        ]);
-        temp.child(".gitignore").write_str("dist/\n").unwrap();
-        temp.child("libs/a/.nxignore")
-            .write_str("generated.ts\n")
-            .unwrap();
-        temp.child(".pytest_cache/.gitignore")
-            .write_str("*\n")
-            .unwrap();
-        let root = dunce::canonicalize(temp.path()).unwrap();
-
-        let result = gather_and_hash_files(&root, as_string(&TempDir::new().unwrap()), true);
-        let from_walk = WorkspaceContext::workspace_policy(&root, result.ignore_files).unwrap();
-        let by_walking =
-            create_filter(&root.to_string_lossy(), &default_watch_ignores(), true).unwrap();
-        for path in [
-            "a.ts",
-            "dist/out.js",
-            "libs/a/generated.ts",
-            "libs/a/kept.ts",
-            ".pytest_cache/x",
-        ] {
-            assert_eq!(
-                from_walk(path),
-                by_walking.admits(&root.join(path), false),
-                "{path}"
-            );
-        }
     }
 
     #[test]

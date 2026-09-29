@@ -6,7 +6,6 @@ use std::path::PathBuf;
 use tracing::trace;
 
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
-use crate::native::watch::git_utils::get_ignore_files;
 use crate::native::watch::types::RawWatchEvent;
 use crate::native::watch::utils::get_nx_ignore;
 
@@ -155,18 +154,9 @@ impl WatchFilterer {
     }
 }
 
+/// `ignore_files` are absolute paths under `origin` plus any parent
+/// `.gitignore`. `None` applies only the hardcoded ignores and `additional_globs`.
 pub(crate) fn create_filter(
-    origin: &str,
-    additional_globs: &[String],
-    use_ignore: bool,
-) -> anyhow::Result<WatchFilterer> {
-    let ignore_files = use_ignore.then(|| get_ignore_files(origin));
-    create_filter_from(origin, additional_globs, ignore_files)
-}
-
-/// `create_filter` with the ignore files already found, as absolute paths
-/// under `origin` plus any parent `.gitignore`. `None` is `use_ignore: false`.
-pub(crate) fn create_filter_from(
     origin: &str,
     additional_globs: &[String],
     ignore_files: Option<Vec<PathBuf>>,
