@@ -121,6 +121,7 @@
     },
     "test": {
       "executor": "nx:noop",
+      "inputs": [],
       "dependsOn": ["validate-links", "format"]
     },
     "pw-e2e": {
