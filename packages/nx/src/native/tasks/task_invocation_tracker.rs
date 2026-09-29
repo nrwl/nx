@@ -1,6 +1,5 @@
-use crate::native::db::connection::NxDbConnection;
+use crate::native::db::connection::{DbValue, NxDbConnection};
 use napi::bindgen_prelude::External;
-use rusqlite::params;
 use std::sync::{Arc, Mutex};
 use tracing::debug;
 
@@ -45,7 +44,11 @@ impl TaskInvocationTracker {
     pub fn register_task(&self, parent_pid: u32, task_id: String) -> anyhow::Result<()> {
         self.db.lock().unwrap().execute(
             "INSERT INTO task_invocations (root_pid, parent_pid, task_id) VALUES (?1, ?2, ?3)",
-            params![self.root_pid, parent_pid, task_id],
+            &[
+                DbValue::Integer(self.root_pid as i64),
+                DbValue::Integer(parent_pid as i64),
+                DbValue::from(task_id.as_str()),
+            ],
         )?;
         debug!(
             "Registered task invocation: root_pid={}, parent_pid={}, task_id={}",
@@ -59,7 +62,10 @@ impl TaskInvocationTracker {
     pub fn unregister_task(&self, task_id: String) -> anyhow::Result<()> {
         self.db.lock().unwrap().execute(
             "DELETE FROM task_invocations WHERE root_pid = ?1 AND task_id = ?2",
-            params![self.root_pid, task_id],
+            &[
+                DbValue::Integer(self.root_pid as i64),
+                DbValue::from(task_id.as_str()),
+            ],
         )?;
         debug!(
             "Unregistered task invocation: root_pid={}, task_id={}",
@@ -71,19 +77,21 @@ impl TaskInvocationTracker {
     /// Get all invocations for this root_pid, ordered by creation time.
     #[napi]
     pub fn get_invocation_chain(&self) -> anyhow::Result<Vec<InvocationRecord>> {
-        let db = self.db.lock().unwrap();
-        let mut stmt = db.prepare(
-            "SELECT parent_pid, task_id FROM task_invocations WHERE root_pid = ?1 ORDER BY created_at ASC",
-        )?;
-        let records = stmt
-            .query_map(params![self.root_pid], |row| {
+        self.db
+            .lock()
+            .unwrap()
+            .query_rows(
+                "SELECT parent_pid, task_id FROM task_invocations WHERE root_pid = ?1 ORDER BY created_at ASC",
+                &[DbValue::Integer(self.root_pid as i64)],
+            )?
+            .iter()
+            .map(|row| {
                 Ok(InvocationRecord {
-                    parent_pid: row.get(0)?,
-                    task_id: row.get(1)?,
+                    parent_pid: row.get_i64(0)? as u32,
+                    task_id: row.get_str(1)?,
                 })
-            })?
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(records)
+            })
+            .collect()
     }
 
     /// Clean up stale invocations older than 1 day (handles PID recycling).
@@ -91,7 +99,7 @@ impl TaskInvocationTracker {
     pub fn cleanup_stale(&self) -> anyhow::Result<()> {
         let deleted = self.db.lock().unwrap().execute(
             "DELETE FROM task_invocations WHERE created_at < datetime('now', '-1 day')",
-            [],
+            &[],
         )?;
         if deleted > 0 {
             debug!("Cleaned up {} stale invocation records", deleted);

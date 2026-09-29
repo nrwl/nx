@@ -1,7 +1,7 @@
 pub(crate) mod set;
 mod snapshots;
 #[cfg(not(target_arch = "wasm32"))]
-mod store;
+pub(crate) mod store;
 mod types;
 
 pub use snapshots::IoSnapshots;

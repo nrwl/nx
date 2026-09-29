@@ -1,16 +1,13 @@
 use std::collections::{BTreeMap, HashMap};
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result};
 use napi::bindgen_prelude::External;
-use rusqlite::params;
-use rusqlite::types::Value;
 use tracing::debug;
 
 use super::set::{ImportedSet, TaskIoSnapshot};
 use super::{IoSnapshotImportOptions, IoSnapshotResolution, IoSnapshots};
-use crate::native::db::connection::NxDbConnection;
+use crate::native::db::connection::{DbValue, NxDbConnection};
 use crate::native::utils::time::current_timestamp_millis;
 
 /// The workspace database's snapshot sets. Each import is its own version,
@@ -29,7 +26,8 @@ impl IoSnapshotStore {
     pub fn new(
         #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<Db>,
     ) -> napi::Result<Self, String> {
-        // Created here because `create_all_tables` only runs for a new database file.
+        // `create_all_tables` already made these; repeating it surfaces an unusable
+        // database here as `STORE_UNAVAILABLE`.
         db.lock()
             .unwrap()
             .execute_batch(SCHEMA)
@@ -102,20 +100,20 @@ pub type Db = Arc<Mutex<NxDbConnection>>;
 
 /// One row per version for the set, one row per task for its entry, so a run
 /// reads the tasks it plans instead of the workspace's whole set.
-const SCHEMA: &str = "
+pub(crate) const SCHEMA: &str = "
 CREATE TABLE IF NOT EXISTS io_snapshot_versions (
     commit_sha TEXT NOT NULL,
     fetched_at INTEGER NOT NULL,
     tasks INTEGER NOT NULL,
     PRIMARY KEY (commit_sha, fetched_at)
-) WITHOUT ROWID;
+);
 CREATE TABLE IF NOT EXISTS io_snapshot_entries (
     commit_sha TEXT NOT NULL,
     fetched_at INTEGER NOT NULL,
     task_id TEXT NOT NULL,
     entry TEXT NOT NULL,
     PRIMARY KEY (commit_sha, fetched_at, task_id)
-) WITHOUT ROWID;
+);
 ";
 
 /// The SQL behind the store; not exposed to JS.
@@ -137,20 +135,33 @@ impl IoSnapshotStore {
             conn.execute(
                 "INSERT OR REPLACE INTO io_snapshot_versions (commit_sha, fetched_at, tasks) \
                  VALUES (?1, ?2, ?3)",
-                params![commit, fetched_at, resolution.tasks],
+                &[
+                    DbValue::from(commit.as_str()),
+                    DbValue::Integer(fetched_at),
+                    DbValue::Integer(resolution.tasks.into()),
+                ],
             )?;
             // A version rewritten at the same instant.
             conn.execute(
                 "DELETE FROM io_snapshot_entries WHERE commit_sha = ?1 AND fetched_at = ?2",
-                params![commit, fetched_at],
+                &[DbValue::from(commit.as_str()), DbValue::Integer(fetched_at)],
             )?;
-            let mut insert = conn.prepare(
+            let rows: Vec<Vec<DbValue>> = entries
+                .iter()
+                .map(|(task_id, entry)| {
+                    vec![
+                        DbValue::from(commit.as_str()),
+                        DbValue::Integer(fetched_at),
+                        DbValue::from(task_id.as_str()),
+                        DbValue::from(entry.as_str()),
+                    ]
+                })
+                .collect();
+            conn.query_rows_each(
                 "INSERT INTO io_snapshot_entries (commit_sha, fetched_at, task_id, entry) \
                  VALUES (?1, ?2, ?3, ?4)",
+                &rows,
             )?;
-            for (task_id, entry) in &entries {
-                insert.execute(params![commit, fetched_at, task_id, entry])?;
-            }
             Ok(())
         })
     }
@@ -161,19 +172,23 @@ impl IoSnapshotStore {
         commit: &str,
         fetched_at: Option<i64>,
     ) -> Result<Option<IoSnapshotResolution>> {
-        self.db.lock().unwrap().query_row(
+        let row = self.db.lock().unwrap().query_row(
             "SELECT fetched_at, tasks FROM io_snapshot_versions \
              WHERE commit_sha = ?1 AND (?2 IS NULL OR fetched_at = ?2) \
              ORDER BY fetched_at DESC LIMIT 1",
-            params![commit, fetched_at],
-            |row| {
-                Ok(IoSnapshotResolution {
-                    requested_commit: commit.to_string(),
-                    fetched_at: row.get(0)?,
-                    tasks: row.get(1)?,
-                })
-            },
-        )
+            &[
+                DbValue::from(commit),
+                fetched_at.map_or(DbValue::Null, DbValue::Integer),
+            ],
+        )?;
+        row.map(|row| {
+            Ok(IoSnapshotResolution {
+                requested_commit: commit.to_string(),
+                fetched_at: row.get_i64(0)?,
+                tasks: u32::try_from(row.get_i64(1)?)?,
+            })
+        })
+        .transpose()
     }
 
     /// The stored entries among `task_ids` for one version of `commit`; an id
@@ -184,20 +199,27 @@ impl IoSnapshotStore {
         fetched_at: i64,
         task_ids: &[&str],
     ) -> Result<Vec<(String, TaskIoSnapshot)>> {
-        let ids = Rc::new(
-            task_ids
-                .iter()
-                .map(|id| Value::from(id.to_string()))
-                .collect::<Vec<Value>>(),
-        );
-        let rows: Vec<(String, String)> = self.db.lock().unwrap().query_map(
+        // One indexed lookup per id: turso serves `task_id IN (...)` from the index's
+        // first two columns only, which scans the whole version for every id.
+        let param_sets: Vec<Vec<DbValue>> = task_ids
+            .iter()
+            .map(|id| {
+                vec![
+                    DbValue::from(commit),
+                    DbValue::Integer(fetched_at),
+                    DbValue::from(*id),
+                ]
+            })
+            .collect();
+        let rows = self.db.lock().unwrap().query_rows_each(
             "SELECT task_id, entry FROM io_snapshot_entries \
-             WHERE commit_sha = ?1 AND fetched_at = ?2 AND task_id IN rarray(?3)",
-            (commit, fetched_at, ids),
-            |row| Ok((row.get(0)?, row.get(1)?)),
+             WHERE commit_sha = ?1 AND fetched_at = ?2 AND task_id = ?3",
+            &param_sets,
         )?;
         rows.into_iter()
-            .map(|(task_id, json)| {
+            .map(|row| {
+                let task_id = row.get_str(0)?;
+                let json = row.get_str(1)?;
                 let entry = serde_json::from_str(&json)
                     .with_context(|| format!("parsing the stored snapshot of {task_id}"))?;
                 Ok((task_id, entry))
@@ -310,7 +332,10 @@ mod tests {
             .db
             .lock()
             .unwrap()
-            .execute("UPDATE io_snapshot_versions SET tasks = 'not a number'", [])
+            .execute(
+                "UPDATE io_snapshot_versions SET tasks = 'not a number'",
+                &[],
+            )
             .unwrap();
         assert!(store.get("head".into(), None).is_none());
     }
