@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  type ProjectConfiguration,
   formatFiles,
   getProjects,
   joinPathFragments,
@@ -29,6 +30,11 @@ export default async function (tree: Tree, options: Schema) {
     );
   }
   const project = projects.get(options.project);
+  if (usesModuleFederation(tree, project)) {
+    throw new Error(
+      `The project ${options.project} is using Module Federation. At the moment, we don't support migrating projects that use Module Federation. See https://nx.dev/docs/kb/migrate-from-nx-module-federation to move it to the official Module Federation plugins.`
+    );
+  }
 
   const webpackConfigsWithHelpersToConvert: [string, string][] = [];
   const webpackConfigsWithPluginsToConvert: [string, string][] = [];
@@ -88,16 +94,6 @@ export default async function (tree: Tree, options: Schema) {
       target.executor = '@nx/rspack:dev-server';
     } else if (target.executor === '@nx/webpack:ssr-dev-server') {
       target.executor = '@nx/rspack:dev-server';
-    } else if (target.executor === '@nx/react:module-federation-dev-server') {
-      target.executor = '@nx/rspack:module-federation-dev-server';
-    } else if (
-      target.executor === '@nx/react:module-federation-ssr-dev-server'
-    ) {
-      target.executor = '@nx/rspack:module-federation-ssr-dev-server';
-    } else if (
-      target.executor === '@nx/react:module-federation-static-server'
-    ) {
-      target.executor = '@nx/rspack:module-federation-static-server';
     }
   }
 
@@ -244,4 +240,19 @@ function findWebpackConfigPath(tree: Tree, projectRoot: string) {
       return possiblePath;
     }
   }
+}
+
+function usesModuleFederation(tree: Tree, project: ProjectConfiguration) {
+  if (
+    Object.values(project.targets ?? {}).some((target) =>
+      target.executor?.includes(':module-federation-')
+    )
+  ) {
+    return true;
+  }
+  return ['ts', 'js', 'mjs', 'cjs', 'mts', 'cts'].some((ext) =>
+    tree.exists(
+      joinPathFragments(project.root, `module-federation.config.${ext}`)
+    )
+  );
 }

@@ -30,17 +30,11 @@
   ],
   "typesVersions": {
     "*": {
-      "mf": [
-        "dist/mf/index.d.ts"
-      ],
       "babel": [
         "dist/babel.d.ts"
       ],
       "tailwind": [
         "dist/tailwind.d.ts"
-      ],
-      "module-federation": [
-        "dist/module-federation.d.ts"
       ],
       "webpack-plugin": [
         "dist/webpack-plugin.d.ts"
@@ -93,22 +87,10 @@
   "peerDependencies": {
     "babel-plugin-react-compiler": "^1.0.0",
     "react": ">=18.0.0 <20.0.0",
-    "react-dom": ">=18.0.0 <20.0.0",
-    "@nx/module-federation": "workspace:*",
-    "express": "^4.21.2",
-    "http-proxy-middleware": "catalog:"
+    "react-dom": ">=18.0.0 <20.0.0"
   },
   "peerDependenciesMeta": {
     "babel-plugin-react-compiler": {
-      "optional": true
-    },
-    "@nx/module-federation": {
-      "optional": true
-    },
-    "express": {
-      "optional": true
-    },
-    "http-proxy-middleware": {
       "optional": true
     }
   },
@@ -125,7 +107,6 @@
   },
   "devDependencies": {
     "@nx/cypress": "workspace:*",
-    "@nx/module-federation": "workspace:*",
     "@nx/playwright": "workspace:*",
     "@nx/rollup": "workspace:*",
     "@nx/rsbuild": "workspace:*",
@@ -133,8 +114,6 @@
     "@nx/vitest": "workspace:*",
     "@nx/webpack": "workspace:*",
     "@nx/storybook": "workspace:*",
-    "express": "^4.21.2",
-    "http-proxy-middleware": "catalog:",
     "nx": "workspace:*"
   },
   "optionalDependencies": {
@@ -153,11 +132,6 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./mf": {
-      "@nx/nx-source": "./mf/index.ts",
-      "types": "./dist/mf/index.d.ts",
-      "default": "./dist/mf/index.js"
-    },
     "./babel": {
       "@nx/nx-source": "./babel.ts",
       "types": "./dist/babel.d.ts",
@@ -167,11 +141,6 @@
       "@nx/nx-source": "./tailwind.ts",
       "types": "./dist/tailwind.d.ts",
       "default": "./dist/tailwind.js"
-    },
-    "./module-federation": {
-      "@nx/nx-source": "./module-federation.ts",
-      "types": "./dist/module-federation.d.ts",
-      "default": "./dist/module-federation.js"
     },
     "./webpack-plugin": {
       "@nx/nx-source": "./webpack-plugin.ts",

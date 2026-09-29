@@ -198,40 +198,7 @@ module.exports = composePlugins(
 
 ### Configure Webpack for Module Federation
 
-{% aside type="tip" title="Non-standard webpack config" %}
-`composePlugins`, `withNx`, and `withModuleFederation` do not work with the Webpack CLI and requires the use of the `@nx/webpack:webpack` executor.
-{% /aside %}
-
-If you use the [Module Federation](/docs/kb/faster-builds-with-module-federation) support
-from `@nx/angular` or `@nx/react` then
-you can customize your Webpack configuration as follows.
-
-```js
-// apps/my-app/webpack.config.js
-const { composePlugins, withNx } = require('@nx/webpack');
-const { merge } = require('webpack-merge');
-const { withModuleFederation } = require('@nx/module-federation/webpack');
-// or `const { withModuleFederation } = require('@nx/module-federation/angular');`
-
-module.exports = composePlugins(
-  withNx(),
-  async (config, { options, context }) => {
-    const federatedModules = await withModuleFederation({
-      // your options here
-    });
-
-    return merge(federatedModules(config, { options, context }), {
-      // overwrite values here
-    });
-  }
-);
-```
-
-{% aside type="note" title="Install @nx/module-federation" %}
-The `withModuleFederation` plugins live in the `@nx/module-federation` package. Install it with your package manager.
-
-The `host` and `remote` generators that previously added it are deprecated as of Nx v23. Start new React micro frontends with the [`@nx/react:consumer` and `@nx/react:provider`](/docs/kb/consumer-and-provider) generators, which configure the official Module Federation bundler plugins instead of these webpack plugins. For Angular micro frontends, use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation), covered in [Micro Frontends with Angular](/docs/kb/angular-micro-frontends).
-{% /aside %}
+Nx v24 removed `withModuleFederation` and the rest of Nx Module Federation. Add `ModuleFederationPlugin` from `@module-federation/enhanced/webpack` to a standard webpack config instead. To move an existing config, follow [migrate from Nx Module Federation](/docs/kb/migrate-from-nx-module-federation) for React or [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation) for Angular.
 
 Reference the [Webpack documentation](https://webpack.js.org/configuration/) for details on the structure of the Webpack
 configuration object.

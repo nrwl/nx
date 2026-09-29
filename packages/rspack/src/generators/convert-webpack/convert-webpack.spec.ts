@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { readProjectConfiguration } from '@nx/devkit';
+import { addProjectConfiguration, readProjectConfiguration } from '@nx/devkit';
 // nx-ignore-next-line
-import { applicationGenerator, hostGenerator } from '@nx/react';
+import { applicationGenerator } from '@nx/react';
 // nx-ignore-next-line
 import { applicationGenerator as nestApplicationGenerator } from '@nx/nest';
 import convertWebpack from './convert-webpack';
@@ -167,340 +167,43 @@ describe('Convert webpack', () => {
           `);
     });
 
-    it('should convert react module federation webpack projects to rspack', async () => {
-      // ARRANGE
+    it('should refuse projects using a Module Federation executor', async () => {
       const tree = createTreeWithEmptyWorkspace();
-      await hostGenerator(tree, {
-        directory: 'demo',
-        bundler: 'webpack',
-        e2eTestRunner: 'playwright',
-        remotes: ['remote1', 'remote2'],
-        linter: 'none',
-        style: 'css',
-        addPlugin: false,
-        unitTestRunner: 'none',
-        typescriptConfiguration: true,
+      addProjectConfiguration(tree, 'host', {
+        root: 'host',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: { webpackConfig: 'host/webpack.config.ts' },
+          },
+          serve: { executor: '@nx/react:module-federation-dev-server' },
+        },
       });
+      tree.write('host/webpack.config.ts', 'export default {};');
 
-      // ACT
-      await convertWebpack(tree, { project: 'demo' });
-      await convertWebpack(tree, { project: 'remote1' });
-      await convertWebpack(tree, { project: 'remote2' });
+      await expect(convertWebpack(tree, { project: 'host' })).rejects.toThrow(
+        'The project host is using Module Federation.'
+      );
+      expect(tree.exists('host/webpack.config.ts')).toBeTruthy();
+    });
 
-      // ASSERT
-      const project = readProjectConfiguration(tree, 'demo');
+    it('should refuse projects with a module-federation.config file', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'remote', {
+        root: 'remote',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: { webpackConfig: 'remote/webpack.config.js' },
+          },
+        },
+      });
+      tree.write('remote/webpack.config.js', 'module.exports = {};');
+      tree.write('remote/module-federation.config.js', 'module.exports = {};');
 
-      expect(tree.exists('demo/rspack.config.ts')).toBeTruthy();
-      expect(tree.read('demo/rspack.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { withModuleFederation } from '@nx/module-federation/rspack';
-        import { withReact } from '@nx/rspack';
-        import { withNx } from '@nx/rspack';
-        import { composePlugins } from '@nx/rspack';
-
-        import type { ModuleFederationConfig } from '@nx/module-federation';
-
-        import baseConfig from './module-federation.config';
-
-        const config: ModuleFederationConfig = {
-          ...baseConfig,
-        };
-
-        // Nx plugins for webpack to build config object from Nx options and context.
-        /**
-         * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
-         * The DTS Plugin can be enabled by setting dts: true
-         * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
-         */
-        export default composePlugins(
-          withNx(),
-          withReact({ useLegacyHtmlPlugin: true }),
-          withModuleFederation(config, { dts: false }),
-        );
-        "
-      `);
-      expect(project.targets.build).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "extractLicenses": false,
-                    "optimization": false,
-                    "sourceMap": true,
-                    "vendorChunk": true,
-                  },
-                  "production": {
-                    "extractLicenses": true,
-                    "fileReplacements": [
-                      {
-                        "replace": "demo/src/environments/environment.ts",
-                        "with": "demo/src/environments/environment.prod.ts",
-                      },
-                    ],
-                    "namedChunks": false,
-                    "optimization": true,
-                    "outputHashing": "all",
-                    "rspackConfig": "demo/rspack.config.prod.ts",
-                    "sourceMap": false,
-                    "vendorChunk": false,
-                  },
-                },
-                "defaultConfiguration": "production",
-                "executor": "@nx/rspack:rspack",
-                "options": {
-                  "assets": [
-                    "demo/src/favicon.ico",
-                    "demo/src/assets",
-                  ],
-                  "baseHref": "/",
-                  "compiler": "babel",
-                  "index": "demo/src/index.html",
-                  "main": "demo/src/main.ts",
-                  "outputPath": "dist/demo",
-                  "rspackConfig": "demo/rspack.config.ts",
-                  "scripts": [],
-                  "styles": [
-                    "demo/src/styles.css",
-                  ],
-                  "target": "web",
-                  "tsConfig": "demo/tsconfig.app.json",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              }
-          `);
-      expect(project.targets.serve).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "buildTarget": "demo:build:development",
-                  },
-                  "production": {
-                    "buildTarget": "demo:build:production",
-                    "hmr": false,
-                  },
-                },
-                "defaultConfiguration": "development",
-                "executor": "@nx/rspack:module-federation-dev-server",
-                "options": {
-                  "buildTarget": "demo:build",
-                  "hmr": true,
-                  "port": 4200,
-                },
-              }
-          `);
-
-      const remote1 = readProjectConfiguration(tree, 'remote1');
-
-      expect(tree.exists('remote1/rspack.config.ts')).toBeTruthy();
-      expect(tree.read('remote1/rspack.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { withModuleFederation } from '@nx/module-federation/rspack';
-        import { withReact } from '@nx/rspack';
-        import { withNx } from '@nx/rspack';
-        import { composePlugins } from '@nx/rspack';
-
-        import baseConfig from './module-federation.config';
-
-        const config = {
-          ...baseConfig,
-        };
-
-        // Nx plugins for webpack to build config object from Nx options and context.
-        /**
-         * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
-         * The DTS Plugin can be enabled by setting dts: true
-         * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
-         */
-        export default composePlugins(
-          withNx(),
-          withReact({ useLegacyHtmlPlugin: true }),
-          withModuleFederation(config, { dts: false }),
-        );
-        "
-      `);
-      expect(tree.exists('remote1/rspack.config.prod.ts')).toBeTruthy();
-      expect(tree.read('remote1/rspack.config.prod.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-              "export default require('./rspack.config');
-              "
-          `);
-      expect(project.targets.build).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "extractLicenses": false,
-                    "optimization": false,
-                    "sourceMap": true,
-                    "vendorChunk": true,
-                  },
-                  "production": {
-                    "extractLicenses": true,
-                    "fileReplacements": [
-                      {
-                        "replace": "demo/src/environments/environment.ts",
-                        "with": "demo/src/environments/environment.prod.ts",
-                      },
-                    ],
-                    "namedChunks": false,
-                    "optimization": true,
-                    "outputHashing": "all",
-                    "rspackConfig": "demo/rspack.config.prod.ts",
-                    "sourceMap": false,
-                    "vendorChunk": false,
-                  },
-                },
-                "defaultConfiguration": "production",
-                "executor": "@nx/rspack:rspack",
-                "options": {
-                  "assets": [
-                    "demo/src/favicon.ico",
-                    "demo/src/assets",
-                  ],
-                  "baseHref": "/",
-                  "compiler": "babel",
-                  "index": "demo/src/index.html",
-                  "main": "demo/src/main.ts",
-                  "outputPath": "dist/demo",
-                  "rspackConfig": "demo/rspack.config.ts",
-                  "scripts": [],
-                  "styles": [
-                    "demo/src/styles.css",
-                  ],
-                  "target": "web",
-                  "tsConfig": "demo/tsconfig.app.json",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              }
-          `);
-      expect(project.targets.serve).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "buildTarget": "demo:build:development",
-                  },
-                  "production": {
-                    "buildTarget": "demo:build:production",
-                    "hmr": false,
-                  },
-                },
-                "defaultConfiguration": "development",
-                "executor": "@nx/rspack:module-federation-dev-server",
-                "options": {
-                  "buildTarget": "demo:build",
-                  "hmr": true,
-                  "port": 4200,
-                },
-              }
-          `);
-
-      const remote2 = readProjectConfiguration(tree, 'remote2');
-
-      expect(tree.exists('remote2/rspack.config.ts')).toBeTruthy();
-      expect(tree.read('remote2/rspack.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { withModuleFederation } from '@nx/module-federation/rspack';
-        import { withReact } from '@nx/rspack';
-        import { withNx } from '@nx/rspack';
-        import { composePlugins } from '@nx/rspack';
-
-        import baseConfig from './module-federation.config';
-
-        const config = {
-          ...baseConfig,
-        };
-
-        // Nx plugins for webpack to build config object from Nx options and context.
-        /**
-         * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
-         * The DTS Plugin can be enabled by setting dts: true
-         * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
-         */
-        export default composePlugins(
-          withNx(),
-          withReact({ useLegacyHtmlPlugin: true }),
-          withModuleFederation(config, { dts: false }),
-        );
-        "
-      `);
-      expect(tree.exists('remote2/rspack.config.prod.ts')).toBeTruthy();
-      expect(tree.read('remote2/rspack.config.prod.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-              "export default require('./rspack.config');
-              "
-          `);
-      expect(project.targets.build).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "extractLicenses": false,
-                    "optimization": false,
-                    "sourceMap": true,
-                    "vendorChunk": true,
-                  },
-                  "production": {
-                    "extractLicenses": true,
-                    "fileReplacements": [
-                      {
-                        "replace": "demo/src/environments/environment.ts",
-                        "with": "demo/src/environments/environment.prod.ts",
-                      },
-                    ],
-                    "namedChunks": false,
-                    "optimization": true,
-                    "outputHashing": "all",
-                    "rspackConfig": "demo/rspack.config.prod.ts",
-                    "sourceMap": false,
-                    "vendorChunk": false,
-                  },
-                },
-                "defaultConfiguration": "production",
-                "executor": "@nx/rspack:rspack",
-                "options": {
-                  "assets": [
-                    "demo/src/favicon.ico",
-                    "demo/src/assets",
-                  ],
-                  "baseHref": "/",
-                  "compiler": "babel",
-                  "index": "demo/src/index.html",
-                  "main": "demo/src/main.ts",
-                  "outputPath": "dist/demo",
-                  "rspackConfig": "demo/rspack.config.ts",
-                  "scripts": [],
-                  "styles": [
-                    "demo/src/styles.css",
-                  ],
-                  "target": "web",
-                  "tsConfig": "demo/tsconfig.app.json",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              }
-          `);
-      expect(project.targets.serve).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "buildTarget": "demo:build:development",
-                  },
-                  "production": {
-                    "buildTarget": "demo:build:production",
-                    "hmr": false,
-                  },
-                },
-                "defaultConfiguration": "development",
-                "executor": "@nx/rspack:module-federation-dev-server",
-                "options": {
-                  "buildTarget": "demo:build",
-                  "hmr": true,
-                  "port": 4200,
-                },
-              }
-          `);
+      await expect(convertWebpack(tree, { project: 'remote' })).rejects.toThrow(
+        'The project remote is using Module Federation.'
+      );
     });
   });
 });

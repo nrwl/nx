@@ -15,8 +15,8 @@ A challenge arises when these federated modules are integrated into a _host_ or 
 
 To mitigate these issues, Module Federation has a shared API. Its primary function is to act as a gatekeeper, ensuring that only one copy of a dependency is downloaded, regardless of how many federated modules request it.
 
-{% aside type="note" title="v23 consumer/provider setups" %}
-The automatic sharing described on this page applies to legacy setups using `withModuleFederation` or `NxModuleFederationPlugin`. With the v23 `consumer` and `provider` generators, you configure sharing explicitly in the federation plugin's `shared` option. See the [sharing strategy](/docs/kb/micro-frontend-architecture#share-as-few-libraries-as-possible). The Single Version Policy reasoning below applies either way.
+{% aside type="note" title="Removed in Nx v24" %}
+The automatic sharing described on this page came from `withModuleFederation` and `NxModuleFederationPlugin`, which Nx v24 removed. To move an existing setup, see [migrate from Nx Module Federation](/docs/kb/migrate-from-nx-module-federation). With the v23 `consumer` and `provider` generators, you configure sharing explicitly in the federation plugin's `shared` option. See the [sharing strategy](/docs/kb/micro-frontend-architecture#share-as-few-libraries-as-possible). The Single Version Policy reasoning below applies either way.
 {% /aside %}
 
 ### How it works
@@ -26,7 +26,7 @@ The Shared API maintains a registry of all the downloaded dependencies. When a f
 ![How Shared API works](../../../assets/concepts/module-federation/shared-api.png)
 
 {% aside type="note" title="Lost?" %}
-If you are not familiar with the concepts of federated modules, remotes, and hosts, please read the [Faster builds with module federation](/docs/kb/faster-builds-with-module-federation) for an introduction.
+If you are not familiar with the concepts of federated modules, remotes, and hosts, please read the [Module Federation introduction](/docs/technologies/module-federation/introduction).
 {% /aside %}
 
 ## Our approach

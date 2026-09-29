@@ -60,20 +60,6 @@
       "description": "Create a hook.",
       "aliases": ["c"]
     },
-    "host": {
-      "factory": "./dist/src/generators/host/host",
-      "schema": "./dist/src/generators/host/schema.json",
-      "x-type": "application",
-      "description": "Generate a host react application",
-      "x-deprecated": "Use `@nx/react:consumer` instead (dynamic federation, no static-serve orchestration). Removed in Nx v24."
-    },
-    "remote": {
-      "factory": "./dist/src/generators/remote/remote",
-      "schema": "./dist/src/generators/remote/schema.json",
-      "x-type": "application",
-      "description": "Generate a remote react application",
-      "x-deprecated": "Use `@nx/react:provider` instead. Removed in Nx v24."
-    },
     "consumer": {
       "factory": "./dist/src/generators/consumer/consumer",
       "schema": "./dist/src/generators/consumer/schema.json",
@@ -103,13 +89,6 @@
       "schema": "./dist/src/generators/setup-ssr/schema.json",
       "description": "Set up SSR configuration for a project.",
       "hidden": false
-    },
-    "federate-module": {
-      "factory": "./dist/src/generators/federate-module/federate-module#federateModuleGenerator",
-      "schema": "./dist/src/generators/federate-module/schema.json",
-      "description": "Federate a module.",
-      "hidden": false,
-      "x-deprecated": "The new `@nx/react:provider` generator exposes modules directly. Removed in Nx v24."
     }
   }
 }

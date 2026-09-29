@@ -126,10 +126,10 @@ Wrap each `<ProviderBoundary>` in your router of choice (TanStack Router, React 
 
 ## What changed in v23
 
-The following surfaces are deprecated in v23 and will be removed in v24:
+Nx v23 deprecated the following surfaces, and Nx v24 removed them:
 
 - `@nx/react:host`, `@nx/react:remote`, `@nx/react:federate-module`
-- `@nx/angular:host`, `@nx/angular:remote`, `@nx/angular:setup-mf`, `@nx/angular:federate-module`
+- `@nx/angular:host`, `@nx/angular:remote`, `@nx/angular:setup-mf`, `@nx/angular:federate-module`, `@nx/angular:convert-to-with-mf`
 - `@nx/react:module-federation-dev-server`, `@nx/react:module-federation-ssr-dev-server`, `@nx/react:module-federation-static-server`
 - `@nx/angular:module-federation-dev-server`, `@nx/angular:module-federation-dev-ssr`
 - `@nx/rspack:module-federation-dev-server`, `@nx/rspack:module-federation-ssr-dev-server`, `@nx/rspack:module-federation-static-server`
@@ -140,9 +140,7 @@ Angular Module Federation in Nx is no longer supported. Use [`@angular-architect
 
 ## Migrate from `host` / `remote`
 
-There is **no automated codemod**. Existing setups vary widely (custom executors, host orchestration, SSR variants) and a generator would not land cleanly. Migrate manually using the steps below, or paste the AI prompt at the end of this section into Cursor / Claude Code / Copilot to perform the rewrite on your own codebase.
-
-The steps below regenerate each app, so they move webpack apps onto a different bundler. To keep your current webpack or Rspack setup and swap only the federation plugin, see [migrating off `@nx/module-federation`](/docs/kb/migrate-from-nx-module-federation) instead.
+The steps below regenerate each app, so they move webpack apps onto a different bundler. Migrate manually, or paste the AI prompt at the end of this section into your AI assistant. To keep your current webpack or Rspack setup and swap only the federation plugin, see [migrating off `@nx/module-federation`](/docs/kb/migrate-from-nx-module-federation) instead. `nx migrate` to Nx v24 follows the same guide.
 
 ### Manual steps
 
@@ -159,7 +157,7 @@ The steps below regenerate each app, so they move webpack apps onto a different 
 Paste this into your AI assistant of choice, adjusted with your project paths:
 
 ```markdown
-You are migrating an Nx workspace from the deprecated `@nx/react:host` / `@nx/react:remote` generators to the new
+You are migrating an Nx workspace from the removed `@nx/react:host` / `@nx/react:remote` generators to the new
 `@nx/react:consumer` / `@nx/react:provider` generators (Nx v23+).
 
 For each `host` app in `apps/`:
