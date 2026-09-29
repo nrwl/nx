@@ -87,7 +87,8 @@ impl OutputRecords {
                 }
             }
         }
-        let index = reader.caught_up();
+        reader.catch_up();
+        let index = reader.index();
         entries.into_par_iter().for_each(|entry| {
             // Read from disk: the watch may not have delivered the task's own
             // writes yet, and a listing missing them would record too little.
@@ -97,7 +98,7 @@ impl OutputRecords {
             };
             let made_at = now_secs();
             let files = paths
-                .into_iter()
+                .into_par_iter()
                 .filter_map(|path| {
                     let full_path = root.join(&path);
                     let stamp = stamp_of(&std::fs::metadata(&full_path).ok()?);
@@ -128,7 +129,8 @@ impl OutputRecords {
         reader: &IgnoredIndexReader,
         entries: Vec<TaskOutputs>,
     ) -> Vec<bool> {
-        let index = reader.caught_up();
+        reader.catch_up();
+        let index = reader.index();
         entries
             .into_par_iter()
             .map(|entry| {
@@ -156,7 +158,7 @@ impl OutputRecords {
                     trace!("outputs of {} changed: different files", entry.hash);
                     return false;
                 }
-                recorded.files.iter().all(|file| {
+                recorded.files.par_iter().all(|file| {
                     let full_path = root.join(&file.path);
                     std::fs::metadata(&full_path)
                         .is_ok_and(|metadata| stamp_of(&metadata) == file.stamp)
