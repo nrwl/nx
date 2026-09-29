@@ -98,12 +98,6 @@
       "description": "Generate a Cypress component test for a React component",
       "hidden": false
     },
-    "setup-ssr": {
-      "factory": "./dist/src/generators/setup-ssr/setup-ssr#setupSsrGenerator",
-      "schema": "./dist/src/generators/setup-ssr/schema.json",
-      "description": "Set up SSR configuration for a project.",
-      "hidden": false
-    },
     "federate-module": {
       "factory": "./dist/src/generators/federate-module/federate-module#federateModuleGenerator",
       "schema": "./dist/src/generators/federate-module/schema.json",

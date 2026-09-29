@@ -19,6 +19,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 
+import { loadConfigFile } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -238,6 +239,40 @@ function buildTargetWebpack(
     Has build config? ${!!buildableProjectConfig}
     Has component config? ${!!ctProjectConfig}
     `);
+  }
+
+  const buildConfig = buildableProjectConfig.targets[parsed.target];
+  if (buildConfig.metadata?.technologies?.includes('webpack')) {
+    return async () => {
+      const configPath = ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts']
+        .map((ext) =>
+          join(
+            workspaceRoot,
+            buildableProjectConfig.root,
+            `webpack.config.${ext}`
+          )
+        )
+        .find((path) => existsSync(path));
+      if (!configPath)
+        throw new Error(`Cannot find webpack config for ${buildTarget}`);
+      const previousBuildTarget = process.env.NX_BUILD_TARGET;
+      process.env.NX_BUILD_TARGET = buildTarget;
+      try {
+        const exported = await loadConfigFile(configPath);
+        const config =
+          typeof exported === 'function'
+            ? await exported({}, { mode: 'development' })
+            : exported;
+        // Cypress runs its own dev server; the app's port and history
+        // fallback would collide with it and replace its spec page.
+        const { devServer: _devServer, ...ctConfig } = config;
+        return ctConfig;
+      } finally {
+        if (previousBuildTarget === undefined)
+          delete process.env.NX_BUILD_TARGET;
+        else process.env.NX_BUILD_TARGET = previousBuildTarget;
+      }
+    };
   }
 
   if (

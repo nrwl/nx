@@ -51,8 +51,8 @@ base config at the workspace root, and folds `.eslintignore` files into `ignores
 It does not convert JavaScript-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`), so
 convert those by hand using the steps below.
 New Nx workspaces generate flat config by default, and the
-[@nx/eslint:lint executor](/docs/technologies/eslint/executors#lint) runs it without extra
-configuration.
+[@nx/eslint/plugin inferred targets](/docs/technologies/eslint/introduction) run it without
+extra configuration.
 
 The generator aims to produce a flat config that behaves exactly like your original JSON
 config, so depending on the complexity of the original it may wrap parts in `FlatCompat`.
@@ -166,8 +166,8 @@ Flat config is only part of the v9 upgrade. These runtime changes surface during
 
 - **Preset defaults shifted** - The ESLint v9 and typescript-eslint v8 recommended sets enable rules they didn't before, so a previously passing workspace can newly fail. Disable a newly reported rule you never configured, with a short comment, instead of editing source files to satisfy it.
 - **A crash is not a finding** - Errors like `TypeError: context.getAncestors is not a function` or `Could not find "<rule>" in plugin` mean an installed plugin predates ESLint v9. Update the plugin and prefer its flat entry point (for example `eslint-plugin-cypress/flat`) instead of disabling its rules.
-- **Some output formatters were removed** - `stylish`, `html`, `json`, and `json-with-metadata` remain built in. For a removed one like `junit`, install the community package (`eslint-formatter-junit`) and reference it by package name in the lint target's `format` option.
-- **Removed CLI flags** - `--rulesdir`, `--ext`, and `--resolve-plugins-relative-to` are gone, along with the matching `@nx/eslint:lint` options. Move file targeting into `files` and `ignores` in the config.
+- **Some output formatters were removed** - `stylish`, `html`, `json`, and `json-with-metadata` remain built in. For a removed one like `junit`, install the community package (`eslint-formatter-junit`) and pass its package name to `--format`.
+- **Removed CLI flags** - `--rulesdir`, `--ext`, and `--resolve-plugins-relative-to` are gone. Move file targeting into `files` and `ignores` in the config.
 - **Local rule API moved to `SourceCode`** - If the workspace authors its own rules, `context.getScope()` becomes `sourceCode.getScope(node)` (and similar for `getAncestors`, `getDeclaredVariables`, `getText`, and `parserServices`), and a rule that accepts options must declare `meta.schema`.
 
 After the migration, run `nx reset` so renamed configs are re-detected, then confirm `nx run-many -t lint` passes across the workspace.

@@ -1,6 +1,10 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
+import {
+  joinPathFragments,
+  readNxJson,
+  readProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../library/library.impl';
 import cypressComponentConfigurationGenerator from './cypress-component-configuration.impl';
@@ -39,17 +43,12 @@ describe('CypressComponentConfiguration', () => {
       });
       "
     `);
-    expect(project.targets['component-test']).toMatchInlineSnapshot(`
-      {
-        "executor": "@nx/cypress:cypress",
-        "options": {
-          "cypressConfig": "cypress-test/cypress.config.ts",
-          "devServerTarget": "",
-          "skipServe": true,
-          "testingType": "component",
-        },
-      }
-    `);
+    expect(project.targets['component-test']).toBeUndefined();
+    expect(
+      readNxJson(tree).plugins.some(
+        (p) => typeof p !== 'string' && p.plugin === '@nx/cypress/plugin'
+      )
+    ).toBe(true);
     expect(
       tree.exists(joinPathFragments(project.root, 'cypress'))
     ).toBeTruthy();

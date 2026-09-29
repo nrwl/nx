@@ -5,7 +5,6 @@ import {
   detectPackageManager,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
@@ -25,11 +24,7 @@ export function expoInitGenerator(tree: Tree, schema: Schema) {
 export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
   assertSupportedExpoVersion(host);
 
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin = true;
 
   addGitIgnoreEntry(host);
 

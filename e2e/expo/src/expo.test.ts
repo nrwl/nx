@@ -288,7 +288,7 @@ console.log(
     // run prebuild command with git check disable
     process.env['EXPO_NO_GIT_STATUS'] = 'true';
     const prebuildResult = await runCLIAsync(
-      `prebuild ${appName} --no-interactive --install=false`
+      `prebuild ${appName} -- --no-install`
     );
     expect(prebuildResult.combinedOutput).toContain(
       'Successfully ran target prebuild for project'
@@ -296,27 +296,19 @@ console.log(
   });
 
   it('should install', async () => {
-    // run install command
-    let installResults = await runCLIAsync(
-      `install ${appName} --force --no-interactive`
-    );
-    expect(installResults.combinedOutput).toContain(
-      'Successfully ran target install'
-    );
-
-    installResults = await runCLIAsync(
-      `install ${appName} --force --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
+    const installResults = await runCLIAsync(
+      `install ${appName} -- @react-native-async-storage/async-storage react-native-image-picker`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
     );
     const packageJson = readJson(join(appName, 'package.json'));
-    expect(packageJson).toMatchObject({
-      dependencies: {
-        '@react-native-async-storage/async-storage': '*',
-        'react-native-image-picker': '*',
-      },
-    });
+    expect(packageJson.dependencies).toHaveProperty(
+      '@react-native-async-storage/async-storage'
+    );
+    expect(packageJson.dependencies).toHaveProperty(
+      'react-native-image-picker'
+    );
   });
 
   it('should run e2e for cypress', async () => {

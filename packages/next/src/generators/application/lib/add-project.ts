@@ -1,70 +1,17 @@
-import { addBuildTargetDefaults, type PackageJson } from '@nx/devkit/internal';
+import { type PackageJson } from '@nx/devkit/internal';
 import { NormalizedSchema } from './normalize-options';
 import {
   addProjectConfiguration,
   joinPathFragments,
   ProjectConfiguration,
-  readNxJson,
   Tree,
   writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { nextVersion } from '../../../utils/versions';
-import { warnNextExecutorGenerating } from '../../../utils/deprecation';
 import { reactDomVersion, reactVersion } from '@nx/react';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
-  const targets: Record<string, any> = {};
-
-  // Check if plugin exists in nx.json and if it doesn't then we can continue
-  // with the default targets.
-
-  const nxJson = readNxJson(host);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/next/plugin'
-      : p.plugin === '@nx/next/plugin'
-  );
-
-  if (!hasPlugin) {
-    warnNextExecutorGenerating();
-    addBuildTargetDefaults(host, '@nx/next:build');
-
-    targets.build = {
-      executor: '@nx/next:build',
-      outputs: ['{options.outputPath}'],
-      defaultConfiguration: 'production',
-      options: {
-        outputPath: options.outputPath,
-      },
-      configurations: {
-        development: {
-          outputPath: options.appProjectRoot,
-        },
-        production: {},
-      },
-    };
-
-    targets.serve = {
-      executor: '@nx/next:server',
-      defaultConfiguration: 'development',
-      options: {
-        buildTarget: `${options.projectName}:build`,
-        dev: true,
-      },
-      configurations: {
-        development: {
-          buildTarget: `${options.projectName}:build:development`,
-          dev: true,
-        },
-        production: {
-          buildTarget: `${options.projectName}:build:production`,
-          dev: false,
-        },
-      },
-    };
-  }
-
   const sourceRoot = options.src
     ? joinPathFragments(options.appProjectRoot, 'src')
     : options.appProjectRoot;
@@ -73,7 +20,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     root: options.appProjectRoot,
     sourceRoot,
     projectType: 'application',
-    targets,
+    targets: {},
     tags: options.parsedTags,
   };
 

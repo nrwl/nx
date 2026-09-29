@@ -78,17 +78,6 @@ nx add @nx/gradle
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
 
-If you upgraded Nx from an older version, ensure that [inferred tasks](/docs/kb/convert-to-inferred#enable-inferred-tasks-for-older-workspaces) are enabled in `nx.json`:
-
-```json
-// nx.json
-{
-  ...
-  // turned on by default; just make sure it is not set to false
-  useInferencePlugins: true
-}
-```
-
 ## Update an existing project to use automated task splitting
 
 If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, `@nx/vitest`, or `@nx/gradle` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
@@ -235,11 +224,14 @@ nx show project my-project-e2e
           }
         },
         "lint": {
-          "executor": "@nx/eslint:lint",
+          "executor": "nx:run-commands",
           "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
           "cache": true,
           "outputs": ["{options.outputFile}"],
-          "options": {},
+          "options": {
+            "cwd": "apps/admin-e2e",
+            "command": "eslint ."
+          },
           "configurations": {},
           "metadata": {
             "technologies": ["eslint"]

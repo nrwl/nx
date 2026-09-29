@@ -3,7 +3,6 @@ import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
-  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   type GeneratorCallback,
@@ -39,10 +38,8 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
     );
   }
 
-  const nxJson = readNxJson(tree);
-  schema.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+  // React Router has no executors, so its tasks only exist through the plugin.
+  schema.addPlugin = true;
 
   if (schema.useReactRouterPlugin && schema.addPlugin) {
     await addPlugin(

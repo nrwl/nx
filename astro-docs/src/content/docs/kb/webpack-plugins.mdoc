@@ -12,8 +12,8 @@ Nx provides two types of Webpack plugins:
 
 1. [_Basic_](#basic-plugins) plugins that work in a
    standard [webpack configuration](https://webpack.js.org/configuration/) file.
-2. [_Nx-enhanced_](#nxenhanced-plugins) plugins that work with
-   the [`@nx/webpack:webpack`](/docs/technologies/build-tools/webpack/executors#webpack) executor.
+2. [_Nx-enhanced_](#nxenhanced-plugins) plugins that only work when Nx runs
+   the task.
 
 The basic plugins integrate directly with the Webpack CLI.
 
@@ -373,13 +373,12 @@ module.exports = {
 ## Nx-enhanced plugins
 
 {% aside type="caution" title="The compose helpers are deprecated" %}
-The `composePlugins`, `withNx`, `withWeb`, and `withReact` helpers below are deprecated and will be removed in Nx v24. They produce a non-standard config function that only runs under the `@nx/webpack:webpack` executor. They still work in v23, but using them logs a deprecation warning.
+The `composePlugins`, `withNx`, `withWeb`, and `withReact` helpers below are deprecated and will be removed in Nx v24. They produce a non-standard config function that only works when Nx runs the task. They still work in v23, but using them logs a deprecation warning.
 
 Prefer a standard webpack config built around [`NxAppWebpackPlugin`](#nxappwebpackplugin) under the inferred `@nx/webpack/plugin`. Run `nx g @nx/webpack:convert-to-inferred` to migrate existing projects.
 {% /aside %}
 
-The Nx-enhanced plugins work with `@nx/webpack:webpack` executor and receive the target options and context from the
-executor. These are used when using [Module Federation](/docs/technologies/module-federation/introduction).
+The Nx-enhanced plugins receive Nx build options and the task context when Nx runs the task. These are used when using [Module Federation](/docs/technologies/module-federation/introduction).
 
 The plugins are used in conjunction with `composePlugins` utility to generate a final Webpack configuration object, once all of the plugins have applied their changes.
 
@@ -388,8 +387,8 @@ The plugins are used in conjunction with `composePlugins` utility to generate a 
 const { composePlugins } = require('@nx/webpack');
 
 function myCustomPlugin() {
-  // `options` and `context` are the target options and
-  // `@nx/webpack:webpack` executor context respectively.
+  // `options` and `context` are the Nx build options and
+  // task context respectively.
   return (webpackConfig, { options, context }) => {
     // Do something with the config.
     return webpackConfig;
