@@ -183,8 +183,10 @@ pub fn get_files_for_outputs(
 ) -> anyhow::Result<Vec<String>> {
     get_files_for_outputs_via(directory, entries, &|dir| {
         let root = PathBuf::from(dir);
+        let dir_path = directory.join(dir);
         Some(
-            nx_walker(directory.join(dir), false)
+            nx_walker(&dir_path, false)
+                .filter(|file| dir_path.join(&file.normalized_path).is_file())
                 .map(|file| root.join(&file.normalized_path).to_normalized_string())
                 .collect(),
         )
@@ -193,7 +195,8 @@ pub fn get_files_for_outputs(
 
 /// `get_files_for_outputs` with the directory reads supplied: `read` takes a
 /// workspace-relative directory and answers the workspace-relative files
-/// under it, `None` when it cannot be read.
+/// under it, `None` when it cannot be read. What `read` answers is taken to
+/// be files, without a stat per entry.
 pub(crate) fn get_files_for_outputs_via(
     directory: &Path,
     entries: Vec<String>,
@@ -247,12 +250,7 @@ pub(crate) fn get_files_for_outputs_via(
 
     for dir in directories {
         let dir = dir.trim_end_matches('/');
-        files.extend(
-            read(dir)
-                .unwrap_or_default()
-                .into_iter()
-                .filter(|file| directory.join(file).is_file()),
-        );
+        files.extend(read(dir).unwrap_or_default());
     }
 
     files.sort();
