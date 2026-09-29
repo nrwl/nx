@@ -63,12 +63,6 @@ export interface AffectedExplanation {
    * selection decided it; every other entry was reached only through another.
    */
   touched: string[];
-  /**
-   * Tasks a run keeps only because others need them: the change reached none
-   * of them. Each maps to the kept tasks that depend on it. Only when the
-   * caller is about to run the selection.
-   */
-  required?: Record<string, string[]>;
   /** The requested targets, and how many of their tasks selection chose among. */
   requested?: { targets: string[]; total: number };
 }
@@ -106,22 +100,15 @@ export function formatAffectedReason(reason: AffectedReason): string {
 /**
  * Renders `--explain` output: one block per entity, its reasons beneath it.
  *
- * With nothing upstream or required it is one list. Otherwise it is laid out
- * as the run goes: what runs only because it is needed, what the change
- * touched, what it reached through those, and last the selection itself, so
- * the reader's own entries stay at the bottom however long the chain grows.
+ * It follows the chain: what the change touched, what it reached through
+ * those, and last the selection itself, so the reader's own entries stay at
+ * the bottom however long the chain grows.
  *
  * An entity with no reason is still listed, with a line saying so, because a
  * blank line is indistinguishable from a bug when you are troubleshooting.
  */
 export function formatAffectedExplanation(
-  {
-    affected,
-    upstream,
-    touched: touchedNames,
-    required = {},
-    requested,
-  }: AffectedExplanation,
+  { affected, upstream, touched: touchedNames, requested }: AffectedExplanation,
   heading: string,
   { verbose = false }: { verbose?: boolean } = {}
 ): string {
@@ -167,64 +154,79 @@ export function formatAffectedExplanation(
     // Every reason names another entry, so say where the chain starts: the
     // reader should not have to follow it up the output to find the file.
     if (!touched(name)) {
-      const origins = chainOrigins(name, reasonsOf);
-      if (origins.length) {
-        const others = origins.length - 1;
-        lines.push(
-          `    - traced to ${origins[0]}${
-            others ? ` and ${others} ${others === 1 ? 'other' : 'others'}` : ''
-          }`
-        );
+      const trace = tracedTo(name);
+      if (trace) {
+        lines.push(`    - ${trace}`);
       }
     }
     lines.push('');
   };
-  const section = (title: string, group: string[]) => {
-    if (group.length) {
-      lines.push(`${title} (${group.length}):`, '');
-      group.forEach((name) => render(name));
+  // A long section is grouped by what changed, each group naming a few of its
+  // tasks, since every entry would otherwise repeat the same files.
+  const section = (
+    title: string,
+    group: string[],
+    { withLayer = false, titled = true } = {}
+  ) => {
+    if (!group.length) return;
+    if (verbose || group.length <= 5) {
+      if (titled) {
+        lines.push(`${title} (${group.length}):`, '');
+      }
+      group.forEach((name) => render(name, withLayer));
+      return;
     }
-  };
-
-  const upstreamNames = Object.keys(upstream).sort();
-  const requiredNames = Object.keys(required).sort();
-  if (!upstreamNames.length && !requiredNames.length) {
-    touchedFirst(names).forEach((name) => render(name));
-  } else {
-    // The change reached none of them, so the list is what runs, not why:
-    // behind --verbose, since there are often more of these than anything else.
-    if (requiredNames.length && !verbose) {
+    lines.push(
+      `${title} (${group.length}). Pass --verbose to list each with its reasons.`,
+      ''
+    );
+    const byCause = new Map<string, string[]>();
+    for (const name of group) {
+      const changed = touched(name)
+        ? changedIn(reasonsOf(name))
+        : chainOrigins(name, reasonsOf);
+      const key = `${touched(name) ? 'touched' : 'affected'}\0${describeChanged(changed)}`;
+      byCause.set(key, [...(byCause.get(key) ?? []), name]);
+    }
+    for (const [key, members] of [...byCause].sort(
+      ([a, x], [b, y]) => y.length - x.length || a.localeCompare(b)
+    )) {
+      const [verb, changed] = key.split('\0');
+      const count = `${members.length} ${members.length === 1 ? 'task' : 'tasks'}`;
       lines.push(
-        `Dependencies, needed to run first (${requiredNames.length}). Pass --verbose to list them.`,
-        ''
+        `  ${
+          !changed
+            ? `${count} ${members.length === 1 ? 'was' : 'were'} ${verb} without a changed file to name:`
+            : verb === 'touched'
+              ? `Changing ${changed} touched ${count}:`
+              : `Changing ${changed} affected ${count} through the outputs they read:`
+        }`
       );
-    } else if (requiredNames.length) {
-      lines.push(
-        `Dependencies, needed to run first (${requiredNames.length}):`,
-        ''
-      );
-      for (const name of requiredNames) {
-        const [first, ...rest] = required[name];
-        lines.push(
-          !first
-            ? `  ${name}`
-            : `  ${name}, needed by ${first}${
-                rest.length
-                  ? ` and ${rest.length} ${rest.length === 1 ? 'other' : 'others'}`
-                  : ''
-              }`
-        );
+      for (const name of members.slice(0, 5)) {
+        lines.push(`    - ${name}`);
+      }
+      if (members.length > 5) {
+        lines.push(`    - and ${members.length - 5} more`);
       }
       lines.push('');
     }
-    section(`Touched, their own inputs changed`, upstreamNames.filter(touched));
-    section(
-      `Affected, they read outputs the change reached`,
-      upstreamNames.filter((name) => !touched(name))
-    );
-    lines.push(`${heading} (${names.length}):`, '');
-    touchedFirst(names).forEach((name) => render(name, true));
-  }
+  };
+  const tracedTo = (name: string) => {
+    const origins = chainOrigins(name, reasonsOf);
+    return origins.length ? `traced to ${describeChanged(origins)}` : undefined;
+  };
+
+  const upstreamNames = Object.keys(upstream).sort();
+  section(`Touched, their own inputs changed`, upstreamNames.filter(touched));
+  section(
+    `Affected, they read outputs the change reached`,
+    upstreamNames.filter((name) => !touched(name))
+  );
+  section(heading, touchedFirst(names), {
+    withLayer: true,
+    // The heading already titles the output when nothing sits above.
+    titled: upstreamNames.length > 0,
+  });
 
   // Out of the requested targets' tasks, so the line says what selection saved.
   const n = names.length;
@@ -245,13 +247,28 @@ export function formatAffectedExplanation(
  * The JSON keeps them all.
  */
 function reasonLines(reasons: AffectedReason[]): string[] {
+  // Hashing every external covers every package in an ecosystem that moved.
+  if (reasons.some((reason) => reason.kind === 'external-dependencies')) {
+    reasons = reasons.filter((reason) => reason.kind !== 'moved-ecosystem');
+  }
   const grouped = new Map<string, AffectedReason[]>();
-  const keyOf = (reason: AffectedReason) =>
-    reason.kind === 'input-file'
-      ? `input-file\0${reason.pattern ?? ''}`
-      : reason.kind === 'npm-package' || reason.kind === 'dependent-output'
-        ? reason.kind
-        : undefined;
+  const keyOf = (reason: AffectedReason) => {
+    switch (reason.kind) {
+      case 'input-file':
+        return `input-file\0${reason.pattern ?? ''}`;
+      case 'npm-package':
+      case 'dependent-output':
+      case 'external-dependencies':
+      case 'project-configuration':
+      case 'deleted-project-configuration':
+      case 'lockfile':
+        return reason.kind;
+      case 'moved-ecosystem':
+        return `moved-ecosystem\0${reason.ecosystem}`;
+      default:
+        return undefined;
+    }
+  };
   for (const reason of reasons) {
     const key = keyOf(reason);
     if (key) {
@@ -272,26 +289,53 @@ function reasonLines(reasons: AffectedReason[]): string[] {
     done.add(key);
     const [first] = group;
     const others = group.length - 1;
-    lines.push(
-      first.kind === 'input-file'
-        ? `input ${first.pattern ? `${first.pattern} ` : ''}matched ${
+    switch (first.kind) {
+      case 'input-file':
+        lines.push(
+          `input ${first.pattern ? `${first.pattern} ` : ''}matched ${
             first.file
           } and ${others} other ${others === 1 ? 'file' : 'files'}`
-        : first.kind === 'dependent-output'
-          ? `reads the outputs of ${first.producer} and ${others} other ${
-              others === 1 ? 'task' : 'tasks'
-            } the change reached`
-          : `depends on ${first.package} and ${others} other ${
-              others === 1 ? 'package' : 'packages'
-            }, whose versions changed`
-    );
+        );
+        break;
+      case 'dependent-output':
+        lines.push(
+          `reads the outputs of ${first.producer} and ${others} other ${
+            others === 1 ? 'task' : 'tasks'
+          } the change reached`
+        );
+        break;
+      case 'npm-package':
+        lines.push(
+          `depends on ${first.package} and ${others} other ${
+            others === 1 ? 'package' : 'packages'
+          }, whose versions changed`
+        );
+        break;
+      default: {
+        // The same reason for several files: name them in one.
+        const files = group.map((r) => r.file ?? '').sort();
+        const joined =
+          files.length === 2
+            ? `${files[0]} and ${files[1]}`
+            : `${files[0]} and ${files.length - 1} other files`;
+        lines.push(formatAffectedReason({ ...first, file: joined }));
+      }
+    }
   }
   return lines;
 }
 
 /** The first changed file or package a touched task's own reasons name. */
 function touchedBy(reasons: AffectedReason[]): string {
-  const changed = [
+  const changed = changedIn(reasons);
+  return changed.length
+    ? `touched by ${describeChanged(changed)}`
+    : 'touched: its own inputs changed';
+}
+
+/** The changed files, or packages when no file is known, a task's own reasons name. */
+function changedIn(reasons: AffectedReason[]): string[] {
+  return [
     ...new Set(
       reasons
         .filter((reason) => !isUpstreamReason(reason))
@@ -299,13 +343,13 @@ function touchedBy(reasons: AffectedReason[]): string {
         .filter(Boolean)
     ),
   ].sort();
-  if (!changed.length) {
-    return 'touched: its own inputs changed';
-  }
-  const others = changed.length - 1;
-  return `touched by ${changed[0]}${
-    others ? ` and ${others} ${others === 1 ? 'other' : 'others'}` : ''
-  }`;
+}
+
+/** "a", "a and b", or "a and N others". */
+function describeChanged(changed: string[]): string {
+  return changed.length <= 2
+    ? changed.join(' and ')
+    : `${changed[0]} and ${changed.length - 1} others`;
 }
 
 /** The first task a reached target reads the outputs of. */

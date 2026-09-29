@@ -76,10 +76,8 @@ export async function showProjectsHandler(
         explain: isExplaining(nxArgs.explain),
       });
       if (isExplaining(nxArgs.explain)) {
-        // Runs nothing, so what a run would need first is not part of the answer.
-        const { required: _, ...explanation } = affectedTasks.explanation;
         printAffectedExplanation(
-          explanation,
+          affectedTasks.explanation,
           'Affected tasks',
           // show projects declares its own --json, which has no executor to
           // pass through to.

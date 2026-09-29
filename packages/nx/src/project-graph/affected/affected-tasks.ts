@@ -355,7 +355,6 @@ export async function selectAffectedTasks(
     taskGraph,
     explanation: explanation && {
       ...explanation,
-      required: requiredOnly(keep, taskGraph, explanation),
       requested: requestedTasks(taskIds, taskGraph, targets, options),
     },
     taskSelection: {
@@ -419,6 +418,8 @@ function hasCustomHasher(
 /** Dependency changes, plus why each named project was named, for `--explain`. */
 type NamedDependencyChanges = DependencyChanges & {
   named: Map<string, AffectedReason[]>;
+  /** The changed file that moved each external, for naming it in a reason. */
+  movedBy: Map<string, string>;
 };
 
 function dependencyChanges(
@@ -460,6 +461,14 @@ function dependencyChanges(
     });
   }
 
+  const movedBy = new Map<string, string>();
+  for (const external of packageJsonChanges.externals) {
+    movedBy.set(external, 'package.json');
+  }
+  for (const external of lockFile.externals) {
+    movedBy.set(external, changedLockFile);
+  }
+
   return {
     externals: [...new Set(changes.flatMap((c) => c.externals))],
     changedExternalTypes: [
@@ -467,6 +476,7 @@ function dependencyChanges(
     ],
     projects: [...new Set(changes.flatMap((c) => c.projects))],
     named,
+    movedBy,
   };
 }
 
@@ -509,7 +519,11 @@ function explainTasks(
       });
     }
     for (const pkg of matches?.packages ?? []) {
-      forTask.push({ kind: 'npm-package', package: pkg });
+      forTask.push({
+        kind: 'npm-package',
+        package: pkg,
+        file: dependencies.movedBy.get(pkg),
+      });
     }
     for (const ecosystem of matches?.movedEcosystems ?? []) {
       for (const file of dependencyFiles.length
@@ -580,37 +594,6 @@ function explainTasks(
     (id) => id in result.affected || id in result.upstream
   );
   return result;
-}
-
-/**
- * The tasks a run keeps that the change reached none of, each with the kept
- * tasks that depend on it: what runs only so the others can.
- */
-function requiredOnly(
-  keep: string[],
-  taskGraph: TaskGraph,
-  explanation: AffectedExplanation
-): Record<string, string[]> {
-  const kept = new Set(keep);
-  const neededBy: Record<string, string[]> = {};
-  for (const id of keep) {
-    for (const dependency of [
-      ...(taskGraph.dependencies[id] ?? []),
-      ...(taskGraph.continuousDependencies?.[id] ?? []),
-    ]) {
-      if (kept.has(dependency)) {
-        (neededBy[dependency] ??= []).push(id);
-      }
-    }
-  }
-  return Object.fromEntries(
-    keep
-      .filter(
-        (id) => !(id in explanation.affected) && !(id in explanation.upstream)
-      )
-      .sort()
-      .map((id) => [id, (neededBy[id] ?? []).sort()])
-  );
 }
 
 /**

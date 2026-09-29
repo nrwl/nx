@@ -342,7 +342,7 @@ describe('computeAffectedTasks', () => {
       'uses_moved:test',
     ]);
     expect(result.explanation.affected['uses_moved:test']).toEqual([
-      { kind: 'npm-package', package: 'npm:moved' },
+      { kind: 'npm-package', package: 'npm:moved', file: 'package-lock.json' },
     ]);
     expect(result.explanation.affected['hashes_all:test']).toEqual([
       { kind: 'external-dependencies', file: 'package-lock.json' },
@@ -578,7 +578,7 @@ describe('the run graph selection hands over', () => {
   });
 });
 
-describe('explaining what a run needs first', () => {
+describe('explaining a touched task outside the selection', () => {
   // prebuild's own input changed, but build only orders after it rather than
   // reading its outputs: it runs as a dependency the change still touched.
   it('lists a touched dependency as touched, not as untouched', async () => {
@@ -614,7 +614,6 @@ describe('explaining what a run needs first', () => {
       ) as any,
       explain: true,
     });
-    expect(explanation.required).toEqual({});
     expect(explanation.upstream['app:prebuild']).toContainEqual(
       expect.objectContaining({
         kind: 'input-file',
@@ -622,28 +621,6 @@ describe('explaining what a run needs first', () => {
       })
     );
     expect(explanation.touched).toContain('app:prebuild');
-  });
-
-  // A lib change cannot reach app:test, so lib:test runs only because the
-  // affected app:test depends on it.
-  it('lists a kept task the change never reached, with what needs it', async () => {
-    const { explanation } = await computeAffectedTasks({
-      projectGraph: graph(),
-      nxJson: {
-        namedInputs: { production: ['{projectRoot}/src/**/*'] },
-      } as any,
-      targets: ['test'],
-      touchedFiles: [
-        {
-          file: 'packages/js/src/index.ts',
-          getChanges: () => [new WholeFileChange()],
-        },
-      ] as any,
-      extraTargetDependencies: { test: ['^test'] },
-      explain: true,
-    });
-    expect(Object.keys(explanation.affected)).toEqual(['app:test']);
-    expect(explanation.required).toEqual({ 'lib:test': ['app:test'] });
   });
 });
 
