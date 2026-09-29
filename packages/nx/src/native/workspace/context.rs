@@ -3056,6 +3056,26 @@ mod tests {
 
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
+    fn a_negation_inside_a_gitignored_directory_does_not_admit_what_the_walk_skips() {
+        // The walk never enters dist/, so dist/.gitignore cannot re-include
+        // anything. Admitting keep.js would report it deleted on the next rescan.
+        let temp = workspace_with(&["a.ts", "dist/keep.js"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        temp.child("dist/.gitignore")
+            .write_str("!keep.js\n")
+            .unwrap();
+        let cache = TempDir::new().unwrap();
+
+        let ctx = watching_context(&temp, &cache);
+        assert_eq!(names_of(&ctx), vec![".gitignore", "a.ts"]);
+        assert!(
+            ctx.incremental_update(vec!["dist/keep.js".into()], vec![])
+                .is_empty()
+        );
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
     fn a_caller_supplied_update_is_held_to_the_same_rule_as_the_watch() {
         let temp = workspace_with(&["a.ts"]);
         temp.child(".gitignore").write_str("dist/\n").unwrap();
