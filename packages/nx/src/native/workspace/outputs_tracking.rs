@@ -15,6 +15,7 @@ use tracing::trace;
 use crate::native::cache::expand_outputs::get_files_for_outputs_via;
 use crate::native::glob::glob_transform::partition_glob;
 use crate::native::hasher::hash_file_path;
+use crate::native::utils::Normalize;
 use crate::native::walker::walk_reaches;
 use crate::native::workspace::ignored_index::{
     FileStamp, IgnoredIndex, IgnoredIndexReader, now_secs, stamp_of,
@@ -87,17 +88,30 @@ fn key(outputs: &[String]) -> String {
     outputs.join("\n")
 }
 
+/// The directory an output is read from, as `get_files_for_outputs_via`
+/// resolves it: a path that exists as written, with the platform's
+/// separators, else the root of the glob.
+fn read_root(root: &Path, output: &str) -> String {
+    if root.join(output).exists() {
+        Path::new(output).to_normalized_string()
+    } else {
+        partition_glob(output).0
+    }
+}
+
 /// Whether what the cache copies for `outputs` covers every file a check
 /// reads, where a check reads each directory whole. The cache honours a
-/// negation, and neither copies through a link nor walks into what
-/// `walk_reaches` vetoes; the workspace root is never trusted, as a copy
-/// walks it with vetoes a check does not apply to its start.
+/// negation, does not follow a link on a glob's path, and never walks into
+/// what `walk_reaches` vetoes, so any of those falls back to a walk. The
+/// workspace root is never trusted, as a copy walks it with vetoes a check
+/// does not apply to its start. A missing path is trusted: both sides are
+/// empty.
 fn given_covers(root: &Path, canonical_root: Option<&Path>, outputs: &[String]) -> bool {
     outputs.iter().all(|output| {
         if output.starts_with('!') {
             return false;
         }
-        let dir = partition_glob(output).0;
+        let dir = read_root(root, output);
         let full = root.join(&dir);
         walk_reaches(root, "", &dir)
             && (std::fs::symlink_metadata(&full).is_err()
@@ -105,17 +119,6 @@ fn given_covers(root: &Path, canonical_root: Option<&Path>, outputs: &[String]) 
                     dunce::canonicalize(&full).is_ok_and(|real| real == canonical_root.join(&dir))
                 }))
     })
-}
-
-/// On Windows `\` separates, as the glob lexer reads it there, while
-/// listings and the cache's file list use `/`.
-fn with_forward_slashes(mut entry: TaskOutputs) -> TaskOutputs {
-    if cfg!(windows) {
-        for output in &mut entry.outputs {
-            *output = output.replace('\\', "/");
-        }
-    }
-    entry
 }
 
 /// The files of `given` that `outputs` names, each with its stamp. A file
@@ -177,10 +180,9 @@ impl OutputRecords {
         reader: &IgnoredIndexReader,
         entries: Vec<TaskOutputs>,
     ) {
-        let entries: Vec<_> = entries.into_iter().map(with_forward_slashes).collect();
         for entry in &entries {
             for output in entry.outputs.iter().filter(|o| !o.starts_with('!')) {
-                let dir = partition_glob(output).0;
+                let dir = read_root(root, output);
                 if !root.join(&dir).is_file() {
                     reader.track(root, &dir);
                 }
@@ -256,7 +258,6 @@ impl OutputRecords {
         let index = reader.index();
         entries
             .into_par_iter()
-            .map(with_forward_slashes)
             .map(|entry| {
                 let Some(recorded) = self.records.get(&key(&entry.outputs)) else {
                     return false;
@@ -298,6 +299,7 @@ impl OutputRecords {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     use assert_fs::TempDir;
@@ -320,12 +322,22 @@ mod tests {
     }
 
     fn watched() -> IgnoredIndexReader {
+        counted().0
+    }
+
+    /// A reader that counts its catch-ups.
+    fn counted() -> (IgnoredIndexReader, Arc<AtomicUsize>) {
         let delivers_under: crate::native::workspace::ignored_index::DeliversUnder =
             Arc::new(|path: &str| !path.starts_with("node_modules"));
-        IgnoredIndexReader::new(
+        let count = Arc::new(AtomicUsize::new(0));
+        let counter = Arc::clone(&count);
+        let reader = IgnoredIndexReader::new(
             Arc::new(IgnoredIndex::new(Some(Watch { delivers_under }))),
-            Arc::new(|| {}),
-        )
+            Arc::new(move || {
+                counter.fetch_add(1, Ordering::SeqCst);
+            }),
+        );
+        (reader, count)
     }
 
     fn entry(outputs: &[&str], hash: &str) -> TaskOutputs {
@@ -601,6 +613,7 @@ mod tests {
             // A link above the output, not only at it.
             link("dist", "out");
             assert!(!covers(&["out/app/*.txt"]));
+            assert!(covers(&["out/not-yet"]));
         }
     }
 
@@ -609,32 +622,55 @@ mod tests {
         let temp = workspace();
         temp.child("dist/other/cache/x.bin").write_str("x").unwrap();
         temp.child("dist/other/d.txt").write_str("d").unwrap();
-        let (records, reader) = (OutputRecords::default(), watched());
+        let (records, (reader, catch_ups)) = (OutputRecords::default(), counted());
         let walked = ["dist/other", "!dist/other/cache"];
+        // The trusted list leaves out a file on disk, to show it was used.
+        let trusted = || TaskOutputs {
+            files: Some(given(&temp, &["dist/app/a.txt", "dist/app/b.md"])),
+            ..entry(&["dist/app"], "h1")
+        };
         records.record(
             temp.path(),
             &reader,
             vec![
-                TaskOutputs {
-                    files: Some(given(
-                        &temp,
-                        &["dist/app/a.txt", "dist/app/b.md", "dist/app/c.html"],
-                    )),
-                    ..entry(&["dist/app"], "h1")
-                },
+                trusted(),
                 TaskOutputs {
                     files: Some(given(&temp, &["dist/other/d.txt"])),
                     ..entry(&walked, "h2")
                 },
             ],
         );
-        assert!(check(&records, &temp, &reader, &["dist/app"], "h1"));
+        assert_eq!(catch_ups.load(Ordering::SeqCst), 1);
+        assert!(!check(&records, &temp, &reader, &["dist/app"], "h1"));
         assert!(check(&records, &temp, &reader, &walked, "h2"));
+
+        let before = catch_ups.load(Ordering::SeqCst);
+        records.record(temp.path(), &reader, vec![trusted()]);
+        assert_eq!(catch_ups.load(Ordering::SeqCst), before);
+    }
+
+    #[test]
+    fn an_escaped_output_is_read_where_its_escapes_resolve() {
+        let temp = workspace();
+        temp.child("app/[id]/page.js").write_str("page").unwrap();
+        let (records, reader) = (OutputRecords::default(), watched());
+        let outputs = ["app/\\[id\\]"];
+        records.record(
+            temp.path(),
+            &reader,
+            vec![TaskOutputs {
+                files: Some(given(&temp, &["app/[id]/page.js"])),
+                ..entry(&outputs, "h1")
+            }],
+        );
+        assert!(check(&records, &temp, &reader, &outputs, "h1"));
+        temp.child("app/[id]/page.js").write_str("edited").unwrap();
+        assert!(!check(&records, &temp, &reader, &outputs, "h1"));
     }
 
     #[cfg(windows)]
     #[test]
-    fn backslash_outputs_are_read_with_forward_slashes() {
+    fn a_backslash_output_that_exists_is_read_as_its_path() {
         let temp = workspace();
         let (records, reader) = (OutputRecords::default(), watched());
         records.record(

@@ -220,9 +220,9 @@ pub(crate) fn get_files_for_outputs_via(
                 _ => globs.push(entry),
             }
         } else if path.is_dir() {
-            directories.push(entry);
+            directories.push(Path::new(&entry).to_normalized_string());
         } else {
-            files.push(entry);
+            files.push(Path::new(&entry).to_normalized_string());
         }
     }
 
