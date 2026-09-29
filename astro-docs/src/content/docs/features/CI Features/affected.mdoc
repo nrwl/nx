@@ -298,7 +298,7 @@ The output follows the order the run goes in, and the tasks you asked for always
 
 The layers above the last section list tasks you didn't ask for, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`.
 Each entry lists every reason that applies, so a task reached through two different producers reports both.
-When several changed files match one input, or several packages moved, they share one line that names the first and counts the rest. The JSON lists them all.
+When several changed files match one input, several packages moved, or a task reads several of the tasks above, they share one line that names the first and counts the rest. Pass `--verbose` to list each on its own line. The JSON lists them all.
 An entry reached only through other entries ends with the changed file its chain starts from.
 To follow the chain step by step, look up the task named in a reason.
 

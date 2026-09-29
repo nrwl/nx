@@ -152,7 +152,9 @@ export function formatAffectedExplanation(
     if (!forName.length) {
       lines.push(`    - selected, but no reason was recorded`);
     }
-    for (const line of reasonLines(forName)) {
+    for (const line of verbose
+      ? forName.map(formatAffectedReason)
+      : reasonLines(forName)) {
       lines.push(`    - ${line}`);
     }
     // Every reason names another entry, so say where the chain starts: the
@@ -229,9 +231,10 @@ export function formatAffectedExplanation(
 }
 
 /**
- * One line per reason, except that files matching one input, or moved
- * packages, share a line naming the first and counting the rest: a refactor or
- * a dependency bump would otherwise print a line per file under every task.
+ * One line per reason, except that files matching one input, moved packages,
+ * or producers read, share a line naming the first and counting the rest: a
+ * refactor or a dependency bump would otherwise print a line per file under
+ * every task. `--verbose` prints them all.
  * The JSON keeps them all.
  */
 function reasonLines(reasons: AffectedReason[]): string[] {
@@ -239,8 +242,8 @@ function reasonLines(reasons: AffectedReason[]): string[] {
   const keyOf = (reason: AffectedReason) =>
     reason.kind === 'input-file'
       ? `input-file\0${reason.pattern ?? ''}`
-      : reason.kind === 'npm-package'
-        ? 'npm-package'
+      : reason.kind === 'npm-package' || reason.kind === 'dependent-output'
+        ? reason.kind
         : undefined;
   for (const reason of reasons) {
     const key = keyOf(reason);
@@ -267,9 +270,13 @@ function reasonLines(reasons: AffectedReason[]): string[] {
         ? `input ${first.pattern ? `${first.pattern} ` : ''}matched ${
             first.file
           } and ${others} other ${others === 1 ? 'file' : 'files'}`
-        : `depends on ${first.package} and ${others} other ${
-            others === 1 ? 'package' : 'packages'
-          }, whose versions changed`
+        : first.kind === 'dependent-output'
+          ? `reads the outputs of ${first.producer} and ${others} other ${
+              others === 1 ? 'task' : 'tasks'
+            } the change reached`
+          : `depends on ${first.package} and ${others} other ${
+              others === 1 ? 'package' : 'packages'
+            }, whose versions changed`
     );
   }
   return lines;

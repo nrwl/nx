@@ -244,6 +244,45 @@ describe('formatAffectedExplanation', () => {
     expect(out).not.toContain('libs/ui/b.ts');
   });
 
+  it('names the first producer read and counts the rest', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'app:build': ['web:build', 'web:build-base', 'webpack:build'].map(
+            (producer) => ({ kind: 'dependent-output' as const, producer })
+          ),
+        },
+        upstream: {},
+        touched: [],
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain(
+      '    - reads the outputs of web:build and 2 other tasks the change reached'
+    );
+    expect(out).not.toContain('web:build-base');
+  });
+
+  it('lists every reason under verbose', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'app:build': ['web:build', 'web:build-base'].map((producer) => ({
+            kind: 'dependent-output' as const,
+            producer,
+          })),
+        },
+        upstream: {},
+        touched: [],
+      },
+      'Affected tasks',
+      { verbose: true }
+    );
+    expect(out).toContain(
+      '    - reads the outputs of web:build-base, which the change reached'
+    );
+  });
+
   it('keeps a single match on its own line, and counts one other', () => {
     const match = (f: string) => ({
       kind: 'input-file' as const,
