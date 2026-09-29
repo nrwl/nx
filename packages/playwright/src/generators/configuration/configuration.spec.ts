@@ -131,6 +131,49 @@ describe('Playwright e2e configuration', () => {
 
       expect(readConfig()).not.toContain('isCI');
     });
+
+    it.each([
+      [
+        'switching on CI',
+        {
+          webServerCommand: String.raw`C:\tools\serve.cmd --title 'my app'`,
+          webServerAddress: 'http://localhost:4200',
+          ciWebServerCommand:
+            'npx nx run myapp:build && npx serve "dist/my app"',
+          ciWebServerAddress: 'http://localhost:4300/?a=1&b=2',
+        },
+        [
+          String.raw`command: isCI ? 'npx nx run myapp:build && npx serve \"dist/my app\"' : 'C:\\tools\\serve.cmd --title \'my app\'',`,
+          String.raw`const webServerAddress = isCI ? 'http://localhost:4300/?a=1&b=2' : 'http://localhost:4200';`,
+        ],
+      ],
+      [
+        'one server',
+        {
+          webServerCommand: String.raw`C:\tools\serve.cmd --title 'my app'`,
+          webServerAddress: 'http://localhost:4200/?a=1&b=2',
+        },
+        [
+          String.raw`command: 'C:\\tools\\serve.cmd --title \'my app\'',`,
+          String.raw`url: 'http://localhost:4200/?a=1&b=2',`,
+          String.raw`const baseURL = process.env['BASE_URL'] || 'http://localhost:4200/?a=1&b=2';`,
+        ],
+      ],
+    ])(
+      'should keep quotes, backslashes and ampersands in web server values (%s)',
+      async (_, options, expectedLines) => {
+        await configGenerator(tree, {
+          project: 'myapp-e2e',
+          skipFormat: true,
+          ...options,
+        });
+
+        const config = readConfig();
+        for (const line of expectedLines) {
+          expect(config).toContain(line);
+        }
+      }
+    );
   });
 
   describe('TS Solution Setup', () => {
