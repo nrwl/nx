@@ -27,13 +27,17 @@ fn collect_workspace_ignore_files(root: &Path) -> Vec<PathBuf> {
 
 pub(in crate::native) fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<PathBuf> {
     let root_path = PathBuf::from(root.as_ref());
+    let found = collect_workspace_ignore_files(&root_path);
+    with_parent_ignore_files(&root_path, found)
+}
 
-    let mut ignore_files = collect_workspace_ignore_files(&root_path);
-
-    if let Some(gitignore_paths) = parent_gitignore_files(&root_path) {
-        ignore_files.extend(gitignore_paths);
+/// `found`, the ignore files inside `root`, plus the `.gitignore` files above
+/// it that still apply.
+pub(crate) fn with_parent_ignore_files(root: &Path, mut found: Vec<PathBuf>) -> Vec<PathBuf> {
+    if let Some(gitignore_paths) = parent_gitignore_files(root) {
+        found.extend(gitignore_paths);
     }
 
-    trace!(?ignore_files, "Final ignore files list");
-    ignore_files
+    trace!(ignore_files = ?found, "Final ignore files list");
+    found
 }

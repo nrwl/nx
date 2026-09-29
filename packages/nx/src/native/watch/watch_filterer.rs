@@ -160,6 +160,17 @@ pub(crate) fn create_filter(
     additional_globs: &[String],
     use_ignore: bool,
 ) -> anyhow::Result<WatchFilterer> {
+    let ignore_files = use_ignore.then(|| get_ignore_files(origin));
+    create_filter_from(origin, additional_globs, ignore_files)
+}
+
+/// `create_filter` with the ignore files already found, as absolute paths
+/// under `origin` plus any parent `.gitignore`. `None` is `use_ignore: false`.
+pub(crate) fn create_filter_from(
+    origin: &str,
+    additional_globs: &[String],
+    ignore_files: Option<Vec<PathBuf>>,
+) -> anyhow::Result<WatchFilterer> {
     // `origin` is expected canonical and in dunce form (no Windows `\\?\`
     // verbatim prefix): WatchPipeline::new canonicalizes it with
     // dunce::canonicalize and hands the same string here and to origin_path.
@@ -167,7 +178,7 @@ pub(crate) fn create_filter(
     // paths, so a `\\?\` origin would reject every event. The disallowed_methods
     // clippy lint keeps lib code on dunce, but `lint-native` runs clippy without
     // --all-targets, so cfg(test) is unlinted — tests must hold this by hand.
-    let ignore_files = use_ignore.then(|| get_ignore_files(origin));
+    let use_ignore = ignore_files.is_some();
 
     trace!(
         ?use_ignore,
