@@ -12,7 +12,6 @@ use crate::native::types::FileData;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::utils::file_lock::FileLock;
 use crate::native::utils::{Normalize, NxCondvar, NxMutex, gather_stamp, path::get_child_files};
-#[cfg(target_arch = "wasm32")]
 use crate::native::walker::nx_walker;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::walker::nx_walker_with_ignore_files;
@@ -180,7 +179,8 @@ fn hashes_to_files(hashes: NxFileHashes) -> Files {
 }
 
 /// The files one walk produced, and the ignore files it applied getting them.
-/// `ignore_files` is `None` when the files came from an archive instead.
+/// `ignore_files` is `None` when the files came from an archive, or when the
+/// walk was not asked for them because nothing builds rules from them.
 struct Walked {
     files: Files,
     ignore_files: Option<Vec<PathBuf>>,
@@ -229,6 +229,7 @@ fn acquire_files(
     cache_dir: &str,
     trust_archive: bool,
     wait_for: Duration,
+    find_ignore_files: bool,
 ) -> Walked {
     let lock_path = Path::new(cache_dir).join(NX_FILES_LOCK);
     let mut lock = match FileLock::new(lock_path.to_string_lossy().to_string()) {
@@ -238,7 +239,7 @@ fn acquire_files(
                 "could not open {}, walking unshared: {e:?}",
                 lock_path.display()
             );
-            return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+            return gather_and_hash_files(workspace_root, cache_dir.to_owned(), find_ignore_files);
         }
     };
 
@@ -255,11 +256,19 @@ fn acquire_files(
                         trace!(
                             "the walk holding the files lock outlasted the wait, walking unshared"
                         );
-                        return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                        return gather_and_hash_files(
+                            workspace_root,
+                            cache_dir.to_owned(),
+                            find_ignore_files,
+                        );
                     }
                     Err(e) => {
                         trace!("could not wait on the files lock, walking unshared: {e:?}");
-                        return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                        return gather_and_hash_files(
+                            workspace_root,
+                            cache_dir.to_owned(),
+                            find_ignore_files,
+                        );
                     }
                 }
             }
@@ -274,7 +283,8 @@ fn acquire_files(
 
         match lock.try_lock() {
             Ok(true) => {
-                let files = gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                let files =
+                    gather_and_hash_files(workspace_root, cache_dir.to_owned(), find_ignore_files);
                 let _ = lock.unlock();
                 return files;
             }
@@ -291,11 +301,19 @@ fn acquire_files(
                         trace!(
                             "the walk holding the files lock outlasted the wait, walking unshared"
                         );
-                        return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                        return gather_and_hash_files(
+                            workspace_root,
+                            cache_dir.to_owned(),
+                            find_ignore_files,
+                        );
                     }
                     Err(e) => {
                         trace!("could not wait on the files lock, walking unshared: {e:?}");
-                        return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                        return gather_and_hash_files(
+                            workspace_root,
+                            cache_dir.to_owned(),
+                            find_ignore_files,
+                        );
                     }
                 }
                 let fresh =
@@ -310,7 +328,11 @@ fn acquire_files(
                 trace!("the other walk left no fresh archive, trying for the lock again");
                 if remaining().is_zero() {
                     trace!("no time left to wait for another walk, walking unshared");
-                    return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                    return gather_and_hash_files(
+                        workspace_root,
+                        cache_dir.to_owned(),
+                        find_ignore_files,
+                    );
                 }
             }
             Err(e) => {
@@ -318,7 +340,11 @@ fn acquire_files(
                     "could not take {}, walking unshared: {e:?}",
                     lock_path.display()
                 );
-                return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                return gather_and_hash_files(
+                    workspace_root,
+                    cache_dir.to_owned(),
+                    find_ignore_files,
+                );
             }
         }
     }
@@ -437,7 +463,11 @@ fn diff_files(before: &Files, after: &Files) -> Outcomes {
     outcomes
 }
 
-fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Walked {
+fn gather_and_hash_files(
+    workspace_root: &Path,
+    cache_dir: String,
+    find_ignore_files: bool,
+) -> Walked {
     let archived_files = read_files_archive(&cache_dir);
 
     trace!("Gathering files in {}", workspace_root.display());
@@ -447,12 +477,17 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Walked {
     // re-hash it rather than trust the timestamp. See `selective_files_hash`.
     let gathered_at = gather_stamp();
     #[cfg(not(target_arch = "wasm32"))]
-    let (walked, ignore_files) = {
+    let (walked, ignore_files) = if find_ignore_files {
         let (walked, ignore_files) = nx_walker_with_ignore_files(workspace_root);
         (walked, Some(ignore_files))
+    } else {
+        (nx_walker(workspace_root, true).collect(), None)
     };
     #[cfg(target_arch = "wasm32")]
-    let (walked, ignore_files) = (nx_walker(workspace_root, true).collect(), None);
+    let (walked, ignore_files) = {
+        let _ = find_ignore_files;
+        (nx_walker(workspace_root, true).collect(), None)
+    };
     let file_hashes = if let Some(archived_files) = archived_files {
         selective_files_hash(walked, &archived_files)
     } else {
@@ -572,12 +607,14 @@ impl FileState {
         };
         let state = self.clone();
         let workspace_root = workspace_root.to_owned();
+        let watching = self.watching();
         std::thread::spawn(move || {
             let files = acquire_files(
                 &workspace_root,
                 &cache_dir,
                 trust_archive,
                 files_lock_wait(),
+                watching,
             );
             trace!(files_len = files.files.len(), "files retrieved");
             // Changes the watch reported during the walk land in this batch.
@@ -604,10 +641,22 @@ impl FileState {
             .flatten()
         {
             Some(archive) => archive_to_files(archive).into(),
-            None => gather_and_hash_files(workspace_root, cache_dir.clone()),
+            None => gather_and_hash_files(workspace_root, cache_dir.clone(), false),
         };
         trace!("{} files retrieved", files.files.len());
         self.finish_walk(workspace_root, &cache_dir, files, true);
+    }
+
+    /// Whether a watch feeds these files, so a walk must also find the ignore
+    /// files its rules are built from.
+    fn watching(&self) -> bool {
+        self.0.as_ref().is_some_and(|sync| {
+            sync.deref()
+                .0
+                .lock()
+                .expect("Should be able to lock files")
+                .watching
+        })
     }
 
     /// Marks a walk in progress. False, doing nothing, when one already is.
@@ -677,9 +726,10 @@ impl FileState {
             }
             if state.queued.iter().any(|c| c.kind == ChangeKind::Rescan) {
                 state.queued.retain(|c| c.kind != ChangeKind::Rescan);
+                let watching = state.watching;
                 drop(state);
                 initial = false;
-                fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned(), watching);
                 continue;
             }
             let queued = std::mem::take(&mut state.queued);
@@ -809,8 +859,9 @@ impl FileState {
             // Walk before locking: the walk is the slow part and readers should
             // not block on it any longer than the phase already makes them.
             state.phase = Phase::Scanning;
+            let watching = state.watching;
             drop(state);
-            let fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned());
+            let fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned(), watching);
             return self.finish_walk(workspace_root, cache_dir, fresh, false);
         }
         let outcomes = apply(&mut state, workspace_root, changes);
@@ -1397,9 +1448,15 @@ impl WorkspaceContext {
         let cache_dir = self.cache_dir.clone();
         let walk = move || {
             #[cfg(not(target_arch = "wasm32"))]
-            let fresh = acquire_files(&workspace_root, &cache_dir, false, files_lock_wait());
+            let fresh = acquire_files(
+                &workspace_root,
+                &cache_dir,
+                false,
+                files_lock_wait(),
+                files.watching(),
+            );
             #[cfg(target_arch = "wasm32")]
-            let fresh = gather_and_hash_files(&workspace_root, cache_dir.clone());
+            let fresh = gather_and_hash_files(&workspace_root, cache_dir.clone(), false);
             let batch = files.finish_walk(&workspace_root, &cache_dir, fresh, false);
             trace!("files refreshed");
             if !batch.is_empty() {
@@ -2120,7 +2177,8 @@ mod tests {
         let root = root.path().to_path_buf();
         let cache_dir = as_string(cache);
         std::thread::spawn(move || {
-            let _ = done.send(acquire_files(&root, &cache_dir, trust_archive, wait_for).files);
+            let _ =
+                done.send(acquire_files(&root, &cache_dir, trust_archive, wait_for, false).files);
         });
         on_done
             .recv_timeout(ceiling)
@@ -3040,7 +3098,7 @@ mod tests {
             .unwrap();
         let root = dunce::canonicalize(temp.path()).unwrap();
 
-        let walked = gather_and_hash_files(&root, as_string(&TempDir::new().unwrap()));
+        let walked = gather_and_hash_files(&root, as_string(&TempDir::new().unwrap()), true);
         let from_walk = WorkspaceContext::workspace_policy(&root, walked.ignore_files).unwrap();
         let by_walking = WorkspaceContext::workspace_policy(&root, None).unwrap();
         for path in [
@@ -3071,6 +3129,34 @@ mod tests {
         assert!(
             ctx.incremental_update(vec!["dist/keep.js".into()], vec![])
                 .is_empty()
+        );
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn only_a_watching_context_has_its_walk_find_ignore_files() {
+        // Nothing builds rules for a context without a watch, so its walk
+        // skips the per-directory lookups.
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+
+        assert!(
+            watching_context(&temp, &TempDir::new().unwrap())
+                .files
+                .watching()
+        );
+        assert!(!context(&temp, &TempDir::new().unwrap()).files.watching());
+
+        let cache = as_string(&TempDir::new().unwrap());
+        assert!(
+            gather_and_hash_files(&root, cache.clone(), false)
+                .ignore_files
+                .is_none()
+        );
+        assert_eq!(
+            gather_and_hash_files(&root, cache, true).ignore_files,
+            Some(vec![root.join(".gitignore")])
         );
     }
 
