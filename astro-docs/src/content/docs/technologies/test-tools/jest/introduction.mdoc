@@ -9,7 +9,7 @@ filter: 'type:References'
 
 [Jest](https://jestjs.io) is a JavaScript testing framework.
 
-The `@nx/jest` plugin adds [inferred Jest targets](#configuration), a [Jest configuration generator](#add-jest-to-a-project), and CI-ready [test splitting](#unit-and-e2e-configurations).
+The `@nx/jest` plugin adds [inferred Jest targets](#configuration), a [Jest configuration generator](#add-jest-to-a-project), and CI-ready [test splitting](#plugin-options).
 
 You can use Jest with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
@@ -179,7 +179,7 @@ Configure the plugin in `nx.json`:
 `disableJestRuntime` defaults to `true` because the plugin treats it as enabled only when `options.disableJestRuntime !== false`. This reduces computation time for inferred tasks; set it to `false` if you need Jest runtime inference.
 
 The test task is cached, with inputs and outputs based on your Jest configuration.
-Set `ciTargetName` to enable the [Atomizer](/docs/kb/split-e2e-tasks).
+Set `ciTargetName` to enable [task splitting (Atomizer)](/docs/kb/split-e2e-tasks).
 
 ### Unit and e2e configurations
 

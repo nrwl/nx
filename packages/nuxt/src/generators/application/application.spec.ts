@@ -213,7 +213,9 @@ describe('app', () => {
           ).toMatchSnapshot();
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
-          expect(packageJson.devDependencies['vitest']).toEqual('~4.1.0');
+          // Literal, not the constant that decides it: a regression back to
+          // vitest 4 has to fail here.
+          expect(packageJson.devDependencies['vitest']).toEqual('~5.0.1');
         });
 
         it('should fall back to a .ts vitest config on eslintrc', async () => {
