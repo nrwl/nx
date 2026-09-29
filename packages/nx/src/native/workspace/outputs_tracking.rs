@@ -88,9 +88,9 @@ fn key(outputs: &[String]) -> String {
     outputs.join("\n")
 }
 
-/// The directory an output is read from, as `get_files_for_outputs_via`
-/// resolves it: a path that exists as written, with the platform's
-/// separators, else the root of the glob.
+/// The path an output is read from, as `get_files_for_outputs_via` resolves
+/// it: one that exists as written, with `/` separators, else the root of the
+/// glob.
 fn read_root(root: &Path, output: &str) -> String {
     if root.join(output).exists() {
         Path::new(output).to_normalized_string()
@@ -108,7 +108,11 @@ fn read_root(root: &Path, output: &str) -> String {
 /// empty.
 fn given_covers(root: &Path, canonical_root: Option<&Path>, outputs: &[String]) -> bool {
     outputs.iter().all(|output| {
-        if output.starts_with('!') {
+        // The cache reads a path with glob syntax as a glob even where it
+        // exists as written, so it can copy less than a check reads.
+        if output.starts_with('!')
+            || (root.join(output).exists() && partition_glob(output).1.is_some())
+        {
             return false;
         }
         let dir = read_root(root, output);
@@ -601,6 +605,8 @@ mod tests {
         assert!(!covers(&["dist/app", "!dist/app/cache"]));
         assert!(!covers(&["node_modules/pkg/dist/*.js"]));
         assert!(!covers(&["*.txt"]));
+        std::fs::create_dir_all(temp.path().join("app/[id]")).unwrap();
+        assert!(!covers(&["app/[id]"]));
         #[cfg(unix)]
         {
             let link = |target: &str, link: &str| {
@@ -649,6 +655,8 @@ mod tests {
         assert_eq!(catch_ups.load(Ordering::SeqCst), before);
     }
 
+    // `\` is not a glob escape on Windows until #37215.
+    #[cfg(unix)]
     #[test]
     fn an_escaped_output_is_read_where_its_escapes_resolve() {
         let temp = workspace();
