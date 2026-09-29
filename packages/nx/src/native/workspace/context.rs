@@ -232,8 +232,7 @@ fn acquire_files(
     wait_for: Duration,
     find_ignore_files: bool,
 ) -> GatheredFiles {
-    let walk_unshared =
-        || gather_and_hash_files(workspace_root, cache_dir.to_owned(), find_ignore_files);
+    let gather = || gather_and_hash_files(workspace_root, cache_dir.to_owned(), find_ignore_files);
     let lock_path = Path::new(cache_dir).join(NX_FILES_LOCK);
     let mut lock = match FileLock::new(lock_path.to_string_lossy().to_string()) {
         Ok(lock) => lock,
@@ -242,7 +241,7 @@ fn acquire_files(
                 "could not open {}, walking unshared: {e:?}",
                 lock_path.display()
             );
-            return walk_unshared();
+            return gather();
         }
     };
 
@@ -259,11 +258,11 @@ fn acquire_files(
                         trace!(
                             "the walk holding the files lock outlasted the wait, walking unshared"
                         );
-                        return walk_unshared();
+                        return gather();
                     }
                     Err(e) => {
                         trace!("could not wait on the files lock, walking unshared: {e:?}");
-                        return walk_unshared();
+                        return gather();
                     }
                 }
             }
@@ -278,7 +277,7 @@ fn acquire_files(
 
         match lock.try_lock() {
             Ok(true) => {
-                let files = walk_unshared();
+                let files = gather();
                 let _ = lock.unlock();
                 return files;
             }
@@ -295,11 +294,11 @@ fn acquire_files(
                         trace!(
                             "the walk holding the files lock outlasted the wait, walking unshared"
                         );
-                        return walk_unshared();
+                        return gather();
                     }
                     Err(e) => {
                         trace!("could not wait on the files lock, walking unshared: {e:?}");
-                        return walk_unshared();
+                        return gather();
                     }
                 }
                 let fresh =
@@ -314,7 +313,7 @@ fn acquire_files(
                 trace!("the other walk left no fresh archive, trying for the lock again");
                 if remaining().is_zero() {
                     trace!("no time left to wait for another walk, walking unshared");
-                    return walk_unshared();
+                    return gather();
                 }
             }
             Err(e) => {
@@ -322,7 +321,7 @@ fn acquire_files(
                     "could not take {}, walking unshared: {e:?}",
                     lock_path.display()
                 );
-                return walk_unshared();
+                return gather();
             }
         }
     }
