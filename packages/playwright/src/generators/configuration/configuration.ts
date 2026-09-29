@@ -88,6 +88,7 @@ export async function configurationGeneratorInternal(
     isTsSolutionSetup,
     ...options,
     ...getCiWebServer(options),
+    toJsStringLiteral,
   });
   const playwrightConfigFile = options.js
     ? 'playwright.config.mjs'
@@ -301,6 +302,11 @@ function getCiWebServer(options: NormalizedGeneratorOptions): {
       options.webServerAddress
     ),
   };
+}
+
+// The template inserts the result with `<%-`, since `<%=` would HTML-escape it.
+function toJsStringLiteral(value: string): string {
+  return `'${JSON.stringify(value).slice(1, -1).replace(/'/g, "\\'")}'`;
 }
 
 async function promptForMissingServeData(projectName: string) {
