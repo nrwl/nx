@@ -21,15 +21,15 @@ The `@nx/vitest` plugin supports the following package versions.
 | -------- | ------------------------------ |
 | `vitest` | ^3.0.0 \|\| ^4.0.0 \|\| ^5.0.0 |
 
-Each Vitest major sets its own Vite and Node requirements.
+Each Vitest major sets its own Vite requirement.
 
-| Vitest | Vite     | Node                 |
-| ------ | -------- | -------------------- |
-| 5      | 6.4 to 8 | 22.12, 24, 26 and up |
-| 4      | 6 to 8   | 20, 22, 24 and up    |
-| 3      | 5 to 7   | 18, 20, 22 and up    |
+| Vitest | Vite     |
+| ------ | -------- |
+| 5      | 6.4 to 8 |
+| 4      | 6 to 8   |
+| 3      | 5 to 7   |
 
-Nx does not pin a Node version of its own, so the Vitest major you run decides the floor.
+For Node.js, follow the [Nx compatibility matrix](/docs/technologies/node/introduction) rather than the Vitest floor. Nx supports a narrower set of Node versions than Vitest 3 and Vitest 4 accept, so the Nx requirement is the one that applies.
 
 Vitest 5 treats Vite as a peer dependency rather than installing its own copy. If you upgrade from Vitest 4 and your `package.json` never listed `vite`, add it. The `nx migrate` path does this for you.
 
