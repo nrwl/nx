@@ -227,5 +227,6 @@ describe('runLintTasks', () => {
       success: false,
       terminalOutput: '',
     });
+    expect(stdout).not.toHaveBeenCalled();
   });
 });

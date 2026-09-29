@@ -131,9 +131,11 @@ export function runLintTasks(
     };
   }
 
-  const { number_of_files, threads_count, start_time } = run.report;
-  process.stdout.write(
-    `Finished in ${Math.round(start_time * 1000)}ms on ${number_of_files} files using ${threads_count} threads.\n`
-  );
+  if (resolved.some((r) => !r.options.silent)) {
+    const { number_of_files, threads_count, start_time } = run.report;
+    process.stdout.write(
+      `Finished in ${Math.round(start_time * 1000)}ms on ${number_of_files} files using ${threads_count} threads.\n`
+    );
+  }
   return results;
 }
