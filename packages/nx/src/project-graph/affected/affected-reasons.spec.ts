@@ -141,8 +141,34 @@ describe('formatAffectedExplanation', () => {
     expect(at('Touched,')).toBeLessThan(at('\n\nAffected tasks (2):'));
     // Touched targets before the ones reached through them.
     expect(at('  lib:build')).toBeLessThan(at('  app:build'));
-    expect(out).toContain('    - touched: its own inputs changed');
+    expect(out).toContain('    - touched by libs/lib/x.ts');
     expect(out).toContain('2 affected tasks.');
+  });
+
+  // The first line of a touched target names what changed, so the reader
+  // need not scan its reasons for it.
+  it('names what touched a target, or says so when nothing is named', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'a:e2e': [
+            {
+              kind: 'moved-ecosystem',
+              ecosystem: 'npm',
+              file: 'pnpm-lock.yaml',
+            },
+            { kind: 'external-dependencies', file: 'package.json' },
+          ],
+          'b:e2e': [{ kind: 'custom-hasher' }],
+        },
+        upstream: {},
+        touched: ['a:e2e', 'b:e2e'],
+        required: { 'core:build': ['a:e2e'] },
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain('  a:e2e\n    - touched by package.json and 1 other');
+    expect(out).toContain('  b:e2e\n    - touched: its own inputs changed');
   });
 
   // The change reached none of them, so listing each is noise unless asked.

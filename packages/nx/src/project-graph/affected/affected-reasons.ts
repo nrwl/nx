@@ -144,7 +144,7 @@ export function formatAffectedExplanation(
     if (withLayer) {
       lines.push(
         touched(name)
-          ? `    - touched: its own inputs changed`
+          ? `    - ${touchedBy(reasonsOf(name))}`
           : `    - affected: reads outputs the change reached`
       );
     }
@@ -280,6 +280,25 @@ function reasonLines(reasons: AffectedReason[]): string[] {
     );
   }
   return lines;
+}
+
+/** The first changed file or package a touched task's own reasons name. */
+function touchedBy(reasons: AffectedReason[]): string {
+  const changed = [
+    ...new Set(
+      reasons
+        .filter((reason) => !isUpstreamReason(reason))
+        .map((reason) => reason.file ?? reason.package)
+        .filter(Boolean)
+    ),
+  ].sort();
+  if (!changed.length) {
+    return 'touched: its own inputs changed';
+  }
+  const others = changed.length - 1;
+  return `touched by ${changed[0]}${
+    others ? ` and ${others} ${others === 1 ? 'other' : 'others'}` : ''
+  }`;
 }
 
 /** A reason that names another entry rather than a change. */
