@@ -84,7 +84,7 @@ describe('formatAffectedExplanation', () => {
         '    ui:build',
         '      - input libs/ui/**/* matched libs/ui/src/index.ts',
         '',
-        '  Changing libs/ui/src/index.ts affected 2 tasks through the outputs they read:',
+        '  2 tasks read outputs the change reached:',
         '    admin:build',
         '      - reads the outputs of ui:build, which the change reached',
         '    app:build',
@@ -114,32 +114,7 @@ describe('formatAffectedExplanation', () => {
     );
     expect(at('    app:gen')).toBeLessThan(at('\nAffected tasks (1):'));
     expect(out).toContain(
-      'Affected tasks (1):\n\n  Changing apps/app/schema.json affected 1 task through the outputs they read:\n    app:build\n'
-    );
-  });
-
-  // A group heading walks the chain to the changed files, ending on a cycle.
-  it('names the changed files a chain starts from', () => {
-    const out = formatAffectedExplanation(
-      {
-        affected: {
-          'app:build': [
-            { kind: 'dependent-output', producer: 'lib:build' },
-            { kind: 'dependent-output', producer: 'app:gen' },
-          ],
-          'app:gen': [{ kind: 'dependent-output', producer: 'app:build' }],
-          'lib:build': ['a.ts', 'b.ts', 'c.ts', 'd.ts'].map((file) => ({
-            kind: 'input-file' as const,
-            file,
-          })),
-        },
-        upstream: {},
-        touched: ['lib:build'],
-      },
-      'Affected tasks'
-    );
-    expect(out).toContain(
-      '  Changing a.ts and 3 others affected 2 tasks through the outputs they read:'
+      'Affected tasks (1):\n\n  1 task read outputs the change reached:\n    app:build\n'
     );
   });
 
@@ -159,7 +134,7 @@ describe('formatAffectedExplanation', () => {
         'Affected tasks'
       );
     expect(explain(['app:gen'])).toContain(
-      'Touching the 1 task above changed outputs read by 1 task:'
+      'Touching the 1 task above changed outputs read by 1 task:\n  app:build\n    - reads the outputs of app:gen, which the change reached\n'
     );
     // Nothing touched above it, so there are no tasks above to point at.
     expect(explain([])).toContain(

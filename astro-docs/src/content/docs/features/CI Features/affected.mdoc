@@ -272,7 +272,7 @@ NX_LEGACY_AFFECTED=false nx affected -t build --explain
     ui:build
       - input libs/ui/**/* matched libs/ui/src/index.ts
 
-  Changing libs/ui/src/index.ts affected 2 tasks through the outputs they read:
+  2 tasks read outputs the change reached:
     admin:build
       - reads the outputs of ui:build, which the change reached
     app:build
@@ -281,8 +281,8 @@ NX_LEGACY_AFFECTED=false nx affected -t build --explain
 3 out of 12 build tasks were affected.
 ```
 
-Tasks are grouped by the changed files that reached them.
-A task is touched when one of its own inputs changed, and affected when it reads the outputs of a task your change reached.
+A task is touched when one of its own inputs changed, and touched tasks are grouped by the changed files that reached them.
+A task is affected when it reads the outputs of a task your change reached.
 
 Tasks you didn't ask for can carry your change to the ones you did, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`.
 Those come first, under `Changing N files touched M tasks` and `Touching the M tasks above changed outputs read by K tasks`, and the tasks you asked for always come last.

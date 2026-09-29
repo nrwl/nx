@@ -124,36 +124,58 @@ export function formatAffectedExplanation(
   const lines = [`${heading} (${names.length}):`, ''];
   // The group heading says what changed, so a task's own reasons are all it
   // needs beneath it.
-  const detail = (name: string) => {
-    lines.push(`    ${name}`);
+  const detail = (name: string, indent = '    ') => {
+    lines.push(`${indent}${name}`);
     const forName = reasonsOf(name);
     if (!forName.length) {
-      lines.push(`      - selected, but no reason was recorded`);
+      lines.push(`${indent}  - selected, but no reason was recorded`);
     }
     // Grouped even under --verbose: a whole-file package.json change moves
     // thousands of packages per task. The JSON lists them all.
     for (const line of reasonLines(forName)) {
-      lines.push(`      - ${line}`);
+      lines.push(`${indent}  - ${line}`);
     }
   };
   // Every section is grouped by what changed, since its tasks would otherwise
   // repeat the same files. A small section, or --verbose, shows every task
   // with its reasons; a large one names up to five tasks per group.
-  const section = (header: string | undefined, group: string[]) => {
+  const section = (
+    header: string | undefined,
+    group: string[],
+    { flat = false } = {}
+  ) => {
     if (!group.length) return;
     const detailed = verbose || group.length <= 5;
     const hint = 'Pass --verbose to list each with its reasons.';
+    // A flat list sits right under its header; grouped ones are spaced out.
+    const gap = flat ? [] : [''];
     if (header) {
-      lines.push(detailed ? `${header}:` : `${header}. ${hint}`, '');
+      lines.push(detailed ? `${header}:` : `${header}. ${hint}`, ...gap);
     } else if (!detailed) {
-      lines.push(hint, '');
+      lines.push(hint, ...gap);
+    }
+    // The header already says how these were reached, so they are only listed.
+    if (flat) {
+      if (detailed) {
+        group.forEach((name) => detail(name, '  '));
+      } else {
+        for (const name of group.slice(0, 5)) {
+          lines.push(`  - ${name}`);
+        }
+        if (group.length > 5) {
+          lines.push(`  - and ${group.length - 5} more`);
+        }
+      }
+      lines.push('');
+      return;
     }
     const byCause = new Map<string, string[]>();
     for (const name of group) {
-      const changed = touched(name)
-        ? changedIn(reasonsOf(name))
-        : chainOrigins(name, reasonsOf);
-      const key = `${touched(name) ? 'touched' : 'affected'}\0${describeChanged(changed)}`;
+      // Only touched tasks group by file: a reached task's file is at the far
+      // end of a chain, which a heading cannot show.
+      const key = touched(name)
+        ? `touched\0${describeChanged(changedIn(reasonsOf(name)))}`
+        : 'affected\0';
       byCause.set(key, [...(byCause.get(key) ?? []), name]);
     }
     // Touched before affected, so each group follows the one it came from.
@@ -167,15 +189,15 @@ export function formatAffectedExplanation(
       const count = `${members.length} ${members.length === 1 ? 'task' : 'tasks'}`;
       lines.push(
         `  ${
-          !changed
-            ? `${count} ${members.length === 1 ? 'was' : 'were'} ${verb} without a changed file to name:`
-            : verb === 'touched'
-              ? `Changing ${changed} touched ${count}:`
-              : `Changing ${changed} affected ${count} through the outputs they read:`
+          verb === 'affected'
+            ? `${count} read outputs the change reached:`
+            : !changed
+              ? `${count} ${members.length === 1 ? 'was' : 'were'} touched without a changed file to name:`
+              : `Changing ${changed} touched ${count}:`
         }`
       );
       if (detailed) {
-        members.forEach(detail);
+        members.forEach((name) => detail(name));
       } else {
         for (const name of members.slice(0, 5)) {
           lines.push(`    - ${name}`);
@@ -205,7 +227,8 @@ export function formatAffectedExplanation(
     touchedUpstream.length
       ? `Touching the ${tasks(touchedUpstream.length)} above changed outputs read by ${tasks(reachedUpstream.length)}`
       : `Outputs the change reached are read by ${tasks(reachedUpstream.length)}`,
-    reachedUpstream
+    reachedUpstream,
+    { flat: true }
   );
   // The heading already titles the output when nothing sits above.
   section(
@@ -332,34 +355,6 @@ function describeChanged(changed: string[]): string {
 /** A reason that names another entry rather than a change. */
 function isUpstreamReason(reason: AffectedReason): boolean {
   return reason.kind === 'dependent-output';
-}
-
-/**
- * The changed files, or moved packages, a chain of output reads starts
- * from. Walks the names reasons point at, so a cycle ends and an entry missing
- * from the output is skipped.
- */
-function chainOrigins(
-  name: string,
-  reasonsOf: (name: string) => AffectedReason[]
-): string[] {
-  const origins = new Set<string>();
-  const seen = new Set<string>([name]);
-  const pending = [name];
-  while (pending.length) {
-    for (const reason of reasonsOf(pending.pop())) {
-      if (isUpstreamReason(reason)) {
-        const upstream = reason.producer;
-        if (upstream && !seen.has(upstream)) {
-          seen.add(upstream);
-          pending.push(upstream);
-        }
-      } else if (reason.file ?? reason.package) {
-        origins.add(reason.file ?? reason.package);
-      }
-    }
-  }
-  return [...origins].sort();
 }
 
 /** Whether `--explain` was asked for at all, in any of its forms. */
