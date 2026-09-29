@@ -2,8 +2,8 @@ import { renderDiagnostics } from './index';
 import { createFixtureWorkspace, diagnostics } from './fixtures.spec-util';
 
 // picocolors decides on colors at import time, so an env var set in the test is too late.
-jest.mock('picocolors', () => {
-  const colors = jest.requireActual('picocolors').createColors(false);
+vi.mock('picocolors', async () => {
+  const colors = (await vi.importActual<any>('picocolors')).createColors(false);
   return { __esModule: true, default: colors, ...colors };
 });
 

@@ -1,17 +1,18 @@
+import type { Mock, MockedFunction, MockInstance } from 'vitest';
 import { logger } from '@nx/devkit';
 import { runLintTasks } from './run-lint-tasks';
 import { runOxlint, type OxlintReport } from './run-oxlint';
 
-jest.mock('./run-oxlint', () => ({ runOxlint: jest.fn() }));
-jest.mock('@nx/devkit', () => ({ logger: { warn: jest.fn() } }));
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
+vi.mock('./run-oxlint', () => ({ runOxlint: vi.fn() }));
+vi.mock('@nx/devkit', () => ({ logger: { warn: vi.fn() } }));
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
   isCI: () => true,
   isAiAgent: () => false,
 }));
 
-const mockRunOxlint = runOxlint as jest.MockedFunction<typeof runOxlint>;
-const mockLogger = logger as unknown as { warn: jest.Mock };
+const mockRunOxlint = runOxlint as MockedFunction<typeof runOxlint>;
+const mockLogger = logger as unknown as { warn: Mock };
 
 const report = (
   files: { filename: string; severity?: 'error' | 'warning' }[]
@@ -37,11 +38,11 @@ const task = (root: string, options = {}) => ({
 });
 
 describe('runLintTasks', () => {
-  let stdout: jest.SpyInstance;
+  let stdout: MockInstance;
   beforeEach(() => {
     mockRunOxlint.mockReset();
     mockLogger.warn.mockReset();
-    stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
   });
   afterEach(() => stdout.mockRestore());
 
