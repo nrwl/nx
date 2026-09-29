@@ -218,7 +218,7 @@ describe('app', () => {
         import { nxE2EPreset } from '@nx/playwright/preset';
         import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
-        // CI runs against a production build; locally the dev server is used.
+        // CI and local runs use different web servers.
         const isCI = !!process.env['CI'];
         // getReadyUrl moves the address to the port the server task reported.
         const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300' : 'http://localhost:4200');
