@@ -1,0 +1,70 @@
+---
+title: 'Removed Executors'
+description: 'Nx 24 removes 37 deprecated executors across 15 plugins in favor of inferred targets. Learn which executors were removed and how the automatic migration converts your workspace.'
+sidebar:
+  hidden: true
+weight: .1
+filter: 'type:References'
+---
+
+Nx 24 removes 37 executors that were deprecated in Nx 23. Each removed executor has an inferred equivalent provided by its plugin, so the task you ran before still runs after the migration, just without an executor entry in your project configuration.
+
+Installing Nx 24 does not break a workspace that still references these executors. The project graph still loads, and `nx migrate` still runs. Tasks that use a removed executor fail until you complete the migration.
+
+## Removed executors
+
+| Plugin             | Removed executors                                                                                   |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `@nx/cypress`      | `cypress`                                                                                           |
+| `@nx/detox`        | `build`, `test`                                                                                     |
+| `@nx/eslint`       | `lint`                                                                                              |
+| `@nx/expo`         | `build`, `export`, `install`, `prebuild`, `run`, `serve`, `start`, `submit`                         |
+| `@nx/jest`         | `jest`                                                                                              |
+| `@nx/next`         | `build`, `server`                                                                                   |
+| `@nx/playwright`   | `playwright`                                                                                        |
+| `@nx/react-native` | `build-android`, `build-ios`, `bundle`, `pod-install`, `run-android`, `run-ios`, `start`, `upgrade` |
+| `@nx/remix`        | `build`, `serve`                                                                                    |
+| `@nx/rollup`       | `rollup`                                                                                            |
+| `@nx/rspack`       | `rspack`, `dev-server`                                                                              |
+| `@nx/storybook`    | `storybook`, `build`                                                                                |
+| `@nx/vite`         | `build`, `dev-server`, `preview-server`                                                             |
+| `@nx/vitest`       | `test`                                                                                              |
+| `@nx/webpack`      | `webpack`, `dev-server`                                                                             |
+
+The old `@nrwl`-scoped aliases of these executors are removed as well.
+
+Executors that have no inferred equivalent stay: `@nx/expo:build-list`, `@nx/expo:sync-deps`, `@nx/expo:update`, `@nx/expo:ensure-symlink`, `@nx/react-native:storybook`, `@nx/react-native:sync-deps`, `@nx/react-native:ensure-symlink`, `@nx/webpack:ssr-dev-server`, `@nx/rspack:ssr-dev-server`, the `@nx/rspack` Module Federation executors, and `@nx/playwright:merge-reports`.
+
+## Migrate
+
+Run the standard migration. Each affected plugin ships a `remove-deprecated-executors` migration that converts your projects.
+
+```shell
+nx migrate latest
+nx migrate --run-migrations
+```
+
+The migration runs `convert-to-inferred` for every project that uses a removed executor. It moves each target's options into the tool's own configuration file, registers the plugin in `nx.json`, and preserves your target names and configurations.
+
+Some options have no equivalent outside the executor. The migration reports those rather than dropping them silently, so read its output before committing.
+
+## Migrate a single plugin
+
+To convert one plugin ahead of the upgrade, run its generator directly:
+
+```shell
+nx g @nx/vite:convert-to-inferred
+```
+
+Pass `--project` to convert a single project instead of the whole workspace.
+
+## After migrating
+
+Verify that the project graph still loads and that your tasks still run:
+
+```shell
+nx show projects
+nx run-many -t build test lint
+```
+
+For the details of what `convert-to-inferred` changes and the options it cannot migrate, see [Convert to inferred](/docs/kb/convert-to-inferred) and [Troubleshoot convert-to-inferred](/docs/kb/troubleshoot-convert-to-inferred).

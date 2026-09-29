@@ -56,17 +56,20 @@ interface AppComponentInfo {
 }
 
 async function getProjectConfig(tree: Tree, projectName: string) {
-  let maybeProjectConfig = readProjectConfiguration(tree, projectName);
-  if (!maybeProjectConfig.targets?.build) {
-    let projectGraph;
-    try {
-      projectGraph = readCachedProjectGraph();
-    } catch {
-      projectGraph = await createProjectGraphAsync();
-    }
-    maybeProjectConfig = projectGraph.nodes[projectName].data;
+  const treeConfig = readProjectConfiguration(tree, projectName);
+  if (treeConfig.targets?.build) {
+    return treeConfig;
   }
-  return maybeProjectConfig;
+
+  let projectGraph;
+  try {
+    projectGraph = readCachedProjectGraph();
+  } catch {
+    projectGraph = await createProjectGraphAsync();
+  }
+  // A project generated earlier in this same run is not in the graph yet, and
+  // an inferred build target never lands in the Tree, so fall back to the Tree.
+  return projectGraph.nodes[projectName]?.data ?? treeConfig;
 }
 
 export async function setupSsrGenerator(tree: Tree, options: Schema) {

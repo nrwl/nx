@@ -177,22 +177,8 @@ function createProjectJson(
 
     if (nestCLIOptions.webpackOptions) {
       json.targets['build'] = {
-        executor: '@nx/webpack:webpack',
-        outputs: ['{options.outputPath}'],
-        options: {
-          target: 'node',
-          compiler: 'tsc',
-          outputPath: `dist/${packageName}`,
-          main: join(nestCLIOptions.sourceRoot, nestCLIOptions.entryFile),
-          tsConfig: 'tsconfig.build.json',
-        },
-        configurations: {
-          production: {
-            optimization: true,
-            extractLicenses: true,
-            inspect: false,
-          },
-        },
+        command: 'webpack-cli build',
+        outputs: [`{workspaceRoot}/dist/${packageName}`],
       };
       json.targets['serve'] = {
         ...json.targets['serve'],
@@ -227,10 +213,7 @@ function createProjectJson(
 
     // lint
     json.targets['lint'] = {
-      executor: '@nx/eslint:lint',
-      options: {
-        lintFilePatterns: ['./src', './test'],
-      },
+      command: 'eslint ./src ./test',
     };
 
     // test and e2e
@@ -334,20 +317,12 @@ function addJestTargets(
   recordInitWrite(e2eTestConfigPath);
 
   projectJson.targets['test'] = {
-    executor: '@nx/jest:jest',
+    command: `jest --config ${unitTestConfigPath} --passWithNoTests`,
     outputs: [`{workspaceRoot}/coverage/${packageName}`],
-    options: {
-      passWithNoTests: true,
-      jestConfig: unitTestConfigPath,
-    },
   };
 
   projectJson.targets['e2e'] = {
-    executor: '@nx/jest:jest',
-    options: {
-      passWithNoTests: true,
-      jestConfig: e2eTestConfigPath,
-    },
+    command: `jest --config ${e2eTestConfigPath} --passWithNoTests`,
   };
 
   // remove jest options from package.json

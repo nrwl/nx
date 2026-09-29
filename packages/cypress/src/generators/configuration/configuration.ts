@@ -42,7 +42,6 @@ import { addLinterToCyProject } from '../../utils/add-linter';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { addDefaultE2EConfig } from '../../utils/config';
 import type { NxCypressE2EPresetOptions } from '../../../plugins/cypress-preset';
-import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   getInstalledCypressMajorVersion,
   versions,
@@ -117,10 +116,6 @@ export async function configurationGeneratorInternal(
   );
 
   await addFiles(tree, opts, projectGraph, hasPlugin);
-  if (!hasPlugin) {
-    warnCypressExecutorGenerating();
-    addTarget(tree, opts, projectGraph);
-  }
 
   const projectTsConfigPath = joinPathFragments(
     opts.projectRoot,
@@ -253,9 +248,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
   }
 
   const nxJson = readNxJson(tree);
-  options.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+  options.addPlugin = true;
 
   return {
     ...options,
@@ -372,6 +365,13 @@ async function addFiles(
     }
   }
 
+  if (typeof options.port === 'number') {
+    for (const name of Object.keys(webServerCommands ?? {})) {
+      webServerCommands[name] += ` --port=${options.port}`;
+    }
+    if (ciWebServerCommand) ciWebServerCommand += ` --port=${options.port}`;
+  }
+
   const e2ePresetOptions: NxCypressE2EPresetOptions = {
     cypressDir: options.directory,
     bundler: options.bundler === 'vite' ? 'vite' : undefined,
@@ -409,65 +409,6 @@ async function addFiles(
   if (options.js) {
     toJS(tree);
   }
-}
-
-function addTarget(
-  tree: Tree,
-  opts: NormalizedSchema,
-  projectGraph: ProjectGraph
-) {
-  const projectConfig = readProjectConfiguration(tree, opts.project);
-  projectConfig.targets ??= {};
-  projectConfig.targets.e2e = {
-    executor: '@nx/cypress:cypress',
-    options: {
-      cypressConfig: joinPathFragments(
-        projectConfig.root,
-        `cypress.config.${opts.js ? 'js' : 'ts'}`
-      ),
-      testingType: 'e2e',
-    },
-  };
-  if (opts.devServerTarget) {
-    const parsedTarget = parseTargetString(opts.devServerTarget, projectGraph);
-
-    projectConfig.targets.e2e.options = {
-      ...projectConfig.targets.e2e.options,
-      devServerTarget: opts.devServerTarget,
-      port: opts.port,
-    };
-
-    const devServerProjectConfig = readProjectConfiguration(
-      tree,
-      parsedTarget.project
-    );
-    // Add production e2e target if serve target is found
-    if (
-      parsedTarget.configuration !== 'production' &&
-      devServerProjectConfig.targets?.[parsedTarget.target]?.configurations?.[
-        'production'
-      ]
-    ) {
-      projectConfig.targets.e2e.configurations ??= {};
-      projectConfig.targets.e2e.configurations['production'] = {
-        devServerTarget: `${parsedTarget.project}:${parsedTarget.target}:production`,
-      };
-    }
-    // Add ci/static e2e target if serve target is found
-    if (devServerProjectConfig.targets?.['serve-static']) {
-      projectConfig.targets.e2e.configurations ??= {};
-      projectConfig.targets.e2e.configurations.ci = {
-        devServerTarget: `${parsedTarget.project}:serve-static`,
-      };
-    }
-  } else if (opts.baseUrl) {
-    projectConfig.targets.e2e.options = {
-      ...projectConfig.targets.e2e.options,
-      baseUrl: opts.baseUrl,
-    };
-  }
-
-  updateProjectConfiguration(tree, opts.project, projectConfig);
 }
 
 function createPackageJson(tree: Tree, options: NormalizedSchema) {

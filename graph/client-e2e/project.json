@@ -5,24 +5,22 @@
   "projectType": "application",
   "targets": {
     "e2e-base": {
-      "executor": "@nx/cypress:cypress",
+      "executor": "nx:run-commands",
       "options": {
-        "testingType": "e2e",
-        "skipServe": true,
-        "browser": "chrome"
+        "cwd": "graph/client-e2e"
       },
       "configurations": {
         "dev": {
-          "cypressConfig": "graph/client-e2e/cypress.config.ts"
+          "command": "cypress run --e2e --browser chrome --config-file cypress.config.ts"
         },
         "watch": {
-          "cypressConfig": "graph/client-e2e/cypress-watch-mode.config.ts"
+          "command": "cypress run --e2e --browser chrome --config-file cypress-watch-mode.config.ts"
         },
         "release": {
-          "cypressConfig": "graph/client-e2e/cypress-release.config.ts"
+          "command": "cypress run --e2e --browser chrome --config-file cypress-release.config.ts"
         },
         "release-static": {
-          "cypressConfig": "graph/client-e2e/cypress-release-static.config.ts"
+          "command": "cypress run --e2e --browser chrome --config-file cypress-release-static.config.ts"
         }
       },
       "defaultConfiguration": "dev"

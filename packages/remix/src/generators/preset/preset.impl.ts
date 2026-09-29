@@ -1,7 +1,6 @@
 import {
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   Tree,
   runTasksInSerial,
 } from '@nx/devkit';
@@ -21,10 +20,7 @@ export default async function (tree: Tree, _options: RemixGeneratorSchema) {
   const setupGenTask = await setupGenerator(tree);
   tasks.push(setupGenTask);
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+  const addPluginDefault = true;
 
   const appGenTask = await applicationGenerator(tree, {
     name: options.appName,

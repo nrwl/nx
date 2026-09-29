@@ -9,7 +9,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import type { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
+import type { CypressExecutorOptions } from '../../executors/cypress/schema';
 
 const EXECUTOR_TO_MIGRATE = '@nx/cypress:cypress';
 

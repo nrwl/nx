@@ -1,9 +1,4 @@
-import {
-  acknowledgeBuildScripts,
-  addPlugin,
-  upsertTargetDefault,
-  findTargetDefault,
-} from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
@@ -81,24 +76,6 @@ export function updateNxJsonSettings(tree: Tree) {
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
-  );
-
-  if (!hasPlugin) {
-    const existing = findTargetDefault(nxJson.targetDefaults, {
-      executor: '@nx/vitest:test',
-    });
-    upsertTargetDefault(tree, nxJson, {
-      executor: '@nx/vitest:test',
-      cache: existing?.cache ?? true,
-      inputs: existing?.inputs ?? [
-        'default',
-        productionFileSet ? '^production' : '^default',
-      ],
-    });
-  }
-
   updateNxJson(tree, nxJson);
 }
 
@@ -106,10 +83,7 @@ export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   assertSupportedVitestVersion(tree);
 
   const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin = true;
 
   if (schema.addPlugin) {
     await addPlugin(

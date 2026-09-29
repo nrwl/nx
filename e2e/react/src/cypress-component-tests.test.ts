@@ -10,7 +10,6 @@ import {
   updateJson,
   shouldRunCypressTests,
 } from '@nx/e2e-utils';
-import { join } from 'path';
 
 describe('React Cypress Component Tests', () => {
   let projectName;
@@ -137,14 +136,12 @@ export default Input;
 `
     );
     createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
-    updateJson(join('apps', appName, 'project.json'), (config) => {
-      config.targets['build'].options.assets.push({
-        glob: '**/*',
-        input: 'libs/assets',
-        output: 'assets',
-      });
-      return config;
-    });
+    updateFile(`apps/${appName}/webpack.config.js`, (content) =>
+      content.replace(
+        'assets: [',
+        `assets: [{ glob: '**/*', input: 'libs/assets', output: 'assets' }, `
+      )
+    );
   });
 
   afterAll(() => {
@@ -157,7 +154,7 @@ export default Input;
       `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -168,7 +165,7 @@ export default Input;
       `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -186,7 +183,7 @@ export default Input;
       );
     });
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -218,49 +215,11 @@ describe(Input.name, () => {
     );
 
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
     }
   }, 300_000);
-
-  it('should work with async webpack config', async () => {
-    // TODO: (caleb) for whatever reason the MF webpack config + CT is running, but cypress is not starting up?
-    // are they overriding some option on top of each other causing cypress to not see it's running?
-    createFile(
-      `apps/${appName}/webpack.config.js`,
-      `
-        const { composePlugins, withNx } = require('@nx/webpack');
-        const { withReact } = require('@nx/react');
-
-        module.exports = composePlugins(
-          withNx(),
-          withReact(),
-          async function (configuration) {
-            await new Promise((res) => {
-              setTimeout(() => {
-                console.log('I am from the custom async Webpack config');
-                res();
-              }, 1000);
-            });
-            return configuration;
-          }
-        );
-      `
-    );
-    updateJson(join('apps', appName, 'project.json'), (config) => {
-      config.targets['build'].options.webpackConfig =
-        `apps/${appName}/webpack.config.js`;
-
-      return config;
-    });
-
-    if (await shouldRunCypressTests()) {
-      const results = runCLI(`component-test ${appName}`);
-      expect(results).toContain('I am from the custom async Webpack config');
-      expect(results).toContain('All specs passed!');
-    }
-  });
 
   // flaky bc of upstream issue https://github.com/cypress-io/cypress/issues/25913
   it.skip('should CT vite projects importing other projects', async () => {

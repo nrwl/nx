@@ -13,6 +13,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import { addPropertyToJestConfig, findJestConfig } from '@nx/jest';
 import {
   libraryGenerator as jsLibraryGenerator,
   addTsLibDependencies,
@@ -167,6 +168,14 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
 
   await addFiles(host, options);
   updatePluginConfig(host, options);
+
+  if (options.unitTestRunner === 'jest') {
+    // addFiles removes src/lib and its spec, so a fresh plugin has no tests yet.
+    const jestConfig = findJestConfig(host, options.projectRoot);
+    if (jestConfig) {
+      addPropertyToJestConfig(host, jestConfig, 'passWithNoTests', true);
+    }
+  }
 
   if (options.e2eTestRunner !== 'none') {
     tasks.push(

@@ -57,22 +57,9 @@ describe('Add Project', () => {
       expect(project.implicitDependencies).toEqual(['my-app']);
     });
 
-    it('should update targets', () => {
+    it('should not add executor targets', () => {
       const project = readProjectConfiguration(tree, 'my-app-e2e');
-      expect(project.targets).toMatchObject({
-        'build-ios': {
-          executor: '@nx/detox:build',
-        },
-        'test-ios': {
-          executor: '@nx/detox:test',
-        },
-        'build-android': {
-          executor: '@nx/detox:build',
-        },
-        'test-android': {
-          executor: '@nx/detox:test',
-        },
-      });
+      expect(project.targets).toEqual({});
     });
   });
 
@@ -109,22 +96,9 @@ describe('Add Project', () => {
       expect(project.implicitDependencies).toEqual(['my-dir-my-app']);
     });
 
-    it('should update targets', () => {
+    it('should not add executor targets', () => {
       const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
-      expect(project.targets).toMatchObject({
-        'build-ios': {
-          executor: '@nx/detox:build',
-        },
-        'test-ios': {
-          executor: '@nx/detox:test',
-        },
-        'build-android': {
-          executor: '@nx/detox:build',
-        },
-        'test-android': {
-          executor: '@nx/detox:test',
-        },
-      });
+      expect(project.targets).toEqual({});
     });
   });
 });

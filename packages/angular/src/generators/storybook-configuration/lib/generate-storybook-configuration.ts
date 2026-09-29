@@ -18,6 +18,5 @@ export async function generateStorybookConfiguration(
     configureStaticServe: options.configureStaticServe,
     skipFormat: true,
     addPlugin: false,
-    addExplicitTargets: true,
   });
 }

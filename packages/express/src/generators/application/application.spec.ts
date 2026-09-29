@@ -244,30 +244,6 @@ describe('app', () => {
           "name": "@proj/myapp",
           "nx": {
             "targets": {
-              "build": {
-                "configurations": {
-                  "development": {
-                    "outputHashing": "none",
-                  },
-                  "production": {},
-                },
-                "defaultConfiguration": "production",
-                "executor": "@nx/webpack:webpack",
-                "options": {
-                  "assets": [
-                    "myapp/src/assets",
-                  ],
-                  "compiler": "tsc",
-                  "main": "myapp/src/main.ts",
-                  "outputPath": "myapp/dist",
-                  "target": "node",
-                  "tsConfig": "myapp/tsconfig.app.json",
-                  "webpackConfig": "myapp/webpack.config.js",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              },
               "copy-workspace-modules": {
                 "cache": true,
                 "dependsOn": [
@@ -280,9 +256,6 @@ describe('app', () => {
                 "outputs": [
                   "{workspaceRoot}/myapp/dist/workspace_modules",
                 ],
-              },
-              "lint": {
-                "executor": "@nx/eslint:lint",
               },
               "prune": {
                 "dependsOn": [
@@ -326,14 +299,9 @@ describe('app', () => {
                 },
               },
               "test": {
-                "executor": "@nx/jest:jest",
                 "options": {
-                  "jestConfig": "myapp/jest.config.cts",
                   "passWithNoTests": true,
                 },
-                "outputs": [
-                  "{projectRoot}/test-output/jest/coverage",
-                ],
               },
             },
           },
@@ -458,30 +426,6 @@ describe('app', () => {
           "sourceRoot": "myapp/src",
           "tags": [],
           "targets": {
-            "build": {
-              "configurations": {
-                "development": {
-                  "outputHashing": "none",
-                },
-                "production": {},
-              },
-              "defaultConfiguration": "production",
-              "executor": "@nx/webpack:webpack",
-              "options": {
-                "assets": [
-                  "myapp/src/assets",
-                ],
-                "compiler": "tsc",
-                "main": "myapp/src/main.ts",
-                "outputPath": "myapp/dist",
-                "target": "node",
-                "tsConfig": "myapp/tsconfig.app.json",
-                "webpackConfig": "myapp/webpack.config.js",
-              },
-              "outputs": [
-                "{options.outputPath}",
-              ],
-            },
             "copy-workspace-modules": {
               "cache": true,
               "dependsOn": [
@@ -494,9 +438,6 @@ describe('app', () => {
               "outputs": [
                 "{workspaceRoot}/myapp/dist/workspace_modules",
               ],
-            },
-            "lint": {
-              "executor": "@nx/eslint:lint",
             },
             "prune": {
               "dependsOn": [
@@ -540,14 +481,9 @@ describe('app', () => {
               },
             },
             "test": {
-              "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp/jest.config.cts",
                 "passWithNoTests": true,
               },
-              "outputs": [
-                "{projectRoot}/test-output/jest/coverage",
-              ],
             },
           },
         }
