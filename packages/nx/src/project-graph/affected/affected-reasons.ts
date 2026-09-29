@@ -141,15 +141,22 @@ export function formatAffectedExplanation(
   const lines = [`${heading} (${names.length}):`, ''];
   const render = (name: string, withLayer = false) => {
     lines.push(`  ${name}`);
+    // A reached target's first line names the tasks it was reached through,
+    // so without --verbose the producer lines below would only repeat it.
+    const reachedThrough = withLayer && !touched(name);
     if (withLayer) {
       lines.push(
-        touched(name)
-          ? `    - ${touchedBy(reasonsOf(name))}`
-          : `    - affected: reads outputs the change reached`
+        `    - ${
+          reachedThrough
+            ? affectedThrough(reasonsOf(name))
+            : touchedBy(reasonsOf(name))
+        }`
       );
     }
-    const forName = reasonsOf(name);
-    if (!forName.length) {
+    const forName = reasonsOf(name).filter(
+      (reason) => verbose || !reachedThrough || !isUpstreamReason(reason)
+    );
+    if (!reasonsOf(name).length) {
       lines.push(`    - selected, but no reason was recorded`);
     }
     for (const line of verbose
@@ -297,6 +304,18 @@ function touchedBy(reasons: AffectedReason[]): string {
   }
   const others = changed.length - 1;
   return `touched by ${changed[0]}${
+    others ? ` and ${others} ${others === 1 ? 'other' : 'others'}` : ''
+  }`;
+}
+
+/** The first task a reached target reads the outputs of. */
+function affectedThrough(reasons: AffectedReason[]): string {
+  const producers = reasons
+    .filter(isUpstreamReason)
+    .map((reason) => reason.producer)
+    .sort();
+  const others = producers.length - 1;
+  return `affected through ${producers[0]}${
     others ? ` and ${others} ${others === 1 ? 'other' : 'others'}` : ''
   }`;
 }

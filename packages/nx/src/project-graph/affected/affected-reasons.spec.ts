@@ -99,7 +99,9 @@ describe('formatAffectedExplanation', () => {
     );
     expect(out).toContain('Touched, their own inputs changed (1):');
     expect(out).toMatch(/\n\nAffected tasks \(1\):\n/);
-    expect(out).toContain('    - affected: reads outputs the change reached');
+    expect(out).toContain('  app:build\n    - affected through app:prebuild\n');
+    // The first line names the producer, so the reason line would repeat it.
+    expect(out).not.toContain('reads the outputs of app:prebuild');
     expect(out.indexOf('app:prebuild')).toBeLessThan(out.indexOf('app:build'));
     const entries = out.split('\n').filter((line) => /^  \S/.test(line));
     expect(entries.at(-1)).toBe('  app:build');
