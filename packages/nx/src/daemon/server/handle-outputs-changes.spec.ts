@@ -5,9 +5,7 @@ vi.mock('../logger', () => ({
   serverLogger: { watcherLog: vi.fn() },
 }));
 vi.mock('./outputs-tracking', () => ({
-  clearRecordedOutputsHashes: vi.fn(),
   disableOutputsTracking: vi.fn(),
-  processFileChangesInOutputs: vi.fn(),
 }));
 vi.mock('./project-graph-incremental-recomputation', () => ({
   currentProjectGraph: undefined,
@@ -29,9 +27,7 @@ describe('handleOutputsChanges', () => {
   let handleOutputsChanges: typeof import('./handle-outputs-changes').handleOutputsChanges;
   let getOutputsWatcherTerminalError: typeof import('./handle-outputs-changes').getOutputsWatcherTerminalError;
   let outputsTracking: {
-    clearRecordedOutputsHashes: Mock;
     disableOutputsTracking: Mock;
-    processFileChangesInOutputs: Mock;
   };
   let recomputation: {
     invalidateGraphCache: Mock;
@@ -65,12 +61,10 @@ describe('handleOutputsChanges', () => {
     consoleError.mockRestore();
   });
 
-  it('starts the tracker over and invalidates the graph on a rescan, without processing per-path events', async () => {
+  it('invalidates the graph on a rescan without classifying per-path events', async () => {
     await handleOutputsChanges(null, [{ path: '', type: EventType.rescan }]);
 
-    expect(outputsTracking.clearRecordedOutputsHashes).toHaveBeenCalled();
     expect(recomputation.invalidateGraphCache).toHaveBeenCalled();
-    expect(outputsTracking.processFileChangesInOutputs).not.toHaveBeenCalled();
     expect(dotenvChanges.classifyDotEnvChanges).not.toHaveBeenCalled();
     // A rescan is recoverable: the watch stream is still alive.
     expect(getOutputsWatcherTerminalError()).toBeUndefined();
@@ -96,29 +90,15 @@ describe('handleOutputsChanges', () => {
     expect(outputsTracking.disableOutputsTracking).toHaveBeenCalled();
   });
 
-  it('keeps invalidating the graph for dotenv edits after a processing failure, which is not terminal', async () => {
-    // A processing failure happens with the native watcher still alive, so
-    // later events keep arriving; only their outputs processing stays off.
-    outputsTracking.processFileChangesInOutputs.mockImplementationOnce(() => {
+  it('invalidates the graph when dotenv classification fails, leaving outputs tracking on', async () => {
+    dotenvChanges.classifyDotEnvChanges.mockImplementationOnce(() => {
       throw new Error('boom');
     });
     await handleOutputsChanges(null, events);
 
-    expect(getOutputsWatcherTerminalError()).toBeUndefined();
-    expect(outputsTracking.disableOutputsTracking).toHaveBeenCalled();
-
-    dotenvChanges.classifyDotEnvChanges.mockReturnValue({
-      invalidating: ['.env.e2e'],
-      unclassified: [],
-    });
-    context.trackedFilesInContext.mockReturnValue([]);
-    await handleOutputsChanges(null, events);
-
     expect(recomputation.invalidateGraphCache).toHaveBeenCalled();
     expect(getOutputsWatcherTerminalError()).toBeUndefined();
-    expect(outputsTracking.processFileChangesInOutputs).toHaveBeenCalledTimes(
-      1
-    );
+    expect(outputsTracking.disableOutputsTracking).not.toHaveBeenCalled();
   });
 
   it('forwards unclassified dotenv events to the pending queue without invalidating', async () => {

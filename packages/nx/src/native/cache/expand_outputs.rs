@@ -172,13 +172,33 @@ fn partition_globs_into_map(globs: Vec<String>) -> HashMap<String, Vec<String>> 
     map
 }
 
-/// Expands the given outputs into a list of existing files.
-/// This is what the daemon's outputs tracking reads; hashing expands the same
-/// entries through `expand_task_outputs`. Takes a borrowed directory so batch
-/// callers don't pay a String clone per task.
+/// Expands the given outputs into a list of existing files, read from disk.
+/// Hashing expands the same entries through `expand_task_outputs`. Takes a
+/// borrowed directory so batch callers don't pay a String clone per task.
 pub fn get_files_for_outputs(
     directory: &Path,
     entries: Vec<String>,
+) -> anyhow::Result<Vec<String>> {
+    get_files_for_outputs_via(directory, entries, &|dir| {
+        let root = PathBuf::from(dir);
+        let dir_path = directory.join(dir);
+        Some(
+            nx_walker(&dir_path, false)
+                .filter(|file| dir_path.join(&file.normalized_path).is_file())
+                .map(|file| root.join(&file.normalized_path).to_normalized_string())
+                .collect(),
+        )
+    })
+}
+
+/// `get_files_for_outputs` with the directory reads supplied: `read` takes a
+/// workspace-relative directory and answers the workspace-relative files
+/// under it, `None` when it cannot be read. What `read` answers is taken to
+/// be files, without a stat per entry.
+pub(crate) fn get_files_for_outputs_via(
+    directory: &Path,
+    entries: Vec<String>,
+    read: &(dyn Fn(&str) -> Option<Vec<String>> + Sync),
 ) -> anyhow::Result<Vec<String>> {
     let mut globs: Vec<String> = vec![];
     let mut files: Vec<String> = vec![];
@@ -200,54 +220,31 @@ pub fn get_files_for_outputs(
                 _ => globs.push(entry),
             }
         } else if path.is_dir() {
-            directories.push(entry);
+            directories.push(Path::new(&entry).to_normalized_string());
         } else {
-            files.push(entry);
+            files.push(Path::new(&entry).to_normalized_string());
         }
     }
 
     if !globs.is_empty() {
         let partitioned_globs = partition_globs_into_map(globs);
         for (root, patterns) in partitioned_globs {
-            let root_path = directory.join(&root);
             let glob_set = build_glob_set(&patterns)?;
-            trace!("walking directory: {:?}", root_path);
-
-            let found_paths: Vec<String> = nx_walker(&root_path, false)
-                .filter_map(|file| {
-                    if glob_set.is_match(&file.normalized_path) {
-                        Some(
-                            // root_path contains full directory,
-                            // root is only the leading dirs from glob
-                            PathBuf::from(&root)
-                                .join(&file.normalized_path)
-                                .to_normalized_string(),
-                        )
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
+            trace!("reading directory: {:?}", root);
+            let root_path = PathBuf::from(&root);
+            let found_paths = read(&root).unwrap_or_default().into_iter().filter(|file| {
+                // The patterns are relative to the root they were split from.
+                Path::new(file)
+                    .strip_prefix(&root_path)
+                    .is_ok_and(|relative| glob_set.is_match(relative.to_normalized_string()))
+            });
             files.extend(found_paths);
         }
     }
 
-    if !directories.is_empty() {
-        for dir in directories {
-            let dir = PathBuf::from(dir);
-            let dir_path = directory.join(&dir);
-            let files_in_dir = nx_walker(&dir_path, false).filter_map(|e| {
-                let path = dir_path.join(&e.normalized_path);
-
-                if path.is_file() {
-                    Some(dir.join(e.normalized_path).to_normalized_string())
-                } else {
-                    None
-                }
-            });
-            files.extend(files_in_dir);
-        }
+    for dir in directories {
+        let dir = dir.trim_end_matches('/');
+        files.extend(read(dir).unwrap_or_default());
     }
 
     files.sort();

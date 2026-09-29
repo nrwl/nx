@@ -173,7 +173,7 @@ export declare class NxCache {
    * SQL query and reads terminal output files in parallel via Rayon.
    */
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
-  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
+  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): CachedOutputs
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
   /**
    * Register terminal outputs that were written without a cache entry —
@@ -196,7 +196,8 @@ export declare class NxCache {
   recordTerminalOutputs(records: Array<TerminalOutputRecord>): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
-  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
+  /** Restores `outputs` and returns each file written, stamped as it is now. */
+  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): Array<OutputFile>
   removeOldCacheRecords(): void
   checkCacheFsInSync(): boolean
 }
@@ -391,6 +392,13 @@ export declare class WorkspaceContext {
    * other read of the files does, so a write already reported counts.
    */
   trackedFiles(paths: Array<string>): Array<string>
+  /**
+   * Remembers each task's outputs, as given or else as they are on disk
+   * now, so `outputs_unchanged` can tell whether they still are.
+   */
+  recordOutputs(entries: Array<TaskOutputs>): void
+  /** Whether each task's outputs are still as last recorded for its hash. */
+  outputsUnchanged(entries: Array<TaskOutputs>): Array<boolean>
   getFilesInDirectory(directory: string): Array<string>
   /**
    * Subscribes to the context's changes: the callback is called whenever
@@ -501,6 +509,14 @@ export declare const enum BatchStatus {
   Running = 'Running',
   Success = 'Success',
   Failure = 'Failure'
+}
+
+/** What `put` copied into the cache. */
+export interface CachedOutputs {
+  /** The output entries that exist, as `expand_outputs` finds them. */
+  expandedOutputs: Array<string>
+  /** Each file copied, stamped as it is in the workspace. */
+  files: Array<OutputFile>
 }
 
 export interface CachedPluginCapabilities {
@@ -992,6 +1008,16 @@ export interface NxWorkspaceFilesExternals {
   ignoredIndex: ExternalObject<IgnoredIndexReader>
 }
 
+/** A workspace-relative file with the stamp it was left with. */
+export interface OutputFile {
+  path: string
+  /**
+   * `<mtime nanos>:<size>`, a string because the nanoseconds do not fit a
+   * JavaScript number.
+   */
+  stamp: string
+}
+
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
 
 /**
@@ -1159,6 +1185,16 @@ export interface TaskHashDetails {
   implicitDeps?: Record<string, string>
   /** Hash of the runtime environment which the task was executed */
   runtime?: Record<string, string>
+}
+
+export interface TaskOutputs {
+  outputs: Array<string>
+  hash: string
+  /**
+   * What the cache just wrote or restored for these outputs. Recorded as
+   * given, without walking, where `given_covers` allows.
+   */
+  files?: Array<OutputFile>
 }
 
 /**

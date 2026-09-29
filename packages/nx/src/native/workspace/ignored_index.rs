@@ -91,7 +91,7 @@ impl Content {
     }
 }
 
-fn now_secs() -> u64 {
+pub(crate) fn now_secs() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
@@ -579,6 +579,12 @@ impl IgnoredIndexReader {
 
     pub(crate) fn index(&self) -> &IgnoredIndex {
         &self.index
+    }
+
+    /// Applies what the watch delivered, for a caller about to read `index`
+    /// many times in a row. See `files_under`.
+    pub(crate) fn catch_up(&self) {
+        (self.catch_up)();
     }
 
     /// See `IgnoredIndex::track`.
