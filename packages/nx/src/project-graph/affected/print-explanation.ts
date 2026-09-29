@@ -15,7 +15,8 @@ import {
 export function printAffectedExplanation(
   explanation: AffectedExplanation,
   heading: string,
-  destination: string | boolean | undefined
+  destination: string | boolean | undefined,
+  options: { verbose?: boolean } = {}
 ): void {
   if (destination === 'stdout') {
     console.log(JSON.stringify(explanation, null, 2));
@@ -27,7 +28,7 @@ export function printAffectedExplanation(
     return;
   }
 
-  const rendered = formatAffectedExplanation(explanation, heading);
+  const rendered = formatAffectedExplanation(explanation, heading, options);
   const count = Object.keys(explanation.affected).length;
   if (!count) {
     output.log({ title: rendered });

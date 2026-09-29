@@ -105,7 +105,9 @@ export async function affected(
     // --explain reports the selection rather than acting on it: someone asking
     // why a task is affected does not also want it to run.
     if (isExplaining(nxArgs.explain)) {
-      printAffectedExplanation(explanation, 'Affected tasks', nxArgs.explain);
+      printAffectedExplanation(explanation, 'Affected tasks', nxArgs.explain, {
+        verbose: args.verbose,
+      });
       await output.drain();
       process.exit(0);
     }

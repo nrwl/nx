@@ -122,7 +122,8 @@ export function formatAffectedExplanation(
     required = {},
     requested,
   }: AffectedExplanation,
-  heading: string
+  heading: string,
+  { verbose = false }: { verbose?: boolean } = {}
 ): string {
   const names = Object.keys(affected).sort();
   if (!names.length) {
@@ -181,18 +182,28 @@ export function formatAffectedExplanation(
   if (!upstreamNames.length && !requiredNames.length) {
     touchedFirst(names).forEach((name) => render(name));
   } else {
-    if (requiredNames.length) {
+    // The change reached none of them, so the list is what runs, not why:
+    // behind --verbose, since there are often more of these than anything else.
+    if (requiredNames.length && !verbose) {
+      lines.push(
+        `Dependencies, needed to run first (${requiredNames.length}). Pass --verbose to list them.`,
+        ''
+      );
+    } else if (requiredNames.length) {
       lines.push(
         `Dependencies, needed to run first (${requiredNames.length}):`,
         ''
       );
       for (const name of requiredNames) {
-        const by = required[name];
-        const more = by.length > 2 ? ` and ${by.length - 2} more` : '';
+        const [first, ...rest] = required[name];
         lines.push(
-          by.length
-            ? `  ${name}, needed by ${by.slice(0, 2).join(', ')}${more}`
-            : `  ${name}`
+          !first
+            ? `  ${name}`
+            : `  ${name}, needed by ${first}${
+                rest.length
+                  ? ` and ${rest.length} ${rest.length === 1 ? 'other' : 'others'}`
+                  : ''
+              }`
         );
       }
       lines.push('');

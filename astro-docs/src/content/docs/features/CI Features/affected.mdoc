@@ -268,10 +268,7 @@ NX_LEGACY_AFFECTED=false nx affected -t build --explain
 ```text
  NX   Affected tasks (3)
 
-Dependencies, needed to run first (2):
-
-  admin:prebuild, needed by admin:build
-  app:prebuild, needed by app:build
+Dependencies, needed to run first (2). Pass --verbose to list them.
 
 Affected tasks (3):
 
@@ -294,7 +291,7 @@ Affected tasks (3):
 
 The output follows the order the run goes in, and the tasks you asked for always come last:
 
-- `Dependencies` run only because a task below needs them. Your change didn't reach them, so they can restore from cache.
+- `Dependencies` run only because a task below needs them. Your change didn't reach them, so they can restore from cache. Pass `--verbose` to list each one with the task that needs it.
 - `Touched` tasks had one of their own inputs changed.
 - Under `Affected, they read outputs`, each task reads the outputs of one your change reached.
 - `Affected tasks` comes last and holds the tasks you asked for, each marked touched or affected.

@@ -130,13 +130,12 @@ describe('formatAffectedExplanation', () => {
           'tools:build': ['app:build'],
         },
       },
-      'Affected tasks'
+      'Affected tasks',
+      { verbose: true }
     );
     const at = (text: string) => out.indexOf(text);
     expect(out).toContain('Dependencies, needed to run first (2):');
-    expect(out).toContain(
-      '  core:build, needed by a:build, b:build and 1 more'
-    );
+    expect(out).toContain('  core:build, needed by a:build and 2 others');
     expect(out).toContain('  tools:build, needed by app:build');
     expect(at('Dependencies,')).toBeLessThan(at('Touched,'));
     expect(at('Touched,')).toBeLessThan(at('\n\nAffected tasks (2):'));
@@ -144,6 +143,23 @@ describe('formatAffectedExplanation', () => {
     expect(at('  lib:build')).toBeLessThan(at('  app:build'));
     expect(out).toContain('    - touched: its own inputs changed');
     expect(out).toContain('2 affected tasks.');
+  });
+
+  // The change reached none of them, so listing each is noise unless asked.
+  it('collapses the dependencies to a count unless verbose', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: { 'app:build': [{ kind: 'input-file', file: 'x.ts' }] },
+        upstream: {},
+        touched: ['app:build'],
+        required: { 'core:build': ['app:build'], 'tools:build': ['app:build'] },
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain(
+      'Dependencies, needed to run first (2). Pass --verbose to list them.'
+    );
+    expect(out).not.toContain('core:build');
   });
 
   // The reader's task sits at the bottom, so it names the file its chain
