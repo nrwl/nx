@@ -3,8 +3,7 @@ use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
 
 /// One row per plugin that built the latest graph, stamped with its `computedAt`.
-/// Created here because `create_all_tables` only runs for a new database file.
-const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS nx_plugin_capabilities (
+pub(crate) const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS nx_plugin_capabilities (
     position   INTEGER PRIMARY KEY NOT NULL,
     computed_at   INTEGER NOT NULL,
     create_nodes_pattern   TEXT,
@@ -37,12 +36,7 @@ impl NxPluginCapabilities {
             Arc<Mutex<NxDbConnection>>,
         >,
     ) -> anyhow::Result<Self> {
-        let service = Self { db: Arc::clone(db) };
-        {
-            let db = service.db.lock().unwrap();
-            db.execute_batch(SCHEMA)?;
-        }
-        Ok(service)
+        Ok(Self { db: Arc::clone(db) })
     }
 
     #[napi]

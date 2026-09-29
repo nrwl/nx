@@ -1,4 +1,6 @@
 use crate::native::db::connection::NxDbConnection;
+use crate::native::io_snapshots::store::SCHEMA as IO_SNAPSHOTS_SCHEMA;
+use crate::native::plugins::graph_capabilities::SCHEMA as PLUGIN_CAPABILITIES_SCHEMA;
 use crate::native::tasks::details::SCHEMA as TASK_DETAILS_SCHEMA;
 use crate::native::tasks::running_tasks_service::SCHEMA as RUNNING_TASKS_SCHEMA;
 use crate::native::tasks::task_history::SCHEMA as TASK_HISTORY_SCHEMA;
@@ -70,6 +72,8 @@ fn create_all_tables(c: &NxDbConnection) -> anyhow::Result<()> {
         c.execute_batch(RUNNING_TASKS_SCHEMA)?;
         c.execute_batch(TASK_INVOCATIONS_SCHEMA)?;
         c.execute_batch("CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT)")?;
+        c.execute_batch(PLUGIN_CAPABILITIES_SCHEMA)?;
+        c.execute_batch(IO_SNAPSHOTS_SCHEMA)?;
         // Tables with FK dependencies
         c.execute_batch(TASK_HISTORY_SCHEMA)
     })

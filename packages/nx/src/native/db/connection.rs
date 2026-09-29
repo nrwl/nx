@@ -207,6 +207,27 @@ impl NxDbConnection {
         .with_context(|| format!("DB query error: \"{sql}\""))
     }
 
+    /// Runs `sql` once per parameter set, preparing it only once. Use it for bulk
+    /// writes and for key lookups that `IN (...)` can't serve from an index.
+    pub fn query_rows_each(&self, sql: &str, param_sets: &[Vec<DbValue>]) -> Result<Vec<DbRow>> {
+        self.retrying(|| {
+            let mut stmt = self.conn()?.prepare(sql)?;
+            let mut result = Vec::new();
+            for params in param_sets {
+                stmt.reset()?;
+                for (i, param) in params.iter().enumerate() {
+                    let index = NonZero::new(i + 1).expect("index starts at 1");
+                    stmt.bind_at(index, to_turso_value(param))?;
+                }
+                result.extend(stmt.run_collect_rows()?.iter().map(|row| DbRow {
+                    values: row.iter().map(from_turso_value).collect(),
+                }));
+            }
+            Ok(result)
+        })
+        .with_context(|| format!("DB query error: \"{sql}\""))
+    }
+
     pub fn query_row(&self, sql: &str, params: &[DbValue]) -> Result<Option<DbRow>> {
         let rows = self.query_rows(sql, params)?;
         Ok(rows.into_iter().next())
