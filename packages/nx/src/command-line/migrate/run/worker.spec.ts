@@ -1276,6 +1276,20 @@ describe('runSingleMigrationWorker', () => {
       ).rejects.toThrow(`Remove 'agent-work' from the migrate run`);
     });
 
+    it('refuses a plan snapshot planted as a symlink', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'dispensed')],
+        migrations: [promptMig('@nx/js', 'p')],
+      });
+      const outside = join(dir, 'outside.json');
+      renameSync(join(dir, 'plan-0.json'), outside);
+      symlinkSync(outside, join(dir, 'plan-0.json'));
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:p', 'run-1'))
+      ).rejects.toThrow(`${join(dir, 'plan-0.json')} is not a regular file`);
+    });
+
     it('re-hands the payload stored by the earlier attempt on a hybrid retry', async () => {
       const dir = setupRun('run-1', {
         steps: [

@@ -76,6 +76,7 @@ import {
   type StepEvent,
 } from './state-machine';
 import { holdRunActivity, updateRunState } from './state-lock';
+import { readRunJson, runFileExists } from './run-files';
 import {
   installDepsChangedSinceDispense,
   nowIso,
@@ -241,13 +242,15 @@ function readMigrationsSource(
     // Safe to join and to name in the error below only because the read
     // refuses any planSnapshot that is not a bare `plan-<round>.json`.
     const planPath = join(dir, round.planSnapshot);
-    if (!existsSync(planPath)) {
+    if (!runFileExists(dir, planPath)) {
       throw new Error(
         `The plan snapshot '${round.planSnapshot}' for migrate run '${runId}' doesn't exist, can't run the migration.`
       );
     }
     return {
-      migrations: readPlanMigrations(planPath),
+      migrations:
+        readRunJson<{ migrations?: PlannedMigration[] }>(dir, planPath)
+          .migrations ?? [],
       source: round.planSnapshot,
     };
   }

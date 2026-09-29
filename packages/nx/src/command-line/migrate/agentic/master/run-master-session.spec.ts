@@ -621,22 +621,44 @@ describe('runMasterSession', () => {
     expect(mockReadRunState).not.toHaveBeenCalled();
     expect(mockRunComplete).not.toHaveBeenCalled();
   });
-  it('exits 1 with the error, the error and abandonment events and the resume hint when the session had to be closed on an unanswered request and the run is still active', async () => {
-    const error = new Error('EACCES: permission denied, rename');
-    mockSpawnMaster.mockResolvedValue({ kind: 'broker-failed', error });
-    mockReadRunState.mockReturnValue(state('active', ['running']));
+  it.each([
+    [
+      'an unanswered request',
+      'broker-failed',
+      'EACCES: permission denied, rename',
+      {
+        title:
+          "Closed the Claude Code session: a step's request could not be answered (EACCES: permission denied, rename).",
+      },
+    ],
+    [
+      'a sentinel it could not check for',
+      'sentinel-failed',
+      "Remove 'handoffs' from the migrate run and try again; nx needs a directory at /workspace/.nx/migrate-runs/x/handoffs.",
+      {
+        title:
+          'Closed the Claude Code session: nx could not check for the file that marks it complete.',
+        bodyLines: [
+          "Remove 'handoffs' from the migrate run and try again; nx needs a directory at /workspace/.nx/migrate-runs/x/handoffs.",
+        ],
+      },
+    ],
+  ])(
+    'exits 1 with the error, the error and abandonment events and the resume hint when the session had to be closed on %s and the run is still active',
+    async (_, kind, message, printed) => {
+      const error = new Error(message);
+      mockSpawnMaster.mockResolvedValue({ kind, error });
+      mockReadRunState.mockReturnValue(state('active', ['running']));
 
-    expect(await runMasterSession(input())).toBe(1);
+      expect(await runMasterSession(input())).toBe(1);
 
-    expect(errorSpy).toHaveBeenCalledWith({
-      title:
-        "Closed the Claude Code session: a step's request could not be answered (EACCES: permission denied, rename).",
-    });
-    expect(warnSpy).toHaveBeenCalledWith({
-      title: `Migrate run ${runId} is still active. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
-    });
-    expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
-    expect(mockAbandoned).toHaveBeenCalledTimes(1);
-    expect(mockRunComplete).not.toHaveBeenCalled();
-  });
+      expect(errorSpy).toHaveBeenCalledWith(printed);
+      expect(warnSpy).toHaveBeenCalledWith({
+        title: `Migrate run ${runId} is still active. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
+      });
+      expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
+      expect(mockAbandoned).toHaveBeenCalledTimes(1);
+      expect(mockRunComplete).not.toHaveBeenCalled();
+    }
+  );
 });

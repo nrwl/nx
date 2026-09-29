@@ -544,10 +544,34 @@ describe('spawnMasterSession', () => {
         kind: 'spawn-failed',
         error: expect.objectContaining({
           message: expect.stringContaining(
-            `something other than a directory at ${handoffsDir}`
+            `Remove 'handoffs' from the migrate run and try again; nx needs a directory at ${handoffsDir}`
           ),
         }),
       });
+    });
+
+    it('keeps waiting while the handoffs directory is missing and closes the session with the error once a symlink replaces it', async () => {
+      const elsewhere = join(root, 'elsewhere');
+      mkdirSync(elsewhere);
+      const child = fakeChild({ exitAfterSpawn: false });
+      mockSpawn.mockImplementation(() => child);
+
+      const pending = spawnMasterSession(input({ runRoot: root }));
+      await pollsElapsed(3);
+      rmSync(handoffsDir, { recursive: true });
+      await pollsElapsed(3);
+      const killsWhileMissing = child.kill.mock.calls.length;
+      symlinkSync(elsewhere, handoffsDir);
+      writeFileSync(promptedSentinel(), '');
+
+      expect(await pending).toEqual({
+        kind: 'sentinel-failed',
+        error: expect.objectContaining({
+          message: `Remove 'handoffs' from the migrate run and try again; nx needs a directory at ${handoffsDir}.`,
+        }),
+      });
+      expect(killsWhileMissing).toBe(0);
+      expect(child.kill).toHaveBeenCalledWith('SIGINT');
     });
 
     it('still reports the session as exited when the sentinel cannot be removed', async () => {

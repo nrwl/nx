@@ -1,18 +1,9 @@
 import { execSync } from 'child_process';
 import { createHash } from 'crypto';
-import {
-  existsSync,
-  lstatSync,
-  mkdirSync,
-  readdirSync,
-  rmSync,
-  writeFileSync,
-  type BigIntStats,
-} from 'fs';
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { IS_WASM } from '../../../native';
-import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
-import { publishFileAtomically } from './atomic-write';
+import { serializeJson } from '../../../utils/json';
 import {
   canOfferCleanRetry,
   cleanRetryUnavailableReason,
@@ -46,10 +37,8 @@ import {
 } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import {
-  handoffsDirState,
   runStepHandoffPath,
   readHandoffWithReason,
-  readInspectedFile,
   type HandoffReadFailureReason,
   type HandoffReadResult,
 } from '../agentic/handoff';
@@ -103,6 +92,15 @@ import {
   withRunCreationLock,
   withRunStateLock,
 } from './state-lock';
+import {
+  ensureRunFolder,
+  lstatRunFile,
+  readInspectedFile,
+  readRunJson,
+  removeRunFile,
+  runSubdirState,
+  writeRunFile,
+} from './run-files';
 import {
   appendCommit,
   applyStepEvent,
@@ -446,7 +444,11 @@ export async function runOrchestratorInit(
     // The snapshot must exist before run.json makes the run discoverable: a
     // crash in between must not leave an active run without its plan.
     mkdirSync(dir, { recursive: true });
-    writeJsonFile(join(dir, PLAN_SNAPSHOT_0), migrationsJson);
+    writeRunFile(
+      dir,
+      join(dir, PLAN_SNAPSHOT_0),
+      serializeJson(migrationsJson)
+    );
     // Held from here until run.json is written below and past it: a run must
     // never be discoverable, or reserved, without a holder.
     registerRunActivity(dir);
@@ -508,13 +510,11 @@ export async function runOrchestratorInit(
   };
   withRunCreationLock(root, () => {
     // The runbook gets the snapshot's crash guarantee: a discoverable run
-    // always has the runbook a resume re-emits from disk. 'wx' creates
-    // without following links, so nothing pre-planted at the path can
-    // redirect it.
-    writeFileSync(
+    // always has the runbook a resume re-emits from disk.
+    writeRunFile(
+      dir,
       join(dir, RUNBOOK_FILE_NAME),
-      renderRunbook(runbookContext(root, runId, state)),
-      { flag: 'wx' }
+      renderRunbook(runbookContext(root, runId, state))
     );
     createRun(root, state);
   });
@@ -752,7 +752,7 @@ function deleteRunRecord(root: string, runId: string): boolean {
     refuseUndeletableRun(root, runId, readRunState(dir));
     // The hold's lock file is inside the directory removeDeletedRunDir removes.
     releaseRunActivity(dir);
-    rmSync(join(dir, RUN_STATE_FILE_NAME), { force: true });
+    removeRunFile(dir, join(dir, RUN_STATE_FILE_NAME));
     return true;
   });
 }
@@ -979,7 +979,7 @@ function ensureRunbook(
   state: MigrateRunState
 ): string | null {
   const filePath = join(dir, state.runbookPath ?? RUNBOOK_FILE_NAME);
-  const stat = lstatRunbook(filePath);
+  const stat = lstatRunFile(dir, filePath);
   if (stat?.isFile()) {
     // The read is the proof the entry is usable: read errors (an unreadable
     // mode, an I/O failure) propagate rather than letting an unreadable
@@ -1006,7 +1006,7 @@ function ensureRunbook(
     // rename publish below: POSIX rename replaces it in place, but not every
     // platform guarantees that, and a removal failure must propagate rather
     // than leave the entry standing.
-    rmSync(filePath, { force: true });
+    removeRunFile(dir, filePath);
   }
   if (state.nxVersion !== nxVersion) {
     const reason = [
@@ -1022,12 +1022,8 @@ function ensureRunbook(
     return null;
   }
   const content = renderRunbook(runbookContext(root, runId, state));
-  // A crashed repair leaves the path missing rather than truncated. 'wx'
-  // creates without following links, so anything planted at the temp name
-  // fails the repair instead of redirecting it.
-  publishFileAtomically(filePath, (tmpPath) =>
-    writeFileSync(tmpPath, content, { flag: 'wx' })
-  );
+  // A crashed repair leaves the path missing rather than truncated.
+  writeRunFile(dir, filePath, content);
   updateRunState(dir, (fresh) =>
     fresh.runbookPath ? null : { ...fresh, runbookPath: RUNBOOK_FILE_NAME }
   );
@@ -1035,20 +1031,6 @@ function ensureRunbook(
     title: `The runbook for run '${runId}' was missing; it has been re-rendered.`,
   });
   return content;
-}
-
-// lstat that treats only a missing entry as null; other inspection failures
-// (permissions, I/O) propagate rather than masquerading as "missing". Bigint
-// stats so the inode identity compared above cannot lose precision.
-function lstatRunbook(filePath: string): BigIntStats | null {
-  try {
-    return lstatSync(filePath, { bigint: true });
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') {
-      return null;
-    }
-    throw e;
-  }
 }
 
 function runbookContext(
@@ -2660,9 +2642,9 @@ function emitAwaitPrompt(
   // Recreated if the agent removed it, so the handed-over path always has its
   // parent (an agent that has to `mkdir -p` pays a permission prompt).
   const handoffsDir = runHandoffsDir(dir);
-  const handoffsDirIs = handoffsDirState(handoffsDir);
+  const handoffsDirIs = runSubdirState(handoffsDir);
   if (handoffsDirIs === 'missing') {
-    mkdirSync(handoffsDir, { recursive: true });
+    ensureRunFolder(dir, handoffsDir);
   }
   // Claim only while fresh state still awaits this handoff. Steps that never
   // park cannot report updates; serial dispensing fixes order, and stale
@@ -2784,7 +2766,8 @@ function planPromptPath(
   if (!round) return null;
   let migrations: unknown;
   try {
-    migrations = readJsonFile<{ migrations?: unknown }>(
+    migrations = readRunJson<{ migrations?: unknown }>(
+      dir,
       join(dir, round.planSnapshot)
     ).migrations;
   } catch {
@@ -3024,8 +3007,10 @@ function noProgressLines(
 // or non-regular runbooks stand alone.
 function runbookFooterLines(root: string, runId: string): string[] {
   if (
-    lstatRunbook(join(runDir(root, runId), RUNBOOK_FILE_NAME))?.isFile() !==
-    true
+    lstatRunFile(
+      runDir(root, runId),
+      join(runDir(root, runId), RUNBOOK_FILE_NAME)
+    )?.isFile() !== true
   ) {
     return [];
   }
@@ -3123,20 +3108,8 @@ function readStepHandoff(dir: string, stepId: string): HandoffReadResult {
   );
 }
 
-// Probe-time guard: a handoffs dir the agent swapped for a symlink into a
-// directory holding a file of the step's fixed name would otherwise have the
-// orchestrator delete that file. A swap between the probe and the rm is not
-// caught. A probe failure skips the rm too; the next read reports it.
 function removeHandoff(dir: string, stepId: string): void {
-  let state: ReturnType<typeof handoffsDirState>;
-  try {
-    state = handoffsDirState(runHandoffsDir(dir));
-  } catch {
-    return;
-  }
-  if (state === 'directory') {
-    rmSync(runStepHandoffPath(dir, stepId), { force: true });
-  }
+  removeRunFile(dir, runStepHandoffPath(dir, stepId));
 }
 
 // null means the probe itself failed; the death dispense renders that as

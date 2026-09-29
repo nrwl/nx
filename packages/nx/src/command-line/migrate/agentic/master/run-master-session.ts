@@ -132,21 +132,37 @@ export async function runMasterSession(
     reconcileCommand,
     policy,
   });
-  if (session.kind === 'spawn-failed') {
-    output.error({
-      title: `Could not start ${agent.displayName}: ${session.error.message}`,
-      bodyLines: [`Migrate run ${runId} is still active. ${resumeHint}`],
-    });
-    reportMigrateRunError({ code: 'agentic', error: session.error });
-    return 1;
-  }
-  if (session.kind === 'broker-failed') {
-    // The broker itself reads run.json, so its failure can mean the state is
-    // unreadable; the read below decides whether a resume is safe to offer.
-    output.error({
-      title: `Closed the ${agent.displayName} session: a step's request could not be answered (${session.error.message}).`,
-    });
-    reportMigrateRunError({ code: 'agentic', error: session.error });
+  switch (session.kind) {
+    case 'spawn-failed':
+      output.error({
+        title: `Could not start ${agent.displayName}: ${session.error.message}`,
+        bodyLines: [`Migrate run ${runId} is still active. ${resumeHint}`],
+      });
+      reportMigrateRunError({ code: 'agentic', error: session.error });
+      return 1;
+    case 'broker-failed':
+      // The broker itself reads run.json, so its failure can mean the state is
+      // unreadable; the read below decides whether a resume is safe to offer.
+      output.error({
+        title: `Closed the ${agent.displayName} session: a step's request could not be answered (${session.error.message}).`,
+      });
+      reportMigrateRunError({ code: 'agentic', error: session.error });
+      break;
+    case 'sentinel-failed':
+      output.error({
+        title: `Closed the ${agent.displayName} session: nx could not check for the file that marks it complete.`,
+        bodyLines: [session.error.message],
+      });
+      reportMigrateRunError({ code: 'agentic', error: session.error });
+      break;
+    case 'exited':
+      break;
+    default: {
+      const unhandled: never = session;
+      throw new Error(
+        `Unhandled master session result: ${JSON.stringify(unhandled)}`
+      );
+    }
   }
 
   let state: MigrateRunState;

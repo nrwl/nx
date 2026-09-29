@@ -116,7 +116,9 @@ import {
   mkdirSync,
   mkdtempSync,
   realpathSync,
+  renameSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -328,6 +330,25 @@ describe('migrate() orchestrated init dispatch', () => {
       policy: { createCommits: true, skipInstall: false },
     });
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+  });
+
+  it('refuses to continue on a plan snapshot planted as a symlink', async () => {
+    const plan = join(runDir(root, 'run-1'), 'plan-0.json');
+    const outside = join(root, 'outside.json');
+    renameSync(plan, outside);
+    symlinkSync(outside, plan);
+
+    expect(
+      await migrate(
+        root,
+        runMigrationsArgs({ runId: 'run-1', agentic: 'claude-code' }),
+        ['--run-migrations', '--agentic=claude-code', '--run-id=run-1']
+      )
+    ).toBe(1);
+    expect(output.error).toHaveBeenCalledWith(
+      expect.objectContaining({ title: `${plan} is not a regular file.` })
+    );
+    expect(mockRunOrchestratorResume).not.toHaveBeenCalled();
   });
 
   it('refuses a start-fresh naming no active run before the preflight install', async () => {

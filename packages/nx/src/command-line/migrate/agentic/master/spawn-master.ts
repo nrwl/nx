@@ -1,5 +1,4 @@
 import { type ChildProcess, spawn } from 'child_process';
-import { existsSync, rmSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
 import { logger } from '../../../../utils/logger';
 import { output } from '../../../../utils/output';
@@ -13,6 +12,11 @@ import {
   treeOperationLabel,
 } from '../../run';
 import {
+  ensureRunFolder,
+  lstatRunFile,
+  removeRunFile,
+} from '../../run/run-files';
+import {
   AGENT_GRACEFUL_EXIT_MS,
   closeAgentSession,
   type ExitInfo,
@@ -20,7 +24,6 @@ import {
   raceWithTimeout,
   waitForExit,
 } from '../close-agent-session';
-import { ensureRunSubdir } from '../handoff';
 import { restoreTermiosAfterAgent } from '../terminal-repair';
 import type { DetectedInstalledAgent } from '../types';
 import {
@@ -48,7 +51,9 @@ export type SpawnMasterSessionResult =
   | { kind: 'exited' }
   | { kind: 'spawn-failed'; error: Error }
   // The session was closed because a request it made could not be answered.
-  | { kind: 'broker-failed'; error: Error };
+  | { kind: 'broker-failed'; error: Error }
+  // The session was closed because nx could not check for its sentinel.
+  | { kind: 'sentinel-failed'; error: Error };
 
 // The wrapper's local re-exec sets the first two for its own hop and the user
 // sets the third to reach this path; inherited, they would change install or
@@ -127,14 +132,7 @@ export async function spawnMasterSession(
     });
     assertWithinWindowsCommandLineBudget(adapted, agent, runId);
     // A symlink here would send the agent's write and the poll below elsewhere.
-    const handoffsDir = dirname(sentinelPath);
-    ensureRunSubdir(
-      handoffsDir,
-      () =>
-        new Error(
-          `Migrate run ${runId} has something other than a directory at ${handoffsDir}; remove it and try again.`
-        )
-    );
+    ensureRunFolder(runDir(runRoot, runId), dirname(sentinelPath));
     // Local alias so `@nx/workspace-require-windows-hide` can track the
     // options as an Identifier.
     const spawnOptions = adapted.options;
@@ -149,6 +147,7 @@ export async function spawnMasterSession(
   process.on('SIGINT', swallowSigint);
   const sentinelWatch = new AbortController();
   let brokerFailure: Error | undefined;
+  let sentinelFailure: Error | undefined;
   // Settles when the poll aborts and the request in flight is answered, or
   // early when a request could not be answered at all.
   const brokerDone = serviceBrokerUntilAborted(
@@ -178,11 +177,20 @@ export async function spawnMasterSession(
         exit = info;
         return 'exit' as const;
       }),
+      // A failure settles the race rather than rejecting it, so the session
+      // is still closed.
       waitForFile(
+        runDir(runRoot, runId),
         sentinelPath,
         sentinelPollIntervalMs,
         sentinelWatch.signal
-      ).then(() => 'sentinel' as const),
+      ).then(
+        () => 'sentinel' as const,
+        (error) => {
+          sentinelFailure = toError(error);
+          return 'sentinel-failed' as const;
+        }
+      ),
       brokerDone.then(() => 'broker-failed' as const),
     ]);
     if (winner !== 'exit') {
@@ -199,7 +207,7 @@ export async function spawnMasterSession(
     if (winner === 'sentinel') {
       // Hygiene only; run state decides the outcome, not this removal.
       try {
-        rmSync(sentinelPath, { force: true });
+        removeRunFile(runDir(runRoot, runId), sentinelPath);
       } catch (error) {
         logger.verbose(
           `Could not remove ${sentinelPath}: ${toError(error).message}`
@@ -229,7 +237,9 @@ export async function spawnMasterSession(
   }
   return brokerFailure
     ? { kind: 'broker-failed', error: brokerFailure }
-    : { kind: 'exited' };
+    : sentinelFailure
+      ? { kind: 'sentinel-failed', error: sentinelFailure }
+      : { kind: 'exited' };
 }
 
 function restoreTerminal(): void {
@@ -288,17 +298,27 @@ function prosePath(runRoot: string, path: string): string {
   return relative(runRoot, path).split(sep).join('/');
 }
 
-// Never settles after an abort; the race it feeds has settled by then.
+// Never settles after an abort; the race it feeds has settled by then. Rejects
+// when the check fails: a sentinel the agent wrote through a symlinked folder
+// would otherwise never be seen.
 function waitForFile(
+  runDirPath: string,
   path: string,
   intervalMs: number,
   signal: AbortSignal
 ): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let timer: NodeJS.Timeout;
     const tick = () => {
       if (signal.aborted) return;
-      if (existsSync(path)) {
+      let found: boolean;
+      try {
+        found = lstatRunFile(runDirPath, path) !== null;
+      } catch (error) {
+        reject(error);
+        return;
+      }
+      if (found) {
         resolve();
         return;
       }

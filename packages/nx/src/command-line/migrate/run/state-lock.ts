@@ -13,9 +13,10 @@
 // child-process side effects belong outside the lock for the same reason.
 
 import { randomBytes } from 'crypto';
-import { mkdirSync, readdirSync } from 'fs';
+import { mkdirSync } from 'fs';
 import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
+import { NotADirectoryError, listRunFolder, lockRunFile } from './run-files';
 import {
   hasRunState,
   migrateRunsDir,
@@ -29,11 +30,11 @@ const STATE_LOCK_FILE_NAME = 'run.json.lock';
 const CREATION_LOCK_FILE_NAME = 'init.lock';
 const ACTIVITY_DIR_NAME = 'activity';
 
-function withFileLock<T>(lockPath: string, fn: () => T): T {
+function withFileLock<T>(openLock: () => FileLock, fn: () => T): T {
   if (IS_WASM) {
     return fn();
   }
-  const lock = new FileLock(lockPath);
+  const lock = openLock();
   lock.lock();
   try {
     return fn();
@@ -50,7 +51,10 @@ function withFileLock<T>(lockPath: string, fn: () => T): T {
  * those sequences so the event always applies to the freshest on-disk state.
  */
 export function withRunStateLock<T>(runDirPath: string, fn: () => T): T {
-  return withFileLock(join(runDirPath, STATE_LOCK_FILE_NAME), fn);
+  return withFileLock(
+    () => lockRunFile(runDirPath, join(runDirPath, STATE_LOCK_FILE_NAME)),
+    fn
+  );
 }
 
 /**
@@ -64,7 +68,10 @@ export function withRunStateLock<T>(runDirPath: string, fn: () => T): T {
 export function withRunCreationLock<T>(root: string, fn: () => T): T {
   const dir = migrateRunsDir(root);
   mkdirSync(dir, { recursive: true });
-  return withFileLock(join(dir, CREATION_LOCK_FILE_NAME), fn);
+  return withFileLock(
+    () => new FileLock(join(dir, CREATION_LOCK_FILE_NAME)),
+    fn
+  );
 }
 
 /**
@@ -153,7 +160,12 @@ export function describeHolders(holders: number[]): string {
 export function registerRunActivity(dir: string): void {
   if (IS_WASM || heldActivity.has(dir)) return;
   const name = `${process.pid}-${randomBytes(4).toString('hex')}.lock`;
-  const lock = new FileLock(join(dir, ACTIVITY_DIR_NAME, name));
+  let lock: FileLock;
+  try {
+    lock = lockRunFile(dir, join(dir, ACTIVITY_DIR_NAME, name));
+  } catch (e) {
+    throw e instanceof NotADirectoryError ? activityNotADirectoryError(dir) : e;
+  }
   lock.lock();
   heldActivity.set(dir, { lock, name });
 }
@@ -171,6 +183,7 @@ export function releaseRunActivity(dir: string): void {
  * from its report or preflight, which is not competing work. Locks left by
  * dead holders are free. 'unknown' under WASM, and when the folder cannot be
  * listed, a lock cannot be probed, or a held lock's name carries no pid.
+ * Throws when the activity folder is not a directory.
  */
 export function liveRunActivityPids(dir: string): number[] | 'unknown' {
   if (IS_WASM) return 'unknown';
@@ -185,7 +198,8 @@ export function liveRunActivityPids(dir: string): number[] | 'unknown' {
 /**
  * Whether any live process, this one included, holds an activity lock on the
  * run: for the init discovery that treats a held directory without run.json
- * as a run being started, whichever process is starting it. Fails closed.
+ * as a run being started, whichever process is starting it. Fails closed, and
+ * throws when the activity folder is not a directory.
  */
 export function hasAnyLiveRunActivity(dir: string): boolean {
   const names = liveActivityNames(dir, undefined);
@@ -193,23 +207,25 @@ export function hasAnyLiveRunActivity(dir: string): boolean {
 }
 
 // The names of the held lock files other than `skip`; 'unknown' when the
-// folder cannot be listed or a lock cannot be probed.
+// folder cannot be listed or a lock cannot be probed. Throws when the folder
+// is not a directory.
 function liveActivityNames(
   dir: string,
   skip: string | undefined
 ): string[] | 'unknown' {
   let names: string[];
   try {
-    names = readdirSync(join(dir, ACTIVITY_DIR_NAME));
+    names = listRunFolder(dir, join(dir, ACTIVITY_DIR_NAME));
   } catch (e) {
     if (e?.code === 'ENOENT') return [];
+    if (e instanceof NotADirectoryError) throw activityNotADirectoryError(dir);
     return 'unknown';
   }
   const held: string[] = [];
   for (const name of names) {
     if (name === skip) continue;
     try {
-      if (new FileLock(join(dir, ACTIVITY_DIR_NAME, name)).check()) {
+      if (lockRunFile(dir, join(dir, ACTIVITY_DIR_NAME, name)).check()) {
         held.push(name);
       }
     } catch {
@@ -217,4 +233,12 @@ function liveActivityNames(
     }
   }
   return held;
+}
+
+// A non-directory at activity/ may hide the locks of live holders. Its own
+// refusal, rather than 'unknown', tells the user what to remove.
+function activityNotADirectoryError(dir: string): Error {
+  return new Error(
+    `${join(dir, ACTIVITY_DIR_NAME)} is not a directory, so nx cannot tell whether another nx migrate process is working on this migrate run. Make sure none is, remove it, then re-run the command.`
+  );
 }

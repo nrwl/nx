@@ -2,8 +2,10 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -178,6 +180,20 @@ describe('state-lock', () => {
       );
       expect(existsSync(join(deleted, 'activity'))).toBe(false);
     });
+
+    it('refuses a symlinked activity folder instead of taking the lock where it points', () => {
+      const held = runDir(tempRoot, 'run-1');
+      mkdirSync(held, { recursive: true });
+      writeRunState(held, buildState());
+      const outside = join(tempRoot, 'outside');
+      mkdirSync(outside);
+      symlinkSync(outside, join(held, 'activity'));
+
+      expect(() => holdRunActivity(tempRoot, 'run-1')).toThrow(
+        `${join(held, 'activity')} is not a directory, so nx cannot tell whether another nx migrate process is working on this migrate run. Make sure none is, remove it, then re-run the command.`
+      );
+      expect(readdirSync(outside)).toEqual([]);
+    });
   });
 
   describe('liveRunActivityPids', () => {
@@ -189,11 +205,7 @@ describe('state-lock', () => {
       expect(liveRunActivityPids(dir)).toEqual([]);
     });
 
-    it('is unknown when the activity directory cannot be listed or a held lock has no pid in its name', () => {
-      writeFileSync(join(dir, 'activity'), '');
-      expect(liveRunActivityPids(dir)).toBe('unknown');
-
-      rmSync(join(dir, 'activity'));
+    it('is unknown when a held lock has no pid in its name', () => {
       mkdirSync(join(dir, 'activity'));
       const holder = new FileLock(join(dir, 'activity', 'stray.lock'));
       holder.lock();
@@ -203,5 +215,29 @@ describe('state-lock', () => {
         holder.unlock();
       }
     });
+
+    it.each([
+      [
+        'a symlink',
+        (activityPath: string) => {
+          const outside = join(tempRoot, 'outside');
+          mkdirSync(outside);
+          symlinkSync(outside, activityPath);
+        },
+      ],
+      [
+        'a regular file',
+        (activityPath: string) => writeFileSync(activityPath, ''),
+      ],
+    ])(
+      'refuses an activity folder planted as %s instead of reading its holders',
+      (_, plant) => {
+        plant(join(dir, 'activity'));
+
+        expect(() => liveRunActivityPids(dir)).toThrow(
+          `${join(dir, 'activity')} is not a directory, so nx cannot tell whether another nx migrate process is working on this migrate run. Make sure none is, remove it, then re-run the command.`
+        );
+      }
+    );
   });
 });

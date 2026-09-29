@@ -406,6 +406,18 @@ describe('migrate commit broker', () => {
       expect(brokerFiles()).toEqual(['deadbeef.lock']);
     });
 
+    it('refuses the request through a symlinked broker directory, writing nothing there', async () => {
+      process.env.NX_MIGRATE_BROKER = 'deadbeef';
+      const outside = join(root, 'outside');
+      mkdirSync(outside);
+      symlinkSync(outside, brokerDir(dir));
+
+      await expect(
+        commitStepTree(dir, step(), [], vi.fn(), {})
+      ).rejects.toThrow(`Remove 'broker' from the migrate run`);
+      expect(readdirSync(outside)).toEqual([]);
+    });
+
     it('answers a repeat from a result published while its lock probe failed to build', async () => {
       process.env.NX_MIGRATE_BROKER = 'deadbeef';
       mkdirSync(brokerDir(dir), { recursive: true });
@@ -852,7 +864,7 @@ describe('migrate commit broker', () => {
 
         expect(
           () => new MigrateCommitBroker(root, dir, 'npx nx migrate', POLICY)
-        ).toThrow(`something other than a directory at ${brokerDir(dir)}`);
+        ).toThrow(`Remove 'broker' from the migrate run and try again`);
       }
     );
 
@@ -870,7 +882,7 @@ describe('migrate commit broker', () => {
       symlinkSync(elsewhere, brokerDir(dir));
 
       await expect(broker.service()).rejects.toThrow(
-        `something other than a directory at ${brokerDir(dir)}`
+        `Remove 'broker' from the migrate run and try again`
       );
       broker.close();
 

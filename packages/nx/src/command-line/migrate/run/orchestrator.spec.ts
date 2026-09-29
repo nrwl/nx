@@ -3792,28 +3792,50 @@ describe('orchestrator', () => {
       expect(stdout).toContain('"prompt": "prompts/p.md"');
     });
 
-    it('refuses a stored payload planted as a symlink, synthesizing from the plan instead', async () => {
-      const dir = setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
-        plan: [promptMig('@nx/js', 'p')],
-      });
-      const elsewhere = join(dir, 'elsewhere.json');
-      writeFileSync(
-        elsewhere,
-        JSON.stringify({
-          migrationId: '@nx/js:p',
-          prompt: 'prompts/p.md',
-          planted: true,
-        })
-      );
-      mkdirSync(join(dir, 'agent-work'), { recursive: true });
-      symlinkSync(elsewhere, join(dir, 'agent-work', 'step-1-attempt-1.json'));
+    it.each([
+      [
+        'the payload',
+        (dir: string, planted: string) => {
+          mkdirSync(join(dir, 'agent-work'), { recursive: true });
+          symlinkSync(
+            planted,
+            join(dir, 'agent-work', 'step-1-attempt-1.json')
+          );
+        },
+      ],
+      [
+        'the agent-work directory',
+        (dir: string, planted: string) => {
+          const outside = join(dir, 'outside');
+          mkdirSync(outside);
+          renameSync(planted, join(outside, 'step-1-attempt-1.json'));
+          symlinkSync(outside, join(dir, 'agent-work'));
+        },
+      ],
+    ])(
+      'refuses a stored payload behind a symlink planted at %s, synthesizing from the plan instead',
+      async (_, plant) => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+          plan: [promptMig('@nx/js', 'p')],
+        });
+        const planted = join(dir, 'elsewhere.json');
+        writeFileSync(
+          planted,
+          JSON.stringify({
+            migrationId: '@nx/js:p',
+            prompt: 'prompts/p.md',
+            planted: true,
+          })
+        );
+        plant(dir, planted);
 
-      await runOrchestratorReconcile({ root, runId: 'run-1' });
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
 
-      expect(stdout).not.toContain('"planted"');
-      expect(stdout).toContain('"prompt": "prompts/p.md"');
-    });
+        expect(stdout).not.toContain('"planted"');
+        expect(stdout).toContain('"prompt": "prompts/p.md"');
+      }
+    );
 
     it.each([
       ['an object for migrations', '{"migrations": {}}'],

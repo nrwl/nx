@@ -4,14 +4,13 @@
 // it after a compaction or restart without reusing payloads from discarded
 // attempts.
 
-import { readdirSync, rmSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import {
-  ensureRunSubdir,
-  handoffsDirState,
-  readAtomicallyPublishedFile,
-} from '../agentic/handoff';
-import { publishFileAtomically } from './atomic-write';
+  listRunFolder,
+  readRunFile,
+  removeRunFile,
+  writeRunFile,
+} from './run-files';
 import type { MigrateStepAwaitingKind } from './run-state';
 
 const AGENT_WORK_DIR_NAME = 'agent-work';
@@ -48,11 +47,16 @@ export function persistAgentWorkPayload(
   filePath: string,
   payload: object
 ): void {
-  // A symlink in the directory's place would send the write wherever it points.
-  ensureRunSubdir(dirname(filePath));
-  publishFileAtomically(filePath, (tmpPath) =>
-    writeFileSync(tmpPath, JSON.stringify(payload, null, 2))
+  writeRunFile(
+    payloadRunDir(filePath),
+    filePath,
+    JSON.stringify(payload, null, 2)
   );
+}
+
+// Payload paths all come from agentWorkPayloadPath: <run>/agent-work/<file>.
+function payloadRunDir(filePath: string): string {
+  return dirname(dirname(filePath));
 }
 
 /**
@@ -71,7 +75,7 @@ export function readAgentWorkPayload(
 ): Record<string, unknown> | null {
   let content: string;
   try {
-    content = readAtomicallyPublishedFile(filePath);
+    content = readRunFile(payloadRunDir(filePath), filePath);
   } catch {
     return null;
   }
@@ -138,10 +142,7 @@ function storedAttemptsForStep(runDirPath: string, stepId: string): number[] {
   const dir = join(runDirPath, AGENT_WORK_DIR_NAME);
   let entries: string[];
   try {
-    if (handoffsDirState(dir) !== 'directory') {
-      return [];
-    }
-    entries = readdirSync(dir);
+    entries = listRunFolder(runDirPath, dir);
   } catch {
     return [];
   }
@@ -183,9 +184,10 @@ export function removeAgentWorkPayloads(
       continue;
     }
     try {
-      rmSync(agentWorkPayloadPath(runDirPath, stepId, attempt), {
-        force: true,
-      });
+      removeRunFile(
+        runDirPath,
+        agentWorkPayloadPath(runDirPath, stepId, attempt)
+      );
     } catch {}
   }
 }

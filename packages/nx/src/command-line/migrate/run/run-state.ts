@@ -1,12 +1,16 @@
-import { existsSync, mkdirSync, readdirSync, rmSync, type Dirent } from 'fs';
+import { mkdirSync, readdirSync, rmSync, type Dirent } from 'fs';
 import { createHash } from 'crypto';
 import { basename, join } from 'path';
-import { writeJsonFile } from '../../../utils/fileutils';
-import { publishFileAtomically } from './atomic-write';
+import { serializeJson } from '../../../utils/json';
 import { GIT_SHA } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
-import { readAtomicallyPublishedFile } from '../agentic/handoff';
+import {
+  ensureRunFolder,
+  readRunFile,
+  runFileExists,
+  writeRunFile,
+} from './run-files';
 import { RUN_ID_SAFE } from './run-id';
 import { singleLine } from '../text';
 
@@ -741,7 +745,8 @@ export function readRunState(runDirPath: string): MigrateRunState {
   // planted symlink or FIFO; read it without reading a symlink's target or
   // blocking on a FIFO, while still tolerating a concurrent tmp + rename
   // publish. A non-regular file reads as corruption; ENOENT stays "no run".
-  const content = readAtomicallyPublishedFile(
+  const content = readRunFile(
+    runDirPath,
     filePath,
     corruptRunStateError(filePath, 'is not a regular file.').message
   );
@@ -818,7 +823,7 @@ export function writeRunState(
   state: MigrateRunState
 ): void {
   const filePath = join(runDirPath, RUN_STATE_FILE_NAME);
-  publishFileAtomically(filePath, (tmpPath) => writeJsonFile(tmpPath, state));
+  writeRunFile(runDirPath, filePath, serializeJson(state));
 }
 
 // ENOENT is the ordinary "no runs yet" answer. Any other failure (EACCES,
@@ -837,7 +842,7 @@ function readDirEntries(dir: string): Dirent[] {
 // (a run id the user made up) and for one that does but holds no run.json (a
 // legacy per-version agentic scratch dir).
 export function hasRunState(runDirPath: string): boolean {
-  return existsSync(join(runDirPath, RUN_STATE_FILE_NAME));
+  return runFileExists(runDirPath, join(runDirPath, RUN_STATE_FILE_NAME));
 }
 
 // Corrupt run.json reads as null; a newer-format run.json propagates so
@@ -934,7 +939,8 @@ export function createRun(root: string, state: MigrateRunState): void {
   const dir = runDir(root, state.runId);
   // Created up front so the agent never has to `mkdir -p`: that costs a
   // workspace-permission prompt in agents like Claude Code, on every step.
-  mkdirSync(runHandoffsDir(dir), { recursive: true });
+  mkdirSync(dir, { recursive: true });
+  ensureRunFolder(dir, runHandoffsDir(dir));
   writeRunState(dir, state);
   pruneCompletedRuns(root, state.runId);
 }

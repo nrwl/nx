@@ -8,16 +8,9 @@
 // parent's own invocation decides what it installs and commits.
 
 import { randomBytes } from 'crypto';
-import { existsSync, readdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
-import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
-import { parseJson } from '../../../utils/json';
-import {
-  ensureRunSubdir,
-  handoffsDirState,
-  readAtomicallyPublishedFile,
-} from '../agentic/handoff';
+import { serializeJson } from '../../../utils/json';
 import {
   DeferredOutputCollector,
   replayDeferredOutput,
@@ -28,7 +21,6 @@ import {
   commitMigrationIfRequested,
   type CommitResult,
 } from '../migrate-commits';
-import { publishFileAtomically } from './atomic-write';
 import { giveUpWithCommit, type GiveUpOutcome } from './give-up';
 import {
   readRunState,
@@ -38,6 +30,15 @@ import {
   type MigrateStepStatus,
   type MigrateTreeOperation,
 } from './run-state';
+import {
+  ensureRunFolder,
+  listRunFolder,
+  lockRunFile,
+  readRunJson,
+  removeRunFile,
+  runFileExists,
+  writeRunFile,
+} from './run-files';
 import { updateRunState } from './state-lock';
 import {
   appendCommit,
@@ -323,15 +324,6 @@ function resultPath(runDirPath: string, id: string): string {
   return join(brokerDir(runDirPath), `${id}.result.json`);
 }
 
-// A request file lives in the agent-writable broker directory, so it could be
-// a planted symlink or FIFO; read it without reading a symlink's target or
-// blocking on a FIFO.
-function readRequestFile(filePath: string): BrokerRequest {
-  return parseJson<BrokerRequest>(
-    readAtomicallyPublishedFile(filePath, `${filePath} is not a regular file.`)
-  );
-}
-
 /**
  * Runs the step's install and commit where they can land: in this process
  * unless a parent session advertised its broker, in which case the request
@@ -477,8 +469,8 @@ async function ask(
   }${request.commitAs !== undefined ? `-${request.commitAs}` : ''}`;
   const path = resultPath(dir, id);
   // A repeat reads the first answer, whatever became of the session since.
-  if (existsSync(path)) {
-    return settle(readJsonFile<BrokerResult>(path));
+  if (runFileExists(dir, path)) {
+    return settle(readRunJson<BrokerResult>(dir, path));
   }
   // No deadline: an install or a commit over a large tree takes as long as it
   // takes; the poll ends with an answer or a released lock. The probe is built
@@ -486,27 +478,25 @@ async function ask(
   // a descriptor, and `wait()` would pin this process until the session ends.
   let lock: FileLock | null = null;
   try {
-    lock = IS_WASM ? null : new FileLock(lockPath(dir, nonce));
+    lock = IS_WASM ? null : lockRunFile(dir, lockPath(dir, nonce));
   } catch (e) {
-    if (existsSync(path)) {
-      return settle(readJsonFile<BrokerResult>(path));
+    if (runFileExists(dir, path)) {
+      return settle(readRunJson<BrokerResult>(dir, path));
     }
     throw notAccepting(e);
   }
   try {
-    publishFileAtomically(requestPath(dir, id), (tmpPath) =>
-      writeJsonFile(tmpPath, request)
-    );
+    writeRunFile(dir, requestPath(dir, id), serializeJson(request));
   } catch (e) {
     throw notAccepting(e);
   }
   for (;;) {
-    if (existsSync(path)) {
-      return settle(readJsonFile<BrokerResult>(path));
+    if (runFileExists(dir, path)) {
+      return settle(readRunJson<BrokerResult>(dir, path));
     }
     if (lock && lockIsFree(lock)) {
       // Answered and closed between the two checks: the answer stays on disk.
-      if (existsSync(path)) continue;
+      if (runFileExists(dir, path)) continue;
       throw new BrokerUnavailableError(
         `The nx migrate session that started this step ended before its request was answered. The install or the commit may still have landed; check the working tree and git log.`
       );
@@ -583,8 +573,8 @@ export class MigrateCommitBroker {
     private readonly reconcileCommand: string,
     private readonly policy: MigrateRunPolicy
   ) {
-    ensureRunSubdir(brokerDir(dir), () => this.notADirectory());
-    this.lock = IS_WASM ? null : new FileLock(lockPath(dir, this.nonce));
+    ensureRunFolder(dir, brokerDir(dir));
+    this.lock = IS_WASM ? null : lockRunFile(dir, lockPath(dir, this.nonce));
     this.lock?.lock();
   }
 
@@ -595,18 +585,16 @@ export class MigrateCommitBroker {
 
   /** Answers this session's unanswered requests, one at a time. */
   async service(): Promise<void> {
-    // Refused rather than followed: a symlink swapped in would send the reads
-    // and the answers wherever it points, or leave requests unanswered.
-    if (handoffsDirState(brokerDir(this.dir)) !== 'directory') {
-      throw this.notADirectory();
-    }
     const prefix = `${this.nonce}-`;
     const suffix = '.request.json';
-    for (const name of readdirSync(brokerDir(this.dir))) {
+    for (const name of listRunFolder(this.dir, brokerDir(this.dir))) {
       if (!name.startsWith(prefix) || !name.endsWith(suffix)) continue;
       const id = name.slice(0, -suffix.length);
       if (this.handled.has(id)) continue;
-      const request = readRequestFile(requestPath(this.dir, id));
+      const request = readRunJson<BrokerRequest>(
+        this.dir,
+        requestPath(this.dir, id)
+      );
       // Reserved before anything runs, released after the record is written.
       // A tree held by another live process is left for a later pass, not
       // marked handled; a request no longer at its seam is answered stale.
@@ -635,9 +623,7 @@ export class MigrateCommitBroker {
       }
       // Published after the release, so the step reading the answer never
       // finds this request's reservation still standing over its own write.
-      publishFileAtomically(resultPath(this.dir, id), (tmpPath) =>
-        writeJsonFile(tmpPath, result)
-      );
+      writeRunFile(this.dir, resultPath(this.dir, id), serializeJson(result));
     }
   }
 
@@ -788,23 +774,14 @@ export class MigrateCommitBroker {
     } catch {}
     // Hygiene only; a file left behind is never read by another session.
     try {
-      if (handoffsDirState(brokerDir(this.dir)) !== 'directory') return;
-      for (const name of readdirSync(brokerDir(this.dir))) {
+      for (const name of listRunFolder(this.dir, brokerDir(this.dir))) {
         if (
           name === `${this.nonce}.lock` ||
           (name.startsWith(`${this.nonce}-`) && name.endsWith('.request.json'))
         ) {
-          rmSync(join(brokerDir(this.dir), name), { force: true });
+          removeRunFile(this.dir, join(brokerDir(this.dir), name));
         }
       }
     } catch {}
-  }
-
-  private notADirectory(): Error {
-    return new Error(
-      `The migrate run has something other than a directory at ${brokerDir(
-        this.dir
-      )}; remove it and try again.`
-    );
   }
 }

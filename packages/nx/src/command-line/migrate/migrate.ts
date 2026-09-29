@@ -3332,13 +3332,14 @@ async function runMigrations(
     // A continue runs the plan the run recorded, not whatever the workspace's
     // migrations file holds now (it may be gone, or belong to another plan).
     const { latestRound, runDir } = require('./run') as typeof import('./run');
+    const { readRunJson } =
+      require('./run/run-files') as typeof import('./run/run-files');
     const round = latestRound(continued);
     if (!round) {
       throw new Error(`Migrate run '${opts.runId}' records no plan.`);
     }
-    migrationsJson = readJsonFile(
-      join(runDir(root, opts.runId), round.planSnapshot)
-    );
+    const dir = runDir(root, opts.runId);
+    migrationsJson = readRunJson(dir, join(dir, round.planSnapshot));
   } else {
     const migrationsExists: boolean = fileExists(opts.runMigrations);
 
