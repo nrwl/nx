@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 <% if (webServerCommand && webServerAddress) { %>import { workspaceRoot } from '@nx/devkit';<% } %>
 
-<% const switchesOnCI = webServerCommand && webServerAddress && (ciWebServerCommand || ciWebServerAddress); %><% if (switchesOnCI) { %>// CI runs against a production build; locally the dev server is used.
+<% const switchesOnCI = webServerCommand && webServerAddress && (ciWebServerCommand || ciWebServerAddress); %><% if (switchesOnCI) { %>// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 <% } %><% if (switchesOnCI && ciWebServerAddress) { %>const webServerAddress = isCI ? <%- toJsStringLiteral(ciWebServerAddress) %> : <%- toJsStringLiteral(webServerAddress) %>;
 

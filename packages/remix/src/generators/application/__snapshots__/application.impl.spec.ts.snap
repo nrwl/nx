@@ -145,7 +145,7 @@ exports[`Remix Application > Integrated Repo > --e2eTestRunner > should generate
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
-// CI runs against a production build; locally the dev server is used.
+// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
@@ -636,7 +636,7 @@ exports[`Remix Application > Standalone Project Repo > should generate a playwri
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
-// CI runs against a production build; locally the dev server is used.
+// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';

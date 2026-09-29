@@ -273,7 +273,7 @@ exports[`application generator > should set up project correctly with given opti
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
-// CI runs against a production build; locally the dev server is used.
+// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 const webServerAddress = isCI ? 'http://localhost:4300' : 'http://localhost:4200';
 

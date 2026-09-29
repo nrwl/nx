@@ -5,7 +5,7 @@ exports[`app > not nested > should generate files if bundler is vite 1`] = `
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
-// CI runs against a production build; locally the dev server is used.
+// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 const webServerAddress = isCI ? 'http://localhost:4300' : 'http://localhost:4200';
 
@@ -88,7 +88,7 @@ exports[`app > not nested > should setup playwright e2e project correctly for we
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
-// CI runs against a production build; locally the dev server is used.
+// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
@@ -169,7 +169,7 @@ exports[`app > not nested > should use serve target and port if bundler=vite, e2
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
-// CI runs against a production build; locally the dev server is used.
+// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 const webServerAddress = isCI ? 'http://localhost:4300' : 'http://localhost:4200';
 
