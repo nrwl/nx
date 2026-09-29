@@ -13,8 +13,6 @@
 
 Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
 
-This package is a [Module Federation plugin for Nx](https://nx.dev/nx-api/module-federation).
-Module Federation allows developers to share code between deployed applications easier and makes team collaboration more efficient.  
-To learn more about Module Federation, check out the [official documentation](https://module-federation.io/).
+Nx Module Federation was removed in Nx v24. This package only ships the migrations that move a workspace to the official [Module Federation](https://module-federation.io/) plugins. See the [React](https://nx.dev/docs/kb/migrate-from-nx-module-federation) and [Angular](https://nx.dev/docs/kb/migrate-angular-module-federation) migration guides.
 
 {{content}}

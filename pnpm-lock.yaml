@@ -2291,18 +2291,12 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
       '@nx/rspack':
         specifier: workspace:*
         version: link:../rspack
-      '@nx/web':
-        specifier: workspace:*
-        version: link:../web
       '@nx/webpack':
         specifier: workspace:*
         version: link:../webpack
@@ -2485,7 +2479,7 @@ importers:
     devDependencies:
       '@rsbuild/core':
         specifier: 2.0.15
-        version: 2.0.15(@module-federation/runtime-tools@0.21.2)(core-js@3.36.1)
+        version: 2.0.15(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(core-js@3.36.1)
       jsonc-eslint-parser:
         specifier: ^2.4.0
         version: 2.4.0
@@ -3100,33 +3094,9 @@ importers:
 
   packages/module-federation:
     dependencies:
-      '@module-federation/enhanced':
-        specifier: ^2.0.0
-        version: 2.3.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(node-fetch@3.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))(webpack@5.109.2)
-      '@module-federation/node':
-        specifier: ^2.0.0
-        version: 2.7.21(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(debug@4.4.3(supports-color@10.2.2))(next@16.3.4(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.101.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))(webpack@5.109.2)
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../js
-      '@nx/web':
-        specifier: workspace:*
-        version: link:../web
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-      express:
-        specifier: ^4.21.2
-        version: 4.22.1(supports-color@10.2.2)
-      http-proxy-middleware:
-        specifier: 'catalog:'
-        version: 3.0.7(supports-color@10.2.2)
-      picocolors:
-        specifier: 'catalog:'
-        version: 1.1.1
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3134,9 +3104,6 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
-      webpack:
-        specifier: 'catalog:'
-        version: 5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.23))(clean-css@5.3.3)(cssnano@7.1.9(postcss@8.5.25))(csso@5.0.5)(esbuild@0.25.0)(html-minifier-terser@6.1.0)(lightningcss@1.32.0)(postcss@8.5.25)(uglify-js@3.19.3)(webpack-cli@7.0.3)
 
   packages/nest:
     dependencies:
@@ -3606,9 +3573,6 @@ importers:
       '@nx/cypress':
         specifier: workspace:*
         version: link:../cypress
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
@@ -3627,12 +3591,6 @@ importers:
       '@nx/webpack':
         specifier: workspace:*
         version: link:../webpack
-      express:
-        specifier: ^4.21.2
-        version: 4.22.1(supports-color@10.2.2)
-      http-proxy-middleware:
-        specifier: 'catalog:'
-        version: 3.0.7(supports-color@10.2.2)
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3840,9 +3798,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
       '@nx/web':
         specifier: workspace:*
         version: link:../web
@@ -3867,12 +3822,6 @@ importers:
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(webpack@5.109.2)
-      express:
-        specifier: ^4.21.2
-        version: 4.22.1(supports-color@10.2.2)
-      http-proxy-middleware:
-        specifier: 'catalog:'
-        version: 3.0.7(supports-color@10.2.2)
       less-loader:
         specifier: catalog:css
         version: 12.3.2(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(less@4.8.1(supports-color@10.2.2))(webpack@5.109.2)
@@ -33745,21 +33694,6 @@ snapshots:
     transitivePeerDependencies:
       - node-fetch
 
-  '@module-federation/cli@0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
-    dependencies:
-      '@modern-js/node-bundle-require': 2.68.2
-      '@module-federation/dts-plugin': 0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/sdk': 0.21.2
-      chalk: 3.0.0
-      commander: 11.1.0
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - supports-color
-      - typescript
-      - utf-8-validate
-      - vue-tsc
-
   '@module-federation/cli@0.21.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
     dependencies:
       '@modern-js/node-bundle-require': 2.68.2
@@ -33805,33 +33739,6 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
     transitivePeerDependencies:
       - node-fetch
-
-  '@module-federation/dts-plugin@0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
-    dependencies:
-      '@module-federation/error-codes': 0.21.2
-      '@module-federation/managers': 0.21.2
-      '@module-federation/sdk': 0.21.2
-      '@module-federation/third-party-dts-extractor': 0.21.2
-      adm-zip: 0.5.16
-      ansi-colors: 4.1.3
-      axios: 1.18.1(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
-      chalk: 3.0.0
-      fs-extra: 9.1.0
-      isomorphic-ws: 5.0.0(ws@8.18.0)
-      koa: 3.0.3
-      lodash.clonedeepwith: 4.5.0
-      log4js: 6.9.1(supports-color@10.2.2)
-      node-schedule: 2.1.1
-      rambda: 9.4.2
-      typescript: 6.0.3
-      ws: 8.18.0
-    optionalDependencies:
-      vue-tsc: 2.2.12(typescript@6.0.3)
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - supports-color
-      - utf-8-validate
 
   '@module-federation/dts-plugin@0.21.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
     dependencies:
@@ -33909,35 +33816,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@module-federation/enhanced@0.21.2(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(debug@4.4.3(supports-color@10.2.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))(webpack@5.109.2)':
-    dependencies:
-      '@module-federation/bridge-react-webpack-plugin': 0.21.2
-      '@module-federation/cli': 0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/data-prefetch': 0.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@module-federation/dts-plugin': 0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/error-codes': 0.21.2
-      '@module-federation/inject-external-runtime-core-plugin': 0.21.2(@module-federation/runtime-tools@0.21.2)
-      '@module-federation/managers': 0.21.2
-      '@module-federation/manifest': 0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/rspack': 0.21.2(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/runtime-tools': 0.21.2
-      '@module-federation/sdk': 0.21.2
-      btoa: 1.2.1
-      schema-utils: 4.3.3
-      upath: 2.0.1
-    optionalDependencies:
-      typescript: 6.0.3
-      vue-tsc: 2.2.12(typescript@6.0.3)
-      webpack: 5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.23))(clean-css@5.3.3)(cssnano@7.1.9(postcss@8.5.25))(csso@5.0.5)(esbuild@0.25.0)(html-minifier-terser@6.1.0)(lightningcss@1.32.0)(postcss@8.5.25)(uglify-js@3.19.3)(webpack-cli@7.0.3)
-    transitivePeerDependencies:
-      - '@rspack/core'
-      - bufferutil
-      - debug
-      - react
-      - react-dom
-      - supports-color
-      - utf-8-validate
-
   '@module-federation/enhanced@2.3.3(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(node-fetch@3.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))(webpack@5.109.2)':
     dependencies:
       '@module-federation/bridge-react-webpack-plugin': 2.3.3(node-fetch@3.3.2)
@@ -33959,35 +33837,6 @@ snapshots:
       typescript: 6.0.3
       vue-tsc: 2.2.12(typescript@6.0.3)
       webpack: 5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(clean-css@5.3.3)(cssnano@7.1.9(postcss@8.5.25))(csso@5.0.5)(esbuild@0.25.0)(html-minifier-terser@6.1.0)(lightningcss@1.32.0)(postcss@8.5.25)(uglify-js@3.19.3)(webpack-cli@7.0.3)
-    transitivePeerDependencies:
-      - '@rspack/core'
-      - bufferutil
-      - node-fetch
-      - react
-      - react-dom
-      - utf-8-validate
-
-  '@module-federation/enhanced@2.3.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(node-fetch@3.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))(webpack@5.109.2)':
-    dependencies:
-      '@module-federation/bridge-react-webpack-plugin': 2.3.3(node-fetch@3.3.2)
-      '@module-federation/cli': 2.3.3(node-fetch@3.3.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/data-prefetch': 2.3.3(node-fetch@3.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@module-federation/dts-plugin': 2.3.3(node-fetch@3.3.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/error-codes': 2.3.3
-      '@module-federation/inject-external-runtime-core-plugin': 2.3.3(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))
-      '@module-federation/managers': 2.3.3(node-fetch@3.3.2)
-      '@module-federation/manifest': 2.3.3(node-fetch@3.3.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/rspack': 2.3.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(node-fetch@3.3.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/runtime-tools': 2.3.3(node-fetch@3.3.2)
-      '@module-federation/sdk': 2.3.3(node-fetch@3.3.2)
-      '@module-federation/webpack-bundler-runtime': 2.3.3(node-fetch@3.3.2)
-      schema-utils: 4.3.0
-      tapable: 2.3.0
-      upath: 2.0.1
-    optionalDependencies:
-      typescript: 6.0.3
-      vue-tsc: 2.2.12(typescript@6.0.3)
-      webpack: 5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.23))(clean-css@5.3.3)(cssnano@7.1.9(postcss@8.5.25))(csso@5.0.5)(esbuild@0.25.0)(html-minifier-terser@6.1.0)(lightningcss@1.32.0)(postcss@8.5.25)(uglify-js@3.19.3)(webpack-cli@7.0.3)
     transitivePeerDependencies:
       - '@rspack/core'
       - bufferutil
@@ -34020,21 +33869,6 @@ snapshots:
       find-pkg: 2.0.0
     transitivePeerDependencies:
       - node-fetch
-
-  '@module-federation/manifest@0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
-    dependencies:
-      '@module-federation/dts-plugin': 0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/managers': 0.21.2
-      '@module-federation/sdk': 0.21.2
-      chalk: 3.0.0
-      find-pkg: 2.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - supports-color
-      - typescript
-      - utf-8-validate
-      - vue-tsc
 
   '@module-federation/manifest@0.21.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
     dependencies:
@@ -34086,28 +33920,6 @@ snapshots:
       - utf-8-validate
       - vue-tsc
 
-  '@module-federation/node@2.7.21(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(debug@4.4.3(supports-color@10.2.2))(next@16.3.4(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.101.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))(webpack@5.109.2)':
-    dependencies:
-      '@module-federation/enhanced': 0.21.2(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(debug@4.4.3(supports-color@10.2.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))(webpack@5.109.2)
-      '@module-federation/runtime': 0.21.2
-      '@module-federation/sdk': 0.21.2
-      btoa: 1.2.1
-      encoding: 0.1.13
-      node-fetch: 2.7.0(encoding@0.1.13)
-      webpack: 5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.23))(clean-css@5.3.3)(cssnano@7.1.9(postcss@8.5.25))(csso@5.0.5)(esbuild@0.25.0)(html-minifier-terser@6.1.0)(lightningcss@1.32.0)(postcss@8.5.25)(uglify-js@3.19.3)(webpack-cli@7.0.3)
-    optionalDependencies:
-      next: 16.3.4(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.101.0)
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@rspack/core'
-      - bufferutil
-      - debug
-      - supports-color
-      - typescript
-      - utf-8-validate
-      - vue-tsc
-
   '@module-federation/rspack@0.21.2(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
     dependencies:
       '@module-federation/bridge-react-webpack-plugin': 0.21.2
@@ -34128,26 +33940,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@module-federation/rspack@0.21.2(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
-    dependencies:
-      '@module-federation/bridge-react-webpack-plugin': 0.21.2
-      '@module-federation/dts-plugin': 0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/inject-external-runtime-core-plugin': 0.21.2(@module-federation/runtime-tools@0.21.2)
-      '@module-federation/managers': 0.21.2
-      '@module-federation/manifest': 0.21.2(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/runtime-tools': 0.21.2
-      '@module-federation/sdk': 0.21.2
-      '@rspack/core': 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-      btoa: 1.2.1
-    optionalDependencies:
-      typescript: 6.0.3
-      vue-tsc: 2.2.12(typescript@6.0.3)
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - supports-color
-      - utf-8-validate
-
   '@module-federation/rspack@2.3.3(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(node-fetch@3.3.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
     dependencies:
       '@module-federation/bridge-react-webpack-plugin': 2.3.3(node-fetch@3.3.2)
@@ -34158,24 +33950,6 @@ snapshots:
       '@module-federation/runtime-tools': 2.3.3(node-fetch@3.3.2)
       '@module-federation/sdk': 2.3.3(node-fetch@3.3.2)
       '@rspack/core': 2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18)
-    optionalDependencies:
-      typescript: 6.0.3
-      vue-tsc: 2.2.12(typescript@6.0.3)
-    transitivePeerDependencies:
-      - bufferutil
-      - node-fetch
-      - utf-8-validate
-
-  '@module-federation/rspack@2.3.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(node-fetch@3.3.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))':
-    dependencies:
-      '@module-federation/bridge-react-webpack-plugin': 2.3.3(node-fetch@3.3.2)
-      '@module-federation/dts-plugin': 2.3.3(node-fetch@3.3.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/inject-external-runtime-core-plugin': 2.3.3(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))
-      '@module-federation/managers': 2.3.3(node-fetch@3.3.2)
-      '@module-federation/manifest': 2.3.3(node-fetch@3.3.2)(typescript@6.0.3)(vue-tsc@2.2.12(typescript@6.0.3))
-      '@module-federation/runtime-tools': 2.3.3(node-fetch@3.3.2)
-      '@module-federation/sdk': 2.3.3(node-fetch@3.3.2)
-      '@rspack/core': 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
     optionalDependencies:
       typescript: 6.0.3
       vue-tsc: 2.2.12(typescript@6.0.3)
@@ -44463,6 +44237,7 @@ snapshots:
       ms: 2.0.0
     optionalDependencies:
       supports-color: 10.2.2
+    optional: true
 
   debug@2.6.9(supports-color@7.2.0):
     dependencies:
@@ -47527,17 +47302,6 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  http-proxy-middleware@3.0.7(supports-color@10.2.2):
-    dependencies:
-      '@types/http-proxy': 1.17.16
-      debug: 4.4.3(supports-color@10.2.2)
-      http-proxy: 1.18.1(debug@4.4.3(supports-color@10.2.2))
-      is-glob: 4.0.3
-      is-plain-object: 5.0.0
-      micromatch: 4.0.8
-    transitivePeerDependencies:
-      - supports-color
-
   http-proxy-middleware@3.0.7(supports-color@8.1.1):
     dependencies:
       '@types/http-proxy': 1.17.16
@@ -49700,16 +49464,6 @@ snapshots:
       slice-ansi: 7.1.0
       strip-ansi: 7.1.2
       wrap-ansi: 9.0.0
-
-  log4js@6.9.1(supports-color@10.2.2):
-    dependencies:
-      date-format: 4.0.14
-      debug: 4.4.3(supports-color@10.2.2)
-      flatted: 3.3.4
-      rfdc: 1.4.1
-      streamroller: 3.1.5(supports-color@10.2.2)
-    transitivePeerDependencies:
-      - supports-color
 
   log4js@6.9.1(supports-color@8.1.1):
     dependencies:
@@ -52059,35 +51813,6 @@ snapshots:
       '@next/swc-linux-x64-musl': 15.5.25
       '@next/swc-win32-arm64-msvc': 15.5.25
       '@next/swc-win32-x64-msvc': 15.5.25
-      '@opentelemetry/api': 1.9.1
-      '@playwright/test': 1.60.0
-      babel-plugin-react-compiler: 1.0.0
-      sass: 1.101.0
-      sharp: 0.35.4(@types/node@24.12.2)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@types/node'
-      - babel-plugin-macros
-
-  next@16.3.4(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.101.0):
-    dependencies:
-      '@next/env': 16.3.4
-      '@swc/helpers': 0.5.23
-      baseline-browser-mapping: 2.11.8
-      caniuse-lite: 1.0.30001806
-      postcss: 8.5.23
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      styled-jsx: 5.1.6(@babel/core@7.29.7(supports-color@10.2.2))(babel-plugin-macros@3.1.0)(react@18.3.1)
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 16.3.4
-      '@next/swc-darwin-x64': 16.3.4
-      '@next/swc-linux-arm64-gnu': 16.3.4
-      '@next/swc-linux-arm64-musl': 16.3.4
-      '@next/swc-linux-x64-gnu': 16.3.4
-      '@next/swc-linux-x64-musl': 16.3.4
-      '@next/swc-win32-arm64-msvc': 16.3.4
-      '@next/swc-win32-x64-msvc': 16.3.4
       '@opentelemetry/api': 1.9.1
       '@playwright/test': 1.60.0
       babel-plugin-react-compiler: 1.0.0
@@ -56791,14 +56516,6 @@ snapshots:
 
   stream-slice@0.1.2: {}
 
-  streamroller@3.1.5(supports-color@10.2.2):
-    dependencies:
-      date-format: 4.0.14
-      debug: 4.4.3(supports-color@10.2.2)
-      fs-extra: 8.1.0
-    transitivePeerDependencies:
-      - supports-color
-
   streamroller@3.1.5(supports-color@8.1.1):
     dependencies:
       date-format: 4.0.14
@@ -59313,7 +59030,7 @@ snapshots:
       webpack-dev-middleware: 7.4.5(tslib@2.8.1)(webpack@5.109.2)
       ws: 8.19.0
     optionalDependencies:
-      webpack: 5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.23))(clean-css@5.3.3)(cssnano@7.1.9(postcss@8.5.25))(csso@5.0.5)(esbuild@0.25.0)(html-minifier-terser@6.1.0)(lightningcss@1.32.0)(postcss@8.5.25)(uglify-js@3.19.3)(webpack-cli@7.0.3)
+      webpack: 5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(clean-css@5.3.3)(cssnano@7.1.9(postcss@8.5.25))(csso@5.0.5)(esbuild@0.25.0)(html-minifier-terser@6.1.0)(lightningcss@1.32.0)(postcss@8.5.25)(uglify-js@3.19.3)(webpack-cli@7.0.3)
       webpack-cli: 7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.109.2)
     transitivePeerDependencies:
       - bufferutil

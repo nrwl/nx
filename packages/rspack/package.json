@@ -37,12 +37,6 @@
       "app-plugin.js": [
         "dist/app-plugin.d.ts"
       ],
-      "module-federation": [
-        "dist/module-federation.d.ts"
-      ],
-      "module-federation.js": [
-        "dist/module-federation.d.ts"
-      ],
       "plugin": [
         "dist/plugin.d.ts"
       ],
@@ -85,16 +79,6 @@
       "types": "./dist/app-plugin.d.ts",
       "default": "./dist/app-plugin.js"
     },
-    "./module-federation": {
-      "@nx/nx-source": "./module-federation.ts",
-      "types": "./dist/module-federation.d.ts",
-      "default": "./dist/module-federation.js"
-    },
-    "./module-federation.js": {
-      "@nx/nx-source": "./module-federation.ts",
-      "types": "./dist/module-federation.d.ts",
-      "default": "./dist/module-federation.js"
-    },
     "./plugin": {
       "@nx/nx-source": "./plugin.ts",
       "types": "./dist/plugin.d.ts",
@@ -129,14 +113,11 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "@nx/module-federation": "workspace:*",
     "@nx/web": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "autoprefixer": "catalog:css",
     "browserslist": "^4.26.0",
     "css-loader": "^7.1.4",
-    "express": "^4.21.2",
-    "http-proxy-middleware": "catalog:",
     "less-loader": "catalog:css",
     "license-webpack-plugin": "^4.0.2",
     "loader-utils": "^2.0.3",

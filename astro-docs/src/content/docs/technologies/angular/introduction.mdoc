@@ -180,7 +180,7 @@ nx g @nx/angular:lib libs/my-lib --publishable --importPath=@my-org/my-lib
 
 ### Set up micro frontends
 
-As of Nx v23, the `@nx/angular` `host` and `remote` generators are deprecated. For Angular micro frontends, use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation), with Nx orchestrating, caching, and scoping CI to the affected apps. See [Micro Frontends with Angular](/docs/kb/angular-micro-frontends) for the setup path.
+Nx v24 removed the `@nx/angular` `host` and `remote` generators. For Angular micro frontends, use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation), with Nx orchestrating, caching, and scoping CI to the affected apps. To move an existing Nx Module Federation setup, see [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation).
 
 ## Structure your Angular monorepo
 
@@ -210,7 +210,6 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 {% linkcard title="Set up CI with Nx Cloud" description="Remote caching, Nx Agents, and self-healing CI." href="/docs/getting-started/setup-ci" /%}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
 {% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="/docs/kb/migrate-angular-cli-to-nx" /%}
-{% linkcard title="Micro Frontends with Angular" description="Build Angular micro frontends with Native Federation." href="/docs/kb/angular-micro-frontends" /%}
 {% linkcard title="Tailwind CSS with Angular" description="Add Tailwind CSS to Angular apps and libraries." href="/docs/kb/using-tailwind-css-with-angular-projects" /%}
 {% linkcard title="Angular Generators Reference" description="All @nx/angular generators." href="/docs/technologies/angular/generators" /%}
 {% linkcard title="Angular Executors Reference" description="All @nx/angular executors." href="/docs/technologies/angular/executors" /%}

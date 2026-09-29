@@ -27,10 +27,6 @@ complexity.
 If your teams can deploy together and you mainly want faster builds, runtime composition is the
 wrong tool for that problem.
 
-For the build-speed use case, see
-[faster builds with Module Federation](/docs/kb/faster-builds-with-module-federation),
-which uses the same federation mechanics without independent deployments.
-
 ## When should you avoid micro frontends?
 
 Avoid micro frontends in the following situations:
@@ -163,13 +159,13 @@ As the number of applications grows, distribute those CI runs with
 
 ## Micro frontends with Angular
 
-As of Nx v23, the `@nx/angular` `host` and `remote` generators are deprecated.
+Nx v24 removed the `@nx/angular` `host` and `remote` generators.
 For Angular micro frontends, look to
 [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation),
 which implements the same runtime composition model on top of the Angular CLI build.
 Nx still runs, caches, and orchestrates the Angular apps as regular projects in the workspace.
-For the full Angular setup path, see
-[Micro Frontends with Angular](/docs/kb/angular-micro-frontends).
+To move an existing Nx Module Federation setup, see
+[migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation).
 
 ## Strategic collaboration over micro frontend anarchy
 
