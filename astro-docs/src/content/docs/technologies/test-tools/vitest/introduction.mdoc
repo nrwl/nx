@@ -205,7 +205,7 @@ There is no single "disable" flag for inference. Use `include` and `exclude` to 
 
 The test task is cached, with outputs based on your Vitest coverage configuration.
 Custom reporter output files are not inferred.
-Set `ciTargetName` to enable the [Atomizer](/docs/kb/split-e2e-tasks).
+Set `ciTargetName` to enable [task splitting (Atomizer)](/docs/kb/split-e2e-tasks).
 
 When coverage is enabled, each atomized task writes its report to a directory under the configured
 `reportsDirectory` that mirrors the spec file's path.
