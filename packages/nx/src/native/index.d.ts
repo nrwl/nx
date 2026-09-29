@@ -393,8 +393,8 @@ export declare class WorkspaceContext {
    */
   trackedFiles(paths: Array<string>): Array<string>
   /**
-   * Remembers each task's outputs as they are on disk now, so
-   * `outputs_unchanged` can tell whether they still are.
+   * Remembers each task's outputs, as given or else as they are on disk
+   * now, so `outputs_unchanged` can tell whether they still are.
    */
   recordOutputs(entries: Array<TaskOutputs>): void
   /** Whether each task's outputs are still as last recorded for its hash. */
@@ -1184,7 +1184,7 @@ export interface TaskOutputs {
   hash: string
   /**
    * What the cache just wrote or restored for these outputs. Recorded as
-   * given, so the outputs are not walked again.
+   * given, without walking, where `given_covers` allows.
    */
   files?: Array<OutputFile>
 }

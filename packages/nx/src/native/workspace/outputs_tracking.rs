@@ -25,7 +25,7 @@ pub struct TaskOutputs {
     pub outputs: Vec<String>,
     pub hash: String,
     /// What the cache just wrote or restored for these outputs. Recorded as
-    /// given, so the outputs are not walked again.
+    /// given, without walking, where `given_covers` allows.
     pub files: Option<Vec<OutputFile>>,
 }
 
@@ -85,6 +85,20 @@ fn key(outputs: &[String]) -> String {
     outputs.sort();
     outputs.dedup();
     outputs.join("\n")
+}
+
+/// Whether what the cache copies for `outputs` covers every file a check
+/// reads. The cache honours a negation, and copies a linked root as a link
+/// and nothing under a vetoed root, where a check reads the whole directory.
+fn given_covers(root: &Path, outputs: &[String]) -> bool {
+    outputs.iter().all(|output| {
+        if output.starts_with('!') {
+            return false;
+        }
+        let dir = partition_glob(output).0;
+        walk_reaches(root, "", &dir)
+            && !std::fs::symlink_metadata(root.join(&dir)).is_ok_and(|link| link.is_symlink())
+    })
 }
 
 /// The files of `given` that `outputs` names, each with its stamp. A file
@@ -154,12 +168,22 @@ impl OutputRecords {
                 }
             }
         }
-        if entries.iter().any(|entry| entry.files.is_none()) {
+        let entries: Vec<_> = entries
+            .into_iter()
+            .map(|mut entry| {
+                let given = entry
+                    .files
+                    .take()
+                    .filter(|_| given_covers(root, &entry.outputs));
+                (entry, given)
+            })
+            .collect();
+        if entries.iter().any(|(_, given)| given.is_none()) {
             reader.catch_up();
         }
         let index = reader.index();
-        entries.into_par_iter().for_each(|entry| {
-            let stamped = match entry.files {
+        entries.into_par_iter().for_each(|(entry, given)| {
+            let stamped = match given {
                 Some(given) => expand_given(root, &entry.outputs, given),
                 // Read from disk: the watch may not have delivered the task's
                 // own writes yet, and a listing missing them would record too
@@ -507,5 +531,48 @@ mod tests {
             }],
         );
         assert!(check(&records, &temp, &reader, &["dist/app"], "h1"));
+    }
+
+    #[test]
+    fn a_given_file_list_that_a_negation_trimmed_is_not_trusted() {
+        let temp = workspace();
+        temp.child("dist/app/cache/x.bin").write_str("x").unwrap();
+        let (records, reader) = (OutputRecords::default(), watched());
+        let outputs = ["dist/app", "!dist/app/cache"];
+        // What `put` copies: the cache honours the negation.
+        records.record(
+            temp.path(),
+            &reader,
+            vec![TaskOutputs {
+                files: Some(given(
+                    &temp,
+                    &["dist/app/a.txt", "dist/app/b.md", "dist/app/c.html"],
+                )),
+                ..entry(&outputs, "h1")
+            }],
+        );
+        assert!(check(&records, &temp, &reader, &outputs, "h1"));
+    }
+
+    #[test]
+    fn a_given_file_list_is_trusted_only_where_it_covers_what_a_check_reads() {
+        let temp = workspace();
+        let covers = |outputs: &[&str]| {
+            given_covers(
+                temp.path(),
+                &outputs.iter().map(|o| o.to_string()).collect::<Vec<_>>(),
+            )
+        };
+        assert!(covers(&["dist/app", "dist/app/*.txt"]));
+        assert!(!covers(&["dist/app", "!dist/app/cache"]));
+        assert!(!covers(&["node_modules/pkg/dist/*.js"]));
+        assert!(!covers(&["*.txt"]));
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(temp.path().join("dist/app"), temp.path().join("dist/link"))
+                .unwrap();
+            assert!(!covers(&["dist/link"]));
+            assert!(!covers(&["dist/link/*.txt"]));
+        }
     }
 }

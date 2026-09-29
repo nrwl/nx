@@ -31,14 +31,14 @@ pub struct CachedOutputs {
     pub files: Vec<OutputFile>,
 }
 
-/// Adds the workspace file at `path` to `files` as it is now. A directory,
-/// even one a link leads to, is left out, as a walk would not list it.
+/// Adds the workspace file at `path` to `files` as it is now. Only a regular
+/// file, or a link to one, is kept: nothing else is an output file to stamp.
 fn note_copied(workspace_root: &Path, path: &Path, files: &Mutex<Vec<OutputFile>>) {
     let (Ok(relative), Ok(metadata)) = (path.strip_prefix(workspace_root), std::fs::metadata(path))
     else {
         return;
     };
-    if !metadata.is_dir() {
+    if metadata.is_file() {
         let file = OutputFile::new(relative.to_normalized_string(), &metadata);
         files.lock().unwrap_or_else(|e| e.into_inner()).push(file);
     }

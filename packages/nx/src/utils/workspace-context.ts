@@ -176,7 +176,7 @@ export function trackedFilesInContext(
   return workspaceContext?.trackedFiles(paths) ?? [];
 }
 
-/** Remembers each task's outputs as they are on disk now. */
+/** Remembers each task's outputs, as given or else as they are on disk now. */
 export function recordOutputsInContext(
   workspaceRoot: string,
   entries: TaskOutputs[]

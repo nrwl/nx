@@ -173,10 +173,9 @@ fn partition_globs_into_map(globs: Vec<String>) -> HashMap<String, Vec<String>> 
     map
 }
 
-/// Expands the given outputs into a list of existing files.
-/// This is what the daemon's outputs tracking reads; hashing expands the same
-/// entries through `expand_task_outputs`. Takes a borrowed directory so batch
-/// callers don't pay a String clone per task.
+/// Expands the given outputs into a list of existing files, read from disk.
+/// Hashing expands the same entries through `expand_task_outputs`. Takes a
+/// borrowed directory so batch callers don't pay a String clone per task.
 pub fn get_files_for_outputs(
     directory: &Path,
     entries: Vec<String>,
