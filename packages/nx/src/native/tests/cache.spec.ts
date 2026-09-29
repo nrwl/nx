@@ -1,7 +1,7 @@
 import { TaskDetails, NxCache } from '../index';
 import { join } from 'path';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
-import { rmSync } from 'fs';
+import { rmSync, statSync } from 'fs';
 import { getDbConnection } from '../../utils/db-connection';
 import { randomBytes } from 'crypto';
 
@@ -63,6 +63,27 @@ describe('Cache', () => {
     expect(await tempFs.readFile('dist/output.txt')).toEqual(
       'output contents 123'
     );
+  });
+
+  it('should return the files it copies, stamped as they are in the workspace', () => {
+    tempFs.createFileSync('dist/output.txt', 'output contents 123');
+    const stampOf = (path: string) => {
+      const { mtimeNs, size } = statSync(join(tempFs.tempDir, path), {
+        bigint: true,
+      });
+      return `${mtimeNs}:${size}`;
+    };
+
+    const stored = cache.put('123', 'output 123', ['dist'], 0);
+    expect(stored.files).toEqual([
+      { path: 'dist/output.txt', stamp: stampOf('dist/output.txt') },
+    ]);
+
+    tempFs.removeFileSync('dist/output.txt');
+    const restored = cache.copyFilesFromCache(cache.get('123'), ['dist']);
+    expect(restored).toEqual([
+      { path: 'dist/output.txt', stamp: stampOf('dist/output.txt') },
+    ]);
   });
 
   it('should handle storing hashes that already exist in the cache', async () => {

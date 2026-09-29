@@ -15,11 +15,34 @@ use rusqlite::{params, types::Value};
 use sysinfo::Disks;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
-use crate::native::cache::file_ops::{_copy, copy_outputs_into_workspace};
+use crate::native::cache::file_ops::{copy_outputs_into_workspace, copy_reporting};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
+use crate::native::workspace::outputs_tracking::OutputFile;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
+
+/// What `put` copied into the cache.
+#[napi(object)]
+pub struct CachedOutputs {
+    /// The output entries that exist, as `expand_outputs` finds them.
+    pub expanded_outputs: Vec<String>,
+    /// Each file copied, stamped as it is in the workspace.
+    pub files: Vec<OutputFile>,
+}
+
+/// Adds the workspace file at `path` to `files` as it is now. A directory,
+/// even one a link leads to, is left out, as a walk would not list it.
+fn note_copied(workspace_root: &Path, path: &Path, files: &Mutex<Vec<OutputFile>>) {
+    let (Ok(relative), Ok(metadata)) = (path.strip_prefix(workspace_root), std::fs::metadata(path))
+    else {
+        return;
+    };
+    if !metadata.is_dir() {
+        let file = OutputFile::new(relative.to_normalized_string(), &metadata);
+        files.lock().unwrap_or_else(|e| e.into_inner()).push(file);
+    }
+}
 
 /// Batch logs older than this are swept. Matches `remove_old_cache_records`.
 const BATCH_OUTPUT_MAX_AGE: Duration = Duration::from_secs(7 * 24 * 60 * 60);
@@ -380,7 +403,7 @@ impl NxCache {
         terminal_output: String,
         outputs: Vec<String>,
         code: i16,
-    ) -> anyhow::Result<Vec<String>> {
+    ) -> anyhow::Result<CachedOutputs> {
         let start = Instant::now();
         trace!("PUT {}", &hash);
         let task_dir = self.cache_path.join(&hash);
@@ -410,12 +433,15 @@ impl NxCache {
 
         // Copy the outputs to the cache
         let mut copied_files = 0;
+        let files = Mutex::new(vec![]);
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
                 trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
-                let copied_size = _copy(p, cached_outputs_dir)?;
+                let copied_size = copy_reporting(&p, &cached_outputs_dir, None, &|src, _| {
+                    note_copied(&self.workspace_root, src, &files)
+                })?;
                 total_size += copied_size;
                 copied_files += 1;
                 trace!(
@@ -431,7 +457,10 @@ impl NxCache {
 
         self.record_to_cache(hash.clone(), code, total_size)?;
         debug!("PUT {} {:?}", &hash, start.elapsed());
-        Ok(expanded_outputs)
+        Ok(CachedOutputs {
+            expanded_outputs,
+            files: files.into_inner().unwrap_or_else(|e| e.into_inner()),
+        })
     }
 
     #[napi]
@@ -449,8 +478,9 @@ impl NxCache {
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs {
             if outputs.len() > 0 && result.code == 0 {
-                size +=
-                    try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
+                size += try_and_retry(|| {
+                    self.restore(result.clone(), outputs.clone(), &mut Vec::new())
+                })?;
             };
         }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
@@ -608,11 +638,23 @@ impl NxCache {
         Ok(())
     }
 
+    /// Restores `outputs` and returns each file written, stamped as it is now.
     #[napi]
     pub fn copy_files_from_cache(
         &self,
         cached_result: CachedResult,
         outputs: Vec<String>,
+    ) -> anyhow::Result<Vec<OutputFile>> {
+        let mut files = vec![];
+        self.restore(cached_result, outputs, &mut files)?;
+        Ok(files)
+    }
+
+    fn restore(
+        &self,
+        cached_result: CachedResult,
+        outputs: Vec<String>,
+        files: &mut Vec<OutputFile>,
     ) -> anyhow::Result<i64> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
@@ -625,7 +667,15 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
-        copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)
+        let copied = Mutex::new(vec![]);
+        let size = copy_outputs_into_workspace(
+            &self.workspace_root,
+            outputs_path,
+            &expanded_outputs,
+            &|_, dest| note_copied(&self.workspace_root, dest, &copied),
+        )?;
+        files.extend(copied.into_inner().unwrap_or_else(|e| e.into_inner()));
+        Ok(size)
     }
 
     #[napi]

@@ -274,6 +274,7 @@ describe('TaskOrchestrator', () => {
         copyFilesFromCache: vi.fn(),
       };
       orchestrator.cacheMissedHashes = new Set();
+      orchestrator.copiedOutputFiles = new Map();
       orchestrator.shouldCopyOutputsFromCacheBatch = vi.fn(
         async () => new Map()
       );
@@ -333,6 +334,75 @@ describe('TaskOrchestrator', () => {
       expect(
         orchestrator.options.lifeCycle.printTaskTerminalOutput
       ).toHaveBeenCalledWith(failing, 'failure', 'boom');
+    });
+  });
+
+  describe('outputs tracking', () => {
+    const files = [{ path: 'dist/app/main.js', stamp: '1:2' }];
+
+    function createOrchestrator() {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      // Object.create bypasses field initializers.
+      orchestrator.tasksWithPersistedOutput = new Set<string>();
+      orchestrator.copiedOutputFiles = new Map();
+      orchestrator.stopRequested = false;
+      orchestrator.cache = {
+        put: vi.fn(async () => files),
+        copyFilesFromCache: vi.fn(async () => files),
+        recordTerminalOutputs: vi.fn(),
+      };
+      orchestrator.options = {
+        lifeCycle: { printTaskTerminalOutput: vi.fn() },
+      };
+      orchestrator.recordOutputsHashBatch = vi.fn();
+      orchestrator.complete = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      return orchestrator;
+    }
+
+    const task = {
+      id: 'app:build',
+      target: { project: 'app', target: 'build' },
+      overrides: {},
+      outputs: ['dist/app'],
+      projectRoot: 'app',
+      cache: true,
+      parallelism: true,
+      hash: 'app-build-hash',
+    } as Task;
+
+    it('records outputs after caching them, with the files the cache wrote', async () => {
+      const orchestrator = createOrchestrator();
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'ok' }],
+        true,
+        0
+      );
+
+      expect(orchestrator.recordOutputsHashBatch).toHaveBeenCalledWith([
+        { outputs: task.outputs, hash: task.hash, files },
+      ]);
+      expect(orchestrator.cache.put.mock.invocationCallOrder[0]).toBeLessThan(
+        orchestrator.recordOutputsHashBatch.mock.invocationCallOrder[0]
+      );
+      expect(orchestrator.copiedOutputFiles.size).toBe(0);
+    });
+
+    it('records restored outputs with the files the restore wrote', async () => {
+      const orchestrator = createOrchestrator();
+      orchestrator.shouldCopyOutputsFromCacheBatch = vi.fn(
+        async () => new Map([[task.hash, true]])
+      );
+
+      const results = await orchestrator.finalizeCacheHits([
+        { task, cachedResult: { code: 0, terminalOutput: '', remote: false } },
+      ]);
+      await orchestrator.postRunSteps(results, false, 0);
+
+      expect(orchestrator.recordOutputsHashBatch).toHaveBeenCalledWith([
+        { outputs: task.outputs, hash: task.hash, files },
+      ]);
     });
   });
 
@@ -503,6 +573,7 @@ describe('TaskOrchestrator', () => {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       // Object.create bypasses field initializers.
       orchestrator.tasksWithPersistedOutput = new Set<string>();
+      orchestrator.copiedOutputFiles = new Map();
       orchestrator.stopRequested = false;
       orchestrator.cache = {
         temporaryOutputPath: (task: Task) =>

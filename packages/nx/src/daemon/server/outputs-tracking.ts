@@ -17,8 +17,8 @@ export function outputsHashesMatchBatch(entries: TaskOutputs[]): boolean[] {
 }
 
 /**
- * Record each entry's on-disk outputs so future outputsHashesMatchBatch calls
- * can skip redundant cache copies.
+ * Record each entry's outputs (the files it carries, or else what is on disk)
+ * so future outputsHashesMatchBatch calls can skip redundant cache copies.
  */
 export function recordOutputsHashBatch(entries: TaskOutputs[]) {
   if (disabled) return;
