@@ -121,7 +121,7 @@ describe('GitLabRemoteReleaseClient', () => {
 
     it('should redact the token when it has trailing whitespace', async () => {
       const token = 'glpat-secret';
-      // Axios trims header values, so the dump holds the trimmed token while
+      // fetch trims header values, so the dump holds the trimmed token while
       // tokenData still carries the untrimmed value read from the environment.
       const clientWithToken = new GitLabRemoteReleaseClient(repoData, false, {
         token: `${token}\n`,
@@ -157,8 +157,8 @@ describe('GitLabRemoteReleaseClient', () => {
 
     it('should redact the token when it contains a line break', async () => {
       const token = 'glpat-secret';
-      // Defensive: node rejects a CR/LF header outright, so axios cannot produce
-      // this pairing. Pins the needle that would cover it if it ever could.
+      // Defensive: fetch rejects a CR/LF header outright, so a request cannot
+      // produce this pairing. Pins the needle that would cover it if it ever could.
       const clientWithToken = new GitLabRemoteReleaseClient(repoData, false, {
         token: `${token.slice(0, 4)}\r\n${token.slice(4)}`,
         headerName: 'PRIVATE-TOKEN',
