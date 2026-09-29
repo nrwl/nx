@@ -2,6 +2,7 @@ import { logger } from '@nx/devkit';
 import { interpolate, isAiAgent, isCI } from '@nx/devkit/internal';
 import { resolveLintOptions } from './options.js';
 import {
+  excludedNestedRoots,
   nestedProjectIgnorePatterns,
   normalizeFilename,
   partitionDiagnostics,
@@ -33,20 +34,28 @@ export function runLintTasks(
   tasks: LintTask[],
   workspaceRoot: string
 ): Record<string, LintTaskResult> {
-  const resolved = tasks.map((task) => ({
-    task,
-    options: resolveLintOptions(task.options),
-    paths: (task.options.lintFilePatterns ?? ['{projectRoot}']).map((p) =>
-      normalizeFilename(
-        interpolate(p, {
-          workspaceRoot: '',
-          projectRoot: task.projectRoot,
-          projectName: task.projectName,
-        }),
-        workspaceRoot
-      )
-    ),
-  }));
+  const resolved = tasks.map((task) => {
+    const paths = (task.options.lintFilePatterns ?? ['{projectRoot}']).map(
+      (p) =>
+        normalizeFilename(
+          interpolate(p, {
+            workspaceRoot: '',
+            projectRoot: task.projectRoot,
+            projectName: task.projectName,
+          }),
+          workspaceRoot
+        )
+    );
+    return {
+      task,
+      options: resolveLintOptions(task.options),
+      paths,
+      excludedRoots: excludedNestedRoots(
+        paths,
+        task.options.nestedProjectRoots ?? []
+      ),
+    };
+  });
 
   // One Oxlint process gets one flag set: the first task's. Format, --silent
   // and the warning thresholds still apply per task.
@@ -59,11 +68,12 @@ export function runLintTasks(
       `[@nx/oxlint] ${differing.task.projectName} resolves different Oxlint options than ${resolved[0].task.projectName}. Oxlint runs once for the whole batch, using ${resolved[0].task.projectName}'s options.`
     );
   }
-  // The inferred targets carry their nested project roots, so the whole
-  // exclusion frontier is the union of the participants' lists.
   const ignores = nestedProjectIgnorePatterns(
-    resolved.map((r) => ({ projectRoot: r.task.projectRoot, paths: r.paths })),
-    [...new Set(tasks.flatMap((t) => t.options.nestedProjectRoots ?? []))]
+    resolved.map((r) => ({
+      projectRoot: r.task.projectRoot,
+      paths: r.paths,
+      excludedRoots: r.excludedRoots,
+    }))
   );
   const paths = [...new Set(resolved.flatMap((r) => r.paths))];
 
@@ -93,7 +103,11 @@ export function runLintTasks(
   }
   const byTask = partitionDiagnostics(
     run.report.diagnostics,
-    resolved.map((r) => ({ taskId: r.task.taskId, paths: r.paths }))
+    resolved.map((r) => ({
+      taskId: r.task.taskId,
+      paths: r.paths,
+      excludedRoots: r.excludedRoots,
+    }))
   );
   const agentMode = !!isCI() || isAiAgent();
 

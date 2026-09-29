@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import {
+  excludedNestedRoots,
   nestedProjectIgnorePatterns,
   normalizeFilename,
   partitionDiagnostics,
@@ -18,7 +19,7 @@ const diagnostic = (filename: string): OxlintDiagnostic => ({
 });
 
 describe('partitionDiagnostics', () => {
-  it('should give every task an entry and assign by longest matching path', () => {
+  it('should give every task an entry and keep a parent off its excluded nested roots', () => {
     const byTask = partitionDiagnostics(
       [
         diagnostic('libs/a/src/x.ts'),
@@ -26,10 +27,18 @@ describe('partitionDiagnostics', () => {
         diagnostic('libs/b/index.ts'),
       ],
       [
-        { taskId: 'a:lint', paths: ['libs/a'] },
-        { taskId: 'a-nested:lint', paths: ['libs/a/nested'] },
-        { taskId: 'b:lint', paths: ['libs/b'] },
-        { taskId: 'c:lint', paths: ['libs/c'] },
+        {
+          taskId: 'a:lint',
+          paths: ['libs/a'],
+          excludedRoots: ['libs/a/nested'],
+        },
+        {
+          taskId: 'a-nested:lint',
+          paths: ['libs/a/nested'],
+          excludedRoots: [],
+        },
+        { taskId: 'b:lint', paths: ['libs/b'], excludedRoots: [] },
+        { taskId: 'c:lint', paths: ['libs/c'], excludedRoots: [] },
       ]
     );
     expect([...byTask.keys()]).toEqual([
@@ -51,41 +60,54 @@ describe('partitionDiagnostics', () => {
     const byTask = partitionDiagnostics(
       [diagnostic('libs/ab/x.ts')],
       [
-        { taskId: 'a:lint', paths: ['libs/a'] },
-        { taskId: 'ab:lint', paths: ['libs/ab'] },
+        { taskId: 'a:lint', paths: ['libs/a'], excludedRoots: [] },
+        { taskId: 'ab:lint', paths: ['libs/ab'], excludedRoots: [] },
       ]
     );
     expect(byTask.get('a:lint')).toEqual([]);
     expect(byTask.get('ab:lint')).toHaveLength(1);
   });
 
-  it('should anchor globs and single files', () => {
+  // Oxlint expands no globs: `app/[id]` is a directory, not a character class.
+  it('should match files and directories literally', () => {
     const byTask = partitionDiagnostics(
-      [diagnostic('libs/a/src/x.ts'), diagnostic('libs/a/tools/t.ts')],
       [
-        { taskId: 'src:lint', paths: ['libs/a/src/**/*.ts'] },
-        { taskId: 'tool:lint', paths: ['libs/a/tools/t.ts'] },
+        diagnostic('app/[id]/page.ts'),
+        diagnostic('app/other/page.ts'),
+        diagnostic('libs/a/tools/t.ts'),
+      ],
+      [
+        { taskId: 'id:lint', paths: ['app/[id]'], excludedRoots: [] },
+        {
+          taskId: 'tool:lint',
+          paths: ['libs/a/tools/t.ts'],
+          excludedRoots: [],
+        },
       ]
     );
-    expect(byTask.get('src:lint')).toHaveLength(1);
+    expect(byTask.get('id:lint').map((d) => d.filename)).toEqual([
+      'app/[id]/page.ts',
+    ]);
     expect(byTask.get('tool:lint')).toHaveLength(1);
-  });
-
-  it('should assign diagnostics for a glob at the workspace root', () => {
-    const byTask = partitionDiagnostics(
-      [diagnostic('root.ts')],
-      [{ taskId: 'root:lint', paths: ['*.ts'] }]
-    );
-    expect(byTask.get('root:lint')).toHaveLength(1);
   });
 
   it('should drop a diagnostic no task owns', () => {
     const byTask = partitionDiagnostics(
       [diagnostic('tools/x.ts')],
-      [{ taskId: 'a:lint', paths: ['libs/a'] }]
+      [{ taskId: 'a:lint', paths: ['libs/a'], excludedRoots: [] }]
     );
     expect(byTask.get('a:lint')).toEqual([]);
   });
+});
+
+const scope = (
+  projectRoot: string,
+  nestedProjectRoots: string[],
+  paths = [projectRoot]
+) => ({
+  projectRoot,
+  paths,
+  excludedRoots: excludedNestedRoots(paths, nestedProjectRoots),
 });
 
 // The unit expectations above cannot see what Oxlint's matcher does with the
@@ -110,10 +132,9 @@ describe('partitionDiagnostics', () => {
         writeFileSync(join(ws, file), content);
       }
 
-      const patterns = nestedProjectIgnorePatterns(
-        [{ projectRoot: 'libs/a', paths: ['libs/a'] }],
-        ['libs/a', 'libs/a/nested', 'libs/a/n[x]']
-      );
+      const patterns = nestedProjectIgnorePatterns([
+        scope('libs/a', ['libs/a/nested', 'libs/a/n[x]']),
+      ]);
       const bin = join(
         dirname(require.resolve('oxlint/package.json')),
         'bin',
@@ -149,40 +170,45 @@ describe('normalizeFilename', () => {
 });
 
 describe('nestedProjectIgnorePatterns', () => {
-  const roots = ['libs/a', 'libs/a/nested', 'libs/a/nested/deeper', 'libs/b'];
-
   // Anchored: a bare `nested` would also match a same-named directory the
   // outer project owns. Excluding a root already prunes everything under it,
   // so the deeper root emits no pattern of its own.
   it('should ignore nested projects that are not in the run', () => {
     expect(
-      nestedProjectIgnorePatterns(
-        [{ projectRoot: 'libs/a', paths: ['libs/a'] }],
-        roots
-      )
+      nestedProjectIgnorePatterns([
+        scope('libs/a', ['libs/a/nested', 'libs/a/nested/deeper']),
+      ])
     ).toEqual(['--ignore-pattern=/libs/a/nested']);
+    expect(
+      nestedProjectIgnorePatterns([scope('.', ['libs/a'], ['.'])])
+    ).toEqual(['--ignore-pattern=/libs/a']);
   });
 
   it('should keep nested projects that are in the run', () => {
     expect(
-      nestedProjectIgnorePatterns(
-        [
-          { projectRoot: 'libs/a', paths: ['libs/a'] },
-          { projectRoot: 'libs/a/nested', paths: ['libs/a/nested'] },
-        ],
-        roots
-      )
+      nestedProjectIgnorePatterns([
+        scope('libs/a', ['libs/a/nested']),
+        scope('libs/a/nested', ['libs/a/nested/deeper']),
+      ])
     ).toEqual(['--ignore-pattern=/libs/a/nested/deeper']);
+  });
+
+  // An ignore pattern applies to the whole run, so it would hide the root from
+  // a task that lints it when run on its own.
+  it('should keep a nested root that another task in the run lints', () => {
+    expect(
+      nestedProjectIgnorePatterns([
+        scope('libs/a', ['libs/a/nested']),
+        scope('tools', [], ['libs']),
+      ])
+    ).toEqual([]);
   });
 
   // To Oxlint's matcher `[`, `]`, `*` and `?` are pattern syntax: an unescaped
   // `/libs/a/n[x]` is a character class matching `libs/a/nx`.
   it('should escape gitignore metacharacters in the root', () => {
     expect(
-      nestedProjectIgnorePatterns(
-        [{ projectRoot: 'libs/a', paths: ['libs/a'] }],
-        ['libs/a', 'libs/a/n[x]']
-      )
+      nestedProjectIgnorePatterns([scope('libs/a', ['libs/a/n[x]'])])
     ).toEqual(['--ignore-pattern=/libs/a/n\\[x\\]']);
   });
 });

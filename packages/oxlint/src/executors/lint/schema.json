@@ -9,7 +9,7 @@
   "properties": {
     "lintFilePatterns": {
       "type": "array",
-      "description": "One or more files/dirs/globs to pass to Oxlint.",
+      "description": "One or more files or directories to pass to Oxlint. Oxlint does not expand globs.",
       "default": ["{projectRoot}"],
       "items": {
         "type": "string"

@@ -125,15 +125,21 @@ describe('runLintTasks', () => {
     ]);
   });
 
-  it('should keep an in-run nested root lintable and exclude its own children', () => {
-    mockRunOxlint.mockReturnValue({ ok: true, report: report([]) });
+  // Run on its own, each task lints its whole path, so a file two tasks lint
+  // fails both, as it does without batching.
+  it('should keep an in-run nested root lintable, exclude its own children, and report an overlap in every task', () => {
+    mockRunOxlint.mockReturnValue({
+      ok: true,
+      report: report([{ filename: 'libs/a/nested/x.ts' }]),
+    });
 
-    runLintTasks(
+    const results = runLintTasks(
       [
         task('libs/a', { nestedProjectRoots: ['libs/a/nested'] }),
         task('libs/a/nested', {
           nestedProjectRoots: ['libs/a/nested/deeper'],
         }),
+        task('tools', { lintFilePatterns: ['libs/a/nested/x.ts'] }),
       ],
       '/ws'
     );
@@ -143,7 +149,11 @@ describe('runLintTasks', () => {
       '--no-error-on-unmatched-pattern',
       'libs/a',
       'libs/a/nested',
+      'libs/a/nested/x.ts',
     ]);
+    expect(results['libs/a:lint'].success).toBe(true);
+    expect(results['libs/a/nested:lint'].success).toBe(false);
+    expect(results['tools:lint'].success).toBe(false);
   });
 
   it("should use the first task's flags and warn when another task differs", () => {
