@@ -164,22 +164,21 @@ export function formatAffectedExplanation(
   // A long section is grouped by what changed, each group naming a few of its
   // tasks, since every entry would otherwise repeat the same files.
   const section = (
-    title: string,
+    title: string | ((group: string[]) => string),
     group: string[],
     { withLayer = false, titled = true } = {}
   ) => {
     if (!group.length) return;
+    const header =
+      typeof title === 'string' ? `${title} (${group.length})` : title(group);
     if (verbose || group.length <= 5) {
       if (titled) {
-        lines.push(`${title} (${group.length}):`, '');
+        lines.push(`${header}:`, '');
       }
       group.forEach((name) => render(name, withLayer));
       return;
     }
-    lines.push(
-      `${title} (${group.length}). Pass --verbose to list each with its reasons.`,
-      ''
-    );
+    lines.push(`${header}. Pass --verbose to list each with its reasons.`, '');
     const byCause = new Map<string, string[]>();
     for (const name of group) {
       const changed = touched(name)
@@ -217,7 +216,12 @@ export function formatAffectedExplanation(
   };
 
   const upstreamNames = Object.keys(upstream).sort();
-  section(`Touched, their own inputs changed`, upstreamNames.filter(touched));
+  section((group) => {
+    const files = new Set(group.flatMap((name) => changedIn(reasonsOf(name))));
+    return `Changing ${files.size} ${files.size === 1 ? 'file' : 'files'} touched ${
+      group.length
+    } ${group.length === 1 ? 'task' : 'tasks'} (tasks with 1 or more direct inputs changed)`;
+  }, upstreamNames.filter(touched));
   section(
     `Affected, they read outputs the change reached`,
     upstreamNames.filter((name) => !touched(name))

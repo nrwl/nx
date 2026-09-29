@@ -285,7 +285,7 @@ NX_LEGACY_AFFECTED=false nx affected -t build --explain
 
 The output follows the chain from your change to your targets, and the tasks you asked for always come last:
 
-- `Touched` tasks had one of their own inputs changed.
+- `Changing N files touched M tasks` lists the tasks with one or more of their own inputs changed.
 - Under `Affected, they read outputs`, each task reads the outputs of one your change reached.
 - `Affected tasks` comes last and holds the tasks you asked for. Each starts with the file that touched it, or the task it was affected through.
 

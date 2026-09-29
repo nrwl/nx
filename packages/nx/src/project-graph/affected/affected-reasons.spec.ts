@@ -97,7 +97,9 @@ describe('formatAffectedExplanation', () => {
       },
       'Affected tasks'
     );
-    expect(out).toContain('Touched, their own inputs changed (1):');
+    expect(out).toContain(
+      'Changing 1 file touched 1 task (tasks with 1 or more direct inputs changed):'
+    );
     expect(out).toMatch(/\n\nAffected tasks \(1\):\n/);
     expect(out).toContain('  app:build\n    - affected through app:prebuild\n');
     // The first line names the producer, so the reason line would repeat it.
@@ -111,7 +113,7 @@ describe('formatAffectedExplanation', () => {
   it('adds no section labels when nothing was carried', () => {
     const out = formatAffectedExplanation(selected, 'Affected tasks');
     expect(out.match(/Affected tasks \(/g)).toHaveLength(1);
-    expect(out).not.toContain('Touched,');
+    expect(out).not.toContain('direct inputs changed');
   });
 
   // Run order: what is only needed first, then what the change touched, then
@@ -132,7 +134,7 @@ describe('formatAffectedExplanation', () => {
       { verbose: true }
     );
     const at = (text: string) => out.indexOf(text);
-    expect(at('Touched,')).toBeLessThan(at('\n\nAffected tasks (2):'));
+    expect(at('Changing ')).toBeLessThan(at('\n\nAffected tasks (2):'));
     // Touched targets before the ones reached through them.
     expect(at('  lib:build')).toBeLessThan(at('  app:build'));
     expect(out).toContain('    - touched by libs/lib/x.ts');
@@ -350,7 +352,7 @@ describe('formatAffectedExplanation', () => {
     };
     const out = formatAffectedExplanation(explanation, 'Affected tasks');
     expect(out).toContain(
-      'Touched, their own inputs changed (6). Pass --verbose to list each with its reasons.\n\n  Changing pnpm-lock.yaml touched 6 tasks:\n    - a:build\n    - b:build\n    - c:build\n    - d:build\n    - e:build\n    - and 1 more\n'
+      'Changing 1 file touched 6 tasks (tasks with 1 or more direct inputs changed). Pass --verbose to list each with its reasons.\n\n  Changing pnpm-lock.yaml touched 6 tasks:\n    - a:build\n    - b:build\n    - c:build\n    - d:build\n    - e:build\n    - and 1 more\n'
     );
     expect(out).not.toContain('  f:build');
     expect(
