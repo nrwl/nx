@@ -5,17 +5,15 @@ import { output } from '../../../../utils/output';
 import { resetSgrAfterAgent } from '../../migrate-output';
 import {
   BROKER_ENV_VAR,
+  ensureRunFolder,
+  lstatRunFile,
   MigrateCommitBroker,
   type MigrateRunPolicy,
+  removeRunFile,
   runDir,
   runHandoffsDir,
   treeOperationLabel,
 } from '../../run';
-import {
-  ensureRunFolder,
-  lstatRunFile,
-  removeRunFile,
-} from '../../run/run-files';
 import {
   AGENT_GRACEFUL_EXIT_MS,
   closeAgentSession,

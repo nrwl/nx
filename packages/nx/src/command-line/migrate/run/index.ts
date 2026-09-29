@@ -74,3 +74,10 @@ export {
   MigrateCommitBroker,
   treeOperationLabel,
 } from './broker';
+
+export {
+  ensureRunFolder,
+  lstatRunFile,
+  readRunJson,
+  removeRunFile,
+} from './run-files';

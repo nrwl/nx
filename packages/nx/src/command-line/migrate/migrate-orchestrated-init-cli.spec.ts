@@ -10,6 +10,7 @@ const mockActiveRunToReplace = vi.fn();
 // migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
 // intercept; replace the module in the require channel instead.
 import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+import { readRunJson } from './run/run-files';
 import { runDir } from './run/run-state';
 import { latestRound } from './run/state-machine';
 mockCjsModule(import.meta.url, './run', {
@@ -21,6 +22,7 @@ mockCjsModule(import.meta.url, './run', {
   holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
   activeRunToReplace: (...args: unknown[]) => mockActiveRunToReplace(...args),
   latestRound,
+  readRunJson,
   runDir,
 });
 const mockRunMasterSession = vi.fn();

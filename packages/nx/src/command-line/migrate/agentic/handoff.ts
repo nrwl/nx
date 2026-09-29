@@ -1,8 +1,17 @@
 import { createHash } from 'crypto';
-import { lstatSync, mkdirSync, rmSync } from 'fs';
+import {
+  closeSync,
+  constants as fsConstants,
+  fstatSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  rmSync,
+  type BigIntStats,
+} from 'fs';
 import { join } from 'path';
 import { rsort } from 'semver';
-import { readInspectedFile, runSubdirState } from '../run/run-files';
 import { normalizeVersion } from '../version-utils';
 import {
   HANDOFFS_DIR_NAME,
@@ -139,6 +148,62 @@ export type HandoffReadResult =
   | { ok: false; reason: HandoffReadFailureReason; detail?: string };
 
 /**
+ * `lstat`, not `stat`: a symlink in the handoffs dir's place would send every
+ * handoff read and removal wherever it points.
+ */
+export function handoffsDirState(
+  handoffsDir: string
+): 'directory' | 'missing' | 'other' {
+  try {
+    return lstatSync(handoffsDir).isDirectory() ? 'directory' : 'other';
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return 'missing';
+    throw err;
+  }
+}
+
+/**
+ * Thrown by {@link readInspectedFile} when the opened descriptor is not the
+ * file the caller's lstat described: a symlink followed on Windows, or an
+ * atomic replacement between the lstat and the open.
+ */
+export class FileReplacedDuringReadError extends Error {}
+
+/**
+ * Reads the file `stat` describes, refusing a symlink swapped in after the
+ * caller's lstat: O_NOFOLLOW fails the open with ELOOP, and O_NONBLOCK keeps a
+ * planted FIFO from blocking it. Windows has neither flag, so there the inode
+ * comparison is what catches a followed symlink. It does not guard against an
+ * unlink and recreate reusing the inode number. Read errors propagate: a file
+ * the agent cannot read must not pass.
+ */
+export function readInspectedFile(
+  filePath: string,
+  stat: BigIntStats,
+  replacedMessage: string
+): string {
+  const fd = openSync(
+    filePath,
+    fsConstants.O_RDONLY |
+      (fsConstants.O_NOFOLLOW ?? 0) |
+      (fsConstants.O_NONBLOCK ?? 0)
+  );
+  try {
+    const fdStat = fstatSync(fd, { bigint: true });
+    if (
+      !fdStat.isFile() ||
+      fdStat.dev !== stat.dev ||
+      fdStat.ino !== stat.ino
+    ) {
+      throw new FileReplacedDuringReadError(replacedMessage);
+    }
+    return readFileSync(fd, 'utf-8');
+  } finally {
+    closeSync(fd);
+  }
+}
+
+/**
  * Splits "not written yet" from "written but garbage" so callers can surface a
  * malformed handoff instead of collapsing it into the generic
  * ambiguous-outcome prompt.
@@ -149,7 +214,7 @@ export function readHandoffWithReason(
 ): HandoffReadResult {
   let raw: string;
   try {
-    switch (runSubdirState(handoffsDir)) {
+    switch (handoffsDirState(handoffsDir)) {
       case 'missing':
         return { ok: false, reason: 'missing' };
       case 'other':

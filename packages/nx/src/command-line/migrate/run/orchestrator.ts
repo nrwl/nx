@@ -37,8 +37,10 @@ import {
 } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import {
+  handoffsDirState,
   runStepHandoffPath,
   readHandoffWithReason,
+  readInspectedFile,
   type HandoffReadFailureReason,
   type HandoffReadResult,
 } from '../agentic/handoff';
@@ -95,10 +97,8 @@ import {
 import {
   ensureRunFolder,
   lstatRunFile,
-  readInspectedFile,
   readRunJson,
   removeRunFile,
-  runSubdirState,
   writeRunFile,
 } from './run-files';
 import {
@@ -2642,7 +2642,7 @@ function emitAwaitPrompt(
   // Recreated if the agent removed it, so the handed-over path always has its
   // parent (an agent that has to `mkdir -p` pays a permission prompt).
   const handoffsDir = runHandoffsDir(dir);
-  const handoffsDirIs = runSubdirState(handoffsDir);
+  const handoffsDirIs = handoffsDirState(handoffsDir);
   if (handoffsDirIs === 'missing') {
     ensureRunFolder(dir, handoffsDir);
   }

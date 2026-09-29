@@ -1,12 +1,10 @@
 import { execFileSync } from 'child_process';
 import {
   existsSync,
-  lstatSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
-  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -14,15 +12,12 @@ import {
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
-  FileReplacedDuringReadError,
   listRunFolder,
   lockRunFile,
   lstatRunFile,
-  readInspectedFile,
   readRunFile,
   removeRunFile,
   runFileExists,
-  runSubdirState,
   writeRunFile,
 } from './run-files';
 
@@ -40,37 +35,6 @@ describe('run-files', () => {
 
   afterEach(() => {
     rmSync(join(runDir, '..'), { recursive: true, force: true });
-  });
-
-  describe('runSubdirState', () => {
-    it.each([
-      ['a real directory', () => mkdirSync(join(runDir, 'sub')), 'directory'],
-      [
-        'a symlink to a directory',
-        () => symlinkSync(outside, join(runDir, 'sub')),
-        'other',
-      ],
-      ['a file', () => writeFileSync(join(runDir, 'sub'), ''), 'other'],
-      ['nothing', () => {}, 'missing'],
-    ])('reports %s', (_, plant, expected) => {
-      plant();
-      expect(runSubdirState(join(runDir, 'sub'))).toBe(expected);
-    });
-  });
-
-  describe('readInspectedFile', () => {
-    it('reports a replacement when the inode changed after the caller lstatted it', () => {
-      const path = join(runDir, 'state.json');
-      writeFileSync(path, 'first');
-      const stat = lstatSync(path, { bigint: true });
-      const replacement = join(runDir, 'replacement.json');
-      writeFileSync(replacement, 'second');
-      renameSync(replacement, path); // same name, new inode
-
-      expect(() => readInspectedFile(path, stat, 'replaced')).toThrow(
-        FileReplacedDuringReadError
-      );
-    });
   });
 
   describe('readRunFile', () => {

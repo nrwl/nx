@@ -1,7 +1,9 @@
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -10,10 +12,13 @@ import { createHash } from 'crypto';
 import { tmpdir } from 'os';
 import { basename, join } from 'path';
 import {
+  FileReplacedDuringReadError,
   initRunDir,
+  handoffsDirState,
   mkdirSafely,
   readHandoff,
   readHandoffWithReason,
+  readInspectedFile,
   runStepHandoffPath,
   stepHandoffPath,
   stepPromptsDir,
@@ -451,6 +456,34 @@ describe('handoff', () => {
     });
   });
 
+  describe('handoffsDirState', () => {
+    it('reports a real directory', () => {
+      const handoffs = join(workspace, HANDOFFS_DIR_NAME);
+      mkdirSync(handoffs);
+      expect(handoffsDirState(handoffs)).toBe('directory');
+    });
+
+    it('reports a symlink to a directory as other', () => {
+      const outside = join(workspace, 'elsewhere');
+      mkdirSync(outside);
+      const handoffs = join(workspace, HANDOFFS_DIR_NAME);
+      symlinkSync(outside, handoffs);
+      expect(handoffsDirState(handoffs)).toBe('other');
+    });
+
+    it('reports a file in its place as other', () => {
+      const handoffs = join(workspace, HANDOFFS_DIR_NAME);
+      writeFileSync(handoffs, '');
+      expect(handoffsDirState(handoffs)).toBe('other');
+    });
+
+    it('reports a dir that does not exist yet as missing', () => {
+      expect(handoffsDirState(join(workspace, HANDOFFS_DIR_NAME))).toBe(
+        'missing'
+      );
+    });
+  });
+
   describe('waitForValidHandoff', () => {
     it('keeps polling past invalid contents and resolves once the file becomes a valid handoff', async () => {
       const file = join(workspace, 'h.json');
@@ -486,6 +519,21 @@ describe('handoff', () => {
           signal: ac.signal,
         })
       ).rejects.toThrow('already-cancelled');
+    });
+  });
+
+  describe('readInspectedFile', () => {
+    it('reports a replacement when the inode changed after the caller lstatted it', () => {
+      const path = join(workspace, 'state.json');
+      writeFileSync(path, 'first');
+      const stat = lstatSync(path, { bigint: true });
+      const replacement = join(workspace, 'replacement.json');
+      writeFileSync(replacement, 'second');
+      renameSync(replacement, path); // same name, new inode
+
+      expect(() => readInspectedFile(path, stat, 'replaced')).toThrow(
+        FileReplacedDuringReadError
+      );
     });
   });
 });

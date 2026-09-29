@@ -4,18 +4,14 @@
 // every folder between the run folder and its target to be a real directory,
 // and refuses a symlink or FIFO at the target. Not covered: the run folder
 // itself and its ancestors, and an entry swapped between a check and the
-// operation. agentic/handoff.ts's readHandoffWithReason, shared with the
-// per-step flow, is the one reader built directly on the primitives below.
+// operation. The primitives come from agentic/handoff.ts, whose
+// readHandoffWithReason, shared with the per-step flow, is the one reader built
+// directly on them.
 
 import {
-  closeSync,
-  constants as fsConstants,
-  fstatSync,
   lstatSync,
   mkdirSync,
-  openSync,
   readdirSync,
-  readFileSync,
   rmSync,
   writeFileSync,
   type BigIntStats,
@@ -23,20 +19,12 @@ import {
 import { basename, dirname, isAbsolute, join, relative, sep } from 'path';
 import { FileLock } from '../../../native';
 import { parseJson } from '../../../utils/json';
+import {
+  FileReplacedDuringReadError,
+  handoffsDirState,
+  readInspectedFile,
+} from '../agentic/handoff';
 import { publishFileAtomically } from './atomic-write';
-
-/**
- * `lstat`, not `stat`: a symlink in a directory's place would send every read
- * and removal wherever it points.
- */
-export function runSubdirState(dir: string): 'directory' | 'missing' | 'other' {
-  try {
-    return lstatSync(dir).isDirectory() ? 'directory' : 'other';
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return 'missing';
-    throw err;
-  }
-}
 
 /** Thrown when a folder on the way to a run file is not a real directory. */
 export class NotADirectoryError extends Error {
@@ -70,7 +58,7 @@ function walkRunFolders(
   let dir = runDir;
   for (const segment of segments) {
     dir = join(dir, segment);
-    const state = runSubdirState(dir);
+    const state = handoffsDirState(dir);
     switch (state) {
       case 'directory':
         break;
@@ -96,47 +84,6 @@ function checkFoldersTo(runDir: string, dir: string, create: boolean): boolean {
 /** Creates `dir` and the folders above it inside the run, if missing. */
 export function ensureRunFolder(runDir: string, dir: string): void {
   checkFoldersTo(runDir, dir, true);
-}
-
-/**
- * Thrown by {@link readInspectedFile} when the opened descriptor is not the
- * file the caller's lstat described: a symlink followed on Windows, or an
- * atomic replacement between the lstat and the open.
- */
-export class FileReplacedDuringReadError extends Error {}
-
-/**
- * Reads the file `stat` describes, refusing a symlink swapped in after the
- * caller's lstat: O_NOFOLLOW fails the open with ELOOP, and O_NONBLOCK keeps a
- * planted FIFO from blocking it. Windows has neither flag, so there the inode
- * comparison is what catches a followed symlink. It does not guard against an
- * unlink and recreate reusing the inode number. Read errors propagate: a file
- * the agent cannot read must not pass.
- */
-export function readInspectedFile(
-  filePath: string,
-  stat: BigIntStats,
-  replacedMessage: string
-): string {
-  const fd = openSync(
-    filePath,
-    fsConstants.O_RDONLY |
-      (fsConstants.O_NOFOLLOW ?? 0) |
-      (fsConstants.O_NONBLOCK ?? 0)
-  );
-  try {
-    const fdStat = fstatSync(fd, { bigint: true });
-    if (
-      !fdStat.isFile() ||
-      fdStat.dev !== stat.dev ||
-      fdStat.ino !== stat.ino
-    ) {
-      throw new FileReplacedDuringReadError(replacedMessage);
-    }
-    return readFileSync(fd, 'utf-8');
-  } finally {
-    closeSync(fd);
-  }
 }
 
 const ATOMIC_READ_ATTEMPTS = 5;
