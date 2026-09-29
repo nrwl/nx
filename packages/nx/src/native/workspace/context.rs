@@ -1627,8 +1627,8 @@ impl WorkspaceContext {
         self.files.holds(paths)
     }
 
-    /// Remembers each task's outputs as they are on disk now, so
-    /// `outputs_unchanged` can tell whether they still are.
+    /// Remembers each task's outputs, as given or else as they are on disk
+    /// now, so `outputs_unchanged` can tell whether they still are.
     #[napi]
     pub fn record_outputs(&self, entries: Vec<TaskOutputs>) {
         self.outputs
