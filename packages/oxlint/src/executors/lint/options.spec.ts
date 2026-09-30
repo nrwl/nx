@@ -76,6 +76,12 @@ describe('resolveLintOptions', () => {
     });
   });
 
+  it("should let a format in args override the schema's default format", () => {
+    expect(
+      resolveLintOptions({ format: 'default', args: ['--format=json'] })
+    ).toMatchObject({ format: 'json' });
+  });
+
   it('should reject formats it cannot render', () => {
     expect(() => resolveLintOptions({ args: ['--format=sarif'] })).toThrow(
       /Unsupported Oxlint output format "sarif"/

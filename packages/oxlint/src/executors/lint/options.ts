@@ -31,7 +31,6 @@ export function resolveLintOptions(
     lintFilePatterns: _patterns,
     // Carried for the batch's nested exclusions, not an Oxlint flag.
     nestedProjectRoots: _nestedRoots,
-    format,
     args,
     __unparsed__: unparsed = [],
     // Nx keeps its own --verbose in the options it hands an executor.
@@ -83,10 +82,6 @@ export function resolveLintOptions(
     } else {
       resolved.flags.push(flag);
     }
-  }
-
-  if (format) {
-    resolved.format = assertSupportedFormat(format);
   }
   return resolved;
 }
