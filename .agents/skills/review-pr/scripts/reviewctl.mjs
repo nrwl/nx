@@ -1237,8 +1237,10 @@ function validateReviewPath(
     fail('the closeability-only path requires superseded or unnecessary');
   if (result.critical !== 0 || result.important !== 0)
     fail('the closeability-only path cannot contain findings');
-  if (!/^### Close without merge\s*$/m.test(result.draft))
-    fail('the closeability-only draft requires a Close without merge section');
+  if (!/^### Close-without-merge check\s*$/m.test(result.draft))
+    fail(
+      'the closeability-only draft requires a Close-without-merge check section'
+    );
   return 'closeability';
 }
 
@@ -1441,8 +1443,13 @@ function priorReviewsSection(previous, previousMeta) {
     const attempt = Number(previousMeta.attempt) || 0;
     const head = previousMeta.head_sha || 'unknown';
     const date = previousMeta.last_reviewed_at || 'unknown';
+    // The grill belongs to the draft it evaluated, so it is demoted with it. A
+    // top-level `## Grill` would tell the outbox a human had already evaluated
+    // the new draft, and `post all` would publish fresh findings ungrilled.
+    const grill = extractSection(previous, 'Grill');
     entries.push(
-      `### attempt ${attempt} - head_sha=${head} - ${date}\n\n${draft}`
+      `### attempt ${attempt} - head_sha=${head} - ${date}\n\n${draft}` +
+        (grill ? `\n\n**Grill (attempt ${attempt}):**\n\n${grill}` : '')
     );
   }
   const earlier = extractSection(previous, 'Prior reviews');
@@ -1546,6 +1553,7 @@ merge_base: ${state.pr.mergeBase}
 last_reviewed_at: ${now}
 verdict: ${result.verdict}
 attempt: ${attempt}
+reviewer: codex
 pipeline_version: ${state.pipeline}
 review_path: ${result.reviewPath}
 run_id: ${state.runId}
@@ -1592,7 +1600,7 @@ ${publicGrounding.trim()}
 ## Private context
 
 ${privateContext.trim()}
-${carriedSection(previous, 'Grill')}
+
 ## Posted
 
 ${postedSection(previous, previousMeta)}

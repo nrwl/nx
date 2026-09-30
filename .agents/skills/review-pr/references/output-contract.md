@@ -35,15 +35,17 @@ or another material constraint. Use `none` when no limitation is known. The help
 outer envelope and mechanical publication rules. It does not decide findings.
 
 When current public evidence establishes `superseded` or `unnecessary` before reviewer dispatch, use
-zero findings and a concise `### Close without merge` section naming the decisive evidence. The
+zero findings and a concise `### Close-without-merge check` section naming the decisive evidence. The
 helper derives this path from the absence of reviewer attempts; the envelope cannot select it. A
 forced review always requires the full reviewer wave.
 
 ## Private record
 
 The record opens with frontmatter carrying PR identity, frozen HEAD, base branch, exact merge base,
-verdict, attempt, `posted_at`, and `posted_url`. Then come `## Review draft` and `## Prior reviews`.
-Below those it keeps:
+verdict, attempt, `reviewer`, `pipeline_version`, `posted_at`, and `posted_url`. `reviewer: codex`
+names this skill as the writer. Claude's `review-pr` writes the same record and keeps its own
+`pipeline_version` counter, so the outbox compares each draft against the constant for its writer.
+Then come `## Review draft` and `## Prior reviews`. Below those it keeps:
 
 - the adjudicated private review, with a compact disposition for every lane item, including dropped,
   merged, resolved, and unavailable items;
@@ -56,11 +58,13 @@ The private review records whether optional Polygraph context was not needed, un
 or read, plus any disposition effect. This status never appears in the draft.
 
 On a re-review the helper moves the previous draft to the top of `## Prior reviews` under
-`### attempt <N-1> - head_sha=<SHA> - <DATE>`, preserves `## Author follow-ups (not for the PR)`,
-`## Grill`, and `## Posted` verbatim, and copies the complete previous record to
+`### attempt <N-1> - head_sha=<SHA> - <DATE>`, preserves `## Author follow-ups (not for the PR)`
+and `## Posted` verbatim, and copies the complete previous record to
 `.history/<NUMBER>/attempt-<N-1>-<SHA>.md`. The inline entry is what the next review reads; the copy
-keeps the evidence the new record replaces. `posted_at` and `posted_url` reset because the new draft
-has not been posted, and the earlier posting stays recorded under `## Posted`.
+keeps the evidence the new record replaces. Any `## Grill` moves into that demoted entry rather than
+staying at top level: the outbox reads a top-level `## Grill` as a human having already evaluated the
+current draft, and would publish new findings ungrilled. `posted_at` and `posted_url` reset because
+the new draft has not been posted, and the earlier posting stays recorded under `## Posted`.
 
 When persistence succeeds, an explicit abort writes a separate failure record under
 `.failures/<NUMBER>/`, including lane verification inputs not already preserved as verified reports,
@@ -76,7 +80,7 @@ them in the draft.
 Start with a `### ` heading and use no heading above level 3 anywhere in the draft: a `##` line ends
 the section the outbox extracts. Emit only the sections that apply, in this order:
 
-1. `### Close without merge`
+1. `### Close-without-merge check`
 2. `### Since previous review` (re-review only)
 3. `### Critical`
 4. `### Important`

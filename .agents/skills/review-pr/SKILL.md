@@ -160,7 +160,7 @@ Reuse the acquired metadata and public grounding:
   changed lines or a changed public export surface is advisory speculative scope, never an early exit.
 
 Without `--force`, a strong result skips the charter, reviewers, runtime checks, and adjudication.
-Draft the normal final envelope with zero findings and a concise `### Close without merge` section
+Draft the normal final envelope with zero findings and a concise `### Close-without-merge check` section
 that links the decisive public evidence, then finalize. The helper derives the closeability path from
 the absence of reviewer attempts; the model cannot select it. A closeability-only artifact never
 suppresses a later full review at the same head. If no strong signal fires, emit no section and
