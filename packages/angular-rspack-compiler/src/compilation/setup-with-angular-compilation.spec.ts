@@ -358,34 +358,50 @@ describe('setupCompilationWithAngularCompilation', () => {
       isAngularBuildVersionAtLeastMock.mockReturnValue(false);
     });
 
-    it('should replace the compiler options and pass the source file cache', async () => {
-      const compilerOptions: Record<string, unknown> = {
-        isolatedModules: true,
-        inlineSourceMap: true,
-      };
-      vi.mocked(setupCompilation).mockResolvedValueOnce({
-        rootNames: ['/root/src/main.ts'],
-        compilerOptions,
-        componentStylesheetBundler: {},
-      } as unknown as Awaited<ReturnType<typeof setupCompilation>>);
-      const initialize = vi.fn().mockResolvedValue({ referencedFiles: [] });
-      const sourceFileCache = {} as SourceFileCache;
+    it.each([
+      // Earlier versions ignore the flag and compute the gate themselves.
+      { version: '22.0', is221: false, flag: {} },
+      // Sourcemaps don't force TypeScript transpilation from 22.1.
+      {
+        version: '22.1',
+        is221: true,
+        flag: { _useTypeScriptTranspilation: false },
+      },
+    ])(
+      'should replace the compiler options and pass the source file cache ($version)',
+      async ({ is221, flag }) => {
+        isAngularBuildVersionAtLeastMock.mockImplementation(
+          (version) => is221 && version === '22.1.0'
+        );
+        const compilerOptions: Record<string, unknown> = {
+          isolatedModules: true,
+          inlineSourceMap: true,
+        };
+        vi.mocked(setupCompilation).mockResolvedValueOnce({
+          rootNames: ['/root/src/main.ts'],
+          compilerOptions,
+          componentStylesheetBundler: {},
+        } as unknown as Awaited<ReturnType<typeof setupCompilation>>);
+        const initialize = vi.fn().mockResolvedValue({ referencedFiles: [] });
+        const sourceFileCache = {} as SourceFileCache;
 
-      await setupCompilationWithAngularCompilation(
-        { source: { tsconfigPath: '/root/tsconfig.json' } },
-        options,
-        sourceFileCache,
-        { initialize } as unknown as AngularCompilation
-      );
+        await setupCompilationWithAngularCompilation(
+          { source: { tsconfigPath: '/root/tsconfig.json' } },
+          options,
+          sourceFileCache,
+          { initialize } as unknown as AngularCompilation
+        );
 
-      const [, hostOptions, transformer] = initialize.mock.calls[0];
-      expect(hostOptions.sourceFileCache).toBe(sourceFileCache);
-      expect(transformer({})).toEqual({
-        isolatedModules: true,
-        inlineSourceMap: true,
-        incremental: false,
-      });
-    });
+        const [, hostOptions, transformer] = initialize.mock.calls[0];
+        expect(hostOptions.sourceFileCache).toBe(sourceFileCache);
+        expect(transformer({})).toEqual({
+          isolatedModules: true,
+          inlineSourceMap: true,
+          incremental: false,
+          ...flag,
+        });
+      }
+    );
 
     it('should persist the TS incremental state when a persistent cache path is available', async () => {
       const compilerOptions: Record<string, unknown> = {};

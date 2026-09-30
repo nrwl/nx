@@ -91,9 +91,9 @@ export async function setupCompilation(
     config.source?.tsconfigPath ?? options.tsConfig,
     {
       ...DEFAULT_NG_COMPILER_OPTIONS,
-      // Sourcemaps must be inline to survive the loader chain, and emitting
-      // them forgoes Angular's fast raw-TS emit path, so only emit them when
-      // script sourcemaps are requested.
+      // Sourcemaps must be inline to survive the loader chain. Before
+      // @angular/build 22.1, emitting them forgoes the raw-TS emit path, so
+      // only emit them when script sourcemaps are requested.
       inlineSources: !!options.sourceMap,
       inlineSourceMap: !!options.sourceMap,
       sourceMap: undefined,
