@@ -1,5 +1,6 @@
 import { JavaScriptTransformer } from '@angular/build/private';
 import { AngularCompilation } from '../models';
+import type { JavaScriptTransformerAdapter } from '../utils/javascript-transformer';
 import { assertSupportedAngularRspackCompilerVersions } from '../utils/assert-supported-versions';
 import {
   toTypeScriptFileCacheKey,
@@ -20,7 +21,7 @@ import {
 export async function buildAndAnalyze(
   angularCompilation: AngularCompilation,
   typescriptFileCache: Map<string, string | TransformedSource>,
-  javascriptTransformer: JavaScriptTransformer
+  javascriptTransformer: JavaScriptTransformer | JavaScriptTransformerAdapter
 ) {
   assertSupportedAngularRspackCompilerVersions();
 
