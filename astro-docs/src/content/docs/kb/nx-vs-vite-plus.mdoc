@@ -52,7 +52,7 @@ Choosing Nx doesn't mean giving that toolchain up. Nx plugins read your existing
 
 Both tools run your `package.json` scripts with `dependsOn` ordering across the workspace. Vite+ derives cache inputs automatically by recording file reads and writes during execution, a good default that avoids manual configuration. Its cache is content-based, stored in `node_modules/.vite/task-cache`, and replays terminal output on a hit.
 
-Nx takes a declare-and-verify approach. Caching is [opt-in per task](/docs/concepts/how-caching-works), plugins set inputs and outputs from your tool configuration, and reusable [`namedInputs`](/docs/reference/inputs) patterns compose across targets, so a spec file change doesn't invalidate your build cache. [Task sandboxing](/docs/features/ci-features/sandboxing) runs each task in a sandbox that surfaces undeclared reads or writes, with an opt-in strict mode that fails the task, protecting cache integrity.
+Nx takes a declare-and-verify approach. Caching is [opt-in per task](/docs/concepts/how-caching-works), plugins set inputs and outputs from your tool configuration, and reusable [`namedInputs`](/docs/reference/inputs) patterns compose across targets, so a spec file change doesn't invalidate your build cache. [Task sandboxing](/docs/kb/sandboxing) runs each task in a sandbox that surfaces undeclared reads or writes, with an opt-in strict mode that fails the task, protecting cache integrity.
 
 ## Sharing the cache
 
@@ -72,7 +72,7 @@ Vite+ has no affected command. Its `--filter` flag selects packages by name, glo
 
 The Vite+ CI story is that CI runs the same commands developers run locally, with the `setup-vp` action installing the toolchain. There is no task distribution, test splitting, or flaky test handling.
 
-Nx works the same way on any CI provider, and [Nx Cloud](/docs/features/ci-features) layers on what single-machine execution can't provide: [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute tasks across machines based on historical timings, [Atomizer](/docs/features/ci-features/split-e2e-tasks) splits slow e2e suites into per-file tasks, [flaky task detection](/docs/features/ci-features/flaky-tasks) retries flaky tests in isolation, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes verified fixes for failures.
+Nx works the same way on any CI provider, and [Nx Cloud](/docs/features/ci-features) layers on what single-machine execution can't provide: [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute tasks across machines based on historical timings, [Atomizer](/docs/kb/split-e2e-tasks) splits slow e2e suites into per-file tasks, [flaky task detection](/docs/kb/flaky-tasks) retries flaky tests in isolation, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes verified fixes for failures.
 
 ## Polyglot support
 

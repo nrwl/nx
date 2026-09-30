@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -11,14 +12,15 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import { componentConfigurationGenerator } from './component-configuration';
 import { cypressInitGenerator } from '../init/init';
 
-jest.mock('../../utils/versions', () => ({
-  ...jest.requireActual('../../utils/versions'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('../../utils/versions', async () => ({
+  ...(await vi.importActual<any>('../../utils/versions')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 let projectConfig: ProjectConfiguration = {
@@ -42,7 +44,7 @@ let projectConfig: ProjectConfiguration = {
 };
 describe('Cypress Component Configuration', () => {
   let tree: Tree;
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 
@@ -101,7 +103,101 @@ describe('Cypress Component Configuration', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
+    mockedInstalledCypressVersion.mockReset();
+  });
+
+  it('should install the cypress 15 set for the vite bundler on a fresh workspace with a vite below 8', async () => {
+    mockedInstalledCypressVersion.mockImplementation(
+      (
+        await vi.importActual<typeof import('../../utils/versions')>(
+          '../../utils/versions'
+        )
+      ).getInstalledCypressMajorVersion
+    );
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, vite: '^7.0.0' };
+      return json;
+    });
+
+    await withPnpm(tree, '11.2.2', () =>
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        bundler: 'vite',
+        skipFormat: true,
+        addPlugin: true,
+      })
+    );
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies.cypress).toBe('^15.20.1');
+    expect(devDependencies['@cypress/vite-dev-server']).toBe('^7.3.1');
+    expect(devDependencies['@nx/cypress']).toBeDefined();
+    expect(readNxJson(tree).plugins).toContainEqual(
+      expect.objectContaining({ plugin: '@nx/cypress/plugin' })
+    );
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?cypress['"]?: true/
+    );
+  });
+
+  it('should reject the vite bundler on cypress 16 with a vite below 8', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        cypress: '^16.0.0',
+        vite: '^7.0.0',
+      };
+      return json;
+    });
+    tree.write(
+      'node_modules/cypress/package.json',
+      JSON.stringify({ name: 'cypress', version: '16.0.0' })
+    );
+
+    await expect(
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        bundler: 'vite',
+        skipFormat: true,
+      })
+    ).rejects.toThrow(
+      'Cypress 16 component testing requires Vite 8. Found Vite 7.0.0. Update Vite to 8 or use Cypress 15.'
+    );
+  });
+
+  it('should deny the esbuild build script pulled in by the webpack dev server', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+
+    await withPnpm(tree, '11.2.2', () =>
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        skipFormat: true,
+        bundler: 'webpack',
+        addPlugin: true,
+      })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?esbuild['"]?: false/
+    );
+  });
+
+  it('should not record an esbuild decision for the vite dev server', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+
+    await withPnpm(tree, '11.2.2', () =>
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        skipFormat: true,
+        bundler: 'vite',
+        addPlugin: true,
+      })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+      'esbuild'
+    );
   });
 
   it('should not add the target when @nx/cypress/plugin is registered', async () => {

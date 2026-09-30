@@ -18,10 +18,18 @@ import {
   isTerminalRun,
   parseExports,
 } from './runtime-lint-utils';
-import { vol } from 'memfs';
+import { createRequire } from 'node:module';
+import { fs as memfs, vol } from 'memfs';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+// Import resolution loads typescript with `require`, which reads through the
+// CJS `fs`; the import graph has loaded it already, so evict it onto memfs.
+mockCjsModule(import.meta.url, 'fs', memfs);
+const cjsRequire = createRequire(import.meta.url);
+delete cjsRequire.cache[cjsRequire.resolve('typescript')];
+
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
@@ -348,9 +356,8 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
 describe('is terminal run', () => {
   const originalArgv = process.argv;
 
-  // Set only process.argv rather than reassigning the whole `process` object.
-  // Under Node >= 26 the jest sandbox global is a Proxy and reassigning the
-  // global `process` binding throws ReferenceError; mutating the property works.
+  // Mutate process.argv: reassigning the global `process` binding throws in
+  // sandboxed test globals (Node >= 26).
   const mockProcessArgv = (argv: string[]) => {
     process.argv = argv;
   };
@@ -395,6 +402,26 @@ describe('is terminal run', () => {
       'C:\\Program Files\\nodejs\\node.exe',
       'C:\\dev\\my-repo\\node_modules\\nx\\bin\\eslint',
       'my-file.ts',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run inside an ESLint concurrency worker on Mac', () => {
+    // ESLint's `--concurrency` lints in worker threads. Node sets a worker's
+    // argv[1] to the worker script, so the eslint binary is not what is seen
+    // here. Workers are started per `lintFiles()` call and end with it, so the
+    // project graph memo cannot outlive a single lint run.
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/eslint/lib/eslint/worker.js',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run inside an ESLint concurrency worker on Windows', () => {
+    mockProcessArgv([
+      'C:\\Program Files\\nodejs\\node.exe',
+      'C:\\dev\\my-repo\\node_modules\\eslint\\lib\\eslint\\worker.js',
     ]);
     expect(isTerminalRun()).toBe(true);
   });

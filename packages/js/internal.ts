@@ -85,6 +85,7 @@ export {
 // SWC helpers
 export { addSwcConfig, addSwcTestConfig } from './src/utils/swc/add-swc-config';
 export {
+  acknowledgeSwcBuildScripts,
   addSwcDependencies,
   addSwcRegisterDependencies,
 } from './src/utils/swc/add-swc-dependencies';

@@ -1,4 +1,12 @@
-import { writeJson, readJson, Tree, updateJson, readNxJson } from '@nx/devkit';
+import type { Mock } from 'vitest';
+import {
+  ensurePackage,
+  writeJson,
+  readJson,
+  Tree,
+  updateJson,
+  readNxJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import init from './init';
 import {
@@ -9,11 +17,10 @@ import {
 
 // `ensurePackage` performs a real out-of-band install, so the only way to
 // assert *whether* it runs is to intercept it.
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  ensurePackage: jest.fn(),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  ensurePackage: vi.fn(),
 }));
-const { ensurePackage } = jest.requireMock('@nx/devkit');
 
 describe('js init generator', () => {
   let tree: Tree;
@@ -24,7 +31,7 @@ describe('js init generator', () => {
     tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     // Remove files that should be part of the init generator
     tree.delete('tsconfig.base.json');
-    (ensurePackage as jest.Mock).mockClear();
+    (ensurePackage as Mock).mockClear();
   });
 
   describe('making the formatter resolvable before it formats', () => {

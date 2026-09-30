@@ -68,3 +68,7 @@ export function trimDaemonLog(contents: string, tailLines = 30): string {
   }
   return out.join('\n');
 }
+
+export function secondsSince(startTime: number): string {
+  return ((performance.now() - startTime) / 1000).toFixed(1);
+}

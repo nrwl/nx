@@ -29,7 +29,7 @@ impl NxCondvar {
     where
         F: Fn(&MutexGuard<'a, T>) -> bool,
     {
-        if condition(&guard) {
+        while condition(&guard) {
             self.0.wait(&mut guard);
         }
         Ok(guard)

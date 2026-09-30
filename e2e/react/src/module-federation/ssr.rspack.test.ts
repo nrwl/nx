@@ -6,9 +6,9 @@ import {
   newProject,
   runCLIAsync,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
@@ -99,7 +99,7 @@ describe('React Rspack SSR Module Federation', () => {
         `;
       });
 
-      if (await runE2ETests()) {
+      if (await shouldRunCypressTests()) {
         const hostE2eResults = await runCommandUntil(
           `e2e ${shell}-e2e --verbose`,
           (output) => output.includes('All specs passed!')

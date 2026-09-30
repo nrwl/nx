@@ -29,7 +29,10 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import {
+  addSwcRegisterDependencies,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import {
   expressVersion,
   httpProxyMiddlewareVersion,
@@ -199,6 +202,12 @@ export async function hostGenerator(
     true
   );
   tasks.push(installTask);
+
+  // The TS config templates use extensionless relative imports and
+  // `__dirname`, which Node's native type stripping cannot load.
+  if (options.typescriptConfiguration) {
+    tasks.push(addSwcRegisterDependencies(host));
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

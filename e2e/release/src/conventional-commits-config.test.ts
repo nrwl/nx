@@ -51,6 +51,7 @@ describe('nx release conventional commits config', () => {
 
   beforeEach(async () => {
     newProject({
+      keepBackup: true,
       packages: ['@nx/js'],
     });
 

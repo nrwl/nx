@@ -19,7 +19,6 @@ import {
   getSkippedNxCloudInfo,
   openCloudSetupUrl,
   readNxCloudToken,
-  setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
@@ -164,11 +163,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
 
     // Connect to Nx Cloud for template flow
-    if (
-      nxCloud !== 'skip' &&
-      nxCloud !== 'never' &&
-      !options.skipCloudConnect
-    ) {
+    if (nxCloud !== 'skip' && !options.skipCloudConnect) {
       await connectToNxCloudForTemplate(
         directory,
         'create-nx-workspace',
@@ -232,11 +227,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const isTemplate = !!options.template;
 
-  // Handle "Never" opt-out: set neverConnectToCloud in nx.json
-  if (options.neverConnectToCloud) {
-    setNeverConnectToCloud(directory);
-  }
-
   // For template flow, save analytics preference directly to nx.json.
   // For preset flow, this is handled by the workspace generator via createNxJson.
   if (isTemplate && typeof options.analytics === 'boolean') {
@@ -245,7 +235,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   // Generate CI for preset flow (not template)
   // When nxCloud === 'yes' (from simplified prompt), use GitHub as the CI provider
-  if (nxCloud !== 'skip' && nxCloud !== 'never' && !isTemplate) {
+  if (nxCloud !== 'skip' && !isTemplate) {
     const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
     await setupCI(directory, ciProvider, packageManager);
   }
@@ -352,7 +342,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
 
-  if (nxCloud !== 'skip' && nxCloud !== 'never') {
+  if (nxCloud !== 'skip') {
     // "Yes" or "Maybe later" — generate URL, update README, show banner
     const aiModeForCloud = isAiAgent();
     if (aiModeForCloud) {
@@ -395,7 +385,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     if (!options.skipCloudConnect) {
       await openCloudSetupUrl(connectUrl);
     }
-  } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
+  } else if (isTemplate && nxCloud === 'skip') {
     // Strip marker comments from README
     const readmeUpdated = addConnectUrlToReadme(directory, undefined);
     if (readmeUpdated && !skipGit && commit) {
@@ -403,10 +393,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       await amendOrCommitReadme(directory, alreadyPushed);
     }
 
-    // Only show "nx connect" message for 'skip', not 'never'
-    if (nxCloud === 'skip') {
-      nxCloudInfo = getSkippedNxCloudInfo();
-    }
+    nxCloudInfo = getSkippedNxCloudInfo();
   }
 
   return {

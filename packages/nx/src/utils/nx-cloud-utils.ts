@@ -12,6 +12,13 @@ export function isNxCloudUsed(nxJson: NxJsonConfiguration): boolean {
   return (
     !!process.env.NX_CLOUD_AUTH_TOKEN ||
     !!process.env.NX_CLOUD_ACCESS_TOKEN ||
+    isNxCloudConfigured(nxJson)
+  );
+}
+
+/** Whether nx.json connects the workspace to Nx Cloud, ignoring the env. */
+export function isNxCloudConfigured(nxJson: NxJsonConfiguration): boolean {
+  return (
     !!nxJson.nxCloudAccessToken ||
     !!nxJson.nxCloudId ||
     !!Object.values(nxJson.tasksRunnerOptions ?? {}).find(

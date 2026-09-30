@@ -5,10 +5,10 @@ import {
   reservePorts,
   runCLIAsync,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import {
@@ -83,7 +83,7 @@ describe('React Rspack Module Federation - Basic - Playwright', () => {
       `
     );
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e`,
         (output) => output.includes('Successfully ran target e2e for project'),

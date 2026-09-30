@@ -149,6 +149,19 @@ describe('buildSystemPrompt', () => {
       expect(prompt).toMatch(VALIDATION_MARKER);
       expect(prompt).not.toContain(AUTHOR_MARKER);
     });
+
+    it.each(['author', 'generic-validation'] as const)(
+      'keeps the agent out of the run directory but says nothing about nx.json (%s)',
+      (mode) => {
+        // The commit policy is read once before the per-step runner starts,
+        // so only the orchestrated runbook needs the nx.json rule.
+        const prompt = buildSystemPrompt({ ...ctx, mode });
+        expect(prompt).toContain(
+          'Do not edit anything under `.nx/migrate-runs` except the handoff file you are asked to write.'
+        );
+        expect(prompt).not.toContain('nx.json');
+      }
+    );
   });
 
   describe('formatting the agent’s changes (author mode)', () => {

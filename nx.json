@@ -1,5 +1,10 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -71,6 +76,9 @@
         "transitive": true
       },
       {
+        "dependentTasksOutputFiles": "dist/local-registry/proj-backup/*.tar"
+      },
+      {
         "json": "{workspaceRoot}/tsconfig.json",
         "fields": ["compilerOptions", "extends", "files", "include"]
       }
@@ -140,7 +148,11 @@
       "cache": true
     },
     "test-native": {
-      "inputs": ["native", "{projectRoot}/**/*.snap"],
+      "inputs": [
+        "native",
+        "{projectRoot}/**/*.snap",
+        "{projectRoot}/src/native/**/fixtures/**/*"
+      ],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
@@ -190,17 +202,19 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-ci": {
-      "inputs": ["e2eInputs", "^production"]
+      "inputs": ["...", "e2eInputs", "^production"]
     },
     "e2e-macos-local": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ]
     },
@@ -208,9 +222,10 @@
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--**/**": {
-      "inputs": ["e2eInputs", "^production"],
+      "inputs": ["...", "e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ],
       "options": {
@@ -221,6 +236,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ]
     },
@@ -388,7 +404,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3238,
+  "bust": 3239,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
@@ -488,6 +504,9 @@
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/migration-markdown-assets"
       },
       {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/generator-template-assets"
+      },
+      {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/no-ignored-tracked-files"
       },
       {
@@ -495,6 +514,9 @@
       },
       {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/relative-image-imports"
+      },
+      {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/headings-in-tabs"
       },
       {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/types-versions-exports-sync"
@@ -532,6 +554,7 @@
             "NX_WINDOWS_PTY_SUPPORT",
             "NX_ORIGINAL_FORCE_COLOR",
             "NX_MIGRATE_ORCHESTRATOR",
+            "NX_MIGRATE_BROKER",
             "NX_CSS_MODULE_HASH_FUNCTION",
             "NX_BUILDABLE_LIBRARIES_TASK_GRAPH",
             "NX_BUILD_LIBS_FROM_SOURCE",

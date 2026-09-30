@@ -23,6 +23,7 @@ describe('Nx Affected and Graph Tests', () => {
   beforeAll(
     () =>
       (proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/eslint',
           '@nx/jest',
@@ -564,6 +565,7 @@ describe('show projects --affected', () => {
   beforeAll(
     () =>
       (proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/eslint',
           '@nx/jest',

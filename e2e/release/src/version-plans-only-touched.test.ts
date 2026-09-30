@@ -52,6 +52,7 @@ describe('nx release version plans only touched', () => {
 
   beforeEach(async () => {
     newProject({
+      keepBackup: true,
       packages: ['@nx/js'],
     });
 

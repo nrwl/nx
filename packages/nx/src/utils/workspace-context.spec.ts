@@ -114,7 +114,11 @@ describe('which constructor a process uses', () => {
 
     await globWithWorkspaceContext('/virtual', ['**/*.ts']);
 
-    expect(fromArchive).toHaveBeenCalledWith('/virtual', '/virtual/.nx');
+    expect(fromArchive).toHaveBeenCalledWith(
+      '/virtual',
+      '/virtual/.nx',
+      undefined
+    );
     expect(cjsNative.WorkspaceContext).not.toHaveBeenCalled();
   });
 
@@ -123,7 +127,8 @@ describe('which constructor a process uses', () => {
 
     expect(cjsNative.WorkspaceContext).toHaveBeenCalledWith(
       '/virtual',
-      '/virtual/.nx'
+      '/virtual/.nx',
+      undefined
     );
     expect(fromArchive).not.toHaveBeenCalled();
   });

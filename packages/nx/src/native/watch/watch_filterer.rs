@@ -6,9 +6,7 @@ use std::path::PathBuf;
 use tracing::trace;
 
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
-use crate::native::watch::git_utils::{collect_workspace_ignore_files, get_gitignore_files};
 use crate::native::watch::types::RawWatchEvent;
-use crate::native::watch::utils::get_nx_ignore;
 
 #[derive(Debug)]
 pub struct WatchFilterer {
@@ -33,6 +31,12 @@ pub struct WatchFilterer {
 }
 
 impl WatchFilterer {
+    /// Whether the policy admits `path` (absolute, under the origin) as a file
+    /// or a directory, independent of any event.
+    pub(crate) fn admits(&self, path: &std::path::Path, is_dir: bool) -> bool {
+        self.filter_path(path, is_dir)
+    }
+
     fn filter_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
         let path = dunce::simplified(path);
 
@@ -99,7 +103,7 @@ impl WatchFilterer {
     }
 
     /// Check whether a watch event should be passed through.
-    pub fn check_event(&self, event: &RawWatchEvent) -> bool {
+    pub(super) fn check_event(&self, event: &RawWatchEvent) -> bool {
         trace!(event = ?event.event, "checking if event is valid");
 
         // Check event kind — only allow file-relevant event types.
@@ -149,10 +153,12 @@ impl WatchFilterer {
     }
 }
 
-pub(super) fn create_filter(
+/// `ignore_files` are absolute paths under `origin` plus any parent
+/// `.gitignore`. `None` applies only the hardcoded ignores and `additional_globs`.
+pub(crate) fn create_filter(
     origin: &str,
     additional_globs: &[String],
-    use_ignore: bool,
+    ignore_files: Option<Vec<PathBuf>>,
 ) -> anyhow::Result<WatchFilterer> {
     // `origin` is expected canonical and in dunce form (no Windows `\\?\`
     // verbatim prefix): WatchPipeline::new canonicalizes it with
@@ -161,10 +167,7 @@ pub(super) fn create_filter(
     // paths, so a `\\?\` origin would reject every event. The disallowed_methods
     // clippy lint keeps lib code on dunce, but `lint-native` runs clippy without
     // --all-targets, so cfg(test) is unlinted — tests must hold this by hand.
-    let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
-
     trace!(
-        ?use_ignore,
         ?additional_globs,
         ?ignore_files,
         "Using these ignore files for the watcher"
@@ -172,36 +175,12 @@ pub(super) fn create_filter(
 
     let mut git_ignores: Vec<(PathBuf, u8, Gitignore)> = Vec::new();
 
-    // Build per-directory Gitignore instances from .gitignore files
+    // Per-directory matchers from every .gitignore and .nxignore, the root's
+    // included. create_walker honours a nested `.nxignore`, and a file the
+    // watcher admits but the rescan walk drops is reported deleted.
     if let Some(paths) = ignore_files {
-        for gitignore_path in paths {
-            let (gitignore, err) = Gitignore::new(&gitignore_path);
-            if let Some(err) = err {
-                trace!(
-                    ?err,
-                    ?gitignore_path,
-                    "error parsing gitignore, using partial result"
-                );
-            }
-            let dir = gitignore_path
-                .parent()
-                .unwrap_or(&gitignore_path)
-                .to_path_buf();
-            git_ignores.push((dir, 1, gitignore));
-        }
-    }
-
-    // Nested `.nxignore` — create_walker honours it, so a directory it excludes
-    // must not reach the watcher (it would be inserted into the file map and
-    // then reported deleted on the next rescan, since the rescan walk drops it).
-    // The root `.nxignore` is added below, outside the `use_ignore` gate, so it
-    // is skipped here rather than added twice.
-    if use_ignore {
-        let root_nxignore = PathBuf::from(origin).join(".nxignore");
-        for path in collect_workspace_ignore_files(origin, &[".nxignore"]) {
-            if path == root_nxignore {
-                continue;
-            }
+        for path in paths {
+            let rank = if path.ends_with(".nxignore") { 2 } else { 1 };
             let (gitignore, err) = Gitignore::new(&path);
             if let Some(err) = err {
                 trace!(
@@ -211,7 +190,7 @@ pub(super) fn create_filter(
                 );
             }
             let dir = path.parent().unwrap_or(&path).to_path_buf();
-            git_ignores.push((dir, 2, gitignore));
+            git_ignores.push((dir, rank, gitignore));
         }
 
         // `.git/info/exclude` and the global core.excludesFile: the canonical
@@ -253,22 +232,6 @@ pub(super) fn create_filter(
         Some(builder.build()?)
     };
 
-    // The root `.nxignore` applies whether or not `use_ignore` is set — it is
-    // nx's own opt-out, not a git source. It joins git_ignores at the .nxignore
-    // rank rather than above everything, so a nested .nxignore beats it the way
-    // it does in the walk.
-    if let Some(nxignore_path) = get_nx_ignore(origin) {
-        let (gitignore, err) = Gitignore::new(&nxignore_path);
-        if let Some(err) = err {
-            trace!(
-                ?err,
-                ?nxignore_path,
-                "error parsing nxignore, using partial result"
-            );
-        }
-        git_ignores.push((PathBuf::from(origin), 2, gitignore));
-    }
-
     // Rank before depth, matching how the ignore crate combines classes: it
     // keeps the deepest match per class and then prefers the higher class, so a
     // nested .nxignore beats a .gitignore at ANY depth. Sorting depth first
@@ -279,8 +242,8 @@ pub(super) fn create_filter(
         rb.cmp(ra).then(b_depth.cmp(&a_depth))
     });
 
-    // The hardcoded ignores are enforced unconditionally, independent of
-    // `use_ignore` and of the brought-in files, exactly as `create_walker`
+    // The hardcoded ignores are enforced unconditionally, independent of the
+    // brought-in files, exactly as `create_walker`
     // applies them.
     let mut hardcoded_builder = GitignoreBuilder::new(origin);
     for pattern in HARDCODED_IGNORE_PATTERNS {

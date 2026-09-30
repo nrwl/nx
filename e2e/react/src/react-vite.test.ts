@@ -7,8 +7,8 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   uniq,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Vite', () => {
@@ -82,7 +82,7 @@ describe('Build React applications and libraries with Vite', () => {
     const viteConfig = readFile(`apps/${viteApp}/vite.config.mts`);
     expect(viteConfig).toContain(`port: ${customPort}`);
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e ${viteApp}-e2e`, {
         verbose: true,
       });

@@ -10,6 +10,8 @@ import type {
   MigrateStepOutcome,
   MigrateStepPromptOutcome,
 } from './run-state';
+import { singleLine } from '../text';
+import type { MigrateOrchestratorTallies } from '../migrate-analytics';
 import type { StepAction } from '../step-actions';
 
 export type { StepAction };
@@ -198,8 +200,20 @@ function applyStepAction(
         // exec side effect, or a crash mid-flush), so a reset-backed retry is
         // offered under the same guard as for a death.
         return commit(state, index, cleanRearm(state, step));
+      case 'adopt':
+        return commit(state, index, adopt(step));
       case 'skip':
-        return commit(state, index, { ...step, status: 'skipped' });
+      case 'unresolved':
+        if (commitMayBeInHistory(state, step)) {
+          return {
+            kind: 'error',
+            reason: `Cannot apply action '${action}' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied once the migration is finished.`,
+          };
+        }
+        return commit(state, index, {
+          ...step,
+          status: action === 'skip' ? 'skipped' : 'unresolved',
+        });
     }
   }
   if (step.status === 'died') {
@@ -215,25 +229,58 @@ function applyStepAction(
         }
         return {
           kind: 'error',
-          reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use 'retry-clean', 'adopt' or 'skip' instead.`,
+          reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use ${
+            commitMayBeInHistory(state, step)
+              ? `'retry-clean' where offered, or 'adopt'`
+              : `'retry-clean', 'adopt', 'skip' or 'unresolved'`
+          } instead.`,
         };
       case 'retry-clean':
         return commit(state, index, cleanRearm(state, step));
       case 'adopt':
-        return commit(state, index, {
-          ...step,
-          status: 'succeeded',
-          outcome: { ...step.outcome, summary: adoptedSummary(step) },
-        });
-      case 'skip':
+        return commit(state, index, adopt(step));
+      case 'skip': {
+        if (coveringLandedEntries(state, step.id).length > 0) {
+          return {
+            kind: 'error',
+            reason: `Cannot apply action 'skip' to step '${step.id}': a commit of its changes already landed, so the migration is applied. Use 'adopt' to record that.`,
+          };
+        }
+        if (step.commitStarted === true) {
+          return {
+            kind: 'error',
+            reason: `Cannot apply action 'skip' to step '${step.id}': a commit of its changes was started and never recorded, so it may be in history. Use 'adopt' to record the migration as applied.`,
+          };
+        }
         // Same as skipping a failure: the tree stays as the worker left it.
         return commit(state, index, { ...step, status: 'skipped' });
+      }
+      case 'unresolved':
+        if (commitMayBeInHistory(state, step)) {
+          return {
+            kind: 'error',
+            reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied once the migration is finished.`,
+          };
+        }
+        // A death records no outcome, so the failure given up on is the death
+        // itself.
+        return commit(state, index, {
+          ...step,
+          status: 'unresolved',
+          outcome: { summary: workerDiedSummary(step) },
+        });
     }
   }
   return {
     kind: 'error',
     reason: `Cannot apply action '${action}' to step '${step.id}' in status '${step.status}'.`,
   };
+}
+
+function workerDiedSummary(step: MigrateStep): string {
+  return `the worker process${
+    step.pid === undefined ? '' : ` (pid ${step.pid})`
+  } died before recording an outcome`;
 }
 
 // Re-arms for a retry that resets the tree first. The reset target predates
@@ -244,18 +291,26 @@ function cleanRearm(state: MigrateRunState, step: MigrateStep): MigrateStep {
   return rearm(step, coveringLandedEntries(state, step.id).length > 0);
 }
 
-// An adopted death records how far the worker got, since 'succeeded' alone
-// says the migration was applied and cannot say by what.
+function adopt(step: MigrateStep): MigrateStep {
+  return {
+    ...step,
+    status: 'succeeded',
+    adopted: true,
+    outcome: { ...step.outcome, summary: adoptedSummary(step) },
+  };
+}
+
 function adoptedSummary(step: MigrateStep): string {
+  if (step.status === 'failed') {
+    return "Adopted after the attempt failed: the working tree as it stood was taken as this migration's result.";
+  }
   return step.generatorCompleted === true
     ? "Adopted after the worker died: its generator had run, and the working tree it left was taken as this migration's result."
     : "Adopted after the worker died before recording that its generator had run; the working tree it left was taken as this migration's result.";
 }
 
-// Re-arms a step for a fresh attempt. Drops every field the previous attempt
-// wrote (pid, timestamps, git ref, tree state, outcomes) so a later success
-// can't carry a stale failure outcome; dispenseCount stays cumulative across
-// attempts.
+// Rebuilds the step for a fresh attempt so a stale outcome cannot survive;
+// dispenseCount stays cumulative across attempts.
 // `keepGeneratorCompleted` says whether the generator's changes reach the new
 // attempt. They do when nothing resets the tree, and when the reset target
 // already contains the commit that landed them; re-running the generator there
@@ -282,26 +337,143 @@ function rearm(
     ...(step.depsHashAtDispense !== undefined
       ? { depsHashAtDispense: step.depsHashAtDispense }
       : {}),
-    ...(keepGeneratorCompleted && step.generatorCompleted
-      ? { generatorCompleted: true }
-      : {}),
-    ...(keepGeneratorCompleted &&
-    step.generatorCompleted &&
-    step.generatorCompletedAtAttempt !== undefined
+    // A reset keeps a commit that landed before this attempt's ref as well.
+    ...(step.commitStarted ? { commitStarted: true } : {}),
+    ...(keepGeneratorCompleted ? generatorRunFields(step) : {}),
+  };
+}
+
+function generatorRunFields(step: MigrateStep): Partial<MigrateStep> {
+  if (!step.generatorCompleted) return {};
+  return {
+    generatorCompleted: true,
+    ...(step.generatorCompletedAtAttempt !== undefined
       ? { generatorCompletedAtAttempt: step.generatorCompletedAtAttempt }
       : {}),
-    ...(keepGeneratorCompleted && step.generatorCompleted && step.agenticWaived
-      ? { agenticWaived: true }
-      : {}),
-    ...(keepGeneratorCompleted && step.generatorCompleted && step.validationOwed
-      ? { validationOwed: true }
-      : {}),
-    ...(keepGeneratorCompleted &&
-    step.generatorCompleted &&
-    step.generatorMadeChanges !== undefined
+    ...(step.agenticWaived ? { agenticWaived: true } : {}),
+    ...(step.validationOwed ? { validationOwed: true } : {}),
+    ...(step.generatorMadeChanges !== undefined
       ? { generatorMadeChanges: step.generatorMadeChanges }
       : {}),
   };
+}
+
+/**
+ * Forgets the generator run of `stepId`'s current attempt, unless a landed
+ * commit already carries its changes.
+ */
+export function discardGeneratorRun(
+  state: MigrateRunState,
+  stepId: string
+): MigrateRunState {
+  if (coveringLandedEntries(state, stepId).length > 0) return state;
+  return {
+    ...state,
+    steps: state.steps.map((step) => {
+      if (step.id !== stepId || !step.generatorCompleted) return step;
+      const {
+        generatorCompleted: _completed,
+        generatorCompletedAtAttempt: _atAttempt,
+        agenticWaived: _waived,
+        validationOwed: _owed,
+        generatorMadeChanges: _madeChanges,
+        ...rest
+      } = step;
+      return rest;
+    }),
+  };
+}
+
+// Applied and adopted partition the succeeded steps; stalled steps are included
+// in remaining.
+export interface StepTally {
+  applied: number;
+  adopted: number;
+  skipped: number;
+  unresolved: MigrateStep[];
+  remaining: number;
+  stalled: number;
+}
+
+export function tallySteps(state: MigrateRunState): StepTally {
+  const tally: StepTally = {
+    applied: 0,
+    adopted: 0,
+    skipped: 0,
+    unresolved: [],
+    remaining: 0,
+    stalled: 0,
+  };
+  for (const step of state.steps) {
+    switch (step.status) {
+      case 'succeeded':
+        if (step.adopted) tally.adopted++;
+        else tally.applied++;
+        break;
+      case 'skipped':
+        tally.skipped++;
+        break;
+      case 'unresolved':
+        tally.unresolved.push(step);
+        break;
+      case 'failed':
+      case 'died':
+        tally.stalled++;
+        tally.remaining++;
+        break;
+      case 'pending':
+      case 'dispensed':
+      case 'running':
+      case 'awaiting-prompt-outcome':
+        tally.remaining++;
+        break;
+      default: {
+        const exhaustive: never = step.status;
+        throw new Error(`Unhandled step status '${exhaustive}'.`);
+      }
+    }
+  }
+  return tally;
+}
+
+export function runTallies(state: MigrateRunState): MigrateOrchestratorTallies {
+  const tally = tallySteps(state);
+  return {
+    completed: tally.applied + tally.adopted,
+    skipped: tally.skipped,
+    unresolved: tally.unresolved.length,
+    dispenseCount: state.steps.reduce((n, s) => n + s.dispenseCount, 0),
+  };
+}
+
+// The failure a given-up step is reported with, in the issue ledger and the
+// completion report alike. Agent text is collapsed to one line so a break
+// inside it cannot open a block at a line start; an accepted handoff may carry
+// an empty summary, which gets the fallback.
+export function unresolvedFailureDetail(step: MigrateStep): string {
+  const failure = singleLine(
+    step.outcome?.summary ?? step.promptOutcome?.summary ?? ''
+  ).trim();
+  return failure.length === 0 ? 'no failure detail was recorded' : failure;
+}
+
+export function completionSummaryLines(state: MigrateRunState): string[] {
+  const tally = tallySteps(state);
+  return [
+    `  applied: ${tally.applied}`,
+    `  adopted: ${tally.adopted}`,
+    `  skipped: ${tally.skipped}`,
+    `  unresolved: ${tally.unresolved.length}`,
+    ...tally.unresolved.map(
+      (step) => `    - ${step.migrationId}: ${unresolvedFailureDetail(step)}`
+    ),
+  ];
+}
+
+// Suffixed so history does not read the partial result as the migration
+// applied.
+export function unresolvedCommitName(step: MigrateStep): string {
+  return `${splitMigrationId(step.migrationId).name} (unresolved)`;
 }
 
 // A guarded transition whose observation was made against an earlier attempt
@@ -393,6 +565,83 @@ export function coveringLandedEntries(
   );
 }
 
+export function markCommitStarted(
+  state: MigrateRunState,
+  stepId: string
+): MigrateRunState {
+  return {
+    ...state,
+    steps: state.steps.map((step) =>
+      step.id === stepId ? { ...step, commitStarted: true } : step
+    ),
+  };
+}
+
+export function clearCommitStarted(
+  state: MigrateRunState,
+  stepId: string
+): MigrateRunState {
+  return {
+    ...state,
+    steps: state.steps.map((step) => {
+      if (step.id !== stepId || !step.commitStarted) return step;
+      const { commitStarted: _started, ...rest } = step;
+      return rest;
+    }),
+  };
+}
+
+/**
+ * True when a landed entry names the step, or a commit was started for it
+ * that no entry accounts for. Skipping the step would then report as not
+ * applied a migration whose commit is, or may be, in history.
+ */
+export function commitMayBeInHistory(
+  state: MigrateRunState,
+  step: MigrateStep
+): boolean {
+  return (
+    coveringLandedEntries(state, step.id).length > 0 ||
+    step.commitStarted === true
+  );
+}
+
+// Every ledger append. Entries are never removed or reordered: step receipts
+// and resolution stamps index into the ledger. A failed entry says nothing
+// about an earlier commit, so only a landed one clears the mark.
+export function appendCommit(
+  state: MigrateRunState,
+  entry: MigrateCommitLedgerEntry
+): MigrateRunState {
+  const accounted =
+    entry.kind === 'landed'
+      ? entry.stepIds.reduce(clearCommitStarted, state)
+      : state;
+  return { ...accounted, commits: [...state.commits, entry] };
+}
+
+/**
+ * The entry a parent session recorded for this attempt's commit, or undefined
+ * without a receipt. A receipt past the ledger or naming another step is
+ * corrupt run state, so it throws.
+ */
+export function commitReceipt(
+  state: MigrateRunState,
+  step: MigrateStep
+): { index: number; entry: MigrateCommitLedgerEntry } | undefined {
+  const index = step.commitLedgerIndex;
+  if (index === undefined) return undefined;
+  const entry = state.commits[index];
+  if (!entry || !entry.stepIds.includes(step.id)) {
+    throw new Error(
+      `Step ${step.id} records its commit at ledger index ${index}, which ${
+        entry ? 'does not name it' : 'does not exist'
+      }.`
+    );
+  }
+  return { index, entry };
+}
+
 // The round with the highest index.
 export function latestRound(
   state: MigrateRunState
@@ -431,6 +680,25 @@ export function stepsToPendingMigrations(
     pending.push({ package: pkg, name });
   }
   return pending;
+}
+
+// Whether git may have written history for this result. A landed commit's
+// mark is the ledger entry's to clear, and a failure reported once git ran
+// (a hook's output overflowing the subprocess buffer after the commit) cannot
+// vouch that nothing landed, so only the other results release the mark.
+export function gitRan(result: CommitResult): boolean {
+  switch (result.status) {
+    case 'committed':
+    case 'failed':
+      return true;
+    case 'no-changes':
+    case 'disabled':
+      return false;
+    default: {
+      const exhaustive: never = result;
+      throw new Error(`Unhandled commit result: ${JSON.stringify(exhaustive)}`);
+    }
+  }
 }
 
 /**

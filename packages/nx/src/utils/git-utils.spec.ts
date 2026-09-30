@@ -6,10 +6,13 @@ import {
   getPathCommitExposure,
   getUncommittedChangesSnapshot,
   getWorkingTreeStatus,
+  getAncestorStatus,
   isAncestorCommit,
   tryCommitChanges,
+  tryCommitChangesAsync,
 } from './git-utils';
-import { execSync } from 'child_process';
+import { exec, execSync } from 'child_process';
+import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -879,6 +882,125 @@ describe('git utils tests', () => {
     });
   });
 
+  describe('tryCommitChangesAsync', () => {
+    afterEach(() => {
+      vi.resetAllMocks();
+    });
+
+    // Runs the sync helper's commands through `exec`, feeding the message on
+    // stdin, so the event loop keeps serving while git waits. `exec` hands
+    // stdout and stderr to the callback, not to the error, as Node does.
+    function fakeExec(
+      failOn?: (command: string) => {
+        err: Error;
+        stdout: string;
+        stderr: string;
+        stdinError?: Error;
+      } | null
+    ): { commands: string[]; inputs: (string | undefined)[] } {
+      const commands: string[] = [];
+      const inputs: (string | undefined)[] = [];
+      (exec as unknown as Mock).mockImplementation(
+        (
+          command: string,
+          _opts: unknown,
+          cb: (err: Error | null, stdout: string, stderr: string) => void
+        ) => {
+          commands.push(command);
+          const failure = failOn?.(command) ?? null;
+          const stdin = new EventEmitter() as EventEmitter & {
+            end: (chunk?: string) => void;
+          };
+          stdin.end = (chunk?: string) => {
+            inputs.push(chunk);
+            if (failure?.stdinError) stdin.emit('error', failure.stdinError);
+          };
+          setImmediate(() =>
+            failure
+              ? cb(failure.err, failure.stdout, failure.stderr)
+              : cb(null, '', '')
+          );
+          return { stdin };
+        }
+      );
+      (execSync as Mock).mockReturnValue('abc123\n');
+      return { commands, inputs };
+    }
+
+    it('runs the same commands as the sync helper with the message on stdin', async () => {
+      const { commands, inputs } = fakeExec();
+
+      const sha = await tryCommitChangesAsync('msg', '/workspace', [
+        '.nx/migrate-runs',
+      ]);
+
+      expect(commands).toEqual([
+        'git add -A',
+        'git reset -q -- ".nx/migrate-runs"',
+        'git commit --no-verify -F -',
+      ]);
+      expect(inputs).toEqual(['', '', 'msg']);
+      expect(exec).toHaveBeenCalledWith(
+        'git commit --no-verify -F -',
+        expect.objectContaining({ cwd: '/workspace' }),
+        expect.any(Function)
+      );
+      expect(sha).toBe('abc123');
+    });
+
+    it('reports the streams from the callback and preserves the original error as `cause`', async () => {
+      const originalErr = Object.assign(
+        new Error('Command failed: git commit ...'),
+        { code: 128, signal: null }
+      );
+      fakeExec((command) =>
+        command.startsWith('git commit')
+          ? {
+              err: originalErr,
+              stdout: 'On branch main\n',
+              stderr: 'error: gpg failed to sign the data\n',
+            }
+          : null
+      );
+
+      const caught = await tryCommitChangesAsync('msg', '/workspace').catch(
+        (e) => e
+      );
+
+      expect(caught).toBeInstanceOf(Error);
+      expect((caught as Error).message).toBe(
+        'error: gpg failed to sign the data\nOn branch main'
+      );
+      expect((caught as Error & { cause?: unknown }).cause).toBe(originalErr);
+    });
+
+    it('turns a child that exits before reading its message into a commit failure, not a crash', async () => {
+      const originalErr = Object.assign(
+        new Error('Command failed: git commit ...'),
+        { code: 128, signal: null }
+      );
+      fakeExec((command) =>
+        command.startsWith('git commit')
+          ? {
+              err: originalErr,
+              stdout: '',
+              stderr: 'fatal: not a git repository\n',
+              stdinError: Object.assign(new Error('write EPIPE'), {
+                code: 'EPIPE',
+              }),
+            }
+          : null
+      );
+
+      const caught = await tryCommitChangesAsync('msg', '/workspace').catch(
+        (e) => e
+      );
+
+      expect((caught as Error).message).toBe('fatal: not a git repository');
+      expect((caught as Error & { cause?: unknown }).cause).toBe(originalErr);
+    });
+  });
+
   describe('isAncestorCommit', () => {
     const shaA = 'a'.repeat(40);
     const shaB = 'b'.repeat(40);
@@ -920,6 +1042,34 @@ describe('git utils tests', () => {
       expect(isAncestorCommit('abc123', shaB, '/repo')).toBe(false);
       expect(isAncestorCommit(shaA, 'a'.repeat(41), '/repo')).toBe(false);
       expect(execSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getAncestorStatus', () => {
+    const shaA = 'a'.repeat(40);
+    const shaB = 'b'.repeat(40);
+
+    afterEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it("reports 'not-ancestor' only on git's exit 1", () => {
+      (execSync as Mock).mockImplementation(() => {
+        throw Object.assign(new Error('exit 1'), { status: 1 });
+      });
+
+      expect(getAncestorStatus(shaA, shaB, '/repo')).toBe('not-ancestor');
+    });
+
+    it("reports 'unknown' on any other failure and for a non-sha value", () => {
+      (execSync as Mock).mockImplementation(() => {
+        throw Object.assign(new Error('fatal: not a git repository'), {
+          status: 128,
+        });
+      });
+
+      expect(getAncestorStatus(shaA, shaB, '/repo')).toBe('unknown');
+      expect(getAncestorStatus('HEAD~1', shaB, '/repo')).toBe('unknown');
     });
   });
 });

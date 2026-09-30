@@ -64,6 +64,15 @@ function overrideEnv(entries: Record<string, string | undefined>): () => void {
   return () => applyEnv(previous);
 }
 
+function withSharedBaseDisabled(callback: () => void): void {
+  const restoreEnv = overrideEnv({ NX_E2E_SKIP_SHARED_BASE: 'true' });
+  try {
+    callback();
+  } finally {
+    restoreEnv();
+  }
+}
+
 /**
  * Runs `nx migrate` twice against the same file, first with the closed port in
  * it and then with the local registry, so the run that succeeds can only have
@@ -163,7 +172,13 @@ function createYarnBerryProject(): void {
   }
   try {
     activateYarn(yarnBerryVersion);
-    newProject({ packageManager: 'yarn', packages: [] });
+    withSharedBaseDisabled(() =>
+      newProject({
+        keepBackup: true,
+        packageManager: 'yarn',
+        packages: [],
+      })
+    );
   } finally {
     rmSync(backup, { recursive: true, force: true });
     if (directoryExists(classicBackup)) {
@@ -198,7 +213,11 @@ suite('migrate registry configuration', () => {
       // PR runs pin the whole suite to npm, and the configuration under test is
       // pnpm's.
       process.env.SELECTED_PM = 'pnpm';
-      newProject({ packageManager: 'pnpm', packages: [] });
+      newProject({
+        keepBackup: true,
+        packageManager: 'pnpm',
+        packages: [],
+      });
       pinNpmrcToUnreachableRegistry();
       pristineWorkspaceFile = readPristine(workspaceFile);
 
@@ -265,7 +284,13 @@ suite('migrate registry configuration', () => {
     beforeAll(() => {
       process.env.SELECTED_PM = 'yarn';
       activateYarn(yarnClassicVersion);
-      newProject({ packageManager: 'yarn', packages: [] });
+      withSharedBaseDisabled(() =>
+        newProject({
+          keepBackup: true,
+          packageManager: 'yarn',
+          packages: [],
+        })
+      );
       pinPackageManager(`yarn@${yarnClassicVersion}`);
       pinNpmrcToUnreachableRegistry();
       pristineYarnrc = readPristine('.yarnrc');
@@ -345,7 +370,11 @@ suite('migrate registry configuration', () => {
     // which the suite-wide timeout does not cover.
     beforeAll(() => {
       process.env.SELECTED_PM = 'bun';
-      newProject({ packageManager: 'bun', packages: [scopedPackage] });
+      newProject({
+        keepBackup: true,
+        packageManager: 'bun',
+        packages: [scopedPackage],
+      });
       pinNpmrcToUnreachableRegistry();
       pristineBunfig = readPristine(bunfigFile);
 

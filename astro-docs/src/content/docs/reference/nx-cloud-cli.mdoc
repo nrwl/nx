@@ -38,18 +38,23 @@ When `nx.json` also contains an `nxCloudId`, the token is checked against Nx Clo
 {% tabs %}
 {% tabitem label="macOS & Linux" %}
 
-We look for this file at the following locations:
+We look for this file at the following locations, in order:
 
 - `$XDG_CONFIG_HOME/nxcloud/nxcloud.ini`
-- `$HOME/config/nxcloud/nxcloud.ini`
 - `$HOME/.nxcloud.ini`
+- `$HOME/.config/nxcloud/nxcloud.ini`
 
-If we don't find an existing config file, we create one at `$HOME/config/nxcloud/nxcloud.ini`
+If we don't find an existing config file, we create one at `$HOME/.config/nxcloud/nxcloud.ini`
 
 {% /tabitem %}
 {% tabitem label="Windows" %}
 
-We look for this file within the `%LOCALAPPDATA%/nxcloud` directory and if it does not exist, we will create a new `nxcloud.ini` file there.
+We look for this file at the following locations, in order:
+
+- `%USERPROFILE%/.nxcloud.ini`
+- `%LOCALAPPDATA%/nxcloud/nxcloud.ini`
+
+If we don't find an existing config file, we create one at `%LOCALAPPDATA%/nxcloud/nxcloud.ini`
 
 {% /tabitem %}
 {% /tabs %}
@@ -414,6 +419,7 @@ If you accidentally run this command locally, remove all generated marker files 
 | ------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `--distribute-on`               | string  | Configure the number of agents, [launch templates](/docs/kb/launch-templates) and [assignment rules](/docs/kb/assignment-rules) for distributed execution              |         |
 | `--assignment-rules`            | string  | Path to the [assignment rules configuration](/docs/kb/assignment-rules#using-assignment-rules-when-you-bring-your-own-compute) for manual distribution.                |         |
+| `--scheduling-constraints`      | string  | Path to a YAML file listing tasks that must not run on the same agent at the same time                                                                                 |         |
 | `--no-distribution`             | boolean | Disable distribution for this run                                                                                                                                      |         |
 | `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx complete-ci-run`                                                                                      | `false` |
 | `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                    |         |
@@ -430,6 +436,15 @@ If you accidentally run this command locally, remove all generated marker files 
 
 When `--distribute-on` points at a configuration file that already embeds assignment rules, the `--assignment-rules` file replaces them.
 
+##### `--scheduling-constraints`
+
+Point this at a YAML file with a top-level `scheduling-constraints` list.
+Each entry names tasks by `projects`, `targets`, or `configurations`, and `cannot-run-with` lists the tasks they must never share an agent with at the same time.
+`start-ci-run` exits with an error when the file can't be read or is empty.
+
+When `--distribute-on` points at a configuration file that already embeds scheduling constraints, the `--scheduling-constraints` file replaces them.
+It overrides embedded constraints independently of `--assignment-rules`.
+
 ##### `--no-distribution`
 
 Turn distribution off for the whole CI pipeline execution.
@@ -445,7 +460,7 @@ This command tells Nx Cloud how many agents to use (and what launch templates to
 `npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"` will distribute CI using 8 agents that are initialized
 using the `linux-medium-js` launch template.
 
-You can also [define the configuration in a file](/docs/features/ci-features/dynamic-agents) and reference it as follows:
+You can also [define the configuration in a file](/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size) and reference it as follows:
 `npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"`.
 
 ```yaml
@@ -473,7 +488,7 @@ include one or more targets from each command.
 {% tabs %}
 {% tabitem label="Serial command execution" %}
 
-#### Incorrect example:
+This example is incorrect:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=build
@@ -486,7 +501,7 @@ Nx Cloud will only look for the presence of a `build` target before determining 
 both `lint` and `test` will only run after `build` is complete, your pipeline would end before all intended work is
 executed.
 
-#### Corrected example:
+Use this instead:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=lint,test,build
@@ -498,7 +513,7 @@ executed.
 {% /tabitem %}
 {% tabitem label="Parallel command execution" %}
 
-#### Incorrect example:
+This example is incorrect:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=test
@@ -509,7 +524,7 @@ At first glance, this example may appear correct. However, since all the command
 be possible that your `test` command results in full cache hits and finishes faster than the `build` and `lint` commands.
 In this case, Nx Cloud will stop your pipeline, leaving work incomplete for both the `build` and `lint` commands.
 
-#### Corrected example:
+Use this instead:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=lint,test,build
@@ -651,7 +666,6 @@ Use it to dedicate a pool of agents to a subset of your pipeline, for example `-
 | Variable                                           | Description                                                                                        |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `NX_AGENT_NAME`                                    | Name the agent for logs and the Nx Cloud UI. Defaults to the CircleCI job name, then a random name |
-| `NX_AGENT_INSTANCE_NAME`                           | Distinguish individual instances that share an agent name                                          |
 | `NX_AGENT_LAUNCH_TEMPLATE`                         | Report the [launch template](/docs/kb/launch-templates) the agent runs, used by assignment rules   |
 | `NX_VERBOSE_LOGGING` or `NX_CLOUD_VERBOSE_LOGGING` | Set either to `true` to turn on verbose logging. `start-agent` has no `--verbose` flag             |
 
@@ -843,7 +857,7 @@ See [validating launch templates](/docs/kb/launch-templates#validating-launch-te
 
 ##### `nx-cloud validate sandbox-violations`
 
-Replay a downloaded [sandbox report](/docs/features/ci-features/sandboxing) against your current `nx.json`.
+Replay a downloaded [sandbox report](/docs/kb/sandboxing) against your current `nx.json`.
 For every task in the report, the command prints which unexpected reads and writes your latest input and output declarations now cover, and which ones remain unexplained.
 
 It accepts a single per-task report, an array of reports, or the `index.json` written next to them, in which case every referenced report is loaded.
@@ -926,11 +940,11 @@ npx nx-cloud record -- echo "hello world"
 npx nx-cloud record -- nx format:check
 ```
 
-Everything after `--` belongs to the wrapped command. See [recording non-Nx commands](/docs/guides/nx-cloud/record-commands).
+Everything after `--` belongs to the wrapped command. See [recording non-Nx commands](/docs/kb/record-commands).
 
 ### `nx-cloud decrypt-artifact`
 
-Decrypt an artifact that Nx Cloud stored with your workspace [encryption key](/docs/guides/nx-cloud/encryption).
+Decrypt an artifact that Nx Cloud stored with your workspace [encryption key](/docs/kb/encryption).
 Point it at a single encrypted file or at a directory, in which case every file underneath is decrypted into a mirrored output tree.
 
 The key is read from `NX_CLOUD_ENCRYPTION_KEY`. Without that variable, the nearest `nx.json` is searched for `nxCloudEncryptionKey`.

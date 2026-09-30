@@ -1,7 +1,28 @@
 import { applyBaseConfig } from './apply-base-config';
 import { NormalizedNxAppRspackPluginOptions } from './models';
-import type { Configuration } from '@rspack/core';
+import type { Configuration, Stats } from '@rspack/core';
 import * as path from 'path';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { runInNewContext } from 'vm';
+import { createRequire } from 'module';
+import {
+  mockCjsModule,
+  unmockCjsModule,
+} from '@nx/devkit/internal-testing-utils';
+
+// The source `require`s these lazily, which `vi.mock`/`vi.doMock` cannot reach.
+const cjsRequire = createRequire(import.meta.url);
+
+// applyBaseConfig branches on the loaded @rspack/core's version, so each block pins it.
+function reportingRspackVersion(version: string) {
+  return new Proxy(cjsRequire('@rspack/core'), {
+    get(target, prop) {
+      if (prop === 'rspackVersion') return version;
+      return (target as any)[prop];
+    },
+  });
+}
 
 describe('apply-base-config libraryTarget handling', () => {
   let options: NormalizedNxAppRspackPluginOptions;
@@ -18,8 +39,22 @@ describe('apply-base-config libraryTarget handling', () => {
     global.NX_GRAPH_CREATION = false;
   });
 
+  let applyBaseConfigV1: typeof applyBaseConfig;
+  beforeEach(async () => {
+    vi.resetModules();
+    mockCjsModule(
+      import.meta.url,
+      '@rspack/core',
+      reportingRspackVersion('1.6.8')
+    );
+    ({ applyBaseConfig: applyBaseConfigV1 } =
+      await import('./apply-base-config'));
+  });
+
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
+    unmockCjsModule(import.meta.url, '@rspack/core');
+    vi.resetModules();
   });
 
   it('should not set libraryTarget when user configures library.type', async () => {
@@ -27,7 +62,7 @@ describe('apply-base-config libraryTarget handling', () => {
       library: { type: 'module' },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
   });
@@ -37,7 +72,7 @@ describe('apply-base-config libraryTarget handling', () => {
       libraryTarget: 'umd',
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('umd');
   });
@@ -45,7 +80,7 @@ describe('apply-base-config libraryTarget handling', () => {
   it('should default to commonjs for node targets when nothing configured', async () => {
     config.output = {};
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs');
   });
@@ -54,7 +89,7 @@ describe('apply-base-config libraryTarget handling', () => {
     options.target = 'async-node';
     config.output = {};
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs-module');
   });
@@ -63,7 +98,7 @@ describe('apply-base-config libraryTarget handling', () => {
     options.target = 'web';
     config.output = {};
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
   });
@@ -74,7 +109,7 @@ describe('apply-base-config libraryTarget handling', () => {
       library: { type: 'module' },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
   });
@@ -82,7 +117,7 @@ describe('apply-base-config libraryTarget handling', () => {
   it('should handle empty output config gracefully', async () => {
     config.output = undefined;
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs');
   });
@@ -92,7 +127,7 @@ describe('apply-base-config libraryTarget handling', () => {
       library: { type: undefined as any },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs');
   });
@@ -102,7 +137,7 @@ describe('apply-base-config libraryTarget handling', () => {
       libraryTarget: undefined,
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs');
   });
@@ -112,7 +147,7 @@ describe('apply-base-config libraryTarget handling', () => {
       libraryTarget: '' as any,
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('');
   });
@@ -125,7 +160,7 @@ describe('apply-base-config libraryTarget handling', () => {
       },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
     expect((config.output.library as any).type).toBe('module');
@@ -138,7 +173,7 @@ describe('apply-base-config libraryTarget handling', () => {
       library: { type: 'module' },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
     expect((config.output.library as any).type).toBe('module');
@@ -150,7 +185,7 @@ describe('apply-base-config libraryTarget handling', () => {
       libraryTarget: 'umd',
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('umd');
   });
@@ -159,21 +194,17 @@ describe('apply-base-config libraryTarget handling', () => {
     beforeEach(() => {
       // Force the loaded module to report v2 so the v1/v2 branch in
       // applyBaseConfig picks the modern output.library.type shape.
-      jest.resetModules();
-      jest.doMock('@rspack/core', () => {
-        const actual = jest.requireActual('@rspack/core');
-        return new Proxy(actual, {
-          get(target, prop) {
-            if (prop === 'rspackVersion') return '2.0.3';
-            return (target as any)[prop];
-          },
-        });
-      });
+      vi.resetModules();
+      mockCjsModule(
+        import.meta.url,
+        '@rspack/core',
+        reportingRspackVersion('2.0.3')
+      );
     });
 
     afterEach(() => {
-      jest.dontMock('@rspack/core');
-      jest.resetModules();
+      unmockCjsModule(import.meta.url, '@rspack/core');
+      vi.resetModules();
     });
 
     it('emits output.library.type instead of libraryTarget on v2', async () => {
@@ -216,21 +247,25 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
 
   beforeEach(() => {
     capturedPluginConfigs.length = 0;
-    jest.resetModules();
+    vi.resetModules();
     global.NX_GRAPH_CREATION = false;
-    jest.doMock('ts-checker-rspack-plugin', () => ({
+    mockCjsModule(import.meta.url, 'ts-checker-rspack-plugin', {
       TsCheckerRspackPlugin: class {
         constructor(pluginConfig: any) {
           capturedPluginConfigs.push(pluginConfig);
         }
         apply() {}
       },
-    }));
+    });
   });
 
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
-    jest.resetModules();
+    unmockCjsModule(import.meta.url, 'ts-checker-rspack-plugin');
+    // Unlike jest.resetModules, vi.resetModules keeps doMock registrations.
+    vi.doUnmock('@nx/js/internal');
+    vi.doUnmock('../../utils/is-serve-mode');
+    vi.resetModules();
   });
 
   const baseOptions = {
@@ -241,8 +276,8 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
   } as NormalizedNxAppRspackPluginOptions;
 
   it('widens the ts-checker rootDir to the workspace root in a classic setup', async () => {
-    jest.doMock('@nx/js/internal', () => ({
-      ...jest.requireActual('@nx/js/internal'),
+    vi.doMock('@nx/js/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/js/internal')),
       isUsingTsSolutionSetup: () => false,
     }));
 
@@ -257,13 +292,13 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
   });
 
   it('does not override rootDir when using the TS solution setup', async () => {
-    jest.doMock('@nx/js/internal', () => ({
-      ...jest.requireActual('@nx/js/internal'),
+    vi.doMock('@nx/js/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/js/internal')),
       isUsingTsSolutionSetup: () => true,
     }));
     // The TS solution setup only type-checks during serve, so force serve mode
     // to make the plugin be installed at all.
-    jest.doMock('../../utils/is-serve-mode', () => ({
+    vi.doMock('../../utils/is-serve-mode', () => ({
       isServeMode: () => true,
     }));
 
@@ -284,14 +319,14 @@ describe('apply-base-config cache option', () => {
   } as NormalizedNxAppRspackPluginOptions;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     global.NX_GRAPH_CREATION = false;
   });
 
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
-    jest.dontMock('@rspack/core');
-    jest.resetModules();
+    unmockCjsModule(import.meta.url, '@rspack/core');
+    vi.resetModules();
   });
 
   it('writes the public cache value as-is in executor mode', async () => {
@@ -313,20 +348,21 @@ describe('apply-base-config cache option', () => {
       cache === true
         ? { type: 'memory', snapshot: {} }
         : { ...(cache as object), snapshot: {} };
-    const getNormalizedRspackOptions = jest.fn(({ cache }) => ({
+    const getNormalizedRspackOptions = vi.fn(({ cache }) => ({
       cache: normalize(cache),
     }));
-    jest.doMock('@rspack/core', () => {
-      const actual = jest.requireActual('@rspack/core');
-      return new Proxy(actual, {
+    mockCjsModule(
+      import.meta.url,
+      '@rspack/core',
+      new Proxy(cjsRequire('@rspack/core'), {
         get(target, prop) {
           if (prop === 'config') {
             return { ...(target as any).config, getNormalizedRspackOptions };
           }
           return (target as any)[prop];
         },
-      });
-    });
+      })
+    );
     const { applyBaseConfig } = await import('./apply-base-config');
 
     const defaults: Partial<Configuration> = {};
@@ -349,7 +385,7 @@ describe('apply-base-config cache option', () => {
   it('passes an explicit cache option through the installed normalizer in plugin mode', async () => {
     const { applyBaseConfig } = await import('./apply-base-config');
     const rspackCore: typeof import('@rspack/core') =
-      jest.requireActual('@rspack/core');
+      await vi.importActual<any>('@rspack/core');
     const normalizedCache = (cache: Configuration['cache']) =>
       rspackCore.config.getNormalizedRspackOptions({
         context: path.join('/test', 'apps/test'),
@@ -376,4 +412,85 @@ describe('apply-base-config cache option', () => {
     );
     expect(persistent.cache).toEqual(normalizedCache({ type: 'persistent' }));
   });
+});
+
+describe('apply-base-config minimizer', () => {
+  let dir: string;
+
+  beforeAll(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'nx-rspack-minimizer-'));
+    writeFileSync(
+      path.join(dir, 'index.js'),
+      `
+        function wrap(cb) { return () => cb(); }
+        class C { static n = 0; id = ++C.n; v = wrap(() => this.id); }
+        console.log([new C(), new C(), new C()].map((c) => c.v()).join(','));
+      `
+    );
+  });
+
+  afterAll(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  beforeEach(() => {
+    vi.resetModules();
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    vi.resetModules();
+  });
+
+  it.each(['web', 'node'] as const)(
+    'keeps per-instance closures from class field initializers when minifying for %s targets',
+    async (target) => {
+      const { applyBaseConfig } = await import('./apply-base-config');
+      const { rspack } = await import('@rspack/core');
+      const config: Partial<Configuration> = {};
+      applyBaseConfig(
+        {
+          root: '/test',
+          projectRoot: 'apps/test',
+          target,
+          mode: 'production',
+          optimization: true,
+        } as NormalizedNxAppRspackPluginOptions,
+        config
+      );
+
+      const outDir = path.join(dir, `out-${target}`);
+      const compiler = rspack({
+        mode: 'production',
+        context: dir,
+        entry: './index.js',
+        target,
+        output: { path: outDir, filename: 'main.js' },
+        devtool: false,
+        optimization: config.optimization,
+      });
+      const stats = await new Promise<Stats>((res, rej) => {
+        compiler.run((err, stats) => {
+          compiler.close((closeErr) => {
+            if (err || closeErr) {
+              rej(err ?? closeErr);
+            } else if (stats.hasErrors()) {
+              rej(new Error(stats.toString({ errors: true, all: false })));
+            } else {
+              res(stats);
+            }
+          });
+        });
+      });
+      const mainAsset = stats.compilation.getAsset('main.js');
+      expect(mainAsset && mainAsset.info.minimized).toBe(true);
+
+      const logs: string[] = [];
+      runInNewContext(readFileSync(path.join(outDir, 'main.js'), 'utf8'), {
+        console: { log: (message: string) => logs.push(message) },
+      });
+      expect(logs).toEqual(['1,2,3']);
+    }
+  );
 });

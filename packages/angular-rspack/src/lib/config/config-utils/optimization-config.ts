@@ -22,6 +22,10 @@ export function getOptimization(
           new SwcJsMinimizerRspackPlugin({
             minimizerOptions: {
               minify: true,
+              // Keeps SWC from hoisting a callback passed in a class field
+              // initializer into one binding shared by all instances:
+              // https://github.com/swc-project/swc/issues/12380
+              compress: { inline: 0, reduce_funcs: false },
               ...(platform === 'server'
                 ? {
                     mangle: {

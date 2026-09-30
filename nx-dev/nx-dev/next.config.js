@@ -31,6 +31,9 @@ module.exports = withNx({
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   experimental: {
     cpus: 1,
     outputFileTracingExcludes: {

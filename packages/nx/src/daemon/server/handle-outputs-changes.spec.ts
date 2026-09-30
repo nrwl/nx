@@ -13,7 +13,9 @@ vi.mock('./project-graph-incremental-recomputation', () => ({
   currentProjectGraph: undefined,
   getRecomputationGeneration: vi.fn(() => 7),
   invalidateGraphCache: vi.fn(),
-  isKnownWorkspaceFile: vi.fn(() => true),
+}));
+vi.mock('../../utils/workspace-context', () => ({
+  trackedFilesInContext: vi.fn(() => []),
 }));
 vi.mock('./dotenv-graph-changes', () => ({
   classifyDotEnvChanges: vi.fn(() => ({
@@ -33,8 +35,8 @@ describe('handleOutputsChanges', () => {
   };
   let recomputation: {
     invalidateGraphCache: Mock;
-    isKnownWorkspaceFile: Mock;
   };
+  let context: { trackedFilesInContext: Mock };
   let dotenvChanges: {
     classifyDotEnvChanges: Mock;
     queuePendingDotEnvEvents: Mock;
@@ -55,6 +57,7 @@ describe('handleOutputsChanges', () => {
     recomputation =
       (await import('./project-graph-incremental-recomputation')) as any;
     dotenvChanges = (await import('./dotenv-graph-changes')) as any;
+    context = (await import('../../utils/workspace-context')) as any;
     consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -108,7 +111,7 @@ describe('handleOutputsChanges', () => {
       invalidating: ['.env.e2e'],
       unclassified: [],
     });
-    recomputation.isKnownWorkspaceFile.mockReturnValue(false);
+    context.trackedFilesInContext.mockReturnValue([]);
     await handleOutputsChanges(null, events);
 
     expect(recomputation.invalidateGraphCache).toHaveBeenCalled();
@@ -144,7 +147,7 @@ describe('handleOutputsChanges', () => {
       invalidating: ['libs/foo/.env.e2e'],
       unclassified: [],
     });
-    recomputation.isKnownWorkspaceFile.mockReturnValue(true);
+    context.trackedFilesInContext.mockReturnValue(['libs/foo/.env.e2e']);
     await handleOutputsChanges(null, events);
 
     expect(dotenvChanges.queuePendingDotEnvEvents).toHaveBeenCalledWith(

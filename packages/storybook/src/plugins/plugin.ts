@@ -242,21 +242,27 @@ async function buildStorybookTargets(
     angularBuildTarget ?? options.buildStorybookTargetName
   }`;
 
-  targets[options.buildStorybookTargetName] = buildTarget(
+  const inputs = storybookInputs(
     namedInputs,
+    frameworkIsAngular,
+    hasTestRunner
+  );
+
+  targets[options.buildStorybookTargetName] = buildTarget(
+    inputs,
     buildOutputs,
     projectRoot,
     frameworkIsAngular,
     browserTarget,
-    configFilePath,
-    hasTestRunner
+    configFilePath
   );
 
   targets[options.serveStorybookTargetName] = serveTarget(
     projectRoot,
     frameworkIsAngular,
     browserTarget,
-    configFilePath
+    configFilePath,
+    inputs
   );
 
   if (usesVitestAddon) {
@@ -267,7 +273,8 @@ async function buildStorybookTargets(
 
   targets[options.staticStorybookTargetName] = serveStaticTarget(
     options,
-    projectRoot
+    projectRoot,
+    inputs
   );
 
   addBuildAndWatchDepsTargets(
@@ -281,16 +288,32 @@ async function buildStorybookTargets(
   return targets;
 }
 
+function storybookInputs(
+  namedInputs: { [inputName: string]: any[] },
+  frameworkIsAngular: boolean,
+  hasTestRunner: boolean
+): TargetConfiguration['inputs'] {
+  return [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: [
+        'storybook',
+        frameworkIsAngular ? '@storybook/angular' : undefined,
+        hasTestRunner ? '@storybook/test-runner' : undefined,
+      ].filter(Boolean),
+    },
+  ];
+}
+
 function buildTarget(
-  namedInputs: {
-    [inputName: string]: any[];
-  },
+  inputs: TargetConfiguration['inputs'],
   outputs: string[],
   projectRoot: string,
   frameworkIsAngular: boolean,
   browserTarget: string,
-  configFilePath: string,
-  hasTestRunner: boolean
+  configFilePath: string
 ) {
   let targetConfig: TargetConfiguration;
 
@@ -305,18 +328,7 @@ function buildTarget(
       },
       cache: true,
       outputs,
-      inputs: [
-        ...('production' in namedInputs
-          ? ['production', '^production']
-          : ['default', '^default']),
-        {
-          externalDependencies: [
-            'storybook',
-            '@storybook/angular',
-            hasTestRunner ? '@storybook/test-runner' : undefined,
-          ].filter(Boolean),
-        },
-      ],
+      inputs: [...inputs],
     };
   } else {
     targetConfig = {
@@ -324,17 +336,7 @@ function buildTarget(
       options: { cwd: projectRoot },
       cache: true,
       outputs,
-      inputs: [
-        ...('production' in namedInputs
-          ? ['production', '^production']
-          : ['default', '^default']),
-        {
-          externalDependencies: [
-            'storybook',
-            hasTestRunner ? '@storybook/test-runner' : undefined,
-          ].filter(Boolean),
-        },
-      ],
+      inputs: [...inputs],
     };
   }
 
@@ -345,11 +347,13 @@ function serveTarget(
   projectRoot: string,
   frameworkIsAngular: boolean,
   browserTarget: string,
-  configFilePath: string
+  configFilePath: string,
+  inputs: TargetConfiguration['inputs']
 ) {
   if (frameworkIsAngular) {
     return {
       continuous: true,
+      inputs: [...inputs],
       executor: '@storybook/angular:start-storybook',
       options: {
         configDir: `${dirname(configFilePath)}`,
@@ -363,6 +367,7 @@ function serveTarget(
   } else {
     return {
       continuous: true,
+      inputs: [...inputs],
       command: `storybook dev`,
       options: { cwd: projectRoot },
     };
@@ -405,11 +410,13 @@ function vitestTestTarget(projectRoot: string) {
 
 function serveStaticTarget(
   options: StorybookPluginOptions,
-  projectRoot: string
+  projectRoot: string,
+  inputs: TargetConfiguration['inputs']
 ) {
   const targetConfig: TargetConfiguration = {
     dependsOn: [`${options.buildStorybookTargetName}`],
     continuous: true,
+    inputs: [...inputs],
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStorybookTargetName}`,

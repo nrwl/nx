@@ -1,22 +1,19 @@
 use std::cmp;
-use std::path::Path;
 use std::thread::available_parallelism;
 
 use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
-use crate::native::walker::{NxFile, nx_walker};
+use crate::native::walker::NxFile;
 use crate::native::workspace::files_archive::{FilesArchive, NxFileHashed, NxFileHashes};
 
-pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
-    let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
+pub fn full_files_hash(files: Vec<NxFile>) -> NxFileHashes {
     trace!("Found {} files", files.len());
     hash_files(files).into_iter().collect()
 }
 
-pub fn selective_files_hash(workspace_root: &Path, archived_files: &FilesArchive) -> NxFileHashes {
-    let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
+pub fn selective_files_hash(files: Vec<NxFile>, archived_files: &FilesArchive) -> NxFileHashes {
     let mut archived = vec![];
     let mut not_archived = vec![];
     let now = std::time::Instant::now();
@@ -98,6 +95,7 @@ mod tests {
     use assert_fs::prelude::*;
 
     use crate::native::utils::get_mod_time;
+    use crate::native::walker::nx_walker;
     use crate::native::workspace::files_archive::{FilesArchive, NxFileHashed, NxFileHashes};
 
     fn setup_fs() -> TempDir {
@@ -161,7 +159,8 @@ mod tests {
         .with_gathered_at(get_mod_time(&temp.child("test.txt").metadata().unwrap()) + 1);
 
         let archived_files = FilesArchive::from_hashes(&archived_files).unwrap();
-        let hashed_files = super::selective_files_hash(temp.path(), &archived_files);
+        let hashed_files =
+            super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived_files);
         let mut paths = hashed_files
             .iter()
             .map(|(path, _)| path.as_str())
@@ -212,7 +211,7 @@ mod tests {
         .with_gathered_at(mod_time);
         let archived = FilesArchive::from_hashes(&archived).unwrap();
 
-        let hashed = super::selective_files_hash(temp.path(), &archived);
+        let hashed = super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
         assert_ne!(
             hashed.get("same-tick.txt").unwrap().0,
             "stale-hash",
@@ -239,7 +238,7 @@ mod tests {
         .with_gathered_at(mod_time + 1);
         let archived = FilesArchive::from_hashes(&archived).unwrap();
 
-        let hashed = super::selective_files_hash(temp.path(), &archived);
+        let hashed = super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
         assert_eq!(
             hashed.get("settled.txt").unwrap().0,
             "archived-hash",

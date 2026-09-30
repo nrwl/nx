@@ -1,8 +1,12 @@
-use ignore::WalkBuilder;
+use ignore::{WalkBuilder, WalkState};
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, OnceLock};
 
-use crate::native::glob::build_glob_set;
+use anyhow::{Context, Result};
+use parking_lot::Mutex;
+
+use crate::native::glob::{NxGlobSet, build_glob_set};
 
 use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
 use walkdir::WalkDir;
@@ -102,24 +106,46 @@ pub fn nx_walker<P>(directory: P, use_ignores: bool) -> impl Iterator<Item = NxF
 where
     P: AsRef<Path>,
 {
-    use std::thread;
+    walk_and_find_ignore_files(directory.as_ref(), use_ignores, false)
+        .0
+        .into_iter()
+}
+
+/// `nx_walker` with ignores, plus the `.gitignore` and `.nxignore` of every
+/// directory it entered, relative to `directory`. Those are the files the walk
+/// applied, including one that ignores itself and so is missing from the files.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn nx_walker_with_ignore_files<P>(directory: P) -> (Vec<NxFile>, Vec<PathBuf>)
+where
+    P: AsRef<Path>,
+{
+    walk_and_find_ignore_files(directory.as_ref(), true, true)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn walk_and_find_ignore_files(
+    directory: &Path,
+    use_ignores: bool,
+    collect_ignore_files: bool,
+) -> (Vec<NxFile>, Vec<PathBuf>) {
     use std::thread::available_parallelism;
 
     use crossbeam_channel::unbounded;
     use tracing::trace;
 
-    let directory = directory.as_ref();
     let mut walker = create_walker(directory, use_ignores);
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
     let (sender, receiver) = unbounded();
+    let ignore_files = Mutex::new(Vec::new());
 
     trace!(?directory, "walking");
 
     let now = std::time::Instant::now();
     walker.threads(cpus).build_parallel().run(|| {
         let tx = sender.clone();
+        let ignore_files = &ignore_files;
         Box::new(move |entry| {
             use ignore::WalkState::*;
 
@@ -128,6 +154,13 @@ where
             };
 
             if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
+                if collect_ignore_files && let Ok(dir) = dir_entry.path().strip_prefix(directory) {
+                    for name in [".gitignore", ".nxignore"] {
+                        if dir_entry.path().join(name).is_file() {
+                            ignore_files.lock().push(dir.join(name));
+                        }
+                    }
+                }
                 return Continue;
             };
 
@@ -156,9 +189,8 @@ where
     });
     trace!("walked in {:?}", now.elapsed());
 
-    let receiver_thread = thread::spawn(move || receiver.into_iter());
     drop(sender);
-    receiver_thread.join().unwrap()
+    (receiver.into_iter().collect(), ignore_files.into_inner())
 }
 
 /// Returns true when the entry should be hashed as a workspace file.
@@ -169,8 +201,16 @@ fn is_hashable_file(file_type: &std::fs::FileType) -> bool {
     file_type.is_file() || file_type.is_symlink()
 }
 
-/// Hardcoded ignore patterns used by both the walker and the watcher.
-/// These are directories that should never be walked or watched.
+/// Files vite and vitest write and remove while they load a config. The
+/// watch never reports them, so a walk that feeds a hash skips them too.
+pub(crate) const TRANSIENT_FILE_GLOBS: &[&str] = &[
+    "vitest.config.ts.timestamp*.mjs",
+    "vite.config.ts.timestamp*.mjs",
+    "vitest.config.mts.timestamp*.mjs",
+    "vite.config.mts.timestamp*.mjs",
+];
+
+/// Directories the walker and the watcher never enter.
 pub(crate) const HARDCODED_IGNORE_PATTERNS: &[&str] = &[
     "**/node_modules",
     "**/.git",
@@ -194,6 +234,20 @@ pub fn get_hardcoded_ignore_patterns() -> Vec<String> {
 }
 
 pub(crate) fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
+where
+    P: AsRef<Path>,
+{
+    create_walker_vetoing(directory, use_ignores, None)
+}
+
+/// `create_walker` with `extra` vetoed on top of the hardcoded ignores. The
+/// ignore crate keeps one filter predicate, so a caller that needs more has
+/// to have them composed here rather than add its own.
+pub(crate) fn create_walker_vetoing<P>(
+    directory: P,
+    use_ignores: bool,
+    extra: Option<Arc<NxGlobSet>>,
+) -> WalkBuilder
 where
     P: AsRef<Path>,
 {
@@ -234,8 +288,118 @@ where
     walker.filter_entry(move |entry| {
         let path = entry.path().to_string_lossy();
         !ignore_glob_set.is_match(path.as_ref())
+            && extra
+                .as_ref()
+                .is_none_or(|set| !set.is_match(path.as_ref()))
     });
     walker
+}
+
+// ---------------------------------------------------------------------------
+// Reading a directory's files, for the hashers and for the ignored index.
+// Both want the same thing: every file under a directory, workspace-relative.
+// ---------------------------------------------------------------------------
+
+/// The transient files the watch never reports. The hardcoded directories
+/// come from `create_walker`, which vetoes them for every walk.
+fn transient_skips() -> Result<Arc<NxGlobSet>> {
+    static SKIPS: OnceLock<Option<Arc<NxGlobSet>>> = OnceLock::new();
+    SKIPS
+        .get_or_init(|| {
+            let patterns: Vec<String> = TRANSIENT_FILE_GLOBS
+                .iter()
+                .map(|g| format!("**/{g}"))
+                .collect();
+            build_glob_set(&patterns).ok()
+        })
+        .clone()
+        .context("the transient-file globs always build")
+}
+
+/// Files under `start`, workspace-relative, with the stamp read on the way
+/// for anything the context does not vouch for. The walker skips what it
+/// skips for every walk, but never the root it is given, so a glob rooted at
+/// `node_modules` reads it. A linked file is read where it points; a linked
+/// directory is not entered.
+pub(crate) fn walk_files(
+    start: &Path,
+    workspace_root: &Path,
+    accept: PathPredicate,
+) -> Result<Vec<String>> {
+    let relative_of = |path: &Path| -> Option<String> {
+        Some(
+            path.strip_prefix(workspace_root)
+                .ok()?
+                .to_string_lossy()
+                .replace('\\', "/"),
+        )
+    };
+    let visit = |path: &Path, file_type: std::fs::FileType| -> Option<String> {
+        let relative = relative_of(path)?;
+        if file_type.is_symlink() {
+            // Read where a linked file points, but never enter a linked
+            // directory.
+            let target = std::fs::metadata(path).ok()?;
+            if target.is_dir() || !accept(&relative) {
+                return None;
+            }
+            return Some(relative);
+        }
+        if !file_type.is_file() || !accept(&relative) {
+            return None;
+        }
+        Some(relative)
+    };
+
+    let found = Mutex::new(Vec::new());
+    create_walker_vetoing(start, false, Some(transient_skips()?))
+        .follow_links(false)
+        .build_parallel()
+        .run(|| {
+            Box::new(|entry| {
+                if let Ok(entry) = entry
+                    && let Some(file_type) = entry.file_type()
+                    && let Some(one) = visit(entry.path(), file_type)
+                {
+                    found.lock().push(one);
+                }
+                WalkState::Continue
+            })
+        });
+    Ok(found.into_inner())
+}
+
+/// A question asked about one path: does this glob admit it, does the
+/// workspace context already track it. Borrowed and shared across the walk's
+/// threads, so it is always behind a reference and `Sync`.
+pub(crate) type PathPredicate<'a> = &'a (dyn Fn(&str) -> bool + Sync);
+
+/// The files under `dir` that `accept` admits, workspace-relative, read from
+/// disk. The one implementation of "what does this directory hold"; the
+/// ignored index caches on top of it, and everything else calls it directly.
+/// A path is read wherever it points, so an entry or a linked file may lead
+/// out of the workspace. `None` when `dir` cannot be read at all. The order
+/// is the walk's, not sorted.
+pub(crate) fn read_directory(
+    workspace_root: &Path,
+    dir: &str,
+    accept: PathPredicate,
+) -> Option<Vec<String>> {
+    let start = workspace_root.join(dir);
+    if !dunce::canonicalize(&start).ok()?.is_dir() {
+        return Some(Vec::new());
+    }
+    walk_files(&start, workspace_root, accept).ok()
+}
+
+/// Every file under `dir`, for the index adopting it as a listing. A
+/// directory that does not exist yet is empty rather than missing, so
+/// tracking one before its task writes it is not an error.
+pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<String>> {
+    if std::fs::symlink_metadata(workspace_root.join(dir)).is_err() {
+        return Some(Vec::new());
+    }
+    read_directory(workspace_root, dir, &|_| true)
 }
 
 #[cfg(test)]

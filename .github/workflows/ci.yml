@@ -21,6 +21,8 @@ env:
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
+  # Record and hash tasks with Nx Cloud I/O snapshots (ultracache).
+  NX_CLOUD_USE_IO_SNAPSHOTS: 'true'
 
 jobs:
   main-linux:
@@ -38,6 +40,9 @@ jobs:
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
       NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'true'
+      NX_FIX_CI_EXPERIMENTAL: 'true'
+      NX_FIX_CI_TRACING: 'true'
+      NX_FIX_CI_STABLE_OUTPUT_SCHEMA: 'true'
 
     steps:
       - name: Checkout

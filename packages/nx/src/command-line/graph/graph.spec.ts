@@ -1,18 +1,28 @@
 import type { Mock } from 'vitest';
 import type { FileData } from '../../config/project-graph';
-import { HashPlanner } from '../../native';
+import { expandFilesInput, HashPlanner } from '../../native';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
-import { getExpandedTaskInputs, ProjectGraphClientResponse } from './graph';
+import {
+  getExpandedTaskInputs,
+  ProjectGraphClientResponse,
+  selectedFor,
+  taskGraphForSelection,
+} from './graph';
+import type { TaskGraph } from '../../config/task-graph';
 
 vi.mock('../../native', async (importOriginal) => ({
   ...(await importOriginal<any>()),
   HashPlanner: vi.fn(),
   transferProjectGraph: vi.fn((g) => g),
+  expandFilesInput: vi.fn((_root: string, globs: string[]) =>
+    globs.filter((g) => !g.startsWith('!'))
+  ),
 }));
 vi.mock('../../native/transform-objects', () => ({
   transformProjectGraphForRust: vi.fn((g) => g),
+  transformProjectGraphForLocators: vi.fn((g) => g),
 }));
 vi.mock('../../project-graph/project-graph', () => ({
   createProjectGraphAsync: vi.fn(),
@@ -184,6 +194,83 @@ describe('getExpandedTaskInputs', () => {
     expect(cache.get('myproj:build')).toBe(result);
   });
 
+  it('expands a disk-backed group on disk instead of treating it as external', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': [
+        'files:[libs/myproj/generated/a.json,!libs/myproj/generated/b.json]',
+        'npm:some-pkg',
+      ],
+    });
+
+    const cache = new Map<string, Record<string, string[]>>();
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      cache,
+      'myproj:build'
+    );
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      ['libs/myproj/generated/a.json', '!libs/myproj/generated/b.json']
+    );
+    expect(result).toEqual({
+      general: ['libs/myproj/generated/a.json'],
+      external: ['npm:some-pkg'],
+    });
+  });
+
+  it('keeps a brace group intact when splitting a disk-backed group', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': [
+        'files:[{nx,tsconfig.base}.json,libs/myproj/gen/{a,b}/*.ts,!libs/myproj/gen/b/x.ts]',
+      ],
+    });
+
+    const cache = new Map<string, Record<string, string[]>>();
+    await getExpandedTaskInputs(makeResponse(), cache, 'myproj:build');
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      [
+        '{nx,tsconfig.base}.json',
+        'libs/myproj/gen/{a,b}/*.ts',
+        '!libs/myproj/gen/b/x.ts',
+      ]
+    );
+  });
+
+  it('keeps a brace group intact in a workspace group too', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': ['workspace:[{workspaceRoot}/{nx,tsconfig.base}.json]'],
+    });
+    allFileDataMock.mockResolvedValue([
+      { file: 'nx.json', hash: '1' },
+      { file: 'tsconfig.base.json', hash: '2' },
+      { file: 'tsconfig.json', hash: '3' },
+    ] as FileData[]);
+
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      new Map(),
+      'myproj:build'
+    );
+
+    expect(result.general).toEqual(['nx.json', 'tsconfig.base.json']);
+  });
+
+  it('falls back to a plain split when a brace is unbalanced', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': ['files:[libs/myproj/{a.json,libs/myproj/b.json]'],
+    });
+
+    await getExpandedTaskInputs(makeResponse(), new Map(), 'myproj:build');
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      ['libs/myproj/{a.json', 'libs/myproj/b.json']
+    );
+  });
+
   it('memoizes: a second call for the same task reuses the cached result', async () => {
     getPlansMock.mockReturnValue({
       'myproj:build': ['npm:some-pkg'],
@@ -221,5 +308,94 @@ describe('getExpandedTaskInputs', () => {
 
     expect(result).toEqual({ general: [], external: ['npm:some-pkg'] });
     expect(cache.get('myproj:test:integration')).toBe(result);
+  });
+});
+
+describe('selectedFor', () => {
+  const selection = {
+    targets: ['build', 'test'],
+    configuration: 'production',
+    taskIds: ['a:build:production'],
+  };
+
+  it('builds the selection, with its configuration, for its own targets', () => {
+    expect(selectedFor(['test', 'build'], undefined, selection)).toEqual({
+      configuration: 'production',
+      taskIds: ['a:build:production'],
+    });
+    expect(selectedFor(['build', 'test'], 'production', selection)).toEqual({
+      configuration: 'production',
+      taskIds: ['a:build:production'],
+    });
+  });
+
+  // The selection's ids carry `:production`; built without it the graph holds
+  // `a:build`, and pruning one to the other would leave nothing.
+  it("does not let a page with no configuration drop the selection's", () => {
+    expect(
+      selectedFor(['build', 'test'], undefined, selection).configuration
+    ).toBe('production');
+  });
+
+  it('shows another target or configuration whole rather than pruning it to nothing', () => {
+    expect(selectedFor(['lint'], undefined, selection)).toEqual({
+      configuration: undefined,
+    });
+    expect(selectedFor(['build', 'test'], 'development', selection)).toEqual({
+      configuration: 'development',
+    });
+  });
+
+  it('prunes nothing without a selection', () => {
+    expect(selectedFor(['build', 'test'], 'production', undefined)).toEqual({
+      configuration: 'production',
+    });
+  });
+});
+
+describe('taskGraphForSelection', () => {
+  const task = (id: string) => ({ id }) as any;
+  const built: TaskGraph = {
+    roots: ['lib:build', 'other:build'],
+    tasks: {
+      'app:build': task('app:build'),
+      'lib:build': task('lib:build'),
+      'other:build': task('other:build'),
+    },
+    dependencies: {
+      'app:build': ['lib:build'],
+      'lib:build': [],
+      'other:build': [],
+    },
+    continuousDependencies: {
+      'app:build': [],
+      'lib:build': [],
+      'other:build': [],
+    },
+  };
+
+  // It carries the overrides the run gives each task, which a graph built
+  // here without them would not.
+  it('draws the graph the run executes without building one', () => {
+    const narrowed = { ...built, tasks: { 'app:build': task('app:build') } };
+    const build = vi.fn(() => built);
+    expect(
+      taskGraphForSelection(build, {
+        taskGraph: narrowed,
+        taskIds: ['app:build', 'lib:build'],
+      })
+    ).toBe(narrowed);
+    expect(build).not.toHaveBeenCalled();
+  });
+
+  it('builds and prunes to the ids when given no graph, as the live graph is', () => {
+    const drawn = taskGraphForSelection(() => built, {
+      taskIds: ['app:build', 'lib:build'],
+    });
+    expect(Object.keys(drawn.tasks).sort()).toEqual(['app:build', 'lib:build']);
+  });
+
+  it('draws the whole graph without a selection', () => {
+    expect(taskGraphForSelection(() => built)).toBe(built);
   });
 });

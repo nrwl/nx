@@ -1,17 +1,18 @@
 describe('@nx/react withReact deprecation', () => {
-  function setup() {
-    let warn!: jest.SpyInstance;
-    let mod!: typeof import('./deprecation');
-    jest.isolateModules(() => {
-      const { logger } = require('@nx/devkit');
-      warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
-      mod = require('./deprecation');
-    });
+  async function setup() {
+    vi.resetModules();
+    const { logger } = await import('@nx/devkit');
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    const mod = await import('./deprecation');
     return { warn, mod };
   }
 
-  it('warns once per process', () => {
-    const { warn, mod } = setup();
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('warns once per process', async () => {
+    const { warn, mod } = await setup();
 
     mod.warnReactWithReactDeprecation();
     mod.warnReactWithReactDeprecation();
@@ -21,8 +22,8 @@ describe('@nx/react withReact deprecation', () => {
     expect(warn.mock.calls[0][0]).toContain('convert-to-inferred');
   });
 
-  it('does not warn when called inside a suppression scope', () => {
-    const { warn, mod } = setup();
+  it('does not warn when called inside a suppression scope', async () => {
+    const { warn, mod } = await setup();
 
     mod.suppressReactComposeHelperWarnings(() =>
       mod.warnReactWithReactDeprecation()
@@ -31,8 +32,8 @@ describe('@nx/react withReact deprecation', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it('restores warning after the suppression scope exits', () => {
-    const { warn, mod } = setup();
+  it('restores warning after the suppression scope exits', async () => {
+    const { warn, mod } = await setup();
 
     mod.suppressReactComposeHelperWarnings(() =>
       mod.warnReactWithReactDeprecation()

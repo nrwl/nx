@@ -1,7 +1,8 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -83,6 +84,15 @@ export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
 
 export async function updateDependencies(host: Tree, schema: Schema) {
   const versions = await getExpoDependenciesVersionsToInstall(host);
+
+  // @nx/expo optionally depends on @nx/detox, which depends on @nx/jest, so
+  // jest-resolve is installed even without a jest setup. It depends on
+  // unrs-resolver and, from jest 30.5.0, on a jest-haste-map that depends on
+  // @parcel/watcher. Neither needs its build to run.
+  acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+    '@parcel/watcher': false,
+    'unrs-resolver': false,
+  });
 
   // Expo SDK 55+ provides Metro through `@expo/metro` (a transitive dependency
   // of `expo`). Installing the standalone `metro-config`/`metro-resolver`

@@ -19,6 +19,7 @@ import { execFileSync, execSync } from 'child_process';
 import * as fs from 'fs';
 import { JsonDiffType } from '../utils/json-diff';
 import { workspaceRoot } from '../utils/workspace-root';
+import { join } from 'path';
 import ignore = require('ignore');
 
 describe('calculateFileChanges', () => {
@@ -175,6 +176,20 @@ describe('calculateFileChanges', () => {
       expect(execSyncMock).not.toHaveBeenCalledWith(
         expect.stringContaining('touch /tmp/nx-pwned'),
         expect.anything()
+      );
+    });
+
+    // `nx affected` can run from any directory inside the workspace.
+    it('should read the working tree relative to the workspace root', () => {
+      const readFileSync = vi.spyOn(fs, 'readFileSync');
+      const changes = calculateFileChanges(['proj/tsconfig.json'], {
+        base: 'main',
+      } as any);
+      changes[0].getChanges();
+
+      expect(readFileSync).toHaveBeenCalledWith(
+        join(workspaceRoot, 'proj/tsconfig.json'),
+        'utf-8'
       );
     });
 

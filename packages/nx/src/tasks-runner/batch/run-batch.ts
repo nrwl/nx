@@ -112,8 +112,26 @@ async function runTasks(
   } catch (e) {
     const isVerbose = tasks[0].overrides.verbose;
     console.error(isVerbose ? e : e.message);
+    // `process.exit` does not wait for pipe writes, so the reason this worker
+    // died could otherwise be the one line that never arrives.
+    await flushStdio();
     process.exit(1);
   }
+}
+
+/**
+ * Waits until everything written to stdout and stderr so far has reached the
+ * pipe. Writes to a pipe are asynchronous, and the parent learns the batch is
+ * over through a separate IPC channel - so without this it can be told the batch
+ * finished, or see the process exit, while the end of its output is still in
+ * memory here. That tail is where a tool reports what went wrong.
+ */
+function flushStdio(): Promise<void> {
+  const flush = (stream: NodeJS.WriteStream) =>
+    new Promise<void>((resolve) => stream.write('', () => resolve()));
+  return Promise.all([flush(process.stdout), flush(process.stderr)]).then(
+    () => undefined
+  );
 }
 
 process.on('message', async (message: BatchMessage) => {
@@ -125,6 +143,7 @@ process.on('message', async (message: BatchMessage) => {
         message.batchTaskGraph,
         message.fullTaskGraph
       );
+      await flushStdio();
       process.send({
         type: BatchMessageType.CompleteBatchExecution,
         results,

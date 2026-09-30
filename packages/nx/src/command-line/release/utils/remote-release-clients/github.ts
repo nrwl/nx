@@ -17,8 +17,7 @@ import {
   RemoteRepoData,
 } from './remote-release-client';
 
-// Use default import with esModuleInterop
-import axios from 'axios';
+import { httpRequest } from '../../../../utils/http-client';
 
 export interface GithubRepoData extends RemoteRepoData {}
 
@@ -184,11 +183,9 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
               break;
             }
           }
-          const { data } = await axios
-            .get<any, { data?: UnghUserLookupResponse }>(
-              `https://ungh.cc/users/find/${email}`
-            )
-            .catch(() => ({ data: { user: null } }));
+          const { data } = await httpRequest<UnghUserLookupResponse>(
+            `https://ungh.cc/users/find/${email}`
+          ).catch(() => ({ data: { user: null } }));
           if (data?.user?.username) {
             meta.username = data.user.username;
             break;
@@ -341,14 +338,14 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
             `---`,
             `Request Data:`,
             `Repo: ${this.getRemoteRepoData<GithubRepoData>()?.slug}`,
-            `Token Header Data: ${this.tokenHeader}`,
+            `Token Header: ${this.getRedactedTokenHeader()}`,
             `Body: ${JSON.stringify(result.requestData)}`,
           ],
         });
       } else {
-        console.log(error);
+        console.log(this.inspectWithRedactedToken(error));
         console.error(
-          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitHub token from the error message!)`
+          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: your GitHub token is redacted above, but please double-check before sharing)`
         );
       }
     }

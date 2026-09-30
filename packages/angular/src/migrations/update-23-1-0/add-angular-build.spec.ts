@@ -6,6 +6,7 @@ import {
   updateNxJson,
   type Tree,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { angularDevkitVersion } from '../../utils/versions';
 import migration from './add-angular-build';
@@ -156,6 +157,42 @@ describe('add-angular-build migration', () => {
       await migration(tree);
 
       expect(getAngularBuildVersion()).toBeUndefined();
+    });
+  });
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the build scripts @angular/build pulls in', async () => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        projectType: 'application',
+        targets: {
+          build: { executor: '@nx/angular:application', options: {} },
+        },
+      });
+
+      await withPnpm(tree, '11.2.2', () => migration(tree));
+
+      const workspaceYaml = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(workspaceYaml).toMatch(/['"]?esbuild['"]?: false/);
+      expect(workspaceYaml).toMatch(/['"]?lmdb['"]?: false/);
+      expect(workspaceYaml).toMatch(/['"]?msgpackr-extract['"]?: false/);
+      expect(workspaceYaml).toMatch(/['"]@parcel\/watcher['"]: false/);
+    });
+
+    it('should not record decisions when @angular/build is not added', async () => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        projectType: 'application',
+        targets: {
+          build: {
+            executor: '@angular-devkit/build-angular:browser',
+            options: {},
+          },
+        },
+      });
+
+      await withPnpm(tree, '11.2.2', () => migration(tree));
+
+      expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
     });
   });
 });

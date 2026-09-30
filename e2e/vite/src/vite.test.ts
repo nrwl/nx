@@ -36,6 +36,7 @@ describe('@nx/vite/plugin', () => {
   describe('with react', () => {
     beforeAll(() => {
       proj = newProject({
+        keepBackup: true,
         packages: ['@nx/react', '@nx/vue', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
@@ -421,6 +422,7 @@ export default defineConfig({
 
     beforeAll(() => {
       proj = newProject({
+        keepBackup: true,
         packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
@@ -446,6 +448,7 @@ export default defineConfig({
 
     beforeAll(() => {
       proj = newProject({
+        keepBackup: true,
         packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
@@ -489,6 +492,7 @@ export default defineConfig({
 
     beforeAll(() => {
       proj = newProject({
+        keepBackup: true,
         packages: ['@nx/vitest', '@nx/react', '@nx/webpack', '@nx/vite'],
       });
       runCLI(

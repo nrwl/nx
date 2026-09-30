@@ -1,3 +1,4 @@
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertToRspack } from './convert-to-rspack';
 import {
@@ -10,9 +11,9 @@ import {
 } from '@nx/devkit';
 import * as _configUtils from '@nx/devkit/internal';
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  loadConfigFile: jest.fn().mockImplementation(async (path) => {
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  loadConfigFile: vi.fn().mockImplementation(async (path) => {
     return () => {
       return {};
     };
@@ -20,6 +21,39 @@ jest.mock('@nx/devkit/internal', () => ({
 }));
 
 describe('convert-to-rspack', () => {
+  it('should record the build script decisions @nx/angular-rspack pulls in', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+      },
+    });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
+
+    await withPnpm(tree, '11.2.2', () =>
+      convertToRspack(tree, { project: 'app' })
+    );
+
+    const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatch(/['"]?esbuild['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?lmdb['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?msgpackr-extract['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?core-js['"]?: false/);
+    // Patches `@angular/build` below 20.2.0, so it has to run.
+    expect(pnpmWorkspace).toMatch(/['"]@nx\/angular-rspack-compiler['"]: true/);
+  });
+
   it('should convert a basic angular webpack application to rspack', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
@@ -1052,9 +1086,8 @@ describe('convert-to-rspack', () => {
     );
     tree.write('apps/app/webpack.config.js', ``);
 
-    jest
-      .spyOn(_configUtils, 'loadConfigFile')
-      .mockImplementation(async (path) => {
+    vi.spyOn(_configUtils, 'loadConfigFile').mockImplementation(
+      async (path) => {
         return {
           default: {
             module: {
@@ -1067,7 +1100,8 @@ describe('convert-to-rspack', () => {
             },
           },
         };
-      });
+      }
+    );
 
     // ACT
     await convertToRspack(tree, { project: 'app' });

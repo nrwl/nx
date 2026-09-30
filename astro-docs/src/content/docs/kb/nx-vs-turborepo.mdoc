@@ -278,7 +278,7 @@ In Turborepo, the same exclusion list is repeated across `build`, `build:prod`, 
 
 A cache is only valuable if you can trust it. Turborepo has no task sandboxing. During execution, tasks can read and write anywhere on the filesystem. A task can read files that aren't declared as inputs and produce undeclared outputs that get cached and replayed into a different context. The result: false cache hits, missing artifacts, and hard-to-trace failures.
 
-Nx provides [task sandboxing](/docs/features/ci-features/sandboxing) that runs each task in a sandbox and surfaces undeclared reads or writes, with an opt-in strict mode that fails the task. Undeclared dependencies show up automatically rather than through debugging production incidents.
+Nx provides [task sandboxing](/docs/kb/sandboxing) that runs each task in a sandbox and surfaces undeclared reads or writes, with an opt-in strict mode that fails the task. Undeclared dependencies show up automatically rather than through debugging production incidents.
 
 This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) showed how remote caches without branch isolation, where the first run to populate a key wins, let a contributor with PR access poison artifacts that protected branches later reuse. It's a property of bucket-style shared caches, not of any one tool. Nx Cloud prevents it through branch-scoped cache isolation. For more details, see [cache security](/docs/kb/cache-security).
 
@@ -318,7 +318,7 @@ Turborepo can orchestrate any language by wrapping CLI commands in `package.json
 Nx actively embraces AI and autonomous agents across the entire development lifecycle, not only individual features. Running [`nx configure-ai-agents`](/blog/nx-ai-agent-skills) sets up everything your AI agent needs in one command: agent skills, an MCP server, and `CLAUDE.md` / `AGENTS.md` guidelines. It works across **Claude Code, Cursor, GitHub Copilot, Gemini, Codex, and OpenCode**.
 
 - **[Agent skills](/blog/why-we-deleted-most-of-our-mcp-tools)** teach agents _how_ to work in your monorepo: when to use generators, how to explore the project graph, how to run tasks efficiently. Skills are loaded incrementally, keeping context focused and token-efficient.
-- **[Self-healing CI](/docs/features/ci-features/self-healing-ci)** is a specialized AI agent that runs on CI, monitors runs, diagnoses broken tasks, provides verified fixes, and automatically identifies and [re-runs flaky tasks](/docs/features/ci-features/flaky-tasks).
+- **[Self-healing CI](/docs/features/ci-features/self-healing-ci)** is a specialized AI agent that runs on CI, monitors runs, diagnoses broken tasks, provides verified fixes, and automatically identifies and [re-runs flaky tasks](/docs/kb/flaky-tasks).
 - Dedicated skills and an **[MCP server](/docs/reference/nx-mcp)** allow the local coding agent to connect and [coordinate with the remote CI agent](/blog/autonomous-ai-workflows-with-nx), creating fully autonomous push-fix-verify loops.
 - The **Nx CLI is [optimized for agentic use](/blog/making-nx-agent-ready)**: commands like `nx init`, `nx import`, and `create-nx-workspace` detect when they're called by an agent and emit structured JSON output instead of interactive prompts, reducing wasted tokens and retries.
 
@@ -363,7 +363,7 @@ With static binning, one agent finishes early and sits idle while another carrie
 To learn more about distribution on CI, read [Distribute Task Execution (Nx Agents)](/docs/features/ci-features/distribute-task-execution).
 
 Nx also provides **Atomizer**, which automatically splits slow e2e and integration test suites into per-file tasks that can run in parallel across machines.
-For more information, see [split e2e tasks](/docs/features/ci-features/split-e2e-tasks).
+For more information, see [split e2e tasks](/docs/kb/split-e2e-tasks).
 
 ### CI throughput
 
@@ -371,7 +371,7 @@ Raw CI speed is one part of throughput. The other is avoiding failed PRs. A fail
 
 Nx Cloud's [self-healing CI](/docs/features/ci-features/self-healing-ci) places a specialized AI agent on CI that analyzes failures, proposes fixes, and auto-applies verified fixes. This reduces friction on the developer side, allowing PRs to move forward without manual intervention.
 
-[Flaky task detection](/docs/features/ci-features/flaky-tasks) identifies flaky tests and re-runs them in isolation, preventing false failures from blocking your pipeline.
+[Flaky task detection](/docs/kb/flaky-tasks) identifies flaky tests and re-runs them in isolation, preventing false failures from blocking your pipeline.
 
 ![Time to green data: ~1h reduction per PR, 1h 24m developer time saved, 22.6% fewer context switches](../../../assets/guides/adopting-nx/time-to-green.avif)
 
@@ -389,7 +389,7 @@ Both tools offer visibility into your pipelines, but through different models.
 
 _Nx Agent utilization chart, showing even distribution across CI runners._
 
-For deep dives into resource utilization, see [Resource Usage](/docs/features/ci-features/resource-usage).
+For deep dives into resource utilization, see [Resource Usage](/docs/kb/resource-usage).
 
 **Turborepo** exposes run metrics via experimental **OpenTelemetry (OTLP)**. This is useful if you already have a mature observability stack (like Datadog or Grafana) and want to route build metrics into it, though it requires significant manual setup and maintenance of your own collector and visualization layer.
 

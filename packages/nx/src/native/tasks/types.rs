@@ -38,6 +38,47 @@ pub struct Task {
     pub parallelism: Option<bool>,
     /// This denotes if the task runs continuously
     pub continuous: Option<bool>,
+    /// The target's ultracache configuration, if declared
+    pub ultracache: Option<TaskUltracacheConfiguration>,
+}
+
+/// How a target's tasks participate in ultracache. Nx Cloud only: nothing in
+/// the OSS runner records or applies IO, so every mode behaves as `Off` without
+/// it.
+#[napi(string_enum = "lowercase")]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub enum UltracacheMode {
+    /// Record IO and let the recording stand in for the target's declared
+    /// inputs and outputs. The default.
+    #[default]
+    On,
+    /// Record IO and report undeclared reads and writes, but hash and cache
+    /// from what the target declared.
+    Warn,
+    /// Reserved for failing the task on an undeclared read or write. Nothing
+    /// enforces that per target yet, so it behaves as `Warn` today.
+    Error,
+    /// Record nothing, so no report is produced and nothing is applied.
+    Off,
+}
+
+/// Ultracache configuration of a task's target
+#[napi(object)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub struct TaskUltracacheConfiguration {
+    /// How this target's tasks participate. Defaults to `on`.
+    #[napi(ts_type = "'on' | 'warn' | 'error' | 'off'")]
+    pub mode: Option<UltracacheMode>,
+    /// Workspace-relative glob patterns for reads that should be excluded
+    /// from ultracache reports. The first path segment cannot contain `*`,
+    /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+    /// pattern to a directory instead of leading with `**`.
+    pub ignored_reads: Option<Vec<String>>,
+    /// Workspace-relative glob patterns for writes that should be excluded
+    /// from ultracache reports. The first path segment cannot contain `*`,
+    /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+    /// pattern to a directory instead of leading with `**`.
+    pub ignored_writes: Option<Vec<String>>,
 }
 
 impl Task {
@@ -157,14 +198,31 @@ pub enum HashInstruction {
     Runtime(String),
     Environment(String),
     Cwd(CwdMode),
+    /// Globs filtered against one project's tracked files.
     ProjectFileSet(String, Vec<String>),
+    /// Workspace-relative globs expanded against the disk, so gitignored and
+    /// generated files count: a project's `includeIgnored` globs, or a
+    /// snapshot's observed reads. The project is not part of it: the same globs
+    /// read the same files wherever they were declared.
+    IgnoredFileSet(Vec<String>),
     ProjectConfiguration(String),
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
     External(String),
     AllExternalDependencies,
     JsonFileSet(Box<JsonFileSetInput>),
+    /// Digest of the I/O snapshot entry a task's plan was built from, so its
+    /// hash moves when its own observations do. Hashed as the text `Display`
+    /// renders, which also keeps it from colliding with a native key.
+    IoSnapshot(String),
 }
+
+/// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
+pub(crate) const ALWAYS_ON_WORKSPACE_FILES: [&str; 3] = [
+    "{workspaceRoot}/nx.json",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+];
 
 /// Append-only interner for hash instructions. Plans store `u32` ids into the
 /// pool, so each unique instruction is materialized once per planner instance
@@ -176,6 +234,8 @@ pub struct InstructionPool {
     // Display strings, rendered once per unique instruction at intern time so
     // hashing can hand out shared keys instead of re-rendering per task.
     keys: DashMap<u32, Arc<str>>,
+    /// `HashInstruction::label` per id, rendered once like `keys`.
+    labels: DashMap<u32, Arc<str>>,
     next_id: AtomicU32,
 }
 
@@ -197,9 +257,30 @@ impl InstructionPool {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
                 self.items.insert(id, vacant.key().clone());
                 self.keys.insert(id, Arc::from(vacant.key().to_string()));
+                self.labels.insert(id, Arc::from(vacant.key().label()));
                 vacant.insert(id);
                 id
             }
+        }
+    }
+
+    /// Whether an I/O snapshot replaces this instruction: every declared
+    /// fileset (`includeIgnored` ones too), TsConfiguration unless the root
+    /// tsconfig was read, and a JSON input unless `read` says its file was.
+    pub fn replaced_by_snapshot(
+        &self,
+        id: u32,
+        keep_tsconfig: bool,
+        read: impl Fn(&str) -> bool,
+    ) -> bool {
+        // The snapshot's own reads are disk-backed groups too; the caller keeps those.
+        match &*self.get(id) {
+            HashInstruction::ProjectFileSet(..)
+            | HashInstruction::WorkspaceFileSet(_)
+            | HashInstruction::IgnoredFileSet(_) => true,
+            HashInstruction::TsConfiguration(_) => !keep_tsconfig,
+            HashInstruction::JsonFileSet(json) => !read(&json.json_path),
+            _ => false,
         }
     }
 
@@ -218,6 +299,15 @@ impl InstructionPool {
             .clone()
     }
 
+    /// The instruction's label (see `HashInstruction::label`), shared across
+    /// all tasks that reference the instruction.
+    pub fn label(&self, id: u32) -> Arc<str> {
+        self.labels
+            .get(&id)
+            .expect("instruction ids are only handed out by intern()")
+            .clone()
+    }
+
     pub fn len(&self) -> usize {
         self.items.len()
     }
@@ -228,6 +318,28 @@ impl InstructionPool {
 pub struct HashPlans {
     pub pool: Arc<InstructionPool>,
     pub plans: HashMap<String, Vec<u32>>,
+    /// Tasks the up-front batch leaves out: the directory a disk-backed
+    /// fileset of theirs reads from contains, or sits inside, an output a
+    /// task they depend on declares.
+    pub deferred: std::collections::HashSet<String>,
+}
+
+/// Entries above which a disk-backed group's label carries a count and a
+/// digest instead of every path. A snapshot group can run to thousands.
+pub const COMPACT_FILES_LABEL_ABOVE: usize = 8;
+
+impl HashInstruction {
+    /// What hash details name this instruction: its Display, except that a
+    /// large disk-backed group folds to a count and a digest of its paths.
+    pub fn label(&self) -> String {
+        match self {
+            HashInstruction::IgnoredFileSet(globs) if globs.len() > COMPACT_FILES_LABEL_ABOVE => {
+                let digest = crate::native::hasher::hash(globs.join(",").as_bytes());
+                format!("files:[{} paths #{digest}]", globs.len())
+            }
+            _ => self.to_string(),
+        }
+    }
 }
 
 impl ToNapiValue for HashInstruction {
@@ -274,6 +386,7 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::ProjectFileSet(project_name, file_set) => {
                     format!("{project_name}:{}", file_set.join(","))
                 }
+                HashInstruction::IgnoredFileSet(globs) => format!("files:[{}]", globs.join(",")),
                 HashInstruction::WorkspaceFileSet(file_set) =>
                     format!("workspace:[{}]", file_set.join(",")),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
@@ -284,6 +397,9 @@ impl fmt::Display for HashInstruction {
                     format!("{task_output}:{dep_outputs}")
                 }
                 HashInstruction::External(external) => external.to_string(),
+                HashInstruction::IoSnapshot(digest) => {
+                    format!("io-snapshot:{digest}")
+                }
                 HashInstruction::ProjectConfiguration(project_name) => {
                     format!("{project_name}:ProjectConfiguration")
                 }
@@ -318,6 +434,62 @@ mod tests {
     use super::*;
 
     #[test]
+    fn label_folds_a_large_disk_backed_group_and_keeps_small_ones_verbatim() {
+        let small = HashInstruction::IgnoredFileSet(vec!["a".into(), "!b".into()]);
+        assert_eq!(small.label(), small.to_string());
+        let globs: Vec<String> = (0..20).map(|i| format!("libs/p/f{i}.ts")).collect();
+        let big = HashInstruction::IgnoredFileSet(globs.clone());
+        let label = big.label();
+        assert!(label.starts_with("files:[20 paths #"), "{label}");
+        let mut changed = globs.clone();
+        changed[3] = "libs/p/other.ts".into();
+        let relabeled = HashInstruction::IgnoredFileSet(changed).label();
+        assert_ne!(label, relabeled);
+        let tracked = HashInstruction::ProjectFileSet("p".into(), globs);
+        assert_eq!(tracked.label(), tracked.to_string());
+        let pool = InstructionPool::new();
+        let id = pool.intern(big.clone());
+        assert_eq!(&*pool.label(id), label.as_str());
+        assert_eq!(&*pool.key(id), big.to_string().as_str());
+    }
+
+    #[test]
+    fn the_snapshot_digest_renders_with_its_prefix_and_interns_by_value() {
+        let pool = InstructionPool::new();
+        let a = pool.intern(HashInstruction::IoSnapshot("abc".into()));
+        let b = pool.intern(HashInstruction::IoSnapshot("abc".into()));
+        let c = pool.intern(HashInstruction::IoSnapshot("def".into()));
+        assert_eq!(a, b);
+        assert_ne!(a, c);
+        assert_eq!(&*pool.key(a), "io-snapshot:abc");
+        // Filesets, disk-backed ones included, are replaced by a snapshot; the
+        // digest is not.
+        let fileset = pool.intern(HashInstruction::ProjectFileSet(
+            "p".into(),
+            vec!["p/**/*".into()],
+        ));
+        let group = pool.intern(HashInstruction::IgnoredFileSet(vec![
+            "p/a.ts".into(),
+            "!p/**/*.spec.ts".into(),
+        ]));
+        let unread = |_: &str| false;
+        assert!(pool.replaced_by_snapshot(fileset, true, unread));
+        assert!(pool.replaced_by_snapshot(group, true, unread));
+        assert!(!pool.replaced_by_snapshot(a, true, unread));
+        let ts = pool.intern(HashInstruction::TsConfiguration("p".into()));
+        assert!(pool.replaced_by_snapshot(ts, false, unread));
+        assert!(!pool.replaced_by_snapshot(ts, true, unread));
+        let json = pool.intern(HashInstruction::JsonFileSet(Box::new(JsonFileSetInput {
+            project_name: None,
+            json_path: "p/package.json".into(),
+            fields: Some(vec!["version".into()]),
+            exclude_fields: None,
+        })));
+        assert!(pool.replaced_by_snapshot(json, true, unread));
+        assert!(!pool.replaced_by_snapshot(json, true, |path| path == "p/package.json"));
+    }
+
+    #[test]
     fn pool_key_matches_display_and_is_shared() {
         let pool = InstructionPool::new();
         let instruction = HashInstruction::ProjectConfiguration("proj".to_string());
@@ -327,6 +499,31 @@ mod tests {
         assert_eq!(&*key, instruction.to_string());
         // Every call hands out the same allocation, not a fresh string.
         assert!(Arc::ptr_eq(&key, &pool.key(id)));
+    }
+
+    #[test]
+    fn disk_backed_display_lists_globs_in_declared_order() {
+        let instruction = HashInstruction::IgnoredFileSet(vec![
+            "libs/ui/dist/**/*.js".into(),
+            "!libs/ui/dist/**/*.map".into(),
+        ]);
+        assert_eq!(
+            instruction.to_string(),
+            "files:[libs/ui/dist/**/*.js,!libs/ui/dist/**/*.map]"
+        );
+    }
+
+    #[test]
+    fn the_two_backing_stores_never_share_a_pool_key() {
+        let globs = vec!["libs/ui/**/*.ts".to_string()];
+        assert_ne!(
+            HashInstruction::ProjectFileSet("ui".into(), globs.clone()).to_string(),
+            HashInstruction::IgnoredFileSet(globs.clone()).to_string()
+        );
+        assert_ne!(
+            HashInstruction::WorkspaceFileSet(globs.clone()).to_string(),
+            HashInstruction::IgnoredFileSet(globs).to_string()
+        );
     }
 
     #[test]

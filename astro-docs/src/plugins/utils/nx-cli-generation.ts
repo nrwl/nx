@@ -1,5 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import type { LoaderContext } from 'astro/loaders';
+import { generatedDocFileURL } from './generated-doc-file-url';
 import type { CollectionEntry } from 'astro:content';
 import { fork } from 'node:child_process';
 import { join, relative } from 'node:path';
@@ -92,7 +93,9 @@ export async function loadNxCliPackage(
       filter: 'type:References',
       weight: 4,
     },
-    rendered: await renderMarkdown(markdown),
+    rendered: await renderMarkdown(markdown, {
+      fileURL: generatedDocFileURL('reference/nx-commands'),
+    }),
     collection: 'nx-reference-packages',
   };
 
