@@ -113,6 +113,21 @@ The site uses custom content loaders to dynamically generate documentation:
 - **PluginLoader** (`plugin.loader.ts`) - Generates official plugin documentation (generators, executors, migrations)
 - **CommunityPluginsLoader** (`community-plugins.loader.ts`) - Generates data for plugin registry (e.g. GitHub stars, npm downloads)
 - **NxReferencePackagesLoader** (`nx-reference-packages.loader.ts`) - Generated data for CNW, Devkit, nx cli (e.g. nx core related things)
+- **NxCloudPublicApiLoader** (`nx-cloud-public-api.loader.ts`) - Fetches the deployed OpenAPI specification into the `nx-cloud-public-api` collection and generates the API reference, including authentication, parameters, responses, headers, and schemas.
+
+### Nx Cloud Public API reference
+
+The reference at `/docs/reference/nx-cloud/public-api` is an Astro page backed by the `nx-cloud-public-api` collection, not an authored Markdoc page. Its loader reads `https://cloud.nx.app/nx-cloud/data/openapi.json` on each content sync. Set `NX_CLOUD_OPENAPI_URL` to use another deployment's specification.
+
+The loader fails if the specification cannot be fetched or parsed. It does not publish a static fallback. API descriptions belong in the OpenAPI source; usage instructions belong in the Knowledge Base articles. The generated reference also has a `.md` endpoint and appears in the reference `llms.txt` index.
+
+The renderer shows shared HTTP response descriptions and header definitions once. Each operation links its response codes to those details. Its success body and examples start collapsed; the response code link or the summary reveals them. Status-keyed `components.responses` entries (for example, `400`) supply common meanings when the operation has the same response shape. Different payloads or headers remain separate. Schema links use readable labels without changing the specification's names or reference anchors.
+
+Authentication labels use the scheme's `x-displayName` extension, or its name with the first letter capitalized. The renderer does not change scheme keys or header names.
+
+The `astro-docs:build` target does not use the Nx task cache because the remote specification can change independently of repository files. Package build dependencies still use their normal caches. Restart the local server to fetch a new deployed specification.
+
+Run `pnpm nx run astro-docs:test-openapi` for the loader tests. Run `pnpm nx run astro-docs:pw-e2e -- public-api.spec.ts` for the reference page tests.
 
 ## Content Management
 

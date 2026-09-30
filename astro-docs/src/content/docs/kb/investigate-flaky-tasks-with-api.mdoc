@@ -1,0 +1,76 @@
+---
+title: Investigate flaky tasks with the Public API
+description: Build a weekly flaky-task review from Nx Cloud metrics and logs, then propose focused fixes with an AI agent.
+filter: 'type:Guides'
+topics:
+  - 'Nx Cloud'
+  - 'Continuous integration'
+---
+
+Use the [Nx Cloud Public API](/docs/reference/nx-cloud/public-api) to identify flaky tasks and collect evidence for a weekly review. An AI agent can inspect the evidence and propose a pull request. The API itself does not modify code or open pull requests.
+
+## Select a settled period
+
+Choose seven completed UTC days. Set `windowStartAfter` to the first day and `windowEndBefore` to the last day. Do not include the current day, because its metric window can still change.
+
+Use the authentication and path discovery from the [request guide](/docs/kb/query-public-api#make-your-first-request). Discover the metric path from the downloaded specification:
+
+```shell
+FLAKY_TASKS_PATH=$(jq -r '.paths | keys[] | select(endswith("/flaky-tasks"))' openapi.json)
+
+curl --fail-with-body --silent --show-error --get \
+  "$NX_CLOUD_HOST$FLAKY_TASKS_PATH" \
+  --header "Authorization: Bearer $NX_CLOUD_ACCESS_TOKEN" \
+  --data-urlencode "windowStartAfter=2026-09-21" \
+  --data-urlencode "windowEndBefore=2026-09-27" \
+  --data-urlencode "limit=100" \
+  --output flaky-tasks.json
+```
+
+Replace the example dates with your review period. Follow `nextCursor` until you have every page in that period. Keep the dates and other filters unchanged. Add a `project` filter if you only need one project.
+
+## Prioritize five tasks
+
+Group rows by `project`, `target`, and `configuration`. Each row represents one daily window, not one task's aggregate for the whole week.
+
+For each group, calculate a sample-weighted rate:
+
+```text
+weekly rate = sum(flakinessRate * sampleSizeFlakinessRate)
+              / sum(sampleSizeFlakinessRate)
+```
+
+Report the denominator alongside the rate. A task with one sample should not outrank a frequently retried task without additional evidence. Select a minimum sample size suitable for your workspace, then rank eligible groups by the weighted rate. Use `totalReruns` to show the retry workload and `deflakedAutomatically` to show automatic recovery.
+
+Do not assume the first five API rows are the five flakiest tasks. The API pages by metric window, not by flakiness rank. Record your period, sample threshold, page count, and ranking method in the report.
+
+## Inspect contributing executions
+
+For each selected task:
+
+1. Follow each metric row's `links.executions` and fetch all its pages.
+2. Deduplicate execution IDs across the selected daily windows.
+3. Follow `links.run` for run metadata and `links.tasks` for the matching task rows.
+4. Inspect the task's final result and `priorAttempts`.
+5. Download the final and earlier failed logs through their asset URLs.
+
+Earlier task attempts use an `attempt` index that starts at zero, oldest-first. Preserve `batchId` when the task ID repeats within a run. Follow the [asset download rules](/docs/kb/query-public-api#download-assets); do not send tokens to the signed storage URL.
+
+A retry alone does not prove a task is flaky. Compare failures and successes for the same computation, including the recorded hash and task configuration. Inspect the logs for a repeatable cause, such as shared ports, timing assumptions, or a resource limit.
+
+Some contributing execution links can return `404`. Report those missing records instead of treating them as successful attempts.
+
+## Ask an agent for a focused fix
+
+Give the agent the selected task, metric period, sample count, relevant attempt logs, and repository revision. Ask it to reproduce the failure and propose the smallest change supported by that evidence.
+
+Require these outputs before a pull request:
+
+- The failure signature and its supporting execution IDs.
+- A reproduction or an explicit statement that reproduction failed.
+- A focused code change and relevant test results.
+- A clear distinction between verified findings and hypotheses.
+
+Do not let the agent change cache settings because a metric suggests flakiness. API records do not establish the current Nx target configuration. Inspect the matching repository before a configuration change.
+
+Review each proposed pull request before merge. Compare the next settled period with the same filters to check whether the task improved.

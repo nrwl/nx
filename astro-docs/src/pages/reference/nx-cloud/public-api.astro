@@ -1,0 +1,30 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getEntry, render } from 'astro:content';
+
+const reference = await getEntry('nx-cloud-public-api', 'reference');
+if (!reference) {
+  throw new Error('The Nx Cloud Public API specification was not loaded.');
+}
+const { Content, headings } = await render(reference);
+Astro.locals.rawContent = reference.body;
+---
+
+<StarlightPage
+  frontmatter={{ title: reference.data.title, description: reference.data.description }}
+  headings={headings}
+>
+  <p>
+    This reference is generated from the
+    <a href={reference.data.specificationUrl}>deployed OpenAPI specification</a>.
+    API version: <code>{reference.data.apiVersion}</code>.
+  </p>
+  <p>
+    For usage examples, see
+    <a href="/docs/kb/query-public-api">Query the Nx Cloud Public API</a>,
+    <a href="/docs/kb/investigate-flaky-tasks-with-api">investigate flaky tasks</a>,
+    <a href="/docs/kb/debug-ci-failures-with-api">debug CI failures</a>, and
+    <a href="/docs/kb/analyze-task-distribution-with-api">analyze task distribution</a>.
+  </p>
+  <Content />
+</StarlightPage>
