@@ -11,6 +11,7 @@ import { transformFromPromise } from 'ng-packagr/src/lib/graph/transform';
 import type { NgEntryPoint } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
 import {
   byEntryPoint,
+  getActiveEntryPoint,
   isEntryPointInProgress,
   isPackage,
 } from 'ng-packagr/src/lib/ng-package/nodes';
@@ -36,7 +37,12 @@ async function shouldWriteFile(
 
 export const writeBundlesTransform = (_options: NgPackagrOptions) => {
   return transformFromPromise(async (graph) => {
-    const entryPointNode = graph.find(isEntryPointInProgress());
+    // ng-packagr >= 22.2 builds entry points in parallel, so several can be in
+    // progress; its helper returns the one this graph is scoped to
+    const entryPointNode =
+      typeof getActiveEntryPoint === 'function'
+        ? getActiveEntryPoint(graph)
+        : graph.find(isEntryPointInProgress());
     if (!entryPointNode) {
       return;
     }
