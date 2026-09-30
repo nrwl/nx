@@ -1,6 +1,6 @@
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import type { Cache } from '@angular/build/private';
+import { requireAngularBuildFile } from './angular-build-file';
 
 export interface JavascriptTransformerCache {
   cache: Cache<Uint8Array>;
@@ -11,6 +11,12 @@ interface LmdbCacheStoreLike {
   createCache<V>(namespace: string): Cache<V>;
   close(): Promise<void>;
 }
+
+// `@angular/build` 22.2 moved the store out of `src/tools/esbuild`.
+const LMDB_CACHE_STORE_PATHS = [
+  'src/utils/cache/lmdb-cache-store.js',
+  'src/tools/esbuild/lmdb-cache-store.js',
+];
 
 /**
  * Creates the persistent store the esbuild application builder uses for
@@ -26,22 +32,22 @@ interface LmdbCacheStoreLike {
 export function createJavascriptTransformerCache(
   persistentCachePath: string
 ): JavascriptTransformerCache | undefined {
-  try {
-    const requireFn = createRequire(__filename);
-    const angularBuildDir = dirname(
-      requireFn.resolve('@angular/build/package.json')
-    );
-    const { LmdbCacheStore } = requireFn(
-      join(angularBuildDir, 'src/tools/esbuild/lmdb-cache-store.js')
-    ) as { LmdbCacheStore: new (cachePath: string) => LmdbCacheStoreLike };
-    const store = new LmdbCacheStore(
-      join(persistentCachePath, 'angular-compiler.db')
-    );
-    return {
-      cache: store.createCache('jstransformer'),
-      close: () => store.close(),
-    };
-  } catch {
-    return undefined;
+  for (const storePath of LMDB_CACHE_STORE_PATHS) {
+    try {
+      const {
+        LmdbCacheStore,
+      }: { LmdbCacheStore: new (cachePath: string) => LmdbCacheStoreLike } =
+        requireAngularBuildFile(storePath);
+      const store = new LmdbCacheStore(
+        join(persistentCachePath, 'angular-compiler.db')
+      );
+      return {
+        cache: store.createCache('jstransformer'),
+        close: () => store.close(),
+      };
+    } catch {
+      // Not loadable from this location; try the next one.
+    }
   }
+  return undefined;
 }

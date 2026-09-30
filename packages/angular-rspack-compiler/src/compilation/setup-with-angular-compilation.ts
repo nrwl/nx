@@ -6,6 +6,8 @@ import {
   SourceFileCache,
   toTypeScriptFileCacheKey,
 } from '../models';
+import { resetAngularBuildSassCaches } from '../utils/angular-build-sass';
+import { isAngularBuildVersionAtLeast } from '../utils/angular-build-version';
 import {
   setupCompilation,
   styleTransform,
@@ -21,6 +23,28 @@ export interface StylesheetMetafileInputs {
   inputs: Record<string, { bytesInOutput: number }>;
 }
 
+type AngularHostOptions = Parameters<AngularCompilation['initialize']>[1];
+
+// Before @angular/build 22.2, `initialize` took the source file cache in the
+// host options and a function replacing the compiler options it read.
+interface LegacyAngularCompilation {
+  initialize(
+    tsconfig: string,
+    hostOptions: AngularHostOptions & { sourceFileCache?: SourceFileCache },
+    compilerOptionsTransformer: (
+      compilerOptions: Record<string, unknown>
+    ) => Record<string, unknown>
+  ): ReturnType<AngularCompilation['initialize']>;
+}
+
+// The declarations are those of the installed @angular/build, so only its
+// version tells whether `initialize` has the pre-22.2 signature.
+function hasLegacyInitialize(
+  compilation: AngularCompilation
+): compilation is LegacyAngularCompilation & AngularCompilation {
+  return !isAngularBuildVersionAtLeast('22.2.0');
+}
+
 export async function setupCompilationWithAngularCompilation(
   config: Pick<RsbuildConfig, 'source'>,
   options: SetupCompilationOptions,
@@ -34,21 +58,6 @@ export async function setupCompilationWithAngularCompilation(
     componentStylesheetBundler,
     setupWarnings,
   } = await setupCompilation(config, options);
-
-  // Persist the TypeScript incremental state to the cache directory when one
-  // is available so later cold builds resume from it.
-  if (
-    sourceFileCache?.persistentCachePath &&
-    compilerOptions.incremental !== false
-  ) {
-    compilerOptions.incremental = true;
-    compilerOptions.tsBuildInfoFile = join(
-      sourceFileCache.persistentCachePath,
-      '.tsbuildinfo'
-    );
-  } else {
-    compilerOptions.incremental = false;
-  }
 
   // Mirrors @angular/build's NG_BUILD_PARALLEL_TS switch: anything but
   // 0/false runs the Angular compilation in a worker thread, so type
@@ -73,6 +82,7 @@ export async function setupCompilationWithAngularCompilation(
   // stylesheets get rebuilt; there's nothing to invalidate on the first build.
   if (modifiedFiles) {
     componentStylesheetBundler.invalidate(modifiedFiles);
+    resetAngularBuildSassCaches(modifiedFiles);
   }
 
   modifiedFiles ??= new Set(rootNames);
@@ -121,24 +131,54 @@ export async function setupCompilationWithAngularCompilation(
     return result.contents;
   };
 
+  const tsconfig = config.source?.tsconfigPath ?? options.tsConfig;
+  const hostOptions: AngularHostOptions = {
+    fileReplacements,
+    modifiedFiles,
+    transformStylesheet: wrappedTransformStylesheet,
+    processWebWorker(workerFile: string) {
+      return workerFile;
+    },
+  };
   // Initialization errors are rethrown for callers to surface as build
   // errors instead of continuing with a compilation that was never
   // initialized.
   let initializationResult;
   try {
-    initializationResult = await angularCompilation.initialize(
-      config.source?.tsconfigPath ?? options.tsConfig,
-      {
-        sourceFileCache,
-        fileReplacements,
-        modifiedFiles,
-        transformStylesheet: wrappedTransformStylesheet,
-        processWebWorker(workerFile: string) {
-          return workerFile;
-        },
-      },
-      () => compilerOptions
-    );
+    if (hasLegacyInitialize(angularCompilation)) {
+      // Persist the TypeScript incremental state to the cache directory when
+      // one is available so later cold builds resume from it.
+      if (
+        sourceFileCache?.persistentCachePath &&
+        compilerOptions.incremental !== false
+      ) {
+        compilerOptions.incremental = true;
+        compilerOptions.tsBuildInfoFile = join(
+          sourceFileCache.persistentCachePath,
+          '.tsbuildinfo'
+        );
+      } else {
+        compilerOptions.incremental = false;
+      }
+      initializationResult = await angularCompilation.initialize(
+        tsconfig,
+        { ...hostOptions, sourceFileCache },
+        () => compilerOptions
+      );
+    } else {
+      // The compilation reads and adjusts the tsconfig itself, like
+      // `setupCompilation` does; only these overrides reach it.
+      initializationResult = await angularCompilation.initialize(
+        tsconfig,
+        hostOptions,
+        {
+          sourcemap: !!options.sourceMap,
+          preserveSymlinks: options.preserveSymlinks,
+          cachePath: sourceFileCache?.persistentCachePath,
+          customConditions: options.customConditions,
+        }
+      );
+    }
   } catch (error) {
     // A worker-based compilation spawns its worker thread on construction;
     // close one created here or every failing setup would leak a worker.
@@ -176,16 +216,15 @@ export async function setupCompilationWithAngularCompilation(
   }
 
   // Only the AOT emit branches between TypeScript transpilation and raw
-  // Angular-transformed TypeScript, on this exact expression over the
-  // program's options (JIT always transpiles). The loaders classify the
-  // emitted cache entries with this flag, so it must never diverge from the
-  // emit's gate. The worker-based initialize reports only four options; the
-  // three the gate reads are among them, and any other option would be
-  // undefined here.
+  // Angular-transformed TypeScript (JIT always transpiles). The loaders
+  // classify the emitted cache entries with this flag, so it must never
+  // diverge from the emit's gate. Worker-based compilations before
+  // @angular/build 22.1 report only `allowJs` and the options the fallback
+  // reads.
   const useTypeScriptTranspilation =
-    !initializedCompilerOptions?.isolatedModules ||
-    !!initializedCompilerOptions?.sourceMap ||
-    !!initializedCompilerOptions?.inlineSourceMap;
+    (initializedCompilerOptions?.['_useTypeScriptTranspilation'] as
+      | boolean
+      | undefined) ?? isTypeScriptTranspiled(initializedCompilerOptions);
 
   return {
     angularCompilation,
@@ -195,6 +234,23 @@ export async function setupCompilationWithAngularCompilation(
     resourceDependencies,
     setupWarnings,
   };
+}
+
+// The AOT emit gate of @angular/build < 22.1.
+function isTypeScriptTranspiled(
+  compilerOptions:
+    | {
+        isolatedModules?: unknown;
+        sourceMap?: unknown;
+        inlineSourceMap?: unknown;
+      }
+    | undefined
+): boolean {
+  return (
+    !compilerOptions?.isolatedModules ||
+    !!compilerOptions.sourceMap ||
+    !!compilerOptions.inlineSourceMap
+  );
 }
 
 // Callers report initialization failures as build errors; hand them the
