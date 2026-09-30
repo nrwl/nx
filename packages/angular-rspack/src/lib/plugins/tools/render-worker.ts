@@ -59,6 +59,68 @@ interface ServerBundleExports {
     | Type<unknown>;
 }
 
+interface InlineCriticalCssResult {
+  content: string;
+  warnings: string[];
+  errors: string[];
+}
+
+interface LegacyInlineCriticalCssProcessorConstructor {
+  new (options: { deployUrl: string; minify: boolean }): {
+    process(
+      html: string,
+      options: { outputPath: string }
+    ): Promise<InlineCriticalCssResult>;
+  };
+}
+
+// The declarations are those of the installed @angular/build, which no
+// longer export the processor, so its presence is checked at runtime.
+function hasInlineCriticalCssProcessor(
+  angularBuildPrivate: object
+): angularBuildPrivate is {
+  InlineCriticalCssProcessor: LegacyInlineCriticalCssProcessorConstructor;
+} {
+  return 'InlineCriticalCssProcessor' in angularBuildPrivate;
+}
+
+async function processCriticalCss(
+  html: string,
+  outputPath: string,
+  deployUrl: string,
+  minify: boolean
+): Promise<InlineCriticalCssResult> {
+  const angularBuildPrivate = await import('@angular/build/private');
+  if (hasInlineCriticalCssProcessor(angularBuildPrivate)) {
+    const { InlineCriticalCssProcessor } = angularBuildPrivate;
+    return new InlineCriticalCssProcessor({ deployUrl, minify }).process(html, {
+      outputPath,
+    });
+  }
+
+  // @angular/build 22.2 replaced the processor with a function it does not
+  // export; its exports map blocks the subpath, so load it by file path.
+  const angularBuildDir = path.dirname(
+    require.resolve('@angular/build/package.json')
+  );
+  const {
+    inlineCriticalCss,
+  }: {
+    inlineCriticalCss: (
+      html: string,
+      outputPath: string,
+      deployUrl: string | undefined,
+      minify: boolean,
+      readAsset: (file: string) => Promise<string>
+    ) => Promise<InlineCriticalCssResult>;
+  } = require(
+    path.join(angularBuildDir, 'src/utils/index-file/inline-critical-css.js')
+  );
+  return inlineCriticalCss(html, outputPath, deployUrl, minify, (file) =>
+    fs.promises.readFile(file, 'utf-8')
+  );
+}
+
 /**
  * The fully resolved path to the zone.js package that will be loaded during worker initialization.
  * This is passed as workerData when setting up the worker via the `piscina` package.
@@ -150,18 +212,12 @@ async function render({
   }
 
   if (inlineCriticalCss) {
-    const { InlineCriticalCssProcessor } =
-      await import('@angular/build/private');
-
-    const inlineCriticalCssProcessor = new InlineCriticalCssProcessor({
-      deployUrl: deployUrl,
-      minify: minifyCss,
-    });
-
-    const { content, warnings, errors } =
-      await inlineCriticalCssProcessor.process(html, {
-        outputPath,
-      });
+    const { content, warnings, errors } = await processCriticalCss(
+      html,
+      outputPath,
+      deployUrl,
+      minifyCss
+    );
     result.errors = errors;
     result.warnings = warnings;
     html = content;

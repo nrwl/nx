@@ -122,13 +122,17 @@ export class IndexHtmlPlugin
             );
 
             for (const [locale, outputPath] of outputPaths.entries()) {
-              const { csrContent, warnings, errors } = await this.process({
+              // @angular/build 22.2 reads `outputPath` from the constructor
+              // options; earlier versions read it from these.
+              const processOptions = {
                 files,
                 outputPath,
                 baseHref:
                   this.getLocaleBaseHref(locale) ?? this.options.baseHref,
                 lang: locale || undefined,
-              });
+              };
+              const { csrContent, warnings, errors } =
+                await this.process(processOptions);
 
               let html = csrContent;
               if (this.options.isSsr) {
