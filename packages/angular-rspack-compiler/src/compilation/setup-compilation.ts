@@ -58,6 +58,8 @@ export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
   sourceRoot: undefined,
   supportTestBed: false,
   supportJitMode: false,
+  // TypeScript would also strip annotations such as `/* @__PURE__ */`.
+  removeComments: false,
 };
 
 let COMPONENT_STYLESHEET_BUNDLER: ComponentStylesheetBundler | undefined =
