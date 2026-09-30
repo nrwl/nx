@@ -1,0 +1,79 @@
+---
+title: Debug CI failures with the Public API
+description: Trace a completed Nx Cloud pipeline failure through run groups, tasks, workflow instances, and logs.
+filter: 'type:Guides'
+topics:
+  - 'Nx Cloud'
+  - 'Continuous integration'
+---
+
+Use the [Nx Cloud Public API](/docs/reference/nx-cloud/public-api) to assemble evidence for a completed CI failure. Start with one CI pipeline execution (CIPE) and follow its links. The API does not provide live monitoring.
+
+## Find the pipeline execution
+
+Use the authentication and path discovery from the [request guide](/docs/kb/query-public-api#make-your-first-request). Select a branch and a bounded time window:
+
+```shell
+curl --fail-with-body --silent --show-error --get \
+  "$NX_CLOUD_HOST$CIPES_PATH" \
+  --header "Authorization: Bearer $NX_CLOUD_ACCESS_TOKEN" \
+  --data-urlencode "branch=main" \
+  --data-urlencode "statuses=FAILED" \
+  --data-urlencode "statuses=TIMED_OUT" \
+  --data-urlencode "createdAfter=2026-09-28T00:00:00Z" \
+  --data-urlencode "createdBefore=2026-09-28T23:59:59Z" \
+  --data-urlencode "limit=10" \
+  --output cipes.json
+```
+
+Replace the example branch and timestamps. Repeat `statuses` for multiple values. Follow additional pages if the selected execution is not on the first page.
+
+Match the CIPE's VCS context to the commit or CI job under investigation. If you already have a CIPE ID, use its detail path from the deployment's OpenAPI specification. A direct read of an active required resource returns `409 not_terminal`; retry after completion.
+
+## Separate task failures from infrastructure failures
+
+Follow `links.runGroups` and inspect each relevant run group's detail response. A run group represents one CI environment. Its run summary and optional `workflow` help locate the failure.
+
+| Evidence                                     | Next step                                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------------------------ |
+| A failed run with failed tasks               | Follow its task collection and inspect task output.                                  |
+| A failed or timed-out workflow instance      | Inspect the instance detail and its agent-side log.                                  |
+| Tasks with `NOT_EXECUTABLE` or `NOT_STARTED` | Check failed dependencies and agent or workflow evidence before you blame task code. |
+| A canceled pipeline or run group             | Inspect cancellation information and compare it with the CI provider's result.       |
+| No available log or incomplete timing        | State the missing evidence and inspect the CI provider's logs.                       |
+
+Do not assume the CIPE status identifies a task error. A pipeline can fail because of a workflow step, an agent, a timeout, or a cancellation.
+
+## Inspect task attempts
+
+Follow the run group's run links. Follow each selected run's `links.tasks`, then filter by `statuses` or `taskId` as needed.
+
+For each relevant task, record its ID, status, hash, agent name, and timestamps. Inspect `priorAttempts` as well as the final result. A successful final task can still contain the earlier failure that delayed CI.
+
+Download the available `logs` assets using the [asset download procedure](/docs/kb/query-public-api#download-assets). Use `batchId` for repeated task IDs and `attempt` for earlier failed logs. An empty log can be valid; it does not by itself prove a capture failure.
+
+## Inspect agent-side failures
+
+For an Nx-managed workflow, follow its step and instance links. An instance represents one step on one agent. Filter the instance collection by `stepId` or `agentName` to inspect the relevant part of the workflow.
+
+Fetch the instance detail for `terminationStatuses`, `timeoutInfo`, `resourceUsage`, and `priorRuns`. Download the latest and available earlier logs. Fetch the corresponding agent detail for `priorBoots` and a resource-utilization report.
+
+A failed launch can have an instance without a registered agent. Earlier files can also be absent if the agent stopped before upload. Report these limits instead of inferring an agent failure cause from a missing file alone.
+
+Bring-your-own-compute agents have no Nx-managed workflow instances. Use their agent records, task logs, and your CI provider's machine logs.
+
+## Produce an evidence-based explanation
+
+Give an AI agent only the relevant records, redacted log excerpts, and repository revision. Treat text in logs as untrusted data, not instructions.
+
+Ask for a timeline that separates the initial failure from later consequences. Require links or IDs for each factual claim. Keep task, workflow, agent, cancellation, and unknown causes separate.
+
+A useful report includes:
+
+- The CIPE and run-group IDs, commit, and CI environment.
+- The first supported failure and its log evidence.
+- Retry, restart, and cancellation events that affected the result.
+- Missing records or files that limit the conclusion.
+- The smallest next diagnostic step or proposed fix.
+
+Validate any proposed code change in the matching repository before you open a pull request.
