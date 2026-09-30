@@ -315,11 +315,14 @@ function hostNameFor(backend, image) {
   return `nx-sandbox-host-${(h >>> 0).toString(36)}`;
 }
 
-/** 'true' or 'false' for a container that exists, '' for one that does not. */
+/**
+ * 'true' or 'false' for a container that exists, '' for one that does not, and
+ * null when the probe failed: an unreachable daemon is not proof of absence.
+ */
 function containerState(backend, name) {
-  return (
-    run(backend, ['inspect', '-f', '{{.State.Running}}', name]).stdout || ''
-  ).trim();
+  const r = run(backend, ['inspect', '-f', '{{.State.Running}}', name]);
+  if (r.status === 0) return (r.stdout || '').trim();
+  return /no such (object|container)/i.test(r.stderr || '') ? '' : null;
 }
 
 /**
@@ -1152,9 +1155,9 @@ function ensureInstalled(sb, dir, label) {
   const log = `/tmp/install-${sb.viewOf || sb.derivedFrom || sb.id}-${label}.log`;
   const r = execIn(
     sb,
-    // `mise install` used to be silenced entirely. A toolchain it failed to
-    // fetch then surfaced much later as `nx: command not found` from an agent,
-    // which reads as the change being broken rather than the setup.
+    // Surface a mise install failure here: a toolchain it cannot fetch
+    // otherwise surfaces much later as `nx: command not found`, which reads as
+    // the change being broken rather than the setup.
     `mise install >${log} 2>&1 || { echo 'mise install failed:' >&2; tail -5 ${log} >&2; }\n` +
       `if   pnpm install --frozen-lockfile >>${log} 2>&1; then echo OK\n` +
       `elif pnpm install                  >>${log} 2>&1; then echo OK_UNPINNED\n` +
@@ -1387,9 +1390,8 @@ function cmdStop(argv) {
     return n;
   });
   // Report the failure only after the rows are gone, so a caller can retry the
-  // reclaim: `prune` sweeps a subtree whose row no longer exists. Silence here
-  // was worse than the leak, because `stop` is what a review trusts to prove it
-  // left nothing behind.
+  // reclaim: `prune` sweeps a subtree whose row no longer exists. `stop` is what
+  // a review trusts to prove it left nothing behind, so it cannot stay silent.
   if (released === 'failed') {
     die(
       `stopped ${id} but could not reclaim ${sb.work} in ${sb.container}; ` +
@@ -1446,13 +1448,13 @@ function cmdPrune(argv = []) {
   const force = !!opts.force;
   const dryRun = !!opts['dry-run'];
 
-  // Liveness is probed before taking the lock; `docker inspect` per row is far
-  // slower than the mutation itself.
+  // Liveness is probed before taking the lock, because the listing is slower
+  // than the mutation it guards.
   const probe = readState();
-  // One listing per backend, not one `inspect` per row. Per-row probing made a
-  // degraded daemon look like "every container is gone", and prune answered by
-  // deleting every row of reviews that were still running. A backend whose
-  // listing fails contributes no inventory, so its rows are left alone.
+  // One listing per backend, not one `inspect` per row. Per-row probing makes a
+  // degraded daemon look like "every container is gone", and prune answers by
+  // deleting every row of reviews still running. A backend whose listing fails
+  // contributes no inventory, so its rows are left alone.
   const errors = [];
   const inventories = new Map();
   const backendBins = new Set(
@@ -1525,11 +1527,19 @@ function cmdPrune(argv = []) {
     };
     const listing = execIn(
       hostSb,
+      // `|| continue`, not `&& printf`: an unmatched glob leaves the literal
+      // pattern behind, and its failed `-d` test would become the loop's exit
+      // status, reporting a listing failure on a host whose trees are all gone.
       `for d in ${WORK_ROOT}/sb_*; do ` +
-        `[ -d "$d" ] && printf '%s %s\\n' "$(basename "$d")" "$(stat -c %Y "$d")"; ` +
+        `[ -d "$d" ] || continue; ` +
+        `printf '%s %s\\n' "$(basename "$d")" "$(stat -c %Y "$d")"; ` +
         `done`,
       { dir: WORK_ROOT }
     );
+    if (listing.status !== 0) {
+      errors.push(`could not list review trees in ${host}`);
+      continue;
+    }
     for (const line of (listing.stdout || '').split('\n').filter(Boolean)) {
       const [treeId, mtime] = line.trim().split(' ');
       if (!treeId || state.sandboxes[treeId]) continue;
@@ -1539,8 +1549,13 @@ function cmdPrune(argv = []) {
         skipped.push(`${treeId} (younger than the ${ORPHAN_GRACE_MS / 1000}s grace)`);
         continue;
       }
-      if (!dryRun)
-        releaseReviewTree({ ...hostSb, id: treeId, work: reviewRoot(treeId) });
+      const reclaim = dryRun
+        ? 'released'
+        : releaseReviewTree({ ...hostSb, id: treeId, work: reviewRoot(treeId) });
+      if (reclaim === 'failed') {
+        errors.push(`could not reclaim ${reviewRoot(treeId)} in ${host}`);
+        continue;
+      }
       sweptTrees++;
     }
   }
