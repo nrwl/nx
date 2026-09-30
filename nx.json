@@ -1,5 +1,10 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -202,7 +207,7 @@
       ]
     },
     "e2e-ci": {
-      "inputs": ["e2eInputs", "^production"]
+      "inputs": ["...", "e2eInputs", "^production"]
     },
     "e2e-macos-local": {
       "cache": true,
@@ -217,7 +222,7 @@
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--**/**": {
-      "inputs": ["e2eInputs", "^production"],
+      "inputs": ["...", "e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",

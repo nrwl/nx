@@ -1814,9 +1814,6 @@ importers:
 
   e2e/utils:
     dependencies:
-      '@nx/angular':
-        specifier: workspace:*
-        version: link:../../packages/angular
       '@nx/devkit':
         specifier: workspace:*
         version: link:../../packages/devkit
