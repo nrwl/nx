@@ -25,7 +25,6 @@ import {
 } from '../agentic/handoff';
 import { publishFileAtomically } from './atomic-write';
 
-/** Thrown when a folder on the way to a run file is not a real directory. */
 export class NotADirectoryError extends Error {
   constructor(dir: string) {
     super(
