@@ -1,4 +1,6 @@
-use std::fs::{create_dir_all, read_dir, read_to_string, remove_file, symlink_metadata, write};
+use std::fs::{
+    create_dir_all, metadata, read_dir, read_to_string, remove_file, symlink_metadata, write,
+};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
@@ -261,7 +263,7 @@ impl NxCache {
         // Terminal output file read happens AFTER the lock is released.
         let result = row_data.and_then(|(code, size)| self.build_cached_result(&hash, code, size));
         if row_data.is_some() && result.is_none() {
-            self.remove_stale_cache_records(std::slice::from_ref(&hash))?;
+            self.demote_stale_cache_records(std::slice::from_ref(&hash));
         }
 
         trace!("GET {} {:?}", &hash, start.elapsed());
@@ -290,8 +292,8 @@ impl NxCache {
             })
             .collect();
 
-        // 3. A row whose artifacts are gone is a miss above; drop those rows
-        //    in one statement rather than from inside the parallel map.
+        // 3. A row whose artifacts are gone is a miss above; demote those rows
+        //    in one transaction rather than from inside the parallel map.
         let stale: Vec<String> = hashes
             .iter()
             .zip(&results)
@@ -299,7 +301,7 @@ impl NxCache {
             .map(|(hash, _)| hash.clone())
             .collect();
         if !stale.is_empty() {
-            self.remove_stale_cache_records(&stale)?;
+            self.demote_stale_cache_records(&stale);
         }
 
         trace!("GET_BATCH {} hashes {:?}", hashes.len(), start.elapsed());
@@ -350,18 +352,8 @@ impl NxCache {
         Ok(rows)
     }
 
-    /// Assemble a `CachedResult` for a row `get`/`get_batch` found, or `None`
-    /// when the `<cacheDir>/<hash>` directory the row describes is gone.
-    ///
-    /// The database is an index of the cache directory, not the cache: the
-    /// directory can be emptied, moved or pointed elsewhere (`cacheDirectory`,
-    /// `NX_CACHE_DIRECTORY`) while `.nx/workspace-data` keeps its rows. Served
-    /// as a hit, such a row restores nothing and the run carries on with the
-    /// outputs missing. `put` and every remote retrieve create the directory,
-    /// even for a task with no outputs, so its absence is the only check needed.
-    ///
-    /// Safe to call concurrently — Rayon invokes this from multiple threads
-    /// during `get_batch`.
+    /// A cache row can outlive its artifact directory. Serving it as a hit
+    /// would skip the task without restoring its outputs.
     fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> Option<CachedResult> {
         let outputs_path = self.cache_path.join(hash);
         if !outputs_path.is_dir() {
@@ -662,30 +654,38 @@ impl NxCache {
         Ok(())
     }
 
-    /// Drop records whose `<cacheDir>/<hash>` directory is gone: the row and
-    /// its terminal output together, as `remove_old_cache_records` does for an
-    /// expired entry. Left in place, the row would count against
-    /// `maxCacheSize` for artifacts that no longer exist and cost a stat on
-    /// every lookup; the next `put` of the hash records a fresh row.
-    fn remove_stale_cache_records(&self, hashes: &[String]) -> anyhow::Result<()> {
-        trace!("Removing {} cache records without artifacts", hashes.len());
-        let values = Rc::new(
-            hashes
-                .iter()
-                .map(|h| Value::from(h.clone()))
-                .collect::<Vec<Value>>(),
-        );
-        self.db.lock().unwrap().execute(
-            "DELETE FROM cache_outputs WHERE hash IN rarray(?1)",
-            [values],
-        )?;
-
-        let terminal_outputs = hashes
-            .iter()
-            .map(|hash| self.get_task_outputs_path_internal(hash))
-            .collect::<Vec<_>>();
-        remove_items(&terminal_outputs)?;
-        Ok(())
+    /// Stop counting a row whose `<cacheDir>/<hash>` directory is gone as a
+    /// cache entry: `is_cache_entry` becomes FALSE and `size` the bytes of the
+    /// terminal output it still owns, which `remove_old_cache_records` collects
+    /// as for any output-only row. Nothing is deleted.
+    ///
+    /// The directory is checked again inside an immediate transaction: `put`
+    /// creates it before `record_to_cache` writes the row, and that write
+    /// waits for the lock, so a directory still missing here is not one a
+    /// concurrent `put` has just finished. Errors are logged, not returned;
+    /// the lookup has already reported the miss.
+    fn demote_stale_cache_records(&self, hashes: &[String]) {
+        trace!("Demoting {} cache records without artifacts", hashes.len());
+        let mut db = self.db.lock().unwrap();
+        let outcome = db.transaction_immediate(|conn| {
+            for hash in hashes {
+                if self.cache_path.join(hash).is_dir() {
+                    continue;
+                }
+                let terminal_output_size = metadata(self.get_task_outputs_path_internal(hash))
+                    .map(|m| m.len() as i64)
+                    .unwrap_or(0);
+                conn.execute(
+                    "UPDATE cache_outputs SET is_cache_entry = FALSE, size = ?2
+                     WHERE hash = ?1 AND is_cache_entry",
+                    params![hash, terminal_output_size],
+                )?;
+            }
+            Ok(())
+        });
+        if let Err(e) = outcome {
+            debug!("Unable to demote cache records without artifacts: {e:?}");
+        }
     }
 
     #[napi]
@@ -972,20 +972,29 @@ mod test {
         );
     }
 
-    /// A workspace, a cache directory and a database of its own under `temp`.
-    fn cache_in(temp: &TempDir) -> NxCache {
-        let workspace_root = temp.path().join("workspace");
-        create_dir_all(&workspace_root).unwrap();
-        let db =
-            crate::native::db::initialize::initialize_db(&temp.path().join("test.db")).unwrap();
+    /// A cache over `db` and `cache_dir` with its workspace at `workspace`.
+    /// Two caches can share `db` (two Nx processes in one workspace) or only
+    /// `cache_dir` (two workspaces on one cache directory).
+    fn cache_with(workspace: &Path, db: &Path, cache_dir: &Path) -> NxCache {
+        create_dir_all(workspace).unwrap();
+        let db = crate::native::db::initialize::initialize_db(db).unwrap();
         NxCache::new(
-            workspace_root.to_str().unwrap().to_string(),
-            temp.path().join("cache").to_str().unwrap().to_string(),
+            workspace.to_str().unwrap().to_string(),
+            cache_dir.to_str().unwrap().to_string(),
             &External::new(Arc::new(Mutex::new(db))),
             None,
             None,
         )
         .unwrap()
+    }
+
+    /// A workspace, a cache directory and a database of its own under `temp`.
+    fn cache_in(temp: &TempDir) -> NxCache {
+        cache_with(
+            &temp.path().join("workspace"),
+            &temp.path().join("test.db"),
+            &temp.path().join("cache"),
+        )
     }
 
     /// `cache_outputs.hash` references `task_details`, which Nx fills in
@@ -1002,7 +1011,8 @@ mod test {
             .unwrap();
     }
 
-    /// Builds one output file for `hash` in the workspace and stores it.
+    /// Builds one output file for `hash` in the workspace and stores it with
+    /// the terminal output `log`.
     fn put_output(cache: &mut NxCache, hash: &str) {
         record_task(cache, hash);
         let output = cache.workspace_root.join("dist").join(hash);
@@ -1018,19 +1028,21 @@ mod test {
             .unwrap();
     }
 
-    fn records_for(cache: &NxCache, hash: &str) -> i64 {
+    /// `(is_cache_entry, size)` of the row for `hash`, if there is one.
+    fn record_for(cache: &NxCache, hash: &str) -> Option<(bool, i64)> {
         cache
             .db
             .lock()
             .unwrap()
             .query_row(
-                "SELECT COUNT(*) FROM cache_outputs WHERE hash = ?1",
+                "SELECT is_cache_entry, size FROM cache_outputs WHERE hash = ?1",
                 params![hash],
-                |row| row.get(0),
+                |row| Ok((row.get(0)?, row.get(1)?)),
             )
             .unwrap()
-            .unwrap()
     }
+
+    const LOG_SIZE: i64 = "log".len() as i64;
 
     #[test]
     fn get_is_a_miss_once_the_artifact_directory_is_gone() {
@@ -1039,26 +1051,34 @@ mod test {
         put_output(&mut cache, "1");
         let hit = cache.get("1".to_string()).unwrap().unwrap();
         assert!(Path::new(&hit.outputs_path).is_dir());
+        let (_, stored_size) = record_for(&cache, "1").unwrap();
+        assert!(stored_size > LOG_SIZE);
 
         // The cache directory was emptied, moved or repointed; the database
         // still holds the row.
         std::fs::remove_dir_all(&hit.outputs_path).unwrap();
 
         assert!(cache.get("1".to_string()).unwrap().is_none());
-        assert_eq!(records_for(&cache, "1"), 0);
-        assert!(!cache.get_task_outputs_path_internal("1").exists());
+        // The row now counts only the terminal output it still owns, which
+        // stays on disk for `remove_old_cache_records`.
+        assert_eq!(record_for(&cache, "1"), Some((false, LOG_SIZE)));
+        assert!(cache.get_task_outputs_path_internal("1").is_file());
+        assert_eq!(cache.get_cache_size().unwrap(), LOG_SIZE);
+        assert!(cache.get("1".to_string()).unwrap().is_none());
 
-        // The task reruns and the next put is a hit again.
+        // The task reruns and its next put is a hit again.
         put_output(&mut cache, "1");
         assert!(cache.get("1".to_string()).unwrap().is_some());
+        assert_eq!(record_for(&cache, "1"), Some((true, stored_size)));
     }
 
     #[test]
-    fn get_batch_drops_only_the_records_whose_artifacts_are_gone() {
+    fn get_batch_demotes_only_the_records_whose_artifacts_are_gone() {
         let temp = TempDir::new().unwrap();
         let mut cache = cache_in(&temp);
         put_output(&mut cache, "1");
         put_output(&mut cache, "2");
+        let (_, stored_size) = record_for(&cache, "1").unwrap();
         std::fs::remove_dir_all(cache.cache_path.join("2")).unwrap();
 
         let results = cache
@@ -1068,10 +1088,12 @@ mod test {
         assert!(results[0].is_some());
         assert!(results[1].is_none());
         assert!(results[2].is_none());
-        assert_eq!(records_for(&cache, "1"), 1);
-        assert_eq!(records_for(&cache, "2"), 0);
-        assert!(cache.get_task_outputs_path_internal("1").exists());
-        assert!(!cache.get_task_outputs_path_internal("2").exists());
+        assert_eq!(record_for(&cache, "1"), Some((true, stored_size)));
+        assert_eq!(record_for(&cache, "2"), Some((false, LOG_SIZE)));
+        assert_eq!(record_for(&cache, "3"), None);
+        assert!(cache.get_task_outputs_path_internal("1").is_file());
+        assert!(cache.get_task_outputs_path_internal("2").is_file());
+        assert_eq!(cache.get_cache_size().unwrap(), stored_size + LOG_SIZE);
     }
 
     #[test]
@@ -1087,5 +1109,69 @@ mod test {
 
         assert!(cache.get("1".to_string()).unwrap().is_some());
         assert!(cache.get_batch(vec!["1".to_string()]).unwrap()[0].is_some());
+    }
+
+    /// `get` and `get_batch` both check the directory in `build_cached_result`
+    /// and then call `demote_stale_cache_records`. Runs a `put` from `other`
+    /// between the two, as a second Nx process would.
+    fn put_between_check_and_cleanup(stale: &mut NxCache, other: &mut NxCache, hash: &str) {
+        let (code, size) = stale.fetch_cache_rows(&[hash.to_string()]).unwrap()[hash];
+        assert!(stale.build_cached_result(hash, code, size).is_none());
+        put_output(other, hash);
+        stale.demote_stale_cache_records(&[hash.to_string()]);
+    }
+
+    #[test]
+    fn cleanup_keeps_a_result_stored_meanwhile_in_a_shared_database() {
+        let temp = TempDir::new().unwrap();
+        let workspace = temp.path().join("workspace");
+        let db = temp.path().join("test.db");
+        let cache_dir = temp.path().join("cache");
+        // Two Nx processes in one workspace: two connections to one database.
+        let mut a = cache_with(&workspace, &db, &cache_dir);
+        let mut b = cache_with(&workspace, &db, &cache_dir);
+        put_output(&mut a, "1");
+        let (_, stored_size) = record_for(&a, "1").unwrap();
+        std::fs::remove_dir_all(cache_dir.join("1")).unwrap();
+
+        put_between_check_and_cleanup(&mut a, &mut b, "1");
+
+        // B's row is still a cache entry, and both processes hit it with B's
+        // terminal output.
+        assert_eq!(record_for(&a, "1"), Some((true, stored_size)));
+        let hit = b.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(hit.terminal_output.as_deref(), Some("log"));
+        assert!(a.get("1".to_string()).unwrap().is_some());
+    }
+
+    #[test]
+    fn cleanup_keeps_a_result_stored_meanwhile_through_a_separate_database() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.path().join("cache");
+        // Two workspaces sharing one cache directory, a database each.
+        let mut a = cache_with(
+            &temp.path().join("a/workspace"),
+            &temp.path().join("a/test.db"),
+            &cache_dir,
+        );
+        let mut b = cache_with(
+            &temp.path().join("b/workspace"),
+            &temp.path().join("b/test.db"),
+            &cache_dir,
+        );
+        put_output(&mut a, "1");
+        let (_, stored_size) = record_for(&a, "1").unwrap();
+        std::fs::remove_dir_all(cache_dir.join("1")).unwrap();
+
+        put_between_check_and_cleanup(&mut a, &mut b, "1");
+
+        // B's row, directory and terminal output are untouched, and A's row
+        // describes a directory that exists again.
+        assert_eq!(record_for(&b, "1"), Some((true, stored_size)));
+        assert!(cache_dir.join("terminalOutputs").join("1").is_file());
+        let hit = b.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(hit.terminal_output.as_deref(), Some("log"));
+        assert_eq!(record_for(&a, "1"), Some((true, stored_size)));
+        assert!(a.get("1".to_string()).unwrap().is_some());
     }
 }
