@@ -159,6 +159,7 @@ describe('setup-oxlint-bridge', () => {
       expect(result).toContain(`require('eslint-plugin-oxlint')`);
       expect(result).toContain(`require('jiti')`);
       expect(result).toContain('createJiti(__filename)');
+      expect(result).toContain("jiti('./oxlint.config.ts').default");
       expect(result).toContain("reportUnusedDisableDirectives: 'off'");
       expect(result).toContain('...oxlint.buildFromOxlintConfig(oxlintConfig)');
     });

@@ -152,7 +152,7 @@ function injectOxlintBridgeCJS(
     `const { createJiti } = require('jiti');`,
     '',
     `const jiti = createJiti(__filename);`,
-    `const oxlintConfig = jiti.import('${oxlintConfigPath}', { default: true });`,
+    `const oxlintConfig = jiti('${oxlintConfigPath}').default;`,
   ].join('\n');
 
   const exportsIdx = content.indexOf('module.exports');
