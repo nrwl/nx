@@ -1,4 +1,5 @@
 export * from './regex-filters';
+export * from './angular-build-version';
 export * from './component-resolvers';
 export * from './javascript-transformer';
 export * from './javascript-transformer-cache';
