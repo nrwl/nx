@@ -103,13 +103,11 @@ describe('runLintTasks', () => {
 
     const results = runLintTasks([task('libs/a'), task('libs/b')], '/ws');
 
-    expect(results).toEqual({
-      'libs/a:lint': expect.objectContaining({
-        success: false,
-        terminalOutput: 'Failed to parse oxlint configuration file\n',
-      }),
-      'libs/b:lint': expect.objectContaining({ success: false }),
+    const failed = expect.objectContaining({
+      success: false,
+      terminalOutput: 'Failed to parse oxlint configuration file\n',
     });
+    expect(results).toEqual({ 'libs/a:lint': failed, 'libs/b:lint': failed });
   });
 
   it("should ignore a task's nested roots when they are not in the run", () => {

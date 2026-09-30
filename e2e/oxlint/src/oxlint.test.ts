@@ -193,7 +193,6 @@ describe('Oxlint', () => {
     const targetName = requireOxlintTarget(clean);
     const command = `run-many -t ${targetName} -p ${clean},${broken}`;
 
-    // 1. one Oxlint process for both projects, and only the broken one fails.
     const output = runExpectingFailure(command);
     expect(output).toContain(`Running 2 tasks with @nx/oxlint:lint`);
     expect(output).toContain(`packages/${broken}/src/index.ts`);
@@ -201,12 +200,10 @@ describe('Oxlint', () => {
     expect(output).toContain(`- ${broken}:${targetName}`);
     expect(output).not.toContain(`- ${clean}:${targetName}`);
 
-    // 2. the passing project's result was cached on its own.
     expect(runCLI(`run ${clean}:${targetName}`)).toContain(
       'existing outputs match the cache'
     );
 
-    // 3. without batching the same diagnostic is reported the same way.
     const unbatched = runExpectingFailure(
       `${command} --batch=false --skip-nx-cache`
     );
@@ -214,10 +211,10 @@ describe('Oxlint', () => {
     expect(unbatched).toContain(`packages/${broken}/src/index.ts`);
     expect(unbatched).toContain('no-debugger');
 
-    // 4. a CLI flag reaches Oxlint: a config with no rules finds nothing.
+    // A CLI flag reaches Oxlint: a config with no rules finds nothing.
     updateFile('empty.oxlintrc.json', JSON.stringify({ rules: {} }));
     expect(
-      runCLI(`${command} --config=empty.oxlintrc.json --skip-nx-cache`)
+      runCLI(`${command} --config empty.oxlintrc.json --skip-nx-cache`)
     ).toContain(`Successfully ran target ${targetName}`);
   });
 });
