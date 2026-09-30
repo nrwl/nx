@@ -15,7 +15,12 @@ import { spawnSync } from 'node:child_process';
 const MAX_FILE_BYTES = 128 * 1024 * 1024;
 const MAX_TOTAL_BYTES = 2 * 1024 * 1024 * 1024;
 const MAX_BUFFER = 64 * 1024 * 1024;
-const ARCHIVE_ATTRIBUTES = '* -export-ignore -export-subst\n';
+// Every conversion `git archive` would otherwise apply to PR content, unset
+// in the highest-precedence attribute file. `filter` is the load-bearing one:
+// the PR selects a driver by name and the host runs it over its blobs. The
+// rest keep the snapshot byte-exact with the stored blob.
+const ARCHIVE_ATTRIBUTES =
+  '* -export-ignore -export-subst -filter -text -eol -ident -working-tree-encoding\n';
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
