@@ -90,9 +90,17 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       min-height: 100vh;
     }
 
-    /* Height of the conference promo strip; reused to offset everything below it. */
+    /* Height of the promo strip; reused to offset everything below it. */
     .page.has-conf-banner {
       --conf-banner-h: 2.5rem;
+    }
+
+    /* Narrow viewports: the banner copy wraps to two lines, so grow the strip
+       (and every offset derived from it) to keep the content from clipping. */
+    @media (max-width: 36rem) {
+      .page.has-conf-banner {
+        --conf-banner-h: 3.75rem;
+      }
     }
 
     .header {

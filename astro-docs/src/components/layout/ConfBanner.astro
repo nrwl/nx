@@ -15,12 +15,15 @@ const active = isConfBannerActive();
     >
       <span class="conf-banner__text">
         <span class="conf-banner__brand">
-          AI <span class="conf-banner__heart">&#9829;</span> Monorepos
+          Nx and Nx Cloud are about to get a lot faster
         </span>
-        <span class="conf-banner__desc">Free online conference &middot; June 23</span>
+        <span class="conf-banner__desc">
+          Faster caching, smarter distribution, up to 50% less CI compute. See it
+          all at our live product event, Oct 22 &middot; 1:00 p.m. ET.
+        </span>
       </span>
       <span class="conf-banner__cta">
-        Join us!
+        Save my spot
         <svg
           class="conf-banner__arrow"
           viewBox="0 0 20 20"
@@ -46,9 +49,11 @@ const active = isConfBannerActive();
     z-index: calc(var(--sl-z-index-navbar) + 1);
     height: var(--conf-banner-h, 2.5rem);
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    align-content: center;
     justify-content: center;
-    gap: 0.625rem;
+    gap: 0.25rem 0.625rem;
     padding-inline: 1rem;
     /* Theme-aware: light strip in light mode, dark strip in dark mode. */
     background-color: var(--sl-color-bg-nav);
@@ -70,10 +75,6 @@ const active = isConfBannerActive();
     font-weight: 700;
     color: var(--sl-color-gray-1);
     white-space: nowrap;
-  }
-
-  .conf-banner__heart {
-    color: #f43f5e;
   }
 
   .conf-banner__desc {
@@ -102,8 +103,8 @@ const active = isConfBannerActive();
     height: 1rem;
   }
 
-  /* Tight viewports: drop the descriptor so the bar stays one line at 2.5rem. */
-  @media (max-width: 30rem) {
+  /* The descriptor only fits on one line at wide viewports; drop it below. */
+  @media (max-width: 82rem) {
     .conf-banner__desc {
       display: none;
     }
