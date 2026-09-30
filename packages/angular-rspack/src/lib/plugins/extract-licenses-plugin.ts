@@ -6,8 +6,9 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 
+import { isAngularBuildVersionAtLeast } from '@nx/angular-rspack-compiler';
 import type { Compiler, Module, RspackPluginInstance } from '@rspack/core';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { NG_RSPACK_SYMBOL_NAME, type NgRspackCompilation } from '../models';
 
@@ -42,9 +43,14 @@ const NODE_MODULE_SEGMENT = 'node_modules';
 const CUSTOM_LICENSE_TEXT = 'SEE LICENSE IN ';
 
 /**
- * A list of commonly named license files found within packages.
+ * A regular expression for commonly named license files found within packages.
  */
-const LICENSE_FILES = ['LICENSE', 'LICENSE.txt', 'LICENSE.md'];
+const LICENSE_FILE_REGEXP = /^(?:mit-)?licen[cs]e(?:$|[-._])/i;
+
+/**
+ * The license files `@angular/build` < 22.1.3 looks for, in order.
+ */
+const LEGACY_LICENSE_FILES = ['LICENSE', 'LICENSE.txt', 'LICENSE.md'];
 
 /**
  * Header text that will be added to the top of the output license extraction file.
@@ -68,10 +74,10 @@ const EXTRACTION_FILE_SEPARATOR = '-'.repeat(80) + '\n';
  * package. If a license file (e.g., `LICENSE`) is present in the root of the package, it
  * will also be included in the output licenses file.
  *
- * Vendored from `@angular/build` (`src/tools/esbuild/license-extractor.ts`, identical
- * across the supported Angular majors) since it is not exposed in the package's public
- * or private API. Only the esbuild `Metafile` type import is replaced with the local
- * `LicenseMetafile` interface.
+ * Vendored from `@angular/build` 22.1.3 (`src/tools/esbuild/license-extractor.ts`) since
+ * it is not exposed in the package's public or private API. Only the esbuild `Metafile`
+ * type import is replaced with the local `LicenseMetafile` interface. When an earlier
+ * `@angular/build` is installed, its license file lookup is used instead.
  *
  * @param metafile An esbuild metafile object.
  * @param rootDirectory The root directory of the workspace.
@@ -82,8 +88,10 @@ export async function extractLicenses(
   rootDirectory: string
 ) {
   let extractedLicenseContent = `${EXTRACTION_FILE_HEADER}\n${EXTRACTION_FILE_SEPARATOR}`;
+  const useLegacyLicenseLookup = !isAngularBuildVersionAtLeast('22.1.3');
 
   const seenPaths = new Set<string>();
+  const seenPackageDirectories = new Set<string>();
   const seenPackages = new Set<string>();
 
   for (const entry of Object.values(metafile.outputs)) {
@@ -129,6 +137,10 @@ export async function extractLicenses(
         ? `${nameOrScope}/${nameOrFile}`
         : nameOrScope;
       const packageDirectory = path.join(baseDirectory, packageName);
+      if (seenPackageDirectories.has(packageDirectory)) {
+        continue;
+      }
+      seenPackageDirectories.add(packageDirectory);
 
       // Load the package's metadata to find the package's name, version, and license type
       const packageJsonPath = path.join(packageDirectory, 'package.json');
@@ -155,13 +167,16 @@ export async function extractLicenses(
       // Attempt to find license text inside package
       let licenseText = '';
       if (
+        // Earlier versions never matched it: they compared the lowercased
+        // license with the uppercase constant.
+        !useLegacyLicenseLookup &&
         typeof packageJson.license === 'string' &&
-        packageJson.license.toLowerCase().startsWith(CUSTOM_LICENSE_TEXT)
+        packageJson.license.toUpperCase().startsWith(CUSTOM_LICENSE_TEXT)
       ) {
         // Attempt to load the package's custom license
         let customLicensePath;
         const customLicenseFile = path.normalize(
-          packageJson.license.slice(CUSTOM_LICENSE_TEXT.length + 1).trim()
+          packageJson.license.slice(CUSTOM_LICENSE_TEXT.length).trim()
         );
         if (
           customLicenseFile.startsWith('..') ||
@@ -173,12 +188,10 @@ export async function extractLicenses(
           customLicensePath = path.join(packageDirectory, customLicenseFile);
           try {
             licenseText = await readFile(customLicensePath, 'utf-8');
-            break;
           } catch {}
         }
-      } else {
-        // Search for a license file within the root of the package
-        for (const potentialLicense of LICENSE_FILES) {
+      } else if (useLegacyLicenseLookup) {
+        for (const potentialLicense of LEGACY_LICENSE_FILES) {
           const packageLicensePath = path.join(
             packageDirectory,
             potentialLicense
@@ -187,6 +200,23 @@ export async function extractLicenses(
             licenseText = await readFile(packageLicensePath, 'utf-8');
             break;
           } catch {}
+        }
+      } else {
+        // Search for a license file within the root of the package
+        const entries = await readdir(packageDirectory, {
+          withFileTypes: true,
+        }).catch(() => []);
+        for (const entry of entries) {
+          if (
+            (entry.isFile() || entry.isSymbolicLink()) &&
+            LICENSE_FILE_REGEXP.test(entry.name)
+          ) {
+            const packageLicensePath = path.join(packageDirectory, entry.name);
+            try {
+              licenseText = await readFile(packageLicensePath, 'utf-8');
+              break;
+            } catch {}
+          }
         }
       }
 
