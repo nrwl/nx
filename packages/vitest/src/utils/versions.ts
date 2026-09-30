@@ -22,7 +22,7 @@ export const ajvVersion = '^8.0.0';
 export const happyDomVersion = '^20.10.4';
 export const edgeRuntimeVmVersion = '~3.0.2';
 export const jitiVersion = '2.4.2';
-export const analogVitestAngular = '~2.6.0';
+export const analogVitestAngular = '~2.7.3';
 
 export type VersionSelectionOptions = {
   /** Vite range about to be installed, when the workspace declares none yet. */
