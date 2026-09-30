@@ -160,6 +160,13 @@ export async function setupCompilationWithAngularCompilation(
       } else {
         compilerOptions.incremental = false;
       }
+      // @angular/build 22.1 gates the emit on this flag, and its application
+      // builder sets it to `!isolatedModules`. Earlier versions ignore it and
+      // use the fallback's expression.
+      if (isAngularBuildVersionAtLeast('22.1.0')) {
+        compilerOptions['_useTypeScriptTranspilation'] =
+          !compilerOptions.isolatedModules;
+      }
       initializationResult = await angularCompilation.initialize(
         tsconfig,
         { ...hostOptions, sourceFileCache },
