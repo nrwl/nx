@@ -75,11 +75,11 @@ describe('isIoSnapshotFetchEnabled', () => {
   });
 
   it('reads the run env by default', () => {
-    vi.stubEnv('NX_IO_SNAPSHOTS', '');
-    vi.stubEnv('NX_CLOUD_USE_IO_SNAPSHOTS', '');
+    delete process.env.NX_IO_SNAPSHOTS;
     expect(isIoSnapshotFetchEnabled(connected)).toBe(false);
-    vi.stubEnv('NX_IO_SNAPSHOTS', 'true');
+    process.env.NX_IO_SNAPSHOTS = 'true';
     expect(isIoSnapshotFetchEnabled(connected)).toBe(true);
+    delete process.env.NX_IO_SNAPSHOTS;
   });
 });
 
