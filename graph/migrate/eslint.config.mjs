@@ -1,8 +1,4 @@
-import {
-  allowDirectNxImports,
-  baseConfig,
-  reactHooksV7Off,
-} from '../../eslint.config.mjs';
+import { baseConfig, reactHooksV7Off } from '../../eslint.config.mjs';
 import nx from '@nx/eslint-plugin';
 
 export default [
@@ -12,5 +8,4 @@ export default [
   {
     ignores: ['storybook-static'],
   },
-  allowDirectNxImports,
 ];

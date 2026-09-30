@@ -19,10 +19,15 @@ run-name: ${{ github.event.inputs.pr && format('PR Release for {0}', github.even
 
 env:
   DEBUG: napi:*
+  # Published binaries must never be built incrementally: the root Cargo.toml
+  # turns incremental on for the release profile so local rebuilds are fast, and
+  # incremental partitioning changes codegen. This must reach every build below,
+  # including the docker and FreeBSD ones, which forward env explicitly.
+  CARGO_INCREMENTAL: '0'
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 26.3.0
-  PNPM_VERSION: 11.2.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  NODE_VERSION: 26.7.0
+  PNPM_VERSION: 12.4.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
 jobs:
@@ -321,7 +326,7 @@ jobs:
               export PATH="$JAVA_HOME\bin:$PATH"
               java -version
               pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@26.3.0
+    name: stable - ${{ matrix.settings.target }} - node@26.7.0
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -343,8 +348,12 @@ jobs:
           corepack enable
           corepack prepare --activate
 
-      - name: Cache cargo
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      # Restore always, but only save from master. A cache written on a tag or PR ref
+      # is scoped to that ref, so nothing can ever read it back — it just consumes the
+      # repo-wide 10GB budget and evicts the master entries these builds depend on.
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -392,6 +401,7 @@ jobs:
             -e PNPM_VERSION \
             -e NX_GRADLE_PROJECT_GRAPH_TIMEOUT \
             -e NX_VERBOSE_LOGGING \
+            -e CARGO_INCREMENTAL \
             -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db \
             -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache \
             -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index \
@@ -405,6 +415,18 @@ jobs:
         run: ${{ matrix.settings.build }}
         if: ${{ !matrix.settings.docker }}
         shell: bash
+
+      - name: Save cargo cache
+        if: github.ref == 'refs/heads/master' && steps.cargo-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            .cargo-cache
+            target/
+          key: ${{ matrix.settings.target }}-cargo-registry
 
       - name: Upload artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -433,8 +455,9 @@ jobs:
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
+          CARGO_INCREMENTAL: '0'
           PLAYWRIGHT_BROWSERS_PATH: 0
-          NODE_VERSION: 26.3.0
+          NODE_VERSION: 26.7.0
           NX_GRADLE_DISABLE: 'true'
           NX_DOTNET_DISABLE: 'true'
           NODE_OPTIONS: '--max-old-space-size=4096'
@@ -442,13 +465,13 @@ jobs:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS
+          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS PNPM_VERSION
           shell: bash
           run: |
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
-            sudo npm install --location=global --ignore-scripts pnpm@11.2.2
+            sudo npm install --location=global --ignore-scripts pnpm@${PNPM_VERSION}
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -865,4 +888,3 @@ jobs:
               issue_number: ${{ github.event.inputs.pr }},
               body: message
             });
-

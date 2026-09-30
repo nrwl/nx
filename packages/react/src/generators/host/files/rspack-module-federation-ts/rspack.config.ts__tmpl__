@@ -13,7 +13,7 @@ export default {
     publicPath: 'auto'
   },
   devServer: {
-    port: <%= devServerPort %>,
+    port: <%= port %>,
     historyApiFallback: {
       index: '/index.html',
       disableDotRule: true,

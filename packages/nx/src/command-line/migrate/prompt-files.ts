@@ -1,11 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { dirname, isAbsolute, join, posix, relative, sep } from 'path';
+import { dirname, join, posix } from 'path';
 import {
   MigrationsJson,
   MigrationsJsonEntry,
 } from '../../config/misc-interfaces';
 import { extractFileFromTarball } from '../../utils/tar';
-import { joinPathFragments } from '../../utils/path';
+import { isContainedRelativePath, joinPathFragments } from '../../utils/path';
 
 export const AI_MIGRATIONS_DIR = joinPathFragments('tools', 'ai-migrations');
 
@@ -70,26 +70,13 @@ async function resolvePromptFiles(
     : undefined;
 }
 
-function isPromptPathWithinMigrationsDir(
-  migrationsDir: string,
-  promptRelPath: string
-): boolean {
-  const rel = relative(migrationsDir, join(migrationsDir, promptRelPath));
-  return !(
-    isAbsolute(promptRelPath) ||
-    rel === '..' ||
-    rel.startsWith(`..${sep}`) ||
-    rel.startsWith(`..${posix.sep}`)
-  );
-}
-
 function assertPromptPathWithinMigrationsDir(
   migrationsDir: string,
   promptRelPath: string,
   packageName: string,
   packageVersion: string
 ): void {
-  if (!isPromptPathWithinMigrationsDir(migrationsDir, promptRelPath)) {
+  if (!isContainedRelativePath(promptRelPath)) {
     throw new Error(
       `Invalid prompt path "${promptRelPath}" in package "${packageName}@${packageVersion}": prompt paths must be relative and resolve within the package's migrations directory.`
     );
@@ -125,7 +112,7 @@ export function resolvePrompt(
   promptPath: string,
   migrationsDir: string
 ): string {
-  if (!isPromptPathWithinMigrationsDir(migrationsDir, promptPath)) {
+  if (!isContainedRelativePath(promptPath)) {
     throw new PromptResolutionError(promptPath, migrationsDir);
   }
   const resolvedPath = join(migrationsDir, promptPath);

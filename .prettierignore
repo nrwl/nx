@@ -59,3 +59,7 @@ tools/documentation/create-embeddings/src/main.mts
 
 # Inlined from `@yarnpkg/parser` keep as is
 packages/nx/src/utils/yarn-syml/syml-grammar.js
+
+# Generated on Netlify builds; reformatting invalidates the sha256 digests in
+# index.json (see astro-docs/scripts/sync-agent-skills.mjs)
+astro-docs/public/.well-known/agent-skills

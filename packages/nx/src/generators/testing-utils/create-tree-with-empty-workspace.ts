@@ -1,12 +1,39 @@
 import { FsTree } from '../tree';
 import type { Tree } from '../tree';
+import type { FormatterType } from '../../utils/formatters';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 /**
+ * A formatter choice rather than a dispatch target, so `'none'` is composed in
+ * here instead of living in `FormatterType`.
+ */
+type TestFormatter = FormatterType | 'none';
+
+/**
+ * Keyed by `FormatterType` so adding a formatter fails to compile here until
+ * this helper can seed it, rather than silently producing a workspace with no
+ * config.
+ */
+const formatterConfigFiles = {
+  prettier: '.prettierrc',
+  oxfmt: '.oxfmtrc.json',
+} satisfies Record<FormatterType, string>;
+
+/**
  * Creates a host for testing.
+ *
+ * Defaults to oxfmt deliberately, so generator tests exercise the oxfmt path
+ * rather than the create-nx-workspace default. oxfmt formats
+ * JS, TS, JSON, YAML and Markdown - nothing filters by extension on the way in
+ * - so any spec asserting on generated file *content* is affected. Pass `none`
+ * to assert exactly what the generator wrote, or `prettier` only for a test
+ * that is about prettier itself.
  */
 export function createTreeWithEmptyWorkspace(
-  opts = {} as { layout?: 'apps-libs' }
+  opts = {} as {
+    layout?: 'apps-libs';
+    formatter?: TestFormatter;
+  }
 ): Tree {
   const tree = new FsTree('/virtual', false);
   // Our unit tests are all written as though they are at the root of a workspace
@@ -15,7 +42,7 @@ export function createTreeWithEmptyWorkspace(
   // is prepended to the paths created in the virtual tree.
   // Setting this envVar to workspaceRoot prevents this behaviour
   process.env.INIT_CWD = workspaceRoot;
-  return addCommonFiles(tree, opts.layout === 'apps-libs');
+  return addCommonFiles(tree, opts.layout === 'apps-libs', opts.formatter);
 }
 
 /**
@@ -27,8 +54,17 @@ export function createTreeWithEmptyV1Workspace(): Tree {
   );
 }
 
-function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
-  tree.write('./.prettierrc', JSON.stringify({ singleQuote: true }));
+function addCommonFiles(
+  tree: Tree,
+  addAppsAndLibsFolders: boolean,
+  formatter: TestFormatter = 'oxfmt'
+): Tree {
+  if (formatter !== 'none') {
+    tree.write(
+      `./${formatterConfigFiles[formatter]}`,
+      JSON.stringify({ singleQuote: true })
+    );
+  }
   tree.write(
     '/package.json',
     JSON.stringify({

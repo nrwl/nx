@@ -2,7 +2,7 @@ import {
   NxJsonConfiguration,
   NxReleaseChangelogConfiguration,
 } from '../../config/nx-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
 import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
 
@@ -48,5 +48,5 @@ export default async function update(tree: Tree) {
 
   updateNxJson(tree, nxJson);
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }

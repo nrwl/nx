@@ -1,13 +1,7 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Remix Application Integrated Repo --directory should create the application correctly 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
+exports[`Remix Application > Integrated Repo > --directory > should create the application correctly 1`] = `
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
@@ -53,7 +47,7 @@ export default function App() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --directory should create the application correctly 2`] = `
+exports[`Remix Application > Integrated Repo > --directory > should create the application correctly 2`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -66,14 +60,8 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
+exports[`Remix Application > Integrated Repo > --directory > should extract the layout directory from the directory options if it exists 1`] = `
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
@@ -119,7 +107,7 @@ export default function App() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 2`] = `
+exports[`Remix Application > Integrated Repo > --directory > should extract the layout directory from the directory options if it exists 2`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -132,7 +120,7 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
+exports[`Remix Application > Integrated Repo > --e2eTestRunner > should generate a cypress e2e application for the app 1`] = `
 "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
 const { defineConfig } = require('cypress');
 module.exports = defineConfig({
@@ -152,7 +140,7 @@ module.exports = defineConfig({
 "
 `;
 
-exports[`Remix Application Integrated Repo --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
+exports[`Remix Application > Integrated Repo > --e2eTestRunner > should generate a playwright e2e application for the app 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
@@ -231,7 +219,7 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
+exports[`Remix Application > Integrated Repo > --unitTestRunner > should generate the correct files for testing using jest 1`] = `
 "module.exports = {
   displayName: 'test',
   preset: '../jest.preset.js',
@@ -244,14 +232,14 @@ exports[`Remix Application Integrated Repo --unitTestRunner should generate the 
 "
 `;
 
-exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 2`] = `
+exports[`Remix Application > Integrated Repo > --unitTestRunner > should generate the correct files for testing using jest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 1`] = `
+exports[`Remix Application > Integrated Repo > --unitTestRunner > should generate the correct files for testing using vitest 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -283,25 +271,19 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 2`] = `
+exports[`Remix Application > Integrated Repo > --unitTestRunner > should generate the correct files for testing using vitest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 3`] = `
+exports[`Remix Application > Integrated Repo > --unitTestRunner > should generate the correct files for testing using vitest 3`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ]
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"]
   },
   "include": [
     "vite.config.ts",
@@ -325,14 +307,8 @@ exports[`Remix Application Integrated Repo --unitTestRunner should generate the 
 "
 `;
 
-exports[`Remix Application Integrated Repo should create the application correctly 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
+exports[`Remix Application > Integrated Repo > should create the application correctly 1`] = `
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
@@ -378,7 +354,7 @@ export default function App() {
 "
 `;
 
-exports[`Remix Application Integrated Repo should create the application correctly 2`] = `
+exports[`Remix Application > Integrated Repo > should create the application correctly 2`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -391,7 +367,7 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
+exports[`Remix Application > Standalone Project Repo > --e2eTestRunner > should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
 export default defineConfig({
@@ -411,7 +387,7 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
+exports[`Remix Application > Standalone Project Repo > --unitTestRunner > should generate the correct files for testing using jest 1`] = `
 "module.exports = {
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
@@ -421,21 +397,19 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: './coverage/test',
-  testMatch: [
-    '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-  ],
+  testMatch: ['<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 };
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 2`] = `
+exports[`Remix Application > Standalone Project Repo > --unitTestRunner > should generate the correct files for testing using jest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 3`] = `
+exports[`Remix Application > Standalone Project Repo > --unitTestRunner > should generate the correct files for testing using jest 3`] = `
 "import { createRemixStub } from '@remix-run/testing';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
@@ -451,12 +425,12 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  expect(await screen.findByText('Hello there,')).toBeTruthy();
 });
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 1`] = `
+exports[`Remix Application > Standalone Project Repo > --unitTestRunner > should generate the correct files for testing using vitest 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -488,7 +462,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 2`] = `
+exports[`Remix Application > Standalone Project Repo > --unitTestRunner > should generate the correct files for testing using vitest 2`] = `
 "import { createRemixStub } from '@remix-run/testing';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
@@ -504,23 +478,17 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  expect(await screen.findByText('Hello there,')).toBeTruthy();
 });
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 3`] = `
+exports[`Remix Application > Standalone Project Repo > --unitTestRunner > should generate the correct files for testing using vitest 3`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ]
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"]
   },
   "include": [
     "vite.config.ts",
@@ -544,21 +512,15 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 4`] = `
+exports[`Remix Application > Standalone Project Repo > --unitTestRunner > should generate the correct files for testing using vitest 4`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Application Standalone Project Repo should create the application correctly 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
+exports[`Remix Application > Standalone Project Repo > should create the application correctly 1`] = `
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
@@ -604,7 +566,7 @@ export default function App() {
 "
 `;
 
-exports[`Remix Application Standalone Project Repo should create the application correctly 2`] = `
+exports[`Remix Application > Standalone Project Repo > should create the application correctly 2`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -617,7 +579,7 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Standalone Project Repo should create the application correctly 3`] = `
+exports[`Remix Application > Standalone Project Repo > should create the application correctly 3`] = `
 "import { createRemixStub } from '@remix-run/testing';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
@@ -633,12 +595,12 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  expect(await screen.findByText('Hello there,')).toBeTruthy();
 });
 "
 `;
 
-exports[`Remix Application Standalone Project Repo should create the application correctly 4`] = `
+exports[`Remix Application > Standalone Project Repo > should create the application correctly 4`] = `
 "import { vitePlugin as remix } from '@remix-run/dev';
 import { defineConfig } from 'vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -667,7 +629,7 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Standalone Project Repo should generate a playwright e2e application for the app 1`] = `
+exports[`Remix Application > Standalone Project Repo > should generate a playwright e2e application for the app 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';

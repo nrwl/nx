@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { confirmationPrompt } from './prompt-helpers';
 import { homedir } from 'os';
 import { output } from './output';
 import {
@@ -59,16 +59,10 @@ async function promptForNxConsoleInstallation(): Promise<boolean> {
       ],
     });
 
-    const { shouldInstallNxConsole } = await prompt<{
-      shouldInstallNxConsole: boolean;
-    }>({
-      type: 'confirm',
-      name: 'shouldInstallNxConsole',
+    return await confirmationPrompt({
       message: 'Install Nx Console? (you can uninstall anytime)',
-      initial: true,
+      onCancel: () => false,
     });
-
-    return shouldInstallNxConsole;
   } catch (error) {
     return false;
   }

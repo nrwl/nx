@@ -72,5 +72,6 @@ export const release = defaultClient.release.bind(
  */
 export {
   AfterAllProjectsVersioned,
+  ResolveVersionForDependency,
   VersionActions,
 } from './version/version-actions';

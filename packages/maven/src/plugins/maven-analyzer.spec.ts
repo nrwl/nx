@@ -1,24 +1,29 @@
-import { runMavenAnalysis } from './maven-analyzer';
+import type { Mock } from 'vitest';
+import { getAnalysisTimeoutMs, runMavenAnalysis } from './maven-analyzer';
 import { existsSync } from 'fs';
 import { readJsonFile } from '@nx/devkit';
 import { EventEmitter } from 'events';
 import {
+  killChildOnHostExit,
+  killProcessTreeGraceful,
   safeExecFileSync,
   safeSpawn,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 
-jest.mock('fs');
+vi.mock('fs');
 // Mock the wrapper, not child_process: safeSpawn decides platform behavior at
 // call time, and a child_process assertion would only hold off Windows.
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  safeSpawn: jest.fn(),
-  safeExecFileSync: jest.fn(),
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  safeSpawn: vi.fn(),
+  safeExecFileSync: vi.fn(),
+  killProcessTreeGraceful: vi.fn().mockResolvedValue(undefined),
+  killChildOnHostExit: vi.fn(),
 }));
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  readJsonFile: jest.fn(),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  readJsonFile: vi.fn(),
 }));
 
 describe('Maven Analyzer', () => {
@@ -26,23 +31,64 @@ describe('Maven Analyzer', () => {
   const mockOutputFile = `${workspaceDataDirectory}/nx-maven-projects.json`;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (existsSync as jest.Mock).mockReturnValue(true);
+    vi.clearAllMocks();
+    (existsSync as Mock).mockReturnValue(true);
     // Mock mvnd detection to fail by default, so tests use mvnw/mvn
-    (safeExecFileSync as jest.Mock).mockImplementation(() => {
+    (safeExecFileSync as Mock).mockImplementation(() => {
       throw new Error('mvnd not found');
     });
   });
 
+  describe('getAnalysisTimeoutMs', () => {
+    afterEach(() => {
+      delete process.env.NX_MAVEN_ANALYSIS_TIMEOUT;
+    });
+
+    // setTimeout clamps a delay past the 32-bit signed max to 1ms, so an
+    // unclamped huge value would abort the analysis instantly — the opposite
+    // of what the timeout error tells the user to do.
+    it('should clamp an overflowing NX_MAVEN_ANALYSIS_TIMEOUT', () => {
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = '9999999';
+      expect(getAnalysisTimeoutMs()).toBe(2 ** 31 - 1);
+
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = 'Infinity';
+      expect(getAnalysisTimeoutMs()).toBe(2 ** 31 - 1);
+
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = '30';
+      expect(getAnalysisTimeoutMs()).toBe(30_000);
+    });
+  });
+
   describe('runMavenAnalysis', () => {
+    it('should register the maven process to be killed on host exit', async () => {
+      const mockChild = new EventEmitter() as any;
+      mockChild.stdout = new EventEmitter();
+      mockChild.stderr = new EventEmitter();
+      mockChild.pid = 1234;
+
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (readJsonFile as Mock).mockReturnValue({
+        projects: [],
+        generatedAt: 0,
+      });
+
+      const promise = runMavenAnalysis(workspaceRoot, {});
+      setImmediate(() => {
+        mockChild.emit('close', 0);
+      });
+      await promise;
+
+      expect(killChildOnHostExit).toHaveBeenCalledWith(mockChild);
+    });
+
     it('should run Maven analysis with default options', async () => {
       const mockChild = new EventEmitter() as any;
       mockChild.stdout = new EventEmitter();
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
-      (readJsonFile as jest.Mock).mockReturnValue({
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (readJsonFile as Mock).mockReturnValue({
         projects: [],
         generatedAt: Date.now(),
       });
@@ -80,8 +126,8 @@ describe('Maven Analyzer', () => {
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
-      (readJsonFile as jest.Mock).mockReturnValue({
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (readJsonFile as Mock).mockReturnValue({
         projects: [],
         generatedAt: Date.now(),
       });
@@ -104,7 +150,7 @@ describe('Maven Analyzer', () => {
     });
 
     it('should use mvnw wrapper on Unix when available', async () => {
-      (existsSync as jest.Mock).mockImplementation((path: string) => {
+      (existsSync as Mock).mockImplementation((path: string) => {
         if (path.includes('mvnw') && !path.includes('.cmd')) {
           return true;
         }
@@ -116,8 +162,8 @@ describe('Maven Analyzer', () => {
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
-      (readJsonFile as jest.Mock).mockReturnValue({
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (readJsonFile as Mock).mockReturnValue({
         projects: [],
         generatedAt: Date.now(),
       });
@@ -143,7 +189,7 @@ describe('Maven Analyzer', () => {
     });
 
     it('should use mvnw.cmd wrapper on Windows when available', async () => {
-      (existsSync as jest.Mock).mockImplementation((path: string) => {
+      (existsSync as Mock).mockImplementation((path: string) => {
         if (path.includes('mvnw.cmd')) {
           return true;
         }
@@ -155,8 +201,8 @@ describe('Maven Analyzer', () => {
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
-      (readJsonFile as jest.Mock).mockReturnValue({
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (readJsonFile as Mock).mockReturnValue({
         projects: [],
         generatedAt: Date.now(),
       });
@@ -174,13 +220,13 @@ describe('Maven Analyzer', () => {
 
       Object.defineProperty(process, 'platform', { value: originalPlatform });
 
-      const [binary, , options] = (safeSpawn as jest.Mock).mock.calls[0];
+      const [binary, , options] = (safeSpawn as Mock).mock.calls[0];
       expect(binary).toBe('mvnw.cmd');
       expect(options.shell).toBeFalsy();
     });
 
     it('should fallback to mvn when wrapper is not available', async () => {
-      (existsSync as jest.Mock).mockImplementation((path: string) => {
+      (existsSync as Mock).mockImplementation((path: string) => {
         return path.includes('nx-maven-projects.json');
       });
 
@@ -189,8 +235,8 @@ describe('Maven Analyzer', () => {
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
-      (readJsonFile as jest.Mock).mockReturnValue({
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (readJsonFile as Mock).mockReturnValue({
         projects: [],
         generatedAt: Date.now(),
       });
@@ -216,7 +262,7 @@ describe('Maven Analyzer', () => {
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
+      (safeSpawn as Mock).mockReturnValue(mockChild);
 
       const promise = runMavenAnalysis(workspaceRoot, {});
 
@@ -230,13 +276,33 @@ describe('Maven Analyzer', () => {
       );
     });
 
+    // A process that never exits must still settle the promise, or the
+    // timeout error is never reported.
+    it('should report the timeout even if the process never exits', async () => {
+      const mockChild = new EventEmitter() as any;
+      mockChild.stdout = new EventEmitter();
+      mockChild.stderr = new EventEmitter();
+      mockChild.pid = 1234;
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = '0.001';
+      try {
+        await expect(runMavenAnalysis(workspaceRoot, {})).rejects.toThrow(
+          'Maven analysis timed out'
+        );
+        expect(killProcessTreeGraceful).toHaveBeenCalledWith(1234);
+      } finally {
+        delete process.env.NX_MAVEN_ANALYSIS_TIMEOUT;
+      }
+    });
+
     it('should handle spawn error', async () => {
       const mockChild = new EventEmitter() as any;
       mockChild.stdout = new EventEmitter();
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
+      (safeSpawn as Mock).mockReturnValue(mockChild);
 
       const promise = runMavenAnalysis(workspaceRoot, {});
 
@@ -255,8 +321,8 @@ describe('Maven Analyzer', () => {
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (existsSync as Mock).mockReturnValue(false);
 
       const promise = runMavenAnalysis(workspaceRoot, {});
 
@@ -275,15 +341,11 @@ describe('Maven Analyzer', () => {
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      const stdoutSpy = jest
-        .spyOn(process.stdout, 'write')
-        .mockImplementation();
-      const stderrSpy = jest
-        .spyOn(process.stderr, 'write')
-        .mockImplementation();
+      const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation();
+      const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation();
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
-      (readJsonFile as jest.Mock).mockReturnValue({
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (readJsonFile as Mock).mockReturnValue({
         projects: [],
         generatedAt: Date.now(),
       });
@@ -322,8 +384,8 @@ describe('Maven Analyzer', () => {
         generatedAt: Date.now(),
       };
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
-      (readJsonFile as jest.Mock).mockReturnValue(mockResult);
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (readJsonFile as Mock).mockReturnValue(mockResult);
 
       const promise = runMavenAnalysis(workspaceRoot, {});
 
@@ -347,8 +409,8 @@ describe('Maven Analyzer', () => {
       mockChild.stderr = new EventEmitter();
       mockChild.pid = 1234;
 
-      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
-      (readJsonFile as jest.Mock).mockReturnValue({
+      (safeSpawn as Mock).mockReturnValue(mockChild);
+      (readJsonFile as Mock).mockReturnValue({
         projects: [],
         generatedAt: Date.now(),
       });
@@ -365,7 +427,7 @@ describe('Maven Analyzer', () => {
 
       Object.defineProperty(process, 'platform', { value: originalPlatform });
 
-      const [, args, options] = (safeSpawn as jest.Mock).mock.calls[0];
+      const [, args, options] = (safeSpawn as Mock).mock.calls[0];
       expect(options.shell).toBeFalsy();
       expect(args).toContain(`-DtargetNamePrefix=${malicious}`);
     });

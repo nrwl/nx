@@ -10,6 +10,7 @@ exceptions:
   - Nx Cloud
   - Nx Console
   - Nx Agents
+  - Enterprise
   - Nx Replay
   - AI
   - CI
@@ -40,12 +41,21 @@ exceptions:
   - BitBucket
   - BitBucket Cloud
   - Azure DevOps
+  - Azure AI Foundry
   - Azure
+  - AWS Bedrock
+  - Google Vertex AI
+  - Anthropic
+  - Claude Code
+  - Claude
   - Docker
   - Dockerfile
   - Kubernetes
   - Gradle
   - Maven
+  - Rust
+  - Cargo
+  - Clippy
   - Node.js
   - Deno
   - Bun

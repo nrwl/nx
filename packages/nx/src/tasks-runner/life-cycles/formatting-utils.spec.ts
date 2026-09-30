@@ -22,9 +22,10 @@ describe('formatFlags', () => {
     );
   });
   it('should not break on invalid inputs', () => {
-    expect(formatFlags('', 'myflag', (abc) => abc)).toBe(
-      '  --myflag=(abc)=>abc'
-    );
+    // The exact serialization of a function depends on the TS transform, so
+    // compare against the function's own toString.
+    const fn = (abc: unknown) => abc;
+    expect(formatFlags('', 'myflag', fn)).toBe(`  --myflag=${fn}`);
     expect(formatFlags('', 'myflag', NaN)).toBe('  --myflag=NaN');
   });
   it('should decompose positional values', () => {

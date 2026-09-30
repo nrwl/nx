@@ -22,7 +22,7 @@ This command will install the correct version of Nx based on your Angular versio
 
 This will enable you to use the Nx CLI in your existing Angular CLI workspace while keeping your existing file structure in place. The following changes will be made in your repo to enable Nx:
 
-- The `nx`, `@nx/workspace` and `prettier` packages will be installed.
+- The `nx` and `@nx/workspace` packages will be installed.
 - An `nx.json` file will be created in the root of your workspace.
 - The `angular.json` file is split into separate `project.json` files for each project.
 
@@ -45,7 +45,7 @@ The command applies the following changes to your workspace:
 
 ### Importing additional Angular CLI projects
 
-If you have multiple Angular CLI workspaces that you want to consolidate into a single Nx monorepo, you can use [`nx import`](/docs/guides/adopting-nx/import-project) to bring additional projects into an existing Nx workspace while preserving their git history.
+If you have multiple Angular CLI workspaces that you want to consolidate into a single Nx monorepo, you can use [`nx import`](/docs/kb/import-project) to bring additional projects into an existing Nx workspace while preserving their git history.
 
 After the changes are applied, your workspace file structure should look similar to the one below:
 
@@ -77,8 +77,6 @@ After the changes are applied, your workspace file structure should look similar
   - tools/
   - .editorconfig
   - .gitignore
-  - .prettierignore
-  - .prettierrc
   - nx.json
   - package.json
   - README.md
@@ -97,7 +95,7 @@ Your workspace is now powered by Nx! You can verify that your application still 
 
 > Your project graph will grow as you add and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see the changes in-browser as you add them.
 
-For guidance on setting up CI, see the [CI setup guide](/docs/kb/setup-ci).
+For guidance on setting up CI, see the [CI setup guide](/docs/getting-started/setup-ci).
 
 ## Learn more
 

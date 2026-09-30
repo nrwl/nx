@@ -247,11 +247,10 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
           log.debug("Maven output for task $taskId:\n$outputText")
         }
       } else {
-        // Log at ERROR level when task fails so user can see what went wrong
+        // Only the outcome: the output itself already reached stdout through the
+        // tee as Maven produced it, and Nx renders it again from terminalOutput.
         log.error("Task $taskId FAILED with exit code: $exitCode (${duration}ms)")
-        if (outputText.isNotEmpty()) {
-          log.error("Maven output for failed task $taskId:\n$outputText")
-        } else {
+        if (outputText.isEmpty()) {
           log.error("Task $taskId had no output from Maven")
         }
       }

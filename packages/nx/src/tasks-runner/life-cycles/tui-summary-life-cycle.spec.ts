@@ -20,7 +20,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       }
       return [22229415, 668399708];
     }) as any;
-    jest.spyOn(taskHistoryUtils, 'getTaskHistory').mockReturnValue(null);
+    vi.spyOn(taskHistoryUtils, 'getTaskHistory').mockReturnValue(null);
   });
 
   afterAll(() => {
@@ -31,7 +31,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
   beforeEach(() => {});
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('runOne', () => {
@@ -58,7 +58,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         overrides: {},
         projectNames: ['test'],
         tasks: [target, dep],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       lifeCycle.startTasks?.([dep], null as unknown as TaskMetadata);
@@ -117,7 +117,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         overrides: {},
         projectNames: ['test'],
         tasks: [target, dep],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       lifeCycle.startTasks?.([dep], null as unknown as TaskMetadata);
@@ -178,7 +178,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         overrides: {},
         projectNames: ['test'],
         tasks: [target, dep],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       lifeCycle.startTasks?.([dep], null as unknown as TaskMetadata);
@@ -237,7 +237,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         overrides: {},
         projectNames: ['test'],
         tasks: [target, dep],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       lifeCycle.startTasks?.([dep, target], null as unknown as TaskMetadata);
@@ -307,7 +307,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         overrides: {},
         projectNames: ['test'],
         tasks: [target],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       lifeCycle.startTasks?.([target], null as unknown as TaskMetadata);
@@ -386,7 +386,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         overrides: {},
         projectNames: ['test'],
         tasks: [devServer, e2eTest],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       // Dev server starts
@@ -489,7 +489,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         overrides: {},
         projectNames: ['foo', 'bar'],
         tasks: [foo, bar],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       lifeCycle.startTasks?.([foo, bar], null as unknown as TaskMetadata);
@@ -573,7 +573,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         overrides: {},
         projectNames: ['foo', 'bar'],
         tasks: [foo, bar],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       lifeCycle.startTasks?.([bar, foo], null as unknown as TaskMetadata);
@@ -657,7 +657,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         overrides: {},
         projectNames: ['test'],
         tasks: [devServer, e2eTest],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       // Dev server starts
@@ -760,7 +760,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         },
         projectNames: ['foo', 'bar'],
         tasks: [foo, bar],
-        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
       });
 
       lifeCycle.startTasks?.([foo, bar], null as unknown as TaskMetadata);

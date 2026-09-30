@@ -11,7 +11,9 @@ import {
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { applyEdits, FormattingOptions, modify } from 'jsonc-parser';
+import { validRange } from 'semver';
 import { VersionActions } from 'nx/release';
+import type { ResolveVersionForDependency } from 'nx/release';
 import type {
   AfterAllProjectsVersioned,
   NxReleaseVersionConfiguration,
@@ -41,8 +43,18 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   };
 };
 
+type LocalDependencyProject = {
+  projectName: string;
+};
+
 // Cache at the module level to avoid re-detecting the package manager for each instance
 let pm: PackageManager | undefined;
+// Every project in a release receives the same ProjectGraph. Building these
+// indexes once avoids turning dependency updates into quadratic graph scans.
+const localDependencyProjectsByGraph = new WeakMap<
+  ProjectGraph,
+  Map<string, LocalDependencyProject>
+>();
 
 export default class JsVersionActions extends VersionActions {
   validManifestFilenames = ['package.json'];
@@ -154,28 +166,29 @@ export default class JsVersionActions extends VersionActions {
       'package.json'
     );
     const json = readJson(tree, sourcePackageJsonPath);
-    // Resolve the package name from the project graph metadata, as it may not match the project name
-    const dependencyPackageName =
-      projectGraph.nodes[dependencyProjectName].data.metadata?.js?.packageName;
     const dependencyTypes = [
       'dependencies',
       'devDependencies',
       'peerDependencies',
       'optionalDependencies',
     ];
+    const dependencyPackageName =
+      projectGraph.nodes[dependencyProjectName]?.data.metadata?.js?.packageName;
 
     let currentVersion = null;
     let dependencyCollection = null;
-    for (const depType of dependencyTypes) {
-      if (json[depType] && json[depType][dependencyPackageName]) {
-        currentVersion = json[depType][dependencyPackageName];
-        dependencyCollection = depType;
-        break;
+    if (dependencyPackageName) {
+      for (const depType of dependencyTypes) {
+        if (json[depType]?.[dependencyPackageName]) {
+          currentVersion = json[depType][dependencyPackageName];
+          dependencyCollection = depType;
+          break;
+        }
       }
     }
 
     // Resolve catalog references if needed
-    if (currentVersion) {
+    if (currentVersion && dependencyPackageName) {
       const catalogManager = getCatalogManager(tree.root);
       if (catalogManager?.isCatalogReference(currentVersion)) {
         currentVersion = catalogManager.resolveCatalogReference(
@@ -211,14 +224,51 @@ export default class JsVersionActions extends VersionActions {
   async updateProjectDependencies(
     tree: Tree,
     projectGraph: ProjectGraph,
-    dependenciesToUpdate: Record<string, string>
+    dependenciesToUpdate: Record<string, string>,
+    resolveVersionForDependency?: ResolveVersionForDependency
   ): Promise<string[]> {
-    let numDependenciesToUpdate = Object.keys(dependenciesToUpdate).length;
-    if (numDependenciesToUpdate === 0) {
+    if (
+      Object.keys(dependenciesToUpdate).length === 0 &&
+      !resolveVersionForDependency
+    ) {
       return [];
     }
 
-    const logMessages: string[] = [];
+    const dependencyTypes = [
+      'dependencies',
+      'devDependencies',
+      'peerDependencies',
+      'optionalDependencies',
+    ];
+    const localDependencyProjects =
+      this.getLocalDependencyProjectLookup(projectGraph);
+    for (const projectName of Object.keys(dependenciesToUpdate)) {
+      if (!projectGraph.nodes[projectName]?.data.metadata?.js?.packageName) {
+        throw new Error(
+          `Unable to determine the package name for project "${projectName}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
+        );
+      }
+    }
+
+    const resolvedVersions = new Map<string, Promise<string>>();
+    const resolveVersion = (projectName: string): Promise<string> => {
+      let resolution = resolvedVersions.get(projectName);
+      if (!resolution) {
+        if (!resolveVersionForDependency) {
+          throw new Error(
+            `No version resolver was provided for dependency project "${projectName}".`
+          );
+        }
+        resolution = resolveVersionForDependency(projectName);
+        resolvedVersions.set(projectName, resolution);
+      }
+      return resolution;
+    };
+
+    const manifestUpdates: Array<{
+      manifestPath: string;
+      updates: Array<{ path: string[]; value: string }>;
+    }> = [];
     const catalogUpdates: Array<{
       packageName: string;
       version: string;
@@ -228,16 +278,10 @@ export default class JsVersionActions extends VersionActions {
 
     for (const manifestToUpdate of this.manifestsToUpdate) {
       const json = readJson(tree, manifestToUpdate.manifestPath);
-      const manifestUpdates: Array<{
+      const updates: Array<{
         path: string[];
         value: string;
       }> = [];
-      const dependencyTypes = [
-        'dependencies',
-        'devDependencies',
-        'peerDependencies',
-        'optionalDependencies',
-      ];
 
       const preserveMatchingDependencyRanges =
         this.finalConfigForProject.preserveMatchingDependencyRanges === true
@@ -250,39 +294,40 @@ export default class JsVersionActions extends VersionActions {
 
       for (const depType of dependencyTypes) {
         if (json[depType]) {
-          for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
-            // Resolve the package name from the project graph metadata, as it may not match the project name
-            const packageName =
-              projectGraph.nodes[dep].data.metadata?.js?.packageName;
-            if (!packageName) {
-              throw new Error(
-                `Unable to determine the package name for project "${dep}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
-              );
+          for (const [dependencyName, currentVersion] of Object.entries<string>(
+            json[depType]
+          )) {
+            const targetProject = localDependencyProjects.get(dependencyName);
+            if (!targetProject) {
+              continue;
             }
-            const currentVersion = json[depType][packageName];
-            if (currentVersion) {
+
+            let version = dependenciesToUpdate[targetProject.projectName];
+            if (version !== undefined) {
               if (catalogManager?.isCatalogReference(currentVersion)) {
                 // collect the catalog updates so we can update the catalog definitions later
                 const catalogRef =
                   catalogManager.parseCatalogReference(currentVersion)!;
                 catalogUpdates.push({
-                  packageName,
+                  packageName: dependencyName,
                   version,
                   catalogName: catalogRef.catalogName,
                 });
-
-                numDependenciesToUpdate--;
                 continue;
               }
-              // Check if other local dependency protocols should be preserved
-              else if (
+
+              if (
                 manifestToUpdate.preserveLocalDependencyProtocols &&
                 this.isLocalDependencyProtocol(currentVersion)
               ) {
-                // Reduce the count appropriately to avoid confusing user-facing logs
-                numDependenciesToUpdate--;
                 continue;
-              } else if (
+              }
+
+              if (this.isLocalDependencyProtocol(currentVersion)) {
+                version = this.applyVersionPrefix(currentVersion, version);
+              }
+
+              if (
                 preserveMatchingDependencyRanges.includes(depType) &&
                 !this.isLocalDependencyProtocol(currentVersion)
               ) {
@@ -292,15 +337,36 @@ export default class JsVersionActions extends VersionActions {
                   !isMatchingDependencyRange(version, currentVersion)
                 ) {
                   throw new Error(
-                    `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
+                    `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${dependencyName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
                   );
                 } else if (isValidRange(currentVersion)) {
-                  // it is a range, but it is valid
                   continue;
                 }
               }
-              manifestUpdates.push({
-                path: [depType, packageName],
+            } else if (
+              resolveVersionForDependency &&
+              !manifestToUpdate.preserveLocalDependencyProtocols &&
+              this.isLocalDependencyProtocol(currentVersion)
+            ) {
+              try {
+                version = await this.resolveLocalDependencySpecifier(
+                  dependencyName,
+                  currentVersion,
+                  targetProject,
+                  resolveVersion
+                );
+              } catch (error) {
+                const message =
+                  error instanceof Error ? error.message : String(error);
+                throw new Error(
+                  `Unable to replace local dependency protocol "${currentVersion}" for "${dependencyName}" in manifest "${manifestToUpdate.manifestPath}". ${message}`
+                );
+              }
+            }
+
+            if (version !== undefined) {
+              updates.push({
+                path: [depType, dependencyName],
                 value: version,
               });
             }
@@ -308,23 +374,28 @@ export default class JsVersionActions extends VersionActions {
         }
       }
 
+      manifestUpdates.push({
+        manifestPath: manifestToUpdate.manifestPath,
+        updates,
+      });
+    }
+
+    // Resolve every requested version before writing any manifest so one
+    // failed resolver cannot leave a partially updated set of manifests.
+    const logMessages: string[] = [];
+    for (const manifestUpdate of manifestUpdates) {
       this.updateManifestValues(
         tree,
-        manifestToUpdate.manifestPath,
-        manifestUpdates
+        manifestUpdate.manifestPath,
+        manifestUpdate.updates
       );
-
-      // If we ignored local dependecy protocols, then we could have dynamically ended up with zero here and we should not log anything related to dependencies
-      if (numDependenciesToUpdate === 0) {
-        return [];
+      if (manifestUpdate.updates.length > 0) {
+        const depText =
+          manifestUpdate.updates.length === 1 ? 'dependency' : 'dependencies';
+        logMessages.push(
+          `✍️  Updated ${manifestUpdate.updates.length} ${depText} in manifest: ${manifestUpdate.manifestPath}`
+        );
       }
-
-      const depText =
-        numDependenciesToUpdate === 1 ? 'dependency' : 'dependencies';
-
-      logMessages.push(
-        `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestToUpdate.manifestPath}`
-      );
     }
 
     // Update catalog definitions in the package manager's catalog file
@@ -341,6 +412,99 @@ export default class JsVersionActions extends VersionActions {
     }
 
     return logMessages;
+  }
+
+  private getLocalDependencyProjectLookup(
+    projectGraph: ProjectGraph
+  ): Map<string, LocalDependencyProject> {
+    let lookup = localDependencyProjectsByGraph.get(projectGraph);
+    if (lookup) {
+      return lookup;
+    }
+
+    // This lookup requires the dependency key to match the package name.
+    // Package aliases need relationship-specific manifest data that the
+    // project graph does not retain. Support is tracked in
+    // https://github.com/nrwl/nx/issues/36630.
+    lookup = new Map<string, LocalDependencyProject>();
+    for (const [projectName, node] of Object.entries(projectGraph.nodes)) {
+      const packageName = node.data.metadata?.js?.packageName;
+      if (!packageName) {
+        continue;
+      }
+      lookup.set(packageName, { projectName });
+    }
+    localDependencyProjectsByGraph.set(projectGraph, lookup);
+    return lookup;
+  }
+
+  private async resolveLocalDependencySpecifier(
+    dependencyName: string,
+    versionSpecifier: string,
+    targetProject: LocalDependencyProject,
+    resolveVersion: (projectName: string) => Promise<string>
+  ): Promise<string> {
+    if (versionSpecifier.startsWith('file:')) {
+      const resolvedVersion = await resolveVersion(targetProject.projectName);
+      return this.applyVersionPrefix(versionSpecifier, resolvedVersion);
+    }
+
+    const range = versionSpecifier.slice('workspace:'.length);
+
+    if (
+      range !== '' &&
+      range !== '*' &&
+      range !== '^' &&
+      range !== '~' &&
+      validRange(range) !== null
+    ) {
+      return range;
+    }
+
+    const isRelativePath = range.startsWith('.');
+    if (
+      !isRelativePath &&
+      range !== '' &&
+      range !== '*' &&
+      range !== '^' &&
+      range !== '~'
+    ) {
+      throw new Error(
+        `The workspace protocol used by "${dependencyName}" is not a supported range or relative workspace path.`
+      );
+    }
+
+    const resolvedVersion = await resolveVersion(targetProject.projectName);
+    return this.applyVersionPrefix(
+      isRelativePath ? 'workspace:*' : `workspace:${range}`,
+      resolvedVersion
+    );
+  }
+
+  private applyVersionPrefix(
+    versionSpecifier: string,
+    resolvedVersion: string
+  ): string {
+    const configuredPrefix = this.finalConfigForProject.versionPrefix;
+    let prefix = '';
+    if (
+      configuredPrefix === '~' ||
+      configuredPrefix === '^' ||
+      configuredPrefix === '='
+    ) {
+      prefix = configuredPrefix;
+    } else if (
+      configuredPrefix === 'auto' &&
+      versionSpecifier.startsWith('workspace:')
+    ) {
+      const range = versionSpecifier.slice('workspace:'.length);
+      if (range.startsWith('^')) {
+        prefix = '^';
+      } else if (range.startsWith('~')) {
+        prefix = '~';
+      }
+    }
+    return `${prefix}${resolvedVersion.replace(/^[~^=]/, '')}`;
   }
 
   private updateManifestValues(

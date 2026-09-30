@@ -29,7 +29,9 @@ export async function addJest(
     supportTsx: true,
     skipSerializers: true,
     setupFile: 'none',
-    compiler: 'babel',
+    // The generated config is replaced by updateJestConfig, so this only decides
+    // which transformer package gets installed; 'tsc' installs none.
+    compiler: 'tsc',
     skipFormat: true,
     runtimeTsconfigFileName: 'tsconfig.json',
   });

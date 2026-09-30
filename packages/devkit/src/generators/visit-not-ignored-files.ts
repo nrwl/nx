@@ -39,11 +39,11 @@ export function visitNotIgnoredFiles(
 /**
  * Callers must have cleared `dirPath` already - both call sites do.
  *
- * Not descending into an ignored directory is what makes the answers match git,
- * not just what makes them fast: git refuses to re-include a file inside an
- * excluded directory, and `isIgnoredFile` alone does not implement that rule
- * (see `isIgnoredByChain`). Flattening this into a per-file filter would start
- * visiting files git ignores.
+ * Not descending into an ignored directory keeps the walk from checking every
+ * file under one just to drop them all. It also keeps the answers matching git
+ * under devkit's nx skew: git refuses to re-include a file inside an excluded
+ * directory, and only nx versions from `createAncestorAwareIgnoreChecker`
+ * onward enforce that in `isIgnoredFile` itself.
  */
 function visitDirectory(
   tree: Tree,

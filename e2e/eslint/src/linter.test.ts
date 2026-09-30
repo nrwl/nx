@@ -33,6 +33,7 @@ describe('Linter', () => {
 
     beforeAll(() => {
       projScope = newProject({
+        keepBackup: true,
         packages: [
           '@nx/eslint',
           '@nx/js',
@@ -647,6 +648,7 @@ describe('Linter', () => {
   describe('Root projects migration', () => {
     beforeEach(() =>
       newProject({
+        keepBackup: true,
         packages: [
           '@nx/angular',
           '@nx/eslint',

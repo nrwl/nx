@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/eslint:workspace-rule --dir should support creating the rule in a nested directory 1`] = `
+exports[`@nx/eslint:workspace-rule > --dir > should support creating the rule in a nested directory 1`] = `
 "/**
  * This file sets you up with structure needed for an ESLint rule.
  *
@@ -40,7 +40,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 "
 `;
 
-exports[`@nx/eslint:workspace-rule --dir should support creating the rule in a nested directory 2`] = `
+exports[`@nx/eslint:workspace-rule > --dir > should support creating the rule in a nested directory 2`] = `
 "import { RuleTester } from '@typescript-eslint/rule-tester';
 import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { rule, RULE_NAME } from './another-rule';
@@ -58,7 +58,7 @@ ruleTester.run(RULE_NAME, rule, {
 "
 `;
 
-exports[`@nx/eslint:workspace-rule --dir should support creating the rule in a nested directory with multiple levels of nesting 1`] = `
+exports[`@nx/eslint:workspace-rule > --dir > should support creating the rule in a nested directory with multiple levels of nesting 1`] = `
 "/**
  * This file sets you up with structure needed for an ESLint rule.
  *
@@ -98,7 +98,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 "
 `;
 
-exports[`@nx/eslint:workspace-rule --dir should support creating the rule in a nested directory with multiple levels of nesting 2`] = `
+exports[`@nx/eslint:workspace-rule > --dir > should support creating the rule in a nested directory with multiple levels of nesting 2`] = `
 "import { RuleTester } from '@typescript-eslint/rule-tester';
 import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { rule, RULE_NAME } from './one-more-rule';
@@ -116,7 +116,7 @@ ruleTester.run(RULE_NAME, rule, {
 "
 `;
 
-exports[`@nx/eslint:workspace-rule should generate the required files 1`] = `
+exports[`@nx/eslint:workspace-rule > should generate the required files 1`] = `
 "/**
  * This file sets you up with structure needed for an ESLint rule.
  *
@@ -156,7 +156,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 "
 `;
 
-exports[`@nx/eslint:workspace-rule should generate the required files 2`] = `
+exports[`@nx/eslint:workspace-rule > should generate the required files 2`] = `
 "import { RuleTester } from '@typescript-eslint/rule-tester';
 import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { rule, RULE_NAME } from './my-rule';
@@ -174,7 +174,7 @@ ruleTester.run(RULE_NAME, rule, {
 "
 `;
 
-exports[`@nx/eslint:workspace-rule should update the plugin index.ts with the new rule 1`] = `
+exports[`@nx/eslint:workspace-rule > should update the plugin index.ts with the new rule 1`] = `
 "import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
 /**
  * Import your custom workspace rules at the top of this file.

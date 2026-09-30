@@ -1,7 +1,6 @@
 pub mod connection;
 pub(crate) mod initialize;
 
-use crate::native::logger::enable_logger;
 use crate::native::machine_id::get_machine_id;
 use crate::native::{db::connection::NxDbConnection, hasher::hash};
 use napi::bindgen_prelude::External;
@@ -16,7 +15,6 @@ pub fn connect_to_nx_db(
     cache_dir: String,
     db_name: Option<String>,
 ) -> anyhow::Result<External<Arc<Mutex<NxDbConnection>>>> {
-    enable_logger();
     let cache_dir_buf = PathBuf::from(cache_dir);
     let mut db_file_name = db_name.unwrap_or_else(get_machine_id);
 

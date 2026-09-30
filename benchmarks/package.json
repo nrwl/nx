@@ -53,6 +53,12 @@
           "^build"
         ],
         "parallelism": false
+      },
+      "oxlint": {
+        "inputs": [
+          "...",
+          "{projectRoot}/nx.json"
+        ]
       }
     }
   }

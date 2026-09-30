@@ -25,6 +25,7 @@ import { acknowledgeBuildScripts } from '../../../utils/acknowledge-build-script
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { recordInitWrite } from './format';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { connectWorkspaceToCloud } from '../../nx-cloud/connect/connect-to-nx-cloud';
 import { deduceDefaultBase } from './deduce-default-base';
@@ -79,6 +80,7 @@ export function createNxJsonFile(
     nxJson.defaultBase ??= defaultBase;
   }
   writeJsonFile(nxJsonPath, nxJson);
+  recordInitWrite(nxJsonPath);
 }
 
 /**
@@ -234,15 +236,6 @@ export function createNxJsonFromTurboJson(
     }
   }
 
-  /**
-   * The fact that cacheDir was in use suggests the user had a reason for deviating from the default.
-   * We can't know what that reason was, nor if it would still be applicable in Nx, but we can at least
-   * improve discoverability of the relevant Nx option by explicitly including it with its default value.
-   */
-  if (turboJson.cacheDir) {
-    nxJson.cacheDirectory = '.nx/cache';
-  }
-
   const defaultBase = deduceDefaultBase();
   // Do not add defaultBase if it is inferred to be the Nx default value of main
   if (defaultBase !== 'main') {
@@ -267,6 +260,7 @@ export function addDepsToPackageJson(
     }
   }
   writeJsonFile(path, json);
+  recordInitWrite(path);
   // nx has a postinstall script, which pnpm 11+ refuses to install
   // unacknowledged.
   acknowledgeBuildScripts(repoRoot, packageManager, { nx: true });
@@ -310,13 +304,17 @@ export function runInstall(
   pmc: PackageManagerCommands = getPackageManagerCommand(packageManager)
 ) {
   let command = pmc.install;
+  const env = { ...process.env };
   // Plugins added during init can pull build-script deps whose allowBuilds
   // entries are only recorded by their init generators after this install;
-  // warn and skip for this one install, like pnpm 10 did.
+  // warn and skip for this one install, like pnpm 10 did. pnpm 12 gave
+  // `--config` a meaning of its own and takes the setting from the
+  // environment instead.
   if (packageManager === 'pnpm') {
     try {
       if (gte(getPackageManagerVersion('pnpm', repoRoot), '11.0.0')) {
         command += ' --config.strictDepBuilds=false';
+        env.PNPM_CONFIG_STRICT_DEP_BUILDS = 'false';
       }
     } catch {
       // The version cannot be probed; run the install unmodified.
@@ -328,6 +326,7 @@ export function runInstall(
       encoding: 'utf8',
       cwd: repoRoot,
       windowsHide: true,
+      env,
     });
   } catch (e) {
     if ((e as any)?.stderr) process.stderr.write((e as any).stderr);
@@ -399,13 +398,6 @@ export async function initCloud(
   await printSuccessMessage(token, installationSource);
 }
 
-export function setNeverConnectToCloud(repoRoot: string): void {
-  const nxJsonPath = join(repoRoot, 'nx.json');
-  const nxJson = readJsonFile(nxJsonPath);
-  nxJson.neverConnectToCloud = true;
-  writeJsonFile(nxJsonPath, nxJson);
-}
-
 export function addVsCodeRecommendedExtensions(
   repoRoot: string,
   extensions: string[]
@@ -423,8 +415,10 @@ export function addVsCodeRecommendedExtensions(
     });
 
     writeJsonFile(vsCodeExtensionsPath, vsCodeExtensionsJson);
+    recordInitWrite(vsCodeExtensionsPath);
   } else {
     writeJsonFile(vsCodeExtensionsPath, { recommendations: extensions });
+    recordInitWrite(vsCodeExtensionsPath);
   }
 }
 
@@ -452,6 +446,7 @@ export function markRootPackageJsonAsNxProjectLegacy(
     }
   }
   writeJsonFile(`package.json`, json);
+  recordInitWrite('package.json');
 }
 
 export function markPackageJsonAsNxProject(packageJsonPath: string) {
@@ -462,6 +457,7 @@ export function markPackageJsonAsNxProject(packageJsonPath: string) {
 
   json.nx = {};
   writeJsonFile(packageJsonPath, json);
+  recordInitWrite(packageJsonPath);
 }
 
 export function printFinalMessage({

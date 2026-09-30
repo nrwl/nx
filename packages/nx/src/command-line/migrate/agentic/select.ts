@@ -8,7 +8,7 @@ import {
   type MigratePromptChoices,
   reportMigratePrompt,
 } from '../migrate-analytics';
-import { migratePrompt } from '../safe-prompt';
+import { migrateChoice } from '../safe-prompt';
 import { detectInstalledAgents } from './detect-installed';
 import { isInsideAgent } from './inception';
 import { AGENT_DEFINITIONS } from './definitions';
@@ -183,58 +183,50 @@ async function firePromptForAgentic(
   // `name` is typed so renaming a choice here fails to compile instead of
   // silently forking the GA value-space and falling through the switch below.
   type AgenticChoice = {
-    name: MigratePromptChoices['agentic'];
-    message: string;
-    description: string;
+    value: MigratePromptChoices['agentic'];
+    label: string;
+    hint: string;
   };
   const pinChoice: AgenticChoice[] = multipleAgents
     ? [
         {
-          name: 'yes-pin',
-          message: 'Yes, always with the same agent',
-          description: rememberHint,
+          value: 'yes-pin',
+          label: 'Yes, always with the same agent',
+          hint: rememberHint,
         },
       ]
     : [];
   const choices: AgenticChoice[] = [
     {
-      name: 'yes-once',
-      message: 'Yes, just this time',
-      description: applyHint,
+      value: 'yes-once',
+      label: 'Yes, just this time',
+      hint: applyHint,
     },
     {
-      name: 'yes-flex',
-      message: multipleAgents
+      value: 'yes-flex',
+      label: multipleAgents
         ? "Yes, always (I'll pick the agent each run)"
         : 'Yes, always',
-      description: rememberHint,
+      hint: rememberHint,
     },
     ...pinChoice,
-    { name: 'no-once', message: 'No, just this time', description: skipHint },
-    { name: 'no-never', message: 'No, never', description: rememberHint },
+    { value: 'no-once', label: 'No, just this time', hint: skipHint },
+    { value: 'no-never', label: 'No, never', hint: rememberHint },
   ];
 
   // Blank line keeps the prompt from gluing to the previous `npm install`
   // output or any earlier orchestrator line.
   console.log();
-  // `as any`: `footer` and per-choice `description` aren't in enquirer's .d.ts.
-  const response = await migratePrompt<{
-    choice: MigratePromptChoices['agentic'];
-  }>({
-    name: 'choice',
-    type: 'select',
+  // Each choice's hint renders beside it, so the description no longer needs a
+  // footer that tracks the cursor.
+  const choice = await migrateChoice<MigratePromptChoices['agentic']>({
     message: 'Enable the agentic flow?',
     choices,
-    initial: 0,
-    footer: function () {
-      const focused = this.focused as { description?: string };
-      return focused?.description ? pc.dim(`  ${focused.description}`) : '';
-    },
-  } as any);
+  });
 
-  reportMigratePrompt('agentic', response.choice);
+  reportMigratePrompt('agentic', choice);
 
-  switch (response.choice) {
+  switch (choice) {
     case 'yes-once':
       return { enabled: true };
     case 'yes-flex':
@@ -330,12 +322,10 @@ async function selectAgent(
 
   // Blank line keeps the prompt from gluing to the preceding output.
   console.log();
-  const response = await migratePrompt<{ id: AgentId }>({
-    name: 'id',
-    type: 'select',
+  const id = await migrateChoice<AgentId>({
     message: 'Multiple AI agents detected. Which one should Nx use?',
-    choices: detected.map((d) => ({ name: d.id, message: d.displayName })),
+    choices: detected.map((d) => ({ value: d.id, label: d.displayName })),
   });
-  reportMigratePrompt('agent_select', response.id);
-  return detected.find((d) => d.id === response.id)!;
+  reportMigratePrompt('agent_select', id);
+  return detected.find((d) => d.id === id)!;
 }

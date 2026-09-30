@@ -1,0 +1,269 @@
+import type { MockInstance } from 'vitest';
+import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import type { Tree } from '../../generators/tree';
+import { TempFs } from '../../internal-testing-utils/temp-fs';
+import {
+  detectFormatter,
+  detectFormatterInTree,
+  resetFormatterWarningsForTesting,
+} from './index';
+import { logger } from '../logger';
+
+describe('detectFormatterInTree', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    // No formatter: this suite is about what detection reports, so a
+    // pre-seeded config would answer before the code under test runs.
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+  });
+
+  it('should return null when nothing indicates a formatter', () => {
+    expect(detectFormatterInTree(tree)).toBeNull();
+  });
+
+  it('should detect oxfmt from its config file', () => {
+    tree.write('.oxfmtrc.json', '{}');
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+  });
+
+  it('should detect prettier from its config file', () => {
+    tree.write('.prettierrc', '{}');
+
+    expect(detectFormatterInTree(tree)).toBe('prettier');
+  });
+
+  it('should prefer oxfmt when both are configured', () => {
+    tree.write('.oxfmtrc.json', '{}');
+    tree.write('.prettierrc', '{}');
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+  });
+
+  it('should prefer a prettier config over a declared oxfmt dependency', () => {
+    // A config is stronger intent than a dependency, so the dependency
+    // fallback ranks below both configs rather than beside the oxfmt one.
+    // Otherwise a prettier workspace that pulls oxfmt in mid-migration
+    // silently switches formatter.
+    tree.write('.prettierrc', '{}');
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { oxfmt: '^0.60.0' } })
+    );
+
+    expect(detectFormatterInTree(tree)).toBe('prettier');
+  });
+
+  it('should detect oxfmt from a dependency when it has no config file', () => {
+    // oxfmt runs on defaults, so a config file is optional.
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { oxfmt: '^0.60.0' } })
+    );
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+  });
+
+  it('should detect oxfmt declared as a runtime dependency', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ dependencies: { oxfmt: '^0.60.0' } })
+    );
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+  });
+
+  it('should detect prettier from a dependency when it has no config file', () => {
+    // #30426 ruled out prettier merely being resolvable in node_modules, which
+    // a biome/dprint workspace gets transitively. Declaring it is a choice.
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { prettier: '^3.6.2' } })
+    );
+
+    expect(detectFormatterInTree(tree)).toBe('prettier');
+  });
+
+  it('should prefer a declared oxfmt dependency over a declared prettier one', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({
+        devDependencies: { oxfmt: '^0.60.0', prettier: '^3.6.2' },
+      })
+    );
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+  });
+
+  it('should detect prettier configured through package.json', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ prettier: { singleQuote: true } })
+    );
+
+    expect(detectFormatterInTree(tree)).toBe('prettier');
+  });
+});
+
+describe('detectFormatter', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('detect-formatter');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  it('should return null for a directory with no formatter', () => {
+    fs.createFileSync('package.json', '{}');
+
+    expect(detectFormatter(fs.tempDir)).toBeNull();
+  });
+
+  it('should detect oxfmt from its config file', () => {
+    fs.createFileSync('.oxfmtrc.json', '{}');
+
+    expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
+  });
+
+  it('should prefer oxfmt when both are configured', () => {
+    fs.createFileSync('.oxfmtrc.json', '{}');
+    fs.createFileSync('.prettierrc', '{}');
+
+    expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
+  });
+
+  it('should prefer a prettier config over a declared oxfmt dependency', () => {
+    fs.createFileSync('.prettierrc', '{}');
+    fs.createFileSync(
+      'package.json',
+      JSON.stringify({ devDependencies: { oxfmt: '^0.60.0' } })
+    );
+
+    expect(detectFormatter(fs.tempDir)).toBe('prettier');
+  });
+
+  it('should resolve config files against the given root, not the cwd', () => {
+    fs.createFileSync('.prettierrc', '{}');
+
+    expect(detectFormatter(fs.tempDir)).toBe('prettier');
+
+    const empty = new TempFs('detect-formatter-empty');
+    try {
+      expect(detectFormatter(empty.tempDir)).toBeNull();
+    } finally {
+      empty.cleanup();
+    }
+  });
+
+  it('should detect oxfmt from a dependency when it has no config file', () => {
+    // The on-disk twin of the in-tree case: oxfmt runs on defaults, so a
+    // declared dependency is the only signal an unconfigured workspace gives.
+    fs.createFileSync(
+      'package.json',
+      JSON.stringify({ devDependencies: { oxfmt: '^0.60.0' } })
+    );
+
+    expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
+  });
+
+  it('should detect prettier from a config format only the shared list knows', () => {
+    // The setup and detection lists have to agree; `prettier.config.ts` is one
+    // of the entries a hand-maintained copy had drifted past.
+    fs.createFileSync('prettier.config.ts', 'export default {};');
+
+    expect(detectFormatter(fs.tempDir)).toBe('prettier');
+  });
+
+  it('should detect prettier from a dependency when it has no config file', () => {
+    fs.createFileSync(
+      'package.json',
+      JSON.stringify({ devDependencies: { prettier: '^3.6.2' } })
+    );
+
+    expect(detectFormatter(fs.tempDir)).toBe('prettier');
+  });
+
+  it('should prefer a declared oxfmt dependency over a declared prettier one', () => {
+    fs.createFileSync(
+      'package.json',
+      JSON.stringify({
+        devDependencies: { oxfmt: '^0.60.0', prettier: '^3.6.2' },
+      })
+    );
+
+    expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
+  });
+});
+
+describe('the both-configured warning', () => {
+  let warn: MockInstance;
+
+  beforeEach(() => {
+    // The warn-once flag is module state; without this reset every case after
+    // the first passes for the wrong reason (already warned).
+    resetFormatterWarningsForTesting();
+    warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => warn.mockRestore());
+
+  it('should warn on the disk path too, not only the tree path', () => {
+    // `nx format` and `nx init` go through `detectFormatter`, so the tree-side
+    // case above does not cover the warning a CLI user actually sees.
+    const fs = new TempFs('detect-formatter-warn');
+    try {
+      fs.createFileSync('.oxfmtrc.json', '{}');
+      fs.createFileSync('.prettierrc', '{}');
+
+      expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toContain('formatting with oxfmt');
+      expect(warn.mock.calls[0][0]).toContain(
+        'https://nx.dev/docs/reference/code-formatting'
+      );
+    } finally {
+      fs.cleanup();
+    }
+  });
+
+  it('should warn once, not per call, when both are configured', () => {
+    const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    tree.write('.oxfmtrc.json', '{}');
+    tree.write('.prettierrc', '{}');
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('formatting with oxfmt');
+  });
+
+  it('should point at an action the user can actually take', () => {
+    // The remediation clause went unasserted and shipped naming a `--formatter`
+    // flag `nx format` has never had. Deleting a config is the only lever.
+    const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    tree.write('.oxfmtrc.json', '{}');
+    tree.write('.prettierrc', '{}');
+
+    detectFormatterInTree(tree);
+
+    const message = warn.mock.calls[0][0];
+    expect(message).toContain('Delete the config you are not using');
+    expect(message).toContain('https://nx.dev/docs/reference/code-formatting');
+    expect(message).not.toContain('--formatter');
+  });
+
+  it('should stay silent when only one is configured', () => {
+    const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    tree.write('.oxfmtrc.json', '{}');
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+
+    expect(warn).not.toHaveBeenCalled();
+  });
+});

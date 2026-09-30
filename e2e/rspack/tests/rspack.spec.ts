@@ -6,7 +6,9 @@ import {
   updateFile,
   runCLI,
   createFile,
+  packageInstall,
   readJson,
+  removeFile,
   updateJson,
 } from '@nx/e2e-utils';
 
@@ -37,6 +39,65 @@ describe('rspack e2e', () => {
     );
 
     expect(rspackPlugin).toBeDefined();
+  });
+
+  it('should infer targets from a rspack.config.ts that imports @rspack/core and an extensionless .ts sibling', () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/react:application --directory=apps/${appName} --bundler=rspack --e2eTestRunner=none`
+    );
+
+    // The extensionless `.ts` import fails Node's native ESM link, so the
+    // config falls back to swc-node (installed below) and re-requires
+    // @rspack/core, which the failed link left cached (see #36685).
+    packageInstall('@swc-node/register', undefined, '~1.11.1');
+    packageInstall('@swc/core', undefined, '~1.15.5');
+    removeFile(`apps/${appName}/rspack.config.js`);
+    createFile(
+      `apps/${appName}/rspack.shared.ts`,
+      `export const devServerPort = 4310;`
+    );
+    createFile(
+      `apps/${appName}/rspack.config.ts`,
+      `
+        import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
+        import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
+        import { CopyRspackPlugin } from '@rspack/core';
+        import { join } from 'path';
+
+        import { devServerPort } from './rspack.shared';
+
+        export default {
+          output: {
+            path: join(__dirname, '../../dist/${appName}'),
+          },
+          devServer: {
+            port: devServerPort,
+          },
+          plugins: [
+            new NxAppRspackPlugin({
+              tsConfig: './tsconfig.app.json',
+              main: './src/main.tsx',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ['./src/favicon.ico', './src/assets'],
+              styles: ['./src/styles.scss'],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactRspackPlugin(),
+            new CopyRspackPlugin({ patterns: [] }),
+          ],
+        };`
+    );
+
+    const project = JSON.parse(
+      runCLI(`show project ${appName} --json`, { daemon: false })
+    );
+
+    expect(project.targets.build).toBeDefined();
+    expect(project.targets['serve-static'].options.port).toBe(4310);
   });
 
   describe('config types', () => {

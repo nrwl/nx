@@ -6,8 +6,10 @@ import type { UpdatePackageJsonOption } from './update-package-json';
 import { updatePackageJson } from './update-package-json';
 import { checkDependencies } from '../check-dependencies';
 
-export interface CopyPackageJsonOptions
-  extends Omit<UpdatePackageJsonOption, 'projectRoot'> {
+export interface CopyPackageJsonOptions extends Omit<
+  UpdatePackageJsonOption,
+  'projectRoot'
+> {
   watch?: boolean;
   extraDependencies?: DependentBuildableProjectNode[];
   overrideDependencies?: DependentBuildableProjectNode[];

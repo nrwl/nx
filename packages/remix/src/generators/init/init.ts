@@ -1,7 +1,8 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -29,6 +30,11 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
   tasks.push(assertAndPinRemixTypescript(tree));
 
   if (!options.skipPackageJson) {
+    // @remix-run/dev depends on esbuild, whose install script only validates the
+    // prebuilt binary that ships as an optional dependency.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      esbuild: false,
+    });
     const installTask = addDependenciesToPackageJson(
       tree,
       {

@@ -30,7 +30,7 @@ export async function addE2e(
     (options.bundler === 'vite' && hasVitePlugin(tree));
 
   let e2eWebServerInfo: E2EWebServerDetails = {
-    e2eWebServerAddress: `http://localhost:${options.devServerPort ?? 4200}`,
+    e2eWebServerAddress: `http://localhost:${options.port ?? 4200}`,
     e2eWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
       options.projectName
     }:serve`,
@@ -53,7 +53,7 @@ export async function addE2e(
         `webpack.config.${options.js ? 'js' : 'ts'}`
       ),
       options.addPlugin,
-      options.devServerPort ?? 4200
+      options.port
     );
   } else if (options.bundler === 'rspack') {
     const { getRspackE2EWebServerInfo } = ensurePackage<
@@ -67,7 +67,7 @@ export async function addE2e(
         `rspack.config.${options.js ? 'js' : 'ts'}`
       ),
       options.addPlugin,
-      options.devServerPort ?? 4200
+      options.port
     );
   } else if (options.bundler === 'vite') {
     const { getViteE2EWebServerInfo, getReactRouterE2EWebServerInfo } =
@@ -81,7 +81,7 @@ export async function addE2e(
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
           options.addPlugin,
-          options.devServerPort ?? 4200,
+          options.port ?? 4200,
           // If the user manually sets the port, then use it for dev and preview
           options.port
         )
@@ -93,7 +93,7 @@ export async function addE2e(
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
           options.addPlugin,
-          options.devServerPort ?? 4200,
+          options.port ?? 4200,
           // If the user manually sets the port, then use it for dev and preview
           options.port
         );
@@ -111,7 +111,7 @@ export async function addE2e(
         `rsbuild.config.${options.js ? 'js' : 'ts'}`
       ),
       options.addPlugin,
-      options.devServerPort ?? 4200
+      options.port ?? 4200
     );
   }
 

@@ -11,7 +11,7 @@ import {
   getExecutorInformation,
   parseExecutor,
 } from '../../command-line/run/executor-utils';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
 import { readJson } from '../../generators/utils/json';
 import {
@@ -94,7 +94,7 @@ export default async function update(tree: Tree) {
   }
 
   updateNxJson(tree, nxJson);
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }
 
 /**

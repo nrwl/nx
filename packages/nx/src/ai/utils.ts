@@ -4,10 +4,12 @@ import { readNxJson } from '../config/configuration';
 import { flushChanges, FsTree } from '../generators/tree';
 import {
   canInstallNxConsoleForEditor,
+  isAiAgent,
   isEditorInstalled,
   SupportedEditor,
 } from '../native';
 import { readJsonFile } from '../utils/fileutils';
+import { isSandbox } from '../utils/is-sandbox';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import {
@@ -297,4 +299,32 @@ export async function configureAgents(
 
   modificationResults.messages.forEach((message) => output.log(message));
   modificationResults.errors.forEach((error) => output.error(error));
+}
+
+/**
+ * Explains a permission error thrown while writing agent configuration files.
+ *
+ * The errno alone does not identify the cause. Agent harnesses (e.g. Claude
+ * Code) deny writes to their own settings files from sandboxed shell commands,
+ * so `nx configure-ai-agents` run through an agent's bash tool fails with EPERM
+ * where the same command succeeds in a terminal — but a root-owned
+ * `.claude/settings.json` left by an earlier `sudo nx`, or a read-only
+ * checkout, produces the same errno with an unrelated remedy. The sandbox
+ * explanation is therefore only offered where a sandbox or an agent is
+ * actually detected, and the underlying message is kept either way.
+ */
+export function agentConfigWriteBlockedLines(error: unknown): string[] {
+  const err = error as NodeJS.ErrnoException | undefined;
+  const target = err?.path ?? 'an agent configuration file';
+  return [
+    `Writing ${target} failed: ${err?.message ?? 'permission denied'}`,
+    ...(isSandbox() || isAiAgent()
+      ? [
+          "Agent sandboxes protect their own settings files from writes made by sandboxed shell commands, so this command cannot finish when run through an agent's bash tool.",
+          'To complete the AI agent setup, run `nx configure-ai-agents` from a regular terminal and relaunch the agent harness.',
+        ]
+      : [
+          'Check the ownership and mode of that path: an earlier `sudo nx` run or a read-only checkout produces this.',
+        ]),
+  ];
 }

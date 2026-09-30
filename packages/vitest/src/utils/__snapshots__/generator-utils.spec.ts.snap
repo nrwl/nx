@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createOrEditViteConfig test environment options should default to jsdom when testEnvironment is not specified 1`] = `
+exports[`createOrEditViteConfig > test environment options > should default to jsdom when testEnvironment is not specified 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -25,7 +25,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig test environment options should set test environment to edge-runtime 1`] = `
+exports[`createOrEditViteConfig > test environment options > should set test environment to edge-runtime 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -50,7 +50,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig test environment options should set test environment to happy-dom 1`] = `
+exports[`createOrEditViteConfig > test environment options > should set test environment to happy-dom 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -75,7 +75,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig test environment options should set test environment to jsdom 1`] = `
+exports[`createOrEditViteConfig > test environment options > should set test environment to jsdom 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -100,7 +100,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig test environment options should set test environment to node 1`] = `
+exports[`createOrEditViteConfig > test environment options > should set test environment to node 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -125,7 +125,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vite config generation (not vitest-only) should generate vite.config.ts with vitest reference when not onlyVitest 1`] = `
+exports[`createOrEditViteConfig > vite config generation (not vitest-only) > should generate vite.config.ts with vitest reference when not onlyVitest 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -171,7 +171,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vite config generation (not vitest-only) should include library build config when includeLib is true 1`] = `
+exports[`createOrEditViteConfig > vite config generation (not vitest-only) > should include library build config when includeLib is true 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
@@ -226,7 +226,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vitest config generation should generate valid JavaScript syntax for all coverage provider options 1`] = `
+exports[`createOrEditViteConfig > vitest config generation > should generate valid JavaScript syntax for all coverage provider options 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -251,7 +251,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vitest config generation should generate valid JavaScript syntax for all coverage provider options 2`] = `
+exports[`createOrEditViteConfig > vitest config generation > should generate valid JavaScript syntax for all coverage provider options 2`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -276,7 +276,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vitest config generation should generate valid JavaScript syntax for all coverage provider options 3`] = `
+exports[`createOrEditViteConfig > vitest config generation > should generate valid JavaScript syntax for all coverage provider options 3`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -301,7 +301,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vitest config generation should generate valid JavaScript syntax for all coverage provider options 4`] = `
+exports[`createOrEditViteConfig > vitest config generation > should generate valid JavaScript syntax for all coverage provider options 4`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -322,7 +322,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vitest config generation should generate vitest config with istanbul coverage provider 1`] = `
+exports[`createOrEditViteConfig > vitest config generation > should generate vitest config with istanbul coverage provider 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -347,7 +347,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vitest config generation should generate vitest config with v8 coverage provider 1`] = `
+exports[`createOrEditViteConfig > vitest config generation > should generate vitest config with v8 coverage provider 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -372,7 +372,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vitest config generation should generate vitest config without coverage when coverageProvider is none 1`] = `
+exports[`createOrEditViteConfig > vitest config generation > should generate vitest config without coverage when coverageProvider is none 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -393,7 +393,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vitest config generation should include includeSource when inSourceTests is true 1`] = `
+exports[`createOrEditViteConfig > vitest config generation > should include includeSource when inSourceTests is true 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -422,7 +422,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`createOrEditViteConfig vitest config generation should include setupFiles when setupFile option is provided 1`] = `
+exports[`createOrEditViteConfig > vitest config generation > should include setupFiles when setupFile option is provided 1`] = `
 "import { defineConfig } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';

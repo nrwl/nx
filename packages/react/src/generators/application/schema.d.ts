@@ -26,6 +26,7 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   compiler?: 'babel' | 'swc';
   remotes?: string[];
+  /** @deprecated Use {@link Schema.port} instead. This option will be removed in Nx v25. */
   devServerPort?: number;
   skipPackageJson?: boolean;
   rootProject?: boolean;
@@ -35,7 +36,7 @@ export interface Schema {
   addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
-  formatter?: 'prettier' | 'none';
+  formatter?: 'prettier' | 'oxfmt' | 'none';
   useProjectJson?: boolean;
   port?: number;
 }

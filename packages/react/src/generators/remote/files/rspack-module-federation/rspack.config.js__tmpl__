@@ -13,7 +13,7 @@ module.exports = {
     publicPath: 'auto'
   },
   devServer: {
-    port: <%= devServerPort %>,
+    port: <%= port %>,
     headers: {
       "Access-Control-Allow-Origin": "*"
     },

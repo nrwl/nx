@@ -1,3 +1,3 @@
-import { allowDirectNxImports, baseConfig } from '../../eslint.config.mjs';
+import { baseConfig } from '../../eslint.config.mjs';
 
-export default [...baseConfig, allowDirectNxImports];
+export default [...baseConfig];

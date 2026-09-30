@@ -1,5 +1,7 @@
-jest.mock('child_process');
-jest.mock('fs');
+import type { Mock } from 'vitest';
+
+vi.mock('child_process');
+vi.mock('fs');
 import { execFileSync, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
@@ -18,16 +20,19 @@ const SHA = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
 const PAYLOAD = 'HEAD; touch /tmp/nx-migrate-pwned #';
 
 describe('migrate-ui-api git invocations', () => {
-  const execSyncMock = execSync as jest.Mock;
-  const execFileSyncMock = execFileSync as jest.Mock;
+  const execSyncMock = execSync as Mock;
+  const execFileSyncMock = execFileSync as Mock;
 
   beforeEach(() => {
+    // Importing the module under test resolves `cacheDir` at load, which shells
+    // out to git; those calls land on the mocks before the first test runs.
+    vi.clearAllMocks();
     execSyncMock.mockReturnValue('');
     execFileSyncMock.mockReturnValue('');
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('undoMigration', () => {
@@ -76,8 +81,8 @@ describe('migrate-ui-api git invocations', () => {
 
   describe('finishMigrationProcess', () => {
     function mockMigrationsJson(initialGitRef?: { ref: string }) {
-      (existsSync as jest.Mock).mockReturnValue(false);
-      (readFileSync as jest.Mock).mockReturnValue(
+      (existsSync as Mock).mockReturnValue(false);
+      (readFileSync as Mock).mockReturnValue(
         JSON.stringify({
           'nx-console': initialGitRef ? { initialGitRef } : {},
         })
@@ -131,7 +136,7 @@ describe('migrate-ui-api git invocations', () => {
   });
 
   describe('runSingleMigration', () => {
-    const spawnMock = spawn as jest.Mock;
+    const spawnMock = spawn as Mock;
     let migrationsJson: Record<string, any>;
 
     class FakeChild extends EventEmitter {
@@ -159,10 +164,10 @@ describe('migrate-ui-api git invocations', () => {
 
     beforeEach(() => {
       migrationsJson = { 'nx-console': {} };
-      (readFileSync as jest.Mock).mockImplementation(() =>
+      (readFileSync as Mock).mockImplementation(() =>
         JSON.stringify(migrationsJson)
       );
-      (writeFileSync as jest.Mock).mockImplementation(
+      (writeFileSync as Mock).mockImplementation(
         (_path: string, content: string) => {
           migrationsJson = JSON.parse(content);
         }

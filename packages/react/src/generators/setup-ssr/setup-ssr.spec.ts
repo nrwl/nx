@@ -3,7 +3,7 @@ import { ProjectGraph, readJson, Tree } from '@nx/devkit';
 import applicationGenerator from '../application/application';
 import setupSsrGenerator from './setup-ssr';
 
-jest.mock('@nx/devkit', () => {
+vi.mock('@nx/devkit', async () => {
   const myAppData = {
     root: 'my-app',
     sourceRoot: 'my-app/src',
@@ -76,14 +76,12 @@ jest.mock('@nx/devkit', () => {
       },
     },
   };
-  const original = jest.requireActual('@nx/devkit');
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    createProjectGraphAsync: jest.fn().mockResolvedValue(pg),
-    readCachedProjectGraph: jest
-      .fn()
-      .mockImplementation((): ProjectGraph => pg),
-    readProjectConfiguration: jest
+    createProjectGraphAsync: vi.fn().mockResolvedValue(pg),
+    readCachedProjectGraph: vi.fn().mockImplementation((): ProjectGraph => pg),
+    readProjectConfiguration: vi
       .fn()
       .mockImplementation((tree, projectName) => {
         if (projectName === 'my-app') {
@@ -108,8 +106,8 @@ describe('setupSsrGenerator', () => {
 
   afterEach(() => {
     process.env.NX_ADD_PLUGINS = originalEnv;
-    jest.clearAllMocks();
-    jest.resetModules();
+    vi.clearAllMocks();
+    vi.resetModules();
   });
 
   it('should add SSR files', async () => {

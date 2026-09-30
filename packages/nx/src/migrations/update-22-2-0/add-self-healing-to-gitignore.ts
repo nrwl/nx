@@ -1,4 +1,4 @@
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 
@@ -16,5 +16,5 @@ export default async function addSelfHealingToGitignore(tree: Tree) {
     addEntryToGitIgnore(tree, '.prettierignore', '.nx/self-healing');
   }
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }

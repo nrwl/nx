@@ -136,12 +136,16 @@ export async function createApplicationFiles(
       options.appProjectRoot,
       {
         ...templateVariables,
-        webpackPluginOptions: hasWebpackPlugin(host)
-          ? createNxWebpackPluginOptions(
-              options,
-              templateVariables.offsetFromRoot
-            )
-          : null,
+        // Must match addProject's gate. An app that opts out gets executor targets,
+        // so it needs the executor-shaped config too — otherwise the plugin config's
+        // devServer.port and the serve target's port both describe the same server.
+        webpackPluginOptions:
+          hasWebpackPlugin(host) && options.addPlugin
+            ? createNxWebpackPluginOptions(
+                options,
+                templateVariables.offsetFromRoot
+              )
+            : null,
       }
     );
     if (options.compiler === 'babel') {
@@ -170,12 +174,13 @@ export async function createApplicationFiles(
       options.appProjectRoot,
       {
         ...templateVariables,
-        rspackPluginOptions: hasRspackPlugin(host)
-          ? createNxRspackPluginOptions(
-              options,
-              templateVariables.offsetFromRoot
-            )
-          : null,
+        rspackPluginOptions:
+          hasRspackPlugin(host) && options.addPlugin
+            ? createNxRspackPluginOptions(
+                options,
+                templateVariables.offsetFromRoot
+              )
+            : null,
       }
     );
   } else if (options.bundler === 'rsbuild') {

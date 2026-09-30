@@ -1,8 +1,8 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`lib --standalone should generate a library with a standalone component and have it flat 1`] = `"export * from './lib/my-lib';"`;
+exports[`lib > --standalone > should generate a library with a standalone component and have it flat 1`] = `"export * from './lib/my-lib';"`;
 
-exports[`lib --standalone should generate a library with a standalone component and have it flat 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component and have it flat 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -15,7 +15,7 @@ export class MyLib {}
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component and have it flat 3`] = `
+exports[`lib > --standalone > should generate a library with a standalone component and have it flat 3`] = `
 "import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MyLib } from './my-lib';
 
@@ -40,13 +40,13 @@ describe('MyLib', () => {
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 1`] = `
+exports[`lib > --standalone > should generate a library with a standalone component and have it flat with routing setup 1`] = `
 "export * from './lib/lib.routes';
 
 export * from './lib/my-lib';"
 `;
 
-exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component and have it flat with routing setup 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -59,7 +59,7 @@ export class MyLib {}
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 3`] = `
+exports[`lib > --standalone > should generate a library with a standalone component and have it flat with routing setup 3`] = `
 "import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MyLib } from './my-lib';
 
@@ -84,7 +84,7 @@ describe('MyLib', () => {
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 4`] = `
+exports[`lib > --standalone > should generate a library with a standalone component and have it flat with routing setup 4`] = `
 "import { Route } from '@angular/router';
 import { MyLib } from './my-lib';
 
@@ -94,9 +94,9 @@ export const myLibRoutes: Route[] = [
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point 1`] = `"export * from './lib/my-lib/my-lib';"`;
+exports[`lib > --standalone > should generate a library with a standalone component as entry point 1`] = `"export * from './lib/my-lib/my-lib';"`;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -109,7 +109,7 @@ export class MyLib {}
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point 3`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point 3`] = `
 "import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MyLib } from './my-lib';
 
@@ -134,9 +134,9 @@ describe('MyLib', () => {
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point and set up view encapsulation and change detection 1`] = `"export * from './lib/my-lib/my-lib';"`;
+exports[`lib > --standalone > should generate a library with a standalone component as entry point and set up view encapsulation and change detection 1`] = `"export * from './lib/my-lib/my-lib';"`;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point and set up view encapsulation and change detection 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point and set up view encapsulation and change detection 2`] = `
 "import { Component, ViewEncapsulation } from '@angular/core';
 
 @Component({
@@ -150,9 +150,9 @@ export class MyLib {}
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point and skip tests 1`] = `"export * from './lib/my-lib/my-lib';"`;
+exports[`lib > --standalone > should generate a library with a standalone component as entry point and skip tests 1`] = `"export * from './lib/my-lib/my-lib';"`;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point and skip tests 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point and skip tests 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -165,9 +165,9 @@ export class MyLib {}
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point following SFC pattern 1`] = `"export * from './lib/my-lib/my-lib';"`;
+exports[`lib > --standalone > should generate a library with a standalone component as entry point following SFC pattern 1`] = `"export * from './lib/my-lib/my-lib';"`;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point following SFC pattern 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point following SFC pattern 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -180,7 +180,7 @@ export class MyLib {}
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point following SFC pattern 3`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point following SFC pattern 3`] = `
 "import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MyLib } from './my-lib';
 
@@ -205,13 +205,13 @@ describe('MyLib', () => {
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 1`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup 1`] = `
 "export * from './lib/lib.routes';
 
 export * from './lib/my-lib/my-lib';"
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup 2`] = `
 "import { Route } from '@angular/router';
 import { MyLib } from './my-lib/my-lib';
 
@@ -221,7 +221,7 @@ export const myLibRoutes: Route[] = [
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 3`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup 3`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -234,7 +234,7 @@ export class MyLib {}
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 4`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup 4`] = `
 "import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MyLib } from './my-lib';
 
@@ -259,13 +259,13 @@ describe('MyLib', () => {
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 1`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 1`] = `
 "export * from './lib/lib.routes';
 
 export * from './lib/my-lib/my-lib';"
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 2`] = `
 "import { Route } from '@angular/router';
 import { MyLib } from './my-lib/my-lib';
 
@@ -275,7 +275,7 @@ export const myLibRoutes: Route[] = [
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 3`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 3`] = `
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
@@ -283,13 +283,13 @@ export const appRoutes: Route[] = [
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 1`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 1`] = `
 "export * from './lib/lib.routes';
 
 export * from './lib/my-lib/my-lib';"
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 2`] = `
 "import { Route } from '@angular/router';
 import { MyLib } from './my-lib/my-lib';
 
@@ -299,7 +299,7 @@ export const myLibRoutes: Route[] = [
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 3`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 3`] = `
 "import { Route } from '@angular/router';
 import { myLibRoutes } from '@proj/my-lib';
 
@@ -308,7 +308,7 @@ export const appRoutes: Route[] = [
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as a lazy child 1`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as a lazy child 1`] = `
 "import { Route } from '@angular/router';
 import { MyLib } from './my-lib/my-lib';
 
@@ -319,7 +319,7 @@ export const myLibRoutes: Route[] = [
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as direct child 1`] = `
+exports[`lib > --standalone > should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as direct child 1`] = `
 "import { Route } from '@angular/router';
 import { MyLib } from './my-lib/my-lib';
 import { secondRoutes } from '@proj/second';
@@ -331,9 +331,9 @@ export const myLibRoutes: Route[] = [
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component in a directory 1`] = `"export * from './lib/my-lib/my-lib';"`;
+exports[`lib > --standalone > should generate a library with a standalone component in a directory 1`] = `"export * from './lib/my-lib/my-lib';"`;
 
-exports[`lib --standalone should generate a library with a standalone component in a directory 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component in a directory 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -346,7 +346,7 @@ export class MyLib {}
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component in a directory 3`] = `
+exports[`lib > --standalone > should generate a library with a standalone component in a directory 3`] = `
 "import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MyLib } from './my-lib';
 
@@ -371,9 +371,9 @@ describe('MyLib', () => {
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component in a directory with a simple name 1`] = `"export * from './lib/my-lib/my-lib';"`;
+exports[`lib > --standalone > should generate a library with a standalone component in a directory with a simple name 1`] = `"export * from './lib/my-lib/my-lib';"`;
 
-exports[`lib --standalone should generate a library with a standalone component in a directory with a simple name 2`] = `
+exports[`lib > --standalone > should generate a library with a standalone component in a directory with a simple name 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -386,7 +386,7 @@ export class MyLib {}
 "
 `;
 
-exports[`lib --standalone should generate a library with a standalone component in a directory with a simple name 3`] = `
+exports[`lib > --standalone > should generate a library with a standalone component in a directory with a simple name 3`] = `
 "import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MyLib } from './my-lib';
 
@@ -411,9 +411,9 @@ describe('MyLib', () => {
 "
 `;
 
-exports[`lib --standalone should generate a library with a valid selector for the standalone component when library name has a slash 1`] = `"export * from './lib/auth/common/auth/common';"`;
+exports[`lib > --standalone > should generate a library with a valid selector for the standalone component when library name has a slash 1`] = `"export * from './lib/auth/common/auth/common';"`;
 
-exports[`lib --standalone should generate a library with a valid selector for the standalone component when library name has a slash 2`] = `
+exports[`lib > --standalone > should generate a library with a valid selector for the standalone component when library name has a slash 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -426,7 +426,7 @@ export class AuthCommon {}
 "
 `;
 
-exports[`lib router lazy should add RouterModule.forChild 1`] = `
+exports[`lib > router > lazy > should add RouterModule.forChild 1`] = `
 "import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -439,7 +439,7 @@ export class MyLibModule {}
 "
 `;
 
-exports[`lib router lazy should add RouterModule.forChild 2`] = `
+exports[`lib > router > lazy > should add RouterModule.forChild 2`] = `
 "import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -452,7 +452,7 @@ export class MyLib2Module {}
 "
 `;
 
-exports[`lib router lazy should update the parent module 1`] = `
+exports[`lib > router > lazy > should update the parent module 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -461,10 +461,7 @@ import { App } from './app';
   imports: [
     BrowserModule,
     RouterModule.forRoot([
-      {
-        path: 'my-lib',
-        loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
-      },
+      { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule) },
     ]),
   ],
   declarations: [App],
@@ -474,7 +471,7 @@ export class AppModule {}
 "
 `;
 
-exports[`lib router lazy should update the parent module 3`] = `
+exports[`lib > router > lazy > should update the parent module 3`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -483,18 +480,9 @@ import { App } from './app';
   imports: [
     BrowserModule,
     RouterModule.forRoot([
-      {
-        path: 'my-lib',
-        loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
-      },
-      {
-        path: 'my-lib2',
-        loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module),
-      },
-      {
-        path: 'my-lib3',
-        loadChildren: () => import('@proj/my-lib3').then((m) => m.MyLib3Module),
-      },
+      { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule) },
+      { path: 'my-lib2', loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module) },
+      { path: 'my-lib3', loadChildren: () => import('@proj/my-lib3').then((m) => m.MyLib3Module) },
     ]),
   ],
   declarations: [App],
@@ -504,7 +492,7 @@ export class AppModule {}
 "
 `;
 
-exports[`lib router lazy should update the parent module even if the route is declared outside the .forRoot(...) 1`] = `
+exports[`lib > router > lazy > should update the parent module even if the route is declared outside the .forRoot(...) 1`] = `
 "
           import { NgModule } from '@angular/core';
           import { BrowserModule } from '@angular/platform-browser';

@@ -59,6 +59,23 @@ belongs in the corresponding Knowledge Base guide.
   applies to workflows a new flag has superseded.
 - When two sections converge on the same flag or topic after a rewrite, merge them into one.
 
+### 7. One page per feature (the "don't make me hunt" rule)
+
+A feature page answers most of what a new reader arrives with, on the page. Specifics fan out
+to Knowledge Base guides. The questions themselves stay.
+
+**The test:** List the questions a new reader, or an AI answering on their behalf, would ask
+about this feature. If an answer lives only on another page, the feature page is incomplete.
+
+For Nx Cloud that set is what it is, whether it's free, what it adds over Nx Core, how to
+connect, and when Enterprise or self-hosted applies. Spread across three or five pages, a reader
+has to find and visit each one before they can form a view, and a model answering the question
+cites none of them.
+
+Rule 6 trims variants and edge cases off the page. This one keeps every question a reader has to
+answer before they can choose or start. Both push detail to the Knowledge Base. Neither pushes
+the decision there.
+
 ### Sidebar structure
 
 The sidebar has four top-level sections that follow the user journey:
@@ -377,6 +394,9 @@ Don't use possessives on product names. "the Docker CLI", not "Docker's CLI." "t
 - Don't use code in headings unless it's essential (like a CLI command).
 - Don't use bold text in headings.
 - Keep headings short and scannable. Lead with keywords.
+- Don't put headings inside `{% tabs %}`. Tab content is hidden until its tab is active, so the heading
+  still lands in the table of contents but nothing scrolls to it. Inline the section above the tabs, or
+  drop the heading. The `headings-in-tabs` conformance rule enforces this.
 
 ### Line length
 
@@ -527,25 +547,26 @@ Use tables for structured data that benefits from a matrix layout. For simple li
 
 Use these terms consistently. When writing about Nx concepts, use the exact term from this list.
 
-| Term           | Usage notes                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| workspace      | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context. |
-| project        | An app or library within the workspace.                                                    |
-| target         | A task that can be run for a project (e.g., `build`, `test`, `lint`).                      |
-| executor       | The implementation behind a target. Not "builder."                                         |
-| generator      | Code scaffolding tool. Not "schematic."                                                    |
-| plugin         | An Nx plugin that provides executors, generators, or graph inference.                      |
-| task           | A specific invocation of a target for a project (e.g., `myapp:build`).                     |
-| project graph  | The dependency graph between projects.                                                     |
-| affected       | Projects impacted by a code change.                                                        |
-| cache / cached | Not "memoized" or "stored results."                                                        |
-| remote caching | Sharing cached results across machines. Specific product: "Nx Replay."                     |
-| Nx Cloud       | The hosted CI/CD product. Always capitalized.                                              |
-| Nx Console     | The IDE extension. Always capitalized.                                                     |
-| Nx Agents      | Distributed task execution product. Always capitalized.                                    |
-| Nx Replay      | Remote caching product. Always capitalized.                                                |
-| `nx.json`      | Always in code style.                                                                      |
-| `project.json` | Always in code style.                                                                      |
+| Term                 | Usage notes                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| workspace            | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context.             |
+| project              | An app or library within the workspace.                                                                |
+| target               | A task that can be run for a project (e.g., `build`, `test`, `lint`).                                  |
+| executor             | The implementation behind a target. Not "builder."                                                     |
+| generator            | Code scaffolding tool. Not "schematic."                                                                |
+| plugin               | An Nx plugin that provides executors, generators, or graph inference.                                  |
+| task                 | A specific invocation of a target for a project (e.g., `myapp:build`).                                 |
+| project graph        | The dependency graph between projects.                                                                 |
+| affected             | Projects impacted by a code change.                                                                    |
+| cache / cached       | Not "memoized" or "stored results."                                                                    |
+| remote caching       | Sharing cached results across machines. Specific product: "Nx Replay."                                 |
+| Nx Cloud             | The hosted CI/CD product. Always capitalized.                                                          |
+| Nx Console           | The IDE extension. Always capitalized.                                                                 |
+| Nx Agents            | Distributed task execution product. Always capitalized.                                                |
+| Nx Replay            | Remote caching product. Always capitalized.                                                            |
+| dynamic task packing | How Nx Agents fill each agent by CPU and memory use. Lowercase. Italicize the first mention on a page. |
+| `nx.json`            | Always in code style.                                                                                  |
+| `project.json`       | Always in code style.                                                                                  |
 
 ## Vale configuration
 

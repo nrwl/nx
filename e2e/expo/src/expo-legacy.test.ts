@@ -11,10 +11,11 @@ import {
   runCLIAsync,
   runCommand,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunCypressTests,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
@@ -269,7 +270,7 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should run e2e for cypress', async () => {
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const results = runCLI(`e2e ${appName}-e2e`);
       expect(results).toContain('Successfully ran target e2e');
 
@@ -283,7 +284,7 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should run e2e for cypress with configuration ci', async () => {
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const results = runCLI(`e2e ${appName}-e2e --configuration=ci`);
       expect(results).toContain('Successfully ran target e2e');
 
@@ -305,7 +306,7 @@ describe('@nx/expo (legacy)', () => {
     // Build first to speed up static-serve
     runCLI(`export ${appName2}`);
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });
       expect(results).toContain('Successfully ran target e2e');
 

@@ -11,15 +11,21 @@ import {
   createNodesFromFiles,
   CreateNodes,
   detectPackageManager,
+  PackageManager,
   ProjectConfiguration,
   readJsonFile,
   workspaceRoot,
   hashArray,
   getPackageManagerCommand,
+  TargetConfiguration,
+  normalizePath,
+  joinPathFragments,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
   isUsingTsSolutionSetup,
+  pnpmInstallSettingsInputsForInferredTarget,
+  shouldIncludePnpmMajorRuntimeInput,
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'fs';
@@ -56,6 +62,10 @@ export const createNodes: CreateNodes<RspackPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const includePnpmMajorRuntimeInput = shouldIncludePnpmMajorRuntimeInput(
+      packageManager,
+      context.workspaceRoot
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -65,8 +75,10 @@ export const createNodes: CreateNodes<RspackPluginOptions> = [
             context,
             targetsCache,
             isTsSolutionSetup,
+            packageManager,
             pmc,
-            lockFileName
+            lockFileName,
+            includePnpmMajorRuntimeInput
           ),
         configFilePaths,
         options,
@@ -89,8 +101,10 @@ async function createNodesInternal(
   context: CreateNodesContext,
   targetsCache: PluginCache<RspackTargets>,
   isTsSolutionSetup: boolean,
+  packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  lockFileName: string,
+  includePnpmMajorRuntimeInput: boolean
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -117,7 +131,7 @@ async function createNodesInternal(
   const nodeHash = hashArray([
     hashFile(join(context.workspaceRoot, configFilePath)),
     lockFileHash,
-    hashObject({ ...options, isTsSolutionSetup }),
+    hashObject({ ...options, isTsSolutionSetup, includePnpmMajorRuntimeInput }),
     hashObject(packageJson),
   ]);
   // We do not want to alter how the hash is calculated, so appending the config file path to the hash
@@ -133,7 +147,9 @@ async function createNodesInternal(
         normalizedOptions,
         context,
         isTsSolutionSetup,
-        pmc
+        packageManager,
+        pmc,
+        includePnpmMajorRuntimeInput
       )
     );
   }
@@ -157,7 +173,9 @@ async function createRspackTargets(
   options: RspackPluginOptions,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  packageManager: PackageManager,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  includePnpmMajorRuntimeInput: boolean
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -189,6 +207,15 @@ async function createRspackTargets(
     });
   }
 
+  const buildInputs: TargetConfiguration['inputs'] = [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['@rspack/cli'],
+    },
+  ];
+
   targets[options.buildTargetName] = {
     command: `rspack build`,
     options: {
@@ -196,29 +223,30 @@ async function createRspackTargets(
       args: ['--node-env=production'],
       env,
     },
+    configurations: {
+      development: {
+        args: ['--node-env=development'],
+      },
+    },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
-    inputs:
-      'production' in namedInputs
-        ? [
-            'production',
-            '^production',
-            {
-              externalDependencies: ['@rspack/cli'],
-            },
-          ]
-        : [
-            'default',
-            '^default',
-            {
-              externalDependencies: ['@rspack/cli'],
-            },
-          ],
+    inputs: [
+      ...buildInputs,
+      // The build can emit a pruned pnpm deploy output (NxAppRspackPlugin
+      // with generatePackageJson), whose install settings come from these
+      // otherwise-unhashed root sources.
+      ...(packageManager === 'pnpm'
+        ? pnpmInstallSettingsInputsForInferredTarget(
+            includePnpmMajorRuntimeInput
+          )
+        : []),
+    ],
     outputs,
   };
 
   targets[options.serveTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
@@ -229,6 +257,7 @@ async function createRspackTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
@@ -240,6 +269,7 @@ async function createRspackTargets(
   targets[options.serveStaticTargetName] = {
     dependsOn: [`${options.buildTargetName}`],
     continuous: true,
+    inputs: [...buildInputs],
     executor: '@nx/web:file-server',
     options: {
       buildTarget: options.buildTargetName,
@@ -305,15 +335,14 @@ function normalizeOutputPath(
        * If outputPath is absolute, we need to resolve it relative to the workspaceRoot first.
        * After that, we can use the relative path to the workspaceRoot token {workspaceRoot} to generate the output path.
        */
-      return `{workspaceRoot}/${relative(
-        workspaceRoot,
-        resolve(workspaceRoot, outputPath)
+      return `{workspaceRoot}/${normalizePath(
+        relative(workspaceRoot, resolve(workspaceRoot, outputPath))
       )}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }

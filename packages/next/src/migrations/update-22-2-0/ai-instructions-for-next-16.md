@@ -310,17 +310,13 @@ Turbopack is now the default bundler for development.
 // BEFORE (Next.js 15)
 const nextConfig = {
   experimental: {
-    turbopack: {
-      /* options */
-    },
+    turbopack: {/* options */},
   },
 };
 
 // AFTER (Next.js 16)
 const nextConfig = {
-  turbopack: {
-    /* options */
-  },
+  turbopack: {/* options */},
 };
 ```
 

@@ -135,7 +135,7 @@ Nx stores two things for each cached task:
 Both are restored transparently. Other tools and scripts see the same files and output as if the task had actually run.
 
 {% aside type="note" title="Where is the cache stored?" %}
-Local cache is stored in `.nx/cache` by default. Run `nx reset` to clear all local cached results. If you've connected to Nx Cloud, remote cache entries are managed separately.
+Local cache is stored in `~/.nx/<id>/cache` by default, shared by every checkout of the workspace. Run `nx reset` to clear all local cached results. If you've connected to Nx Cloud, remote cache entries are managed separately.
 {% /aside %}
 
 ## Inputs and outputs
@@ -240,7 +240,7 @@ Inputs aren't limited to files. You can also include environment variables and r
 For more details, see [configure inputs](/docs/kb/configure-inputs).
 
 {% aside type="tip" title="Enforce correct inputs and outputs" %}
-Not sure if your `inputs` and `outputs` are configured correctly? Use [sandboxing](/docs/features/ci-features/sandboxing) to detect tasks that read or write files outside their declared configuration.
+Not sure if your `inputs` and `outputs` are configured correctly? Use [sandboxing](/docs/kb/sandboxing) to detect tasks that read or write files outside their declared configuration.
 {% /aside %}
 
 Now that caching, inputs, and outputs are configured, try it out: change a source file and run `nx build my-app`. Nx detects the change, computes a new hash, and runs the build. Revert the change and run again to see the cached result restored, including the `dist/` output files.

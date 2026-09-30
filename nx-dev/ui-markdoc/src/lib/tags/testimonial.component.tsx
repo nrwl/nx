@@ -50,7 +50,7 @@ export function Testimonial({
         </svg>
 
         <div className="relative z-10">
-          <div className="text-xl font-medium italic text-zinc-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
+          <div className="text-xl font-medium text-zinc-800 italic md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
             {children}
           </div>
         </div>

@@ -19,11 +19,10 @@ import { ViteBuildExecutorOptions } from './schema';
 import schema from './schema.json';
 import {
   copyAssets,
-  createLockFile,
   createPackageJson,
-  getLockFileName,
+  generatePrunedDeployOutput,
 } from '@nx/js';
-import { existsSync, writeFileSync } from 'fs';
+import { existsSync } from 'fs';
 import { relative, resolve } from 'path';
 import {
   createBuildableTsConfig,
@@ -169,30 +168,21 @@ export async function* viteBuildExecutor(
 
       builtPackageJson.type ??= 'module';
 
+      const packageManager = detectPackageManager(context.root);
+      generatePrunedDeployOutput(
+        builtPackageJson,
+        context.projectGraph,
+        projectRoot,
+        {
+          outputDirectory: outDirRelativeToWorkspaceRoot,
+          packageManager,
+          workspaceRoot: context.root,
+        }
+      );
       writeJsonFile(
         `${outDirRelativeToWorkspaceRoot}/package.json`,
         builtPackageJson
       );
-      const packageManager = detectPackageManager(context.root);
-
-      if (packageManager === 'bun') {
-        logger.warn(
-          'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
-        );
-      } else {
-        const lockFile = createLockFile(
-          builtPackageJson,
-          context.projectGraph,
-          packageManager
-        );
-        writeFileSync(
-          `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
-          lockFile,
-          {
-            encoding: 'utf-8',
-          }
-        );
-      }
     }
     // For buildable libs, copy package.json if it exists.
     else if (

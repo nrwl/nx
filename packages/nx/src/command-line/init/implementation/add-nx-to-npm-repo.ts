@@ -1,4 +1,4 @@
-import * as enquirer from 'enquirer';
+import { multiselectPrompt, textPrompt } from '../../../utils/prompt-helpers';
 import { join } from 'path';
 import { InitArgs } from '../init-v1';
 import { readJsonFile } from '../../../utils/fileutils';
@@ -14,7 +14,6 @@ import {
   markPackageJsonAsNxProject,
   markRootPackageJsonAsNxProjectLegacy,
   runInstall,
-  setNeverConnectToCloud,
   updateGitIgnore,
 } from './utils';
 import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
@@ -44,32 +43,16 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
         '🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration',
     });
 
-    cacheableOperations = (
-      await enquirer.prompt<{ cacheableOperations: string[] }>([
-        {
-          type: 'multiselect',
-          name: 'cacheableOperations',
-          message:
-            'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts.',
-          choices: scripts,
-          /**
-           * limit is missing from the interface but it limits the amount of options shown
-           */
-          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
-        } as any,
-      ])
-    ).cacheableOperations;
+    cacheableOperations = await multiselectPrompt({
+      message:
+        'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts.',
+      choices: scripts,
+    });
 
     for (const scriptName of cacheableOperations) {
-      scriptOutputs[scriptName] = (
-        await enquirer.prompt([
-          {
-            type: 'input',
-            name: scriptName,
-            message: `Does the "${scriptName}" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage)`,
-          },
-        ])
-      )[scriptName];
+      scriptOutputs[scriptName] = await textPrompt({
+        message: `Does the "${scriptName}" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage)`,
+      });
     }
 
     nxCloudChoice =
@@ -110,7 +93,5 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
   if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init-npm-repo');
-  } else if (nxCloudChoice === 'never') {
-    setNeverConnectToCloud(repoRoot);
   }
 }

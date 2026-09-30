@@ -20,9 +20,8 @@ export default async function* moduleFederationDevServer(
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
   assertPackageIsInstalled('@nx/module-federation', executorName);
   assertPackageIsInstalled('@nx/webpack', executorName);
-  const { startRemoteIterators } = await import(
-    '@nx/module-federation/internal'
-  );
+  const { startRemoteIterators } =
+    await import('@nx/module-federation/internal');
   const { devServerExecutor } = await import('@nx/webpack');
 
   warnReactMfDevServerExecutorDeprecation();

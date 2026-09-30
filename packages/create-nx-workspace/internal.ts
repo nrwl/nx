@@ -13,6 +13,11 @@ export {
 } from './src/internal-utils/prompts';
 export type { Linter } from './src/internal-utils/prompts';
 export {
+  selectPrompt,
+  textPrompt,
+  confirmationPrompt,
+} from './src/internal-utils/prompt-helpers';
+export {
   withAllPrompts,
   withGitOptions,
   withNxCloud,

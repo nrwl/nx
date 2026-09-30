@@ -18,6 +18,8 @@ import { StatsJsonPlugin } from '../../plugins/stats-json-plugin';
 import { WatchFilesLogsPlugin } from '../../plugins/watch-file-logs-plugin';
 import { getIndexInputFile } from '../../utils/index-file/get-index-input-file';
 import { isRspackV2 } from '../../utils/rspack-version';
+import { ENGINE_MANIFEST_VIRTUAL_NAME } from '../../plugins/loaders/engine-manifest';
+import type { AngularPartialTransformLoaderOptions } from '../../plugins/loaders/angular-partial-transform.loader';
 
 export async function getCommonConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
@@ -138,10 +140,9 @@ export async function getCommonConfig(
           test: TS_ALL_EXT_REGEX,
           use: [
             {
-              // eslint-disable-next-line @nx/enforce-module-boundaries
-              loader: require.resolve(
-                '@nx/angular-rspack/loaders/angular-loader'
-              ),
+              loader:
+                // oxlint-disable-next-line @nx/enforce-module-boundaries
+                require.resolve('@nx/angular-rspack/loaders/angular-loader'),
             },
           ],
         },
@@ -149,10 +150,15 @@ export async function getCommonConfig(
           test: JS_ALL_EXT_REGEX,
           use: [
             {
-              // eslint-disable-next-line @nx/enforce-module-boundaries
-              loader: require.resolve(
-                '@nx/angular-rspack/loaders/angular-partial-transform-loader'
-              ),
+              loader:
+                // oxlint-disable-next-line @nx/enforce-module-boundaries
+                require.resolve('@nx/angular-rspack/loaders/angular-partial-transform-loader'),
+              options: {
+                engineManifestPath: resolve(
+                  normalizedOptions.root,
+                  ENGINE_MANIFEST_VIRTUAL_NAME
+                ),
+              } satisfies AngularPartialTransformLoaderOptions,
             },
           ],
         },

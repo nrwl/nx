@@ -1,33 +1,46 @@
-const mockSpawn = jest.fn();
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
+import type { MockInstance } from 'vitest';
+const mockSpawn = vi.fn();
+vi.mock('child_process', async () => ({
+  ...require('child_process'),
   spawn: (...args: unknown[]) => mockSpawn(...args),
 }));
 
-const mockCommitMigrationIfRequested = jest.fn();
-const mockCommitCheckpointBeforeMigrations = jest.fn();
-jest.mock('./migrate-commits', () => ({
+const mockCommitMigrationIfRequested = vi.fn();
+const mockCommitCheckpointBeforeMigrations = vi.fn();
+vi.mock('./migrate-commits', () => ({
   commitMigrationIfRequested: (...args: unknown[]) =>
     mockCommitMigrationIfRequested(...args),
   commitCheckpointBeforeMigrations: (...args: unknown[]) =>
     mockCommitCheckpointBeforeMigrations(...args),
 }));
 
-const mockRunAgenticPromptStep = jest.fn();
-jest.mock('./agentic/run-step', () => ({
+const mockRunAgenticPromptStep = vi.fn();
+// executeMigrations lazy-requires ./agentic/run-step (CJS channel).
+mockCjsModule(import.meta.url, './agentic/run-step', {
+  runAgenticPromptStep: (...args: unknown[]) =>
+    mockRunAgenticPromptStep(...args),
+});
+vi.mock('./agentic/run-step', () => ({
   runAgenticPromptStep: (...args: unknown[]) =>
     mockRunAgenticPromptStep(...args),
 }));
 
-const mockNgRunMigration = jest.fn();
-jest.mock('../../adapter/ngcli-adapter', () => ({
+const mockNgRunMigration = vi.fn();
+// execute-migration loads the ng compat layer through handleImport (CJS
+// channel), which vi.mock cannot intercept; replace it there instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, '../../adapter/ngcli-adapter', {
+  runMigration: (...args: unknown[]) => mockNgRunMigration(...args),
+});
+mockCjsModule(import.meta.url, '../../adapter/compat', {});
+vi.mock('../../adapter/ngcli-adapter', () => ({
   runMigration: (...args: unknown[]) => mockNgRunMigration(...args),
 }));
-jest.mock('../../adapter/compat', () => ({}));
+vi.mock('../../adapter/compat', () => ({}));
 
-const mockCreateProjectGraphAsync = jest.fn();
-const mockReadProjectsConfigurationFromProjectGraph = jest.fn();
-jest.mock('../../project-graph/project-graph', () => ({
+const mockCreateProjectGraphAsync = vi.fn();
+const mockReadProjectsConfigurationFromProjectGraph = vi.fn();
+vi.mock('../../project-graph/project-graph', () => ({
   createProjectGraphAsync: (...args: unknown[]) =>
     mockCreateProjectGraphAsync(...args),
   readProjectsConfigurationFromProjectGraph: (...args: unknown[]) =>
@@ -57,6 +70,7 @@ import {
   getImplementationPath,
   parseMigrationReturn,
   readMigrationCollection,
+  runInstall,
   runNxOrAngularMigration,
 } from './migrate';
 
@@ -91,15 +105,17 @@ function writeImplFile(pkgDir: string, relPath: string, source: string): void {
 // child_process.spawn returns an EventEmitter with a `.stderr` stream; tests
 // drive install outcomes by emitting on these directly.
 class FakeChildProcess extends EventEmitter {
+  stdout: EventEmitter | null;
   stderr: EventEmitter | null;
-  constructor(withStderr = false) {
+  constructor(withStderr = false, withStdout = false) {
     super();
+    this.stdout = withStdout ? new EventEmitter() : null;
     this.stderr = withStderr ? new EventEmitter() : null;
   }
 }
 
 afterEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('parseMigrationReturn', () => {
@@ -566,6 +582,50 @@ describe('ChangedDepInstaller', () => {
     expect(mockSpawn).toHaveBeenCalledTimes(1);
   });
 
+  it('reports installed only once an install actually lands', async () => {
+    // `installed` re-points the recorded run's dependency baseline
+    // (recordInstallLanded), so a value that flips early would let a later
+    // step skip an install that never happened.
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    expect(installer.installed).toBe(false);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+    const child = new FakeChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const promise = installer.installDepsIfChanged();
+    expect(installer.installed).toBe(false);
+    child.emit('close', 0);
+    await promise;
+
+    expect(installer.installed).toBe(true);
+  });
+
+  it('does not report installed when the install fails', async () => {
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+    const child = new FakeChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const promise = installer.installDepsIfChanged();
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toThrow();
+    expect(installer.installed).toBe(false);
+  });
+
+  it('does not report installed when the install was skipped', async () => {
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, true);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+
+    await installer.installDepsIfChanged();
+
+    expect(installer.skippedInstall).toBe(true);
+    expect(installer.installed).toBe(false);
+  });
+
   it('treats a missing package.json as an empty dependency set, so writing one counts as a change', async () => {
     // tmpRoot has no package.json at construction time.
     const installer = new ChangedDepInstaller(tmpRoot, true);
@@ -617,7 +677,7 @@ describe('ChangedDepInstaller', () => {
     });
 
     it('surfaces the configured rerun command in the peer-deps guidance', async () => {
-      const errorSpy = jest.spyOn(output, 'error').mockImplementation(() => {});
+      const errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {});
       try {
         writePackageJson();
         const installer = new ChangedDepInstaller(
@@ -649,6 +709,206 @@ describe('ChangedDepInstaller', () => {
         errorSpy.mockRestore();
       }
     });
+  });
+});
+
+describe('runInstall with an output sink', () => {
+  let tmpRoot: string;
+
+  beforeEach(() => {
+    tmpRoot = mkdtempSync(join(tmpdir(), 'nx-migrate-install-'));
+    writeFileSync(join(tmpRoot, 'package-lock.json'), '{}');
+  });
+
+  afterEach(() => {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  });
+
+  function sink() {
+    const calls: unknown[][] = [];
+    return {
+      calls,
+      notice: (...args: unknown[]) => calls.push(['notice', ...args]),
+      line: (...args: unknown[]) => calls.push(['line', ...args]),
+      raw: (...args: unknown[]) => calls.push(['raw', ...args]),
+    };
+  }
+
+  it('detaches the package manager from the terminal and collects both streams in order', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+    const logSpy = vi.spyOn(output, 'log');
+    const stderrSpy = vi.spyOn(process.stderr, 'write');
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    child.stdout!.emit('data', Buffer.from('added 1 package\n'));
+    child.stderr!.emit('data', Buffer.from('npm warn old\n'));
+    child.emit('close', 0);
+    await promise;
+
+    expect(mockSpawn.mock.calls[0][1]).toMatchObject({
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    expect(out.calls).toEqual([
+      [
+        'notice',
+        'log',
+        {
+          title: expect.stringMatching(
+            /^Running 'npm install .*' to make sure necessary packages are installed$/
+          ),
+        },
+      ],
+      ['raw', 'added 1 package\n'],
+      ['raw', 'npm warn old\n'],
+    ]);
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(stderrSpy).not.toHaveBeenCalled();
+  });
+
+  it('decodes a multi-byte character split across chunks of one stream', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    const euro = Buffer.from('\u20ac');
+    child.stdout!.emit('data', euro.subarray(0, 1));
+    child.stderr!.emit('data', Buffer.from('warn \u20ac'));
+    child.stdout!.emit('data', euro.subarray(1));
+    child.emit('close', 0);
+    await promise;
+
+    expect(out.calls.filter((call) => call[0] === 'raw')).toEqual([
+      ['raw', ''],
+      ['raw', 'warn \u20ac'],
+      ['raw', '\u20ac'],
+    ]);
+  });
+
+  it('flushes a sequence still incomplete when a stream ends', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    child.stdout!.emit('data', Buffer.from([0xe2]));
+    child.stdout!.emit('end');
+    child.stderr!.emit('data', Buffer.from([0xe2]));
+    child.stderr!.emit('end');
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toThrow(/^Command failed:/);
+    expect(out.calls.filter((call) => call[0] === 'raw')).toEqual([
+      ['raw', ''],
+      ['raw', '\ufffd'],
+      ['raw', ''],
+      ['raw', '\ufffd'],
+    ]);
+  });
+
+  it('rejects a spawn failure only after both streams ended, so the sink is complete', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+    let settled = false;
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    promise.catch(() => (settled = true));
+    child.emit('error', new Error('spawn /bin/sh EACCES'));
+    child.stdout!.emit('data', Buffer.from([0xe2]));
+    child.stdout!.emit('end');
+    await new Promise((resolve) => setImmediate(resolve));
+    const settledBeforeClose = settled;
+    child.stderr!.emit('end');
+    child.emit('close', -2);
+
+    await expect(promise).rejects.toThrow('spawn /bin/sh EACCES');
+    expect(settledBeforeClose).toBe(false);
+    expect(out.calls.filter((call) => call[0] === 'raw')).toEqual([
+      ['raw', ''],
+      ['raw', '\ufffd'],
+      ['raw', ''],
+    ]);
+  });
+
+  it('does not classify the stderr of a package manager other than npm', async () => {
+    rmSync(join(tmpRoot, 'package-lock.json'));
+    writeFileSync(join(tmpRoot, 'pnpm-lock.yaml'), '');
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    child.stderr!.emit('data', Buffer.from('npm ERR! code ERESOLVE\n'));
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toThrow(/^Command failed:/);
+    expect(out.calls).toContainEqual(['raw', 'npm ERR! code ERESOLVE\n']);
+    expect(out.calls.some((call) => call[1] === 'error')).toBe(false);
+  });
+
+  it('still classifies a peer conflict from stderr and sends the guidance to the sink', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+    const errorSpy = vi.spyOn(output, 'error');
+
+    const promise = runInstall(
+      tmpRoot,
+      'post-migration',
+      'nx migrate --run-migration=@nx/js:x',
+      out
+    );
+    child.stderr!.emit('data', Buffer.from('npm ERR! code ERESOLVE\n'));
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toMatchObject({
+      name: 'NpmPeerDepsInstallError',
+    });
+    expect(errorSpy).not.toHaveBeenCalled();
+    const guidance = out.calls.find(
+      (call) => call[0] === 'notice' && call[1] === 'error'
+    );
+    expect(guidance[2]).toMatchObject({
+      title:
+        'Some migrations have been applied, but installing the updated dependencies failed',
+      bodyLines: expect.arrayContaining([
+        '   nx migrate --run-migration=@nx/js:x --skip-install',
+      ]),
+    });
+  });
+
+  it('rejects a spawn failure at once without a sink', async () => {
+    const child = new FakeChildProcess(true);
+    mockSpawn.mockReturnValue(child);
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+
+    const promise = runInstall(tmpRoot);
+    child.emit('error', new Error('spawn /bin/sh EACCES'));
+
+    await expect(promise).rejects.toThrow('spawn /bin/sh EACCES');
+  });
+
+  it('keeps the terminal as the default when no sink is given', async () => {
+    const child = new FakeChildProcess(true);
+    mockSpawn.mockReturnValue(child);
+    const logSpy = vi.spyOn(output, 'log').mockImplementation(() => {});
+    const stderrSpy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation(() => true);
+
+    const promise = runInstall(tmpRoot);
+    child.stderr!.emit('data', Buffer.from('npm warn old\n'));
+    child.emit('close', 0);
+    await promise;
+
+    expect(mockSpawn.mock.calls[0][1]).toMatchObject({
+      stdio: ['inherit', 'inherit', 'pipe'],
+    });
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    expect(stderrSpy).toHaveBeenCalledWith(Buffer.from('npm warn old\n'));
   });
 });
 
@@ -812,7 +1072,7 @@ describe('executeMigrations', () => {
   });
 
   describe('skipAgentic', () => {
-    let infoSpy: jest.SpyInstance;
+    let infoSpy: MockInstance;
 
     const AGENTIC_ENABLED: ResolvedAgentic = {
       kind: 'enabled',
@@ -868,7 +1128,7 @@ describe('executeMigrations', () => {
       infoSpy.mock.calls.map((args) => String(args[0] ?? '')).join('\n');
 
     beforeEach(() => {
-      infoSpy = jest.spyOn(logger, 'info').mockImplementation(() => undefined);
+      infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => undefined);
       mockCommitMigrationIfRequested.mockResolvedValue({
         status: 'committed',
         sha: 'sha',
@@ -1015,10 +1275,10 @@ describe('executeMigrations', () => {
         'gen-waives-inside-agent',
         `tree.write('validated.txt', 'x'); return { skipAgentic: true, agentContext: ['hint for the outer agent'] };`
       );
-      const stdoutSpy = jest
+      const stdoutSpy = vi
         .spyOn(process.stdout, 'write')
         .mockImplementation(() => true);
-      const verboseSpy = jest
+      const verboseSpy = vi
         .spyOn(logger, 'verbose')
         .mockImplementation(() => undefined);
 
@@ -1052,7 +1312,7 @@ describe('executeMigrations', () => {
         'hybrid-waives-inside-agent',
         `tree.write('waived.txt', 'x'); return { skipAgentic: true, agentContext: ['hint for the outer agent'] };`
       );
-      const stdoutSpy = jest
+      const stdoutSpy = vi
         .spyOn(process.stdout, 'write')
         .mockImplementation(() => true);
 

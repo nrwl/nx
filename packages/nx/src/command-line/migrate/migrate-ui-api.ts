@@ -182,9 +182,8 @@ export async function runSingleMigration(
     }).trim();
 
     // Run migration in a separate process so it can be cancelled
-    const runMigrationProcessPath = require.resolve(
-      './run-migration-process.js'
-    );
+    const runMigrationProcessPath =
+      require.resolve('./run-migration-process.js');
 
     const migrationProcess = spawn(
       'node',

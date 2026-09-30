@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { registerCompletion } from './metadata';
 import { tryValueCompletion } from './value-completions';
 
@@ -9,12 +10,12 @@ function argv(...userTokens: string[]): string[] {
 
 describe('completion/value-completions', () => {
   describe('tryValueCompletion', () => {
-    let logSpy: jest.SpyInstance;
+    let logSpy: MockInstance;
     let captured: string[];
 
     beforeEach(() => {
       captured = [];
-      logSpy = jest.spyOn(console, 'log').mockImplementation((line: any) => {
+      logSpy = vi.spyOn(console, 'log').mockImplementation((line: any) => {
         captured.push(String(line) + '\n');
       });
     });
@@ -77,7 +78,7 @@ describe('completion/value-completions', () => {
     });
 
     it('passes the full tokens array (including the partial) to the completion fn', () => {
-      const complete = jest.fn(() => ['x']);
+      const complete = vi.fn(() => ['x']);
       registerCompletion('value-args', { positionals: [{ complete }] });
 
       tryValueCompletion(argv('value-args', 'partial'));

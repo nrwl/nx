@@ -44,13 +44,11 @@ async function main() {
   if (process.env.NX_COMPLETE) {
     try {
       performance.mark('init-local');
-      const { tryValueCompletion } = await import(
-        'nx/src/command-line/completion/value-completions'
-      );
+      const { tryValueCompletion } =
+        await import('nx/src/command-line/completion/value-completions');
       if (tryValueCompletion()) return;
-      const { tryCommandSurfaceCompletion } = await import(
-        'nx/src/command-line/completion/command-completions'
-      );
+      const { tryCommandSurfaceCompletion } =
+        await import('nx/src/command-line/completion/command-completions');
       tryCommandSurfaceCompletion();
     } catch (e) {
       // Swallow: a broken completion must produce no suggestions, not a
@@ -69,9 +67,8 @@ async function main() {
     process.argv[2] !== 'reset' &&
     process.argv[2] !== 'completion'
   ) {
-    const { assertSupportedPlatform } = await import(
-      '../src/native/assert-supported-platform.js'
-    );
+    const { assertSupportedPlatform } =
+      await import('../src/native/assert-supported-platform.js');
     assertSupportedPlatform();
   }
 
@@ -80,9 +77,8 @@ async function main() {
   // --version doesn't need any env / daemon / analytics state — skip dotenv
   // loading (and the heavy modules it would pull in).
   if (workspace && process.argv[2] !== '--version') {
-    const { workspaceDataDirectoryForWorkspace } = await import(
-      '../src/utils/cache-directory.js'
-    );
+    const { workspaceDataDirectoryForWorkspace } =
+      await import('../src/utils/cache-directory.js');
     process.report.reportOnFatalError = true;
     process.report.directory = workspaceDataDirectoryForWorkspace(
       workspace.dir
@@ -159,9 +155,8 @@ async function main() {
     if (isNxCloudCommand(process.argv[2])) {
       const { daemonClient } = await import('../src/daemon/client/client.js');
       if (!daemonClient.enabled() && workspace !== null) {
-        const { setupWorkspaceContext } = await import(
-          '../src/utils/workspace-context.js'
-        );
+        const { setupWorkspaceContext } =
+          await import('../src/utils/workspace-context.js');
         setupWorkspaceContext(workspace.dir);
       }
       await initAnalytics();
@@ -171,9 +166,8 @@ async function main() {
     } else if (isLocalInstall) {
       const { daemonClient } = await import('../src/daemon/client/client.js');
       if (!daemonClient.enabled() && workspace !== null) {
-        const { setupWorkspaceContext } = await import(
-          '../src/utils/workspace-context.js'
-        );
+        const { setupWorkspaceContext } =
+          await import('../src/utils/workspace-context.js');
         setupWorkspaceContext(workspace.dir);
       }
       await initAnalytics();
@@ -282,9 +276,8 @@ function isNxCloudCommand(command: string): boolean {
 
 let analyticsStarted = false;
 async function initAnalytics() {
-  const { ensureAnalyticsPreferenceSet } = await import(
-    '../src/utils/analytics-prompt.js'
-  );
+  const { ensureAnalyticsPreferenceSet } =
+    await import('../src/utils/analytics-prompt.js');
   const { startAnalytics } = await import('../src/analytics/index.js');
   try {
     await ensureAnalyticsPreferenceSet();

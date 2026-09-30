@@ -31,7 +31,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B\s+dist\//g, 'XXB dist/')
         .replaceAll(/total files:\s+\d*/g, 'total files: X')
         .replaceAll(/\d*B\s+README.md/g, 'XXB README.md')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         .replaceAll(/(\w+) lock file/g, 'PM lock file')
         // Normalize the version title date.
@@ -103,7 +103,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.2",
-      "type": "module",
+      "files": [
       NX   Updating PM lock file
       NX   Staging changed files with git
       NX   Generating an entry in CHANGELOG.md for v0.0.2
@@ -161,7 +161,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.3",
-      "type": "module",
+      "files": [
       NX   Updating PM lock file
       NX   Staging changed files with git
       NX   Generating an entry in CHANGELOG.md for v0.0.3
@@ -224,7 +224,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.4",
-      "type": "module",
+      "files": [
       NX   Updating PM lock file
       NX   Staging changed files with git
       NX   Generating an entry in CHANGELOG.md for v0.0.4
@@ -282,7 +282,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.6",
-      "main": "./dist/index.cjs.js",
+      "files": [
       NX   Updating PM lock file
       NX   Staging changed files with git
       NX   Generating an entry in CHANGELOG.md for v0.0.6

@@ -10,6 +10,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
 import type { LibraryGeneratorSchema } from './schema';
@@ -42,6 +43,40 @@ describe('lib', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the esbuild build script for the esbuild bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          bundler: 'esbuild',
+          unitTestRunner: 'none',
+          linter: 'none',
+        } as LibraryGeneratorSchema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?esbuild['"]?: false/
+      );
+    });
+
+    it('should deny the @swc/core build script for the swc bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          bundler: 'swc',
+          unitTestRunner: 'none',
+          linter: 'none',
+        } as LibraryGeneratorSchema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@swc\/core['"]: false/
+      );
+    });
   });
 
   it.each`
@@ -927,9 +962,7 @@ describe('lib', () => {
 
                   // Reading the SWC compilation config and remove the "exclude"
                   // for the test files to be compiled by SWC
-                  const { exclude: _, ...swcJestConfig } = JSON.parse(
-                    readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'),
-                  );
+                  const { exclude: _, ...swcJestConfig } = JSON.parse(readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'));
 
                   // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
                   // If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
@@ -1498,7 +1531,7 @@ describe('lib', () => {
         });
 
         it("should warn the user if their defined groups don't match the new project", async () => {
-          const outputSpy = jest
+          const outputSpy = vi
             .spyOn(output, 'warn')
             .mockImplementationOnce(() => {
               return undefined as never;
@@ -1965,12 +1998,9 @@ describe('lib', () => {
           directory,
         });
 
-        expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
-          .toMatchInlineSnapshot(`
-          "packages:
-            - '${expected}'
-          "
-        `);
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(
+          `packages:\n  - '${expected}'\n`
+        );
       }
     );
 
@@ -2264,9 +2294,7 @@ describe('lib', () => {
                   const { readFileSync } = require('fs');
 
                   // Reading the SWC compilation config for the spec files
-                  const swcJestConfig = JSON.parse(
-                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
-                  );
+                  const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
                   // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
                   swcJestConfig.swcrc = false;

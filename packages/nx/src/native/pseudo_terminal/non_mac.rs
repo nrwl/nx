@@ -5,7 +5,6 @@ use tracing::trace;
 use super::child_process::ChildProcess;
 use super::os;
 use super::pseudo_terminal::{PseudoTerminal, PseudoTerminalOptions};
-use crate::native::logger::enable_logger;
 
 #[napi]
 pub struct RustPseudoTerminal {
@@ -16,8 +15,6 @@ pub struct RustPseudoTerminal {
 impl RustPseudoTerminal {
     #[napi(constructor)]
     pub fn new() -> napi::Result<Self> {
-        enable_logger();
-
         let pseudo_terminal = PseudoTerminal::new(PseudoTerminalOptions::default())?;
 
         Ok(Self { pseudo_terminal })

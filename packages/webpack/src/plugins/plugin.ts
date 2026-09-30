@@ -16,13 +16,17 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  PackageManager,
   ProjectConfiguration,
   TargetConfiguration,
   workspaceRoot,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
   isUsingTsSolutionSetup,
+  pnpmInstallSettingsInputsForInferredTarget,
+  shouldIncludePnpmMajorRuntimeInput,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
@@ -64,6 +68,10 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const includePnpmMajorRuntimeInput = shouldIncludePnpmMajorRuntimeInput(
+      packageManager,
+      context.workspaceRoot
+    );
 
     try {
       const { entries, preErrors } = await filterWebpackConfigs(
@@ -73,7 +81,7 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        normalizedOptions,
+        { ...normalizedOptions, includePnpmMajorRuntimeInput },
         context,
         entries.map(() => [lockFileName])
       );
@@ -89,7 +97,9 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
               ctx,
               targetsCache,
               isTsSolutionSetup,
+              packageManager,
               pmc,
+              includePnpmMajorRuntimeInput,
               projectHashes[idx]
             ),
           entries.map((e) => e.configFile),
@@ -124,7 +134,9 @@ async function createNodesInternal(
   context: CreateNodesContext,
   targetsCache: PluginCache<WebpackTargets>,
   isTsSolutionSetup: boolean,
+  packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>,
+  includePnpmMajorRuntimeInput: boolean,
   hash: string
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
@@ -138,7 +150,9 @@ async function createNodesInternal(
         options,
         context,
         isTsSolutionSetup,
-        pmc
+        packageManager,
+        pmc,
+        includePnpmMajorRuntimeInput
       )
     );
   }
@@ -162,7 +176,9 @@ async function createWebpackTargets(
   options: Required<WebpackPluginOptions>,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  packageManager: PackageManager,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  includePnpmMajorRuntimeInput: boolean
 ): Promise<WebpackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -183,29 +199,37 @@ async function createWebpackTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  const buildInputs: TargetConfiguration['inputs'] = [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['webpack-cli'],
+    },
+    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+  ];
+
   targets[options.buildTargetName] = {
     command: `webpack-cli build`,
     options: { cwd: projectRoot, env: { NODE_ENV: 'production' } },
+    configurations: {
+      development: {
+        env: { NODE_ENV: 'development' },
+      },
+    },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
-    inputs:
-      'production' in namedInputs
-        ? [
-            'production',
-            '^production',
-            {
-              externalDependencies: ['webpack-cli'],
-            },
-            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-          ]
-        : [
-            'default',
-            '^default',
-            {
-              externalDependencies: ['webpack-cli'],
-            },
-            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-          ],
+    inputs: [
+      ...buildInputs,
+      // The build can emit a pruned pnpm deploy output (NxAppWebpackPlugin
+      // with generatePackageJson), whose install settings come from these
+      // otherwise-unhashed root sources.
+      ...(packageManager === 'pnpm'
+        ? pnpmInstallSettingsInputsForInferredTarget(
+            includePnpmMajorRuntimeInput
+          )
+        : []),
+    ],
     outputs,
     metadata: {
       technologies: ['webpack'],
@@ -224,6 +248,7 @@ async function createWebpackTargets(
 
   targets[options.serveTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -245,6 +270,7 @@ async function createWebpackTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -266,6 +292,7 @@ async function createWebpackTargets(
 
   targets[options.serveStaticTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
     options: {
@@ -323,9 +350,8 @@ function normalizeOutputPath(
        * If outputPath is absolute, we need to resolve it relative to the workspaceRoot first.
        * After that, we can use the relative path to the workspaceRoot token {workspaceRoot} to generate the output path.
        */
-      return `{workspaceRoot}/${relative(
-        workspaceRoot,
-        resolve(workspaceRoot, outputPath)
+      return `{workspaceRoot}/${normalizePath(
+        relative(workspaceRoot, resolve(workspaceRoot, outputPath))
       )}`;
     } else {
       if (outputPath.startsWith('..')) {

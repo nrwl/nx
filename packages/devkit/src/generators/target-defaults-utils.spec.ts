@@ -1,13 +1,9 @@
 // Stub out @nx/cypress/plugin so the dynamic `await import('@nx/cypress/plugin')`
 // in addE2eCiTargetDefaults doesn't pull real plugin code (which transitively
 // imports @nx/js source and inflates sandbox inputs).
-jest.mock(
-  '@nx/cypress/plugin',
-  () => ({
-    createNodesV2: ['**/cypress.config.{js,ts,mjs,cjs}', jest.fn()],
-  }),
-  { virtual: true }
-);
+vi.mock('@nx/cypress/plugin', () => ({
+  createNodesV2: ['**/cypress.config.{js,ts,mjs,cjs}', vi.fn()],
+}));
 
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import {
@@ -20,6 +16,7 @@ import {
 import {
   addBuildTargetDefaults,
   findTargetDefault,
+  isExactTargetNameKey,
   updateTargetDefault,
   upsertTargetDefault,
 } from './target-defaults-utils';
@@ -612,6 +609,17 @@ describe('target-defaults-utils', () => {
         updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null)
       ).toBe(nxJson);
       expect(nxJson.targetDefaults).toBeUndefined();
+    });
+  });
+
+  describe('isExactTargetNameKey', () => {
+    it('accepts plain target names and rejects executor-like and glob-like keys', () => {
+      expect(isExactTargetNameKey('build')).toBe(true);
+      expect(isExactTargetNameKey('build-base')).toBe(true);
+      expect(isExactTargetNameKey('nx:run-commands')).toBe(false);
+      expect(isExactTargetNameKey('e2e:ci')).toBe(false);
+      expect(isExactTargetNameKey('build-*')).toBe(false);
+      expect(isExactTargetNameKey('e2e-ci--**/**')).toBe(false);
     });
   });
 });

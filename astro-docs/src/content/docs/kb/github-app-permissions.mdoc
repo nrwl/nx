@@ -8,6 +8,8 @@ topics:
 
 The Nx Cloud GitHub App requires the following permissions to provide CI/CD integration and setup experiences. Most information is used transiently during operations and not stored in our systems.
 
+If your workspaces use repositories from more than one GitHub organization, see how to [configure a standard Nx Cloud organization with repository-scoped access](/docs/kb/multiple-github-organizations).
+
 {% callout type="note" title="Administration (read & write) permission removed." %}
 The Nx Cloud GitHub App no longer requests the `Administration` (read & write) permission. It was previously required to generate new workspaces from the browser; that feature has since been removed, so we've dropped the permission to reduce the access we request.
 {% /callout %}
@@ -36,7 +38,7 @@ Organization permissions:
 
 ## Permission details
 
-### Checks (write)
+### Checks (read & write)
 
 **Used for:** Updating CI run statuses so you can see the progress and results of your Nx Cloud pipeline executions directly in GitHub. Also used for Self-Healing CI status check runs in PRs.
 
@@ -62,7 +64,7 @@ Organization permissions:
 
 ### Issues (read & write)
 
-**Used for:** PR comments (GitHub uses the Issues API for PR comments — see "Pull requests" below for more detail).
+**Used for:** PR comments (GitHub uses the Issues API for PR comments - see "Pull requests" below for more detail). Also used to write labels on pull requests, which GitHub exposes through the same Issues API.
 
 **When it's used:** During CI runs and when posting status comments.
 
@@ -79,7 +81,7 @@ Organization permissions:
 
 **When it's used:** Read operations occur during CI runs. Write operations occur during setup and when posting status comments.
 
-### Workflows (write)
+### Workflows (read & write)
 
 **Used for:** Automatically configuring GitHub Actions workflow files when you opt in to features like Self-Healing CI and distributed task execution.
 

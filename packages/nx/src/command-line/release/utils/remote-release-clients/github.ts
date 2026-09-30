@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execFileSync, execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
@@ -17,8 +17,7 @@ import {
   RemoteRepoData,
 } from './remote-release-client';
 
-// Use default import with esModuleInterop
-import axios from 'axios';
+import { httpRequest } from '../../../../utils/http-client';
 
 export interface GithubRepoData extends RemoteRepoData {}
 
@@ -184,12 +183,9 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
               break;
             }
           }
-          const { data } = await axios
-            .get<
-              any,
-              { data?: UnghUserLookupResponse }
-            >(`https://ungh.cc/users/find/${email}`)
-            .catch(() => ({ data: { user: null } }));
+          const { data } = await httpRequest<UnghUserLookupResponse>(
+            `https://ungh.cc/users/find/${email}`
+          ).catch(() => ({ data: { user: null } }));
           if (data?.user?.username) {
             meta.username = data.user.username;
             break;
@@ -342,14 +338,14 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
             `---`,
             `Request Data:`,
             `Repo: ${this.getRemoteRepoData<GithubRepoData>()?.slug}`,
-            `Token Header Data: ${this.tokenHeader}`,
+            `Token Header: ${this.getRedactedTokenHeader()}`,
             `Body: ${JSON.stringify(result.requestData)}`,
           ],
         });
       } else {
-        console.log(error);
+        console.log(this.inspectWithRedactedToken(error));
         console.error(
-          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitHub token from the error message!)`
+          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: your GitHub token is redacted above, but please double-check before sharing)`
         );
       }
     }
@@ -381,29 +377,17 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
 
   private async promptForContinueInGitHub(): Promise<boolean> {
     try {
-      const reply = await prompt<{ open: 'Yes' | 'No' }>([
-        {
-          name: 'open',
-          message:
-            'Do you want to finish creating the release manually in your browser?',
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'It will pre-populate the form for you',
-            },
-            {
-              name: 'No',
-            },
-          ],
-          initial: 0,
-        },
-      ]);
-      return reply.open === 'Yes';
+      const open = await selectPrompt({
+        message:
+          'Do you want to finish creating the release manually in your browser?',
+        choices: [
+          { value: 'Yes', hint: 'It will pre-populate the form for you' },
+          { value: 'No' },
+        ],
+        onCancel: () => process.exit(1),
+      });
+      return open === 'Yes';
     } catch {
-      // Ensure the cursor is always restored before exiting
-      process.stdout.write('\u001b[?25h');
-      // Handle the case where the user exits the prompt with ctrl+c
       process.exit(1);
     }
   }

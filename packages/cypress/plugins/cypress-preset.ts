@@ -41,8 +41,10 @@ export interface NxComponentTestingOptions {
 
 // The bundler is only used while generating the component testing configuration
 // It cannot be changed after the configuration is generated
-export interface NxComponentTestingPresetOptions
-  extends Omit<NxComponentTestingOptions, 'bundler'> {}
+export interface NxComponentTestingPresetOptions extends Omit<
+  NxComponentTestingOptions,
+  'bundler'
+> {}
 
 export function nxBaseCypressPreset(
   pathToConfig: string,

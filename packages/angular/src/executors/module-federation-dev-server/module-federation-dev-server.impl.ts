@@ -51,9 +51,8 @@ export async function* moduleFederationDevServerExecutor(
     '@nx/module-federation',
     '@nx/angular:module-federation-dev-server'
   );
-  const { startRemoteIterators } = await import(
-    '@nx/module-federation/internal'
-  );
+  const { startRemoteIterators } =
+    await import('@nx/module-federation/internal');
 
   warnAngularMfDevServerExecutorDeprecation();
   const options = normalizeOptions(schema);

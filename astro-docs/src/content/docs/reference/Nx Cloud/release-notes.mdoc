@@ -136,7 +136,7 @@ filter: 'type:References'
 
 ##### Self-healing CI / AI fixes
 
-- See [self-healing CI guide](/docs/guides/nx-cloud/enable-ai-features#self-healing-ci-for-enterprise-on-prem-installations) for enablement steps.
+- See [self-healing CI guide](/docs/kb/enable-ai-features#bring-your-own-api-key-byok) for enablement steps.
 
 - Feat: Automatically detect and fix failing CI tasks with AI-generated solutions
 - Feat: New `nx-cloud self-heal apply-locally` command to test AI fixes before applying them in CI
@@ -296,7 +296,7 @@ nxApi:
   - Specifically how `common-init-steps: &common-init-steps` is defined
 - Feat: Individual GitHub commit statuses for each run group
   - This is configurable in your workspace settings
-  - See [here](/docs/kb/setup-ci#github-status-checks) for branch settings configuration
+  - See [GitHub integration](/docs/kb/github-integration#connect-your-repository) for branch settings configuration
   - You might also need [to update your GitHub app permissions](/docs/kb/github-app-permissions)
 - Misc: CIPE list is sortable by duration
 - Fix: early DTE job termination improvements
@@ -675,7 +675,7 @@ This release contains everything needed to run [Nx Agents](/docs/features/ci-fea
 If you already running DTE, there are a few advantages to upgrading to Agents:
 
 - simplified CI config: you will need to maintain just a single, main CI job config. NxCloud will create needed CI agents for you as needed.
-- [dynamic agent allocation based on PR size](/docs/features/ci-features/dynamic-agents): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
+- [dynamic agent allocation based on PR size](/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
 - access to [Spot instances](https://aws.amazon.com/ec2/spot/): if you are running your clusters on any of the popular cloud providers (AWS, Google Cloud, Azure etc.), you can now use their Spot instances for running your CI job. This is possible due to NxCloud's distribution model, which allows work on a reclaimed node to be re-distributed to the remaining agents.
 
 We will shortly make available a new Helm chart that will allow you to deploy a separate Agents cluster to launch workflows: [https://github.com/nrwl/nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm).
@@ -684,7 +684,7 @@ We will shortly make available a new Helm chart that will allow you to deploy a 
 
 ##### Task Atomizer and task retries
 
-If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](/docs/features/ci-features/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](/docs/features/ci-features/flaky-tasks).
+If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](/docs/kb/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](/docs/kb/flaky-tasks).
 
 ##### CIPE page improvements
 

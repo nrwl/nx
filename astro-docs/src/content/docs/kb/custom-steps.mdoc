@@ -17,9 +17,9 @@ To create a custom step, follow these steps:
 1\. **Create a New YAML File**: Create a new YAML file in your `.nx/workflows` directory (e.g., `custom-step.yaml`)
 
 {% aside type="note" title="Custom step file location" %}
-Custom steps do not need to be in the `.nx/workflows` directory. However, they must be available on a public GitHub repository. You have a few options for organizing your custom steps:
+Custom steps do not need to be in the `.nx/workflows` directory. However, they must be reachable through one of the [step reference forms](#step-reference-forms). You have a few options for organizing your custom steps:
 
-- **Same Repository as your Nx Workspace**: Ideal for open-source projects where the Nx workspace is publicly accessible.
+- **Same Repository as your Nx Workspace**: Reference the step with a `file://` path, or with the GitHub shorthand if the repository is public on GitHub.
 - **Create a Dedicated Repository**: Create a separate repository to store a collection of custom steps. This is useful for sharing steps across multiple projects or teams, or if your main Nx workspace is not on GitHub or is private.
 
 {% /aside %}
@@ -103,6 +103,52 @@ launch-templates:
 {% aside type="note" title="Recommendation on Using Inputs vs. Env" %}
 While you can use both `env` and `inputs` to pass values to custom steps, it is recommended to use `inputs` as they offer validation support, whereas `env` does not.
 {% /aside %}
+
+### Step reference forms
+
+The `uses` field accepts three reference forms: the GitHub shorthand shown above, workspace-local `file://` paths, and full HTTPS URLs.
+The GitHub shorthand (`your-org/your-repo/main/path/to/step.yaml`) is fetched from `raw.githubusercontent.com` and requires a branch or tag.
+Vendoring steps into your repository or hosting them yourself means agent startup doesn't depend on that endpoint's availability, and works for workspaces not hosted on GitHub.
+
+#### Workspace-local files
+
+Reference a step file committed to your workspace with a `file://` URL.
+Note the triple slash. The path is resolved from the workspace root.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  custom-template:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node24.14-v1'
+    init-steps:
+      - uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
+      - name: Custom Step
+        uses: 'file:///.nx/workflows/custom-step.yaml'
+```
+
+At validation time, Nx Cloud reads the file from your repository at the triggering commit.
+At runtime, the agent reads it from the checked-out workspace.
+The file only exists after the repository checkout, so the checkout step itself can't use a `file://` reference.
+Keep checkout as a remote step or an inline `script`.
+
+#### Full URLs
+
+Reference a step file on any HTTPS endpoint that returns the raw YAML body, for example a GitLab raw file URL or an internal file server.
+The URL is fetched as-is with an HTTP GET.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  custom-template:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node24.14-v1'
+    init-steps:
+      - name: Custom Step
+        uses: 'https://your-host.example.com/steps/custom-step.yaml'
+```
+
+Whichever form you use, scripts referenced by a step file (such as `main` and `post`) resolve relative to the step file's own location: the same repository and ref for remote steps, workspace-relative for `file://` steps.
 
 ### Validating custom steps
 

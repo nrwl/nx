@@ -2,16 +2,11 @@
 // `await import('@nx/vite/plugin')` doesn't pull @nx/vite and @nx/js source
 // into this test. Only the createNodesV2 glob is consumed, and the include/
 // exclude assertions depend on the nxJson registration, not the real plugin.
-jest.mock(
-  '@nx/vite/plugin',
-  () => ({
-    createNodesV2: [
-      '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
-      jest.fn(),
-    ],
-  }),
-  { virtual: true }
-);
+vi.mock('@nx/vite/plugin', () => ({
+  // Vitest throws on reading an export the factory did not return.
+  createNodes: undefined,
+  createNodesV2: ['**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}', vi.fn()],
+}));
 
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
@@ -32,7 +27,7 @@ describe('getE2EWebServerInfo', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should use the default values when no plugin is registered and plugins are not being used', async () => {
@@ -313,5 +308,48 @@ describe('getE2EWebServerInfo', () => {
         "e2eWebServerCommand": "npx nx run app:vite-serve",
       }
     `);
+  });
+
+  it('should not re-derive from targetDefaults when the port was explicit', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    // The plugin must be registered, or findPluginForConfigFile bails early and
+    // the port-resolution branch under test is never reached.
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: {
+        serveTargetName: 'vite:serve',
+        previewTargetName: 'vite:preview',
+      },
+    });
+    nxJson.targetDefaults = { 'vite:serve': { options: { port: 4300 } } };
+    updateNxJson(tree, nxJson);
+
+    // ACT — the caller resolved 4321 and baked it into both URLs. Re-deriving here
+    // would rewrite the address to 4300 and leave the CI URL at 4321.
+    const e2eWebServerInfo = await getE2EWebServerInfo(
+      tree,
+      'app',
+      {
+        plugin: '@nx/vite/plugin',
+        configFilePath: 'app/vite.config.ts',
+        serveTargetName: 'serveTargetName',
+        serveStaticTargetName: 'previewTargetName',
+      },
+      {
+        defaultServeTargetName: 'serve',
+        defaultServeStaticTargetName: 'preview',
+        defaultE2EWebServerAddress: 'http://localhost:4321',
+        defaultE2ECiBaseUrl: 'http://localhost:4321',
+        defaultE2EPort: 4321,
+        e2EPortIsExplicit: true,
+      },
+      true
+    );
+
+    // ASSERT — both URLs keep the explicitly requested port, and agree
+    expect(e2eWebServerInfo.e2eWebServerAddress).toBe('http://localhost:4321');
+    expect(e2eWebServerInfo.e2eCiBaseUrl).toBe('http://localhost:4321');
   });
 });

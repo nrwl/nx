@@ -29,6 +29,11 @@ Page: {pageUrl}
 
 `nx init` reads your `turbo.json` and writes the equivalent `nx.json`. Your `package.json` scripts stay as they are, and Nx runs them through the package manager you already use.
 
+{% aside type="note" title="New workspaces" %}
+This page is for workspaces that already run on Turborepo. A new workspace doesn't need to start with Turborepo and move
+later. Run [`nx init`](/docs/getting-started/start-with-existing-project) on it directly.
+{% /aside %}
+
 ## Why switch to Nx
 
 Nx runs the same scripts, so what you gain is the work Turborepo leaves to you.
@@ -275,7 +280,7 @@ Then connect the workspace so CI and your team share one cache:
 nx connect
 ```
 
-Remote caching on Nx Cloud is the direct replacement for Turborepo's Remote Cache. [Distributing tasks across agents](/docs/features/ci-features/distribute-task-execution) and [splitting e2e runs by file](/docs/features/ci-features/split-e2e-tasks) have no Turborepo equivalent, and they speed up the runs a cache cannot help with, such as a change to a shared package. The [CI setup guide](/docs/getting-started/setup-ci) walks through a full pipeline.
+Remote caching on Nx Cloud is the direct replacement for Turborepo's Remote Cache. [Distributing tasks across agents](/docs/features/ci-features/distribute-task-execution) and [splitting e2e runs by file](/docs/kb/split-e2e-tasks) have no Turborepo equivalent, and they speed up the runs a cache cannot help with, such as a change to a shared package. The [CI setup guide](/docs/getting-started/setup-ci) walks through a full pipeline.
 
 ## 8. Remove Turborepo
 

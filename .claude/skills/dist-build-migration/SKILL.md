@@ -327,7 +327,7 @@ Curate the new file:
 // `@nx/devkit/internal`.
 
 // Re-exports of nx-source internals (need `no-restricted-imports` overrides).
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 export { ... } from 'nx/src/plugins/.../something';
 
 export { walkTsconfigExtendsChain, type RawTsconfigJsonCache } from './src/utils/typescript/raw-tsconfig';

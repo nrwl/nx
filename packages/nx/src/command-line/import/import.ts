@@ -4,7 +4,7 @@ import * as pc from 'picocolors';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
-import { prompt } from 'enquirer';
+import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { output } from '../../utils/output';
 const createSpinner = require('ora');
 import { detectPlugins, getPluginReason } from '../init/init-v2';
@@ -31,6 +31,10 @@ import {
   configurePlugins,
   installPluginPackages,
 } from '../init/configure-plugins';
+import {
+  formatInitWrites,
+  recordInitWrite,
+} from '../init/implementation/format';
 import {
   checkCompatibleWithPlugins,
   updatePluginsInNxJson,
@@ -134,17 +138,11 @@ export async function importHandler(options: ImportOptions) {
   const tempImportDirectory = join(tmpdir, 'nx-import');
 
   if (!sourceRepository) {
-    sourceRepository = (
-      await prompt<{ sourceRepository: string }>([
-        {
-          type: 'input',
-          name: 'sourceRepository',
-          message:
-            'What is the URL of the repository you want to import? (This can be a local git repository or a git remote URL)',
-          required: true,
-        },
-      ])
-    ).sourceRepository;
+    sourceRepository = await textPrompt({
+      message:
+        'What is the URL of the repository you want to import? (This can be a local git repository or a git remote URL)',
+      validate: (value) => (value ? undefined : 'A repository is required'),
+    });
   }
 
   try {
@@ -207,21 +205,10 @@ export async function importHandler(options: ImportOptions) {
       );
     }
     const branchChoices = await sourceGitClient.listBranches();
-    ref = (
-      await prompt<{ ref: string }>([
-        {
-          type: 'autocomplete',
-          name: 'ref',
-          message: `Which branch do you want to import?`,
-          choices: branchChoices,
-          /**
-           * Limit the number of choices so that it fits on screen
-           */
-          limit: process.stdout.rows - 3,
-          required: true,
-        } as any,
-      ])
-    ).ref;
+    ref = await selectPrompt({
+      message: `Which branch do you want to import?`,
+      choices: branchChoices,
+    });
   }
 
   if (!source) {
@@ -229,15 +216,9 @@ export async function importHandler(options: ImportOptions) {
       // Default to importing the entire repository in agent mode
       source = '.';
     } else {
-      source = (
-        await prompt<{ source: string }>([
-          {
-            type: 'input',
-            name: 'source',
-            message: `Which directory do you want to import into this workspace? (leave blank to import the entire repository)`,
-          },
-        ])
-      ).source;
+      source = await textPrompt({
+        message: `Which directory do you want to import into this workspace? (leave blank to import the entire repository)`,
+      });
     }
   }
 
@@ -247,17 +228,11 @@ export async function importHandler(options: ImportOptions) {
         'The --destination option is required when running in agent mode.'
       );
     }
-    destination = (
-      await prompt<{ destination: string }>([
-        {
-          type: 'input',
-          name: 'destination',
-          message: 'Where in this workspace should the code be imported into?',
-          required: true,
-          initial: source ? source : undefined,
-        },
-      ])
-    ).destination;
+    destination = await textPrompt({
+      message: 'Where in this workspace should the code be imported into?',
+      initialValue: source ? source : undefined,
+      validate: (value) => (value ? undefined : 'A destination is required'),
+    });
   }
 
   const absSource = join(sourceTempRepoPath, source);
@@ -422,6 +397,7 @@ export async function importHandler(options: ImportOptions) {
       const incompatiblePlugins = await checkCompatibleWithPlugins();
       if (Object.keys(incompatiblePlugins).length > 0) {
         updatePluginsInNxJson(workspaceRoot, incompatiblePlugins);
+        await formatInitWrites(workspaceRoot, 'nx import');
         await destinationGitClient.amendCommit();
       }
     }
@@ -436,6 +412,7 @@ export async function importHandler(options: ImportOptions) {
           verbose
         );
         if (succeededPlugins.length > 0) {
+          await formatInitWrites(workspaceRoot, 'nx import');
           await destinationGitClient.amendCommit();
         }
       }
@@ -637,6 +614,7 @@ async function handlePluginOnlyMode(
         verbose
       );
       if (succeededPlugins.length > 0) {
+        await formatInitWrites(workspaceRoot, 'nx import');
         await destinationGitClient.amendCommit();
       }
     }
@@ -687,6 +665,7 @@ async function runInstallDestinationRepo(
       packageManager,
       getPackageManagerCommand(packageManager)
     );
+    await formatInitWrites(workspaceRoot, 'nx import');
     await destinationGitClient.amendCommit();
   } catch (e) {
     installed = false;
@@ -707,6 +686,7 @@ async function runPluginsInstall(
   output.log({ title: 'Installing Plugins' });
   try {
     installPluginPackages(workspaceRoot, pmc, plugins);
+    await formatInitWrites(workspaceRoot, 'nx import');
     await destinationGitClient.amendCommit();
   } catch (e) {
     installed = false;
@@ -793,6 +773,17 @@ async function handleMissingWorkspacesEntry(
     }
 
     addPackagePathToWorkspaces(pkgPath, pm, workspaces, workspaceRoot);
+    // That helper is shared, so it does not record for us - without this the
+    // drain below has nothing to do and the rewritten file ships unformatted.
+    // It writes pnpm-workspace.yaml for pnpm and package.json for the rest, so
+    // recording package.json unconditionally records a file it never touched.
+    recordInitWrite(
+      join(
+        workspaceRoot,
+        pm === 'pnpm' ? 'pnpm-workspace.yaml' : 'package.json'
+      )
+    );
+    await formatInitWrites(workspaceRoot, 'nx import');
     await destinationGitClient.amendCommit();
     output.success({
       title: `Project added in workspaces`,

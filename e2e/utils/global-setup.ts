@@ -59,6 +59,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // Use environment variable instead of npm config command to avoid polluting other tests
     process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] =
       authToken;
+    // npm has the same policy as pnpm below. It is off by default, so this
+    // only matters where a user-level .npmrc turns it on.
+    process.env.npm_config_min_release_age = '0';
     // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*, and they
     // take precedence over any registry a stray process wrote to ~/.npmrc.
     process.env.pnpm_config_registry = registry;
@@ -93,6 +96,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // same version is republished to the local registry.
     const e2eCacheDir = mkdtempSync(join(tmpdir(), 'nx-e2e-cache-'));
     process.env.npm_config_cache = join(e2eCacheDir, 'npm');
+    // pnpm resolves an exact version from its own metadata cache without asking
+    // the registry; `pnpm_config_` is the prefix it honours for cache-dir.
+    process.env.pnpm_config_cache_dir = join(e2eCacheDir, 'pnpm');
     // yarnv1
     process.env.YARN_CACHE_FOLDER = join(e2eCacheDir, 'yarn');
     // yarnv2

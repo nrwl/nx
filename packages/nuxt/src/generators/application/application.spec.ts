@@ -8,6 +8,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { applicationGenerator } from './application';
 
 describe('app', () => {
@@ -22,6 +23,43 @@ describe('app', () => {
   afterEach(() => {
     if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
     else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+    });
+
+    it('should deny the esbuild build script pulled in by the nuxt toolchain', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-app',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+          useAppDir: false,
+        })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?esbuild['"]?: false/
+      );
+    });
+
+    it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-app',
+          style: 'scss',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+          useAppDir: false,
+        })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@parcel\/watcher['"]: false/
+      );
+    });
   });
 
   describe.each(['my-app', 'myApp'])(
@@ -175,7 +213,9 @@ describe('app', () => {
           ).toMatchSnapshot();
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
-          expect(packageJson.devDependencies['vitest']).toEqual('~4.1.0');
+          // Literal, not the constant that decides it: a regression back to
+          // vitest 4 has to fail here.
+          expect(packageJson.devDependencies['vitest']).toEqual('~5.0.1');
         });
 
         it('should fall back to a .ts vitest config on eslintrc', async () => {

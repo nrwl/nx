@@ -5,10 +5,12 @@ import {
   logShowProjectCommand,
   E2EWebServerDetails,
   type PackageJson,
+  acknowledgeBuildScripts,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -309,6 +311,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     js: false,
     skipFormat: true,
     platform: 'web',
+    formatter: options.formatter,
   });
   tasks.push(jsInitTask);
   const webTask = await webInitGenerator(host, {
@@ -489,7 +492,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       options.projectName,
       joinPathFragments(options.appProjectRoot, `webpack.config.js`),
       options.addPlugin,
-      4200
+      // This generator has no `port` option, so there is never an explicit request
+      // to pass on. The helper defaults to 4200 itself, and leaving this undefined
+      // is what lets targetDefaults still apply.
+      undefined
     );
   } else if (options.bundler === 'vite') {
     const { getViteE2EWebServerInfo } = ensurePackage<
@@ -630,6 +636,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         },
         target: 'es2016',
       },
+    });
+    // @swc/core's postinstall only installs a wasm fallback for platforms not
+    // covered by its prebuilt optional dependencies, so skip it.
+    acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+      '@swc/core': false,
     });
     const installTask = addDependenciesToPackageJson(
       host,

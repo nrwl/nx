@@ -39,7 +39,15 @@ impl HttpRemoteCache {
             header::HeaderValue::from_static("application/octet-stream"),
         );
 
-        let mut client_builder = ClientBuilder::new().default_headers(headers);
+        // Keep the system resolver here. Enabling reqwest's `hickory-dns`
+        // feature for the telemetry client flips the default for every client
+        // in the crate, and this URL is user-supplied: it may resolve through
+        // NSS rather than plain DNS (mDNS, LDAP, split-horizon corporate
+        // setups) which hickory does not consult. Only the telemetry endpoint
+        // is a fixed public hostname where that trade is safe.
+        let mut client_builder = ClientBuilder::new()
+            .no_hickory_dns()
+            .default_headers(headers);
 
         let env_accept_unauthorized = env::var("NODE_TLS_REJECT_UNAUTHORIZED");
         if let Ok(env_accept_unauthorized) = env_accept_unauthorized {

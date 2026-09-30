@@ -16,7 +16,7 @@ public static partial class TargetBuilder
         bool isTest,
         bool isExe,
         List<PackageReference> packageRefs,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,

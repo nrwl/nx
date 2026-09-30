@@ -99,6 +99,7 @@ dev-debug.log
 node_modules/
 # Environment variables
 .env
+!/.env
 !e2e/dotnet/.env
 # Editor directories and files
 .idea
@@ -199,3 +200,6 @@ e2e/**/*.d.ts
 e2e/**/*.d.ts.map
 
 .nx/migrate-runs
+
+# Generated on Netlify builds by astro-docs/scripts/sync-agent-skills.mjs
+astro-docs/public/.well-known/agent-skills

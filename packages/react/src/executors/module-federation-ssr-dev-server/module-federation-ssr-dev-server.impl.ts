@@ -20,9 +20,8 @@ export default async function* moduleFederationSsrDevServer(
 ) {
   assertPackageIsInstalled('@nx/module-federation', executorName);
   assertPackageIsInstalled('@nx/webpack', executorName);
-  const { startRemoteIterators } = await import(
-    '@nx/module-federation/internal'
-  );
+  const { startRemoteIterators } =
+    await import('@nx/module-federation/internal');
   const { ssrDevServerExecutor } = await import('@nx/webpack/internal');
 
   warnReactMfSsrDevServerExecutorDeprecation();

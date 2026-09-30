@@ -1,7 +1,7 @@
 import { joinPathFragments } from '../../utils/path';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { TargetConfiguration } from '../../config/workspace-json-project-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
 import { updateJson } from '../../generators/utils/json';
 import {
@@ -33,7 +33,7 @@ export default async function removeRunCommandsOutputPath(tree: Tree) {
       return json;
     });
   }
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }
 
 function updateTargetBlock(target: TargetConfiguration): boolean {

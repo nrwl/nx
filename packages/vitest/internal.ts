@@ -10,3 +10,7 @@
  * `addLintingToProject` reads it through `ensurePackage`.
  */
 export const oxlintPlugins = ['vitest'];
+export {
+  createOrEditViteConfig,
+  ViteConfigFileOptions,
+} from './src/utils/generator-utils';

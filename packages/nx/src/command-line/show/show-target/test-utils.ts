@@ -42,40 +42,40 @@ export function setMockSourceMaps(
   mockSourceMaps = maps;
 }
 
-jest.mock('../../../project-graph/project-graph', () => ({
-  ...(jest.requireActual(
+vi.mock('../../../project-graph/project-graph', async () => ({
+  ...((await vi.importActual(
     '../../../project-graph/project-graph'
-  ) as typeof import('../../../project-graph/project-graph')),
-  createProjectGraphAsync: jest
+  )) as typeof import('../../../project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(graph)),
-  createProjectGraphAndSourceMapsAsync: jest
+  createProjectGraphAndSourceMapsAsync: vi
     .fn()
     .mockImplementation(() =>
       Promise.resolve({ projectGraph: graph, sourceMaps: mockSourceMaps })
     ),
 }));
 
-jest.mock('../../../utils/workspace-root', () => ({
+vi.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/workspace',
 }));
 
-jest.mock('../../../utils/output', () => ({
+vi.mock('../../../utils/output', () => ({
   output: {
-    error: jest.fn(),
-    drain: jest.fn().mockResolvedValue(undefined),
+    error: vi.fn(),
+    drain: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
-jest.mock('../../../config/configuration', () => ({
-  readNxJson: jest.fn().mockImplementation(() => mockNxJson),
+vi.mock('../../../config/configuration', () => ({
+  readNxJson: vi.fn().mockImplementation(() => mockNxJson),
 }));
 
-jest.mock('../../../native', () => {
-  const actual = jest.requireActual('../../../native');
+vi.mock('../../../native', async () => {
+  const actual = await vi.importActual('../../../native');
   return {
     ...actual,
-    expandOutputs: jest
+    expandOutputs: vi
       .fn()
       .mockImplementation((_root: string, outputs: string[]) => {
         if (mockExpandedOutputs !== null) return mockExpandedOutputs;
@@ -90,25 +90,38 @@ export function setMockHasCustomHasher(value: boolean) {
   mockHasCustomHasher = value;
 }
 
-jest.mock('../../../tasks-runner/utils', () => {
-  const actual = jest.requireActual('../../../tasks-runner/utils');
+// hasCustomHasher lazy-requires tasks-runner/utils (CJS channel), which
+// vi.mock cannot intercept; replace the module in the require channel too.
+import { mockCjsModule } from '../../../internal-testing-utils/cjs-mock';
+const mockGetExecutorForTask = vi.hoisted(() => vi.fn());
+mockGetExecutorForTask.mockImplementation(() => ({
+  hasherFactory: mockHasCustomHasher ? () => {} : null,
+}));
+mockCjsModule(import.meta.url, '../../../tasks-runner/utils', {
+  ...require('../../../tasks-runner/utils'),
+  getExecutorForTask: mockGetExecutorForTask,
+});
+vi.mock('../../../tasks-runner/utils', async () => {
+  const actual = await vi.importActual('../../../tasks-runner/utils');
   return {
     ...actual,
-    getExecutorForTask: jest.fn().mockImplementation(() => ({
-      hasherFactory: mockHasCustomHasher ? () => {} : null,
-    })),
+    getExecutorForTask: mockGetExecutorForTask,
   };
 });
 
-jest.mock('../../../hasher/hash-plan-inspector', () => ({
-  HashPlanInspector: jest.fn().mockImplementation(() => ({
-    init: jest.fn().mockResolvedValue(undefined),
-    inspectTaskInputs: jest.fn().mockImplementation(() => mockHashInputs),
-  })),
+vi.mock('../../../hasher/hash-plan-inspector', () => ({
+  // A plain function so `new HashPlanInspector(...)` works (arrows are not
+  // constructible under vitest's mocks).
+  HashPlanInspector: vi.fn().mockImplementation(function () {
+    return {
+      init: vi.fn().mockResolvedValue(undefined),
+      inspectTaskInputs: vi.fn().mockImplementation(() => mockHashInputs),
+    };
+  }),
 }));
 
-performance.mark = jest.fn();
-performance.measure = jest.fn();
+performance.mark = vi.fn();
+performance.measure = vi.fn();
 
 const originalCwd = process.cwd;
 
@@ -116,8 +129,8 @@ export function setupBeforeEach() {
   // Reset the module-level context cache in check-task-files so each test
   // loads a fresh project graph and HashPlanInspector instance.
   _resetContextForTesting();
-  jest.spyOn(console, 'log').mockImplementation(() => {});
-  jest.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+  vi.spyOn(console, 'log').mockImplementation(() => {});
+  vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
   performance.mark('init-local');
   mockCwd = '/workspace';
   mockNxJson = {};
@@ -126,11 +139,11 @@ export function setupBeforeEach() {
   mockSourceMaps = {};
   mockHasCustomHasher = false;
   process.exitCode = undefined;
-  process.cwd = jest.fn().mockReturnValue(mockCwd);
+  process.cwd = vi.fn().mockReturnValue(mockCwd);
 }
 
 export function setupAfterEach() {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   process.cwd = originalCwd;
 }
 

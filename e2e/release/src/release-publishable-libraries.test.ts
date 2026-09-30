@@ -33,7 +33,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B\s+types\//g, 'XXB types/')
         .replaceAll(/total files:\s+\d*/g, 'total files: X')
         .replaceAll(/\d*B\s+README.md/g, 'XXB README.md')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         .replaceAll(/(\w+) lock file/g, 'PM lock file')
         // Normalize the version title date.
@@ -233,7 +233,7 @@ describe('release publishable libraries', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.4",
-      "peerDependencies": {
+      "sideEffects": false,
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.4

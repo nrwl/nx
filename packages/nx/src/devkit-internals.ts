@@ -17,7 +17,10 @@
  *
  * See packages/devkit/CLAUDE.md.
  */
-export { createTempNpmDirectory } from './utils/package-manager';
+export {
+  createTempNpmDirectory,
+  parseVersionFromPackageManagerField,
+} from './utils/package-manager';
 export {
   getExecutorInformation,
   parseExecutor,
@@ -25,11 +28,20 @@ export {
 export { readNxJson as readNxJsonFromDisk } from './config/nx-json';
 export { calculateDefaultProjectName } from './config/calculate-default-project-name';
 export { retrieveProjectConfigurationsWithAngularProjects } from './project-graph/utils/retrieve-workspace-files';
-export { mergeTargetConfigurations } from './project-graph/utils/project-configuration/target-merging';
-export { readProjectConfigurationsFromRootMap } from './project-graph/utils/project-configuration/project-nodes-manager';
+export {
+  mergeTargetConfigurations,
+  resolveCommandSyntacticSugar,
+} from './project-graph/utils/project-configuration/target-merging';
+export {
+  findMatchingTargetNames,
+  readProjectConfigurationsFromRootMap,
+} from './project-graph/utils/project-configuration/project-nodes-manager';
 export { findMatchingConfigFiles } from './project-graph/utils/project-configuration-utils';
 export { findMatchingProjects } from './utils/find-matching-projects';
-export { readTargetDefaultsForTarget } from './project-graph/utils/project-configuration/target-defaults';
+export {
+  createTargetDefaultsResults,
+  readTargetDefaultsForTarget,
+} from './project-graph/utils/project-configuration/target-defaults';
 // Only the tree-bound checkers and their type cross the boundary. The
 // primitives they are built from carry preconditions a caller can violate - a
 // chain must be resolved from the file's own directory, and the array it
@@ -37,10 +49,18 @@ export { readTargetDefaultsForTarget } from './project-graph/utils/project-confi
 // them.
 export {
   createGitIgnoreChecker,
+  createOxfmtIgnoreChecker,
   createPrettierIgnoreChecker,
   type TreeIgnoreChecker,
 } from './utils/ignore';
 export { splitTarget } from './utils/split-target';
+export {
+  selectPrompt,
+  multiselectPrompt,
+  textPrompt,
+  confirmationPrompt,
+  type Choice as PromptChoice,
+} from './utils/prompt-helpers';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';
 export { stripIndent } from './utils/logger';
@@ -67,11 +87,33 @@ export {
   registerTsProject,
   loadTsFile,
   forceRegisterEsmLoader,
+  isRequireInEsmScopeError,
+  isTsEsmNamedExportLinkageError,
   requireWithTsconfigFallback,
 } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
+export {
+  getEnvFilesForTask,
+  getGraphTimeDotEnvForTask,
+} from './tasks-runner/task-env';
+export { getEnvPathsForTask } from './tasks-runner/task-env-paths';
+export {
+  hashDaemonClientEnv,
+  getDaemonClientEnvGeneration,
+  getAppliedDaemonClientEnv,
+  applyDaemonEnvFromClient,
+} from './daemon/client/daemon-environment';
 export { isCI } from './utils/is-ci';
-export { isUsingPrettierInTree } from './utils/is-using-prettier';
+export {
+  isUsingPrettierInTree,
+  prettierConfigFiles,
+} from './utils/formatters/prettier';
+export { detectFormatter, detectFormatterInTree } from './utils/formatters';
+export type { FormatterType } from './utils/formatters';
+export {
+  formatFilesWithOxfmt,
+  oxfmtConfigFiles,
+} from './utils/formatters/oxfmt';
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';
@@ -133,6 +175,7 @@ export { hashFile } from './hasher/file-hasher';
 export { filterUsingGlobPatterns, getTargetInputs } from './hasher/task-hasher';
 export type { JsonInput } from './native';
 export { killProcessTreeGraceful } from './native';
+export { killChildOnHostExit } from './utils/kill-child-on-host-exit';
 export { connectToNxCloud } from './nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 export type { NxCloudOnBoardingStatus } from './nx-cloud/models/onboarding-status';
 export {
@@ -142,6 +185,7 @@ export {
 export { createNxCloudOnboardingURL } from './nx-cloud/utilities/url-shorten';
 export {
   createLockFile,
+  generatePrunedDeployOutput,
   getLockFileName,
 } from './plugins/js/lock-file/lock-file';
 export {
@@ -240,7 +284,7 @@ export {
   readFileIfExisting,
 } from './utils/fileutils';
 export { getLatestCommitSha } from './utils/git-utils';
-export { combineGlobPatterns } from './utils/globs';
+export { combineGlobPatterns, isGlobPattern } from './utils/globs';
 export { getNxRequirePaths } from './utils/installation-directory';
 export { NX_PREFIX } from './utils/logger';
 export type {
@@ -256,6 +300,12 @@ export type {
   PackageJsonDependencySection,
 } from './utils/package-json';
 export { readNxMigrateConfig } from './utils/package-json';
+export {
+  dropEmptyPeerDependencySections,
+  movePeerDependencyToDependencies,
+  relocatePrunedLocalPathSpec,
+  warnUnshippableLocalPathSpec,
+} from './plugins/js/lock-file/pruned-output';
 export type { PackageManagerCommands } from './utils/package-manager';
 // Sourced from the leaf module rather than ./utils/plugins: the barrel index
 // pulls output.ts and core-plugins.ts into the eager closure for a function that
@@ -266,6 +316,7 @@ export {
   findAllProjectNodeDependencies,
   getSourceDirOfDependentProjects,
 } from './utils/project-graph-utils';
+export { quoteShellArg } from './utils/shell-quoting';
 export type { SyncGeneratorResult } from './utils/sync-generators';
 export { SyncError } from './utils/sync-generators';
 export { nxVersion } from './utils/versions';

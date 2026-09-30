@@ -1,13 +1,12 @@
-import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
-import { handleImport } from '../../../utils/handle-import';
 import { output } from '../../../utils/output';
 import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '../../../utils/package-manager';
 import { InitArgs } from '../init-v1';
+import { recordInitWrite } from './format';
 import {
   addDepsToPackageJson,
   createNxJsonFromTurboJson,
@@ -40,22 +39,8 @@ export async function addNxToTurborepo(_options: Options) {
   let nxJson = createNxJsonFromTurboJson(readJsonFile('turbo.json'));
   const nxJsonPath = join(repoRoot, 'nx.json');
 
-  // Turborepo workspaces usually have prettier installed, so try and match the formatting before writing the file
-  try {
-    const prettier = await handleImport('prettier');
-    const config = await prettier.resolveConfig(repoRoot);
-    writeFileSync(
-      nxJsonPath,
-      // @ts-ignore - Always await prettier.format, in modern versions it's async
-      await prettier.format(JSON.stringify(nxJson, null, 2), {
-        ...(config ?? {}),
-        parser: 'json',
-      })
-    );
-  } catch (err) {
-    // Apply fallback JSON write
-    writeJsonFile(nxJsonPath, nxJson);
-  }
+  writeJsonFile(nxJsonPath, nxJson);
+  recordInitWrite(nxJsonPath);
 
   const packageManager = detectPackageManager(repoRoot);
   const pmc = getPackageManagerCommand(packageManager);

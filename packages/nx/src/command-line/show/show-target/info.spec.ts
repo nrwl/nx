@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   GraphBuilder,
   setupBeforeEach,
@@ -33,7 +34,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.project).toBe('my-app');
     expect(parsed.target).toBe('build');
     expect(parsed.executor).toBe('@nx/web:build');
@@ -54,11 +55,11 @@ describe('show target info', () => {
         .build()
     );
 
-    process.cwd = jest.fn().mockReturnValue('/workspace/apps/my-app');
+    process.cwd = vi.fn().mockReturnValue('/workspace/apps/my-app');
 
     await showTargetInfoHandler({ target: 'build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.project).toBe('my-app');
     expect(parsed.target).toBe('build');
   });
@@ -89,7 +90,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed).toMatchObject({
       project: 'my-app',
       target: 'build',
@@ -135,7 +136,7 @@ describe('show target info', () => {
       json: true,
     });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.options).toEqual({
       outputPath: 'dist/apps/my-app',
       optimization: true,
@@ -179,7 +180,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.dependsOn.sort()).toEqual(['lib-a:build', 'lib-b:build']);
   });
 
@@ -221,7 +222,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.dependsOn).toEqual(['lib-a:build']);
     expect(parsed.transitiveTasks).toEqual(['lib-b:build']);
   });
@@ -264,7 +265,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: false });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     // With ≤3 unique transitive target names, list them.
@@ -315,7 +316,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: false });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     // >3 unique target names collapses to bare count with no target names
@@ -353,7 +354,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.dependsOn).toBeUndefined();
     expect(parsed.transitiveTasks).toBeUndefined();
   });
@@ -377,13 +378,13 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:test', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.dependsOn).toContain('my-app:build');
   });
 
   it('should error when target not found and list available targets', async () => {
-    const { output } = require('../../../utils/output');
-    jest.spyOn(process, 'exit').mockImplementation((code) => {
+    const { output } = await import('../../../utils/output');
+    vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });
 
@@ -416,8 +417,8 @@ describe('show target info', () => {
   });
 
   it('should error when project not found', async () => {
-    const { output } = require('../../../utils/output');
-    jest.spyOn(process, 'exit').mockImplementation((code) => {
+    const { output } = await import('../../../utils/output');
+    vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });
 
@@ -446,8 +447,8 @@ describe('show target info', () => {
   });
 
   it('should error when configuration not found and list available configs', async () => {
-    const { output } = require('../../../utils/output');
-    jest.spyOn(process, 'exit').mockImplementation((code) => {
+    const { output } = await import('../../../utils/output');
+    vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });
 
@@ -512,7 +513,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     // Scoped inputs should be preserved as objects, not expanded
     expect(parsed.inputs).toEqual([
       { input: 'production', projects: ['tag:npm:public'] },
@@ -539,7 +540,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.customHasher).toBe(true);
   });
 
@@ -561,7 +562,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: false });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('custom');
@@ -602,7 +603,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.sourceMap).toBeDefined();
     expect(parsed.sourceMap.executor).toEqual([
       'apps/my-app/project.json',
@@ -637,7 +638,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.sourceMap).toBeUndefined();
   });
 
@@ -677,7 +678,7 @@ describe('show target info', () => {
       verbose: true,
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('apps/my-app/project.json');
@@ -712,7 +713,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.sourceMap).toBeDefined();
     expect(parsed.sourceMap.executor).toEqual([
       'apps/my-app/project.json',
@@ -763,9 +764,7 @@ describe('show target info', () => {
       verbose: true,
     });
 
-    const lines = (console.log as jest.Mock).mock.calls.map((c) =>
-      String(c[0])
-    );
+    const lines = (console.log as Mock).mock.calls.map((c) => String(c[0]));
 
     // Find the specific lines for dependsOn, input, and output items
     const depLine = lines.find((l) => l.includes('prebuild'));
@@ -784,12 +783,12 @@ describe('show target info', () => {
     expect(inputLine).toContain('nx.json');
 
     // Also verify JSON output strips internal fields
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     await showTargetInfoHandler({
       target: 'my-app:build',
       json: true,
     });
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed._depSources).toBeUndefined();
     expect(parsed._inputSources).toBeUndefined();
   });
@@ -831,7 +830,7 @@ describe('show target info', () => {
       json: false,
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     // No source hints (the "(from ...)" annotations) should appear
@@ -878,7 +877,7 @@ describe('show target info', () => {
 
     await showTargetInfoHandler({ target: 'my-app-e2e:e2e', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.dependsOn).toEqual(['my-app:serve']);
     expect(parsed.transitiveTasks).toEqual(['my-app:build']);
     expect(parsed.transitiveTasks).not.toContain('my-app-e2e:e2e:ci');

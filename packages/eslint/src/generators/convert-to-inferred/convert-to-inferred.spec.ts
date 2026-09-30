@@ -21,12 +21,12 @@ import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 let fs: TempFs;
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -175,7 +175,7 @@ function createTestProject(
     `${projectOpts.appRoot}/src/foo.ts`,
     `export const myValue = 2;`
   );
-  jest.doMock(
+  vi.doMock(
     join(fs.tempDir, `${projectOpts.appRoot}/.eslintrc.json`),
     () => ({
       default: {
@@ -279,7 +279,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await expect(
         convertToInferred(tree, { project: project.name, skipFormat: true })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (.invalid-eslint-config.json) is not a default config file known by ESLint."`
+        `[Error: The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (.invalid-eslint-config.json) is not a default config file known by ESLint.]`
       );
     });
 
@@ -291,7 +291,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await expect(
         convertToInferred(tree, { project: project.name, skipFormat: true })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (myapp/nested/.eslintrc.json) must point to a file in the project root or a parent directory."`
+        `[Error: The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (myapp/nested/.eslintrc.json) must point to a file in the project root or a parent directory.]`
       );
     });
 
@@ -427,7 +427,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
     });
 
     it('should remove include when all projects are included', async () => {
-      jest.doMock(
+      vi.doMock(
         '.eslintrc.base.json',
         () => ({
           ignorePatterns: ['**/*'],
@@ -964,6 +964,85 @@ describe('Eslint - Convert Executors To Plugin', () => {
         [['targetName', 'lint']].forEach(([targetOptionName, targetName]) => {
           expect(hasEslintPlugin.options[targetOptionName]).toEqual(targetName);
         });
+      }
+    });
+
+    it('centralizes shared lint config without changing the effective target (equivalence)', async () => {
+      // Two projects share a non-inferred option, so it must be hoisted once
+      // into targetDefaults and still resolve identically for each project.
+      const app1 = createTestProject(tree, {
+        appName: 'app1',
+        appRoot: 'app1',
+      });
+      app1.targets.lint.options.cacheLocation = 'cache-dir';
+      updateProjectConfiguration(tree, app1.name, app1);
+      const app2 = createTestProject(tree, {
+        appName: 'app2',
+        appRoot: 'app2',
+      });
+      app2.targets.lint.options.cacheLocation = 'cache-dir';
+      updateProjectConfiguration(tree, app2.name, app2);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      // present exactly once, centrally, scoped to the eslint plugin's targets
+      const targetDefault = readNxJson(tree).targetDefaults?.lint;
+      expect(Array.isArray(targetDefault)).toBe(true);
+      const hoisted = (targetDefault as any[]).find(
+        (entry) => entry?.filter?.plugin === '@nx/eslint/plugin'
+      );
+      expect(hoisted?.options?.['cache-location']).toBe('cache-dir');
+      for (const name of ['app1', 'app2']) {
+        const projectTarget =
+          readProjectConfiguration(tree, name).targets?.lint ?? {};
+        // centralized once, not duplicated in the per-project file. That the
+        // hoisted plugin-scoped default actually RESOLVES onto the inferred
+        // target (through Nx's real targetDefaults pipeline, including the
+        // resolveSourcePlugin gate) is verified in the engine spec's
+        // "through the REAL Nx resolution pipeline" tests; a JS-spread merge
+        // here could not observe that gate.
+        expect(projectTarget.options?.['cache-location']).toBeUndefined();
+      }
+    });
+
+    it('centralizes shared lint configurations without dropping named configuration behavior', async () => {
+      const app1 = createTestProject(tree, {
+        appName: 'app1',
+        appRoot: 'app1',
+      });
+      app1.targets.lint.configurations = {
+        ci: {
+          quiet: true,
+        },
+      };
+      updateProjectConfiguration(tree, app1.name, app1);
+      const app2 = createTestProject(tree, {
+        appName: 'app2',
+        appRoot: 'app2',
+      });
+      app2.targets.lint.configurations = {
+        ci: {
+          quiet: true,
+        },
+      };
+      updateProjectConfiguration(tree, app2.name, app2);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const targetDefault = readNxJson(tree).targetDefaults?.lint;
+      expect(Array.isArray(targetDefault)).toBe(true);
+      const hoisted = (targetDefault as any[]).find(
+        (entry) => entry?.filter?.plugin === '@nx/eslint/plugin'
+      );
+      expect(hoisted?.configurations?.ci).toEqual({
+        quiet: true,
+      });
+      // centralized once, not duplicated per project (effective resolution is
+      // covered by the engine spec's real-pipeline tests).
+      for (const name of ['app1', 'app2']) {
+        const projectTarget =
+          readProjectConfiguration(tree, name).targets?.lint ?? {};
+        expect(projectTarget.configurations?.ci).toBeUndefined();
       }
     });
 

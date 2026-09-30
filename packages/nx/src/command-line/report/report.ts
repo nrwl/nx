@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import { output } from '../../utils/output';
-import { join } from 'path';
+import { join, sep } from 'path';
+import { homedir } from 'os';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -39,6 +40,7 @@ import {
   formatCacheSize,
   resolveMaxCacheSize,
 } from '../../tasks-runner/cache';
+import { cacheDir } from '../../utils/cache-directory';
 import { daemonClient } from '../../daemon/client/client';
 import { readNxPackageGroup } from '../../utils/nx-package-group';
 
@@ -216,11 +218,7 @@ export async function reportHandler() {
 
   if (cache) {
     bodyLines.push(LINE_SEPARATOR);
-    bodyLines.push(
-      `Cache Usage: ${formatCacheSize(cache.used)} / ${
-        cache.max === 0 ? '∞' : formatCacheSize(cache.max)
-      }`
-    );
+    bodyLines.push(...cacheSectionLines(cache));
   }
 
   if (outOfSyncPackageGroup) {
@@ -276,6 +274,33 @@ export async function reportHandler() {
   });
 }
 
+/**
+ * The report is meant to be pasted into public issues, so the home directory
+ * is elided rather than printing the user's account name.
+ */
+function collapseHome(path: string): string {
+  const home = homedir();
+  return path === home || path.startsWith(home + sep)
+    ? `~${path.slice(home.length)}`
+    : path;
+}
+
+export function cacheSectionLines(
+  cache: NonNullable<ReportData['cache']>
+): string[] {
+  const unlimited = cache.max === 0;
+  const max = unlimited ? '∞' : formatCacheSize(cache.max);
+  const share = unlimited
+    ? ''
+    : ` (${((cache.used / cache.max) * 100).toFixed(1)}%)`;
+
+  return [
+    'Cache',
+    `- Usage: ${formatCacheSize(cache.used)} / ${max}${share}`,
+    `- Location: ${collapseHome(cache.location)}`,
+  ];
+}
+
 export interface ReportData {
   pm: PackageManager;
   pmVersion: string;
@@ -312,6 +337,7 @@ export interface ReportData {
   cache: {
     max: number;
     used: number;
+    location: string;
   } | null;
 }
 
@@ -426,6 +452,7 @@ export async function getReportData(): Promise<ReportData> {
     ? {
         max: resolveMaxCacheSize(nxJson),
         used: new DbCache({ nxCloudRemoteCache: null }).getUsedCacheSpace(),
+        location: cacheDir,
       }
     : null;
 

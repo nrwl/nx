@@ -21,9 +21,9 @@ describe('Remix Application', () => {
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
-    jest
-      .spyOn(devkitExports, 'getPackageManagerCommand')
-      .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+    vi.spyOn(devkitExports, 'getPackageManagerCommand').mockReturnValue({
+      exec: 'npx',
+    } as PackageManagerCommands);
   });
 
   afterEach(() => {
@@ -492,11 +492,11 @@ describe('Remix Application', () => {
           "name",
           "private",
           "type",
-          "scripts",
           "sideEffects",
-          "nx",
+          "scripts",
           "dependencies",
           "devDependencies",
+          "nx",
         ]
       `);
       expect(packageJson).toMatchInlineSnapshot(`
@@ -697,11 +697,11 @@ describe('Remix Application', () => {
           "name",
           "private",
           "type",
-          "scripts",
           "sideEffects",
-          "nx",
+          "scripts",
           "dependencies",
           "devDependencies",
+          "nx",
         ]
       `);
     });

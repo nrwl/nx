@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`getEnvFilesForTask should return the correct env files for a standard task 1`] = `
+exports[`getEnvFilesForTask > should return the correct env files for a standard task 1`] = `
 [
   "libs/test-project/.env.build.local",
   "libs/test-project/.env.build",
@@ -19,7 +19,7 @@ exports[`getEnvFilesForTask should return the correct env files for a standard t
 ]
 `;
 
-exports[`getEnvFilesForTask should return the correct env files for a standard task with configurations 1`] = `
+exports[`getEnvFilesForTask > should return the correct env files for a standard task with configurations 1`] = `
 [
   "libs/test-project/.env.build.development.local",
   "libs/test-project/.env.build.development",
@@ -54,7 +54,7 @@ exports[`getEnvFilesForTask should return the correct env files for a standard t
 ]
 `;
 
-exports[`getEnvFilesForTask should return the correct env files for an atomized task 1`] = `
+exports[`getEnvFilesForTask > should return the correct env files for an atomized task 1`] = `
 [
   "libs/test-project/.env.e2e-ci.local",
   "libs/test-project/.env.e2e-ci",
@@ -81,7 +81,7 @@ exports[`getEnvFilesForTask should return the correct env files for an atomized 
 ]
 `;
 
-exports[`getEnvFilesForTask should return the correct env files for an atomized task with configurations 1`] = `
+exports[`getEnvFilesForTask > should return the correct env files for an atomized task with configurations 1`] = `
 [
   "libs/test-project/.env.e2e-ci.staging.local",
   "libs/test-project/.env.e2e-ci.staging",

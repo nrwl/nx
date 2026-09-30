@@ -42,7 +42,7 @@ describeUnix('killProcessTree', () => {
     spawnedPids.length = 0;
   });
 
-  it('should kill a simple process', (done) => {
+  it('should kill a simple process', async () => {
     const child = spawn('sleep', ['30'], { detached: true, stdio: 'ignore' });
     child.unref();
     const pid = child.pid!;
@@ -52,10 +52,8 @@ describeUnix('killProcessTree', () => {
     killProcessTree(pid, 'SIGKILL');
 
     // Give it a moment to actually die
-    setTimeout(() => {
-      expect(isAlive(pid)).toBe(false);
-      done();
-    }, 500);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    expect(isAlive(pid)).toBe(false);
   });
 
   it('should kill a process tree (parent + children)', async () => {

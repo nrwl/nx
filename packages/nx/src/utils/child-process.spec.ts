@@ -1,20 +1,21 @@
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn(),
+import type { Mock } from 'vitest';
+vi.mock('fs', async () => ({
+  ...require('fs'),
+  existsSync: vi.fn(),
 }));
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
-  spawnSync: jest.fn(),
-  execSync: jest.fn(),
+vi.mock('child_process', async () => ({
+  ...require('child_process'),
+  spawnSync: vi.fn(),
+  execSync: vi.fn(),
 }));
-jest.mock('../native', () => ({ ChildProcess: class {} }));
-jest.mock('./package-manager', () => ({
-  detectPackageManager: jest.fn(),
-  getPackageManagerCommand: jest.fn(),
+vi.mock('../native', () => ({ ChildProcess: class {} }));
+vi.mock('./package-manager', () => ({
+  detectPackageManager: vi.fn(),
+  getPackageManagerCommand: vi.fn(),
 }));
-jest.mock('./workspace-root', () => ({
+vi.mock('./workspace-root', () => ({
   workspaceRoot: '/root',
-  workspaceRootInner: jest.fn(() => '/root'),
+  workspaceRootInner: vi.fn(() => '/root'),
 }));
 
 import { execSync, spawnSync } from 'child_process';
@@ -32,7 +33,7 @@ import {
   type PackageManagerCommands,
 } from './package-manager';
 
-const realFs = jest.requireActual('fs') as typeof import('fs');
+const realFs = require('fs') as typeof import('fs');
 
 describe('getRunNxBaseCommand', () => {
   const pmc = { exec: 'npx' } as PackageManagerCommands;
@@ -48,19 +49,19 @@ describe('getRunNxBaseCommand', () => {
   }
 
   it('should run nx through the package manager when the workspace has a package.json', () => {
-    (existsSync as jest.Mock).mockReturnValue(true);
+    (existsSync as Mock).mockReturnValue(true);
     expect(getRunNxBaseCommand(pmc, '/root')).toBe('npx nx');
   });
 
   it('should use the nx.bat wrapper on Windows when there is no package.json', () => {
-    (existsSync as jest.Mock).mockReturnValue(false);
+    (existsSync as Mock).mockReturnValue(false);
     withPlatform('win32', () => {
       expect(getRunNxBaseCommand(pmc, '/root')).toBe('.\\nx.bat');
     });
   });
 
   it('should use the ./nx wrapper on non-Windows platforms when there is no package.json', () => {
-    (existsSync as jest.Mock).mockReturnValue(false);
+    (existsSync as Mock).mockReturnValue(false);
     withPlatform('linux', () => {
       expect(getRunNxBaseCommand(pmc, '/root')).toBe('./nx');
     });
@@ -94,7 +95,7 @@ describe('getNxBin', () => {
   }
 
   beforeEach(() => {
-    (existsSync as jest.Mock).mockImplementation(realFs.existsSync);
+    (existsSync as Mock).mockImplementation(realFs.existsSync);
     fixture = realFs.realpathSync(
       realFs.mkdtempSync(join(tmpdir(), 'nx-get-nx-bin-'))
     );
@@ -213,7 +214,7 @@ describe('getNxBin', () => {
 });
 
 describe('runNxArgvSync', () => {
-  const spawnSyncMock = spawnSync as jest.Mock;
+  const spawnSyncMock = spawnSync as Mock;
 
   beforeEach(() => {
     spawnSyncMock.mockReset();
@@ -259,12 +260,12 @@ describe('runNxArgvSync', () => {
   });
 
   it('hands quoted arguments to the package manager when no nx can be resolved', () => {
-    const execSyncMock = execSync as jest.Mock;
+    const execSyncMock = execSync as Mock;
     execSyncMock.mockReset();
     // A root package.json with no readable nx beside it: the shape of the
     // workspaces `getNxBin` declines, so the shell fallback runs.
-    (existsSync as jest.Mock).mockReturnValue(true);
-    (getPackageManagerCommand as jest.Mock).mockReturnValue({ exec: 'npx' });
+    (existsSync as Mock).mockReturnValue(true);
+    (getPackageManagerCommand as Mock).mockReturnValue({ exec: 'npx' });
     const originalPlatform = process.platform;
     Object.defineProperty(process, 'platform', { value: 'linux' });
 

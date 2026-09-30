@@ -11,7 +11,11 @@ import {
   type ProjectGraph,
   type Tree,
 } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -21,12 +25,12 @@ import { convertToInferred } from './convert-to-inferred';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -67,39 +71,29 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-jest.mock('nx/src/devkit-internals', () => {
-  // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
-  const getActual = () =>
-    jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
-  const getActualDevkitInternals = () =>
-    jest.requireActual('nx/src/devkit-internals');
-
-  return new Proxy(
-    {},
-    {
-      get(target, prop) {
-        if (prop === 'getExecutorInformation') {
-          // Read the executor schema from source so this unit test does not
-          // depend on @nx/webpack being built. executors.json points `schema`
-          // at ./dist (only present after copy-assets); readTargetOptions only
-          // consumes `schema`.
-          return jest.fn().mockImplementation((_pkg, executorName) => ({
-            schema: JSON.parse(
-              readFileSync(
-                join(__dirname, '../../executors', executorName, 'schema.json'),
-                'utf-8'
-              )
-            ),
-          }));
-        }
-        if (prop === 'retrieveProjectConfigurations') {
-          return getActual().retrieveProjectConfigurations;
-        }
-        // For all other properties, return from the actual module
-        return getActualDevkitInternals()[prop];
-      },
-    }
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
+  const { retrieveProjectConfigurations } = await vi.importActual<any>(
+    'nx/src/project-graph/utils/retrieve-workspace-files'
   );
+  return {
+    ...actual,
+    retrieveProjectConfigurations,
+    // Read the executor schema from source so this unit test does not
+    // depend on @nx/webpack being built. executors.json points `schema`
+    // at ./dist (only present after copy-assets); readTargetOptions only
+    // consumes `schema`.
+    getExecutorInformation: vi
+      .fn()
+      .mockImplementation((_pkg, executorName) => ({
+        schema: JSON.parse(
+          readFileSync(
+            join(__dirname, '../../executors', executorName, 'schema.json'),
+            'utf-8'
+          )
+        ),
+      })),
+  };
 });
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
@@ -165,9 +159,12 @@ function writeWebpackConfig(
 ) {
   tree.write(`${projectRoot}/webpack.config.js`, webpackConfig);
   fs.createFileSync(`${projectRoot}/webpack.config.js`, webpackConfig);
-  jest.doMock(join(fs.tempDir, projectRoot, 'webpack.config.js'), () => ({}), {
-    virtual: true,
-  });
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
+    join(fs.tempDir, projectRoot, 'webpack.config.js'),
+    {}
+  );
 }
 
 function createProject(
@@ -285,7 +282,8 @@ describe('convert-to-inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    resetCjsMocks();
+    vi.resetModules();
   });
 
   describe('--project', () => {
@@ -532,10 +530,7 @@ describe('convert-to-inferred', () => {
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -690,10 +685,7 @@ describe('convert-to-inferred', () => {
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -836,6 +828,39 @@ describe('convert-to-inferred', () => {
     });
   });
 
+  it('centralizes shared build config without changing the effective target (equivalence)', async () => {
+    // Two projects share the same non-inferred build residual
+    // (configurations/defaultConfiguration), so it must be hoisted once into
+    // targetDefaults and still resolve identically for each project.
+    const app1 = createProject(tree, { appName: 'app1', appRoot: 'apps/app1' });
+    writeWebpackConfig(tree, app1.root);
+    const app2 = createProject(tree, { appName: 'app2', appRoot: 'apps/app2' });
+    writeWebpackConfig(tree, app2.root);
+
+    await convertToInferred(tree, { skipFormat: true });
+
+    // the shared residual is centralized exactly once, scoped to the webpack
+    // plugin's targets
+    const targetDefault = readNxJson(tree).targetDefaults?.build;
+    expect(Array.isArray(targetDefault)).toBe(true);
+    const hoisted = (targetDefault as any[]).find(
+      (entry) => entry?.filter?.plugin === '@nx/webpack/plugin'
+    );
+    expect(hoisted?.defaultConfiguration).toBe('production');
+    expect(hoisted?.configurations).toEqual({
+      development: {},
+      production: {},
+    });
+    // centralized once, not duplicated per project. Effective resolution
+    // through Nx's real targetDefaults pipeline is verified in the engine spec's
+    // "through the REAL Nx resolution pipeline" tests.
+    for (const name of ['app1', 'app2']) {
+      const projectTarget =
+        readProjectConfiguration(tree, name).targets?.build ?? {};
+      expect(projectTarget.defaultConfiguration).toBeUndefined();
+    }
+  });
+
   describe('all projects', () => {
     it('should migrate all projects using the webpack executors', async () => {
       const project1 = createProject(tree);
@@ -917,62 +942,46 @@ module.exports = composePlugins(
 
       await convertToInferred(tree, {});
 
+      // the shared residuals are centralized as webpack-plugin-scoped entries;
+      // the workspace's pre-existing `build: { cache: true }` catch-all stays
+      const webpackScoped = (config: Record<string, unknown>) => ({
+        filter: { plugin: '@nx/webpack/plugin' },
+        ...config,
+      });
+      const expectedBuildTargetDefaults = webpackScoped({
+        configurations: { development: {}, production: {} },
+        defaultConfiguration: 'production',
+      });
+      const expectedServeTargetDefaults = webpackScoped({
+        configurations: { development: {}, production: {} },
+        defaultConfiguration: 'development',
+      });
+      const targetDefaults = readNxJson(tree).targetDefaults;
+      expect(targetDefaults?.build).toStrictEqual([
+        { cache: true },
+        expectedBuildTargetDefaults,
+      ]);
+      expect(targetDefaults?.serve).toStrictEqual([
+        expectedServeTargetDefaults,
+      ]);
+      expect(targetDefaults?.['build-webpack']).toStrictEqual([
+        expectedBuildTargetDefaults,
+      ]);
+      expect(targetDefaults?.['serve-webpack']).toStrictEqual([
+        expectedServeTargetDefaults,
+      ]);
+
       // project configurations
       const updatedProject1 = readProjectConfiguration(tree, project1.name);
-      expect(updatedProject1.targets).toStrictEqual({
-        build: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        serve: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject1.targets).toStrictEqual({});
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets).toStrictEqual({
-        build: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        serve: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject2.targets).toStrictEqual({});
       const updatedProject3 = readProjectConfiguration(tree, project3.name);
-      expect(updatedProject3.targets).toStrictEqual({
-        'build-webpack': {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        'serve-webpack': {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject3.targets).toStrictEqual({});
       const updatedProject4 = readProjectConfiguration(tree, project4.name);
-      expect(updatedProject4.targets).toStrictEqual({
-        build: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        'serve-webpack': {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject4.targets).toStrictEqual({});
       const updatedProject5 = readProjectConfiguration(tree, project5.name);
-      expect(updatedProject5.targets).toStrictEqual({
-        'build-webpack': {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        serve: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject5.targets).toStrictEqual({});
       const updatedProjectWithComposePlugins = readProjectConfiguration(
         tree,
         projectWithComposePlugins.name
@@ -1151,10 +1160,7 @@ module.exports = composePlugins(
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -1245,10 +1251,7 @@ module.exports = composePlugins(
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },

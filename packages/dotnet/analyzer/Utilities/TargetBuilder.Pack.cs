@@ -11,24 +11,22 @@ public static partial class TargetBuilder
         Dictionary<string, Target> targets,
         string projectName,
         string fileName,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
         string productionInput,
         List<string> directoryBuildInputs)
     {
-        // Create a copy of properties with Configuration=Release
-        var releaseProperties = new Dictionary<string, string>(properties)
-        {
-            ["Configuration"] = "Release"
-        };
+        // The configuration MSBuild evaluated the paths at; the target runs at Release.
+        var defaultConfiguration = properties.Configuration;
+        var releaseProperties = properties.WithConfiguration("Release");
 
-        var packageOutputPath = GetPackageOutputPath(releaseProperties, projectName, projectDirectory, workspaceRoot);
+        var packageOutputPath = GetPackageOutputPath(releaseProperties, defaultConfiguration, projectDirectory, workspaceRoot);
         // `dotnet pack` writes intermediate state into the intermediate (obj)
         // directory, so it must be declared as an output alongside the package
         // output, mirroring the build target.
-        var intermediatePath = GetIntermediateOutputPath(releaseProperties, projectName, projectDirectory, workspaceRoot);
+        var intermediatePath = GetIntermediateOutputPath(releaseProperties, projectDirectory, workspaceRoot);
 
         var buildReleaseTarget = $"{options.BuildTargetName}:release";
         targets[options.PackTargetName] = new Target
@@ -56,17 +54,17 @@ public static partial class TargetBuilder
             [
                 "default",
                 $"^{productionInput}",
-                "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
             Outputs = new[]
                 {
                     packageOutputPath is null ? null : $"{packageOutputPath.TrimEnd('/')}/*.nupkg",
-                    intermediatePath
                 }
                 .Where(p => p is not null)
+                .Concat(GetIntermediateOutputs(intermediatePath))
                 .ToArray()!,
             Metadata = new TargetMetadata
             {

@@ -1,9 +1,136 @@
-use super::contains_glob_pattern;
+//! Taking glob text apart and putting it back together for the matching
+//! engine: brace groups, the directory a glob is read from, slash
+//! normalization, and the conversion the engine needs.
+
 use crate::native::glob::glob_group::GlobGroup;
-use crate::native::glob::glob_parser::parse_glob;
-use itertools::Either::{Left, Right};
+use crate::native::glob::glob_parser::{literal_segment, parse_glob};
 use itertools::Itertools;
 use std::collections::HashSet;
+
+/// Expands brace groups whose alternatives are all literal names into the
+/// exact paths they stand for (`{nx,tsconfig.base}.json` → `nx.json`,
+/// `tsconfig.base.json`; several groups multiply out). A group with a wildcard
+/// or a nested brace is left as-is. A group of literals at the workspace root
+/// names exact files, not a walk.
+pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
+    let negated = glob.starts_with('!');
+    let body = glob.strip_prefix('!').unwrap_or(glob);
+    let Some(open) = body.find('{') else {
+        return vec![glob.to_string()];
+    };
+    let Some(close) = body[open..].find('}').map(|i| open + i) else {
+        return vec![glob.to_string()];
+    };
+    let alternatives: Vec<&str> = body[open + 1..close].split(',').collect();
+    let literal = alternatives.len() > 1
+        && alternatives
+            .iter()
+            .all(|a| !a.is_empty() && !a.contains(['*', '?', '[', ']', '{', '}', '/', '\\']));
+    if !literal {
+        return vec![glob.to_string()];
+    }
+    let prefix = if negated { "!" } else { "" };
+    alternatives
+        .iter()
+        .flat_map(|alternative| {
+            let expanded = format!("{}{}{}", &body[..open], alternative, &body[close + 1..]);
+            expand_literal_braces(&expanded)
+        })
+        .map(|expanded| {
+            let expanded = expanded.strip_prefix('!').unwrap_or(&expanded).to_string();
+            format!("{prefix}{expanded}")
+        })
+        .collect()
+}
+
+/// A glob split into the directory it is read from and the pattern under it.
+/// The directory is the literal segments before the first pattern, escapes
+/// resolved (`libs/\*` is `libs/*`), so `dist/@scope` is a directory like any
+/// other; `normalize_glob` first when `dist//gen/` and `dist/gen` should read
+/// the same. The remainder comes back untouched, with a negation marker
+/// re-attached, and is `None` when the glob is literal to its end: it then
+/// names that path rather than matching under it.
+///
+/// A segment is literal when the glob parser reads it as nothing but text. One
+/// it rejects, like an unclosed `paren(`, counts as a pattern, so the error
+/// surfaces where the pattern is matched.
+pub(crate) fn partition_glob(glob: &str) -> (String, Option<String>) {
+    let (negated, body) = match glob.strip_prefix('!') {
+        Some(body) => (true, body),
+        None => (false, glob),
+    };
+    let mut literal: Vec<String> = Vec::new();
+    let mut consumed = 0;
+    let mut remainder = None;
+    for segment in body.split('/') {
+        let Some(name) = literal_segment(segment) else {
+            remainder = Some(&body[consumed..]);
+            break;
+        };
+        literal.push(name);
+        consumed += segment.len() + 1;
+    }
+    let directory = literal.join("/");
+    let remainder = remainder.map(|rest| match negated {
+        true => format!("!{rest}"),
+        false => rest.to_string(),
+    });
+    (directory, remainder)
+}
+
+/// Collapses repeated and trailing slashes so `dist//gen/` and `dist/gen`
+/// name the same directory, and so prefix arithmetic below lines up.
+pub(crate) fn normalize_glob(glob: &str) -> String {
+    let (prefix, body) = match glob.strip_prefix('!') {
+        Some(body) => ("!", body),
+        None => ("", glob),
+    };
+    let mut out = String::with_capacity(glob.len());
+    out.push_str(prefix);
+    let mut previous_slash = false;
+    for c in body.chars() {
+        if c == '/' {
+            if previous_slash {
+                continue;
+            }
+            previous_slash = true;
+        } else {
+            previous_slash = false;
+        }
+        out.push(c);
+    }
+    if out.len() > prefix.len() && out.ends_with('/') {
+        out.pop();
+    }
+    out
+}
+
+/// A fileset entry that names a path with no glob syntax means that file, or
+/// that directory and everything under it, so it becomes both. Which one it
+/// is depends on the disk, and a glob set never looks; matching both costs
+/// one extra pattern and reads the same in either case. An entry that already
+/// carries a pattern, or ends in `/`, is left alone.
+pub(crate) fn path_or_everything_under(glob: &str) -> Vec<String> {
+    let body = glob.strip_prefix('!').unwrap_or(glob);
+    // `partition_glob` decides what counts as a pattern, so a directory named
+    // `@types` or `+state` is a path here as it is everywhere else. Asking
+    // the glob engine instead would call those characters syntax and leave
+    // such a directory matching nothing.
+    let has_pattern = partition_glob(body).1.is_some();
+    if body.is_empty() || body.ends_with('/') || has_pattern {
+        return vec![glob.to_string()];
+    }
+    vec![glob.to_string(), format!("{glob}/**")]
+}
+
+/// Every fileset glob read as a path or a pattern, ready for `build_glob_set`.
+/// See `path_or_everything_under` for what a pattern-less entry names.
+pub(crate) fn fileset_patterns(globs: &[String]) -> Vec<String> {
+    globs
+        .iter()
+        .flat_map(|glob| path_or_everything_under(glob))
+        .collect()
+}
 
 #[derive(Debug)]
 enum GlobType {
@@ -107,8 +234,14 @@ fn build_segment(
             }
             GlobGroup::OneOrMore(_)
             | GlobGroup::ExactOne(_)
-            | GlobGroup::NonSpecial(_)
-            | GlobGroup::NonSpecialGroup(_) => {
+            | GlobGroup::NonSpecialGroup(_)
+            | GlobGroup::Literal(_)
+            | GlobGroup::Recursive
+            | GlobGroup::Wildcard(_)
+            | GlobGroup::Any
+            | GlobGroup::Class(_)
+            | GlobGroup::Alternates(_)
+            | GlobGroup::Escaped(_) => {
                 build_segment(&built_glob, &group[1..], is_last_segment, is_negative)
             }
         }
@@ -119,32 +252,61 @@ fn build_segment(
     }
 }
 
-pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
-    let (negated, groups) = parse_glob(glob)?;
-    // Partition glob into leading directories and patterns that should be matched
-    let mut has_patterns = false;
-    let (leading_dir_segments, pattern_segments): (Vec<String>, _) = groups
-        .into_iter()
-        .filter(|group| !group.is_empty())
-        .partition_map(|group| match &group[0] {
-            GlobGroup::NonSpecial(value) if !contains_glob_pattern(&value) && !has_patterns => {
-                Left(value.to_string())
-            }
-            _ => {
-                has_patterns = true;
-                Right(group)
-            }
-        });
-
-    Ok((
-        leading_dir_segments.join("/"),
-        convert_glob_segments(negated, pattern_segments),
-    ))
-}
-
 #[cfg(test)]
 mod test {
+    use super::*;
+
+    #[test]
+    fn a_path_without_glob_syntax_also_means_everything_under_it() {
+        assert_eq!(
+            path_or_everything_under("libs/app/src"),
+            vec!["libs/app/src", "libs/app/src/**"]
+        );
+        assert_eq!(
+            path_or_everything_under("!libs/app/src"),
+            vec!["!libs/app/src", "!libs/app/src/**"],
+            "a negation excludes the directory's contents too"
+        );
+        for untouched in ["libs/app/**/*.ts", "libs/app/src/", "*.json", ""] {
+            assert_eq!(path_or_everything_under(untouched), vec![untouched]);
+        }
+    }
+
+    #[test]
+    fn expands_literal_brace_groups() {
+        assert_eq!(
+            expand_literal_braces("{nx,tsconfig.base}.json"),
+            vec!["nx.json", "tsconfig.base.json"]
+        );
+        assert_eq!(
+            expand_literal_braces("tools/{a,b}/{x,y}.ts"),
+            vec![
+                "tools/a/x.ts",
+                "tools/a/y.ts",
+                "tools/b/x.ts",
+                "tools/b/y.ts"
+            ]
+        );
+        assert_eq!(expand_literal_braces("!{a,b}.md"), vec!["!a.md", "!b.md"]);
+        for unchanged in [
+            "{a,*}.json",
+            "{a,{b,c}}.json",
+            "dist/**",
+            "{a}.json",
+            "{a,b/c}.ts",
+        ] {
+            assert_eq!(expand_literal_braces(unchanged), vec![unchanged]);
+        }
+    }
+
     use super::convert_glob;
+
+    #[test]
+    fn convert_glob_keeps_a_lone_special_character() {
+        assert_eq!(convert_glob("a/?/b").unwrap(), ["a/?/b"]);
+        assert_eq!(convert_glob("?").unwrap(), ["?"]);
+        assert!(convert_glob("dist/paren(/x.js").is_err());
+    }
 
     #[test]
     fn convert_globs_full_convert() {
@@ -235,67 +397,112 @@ mod test {
     }
 
     #[test]
-    fn should_convert_globs_with_invalid_groups() {
-        let globs = convert_glob("libs/**/?(*.)+spec.ts?(.snap)").unwrap();
+    fn a_special_character_that_begins_no_group_is_literal() {
+        // `+`, `@` and `?` only introduce a group when a `(` follows. On
+        // their own they are a literal `+`, a literal `@`, and the
+        // single-character wildcard.
         assert_eq!(
-            globs,
+            convert_glob("libs/**/?(*.)+spec.ts?(.snap)").unwrap(),
             [
-                "libs/**/*.spec.ts",
-                "libs/**/*.spec.ts.snap",
-                "libs/**/spec.ts",
-                "libs/**/spec.ts.snap"
+                "libs/**/*.+spec.ts",
+                "libs/**/*.+spec.ts.snap",
+                "libs/**/+spec.ts",
+                "libs/**/+spec.ts.snap"
             ]
         );
-
-        let globs = convert_glob("libs/**/?(*.)@spec.ts?(.snap)").unwrap();
         assert_eq!(
-            globs,
+            convert_glob("libs/**/?(*.)@spec.ts?(.snap)").unwrap(),
             [
-                "libs/**/*.spec.ts",
-                "libs/**/*.spec.ts.snap",
-                "libs/**/spec.ts",
-                "libs/**/spec.ts.snap"
+                "libs/**/*.@spec.ts",
+                "libs/**/*.@spec.ts.snap",
+                "libs/**/@spec.ts",
+                "libs/**/@spec.ts.snap"
             ]
         );
-        let globs = convert_glob("libs/**/?(*.)?spec.ts?(.snap)").unwrap();
         assert_eq!(
-            globs,
+            convert_glob("libs/**/?(*.)?spec.ts?(.snap)").unwrap(),
             [
-                "libs/**/*.spec.ts",
-                "libs/**/*.spec.ts.snap",
-                "libs/**/spec.ts",
-                "libs/**/spec.ts.snap"
+                "libs/**/*.?spec.ts",
+                "libs/**/*.?spec.ts.snap",
+                "libs/**/?spec.ts",
+                "libs/**/?spec.ts.snap"
             ]
         );
     }
 
     #[test]
     fn should_partition_glob_with_leading_dirs() {
-        let (leading_dirs, globs) =
-            super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)").unwrap();
+        let (leading_dirs, rest) = super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)");
         assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(globs, ["!**/{README,LICENSE}.{js,ts}", "**/*.{js,ts}",]);
+        // The remainder is handed on untouched; `build_glob_set` converts it.
+        assert_eq!(rest.as_deref(), Some("**/!(README|LICENSE).(js|ts)"));
+        assert_eq!(
+            convert_glob(&rest.unwrap()).unwrap(),
+            ["!**/{README,LICENSE}.{js,ts}", "**/*.{js,ts}"]
+        );
     }
 
     #[test]
     fn should_partition_glob_with_leading_dirs_and_simple_patterns() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/**/*.css").unwrap();
+        let (leading_dirs, rest) = super::partition_glob("dist/app/**/*.css");
         assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(globs, ["**/*.css"]);
+        assert_eq!(rest.as_deref(), Some("**/*.css"));
     }
 
     #[test]
     fn should_partition_glob_with_leading_dirs_dirs_and_patterns() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/**/js/*.js").unwrap();
+        let (leading_dirs, rest) = super::partition_glob("dist/app/**/js/*.js");
         assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(globs, ["**/js/*.js"]);
+        assert_eq!(rest.as_deref(), Some("**/js/*.js"));
     }
 
     #[test]
     fn should_partition_glob_with_leading_dirs_and_no_patterns() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/").unwrap();
+        assert_eq!(super::partition_glob("dist/app"), ("dist/app".into(), None));
+        // The split does not clean the glob; that is normalize_glob's job.
+        assert_eq!(
+            super::partition_glob("dist//app/"),
+            ("dist//app/".into(), None)
+        );
+        assert_eq!(
+            super::partition_glob(&super::normalize_glob("dist//app/")),
+            ("dist/app".into(), None)
+        );
+    }
+
+    /// A negation keeps its marker on the remainder, so the exclusion still
+    /// reads as one once it reaches the glob engine.
+    #[test]
+    fn a_negated_glob_keeps_its_marker_on_the_remainder() {
+        let (leading_dirs, rest) = super::partition_glob("!dist/app/**/*.map");
         assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(globs, [] as [String; 0]);
+        assert_eq!(rest.as_deref(), Some("!**/*.map"));
+        // With nothing to match under it, the directory stands alone.
+        assert_eq!(
+            super::partition_glob("!dist/app"),
+            ("dist/app".into(), None)
+        );
+    }
+
+    /// A directory named with a character the engine would read as syntax is
+    /// still a directory, the one answer every road gets.
+    #[test]
+    fn a_special_character_in_a_directory_name_is_literal() {
+        for (glob, directory) in [
+            ("dist/@scope/pkg/**", "dist/@scope/pkg"),
+            ("libs/+state/**/*.ts", "libs/+state"),
+            ("dist/co,ma/**", "dist/co,ma"),
+            ("dist/pi|pe/*.js", "dist/pi|pe"),
+            ("dist/bra]cket/*.js", "dist/bra]cket"),
+        ] {
+            assert_eq!(super::partition_glob(glob).0, directory, "{glob}");
+        }
+        // With no pattern anywhere, the glob names one path and nothing is
+        // left to match under it.
+        assert_eq!(
+            super::partition_glob("dist/co,ma/x.js"),
+            ("dist/co,ma/x.js".into(), None)
+        );
     }
 
     #[test]

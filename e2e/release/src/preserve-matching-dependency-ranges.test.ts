@@ -41,7 +41,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
         // Slightly different handling needed for bun (length can be 8)
-        .replaceAll(/[a-fA-F0-9]{7,8}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7,8}\b/g, '{COMMIT_SHA}')
         .split('\n')
         .map((r) => r.trim())
         .filter(Boolean)
@@ -140,7 +140,7 @@ describe('nx release preserve matching dependency ranges', () => {
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied explicit semver value "1.1.0", from the given specifier, to get new version 1.1.0
         {project-name} ✍️  New version 1.1.0 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 2 dependencies in manifest: {project-name}/package.json
+        {project-name} ✍️  Updated 3 dependencies in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.1.0 directly, because the project is a member of a fixed release group containing {project-name}
@@ -212,17 +212,14 @@ describe('nx release preserve matching dependency ranges', () => {
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied explicit semver value "1.1.0", from the given specifier, to get new version 1.1.0
         {project-name} ✍️  New version 1.1.0 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 2 dependencies in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.1.0 directly, because the project is a member of a fixed release group containing {project-name}
         {project-name} ✍️  New version 1.1.0 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.1.0 directly, because the project is a member of a fixed release group containing {project-name}
         {project-name} ✍️  New version 1.1.0 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.1.0",
@@ -267,7 +264,6 @@ describe('nx release preserve matching dependency ranges', () => {
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "patch", from the given specifier, to get new version 1.0.1
         {project-name} ✍️  New version 1.0.1 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 2 dependencies in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.0.1 directly, because the project is a member of a fixed release group containing {project-name}
@@ -324,7 +320,7 @@ describe('nx release preserve matching dependency ranges', () => {
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 1.1.0
         {project-name} ✍️  New version 1.1.0 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 2 dependencies in manifest: {project-name}/package.json
+        {project-name} ✍️  Updated 3 dependencies in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.1.0 directly, because the project is a member of a fixed release group containing {project-name}
@@ -393,17 +389,14 @@ describe('nx release preserve matching dependency ranges', () => {
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "patch", from the given specifier, to get new version 1.0.1
         {project-name} ✍️  New version 1.0.1 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 2 dependencies in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.0.1 directly, because the project is a member of a fixed release group containing {project-name}
         {project-name} ✍️  New version 1.0.1 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.0.1 directly, because the project is a member of a fixed release group containing {project-name}
         {project-name} ✍️  New version 1.0.1 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.0.1",
@@ -457,12 +450,10 @@ describe('nx release preserve matching dependency ranges', () => {
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.0.1 directly, because the project is a member of a fixed release group containing {project-name}
         {project-name} ✍️  New version 1.0.1 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.0.1 directly, because the project is a member of a fixed release group containing {project-name}
         {project-name} ✍️  New version 1.0.1 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.0.1",
@@ -530,7 +521,6 @@ describe('nx release preserve matching dependency ranges', () => {
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "major", from the given specifier, to get new version 2.0.0
         {project-name} ✍️  New version 2.0.0 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 2.0.0 directly, because the project is a member of a fixed release group containing {project-name}

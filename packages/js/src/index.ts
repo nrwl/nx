@@ -13,6 +13,7 @@ export * from './utils/package-json/update-package-json';
 export * from './utils/package-json/create-entry-points';
 export { libraryGenerator } from './generators/library/library';
 export { initGenerator } from './generators/init/init';
+export { setUpFormatter } from './utils/formatter-setup';
 export { setupPrettierGenerator } from './generators/setup-prettier/generator';
 export { setupVerdaccio } from './generators/setup-verdaccio/generator';
 export { isValidVariable } from './utils/is-valid-variable';
@@ -22,5 +23,9 @@ export { isValidVariable } from './utils/is-valid-variable';
 // import it.
 export { type LinterType } from './utils/linter';
 
-export { createLockFile, getLockFileName } from '@nx/devkit/internal';
-export { createPackageJson } from '@nx/devkit/internal';
+export {
+  createLockFile,
+  createPackageJson,
+  generatePrunedDeployOutput,
+  getLockFileName,
+} from '@nx/devkit/internal';

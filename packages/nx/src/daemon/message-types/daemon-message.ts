@@ -1,3 +1,5 @@
+import { posix, win32 } from 'node:path';
+
 export type DaemonMessage = {
   type: string;
   env?: Record<string, string>;
@@ -24,8 +26,30 @@ export function isDaemonMessage(msg: unknown): msg is DaemonMessage {
 type WorkspaceScopedMessage = { type: string; workspaceRoot?: string };
 
 /**
+ * Puts a workspace root into a form two independently-resolved spellings of the
+ * same directory agree on.
+ *
+ * The sender's root and the receiver's root do not always come out of the same
+ * branch of `workspaceRootInner`: one side can be handed `NX_WORKSPACE_ROOT_PATH`
+ * verbatim while the other walks up from `process.cwd()`. On Windows those two
+ * sources routinely disagree on the case of the drive letter — an editor or
+ * agent may export `d:\repo` while `process.cwd()` reports `D:\repo` — and on
+ * separators. Both address the same directory: Windows paths are
+ * case-insensitive, and a drive letter is case-insensitive without exception.
+ *
+ * POSIX roots keep their case, where `/repo` and `/REPO` really can be two
+ * directories.
+ */
+function normalizeWorkspaceRoot(workspaceRoot: string): string {
+  return process.platform === 'win32'
+    ? win32.normalize(workspaceRoot).toLowerCase()
+    : posix.normalize(workspaceRoot);
+}
+
+/**
  * A message from a different workspace — two sharing an NX_SOCKET_DIR — must not
- * be processed. Compared directly; both come from the same resolution.
+ * be processed. Roots are normalized first so that a workspace does not look
+ * foreign to itself; see {@link normalizeWorkspaceRoot}.
  */
 export function isForeignWorkspaceMessage(
   msg: WorkspaceScopedMessage,
@@ -34,7 +58,10 @@ export function isForeignWorkspaceMessage(
   if (msg.workspaceRoot === undefined) {
     return false;
   }
-  return msg.workspaceRoot !== receiverWorkspaceRoot;
+  return (
+    normalizeWorkspaceRoot(msg.workspaceRoot) !==
+    normalizeWorkspaceRoot(receiverWorkspaceRoot)
+  );
 }
 
 /**

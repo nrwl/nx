@@ -107,7 +107,7 @@ export function createIgnoreChainResolver(
  * that same note. Here they are simply the entry's matchers: any one excluding
  * wins, and a negation counts only if none excluded.
  *
- * Two preconditions, both satisfied by a pruning walk and neither enforced:
+ * Two preconditions, neither enforced here:
  *
  * - `filePath` is workspace-relative POSIX and must sit under every `dir` in the
  *   chain, which holds when the chain came from that file's own directory.
@@ -115,9 +115,10 @@ export function createIgnoreChainResolver(
  *   re-include a file inside an excluded directory, and this does not implement
  *   that rule: asked directly about `dist/keep.ts` with a root `dist/` and a
  *   nested `dist/.gitignore` holding `!keep.ts`, it answers "not ignored" where
- *   git says ignored (measured). `visitNotIgnoredFiles` never asks, because it
- *   prunes `dist/` before descending - which is what makes its answers match
- *   git, and why that pruning is load-bearing for correctness rather than speed.
+ *   git says ignored (measured). A pruning walk like `visitNotIgnoredFiles`
+ *   satisfies it by never asking about anything under `dist/`; a per-file
+ *   caller cannot, so it goes through `createAncestorAwareIgnoreChecker`,
+ *   which checks the ancestors before asking the chain.
  */
 export function isIgnoredByChain(
   chain: ScopedIgnoreMatcher[],
@@ -138,6 +139,53 @@ export function isIgnoredByChain(
     }
   }
   return false;
+}
+
+/**
+ * The chain's answers plus git's excluded-ancestor rule: nothing inside an
+ * ignored directory can be re-included, so a nested negation must not
+ * resurrect a file whose ancestor an outer file excluded - the case
+ * `isIgnoredByChain` alone gets wrong (see its second precondition). The
+ * oxfmt CLI follows the same rule (measured against 0.60.0: a scan skips a
+ * nested `!keep.ts` under a root-ignored `dist/`), so every per-file caller -
+ * the cascading tree checkers and the disk-backed resolver in
+ * `formatters/oxfmt.ts` - goes through here.
+ *
+ * A directory's own ignore files cannot un-ignore the directory itself, so
+ * its verdict comes from its parent's chain - probed with a trailing slash,
+ * which is what makes a directory-only pattern like `dist/` match. Verdicts
+ * are memoized per directory, so a batch of files shares its ancestor walks.
+ */
+export function createAncestorAwareIgnoreChecker(
+  resolve: (dir: string) => ScopedIgnoreMatcher[]
+): TreeIgnoreChecker {
+  const ignoredDirs = new Map<string, boolean>();
+
+  const isIgnoredDirectory = (dir: string): boolean => {
+    if (dir === '') {
+      return false;
+    }
+    const cached = ignoredDirs.get(dir);
+    if (cached !== undefined) {
+      return cached;
+    }
+    const parent = posixDirname(dir);
+    const ignored =
+      isIgnoredDirectory(parent) ||
+      isIgnoredByChain(resolve(parent), `${dir}/`);
+    ignoredDirs.set(dir, ignored);
+    return ignored;
+  };
+
+  return {
+    isIgnoredFile: (filePath) => {
+      const dir = posixDirname(filePath);
+      return (
+        isIgnoredDirectory(dir) || isIgnoredByChain(resolve(dir), filePath)
+      );
+    },
+    isIgnoredDirectory,
+  };
 }
 
 let alwaysIgnored: ReturnType<typeof ignore> | undefined;
@@ -173,7 +221,7 @@ type IgnoreCheckerOptions = {
 };
 
 /**
- * The chain bound to a tree, as predicates over workspace-relative POSIX paths.
+ * A chain's answers as predicates over workspace-relative POSIX paths.
  *
  * Files and directories are asked separately because the answers differ: a
  * pattern is only directory-only if it ends in a slash, and `ignore` will not
@@ -223,6 +271,35 @@ export function createPrettierIgnoreChecker(tree: Tree): TreeIgnoreChecker {
   });
 }
 
+/**
+ * What oxfmt ignores: prettier's two files, but resolved from each file's own
+ * directory upwards rather than the workspace root - measured against the
+ * oxfmt 0.60.0 CLI, which differs from prettier on exactly that axis. Still
+ * one matcher per file rather than merged.
+ *
+ * A config's `ignorePatterns` is not an ignore file and is not read here;
+ * `formatFilesWithOxfmt` applies it rooted at that config's directory.
+ */
+export function createOxfmtIgnoreChecker(tree: Tree): TreeIgnoreChecker {
+  return createTreeIgnoreChecker(tree, OXFMT_IGNORE_OPTIONS);
+}
+
+/**
+ * Exported, unlike git's and prettier's, because oxfmt has two consumers:
+ * this tree-backed checker and the disk-backed resolver in
+ * `formatters/oxfmt.ts`. A shared value is the only thing that keeps them
+ * agreeing, so do not restate these three anywhere.
+ *
+ * `satisfies` rather than an annotation keeps the values literal - an
+ * annotation widens `cascade` and `merge` to `boolean` (measured in the
+ * declaration emit).
+ */
+export const OXFMT_IGNORE_OPTIONS = {
+  filenames: ['.gitignore', '.prettierignore'],
+  cascade: true,
+  merge: false,
+} satisfies IgnoreCheckerOptions;
+
 function createTreeIgnoreChecker(
   tree: Tree,
   { filenames, cascade, merge }: IgnoreCheckerOptions
@@ -233,16 +310,31 @@ function createTreeIgnoreChecker(
     merge
   );
 
-  // `probe` may carry a trailing slash; `path` never does. The chain is keyed by
-  // real directories, and `posixDirname('dist/')` is `'dist'` rather than the
-  // parent, so the lookup always uses the slash-less form.
-  const check = (path: string, probe: string) =>
-    isAlwaysIgnored(probe) ||
-    isIgnoredByChain(resolve(cascade ? posixDirname(path) : ''), probe);
+  if (cascade) {
+    // Cascading resolution and the excluded-ancestor rule travel together:
+    // both come from git, and the one cascading tool that is not git - oxfmt -
+    // applies both (measured, see `createAncestorAwareIgnoreChecker`).
+    const checker = createAncestorAwareIgnoreChecker(resolve);
+    return {
+      isIgnoredFile: (path) =>
+        isAlwaysIgnored(path) || checker.isIgnoredFile(path),
+      // The trailing slash is what makes a directory-only pattern like `dist/`
+      // match - `ignore` will not match it against the bare `dist`.
+      isIgnoredDirectory: (path) =>
+        isAlwaysIgnored(`${path}/`) || checker.isIgnoredDirectory(path),
+    };
+  }
+
+  // Root-only: the whole chain is the root's, so no ancestor holds ignore
+  // files of its own, and within one matcher `ignore` itself refuses to
+  // re-include under an excluded directory (measured). Nothing is left for an
+  // ancestor walk to add.
+  const check = (probe: string) =>
+    isAlwaysIgnored(probe) || isIgnoredByChain(resolve(''), probe);
 
   return {
-    isIgnoredFile: (path) => check(path, path),
-    isIgnoredDirectory: (path) => check(path, `${path}/`),
+    isIgnoredFile: (path) => check(path),
+    isIgnoredDirectory: (path) => check(`${path}/`),
   };
 }
 

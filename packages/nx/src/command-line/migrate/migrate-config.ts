@@ -19,8 +19,13 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
  * Phase-aware so each option is only filled where it is consumed, and so a
  * config value never trips the mutually-exclusive-flag guards in
  * `parseMigrationsOptions`: `include` and `multiMajorMode` in the generate
- * phase only, `agentic` / `validate` / `createCommits` / `commitPrefix` when
- * running the whole migrations file or a single migration.
+ * phase only; `createCommits` / `commitPrefix` and `agentic` / `validate` when
+ * running the whole migrations file or a standalone single migration. A
+ * `--run-id` reconcile or recorded worker takes none of them: a recorded run
+ * takes its commit config from run.json and is driven by the outer agent. A
+ * `--run-migrations --run-id` continue takes `agentic` only, to select the
+ * agent of the new session. A `--start-fresh` starts a new run and takes all
+ * four.
  *
  * `include` is carried as `includeFromConfig` so it is never mistaken for an
  * explicit `--include`: `resolveInclude` applies it only when the resolved
@@ -39,9 +44,19 @@ export function applyNxJsonMigrateDefaults(
   // `--run-migrations` with no value is normalized to '' by yargs, so a defined
   // (even empty-string) value means we're in the run-migrations phase.
   const isRunMigrations = merged.runMigrations !== undefined;
-  const isSingleMigration = merged.runMigration !== undefined;
+  // A bare `--run-id` (orchestrated reconcile) must never take the
+  // generate-options overlay, which would leak `include` etc. from nx.json.
+  const isSingleMigration =
+    merged.runMigration !== undefined || merged.runId !== undefined;
 
-  if (isRunMigrations || isSingleMigration) {
+  // These overlays are for an invocation that decides the options for itself,
+  // which a `--run-id` invocation only does when it starts fresh: the recorded
+  // worker and the reconcile both read the commit config from run.json.
+  const startsRun =
+    (isRunMigrations || isSingleMigration) &&
+    (merged.runId === undefined || merged.startFresh === true);
+
+  if (startsRun) {
     if (
       merged.createCommits === undefined &&
       migrateConfig.createCommits !== undefined
@@ -60,14 +75,20 @@ export function applyNxJsonMigrateDefaults(
       assertType(migrateConfig.commitPrefix, 'string', 'commitPrefix');
       merged.commitPrefix = migrateConfig.commitPrefix;
     }
-    if (merged.agentic === undefined && migrateConfig.agentic !== undefined) {
-      assertValidAgentic(migrateConfig.agentic);
-      merged.agentic = coerceAgenticArg(migrateConfig.agentic) as AgenticArg;
-    }
     if (merged.validate === undefined && migrateConfig.validate !== undefined) {
       assertType(migrateConfig.validate, 'boolean', 'validate');
       merged.validate = migrateConfig.validate;
     }
+  }
+  // A continue takes `agentic` too; the reconcile and the worker must not:
+  // there it trips the `--agentic`/`--run-id` parse conflict.
+  if (
+    (startsRun || isRunMigrations) &&
+    merged.agentic === undefined &&
+    migrateConfig.agentic !== undefined
+  ) {
+    assertValidAgentic(migrateConfig.agentic);
+    merged.agentic = coerceAgenticArg(migrateConfig.agentic) as AgenticArg;
   }
 
   if (!isRunMigrations && !isSingleMigration) {

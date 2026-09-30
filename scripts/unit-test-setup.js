@@ -63,12 +63,8 @@ module.exports = () => {
    * graph. We don't want any unit tests to depend on the structure
    * of the Nx repo, so we mock it to return an empty project graph.
    *
-   * Skipped for `packages/nx` itself — `nx`'s own source code never imports
-   * from `@nx/devkit` (devkit re-exports from nx, not vice versa), and the
-   * relative-path mock for `nx/src/project-graph/project-graph` below
-   * already covers nx's internal `createProjectGraphAsync` callers. Loading
-   * devkit here just to spread `requireActual('@nx/devkit')` would pull
-   * its entire source tree into the sandbox for no callers.
+   * The `packages/nx` skip below is inert: nx's suite runs on vitest, which
+   * never loads this file.
    */
   const isNxProject = process.env.NX_TASK_TARGET_PROJECT === 'nx';
   if (!isNxProject) {
@@ -337,11 +333,8 @@ module.exports = () => {
    *     `readExecutorJson`, target normalization) all catch MODULE_NOT_FOUND
    *     and degrade gracefully.
    *
-   * Scoped to `nx:test` only — these mocks target `packages/nx/src/utils/`
-   * source files by absolute physical path and exist to neutralize nx's
-   * own plugin-resolution probing. Applying them to other projects'
-   * tests (rspack, webpack, jest, …) can interfere with legitimate
-   * `@nx/*` lookups those test paths might exercise.
+   * Inert: this block only ran for `nx:test`, which runs on vitest now and
+   * never loads this file.
    */
   if (isNxProject) {
     const hasNxJsPluginPath = nxSrcPath('utils/has-nx-js-plugin');

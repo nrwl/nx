@@ -7,19 +7,21 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import {
-  getCatalogManager,
-  interpolate,
-  type PackageJson,
-  type PackageJsonDependencySection,
-  getLockFileName,
-  createLockFile,
-  getWorkspacePackagesFromGraph,
-} from '@nx/devkit/internal';
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
+import {
+  dropEmptyPeerDependencySections,
+  generatePrunedDeployOutput,
+  getCatalogManager,
+  getWorkspacePackagesFromGraph,
+  interpolate,
+  movePeerDependencyToDependencies,
+  type PackageJson,
+  type PackageJsonDependencySection,
+} from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
+import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
@@ -31,57 +33,57 @@ export default async function pruneLockfileExecutor(
   mergeAllowScripts(packageJson);
   const packageManager = detectPackageManager(workspaceRoot);
 
-  if (packageManager === 'bun') {
-    logger.warn(
-      'Bun lockfile generation is not supported. Only package.json will be generated. Run "bun install" in the output directory if needed.'
-    );
-    writeFileSync(
-      join(outputDirectory, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
-    );
-  } else {
-    const { lockfileName, lockFile } = createPrunedLockfile(
-      packageJson,
-      context.projectGraph
-    );
-    const lockfileOutputPath = join(outputDirectory, lockfileName);
-    writeFileSync(lockfileOutputPath, lockFile);
-    writeFileSync(
-      join(outputDirectory, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
-    );
-    logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
-  }
+  const { project } = parseTargetString(schema.buildTarget, context);
+  const projectRoot = context.projectGraph.nodes[project].data.root;
+  generatePrunedDeployOutput(packageJson, context.projectGraph, projectRoot, {
+    outputDirectory,
+    packageManager,
+    workspaceRoot,
+  });
+  rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
+  writeFileSync(
+    join(outputDirectory, 'package.json'),
+    JSON.stringify(packageJson, null, 2)
+  );
+  logger.log(`Pruned deploy output written to ${outputDirectory}`);
 
   return {
     success: true,
   };
 }
 
-function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
-  const packageManager = detectPackageManager(workspaceRoot);
-  const lockfileName = getLockFileName(packageManager);
-  const lockFile = createLockFile(packageJson, graph, packageManager);
-
+// Point every workspace-module dependency at its copied directory so the
+// standalone output installs them as pnpm `file:` directory dependencies.
+// pnpm rejects a `file:` spec under peerDependencies, so a peer-declared
+// workspace module is moved into dependencies instead (an optional peer
+// becomes required, which is moot since the module is always copied in). Gate
+// strictly on graph membership: a `file:`/`link:` spec to a non-workspace
+// local path (e.g. a vendored tarball) is left alone, since
+// copy-workspace-modules only ever copies actual workspace projects.
+function rewriteWorkspaceModuleSpecifiers(
+  packageJson: PackageJson,
+  graph: ProjectGraph
+) {
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
-  )) {
-    if (
-      pkgVersion.startsWith('workspace:') ||
-      pkgVersion.startsWith('file:') ||
-      pkgVersion.startsWith('link:') ||
-      workspacePackages.has(pkgName)
-    ) {
-      packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
+  for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const pkgName of Object.keys(deps)) {
+      if (!workspacePackages.has(pkgName)) {
+        continue;
+      }
+      const fileSpec = `file:./workspace_modules/${pkgName}`;
+      if (section === 'peerDependencies') {
+        movePeerDependencyToDependencies(packageJson, pkgName, fileSpec);
+      } else {
+        deps[pkgName] = fileSpec;
+      }
     }
   }
-
-  return {
-    lockfileName,
-    lockFile,
-  };
+  dropEmptyPeerDependencySections(packageJson);
 }
 
 /**

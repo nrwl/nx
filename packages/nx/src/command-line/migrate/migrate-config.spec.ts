@@ -269,6 +269,79 @@ describe('applyNxJsonMigrateDefaults', () => {
     });
   });
 
+  describe('orchestrator reconcile phase (bare --run-id)', () => {
+    const base = { runId: 'run-1' };
+
+    it('fills nothing: the run owns its commit config, and the rest is generate-only', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+        agentic: 'claude-code',
+        validate: false,
+        include: 'required',
+        multiMajorMode: 'gradual',
+      };
+      const result = applyNxJsonMigrateDefaults(base, config, noEnv);
+      // The reconcile passes no commit config to the orchestrator: it reads
+      // both from run.json, recorded when the run was created.
+      expect(result.createCommits).toBeUndefined();
+      expect(result.commitPrefix).toBeUndefined();
+      expect(result.agentic).toBeUndefined();
+      expect(result.validate).toBeUndefined();
+      expect(result.include).toBeUndefined();
+      expect(result.includeFromConfig).toBeUndefined();
+      expect(result.multiMajorMode).toBeUndefined();
+    });
+
+    it('fills nothing for a recorded worker either (--run-migration with --run-id)', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+      };
+      const result = applyNxJsonMigrateDefaults(
+        { runMigration: '@nx/js:gen', runId: 'run-1' },
+        config,
+        noEnv
+      );
+      expect(result.createCommits).toBeUndefined();
+      expect(result.commitPrefix).toBeUndefined();
+    });
+
+    it('fills agentic only for a continue (--run-migrations with --run-id): the run owns the rest', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+        agentic: 'claude-code',
+        validate: false,
+      };
+      const result = applyNxJsonMigrateDefaults(
+        { runMigrations: '', runId: 'run-1' },
+        config,
+        noEnv
+      );
+      expect(result.agentic).toBe('claude-code');
+      expect(result.createCommits).toBeUndefined();
+      expect(result.commitPrefix).toBeUndefined();
+      expect(result.validate).toBeUndefined();
+    });
+
+    it('fills the run-migrations overlay for a start-fresh, which starts a new run', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+        agentic: 'claude-code',
+      };
+      const result = applyNxJsonMigrateDefaults(
+        { runMigrations: 'migrations.json', runId: 'run-1', startFresh: true },
+        config,
+        noEnv
+      );
+      expect(result.createCommits).toBe(true);
+      expect(result.commitPrefix).toBe('chore: migrate ');
+      expect(result.agentic).toBe('claude-code');
+    });
+  });
+
   describe('generate-migrations phase', () => {
     const base = { packageAndVersion: 'nx@latest' };
 

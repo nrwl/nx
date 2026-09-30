@@ -1,12 +1,14 @@
+import * as devkit from '@nx/devkit';
+import type { MockInstance } from 'vitest';
 // Pin the detected package manager so inferred lock-file outputs (e.g.
 // prune-lockfile) and package-manager commands are deterministic regardless of
 // which package manager runs the tests.
-jest.mock('@nx/devkit', () => {
-  const actual = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
   return {
     ...actual,
-    detectPackageManager: jest.fn(() => 'npm'),
-    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+    detectPackageManager: vi.fn(() => 'npm'),
+    getPackageManagerCommand: vi.fn((pm = 'npm') =>
       actual.getPackageManagerCommand(pm)
     ),
   };
@@ -29,7 +31,7 @@ describe('application generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should generate project configurations', async () => {
@@ -51,23 +53,6 @@ describe('application generator', () => {
         "sourceRoot": "my-node-app/src",
         "tags": [],
         "targets": {
-          "build": {
-            "configurations": {
-              "development": {
-                "env": {
-                  "NODE_ENV": "development",
-                },
-              },
-            },
-            "executor": "nx:run-commands",
-            "options": {
-              "command": "webpack-cli build",
-              "cwd": "my-node-app",
-              "env": {
-                "NODE_ENV": "production",
-              },
-            },
-          },
           "copy-workspace-modules": {
             "cache": true,
             "dependsOn": [
@@ -130,6 +115,24 @@ describe('application generator', () => {
         },
       }
     `);
+  });
+
+  it('should set up the formatter it was given', async () => {
+    // The preset forwards `formatter`, and Nest reaches @nx/js:init only through
+    // the Node generator - so dropping it here left the workspace with no
+    // formatter config or dependency at all.
+    const unformatted = createTreeWithEmptyWorkspace({ formatter: 'none' });
+
+    await applicationGenerator(unformatted, {
+      directory: appDirectory,
+      addPlugin: true,
+      formatter: 'prettier',
+    });
+
+    expect(unformatted.exists('.prettierrc')).toBe(true);
+    expect(
+      readJson(unformatted, 'package.json').devDependencies['prettier']
+    ).toBeDefined();
   });
 
   it('should generate files', async () => {
@@ -302,17 +305,16 @@ describe('application generator', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
-        .spyOn(devkitModule, 'formatFiles')
+      formatFilesSpy = vi
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files', async () => {
@@ -404,23 +406,6 @@ describe('application generator', () => {
           "name": "@proj/myapp",
           "nx": {
             "targets": {
-              "build": {
-                "configurations": {
-                  "development": {
-                    "env": {
-                      "NODE_ENV": "development",
-                    },
-                  },
-                },
-                "executor": "nx:run-commands",
-                "options": {
-                  "command": "webpack-cli build",
-                  "cwd": "myapp",
-                  "env": {
-                    "NODE_ENV": "production",
-                  },
-                },
-              },
               "copy-workspace-modules": {
                 "cache": true,
                 "dependsOn": [
@@ -610,23 +595,6 @@ describe('application generator', () => {
           "sourceRoot": "myapp/src",
           "tags": [],
           "targets": {
-            "build": {
-              "configurations": {
-                "development": {
-                  "env": {
-                    "NODE_ENV": "development",
-                  },
-                },
-              },
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "webpack-cli build",
-                "cwd": "myapp",
-                "env": {
-                  "NODE_ENV": "production",
-                },
-              },
-            },
             "copy-workspace-modules": {
               "cache": true,
               "dependsOn": [

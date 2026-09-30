@@ -19,10 +19,15 @@ import {
 import { join } from 'path';
 
 import { isValidVariable } from '@nx/js';
-import { getProjectSourceRoot, isUsingTsSolutionSetup } from '@nx/js/internal';
+import {
+  addSwcRegisterDependencies,
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { normalizeRemoteName } from '../../utils/normalize-remote';
+import { findFreePort } from '../application/lib/find-free-port';
 import { maybeJs } from '../../utils/maybe-js';
 import { warnReactRemoteGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 import {
@@ -152,6 +157,10 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     // TODO(colum): remove when Webpack MF works with Crystal
     addPlugin: !schema.bundler || schema.bundler === 'rspack' ? true : false,
     bundler: schema.bundler ?? 'rspack',
+    // Unlike a plain app, a remote needs a port of its own: updateModuleFederationProject
+    // writes it to the serve target, and a dynamic remote's is also recorded in the host
+    // manifest. findFreePort reads the ports already claimed, so remotes step past each other.
+    port: schema.port ?? schema.devServerPort ?? findFreePort(host),
   };
 
   if (options.dynamic) {
@@ -231,7 +240,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     if (options.bundler !== 'rspack') {
       const setupSsrTask = await setupSsrGenerator(host, {
         project: options.projectName,
-        serverPort: options.devServerPort,
+        serverPort: options.port,
         skipFormat: true,
         bundler: options.bundler,
       });
@@ -277,7 +286,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     addRemoteToDynamicHost(
       host,
       options.projectName,
-      options.devServerPort,
+      options.port,
       pathToMFManifest
     );
   }
@@ -304,6 +313,12 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     true
   );
   tasks.push(installTask);
+
+  // The TS config templates use extensionless relative imports and
+  // `__dirname`, which Node's native type stripping cannot load.
+  if (options.typescriptConfiguration) {
+    tasks.push(addSwcRegisterDependencies(host));
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

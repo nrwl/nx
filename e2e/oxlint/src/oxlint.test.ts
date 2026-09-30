@@ -70,6 +70,52 @@ describe('Oxlint', () => {
     ).toBe(true);
   });
 
+  it('should make jsPlugins dependencies of every linted project', () => {
+    const lib = uniq('oxlintlinted');
+    const plugin = uniq('oxlintplugin');
+    runCLI(
+      `generate @nx/js:lib packages/${lib} --linter=oxlint --unitTestRunner=none --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${plugin} --linter=none --unitTestRunner=none --no-interactive`
+    );
+    updateFile(
+      `packages/${plugin}/src/index.js`,
+      `export default { meta: { name: 'local' }, rules: {} };\n`
+    );
+    updateFile(
+      '.oxlintrc.json',
+      JSON.stringify({
+        jsPlugins: [
+          '@nx/oxlint/boundaries-plugin',
+          `./packages/${plugin}/src/index.js`,
+        ],
+        rules: {},
+      })
+    );
+
+    // A workspace plugin is a project edge, so editing it marks every project
+    // it lints as affected — the behavior a hand-maintained input list cannot
+    // give.
+    expect(
+      runCLI(`show projects --affected --files=packages/${plugin}/src/index.js`)
+    ).toContain(lib);
+    runCLI('graph --file=plugin-graph.json');
+    expect(
+      readJson('plugin-graph.json').graph.dependencies[lib]
+    ).toContainEqual({ source: lib, target: plugin, type: 'implicit' });
+
+    // `graph --file` leaves npm nodes out, so the package edge is read from
+    // the graph Nx stores.
+    expect(
+      readJson('.nx/workspace-data/project-graph.json').dependencies[lib]
+    ).toContainEqual({
+      source: lib,
+      target: 'npm:@nx/oxlint',
+      type: 'implicit',
+    });
+  });
+
   it('should pass, serve a re-run from cache, fail on a violation, then pass once fixed', () => {
     const lib = uniq('oxlintrules');
     // Both runners are explicit so this does not depend on what the workspace

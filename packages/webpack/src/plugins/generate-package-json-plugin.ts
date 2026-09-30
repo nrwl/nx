@@ -1,10 +1,9 @@
 import * as fs from 'fs';
 import type { Compiler, WebpackPluginInstance } from 'webpack';
 import {
-  createLockFile,
   createPackageJson,
+  generatePrunedDeployOutput,
   getHelperDependenciesFromProjectGraph,
-  getLockFileName,
   HelperDependency,
   readTsConfig,
 } from '@nx/js';
@@ -95,30 +94,27 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             ...runtimeDependencies,
           };
 
+          const packageManager = detectPackageManager(this.options.root);
+
+          generatePrunedDeployOutput(
+            packageJson,
+            this.options.projectGraph,
+            this.options.projectGraph.nodes[this.options.projectName].data.root,
+            {
+              emit: (assetPath, content) =>
+                compilation.emitAsset(
+                  assetPath,
+                  new sources.RawSource(content)
+                ),
+              packageManager,
+              workspaceRoot: this.options.root,
+            }
+          );
+
           compilation.emitAsset(
             'package.json',
             new sources.RawSource(serializeJson(packageJson))
           );
-          const packageManager = detectPackageManager(this.options.root);
-
-          if (packageManager === 'bun') {
-            compilation
-              .getLogger('GeneratePackageJsonPlugin')
-              .warn(
-                'Bun lockfile generation is not supported. Only package.json will be generated.'
-              );
-          } else {
-            compilation.emitAsset(
-              getLockFileName(packageManager),
-              new sources.RawSource(
-                createLockFile(
-                  packageJson,
-                  this.options.projectGraph,
-                  packageManager
-                )
-              )
-            );
-          }
         }
       );
     });

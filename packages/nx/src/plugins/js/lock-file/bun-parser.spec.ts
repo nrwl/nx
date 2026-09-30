@@ -22,19 +22,19 @@ import {
   getBunTextLockfileNodes,
 } from './bun-parser';
 
-jest.mock('node:fs', () => {
-  const memFs = require('memfs').fs;
+vi.mock('node:fs', async () => {
+  const memFs = (await import('memfs')).fs;
   return {
     ...memFs,
     existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),
   };
 });
 
-jest.mock('../../../utils/workspace-root', () => ({
+vi.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('../../../hasher/file-hasher', () => ({
+vi.mock('../../../hasher/file-hasher', () => ({
   hashArray: (values: string[]) => values.join('|'),
 }));
 
@@ -1286,7 +1286,7 @@ describe('Bun Parser', () => {
           "packages": {}
         }`;
 
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       try {
         // Versions this parser was written against (0 to 3) parse silently
@@ -1356,7 +1356,7 @@ describe('Bun Parser', () => {
     it('should parse lockfileVersion 3 with nested and version-scoped overrides', () => {
       // Written by Bun with `"overrides": { "no-deps": "1.0.0", "one-dep": { "no-deps": "1.1.0" }, "one-range-dep@1": { "no-deps": "2.0.0" } }`
       expect(nestedOverridesBunLock).toContain('"lockfileVersion": 3');
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       try {
         const result = getBunTextLockfileNodes(

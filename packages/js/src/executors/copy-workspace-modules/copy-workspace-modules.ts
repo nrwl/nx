@@ -1,4 +1,5 @@
 import {
+  detectPackageManager,
   type ExecutorContext,
   logger,
   parseTargetString,
@@ -7,8 +8,13 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import {
-  interpolate,
+  dropEmptyPeerDependencySections,
+  getCatalogManager,
   getWorkspacePackagesFromGraph,
+  interpolate,
+  movePeerDependencyToDependencies,
+  relocatePrunedLocalPathSpec,
+  warnUnshippableLocalPathSpec,
 } from '@nx/devkit/internal';
 import { type CopyWorkspaceModulesOptions } from './schema';
 import {
@@ -18,9 +24,72 @@ import {
   readFileSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join, relative, sep } from 'path';
+import { dirname, isAbsolute, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
+import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
+
+type CopiedManifest = {
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+  [key: string]: unknown;
+};
+
+// Sections of a copied module's own manifest whose workspace-module deps are
+// rewritten to file: and recursed into. pnpm installs a transitive dependency's
+// regular, optional, and auto-installed peer deps (a workspace peer is linked
+// and recorded under the depending importer's dependencies in the lockfile), but
+// never its devDependencies. A workspace-module peer is moved into dependencies,
+// since pnpm rejects a file: spec under peerDependencies (mirrors the app-level
+// move in prune-lockfile).
+const TRANSITIVE_INSTALL_SECTIONS = [
+  'dependencies',
+  'optionalDependencies',
+  'peerDependencies',
+] as const;
+
+// Resolve `catalog:` references in a copied module manifest to the version the
+// workspace pinned. Only the sections pnpm installs for a `file:` directory
+// dependency are resolved: a copied module's devDependencies are never
+// installed, so a `catalog:` there is inert (pnpm leaves it untouched), and
+// resolving it would abort the whole deploy build if that catalog entry does
+// not exist. Returns whether anything changed.
+function resolveCatalogReferences(
+  packageJson: CopiedManifest,
+  manager: ReturnType<typeof getCatalogManager>
+): boolean {
+  if (!manager) {
+    return false;
+  }
+  let modified = false;
+  for (const section of TRANSITIVE_INSTALL_SECTIONS) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const [name, version] of Object.entries(deps)) {
+      if (!manager.isCatalogReference(version)) {
+        continue;
+      }
+      const resolved = manager.resolveCatalogReference(
+        workspaceRoot,
+        name,
+        version
+      );
+      if (!resolved) {
+        throw new Error(
+          `Could not resolve catalog reference for package ${name}@${version}.`
+        );
+      }
+      deps[name] = resolved;
+      modified = true;
+    }
+  }
+  return modified;
+}
 
 export default async function copyWorkspaceModules(
   schema: CopyWorkspaceModulesOptions,
@@ -39,14 +108,23 @@ function handleWorkspaceModules(
   outputDirectory: string,
   packageJson: {
     dependencies?: Record<string, string>;
+    optionalDependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+    peerDependencies?: Record<string, string>;
   },
   projectGraph: ProjectGraph
 ) {
-  if (!packageJson.dependencies) {
+  if (
+    !WORKSPACE_MODULE_INSTALL_SECTIONS.some((section) => packageJson[section])
+  ) {
     return;
   }
 
   const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
+  const catalogManager = getCatalogManager(workspaceRoot);
+  // Only the pnpm prune path ships non-workspace local-path targets, so only
+  // pnpm manifests get their file:/link: specs relocated.
+  const isPnpmWorkspace = detectPackageManager(workspaceRoot) === 'pnpm';
   const processedModules = new Set<string>();
   const workspaceModulesDir = join(outputDirectory, 'workspace_modules');
 
@@ -77,15 +155,19 @@ function handleWorkspaceModules(
     logger.verbose(`Copying ${pkgName}.`);
 
     const workspaceModuleProject = workspaceModules.get(pkgName);
-    const workspaceModuleRoot = join(
-      workspaceRoot,
-      workspaceModuleProject.data.root
-    );
+    const workspaceModuleRoot = workspaceModuleProject.data.root;
+    // data.root is workspace-root-relative in the graph, but may arrive
+    // absolute; normalize so the local-path relocation math is in
+    // workspace-root space.
+    const moduleWsRelativeRoot = isAbsolute(workspaceModuleRoot)
+      ? relative(workspaceRoot, workspaceModuleRoot).split(sep).join('/')
+      : workspaceModuleRoot;
     const newWorkspaceModulePath = join(workspaceModulesDir, pkgName);
 
-    // Copy the module
+    // Copy the module, from the workspace root rather than the process cwd: a
+    // graph root arrives workspace-relative in the common case.
     mkdirSync(newWorkspaceModulePath, { recursive: true });
-    cpSync(workspaceModuleRoot, newWorkspaceModulePath, {
+    cpSync(join(workspaceRoot, moduleWsRelativeRoot), newWorkspaceModulePath, {
       filter: (src) => !src.includes('node_modules'),
       recursive: true,
     });
@@ -94,7 +176,7 @@ function handleWorkspaceModules(
 
     // Read the copied module's package.json to process its dependencies
     const copiedPackageJsonPath = join(newWorkspaceModulePath, 'package.json');
-    let copiedPackageJson: { dependencies?: Record<string, string> };
+    let copiedPackageJson: CopiedManifest;
     try {
       copiedPackageJson = JSON.parse(
         readFileSync(copiedPackageJsonPath, 'utf-8')
@@ -104,36 +186,97 @@ function handleWorkspaceModules(
       return;
     }
 
-    // Process and update dependencies
-    if (copiedPackageJson.dependencies) {
-      let packageJsonModified = false;
+    // The standalone dist ships no catalog definition, so resolve any
+    // `catalog:` references to the version the workspace pinned.
+    let packageJsonModified = resolveCatalogReferences(
+      copiedPackageJson,
+      catalogManager
+    );
 
-      for (const [depName, depVersion] of Object.entries(
-        copiedPackageJson.dependencies
-      )) {
+    // Rewrite sibling workspace-module deps to file: paths and recurse. A peer
+    // is moved into dependencies (pnpm rejects a file: spec under
+    // peerDependencies), dropping its now-orphaned optional/required marker.
+    for (const section of TRANSITIVE_INSTALL_SECTIONS) {
+      const deps = copiedPackageJson[section];
+      if (!deps) {
+        continue;
+      }
+      for (const depName of Object.keys(deps)) {
         if (workspaceModules.has(depName)) {
-          const relativePath = calculateRelativePath(pkgName, depName);
-          copiedPackageJson.dependencies[depName] = `file:${relativePath}`;
+          const fileSpec = `file:${calculateRelativePath(pkgName, depName)}`;
+          if (section === 'peerDependencies') {
+            movePeerDependencyToDependencies(
+              copiedPackageJson,
+              depName,
+              fileSpec
+            );
+          } else {
+            deps[depName] = fileSpec;
+          }
           packageJsonModified = true;
           processModule(depName);
+          continue;
+        }
+        // A non-workspace file:/link: dep must keep resolving after the module
+        // moves. pnpm reads a non-importer manifest file: spec relative to the
+        // package dir but a link: spec relative to the install root, so each
+        // rebases onto a different base (pnpm-only; see isPnpmWorkspace).
+        if (!isPnpmWorkspace) {
+          continue;
+        }
+        const spec = deps[depName];
+        const relocation = relocatePrunedLocalPathSpec(
+          spec,
+          moduleWsRelativeRoot,
+          spec.startsWith('link:') ? '' : `workspace_modules/${pkgName}`
+        );
+        if (!relocation) {
+          continue;
+        }
+        if (relocation.reason) {
+          warnUnshippableLocalPathSpec(
+            `"${spec}" in ${pkgName}`,
+            relocation.reason
+          );
+        }
+        if (section === 'peerDependencies') {
+          // Moved even when the target cannot ship: pnpm rejects the spec here
+          // either way.
+          movePeerDependencyToDependencies(
+            copiedPackageJson,
+            depName,
+            relocation.spec
+          );
+          packageJsonModified = true;
+        } else if (!relocation.reason) {
+          deps[depName] = relocation.spec;
+          packageJsonModified = true;
         }
       }
+    }
+    dropEmptyPeerDependencySections(copiedPackageJson);
 
-      if (packageJsonModified) {
-        writeFileSync(
-          copiedPackageJsonPath,
-          JSON.stringify(copiedPackageJson, null, 2)
-        );
-        logger.verbose(
-          `Updated package.json for ${pkgName} with relative workspace module paths.`
-        );
-      }
+    if (packageJsonModified) {
+      writeFileSync(
+        copiedPackageJsonPath,
+        JSON.stringify(copiedPackageJson, null, 2)
+      );
+      logger.verbose(`Updated package.json for ${pkgName}.`);
     }
   }
 
-  // Process all top-level dependencies
-  for (const [pkgName] of Object.entries(packageJson.dependencies)) {
-    processModule(pkgName);
+  // Seed from every section the app declares a workspace module in. Copied
+  // modules recurse over production sections only (see processModule).
+  // processModule dedups via processedModules, so a module listed in several
+  // sections is copied once.
+  for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const pkgName of Object.keys(deps)) {
+      processModule(pkgName);
+    }
   }
 }
 

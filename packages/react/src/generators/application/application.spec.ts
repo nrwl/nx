@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   detectPackageManager,
@@ -12,6 +13,7 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -19,20 +21,20 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    createProjectGraphAsync: jest
+    createProjectGraphAsync: vi
       .fn()
       .mockImplementation(() => Promise.resolve(projectGraph)),
-    detectPackageManager: jest.fn(),
+    detectPackageManager: vi.fn(),
   };
 });
 
@@ -51,17 +53,19 @@ describe('app', () => {
     strict: true,
     addPlugin: true,
   };
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
-  beforeEach(() => {
+  beforeEach(async () => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
-    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
-      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    const actual =
+      await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
+    (detectPackageManager as Mock).mockImplementation(
+      actual.detectPackageManager
     );
   });
 
@@ -71,6 +75,40 @@ describe('app', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          bundler: 'vite',
+          style: 'scss',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@parcel\/watcher['"]: false/
+      );
+    });
+
+    it('should not record a @parcel/watcher decision without scss', async () => {
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          bundler: 'vite',
+          style: 'css',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        '@parcel/watcher'
+      );
+    });
   });
 
   describe('not nested', () => {
@@ -1000,11 +1038,7 @@ describe('app', () => {
             port: 4300,
             host: 'localhost',
           },
-          plugins: [
-            !process.env.VITEST && reactRouter(),
-            nxViteTsPaths(),
-            nxCopyAssetsPlugin(['*.md']),
-          ],
+          plugins: [!process.env.VITEST && reactRouter(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
           //   plugins: () => [ nxViteTsPaths() ],
@@ -1126,12 +1160,7 @@ describe('app', () => {
             "module": "commonjs",
             "moduleResolution": "bundler",
             "jsx": "react-jsx",
-            "types": [
-              "jest",
-              "node",
-              "@nx/react/typings/cssmodule.d.ts",
-              "@nx/react/typings/image.d.ts"
-            ]
+            "types": ["jest", "node", "@nx/react/typings/cssmodule.d.ts", "@nx/react/typings/image.d.ts"]
           },
           "files": ["src/test-setup.ts"],
           "include": [
@@ -1548,7 +1577,7 @@ describe('app', () => {
     });
 
     it('should add project to workspaces when using TS solution (pnpm)', async () => {
-      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      (detectPackageManager as Mock).mockReturnValue('pnpm');
       updateJson(appTree, 'package.json', (json) => {
         delete json.workspaces;
         return json;

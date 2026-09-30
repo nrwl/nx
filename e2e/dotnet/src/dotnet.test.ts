@@ -164,6 +164,21 @@ describe('.NET Plugin', () => {
     });
   });
 
+  describe('Generators', () => {
+    // The templates are copied assets rather than compiled output, so they
+    // reach the installed package only if assets.json ships them.
+    it.each(['github', 'circleci'] as const)(
+      'should generate a %s workflow from the installed package',
+      (ci) => {
+        runCLI(`generate @nx/dotnet:ci-workflow --ci=${ci} --name=ci`);
+
+        checkFilesExist(
+          ci === 'github' ? '.github/workflows/ci.yml' : '.circleci/config.yml'
+        );
+      }
+    );
+  });
+
   describe('Project Graph', () => {
     beforeAll(() => {
       createSimpleDotNetWorkspace();

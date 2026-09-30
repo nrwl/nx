@@ -15,7 +15,7 @@ check and fix any issues. Do not wait to be asked.
 Read `astro-docs/STYLE_GUIDE.md` (the "Information architecture" section) and
 `astro-docs/sidebar.mts` to understand where the page lives in the sidebar hierarchy.
 
-For every new or moved page, evaluate against ALL FIVE principles. These are non-negotiable:
+For every new or moved page, evaluate against ALL SEVEN principles. These are non-negotiable:
 
 ### 1. Progressive disclosure ("journey" rule)
 
@@ -46,6 +46,17 @@ For every new or moved page, evaluate against ALL FIVE principles. These are non
 - YES = "Platform Features"
 - NO (only React/Angular/etc. users) = "Technologies"
 - Flag if a technology-specific page is in Platform Features or vice versa.
+
+### 6. Golden path ("one way" rule)
+
+- Does the page teach one default workflow, or does it enumerate flags and variants?
+- Flag sentences a first-time user needs neither to succeed nor to choose. Those belong in a Knowledge Base guide.
+
+### 7. One page per feature ("don't make me hunt" rule)
+
+- List the questions a new reader, or an AI answering for one, would ask about this feature.
+- Flag any answer that lives only on another page. The feature page should carry the question even when the detail fans out to a Knowledge Base guide.
+- This is the counterweight to principle 6, not an exception to it: trim variants, keep decisions.
 
 ## Phase 2: Style validation
 
@@ -103,7 +114,7 @@ After fixing, report what you did:
 ## Style check results
 
 ### Information architecture: [PASS/FAIL]
-[List any violations or confirm all five principles pass]
+[List any violations or confirm all seven principles pass]
 
 ### Vale: [X errors fixed, Y warnings fixed, Z suggestions noted]
 [Summary of changes made]

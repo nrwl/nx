@@ -100,17 +100,6 @@ export function getYarnMajorVersion(path: string): string | undefined {
   }
 }
 
-export function getPnpmVersion(): string | undefined {
-  try {
-    const pnpmVersion = execSync(`pnpm -v`, {
-      encoding: 'utf-8',
-    }).trim();
-    return pnpmVersion;
-  } catch {
-    return undefined;
-  }
-}
-
 export function getLatestLernaVersion(): string {
   const lernaVersion = execSync(`npm view lerna version`, {
     encoding: 'utf-8',
@@ -147,8 +136,8 @@ process.env.WEBPACK_DEV_SERVER_BASE_PORT ??= String(
   8080 + (process.pid % 5000) * 10
 );
 
-export function getStrippedEnvironmentVariables() {
-  return Object.fromEntries(
+export function getStrippedEnvironmentVariables(cwd: string = tmpProjPath()) {
+  const stripped = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => {
       if (key.startsWith('NX_E2E_')) {
         return true;
@@ -188,6 +177,16 @@ export function getStrippedEnvironmentVariables() {
       // Remove AI agent detection env vars to prevent the test runner's
       // environment (e.g., running inside Claude Code) from leaking into
       // e2e test subprocesses. Tests that need these pass them explicitly.
+      //
+      // Every variable `is_ai_agent` reads must be here, or a run started from
+      // that agent resolves to `--output-style=summary`, which prints no task
+      // output and no `Successfully ran target` line — the string ~96 e2e files
+      // assert on. This list has fallen behind `ai.rs` twice as it gained
+      // detectors, so check it rather than trusting it:
+      //   grep -o 'env::var("[^"]*"' packages/nx/src/native/utils/ai.rs
+      // PAGER is deliberately absent: Cursor needs it alongside CURSOR_TRACE_ID
+      // and COMPOSER_NO_INTERACTION, which are both stripped. NX_DAEMON_PROCESS
+      // is already dropped by the NX_ rule above.
       const aiAgentEnvVars = [
         'CLAUDECODE',
         'CLAUDE_CODE',
@@ -196,6 +195,10 @@ export function getStrippedEnvironmentVariables() {
         'CURSOR_TRACE_ID',
         'COMPOSER_NO_INTERACTION',
         'REPL_ID',
+        'VSCODE_AGENT',
+        'CODEX_THREAD_ID',
+        'COPILOT_CLI',
+        'SUPERSET_AGENT_ID',
       ];
       if (aiAgentEnvVars.includes(key)) {
         return false;
@@ -204,4 +207,21 @@ export function getStrippedEnvironmentVariables() {
       return true;
     })
   );
+
+  return {
+    // Nx defaults the cache to the shared per-user `~/.nx/<id>/cache`, which is
+    // outside the test project. Several suites assert on `.nx/cache`, and the
+    // eviction ones count entries there, so pin it back inside the project. It
+    // also stops concurrent e2e projects evicting each other through one shared
+    // directory.
+    //
+    // Keyed on the directory the command actually runs in, not on the current
+    // project: the runners that accept `opts.cwd` can be pointed at another
+    // workspace, and defaulting to `tmpProjPath()` there would aim the cache at
+    // a project the command never touched. The filter above strips `NX_*`, so
+    // this cannot be overridden from the parent env -- a test that needs a
+    // different value passes `opts.env`.
+    NX_CACHE_DIRECTORY: join(cwd, '.nx', 'cache'),
+    ...stripped,
+  };
 }

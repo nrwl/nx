@@ -1,5 +1,6 @@
 import * as pc from 'picocolors';
 import { spawn } from 'child_process';
+import { StringDecoder } from 'string_decoder';
 import { dirname, join, relative } from 'path';
 import { lt } from 'semver';
 import { handleImport } from '../../utils/handle-import';
@@ -12,6 +13,7 @@ import {
 } from '../../generators/tree';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
+import { singleLine } from './text';
 import {
   ArrayPackageGroup,
   NxMigrationsConfiguration,
@@ -32,6 +34,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { normalizeVersion } from './version-utils';
+import { terminalOutput, type MigrateOutputSink } from './deferred-output';
 
 // Migration execution engine shared by the CLI migrate loop, the Console
 // API, and the single-migration child process.
@@ -77,43 +80,78 @@ export function readPackageMigrationConfig(
   }
 }
 
+/**
+ * With a `sink`, stdin is ignored and stdout and stderr are collected for a
+ * caller sharing the terminal. On POSIX the child stays in nx's process
+ * group. Without a sink, the install owns the terminal.
+ */
 export function runInstall(
   nxWorkspaceRoot?: string,
   phase: MigrationInstallPhase = 'pre-migration',
-  rerunCommand?: string
+  rerunCommand?: string,
+  sink?: MigrateOutputSink
 ): Promise<void> {
   const cwd = nxWorkspaceRoot ?? process.cwd();
   const packageManager = detectPackageManager(cwd);
   const pmCommands = getPackageManagerCommand(packageManager, cwd);
+  const out = sink ?? terminalOutput;
 
   const installCommand = `${pmCommands.install} ${
     pmCommands.ignoreScriptsFlag ?? ''
   }`;
-  output.log({
+  out.notice('log', {
     title: `Running '${installCommand}' to make sure necessary packages are installed`,
   });
 
   return new Promise<void>((resolve, reject) => {
-    // For npm, pipe stderr so we can detect peer dependency errors while still
-    // mirroring it live to the user's terminal. Other package managers inherit
-    // stderr directly since we don't need to inspect their output.
+    // npm's stderr is piped so peer dependency errors can be detected in it.
+    // Without a sink it is mirrored live and other package managers inherit
+    // stderr directly, since their output is not inspected.
     const shouldCaptureStderr = packageManager === 'npm';
     const child = spawn(installCommand, {
       shell: true,
-      stdio: ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
+      stdio: sink
+        ? ['ignore', 'pipe', 'pipe']
+        : ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
       windowsHide: true,
       cwd,
     });
 
+    // Decoded per stream: a chunk boundary can split a multi-byte character,
+    // and a sequence still incomplete at the end is what `end()` returns.
+    const stdoutText = new StringDecoder('utf8');
+    const stderrText = new StringDecoder('utf8');
+    child.stdout?.on('data', (chunk: Buffer) =>
+      out.raw(stdoutText.write(chunk))
+    );
+    child.stdout?.on('end', () => out.raw(stdoutText.end()));
     const stderrChunks: Buffer[] = [];
     child.stderr?.on('data', (chunk: Buffer) => {
-      process.stderr.write(chunk);
-      stderrChunks.push(chunk);
+      if (sink) {
+        out.raw(stderrText.write(chunk));
+      } else {
+        process.stderr.write(chunk);
+      }
+      if (shouldCaptureStderr) stderrChunks.push(chunk);
+    });
+    if (sink) child.stderr.on('end', () => out.raw(stderrText.end()));
+
+    // With a sink the rejection waits for `close`, which follows the streams'
+    // `end`: a caller must be able to render what it collected on rejection.
+    let spawnError: Error | null = null;
+    child.on('error', (error) => {
+      if (sink) {
+        spawnError = error;
+      } else {
+        reject(error);
+      }
     });
 
-    child.on('error', reject);
-
     child.on('close', (code) => {
+      if (spawnError) {
+        reject(spawnError);
+        return;
+      }
       if (code === 0) {
         resolve();
         return;
@@ -126,7 +164,7 @@ export function runInstall(
           // (CLI migrate, `nx repair`, single-migration runner, etc.) surfaces
           // it consistently. Top-level callers catch `NpmPeerDepsInstallError`
           // and return a non-zero exit code without re-logging.
-          logNpmPeerDepsError(phase, rerunCommand);
+          logNpmPeerDepsError(phase, rerunCommand, out);
           reject(new NpmPeerDepsInstallError());
           return;
         }
@@ -181,7 +219,8 @@ export function formatSingleMigrationRerunCommand(migrationId: string): string {
 
 export function logNpmPeerDepsError(
   phase: MigrationInstallPhase,
-  rerunCommand = 'nx migrate --run-migrations'
+  rerunCommand = 'nx migrate --run-migrations',
+  out: MigrateOutputSink = terminalOutput
 ): void {
   const peerDepsResolutionSteps = [
     'Recommended approaches (in order of preference):',
@@ -200,7 +239,7 @@ export function logNpmPeerDepsError(
   ];
 
   if (phase === 'pre-migration') {
-    output.error({
+    out.notice('error', {
       title:
         'You need to resolve the peer dependency conflicts before the migration can continue',
       bodyLines: [
@@ -213,7 +252,7 @@ export function logNpmPeerDepsError(
       ],
     });
   } else {
-    output.error({
+    out.notice('error', {
       title:
         'Some migrations have been applied, but installing the updated dependencies failed',
       bodyLines: [
@@ -229,10 +268,13 @@ export function logNpmPeerDepsError(
   }
 }
 
-export function logSkippedPostMigrationInstall(root: string): void {
+export function logSkippedPostMigrationInstall(
+  root: string,
+  out: MigrateOutputSink = terminalOutput
+): void {
   const packageManager = detectPackageManager(root);
   const installCommand = getPackageManagerCommand(packageManager, root).install;
-  output.warn({
+  out.notice('warn', {
     title: 'Migrations updated your dependencies, but the install was skipped',
     bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
   });
@@ -241,6 +283,7 @@ export function logSkippedPostMigrationInstall(root: string): void {
 export class ChangedDepInstaller {
   private initialDeps: string;
   private _skippedInstall = false;
+  private _installed = false;
 
   constructor(
     private readonly root: string,
@@ -254,6 +297,15 @@ export class ChangedDepInstaller {
     return this._skippedInstall;
   }
 
+  /**
+   * Whether an install actually ran. Distinct from `!skippedInstall`, which is
+   * only about the skip-install flag: dependencies that never changed leave
+   * both false.
+   */
+  public get installed(): boolean {
+    return this._installed;
+  }
+
   public async installDepsIfChanged(): Promise<void> {
     const currentDeps = getStringifiedPackageJsonDeps(this.root);
     if (this.initialDeps !== currentDeps) {
@@ -261,6 +313,7 @@ export class ChangedDepInstaller {
         this._skippedInstall = true;
       } else {
         await runInstall(this.root, 'post-migration', this.rerunCommand);
+        this._installed = true;
       }
     }
     this.initialDeps = currentDeps;
@@ -311,9 +364,9 @@ export async function runNxOrAngularMigration(
       ));
     madeChanges = changes.length > 0;
 
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(singleLine(`Ran ${migration.name} from ${migration.package}`));
     if (migration.description) {
-      logger.info(`  ${migration.description}`);
+      logger.info(singleLine(`  ${migration.description}`));
     }
     logger.info('');
     if (!madeChanges) {
@@ -346,9 +399,9 @@ export async function runNxOrAngularMigration(
     madeChanges = ngResult.madeChanges;
     logs = ngResult.loggingQueue.join('\n');
 
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(singleLine(`Ran ${migration.name} from ${migration.package}`));
     if (migration.description) {
-      logger.info(`  ${migration.description}`);
+      logger.info(singleLine(`  ${migration.description}`));
     }
     logger.info('');
     if (!madeChanges) {
@@ -364,14 +417,20 @@ export async function runNxOrAngularMigration(
     }
 
     logger.info('Changes:');
-    ngResult.loggingQueue.forEach((log) => logger.info('  ' + log));
+    ngResult.loggingQueue.forEach((log) => logger.info(singleLine('  ' + log)));
     logger.info('');
   }
 
   return { changes, nextSteps, agentContext, skipAgentic, logs, madeChanges };
 }
 
-export function getStringifiedPackageJsonDeps(root: string): string {
+/**
+ * The workspace's declared dependencies, serialized for equality comparison,
+ * or `null` when package.json could not be read or parsed. Callers that
+ * persist the value across processes need that distinction: an unreadable
+ * package.json is not an empty dependency set.
+ */
+export function readPackageJsonDeps(root: string): string | null {
   try {
     const { dependencies, devDependencies } = readJsonFile<PackageJson>(
       join(root, 'package.json')
@@ -379,10 +438,14 @@ export function getStringifiedPackageJsonDeps(root: string): string {
 
     return JSON.stringify([dependencies, devDependencies]);
   } catch {
-    // We don't really care if the .nx/installation property changes,
-    // whenever nxw is invoked it will handle the dep updates.
-    return '';
+    return null;
   }
+}
+
+export function getStringifiedPackageJsonDeps(root: string): string {
+  // We don't really care if the .nx/installation property changes,
+  // whenever nxw is invoked it will handle the dep updates.
+  return readPackageJsonDeps(root) ?? '';
 }
 
 export async function runNxMigration(

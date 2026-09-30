@@ -35,7 +35,9 @@ describe('migrate-to-vitest-3', () => {
 
   describe('coverage-c8 → coverage-v8 (V3-2)', () => {
     it('renames the package.json dep while preserving the user pin and order', async () => {
-      const tree = createTreeWithEmptyWorkspace();
+      // No formatter: the rename happens in place, and oxfmt sorts package.json,
+      // so a formatted workspace normalises away the position being asserted.
+      const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
       tree.write(
         'package.json',
         JSON.stringify(

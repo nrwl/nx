@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   chmodSync,
   mkdirSync,
@@ -11,11 +12,11 @@ import { join, dirname } from 'node:path';
 // Redirect the daemon log and its directory so both states — present and
 // missing — are reachable, and so startInBackground creates nothing in the
 // workspace. Unique per run so parallel workers cannot collide.
-jest.mock('../tmp-dir', () => {
-  const actual = jest.requireActual('../tmp-dir');
-  const { join: joinPath } = require('node:path');
-  const { mkdtempSync } = require('node:fs');
-  const { tmpdir: osTmpDir } = require('node:os');
+vi.mock('../tmp-dir', async () => {
+  const actual = await vi.importActual('../tmp-dir');
+  const { join: joinPath } = await import('node:path');
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir: osTmpDir } = await import('node:os');
   const daemonDir = mkdtempSync(joinPath(osTmpDir(), 'nx-spec-daemon-'));
   return {
     ...actual,
@@ -24,29 +25,42 @@ jest.mock('../tmp-dir', () => {
   };
 });
 
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
-  spawn: jest.fn(() => ({ pid: 4242, unref: jest.fn() })),
+const daemonExit = vi.hoisted(() => ({ code: null as number | null }));
+
+vi.mock('child_process', async () => ({
+  ...require('child_process'),
+  spawn: vi.fn(() => ({
+    pid: 4242,
+    unref: vi.fn(),
+    // A daemon whose bind was refused exits before the poll gives up, so the
+    // listener fires synchronously here rather than being left dangling.
+    once: vi.fn((event: string, cb: (code: number | null) => void) => {
+      if (event === 'exit' && daemonExit.code !== null) {
+        cb(daemonExit.code);
+      }
+    }),
+  })),
 }));
 
-jest.mock('../../utils/wait-for-socket-connection', () => ({
-  waitForSocketConnection: jest.fn(),
+vi.mock('../../utils/wait-for-socket-connection', () => ({
+  waitForSocketConnection: vi.fn(),
 }));
 
-jest.mock('../logger', () => ({
-  clientLogger: { log: jest.fn() },
+vi.mock('../logger', () => ({
+  clientLogger: { log: vi.fn() },
 }));
 
-jest.mock('../cache', () => ({
-  ...jest.requireActual('../cache'),
-  readDaemonProcessJsonCache: jest.fn(),
-  getDaemonProcessIdSync: jest.fn(() => undefined),
+vi.mock('../cache', async () => ({
+  ...(await vi.importActual('../cache')),
+  readDaemonProcessJsonCache: vi.fn(),
+  getDaemonProcessIdSync: vi.fn(() => undefined),
 }));
 
 import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { clientLogger } from '../logger';
 import { readDaemonProcessJsonCache } from '../cache';
 import { DAEMON_OUTPUT_LOG_FILE as logFile } from '../tmp-dir';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import {
   daemonClient,
   daemonPermissionException,
@@ -118,15 +132,18 @@ describe('daemonPermissionException', () => {
   // The KB page attributes connect-not-create to Claude Code's
   // `allowUnixSockets`, not to scoped allowlists at large, so the clause naming
   // the limitation has to name Claude Code in the same breath.
-  it('should scope the allowAllUnixSockets advice to Claude Code', () => {
+  it('should point a sandboxed user at the generator, not at a blanket grant', () => {
+    // Measured on Claude Code 2.1.241: the scoped `allowUnixSockets` entry
+    // permits binding, so `allowAllUnixSockets` buys nothing for Nx and opens
+    // every socket on the machine. Each agent gates sockets on a different
+    // setting, so the message names the generator and the KB page rather than
+    // one agent's key.
     const { message } = daemonPermissionException(socketPath, 'connect EPERM');
 
     expect(message).toContain('allow unix sockets under the Nx socket root');
-    expect(message).toContain(
-      'in Claude Code a scoped `allowUnixSockets` only permits connecting'
-    );
-    expect(message).toContain('allowAllUnixSockets: true');
+    expect(message).toContain('nx configure-ai-agents');
     expect(message).toContain('https://nx.dev/docs/kb/nx-sandbox-unix-sockets');
+    expect(message).not.toContain('allowAllUnixSockets');
   });
 
   // The errno has to be on the first line specifically, not merely somewhere in
@@ -164,8 +181,8 @@ describe('startInBackground', () => {
   const refusedSocket = '/tmp/.nx/1001/sockets/abc123/d.sock';
 
   const refuse = (code: string) =>
-    (waitForSocketConnection as jest.Mock).mockImplementation(
-      async (_socketPath, options) => {
+    (waitForSocketConnection as Mock).mockImplementation(
+      (_socketPath, options) => {
         options?.onConnectError?.(
           Object.assign(new Error(`connect ${code} ${refusedSocket}`), {
             code,
@@ -178,13 +195,14 @@ describe('startInBackground', () => {
 
   beforeEach(() => {
     daemonClient.reset();
-    (readDaemonProcessJsonCache as jest.Mock).mockReturnValue({
+    (readDaemonProcessJsonCache as Mock).mockReturnValue({
       socketPath: refusedSocket,
     });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
+    daemonExit.code = null;
     rmSync(logFile, { force: true });
   });
 
@@ -212,7 +230,7 @@ describe('startInBackground', () => {
   // diagnosis with the one it exists to avoid.
   it('should still name the socket when the daemon removed its process json', async () => {
     refuse('EACCES');
-    (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
+    (readDaemonProcessJsonCache as Mock).mockReturnValue(undefined);
 
     const error = await daemonClient.startInBackground().catch((e) => e);
 
@@ -230,6 +248,32 @@ describe('startInBackground', () => {
     expect((error as any).daemonPermissionError).toBeUndefined();
   });
 
+  // The daemon binds in a detached child, so a refusal reaches the client only
+  // as a missing socket — ENOENT, which is also what a cold start looks like.
+  // The child's exit code is the only way that errno crosses the process
+  // boundary, and it is the sole evidence available under an agent whose
+  // sandbox `isSandbox()` cannot see, such as Copilot CLI.
+  it('should surface socket guidance when the daemon exits having been refused its bind', async () => {
+    refuse('ENOENT');
+    daemonExit.code = SOCKET_REFUSED_EXIT_CODE;
+
+    const error = await daemonClient.startInBackground().catch((e) => e);
+
+    expect(error.message).toContain('denied permission');
+    expect(error.message).toContain('NX_SOCKET_DIR');
+  });
+
+  it('should stay quiet about sockets when the daemon died for some other reason', async () => {
+    // An OOM kill or a broken install exits non-zero too; only the refusal code
+    // means the operating system said no.
+    refuse('ENOENT');
+    daemonExit.code = 1;
+
+    const error = await daemonClient.startInBackground().catch((e) => e);
+
+    expect(error.message).not.toContain('NX_SOCKET_DIR');
+  });
+
   // A refusal describes one startup attempt. Retained across a reset it would
   // misdiagnose the next command in the same process.
   it('should not carry a refusal from an earlier attempt into a later one', async () => {
@@ -237,7 +281,7 @@ describe('startInBackground', () => {
     await daemonClient.startInBackground().catch((e) => e);
 
     daemonClient.reset();
-    (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
+    (waitForSocketConnection as Mock).mockResolvedValue(null);
     const error = await daemonClient.startInBackground().catch((e) => e);
 
     expect((error as any).daemonPermissionError).toBeUndefined();
@@ -251,8 +295,8 @@ describe('startInBackground', () => {
   // startup could report a socket path belonging to someone else's attempt.
   it('should not report a refusal belonging to a concurrent poll', async () => {
     const polls: Array<{ options: any; resolve: (v: null) => void }> = [];
-    (waitForSocketConnection as jest.Mock).mockImplementation(
-      async (_socketPath, options) =>
+    (waitForSocketConnection as Mock).mockImplementation(
+      (_socketPath, options) =>
         new Promise<null>((resolve) => polls.push({ options, resolve }))
     );
 
@@ -287,8 +331,8 @@ describe('startInBackground', () => {
   // that refused us has unlinked its process json. Without it a sandbox
   // refusing connects degrades to a generic startup failure.
   it('should report the errno its caller probed with when the poll produces none', async () => {
-    (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
-    (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
+    (waitForSocketConnection as Mock).mockResolvedValue(null);
+    (readDaemonProcessJsonCache as Mock).mockReturnValue(undefined);
 
     const error = await daemonClient
       .startInBackground({
@@ -316,7 +360,7 @@ describe('startInBackground', () => {
 
       await daemonClient.startInBackground().catch((e) => e);
 
-      const logged = (clientLogger.log as jest.Mock).mock.calls
+      const logged = (clientLogger.log as Mock).mock.calls
         .map((c) => String(c[0]))
         .join('\n');
       expect(logged).toContain(expected);
@@ -341,9 +385,9 @@ describe('startInBackground', () => {
       mkdirSync(locked);
       chmodSync(locked, 0o000);
       const socketPath = join(locked, 'd.sock');
-      (readDaemonProcessJsonCache as jest.Mock).mockReturnValue({ socketPath });
+      (readDaemonProcessJsonCache as Mock).mockReturnValue({ socketPath });
       // The poll reports nothing, so the probe's errno is the only one there is.
-      (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
+      (waitForSocketConnection as Mock).mockResolvedValue(null);
 
       try {
         daemonClient.reset();
@@ -367,10 +411,10 @@ describe('startInBackground', () => {
       const locked = join(base, 'locked');
       mkdirSync(locked);
       chmodSync(locked, 0o000);
-      (readDaemonProcessJsonCache as jest.Mock).mockReturnValue({
+      (readDaemonProcessJsonCache as Mock).mockReturnValue({
         socketPath: join(locked, 'd.sock'),
       });
-      (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
+      (waitForSocketConnection as Mock).mockResolvedValue(null);
 
       try {
         daemonClient.reset();
@@ -378,7 +422,7 @@ describe('startInBackground', () => {
 
         // By hand, not via reset(): reset() would clear any instance-held
         // refusal, which is exactly the regression this checks for.
-        (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
+        (readDaemonProcessJsonCache as Mock).mockReturnValue(undefined);
         (daemonClient as any)._daemonStatus = 1; // DISCONNECTED
         const error = await (daemonClient as any)
           .startDaemonIfNecessary()
@@ -405,11 +449,53 @@ describe('startInBackground', () => {
     // No reset, and the poll never reports an errno: with the process json
     // absent the resolver returns null every tick, so tryConnect is not called
     // and onConnectError does not fire. Nothing overwrites the previous value.
-    (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
-    (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
+    (readDaemonProcessJsonCache as Mock).mockReturnValue(undefined);
+    (waitForSocketConnection as Mock).mockResolvedValue(null);
     const error = await daemonClient.startInBackground().catch((e) => e);
 
     expect((error as any).daemonPermissionError).toBeUndefined();
     expect((error as any).internalDaemonError).toBe(true);
+  });
+});
+
+describe('hashTasks', () => {
+  it('sends the daemon a graph without run results', async () => {
+    const { DaemonClient } = await import('./client');
+    // The prototype alone: hashTasks touches nothing the constructor sets up.
+    const client = Object.create(DaemonClient.prototype);
+    const send = vi
+      .spyOn(client, 'sendToDaemonViaQueue')
+      .mockResolvedValue([] as never);
+    const task = {
+      id: 'a:build',
+      target: { project: 'a', target: 'build' },
+      overrides: {},
+      outputs: [],
+      hash: 'h',
+      hashDetails: { command: 'build', nodes: {} },
+      startTime: 1,
+      endTime: 2,
+      terminalOutput: 'out',
+    } as any;
+    const taskGraph = {
+      roots: ['a:build'],
+      tasks: { 'a:build': task },
+      dependencies: {},
+      continuousDependencies: {},
+    } as any;
+    await client.hashTasks({}, [task], taskGraph, {}, '/w');
+    const message = send.mock.calls[0][0] as any;
+    // Exact on purpose: a new Task field lands here and forces a decision on
+    // whether the daemon should see it. Widening this to "field X is absent"
+    // would let it ride along unnoticed.
+    for (const sent of [message.tasks[0], message.taskGraph.tasks['a:build']]) {
+      expect(Object.keys(sent).sort()).toEqual([
+        'id',
+        'outputs',
+        'overrides',
+        'target',
+      ]);
+    }
+    expect(task.hashDetails).toBeDefined();
   });
 });

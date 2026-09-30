@@ -15,7 +15,8 @@ let tsModule: typeof import('typescript');
 const allowedFileExt = new RegExp(/\.[jt]sx?/);
 const isSpecFile = new RegExp(/(spec|test)\./);
 
-export async function configureCypressCT(
+// Resolved before the shared cypress generator runs, so the bundler reaches it.
+export async function resolveCypressCTTarget(
   tree: Tree,
   options: {
     project: string;
@@ -23,10 +24,9 @@ export async function configureCypressCT(
     bundler: 'vite' | 'webpack';
     validExecutorNames: Set<string>;
   }
-): Promise<FoundTarget> {
+): Promise<{ found: FoundTarget; bundler: 'vite' | 'webpack' }> {
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
-  const projectConfig = readProjectConfiguration(tree, options.project);
   // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
   if (options.buildTarget === undefined) {
     const {
@@ -57,6 +57,22 @@ export async function configureCypressCT(
     }
   }
 
+  return {
+    found,
+    bundler: options.bundler ?? (await getActualBundler(tree, options, found)),
+  };
+}
+
+export async function configureCypressCT(
+  tree: Tree,
+  options: {
+    project: string;
+    found: FoundTarget;
+    bundler: 'vite' | 'webpack';
+  }
+): Promise<void> {
+  const { found } = options;
+  const projectConfig = readProjectConfiguration(tree, options.project);
   const {
     addDefaultCTConfig,
     getProjectCypressConfigPath,
@@ -64,7 +80,7 @@ export async function configureCypressCT(
   }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
 
   const ctConfigOptions: NxComponentTestingOptions = {
-    bundler: options.bundler ?? (await getActualBundler(tree, options, found)),
+    bundler: options.bundler,
   };
   if (
     projectConfig.targets?.['component-test']?.executor ===
@@ -91,8 +107,6 @@ export async function configureCypressCT(
     getInstalledCypressMajorVersion(tree)
   );
   tree.write(cypressConfigFilePath, updatedCyConfig);
-
-  return found;
 }
 
 function assertValidConfig(config: unknown) {

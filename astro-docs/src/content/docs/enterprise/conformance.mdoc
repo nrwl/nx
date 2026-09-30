@@ -108,6 +108,8 @@ Here we are using the `nx-cloud` CLI to run the `conformance:check` command so t
 
 If a valid license is not available to the workspace (either locally or via Nx Cloud), the `conformance` and `conformance:check` commands will fail without checking any rules.
 
+Pass `--printConfig` to either command to print the resolved conformance configuration for the workspace.
+
 ## Taking things further with Nx Cloud Enterprise
 
 Organizations on the Nx Cloud Enterprise plan can [publish custom conformance rules](/docs/enterprise/publish-conformance-rules-to-nx-cloud) to their Nx Cloud organization without the friction of a custom registry, and then [configure the rules](/docs/enterprise/configure-conformance-rules-in-nx-cloud) to apply to the workspaces in their organization automatically when `nx-cloud conformance` or `nx-cloud conformance:check` is run (note that the `nx-cloud` CLI is used in this case in order to handle the authentication with Nx Cloud).

@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { exec, execSync, type StdioOptions } from 'child_process';
-import { canPrompt, migratePrompt } from './safe-prompt';
+import { canPrompt, migrateChoice, migrateConfirm } from './safe-prompt';
 import { dirname, join } from 'path';
 import { createRequire } from 'module';
 import { joinPathFragments } from '../../utils/path';
@@ -35,12 +35,11 @@ import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { quoteShellArg } from '../../utils/shell-quoting';
 import { logger } from '../../utils/logger';
+import { IS_WASM } from '../../native';
 import {
-  getGitCurrentBranch,
   getUncommittedChangesSnapshot,
   isGitRepository,
 } from '../../utils/git-utils';
-import { getBaseRef } from '../../utils/command-line-utils';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -57,6 +56,7 @@ import {
   PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
+  parseRegistryViewJson,
 } from '../../utils/package-manager';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import {
@@ -86,7 +86,7 @@ import { readNxJson } from '../../config/configuration';
 import { readInstalledNxBin, runNxArgvSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
-import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatFileContents } from '../../generators/internal-utils/format-changed-files';
 import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
@@ -136,10 +136,12 @@ import {
   assertCommitPrefixHasCommits,
 } from './migrate-config';
 import type { ResolvedAgentic } from './agentic/types';
+import type { MigrateRunState, RunOrchestratorInitInput } from './run';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
-  confirmCommitsOnDefaultBranch,
+  confirmMigrationCommitsOnDefaultBranch,
+  currentBranchIfDefault,
   resolveCreateCommits,
 } from './migrate-commits';
 import {
@@ -181,10 +183,13 @@ import {
   runInstall,
   runNxOrAngularMigration,
 } from './execute-migration';
+import { isStepAction, STEP_ACTIONS, type StepAction } from './step-actions';
 import { sortMigrations } from './sort-migrations';
+import { isInsideAgent } from './agentic/inception';
 import {
   assertWorkspaceNxSupportsNewMigrateFlags,
   resolveNewMigrateFlagsRunTarget,
+  targetsExistingRun,
 } from './version-skew-guard';
 import { nxVersion as ownNxVersion } from '../../utils/versions';
 
@@ -291,6 +296,12 @@ export interface MigratorOptions {
   requiredPackages?: ReadonlySet<string>;
 }
 
+interface PendingPackageJsonUpdate {
+  package: string;
+  key: string;
+  update: PackageJsonUpdates[string];
+}
+
 export class Migrator {
   private readonly packageJson?: MigratorOptions['packageJson'];
   private readonly getInstalledPackageVersion: MigratorOptions['getInstalledPackageVersion'];
@@ -304,6 +315,11 @@ export class Migrator {
   private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
   private readonly promptAnswers: Record<string, boolean> = {};
+  private readonly pendingPackageJsonUpdates = new Map<
+    string,
+    PendingPackageJsonUpdate
+  >();
+  private readonly appliedPackageJsonUpdates = new Set<string>();
   private readonly nxInstallation: NxJsonConfiguration['installation'] | null;
   private minVersionWithSkippedUpdates: string | undefined;
 
@@ -346,6 +362,7 @@ export class Migrator {
       version: targetVersion,
       addToPackageJson: false,
     });
+    await this.applyPendingPackageJsonUpdates();
     this.applyIncludeFilter();
 
     const { migrations, promptContents } = await this.createMigrateJson();
@@ -415,43 +432,102 @@ export class Migrator {
       for (const [packageUpdateKey, packageUpdate] of Object.entries(
         packageToCheck.updates
       )) {
-        if (
-          this.areRequirementsMet(packageUpdate.requires) &&
-          !this.areIncompatiblePackagesPresent(
-            packageUpdate.incompatibleWith
-          ) &&
-          (!this.interactive ||
-            (await this.runPackageJsonUpdatesConfirmationPrompt(
-              packageUpdate,
-              packageUpdateKey,
-              packageToCheck.package
-            )))
-        ) {
-          const updateEntries = Object.entries(packageUpdate.packages);
-          // Validate all up front so invalid metadata fails fast, before any
-          // resolution does I/O.
-          for (const [name, update] of updateEntries) {
-            this.validatePackageUpdateVersion(
-              packageToCheck.package,
-              name,
-              update
-            );
-          }
-          // Resolve serially: resolution can prompt (pnpm strict cooldown) and
-          // append to minimumReleaseAgeExclude, so a serial loop avoids
-          // overlapping prompts and keeps packageUpdates ordering stable.
-          for (const [name, update] of updateEntries) {
-            const resolvedUpdate = {
-              ...update,
-              version: await this.resolveVersionForCascade(
-                name,
-                update.version
-              ),
-            };
-            filteredUpdates[name] = resolvedUpdate;
-            this.packageUpdates[name] = resolvedUpdate;
-          }
+        Object.assign(
+          filteredUpdates,
+          await this.applyPackageJsonUpdate(
+            packageToCheck.package,
+            packageUpdateKey,
+            packageUpdate
+          )
+        );
+      }
+
+      await Promise.all(
+        Object.entries(filteredUpdates).map(([name, update]) =>
+          this.buildPackageJsonUpdates(name, update)
+        )
+      );
+    }
+  }
+
+  private async applyPackageJsonUpdate(
+    sourcePackage: string,
+    packageUpdateKey: string,
+    packageUpdate: PackageJsonUpdates[string]
+  ): Promise<Record<string, PackageUpdate>> {
+    const appliedKey = JSON.stringify([sourcePackage, packageUpdateKey]);
+    if (this.appliedPackageJsonUpdates.has(appliedKey)) {
+      this.pendingPackageJsonUpdates.delete(appliedKey);
+      return {};
+    }
+
+    if (
+      !this.areRequirementsMet(packageUpdate.requires) ||
+      this.areIncompatiblePackagesPresent(packageUpdate.incompatibleWith)
+    ) {
+      this.pendingPackageJsonUpdates.set(appliedKey, {
+        package: sourcePackage,
+        key: packageUpdateKey,
+        update: packageUpdate,
+      });
+      return {};
+    }
+
+    this.pendingPackageJsonUpdates.delete(appliedKey);
+    if (
+      this.interactive &&
+      !(await this.runPackageJsonUpdatesConfirmationPrompt(
+        packageUpdate,
+        packageUpdateKey,
+        sourcePackage
+      ))
+    ) {
+      return {};
+    }
+
+    this.appliedPackageJsonUpdates.add(appliedKey);
+    const updateEntries = Object.entries(packageUpdate.packages);
+    // Validate all up front so invalid metadata fails fast, before any
+    // resolution does I/O.
+    for (const [name, update] of updateEntries) {
+      this.validatePackageUpdateVersion(sourcePackage, name, update);
+    }
+
+    const filteredUpdates: Record<string, PackageUpdate> = {};
+    // Resolve serially: resolution can prompt (pnpm strict cooldown) and append
+    // to minimumReleaseAgeExclude, so a serial loop avoids overlapping prompts
+    // and keeps packageUpdates ordering stable.
+    for (const [name, update] of updateEntries) {
+      const resolvedUpdate = {
+        ...update,
+        version: await this.resolveVersionForCascade(name, update.version),
+      };
+      this.addPackageUpdate(name, resolvedUpdate);
+      filteredUpdates[name] = this.packageUpdates[name];
+    }
+
+    return filteredUpdates;
+  }
+
+  private async applyPendingPackageJsonUpdates(): Promise<void> {
+    while (this.pendingPackageJsonUpdates.size) {
+      let applied = false;
+      const filteredUpdates: Record<string, PackageUpdate> = {};
+
+      for (const pending of [...this.pendingPackageJsonUpdates.values()]) {
+        const updates = await this.applyPackageJsonUpdate(
+          pending.package,
+          pending.key,
+          pending.update
+        );
+        if (Object.keys(updates).length) {
+          applied = true;
+          Object.assign(filteredUpdates, updates);
         }
+      }
+
+      if (!applied) {
+        return;
       }
 
       await Promise.all(
@@ -796,7 +872,7 @@ export class Migrator {
   private addPackageUpdate(name: string, packageUpdate: PackageUpdate): void {
     if (
       !this.packageUpdates[name] ||
-      this.gt(packageUpdate.version, this.packageUpdates[name].version)
+      !this.lt(packageUpdate.version, this.packageUpdates[name].version)
     ) {
       this.packageUpdates[name] = packageUpdate;
     }
@@ -915,39 +991,32 @@ export class Migrator {
       return Promise.resolve(false);
     }
 
-    const promptConfig = {
-      name: 'shouldApply',
-      type: 'confirm',
-      message: packageUpdate['x-prompt'],
-      initial: true,
-    };
-
-    if (packageName.startsWith('@nx/')) {
-      // @ts-expect-error -- enquirer types aren't correct, footer does exist
-      promptConfig.footer = () =>
-        pc.dim(
-          `  View migration details at https://nx.dev/nx-api/${packageName.replace(
+    // No footer slot, so the docs link is appended to the message.
+    const detailsLink = packageName.startsWith('@nx/')
+      ? pc.dim(
+          `\n  View migration details at https://nx.dev/nx-api/${packageName.replace(
             '@nx/',
             ''
           )}#${packageUpdateKey.replace(/[-\.]/g, '')}packageupdates`
-        );
-    }
+        )
+      : '';
 
-    return await migratePrompt([promptConfig]).then(
-      ({ shouldApply }: { shouldApply: boolean }) => {
-        this.promptAnswers[promptKey] = shouldApply;
+    return await migrateConfirm({
+      message: `${packageUpdate['x-prompt']}${detailsLink}`,
+      initial: true,
+    }).then((shouldApply: boolean) => {
+      this.promptAnswers[promptKey] = shouldApply;
 
-        if (
-          !shouldApply &&
-          (!this.minVersionWithSkippedUpdates ||
-            lt(packageUpdate.version, this.minVersionWithSkippedUpdates))
-        ) {
-          this.minVersionWithSkippedUpdates = packageUpdate.version;
-        }
-
-        return shouldApply;
+      if (
+        !shouldApply &&
+        (!this.minVersionWithSkippedUpdates ||
+          lt(packageUpdate.version, this.minVersionWithSkippedUpdates))
+      ) {
+        this.minVersionWithSkippedUpdates = packageUpdate.version;
       }
-    );
+
+      return shouldApply;
+    });
   }
 
   private getPackageUpdatePromptKey(
@@ -1066,10 +1135,10 @@ export async function resolveInclude(
     setMigrateIncludeSource('nx-json');
     return configuredInclude;
   }
-  const choices: { name: string; message: string }[] = [
+  const choices: { value: MigrateInclude; label: string }[] = [
     {
-      name: 'required',
-      message:
+      value: 'required',
+      label:
         'Required only (the target package and the packages it ships with)',
     },
   ];
@@ -1081,9 +1150,8 @@ export async function resolveInclude(
     context.interactive !== true
   ) {
     choices.push({
-      name: 'optional',
-      message:
-        'Optional only (the dependency updates those packages recommend)',
+      value: 'optional',
+      label: 'Optional only (the dependency updates those packages recommend)',
     });
   }
   if (!canPrompt(context.interactive)) {
@@ -1091,14 +1159,10 @@ export async function resolveInclude(
     return 'all';
   }
   choices.push({
-    name: 'all',
-    message: 'All (required and optional)',
+    value: 'all',
+    label: 'All (required and optional)',
   });
-  const { include: selected } = await migratePrompt<{
-    include: MigrateInclude;
-  }>({
-    type: 'select',
-    name: 'include',
+  const selected = await migrateChoice<MigrateInclude>({
     message: 'Which packages would you like to migrate?',
     choices,
   });
@@ -1216,24 +1280,76 @@ type RunMigrations = {
   agentic: AgenticArg;
   validate?: boolean;
   interactive?: boolean;
+  // The orchestrated run to continue, or the one --start-fresh replaces.
+  runId?: string;
+  // Delete the active orchestrated run's record and start a new run.
+  startFresh?: boolean;
 };
 
 type RunSingleMigration = {
   type: 'runSingleMigration';
   runMigration: string;
+  runId?: string;
   agentic: AgenticArg;
   validate?: boolean;
   interactive?: boolean;
 };
 
+type OrchestratorReconcile = {
+  type: 'orchestratorReconcile';
+  runId: string;
+  stepAction?: StepAction;
+};
+
 export async function parseMigrationsOptions(
   options: MigrateArgs,
   fetch?: MigratorOptions['fetch']
-): Promise<GenerateMigrations | RunMigrations | RunSingleMigration> {
+): Promise<
+  | GenerateMigrations
+  | RunMigrations
+  | RunSingleMigration
+  | OrchestratorReconcile
+> {
+  // A run recorded or reconciled via `--run-id` is driven by the outer agent;
+  // spawning another agent from it would double-drive the run. Only the
+  // explicit "on" values conflict; the nx.json default is not applied to
+  // those invocations instead. The `--run-migrations` shape is the
+  // exception: there `--run-id` names the run a continue re-enters, or the
+  // one a `--start-fresh` replaces.
+  if (
+    options.runId !== undefined &&
+    options.agentic !== undefined &&
+    options.agentic !== false &&
+    options.runMigrations === undefined
+  ) {
+    throw new Error(`Error: '--agentic' cannot be combined with '--run-id'.`);
+  }
+
+  if (options.startFresh === true) {
+    if (options.runMigrations === undefined) {
+      throw new Error(`Error: '--start-fresh' requires '--run-migrations'.`);
+    }
+    if (options.runId === undefined) {
+      throw new Error(
+        `Error: '--start-fresh' requires '--run-id=<id>' naming the run to replace; the report prints it.`
+      );
+    }
+  }
+
   if (options.runMigration !== undefined) {
     if (options.runMigration === '') {
       throw new Error(
         `Error: '--run-migration' requires a migration id, e.g. '--run-migration=@nx/js:my-migration'.`
+      );
+    }
+    if (options.runId === '') {
+      throw new Error(
+        `Error: '--run-id' requires the id of the migrate run to record into.`
+      );
+    }
+    if (options.stepAction !== undefined) {
+      throw new Error(
+        `Error: '--step-action' cannot be combined with '--run-migration'. It applies to an orchestrated reconcile ('--run-id' without '--run-migration').`
       );
     }
     if (options.runMigrations !== undefined) {
@@ -1261,10 +1377,62 @@ export async function parseMigrationsOptions(
     return {
       type: 'runSingleMigration',
       runMigration: options.runMigration,
+      runId: options.runId,
       agentic: options.agentic,
       validate: options.validate,
       interactive: options.interactive,
     };
+  }
+
+  if (options.runId !== undefined) {
+    // Empty '--run-id' is an error on every path.
+    if (options.runId === '') {
+      throw new Error(
+        `Error: '--run-id' requires the id of the migrate run to record into.`
+      );
+    }
+    // With `--run-migrations`, `--run-id` continues the named run, which needs
+    // `--agentic`; a start-fresh names the run it replaces instead.
+    if (
+      options.runMigrations !== undefined &&
+      options.startFresh !== true &&
+      (options.agentic === undefined || options.agentic === false)
+    ) {
+      throw new Error(
+        `Error: '--run-id' (reconcile an orchestrated run) cannot be combined with '--run-migrations' (run the whole migrations file). To continue the run, pass '--agentic' (or '--agentic=<agent>') as well.`
+      );
+    }
+    if (
+      options.runMigrations !== undefined &&
+      options.stepAction !== undefined
+    ) {
+      throw new Error(
+        `Error: '--step-action' cannot be combined with '--run-migrations'.`
+      );
+    }
+    // A bare '--run-id' reconciles the run it names. Ungated, unlike init:
+    // the id has to name a run directory that exists, and only a gated init
+    // ever creates one.
+    // yargs' choices already reject bad CLI values; this guards programmatic
+    // callers, where silently dropping the action would reconcile without it.
+    if (options.stepAction !== undefined && !isStepAction(options.stepAction)) {
+      throw new Error(
+        `Error: '--step-action' must be one of ${STEP_ACTIONS.join(', ')}.`
+      );
+    }
+    if (options.runMigrations === undefined) {
+      return {
+        type: 'orchestratorReconcile',
+        runId: options.runId as string,
+        ...(options.stepAction !== undefined
+          ? { stepAction: options.stepAction }
+          : {}),
+      };
+    }
+  }
+
+  if (options.stepAction !== undefined) {
+    throw new Error(`Error: '--step-action' requires '--run-id'.`);
   }
 
   if (options.runMigrations === '') {
@@ -1290,6 +1458,8 @@ export async function parseMigrationsOptions(
       agentic: options.agentic,
       validate: options.validate,
       interactive: options.interactive,
+      ...(options.runId !== undefined ? { runId: options.runId } : {}),
+      ...(options.startFresh === true ? { startFresh: true } : {}),
     };
   }
 
@@ -1868,32 +2038,50 @@ async function getPackageMigrationsUsingRegistry(
   );
 }
 
+// Matched exactly: a hostname that merely contains one of these is a different
+// registry. registry.yarnpkg.com is npmjs' CNAME, so it serves the same
+// metadata; the two loopback literals are the spellings of a local registry
+// that the substring below cannot reach, since neither contains "localhost".
+const FULL_METADATA_REGISTRIES: readonly string[] = [
+  'registry.npmjs.org',
+  'registry.yarnpkg.com',
+  '127.0.0.1',
+  '[::1]',
+];
+// Matched as substrings, since neither names a single host: a local registry
+// can sit on a subdomain of localhost, and an Artifactory instance is
+// identified only by that word appearing somewhere in its hostname.
+const FULL_METADATA_REGISTRY_MARKERS: readonly string[] = [
+  'localhost',
+  'artifactory',
+];
+
 async function getPackageMigrationsConfigFromRegistry(
   packageName: string,
   packageVersion: string
 ) {
-  const result = await packageRegistryView(
-    packageName,
-    packageVersion,
-    'nx-migrations ng-update dist --json'
-  );
+  const result = await packageRegistryView(packageName, packageVersion, [
+    'nx-migrations',
+    'ng-update',
+    'dist',
+    '--json',
+  ]);
 
   if (!result) {
     return null;
   }
 
-  const json = JSON.parse(result);
+  const json = parseRegistryViewJson<Record<string, any>>(result);
 
   if (!json['nx-migrations'] && !json['ng-update']) {
     const registry = new URL('dist' in json ? json.dist.tarball : json.tarball)
       .hostname;
 
-    // Registries other than npmjs and the local registry may not support full metadata via npm view
-    // so throw error so that fetcher falls back to getting config via install
+    // Other registries may not support full metadata via npm view; throw to
+    // trigger the install fallback.
     if (
-      !['registry.npmjs.org', 'localhost', 'artifactory'].some((v) =>
-        registry.includes(v)
-      )
+      !FULL_METADATA_REGISTRIES.includes(registry) &&
+      !FULL_METADATA_REGISTRY_MARKERS.some((v) => registry.includes(v))
     ) {
       throw new Error(
         `Getting migration config from registry is not supported from ${registry}`
@@ -2187,7 +2375,7 @@ async function formatCatalogDefinitionFiles(
     };
   });
 
-  const results = await formatFilesWithPrettierIfAvailable(
+  const results = await formatFileContents(
     catalogDefinitionFiles.map(({ path, content }) => ({ path, content })),
     root,
     { silent: true }
@@ -3056,6 +3244,10 @@ export async function executeMigrations(
   };
 }
 
+function orchestratorFlagNeedsOrchestrator(flag: string): string {
+  return `'${flag}' acts on an orchestrated migrate run (NX_MIGRATE_ORCHESTRATOR=true with an enabled agent), and this invocation is not orchestrated.`;
+}
+
 // nx is located at spawn time, after the gated pre-install, so the child runs
 // the bytes that install put in place.
 function handOffToLocalNx(args: string[]): number | undefined {
@@ -3080,6 +3272,8 @@ async function runMigrations(
     agentic: AgenticArg;
     validate?: boolean;
     interactive?: boolean;
+    runId?: string;
+    startFresh?: boolean;
   },
   args: string[],
   isVerbose: boolean,
@@ -3087,6 +3281,36 @@ async function runMigrations(
   commitPrefix: string,
   shouldSkipInstall = false
 ) {
+  // Both flags act on an orchestrated run: refuse them where none can run
+  // (an explicit --agentic=false outside an agent cannot reach one either),
+  // before the install and before --if-exists could return silently.
+  const orchestratorFlag =
+    opts.startFresh === true
+      ? '--start-fresh'
+      : opts.runId !== undefined
+        ? '--run-id'
+        : undefined;
+  if (
+    orchestratorFlag !== undefined &&
+    (process.env.NX_MIGRATE_ORCHESTRATOR !== 'true' ||
+      (opts.agentic === false && !isInsideAgent()))
+  ) {
+    throw new Error(orchestratorFlagNeedsOrchestrator(orchestratorFlag));
+  }
+
+  const isContinue = opts.runId !== undefined && opts.startFresh !== true;
+  let continued: MigrateRunState | undefined;
+  if (isContinue) {
+    // Before the install: a concurrent start-fresh must not delete the run
+    // this command is about to continue.
+    const { holdRunToContinue } = require('./run') as typeof import('./run');
+    continued = holdRunToContinue(root, opts.runId);
+  } else if (opts.startFresh === true) {
+    // Before the install too: with no active run there is nothing to replace.
+    const { activeRunToReplace } = require('./run') as typeof import('./run');
+    activeRunToReplace(root, opts.runId);
+  }
+
   if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
     await runInstall();
   }
@@ -3094,24 +3318,132 @@ async function runMigrations(
   if (!__dirname.startsWith(workspaceRoot)) {
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
+    if (isContinue) {
+      // The child holds the run itself and refuses while this process does.
+      const { releaseRunToHandOff } =
+        require('./run') as typeof import('./run');
+      releaseRunToHandOff(root, opts.runId);
+    }
     return handOffToLocalNx(args);
   }
 
-  const migrationsExists: boolean = fileExists(opts.runMigrations);
+  let migrationsJson: { migrations?: PlannedMigration[]; [k: string]: unknown };
+  if (isContinue) {
+    // A continue runs the plan the run recorded, not whatever the workspace's
+    // migrations file holds now (it may be gone, or belong to another plan).
+    const { latestRound, runDir } = require('./run') as typeof import('./run');
+    const round = latestRound(continued);
+    if (!round) {
+      throw new Error(`Migrate run '${opts.runId}' records no plan.`);
+    }
+    migrationsJson = readJsonFile(
+      join(runDir(root, opts.runId), round.planSnapshot)
+    );
+  } else {
+    const migrationsExists: boolean = fileExists(opts.runMigrations);
 
-  if (opts.ifExists && !migrationsExists) {
-    output.log({
-      title: `Migrations file '${opts.runMigrations}' doesn't exist`,
+    if (opts.ifExists && !migrationsExists) {
+      output.log({
+        title: `Migrations file '${opts.runMigrations}' doesn't exist`,
+      });
+      return;
+    } else if (!opts.ifExists && !migrationsExists) {
+      throw new Error(
+        `File '${opts.runMigrations}' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
+      );
+    }
+
+    migrationsJson = readJsonFile(join(root, opts.runMigrations));
+  }
+  const migrations: PlannedMigration[] = migrationsJson.migrations;
+  // Defer the nx package lookup until an orchestrated branch needs this payload.
+  const orchestratorInitInput = (
+    createCommits: boolean
+  ): Omit<RunOrchestratorInitInput, 'emitAgentInstructions'> => ({
+    root,
+    migrationsJson,
+    migrationsPath: opts.runMigrations,
+    createCommits,
+    commitPrefix,
+    // The flag only, never NX_MIGRATE_SKIP_INSTALL: the wrapper's local
+    // re-exec sets that env var for its own hop, and it says nothing about
+    // what the user asked for.
+    skipInstall: shouldSkipInstall,
+    installedNxVersion: readModulePackageJson('nx', getNxRequirePaths(root))
+      .packageJson.version,
+    validate: opts.validate,
+  });
+
+  // An outer agent drives the loop, so hand off to the orchestrator instead of
+  // the classic loop: init starts a fresh run or reports an already-active
+  // one; `--run-id` continues that run. Bare `--run-id` reconciles are
+  // dispatched separately and never reach here.
+  if (process.env.NX_MIGRATE_ORCHESTRATOR === 'true' && isInsideAgent()) {
+    const { runOrchestratorInit, runOrchestratorResume } =
+      require('./run') as typeof import('./run');
+    // Orchestrated runs are agent-driven, so commits default on exactly as they
+    // do under `--agentic=enabled`; the orchestrator replaces `resolveAgentic`.
+    const {
+      effective: effectiveCreateCommits,
+      warning: createCommitsWarning,
+      error: createCommitsError,
+    } = resolveCreateCommits({
+      createCommits: shouldCreateCommits,
+      mode: 'orchestrated',
+      isGitRepo: isGitRepository(root),
+      commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
+    });
+    if (createCommitsError) {
+      throw new Error(createCommitsError);
+    }
+    if (createCommitsWarning) {
+      output.warn({ title: createCommitsWarning });
+    }
+    if (isContinue) {
+      runOrchestratorResume({
+        root,
+        runId: opts.runId,
+        policy: {
+          createCommits: effectiveCreateCommits,
+          skipInstall: shouldSkipInstall,
+        },
+      });
+      return;
+    }
+    // The run commits on the user's behalf across many invocations and the
+    // agent driving it cannot answer a terminal prompt, so a commit policy the
+    // user never asked for stops the run on the default branch before any of
+    // them. `--create-commits` or nx.json `migrate.createCommits` is that ask.
+    // Asked by init only once it is about to start a run: an active run is
+    // reported instead, and keeps its own policy.
+    const refuseCommitsOnDefaultBranch = async (): Promise<boolean> => {
+      if (!effectiveCreateCommits || shouldCreateCommits !== undefined) {
+        return true;
+      }
+      const defaultBranch = currentBranchIfDefault(root);
+      if (!defaultBranch) {
+        return true;
+      }
+      output.log({
+        title: `Not starting the run: you are on the default branch '${defaultBranch}' and nx migrate would create a commit for each migration on it.`,
+        bodyLines: [
+          'Ask the user how to proceed, then either:',
+          '- re-run with --create-commits to commit on this branch for this run,',
+          '- set "migrate": { "createCommits": true } in nx.json to always allow it, then re-run,',
+          '- or switch to another branch and re-run.',
+        ],
+      });
+      return false;
+    };
+    const init = orchestratorInitInput(effectiveCreateCommits);
+    await runOrchestratorInit({
+      ...init,
+      onExistingRun: opts.startFresh === true ? 'start-fresh' : 'report',
+      ...(opts.startFresh === true ? { replaceRunId: opts.runId } : {}),
+      confirmStart: refuseCommitsOnDefaultBranch,
     });
     return;
-  } else if (!opts.ifExists && !migrationsExists) {
-    throw new Error(
-      `File '${opts.runMigrations}' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
-    );
   }
-
-  const migrationsJson = readJsonFile(join(root, opts.runMigrations));
-  const migrations: PlannedMigration[] = migrationsJson.migrations;
 
   reportMigrateRunStart({
     createCommits: shouldCreateCommits ?? false,
@@ -3139,7 +3471,7 @@ async function runMigrations(
     error: createCommitsError,
   } = resolveCreateCommits({
     createCommits: shouldCreateCommits,
-    agenticKind: agentic.kind,
+    mode: agentic.kind,
     isGitRepo: isGitRepository(root),
     commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
   });
@@ -3150,24 +3482,40 @@ async function runMigrations(
     output.warn({ title: createCommitsWarning });
   }
 
-  if (effectiveCreateCommits && canPrompt(opts.interactive)) {
-    const currentBranch = getGitCurrentBranch(root);
-    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
-    // generator); compare against the local branch name.
-    const defaultBranch = getBaseRef(readNxJson(root)).replace(/^origin\//, '');
-    const proceed = await confirmCommitsOnDefaultBranch({
-      currentBranch,
-      defaultBranch,
+  // Asked only for a run this invocation starts: the master session hands it
+  // to init, which asks once it is about to start one; a continued run keeps
+  // the policy it was started with.
+  const confirmNewRunCommits = async (): Promise<boolean> =>
+    !effectiveCreateCommits ||
+    !canPrompt(opts.interactive) ||
+    confirmMigrationCommitsOnDefaultBranch(root, 'running migrations');
+
+  // Dark: with the env var set, the agent drives the whole run through the
+  // orchestrator from one session instead of being spawned per step. Not
+  // under WASM, where the broker has no native lock to detect a dead parent.
+  if (
+    agentic.kind === 'enabled' &&
+    process.env.NX_MIGRATE_ORCHESTRATOR === 'true' &&
+    !IS_WASM
+  ) {
+    const init = orchestratorInitInput(effectiveCreateCommits);
+    const { runMasterSession } =
+      require('./agentic/master/run-master-session') as typeof import('./agentic/master/run-master-session');
+    return await runMasterSession({
+      ...init,
+      agent: agentic.selectedAgent,
+      interactive: opts.interactive,
+      runId: opts.runId,
+      startFresh: opts.startFresh,
+      confirmStart: confirmNewRunCommits,
     });
-    if (!proceed) {
-      output.log({
-        title: `Skipped running migrations to avoid committing to the default branch '${currentBranch}'.`,
-        bodyLines: [
-          'Switch to a different branch and re-run, or re-run and confirm to proceed.',
-        ],
-      });
-      return;
-    }
+  }
+  if (orchestratorFlag !== undefined) {
+    throw new Error(orchestratorFlagNeedsOrchestrator(orchestratorFlag));
+  }
+
+  if (!(await confirmNewRunCommits())) {
+    return;
   }
 
   const shouldRunValidation = resolveShouldRunValidation({
@@ -3327,10 +3675,14 @@ async function runMigrations(
   });
 }
 
-export function isSingleMigrationInvocation(
-  args: Pick<MigrateArgs, 'runMigration'>
+export function isRunPhaseInvocation(
+  args: Pick<MigrateArgs, 'runMigration' | 'runId' | 'stepAction'>
 ): boolean {
-  return args.runMigration !== undefined;
+  return (
+    args.runMigration !== undefined ||
+    args.runId !== undefined ||
+    args.stepAction !== undefined
+  );
 }
 
 export async function migrate(
@@ -3342,10 +3694,12 @@ export async function migrate(
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
     const mergedArgs = applyNxJsonMigrateDefaults(args, readNxJson().migrate);
-    // A single-migration invocation resolves its commit config downstream via
-    // resolveCreateCommits, so this assert must not fire for it.
-    const singleMigration = isSingleMigrationInvocation(mergedArgs);
-    if (!singleMigration) {
+    // Run-phase invocations resolve their commit config downstream (run.json
+    // for recorded runs, resolveCreateCommits for standalone), so this assert
+    // must not fire for them; otherwise an nx.json prefix the whole-file run
+    // legitimately uses would wedge every dispensed command.
+    const runPhase = isRunPhaseInvocation(mergedArgs);
+    if (!runPhase) {
       assertCommitPrefixHasCommits(mergedArgs);
     }
     // One fetcher (registry-first, install fallback) shared by the `--include`
@@ -3353,16 +3707,16 @@ export async function migrate(
     // at most once per package/version.
     const fetch = createFetcher(getPackageManagerCommand());
     // `--run-migrations` without a value parses as '', so only undefined (and
-    // no single-migration flag) means the generate phase.
+    // no run-phase flag) means the generate phase.
     const isGenerateInvocation =
-      mergedArgs['runMigrations'] === undefined && !singleMigration;
+      mergedArgs['runMigrations'] === undefined && !runPhase;
     let opts: Awaited<ReturnType<typeof parseMigrationsOptions>>;
     try {
       opts = await parseMigrationsOptions(mergedArgs, fetch);
     } catch (e) {
       if (isGenerateInvocation) {
         reportMigrateGenerateError('resolve_version', e);
-      } else if (singleMigration) {
+      } else if (runPhase) {
         reportMigrateRunError({ code: 'other', error: e });
       }
       throw e;
@@ -3389,6 +3743,8 @@ export async function migrate(
           reportMigrateRunError({ code: 'other', error: e });
           throw e;
         }
+      case 'orchestratorReconcile':
+        return await runOrchestratorReconcileFromCli(root, opts, rawArgs);
       case 'runMigrations':
         try {
           return await runMigrations(
@@ -3444,7 +3800,7 @@ function stringifyCaught(e: unknown): string {
   }
 }
 
-// A resolver-based lookup (including `resolvePackageJsonWithoutCachePollution`,
+// A resolver-based lookup (including `resolveWithoutCachePollution`,
 // which does defeat Node's package self-reference) is the wrong tool here:
 // resolvers fall back to NODE_PATH after the explicit paths, and NODE_PATH
 // names the temp installation when this runs there. The scan below reads its
@@ -3639,6 +3995,34 @@ function readNxVersionFromNodeModules(
   return undefined;
 }
 
+// Mirrors the local-nx hand-off of the other run paths so a reconcile always
+// executes against the workspace-local nx that owns the run state, never the
+// temp installation. Reconciles only read state and commit, so no install.
+async function runOrchestratorReconcileFromCli(
+  root: string,
+  opts: OrchestratorReconcile,
+  args: string[]
+): Promise<number | void> {
+  if (!__dirname.startsWith(workspaceRoot)) {
+    // The workspace-local nx we are about to hand off to must be new enough to
+    // understand the new flags we forward to it.
+    assertWorkspaceNxSupportsNewMigrateFlags({
+      argv: args,
+      readLocalNxVersion: () => readLocalNxVersion(root),
+    });
+
+    return handOffToLocalNx(args);
+  }
+
+  const { runOrchestratorReconcile } =
+    require('./run') as typeof import('./run');
+  return runOrchestratorReconcile({
+    root,
+    runId: opts.runId,
+    stepAction: opts.stepAction,
+  });
+}
+
 // Keeps `--run-migration` behaving like `--run-migrations` when invoked from
 // a temp `nx@latest` install: same pre-install, same local-nx hand-off.
 async function runSingleMigrationFromCli(
@@ -3648,7 +4032,15 @@ async function runSingleMigrationFromCli(
   mergedArgs: { [k: string]: any }
 ): Promise<number | void> {
   const shouldSkipInstall: boolean = mergedArgs['skipInstall'] ?? false;
-  if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
+  // A recorded execution skips the pre-install: the run carries its own
+  // install policy and its worker installs what the migration changed, so
+  // paying for a full install ahead of every dispensed command would be
+  // redundant.
+  if (
+    opts.runId === undefined &&
+    !shouldSkipInstall &&
+    !process.env.NX_MIGRATE_SKIP_INSTALL
+  ) {
     await runInstall(
       undefined,
       'pre-migration',
@@ -3672,7 +4064,8 @@ async function runSingleMigrationFromCli(
   }
 
   // The worker resolves the agentic flow, the effective commit config, and
-  // the default-branch confirmation itself; hand it the raw flags.
+  // the default-branch confirmation itself; hand it the raw flags. Recorded
+  // runs (--run-id) take their commit config from run.json instead.
   // Lazy-load run/ so plain migrate and repair runs don't pay for the agentic
   // selection chain its barrel pulls in eagerly.
   const { runSingleMigrationWorker } =
@@ -3680,6 +4073,7 @@ async function runSingleMigrationFromCli(
   await runSingleMigrationWorker({
     root,
     runMigration: opts.runMigration,
+    runId: opts.runId,
     agentic: opts.agentic,
     validate: opts.validate,
     createCommits: mergedArgs['createCommits'] as boolean | undefined,
@@ -3713,6 +4107,7 @@ export async function runMigration() {
       );
 
     if (
+      !targetsExistingRun(process.argv.slice(3)) &&
       process.env.NX_USE_LOCAL !== 'true' &&
       process.env.NX_MIGRATE_USE_LOCAL === undefined
     ) {

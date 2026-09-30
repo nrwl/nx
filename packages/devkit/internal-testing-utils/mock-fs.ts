@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-restricted-imports */
+/* oxlint-disable no-restricted-imports */
 /**
  * Side-effect module: registers a jest mock of `fs`/`node:fs` backed by memfs
  * for specs that exercise the filesystem. It must remain a dedicated subpath

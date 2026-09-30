@@ -4,6 +4,7 @@ import {
   gradleProjectGraphVersion,
 } from '../../utils/versions';
 import { dirname, join } from 'path';
+import * as posix from 'node:path/posix';
 import { execGradleAsync, findGradlewFile } from '../../utils/exec-gradle';
 import { getPluginAliasFromCatalogAst } from '../../utils/version-catalog-ast-utils';
 
@@ -180,7 +181,7 @@ async function findVersionCatalogPluginAlias(
 
   // Fallback: search for any version catalog in subdirectories
   const versionCatalogFiles = await globAsync(tree, [
-    join(gradleDir, '**/libs.versions.toml'),
+    posix.join(gradleDir, '**/libs.versions.toml'),
   ]);
 
   for (const versionCatalogPath of versionCatalogFiles) {
@@ -290,7 +291,13 @@ async function addNxProjectGraphPluginToBuildGradle(
             '\\.'
           )}\\)`
         )
-      : new RegExp(`\\s*plugin\\(["']${gradleProjectGraphPluginName}["']\\)`);
+      : // Both DSL forms, so a re-run doesn't append a duplicate apply.
+        new RegExp(
+          `\\s*plugin\\s*[:(]\\s*["']${gradleProjectGraphPluginName.replace(
+            /\./g,
+            '\\.'
+          )}["']`
+        );
 
     if (buildGradleContent.includes('allprojects {')) {
       if (!applyPluginPattern.test(buildGradleContent)) {
@@ -298,7 +305,7 @@ async function addNxProjectGraphPluginToBuildGradle(
           ? `plugin(${versionCatalogPluginAccessor})`
           : isKotlinDsl
             ? `plugin("${gradleProjectGraphPluginName}")`
-            : `plugin "${gradleProjectGraphPluginName}"`;
+            : `plugin: "${gradleProjectGraphPluginName}"`;
 
         buildGradleContent = buildGradleContent.replace(
           /allprojects\s*\{/,

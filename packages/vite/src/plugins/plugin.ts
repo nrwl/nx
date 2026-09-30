@@ -4,6 +4,7 @@ import {
   PluginCache,
   hashObject,
   workspaceDataDirectory,
+  retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -15,6 +16,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
@@ -204,26 +206,16 @@ async function buildViteTargets(
   } catch {
     // do nothing
   }
-  // Workaround for race condition with ESM-only Vite plugins (e.g. @vitejs/plugin-vue@6+)
-  // If vite.config.ts is compiled as CJS, then when both require('@vitejs/plugin-vue') and import('@vitejs/plugin-vue')
-  // are pending in the same process, Node will throw an error:
-  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module @vitejs/plugin-vue/dist/index.js because it is not yet fully loaded.
-  // This may be caused by a race condition if the module is simultaneously dynamically import()-ed via Promise.all().
-  try {
-    const importVuePlugin = () =>
-      new Function('return import("@vitejs/plugin-vue")')();
-    await importVuePlugin();
-  } catch {
-    // Plugin not installed or not needed, ignore
-  }
   const { resolveConfig } = await loadViteDynamicImport();
-  const viteBuildConfig = await resolveConfig(
-    {
-      configFile: absoluteConfigFilePath,
-      mode: 'development',
-      root: projectRoot,
-    },
-    'build'
+  const viteBuildConfig = await retryOnRequireEsmRace(() =>
+    resolveConfig(
+      {
+        configFile: absoluteConfigFilePath,
+        mode: 'development',
+        root: projectRoot,
+      },
+      'build'
+    )
   );
 
   const metadata: ProjectConfiguration['metadata'] = {};
@@ -257,7 +249,12 @@ async function buildViteTargets(
 
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
-      const devTarget = serveTarget(projectRoot, isUsingTsSolutionSetup, pmc);
+      const devTarget = serveTarget(
+        projectRoot,
+        isUsingTsSolutionSetup,
+        pmc,
+        namedInputs
+      );
 
       targets[options.serveTargetName] = {
         ...devTarget,
@@ -271,11 +268,13 @@ async function buildViteTargets(
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
         options.buildTargetName,
-        pmc
+        pmc,
+        namedInputs
       );
       targets[options.serveStaticTargetName] = serveStaticTarget(
         options,
-        isUsingTsSolutionSetup
+        isUsingTsSolutionSetup,
+        namedInputs
       );
     }
   }
@@ -368,14 +367,7 @@ async function buildTarget(
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      {
-        externalDependencies: ['vite'],
-      },
-    ],
+    inputs: buildInputs(namedInputs),
     outputs,
     metadata: {
       technologies: ['vite'],
@@ -399,13 +391,28 @@ async function buildTarget(
   return buildTarget;
 }
 
+function buildInputs(namedInputs: {
+  [inputName: string]: any[];
+}): TargetConfiguration['inputs'] {
+  return [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['vite'],
+    },
+  ];
+}
+
 function serveTarget(
   projectRoot: string,
   isUsingTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  namedInputs: { [inputName: string]: any[] }
 ) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
+    inputs: buildInputs(namedInputs),
     command: `vite`,
     options: {
       cwd: joinPathFragments(projectRoot),
@@ -434,10 +441,12 @@ function serveTarget(
 function previewTarget(
   projectRoot: string,
   buildTargetName: string,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  namedInputs: { [inputName: string]: any[] }
 ) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
+    inputs: buildInputs(namedInputs),
     command: `vite preview`,
     dependsOn: [buildTargetName],
     options: {
@@ -462,10 +471,12 @@ function previewTarget(
 
 function serveStaticTarget(
   options: VitePluginOptions,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  namedInputs: { [inputName: string]: any[] }
 ) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
+    inputs: buildInputs(namedInputs),
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildTargetName}`,
@@ -504,10 +515,10 @@ function getOutputs(
 
   const isBuildable = Boolean(
     build?.lib ||
-      viteBuildConfig?.builder?.buildApp ||
-      build?.rollupOptions?.input || // Vite <8
-      build?.rolldownOptions?.input || // Vite >=8
-      existsSync(join(workspaceRoot, projectRoot, 'index.html'))
+    viteBuildConfig?.builder?.buildApp ||
+    build?.rollupOptions?.input || // Vite <8
+    build?.rolldownOptions?.input || // Vite >=8
+    existsSync(join(workspaceRoot, projectRoot, 'index.html'))
   );
 
   const hasServeConfig = Boolean(server?.host || server?.port);
@@ -533,7 +544,7 @@ function normalizeOutputPath(
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      return `{workspaceRoot}/${normalizePath(relative(workspaceRoot, outputPath))}`;
     } else {
       if (outputPath.startsWith('..')) {
         return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);

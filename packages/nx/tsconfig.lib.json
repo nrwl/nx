@@ -25,6 +25,7 @@
   ],
   "include": [
     "bin/**/*.ts",
+    "nx-cloud-internals.ts",
     "plugins/**/*.ts",
     "release/**/*.ts",
     "src/**/*.ts",

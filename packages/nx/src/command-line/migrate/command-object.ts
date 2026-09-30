@@ -4,6 +4,7 @@ import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
 import { AGENT_IDS, coerceAgenticArg } from './agentic/cli-args';
 import type { AgenticArg } from './agentic/select';
+import { STEP_ACTIONS, type StepAction } from './step-actions';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -50,6 +51,9 @@ export interface MigrateArgs {
   packageAndVersion?: string;
   runMigrations?: string;
   runMigration?: string;
+  runId?: string;
+  stepAction?: StepAction;
+  startFresh?: boolean;
   include?: MigrateInclude;
   /**
    * nx.json `migrate.include` default. Consumed by `resolveInclude` only when the
@@ -108,6 +112,26 @@ function withMigrationOptions(yargs: Argv) {
       describe:
         "Run a single migration from migrations.json by id. The id is '<package>:<name>'; a bare '<name>' is accepted when it matches exactly one migration. A name that contains ':' must use the full '<package>:<name>' form.",
       type: 'string',
+    })
+    .option('runId', {
+      // Hidden with the orchestrator itself.
+      describe:
+        'The orchestrated migrate run to record a single migration into, to continue with --run-migrations, or to reconcile when given alone.',
+      type: 'string',
+      hidden: true,
+    })
+    .option('stepAction', {
+      describe:
+        'How an orchestrated reconcile resolves its single failed or died step.',
+      choices: STEP_ACTIONS,
+      type: 'string',
+      hidden: true,
+    })
+    .option('startFresh', {
+      describe:
+        'With --run-migrations and --run-id=<id> under the orchestrator: delete the record of the active migrate run the id names and start a new run over the whole plan. Migrations the deleted run applied stay applied.',
+      type: 'boolean',
+      hidden: true,
     })
     .option('ifExists', {
       describe: `Run migrations only if the migrations file exists, if not continues successfully.`,

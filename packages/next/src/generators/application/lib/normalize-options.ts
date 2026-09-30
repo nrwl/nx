@@ -7,8 +7,10 @@ import { assertValidStyle } from '@nx/react';
 import { Schema } from '../schema';
 import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 
-export interface NormalizedSchema
-  extends Omit<Schema, 'name' | 'useTsSolution'> {
+export interface NormalizedSchema extends Omit<
+  Schema,
+  'name' | 'useTsSolution'
+> {
   projectName: string;
   projectSimpleName: string;
   appProjectRoot: string;

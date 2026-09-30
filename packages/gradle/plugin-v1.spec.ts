@@ -4,11 +4,11 @@ import { createNodesV2 } from './plugin-v1';
 import { type GradleReport } from './src/plugin-v1/utils/get-gradle-report';
 
 let gradleReport: GradleReport;
-jest.mock('./src/plugin-v1/utils/get-gradle-report', () => {
+vi.mock('./src/plugin-v1/utils/get-gradle-report', () => {
   return {
     GRADLE_BUILD_FILES: new Set(['build.gradle', 'build.gradle.kts']),
-    populateGradleReport: jest.fn().mockImplementation(() => void 0),
-    getCurrentGradleReport: jest.fn().mockImplementation(() => gradleReport),
+    populateGradleReport: vi.fn().mockImplementation(() => void 0),
+    getCurrentGradleReport: vi.fn().mockImplementation(() => gradleReport),
   };
 });
 
@@ -56,7 +56,7 @@ describe('@nx/gradle/plugin-v1', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
     tempFs = null;
   });

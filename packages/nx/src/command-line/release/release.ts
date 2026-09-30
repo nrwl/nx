@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { confirmationPrompt } from '../../utils/prompt-helpers';
 import { rmSync } from 'node:fs';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
@@ -444,21 +444,11 @@ export function createAPI(
 }
 
 async function promptForPublish(): Promise<boolean> {
-  try {
-    const reply = await prompt<{ confirmation: boolean }>([
-      {
-        name: 'confirmation',
-        message: 'Do you want to publish these versions?',
-        type: 'confirm',
-      },
-    ]);
-    return reply.confirmation;
-  } catch {
-    // Ensure the cursor is always restored before exiting
-    process.stdout.write('\u001b[?25h');
-    // Handle the case where the user exits the prompt with ctrl+c
-    return false;
-  }
+  return confirmationPrompt({
+    message: 'Do you want to publish these versions?',
+    // Cancelling is a decision not to publish, not a failure.
+    onCancel: () => false,
+  });
 }
 
 function shouldCreateRemoteRelease(

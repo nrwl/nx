@@ -1,4 +1,10 @@
-import { installPackagesTask, names, readNxJson, Tree } from '@nx/devkit';
+import {
+  installPackagesTask,
+  logger,
+  names,
+  readNxJson,
+  Tree,
+} from '@nx/devkit';
 import { Schema } from './schema';
 import { Preset } from '../utils/presets';
 import { join } from 'path';
@@ -19,8 +25,30 @@ async function createPreset(tree: Tree, options: Schema) {
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
-  if (options.preset === Preset.Apps) {
-    return;
+  if (options.preset === Preset.Apps || options.preset === Preset.NPM) {
+    // These presets generate no project, so nothing downstream would set the
+    // formatter up and the choice would be dropped. Only the formatter is
+    // configured here - `@nx/js:init` would also add TypeScript and register
+    // its plugin, which both presets deliberately leave out.
+    //
+    // `@nx/js` is only in the new workspace's package.json, not necessarily on
+    // disk. `validateOptions` allows `skipInstall` with these presets, so the
+    // require has to be reached only when there is a formatter to set up AND
+    // the install that puts `@nx/js` there actually ran.
+    if (!options.formatter || options.formatter === 'none') {
+      return;
+    }
+    if (options.skipInstall) {
+      // No follow-up command to name: `@nx/js:init` is what sets a formatter
+      // up, and running it here is what the comment above rules out for these
+      // presets.
+      logger.warn(
+        `Skipped ${options.formatter} setup: it lives in @nx/js, which --skipInstall leaves uninstalled.`
+      );
+      return;
+    }
+    const { setUpFormatter } = require('@nx' + '/js');
+    return setUpFormatter(tree, options.formatter);
   } else if (options.preset === Preset.AngularMonorepo) {
     const { applicationGenerator: angularApplicationGenerator } = require(
       '@nx' + '/angular/generators'
@@ -48,6 +76,7 @@ async function createPreset(tree: Tree, options: Schema) {
       ssr: options.ssr,
       prefix: options.prefix,
       zoneless: options.zoneless,
+      formatter: options.formatter,
       nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.AngularStandalone) {
@@ -78,6 +107,7 @@ async function createPreset(tree: Tree, options: Schema) {
       ssr: options.ssr,
       prefix: options.prefix,
       zoneless: options.zoneless,
+      formatter: options.formatter,
       nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
@@ -159,6 +189,7 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: options.unitTestRunner ?? 'vitest',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.Nuxt) {
     const { applicationGenerator: nuxtApplicationGenerator } = require(
@@ -193,6 +224,7 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: options.unitTestRunner ?? 'vitest',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require(
@@ -244,6 +276,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require(
@@ -309,9 +342,17 @@ async function createPreset(tree: Tree, options: Schema) {
     });
   } else if (options.preset === Preset.TS) {
     const { initGenerator } = require('@nx' + '/js');
+    // `validateOptions` allows `skipInstall` here, and this run must then stay
+    // install-free: `skipPackageJson` gates both `ensurePackage` and the
+    // package.json write that would make `installPackagesTask` install, and
+    // `skipFormat` keeps `formatFiles` from loading the formatter. The
+    // formatter config is still written, so detection restores the dependency
+    // on the next `@nx/js:init`-running generator.
     return initGenerator(tree, {
       formatter: options.formatter,
       addTsPlugin: process.env.NX_ADD_PLUGINS !== 'false' && options.workspaces,
+      skipPackageJson: options.skipInstall,
+      skipFormat: options.skipInstall,
     });
   } else if (options.preset === Preset.TsStandalone) {
     const { libraryGenerator } = require('@nx' + '/js');
@@ -327,6 +368,7 @@ async function createPreset(tree: Tree, options: Schema) {
       js: options.js,
       rootProject: true,
       addPlugin,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NodeStandalone) {
     const { applicationGenerator: nodeApplicationGenerator } = require(
@@ -344,6 +386,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       unitTestRunner: options.unitTestRunner,
       addPlugin,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NodeMonorepo) {
     const { applicationGenerator: nodeApplicationGenerator } = require(

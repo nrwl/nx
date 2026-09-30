@@ -24,6 +24,22 @@ import { BUMP_TYPE_REASON_TEXT } from './release-group-processor';
 
 export type SemverBumpType = ReleaseType | 'none';
 
+/**
+ * Lazily resolves the concrete version of a dependency project that is not
+ * already represented in `dependenciesToUpdate`.
+ *
+ * Ecosystem-specific VersionActions implementations can use this when a
+ * manifest reference requires a concrete version but `dependenciesToUpdate`
+ * does not contain one. The resolved value can be the dependency's new version
+ * when it is part of the release, or its current version when it is not being
+ * versioned.
+ *
+ * @public
+ */
+export type ResolveVersionForDependency = (
+  dependencyProjectName: string
+) => Promise<string>;
+
 function resolveVersionActionsPath(
   path: string,
   projectGraphNode: ProjectGraphProjectNode
@@ -468,13 +484,18 @@ It is also possible that the project is being processed because of a dependency 
    * with new dependency versions, but for application deployments it might involve
    * updating something else instead, it depends on the type of application.
    *
+   * `resolveVersionForDependency` is intentionally lazy: implementations
+   * decide which manifest values require a concrete version, while release core
+   * remains unaware of ecosystem-specific dependency protocols.
+   *
    * It should return an array of log messages that will be displayed unmodified to the user
    * after the dependencies have been updated.
    */
   abstract updateProjectDependencies(
     tree: Tree,
     projectGraph: ProjectGraph,
-    dependenciesToUpdate: Record<string, string>
+    dependenciesToUpdate: Record<string, string>,
+    resolveVersionForDependency?: ResolveVersionForDependency
   ): Promise<string[]>;
 }
 
@@ -535,7 +556,8 @@ export class NOOP_VERSION_ACTIONS extends VersionActions {
   updateProjectDependencies(
     tree: Tree,
     projectGraph: ProjectGraph,
-    dependenciesToUpdate: Record<string, string>
+    dependenciesToUpdate: Record<string, string>,
+    resolveVersionForDependency?: ResolveVersionForDependency
   ): Promise<string[]> {
     return Promise.resolve([]);
   }

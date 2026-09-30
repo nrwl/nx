@@ -5,6 +5,10 @@ common-env-vars: &common-env-vars
   GIT_COMMITTER_NAME: Test
   SELECTED_PM: 'pnpm'
   NX_NATIVE_LOGGING: 'nx::native::db'
+  # The release profile enables incremental compilation for local dev (see the
+  # root Cargo.toml). Agents build each task once from a cold cache, so
+  # incremental buys nothing here and only inflates the cargo cache.
+  CARGO_INCREMENTAL: '0'
   # Pin corepack to the pnpm version from packageManager. Without this, corepack
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs created by create-nx-workspace) instead of the repo's
@@ -16,6 +20,8 @@ common-env-vars: &common-env-vars
   NX_DEV_URL: 'https://canary.nx.dev'
   # Cap gradle workers so co-located e2e tasks don't oversubscribe the agent.
   GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
+  # Record and hash tasks with Nx Cloud I/O snapshots (ultracache).
+  NX_CLOUD_USE_IO_SNAPSHOTS: 'true'
 
 common-init-steps: &common-init-steps
   - name: Checkout

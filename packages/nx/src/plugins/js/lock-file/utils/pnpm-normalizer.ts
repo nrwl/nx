@@ -65,12 +65,13 @@ export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
 const YAML_DOCUMENT_START = '---\n';
 const YAML_DOCUMENT_SEPARATOR = '\n---\n';
 
-// pnpm 11 writes a two-document lockfile when `managePackageManagerVersions` is
-// enabled: the first document holds package-manager metadata, and the second
-// holds the workspace lockfile. Mirror pnpm's own positional extraction so we
-// always read the workspace document.
+// pnpm 11 writes a two-document lockfile when `shouldPersistLockfile` holds
+// (the package manager came from `devEngines`, or declares major 12 or above):
+// the first document holds package-manager metadata, and the second holds the
+// workspace lockfile. Mirror pnpm's own positional extraction so we always read
+// the workspace document.
 // https://github.com/pnpm/pnpm/blob/main/lockfile/fs/src/yamlDocuments.ts
-function extractMainLockfileDocument(content: string): string {
+export function extractMainLockfileDocument(content: string): string {
   // Lockfiles written on Windows may use CRLF line endings, which would never
   // match the LF-only document markers.
   content = content.replace(/\r\n/g, '\n');
@@ -85,6 +86,34 @@ function extractMainLockfileDocument(content: string): string {
     return '';
   }
   return content.slice(separatorIndex + YAML_DOCUMENT_SEPARATOR.length);
+}
+
+// The package-manager document (`packageManagerDependencies`) must ship with a
+// pruned lockfile whenever the pruned manifest keeps `packageManager`: pnpm
+// refuses a frozen install when the pin is not recorded in the lockfile.
+export function extractEnvLockfileDocument(content: string): string | null {
+  content = content.replace(/\r\n/g, '\n');
+  if (!content.startsWith(YAML_DOCUMENT_START)) {
+    return null;
+  }
+  const separatorIndex = content.indexOf(
+    YAML_DOCUMENT_SEPARATOR,
+    YAML_DOCUMENT_START.length
+  );
+  if (separatorIndex === -1) {
+    return null;
+  }
+  return content.slice(YAML_DOCUMENT_START.length, separatorIndex);
+}
+
+export function joinPnpmLockfileDocuments(
+  envDocument: string | null,
+  mainDocument: string
+): string {
+  if (envDocument === null) {
+    return mainDocument;
+  }
+  return `${YAML_DOCUMENT_START}${envDocument}${YAML_DOCUMENT_SEPARATOR}${mainDocument}`;
 }
 
 // https://github.com/pnpm/pnpm/blob/50e37072f42bcca6d393a74bed29f7f0e029805d/lockfile/lockfile-file/src/write.ts#L22
@@ -857,7 +886,6 @@ function normalizeLockfile(
   if (!lockfileToSave.pnpmfileChecksum) {
     delete lockfileToSave.pnpmfileChecksum;
   }
-  delete lockfileToSave['catalogs'];
   return lockfileToSave;
 }
 

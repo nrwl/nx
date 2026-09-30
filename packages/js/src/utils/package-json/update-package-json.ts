@@ -1,8 +1,8 @@
 import {
-  createLockFile,
-  getLockFileName,
   createPackageJson,
   fileExists,
+  generatePrunedDeployOutput,
+  type PackageJson,
   readFileMapCache,
 } from '@nx/devkit/internal';
 
@@ -21,9 +21,8 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
-import type { PackageJson } from '@nx/devkit/internal';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
 import { stripGlobToBaseDir } from '../strip-glob-to-base-dir';
@@ -112,33 +111,23 @@ export function updatePackageJson(
     options.format = ['cjs'];
   }
 
-  // update package specific settings
   packageJson = getUpdatedPackageJsonContent(packageJson, options);
 
-  // save files
-  writeJsonFile(`${options.outputPath}/package.json`, packageJson);
-
+  const packageManager = detectPackageManager(context.root);
   if (options.generateLockfile) {
-    const packageManager = detectPackageManager(context.root);
-    if (packageManager === 'bun') {
-      logger.warn(
-        `Bun lockfile generation is unsupported. Remove "generateLockfile" option or set it to false.`
-      );
-    } else {
-      const lockFile = createLockFile(
-        packageJson,
-        context.projectGraph,
-        packageManager
-      );
-      writeFileSync(
-        `${options.outputPath}/${getLockFileName(packageManager)}`,
-        lockFile,
-        {
-          encoding: 'utf-8',
-        }
-      );
-    }
+    generatePrunedDeployOutput(
+      packageJson,
+      context.projectGraph,
+      options.projectRoot,
+      {
+        outputDirectory: options.outputPath,
+        packageManager,
+        workspaceRoot: context.root,
+      }
+    );
   }
+
+  writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 }
 
 function isNpmNode(
