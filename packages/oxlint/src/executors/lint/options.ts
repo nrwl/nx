@@ -38,8 +38,8 @@ export function resolveLintOptions(
     ...forwarded
   } = options;
 
-  // A CLI override arrives both parsed (`maxWarnings: 0`) and verbatim
-  // (`--max-warnings=0`); the verbatim copy wins so the flag reaches Oxlint
+  // A CLI override arrives both parsed (`config: 'a.json'`) and verbatim
+  // (`--config=a.json`); the verbatim copy wins so the flag reaches Oxlint
   // exactly as typed.
   const unparsedNames = new Set(unparsed.map(flagName).filter(Boolean));
   const fromOptions = Object.fromEntries(
@@ -75,10 +75,8 @@ export function resolveLintOptions(
       resolved.silent = true;
     } else if (name === 'max-warnings') {
       resolved.maxWarnings = Number(value());
-      resolved.flags.push(`--max-warnings=${resolved.maxWarnings}`);
     } else if (name === 'deny-warnings') {
       resolved.denyWarnings = true;
-      resolved.flags.push(flag);
     } else {
       resolved.flags.push(flag);
     }

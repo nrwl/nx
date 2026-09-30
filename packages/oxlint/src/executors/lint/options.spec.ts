@@ -41,17 +41,17 @@ describe('resolveLintOptions', () => {
     ]);
   });
 
-  it('should read warning thresholds and still forward them', () => {
+  it('should keep warning thresholds for itself', () => {
     expect(
       resolveLintOptions({ maxWarnings: 3, denyWarnings: true })
     ).toMatchObject({
       maxWarnings: 3,
       denyWarnings: true,
-      flags: ['--max-warnings=3', '--deny-warnings'],
+      flags: [],
     });
     expect(
       resolveLintOptions({ __unparsed__: ['--max-warnings', '0'] })
-    ).toMatchObject({ maxWarnings: 0, flags: ['--max-warnings=0'] });
+    ).toMatchObject({ maxWarnings: 0, flags: [] });
   });
 
   it("should drop Nx's own --verbose", () => {

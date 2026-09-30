@@ -92,6 +92,7 @@ describe('runLintTasks', () => {
     expect(results['libs/a:lint'].success).toBe(true);
     expect(results['libs/b:lint'].success).toBe(false);
     expect(results['libs/c:lint'].success).toBe(false);
+    expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
   it('should fail every task with the raw output when Oxlint produces no report', () => {
