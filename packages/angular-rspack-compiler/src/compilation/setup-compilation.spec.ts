@@ -119,6 +119,26 @@ describe('setupCompilation', () => {
     }
   );
 
+  it('should keep comments over the tsconfig value', async () => {
+    vi.mocked(loadCompilerCli).mockResolvedValueOnce({
+      readConfiguration: (
+        _tsconfig: string,
+        existingOptions: Record<string, unknown>
+      ) => ({
+        // Like readConfiguration, the passed options win over the tsconfig.
+        options: { removeComments: true, module: 99, ...existingOptions },
+        rootNames: ['/root/src/main.ts'],
+      }),
+    } as never);
+
+    const { compilerOptions } = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options
+    );
+
+    expect(compilerOptions.removeComments).toBe(false);
+  });
+
   it('should raise targets below ES2022 and warn about it', async () => {
     // The mocked readConfiguration echoes the existing options, which carry
     // no target, so the ES2022 forcing applies.
