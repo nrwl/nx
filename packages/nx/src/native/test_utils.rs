@@ -89,6 +89,7 @@ pub(crate) fn task_graph(tasks: &[(&str, &[&str])], deps: &[(&str, &[&str])]) ->
             .map(|(id, d)| (id.to_string(), strings(d)))
             .collect(),
         continuous_dependencies: HashMap::new(),
+        continuous_dependencies_without_inputs: None,
         roots: vec![],
     }
 }
