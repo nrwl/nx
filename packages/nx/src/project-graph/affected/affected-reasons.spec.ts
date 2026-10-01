@@ -321,7 +321,7 @@ describe('formatAffectedExplanation', () => {
     expect(out).not.toContain("couldn't be narrowed");
   });
 
-  it('names the packages that moved, grouped after the files', () => {
+  it('names the packages that moved, in a section after the files', () => {
     const out = formatAffectedExplanation(
       {
         affected: {
@@ -343,16 +343,26 @@ describe('formatAffectedExplanation', () => {
       },
       'Affected tasks'
     );
-    expect(out).toContain(
-      'Changing 1 file and 2 packages touches 2 requested tasks:\n\n' +
-        '  apps/app/main.ts -> 1 requested task:\n    app:e2e\n'
-    );
-    expect(out).toContain(
-      '  npm:react and npm:scheduler -> 1 requested task:\n    app:e2e\n'
-    );
-    expect(out).toContain('  npm:react -> 1 requested task:\n    app:build\n');
-    expect(out).toContain(
-      '    - hashes every external dependency, including npm:react and 1 other package, which moved'
+    expect(out).toBe(
+      [
+        'Affected tasks (2):',
+        '',
+        'Changing apps/app/main.ts touches 1 requested task:',
+        '  app:e2e',
+        '    - apps/app/main.ts matches an input',
+        '    - hashes every external dependency, including npm:react and 1 other package, which moved',
+        '',
+        'Changing 2 packages touches 2 requested tasks:',
+        '',
+        '  npm:react -> 1 requested task:',
+        '    app:build',
+        '      - depends on npm:react, whose version changes',
+        '',
+        '  npm:react and npm:scheduler -> 1 requested task:',
+        '    app:e2e',
+        '      - apps/app/main.ts matches an input',
+        '      - hashes every external dependency, including npm:react and 1 other package, which moved',
+      ].join('\n')
     );
     expect(out).not.toContain('pnpm-lock.yaml');
   });

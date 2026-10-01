@@ -202,64 +202,61 @@ export function formatAffectedExplanation(
   const touchedAll = all.filter(touched);
   const reachedAll = all.filter((name) => !touched(name));
 
-  // Touched tasks, grouped by the changed files their own inputs name.
-  if (touchedAll.length) {
-    const detailed = verbose || touchedAll.length <= 5;
-    // Files, then packages: a task touched by both is listed under each.
-    const byChange = new Map<string, { order: number; members: string[] }>();
-    const add = (key: string, order: number, name: string) => {
-      const group = byChange.get(key) ?? { order, members: [] };
-      group.members.push(name);
-      byChange.set(key, group);
-    };
-    const files = new Set<string>();
-    const packages = new Set<string>();
-    for (const name of touchedAll) {
-      const changed = changedIn(reasonsOf(name), moved);
-      const ofFiles = changed.filter((change) => !change.isPackage);
-      const ofPackages = changed.filter((change) => change.isPackage);
-      ofFiles.forEach((change) => files.add(change.name));
-      ofPackages.forEach((change) => packages.add(change.name));
-      if (ofFiles.length) add(describeChanged(ofFiles, 'file'), 0, name);
-      if (ofPackages.length)
-        add(describeChanged(ofPackages, 'package'), 1, name);
-      if (!changed.length) add('', 2, name);
+  // Touched tasks: a section for files, then one for packages, each grouped
+  // by what changed. A task touched by both is listed in each.
+  const kinds = [
+    { noun: 'file' as const, groups: new Map<string, string[]>() },
+    { noun: 'package' as const, groups: new Map<string, string[]>() },
+  ];
+  const unnamed: string[] = [];
+  for (const name of touchedAll) {
+    const changed = changedIn(reasonsOf(name), moved);
+    if (!changed.length) unnamed.push(name);
+    for (const { noun, groups } of kinds) {
+      const ofKind = changed.filter(
+        (change) => change.isPackage === (noun === 'package')
+      );
+      if (!ofKind.length) continue;
+      const key = describeChanged(ofKind, noun);
+      groups.set(key, [...(groups.get(key) ?? []), name]);
     }
-    const groups = [...byChange]
-      .sort(
-        ([a, x], [b, y]) =>
-          x.order - y.order ||
-          y.members.length - x.members.length ||
-          a.localeCompare(b)
+  }
+  for (const { noun, groups } of kinds) {
+    if (!groups.size) continue;
+    const members = [...new Set([...groups.values()].flat())];
+    const detailed = verbose || members.length <= 5;
+    const sorted = [...groups].sort(
+      ([a, x], [b, y]) => y.length - x.length || a.localeCompare(b)
+    );
+    const changes = new Set(
+      members.flatMap((name) =>
+        changedIn(reasonsOf(name), moved)
+          .filter((change) => change.isPackage === (noun === 'package'))
+          .map((change) => change.name)
       )
-      .map(([key, { members }]) => [key, members] as const);
-    const touchedBy = (changed: string, members: string[]) =>
-      changed
-        ? `Changing ${changed} touches ${counted(members)}`
-        : `${counted(members)} ${members.length === 1 ? 'is' : 'are'} touched with no changed file to name`;
-    const changing = [
-      files.size && `${files.size} ${files.size === 1 ? 'file' : 'files'}`,
-      packages.size &&
-        `${packages.size} ${packages.size === 1 ? 'package' : 'packages'}`,
-    ]
-      .filter(Boolean)
-      .join(' and ');
+    );
     const header =
-      groups.length === 1
-        ? touchedBy(groups[0][0], touchedAll)
-        : `Changing ${changing} touches ${counted(touchedAll)}`;
+      sorted.length === 1
+        ? `Changing ${sorted[0][0]} touches ${counted(members)}`
+        : `Changing ${changes.size} ${noun}s touches ${counted(members)}`;
     lines.push(detailed ? `${header}:` : `${header}${hint}`);
-    if (groups.length === 1) {
-      list(touchedAll, '  ', detailed);
+    if (sorted.length === 1) {
+      list(members, '  ', detailed);
     } else {
-      for (const [changed, members] of groups) {
-        lines.push(
-          '',
-          `  ${changed || 'no changed file to name'} -> ${counted(members)}:`
-        );
-        list(members, '    ', detailed);
+      for (const [changed, inGroup] of sorted) {
+        lines.push('', `  ${changed} -> ${counted(inGroup)}:`);
+        list(inGroup, '    ', detailed);
       }
     }
+    lines.push('');
+  }
+  if (unnamed.length) {
+    const detailed = verbose || unnamed.length <= 5;
+    const header = `${counted(unnamed)} ${
+      unnamed.length === 1 ? 'is' : 'are'
+    } touched with no changed file to name`;
+    lines.push(detailed ? `${header}:` : `${header}${hint}`);
+    list(unnamed, '  ', detailed);
     lines.push('');
   }
 

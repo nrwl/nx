@@ -282,14 +282,14 @@ Touching those tasks changes outputs read by 2 build tasks:
 The title says how many tasks of your targets the change affects.
 The first section lists the tasks your change touches, meaning one of their own inputs changes.
 When several files change, it groups them by the files that reach them.
-The second lists the tasks affected because they read the outputs of a touched task.
+When a change to `package.json` or a lockfile moves specific packages, a section after it lists the tasks those packages touch, grouped by package. A task touched by both a file and a package appears in both.
+The last section lists the tasks affected because they read the outputs of a touched task.
 
-Both sections can include tasks you didn't ask for, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`, since they carry your change to the tasks you did ask for.
+Every section can include tasks you didn't ask for, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`, since they carry your change to the tasks you did ask for.
 Each heading counts your tasks apart from the others, and your tasks are listed first and in bold.
 A section with more than five tasks names up to five per group. Pass `--verbose` to list every task with its reasons.
 Each entry lists every reason that applies, so a task reached through two different producers reports both.
 When several changed files match one input, several packages moved, or a task reads several of the tasks above, they share one line that names the first and counts the rest. The JSON lists them all.
-When a change to `package.json` or a lockfile moves specific packages, the output names those packages instead of the file.
 To follow the chain step by step, look up the task named in a reason.
 
 Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
