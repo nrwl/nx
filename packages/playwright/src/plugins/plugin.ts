@@ -12,6 +12,8 @@ import {
   workspaceDataDirectory,
   PluginCache,
   getFilesInDirectoryUsingContext,
+  readTestFileDependsOn,
+  scopeTestTargetToProjects,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -546,8 +548,14 @@ async function buildPlaywrightTargets(
 
       const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
       ciTargetGroup.push(targetName);
+      const dependsOnProjects = readTestFileDependsOn(
+        context.workspaceRoot,
+        testFile
+      );
       targets[targetName] = {
-        ...ciBaseTargetConfig,
+        ...(dependsOnProjects
+          ? scopeTestTargetToProjects(ciBaseTargetConfig, dependsOnProjects)
+          : ciBaseTargetConfig),
         options: {
           ...ciBaseTargetConfig.options,
           env: getAtomizedTaskEnvVars(reporterOutputs, outputSubfolder),
