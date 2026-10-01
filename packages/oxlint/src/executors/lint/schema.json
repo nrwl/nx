@@ -42,7 +42,7 @@
           "type": "string"
         }
       ],
-      "description": "Extra arguments appended to the Oxlint command verbatim. Paths are relative to the workspace root, which is where Oxlint runs."
+      "description": "Extra arguments appended to the Oxlint command. A string is split on whitespace outside quotes, with no shell escaping or expansion; an array passes each item as one argument. Paths are relative to the workspace root, which is where Oxlint runs."
     },
     "__unparsed__": {
       "hidden": true,
