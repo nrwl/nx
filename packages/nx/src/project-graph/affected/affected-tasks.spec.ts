@@ -594,6 +594,90 @@ describe('explaining a change carried by a dependency-only task', () => {
   });
 });
 
+describe('a continuous dependency with inputs: false', () => {
+  // e2e serves app, which bundles feature. Only the served app reads feature.
+  function servedGraph(inputs?: boolean): ProjectGraph {
+    return {
+      nodes: {
+        e2e: {
+          name: 'e2e',
+          type: 'e2e',
+          data: {
+            root: 'packages/workspace',
+            targets: {
+              e2e: {
+                executor: 'nx:run-commands',
+                inputs: ['{projectRoot}/src/**/*'],
+                dependsOn: [{ projects: ['app'], target: 'serve', inputs }],
+              },
+            },
+          },
+        },
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'packages/js',
+            targets: {
+              serve: {
+                executor: 'nx:run-commands',
+                continuous: true,
+                inputs: ['{projectRoot}/src/**/*', '^production'],
+              },
+            },
+          },
+        },
+        feature: {
+          name: 'feature',
+          type: 'lib',
+          data: { root: 'packages/nx', targets: {} },
+        },
+      },
+      dependencies: {
+        e2e: [],
+        app: [{ source: 'app', target: 'feature', type: 'static' }],
+        feature: [],
+      },
+      externalNodes: {},
+    } as any;
+  }
+
+  async function select(inputs: boolean | undefined, file: string) {
+    return computeAffectedTasks({
+      projectGraph: servedGraph(inputs),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['e2e'],
+      touchedFiles: [
+        { file, getChanges: () => [new WholeFileChange()] },
+      ] as any,
+    });
+  }
+
+  it("selects the dependent through the served app's inputs by default", async () => {
+    const result = await select(undefined, 'packages/nx/src/index.ts');
+    expect([...result.affectedTaskIds]).toEqual(['e2e:e2e']);
+  });
+
+  it("does not select the dependent through the served app's inputs", async () => {
+    const result = await select(false, 'packages/nx/src/index.ts');
+    expect([...result.affectedTaskIds]).toEqual([]);
+  });
+
+  it('still selects the dependent through its own inputs and runs the server', async () => {
+    const result = await select(false, 'packages/workspace/src/index.ts');
+    expect([...result.affectedTaskIds]).toEqual(['e2e:e2e']);
+    expect(result.taskGraph.continuousDependencies['e2e:e2e']).toEqual([
+      'app:serve',
+    ]);
+    // The run hashes from this graph, so it must keep the opt-out.
+    expect(result.taskGraph.continuousDependenciesWithoutInputs).toEqual({
+      'e2e:e2e': ['app:serve'],
+    });
+  });
+});
+
 describe('the run graph selection hands over', () => {
   // app:test depends on lib:test, which only a lib change affects. The run
   // builds from app alone, so lib:test is a dependency there and must not
