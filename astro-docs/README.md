@@ -121,11 +121,17 @@ The reference at `/docs/reference/nx-cloud/public-api` is an Astro page backed b
 
 The loader fails if the specification cannot be fetched or parsed. It does not publish a static fallback. API descriptions belong in the OpenAPI source; usage instructions belong in the Knowledge Base articles. The generated reference also has a `.md` endpoint and appears in the reference `llms.txt` index.
 
-The renderer shows shared HTTP response descriptions and header definitions once. Each operation links its response codes to those details. Its success body and examples start collapsed; the response code link or the summary reveals them. Status-keyed `components.responses` entries (for example, `400`) supply common meanings when the operation has the same response shape. Different payloads or headers remain separate. Schema links use readable labels without changing the specification's names or reference anchors.
+`src/plugins/utils/openapi-reference.ts` builds one serializable reference model from the fetched specification. The loader stores the model in `data.reference` and generates the Markdown `body` from that same model. It renders rich Markdown prose fragments during content loading, not a duplicate full HTML page.
+
+`src/pages/reference/nx-cloud/public-api.astro` renders the model inside `StarlightPage`. The components in `src/components/public-api/` use Starlight headings, badges, and copyable code examples. Each endpoint shows its method, path, description, and parameters before its successful outcome. Response bodies start collapsed, with the successful status beside the summary. Redirects and responses without a body show their declared status and description instead. Other declared codes link to shared details after the successful response.
+
+Shared HTTP response descriptions and header definitions appear once. Status-keyed `components.responses` entries supply common parameter, entity, and parent meanings when the response shape matches. Different payloads, headers, links, or other meanings retain separate targets. Schema links use readable labels without changing raw schema anchors. The model supplies explicit heading IDs and the table of contents.
+
+The Markdown body retains the source URL, API version, and Knowledge Base links. The page supplies that body to the copy feature. `/docs/reference/nx-cloud/public-api.md` and `/docs/reference/llms.txt` continue to use the collection body; the export contains no Astro component tags.
 
 Authentication labels use the scheme's `x-displayName` extension, or its name with the first letter capitalized. The renderer does not change scheme keys or header names.
 
-The `astro-docs:build` target does not use the Nx task cache because the remote specification can change independently of repository files. Package build dependencies still use their normal caches. Restart the local server to fetch a new deployed specification.
+The `astro-docs:build` target does not use the Nx task cache because the remote specification can change independently of repository files. Package build dependencies still use their normal caches. Restart the local server to fetch a new deployed specification. The source override also works for a preview build, for example `NX_CLOUD_OPENAPI_URL=http://127.0.0.1:4203/nx-cloud/data/openapi.json mise exec -- pnpm exec nx build astro-docs --excludeTaskDependencies`. The docs show the selected source's routes and metadata without rewriting beta routes or overriding upstream authentication descriptions.
 
 Run `pnpm nx run astro-docs:test-openapi` for the loader tests. Run `pnpm nx run astro-docs:pw-e2e -- public-api.spec.ts` for the reference page tests.
 

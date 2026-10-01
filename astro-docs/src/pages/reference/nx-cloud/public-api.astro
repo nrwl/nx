@@ -1,30 +1,84 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { getEntry, render } from 'astro:content';
+import AnchorHeading from '@astrojs/starlight/components/AnchorHeading.astro';
+import { Code } from '@astrojs/starlight/components';
+import { getEntry } from 'astro:content';
+import ApiEndpoint from '../../../components/public-api/ApiEndpoint.astro';
+import ApiTable from '../../../components/public-api/ApiTable.astro';
+import ApiContent from '../../../components/public-api/ApiContent.astro';
+import ApiResponseDetails from '../../../components/public-api/ApiResponseDetails.astro';
+import type { OpenApiReference } from '../../../plugins/utils/openapi-reference';
 
-const reference = await getEntry('nx-cloud-public-api', 'reference');
-if (!reference) {
-  throw new Error('The Nx Cloud Public API specification was not loaded.');
-}
-const { Content, headings } = await render(reference);
-Astro.locals.rawContent = reference.body;
+export const prerender = true;
+const entry = await getEntry('nx-cloud-public-api', 'reference');
+if (!entry) throw new Error('The Nx Cloud Public API specification was not loaded.');
+const reference: OpenApiReference = entry.data.reference;
+const { sections } = reference;
+Astro.locals.rawContent = entry.body;
 ---
 
 <StarlightPage
-  frontmatter={{ title: reference.data.title, description: reference.data.description }}
-  headings={headings}
+  frontmatter={{ title: entry.data.title, description: entry.data.description, filter: entry.data.filter }}
+  headings={reference.headings}
 >
   <p>
     This reference is generated from the
-    <a href={reference.data.specificationUrl}>deployed OpenAPI specification</a>.
-    API version: <code>{reference.data.apiVersion}</code>.
+    <a href={reference.sourceUrl}>deployed OpenAPI specification</a>.
+    API version: <code>{reference.version}</code>.
   </p>
-  <p>
-    For usage examples, see
-    <a href="/docs/kb/query-public-api">Query the Nx Cloud Public API</a>,
-    <a href="/docs/kb/investigate-flaky-tasks-with-api">investigate flaky tasks</a>,
-    <a href="/docs/kb/debug-ci-failures-with-api">debug CI failures</a>, and
-    <a href="/docs/kb/analyze-task-distribution-with-api">analyze task distribution</a>.
-  </p>
-  <Content />
+  <p>For usage examples: {reference.navigation.map(({ label, href }, index) => <>{index > 0 && ', '}<a {href}>{label}</a></>)}.</p>
+  <Fragment set:html={reference.overview.html} />
+  {reference.servers.length > 0 && <><AnchorHeading level={2} id={sections.servers.slug}>{sections.servers.text}</AnchorHeading><ul>{reference.servers.map((server) => <li set:html={server.html} />)}</ul></>}
+
+  <AnchorHeading level={2} id={sections.authentication.slug}>{sections.authentication.text}</AnchorHeading>
+  <Fragment set:html={reference.authentication.html} />
+  {reference.securitySchemes.map((scheme) => (
+    <>
+      <AnchorHeading level={3} id={scheme.heading.slug}>{scheme.heading.text}</AnchorHeading>
+      <Fragment set:html={scheme.description.html} />
+      <ApiTable table={scheme.properties} />
+      {scheme.flows && <Code code={scheme.flows} lang="json" />}
+    </>
+  ))}
+
+  <AnchorHeading level={2} id={sections.endpoints.slug}>{sections.endpoints.text}</AnchorHeading>
+  {reference.endpoints.map((endpoint) => <ApiEndpoint {endpoint} />)}
+
+  <AnchorHeading level={2} id={sections.responses.slug}>{sections.responses.text}</AnchorHeading>
+  <p>These descriptions apply to the endpoints that list each code. Response-code links select the matching details.</p>
+  {reference.responses.map((response) => (
+    <>
+      <AnchorHeading level={3} id={response.heading.slug}>{response.heading.text}</AnchorHeading>
+      <ApiResponseDetails {response} />
+    </>
+  ))}
+  {reference.headers.length > 0 && (
+    <>
+      <AnchorHeading level={3} id={sections.headers.slug}>{sections.headers.text}</AnchorHeading>
+      {reference.headers.map((header) => (
+        <>
+          <AnchorHeading level={4} id={header.heading.slug}>{header.heading.text}</AnchorHeading>
+          <Fragment set:html={header.description.html} />
+          <Fragment set:html={header.schema.html} />
+          <ApiTable table={header.fields} />
+          <ApiContent content={header.content} />
+          <p>Documented with HTTP {header.statuses.map((status, index) => <>{index > 0 && ', '}<code>{status}</code></>)}.</p>
+        </>
+      ))}
+    </>
+  )}
+
+  <AnchorHeading level={2} id={sections.schemas.slug}>{sections.schemas.text}</AnchorHeading>
+  {reference.schemas.map((schema) => (
+    <>
+      <AnchorHeading level={3} id={schema.heading.slug}>{schema.heading.text}</AnchorHeading>
+      <Fragment set:html={schema.description.html} />
+      <Fragment set:html={schema.type.html} />
+      <ApiTable table={schema.fields} />
+      <details>
+        <summary>Schema definition</summary>
+        <Code code={schema.definition} lang="json" />
+      </details>
+    </>
+  ))}
 </StarlightPage>

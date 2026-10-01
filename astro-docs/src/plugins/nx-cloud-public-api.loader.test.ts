@@ -5,6 +5,7 @@ import {
   NxCloudPublicApiLoader,
   NX_CLOUD_PUBLIC_API_SPEC_URL,
 } from './nx-cloud-public-api.loader';
+import type { OpenApiReference } from './utils/openapi-reference';
 
 function specification() {
   return {
@@ -76,9 +77,14 @@ test('loads the reference and refreshes it on each content sync', async () => {
   assert.deepEqual(requests, [NX_CLOUD_PUBLIC_API_SPEC_URL]);
   assert.equal(data.slug, 'reference/nx-cloud/public-api');
   assert.equal(data.apiVersion, 'v1');
-  assert.match(String(first.body), /GET \/data\/v1\/tasks/);
+  const reference = data.reference as OpenApiReference;
+  assert.equal(reference.sourceUrl, NX_CLOUD_PUBLIC_API_SPEC_URL);
+  assert.equal(reference.endpoints[0].path, '/data/v1/tasks');
+  assert.match(String(first.body), /`GET` `\/data\/v1\/tasks`/);
   assert.match(String(first.body), /#schema-Task/);
-  assert.ok(first.rendered);
+  assert.ok(reference.endpoints[0].description.html);
+  assert.ok(reference.headings.length);
+  assert.equal(first.rendered, undefined);
 
   spec.info.version = 'v2';
   spec.paths['/data/v1/tasks'].get.description = 'Updated description.';
@@ -87,12 +93,21 @@ test('loads the reference and refreshes it on each content sync', async () => {
   assert.equal(requests.length, 2);
   assert.notEqual(first.digest, next.digest);
   assert.match(String(next.body), /Updated description/);
+  assert.equal(
+    (next.data as { reference: OpenApiReference }).reference.version,
+    'v2'
+  );
 });
 
 test('fails the sync instead of publishing a fallback for failed or malformed fetches', async () => {
   for (const response of [
     new Response('Unavailable', { status: 503 }),
     Response.json({}),
+    Response.json({
+      openapi: '3.1.0',
+      info: { title: 'Empty', version: 'v1' },
+      paths: {},
+    }),
     new Response('not JSON'),
   ]) {
     const state = context();
