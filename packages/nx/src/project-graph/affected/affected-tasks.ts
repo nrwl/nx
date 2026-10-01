@@ -593,6 +593,10 @@ function explainTasks(
   result.touched = explanation.touched.filter(
     (id) => id in result.affected || id in result.upstream
   );
+  for (const [pkg, file] of dependencies.movedBy) {
+    result.moved ??= {};
+    (result.moved[file] ??= []).push(pkg);
+  }
   return result;
 }
 

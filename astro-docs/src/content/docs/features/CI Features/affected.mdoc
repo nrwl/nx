@@ -289,15 +289,17 @@ Each heading counts your tasks apart from the others, and your tasks are listed 
 A section with more than five tasks names up to five per group. Pass `--verbose` to list every task with its reasons.
 Each entry lists every reason that applies, so a task reached through two different producers reports both.
 When several changed files match one input, several packages moved, or a task reads several of the tasks above, they share one line that names the first and counts the rest. The JSON lists them all.
+When a change to `package.json` or a lockfile moves specific packages, the output names those packages instead of the file.
 To follow the chain step by step, look up the task named in a reason.
 
 Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
-The JSON has four keys:
+The JSON has these keys:
 
 - `affected` holds the tasks you asked for.
 - `upstream` holds the other tasks your change reached.
 - `touched` lists which of those your change reached directly.
 - `requested` counts the tasks of your targets that selection considered.
+- `moved` lists the packages each changed dependency file moved, when Nx can name them.
 
 `nx show projects --affected -t build --explain` explains its answer the same way.
 

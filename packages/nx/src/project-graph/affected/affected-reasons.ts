@@ -65,23 +65,32 @@ export interface AffectedExplanation {
   touched: string[];
   /** The requested targets, and how many of their tasks selection chose among. */
   requested?: { targets: string[]; total: number };
+  /** The packages each changed dependency file moved, when Nx could name them. */
+  moved?: Record<string, string[]>;
 }
 
-/** One line of `--explain` output, without the leading bullet. */
-export function formatAffectedReason(reason: AffectedReason): string {
+/**
+ * One line of `--explain` output, without the leading bullet. `many` is set
+ * when `file` names several files.
+ */
+export function formatAffectedReason(
+  reason: AffectedReason,
+  many = false
+): string {
+  const changes = many ? 'change' : 'changes';
   switch (reason.kind) {
     case 'deleted-project-configuration':
-      return `${reason.file} is deleted`;
+      return `${reason.file} ${many ? 'are' : 'is'} deleted`;
     case 'project-configuration':
-      return `project configuration in ${reason.file} changes`;
+      return `project configuration in ${reason.file} ${changes}`;
     case 'lockfile':
-      return `lockfile ${reason.file} changes`;
+      return `lockfile ${reason.file} ${changes}`;
     case 'npm-package':
       return `depends on ${reason.package}, whose version changes`;
     case 'moved-ecosystem':
       return `${
         reason.file ?? 'a dependency manifest'
-      } changes and can't be narrowed to packages, so every ${
+      } ${changes} and can't be narrowed to packages, so every ${
         reason.ecosystem
       } package counts as moved`;
     case 'input-file':
@@ -91,7 +100,7 @@ export function formatAffectedReason(reason: AffectedReason): string {
     case 'dependent-output':
       return `reads the outputs of ${reason.producer}`;
     case 'external-dependencies':
-      return `hashes every external dependency, and ${reason.file} changes`;
+      return `hashes every external dependency, and ${reason.file} ${changes}`;
     case 'custom-hasher':
       return `its executor uses a custom hasher, so it is always selected`;
   }
@@ -108,7 +117,13 @@ export function formatAffectedReason(reason: AffectedReason): string {
  * blank line is indistinguishable from a bug when you are troubleshooting.
  */
 export function formatAffectedExplanation(
-  { affected, upstream, touched: touchedNames, requested }: AffectedExplanation,
+  {
+    affected,
+    upstream,
+    touched: touchedNames,
+    requested,
+    moved = {},
+  }: AffectedExplanation,
   heading: string,
   {
     verbose = false,
@@ -162,7 +177,7 @@ export function formatAffectedExplanation(
     if (!forName.length) {
       lines.push(`${indent}  - selected, but no reason is recorded`);
     }
-    for (const line of reasonLines(forName)) {
+    for (const line of reasonLines(forName, moved)) {
       lines.push(`${indent}  - ${line}`);
     }
   };
@@ -192,15 +207,19 @@ export function formatAffectedExplanation(
     const detailed = verbose || touchedAll.length <= 5;
     const byFiles = new Map<string, string[]>();
     for (const name of touchedAll) {
-      const key = describeChanged(changedIn(reasonsOf(name)));
+      const key = describeChanged(changedIn(reasonsOf(name), moved));
       byFiles.set(key, [...(byFiles.get(key) ?? []), name]);
     }
     const groups = [...byFiles].sort(
       ([a, x], [b, y]) => y.length - x.length || a.localeCompare(b)
     );
-    const files = new Set(
-      touchedAll.flatMap((name) => changedIn(reasonsOf(name)))
-    );
+    const changes = [
+      ...new Map(
+        touchedAll
+          .flatMap((name) => changedIn(reasonsOf(name), moved))
+          .map((change) => [change.name, change])
+      ).values(),
+    ];
     const touchedBy = (changed: string, members: string[]) =>
       changed
         ? `Changing ${changed} touches ${counted(members)}`
@@ -208,7 +227,7 @@ export function formatAffectedExplanation(
     const header =
       groups.length === 1
         ? touchedBy(groups[0][0], touchedAll)
-        : `Changing ${files.size} ${files.size === 1 ? 'file' : 'files'} touches ${counted(touchedAll)}`;
+        : `Changing ${changes.length} ${noun(changes)} touches ${counted(touchedAll)}`;
     lines.push(detailed ? `${header}:` : `${header}${hint}`);
     if (groups.length === 1) {
       list(touchedAll, '  ', detailed);
@@ -244,9 +263,19 @@ export function formatAffectedExplanation(
  * every task. The JSON keeps them all.
  * The JSON keeps them all.
  */
-function reasonLines(reasons: AffectedReason[]): string[] {
-  // Hashing every external covers every package in an ecosystem that moved.
-  if (reasons.some((reason) => reason.kind === 'external-dependencies')) {
+function reasonLines(
+  reasons: AffectedReason[],
+  moved: Record<string, string[]>
+): string[] {
+  const externals = reasons.filter(
+    (reason) => reason.kind === 'external-dependencies'
+  );
+  const movedPackages = [
+    ...new Set(externals.flatMap((reason) => moved[reason.file] ?? [])),
+  ].sort();
+  // Hashing every external covers every package in an ecosystem that moved,
+  // unless the line names packages instead of files.
+  if (externals.length && !movedPackages.length) {
     reasons = reasons.filter((reason) => reason.kind !== 'moved-ecosystem');
   }
   const grouped = new Map<string, AffectedReason[]>();
@@ -278,6 +307,20 @@ function reasonLines(reasons: AffectedReason[]): string[] {
   const done = new Set<string>();
   for (const reason of reasons) {
     const key = keyOf(reason);
+    if (reason.kind === 'external-dependencies' && movedPackages.length) {
+      if (done.has(key)) continue;
+      done.add(key);
+      const [first] = movedPackages;
+      const others = movedPackages.length - 1;
+      lines.push(
+        `hashes every external dependency, including ${first}${
+          others
+            ? ` and ${others} other ${others === 1 ? 'package' : 'packages'}`
+            : ''
+        }, which moved`
+      );
+      continue;
+    }
     const group = key ? grouped.get(key) : undefined;
     if (!group || group.length === 1) {
       lines.push(formatAffectedReason(reason));
@@ -316,30 +359,61 @@ function reasonLines(reasons: AffectedReason[]): string[] {
           files.length === 2
             ? `${files[0]} and ${files[1]}`
             : `${files[0]} and ${files.length - 1} other files`;
-        lines.push(formatAffectedReason({ ...first, file: joined }));
+        lines.push(formatAffectedReason({ ...first, file: joined }, true));
       }
     }
   }
   return lines;
 }
 
-/** The changed files, or packages when no file is known, a task's own reasons name. */
-function changedIn(reasons: AffectedReason[]): string[] {
-  return [
-    ...new Set(
-      reasons
-        .filter((reason) => !isUpstreamReason(reason))
-        .map((reason) => reason.file ?? reason.package)
-        .filter(Boolean)
-    ),
-  ].sort();
+interface Changed {
+  name: string;
+  isPackage: boolean;
+}
+
+/**
+ * What a task's own reasons name as changed: a moved package by its name,
+ * anything else by its file.
+ */
+function changedIn(
+  reasons: AffectedReason[],
+  moved: Record<string, string[]>
+): Changed[] {
+  const changed = new Map<string, Changed>();
+  const add = (name: string | undefined, isPackage: boolean) => {
+    if (name) changed.set(name, { name, isPackage });
+  };
+  for (const reason of reasons) {
+    if (isUpstreamReason(reason)) continue;
+    const packages =
+      reason.kind === 'external-dependencies' ? moved[reason.file] : undefined;
+    if (packages?.length) {
+      packages.forEach((name) => add(name, true));
+    } else if (reason.kind === 'npm-package') {
+      add(reason.package, true);
+    } else {
+      add(reason.file, false);
+    }
+  }
+  return [...changed.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** "a", "a and b", or "a and N other files". */
-function describeChanged(changed: string[]): string {
-  return changed.length <= 2
-    ? changed.join(' and ')
-    : `${changed[0]} and ${changed.length - 1} other files`;
+function describeChanged(changed: Changed[]): string {
+  if (changed.length <= 2) {
+    return changed.map((change) => change.name).join(' and ');
+  }
+  const [first, ...rest] = changed;
+  return `${first.name} and ${rest.length} other ${noun(rest)}`;
+}
+
+/** What a list of changes is made of, pluralized. */
+function noun(changed: Changed[]): string {
+  const packages = changed.filter((change) => change.isPackage).length;
+  const one = changed.length === 1;
+  if (!packages) return one ? 'file' : 'files';
+  if (packages === changed.length) return one ? 'package' : 'packages';
+  return 'files and packages';
 }
 
 /** A reason that names another entry rather than a change. */
