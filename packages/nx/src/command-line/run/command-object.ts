@@ -1,4 +1,4 @@
-import { CommandModule, showHelp } from 'yargs';
+import type { Argv, CommandModule } from 'yargs';
 import { handleErrors } from '../../utils/handle-errors';
 import { handleImport } from '../../utils/handle-import';
 import {
@@ -7,6 +7,8 @@ import {
   withRunOneOptions,
   withTuiOptions,
 } from '../yargs-utils/shared-options';
+
+let runArgv: Argv;
 
 export const yargsRunCommand: CommandModule = {
   command: 'run [project][:target][:configuration] [_..]',
@@ -17,7 +19,10 @@ export const yargsRunCommand: CommandModule = {
     (e.g., nx serve myapp --configuration=production)
 
     You can skip the use of Nx cache by using the --skip-nx-cache option.`,
-  builder: (yargs) => withTuiOptions(withRunOneOptions(withBatch(yargs))),
+  builder: (yargs) => {
+    runArgv = yargs;
+    return withTuiOptions(withRunOneOptions(withBatch(yargs)));
+  },
   handler: async (args) => {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
@@ -44,7 +49,7 @@ export const yargsNxInfixCommand: CommandModule = {
       async () => {
         // Yargs parses <target> as 'undefined' if running just 'nx'
         if (!args.target || args.target === 'undefined') {
-          showHelp();
+          runArgv.showHelp();
           process.exit(1);
         }
         return (await handleImport('./run-one.js', __dirname)).runOne(
