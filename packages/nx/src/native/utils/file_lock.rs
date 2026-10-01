@@ -176,14 +176,27 @@ fn open_lock_file(lock_file_path: &str) -> std::io::Result<fs::File> {
         &mut options,
         winapi::um::winbase::FILE_FLAG_OPEN_REPARSE_POINT,
     );
-    let file = options.open(lock_file_path)?;
+    // Checked by path, not error code: FreeBSD reports EMLINK where others
+    // report ELOOP, and neither error names the file.
+    let file = options.open(lock_file_path).map_err(|e| {
+        if fs::symlink_metadata(lock_file_path).is_ok_and(|m| m.is_symlink()) {
+            symlink_error(lock_file_path)
+        } else {
+            e
+        }
+    })?;
     #[cfg(windows)]
-    if file.metadata()?.file_type().is_symlink() {
-        return Err(std::io::Error::other(format!(
-            "{lock_file_path} is a symlink"
-        )));
+    if file.metadata()?.is_symlink() {
+        return Err(symlink_error(lock_file_path));
     }
     Ok(file)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn symlink_error(lock_file_path: &str) -> std::io::Error {
+    std::io::Error::other(format!(
+        "{lock_file_path} is a symlink where Nx expects a lock file. Remove the link itself (not what it points at) and run the command again."
+    ))
 }
 
 #[napi]
@@ -290,7 +303,15 @@ mod test {
             return;
         }
 
-        assert!(FileLock::new(lock.path().to_string_lossy().to_string()).is_err());
+        let lock_path = lock.path().to_string_lossy().to_string();
+        let err = FileLock::new(lock_path.clone())
+            .err()
+            .expect("a symlink at the lock path is refused");
+        assert!(
+            err.to_string()
+                .starts_with(&format!("{lock_path} is a symlink")),
+            "{err}"
+        );
         assert!(!target.exists(), "following the link creates its target");
     }
 
