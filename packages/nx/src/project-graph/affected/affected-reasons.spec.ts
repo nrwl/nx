@@ -190,7 +190,7 @@ describe('formatAffectedExplanation', () => {
       { ...selected, requested: { targets: ['build', 'test'], total: 58 } },
       'Affected tasks'
     );
-    expect(out).toMatch(/^2 out of 58 build, test tasks are affected:\n/);
+    expect(out).toMatch(/^2 out of 58 build and test tasks are affected:\n/);
   });
 
   it('agrees in number with a single task', () => {
@@ -387,6 +387,23 @@ describe('formatAffectedExplanation', () => {
     );
     expect(out).toContain(
       '  - e:e2e\n  - and 2 other e2e tasks and 2 other tasks'
+    );
+  });
+
+  it('counts your tasks per target', () => {
+    const reason = [{ kind: 'input-file' as const, file: 'a.ts' }];
+    const out = formatAffectedExplanation(
+      {
+        affected: { 'a:test': reason, 'b:test': reason, 'a:e2e-ci': reason },
+        upstream: { 'a:build': reason },
+        touched: ['a:test', 'b:test', 'a:e2e-ci', 'a:build'],
+        requested: { targets: ['e2e-ci', 'test'], total: 10 },
+      },
+      'Affected tasks'
+    );
+    expect(out).toMatch(/^3 out of 10 e2e-ci and test tasks are affected:/);
+    expect(out).toContain(
+      'Changing a.ts touches 1 e2e-ci task, 2 test tasks and 1 other task:'
     );
   });
 });

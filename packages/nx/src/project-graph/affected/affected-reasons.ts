@@ -146,7 +146,7 @@ export function formatAffectedExplanation(
   // Out of the requested targets' tasks, so the title says what selection saved.
   const n = names.length;
   const title = requested
-    ? `${n} out of ${requested.total} ${requested.targets.join(', ')} ${
+    ? `${n} out of ${requested.total} ${listed(requested.targets)} ${
         requested.total === 1 ? 'task' : 'tasks'
       } ${n === 1 ? 'is' : 'are'} affected`
     : `${heading} (${n})`;
@@ -155,26 +155,50 @@ export function formatAffectedExplanation(
   // The tasks asked for are marked by count and listed first in each group,
   // rather than split into a section of their own, so each cause shows once.
   const requestedSet = new Set(names);
-  const asked = requested?.targets.join(', ') ?? 'requested';
+  // Your tasks are counted per target, in the order the targets were given.
+  const targets = requested?.targets ?? [];
+  const targetOf = (name: string) =>
+    targets.find(
+      (target) => name.endsWith(`:${target}`) || name.includes(`:${target}:`)
+    ) ?? 'requested';
+  const breakdown = (group: string[], other: string) => {
+    const byTarget = new Map<string, number>(
+      [...targets, 'requested'].map((target) => [target, 0])
+    );
+    let rest = 0;
+    for (const name of group) {
+      if (requestedSet.has(name)) {
+        const target = targetOf(name);
+        byTarget.set(target, byTarget.get(target) + 1);
+      } else {
+        rest++;
+      }
+    }
+    const parts = [...byTarget]
+      .filter(([, count]) => count)
+      .map(
+        ([target, count]) =>
+          `${count} ${other}${target} ${count === 1 ? 'task' : 'tasks'}`
+      );
+    return { parts, rest };
+  };
   const counted = (group: string[]) => {
-    const mine = group.filter((name) => requestedSet.has(name)).length;
-    const others = group.length - mine;
-    if (!mine) return tasks(others);
-    const own = `${mine} ${asked} ${mine === 1 ? 'task' : 'tasks'}`;
-    return others
-      ? `${own} and ${others} other ${others === 1 ? 'task' : 'tasks'}`
-      : own;
+    const { parts, rest } = breakdown(group, '');
+    if (!parts.length) return tasks(rest);
+    return listed(
+      rest
+        ? [...parts, `${rest} other ${rest === 1 ? 'task' : 'tasks'}`]
+        : parts
+    );
   };
   // The tasks a list leaves out, as "N other build tasks and M other tasks".
   const otherCounted = (group: string[]) => {
-    const mine = group.filter((name) => requestedSet.has(name)).length;
-    const others = group.length - mine;
-    return [
-      mine && `${mine} other ${asked} ${mine === 1 ? 'task' : 'tasks'}`,
-      others && `${others} other ${others === 1 ? 'task' : 'tasks'}`,
-    ]
-      .filter(Boolean)
-      .join(' and ');
+    const { parts, rest } = breakdown(group, 'other ');
+    return listed(
+      rest
+        ? [...parts, `${rest} other ${rest === 1 ? 'task' : 'tasks'}`]
+        : parts
+    );
   };
   const requestedFirst = (group: string[]) => [
     ...group.filter((name) => requestedSet.has(name)),
@@ -442,4 +466,11 @@ function isUpstreamReason(reason: AffectedReason): boolean {
 /** Whether `--explain` was asked for at all, in any of its forms. */
 export function isExplaining(value: string | boolean | undefined): boolean {
   return value !== undefined && value !== false;
+}
+
+/** "a", "a and b", or "a, b and c". */
+function listed(items: string[]): string {
+  return items.length <= 2
+    ? items.join(' and ')
+    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
