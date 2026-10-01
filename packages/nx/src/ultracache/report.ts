@@ -1,16 +1,16 @@
 import type { UltracacheDiagnostic, UltracacheReport } from '../native';
 
 export interface UltracacheSummary {
-  /** The heading, e.g. "I/O snapshots: 12 tasks hashed from snapshot, 3 fell back". */
+  /** The heading, e.g. "Ultracache: 12 tasks hashed from their configuration, 3 fell back". */
   line: string;
   /** Per-reason detail under it. */
   bodyLines: string[];
 }
 
 /**
- * Formats the once-per-run verbose summary of a run that resolved a set:
- * `result` is what hashing used, `status` whether the set was fetched or
- * already stored.
+ * Formats the once-per-run verbose summary of a run that resolved an Ultracache
+ * configuration: `result` is what hashing used, `status` whether it was
+ * fetched or already stored.
  */
 export function formatUltracacheSummary(
   result: UltracacheReport,
@@ -23,15 +23,15 @@ export function formatUltracacheSummary(
   const setLevel = result.diagnostics.find((d) => d.taskId == null);
 
   const line = setLevel
-    ? `I/O snapshots: none used (unreadable set: ${setLevel.message})`
-    : `I/O snapshots: ${plural(used, 'task')} hashed from snapshot, ${plural(
+    ? `Ultracache: none used (unreadable configuration: ${setLevel.message})`
+    : `Ultracache: ${plural(used, 'task')} hashed from their configuration, ${plural(
         fellBack,
         'task'
       )} fell back${fellBack ? ` (${summarizeReasons(byReason)})` : ''}`;
 
-  const bodyLines: string[] = [`set: ${status}`];
+  const bodyLines: string[] = [`configuration: ${status}`];
   bodyLines.push(
-    `commit ${result.resolution.requestedCommit}, ${result.resolution.tasks} tasks in set`
+    `commit ${result.resolution.requestedCommit}, ${result.resolution.tasks} tasks in configuration`
   );
   for (const d of result.diagnostics) {
     bodyLines.push(describeDiagnostic(d));
@@ -42,7 +42,7 @@ export function formatUltracacheSummary(
 function describeDiagnostic(d: UltracacheDiagnostic): string {
   switch (d.reason) {
     case 'unreadable-set':
-      return `unreadable snapshot set: ${d.message}`;
+      return `unreadable Ultracache configuration: ${d.message}`;
     case 'disabled':
       return `${d.taskId}: ultracache.mode is off`;
     case 'autofix-disabled':
@@ -50,11 +50,11 @@ function describeDiagnostic(d: UltracacheDiagnostic): string {
     case 'custom-hasher':
       return `${d.taskId}: uses a custom hasher`;
     case 'missing':
-      return `${d.taskId}: no snapshot for this task`;
+      return `${d.taskId}: no Ultracache configuration for this task`;
     case 'invalid-glob':
-      return `${d.taskId}: snapshot glob "${d.glob}" is not a valid files glob`;
+      return `${d.taskId}: configuration glob "${d.glob}" is not a valid files glob`;
     case 'escapes-workspace':
-      return `${d.taskId}: snapshot glob "${d.glob}" escapes the workspace`;
+      return `${d.taskId}: configuration glob "${d.glob}" escapes the workspace`;
     default:
       return `${d.taskId ? `${d.taskId}: ` : ''}${d.reason}`;
   }

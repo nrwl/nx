@@ -13,7 +13,7 @@ type Db = store::UltracacheConfigurationStore;
 #[cfg(target_arch = "wasm32")]
 type Db = ();
 
-/// One stored version of a commit's snapshot set. Handed to the hash planner as-is.
+/// One stored version of a commit's Ultracache configuration. Handed to the hash planner as-is.
 /// A fresh import holds every entry; a handle reopened from storage reads
 /// them per task as they are asked for and remembers them, so it costs the
 /// tasks it plans rather than the workspace's whole set.

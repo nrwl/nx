@@ -23,21 +23,21 @@ describe('formatUltracacheSummary', () => {
     };
     const summary = formatUltracacheSummary(result, 'cached');
     expect(summary.line).toBe(
-      'I/O snapshots: 2 tasks hashed from snapshot, 6 tasks fell back (2 missing, 1 autofix-disabled, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
+      'Ultracache: 2 tasks hashed from their configuration, 6 tasks fell back (2 missing, 1 autofix-disabled, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
     );
     expect(summary.bodyLines).toEqual([
-      'set: cached',
-      'commit abc123, 3 tasks in set',
+      'configuration: cached',
+      'commit abc123, 3 tasks in configuration',
       'c:e2e: ultracache.mode is off',
       'h:deploy: ultracache.mode is not on',
-      'd:test: no snapshot for this task',
-      'e:test: no snapshot for this task',
-      'f:lint: snapshot glob "libs/./x.ts" is not a valid files glob',
-      'g:build: snapshot glob "../x/**" escapes the workspace',
+      'd:test: no Ultracache configuration for this task',
+      'e:test: no Ultracache configuration for this task',
+      'f:lint: configuration glob "libs/./x.ts" is not a valid files glob',
+      'g:build: configuration glob "../x/**" escapes the workspace',
     ]);
   });
 
-  it('says none were used when the set could not be read', () => {
+  it('says none were used when the configuration could not be read', () => {
     expect(
       formatUltracacheSummary(
         {
@@ -47,6 +47,6 @@ describe('formatUltracacheSummary', () => {
         },
         'cached'
       ).line
-    ).toBe('I/O snapshots: none used (unreadable set: bad)');
+    ).toBe('Ultracache: none used (unreadable configuration: bad)');
   });
 });

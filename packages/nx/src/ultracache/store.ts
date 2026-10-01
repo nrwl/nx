@@ -25,9 +25,12 @@ import {
   type ReadUltracacheConfigurationResult,
 } from './fetch';
 
-/** What resolving this run's snapshot set came to. Only a set that resolved carries one. */
+/**
+ * What resolving this run's Ultracache configuration came to. Only one that
+ * resolved carries it.
+ */
 export type UltracacheConfigurationOutcome =
-  | { status: 'fetched' | 'cached'; snapshots: UltracacheConfiguration }
+  | { status: 'fetched' | 'cached'; configuration: UltracacheConfiguration }
   | { status: 'skipped'; reason: string; message: string };
 
 export function skippedUltracacheConfiguration(
@@ -37,12 +40,12 @@ export function skippedUltracacheConfiguration(
   return { status: 'skipped', reason, message };
 }
 
-/** The set an outcome resolved to, if any. */
-export function snapshotsOf(
+/** The configuration an outcome resolved to, if any. */
+export function configurationOf(
   outcome: UltracacheConfigurationOutcome | null
 ): UltracacheConfiguration | undefined {
   return outcome && outcome.status !== 'skipped'
-    ? outcome.snapshots
+    ? outcome.configuration
     : undefined;
 }
 
@@ -53,30 +56,30 @@ export function snapshotsOf(
 const STORED_SET_MAX_AGE_MS = 60 * 60 * 1000;
 
 // Reasons that indicate misconfiguration rather than an expected offline
-// state or a client that simply predates snapshots.
+// state or a client that simply predates Ultracache.
 const WARNED_REASONS = new Set([
   'unauthorized',
   'invalid-response',
   'write-failed',
 ]);
 
-/** The snapshot store in this process's workspace database. */
+/** The Ultracache configuration store in this process's workspace database. */
 export function getUltracacheConfigurationStore(): UltracacheConfigurationStore {
   return new UltracacheConfigurationStore(getDbConnection());
 }
 
 /**
- * Stores a set the Nx Cloud client read for `requestedCommit` and returns its
+ * Stores a configuration the Nx Cloud client read for `requestedCommit` and returns its
  * handle, for `runDiscreteTasks` and `runContinuousTasks`. Exposed to the
  * client through `nx/nx-cloud-internals`. Throws with the store's `code`.
  */
 export function importUltracacheConfiguration(
   requestedCommit: string,
-  snapshots: ReadUltracacheConfigurationResult['snapshots']
+  configuration: ReadUltracacheConfigurationResult['snapshots']
 ): UltracacheConfiguration {
   return getUltracacheConfigurationStore().import({
     requestedCommit,
-    snapshotsJson: JSON.stringify(snapshots),
+    configurationJson: JSON.stringify(configuration),
   });
 }
 
@@ -93,9 +96,9 @@ export function openUltracacheConfiguration(
 }
 
 /**
- * This run's I/O snapshot set for HEAD, in the process that owns the fetch:
- * the stored set while it is fresh, otherwise what Nx Cloud reads, imported
- * into the store. Returns `null` when snapshots are not enabled for this
+ * This run's Ultracache configuration for HEAD, in the process that owns the fetch:
+ * the stored one while it is fresh, otherwise what Nx Cloud reads, imported
+ * into the store. Returns `null` when Ultracache is not enabled for this
  * workspace; never throws.
  */
 export async function loadUltracacheConfigurationForRun(
@@ -120,7 +123,7 @@ export async function loadUltracacheConfigurationForRun(
         stored &&
         reportUltracacheConfigurationResolution({
           status: 'cached',
-          snapshots: stored,
+          configuration: stored,
         })
       );
     };
@@ -135,9 +138,9 @@ export async function loadUltracacheConfigurationForRun(
         const result = await fetchUltracacheConfiguration(runnerOptions);
         return reportUltracacheConfigurationResolution({
           status: 'fetched',
-          snapshots: store.import({
+          configuration: store.import({
             requestedCommit: head,
-            snapshotsJson: JSON.stringify(result.snapshots),
+            configurationJson: JSON.stringify(result.snapshots),
           }),
         });
       }))
@@ -202,19 +205,19 @@ function reportUltracacheConfigurationResolution(
   if (outcome.status === 'skipped') {
     if (WARNED_REASONS.has(outcome.reason)) {
       output.warn({
-        title: `Nx Cloud I/O snapshots are unavailable (${outcome.reason})`,
+        title: `Nx Cloud Ultracache configuration is unavailable (${outcome.reason})`,
         bodyLines: [outcome.message, 'Tasks will be hashed without them.'],
       });
     } else {
       logger.verbose(
-        `Skipping Nx Cloud I/O snapshots (${outcome.reason}): ${outcome.message}`
+        `Skipping Nx Cloud Ultracache configuration (${outcome.reason}): ${outcome.message}`
       );
     }
     return outcome;
   }
-  const { resolution } = outcome.snapshots;
+  const { resolution } = outcome.configuration;
   logger.verbose(
-    `Nx Cloud I/O snapshots ${outcome.status}: ${resolution.tasks} tasks for ${resolution.requestedCommit.slice(
+    `Nx Cloud Ultracache configuration ${outcome.status}: ${resolution.tasks} tasks for ${resolution.requestedCommit.slice(
       0,
       12
     )}`

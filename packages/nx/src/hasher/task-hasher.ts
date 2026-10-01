@@ -236,7 +236,7 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly externalRustReferences: NxWorkspaceFilesExternals | null,
     private readonly options: any,
     private readonly planningContext?: TaskPlanningContext,
-    /** This run's snapshot set; the daemon passes one per request instead. */
+    /** This run's Ultracache configuration; the daemon passes one per request instead. */
     private readonly ultracacheConfiguration?: UltracacheConfiguration
   ) {
     this.taskHasher = new NativeTaskHasherImpl(

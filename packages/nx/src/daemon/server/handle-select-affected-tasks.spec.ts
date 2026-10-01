@@ -28,9 +28,9 @@ vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
 const planningContext = vi.hoisted(() => ({}));
 const planningContextFor = vi.hoisted(() => vi.fn(() => planningContext));
 vi.mock('./planning-context', () => ({ planningContextFor }));
-const snapshots = vi.hoisted(() => ({}));
+const configuration = vi.hoisted(() => ({}));
 const getUltracacheConfigurationForVersion = vi.hoisted(() =>
-  vi.fn(() => snapshots)
+  vi.fn(() => configuration)
 );
 vi.mock('./ultracache-configuration-state', () => ({
   getUltracacheConfigurationForVersion,
@@ -72,7 +72,7 @@ describe('handleSelectAffectedTasks', () => {
   });
 
   // The run hashes with this version, so selection plans with it too.
-  it('plans with the snapshot version the client sent', async () => {
+  it('plans with the configuration version the client sent', async () => {
     const version = { commit: 'abc', fetchedAt: 7 };
     await handleSelectAffectedTasks({
       ...request,
@@ -81,7 +81,7 @@ describe('handleSelectAffectedTasks', () => {
 
     expect(getUltracacheConfigurationForVersion).toHaveBeenCalledWith(version);
     expect(selectAffectedTasks.mock.calls[0][4]).toEqual({
-      ultracacheConfiguration: snapshots,
+      ultracacheConfiguration: configuration,
     });
   });
 

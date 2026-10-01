@@ -2,7 +2,7 @@ import { fetchUltracacheConfiguration } from './fetch';
 
 const cloud = vi.hoisted(() => ({
   verifyOrUpdateNxCloudClient: vi.fn(),
-  readUltracacheConfiguration: vi.fn(),
+  readIoSnapshots: vi.fn(),
 }));
 
 vi.mock('../nx-cloud/update-manager', () => ({
@@ -21,17 +21,17 @@ describe('fetchUltracacheConfiguration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     withClient({
-      readUltracacheConfiguration: cloud.readUltracacheConfiguration,
+      readIoSnapshots: cloud.readIoSnapshots,
     });
   });
 
   it('reads with the run options and returns what Nx Cloud sent', async () => {
     const result = { snapshots: {} };
-    cloud.readUltracacheConfiguration.mockResolvedValue(result);
+    cloud.readIoSnapshots.mockResolvedValue(result);
     expect(await fetchUltracacheConfiguration({ accessToken: 't' })).toBe(
       result
     );
-    expect(cloud.readUltracacheConfiguration).toHaveBeenCalledWith(
+    expect(cloud.readIoSnapshots).toHaveBeenCalledWith(
       expect.objectContaining({ nxCloudOptions: { accessToken: 't' } })
     );
   });
@@ -40,18 +40,18 @@ describe('fetchUltracacheConfiguration', () => {
     const offline = Object.assign(new Error('getaddrinfo'), {
       code: 'ENOTFOUND',
     });
-    cloud.readUltracacheConfiguration.mockRejectedValue(offline);
+    cloud.readIoSnapshots.mockRejectedValue(offline);
     await expect(fetchUltracacheConfiguration({})).rejects.toBe(offline);
   });
 
   it.each([
     [
       'no set',
-      () => cloud.readUltracacheConfiguration.mockResolvedValue(null),
+      () => cloud.readIoSnapshots.mockResolvedValue(null),
       'NO_SNAPSHOTS',
     ],
     [
-      'a client that predates snapshots',
+      'a client that predates Ultracache',
       () => withClient({}),
       'UNSUPPORTED_CLIENT',
     ],

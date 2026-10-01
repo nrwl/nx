@@ -1,4 +1,4 @@
-//! A snapshot set and its task entries, as Nx Cloud sends them and the store keeps them.
+//! An Ultracache configuration and its task entries, as Nx Cloud sends them and the store keeps them.
 
 #[cfg(not(target_arch = "wasm32"))]
 use std::collections::BTreeMap;
@@ -14,21 +14,24 @@ use crate::native::utils::time::current_timestamp_millis;
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ImportedSet {
     pub resolution: UltracacheConfigurationResolution,
-    pub snapshots: BTreeMap<String, UltracacheTaskConfiguration>,
+    pub entries: BTreeMap<String, UltracacheTaskConfiguration>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ImportedSet {
-    /// Describes `snapshots` as the set fetched now for `requested_commit`.
-    pub fn new(requested_commit: String, snapshots: BTreeMap<String, UltracacheTaskConfiguration>) -> Self {
+    /// Describes `entries` as the configuration fetched now for `requested_commit`.
+    pub fn new(
+        requested_commit: String,
+        entries: BTreeMap<String, UltracacheTaskConfiguration>,
+    ) -> Self {
         let resolution = UltracacheConfigurationResolution {
             requested_commit,
             fetched_at: current_timestamp_millis(),
-            tasks: snapshots.len() as u32,
+            tasks: entries.len() as u32,
         };
         Self {
             resolution,
-            snapshots,
+            entries,
         }
     }
 }

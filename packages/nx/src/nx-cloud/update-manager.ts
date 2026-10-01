@@ -65,8 +65,8 @@ export interface NxCloudClient {
   commands: Record<string, () => Promise<void>>;
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
   getRemoteCache: () => RemoteCacheV2;
-  /** Clients that expose I/O snapshots; see `fetchUltracacheConfiguration`. */
-  readUltracacheConfiguration?: (
+  /** Clients that expose Ultracache configuration; see `fetchUltracacheConfiguration`. */
+  readIoSnapshots?: (
     options: ReadUltracacheConfigurationOptions
   ) => Promise<ReadUltracacheConfigurationResult | null>;
 }

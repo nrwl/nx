@@ -97,18 +97,18 @@ describe('loadUltracacheConfigurationForRun', () => {
       await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
     ).toEqual({
       status: 'cached',
-      snapshots: set,
+      configuration: set,
     });
     expect(store.get).toHaveBeenCalledWith('head', 60 * 60 * 1000);
     expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
   });
 
   it('imports what Nx Cloud read when no stored set is young enough', async () => {
-    const snapshots = {
+    const configuration = {
       'web:build': { commit: 'parent', inputs: ['apps/web/**'], outputs: [] },
     };
     cloud.fetchUltracacheConfiguration.mockResolvedValue({
-      snapshots,
+      snapshots: configuration,
     });
     const set = stored();
     store.import.mockReturnValue(set);
@@ -123,10 +123,10 @@ describe('loadUltracacheConfigurationForRun', () => {
     expect(store.import).toHaveBeenCalledWith(
       expect.objectContaining({
         requestedCommit: 'head',
-        snapshotsJson: JSON.stringify(snapshots),
+        configurationJson: JSON.stringify(configuration),
       })
     );
-    expect(result).toEqual({ status: 'fetched', snapshots: set });
+    expect(result).toEqual({ status: 'fetched', configuration: set });
   });
 
   it('fetches once under the lock, and uses a set another process stored meanwhile', async () => {
@@ -143,7 +143,7 @@ describe('loadUltracacheConfigurationForRun', () => {
       optedIn()
     );
 
-    expect(outcome).toEqual({ status: 'cached', snapshots: set });
+    expect(outcome).toEqual({ status: 'cached', configuration: set });
     expect(lock.wait).toHaveBeenCalledTimes(1);
     expect(lock.unlock).toHaveBeenCalledTimes(1);
     expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
@@ -248,13 +248,13 @@ describe('importUltracacheConfiguration', () => {
   it('stores what the Nx Cloud client read and returns the handle', () => {
     const handle = { commit: 'head' };
     store.import.mockReturnValue(handle);
-    const snapshots = {
+    const configuration = {
       'web:build': { commit: 'head', inputs: ['apps/web/**'], outputs: [] },
     };
-    expect(importUltracacheConfiguration('head', snapshots)).toBe(handle);
+    expect(importUltracacheConfiguration('head', configuration)).toBe(handle);
     expect(store.import).toHaveBeenCalledWith({
       requestedCommit: 'head',
-      snapshotsJson: JSON.stringify(snapshots),
+      configurationJson: JSON.stringify(configuration),
     });
   });
 });

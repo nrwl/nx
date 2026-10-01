@@ -8,7 +8,7 @@ import type { UltracacheCloudOptions } from './config';
 
 const READ_TIMEOUT_MS = 10_000;
 
-/** The Nx Cloud client's `readUltracacheConfiguration` contract, as far as nx uses it. */
+/** The Nx Cloud client's `readIoSnapshots` contract, as far as nx uses it. */
 export interface ReadUltracacheConfigurationOptions {
   workspaceRoot?: string;
   nxCloudOptions?: UltracacheCloudOptions;
@@ -26,7 +26,7 @@ export interface ReadUltracacheConfigurationResult {
 }
 
 /**
- * Reads HEAD's snapshot set from Nx Cloud. Throws with a `code` saying why it
+ * Reads HEAD's Ultracache configuration from Nx Cloud. Throws with a `code` saying why it
  * could not: the client's own, or `NO_CLOUD_CLIENT`, `UNSUPPORTED_CLIENT` or
  * `NO_SNAPSHOTS`.
  */
@@ -45,13 +45,13 @@ export async function fetchUltracacheConfiguration(
       'The Nx Cloud client could not be loaded'
     );
   }
-  if (typeof client.readUltracacheConfiguration !== 'function') {
+  if (typeof client.readIoSnapshots !== 'function') {
     throw codedError(
       'UNSUPPORTED_CLIENT',
-      'The installed Nx Cloud client does not expose I/O snapshots; update nx-cloud'
+      'The installed Nx Cloud client does not expose Ultracache configuration; update nx-cloud'
     );
   }
-  const result = await client.readUltracacheConfiguration({
+  const result = await client.readIoSnapshots({
     workspaceRoot,
     nxCloudOptions: runnerOptions,
     timeoutMs: READ_TIMEOUT_MS,
@@ -59,7 +59,10 @@ export async function fetchUltracacheConfiguration(
   if (!result) {
     // The client returns `null` only for a `knownUpdatedAt` match, which nx
     // never sends; treat it as nothing to serve rather than a broken reply.
-    throw codedError('NO_SNAPSHOTS', 'Nx Cloud returned no I/O snapshot set');
+    throw codedError(
+      'NO_SNAPSHOTS',
+      'Nx Cloud returned no Ultracache configuration'
+    );
   }
   return result;
 }

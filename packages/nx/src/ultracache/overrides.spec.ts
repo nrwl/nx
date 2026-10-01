@@ -4,7 +4,7 @@ import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 
 const HEAD = 'a'.repeat(40);
-let snapshotDb: ReturnType<typeof connectToNxDb>;
+let configurationDb: ReturnType<typeof connectToNxDb>;
 
 vi.mock('../tasks-runner/utils', () => ({
   getExecutorForTask: vi.fn((task: { target: { target: string } }) => ({
@@ -74,10 +74,10 @@ function graph(...ids: string[]): TaskGraph {
   };
 }
 
-function writeSet(snapshots: Record<string, unknown>) {
-  return new UltracacheConfigurationStore(snapshotDb).import({
+function writeConfiguration(entries: Record<string, unknown>) {
+  return new UltracacheConfigurationStore(configurationDb).import({
     requestedCommit: HEAD,
-    snapshotsJson: JSON.stringify(snapshots),
+    configurationJson: JSON.stringify(entries),
   });
 }
 
@@ -86,16 +86,16 @@ describe('buildUltracacheOverrides', () => {
 
   beforeEach(() => {
     tempFs = new TempFs('ultracache-overrides');
-    snapshotDb = connectToNxDb(join(tempFs.tempDir, 'db'), 'ultracache');
+    configurationDb = connectToNxDb(join(tempFs.tempDir, 'db'), 'ultracache');
   });
 
   afterEach(() => {
-    closeDbConnection(snapshotDb);
+    closeDbConnection(configurationDb);
     tempFs.cleanup();
   });
 
   it('uses flat entries, including one that read nothing', () => {
-    const set = writeSet({
+    const configuration = writeConfiguration({
       'web:build': {
         commit: HEAD,
         inputs: ['apps/web/src/**/*.ts', 'dist/libs/ui/index.js'],
@@ -106,7 +106,7 @@ describe('buildUltracacheOverrides', () => {
     const result = buildUltracacheOverrides(
       projectGraph,
       graph('web:build', 'ui:build', 'root:build'),
-      set
+      configuration
     );
     expect(result.used).toEqual(['root:build', 'web:build']);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
@@ -115,7 +115,7 @@ describe('buildUltracacheOverrides', () => {
   });
 
   it('withholds disabled, custom-hasher, and invalid-glob tasks', () => {
-    const set = writeSet({
+    const configuration = writeConfiguration({
       'web:lint': { commit: HEAD, inputs: [], outputs: [] },
       'web:custom': { commit: HEAD, inputs: [], outputs: [] },
       'ui:build': {
@@ -127,7 +127,7 @@ describe('buildUltracacheOverrides', () => {
     const result = buildUltracacheOverrides(
       projectGraph,
       graph('web:lint', 'web:custom', 'ui:build'),
-      set
+      configuration
     );
     expect(result.used).toEqual([]);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([

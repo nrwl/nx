@@ -16,7 +16,7 @@ use super::{
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::time::current_timestamp_millis;
 
-/// The workspace database's snapshot sets. Each import is its own version,
+/// The workspace database's Ultracache configurations. Each import is its own version,
 /// keyed by commit and fetch time, so a run that pinned one keeps reading it
 /// while a newer one is imported. Failures throw with a `code` JS maps to a
 /// skip reason: `STORE_UNAVAILABLE`, `INVALID_RESPONSE` or `WRITE_FAILED`.
@@ -47,22 +47,22 @@ impl UltracacheConfigurationStore {
         &self,
         options: UltracacheConfigurationImportOptions,
     ) -> napi::Result<UltracacheConfiguration, String> {
-        let snapshots: BTreeMap<String, UltracacheTaskConfiguration> =
-            serde_json::from_str(&options.snapshots_json).map_err(|err| {
+        let entries: BTreeMap<String, UltracacheTaskConfiguration> =
+            serde_json::from_str(&options.configuration_json).map_err(|err| {
                 napi::Error::new(
                     "INVALID_RESPONSE".to_string(),
-                    format!("Nx Cloud returned I/O snapshots nx cannot read: {err}"),
+                    format!("Nx Cloud returned an Ultracache configuration nx cannot read: {err}"),
                 )
             })?;
-        let set = ImportedSet::new(options.requested_commit, snapshots);
+        let set = ImportedSet::new(options.requested_commit, entries);
         self.write(&set)
             .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
         let ImportedSet {
             resolution,
-            snapshots,
+            entries,
         } = set;
         // The importing process keeps what it just parsed; nothing to re-read.
-        let entries = snapshots
+        let entries = entries
             .into_iter()
             .map(|(id, entry)| (id, Some(Arc::new(entry))))
             .collect();
@@ -108,7 +108,7 @@ fn readable(
     read: Result<Option<UltracacheConfigurationResolution>>,
 ) -> Option<UltracacheConfigurationResolution> {
     read.unwrap_or_else(|err| {
-        debug!("io snapshots: the stored set for {commit} is unreadable: {err}");
+        debug!("ultracache: the stored configuration for {commit} is unreadable: {err}");
         None
     })
 }
@@ -140,11 +140,11 @@ impl UltracacheConfigurationStore {
     /// transaction, so a reader sees the previous set or the new one, never a gap.
     pub(super) fn write(&self, set: &ImportedSet) -> Result<()> {
         let entries: Vec<(&String, String)> = set
-            .snapshots
+            .entries
             .iter()
             .map(|(task_id, entry)| Ok((task_id, serde_json::to_string(entry)?)))
             .collect::<Result<_>>()
-            .context("serializing snapshot entries")?;
+            .context("serializing Ultracache configuration entries")?;
         let resolution = &set.resolution;
         let commit = &resolution.requested_commit;
         let fetched_at = resolution.fetched_at;
@@ -213,8 +213,9 @@ impl UltracacheConfigurationStore {
         )?;
         rows.into_iter()
             .map(|(task_id, json)| {
-                let entry = serde_json::from_str(&json)
-                    .with_context(|| format!("parsing the stored snapshot of {task_id}"))?;
+                let entry = serde_json::from_str(&json).with_context(|| {
+                    format!("parsing the stored Ultracache configuration of {task_id}")
+                })?;
                 Ok((task_id, entry))
             })
             .collect()
@@ -239,7 +240,7 @@ mod tests {
     ) -> napi::Result<UltracacheConfiguration, String> {
         store.import_set(UltracacheConfigurationImportOptions {
             requested_commit: "head".into(),
-            snapshots_json: json.into(),
+            configuration_json: json.into(),
         })
     }
 
@@ -270,7 +271,7 @@ mod tests {
         store
             .write(&ImportedSet {
                 resolution: stored.resolution(),
-                snapshots: BTreeMap::new(),
+                entries: BTreeMap::new(),
             })
             .unwrap();
         assert!(
@@ -341,7 +342,7 @@ mod tests {
     }
 
     fn imported(commit: &str, fetched_at: i64, tasks: &[&str]) -> ImportedSet {
-        let snapshots: BTreeMap<String, UltracacheTaskConfiguration> = tasks
+        let entries: BTreeMap<String, UltracacheTaskConfiguration> = tasks
             .iter()
             .map(|id| {
                 (
@@ -353,7 +354,7 @@ mod tests {
                 )
             })
             .collect();
-        let mut set = ImportedSet::new(commit.into(), snapshots);
+        let mut set = ImportedSet::new(commit.into(), entries);
         set.resolution.fetched_at = fetched_at;
         set
     }

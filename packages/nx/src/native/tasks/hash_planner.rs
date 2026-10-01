@@ -25,7 +25,7 @@ use crate::native::tasks::inputs::{
 };
 use crate::native::tasks::plan_memo::PlanMemo;
 use crate::native::tasks::ultracache_eligibility::{
-    self, EligibilityInputs, SnapshotTask, UltracacheEligibilityOptions,
+    self, EligibilityInputs, UltracacheEligibilityOptions, UltracacheTask,
 };
 use crate::native::tasks::utils;
 use crate::native::ultracache::UltracacheConfiguration;
@@ -34,7 +34,7 @@ use std::sync::{Arc, OnceLock};
 
 /// One entry per visit of a project whose inputs include its files: the
 /// workspace-relative negated patterns that visit declares. Natively each
-/// visit is its own fileset, so a snapshot group keeps only the negations
+/// visit is its own fileset, so an Ultracache group keeps only the negations
 /// every visit shares; removing one re-admits the observed reads it excluded.
 type Negations = Vec<(String, Vec<String>)>;
 
@@ -42,11 +42,12 @@ const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
 const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
 
-/// A task's snapshot plus a matcher over its observed reads, used to decide
-/// whether a class-mapped file (root tsconfig, a declared `{json}` file) was
-/// actually read. An unparsable glob keeps the native instruction (conservative).
-struct SnapshotContext<'a> {
-    io: &'a SnapshotTask,
+/// A task's Ultracache configuration plus a matcher over its observed reads,
+/// used to decide whether a class-mapped file (root tsconfig, a declared
+/// `{json}` file) was actually read. An unparsable glob keeps the native
+/// instruction (conservative).
+struct UltracacheContext<'a> {
+    entry: &'a UltracacheTask,
     /// Observed reads that name one path outright, answered without a matcher.
     literal: HashSet<&'a str>,
     /// Matcher over the observed reads that are real globs; `None` when there are none.
@@ -56,11 +57,11 @@ struct SnapshotContext<'a> {
     unparsable: bool,
 }
 
-impl<'a> SnapshotContext<'a> {
-    fn new(io: &'a SnapshotTask) -> Self {
+impl<'a> UltracacheContext<'a> {
+    fn new(entry: &'a UltracacheTask) -> Self {
         let mut literal = HashSet::new();
         let mut patterns: Vec<&str> = Vec::new();
-        for glob in io.files.iter().map(String::as_str) {
+        for glob in entry.files.iter().map(String::as_str) {
             if glob.starts_with('!') {
                 continue;
             }
@@ -72,7 +73,7 @@ impl<'a> SnapshotContext<'a> {
         }
         if patterns.is_empty() {
             return Self {
-                io,
+                entry,
                 literal,
                 observed: None,
                 unparsable: false,
@@ -80,13 +81,13 @@ impl<'a> SnapshotContext<'a> {
         }
         match NxGlobSetBuilder::new(&patterns).and_then(|b| b.build(None)) {
             Ok(set) => Self {
-                io,
+                entry,
                 literal,
                 observed: Some(set),
                 unparsable: false,
             },
             Err(_) => Self {
-                io,
+                entry,
                 literal,
                 observed: None,
                 unparsable: true,
@@ -128,7 +129,7 @@ pub struct HashPlanner {
     /// Interner backing every plan this planner produces.
     instruction_pool: Arc<InstructionPool>,
     /// Whole-task plans from earlier calls, reused while the task graph
-    /// around them and the snapshot set are unchanged.
+    /// around them and the Ultracache configuration are unchanged.
     plan_memo: PlanMemo,
 }
 
@@ -273,20 +274,20 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-        snapshots: Option<&UltracacheConfiguration>,
+        configuration: Option<&UltracacheConfiguration>,
         custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
         let memo = self.plan_memo.begin(
             &task_graph,
-            snapshots.map(|snapshots| {
-                let resolution = snapshots.resolution_ref();
+            configuration.map(|configuration| {
+                let resolution = configuration.resolution_ref();
                 (resolution.requested_commit.clone(), resolution.fetched_at)
             }),
             custom_hasher_task_ids,
         );
         let to_plan = memo.missing(&task_ids);
-        let snapshot_tasks = snapshots.map(|snapshots| {
+        let ultracache_tasks = configuration.map(|configuration| {
             // Continuous dependencies are planned into their dependents, so
             // their entries are needed too.
             let mut scope: Vec<&str> = to_plan.clone();
@@ -300,7 +301,7 @@ impl HashPlanner {
             scope.sort_unstable();
             scope.dedup();
             ultracache_eligibility::resolve(
-                snapshots,
+                configuration,
                 scope
                     .iter()
                     .filter_map(|id| task_graph.tasks.get_key_value(*id))
@@ -359,10 +360,10 @@ impl HashPlanner {
                     .chain([always_on_id])
                     .collect();
 
-                let snapshot = snapshot_tasks
+                let task_configuration = ultracache_tasks
                     .as_ref()
                     .and_then(|tasks| tasks.get(*id))
-                    .map(SnapshotContext::new);
+                    .map(UltracacheContext::new);
                 let mut negations: Negations = Vec::new();
                 ids.extend(self.self_and_deps_inputs(
                     &task.target.project,
@@ -371,29 +372,35 @@ impl HashPlanner {
                     &task_graph,
                     external_deps_mapped,
                     &mut VisitedTracker::new(task.target.project.as_str()),
-                    snapshot.as_ref(),
-                    snapshot.as_ref().map(|_| &mut negations),
+                    task_configuration.as_ref(),
+                    task_configuration.as_ref().map(|_| &mut negations),
                 )?);
 
-                if let Some(snapshot) = &snapshot {
-                    self.replace_with_snapshot(task, snapshot, &negations, &mut ids, always_on_id);
+                if let Some(task_configuration) = &task_configuration {
+                    self.replace_with_configuration(
+                        task,
+                        task_configuration,
+                        &negations,
+                        &mut ids,
+                        always_on_id,
+                    );
                 }
 
                 // A continuous dependency serves this task from its own process, so
                 // its inputs and externals are hashed here, and its own servers' in
-                // turn: its observed reads when both it and this task hash from a
-                // snapshot, else its declared inputs, so a task hashed natively
+                // turn: its observed reads when both it and this task hash from their
+                // configurations, else its declared inputs, so a task hashed natively
                 // (any `ultracache.mode` but `on` included) stays native throughout.
                 // When it reads
                 // its builds' outputs, those land in this plan too, which holds the
                 // task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
-                    let dep_snapshot = snapshot
+                    let dep_configuration = task_configuration
                         .as_ref()
-                        .and(snapshot_tasks.as_ref())
+                        .and(ultracache_tasks.as_ref())
                         .and_then(|tasks| tasks.get(&dep_task.id))
-                        .map(SnapshotContext::new);
+                        .map(UltracacheContext::new);
                     let mut dep_negations: Negations = Vec::new();
                     let mut dep_ids: Vec<u32> = self
                         .target_input(
@@ -413,13 +420,13 @@ impl HashPlanner {
                         &task_graph,
                         external_deps_mapped,
                         &mut VisitedTracker::new(dep_task.target.project.as_str()),
-                        dep_snapshot.as_ref(),
-                        dep_snapshot.as_ref().map(|_| &mut dep_negations),
+                        dep_configuration.as_ref(),
+                        dep_configuration.as_ref().map(|_| &mut dep_negations),
                     )?);
-                    if let Some(dep_snapshot) = &dep_snapshot {
-                        self.replace_with_snapshot(
+                    if let Some(dep_configuration) = &dep_configuration {
+                        self.replace_with_configuration(
                             dep_task,
-                            dep_snapshot,
+                            dep_configuration,
                             &dep_negations,
                             &mut dep_ids,
                             always_on_id,
@@ -473,11 +480,11 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-        snapshots: Option<&UltracacheConfiguration>,
+        configuration: Option<&UltracacheConfiguration>,
         custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let hash_plans =
-            self.get_plans_internal(task_ids, task_graph, snapshots, custom_hasher_task_ids)?;
+            self.get_plans_internal(task_ids, task_graph, configuration, custom_hasher_task_ids)?;
         Ok(hash_plans
             .plans
             .into_iter()
@@ -492,8 +499,8 @@ impl HashPlanner {
             .collect())
     }
 
-    /// `snapshots` is this run's I/O snapshot set; a task with an eligible
-    /// entry hashes its observed reads instead of its declared filesets.
+    /// `configuration` is this run's Ultracache configuration; a task with an
+    /// eligible entry hashes its observed reads instead of its declared filesets.
     /// `options` carries the task ids decided in JS, where executors and
     /// target configuration are resolved.
     #[napi(ts_return_type = "Record<string, string[]>")]
@@ -501,7 +508,7 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
-        snapshots: Option<ClassInstance<'_, UltracacheConfiguration>>,
+        configuration: Option<ClassInstance<'_, UltracacheConfiguration>>,
         options: Option<UltracacheEligibilityOptions>,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
@@ -509,7 +516,7 @@ impl HashPlanner {
         self.get_plans_materialized(
             task_ids,
             task_graph,
-            snapshots.as_deref(),
+            configuration.as_deref(),
             options.custom_hasher_task_ids.as_deref().unwrap_or(&[]),
         )
     }
@@ -519,7 +526,7 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
-        snapshots: Option<ClassInstance<'_, UltracacheConfiguration>>,
+        configuration: Option<ClassInstance<'_, UltracacheConfiguration>>,
         options: Option<UltracacheEligibilityOptions>,
     ) -> anyhow::Result<External<HashPlans>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
@@ -527,7 +534,7 @@ impl HashPlanner {
         let plans = self.get_plans_internal(
             task_ids,
             task_graph,
-            snapshots.as_deref(),
+            configuration.as_deref(),
             options.custom_hasher_task_ids.as_deref().unwrap_or(&[]),
         )?;
         Ok(External::new(plans))
@@ -539,36 +546,37 @@ impl HashPlanner {
     /// Replaces the declared filesets in `ids` (self, deps, `{input, projects}`)
     /// with `task`'s observed reads; TsConfiguration and JSON inputs survive
     /// only if read.
-    fn replace_with_snapshot(
+    fn replace_with_configuration(
         &self,
         task: &Task,
-        snapshot: &SnapshotContext,
+        configuration: &UltracacheContext,
         negations: &Negations,
         ids: &mut Vec<u32>,
         always_on_id: u32,
     ) {
         let pool = &self.instruction_pool;
-        let keep_tsconfig = snapshot.root_tsconfig_read();
+        let keep_tsconfig = configuration.root_tsconfig_read();
         let own: hashbrown::HashSet<u32> = self
-            .snapshot_file_instructions(task, snapshot, negations)
+            .configuration_file_instructions(task, configuration, negations)
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
         ids.retain(|id| {
             *id == always_on_id
                 || own.contains(id)
-                || !pool.replaced_by_snapshot(*id, keep_tsconfig, |path| snapshot.read(path))
+                || !pool
+                    .replaced_by_configuration(*id, keep_tsconfig, |path| configuration.read(path))
         });
         ids.extend(own);
     }
 
-    fn snapshot_file_instructions(
+    fn configuration_file_instructions(
         &self,
         task: &Task,
-        snapshot: &SnapshotContext,
+        configuration: &UltracacheContext,
         negations: &Negations,
     ) -> Vec<HashInstruction> {
-        let io = snapshot.io;
+        let entry = configuration.entry;
         let self_project = task.target.project.as_str();
 
         // The deepest ancestor directory that is a project root wins. A project
@@ -595,7 +603,7 @@ impl HashPlanner {
         // Nx Cloud collapses sibling files into brace groups; class mapping needs
         // the individual names, so observed groups of literals are expanded.
         let mut buckets: BTreeMap<&str, Vec<String>> = BTreeMap::new();
-        for glob in io
+        for glob in entry
             .files
             .iter()
             .flat_map(|glob| expand_literal_braces(glob))
@@ -626,7 +634,9 @@ impl HashPlanner {
             group.extend(declared_negations);
             instructions.push(HashInstruction::IgnoredFileSet(group));
         }
-        instructions.push(HashInstruction::UltracacheConfiguration(io.digest.clone()));
+        instructions.push(HashInstruction::UltracacheConfiguration(
+            entry.digest.clone(),
+        ));
         instructions
     }
 
@@ -746,7 +756,7 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
-        snapshot: Option<&SnapshotContext>,
+        configuration: Option<&UltracacheContext>,
         mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<u32>> {
         let pool = &self.instruction_pool;
@@ -762,12 +772,12 @@ impl HashPlanner {
         }
 
         let mut ids: Vec<u32> = self
-            .gather_self_inputs(project_name, &inputs.self_inputs, snapshot)?
+            .gather_self_inputs(project_name, &inputs.self_inputs, configuration)?
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
-        // With a snapshot, reads of other tasks' outputs are observed reads.
-        if snapshot.is_none() {
+        // With a configuration, reads of other tasks' outputs are observed reads.
+        if configuration.is_none() {
             ids.extend(
                 self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
                     .into_iter()
@@ -1170,10 +1180,10 @@ impl HashPlanner {
         &self,
         project_name: &str,
         self_inputs: &[Input],
-        snapshot: Option<&SnapshotContext>,
+        configuration: Option<&UltracacheContext>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        if snapshot.is_some() {
-            return self.gather_self_inputs_from_snapshot(project_name, self_inputs);
+        if configuration.is_some() {
+            return self.gather_self_inputs_from_configuration(project_name, self_inputs);
         }
         // `includeIgnored` filesets hash from disk as one aggregated group, so
         // a negation filters across entries; the rest read the file map.
@@ -1245,12 +1255,12 @@ impl HashPlanner {
             .collect())
     }
 
-    /// The self inputs of a snapshot-hashed project: the trace replaces its
-    /// declared filesets, `includeIgnored` ones included, so only the
-    /// configuration, tsconfig and non-file inputs remain. Whether
-    /// TsConfiguration and JSON inputs stay is decided by the caller's
-    /// replacement pass.
-    fn gather_self_inputs_from_snapshot(
+    /// The self inputs of a project hashed from its Ultracache configuration: the
+    /// observed reads replace its declared filesets, `includeIgnored` ones
+    /// included, so only the project configuration, tsconfig and non-file inputs
+    /// remain. Whether TsConfiguration and JSON inputs stay is decided by the
+    /// caller's replacement pass.
+    fn gather_self_inputs_from_configuration(
         &self,
         project_name: &str,
         self_inputs: &[Input],
@@ -1277,7 +1287,7 @@ impl HashPlanner {
         Ok(instructions)
     }
 
-    /// With a snapshot, a declared `{json}` file counts only if the trace
+    /// With a configuration, a declared `{json}` file counts only if the task
     /// read it: the observed reads are the file inputs now.
     fn runtime_env_cwd_json_inputs(
         &self,
@@ -1680,7 +1690,7 @@ fn collect_negations(
     negations.push((project_name.to_string(), patterns));
 }
 
-/// Reads left out of the snapshot's file groups: node_modules (never hashed as
+/// Reads left out of the configuration's file groups: node_modules (never hashed as
 /// files) and nx.json/.gitignore/.nxignore (the always-on set hashes them whole).
 /// Lockfiles stay: externals may cover only a few packages, not the whole file.
 fn covered_by_native_instruction(glob: &str) -> bool {

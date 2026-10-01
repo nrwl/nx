@@ -39,9 +39,9 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
 
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-  // A snapshot can make a task depend on producer outputs its declared
+  // An Ultracache configuration can make a task depend on producer outputs its declared
   // inputs never mentioned; those hash after their producers too.
-  const deferredBySnapshot = ultracacheConfiguration
+  const deferredByConfiguration = ultracacheConfiguration
     ? new Set(getUltracacheDeferredTaskIds(ultracacheConfiguration, taskGraph))
     : null;
   const tasks = Object.values(taskGraph.tasks);
@@ -60,7 +60,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     .filter(
       ({ task, customHasher }) =>
         !customHasher &&
-        !deferredBySnapshot?.has(task.id) &&
+        !deferredByConfiguration?.has(task.id) &&
         !readsDependencyOutputs(task, taskGraph, projectGraph, nxJson)
     )
     .map((t) => t.task);

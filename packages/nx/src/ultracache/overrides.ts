@@ -13,9 +13,10 @@ import { getExecutorForTask } from '../tasks-runner/utils';
 const customHasherMemo = new WeakMap<TaskGraph, string[]>();
 
 /**
- * Tasks whose executor ships a custom hasher; they are never hashed from a
- * snapshot. Detected here because executors are resolved in JS, by the
- * factory's presence only — invoking it would load user modules.
+ * Tasks whose executor ships a custom hasher; they are never hashed from
+ * their Ultracache configuration. Detected here because executors are
+ * resolved in JS, by the factory's presence only — invoking it would load
+ * user modules.
  */
 function customHasherTaskIds(
   projectGraph: ProjectGraph,
@@ -33,7 +34,7 @@ function customHasherTaskIds(
         return !!getExecutorForTask(task, projects).hasherFactory;
       } catch {
         // An unresolvable executor fails later, at execution; it is not a
-        // reason to withhold a snapshot here.
+        // reason to withhold its configuration here.
         return false;
       }
     })
@@ -43,7 +44,7 @@ function customHasherTaskIds(
 }
 
 /**
- * Each task's ultracache configuration: all the native eligibility walk reads
+ * Each task's Ultracache settings: all the native eligibility walk reads
  * from a task. `null`, not `undefined`: the native map drops `undefined` keys.
  */
 export function getUltracacheSettings(
@@ -68,7 +69,7 @@ export function ultracacheEligibilityOptions(
 }
 
 /**
- * Reports which tasks in `taskGraph` hash from `snapshots` and why the rest
+ * Reports which tasks in `taskGraph` hash from `configuration` and why the rest
  * do not, with the same eligibility walk the planner uses, without building a
  * planner (no project-graph transfer). Never fetches, never throws. Feeds
  * the `--verbose` run summary.
@@ -76,10 +77,10 @@ export function ultracacheEligibilityOptions(
 export function buildUltracacheOverrides(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  snapshots: UltracacheConfiguration
+  configuration: UltracacheConfiguration
 ): UltracacheReport {
   return getUltracacheReport(
-    snapshots,
+    configuration,
     getUltracacheSettings(taskGraph),
     ultracacheEligibilityOptions(projectGraph, taskGraph)
   );

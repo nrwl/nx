@@ -285,7 +285,7 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
-    // Disk-backed filesets (`includeIgnored` and snapshot reads): a path index
+    // Disk-backed filesets (`includeIgnored` and Ultracache reads): a path index
     // over the file map so tracked files skip the disk, built only once a plan
     // carries a disk-backed group. Their content lives in the context's
     // IgnoredIndex.

@@ -2,13 +2,13 @@ use std::collections::{HashMap, HashSet};
 
 use crate::native::cache::expand_outputs::match_output_paths;
 use crate::native::glob::expand_literal_braces;
-use crate::native::ultracache::{UltracacheConfigurationResolution, UltracacheConfiguration};
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{parse_group, validate_files_glob};
 use crate::native::tasks::types::{TaskGraph, TaskUltracacheSettings, UltracacheMode};
+use crate::native::ultracache::{UltracacheConfiguration, UltracacheConfigurationResolution};
 use xxhash_rust::xxh3::Xxh3;
 
-/// What the eligibility walk needs beyond each task's ultracache configuration.
+/// What the eligibility walk needs beyond each task's Ultracache settings.
 /// Custom hashers are decided in JS, where executors are resolved.
 #[derive(Default)]
 pub(crate) struct EligibilityInputs {
@@ -36,11 +36,11 @@ impl From<UltracacheEligibilityOptions> for EligibilityInputs {
     }
 }
 
-/// A task the hash planner hashes from its snapshot: observed reads as
-/// workspace-relative globs (negations included), and the digest that marks
-/// the plan.
+/// A task the hash planner hashes from its Ultracache configuration: observed
+/// reads as workspace-relative globs (negations included), and the digest that
+/// marks the plan.
 #[derive(Clone, Debug)]
-pub(crate) struct SnapshotTask {
+pub(crate) struct UltracacheTask {
     pub files: Vec<String>,
     pub digest: String,
 }
@@ -66,7 +66,7 @@ impl UltracacheDiagnostic {
         }
     }
 
-    /// A run-level diagnostic: nothing hashed from snapshots, for `reason`.
+    /// A run-level diagnostic: nothing hashed from its configuration, for `reason`.
     fn run(reason: String, message: Option<String>) -> Self {
         Self {
             reason,
@@ -80,14 +80,14 @@ impl UltracacheDiagnostic {
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct UltracacheReport {
-    /// Task ids hashed from their snapshot.
+    /// Task ids hashed from their Ultracache configuration.
     pub used: Vec<String>,
     pub diagnostics: Vec<UltracacheDiagnostic>,
     pub resolution: UltracacheConfigurationResolution,
 }
 
 pub(crate) struct Resolved {
-    pub tasks: HashMap<String, SnapshotTask>,
+    pub tasks: HashMap<String, UltracacheTask>,
     pub diagnostics: Vec<UltracacheDiagnostic>,
     pub resolution: UltracacheConfigurationResolution,
 }
@@ -108,21 +108,21 @@ impl Resolved {
 }
 
 /// Decides per task whether its entry can be hashed; each withheld task gets
-/// one diagnostic naming why. A set-level read failure yields one diagnostic
-/// and no tasks. Takes each task's id and ultracache configuration: all the
+/// one diagnostic naming why. A configuration-level read failure yields one diagnostic
+/// and no tasks. Takes each task's id and Ultracache settings: all the
 /// walk reads from a task, so callers need not transfer whole tasks.
 pub(crate) fn resolve<'a>(
-    snapshots: &UltracacheConfiguration,
+    configuration: &UltracacheConfiguration,
     ultracache_settings: impl IntoIterator<Item = (&'a str, Option<&'a TaskUltracacheSettings>)>,
     inputs: &EligibilityInputs,
 ) -> Resolved {
-    let resolution = snapshots.resolution_ref();
+    let resolution = configuration.resolution_ref();
 
     let mut tasks = HashMap::new();
     let mut diagnostics = Vec::new();
     let ultracache_settings: Vec<_> = ultracache_settings.into_iter().collect();
     let task_ids: Vec<&str> = ultracache_settings.iter().map(|(id, _)| *id).collect();
-    let entries = match snapshots.entries_for(&task_ids) {
+    let entries = match configuration.entries_for(&task_ids) {
         Ok(entries) => entries,
         Err(err) => {
             return Resolved {
@@ -190,9 +190,9 @@ pub(crate) fn resolve<'a>(
 
         tasks.insert(
             task_id.to_string(),
-            SnapshotTask {
+            UltracacheTask {
                 files,
-                digest: snapshot_digest(ultracache),
+                digest: configuration_digest(ultracache),
             },
         );
     }
@@ -207,7 +207,7 @@ pub(crate) fn resolve<'a>(
 /// The eligibility report, for the run summary.
 #[napi]
 pub fn get_ultracache_report(
-    snapshots: &UltracacheConfiguration,
+    configuration: &UltracacheConfiguration,
     #[napi(ts_arg_type = "Record<string, TaskUltracacheSettings | null>")] tasks: HashMap<
         String,
         Option<TaskUltracacheSettings>,
@@ -215,7 +215,7 @@ pub fn get_ultracache_report(
     options: Option<UltracacheEligibilityOptions>,
 ) -> UltracacheReport {
     resolve(
-        snapshots,
+        configuration,
         tasks
             .iter()
             .map(|(id, ultracache)| (id.as_str(), ultracache.as_ref())),
@@ -227,7 +227,7 @@ pub fn get_ultracache_report(
 /// The marker's digest: the task's `ignoredReads`, which shape the reads its
 /// recording holds, so editing them re-runs the task and records it afresh.
 /// Sorted, since their order means nothing.
-fn snapshot_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
+fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
@@ -279,8 +279,8 @@ fn candidates_under(sorted: &[String], root: &str) -> Vec<String> {
 }
 
 /// A glob that would resolve outside the workspace: absolute, drive-lettered,
-/// or carrying a `..` segment. The set is server-supplied, so this is the
-/// line that keeps a hostile snapshot from turning hashing into a read oracle.
+/// or carrying a `..` segment. The configuration is server-supplied, so this is
+/// the line that keeps a hostile one from turning hashing into a read oracle.
 fn escapes_workspace(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     let bytes = path.as_bytes();
@@ -346,18 +346,19 @@ fn reads_dependency_outputs(task_id: &str, files: &[String], task_graph: &TaskGr
     false
 }
 
-/// Tasks whose snapshot read another task's outputs: they hash after their
-/// producers ran, because those files only exist then. Needs no project graph,
-/// so the client can call it before the first hashing wave on the daemon path.
+/// Tasks whose Ultracache configuration read another task's outputs: they
+/// hash after their producers ran, because those files only exist then. Needs
+/// no project graph, so the client can call it before the first hashing wave
+/// on the daemon path.
 /// Opted-out and custom-hasher tasks are not excluded: deferring a task that
 /// ends up hashed natively only delays its hash, it never changes it.
 #[napi]
 pub fn get_ultracache_deferred_task_ids(
-    snapshots: &UltracacheConfiguration,
+    configuration: &UltracacheConfiguration,
     task_graph: TaskGraph,
 ) -> Vec<String> {
     let ids: Vec<&str> = task_graph.tasks.keys().map(String::as_str).collect();
-    let entries = snapshots.entries_for(&ids).unwrap_or_default();
+    let entries = configuration.entries_for(&ids).unwrap_or_default();
     let mut deferred: Vec<String> = task_graph
         .tasks
         .keys()

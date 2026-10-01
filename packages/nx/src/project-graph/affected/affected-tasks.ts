@@ -8,7 +8,10 @@ import {
   type UltracacheConfiguration,
 } from '../../native';
 import { ultracacheEligibilityOptions } from '../../ultracache/overrides';
-import { snapshotsOf, type UltracacheConfigurationOutcome } from '../../ultracache/store';
+import {
+  configurationOf,
+  type UltracacheConfigurationOutcome,
+} from '../../ultracache/store';
 import type { UltracacheConfigurationVersion } from '../../daemon/message-types/ultracache-configuration-version';
 import {
   createTaskGraph,
@@ -84,7 +87,7 @@ export interface ComputeAffectedTasksOptions {
   /** `--exclude` project patterns. Their tasks leave the selection but still carry a change and run as dependencies. */
   exclude?: string[];
   packageJson?: any;
-  /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
+  /** This command's Ultracache configuration. Selection plans with it, as the run hashes with it. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
   selectivelyHashTsConfig?: boolean;
 }
@@ -132,7 +135,9 @@ export async function computeAffectedTasks(
     exclude: opts.exclude ?? [],
     selectivelyHashTsConfig: opts.selectivelyHashTsConfig,
   };
-  const ultracacheConfiguration = snapshotsOf(opts.ultracacheConfigurationOutcome ?? null);
+  const ultracacheConfiguration = configurationOf(
+    opts.ultracacheConfigurationOutcome ?? null
+  );
   if (ultracacheConfiguration) {
     request.ultracacheConfiguration = {
       commit: ultracacheConfiguration.commit,
@@ -190,8 +195,9 @@ export async function computeAffectedTasks(
 
 /**
  * Plans the targets' full task graph and matches the changed paths against
- * every plan. No project-level prefilter: under an I/O snapshot a task can read
- * files no affected project owns. Shared by the client and the daemon.
+ * every plan. No project-level prefilter: under an Ultracache configuration a
+ * task can read files no affected project owns. Shared by the client and the
+ * daemon.
  */
 export async function selectAffectedTasks(
   projectGraph: ProjectGraph,
