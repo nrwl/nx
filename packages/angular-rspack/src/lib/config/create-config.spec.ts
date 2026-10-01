@@ -336,7 +336,6 @@ describe('createConfig', () => {
           // Posix-normalized by the config, so a native join would fail on
           // Windows.
           browserOutputRelativePath: '../browser',
-          indexOutputName: 'index.html',
           allowedHosts: ['example.com'],
           manifestModuleRequest: expect.stringContaining(
             '__ng-rspack-ssr-entry-manifest__'
