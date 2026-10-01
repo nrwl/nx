@@ -50,20 +50,23 @@ describe('handleHashTasks', () => {
 
   it('gets the version the client names and keeps one handle while it holds', async () => {
     const version = { commit: 'abc', fetchedAt: 1 };
-    await handleHashTasks({ ...base, ultracacheConfigurations: version });
+    await handleHashTasks({
+      ...base,
+      ultracacheConfigurationsVersion: version,
+    });
     expect(mockGetStored).toHaveBeenLastCalledWith('abc', 1);
     const first = hashTasks.mock.lastCall[5];
     expect(first).toMatchObject({ commit: 'abc' });
     await handleHashTasksUpfront({
       ...base,
-      ultracacheConfigurations: version,
+      ultracacheConfigurationsVersion: version,
     });
     // Identity, not shape: the mock returns an equal object on every call.
     expect(hashTasksUpfront.mock.lastCall[5]).toBe(first);
     // A client on a newer version of the same commit gets that version.
     await handleHashTasks({
       ...base,
-      ultracacheConfigurations: { commit: 'abc', fetchedAt: 2 },
+      ultracacheConfigurationsVersion: { commit: 'abc', fetchedAt: 2 },
     });
     const newer = hashTasks.mock.lastCall[5];
     expect(newer).not.toBe(first);
@@ -71,7 +74,7 @@ describe('handleHashTasks', () => {
     // A different commit is a different handle even when the fetch times match.
     await handleHashTasks({
       ...base,
-      ultracacheConfigurations: { commit: 'def', fetchedAt: 2 },
+      ultracacheConfigurationsVersion: { commit: 'def', fetchedAt: 2 },
     });
     expect(hashTasks.mock.lastCall[5]).toMatchObject({ commit: 'def' });
     expect(hashTasks.mock.lastCall[5]).not.toBe(newer);
@@ -81,7 +84,7 @@ describe('handleHashTasks', () => {
     mockGetStored.mockImplementationOnce(() => null);
     await handleHashTasks({
       ...base,
-      ultracacheConfigurations: { commit: 'gone', fetchedAt: 1 },
+      ultracacheConfigurationsVersion: { commit: 'gone', fetchedAt: 1 },
     });
     expect(hashTasks.mock.lastCall[5]).toBeUndefined();
   });
@@ -92,7 +95,7 @@ describe('handleHashTasks', () => {
     });
     await handleHashTasks({
       ...base,
-      ultracacheConfigurations: { commit: 'broken', fetchedAt: 1 },
+      ultracacheConfigurationsVersion: { commit: 'broken', fetchedAt: 1 },
     });
     expect(hashTasks.mock.lastCall[5]).toBeUndefined();
   });

@@ -33,7 +33,7 @@ export type UltracacheConfigurationOutcome =
   | { status: 'fetched' | 'cached'; configurations: UltracacheConfigurations }
   | { status: 'skipped'; reason: string; message: string };
 
-export function skippedUltracacheConfigurations(
+export function skippedUltracacheOutcome(
   reason: string,
   message: string
 ): UltracacheConfigurationOutcome {
@@ -112,10 +112,7 @@ export async function loadUltracacheConfigurationsForRun(
   const head = getLatestCommitSha();
   if (!head) {
     return reportUltracacheConfigurationResolution(
-      skippedUltracacheConfigurations(
-        'not-a-git-repo',
-        'Could not resolve HEAD'
-      )
+      skippedUltracacheOutcome('not-a-git-repo', 'Could not resolve HEAD')
     );
   }
   try {
@@ -152,7 +149,7 @@ export async function loadUltracacheConfigurationsForRun(
     // No fallback to an older set for this commit: it would hash from a
     // recording the run could not refresh, and CI can hash natively instead.
     return reportUltracacheConfigurationResolution(
-      skippedUltracacheConfigurations(reasonFromError(e), errorMessage(e))
+      skippedUltracacheOutcome(reasonFromError(e), errorMessage(e))
     );
   }
 }

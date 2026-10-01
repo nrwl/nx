@@ -108,7 +108,7 @@ export interface AffectedTasksRequest {
   extraTargetDependencies: TargetDependencies;
   excludeTaskDependencies: boolean;
   exclude: string[];
-  ultracacheConfigurations?: UltracacheConfigurationVersion;
+  ultracacheConfigurationsVersion?: UltracacheConfigurationVersion;
   /** The runner's `selectivelyHashTsConfig`, which decides what the tsconfig hash reads. */
   selectivelyHashTsConfig?: boolean;
 }
@@ -139,7 +139,7 @@ export async function computeAffectedTasks(
     opts.ultracacheConfigurationOutcome ?? null
   );
   if (ultracacheConfigurations) {
-    request.ultracacheConfigurations = {
+    request.ultracacheConfigurationsVersion = {
       commit: ultracacheConfigurations.commit,
       fetchedAt: ultracacheConfigurations.resolution.fetchedAt,
     };

@@ -28,7 +28,7 @@ export interface ReadUltracacheConfigurationsResult {
 /**
  * Reads HEAD's Ultracache configurations from Nx Cloud. Throws with a `code`
  * saying why it could not: the client's own, or `NO_CLOUD_CLIENT`, `UNSUPPORTED_CLIENT` or
- * `NO_SNAPSHOTS`.
+ * `NO_CONFIGURATIONS`.
  */
 export async function fetchUltracacheConfigurations(
   runnerOptions: UltracacheCloudOptions
@@ -60,7 +60,7 @@ export async function fetchUltracacheConfigurations(
     // The client returns `null` only for a `knownUpdatedAt` match, which nx
     // never sends; treat it as nothing to serve rather than a broken reply.
     throw codedError(
-      'NO_SNAPSHOTS',
+      'NO_CONFIGURATIONS',
       'Nx Cloud returned no Ultracache configurations'
     );
   }

@@ -76,7 +76,7 @@ describe('handleSelectAffectedTasks', () => {
     const version = { commit: 'abc', fetchedAt: 7 };
     await handleSelectAffectedTasks({
       ...request,
-      ultracacheConfigurations: version,
+      ultracacheConfigurationsVersion: version,
     });
 
     expect(getUltracacheConfigurationsForVersion).toHaveBeenCalledWith(version);

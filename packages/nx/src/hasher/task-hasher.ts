@@ -177,7 +177,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
     private readonly daemonClient: DaemonClient,
     private readonly runnerOptions: any,
-    private readonly ultracacheConfigurations?: UltracacheConfigurationVersion
+    private readonly ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ) {}
 
   async hashTasks(
@@ -193,7 +193,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
       normalizePerTaskEnvs(tasks, envOrPerTaskEnvs),
       process.cwd(),
       collectInputs,
-      this.ultracacheConfigurations
+      this.ultracacheConfigurationsVersion
     );
   }
 
@@ -210,7 +210,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
       perTaskEnvs,
       process.cwd(),
       collectInputs,
-      this.ultracacheConfigurations
+      this.ultracacheConfigurationsVersion
     );
   }
 

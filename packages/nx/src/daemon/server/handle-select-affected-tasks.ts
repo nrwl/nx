@@ -26,7 +26,7 @@ export async function handleSelectAffectedTasks(
     request,
     {
       ultracacheConfigurations: getUltracacheConfigurationsForVersion(
-        request.ultracacheConfigurations
+        request.ultracacheConfigurationsVersion
       ),
     }
   );

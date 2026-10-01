@@ -42,7 +42,7 @@ pub struct Task {
     pub ultracache: Option<TaskUltracacheSettings>,
 }
 
-/// How a target's tasks participate in ultracache. Nx Cloud only: nothing in
+/// How a target's tasks participate in Ultracache. Nx Cloud only: nothing in
 /// the OSS runner records or applies IO, so every mode behaves as `Off` without
 /// it.
 #[napi(string_enum = "lowercase")]

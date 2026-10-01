@@ -20,7 +20,7 @@ interface HashTasksPayload {
   perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
   cwd: string;
   collectInputs?: boolean;
-  ultracacheConfigurations?: UltracacheConfigurationVersion;
+  ultracacheConfigurationsVersion?: UltracacheConfigurationVersion;
 }
 
 async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
@@ -54,7 +54,9 @@ export async function handleHashTasks(payload: HashTasksPayload) {
     payload.perTaskEnvs,
     payload.cwd,
     payload.collectInputs,
-    getUltracacheConfigurationsForVersion(payload.ultracacheConfigurations)
+    getUltracacheConfigurationsForVersion(
+      payload.ultracacheConfigurationsVersion
+    )
   );
   return {
     response,
@@ -70,7 +72,9 @@ export async function handleHashTasksUpfront(payload: HashTasksPayload) {
     payload.perTaskEnvs,
     payload.cwd,
     payload.collectInputs,
-    getUltracacheConfigurationsForVersion(payload.ultracacheConfigurations)
+    getUltracacheConfigurationsForVersion(
+      payload.ultracacheConfigurationsVersion
+    )
   );
   return {
     response,

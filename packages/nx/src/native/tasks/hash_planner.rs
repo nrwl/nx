@@ -360,7 +360,7 @@ impl HashPlanner {
                     .chain([always_on_id])
                     .collect();
 
-                let task_configuration = ultracache_tasks
+                let context = ultracache_tasks
                     .as_ref()
                     .and_then(|tasks| tasks.get(*id))
                     .map(UltracacheContext::new);
@@ -372,14 +372,14 @@ impl HashPlanner {
                     &task_graph,
                     external_deps_mapped,
                     &mut VisitedTracker::new(task.target.project.as_str()),
-                    task_configuration.as_ref(),
-                    task_configuration.as_ref().map(|_| &mut negations),
+                    context.as_ref(),
+                    context.as_ref().map(|_| &mut negations),
                 )?);
 
-                if let Some(task_configuration) = &task_configuration {
+                if let Some(context) = &context {
                     self.replace_with_configuration(
                         task,
-                        task_configuration,
+                        context,
                         &negations,
                         &mut ids,
                         always_on_id,
@@ -396,7 +396,7 @@ impl HashPlanner {
                 // task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
-                    let dep_configuration = task_configuration
+                    let dep_context = context
                         .as_ref()
                         .and(ultracache_tasks.as_ref())
                         .and_then(|tasks| tasks.get(&dep_task.id))
@@ -420,13 +420,13 @@ impl HashPlanner {
                         &task_graph,
                         external_deps_mapped,
                         &mut VisitedTracker::new(dep_task.target.project.as_str()),
-                        dep_configuration.as_ref(),
-                        dep_configuration.as_ref().map(|_| &mut dep_negations),
+                        dep_context.as_ref(),
+                        dep_context.as_ref().map(|_| &mut dep_negations),
                     )?);
-                    if let Some(dep_configuration) = &dep_configuration {
+                    if let Some(dep_context) = &dep_context {
                         self.replace_with_configuration(
                             dep_task,
-                            dep_configuration,
+                            dep_context,
                             &dep_negations,
                             &mut dep_ids,
                             always_on_id,
@@ -549,23 +549,22 @@ impl HashPlanner {
     fn replace_with_configuration(
         &self,
         task: &Task,
-        configuration: &UltracacheContext,
+        context: &UltracacheContext,
         negations: &Negations,
         ids: &mut Vec<u32>,
         always_on_id: u32,
     ) {
         let pool = &self.instruction_pool;
-        let keep_tsconfig = configuration.root_tsconfig_read();
+        let keep_tsconfig = context.root_tsconfig_read();
         let own: hashbrown::HashSet<u32> = self
-            .configuration_file_instructions(task, configuration, negations)
+            .configuration_file_instructions(task, context, negations)
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
         ids.retain(|id| {
             *id == always_on_id
                 || own.contains(id)
-                || !pool
-                    .replaced_by_configuration(*id, keep_tsconfig, |path| configuration.read(path))
+                || !pool.replaced_by_configuration(*id, keep_tsconfig, |path| context.read(path))
         });
         ids.extend(own);
     }
@@ -573,10 +572,10 @@ impl HashPlanner {
     fn configuration_file_instructions(
         &self,
         task: &Task,
-        configuration: &UltracacheContext,
+        context: &UltracacheContext,
         negations: &Negations,
     ) -> Vec<HashInstruction> {
-        let entry = configuration.entry;
+        let entry = context.entry;
         let self_project = task.target.project.as_str();
 
         // The deepest ancestor directory that is a project root wins. A project
@@ -756,7 +755,7 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
-        configuration: Option<&UltracacheContext>,
+        context: Option<&UltracacheContext>,
         mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<u32>> {
         let pool = &self.instruction_pool;
@@ -772,12 +771,12 @@ impl HashPlanner {
         }
 
         let mut ids: Vec<u32> = self
-            .gather_self_inputs(project_name, &inputs.self_inputs, configuration)?
+            .gather_self_inputs(project_name, &inputs.self_inputs, context)?
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
         // With a configuration, reads of other tasks' outputs are observed reads.
-        if configuration.is_none() {
+        if context.is_none() {
             ids.extend(
                 self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
                     .into_iter()
@@ -1180,9 +1179,9 @@ impl HashPlanner {
         &self,
         project_name: &str,
         self_inputs: &[Input],
-        configuration: Option<&UltracacheContext>,
+        context: Option<&UltracacheContext>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        if configuration.is_some() {
+        if context.is_some() {
             return self.gather_self_inputs_from_configuration(project_name, self_inputs);
         }
         // `includeIgnored` filesets hash from disk as one aggregated group, so

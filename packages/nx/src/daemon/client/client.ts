@@ -396,7 +396,7 @@ export class DaemonClient {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean,
-    ultracacheConfigurations?: UltracacheConfigurationVersion
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -407,7 +407,7 @@ export class DaemonClient {
       collectInputs,
       // An External cannot cross the socket: the version names the stored set
       // to hash from. Absent means native hashing.
-      ultracacheConfigurations,
+      ultracacheConfigurationsVersion,
     });
   }
 
@@ -418,7 +418,7 @@ export class DaemonClient {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean,
-    ultracacheConfigurations?: UltracacheConfigurationVersion
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Record<string, Hash>> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS_UPFRONT',
@@ -427,7 +427,7 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
-      ultracacheConfigurations,
+      ultracacheConfigurationsVersion,
     });
   }
 

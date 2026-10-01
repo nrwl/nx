@@ -202,12 +202,12 @@ describe('loadUltracacheConfigurationsForRun', () => {
   // Only reasons that point at misconfiguration warn on every run.
   it('warns for an unauthorized read but not when Nx Cloud has no set', async () => {
     cloud.fetchUltracacheConfigurations.mockRejectedValueOnce(
-      coded('NO_SNAPSHOTS')
+      coded('NO_CONFIGURATIONS')
     );
     expect(
       await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
     ).toMatchObject({
-      reason: 'no-snapshots',
+      reason: 'no-configurations',
     });
     expect(warn).not.toHaveBeenCalled();
 

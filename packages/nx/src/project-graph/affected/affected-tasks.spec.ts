@@ -479,7 +479,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     });
 
     const [request] = daemon.selectAffectedTasks.mock.calls[0];
-    expect(request.ultracacheConfigurations).toEqual({
+    expect(request.ultracacheConfigurationsVersion).toEqual({
       commit: 'abc',
       fetchedAt: 7,
     });

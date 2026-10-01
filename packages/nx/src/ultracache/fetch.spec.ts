@@ -48,7 +48,7 @@ describe('fetchUltracacheConfigurations', () => {
     [
       'no set',
       () => cloud.readIoSnapshots.mockResolvedValue(null),
-      'NO_SNAPSHOTS',
+      'NO_CONFIGURATIONS',
     ],
     [
       'a client that predates Ultracache',
