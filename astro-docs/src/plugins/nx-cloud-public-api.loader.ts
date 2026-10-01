@@ -1,7 +1,6 @@
 import type { Loader } from 'astro/loaders';
 import { watchAndCall } from './utils/watch';
 import {
-  openApiOperations,
   parseOpenApiDocument,
   renderOpenApiReference,
 } from './utils/openapi-reference';
@@ -54,8 +53,6 @@ export function NxCloudPublicApiLoader(options: LoaderOptions = {}): Loader {
             slug: NX_CLOUD_PUBLIC_API_SLUG,
             specificationUrl,
             apiVersion: document.info.version,
-            openapiVersion: document.openapi,
-            operationCount: openApiOperations(document).length,
           },
         });
         const rendered = await renderMarkdown(body);

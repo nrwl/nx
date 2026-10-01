@@ -9,11 +9,12 @@ test('renders operations from the deployed spec and resolves schema links', asyn
   page,
   request,
 }) => {
-  const response = await request.get(specificationUrl);
+  const [response] = await Promise.all([
+    request.get(specificationUrl),
+    page.goto(referencePath),
+  ]);
   expect(response.ok()).toBe(true);
   const specification = await response.json();
-
-  await page.goto(referencePath);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     specification.info.title
   );
@@ -95,10 +96,12 @@ test('shows shared response details once and links response codes to them', asyn
   page,
   request,
 }) => {
-  const response = await request.get(specificationUrl);
+  const [response] = await Promise.all([
+    request.get(specificationUrl),
+    page.goto(referencePath),
+  ]);
   expect(response.ok()).toBe(true);
   const specification = await response.json();
-  await page.goto(referencePath);
   await expect(
     page.getByRole('heading', { name: 'HTTP response codes', exact: true })
   ).toHaveCount(1);
