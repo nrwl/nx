@@ -7,23 +7,24 @@
 // symlink or waits on a FIFO at the target. Not covered: the run folder itself
 // and its ancestors, and an entry swapped between a check and the operation.
 
+import { randomBytes } from 'crypto';
 import {
   lstatSync,
   mkdirSync,
   readdirSync,
+  renameSync,
   rmSync,
   writeFileSync,
   type BigIntStats,
 } from 'fs';
 import { basename, dirname, isAbsolute, join, relative, sep } from 'path';
 import { FileLock } from '../../../native';
-import { parseJson } from '../../../utils/json';
+import { parseJson, serializeJson } from '../../../utils/json';
 import {
   FileReplacedDuringReadError,
   handoffsDirState,
   readInspectedFile,
 } from '../agentic/handoff';
-import { publishFileAtomically } from './atomic-write';
 
 export class NotADirectoryError extends Error {
   constructor(dir: string) {
@@ -79,7 +80,6 @@ function checkFoldersTo(runDir: string, dir: string, create: boolean): boolean {
   return walkRunFolders(runDir, runFolderSegments(runDir, dir), create);
 }
 
-/** Creates `dir` and the folders above it inside the run, if missing. */
 export function ensureRunFolder(runDir: string, dir: string): void {
   checkFoldersTo(runDir, dir, true);
 }
@@ -141,8 +141,11 @@ export function readRunJson<T extends object>(
 
 /**
  * Publishes `content` through a temp file and a rename, creating missing
- * folders on the way. 'wx' fails the write on anything planted at the temp
- * name, and the rename replaces an entry at `filePath` without following it.
+ * folders on the way, so a crash mid-write leaves only a stale temp file.
+ * 'wx' fails the write on anything planted at the temp name, and the rename
+ * replaces an entry at `filePath` without following it. The random suffix
+ * keeps concurrent writers apart; a pid would collide across PID namespaces
+ * sharing the workspace.
  */
 export function writeRunFile(
   runDir: string,
@@ -150,9 +153,17 @@ export function writeRunFile(
   content: string
 ): void {
   checkFoldersTo(runDir, dirname(filePath), true);
-  publishFileAtomically(filePath, (tmpPath) =>
-    writeFileSync(tmpPath, content, { flag: 'wx' })
-  );
+  const tmpPath = `${filePath}~${randomBytes(4).toString('hex')}`;
+  writeFileSync(tmpPath, content, { flag: 'wx' });
+  renameSync(tmpPath, filePath);
+}
+
+export function writeRunJson(
+  runDir: string,
+  filePath: string,
+  value: object
+): void {
+  writeRunFile(runDir, filePath, serializeJson(value));
 }
 
 /**
@@ -203,12 +214,7 @@ export function lstatRunFile(
   filePath: string
 ): BigIntStats | null {
   if (!checkFoldersTo(runDir, dirname(filePath), false)) return null;
-  try {
-    return lstatSync(filePath, { bigint: true });
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') return null;
-    throw e;
-  }
+  return lstatSync(filePath, { bigint: true, throwIfNoEntry: false }) ?? null;
 }
 
 /**

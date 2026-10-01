@@ -9,7 +9,7 @@ import {
   listRunFolder,
   readRunFile,
   removeRunFile,
-  writeRunFile,
+  writeRunJson,
 } from './run-files';
 import type { MigrateStepAwaitingKind } from './run-state';
 
@@ -47,11 +47,7 @@ export function persistAgentWorkPayload(
   filePath: string,
   payload: object
 ): void {
-  writeRunFile(
-    payloadRunDir(filePath),
-    filePath,
-    JSON.stringify(payload, null, 2)
-  );
+  writeRunJson(payloadRunDir(filePath), filePath, payload);
 }
 
 // Payload paths all come from agentWorkPayloadPath: <run>/agent-work/<file>.
@@ -134,15 +130,13 @@ export function latestStoredAgentWorkPayload(
   return null;
 }
 
-// An unreadable directory reads as empty: the lookup falls back to a freshly
-// derived payload, and removal is best effort. A symlink in the directory's
-// place also reads as empty, so it cannot redirect either of them. The
-// `-attempt-` infix keeps `step-1` from matching `step-12`'s files.
+// An unreadable directory, or a non-directory in its place, reads as empty:
+// the lookup falls back to a freshly derived payload, and removal is best
+// effort. The `-attempt-` infix keeps `step-1` from matching `step-12`'s files.
 function storedAttemptsForStep(runDirPath: string, stepId: string): number[] {
-  const dir = join(runDirPath, AGENT_WORK_DIR_NAME);
   let entries: string[];
   try {
-    entries = listRunFolder(runDirPath, dir);
+    entries = listRunFolder(runDirPath, join(runDirPath, AGENT_WORK_DIR_NAME));
   } catch {
     return [];
   }

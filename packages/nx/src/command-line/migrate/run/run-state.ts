@@ -1,7 +1,6 @@
 import { mkdirSync, readdirSync, rmSync, type Dirent } from 'fs';
 import { createHash } from 'crypto';
 import { basename, join } from 'path';
-import { serializeJson } from '../../../utils/json';
 import { GIT_SHA } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
@@ -9,7 +8,7 @@ import {
   ensureRunFolder,
   readRunFile,
   runFileExists,
-  writeRunFile,
+  writeRunJson,
 } from './run-files';
 import { RUN_ID_SAFE } from './run-id';
 import { singleLine } from '../text';
@@ -823,7 +822,7 @@ export function writeRunState(
   state: MigrateRunState
 ): void {
   const filePath = join(runDirPath, RUN_STATE_FILE_NAME);
-  writeRunFile(runDirPath, filePath, serializeJson(state));
+  writeRunJson(runDirPath, filePath, state);
 }
 
 // ENOENT is the ordinary "no runs yet" answer. Any other failure (EACCES,

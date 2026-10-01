@@ -3,8 +3,7 @@
 
 import { createHash } from 'crypto';
 import { join } from 'path';
-import { serializeJson } from '../../../utils/json';
-import { readRunFile, writeRunFile } from './run-files';
+import { readRunFile, writeRunJson } from './run-files';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
 import { warnToAgent } from './agent-output';
@@ -1405,9 +1404,5 @@ function writeIssueArchive(
   issueId: string,
   content: object
 ): void {
-  writeRunFile(
-    runDirPath,
-    issueArchivePath(runDirPath, issueId),
-    serializeJson(content)
-  );
+  writeRunJson(runDirPath, issueArchivePath(runDirPath, issueId), content);
 }

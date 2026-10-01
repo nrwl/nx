@@ -3,7 +3,6 @@ import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { IS_WASM } from '../../../native';
-import { serializeJson } from '../../../utils/json';
 import {
   canOfferCleanRetry,
   cleanRetryUnavailableReason,
@@ -100,6 +99,7 @@ import {
   readRunJson,
   removeRunFile,
   writeRunFile,
+  writeRunJson,
 } from './run-files';
 import {
   appendCommit,
@@ -444,11 +444,7 @@ export async function runOrchestratorInit(
     // The snapshot must exist before run.json makes the run discoverable: a
     // crash in between must not leave an active run without its plan.
     mkdirSync(dir, { recursive: true });
-    writeRunFile(
-      dir,
-      join(dir, PLAN_SNAPSHOT_0),
-      serializeJson(migrationsJson)
-    );
+    writeRunJson(dir, join(dir, PLAN_SNAPSHOT_0), migrationsJson);
     // Held from here until run.json is written below and past it: a run must
     // never be discoverable, or reserved, without a holder.
     registerRunActivity(dir);
@@ -3006,12 +3002,8 @@ function noProgressLines(
 // compacted, truncated or restarted session can recover the contract. Missing
 // or non-regular runbooks stand alone.
 function runbookFooterLines(root: string, runId: string): string[] {
-  if (
-    lstatRunFile(
-      runDir(root, runId),
-      join(runDir(root, runId), RUNBOOK_FILE_NAME)
-    )?.isFile() !== true
-  ) {
+  const dir = runDir(root, runId);
+  if (lstatRunFile(dir, join(dir, RUNBOOK_FILE_NAME))?.isFile() !== true) {
     return [];
   }
   return [

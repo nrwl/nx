@@ -10,7 +10,6 @@
 import { randomBytes } from 'crypto';
 import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
-import { serializeJson } from '../../../utils/json';
 import {
   DeferredOutputCollector,
   replayDeferredOutput,
@@ -37,7 +36,7 @@ import {
   readRunJson,
   removeRunFile,
   runFileExists,
-  writeRunFile,
+  writeRunJson,
 } from './run-files';
 import { updateRunState } from './state-lock';
 import {
@@ -486,7 +485,7 @@ async function ask(
     throw notAccepting(e);
   }
   try {
-    writeRunFile(dir, requestPath(dir, id), serializeJson(request));
+    writeRunJson(dir, requestPath(dir, id), request);
   } catch (e) {
     throw notAccepting(e);
   }
@@ -623,7 +622,7 @@ export class MigrateCommitBroker {
       }
       // Published after the release, so the step reading the answer never
       // finds this request's reservation still standing over its own write.
-      writeRunFile(this.dir, resultPath(this.dir, id), serializeJson(result));
+      writeRunJson(this.dir, resultPath(this.dir, id), result);
     }
   }
 

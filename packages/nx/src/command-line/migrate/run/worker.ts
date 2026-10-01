@@ -248,9 +248,7 @@ function readMigrationsSource(
       );
     }
     return {
-      migrations:
-        readRunJson<{ migrations?: PlannedMigration[] }>(dir, planPath)
-          .migrations ?? [],
+      migrations: planMigrations(readRunJson(dir, planPath)),
       source: round.planSnapshot,
     };
   }
@@ -264,15 +262,15 @@ function readMigrationsSource(
     );
   }
   return {
-    migrations: readPlanMigrations(migrationsPath),
+    migrations: planMigrations(readJsonFile(migrationsPath)),
     source: 'migrations.json',
   };
 }
 
-function readPlanMigrations(path: string): PlannedMigration[] {
-  return (
-    readJsonFile<{ migrations?: PlannedMigration[] }>(path).migrations ?? []
-  );
+function planMigrations(plan: {
+  migrations?: PlannedMigration[];
+}): PlannedMigration[] {
+  return plan.migrations ?? [];
 }
 
 function resolveMigration(
