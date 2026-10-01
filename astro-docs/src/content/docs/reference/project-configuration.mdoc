@@ -648,7 +648,7 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 Reads and writes move together. A task hashed from its recorded reads but cached from its declared outputs would describe a run that never happened, so no mode applies one without the other.
 
 {% aside type="note" title="Nx Cloud only" %}
-Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it. Applying a recording additionally needs [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) or `NX_CLOUD_USE_IO_SNAPSHOTS` set in CI, and a recording for the task in question. See [task sandboxing](/docs/kb/sandboxing).
+Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it. Applying a recording additionally needs [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) set in CI, and a recording for the task in question. See [task sandboxing](/docs/kb/sandboxing).
 {% /aside %}
 
 A target that defines `ultracache` replaces the inherited configuration rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoredReads` and `ignoredWrites` to keep inherited patterns.

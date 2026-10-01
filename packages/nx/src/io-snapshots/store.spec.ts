@@ -47,7 +47,7 @@ describe('loadIoSnapshotsForRun', () => {
   const nxJson = {} as any;
   /** A run that opted in, stated explicitly so the machine's env cannot. */
   const optedIn = (overrides: Record<string, unknown> = {}) => ({
-    NX_IO_SNAPSHOTS: 'true',
+    NX_CLOUD_USE_ULTRACACHE: 'true',
     ...overrides,
   });
   /** A stored set for HEAD. */
@@ -76,9 +76,13 @@ describe('loadIoSnapshotsForRun', () => {
   // Connecting the workspace is not the opt-in: a run that says nothing
   // never reaches Nx Cloud.
   it('does nothing for a run that did not opt in', async () => {
-    for (const NX_IO_SNAPSHOTS of [undefined, 'false']) {
+    for (const NX_CLOUD_USE_ULTRACACHE of [undefined, 'false']) {
       expect(
-        await loadIoSnapshotsForRun(nxJson, {}, optedIn({ NX_IO_SNAPSHOTS }))
+        await loadIoSnapshotsForRun(
+          nxJson,
+          {},
+          optedIn({ NX_CLOUD_USE_ULTRACACHE })
+        )
       ).toBeNull();
     }
     expect(cloud.fetchIoSnapshots).not.toHaveBeenCalled();
