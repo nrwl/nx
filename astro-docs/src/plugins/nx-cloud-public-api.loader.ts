@@ -56,8 +56,6 @@ export function NxCloudPublicApiLoader(options: LoaderOptions = {}): Loader {
               'Nx Cloud Public API reference generated from the deployed OpenAPI specification.',
             slug: NX_CLOUD_PUBLIC_API_SLUG,
             filter: 'type:References',
-            specificationUrl,
-            apiVersion: document.info.version,
             reference,
           },
         });

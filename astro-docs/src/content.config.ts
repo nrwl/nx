@@ -99,8 +99,6 @@ const communityPlugins = defineCollection({
 const nxCloudPublicApi = defineCollection({
   loader: NxCloudPublicApiLoader(),
   schema: baseSchema.extend({
-    specificationUrl: z.url(),
-    apiVersion: z.string(),
     reference: z.custom<OpenApiReference>(),
   }),
 });
