@@ -1216,13 +1216,16 @@ function validateDraft(result) {
     );
   if (result.critical === 0 && result.verdict === 'needs-changes')
     fail('needs-changes requires a Critical finding');
-  if (result.linearTarget === 'none' && result.reviewKind !== 'review')
-    fail('a review without a Linear target must be a first review');
-  if (
-    result.reviewKind === 'review' &&
-    /^### Since previous review\s*$/m.test(draft)
-  )
+  const continuityHeading = proseLines(draft).some(
+    (line) => line.trimEnd() === '### Since previous review'
+  );
+  if (result.reviewKind === 'review' && continuityHeading)
     fail('a first review cannot include continuity');
+  if (
+    result.reviewKind === 're-review' &&
+    !extractSection(draft, 'Since previous review', 3)
+  )
+    fail('a re-review requires a non-empty Since previous review section');
   if (
     result.verdict === 'blocked' &&
     !/^### (?:Questions for the author|Maintainer calls)\s*$/m.test(draft)
