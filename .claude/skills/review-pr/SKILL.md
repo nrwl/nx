@@ -259,10 +259,11 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    What you pass to the **agents** is a different, much smaller artifact — see step 4. Keep the two straight: full history in your head, distilled carry-forward on disk.
 
-2. Compute the incremental diff inside the sandbox, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded:
+2. Compute the incremental diff inside the sandbox, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded. Name the URL: the shared object store has no `origin`, deliberately, so a review of a fork cannot inherit another review's remote.
 
    ```bash
-   if tools/review-sandbox/sandbox exec "$SANDBOX" -- git fetch -q --depth 1 origin "$PRIOR_SHA"; then
+   if tools/review-sandbox/sandbox exec "$SANDBOX" -- \
+     git fetch -q --depth 1 https://github.com/nrwl/nx "$PRIOR_SHA"; then
      tools/review-sandbox/sandbox exec "$SANDBOX" -- git diff "$PRIOR_SHA".."<HEAD_REF_OID>" \
        > /tmp/pr-<NUMBER>-incremental.diff \
        || { echo "FATAL: failed to build incremental diff"; exit 1; }
@@ -298,7 +299,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
        || { echo "FATAL: failed to count incremental changes"; exit 1; }
    else
      tools/review-sandbox/sandbox exec "$SANDBOX" -- \
-       git fetch -q --depth 1 origin "$OLD_MB" "$NEW_MB" \
+       git fetch -q --depth 1 https://github.com/nrwl/nx "$OLD_MB" "$NEW_MB" \
        || { echo "FATAL: failed to fetch merge bases"; exit 1; }
    fi
    ```
