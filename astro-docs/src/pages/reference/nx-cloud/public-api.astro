@@ -26,20 +26,9 @@ Astro.locals.rawContent = entry.body;
     <a href={reference.sourceUrl}>deployed OpenAPI specification</a>.
     API version: <code>{reference.version}</code>.
   </p>
-  <p>For usage examples: {reference.navigation.map(({ label, href }, index) => <>{index > 0 && ', '}<a {href}>{label}</a></>)}.</p>
+  <p>For usage examples: {reference.navigation.map(({ label, href, id }, index) => <>{index > 0 && ', '}<a {href} {id}>{label}</a></>)}.</p>
   <Fragment set:html={reference.overview.html} />
   {reference.servers.length > 0 && <><AnchorHeading level={2} id={sections.servers.slug}>{sections.servers.text}</AnchorHeading><ul>{reference.servers.map((server) => <li set:html={server.html} />)}</ul></>}
-
-  <AnchorHeading level={2} id={sections.authentication.slug}>{sections.authentication.text}</AnchorHeading>
-  <Fragment set:html={reference.authentication.html} />
-  {reference.securitySchemes.map((scheme) => (
-    <>
-      <AnchorHeading level={3} id={scheme.heading.slug}>{scheme.heading.text}</AnchorHeading>
-      <Fragment set:html={scheme.description.html} />
-      <ApiTable table={scheme.properties} />
-      {scheme.flows && <Code code={scheme.flows} lang="json" />}
-    </>
-  ))}
 
   <AnchorHeading level={2} id={sections.endpoints.slug}>{sections.endpoints.text}</AnchorHeading>
   {reference.endpoints.map((endpoint) => <ApiEndpoint {endpoint} />)}

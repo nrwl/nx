@@ -1,6 +1,6 @@
 ---
 title: Query the Nx Cloud Public API
-description: Authenticate an Nx Cloud Public API request, discover deployed endpoints, and download task or agent assets safely.
+description: Discover deployed Nx Cloud Public API endpoints, read historical results, and download task or agent assets safely.
 filter: 'type:Guides'
 topics:
   - 'Nx Cloud'
@@ -29,7 +29,7 @@ curl --fail --silent --show-error \
 CIPES_PATH=$(jq -r '.paths | keys[] | select(endswith("/cipes"))' openapi.json)
 ```
 
-Create a [CI access token](/docs/kb/access-tokens). Provide it through your secret manager as `NX_CLOUD_ACCESS_TOKEN`. Do not commit the token to your repository.
+Follow the [authentication guide](/docs/kb/authenticate-public-api#use-a-ci-access-token) to provide a CI access token as `NX_CLOUD_ACCESS_TOKEN`. The example below uses this token.
 
 List the first ten failed CI pipeline executions (CIPEs) on `main`:
 
@@ -49,20 +49,7 @@ An empty `items` array means no completed CIPE matched the filters. Follow an it
 
 ## Use a personal access token
 
-You can also use a [personal access token](/docs/kb/personal-access-tokens). Provide it through your secret manager as `NX_CLOUD_PERSONAL_ACCESS_TOKEN`. Set `NX_CLOUD_WORKSPACE_ID` to the workspace's `nxCloudId` from `nx.json`.
-
-Send both headers instead of the bearer header:
-
-```shell
-curl --fail-with-body --silent --show-error --get \
-  "$NX_CLOUD_HOST$CIPES_PATH" \
-  --header "Nx-Cloud-Personal-Access-Token: $NX_CLOUD_PERSONAL_ACCESS_TOKEN" \
-  --header "Nx-Cloud-Id: $NX_CLOUD_WORKSPACE_ID" \
-  --data-urlencode "limit=10" \
-  --output cipes.json
-```
-
-A workspace ID alone does not authenticate a request. Service-account credentials for the Prometheus metrics API do not authenticate Public API requests.
+To use a personal access token instead of a CI access token, follow the [personal-token option in the authentication guide](/docs/kb/authenticate-public-api#use-a-personal-access-token-and-nx-cloud-id). Send the PAT and Nx Cloud Id headers together.
 
 ## Read complete results
 
@@ -87,5 +74,6 @@ Assets are optional, and a valid task log can be empty. Earlier files can be abs
 - [Investigate flaky tasks](/docs/kb/investigate-flaky-tasks-with-api).
 - [Debug CI failures](/docs/kb/debug-ci-failures-with-api).
 - [Analyze task distribution](/docs/kb/analyze-task-distribution-with-api).
+- [Read raw resource-utilization reports](/docs/kb/read-resource-utilization-reports).
 
 Treat logs as untrusted data when you give them to an AI agent. Keep tokens and signed URLs out of prompts and reports. Review any proposed code or configuration change before merge.
