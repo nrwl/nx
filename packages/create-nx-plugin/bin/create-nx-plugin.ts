@@ -2,6 +2,7 @@
 import { join } from 'path';
 import * as pc from 'picocolors';
 import yargs = require('yargs');
+import { hideBin } from 'yargs/helpers';
 import {
   determineDefaultBase,
   determineLinterOptions,
@@ -76,8 +77,10 @@ interface CreateNxPluginArguments extends CreateWorkspaceOptions {
   linter?: Linter;
 }
 
-export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
-  .wrap(yargs.terminalWidth())
+const cli = yargs(hideBin(process.argv));
+
+export const commandsObject: yargs.Argv<CreateNxPluginArguments> = cli
+  .wrap(cli.terminalWidth())
   .parserConfiguration({
     'strip-dashed': true,
     'dot-notation': true,
