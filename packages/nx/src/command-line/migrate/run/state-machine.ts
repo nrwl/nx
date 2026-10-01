@@ -703,7 +703,6 @@ function stepKindFields(step: MigrateStep): MigrateStepKindFields {
   }
 }
 
-// How prose about a step names it: "this migration", "the validation pass".
 export function stepNoun(step: MigrateStep): string {
   switch (step.kind) {
     case 'migration':
@@ -717,7 +716,6 @@ export function stepNoun(step: MigrateStep): string {
   }
 }
 
-// How messages to the agent name a step.
 export function stepLabel(step: MigrateStep): string {
   switch (step.kind) {
     case 'migration':
