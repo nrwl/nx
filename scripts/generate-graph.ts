@@ -1,7 +1,8 @@
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import * as yargs from 'yargs';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 import { ensureDirSync } from 'fs-extra';
 
 async function generateGraph(directory: string, name: string) {
@@ -91,7 +92,7 @@ async function generateGraph(directory: string, name: string) {
 }
 
 (async () => {
-  const parsedArgs = yargs
+  const parsedArgs = yargs(hideBin(process.argv))
     .scriptName('pnpm generate-graph')
     .strictOptions()
     .option('name', {

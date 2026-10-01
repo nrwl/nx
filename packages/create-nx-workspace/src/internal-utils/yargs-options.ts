@@ -1,9 +1,9 @@
 import chalk = require('chalk');
-import yargs = require('yargs');
+import type { Argv } from 'yargs';
 import { NxCloudChoices, messages } from '../utils/nx/ab-testing';
 import { packageManagerList } from '../utils/package-manager';
 
-export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
+export function withNxCloud<T = unknown>(argv: Argv<T>) {
   const { message } = messages.getPrompt('setupCI');
 
   const result = argv.option('nxCloud', {
@@ -15,7 +15,7 @@ export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
   return result;
 }
 
-export function withUseGitHub<T = unknown>(argv: yargs.Argv<T>) {
+export function withUseGitHub<T = unknown>(argv: Argv<T>) {
   return argv.option('useGitHub', {
     describe: chalk.dim`Will you be using GitHub as your git hosting provider?`,
     type: 'boolean',
@@ -23,7 +23,7 @@ export function withUseGitHub<T = unknown>(argv: yargs.Argv<T>) {
   });
 }
 
-export function withAllPrompts<T = unknown>(argv: yargs.Argv<T>) {
+export function withAllPrompts<T = unknown>(argv: Argv<T>) {
   return argv.option('allPrompts', {
     alias: 'a',
     describe: chalk.dim`Show all prompts.`,
@@ -32,7 +32,7 @@ export function withAllPrompts<T = unknown>(argv: yargs.Argv<T>) {
   });
 }
 
-export function withPackageManager<T = unknown>(argv: yargs.Argv<T>) {
+export function withPackageManager<T = unknown>(argv: Argv<T>) {
   return argv.option('packageManager', {
     alias: 'pm',
     describe: chalk.dim`Package manager to use.`,
@@ -42,7 +42,7 @@ export function withPackageManager<T = unknown>(argv: yargs.Argv<T>) {
   });
 }
 
-export function withGitOptions<T = unknown>(argv: yargs.Argv<T>) {
+export function withGitOptions<T = unknown>(argv: Argv<T>) {
   return argv
     .option('defaultBase', {
       defaultDescription: 'main',
@@ -81,7 +81,7 @@ export function withGitOptions<T = unknown>(argv: yargs.Argv<T>) {
     });
 }
 
-export function withAnalytics<T = unknown>(argv: yargs.Argv<T>) {
+export function withAnalytics<T = unknown>(argv: Argv<T>) {
   return argv.option('analytics', {
     describe: chalk.dim`Help improve Nx by sharing your usage data.`,
     type: 'boolean',
@@ -89,8 +89,8 @@ export function withAnalytics<T = unknown>(argv: yargs.Argv<T>) {
 }
 
 export function withOptions<T>(
-  argv: yargs.Argv<T>,
-  ...options: ((argv: yargs.Argv<T>) => yargs.Argv<T>)[]
+  argv: Argv<T>,
+  ...options: ((argv: Argv<T>) => Argv<T>)[]
 ): any {
   // Reversing the options keeps the execution order correct.
   // e.g. [withCI, withGIT] should transform into withGIT(withCI) so withCI resolves first.
