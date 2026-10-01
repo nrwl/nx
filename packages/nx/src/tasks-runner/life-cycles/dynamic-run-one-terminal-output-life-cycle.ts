@@ -1,4 +1,4 @@
-import * as cliCursor from 'cli-cursor';
+import { hideCursor, showCursor } from '../../utils/cursor';
 import { dots } from 'cli-spinners';
 import { EOL } from 'os';
 import * as readline from 'readline';
@@ -48,17 +48,17 @@ export async function createRunOneDynamicOutputRenderer({
   args: { configuration?: string; parallel?: number };
   overrides: Record<string, unknown>;
 }): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
-  cliCursor.hide();
+  hideCursor();
   // Show the cursor again after the process exits
   process.on('exit', () => {
-    cliCursor.show();
+    showCursor();
   });
   let resolveRenderIsDonePromise: (value: void) => void;
   const renderIsDone = new Promise<void>(
     (resolve) => (resolveRenderIsDonePromise = resolve)
   ).then(() => {
     clearRenderInterval();
-    cliCursor.show();
+    showCursor();
   });
 
   function clearRenderInterval() {
