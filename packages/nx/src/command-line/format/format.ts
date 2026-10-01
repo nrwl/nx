@@ -1,5 +1,5 @@
 import * as path from 'node:path';
-import * as yargs from 'yargs';
+import type { Arguments } from 'yargs';
 import { readNxJson } from '../../config/configuration';
 import { ProjectGraph } from '../../config/project-graph';
 import {
@@ -35,7 +35,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 
 export async function format(
   command: 'check' | 'write',
-  args: yargs.Arguments
+  args: Arguments
 ): Promise<void> {
   const formatterType = detectFormatter(workspaceRoot);
 
