@@ -853,7 +853,7 @@ async function cmdSandboxUp(args) {
   }
   // Build unconditionally: an image from any older revision passes an existence
   // check identically, so skipping on a hit hides a stale toolchain or a store
-  // that no longer matches the lockfile. A no-op build costs ~1.5s (measured).
+  // that no longer matches the lockfile.
   const build = run('bash', [BUILD_IMAGE], {
     allowFailure: true,
     timeout: 3600_000,

@@ -1132,8 +1132,8 @@ function ownerRow(state, sb) {
  */
 function ensureInstalled(sb, dir, label) {
   // An install runs the PR's own lifecycle scripts, so it is execution and
-  // belongs behind the same gate as `exec`. Without this it was the one way
-  // untrusted code ran under plain runc on a Linux host with no gVisor.
+  // belongs behind the same gate as `exec`. Ungated, it is the one path that
+  // runs untrusted code under plain runc on a Linux host with no gVisor.
   if (sb.exec === 'none') {
     die(
       `install refused for ${sb.id}: ${
