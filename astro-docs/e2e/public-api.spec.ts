@@ -8,7 +8,11 @@ test('renders the reference with usable schema links and a Markdown export', asy
 }) => {
   await page.goto(referencePath);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  for (const name of ['Authentication', 'Operations', 'Schemas']) {
+  for (const name of [
+    'Authentication',
+    'Endpoint reference',
+    'Schema and field definitions',
+  ]) {
     await expect(
       page.getByRole('heading', { name, level: 2, exact: true })
     ).toBeVisible();
@@ -25,14 +29,18 @@ test('renders the reference with usable schema links and a Markdown export', asy
   const responseBody = page
     .locator('details')
     .filter({
-      has: page.locator('summary', { hasText: /^Response body$/ }),
+      has: page.locator('summary', { hasText: /^Response body/ }),
     })
     .first();
   await expect(responseBody).toHaveJSProperty('open', false);
-  await responseBody.locator('summary').click();
+  await responseBody.locator('summary').focus();
+  await page.keyboard.press('Enter');
   await expect(responseBody).toHaveJSProperty('open', true);
 
   const markdown = await request.get(`${referencePath}.md`);
   expect(markdown.ok()).toBe(true);
-  expect(await markdown.text()).toContain('## Operations');
+  const body = await markdown.text();
+  expect(body).toContain('## Endpoint reference');
+  expect(body).toContain('API version:');
+  expect(body).toContain('Other response codes:');
 });

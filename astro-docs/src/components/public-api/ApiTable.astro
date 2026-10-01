@@ -1,0 +1,25 @@
+---
+import type { ReferenceTable } from '../../plugins/utils/openapi-reference';
+interface Props {
+  table: ReferenceTable;
+}
+const { table } = Astro.props;
+---
+
+{table.rows.length > 0 && (
+  <div class="table-scroll">
+    <table>
+      <thead><tr>{table.columns.map((column) => <th scope="col">{column}</th>)}</tr></thead>
+      <tbody>
+        {table.rows.map((row) => <tr>{row.map((cell) => <td><Fragment set:html={cell.html} /></td>)}</tr>)}
+      </tbody>
+    </table>
+  </div>
+)}
+
+<style>
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; min-width: 36rem; }
+  td { vertical-align: top; }
+  td :global(p) { margin: 0; }
+</style>
