@@ -5,7 +5,10 @@ import {
   NxCloudPublicApiLoader,
   NX_CLOUD_PUBLIC_API_SPEC_URL,
 } from './nx-cloud-public-api.loader';
-import type { OpenApiReference } from './utils/openapi-reference';
+import {
+  referenceHeadings,
+  type OpenApiReference,
+} from './utils/openapi-reference';
 
 function specification() {
   return {
@@ -76,14 +79,14 @@ test('loads the reference and refreshes it on each content sync', async () => {
   const data = first.data as Record<string, unknown>;
   assert.deepEqual(requests, [NX_CLOUD_PUBLIC_API_SPEC_URL]);
   assert.equal(data.slug, 'reference/nx-cloud/public-api');
-  assert.equal(data.apiVersion, 'v1');
   const reference = data.reference as OpenApiReference;
+  assert.equal(reference.version, 'v1');
   assert.equal(reference.sourceUrl, NX_CLOUD_PUBLIC_API_SPEC_URL);
   assert.equal(reference.endpoints[0].path, '/data/v1/tasks');
   assert.match(String(first.body), /`GET` `\/data\/v1\/tasks`/);
   assert.match(String(first.body), /#schema-Task/);
   assert.ok(reference.endpoints[0].description.html);
-  assert.ok(reference.headings.length);
+  assert.ok(referenceHeadings(reference).length);
   assert.equal(first.rendered, undefined);
 
   spec.info.version = 'v2';

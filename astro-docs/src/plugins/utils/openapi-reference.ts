@@ -38,7 +38,6 @@ export interface ReferenceMedia {
 
 export interface ReferenceResponse {
   id: string;
-  status: string;
   label: string;
   description: ReferenceProse;
   content: ReferenceMedia[];
@@ -95,7 +94,6 @@ export interface OpenApiReference {
     fields: ReferenceTable;
     definition: string;
   }[];
-  headings: ReferenceHeading[];
 }
 
 function prose(markdown: string): ReferenceProse {
@@ -584,7 +582,6 @@ function responseModel(
 ): ReferenceResponse {
   return {
     id,
-    status,
     label: statusLabel(status),
     description: prose(text(response.description)),
     content: contentModel(document, response.content),
@@ -850,19 +847,26 @@ export function buildOpenApiReference(
     responses,
     headers,
     schemas,
-    headings: [
-      ...(array(document.servers).length ? [sections.servers] : []),
-      sections.endpoints,
-      ...endpoints.map((item) => item.heading),
-      sections.responses,
-      ...responses.map((item) => item.heading),
-      ...(headers.length
-        ? [sections.headers, ...headers.map((item) => item.heading)]
-        : []),
-      sections.schemas,
-      ...schemas.map((item) => item.heading),
-    ],
   };
+}
+
+export function referenceHeadings(
+  reference: OpenApiReference
+): ReferenceHeading[] {
+  const { sections, endpoints, responses, headers, schemas, servers } =
+    reference;
+  return [
+    ...(servers.length ? [sections.servers] : []),
+    sections.endpoints,
+    ...endpoints.map((item) => item.heading),
+    sections.responses,
+    ...responses.map((item) => item.heading),
+    ...(headers.length
+      ? [sections.headers, ...headers.map((item) => item.heading)]
+      : []),
+    sections.schemas,
+    ...schemas.map((item) => item.heading),
+  ];
 }
 
 /** Render only prose fragments. Do not store a second full HTML reference. */
