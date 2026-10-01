@@ -17,24 +17,17 @@ export function formatIoSnapshotSummary(
   status: 'fetched' | 'cached'
 ): IoSnapshotSummary {
   const used = result.used.length;
-  // `unusable-output` is raised on used tasks, possibly several per task:
-  // count withheld tasks, not diagnostics.
-  const usedTasks = new Set(result.used);
-  const withheld = result.diagnostics.filter(
-    (d) => d.taskId != null && !usedTasks.has(d.taskId)
-  );
+  const withheld = result.diagnostics.filter((d) => d.taskId != null);
   const byReason = countByReason(withheld);
-  const fellBack = new Set(withheld.map((d) => d.taskId)).size;
+  const fellBack = withheld.length;
   const setLevel = result.diagnostics.find((d) => d.taskId == null);
 
-  const withOutputs = result.tasksWithOutputs?.length ?? 0;
   const line = setLevel
     ? `I/O snapshots: none used (unreadable set: ${setLevel.message})`
-    : `I/O snapshots: ${plural(used, 'task')} hashed from snapshot${
-        withOutputs ? ` (${withOutputs} with observed outputs)` : ''
-      }, ${plural(fellBack, 'task')} fell back${
-        fellBack ? ` (${summarizeReasons(byReason)})` : ''
-      }`;
+    : `I/O snapshots: ${plural(used, 'task')} hashed from snapshot, ${plural(
+        fellBack,
+        'task'
+      )} fell back${fellBack ? ` (${summarizeReasons(byReason)})` : ''}`;
 
   const bodyLines: string[] = [`set: ${status}`];
   bodyLines.push(
@@ -62,8 +55,6 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
       return `${d.taskId}: snapshot glob "${d.glob}" is not a valid files glob`;
     case 'escapes-workspace':
       return `${d.taskId}: snapshot glob "${d.glob}" escapes the workspace`;
-    case 'unusable-output':
-      return `${d.taskId}: observed write "${d.glob}" is not usable as an output, so it is not cached`;
     default:
       return `${d.taskId ? `${d.taskId}: ` : ''}${d.reason}`;
   }

@@ -7,7 +7,6 @@ import {
   type FileRevisions,
   type IoSnapshots,
 } from '../../native';
-import { applyIoSnapshotOutputs } from '../../io-snapshots/outputs';
 import { ioSnapshotEligibilityOptions } from '../../io-snapshots/overrides';
 import { snapshotsOf, type IoSnapshotOutcome } from '../../io-snapshots/store';
 import type { IoSnapshotVersion } from '../../daemon/message-types/io-snapshot-version';
@@ -247,10 +246,6 @@ export async function selectAffectedTasks(
       false
     );
   const taskIds = Object.keys(taskGraph.tasks);
-  // As the run hashes: observed outputs carry output reads, observed inputs match changes.
-  if (ioSnapshots) {
-    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
-  }
   const plans = ioSnapshots
     ? planningContext.planner.getPlansReference(
         taskIds,

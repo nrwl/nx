@@ -1,13 +1,11 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::native::cache::expand_outputs::match_output_paths;
-use crate::native::glob::{NxGlobSetBuilder, expand_literal_braces};
-use crate::native::io_snapshots::set::TaskIoSnapshot;
+use crate::native::glob::expand_literal_braces;
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{parse_group, validate_files_glob};
 use crate::native::tasks::types::{TaskGraph, TaskUltracacheConfiguration, UltracacheMode};
-use crate::native::utils::path;
 use xxhash_rust::xxh3::Xxh3;
 
 /// What the eligibility walk needs beyond each task's ultracache configuration.
@@ -39,14 +37,11 @@ impl From<IoSnapshotEligibilityOptions> for EligibilityInputs {
 }
 
 /// A task the hash planner hashes from its snapshot: observed reads as
-/// workspace-relative globs (negations included), observed writes, and the
-/// digest of its own entry that marks the plan.
+/// workspace-relative globs (negations included), and the digest that marks
+/// the plan.
 #[derive(Clone, Debug)]
 pub(crate) struct SnapshotTask {
     pub files: Vec<String>,
-    /// Observed writes, confined to the workspace and outside ignored dirs;
-    /// the runner unions them into the task's declared outputs.
-    pub outputs: Vec<String>,
     pub digest: String,
 }
 
@@ -87,8 +82,6 @@ impl IoSnapshotDiagnostic {
 pub struct IoSnapshotReport {
     /// Task ids hashed from their snapshot.
     pub used: Vec<String>,
-    /// Subset of `used` whose snapshot also contributes observed outputs.
-    pub tasks_with_outputs: Vec<String>,
     pub diagnostics: Vec<IoSnapshotDiagnostic>,
     pub resolution: IoSnapshotResolution,
 }
@@ -103,19 +96,11 @@ impl Resolved {
     pub(crate) fn report(&self) -> IoSnapshotReport {
         let mut used: Vec<String> = self.tasks.keys().cloned().collect();
         used.sort();
-        let mut tasks_with_outputs: Vec<String> = self
-            .tasks
-            .iter()
-            .filter(|(_, task)| !task.outputs.is_empty())
-            .map(|(id, _)| id.clone())
-            .collect();
-        tasks_with_outputs.sort();
         // Stable, so a task's own diagnostics keep the order the walk found them.
         let mut diagnostics = self.diagnostics.clone();
         diagnostics.sort_by(|a, b| a.task_id.cmp(&b.task_id));
         IoSnapshotReport {
             used,
-            tasks_with_outputs,
             diagnostics,
             resolution: self.resolution.clone(),
         }
@@ -203,19 +188,11 @@ pub(crate) fn resolve<'a>(
             continue;
         }
 
-        let (outputs, dropped_outputs) = observed_outputs(entry);
-        for glob in dropped_outputs {
-            let mut diagnostic = IoSnapshotDiagnostic::task("unusable-output", task_id);
-            diagnostic.glob = Some(glob);
-            diagnostics.push(diagnostic);
-        }
-
         tasks.insert(
             task_id.to_string(),
             SnapshotTask {
                 files,
-                outputs,
-                digest: snapshot_digest(entry, ultracache),
+                digest: snapshot_digest(ultracache),
             },
         );
     }
@@ -247,129 +224,37 @@ pub fn get_io_snapshot_report(
     .report()
 }
 
-/// The marker's digest: the entry's outputs, plus the ultracache exclusions
-/// that shape what a recording holds, so editing them re-runs the task and
-/// records it afresh. Sorted, since their order means nothing.
-fn snapshot_digest(
-    entry: &TaskIoSnapshot,
-    ultracache: Option<&TaskUltracacheConfiguration>,
-) -> String {
-    let sorted = |globs: Option<&Vec<String>>| {
-        let mut globs = globs.cloned().unwrap_or_default();
-        globs.sort();
-        globs.dedup();
-        globs
-    };
+/// The marker's digest: the task's `ignoredReads`, which shape the reads its
+/// recording holds, so editing them re-runs the task and records it afresh.
+/// Sorted, since their order means nothing.
+fn snapshot_digest(ultracache: Option<&TaskUltracacheConfiguration>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no
-    // marker, since the task never reaches here.
-    let (reads, writes) = match ultracache {
+    // marker, since the task never reaches here. Recorded writes are never
+    // used, so `ignoredWrites` can't change what the task caches.
+    let mut reads = match ultracache {
         Some(TaskUltracacheConfiguration {
             ignored_reads,
-            ignored_writes,
+            ignored_writes: _,
             mode: _,
-        }) => (
-            sorted(ignored_reads.as_ref()),
-            sorted(ignored_writes.as_ref()),
-        ),
-        None => (Vec::new(), Vec::new()),
+        }) => ignored_reads.clone().unwrap_or_default(),
+        None => Vec::new(),
     };
-    if reads.is_empty() && writes.is_empty() {
-        return entry.digest();
+    reads.sort();
+    reads.dedup();
+    // Equals the old marker of a task with no exclusions that recorded no writes.
+    let base = Xxh3::new().digest().to_string();
+    if reads.is_empty() {
+        return base;
     }
     let mut hasher = Xxh3::new();
-    hasher.update(entry.digest().as_bytes());
-    // Tagged per list, NUL after each glob, so no two configurations collide.
-    for (tag, globs) in [(b'r', reads), (b'w', writes)] {
-        hasher.update(&[tag]);
-        for glob in globs {
-            hasher.update(glob.as_bytes());
-            hasher.update(&[0]);
-        }
+    hasher.update(base.as_bytes());
+    // NUL after each glob, so adjacent globs cannot run together.
+    for glob in reads {
+        hasher.update(glob.as_bytes());
+        hasher.update(&[0]);
     }
     hasher.digest().to_string()
-}
-
-/// The observed outputs a task's declared outputs get extended with: no
-/// negations, nothing outside the workspace, nothing under node_modules,
-/// .nx or .git (never cache content). Nx Cloud drops those before a set is
-/// uploaded, so this is expected to keep everything; a write it does reject
-/// means the two sides disagree, hence the second return value.
-fn observed_outputs(entry: &TaskIoSnapshot) -> (Vec<String>, Vec<String>) {
-    let (mut outputs, mut dropped): (Vec<String>, Vec<String>) =
-        entry.outputs.iter().cloned().partition(|glob| {
-            !glob.starts_with('!')
-                && expand_literal_braces(glob).iter().all(|g| {
-                    !escapes_workspace(g)
-                        && !path::escapes_workspace(std::path::Path::new(g))
-                        && !under_ignored_dir(g)
-                        && !g.split('/').any(segment_could_disguise)
-                })
-        });
-    outputs.sort();
-    outputs.dedup();
-    dropped.sort();
-    dropped.dedup();
-    (outputs, dropped)
-}
-
-/// Whether a segment could hide an excluded name behind glob syntax: a class,
-/// an unexpanded brace group, `?`, a partial `*` or an escape (`.gi[t]`,
-/// `{..,*}`, `node_modul?s`, `node_modul*s`, `.gi\t`). A bare `*` or `**` is a
-/// plain wildcard rather than a disguise, so `under_ignored_dir` judges those.
-fn segment_could_disguise(segment: &str) -> bool {
-    if segment.contains(['[', '{', '?']) {
-        return true;
-    }
-    let partial_wildcard = segment.contains('*') && !segment.trim_matches('*').is_empty();
-    if !partial_wildcard && !segment.contains('\\') {
-        return false;
-    }
-    // Lowercased like `under_ignored_dir`, so `NODE_MODUL*S` cannot pass
-    // where `node_modul*s` is caught; a leading `!` is dropped because the
-    // glob builder would read the segment as a negation of its own.
-    let segment = segment.strip_prefix('!').unwrap_or(segment).to_lowercase();
-    NxGlobSetBuilder::new(&[segment])
-        .and_then(|builder| builder.build(None))
-        .map(|set| IGNORED_DIRS.iter().any(|dir| set.is_match(dir)))
-        // A segment the glob engine rejects is not a name this can clear.
-        .unwrap_or(true)
-}
-
-const IGNORED_DIRS: [&str; 3] = ["node_modules", ".nx", ".git"];
-
-/// Case-insensitive: `.GIT/hooks` restores into `.git` on macOS and Windows.
-fn under_ignored_dir(path: &str) -> bool {
-    path.split('/').any(|segment| {
-        IGNORED_DIRS
-            .iter()
-            .any(|dir| segment.eq_ignore_ascii_case(dir))
-    })
-}
-
-/// Observed outputs per eligible task, for the runner to union into
-/// `task.outputs`.
-#[napi]
-pub fn get_observed_io_snapshot_outputs(
-    snapshots: &IoSnapshots,
-    #[napi(ts_arg_type = "Record<string, TaskUltracacheConfiguration | null>")] tasks: HashMap<
-        String,
-        Option<TaskUltracacheConfiguration>,
-    >,
-    options: Option<IoSnapshotEligibilityOptions>,
-) -> HashMap<String, Vec<String>> {
-    resolve(
-        snapshots,
-        tasks
-            .iter()
-            .map(|(id, ultracache)| (id.as_str(), ultracache.as_ref())),
-        &options.unwrap_or_default().into(),
-    )
-    .tasks
-    .into_iter()
-    .filter(|(_, task)| !task.outputs.is_empty())
-    .map(|(id, task)| (id, task.outputs))
-    .collect()
 }
 
 /// Whether an observed read names exactly one path, with no glob syntax.
@@ -514,104 +399,6 @@ mod tests {
         assert_eq!(candidates_under(&sorted, "dist/c"), Vec::<String>::new());
         assert_eq!(candidates_under(&sorted, "").len(), sorted.len());
         assert!(is_literal_path("dist/a/x.js") && !is_literal_path("dist/a/*.js"));
-    }
-
-    #[test]
-    fn observed_outputs_are_confined_and_skip_cache_dirs() {
-        let entry = TaskIoSnapshot {
-            commit: "c".into(),
-            inputs: vec![],
-            outputs: vec![
-                "dist/apps/web/**".into(),
-                "dist/apps/web/**".into(),
-                "apps/web/.next/cache/*".into(),
-                "!dist/apps/web/*.map".into(),
-                "../outside/**".into(),
-                "node_modules/.cache/x".into(),
-                "apps/web/node_modules/.vite/**".into(),
-                ".nx/cache/1".into(),
-                ".git/index".into(),
-                ".GIT/hooks/x".into(),
-                "{dist,.git}/x".into(),
-                ".gi[t]/**".into(),
-                "node_modul?s/**".into(),
-                // A partial `*` hides the name from the plain-text check.
-                "node_modul*s/**".into(),
-                "NODE_MODUL*S/**".into(),
-                "apps/*odules/x".into(),
-                "{..,*}/x".into(),
-                "dist/{a,b}.js".into(),
-                // A plain wildcard is not a disguise and stays.
-                "dist/*.js".into(),
-            ],
-        };
-        assert_eq!(
-            observed_outputs(&entry).0,
-            vec![
-                "apps/web/.next/cache/*",
-                "dist/*.js",
-                "dist/apps/web/**",
-                "dist/{a,b}.js"
-            ]
-        );
-    }
-
-    #[test]
-    fn a_write_the_filter_rejects_is_reported_and_the_task_keeps_its_snapshot() {
-        let (outputs, dropped) = observed_outputs(&TaskIoSnapshot {
-            commit: "c".into(),
-            inputs: vec![],
-            outputs: vec![
-                "dist/apps/web/**".into(),
-                "node_modules/.cache/x".into(),
-                "../outside/y".into(),
-            ],
-        });
-        assert_eq!(outputs, vec!["dist/apps/web/**"]);
-        // Nx Cloud drops these before upload, so a rejection here means the
-        // two sides disagree and the run should say so.
-        assert_eq!(dropped, vec!["../outside/y", "node_modules/.cache/x"]);
-    }
-
-    #[test]
-    fn an_escape_cannot_disguise_an_ignored_dir() {
-        let disguised = [
-            r".gi\t/config",
-            r"node_module\s/x",
-            r".GI\T/hooks/x",
-            r"apps/\.nx/cache/x",
-        ];
-        let kept = [r"libs/\!notes.md", r"dist/a\(b\).js", r"a\\b/x"];
-        let (outputs, dropped) = observed_outputs(&TaskIoSnapshot {
-            commit: "c".into(),
-            inputs: vec![],
-            outputs: disguised
-                .iter()
-                .chain(&kept)
-                .map(|g| g.to_string())
-                .collect(),
-        });
-        let mut expected_dropped: Vec<String> = disguised.iter().map(|g| g.to_string()).collect();
-        expected_dropped.sort();
-        let mut expected_kept: Vec<String> = kept.iter().map(|g| g.to_string()).collect();
-        expected_kept.sort();
-        assert_eq!(dropped, expected_dropped);
-        assert_eq!(outputs, expected_kept);
-    }
-
-    #[test]
-    fn a_root_level_escaped_write_is_kept_only_where_it_stays_relative() {
-        let (outputs, dropped) = observed_outputs(&TaskIoSnapshot {
-            commit: "c".into(),
-            inputs: vec![],
-            outputs: vec![r"\!Backup".into()],
-        });
-        // On Windows `\` roots the path, so joining it would leave the workspace.
-        if cfg!(windows) {
-            assert_eq!((outputs, dropped), (vec![], vec![r"\!Backup".to_string()]));
-        } else {
-            assert_eq!((outputs, dropped), (vec![r"\!Backup".to_string()], vec![]));
-        }
     }
 
     #[test]
