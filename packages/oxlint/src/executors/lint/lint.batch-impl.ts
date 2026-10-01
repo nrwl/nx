@@ -3,9 +3,8 @@ import { runLintTasks, type LintTaskResult } from './run-lint-tasks.js';
 import type { LintExecutorSchema } from './schema.js';
 
 /**
- * Yields rather than returns: Nx prints and caches a batch task's terminal
- * output as each result streams in, while a result map returned at the end is
- * only recorded.
+ * Yields rather than returns, so Nx prints each task's output as its result
+ * streams in, unless it holds batch output for a log group.
  */
 export default async function* batchLintExecutor(
   taskGraph: TaskGraph,

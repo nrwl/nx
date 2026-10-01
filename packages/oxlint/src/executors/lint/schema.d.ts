@@ -6,6 +6,5 @@ export interface LintExecutorSchema {
   format?: OxlintOutputFormat;
   args?: string | string[];
   __unparsed__?: string[];
-  /** Any other option is forwarded to Oxlint as a CLI flag. */
   [forwarded: string]: unknown;
 }

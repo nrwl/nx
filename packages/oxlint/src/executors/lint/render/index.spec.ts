@@ -50,10 +50,8 @@ describe('renderDiagnostics', () => {
         agentMode: true,
       })
     ).toBe(
-      renderDiagnostics('agent', diagnostics, {
-        workspaceRoot,
-        agentMode: true,
-      })
+      "libs/a/src/x.ts:2:10: error eslint(no-unused-vars): Function 'f' is declared but never used. help: Consider removing this declaration.\n" +
+        'libs/a/src/x.ts:1:1: warning eslint(no-console): Unexpected console statement. help: Delete this console statement.\n'
     );
   });
 
