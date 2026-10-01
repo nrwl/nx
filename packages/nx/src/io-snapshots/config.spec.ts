@@ -2,7 +2,7 @@ import { ioSnapshotEnv, isIoSnapshotFetchEnabled } from './config';
 
 describe('isIoSnapshotFetchEnabled', () => {
   const connected = { nxCloudId: 'id' } as any;
-  const optedIn = { NX_IO_SNAPSHOTS: 'true' };
+  const optedIn = { NX_CLOUD_USE_ULTRACACHE: 'true' };
 
   beforeEach(() => vi.stubEnv('CI', 'true'));
   afterEach(() => vi.unstubAllEnvs());
@@ -16,23 +16,15 @@ describe('isIoSnapshotFetchEnabled', () => {
   it('is off until then, whatever else the env says', () => {
     for (const env of [
       {},
-      { NX_IO_SNAPSHOTS: '' },
-      { NX_IO_SNAPSHOTS: 'false' },
-      { NX_IO_SNAPSHOTS: '1' },
-      { NX_IO_SNAPSHOTS: 'TRUE' },
+      { NX_CLOUD_USE_ULTRACACHE: '' },
+      { NX_CLOUD_USE_ULTRACACHE: 'false' },
+      { NX_CLOUD_USE_ULTRACACHE: '1' },
+      { NX_CLOUD_USE_ULTRACACHE: 'TRUE' },
+      // The pre-release names are gone.
+      { NX_IO_SNAPSHOTS: 'true', NX_CLOUD_USE_IO_SNAPSHOTS: 'true' } as any,
     ]) {
       expect(isIoSnapshotFetchEnabled(connected, {}, env)).toBe(false);
     }
-  });
-
-  it("is on when the run opts in through the Nx Cloud client's variable", () => {
-    expect(
-      isIoSnapshotFetchEnabled(
-        connected,
-        {},
-        { NX_CLOUD_USE_IO_SNAPSHOTS: 'true' }
-      )
-    ).toBe(true);
   });
 
   it('is off outside CI, opt-in or not', () => {
@@ -75,11 +67,11 @@ describe('isIoSnapshotFetchEnabled', () => {
   });
 
   it('reads the run env by default', () => {
-    delete process.env.NX_IO_SNAPSHOTS;
+    delete process.env.NX_CLOUD_USE_ULTRACACHE;
     expect(isIoSnapshotFetchEnabled(connected)).toBe(false);
-    process.env.NX_IO_SNAPSHOTS = 'true';
+    process.env.NX_CLOUD_USE_ULTRACACHE = 'true';
     expect(isIoSnapshotFetchEnabled(connected)).toBe(true);
-    delete process.env.NX_IO_SNAPSHOTS;
+    delete process.env.NX_CLOUD_USE_ULTRACACHE;
   });
 });
 
