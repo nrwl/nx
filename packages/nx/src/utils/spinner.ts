@@ -2,9 +2,13 @@ import { dots } from 'cli-spinners';
 import * as figures from 'figures';
 import * as pc from 'picocolors';
 import { clearLine, cursorTo, moveCursor } from 'readline';
-import stringWidth from 'string-width';
 import { stripVTControlCharacters } from 'util';
 import { isCI } from './is-ci';
+
+// string-width is ESM-only; a top-level require would reach every jest run that imports @nx/devkit.
+function stringWidth(text: string): number {
+  return require('string-width').default(text);
+}
 
 export const SHOULD_SHOW_SPINNERS = process.stdout.isTTY && !isCI();
 

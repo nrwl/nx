@@ -1,4 +1,5 @@
 import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 import chalk from 'chalk';
 
 import {
@@ -183,8 +184,10 @@ type Arguments =
   | WebArguments
   | UnknownStackArguments;
 
-export const commandsObject: yargs.Argv<Arguments> = yargs
-  .wrap(yargs.terminalWidth())
+const cli = yargs(hideBin(process.argv));
+
+export const commandsObject: yargs.Argv<Arguments> = cli
+  .wrap(cli.terminalWidth())
   .parserConfiguration({
     'strip-dashed': true,
     'dot-notation': true,
