@@ -20,7 +20,10 @@ import {
   type SharedLicenseInputs,
 } from './extract-licenses-plugin';
 import { I18nInlinePlugin } from './i18n-inline-plugin';
-import { IndexHtmlPlugin } from './index-html-plugin';
+import {
+  IndexHtmlPlugin,
+  type SharedServerRenderingInputs,
+} from './index-html-plugin';
 import { ProgressPlugin } from './progress-plugin';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 
@@ -30,6 +33,9 @@ export class NgRspackPlugin implements RspackPluginInstance {
   readonly i18n: I18nOptions;
   private readonly sharedLicenseInputs: SharedLicenseInputs | undefined;
   private readonly sharedAngularPlugin: AngularRspackPlugin | undefined;
+  private readonly serverRenderingInputs:
+    | SharedServerRenderingInputs
+    | undefined;
 
   constructor(
     pluginOptions: NormalizedAngularRspackPluginOptions,
@@ -50,6 +56,11 @@ export class NgRspackPlugin implements RspackPluginInstance {
        * own compilation.
        */
       sharedAngularPlugin?: AngularRspackPlugin;
+      /**
+       * Filled by the browser compiler of an SSR build for the server
+       * compiler.
+       */
+      serverRenderingInputs?: SharedServerRenderingInputs;
     }
   ) {
     this.pluginOptions = pluginOptions;
@@ -57,6 +68,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
     this.isPlatformServer = extraOptions.platform === 'server';
     this.sharedLicenseInputs = extraOptions.sharedLicenseInputs;
     this.sharedAngularPlugin = extraOptions.sharedAngularPlugin;
+    this.serverRenderingInputs = extraOptions.serverRenderingInputs;
   }
 
   apply(compiler: Compiler) {
@@ -223,6 +235,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
         chunksIntegrity: this.pluginOptions.subresourceIntegrity
           ? new Map()
           : undefined,
+        serverRenderingInputs: this.serverRenderingInputs,
       }).apply(compiler);
     }
     if (

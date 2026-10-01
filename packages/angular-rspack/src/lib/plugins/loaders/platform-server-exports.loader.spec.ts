@@ -15,8 +15,8 @@ describe('platform-server-exports.loader', () => {
     baseHref: '/app/',
     locale: 'en-US',
     inlineCriticalCss: true,
+    usesCriticalCssPlans: false,
     browserOutputRelativePath: '../browser',
-    indexOutputName: 'index.html',
     supportedLocales: { 'en-US': '' },
     allowedHosts: ['example.com'],
   };
@@ -124,7 +124,7 @@ describe('platform-server-exports.loader', () => {
     expect(result).toContain(`allowedHosts: ["example.com"]`);
     expect(result).toContain(`'': () => Promise.resolve({`);
     expect(result).toMatch(
-      /__ngRspackCreateServerAssets\([\s\S]*?"index\.html",\s*true\s*\)/
+      /__ngRspackCreateServerAssets\(\s*__dirname,[\s\S]*?"\.\.\/browser"\),\s*true\s*\)/
     );
   });
 
