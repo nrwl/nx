@@ -154,6 +154,23 @@ describe('formatAffectedExplanation', () => {
     );
   });
 
+  it('names the first of several files a task matched', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'a:test': ['a.ts', 'b.ts', 'c.ts'].map((file) => ({
+            kind: 'input-file' as const,
+            file,
+          })),
+        },
+        upstream: {},
+        touched: ['a:test'],
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain('Changing a.ts and 2 other files touches');
+  });
+
   it('heads the reached tasks by what was touched, or by the change', () => {
     const out = formatAffectedExplanation(
       {

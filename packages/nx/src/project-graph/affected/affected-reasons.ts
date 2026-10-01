@@ -338,11 +338,11 @@ function changedIn(reasons: AffectedReason[]): string[] {
   ].sort();
 }
 
-/** "a", "a and b", or "a and N others". */
+/** "a", "a and b", or "a and N other files". */
 function describeChanged(changed: string[]): string {
   return changed.length <= 2
     ? changed.join(' and ')
-    : `${changed[0]} and ${changed.length - 1} others`;
+    : `${changed[0]} and ${changed.length - 1} other files`;
 }
 
 /** A reason that names another entry rather than a change. */
