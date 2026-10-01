@@ -230,12 +230,21 @@ export interface TargetDependencyConfig {
 // in sync with the Rust/napi-generated shapes. Some variants (fileset/input
 // discrimination, workingDirectory literal union) carry richer TS semantics
 // than their native counterparts and will need a layered type to preserve.
+/**
+ * `always`: the files the input resolves to stay in the hash even when the task
+ * is hashed from its ultracache recording.
+ */
 export type InputDefinition =
-  | { input: string; projects: string | string[] }
-  | { input: string; dependencies: true }
-  | { input: string }
-  | { fileset: string; includeIgnored?: boolean }
-  | { fileset: string; dependencies: true; includeIgnored?: boolean }
+  | { input: string; projects: string | string[]; always?: boolean }
+  | { input: string; dependencies: true; always?: boolean }
+  | { input: string; always?: boolean }
+  | { fileset: string; includeIgnored?: boolean; always?: boolean }
+  | {
+      fileset: string;
+      dependencies: true;
+      includeIgnored?: boolean;
+      always?: boolean;
+    }
   | { runtime: string }
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }
