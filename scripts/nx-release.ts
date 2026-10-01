@@ -8,6 +8,7 @@ import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
 import { ReleaseType, major, parse } from 'semver';
 import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -314,7 +315,7 @@ function parseArgs() {
   const registry = getRegistry();
   const registryIsLocalhost = registry.hostname === 'localhost';
 
-  const parsedArgs = yargs
+  const parsedArgs = yargs(hideBin(process.argv))
     .scriptName('pnpm nx-release')
     .wrap(144)
     .strictOptions()

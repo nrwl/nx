@@ -57,8 +57,8 @@ export interface BuilderIntrospection {
 export function introspectBuilder(
   builder: (yargs: any) => any
 ): BuilderIntrospection | null {
-  const yargs = require('yargs') as typeof import('yargs');
-  const temp: any = (yargs as any)();
+  const yargs: typeof import('yargs') = require('yargs');
+  const temp: any = yargs();
   try {
     builder(temp);
   } catch {

@@ -6,10 +6,10 @@ import { Schema } from './params';
 import { nxVersion } from './versions';
 import { readModulePackageJson } from './package-json';
 
-// cliui is the CLI layout engine developed by, and used within, yargs
-// the typings for cliui do not play nice with our tsconfig, it either
-// works in build or in test but not both.
-const cliui = require('cliui') as (typeof import('cliui'))['default'];
+// cliui is ESM-only; a top-level require would reach every jest run that imports @nx/devkit.
+function cliui(opts: null) {
+  return require('cliui')(opts);
+}
 
 export function printHelp(
   header: string,

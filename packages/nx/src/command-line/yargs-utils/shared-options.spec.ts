@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
 import * as stream from 'node:stream';
-import * as yargs from 'yargs';
+import yargs from 'yargs';
 
 vi.mock('../../native', async () => ({
   ...(await vi.importActual('../../native')),
@@ -19,7 +19,7 @@ import {
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { isAiAgent } from '../../native';
 
-const argv = yargs.default([]);
+const argv = yargs([]);
 
 describe('shared-options', () => {
   describe('withAffectedOptions', () => {
@@ -52,7 +52,7 @@ describe('shared-options', () => {
     it('should split a --files value on every comma, while stdin keeps a comma-bearing path whole', async () => {
       // yargs runs `coerce` only on an instance's first parse, so each case
       // needs an instance of its own to see production's ordering.
-      const split = await withAffectedOptions(yargs.default([])).parseAsync([
+      const split = await withAffectedOptions(yargs([])).parseAsync([
         'affected',
         '--files',
         'libs/a,b/src/index.ts',
@@ -64,7 +64,7 @@ describe('shared-options', () => {
       stdinMock.push('libs/a,b/src/index.ts\n');
       stdinMock.push(null);
 
-      const piped = await withAffectedOptions(yargs.default([])).parseAsync([
+      const piped = await withAffectedOptions(yargs([])).parseAsync([
         'affected',
         '--stdin',
       ]);

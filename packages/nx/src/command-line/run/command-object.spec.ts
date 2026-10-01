@@ -1,4 +1,4 @@
-import yargs = require('yargs');
+import yargs, { type CommandModule } from 'yargs';
 import { withOverrides } from '../yargs-utils/shared-options';
 import { yargsNxInfixCommand, yargsRunCommand } from './command-object';
 
@@ -118,7 +118,7 @@ function getParsedRunArgs(args: string[]) {
 
 function getParsedArgs(
   args: string[],
-  command: yargs.CommandModule,
+  command: CommandModule,
   withOverridesLevel = 1
 ) {
   let parsedArgs: any;

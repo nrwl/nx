@@ -182,8 +182,6 @@ Rules for resolution — the part that most looks solved and isn't:
   `{ find: /^@nx\/devkit$/, replacement: ... }`.
 - `packages/nx` predates the shared resolver and hard-codes `nx/src/*` and
   `nx/bin/*` aliases instead. Don't copy that — the resolver covers it.
-- If the package imports `yargs` with CJS-namespace style
-  (`yargs.terminalWidth()`), alias it to `node_modules/yargs/index.cjs`.
 - If the package loads `nx/src/native`, copy the `nx-native-shim` plugin
   verbatim — `src/native/index.js` requires TS files and cannot run outside a
   transform, so it must be routed to the generated `native-bindings.js` and
