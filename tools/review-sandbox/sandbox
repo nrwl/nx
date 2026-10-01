@@ -88,7 +88,7 @@ function writeState(state) {
   fs.mkdirSync(STATE_DIR, { recursive: true });
   // Write-then-rename: a reader must never observe a half-written registry.
   // Several `/review-pr` panes read this file constantly, and a torn read
-  // parses as "no sandboxes", which reads exactly like a clean cleanup.
+  // aborts whichever one reaches it mid-write.
   const tmp = `${STATE_FILE}.tmp.${process.pid}`;
   fs.writeFileSync(tmp, JSON.stringify(state, null, 2) + '\n');
   fs.renameSync(tmp, STATE_FILE);
