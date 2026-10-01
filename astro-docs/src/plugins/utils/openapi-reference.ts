@@ -382,6 +382,18 @@ function responseHeaderLinks(
   return links.length ? `Response headers: ${links.join(', ')}.` : '';
 }
 
+function responseDetails(
+  document: OpenApiDocument,
+  response: OpenApiObject,
+  headers: Map<string, SharedHeader>
+): string[] {
+  return [
+    text(response.description),
+    contentMarkdown(document, response.content),
+    responseHeaderLinks(document, response, headers),
+  ];
+}
+
 function securityLabel(document: OpenApiDocument, name: string): string {
   const schemes = object(object(document.components).securitySchemes);
   const scheme = resolve(document, schemes[name]);
@@ -530,9 +542,7 @@ export function renderOpenApiReference(document: OpenApiDocument): string {
       lines.push(
         '<details>\n<summary>Response body</summary>\n',
         anchor(successId(status)),
-        text(response.description),
-        contentMarkdown(document, response.content),
-        responseHeaderLinks(document, response, catalog.headers),
+        ...responseDetails(document, response, catalog.headers),
         '</details>'
       );
     }
@@ -547,9 +557,7 @@ export function renderOpenApiReference(document: OpenApiDocument): string {
     lines.push(
       anchor(id),
       `### ${status}${STATUS_CODES[status] ? ` ${STATUS_CODES[status]}` : ''}`,
-      text(response.description),
-      contentMarkdown(document, response.content),
-      responseHeaderLinks(document, response, catalog.headers)
+      ...responseDetails(document, response, catalog.headers)
     );
   }
   if (catalog.headers.size) {

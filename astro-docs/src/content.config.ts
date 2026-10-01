@@ -100,8 +100,6 @@ const nxCloudPublicApi = defineCollection({
   schema: baseSchema.extend({
     specificationUrl: z.url(),
     apiVersion: z.string(),
-    openapiVersion: z.string(),
-    operationCount: z.number().int().positive(),
   }),
 });
 
