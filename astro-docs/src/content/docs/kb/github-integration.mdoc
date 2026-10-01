@@ -121,8 +121,8 @@ dte:
   if: always()
 ```
 
-You can also enable [task sandboxing](/docs/kb/sandboxing) to run each
-distributed task in an isolated sandbox, and track per-agent CPU and memory with
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) hashes each distributed task from the files
+it actually reads, and you can track per-agent CPU and memory with
 [resource usage](/docs/kb/resource-usage) to right-size your agents.
 
 ## What Nx adds to your GitHub PRs

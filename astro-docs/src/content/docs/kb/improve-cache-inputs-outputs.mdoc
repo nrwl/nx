@@ -1,22 +1,22 @@
 ---
-title: 'Fix sandbox violations'
-description: 'Step-by-step guide to download sandbox reports, classify each violation, and update project configuration so caching becomes reliable again.'
-keywords: [sandboxing, violations, caching, project.json, nx-cloud]
+title: 'Improve cache inputs and outputs'
+description: 'Find tasks that read or write files outside their declared inputs and outputs, and fix their project configuration.'
+keywords: [caching, inputs, outputs, ultracache, project.json, nx-cloud]
 sidebar:
-  label: Fix sandbox violations
+  label: Improve cache inputs and outputs
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
 ---
 
-{% llm_copy_prompt title="Fix sandbox violations in this workspace" %}
-You are helping fix sandbox violations in an Nx workspace. Tasks read or wrote files outside their declared `inputs`/`outputs`, which makes Nx Cloud caching unreliable.
+{% llm_copy_prompt title="Improve cache inputs and outputs in this workspace" %}
+You are helping improve the cache configuration of tasks in an Nx workspace. Tasks read or wrote files outside their declared `inputs`/`outputs`, which makes Nx Cloud caching unreliable.
 
 Follow the steps from this guide exactly: {pageUrl}
 
-1. Download the latest sandbox reports for the current branch with `npx nx-cloud get sandbox-reports --branch <branch> --since 1d`. Reports land under `.nx/workspace-data/sandbox-reports/<branch>/`.
-2. Run `npx nx-cloud validate sandbox-violations .nx/workspace-data/sandbox-reports/<branch>/index.json --json` to list every task with violations against the current workspace config. Tasks with `ok: false` and a non-empty `stillUnexpected` array are the ones to fix.
-3. Pick ONE task at a time. Use `tasks[].file` from the index to find the per-task report path, then validate just that file while iterating: `npx nx-cloud validate sandbox-violations .nx/workspace-data/sandbox-reports/<branch>/<task-file>.json --json`.
+1. Download the latest I/O reports for the current branch with `npx nx-cloud get io-reports --branch <branch> --since 1d`. Reports land under `.nx/workspace-data/sandbox-reports/<branch>/`.
+2. Run `npx nx-cloud validate io-violations .nx/workspace-data/sandbox-reports/<branch>/index.json --json` to list every task with violations against the current workspace config. Tasks with `ok: false` and a non-empty `stillUnexpected` array are the ones to fix.
+3. Pick ONE task at a time. Use `tasks[].file` from the index to find the per-task report path, then validate just that file while iterating: `npx nx-cloud validate io-violations .nx/workspace-data/sandbox-reports/<branch>/<task-file>.json --json`.
 4. For each unexpected read or write, classify into one of three categories and fix:
    - (a) Nx config issue - the task legitimately needs the access. Inspect resolved config with `npx nx show target <project>:<target> --json`, then extend `inputs`/`outputs` in `project.json`, declare a `dependsOn`, or use `dependentTasksOutputFiles`. On Nx 23+ prefer the spread token `"..."` to append to plugin-inferred config without re-listing it.
    - (b) Task or app bug - the unexpected read/write reflects a problem in the script, build tool, or application code itself. Fix the offending code, not the Nx config.
@@ -24,22 +24,27 @@ Follow the steps from this guide exactly: {pageUrl}
    - (c) Benign access, last resort - exclude the path. For a single target use `ultracache.ignoredReads`/`ultracache.ignoredWrites` in `project.json`; for the whole workspace use `.nx/workflows/sandboxing-config.yaml` (`exclude-reads`/`exclude-writes` or `task-exclusions`). Use sparingly, like a `ts-ignore` - excluded paths are not tracked...
 
 5. After editing, run `npx nx reset` then re-validate the same per-task report. Once it reports `ok: true`, go back to step 2 to pick the next task. Loop until every task in `index.json` is clean.
-6. Commit and push. After CI runs, re-download with `--since 1h` and re-validate to catch tasks that did not run locally. Print the **Sandbox violations dashboard** URL for the branch to the user (you cannot open it yourself) so they can confirm fixed tasks no longer appear - cache hits will not regenerate reports, so a clean local validate is not enough on its own.
+6. Commit and push. After CI runs, re-download with `--since 1h` and re-validate to catch tasks that did not run locally. Print the **Analytics** > **Cache inputs and outputs** page URL for the branch to the user (you cannot open it yourself) so they can confirm fixed tasks no longer appear - cache hits will not regenerate reports, so a clean local validate is not enough on its own.
 
 Report which tasks you fixed and which category (a/b/c) you used for each. Ask before continuing to the next task if you are uncertain about any change.
 {% /llm_copy_prompt %}
 
-When [task sandboxing](/docs/kb/sandboxing) catches a task reading or writing files outside its declared `inputs` and `outputs`, the cache is no longer reliable for that task.
-This guide walks through fixing every violating task on a branch so caching is correct again.
+A task's `inputs` decide whether it hits or misses the [cache](/docs/features/cache-task-results), and its `outputs` decide which files are restored on a hit.
+A task that reads a file missing from its `inputs` can get a stale cache hit, and a task that writes outside its `outputs` loses those files on a hit.
+
+**Analytics** > **Cache inputs and outputs** in Nx Cloud lists the tasks with undeclared I/O, and each task's **Report** tab shows the files each process read and wrote.
+This guide walks through fixing them, one task at a time.
+
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) records each task's inputs and outputs from the files it actually reads and writes, so cache hits stay correct without any manual config.
 
 ## 1. Download the reports
 
-Fetch every sandbox report for the branch you want to fix.
+Fetch every I/O report for the branch you want to fix.
 `--since 1d` is a sensible default.
 Widen the window if the branch has tasks that haven't run recently.
 
 ```shell
-npx nx-cloud get sandbox-reports --branch <branch> --since 1d
+npx nx-cloud get io-reports --branch <branch> --since 1d
 ```
 
 Reports land under `.nx/workspace-data/sandbox-reports/<branch>/`.
@@ -51,7 +56,7 @@ Run `validate` against the full `index.json` to get a structured summary of ever
 Add `--json` so the output is easy to scan or pipe into other tools.
 
 ```shell
-npx nx-cloud validate sandbox-violations .nx/workspace-data/sandbox-reports/<branch>/index.json --json
+npx nx-cloud validate io-violations .nx/workspace-data/sandbox-reports/<branch>/index.json --json
 ```
 
 Tasks with `ok: false` and a non-empty `stillUnexpected` array are the ones to fix.
@@ -63,7 +68,7 @@ Fixing one task at a time keeps the output focused and prevents one change from 
 Re-run `validate` against just the chosen task's per-task report while you iterate on it:
 
 ```shell
-npx nx-cloud validate sandbox-violations .nx/workspace-data/sandbox-reports/<branch>/<project>_<target>.json --json
+npx nx-cloud validate io-violations .nx/workspace-data/sandbox-reports/<branch>/<project>_<target>.json --json
 ```
 
 ## 4. Classify the violation
@@ -85,7 +90,7 @@ Then extend in the most appropriate place:
 
 - Add to the task's `inputs` or `outputs` in `project.json`.
 - Declare a [`dependsOn`](/docs/reference/project-configuration#dependson) on an upstream producer if another task generates the file.
-- Use [`dependentTasksOutputFiles`](/docs/reference/project-configuration#dependenttasksoutputfiles) when the file is an output of a dependency task and needs to be part of this task's input hash.
+- Use [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks) when the file is an output of a dependency task and needs to be part of this task's input hash.
 
 On Nx 23.0.0 and later, prefer the spread token `"..."` to append to plugin-inferred config without re-listing everything:
 
@@ -126,7 +131,7 @@ When the access belongs to one target, exclude it on that target with [`ultracac
 }
 ```
 
-When the access spans the workspace, exclude the path in `.nx/workflows/sandboxing-config.yaml` (see [Excluding paths](/docs/kb/sandboxing#excluding-paths) for the full reference):
+When the access spans the workspace, exclude the path in `.nx/workflows/sandboxing-config.yaml`:
 
 ```yaml
 # .nx/workflows/sandboxing-config.yaml
@@ -140,6 +145,10 @@ task-exclusions:
       - .next/cache/**
 ```
 
+Global `exclude-reads` and `exclude-writes` apply to all tasks.
+Use `task-exclusions` to scope exclusions to a specific project, target, or combination of both.
+Patterns use glob syntax relative to the workspace root, and they add to a target's own `ultracache` patterns rather than replacing them.
+
 Use sparingly, like a `ts-ignore` - excluded paths are not tracked, so a real regression in one of them will not be caught.
 
 ## 5. Re-validate the task you fixed
@@ -148,7 +157,7 @@ Run `nx reset` so the project graph picks up your changes, then re-run `validate
 
 ```shell
 npx nx reset
-npx nx-cloud validate sandbox-violations .nx/workspace-data/sandbox-reports/<branch>/<project>_<target>.json --json
+npx nx-cloud validate io-violations .nx/workspace-data/sandbox-reports/<branch>/<project>_<target>.json --json
 ```
 
 Once the task reports `ok: true`, go back to [step 2](#2-list-the-violations) and pick the next violating task.
@@ -162,23 +171,23 @@ Commit and push once everything validates clean locally, then wait for the CI pi
 Re-download the fresh reports with a narrower `--since` window so you only fetch what CI just produced:
 
 ```shell
-npx nx-cloud get sandbox-reports --branch <branch> --since 1h
+npx nx-cloud get io-reports --branch <branch> --since 1h
 ```
 
 Re-run step 2 against the fresh `index.json`.
 CI may surface tasks that did not run locally or behave differently in the CI environment - if new violations appear, loop back through steps 2-5 until CI is also clean.
 
-Open the **Sandbox violations dashboard** for the branch in Nx Cloud to confirm.
-The dashboard shows the most recent sandbox report per task, so a cleanly fixed task drops off the list rather than reappearing on cache hits.
+Open **Analytics** > **Cache inputs and outputs** for the branch in Nx Cloud to confirm.
+The page shows the most recent report per task, so a cleanly fixed task drops off the list rather than reappearing on cache hits.
 
 {% aside type="note" title="Cache hits don't regenerate reports" %}
-On CI, a cached task doesn't run, so it doesn't produce a fresh sandbox report.
+On CI, a cached task doesn't run, so it doesn't produce a fresh report.
 A locally clean validate isn't enough on its own.
 The dashboard view is the canonical source - it shows the most recent report per task, even when the latest CI execution served a cache hit for that task.
 {% /aside %}
 
 ## Related
 
-- [Task sandboxing](/docs/kb/sandboxing)
 - [Cache task results](/docs/features/cache-task-results)
+- [Ultracache](/docs/features/ci-features/remote-cache#ultracache)
 - [Project configuration reference](/docs/reference/project-configuration)

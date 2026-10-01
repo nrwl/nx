@@ -1,6 +1,6 @@
 ---
 title: Nx vs Turborepo
-description: Nx vs Turborepo on the same workspace, with distributed CI, task sandboxing, polyglot builds, generators, and release management.
+description: Nx vs Turborepo on the same workspace, with distributed CI, Ultracache, polyglot builds, generators, and release management.
 filter: 'type:Guides'
 sidebar:
   label: Nx vs Turborepo
@@ -22,7 +22,7 @@ Turborepo is a task runner for JavaScript and TypeScript monorepos, maintained b
 
 Both tools are easy to set up and get started, and both cover the same basics: task scheduling, local and remote caching, and affected detection. On top of those, Nx adds:
 
-- Task sandboxing, code generation, polyglot support, and release management.
+- Ultracache, code generation, polyglot support, and release management.
 - A CI platform with distribution, flaky-task handling, and self-healing.
 
 Nx also asks for less task configuration to get there, because it runs your `package.json` scripts with sensible default inputs and [plugins](/docs/concepts/nx-plugins) can infer the rest from your tool configs. Turborepo has you declare inputs and outputs in `turbo.json` and repeat them on every cacheable task.
@@ -34,7 +34,7 @@ Adoption isn't the trade-off it sounds like: Nx works with your existing scripts
 | [Onboarding](#onboarding)                       | Zero-config or guided `nx init`                                             | Manual `turbo.json` configuration                         |
 | [Running tasks](#running-tasks)                 | Runs `package.json` scripts, optional plugin-based task configuration       | Runs `package.json` scripts, requires `turbo.json` config |
 | [Caching](#caching)                             | Explicit opt-in, composable `namedInputs`                                   | Cached by default, flat input lists                       |
-| [Task sandboxing](#task-sandboxing)             | Sandboxed execution for cache integrity                                     | Not available                                             |
+| [Ultracache](#ultracache)                       | Recorded task inputs for cache integrity                                    | Not available                                             |
 | [Code generation](#code-generation)             | Programmatic generators with AST transforms and graph awareness             | Template-based file scaffolding (Plop)                    |
 | [Module boundary rules](#module-boundary-rules) | Tag-based lint rule + conformance rules (polyglot)                          | Experimental `turbo boundaries` (since 2.4)               |
 | [Polyglot support](#polyglot-support)           | First-party plugins for Gradle, Maven, .NET; community for Python, Rust, Go | Any CLI via `package.json` scripts, no native graph       |
@@ -48,7 +48,7 @@ Adoption isn't the trade-off it sounds like: Nx works with your existing scripts
 
 The [Nx CLI](https://github.com/nrwl/nx) is free and open source. Task graph, local caching, `nx affected`, generators, and `nx release` run from the CLI on any CI provider.
 
-[Nx Cloud](/docs/features/ci-features) is the hosted layer: remote caching, task distribution, self-healing CI, and sandboxing. Turborepo divides along the same line, with an open source CLI and remote caching as a hosted service.
+[Nx Cloud](/docs/features/ci-features) is the hosted layer: remote caching, task distribution, self-healing CI, and Ultracache. Turborepo divides along the same line, with an open source CLI and remote caching as a hosted service.
 
 ## Onboarding
 
@@ -274,15 +274,15 @@ The `production` pattern in Nx is defined once and reused across `build` and `te
 
 In Turborepo, the same exclusion list is repeated across `build`, `build:prod`, and `check-types`. Task `extends` can share a base config, but not a reusable named input pattern.
 
-## Task sandboxing
+## Ultracache
 
-A cache is only valuable if you can trust it. Turborepo has no task sandboxing. During execution, tasks can read and write anywhere on the filesystem. A task can read files that aren't declared as inputs and produce undeclared outputs that get cached and replayed into a different context. The result: false cache hits, missing artifacts, and hard-to-trace failures.
+A cache is only valuable if you can trust it. Turborepo has no equivalent. During execution, tasks can read and write anywhere on the filesystem. A task can read files that aren't declared as inputs and produce undeclared outputs that get cached and replayed into a different context. The result: false cache hits, missing artifacts, and hard-to-trace failures.
 
-Nx provides [task sandboxing](/docs/kb/sandboxing) that runs each task in a sandbox and surfaces undeclared reads or writes, with an opt-in strict mode that fails the task. Undeclared dependencies show up automatically rather than through debugging production incidents.
+Nx Cloud [Ultracache](/docs/features/ci-features/remote-cache#ultracache) traces the files each task reads and writes in CI, hashes later runs from what the task actually read, and surfaces the undeclared reads and writes it can't record. Undeclared dependencies show up automatically rather than through debugging production incidents.
 
 This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) showed how remote caches without branch isolation, where the first run to populate a key wins, let a contributor with PR access poison artifacts that protected branches later reuse. It's a property of bucket-style shared caches, not of any one tool. Nx Cloud prevents it through branch-scoped cache isolation. For more details, see [cache security](/docs/kb/cache-security).
 
-Task sandboxing is an architectural difference, not a configuration problem. There's no workaround on the Turborepo side.
+Ultracache is an architectural difference, not a configuration problem. There's no workaround on the Turborepo side.
 
 ## Code generation
 
@@ -290,7 +290,7 @@ Both tools offer code generation, but the depth differs significantly.
 
 Turborepo provides `turbo gen`, built on [Plop.js](https://plopjs.com/). It scaffolds files from templates and supports custom action functions for programmatic steps. What it doesn't have is AST-level code modification, awareness of the project graph, or a migration and codemod system.
 
-Nx generators are built on top of [Nx Devkit](/docs/reference/devkit), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
+Nx generators are built on top of [Nx Devkit](/docs/reference/devkit), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#build-your-own-generator) that encode your team's specific patterns.
 
 The real value isn't raw scaffolding, AI can do that too. It's deterministic, convention-aware generation. **AI agents can invoke your generators to produce code matching your patterns from the start.** This is faster and more token-efficient than generating everything from scratch.
 
@@ -458,7 +458,7 @@ Pick Turborepo when any of these apply:
 - Your workspace is JS/TS-only and will stay that way, and one CI machine keeps your pipeline short enough that you never need to distribute it.
 - Task running and caching are all you want from a build tool, with no code generation, release management, module boundaries, or CI beyond remote caching on the roadmap.
 
-Team size is not the dividing line. A small team gets the [same `nx.json`](#a-minimal-nx-setup) and the same `nx affected` as a large one, and what the large one turns on later is distribution, sandboxing, and self-healing CI.
+Team size is not the dividing line. A small team gets the [same `nx.json`](#a-minimal-nx-setup) and the same `nx affected` as a large one, and what the large one adds later is distribution with Ultracache and self-healing CI.
 
 Nx adopts incrementally on your existing scripts, and `nx init` reads an existing `turbo.json` and converts it, so moving over later is not a rewrite. Setting up either tool takes about the same effort, and `nx init` plus plugins make the Nx side easier, so there is little reason to start on Turborepo first.
 
