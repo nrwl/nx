@@ -1,8 +1,10 @@
 import type { Loader } from 'astro/loaders';
 import { watchAndCall } from './utils/watch';
 import {
+  buildOpenApiReference,
   parseOpenApiDocument,
   renderOpenApiReference,
+  renderReferenceProse,
 } from './utils/openapi-reference';
 
 export const NX_CLOUD_PUBLIC_API_SPEC_URL =
@@ -43,7 +45,9 @@ export function NxCloudPublicApiLoader(options: LoaderOptions = {}): Loader {
           );
         }
         const document = parseOpenApiDocument(await response.json());
-        const body = renderOpenApiReference(document);
+        const reference = buildOpenApiReference(document, specificationUrl);
+        await renderReferenceProse(reference, renderMarkdown);
+        const body = renderOpenApiReference(reference);
         const data = await parseData({
           id: 'reference',
           data: {
@@ -51,16 +55,16 @@ export function NxCloudPublicApiLoader(options: LoaderOptions = {}): Loader {
             description:
               'Nx Cloud Public API reference generated from the deployed OpenAPI specification.',
             slug: NX_CLOUD_PUBLIC_API_SLUG,
+            filter: 'type:References',
             specificationUrl,
             apiVersion: document.info.version,
+            reference,
           },
         });
-        const rendered = await renderMarkdown(body);
         store.set({
           id: 'reference',
           data,
           body,
-          rendered,
           digest: generateDigest({ data, body }),
         });
         logger.info(
