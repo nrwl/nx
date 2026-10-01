@@ -520,6 +520,58 @@ describe('selection with Ultracache configurations', () => {
       withConfigurations.taskSelection.ultracacheConfigurationOutcome
     ).toBe(outcome);
   });
+
+  // app:test's recording never read lib's files, so its declared ^production
+  // stops selecting it, unless the dependency input is kept.
+  it.each([
+    ['a plain dependency input', '^production', 'static', ['lib:test']],
+    [
+      'an always dependency input',
+      { input: 'production', dependencies: true, always: true },
+      'static',
+      ['app:test', 'lib:test'],
+    ],
+  ])(
+    'selects a recorded dependent through %s',
+    async (_, dependencyInput, edgeType, expected) => {
+      const commit = 'head'.padEnd(40, '1');
+      const db = connectToNxDb(dir, 'ultracache');
+      new UltracacheConfigurationStore(db).import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify({
+          'app:test': {
+            commit,
+            inputs: ['packages/js/src/index.ts'],
+            outputs: [],
+          },
+        }),
+      });
+      const projectGraph = graph();
+      projectGraph.nodes.app.data.targets.test.inputs = [
+        '{projectRoot}/src/**/*',
+        dependencyInput,
+      ];
+      projectGraph.dependencies.app[0].type = edgeType as any;
+      const result = await computeAffectedTasks({
+        projectGraph,
+        nxJson: {
+          namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        } as any,
+        targets: ['test'],
+        touchedFiles: [
+          {
+            file: 'packages/nx/src/index.ts',
+            getChanges: () => [new WholeFileChange()],
+          },
+        ] as any,
+        ultracacheConfigurationOutcome: {
+          status: 'fetched',
+          configurations: new UltracacheConfigurationStore(db).get(commit),
+        } as any,
+      });
+      expect([...result.affectedTaskIds].sort()).toEqual(expected);
+    }
+  );
 });
 
 describe('tasks with a custom hasher', () => {

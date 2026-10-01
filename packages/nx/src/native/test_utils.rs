@@ -93,3 +93,43 @@ pub(crate) fn task_graph(tasks: &[(&str, &[&str])], deps: &[(&str, &[&str])]) ->
         roots: vec![],
     }
 }
+
+/// A configuration set holding `entries` (task id to observed reads), imported into
+/// a temporary database the returned directory owns.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn ultracache_configurations(
+    entries: &[(&str, &[&str])],
+) -> (
+    tempfile::TempDir,
+    crate::native::ultracache::UltracacheConfigurations,
+) {
+    use crate::native::ultracache::{
+        UltracacheConfigurationImportOptions, UltracacheConfigurationStore,
+    };
+    use napi::bindgen_prelude::External;
+    use std::sync::Mutex;
+
+    let dir = tempfile::tempdir().unwrap();
+    let db = crate::native::db::initialize::initialize_db(&dir.path().join("test.db")).unwrap();
+    let store =
+        UltracacheConfigurationStore::new(&External::new(Arc::new(Mutex::new(db)))).unwrap();
+    let commit = "c".repeat(40);
+    let json = serde_json::Value::Object(
+        entries
+            .iter()
+            .map(|(id, inputs)| {
+                (
+                    id.to_string(),
+                    serde_json::json!({ "commit": commit, "inputs": inputs, "outputs": [] }),
+                )
+            })
+            .collect(),
+    );
+    let configurations = store
+        .import_set(UltracacheConfigurationImportOptions {
+            requested_commit: commit,
+            configurations_json: json.to_string(),
+        })
+        .unwrap();
+    (dir, configurations)
+}
