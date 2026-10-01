@@ -275,7 +275,7 @@ mod test {
         drop(holder);
     }
 
-    /// Windows needs SeCreateSymbolicLinkPrivilege (Developer Mode or an
+    /// Windows needs `SeCreateSymbolicLinkPrivilege` (Developer Mode or an
     /// elevated process); returns false without it so the caller skips.
     fn plant_file_symlink(target: &Path, link: &Path) -> bool {
         #[cfg(unix)]
@@ -324,7 +324,7 @@ mod test {
         fs::remove_file(lock.path()).unwrap();
         std::os::unix::fs::symlink(tmp_dir.child("target").path(), lock.path()).unwrap();
 
-        assert!(file_lock.wait_blocking(Duration::from_millis(200)).is_err());
+        assert!(file_lock.wait_blocking(Duration::ZERO).is_err());
     }
 
     #[test]
