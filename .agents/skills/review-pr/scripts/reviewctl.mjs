@@ -1057,9 +1057,10 @@ function parseFinalResult(content) {
   };
 }
 
-function proseLines(content) {
+function proseIndices(lines) {
   let fence = null;
-  return content.split('\n').filter((line) => {
+  const indices = [];
+  lines.forEach((line, index) => {
     const match = line.trimStart().match(/^(`{3,}|~{3,})(.*)$/);
     if (fence) {
       if (
@@ -1070,30 +1071,38 @@ function proseLines(content) {
       ) {
         fence = null;
       }
-      return false;
+      return;
     }
     if (match && !(match[1][0] === '`' && match[2].includes('`'))) {
       fence = match[1];
-      return false;
+      return;
     }
-    return true;
+    indices.push(index);
   });
+  return indices;
+}
+
+function proseLines(content) {
+  const lines = content.split('\n');
+  return proseIndices(lines).map((index) => lines[index]);
 }
 
 function extractSection(content, heading, level = 2) {
   const prefix = '#'.repeat(level);
   const marker = `${prefix} ${heading}`;
-  const lines = proseLines(content);
-  if (lines.filter((line) => line.trimEnd() === marker).length > 1) {
-    fail(`duplicate ${heading} section`);
-  }
-  const start = lines.findIndex((line) => line.trimEnd() === marker);
-  if (start < 0) return '';
-  const next = lines.findIndex(
-    (line, index) => index > start && line.trimEnd().startsWith(`${prefix} `)
+  const lines = content.split('\n');
+  // Headings are found among prose lines, so a fenced one cannot open a section.
+  // The body is sliced from the original lines, keeping its fenced blocks.
+  const prose = proseIndices(lines);
+  const headings = prose.filter((index) => lines[index].trimEnd() === marker);
+  if (headings.length > 1) fail(`duplicate ${heading} section`);
+  if (!headings.length) return '';
+  const start = headings[0];
+  const next = prose.find(
+    (index) => index > start && lines[index].trimEnd().startsWith(`${prefix} `)
   );
   return lines
-    .slice(start + 1, next < 0 ? undefined : next)
+    .slice(start + 1, next === undefined ? undefined : next)
     .join('\n')
     .trim();
 }
@@ -1176,8 +1185,9 @@ async function matchingPublishedArtifact(state, triagePath) {
 function sectionFindingCount(content, heading, sectionLevel, findingLevel) {
   const body = extractSection(content, heading, sectionLevel);
   if (!body) return 0;
-  const marker = '#'.repeat(findingLevel);
-  return (body.match(new RegExp(`^${marker}\\s+`, 'gm')) || []).length;
+  // The body keeps its fenced blocks for history, so count prose headings only.
+  const marker = new RegExp(`^${'#'.repeat(findingLevel)}\\s+`);
+  return proseLines(body).filter((line) => marker.test(line)).length;
 }
 
 function validateDraft(result) {
