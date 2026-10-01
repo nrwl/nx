@@ -205,29 +205,49 @@ export function formatAffectedExplanation(
   // Touched tasks, grouped by the changed files their own inputs name.
   if (touchedAll.length) {
     const detailed = verbose || touchedAll.length <= 5;
-    const byFiles = new Map<string, string[]>();
+    // Files, then packages: a task touched by both is listed under each.
+    const byChange = new Map<string, { order: number; members: string[] }>();
+    const add = (key: string, order: number, name: string) => {
+      const group = byChange.get(key) ?? { order, members: [] };
+      group.members.push(name);
+      byChange.set(key, group);
+    };
+    const files = new Set<string>();
+    const packages = new Set<string>();
     for (const name of touchedAll) {
-      const key = describeChanged(changedIn(reasonsOf(name), moved));
-      byFiles.set(key, [...(byFiles.get(key) ?? []), name]);
+      const changed = changedIn(reasonsOf(name), moved);
+      const ofFiles = changed.filter((change) => !change.isPackage);
+      const ofPackages = changed.filter((change) => change.isPackage);
+      ofFiles.forEach((change) => files.add(change.name));
+      ofPackages.forEach((change) => packages.add(change.name));
+      if (ofFiles.length) add(describeChanged(ofFiles, 'file'), 0, name);
+      if (ofPackages.length)
+        add(describeChanged(ofPackages, 'package'), 1, name);
+      if (!changed.length) add('', 2, name);
     }
-    const groups = [...byFiles].sort(
-      ([a, x], [b, y]) => y.length - x.length || a.localeCompare(b)
-    );
-    const changes = [
-      ...new Map(
-        touchedAll
-          .flatMap((name) => changedIn(reasonsOf(name), moved))
-          .map((change) => [change.name, change])
-      ).values(),
-    ];
+    const groups = [...byChange]
+      .sort(
+        ([a, x], [b, y]) =>
+          x.order - y.order ||
+          y.members.length - x.members.length ||
+          a.localeCompare(b)
+      )
+      .map(([key, { members }]) => [key, members] as const);
     const touchedBy = (changed: string, members: string[]) =>
       changed
         ? `Changing ${changed} touches ${counted(members)}`
         : `${counted(members)} ${members.length === 1 ? 'is' : 'are'} touched with no changed file to name`;
+    const changing = [
+      files.size && `${files.size} ${files.size === 1 ? 'file' : 'files'}`,
+      packages.size &&
+        `${packages.size} ${packages.size === 1 ? 'package' : 'packages'}`,
+    ]
+      .filter(Boolean)
+      .join(' and ');
     const header =
       groups.length === 1
         ? touchedBy(groups[0][0], touchedAll)
-        : `Changing ${changes.length} ${noun(changes)} touches ${counted(touchedAll)}`;
+        : `Changing ${changing} touches ${counted(touchedAll)}`;
     lines.push(detailed ? `${header}:` : `${header}${hint}`);
     if (groups.length === 1) {
       list(touchedAll, '  ', detailed);
@@ -399,21 +419,11 @@ function changedIn(
 }
 
 /** "a", "a and b", or "a and N other files". */
-function describeChanged(changed: Changed[]): string {
+function describeChanged(changed: Changed[], noun: 'file' | 'package'): string {
   if (changed.length <= 2) {
     return changed.map((change) => change.name).join(' and ');
   }
-  const [first, ...rest] = changed;
-  return `${first.name} and ${rest.length} other ${noun(rest)}`;
-}
-
-/** What a list of changes is made of, pluralized. */
-function noun(changed: Changed[]): string {
-  const packages = changed.filter((change) => change.isPackage).length;
-  const one = changed.length === 1;
-  if (!packages) return one ? 'file' : 'files';
-  if (packages === changed.length) return one ? 'package' : 'packages';
-  return 'files and packages';
+  return `${changed[0].name} and ${changed.length - 1} other ${noun}s`;
 }
 
 /** A reason that names another entry rather than a change. */

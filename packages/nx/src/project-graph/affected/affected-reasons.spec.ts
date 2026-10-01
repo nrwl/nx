@@ -321,7 +321,7 @@ describe('formatAffectedExplanation', () => {
     expect(out).not.toContain("couldn't be narrowed");
   });
 
-  it('names the packages that moved, when Nx could', () => {
+  it('names the packages that moved, grouped after the files', () => {
     const out = formatAffectedExplanation(
       {
         affected: {
@@ -344,15 +344,16 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      'Changing 3 files and packages touches 2 requested tasks'
+      'Changing 1 file and 2 packages touches 2 requested tasks:\n\n' +
+        '  apps/app/main.ts -> 1 requested task:\n    app:e2e\n'
     );
     expect(out).toContain(
-      '  apps/app/main.ts and 2 other packages -> 1 requested task:'
+      '  npm:react and npm:scheduler -> 1 requested task:\n    app:e2e\n'
     );
+    expect(out).toContain('  npm:react -> 1 requested task:\n    app:build\n');
     expect(out).toContain(
       '    - hashes every external dependency, including npm:react and 1 other package, which moved'
     );
-    expect(out).toContain('  npm:react -> 1 requested task:');
     expect(out).not.toContain('pnpm-lock.yaml');
   });
 });
