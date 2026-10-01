@@ -779,6 +779,11 @@ export interface FileSetInput {
    * instead of the workspace file map.
    */
   includeIgnored?: boolean
+  /**
+   * Keep the matched files in the hash even when the task is hashed from
+   * its ultracache recording.
+   */
+  always?: boolean
 }
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
@@ -939,6 +944,11 @@ export interface InputsInput {
   input: string
   dependencies?: boolean
   projects?: string | Array<string>
+  /**
+   * Keep the files this input resolves to in the hash even when the task
+   * is hashed from its ultracache recording.
+   */
+  always?: boolean
 }
 
 export declare function installNxConsole(): Promise<boolean>
@@ -978,6 +988,11 @@ export interface JsonInput {
   json: string
   fields?: Array<string>
   excludeFields?: Array<string>
+  /**
+   * Keep the file in the hash even when the task is hashed from its
+   * ultracache recording.
+   */
+  always?: boolean
 }
 
 /**
