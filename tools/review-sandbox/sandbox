@@ -1656,13 +1656,15 @@ function cmdPrune(argv = []) {
           // `git gc` drops objects the deleted review refs were pinning. Both
           // only pay off once the trees holding links to them are gone, which
           // the row check above is what guarantees.
-          execIn(
+          const pruned = execIn(
             hostSb,
             `pnpm store prune 2>&1 | tail -2\n` +
               `git -C ${HOST_REPO} gc --prune=now -q 2>&1 | tail -2`,
             { dir: WORK_ROOT }
           );
-          hostNote += `pruned the store and shared repo in ${host}\n`;
+          if (pruned.status === 0)
+            hostNote += `pruned the store and shared repo in ${host}\n`;
+          else errors.push(`could not prune the store in ${host}`);
         }
       }
     }
