@@ -34,7 +34,6 @@ export class NotADirectoryError extends Error {
   }
 }
 
-// The folders from the run folder down to `dir`, which must be inside it.
 function runFolderSegments(runDir: string, dir: string): string[] {
   const rel = relative(runDir, dir);
   if (rel === '') return [];
