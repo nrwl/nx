@@ -15,6 +15,15 @@ describe('resolveLintOptions', () => {
     expect(resolved.flags).toEqual(['--type-aware', '--threads', '2']);
   });
 
+  it('should not forward the CLI copies of its own options', () => {
+    const resolved = resolveLintOptions({
+      args: '--fix',
+      lintFilePatterns: ['libs/a/src'],
+      __unparsed__: ['--args=--fix', '--lintFilePatterns', 'libs/a/src'],
+    });
+    expect(resolved.flags).toEqual(['--fix']);
+  });
+
   it('should keep quoted values and short flags intact in string args', () => {
     expect(
       resolveLintOptions({ args: '--config "configs/team oxlint.json" --fix' })

@@ -69,6 +69,14 @@ export function resolveLintOptions(
 
     if (name === 'verbose' || name === 'no-verbose') {
       continue;
+    } else if (
+      name &&
+      ['args', 'lint-file-patterns', 'nested-project-roots'].includes(
+        kebabCase(name)
+      )
+    ) {
+      // The CLI copy of an option destructured above: drop it and its value.
+      value();
     } else if (name === 'format' || flag === '-f' || flag.startsWith('-f=')) {
       resolved.format = assertSupportedFormat(value());
     } else if (name === 'silent') {
