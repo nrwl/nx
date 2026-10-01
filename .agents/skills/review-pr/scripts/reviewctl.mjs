@@ -851,15 +851,9 @@ async function cmdSandboxUp(args) {
     state.sandbox = null;
     await saveRun(state);
   }
-  const cachedImage =
-    run('docker', ['images', '-q', IMAGE], {
-      allowFailure: true,
-    }).stdout.trim() !== '';
   // Build unconditionally: an image from any older revision passes an existence
   // check identically, so skipping on a hit hides a stale toolchain or a store
   // that no longer matches the lockfile. A no-op build costs ~1.5s (measured).
-  // Only pre-check capacity when the image is absent, where the build is long.
-  if (!cachedImage) requireDockerCapacity();
   const build = run('bash', [BUILD_IMAGE], {
     allowFailure: true,
     timeout: 3600_000,
