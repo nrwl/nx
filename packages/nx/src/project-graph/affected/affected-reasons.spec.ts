@@ -3,6 +3,7 @@ import {
   formatAffectedExplanation,
   formatAffectedReason,
   isExplaining,
+  type AffectedExplanation,
   type AffectedReason,
 } from './affected-reasons';
 
@@ -57,26 +58,41 @@ describe('formatAffectedExplanation', () => {
   // Touched tasks, then the tasks reached through their outputs. The tasks
   // asked for are counted and listed first, not split into their own section.
   it('lays out what was touched, then what read its outputs', () => {
-    const out = formatAffectedExplanation(
-      {
-        affected: {
-          'ui:build': [
-            {
-              kind: 'input-file',
-              file: 'libs/ui/src/index.ts',
-              pattern: 'libs/ui/**/*',
-            },
-          ],
-          'app:build': [{ kind: 'dependent-output', producer: 'ui:build' }],
-          'admin:build': [{ kind: 'dependent-output', producer: 'ui:build' }],
-        },
-        upstream: {},
-        touched: ['ui:build'],
-        requested: { targets: ['build'], total: 12 },
+    const explanation: AffectedExplanation = {
+      affected: {
+        'ui:build': [
+          {
+            kind: 'input-file',
+            file: 'libs/ui/src/index.ts',
+            pattern: 'libs/ui/**/*',
+          },
+        ],
+        'app:build': [{ kind: 'dependent-output', producer: 'ui:build' }],
+        'admin:build': [{ kind: 'dependent-output', producer: 'ui:build' }],
       },
-      'Affected tasks'
+      upstream: {},
+      touched: ['ui:build'],
+      requested: { targets: ['build'], total: 12 },
+    };
+    expect(formatAffectedExplanation(explanation, 'Affected tasks')).toBe(
+      [
+        '3 out of 12 build tasks are affected:',
+        '',
+        'Changing 1 file touches 1 build task. Pass --verbose to list each with its reasons.',
+        '',
+        '  libs/ui/src/index.ts:',
+        '    - ui:build',
+        '',
+        'Touching those tasks changes outputs read by 2 build tasks. Pass --verbose to list each with its reasons.',
+        '  - admin:build',
+        '  - app:build',
+      ].join('\n')
     );
-    expect(out).toBe(
+    expect(
+      formatAffectedExplanation(explanation, 'Affected tasks', {
+        verbose: true,
+      })
+    ).toBe(
       [
         '3 out of 12 build tasks are affected:',
         '',
@@ -132,7 +148,10 @@ describe('formatAffectedExplanation', () => {
         touched: ['app:build'],
       },
       'Affected tasks',
-      { styleTask: (id, asked) => (asked ? `**${id}**` : `_${id}_`) }
+      {
+        verbose: true,
+        styleTask: (id, asked) => (asked ? `**${id}**` : `_${id}_`),
+      }
     );
     expect(out).toContain('  **app:e2e**\n');
     expect(out).toContain('  _app:build_\n');
@@ -149,7 +168,8 @@ describe('formatAffectedExplanation', () => {
         touched: ['a:test', 'b:test'],
         requested: { targets: ['test'], total: 2 },
       },
-      'Affected tasks'
+      'Affected tasks',
+      { verbose: true }
     );
     expect(out).toContain(
       'Changing 2 files touches 2 test tasks:\n\n  a.ts:\n    a:test\n'
@@ -168,7 +188,8 @@ describe('formatAffectedExplanation', () => {
         upstream: {},
         touched: ['a:test'],
       },
-      'Affected tasks'
+      'Affected tasks',
+      { verbose: true }
     );
     expect(out).toContain(
       'Changing 3 files touches 1 requested task:\n\n  a.ts and 2 other files:'
@@ -182,7 +203,8 @@ describe('formatAffectedExplanation', () => {
         upstream: {},
         touched: ['b:e2e'],
       },
-      'Affected tasks'
+      'Affected tasks',
+      { verbose: true }
     );
     expect(out).toContain(
       '1 requested task is touched with no changed file to name:\n  b:e2e\n    - its executor uses a custom hasher, so it is always selected'
@@ -241,7 +263,8 @@ describe('formatAffectedExplanation', () => {
         upstream: {},
         touched: ['ui:build'],
       },
-      'Affected tasks'
+      'Affected tasks',
+      { verbose: true }
     );
     expect(out).toContain(
       '    - libs/ui/a.ts and 4 other files match libs/ui/**/*'
@@ -266,7 +289,8 @@ describe('formatAffectedExplanation', () => {
         },
         touched: [],
       },
-      'Affected tasks'
+      'Affected tasks',
+      { verbose: true }
     );
     expect(out).toContain(
       '    - reads the outputs of web:build and 2 other tasks'
@@ -287,7 +311,8 @@ describe('formatAffectedExplanation', () => {
           upstream: {},
           touched: ['ui:build'],
         },
-        'Affected tasks'
+        'Affected tasks',
+        { verbose: true }
       );
     expect(explain(['a.ts'])).toMatch(
       /- libs\/ui\/a\.ts matches libs\/ui\/\*\*\/\*$/
@@ -317,7 +342,8 @@ describe('formatAffectedExplanation', () => {
         upstream: {},
         touched: ['app:e2e'],
       },
-      'Affected tasks'
+      'Affected tasks',
+      { verbose: true }
     );
     expect(out).toMatch(
       /- hashes every external dependency, and package.json and pnpm-lock.yaml change$/m
@@ -345,7 +371,8 @@ describe('formatAffectedExplanation', () => {
           'pnpm-lock.yaml': ['npm:react', 'npm:scheduler'],
         },
       },
-      'Affected tasks'
+      'Affected tasks',
+      { verbose: true }
     );
     expect(out).toBe(
       [
@@ -405,7 +432,8 @@ describe('formatAffectedExplanation', () => {
         touched: ['a:test', 'b:test', 'a:e2e-ci', 'a:build'],
         requested: { targets: ['e2e-ci', 'test'], total: 10 },
       },
-      'Affected tasks'
+      'Affected tasks',
+      { verbose: true }
     );
     expect(out).toMatch(/^3 out of 10 e2e-ci and test tasks are affected:/);
     expect(out).toContain(

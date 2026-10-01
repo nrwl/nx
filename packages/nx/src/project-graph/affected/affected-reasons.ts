@@ -216,8 +216,7 @@ export function formatAffectedExplanation(
       lines.push(`${indent}  - ${line}`);
     }
   };
-  // A small list, or --verbose, shows each task with its reasons; a large one
-  // names up to five.
+  // --verbose shows each task with its reasons; otherwise up to five names.
   const list = (group: string[], indent: string, detailed: boolean) => {
     const ordered = requestedFirst(group);
     if (detailed) {
@@ -259,7 +258,6 @@ export function formatAffectedExplanation(
   for (const { noun, groups } of kinds) {
     if (!groups.size) continue;
     const members = [...new Set([...groups.values()].flat())];
-    const detailed = verbose || members.length <= 5;
     const sorted = [...groups].sort(
       ([a, x], [b, y]) => y.length - x.length || a.localeCompare(b)
     );
@@ -273,29 +271,27 @@ export function formatAffectedExplanation(
     const header = `Changing ${changes.size} ${noun}${
       changes.size === 1 ? '' : 's'
     } touches ${counted(members)}`;
-    lines.push(detailed ? `${header}:` : `${header}${hint}`);
+    lines.push(verbose ? `${header}:` : `${header}${hint}`);
     for (const [changed, inGroup] of sorted) {
       lines.push('', `  ${changed}:`);
-      list(inGroup, '    ', detailed);
+      list(inGroup, '    ', verbose);
     }
     lines.push('');
   }
   if (unnamed.length) {
-    const detailed = verbose || unnamed.length <= 5;
     const header = `${counted(unnamed)} ${
       unnamed.length === 1 ? 'is' : 'are'
     } touched with no changed file to name`;
-    lines.push(detailed ? `${header}:` : `${header}${hint}`);
-    list(unnamed, '  ', detailed);
+    lines.push(verbose ? `${header}:` : `${header}${hint}`);
+    list(unnamed, '  ', verbose);
     lines.push('');
   }
 
   // Tasks reached only through outputs the touched ones changed.
   if (reachedAll.length) {
-    const detailed = verbose || reachedAll.length <= 5;
     const header = `Touching those tasks changes outputs read by ${counted(reachedAll)}`;
-    lines.push(detailed ? `${header}:` : `${header}${hint}`);
-    list(reachedAll, '  ', detailed);
+    lines.push(verbose ? `${header}:` : `${header}${hint}`);
+    list(reachedAll, '  ', verbose);
     lines.push('');
   }
 

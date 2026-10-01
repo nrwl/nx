@@ -268,17 +268,14 @@ NX_LEGACY_AFFECTED=false nx affected -t build --explain
 ```text
  NX   3 out of 12 build tasks are affected
 
-Changing 1 file touches 1 build task:
+Changing 1 file touches 1 build task. Pass --verbose to list each with its reasons.
 
   libs/ui/src/index.ts:
-    ui:build
-      - libs/ui/src/index.ts matches libs/ui/**/*
+    - ui:build
 
-Touching those tasks changes outputs read by 2 build tasks:
-  admin:build
-    - reads the outputs of ui:build
-  app:build
-    - reads the outputs of ui:build
+Touching those tasks changes outputs read by 2 build tasks. Pass --verbose to list each with its reasons.
+  - admin:build
+  - app:build
 ```
 
 The title says how many tasks of your targets the change affects.
@@ -289,8 +286,8 @@ The last section lists the tasks affected because they read the outputs of a tou
 
 Every section can include tasks you didn't ask for, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`, since they carry your change to the tasks you did ask for.
 Each heading counts your tasks apart from the others, and your tasks are listed first and in bold.
-A section with more than five tasks names up to five per group. Pass `--verbose` to list every task with its reasons.
-Each entry lists every reason that applies, so a task reached through two different producers reports both.
+Each group names up to five tasks. Pass `--verbose` to list every task with its reasons.
+Under `--verbose`, each task lists every reason that applies, so a task reached through two different producers reports both.
 When several changed files match one input, several packages moved, or a task reads several of the tasks above, they share one line that names the first and counts the rest. The JSON lists them all.
 To follow the chain step by step, look up the task named in a reason.
 
