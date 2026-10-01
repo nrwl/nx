@@ -6,9 +6,9 @@ import {
   closeDbConnection,
   connectToNxDb,
   HashPlanner,
-  IoSnapshotStore,
-  getIoSnapshotDeferredTaskIds,
-  getIoSnapshotReport,
+  UltracacheConfigurationStore,
+  getUltracacheDeferredTaskIds,
+  getUltracacheReport,
   TaskHasher,
   testOnlyTransferFileMap,
   transferProjectGraph,
@@ -17,7 +17,7 @@ import { withEnvironmentVariables } from '../../internal-testing-utils/with-envi
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { toRustProjectGraph } from '../transform-objects';
-import { getUltraCacheConfig } from '../../io-snapshots/overrides';
+import { getUltracacheSettings } from '../../ultracache/overrides';
 import { DependencyType } from '../../config/project-graph';
 
 let tempFs = new TempFs('task-planner');
@@ -1912,9 +1912,9 @@ describe('task planner', () => {
 
     const snapshotDbDir = join(
       tmpdir(),
-      `nx-planner-io-snapshots-${process.pid}-${Date.now()}`
+      `nx-planner-ultracache-${process.pid}-${Date.now()}`
     );
-    const snapshotDb = connectToNxDb(snapshotDbDir, 'io-snapshots');
+    const snapshotDb = connectToNxDb(snapshotDbDir, 'ultracache');
     afterAll(() => {
       closeDbConnection(snapshotDb);
       rmSync(snapshotDbDir, { recursive: true, force: true });
@@ -1931,7 +1931,7 @@ describe('task planner', () => {
       >
     ) {
       const commit = `c${setCount++}`.padEnd(40, 'c');
-      new IoSnapshotStore(snapshotDb).import({
+      new UltracacheConfigurationStore(snapshotDb).import({
         requestedCommit: commit,
         snapshotsJson: JSON.stringify(
           Object.fromEntries(
@@ -1946,7 +1946,7 @@ describe('task planner', () => {
           )
         ),
       });
-      return new IoSnapshotStore(snapshotDb).get(commit);
+      return new UltracacheConfigurationStore(snapshotDb).get(commit);
     }
 
     const PARENT_NEG = '!libs/parent/**/*.spec.ts';
@@ -2504,7 +2504,7 @@ describe('task planner', () => {
       expect(plan).not.toContainEqual(
         expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
       );
-      expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
+      expect(getUltracacheDeferredTaskIds(snapshots, taskGraph)).toEqual([
         'parent:build',
       ]);
     });
@@ -2514,9 +2514,9 @@ describe('task planner', () => {
       const withheld = snapshotsFor({
         'parent:build': { inputs: ['libs/./parent/*.gen'] },
       });
-      const report = getIoSnapshotReport(
+      const report = getUltracacheReport(
         withheld,
-        getUltraCacheConfig(taskGraph),
+        getUltracacheSettings(taskGraph),
         {
           customHasherTaskIds: ['child:build'],
         }
@@ -2526,7 +2526,7 @@ describe('task planner', () => {
         ['custom-hasher', 'child:build'],
         ['invalid-glob', 'parent:build'],
       ]);
-      expect(getIoSnapshotDeferredTaskIds(withheld, taskGraph)).toEqual([]);
+      expect(getUltracacheDeferredTaskIds(withheld, taskGraph)).toEqual([]);
 
       const plain = planner.getPlans(['parent:build'], taskGraph);
       for (const negation of ['!', '!libs/parent/[']) {
@@ -2534,7 +2534,7 @@ describe('task planner', () => {
           'parent:build': { inputs: ['libs/parent/filea.ts', negation] },
         });
         expect(
-          getIoSnapshotReport(negated, getUltraCacheConfig(taskGraph))
+          getUltracacheReport(negated, getUltracacheSettings(taskGraph))
             .diagnostics
         ).toContainEqual(
           expect.objectContaining({
@@ -2572,7 +2572,7 @@ describe('task planner', () => {
           planner.getPlans(['parent:build'], taskGraph, snapshots)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(snapshots, getUltraCacheConfig(taskGraph))
+          getUltracacheReport(snapshots, getUltracacheSettings(taskGraph))
             .diagnostics
         ).toContainEqual(
           expect.objectContaining({ reason, taskId: 'parent:build' })
@@ -2592,7 +2592,7 @@ describe('task planner', () => {
         expect.stringMatching(/^files:\[\*\*\/\*\.gen,/)
       );
       expect(
-        getIoSnapshotReport(snapshots, getUltraCacheConfig(taskGraph)).used
+        getUltracacheReport(snapshots, getUltracacheSettings(taskGraph)).used
       ).toContain('parent:build');
     });
 
@@ -2638,11 +2638,11 @@ describe('task planner', () => {
       const snapshots = snapshotsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
       });
-      expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
+      expect(getUltracacheDeferredTaskIds(snapshots, taskGraph)).toEqual([
         'parent:build',
       ]);
       expect(
-        getIoSnapshotReport(snapshots, getUltraCacheConfig(taskGraph)).used
+        getUltracacheReport(snapshots, getUltracacheSettings(taskGraph)).used
       ).toEqual(['parent:build']);
     });
 
@@ -2657,9 +2657,9 @@ describe('task planner', () => {
           planner.getPlans(['parent:build'], taskGraph, snapshots)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(
+          getUltracacheReport(
             snapshots,
-            getUltraCacheConfig(taskGraph)
+            getUltracacheSettings(taskGraph)
           ).diagnostics.find((d) => d.taskId === 'parent:build')
         ).toMatchObject({ reason: 'escapes-workspace', glob });
       }

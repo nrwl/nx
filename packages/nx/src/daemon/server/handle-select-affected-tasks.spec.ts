@@ -29,8 +29,12 @@ const planningContext = vi.hoisted(() => ({}));
 const planningContextFor = vi.hoisted(() => vi.fn(() => planningContext));
 vi.mock('./planning-context', () => ({ planningContextFor }));
 const snapshots = vi.hoisted(() => ({}));
-const getIoSnapshotsForVersion = vi.hoisted(() => vi.fn(() => snapshots));
-vi.mock('./io-snapshots-state', () => ({ getIoSnapshotsForVersion }));
+const getUltracacheConfigurationForVersion = vi.hoisted(() =>
+  vi.fn(() => snapshots)
+);
+vi.mock('./ultracache-configuration-state', () => ({
+  getUltracacheConfigurationForVersion,
+}));
 const selectAffectedTasks = vi.hoisted(() =>
   vi.fn(async () => state.selection)
 );
@@ -70,11 +74,14 @@ describe('handleSelectAffectedTasks', () => {
   // The run hashes with this version, so selection plans with it too.
   it('plans with the snapshot version the client sent', async () => {
     const version = { commit: 'abc', fetchedAt: 7 };
-    await handleSelectAffectedTasks({ ...request, ioSnapshots: version });
+    await handleSelectAffectedTasks({
+      ...request,
+      ultracacheConfiguration: version,
+    });
 
-    expect(getIoSnapshotsForVersion).toHaveBeenCalledWith(version);
+    expect(getUltracacheConfigurationForVersion).toHaveBeenCalledWith(version);
     expect(selectAffectedTasks.mock.calls[0][4]).toEqual({
-      ioSnapshots: snapshots,
+      ultracacheConfiguration: snapshots,
     });
   });
 

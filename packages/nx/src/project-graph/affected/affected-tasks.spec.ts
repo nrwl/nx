@@ -34,7 +34,7 @@ import { ProjectGraphError } from '../error-types';
 import type { ProjectGraph } from '../../config/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { pruneToSelectedTasks } from '../../tasks-runner/utils';
-import { connectToNxDb, IoSnapshotStore } from '../../native';
+import { connectToNxDb, UltracacheConfigurationStore } from '../../native';
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -398,7 +398,7 @@ describe('the run graph with --exclude-task-dependencies', () => {
 describe('selection with an I/O snapshot set', () => {
   let dir: string;
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'affected-io-snapshots-'));
+    dir = mkdtempSync(join(tmpdir(), 'affected-ultracache-'));
   });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
@@ -406,15 +406,15 @@ describe('selection with an I/O snapshot set', () => {
   // but never declared has to select it.
   it('selects a task through a file it read but did not declare', async () => {
     const commit = 'head'.padEnd(40, '0');
-    const db = connectToNxDb(dir, 'io-snapshots');
-    new IoSnapshotStore(db).import({
+    const db = connectToNxDb(dir, 'ultracache');
+    new UltracacheConfigurationStore(db).import({
       requestedCommit: commit,
       snapshotsJson: JSON.stringify({
         'lib:test': { commit, inputs: ['docs/README.md'], outputs: [] },
       }),
     });
-    const snapshots = new IoSnapshotStore(db).get(commit);
-    const select = (ioSnapshotOutcome?: any) =>
+    const snapshots = new UltracacheConfigurationStore(db).get(commit);
+    const select = (ultracacheConfigurationOutcome?: any) =>
       computeAffectedTasks({
         projectGraph: graph(),
         nxJson: {
@@ -424,7 +424,7 @@ describe('selection with an I/O snapshot set', () => {
         touchedFiles: [
           { file: 'docs/README.md', getChanges: () => [new WholeFileChange()] },
         ] as any,
-        ioSnapshotOutcome,
+        ultracacheConfigurationOutcome,
       });
 
     expect([...(await select()).affectedTaskIds]).toEqual([]);
@@ -432,7 +432,9 @@ describe('selection with an I/O snapshot set', () => {
     const withSnapshots = await select(outcome);
     expect([...withSnapshots.affectedTaskIds]).toEqual(['lib:test']);
     // The run hashes with the same set rather than loading its own.
-    expect(withSnapshots.taskSelection.ioSnapshotOutcome).toBe(outcome);
+    expect(withSnapshots.taskSelection.ultracacheConfigurationOutcome).toBe(
+      outcome
+    );
   });
 });
 
@@ -473,13 +475,16 @@ describe('computeAffectedTasks with the daemon on', () => {
       nxJson: {} as any,
       targets: ['test'],
       touchedFiles: [],
-      ioSnapshotOutcome: outcome,
+      ultracacheConfigurationOutcome: outcome,
     });
 
     const [request] = daemon.selectAffectedTasks.mock.calls[0];
-    expect(request.ioSnapshots).toEqual({ commit: 'abc', fetchedAt: 7 });
+    expect(request.ultracacheConfiguration).toEqual({
+      commit: 'abc',
+      fetchedAt: 7,
+    });
     expect(JSON.parse(JSON.stringify(request))).toEqual(request);
-    expect(result.taskSelection.ioSnapshotOutcome).toBe(outcome);
+    expect(result.taskSelection.ultracacheConfigurationOutcome).toBe(outcome);
   });
 
   it('asks the daemon to select, sending the request as plain data', async () => {

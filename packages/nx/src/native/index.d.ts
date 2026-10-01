@@ -102,8 +102,8 @@ export declare class HashPlanner {
    * `options` carries the task ids decided in JS, where executors and
    * target configuration are resolved.
    */
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, options?: IoSnapshotEligibilityOptions | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: UltracacheConfiguration | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): Record<string, string[]>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: UltracacheConfiguration | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -133,9 +133,9 @@ export declare class ImportResult {
  * them per task as they are asked for and remembers them, so it costs the
  * tasks it plans rather than the workspace's whole set.
  */
-export declare class IoSnapshots {
+export declare class UltracacheConfiguration {
   get commit(): string
-  get resolution(): IoSnapshotResolution
+  get resolution(): UltracacheConfigurationResolution
 }
 
 /**
@@ -144,24 +144,24 @@ export declare class IoSnapshots {
  * while a newer one is imported. Failures throw with a `code` JS maps to a
  * skip reason: `STORE_UNAVAILABLE`, `INVALID_RESPONSE` or `WRITE_FAILED`.
  */
-export declare class IoSnapshotStore {
+export declare class UltracacheConfigurationStore {
   constructor(db: ExternalObject<NxDbConnection>)
   /**
    * Stores the set the Nx Cloud client read for `requested_commit` as a new
    * version, and returns it with every entry in hand.
    */
-  import(options: IoSnapshotImportOptions): IoSnapshots
+  import(options: UltracacheConfigurationImportOptions): UltracacheConfiguration
   /**
    * The newest stored set for `commit`, without touching the network;
    * `null` when none is stored, its row cannot be read, or it was fetched
    * more than `max_age_ms` ago. Reads only the version's summary row.
    */
-  get(commit: string, maxAgeMs?: number | undefined | null): IoSnapshots | null
+  get(commit: string, maxAgeMs?: number | undefined | null): UltracacheConfiguration | null
   /**
    * Exactly the version of `commit` fetched at `fetched_at`; `null` when it
    * is not stored or its row cannot be read.
    */
-  getVersion(commit: string, fetchedAt: number): IoSnapshots | null
+  getVersion(commit: string, fetchedAt: number): UltracacheConfiguration | null
 }
 
 export declare class NxCache {
@@ -719,10 +719,10 @@ export declare function getHardcodedIgnorePatterns(): Array<string>
  * Opted-out and custom-hasher tasks are not excluded: deferring a task that
  * ends up hashed natively only delays its hash, it never changes it.
  */
-export declare function getIoSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
+export declare function getUltracacheDeferredTaskIds(snapshots: UltracacheConfiguration, taskGraph: TaskGraph): Array<string>
 
 /** The eligibility report, for the run summary. */
-export declare function getIoSnapshotReport(snapshots: IoSnapshots, tasks: Record<string, TaskUltracacheConfiguration | null>, options?: IoSnapshotEligibilityOptions | undefined | null): IoSnapshotReport
+export declare function getUltracacheReport(snapshots: UltracacheConfiguration, tasks: Record<string, TaskUltracacheSettings | null>, options?: UltracacheEligibilityOptions | undefined | null): UltracacheReport
 
 /**
  * If `workspace_root` is inside a git worktree, returns the main repo root.
@@ -828,7 +828,7 @@ export interface InvocationRecord {
  * Why a task (or the whole run) hashes natively; `reason` is rendered by the
  * run summary.
  */
-export interface IoSnapshotDiagnostic {
+export interface UltracacheDiagnostic {
   reason: string
   taskId?: string
   glob?: string
@@ -836,27 +836,27 @@ export interface IoSnapshotDiagnostic {
 }
 
 /** What JS knows about a run's tasks that the eligibility walk needs. */
-export interface IoSnapshotEligibilityOptions {
+export interface UltracacheEligibilityOptions {
   /** Tasks whose executor ships a custom hasher. */
   customHasherTaskIds?: Array<string>
 }
 
 /** The snapshot set the Nx Cloud client read for HEAD, as JS hands it over. */
-export interface IoSnapshotImportOptions {
+export interface UltracacheConfigurationImportOptions {
   requestedCommit: string
   /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
   snapshotsJson: string
 }
 
-export interface IoSnapshotReport {
+export interface UltracacheReport {
   /** Task ids hashed from their snapshot. */
   used: Array<string>
-  diagnostics: Array<IoSnapshotDiagnostic>
-  resolution: IoSnapshotResolution
+  diagnostics: Array<UltracacheDiagnostic>
+  resolution: UltracacheConfigurationResolution
 }
 
 /** What was resolved for a commit; stored beside its entries. */
-export interface IoSnapshotResolution {
+export interface UltracacheConfigurationResolution {
   requestedCommit: string
   fetchedAt: number
   tasks: number
@@ -1127,7 +1127,7 @@ export interface Task {
   /** This denotes if the task runs continuously */
   continuous?: boolean
   /** The target's ultracache configuration, if declared */
-  ultracache?: TaskUltracacheConfiguration
+  ultracache?: TaskUltracacheSettings
 }
 
 /** Graph of Tasks to be executed */
@@ -1197,7 +1197,7 @@ export interface TaskTarget {
 }
 
 /** Ultracache configuration of a task's target */
-export interface TaskUltracacheConfiguration {
+export interface TaskUltracacheSettings {
   /** How this target's tasks participate. Defaults to `on`. */
   mode?: 'on' | 'warn' | 'error' | 'off'
   /**

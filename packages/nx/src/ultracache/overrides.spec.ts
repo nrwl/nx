@@ -12,8 +12,12 @@ vi.mock('../tasks-runner/utils', () => ({
   })),
 }));
 
-import { closeDbConnection, connectToNxDb, IoSnapshotStore } from '../native';
-import { buildIoSnapshotOverrides } from './overrides';
+import {
+  closeDbConnection,
+  connectToNxDb,
+  UltracacheConfigurationStore,
+} from '../native';
+import { buildUltracacheOverrides } from './overrides';
 
 function node(name: string, root: string, targets: Record<string, any>) {
   return { name, type: 'lib' as const, data: { root, targets } };
@@ -71,18 +75,18 @@ function graph(...ids: string[]): TaskGraph {
 }
 
 function writeSet(snapshots: Record<string, unknown>) {
-  return new IoSnapshotStore(snapshotDb).import({
+  return new UltracacheConfigurationStore(snapshotDb).import({
     requestedCommit: HEAD,
     snapshotsJson: JSON.stringify(snapshots),
   });
 }
 
-describe('buildIoSnapshotOverrides', () => {
+describe('buildUltracacheOverrides', () => {
   let tempFs: TempFs;
 
   beforeEach(() => {
-    tempFs = new TempFs('io-snapshot-overrides');
-    snapshotDb = connectToNxDb(join(tempFs.tempDir, 'db'), 'io-snapshots');
+    tempFs = new TempFs('ultracache-overrides');
+    snapshotDb = connectToNxDb(join(tempFs.tempDir, 'db'), 'ultracache');
   });
 
   afterEach(() => {
@@ -99,7 +103,7 @@ describe('buildIoSnapshotOverrides', () => {
       },
       'root:build': { commit: HEAD, inputs: [], outputs: [] },
     });
-    const result = buildIoSnapshotOverrides(
+    const result = buildUltracacheOverrides(
       projectGraph,
       graph('web:build', 'ui:build', 'root:build'),
       set
@@ -120,7 +124,7 @@ describe('buildIoSnapshotOverrides', () => {
         outputs: [],
       },
     });
-    const result = buildIoSnapshotOverrides(
+    const result = buildUltracacheOverrides(
       projectGraph,
       graph('web:lint', 'web:custom', 'ui:build'),
       set

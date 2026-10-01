@@ -1,4 +1,4 @@
-import type { JsonInput, TaskUltracacheConfiguration } from '../native';
+import type { JsonInput, TaskUltracacheSettings } from '../native';
 import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
@@ -188,8 +188,7 @@ export type Spreadable<T> = T & { '...'?: true };
  * is why it is shared with the native task definition. Authoring additionally
  * permits `'...'`, which target merging resolves away.
  */
-export type TargetUltracacheConfiguration =
-  Spreadable<TaskUltracacheConfiguration>;
+export type TargetUltracacheSettings = Spreadable<TaskUltracacheSettings>;
 
 export interface TargetDependencyConfig {
   /**
@@ -293,7 +292,7 @@ export interface TargetConfiguration<T = any> {
   /**
    * Configures ultracache for tasks of this target. Nx Cloud only.
    */
-  ultracache?: TargetUltracacheConfiguration;
+  ultracache?: TargetUltracacheSettings;
 
   /**
    * Metadata about the target

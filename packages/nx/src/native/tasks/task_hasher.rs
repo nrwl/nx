@@ -98,7 +98,7 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
-            HashInstruction::IoSnapshot(_)
+            HashInstruction::UltracacheConfiguration(_)
             | HashInstruction::ProjectConfiguration(_)
             | HashInstruction::Cwd(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
@@ -599,7 +599,7 @@ impl TaskHasher {
                 | HashInstruction::External(_)
                 | HashInstruction::AllExternalDependencies
                 | HashInstruction::JsonFileSet(_)
-                | HashInstruction::IoSnapshot(_) => Some(OnceCell::new()),
+                | HashInstruction::UltracacheConfiguration(_) => Some(OnceCell::new()),
             })
             .collect();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
@@ -959,7 +959,7 @@ impl TaskHasher {
                 };
                 (hashed_external, inputs)
             }
-            HashInstruction::IoSnapshot(_) => {
+            HashInstruction::UltracacheConfiguration(_) => {
                 let inputs = if collect_inputs {
                     instruction.into()
                 } else {

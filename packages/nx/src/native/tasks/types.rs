@@ -39,7 +39,7 @@ pub struct Task {
     /// This denotes if the task runs continuously
     pub continuous: Option<bool>,
     /// The target's ultracache configuration, if declared
-    pub ultracache: Option<TaskUltracacheConfiguration>,
+    pub ultracache: Option<TaskUltracacheSettings>,
 }
 
 /// How a target's tasks participate in ultracache. Nx Cloud only: nothing in
@@ -65,7 +65,7 @@ pub enum UltracacheMode {
 /// Ultracache configuration of a task's target
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
-pub struct TaskUltracacheConfiguration {
+pub struct TaskUltracacheSettings {
     /// How this target's tasks participate. Defaults to `on`.
     #[napi(ts_type = "'on' | 'warn' | 'error' | 'off'")]
     pub mode: Option<UltracacheMode>,
@@ -214,7 +214,7 @@ pub enum HashInstruction {
     /// Digest of the I/O snapshot entry a task's plan was built from, so its
     /// hash moves when its own observations do. Hashed as the text `Display`
     /// renders, which also keeps it from colliding with a native key.
-    IoSnapshot(String),
+    UltracacheConfiguration(String),
 }
 
 /// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
@@ -397,7 +397,7 @@ impl fmt::Display for HashInstruction {
                     format!("{task_output}:{dep_outputs}")
                 }
                 HashInstruction::External(external) => external.to_string(),
-                HashInstruction::IoSnapshot(digest) => {
+                HashInstruction::UltracacheConfiguration(digest) => {
                     format!("io-snapshot:{digest}")
                 }
                 HashInstruction::ProjectConfiguration(project_name) => {
@@ -456,9 +456,9 @@ mod tests {
     #[test]
     fn the_snapshot_digest_renders_with_its_prefix_and_interns_by_value() {
         let pool = InstructionPool::new();
-        let a = pool.intern(HashInstruction::IoSnapshot("abc".into()));
-        let b = pool.intern(HashInstruction::IoSnapshot("abc".into()));
-        let c = pool.intern(HashInstruction::IoSnapshot("def".into()));
+        let a = pool.intern(HashInstruction::UltracacheConfiguration("abc".into()));
+        let b = pool.intern(HashInstruction::UltracacheConfiguration("abc".into()));
+        let c = pool.intern(HashInstruction::UltracacheConfiguration("def".into()));
         assert_eq!(a, b);
         assert_ne!(a, c);
         assert_eq!(&*pool.key(a), "io-snapshot:abc");

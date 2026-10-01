@@ -8,8 +8,11 @@ use rusqlite::params;
 use rusqlite::types::Value;
 use tracing::debug;
 
-use super::set::{ImportedSet, TaskIoSnapshot};
-use super::{IoSnapshotImportOptions, IoSnapshotResolution, IoSnapshots};
+use super::set::{ImportedSet, UltracacheTaskConfiguration};
+use super::{
+    UltracacheConfiguration, UltracacheConfigurationImportOptions,
+    UltracacheConfigurationResolution,
+};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::time::current_timestamp_millis;
 
@@ -19,12 +22,12 @@ use crate::native::utils::time::current_timestamp_millis;
 /// skip reason: `STORE_UNAVAILABLE`, `INVALID_RESPONSE` or `WRITE_FAILED`.
 #[napi]
 #[derive(Clone)]
-pub struct IoSnapshotStore {
+pub struct UltracacheConfigurationStore {
     db: Db,
 }
 
 #[napi]
-impl IoSnapshotStore {
+impl UltracacheConfigurationStore {
     #[napi(constructor)]
     pub fn new(
         #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<Db>,
@@ -42,9 +45,9 @@ impl IoSnapshotStore {
     #[napi(js_name = "import")]
     pub fn import_set(
         &self,
-        options: IoSnapshotImportOptions,
-    ) -> napi::Result<IoSnapshots, String> {
-        let snapshots: BTreeMap<String, TaskIoSnapshot> =
+        options: UltracacheConfigurationImportOptions,
+    ) -> napi::Result<UltracacheConfiguration, String> {
+        let snapshots: BTreeMap<String, UltracacheTaskConfiguration> =
             serde_json::from_str(&options.snapshots_json).map_err(|err| {
                 napi::Error::new(
                     "INVALID_RESPONSE".to_string(),
@@ -63,35 +66,47 @@ impl IoSnapshotStore {
             .into_iter()
             .map(|(id, entry)| (id, Some(Arc::new(entry))))
             .collect();
-        Ok(IoSnapshots::new(resolution, self.clone(), entries))
+        Ok(UltracacheConfiguration::new(
+            resolution,
+            self.clone(),
+            entries,
+        ))
     }
 
     /// The newest stored set for `commit`, without touching the network;
     /// `null` when none is stored, its row cannot be read, or it was fetched
     /// more than `max_age_ms` ago. Reads only the version's summary row.
     #[napi]
-    pub fn get(&self, commit: String, max_age_ms: Option<i64>) -> Option<IoSnapshots> {
+    pub fn get(&self, commit: String, max_age_ms: Option<i64>) -> Option<UltracacheConfiguration> {
         let resolution = readable(&commit, self.read_resolution(&commit, None))?;
         if max_age_ms.is_some_and(|max| current_timestamp_millis() - resolution.fetched_at > max) {
             return None;
         }
-        Some(IoSnapshots::new(resolution, self.clone(), HashMap::new()))
+        Some(UltracacheConfiguration::new(
+            resolution,
+            self.clone(),
+            HashMap::new(),
+        ))
     }
 
     /// Exactly the version of `commit` fetched at `fetched_at`; `null` when it
     /// is not stored or its row cannot be read.
     #[napi]
-    pub fn get_version(&self, commit: String, fetched_at: i64) -> Option<IoSnapshots> {
+    pub fn get_version(&self, commit: String, fetched_at: i64) -> Option<UltracacheConfiguration> {
         let resolution = readable(&commit, self.read_resolution(&commit, Some(fetched_at)))?;
-        Some(IoSnapshots::new(resolution, self.clone(), HashMap::new()))
+        Some(UltracacheConfiguration::new(
+            resolution,
+            self.clone(),
+            HashMap::new(),
+        ))
     }
 }
 
 /// An unreadable row reads as nothing stored.
 fn readable(
     commit: &str,
-    read: Result<Option<IoSnapshotResolution>>,
-) -> Option<IoSnapshotResolution> {
+    read: Result<Option<UltracacheConfigurationResolution>>,
+) -> Option<UltracacheConfigurationResolution> {
     read.unwrap_or_else(|err| {
         debug!("io snapshots: the stored set for {commit} is unreadable: {err}");
         None
@@ -119,7 +134,7 @@ CREATE TABLE IF NOT EXISTS io_snapshot_entries (
 ";
 
 /// The SQL behind the store; not exposed to JS.
-impl IoSnapshotStore {
+impl UltracacheConfigurationStore {
     /// Adds the set as a version of its commit. Versions are never pruned, so a
     /// pinned run can always read its own; `nx reset` clears them. One
     /// transaction, so a reader sees the previous set or the new one, never a gap.
@@ -160,14 +175,14 @@ impl IoSnapshotStore {
         &self,
         commit: &str,
         fetched_at: Option<i64>,
-    ) -> Result<Option<IoSnapshotResolution>> {
+    ) -> Result<Option<UltracacheConfigurationResolution>> {
         self.db.lock().unwrap().query_row(
             "SELECT fetched_at, tasks FROM io_snapshot_versions \
              WHERE commit_sha = ?1 AND (?2 IS NULL OR fetched_at = ?2) \
              ORDER BY fetched_at DESC LIMIT 1",
             params![commit, fetched_at],
             |row| {
-                Ok(IoSnapshotResolution {
+                Ok(UltracacheConfigurationResolution {
                     requested_commit: commit.to_string(),
                     fetched_at: row.get(0)?,
                     tasks: row.get(1)?,
@@ -183,7 +198,7 @@ impl IoSnapshotStore {
         commit: &str,
         fetched_at: i64,
         task_ids: &[&str],
-    ) -> Result<Vec<(String, TaskIoSnapshot)>> {
+    ) -> Result<Vec<(String, UltracacheTaskConfiguration)>> {
         let ids = Rc::new(
             task_ids
                 .iter()
@@ -211,15 +226,18 @@ mod tests {
     use super::*;
     use crate::native::db::initialize::initialize_db;
 
-    fn temp_store() -> (tempfile::TempDir, IoSnapshotStore) {
+    fn temp_store() -> (tempfile::TempDir, UltracacheConfigurationStore) {
         let dir = tempfile::tempdir().unwrap();
         let conn = initialize_db(&dir.path().join("test.db")).unwrap();
         let db = External::new(Arc::new(Mutex::new(conn)));
-        (dir, IoSnapshotStore::new(&db).unwrap())
+        (dir, UltracacheConfigurationStore::new(&db).unwrap())
     }
 
-    fn import(store: &IoSnapshotStore, json: &str) -> napi::Result<IoSnapshots, String> {
-        store.import_set(IoSnapshotImportOptions {
+    fn import(
+        store: &UltracacheConfigurationStore,
+        json: &str,
+    ) -> napi::Result<UltracacheConfiguration, String> {
+        store.import_set(UltracacheConfigurationImportOptions {
             requested_commit: "head".into(),
             snapshots_json: json.into(),
         })
@@ -315,17 +333,20 @@ mod tests {
         assert!(store.get("head".into(), None).is_none());
     }
 
-    fn resolution_of(db: &IoSnapshotStore, commit: &str) -> Option<IoSnapshotResolution> {
+    fn resolution_of(
+        db: &UltracacheConfigurationStore,
+        commit: &str,
+    ) -> Option<UltracacheConfigurationResolution> {
         db.read_resolution(commit, None).unwrap()
     }
 
     fn imported(commit: &str, fetched_at: i64, tasks: &[&str]) -> ImportedSet {
-        let snapshots: BTreeMap<String, TaskIoSnapshot> = tasks
+        let snapshots: BTreeMap<String, UltracacheTaskConfiguration> = tasks
             .iter()
             .map(|id| {
                 (
                     id.to_string(),
-                    TaskIoSnapshot {
+                    UltracacheTaskConfiguration {
                         commit: commit.into(),
                         inputs: vec![format!("libs/{id}/a.ts"), "b.ts".into()],
                     },

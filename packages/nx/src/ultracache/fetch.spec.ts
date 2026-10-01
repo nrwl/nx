@@ -1,8 +1,8 @@
-import { fetchIoSnapshots } from './fetch';
+import { fetchUltracacheConfiguration } from './fetch';
 
 const cloud = vi.hoisted(() => ({
   verifyOrUpdateNxCloudClient: vi.fn(),
-  readIoSnapshots: vi.fn(),
+  readUltracacheConfiguration: vi.fn(),
 }));
 
 vi.mock('../nx-cloud/update-manager', () => ({
@@ -12,7 +12,7 @@ vi.mock('../nx-cloud/resolution-helpers', () => ({
   findAncestorNodeModules: () => [],
 }));
 
-describe('fetchIoSnapshots', () => {
+describe('fetchUltracacheConfiguration', () => {
   const withClient = (client: object) =>
     cloud.verifyOrUpdateNxCloudClient.mockResolvedValue({
       nxCloudClient: { configureLightClientRequire: () => () => {}, ...client },
@@ -20,14 +20,18 @@ describe('fetchIoSnapshots', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    withClient({ readIoSnapshots: cloud.readIoSnapshots });
+    withClient({
+      readUltracacheConfiguration: cloud.readUltracacheConfiguration,
+    });
   });
 
   it('reads with the run options and returns what Nx Cloud sent', async () => {
     const result = { snapshots: {} };
-    cloud.readIoSnapshots.mockResolvedValue(result);
-    expect(await fetchIoSnapshots({ accessToken: 't' })).toBe(result);
-    expect(cloud.readIoSnapshots).toHaveBeenCalledWith(
+    cloud.readUltracacheConfiguration.mockResolvedValue(result);
+    expect(await fetchUltracacheConfiguration({ accessToken: 't' })).toBe(
+      result
+    );
+    expect(cloud.readUltracacheConfiguration).toHaveBeenCalledWith(
       expect.objectContaining({ nxCloudOptions: { accessToken: 't' } })
     );
   });
@@ -36,14 +40,14 @@ describe('fetchIoSnapshots', () => {
     const offline = Object.assign(new Error('getaddrinfo'), {
       code: 'ENOTFOUND',
     });
-    cloud.readIoSnapshots.mockRejectedValue(offline);
-    await expect(fetchIoSnapshots({})).rejects.toBe(offline);
+    cloud.readUltracacheConfiguration.mockRejectedValue(offline);
+    await expect(fetchUltracacheConfiguration({})).rejects.toBe(offline);
   });
 
   it.each([
     [
       'no set',
-      () => cloud.readIoSnapshots.mockResolvedValue(null),
+      () => cloud.readUltracacheConfiguration.mockResolvedValue(null),
       'NO_SNAPSHOTS',
     ],
     [
@@ -66,6 +70,8 @@ describe('fetchIoSnapshots', () => {
     ],
   ])('throws a coded error for %s', async (_, arrange, code) => {
     arrange();
-    await expect(fetchIoSnapshots({})).rejects.toMatchObject({ code });
+    await expect(fetchUltracacheConfiguration({})).rejects.toMatchObject({
+      code,
+    });
   });
 });

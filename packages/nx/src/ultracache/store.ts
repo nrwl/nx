@@ -2,9 +2,9 @@ import { join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import {
   FileLock,
-  IoSnapshotStore,
+  UltracacheConfigurationStore,
   IS_WASM,
-  type IoSnapshots,
+  type UltracacheConfiguration,
 } from '../native';
 import {
   getDbConnection,
@@ -15,29 +15,32 @@ import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
-  ioSnapshotEnv,
-  isIoSnapshotFetchEnabled,
-  type IoSnapshotCloudOptions,
-  type IoSnapshotEnv,
+  ultracacheEnv,
+  isUltracacheConfigurationFetchEnabled,
+  type UltracacheCloudOptions,
+  type UltracacheEnv,
 } from './config';
-import { fetchIoSnapshots, type ReadIoSnapshotsResult } from './fetch';
+import {
+  fetchUltracacheConfiguration,
+  type ReadUltracacheConfigurationResult,
+} from './fetch';
 
 /** What resolving this run's snapshot set came to. Only a set that resolved carries one. */
-export type IoSnapshotOutcome =
-  | { status: 'fetched' | 'cached'; snapshots: IoSnapshots }
+export type UltracacheConfigurationOutcome =
+  | { status: 'fetched' | 'cached'; snapshots: UltracacheConfiguration }
   | { status: 'skipped'; reason: string; message: string };
 
-export function skippedIoSnapshots(
+export function skippedUltracacheConfiguration(
   reason: string,
   message: string
-): IoSnapshotOutcome {
+): UltracacheConfigurationOutcome {
   return { status: 'skipped', reason, message };
 }
 
 /** The set an outcome resolved to, if any. */
 export function snapshotsOf(
-  outcome: IoSnapshotOutcome | null
-): IoSnapshots | undefined {
+  outcome: UltracacheConfigurationOutcome | null
+): UltracacheConfiguration | undefined {
   return outcome && outcome.status !== 'skipped'
     ? outcome.snapshots
     : undefined;
@@ -58,8 +61,8 @@ const WARNED_REASONS = new Set([
 ]);
 
 /** The snapshot store in this process's workspace database. */
-export function getIoSnapshotStore(): IoSnapshotStore {
-  return new IoSnapshotStore(getDbConnection());
+export function getUltracacheConfigurationStore(): UltracacheConfigurationStore {
+  return new UltracacheConfigurationStore(getDbConnection());
 }
 
 /**
@@ -67,26 +70,26 @@ export function getIoSnapshotStore(): IoSnapshotStore {
  * handle, for `runDiscreteTasks` and `runContinuousTasks`. Exposed to the
  * client through `nx/nx-cloud-internals`. Throws with the store's `code`.
  */
-export function importIoSnapshots(
+export function importUltracacheConfiguration(
   requestedCommit: string,
-  snapshots: ReadIoSnapshotsResult['snapshots']
-): IoSnapshots {
-  return getIoSnapshotStore().import({
+  snapshots: ReadUltracacheConfigurationResult['snapshots']
+): UltracacheConfiguration {
+  return getUltracacheConfigurationStore().import({
     requestedCommit,
     snapshotsJson: JSON.stringify(snapshots),
   });
 }
 
 /**
- * The stored version `importIoSnapshots` returned, reopened by its commit and
+ * The stored version `importUltracacheConfiguration` returned, reopened by its commit and
  * `resolution.fetchedAt`, so other processes hash from it without importing
  * it again. `null` when it isn't stored. Exposed through `nx/nx-cloud-internals`.
  */
-export function openIoSnapshots(
+export function openUltracacheConfiguration(
   commit: string,
   fetchedAt: number
-): IoSnapshots | null {
-  return getIoSnapshotStore().getVersion(commit, fetchedAt);
+): UltracacheConfiguration | null {
+  return getUltracacheConfigurationStore().getVersion(commit, fetchedAt);
 }
 
 /**
@@ -95,27 +98,27 @@ export function openIoSnapshots(
  * into the store. Returns `null` when snapshots are not enabled for this
  * workspace; never throws.
  */
-export async function loadIoSnapshotsForRun(
+export async function loadUltracacheConfigurationForRun(
   nxJson: NxJsonConfiguration,
-  runnerOptions: IoSnapshotCloudOptions,
-  env: IoSnapshotEnv = ioSnapshotEnv()
-): Promise<IoSnapshotOutcome | null> {
-  if (!isIoSnapshotFetchEnabled(nxJson, runnerOptions, env)) {
+  runnerOptions: UltracacheCloudOptions,
+  env: UltracacheEnv = ultracacheEnv()
+): Promise<UltracacheConfigurationOutcome | null> {
+  if (!isUltracacheConfigurationFetchEnabled(nxJson, runnerOptions, env)) {
     return null;
   }
   const head = getLatestCommitSha();
   if (!head) {
-    return reportIoSnapshotResolution(
-      skippedIoSnapshots('not-a-git-repo', 'Could not resolve HEAD')
+    return reportUltracacheConfigurationResolution(
+      skippedUltracacheConfiguration('not-a-git-repo', 'Could not resolve HEAD')
     );
   }
   try {
-    const store = getIoSnapshotStore();
+    const store = getUltracacheConfigurationStore();
     const cached = () => {
       const stored = store.get(head, STORED_SET_MAX_AGE_MS);
       return (
         stored &&
-        reportIoSnapshotResolution({
+        reportUltracacheConfigurationResolution({
           status: 'cached',
           snapshots: stored,
         })
@@ -124,13 +127,13 @@ export async function loadIoSnapshotsForRun(
     return (
       cached() ??
       // Processes that miss together fetch once: the rest find its set.
-      (await withIoSnapshotFetchLock(async () => {
+      (await withUltracacheConfigurationFetchLock(async () => {
         const stored = cached();
         if (stored) {
           return stored;
         }
-        const result = await fetchIoSnapshots(runnerOptions);
-        return reportIoSnapshotResolution({
+        const result = await fetchUltracacheConfiguration(runnerOptions);
+        return reportUltracacheConfigurationResolution({
           status: 'fetched',
           snapshots: store.import({
             requestedCommit: head,
@@ -142,19 +145,24 @@ export async function loadIoSnapshotsForRun(
   } catch (e) {
     // No fallback to an older set for this commit: it would hash from a
     // recording the run could not refresh, and CI can hash natively instead.
-    return reportIoSnapshotResolution(
-      skippedIoSnapshots(reasonFromError(e), errorMessage(e))
+    return reportUltracacheConfigurationResolution(
+      skippedUltracacheConfiguration(reasonFromError(e), errorMessage(e))
     );
   }
 }
 
 /** Runs `fetch` holding a lock beside the workspace database, across processes. */
-async function withIoSnapshotFetchLock<T>(fetch: () => Promise<T>): Promise<T> {
+async function withUltracacheConfigurationFetchLock<T>(
+  fetch: () => Promise<T>
+): Promise<T> {
   if (IS_WASM) {
     return fetch();
   }
   const lock = new FileLock(
-    join(sharedWorkspaceDataDirectory(workspaceRoot), 'io-snapshots.lock')
+    join(
+      sharedWorkspaceDataDirectory(workspaceRoot),
+      'ultracache-configuration.lock'
+    )
   );
   while (!lock.tryLock()) {
     await lock.wait();
@@ -188,9 +196,9 @@ function errorMessage(e: unknown): string {
 }
 
 /** Warns or logs what a resolution came to. */
-function reportIoSnapshotResolution(
-  outcome: IoSnapshotOutcome
-): IoSnapshotOutcome {
+function reportUltracacheConfigurationResolution(
+  outcome: UltracacheConfigurationOutcome
+): UltracacheConfigurationOutcome {
   if (outcome.status === 'skipped') {
     if (WARNED_REASONS.has(outcome.reason)) {
       output.warn({

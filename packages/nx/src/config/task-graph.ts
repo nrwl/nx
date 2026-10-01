@@ -8,5 +8,5 @@ export type {
   TaskGraph,
   TaskTarget,
   TaskHashDetails,
-  TaskUltracacheConfiguration,
+  TaskUltracacheSettings,
 } from '../native';

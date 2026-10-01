@@ -1,5 +1,5 @@
-import { formatIoSnapshotSummary } from './report';
-import type { IoSnapshotReport } from '../native';
+import { formatUltracacheSummary } from './report';
+import type { UltracacheReport } from '../native';
 
 const resolution = {
   requestedCommit: 'abc123',
@@ -7,9 +7,9 @@ const resolution = {
   tasks: 3,
 };
 
-describe('formatIoSnapshotSummary', () => {
+describe('formatUltracacheSummary', () => {
   it('counts used tasks and groups fallbacks by reason', () => {
-    const result: IoSnapshotReport = {
+    const result: UltracacheReport = {
       used: ['a:build', 'b:build'],
       diagnostics: [
         { reason: 'disabled', taskId: 'c:e2e' },
@@ -21,7 +21,7 @@ describe('formatIoSnapshotSummary', () => {
       ],
       resolution,
     };
-    const summary = formatIoSnapshotSummary(result, 'cached');
+    const summary = formatUltracacheSummary(result, 'cached');
     expect(summary.line).toBe(
       'I/O snapshots: 2 tasks hashed from snapshot, 6 tasks fell back (2 missing, 1 autofix-disabled, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
     );
@@ -39,7 +39,7 @@ describe('formatIoSnapshotSummary', () => {
 
   it('says none were used when the set could not be read', () => {
     expect(
-      formatIoSnapshotSummary(
+      formatUltracacheSummary(
         {
           used: [],
           diagnostics: [{ reason: 'unreadable-set', message: 'bad' }],

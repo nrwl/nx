@@ -5,11 +5,11 @@ import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
   type FileRevisions,
-  type IoSnapshots,
+  type UltracacheConfiguration,
 } from '../../native';
-import { ioSnapshotEligibilityOptions } from '../../io-snapshots/overrides';
-import { snapshotsOf, type IoSnapshotOutcome } from '../../io-snapshots/store';
-import type { IoSnapshotVersion } from '../../daemon/message-types/io-snapshot-version';
+import { ultracacheEligibilityOptions } from '../../ultracache/overrides';
+import { snapshotsOf, type UltracacheConfigurationOutcome } from '../../ultracache/store';
+import type { UltracacheConfigurationVersion } from '../../daemon/message-types/ultracache-configuration-version';
 import {
   createTaskGraph,
   createTaskGraphWithDependencyOverrides,
@@ -85,7 +85,7 @@ export interface ComputeAffectedTasksOptions {
   exclude?: string[];
   packageJson?: any;
   /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
-  ioSnapshotOutcome?: IoSnapshotOutcome | null;
+  ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
   selectivelyHashTsConfig?: boolean;
 }
 
@@ -105,7 +105,7 @@ export interface AffectedTasksRequest {
   extraTargetDependencies: TargetDependencies;
   excludeTaskDependencies: boolean;
   exclude: string[];
-  ioSnapshots?: IoSnapshotVersion;
+  ultracacheConfiguration?: UltracacheConfigurationVersion;
   /** The runner's `selectivelyHashTsConfig`, which decides what the tsconfig hash reads. */
   selectivelyHashTsConfig?: boolean;
 }
@@ -132,11 +132,11 @@ export async function computeAffectedTasks(
     exclude: opts.exclude ?? [],
     selectivelyHashTsConfig: opts.selectivelyHashTsConfig,
   };
-  const ioSnapshots = snapshotsOf(opts.ioSnapshotOutcome ?? null);
-  if (ioSnapshots) {
-    request.ioSnapshots = {
-      commit: ioSnapshots.commit,
-      fetchedAt: ioSnapshots.resolution.fetchedAt,
+  const ultracacheConfiguration = snapshotsOf(opts.ultracacheConfigurationOutcome ?? null);
+  if (ultracacheConfiguration) {
+    request.ultracacheConfiguration = {
+      commit: ultracacheConfiguration.commit,
+      fetchedAt: ultracacheConfiguration.resolution.fetchedAt,
     };
   }
 
@@ -148,7 +148,7 @@ export async function computeAffectedTasks(
         affectedTaskIds: new Set(selection.affectedTaskIds),
         taskSelection: {
           ...selection.taskSelection,
-          ioSnapshotOutcome: opts.ioSnapshotOutcome,
+          ultracacheConfigurationOutcome: opts.ultracacheConfigurationOutcome,
         },
       };
     } catch (e) {
@@ -172,7 +172,7 @@ export async function computeAffectedTasks(
     {
       touchedFiles: opts.touchedFiles,
       packageJson: opts.packageJson,
-      ioSnapshots,
+      ultracacheConfiguration,
     }
   );
   return {
@@ -183,7 +183,7 @@ export async function computeAffectedTasks(
       ...selection.taskSelection,
       // The planner remembers what selection planned, so the run's hashing reuses it.
       planningContext,
-      ioSnapshotOutcome: opts.ioSnapshotOutcome,
+      ultracacheConfigurationOutcome: opts.ultracacheConfigurationOutcome,
     },
   };
 }
@@ -204,11 +204,11 @@ export async function selectAffectedTasks(
       request.fileChangeArgs as NxArgs
     ),
     packageJson,
-    ioSnapshots,
+    ultracacheConfiguration,
   }: {
     touchedFiles?: FileChange[];
     packageJson?: any;
-    ioSnapshots?: IoSnapshots;
+    ultracacheConfiguration?: UltracacheConfiguration;
   } = {}
 ): Promise<{
   affectedTaskIds: Set<string>;
@@ -246,12 +246,12 @@ export async function selectAffectedTasks(
       false
     );
   const taskIds = Object.keys(taskGraph.tasks);
-  const plans = ioSnapshots
+  const plans = ultracacheConfiguration
     ? planningContext.planner.getPlansReference(
         taskIds,
         taskGraph,
-        ioSnapshots,
-        ioSnapshotEligibilityOptions(projectGraph, taskGraph)
+        ultracacheConfiguration,
+        ultracacheEligibilityOptions(projectGraph, taskGraph)
       )
     : planningContext.planner.getPlansReference(taskIds, taskGraph);
 

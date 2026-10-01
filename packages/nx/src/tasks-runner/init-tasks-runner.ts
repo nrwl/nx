@@ -10,7 +10,7 @@ import { loadRootEnvFiles } from '../utils/dotenv';
 import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
 import { createTaskHasher } from '../hasher/create-task-hasher';
-import type { IoSnapshots } from '../native';
+import type { UltracacheConfiguration } from '../native';
 import type { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
@@ -23,7 +23,7 @@ async function createOrchestrator(
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   lifeCycle: LifeCycle,
-  ioSnapshots: IoSnapshots | undefined
+  ultracacheConfiguration: UltracacheConfiguration | undefined
 ) {
   loadRootEnvFiles();
 
@@ -59,7 +59,7 @@ async function createOrchestrator(
     }, {} as any),
   };
 
-  const hasher = createTaskHasher(projectGraph, nxJson, options, ioSnapshots);
+  const hasher = createTaskHasher(projectGraph, nxJson, options, ultracacheConfiguration);
 
   const nxArgs = {
     ...options,
@@ -105,8 +105,8 @@ export async function runDiscreteTasks(
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   lifeCycle: LifeCycle,
-  /** The set to hash from, e.g. from `importIoSnapshots`; omitted hashes natively. */
-  ioSnapshots?: IoSnapshots
+  /** The set to hash from, e.g. from `importUltracacheConfiguration`; omitted hashes natively. */
+  ultracacheConfiguration?: UltracacheConfiguration
 ): Promise<Array<Promise<TaskResult[]>>> {
   const orchestrator = await createOrchestrator(
     tasks,
@@ -114,7 +114,7 @@ export async function runDiscreteTasks(
     fullTaskGraph,
     nxJson,
     lifeCycle,
-    ioSnapshots
+    ultracacheConfiguration
   );
 
   let groupId = 0;
@@ -174,8 +174,8 @@ export async function runContinuousTasks(
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   lifeCycle: LifeCycle,
-  /** The set to hash from, e.g. from `importIoSnapshots`; omitted hashes natively. */
-  ioSnapshots?: IoSnapshots
+  /** The set to hash from, e.g. from `importUltracacheConfiguration`; omitted hashes natively. */
+  ultracacheConfiguration?: UltracacheConfiguration
 ) {
   const orchestrator = await createOrchestrator(
     tasks,
@@ -183,7 +183,7 @@ export async function runContinuousTasks(
     fullTaskGraph,
     nxJson,
     lifeCycle,
-    ioSnapshots
+    ultracacheConfiguration
   );
   const runningTasks = tasks.reduce(
     (current, task, index) => {

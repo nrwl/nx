@@ -1,7 +1,7 @@
 import {
-  importIoSnapshots,
-  loadIoSnapshotsForRun,
-  openIoSnapshots,
+  importUltracacheConfiguration,
+  loadUltracacheConfigurationForRun,
+  openUltracacheConfiguration,
 } from './store';
 
 const store = vi.hoisted(() => ({
@@ -9,9 +9,9 @@ const store = vi.hoisted(() => ({
   get: vi.fn(),
   getVersion: vi.fn(),
 }));
-const cloud = vi.hoisted(() => ({ fetchIoSnapshots: vi.fn() }));
+const cloud = vi.hoisted(() => ({ fetchUltracacheConfiguration: vi.fn() }));
 
-const IoSnapshotStore = vi.hoisted(() =>
+const UltracacheConfigurationStore = vi.hoisted(() =>
   vi.fn(function () {
     return store;
   })
@@ -22,13 +22,15 @@ const lock = vi.hoisted(() => ({
   unlock: vi.fn(),
 }));
 vi.mock('../native', () => ({
-  IoSnapshotStore,
+  UltracacheConfigurationStore,
   IS_WASM: false,
   FileLock: vi.fn(function () {
     return lock;
   }),
 }));
-vi.mock('./fetch', () => ({ fetchIoSnapshots: cloud.fetchIoSnapshots }));
+vi.mock('./fetch', () => ({
+  fetchUltracacheConfiguration: cloud.fetchUltracacheConfiguration,
+}));
 vi.mock('../utils/git-utils', () => ({ getLatestCommitSha: () => 'head' }));
 vi.mock('../utils/db-connection', () => ({
   getDbConnection: () => 'db',
@@ -41,7 +43,7 @@ const warn = vi.hoisted(() => vi.fn());
 vi.mock('../utils/output', () => ({ output: { warn } }));
 vi.mock('../utils/logger', () => ({ logger: { verbose: vi.fn() } }));
 
-describe('loadIoSnapshotsForRun', () => {
+describe('loadUltracacheConfigurationForRun', () => {
   afterEach(() => vi.unstubAllEnvs());
 
   const nxJson = {} as any;
@@ -68,7 +70,7 @@ describe('loadIoSnapshotsForRun', () => {
     store.get.mockReset();
     store.import.mockReset();
     store.get.mockReturnValue(null);
-    cloud.fetchIoSnapshots.mockResolvedValue({
+    cloud.fetchUltracacheConfiguration.mockResolvedValue({
       snapshots: {},
     });
   });
@@ -78,42 +80,46 @@ describe('loadIoSnapshotsForRun', () => {
   it('does nothing for a run that did not opt in', async () => {
     for (const NX_CLOUD_USE_ULTRACACHE of [undefined, 'false']) {
       expect(
-        await loadIoSnapshotsForRun(
+        await loadUltracacheConfigurationForRun(
           nxJson,
           {},
           optedIn({ NX_CLOUD_USE_ULTRACACHE })
         )
       ).toBeNull();
     }
-    expect(cloud.fetchIoSnapshots).not.toHaveBeenCalled();
+    expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
   });
 
   it('serves a stored set under an hour old without asking Nx Cloud', async () => {
     const set = stored();
     store.get.mockReturnValue(set);
-    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toEqual({
+    expect(
+      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+    ).toEqual({
       status: 'cached',
       snapshots: set,
     });
     expect(store.get).toHaveBeenCalledWith('head', 60 * 60 * 1000);
-    expect(cloud.fetchIoSnapshots).not.toHaveBeenCalled();
+    expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
   });
 
   it('imports what Nx Cloud read when no stored set is young enough', async () => {
     const snapshots = {
       'web:build': { commit: 'parent', inputs: ['apps/web/**'], outputs: [] },
     };
-    cloud.fetchIoSnapshots.mockResolvedValue({
+    cloud.fetchUltracacheConfiguration.mockResolvedValue({
       snapshots,
     });
     const set = stored();
     store.import.mockReturnValue(set);
-    const result = await loadIoSnapshotsForRun(
+    const result = await loadUltracacheConfigurationForRun(
       nxJson,
       { accessToken: 't' },
       optedIn()
     );
-    expect(cloud.fetchIoSnapshots).toHaveBeenCalledWith({ accessToken: 't' });
+    expect(cloud.fetchUltracacheConfiguration).toHaveBeenCalledWith({
+      accessToken: 't',
+    });
     expect(store.import).toHaveBeenCalledWith(
       expect.objectContaining({
         requestedCommit: 'head',
@@ -131,12 +137,16 @@ describe('loadIoSnapshotsForRun', () => {
     // Missed before the lock; the holder stored one before releasing it.
     store.get.mockReturnValueOnce(null).mockReturnValueOnce(set);
 
-    const outcome = await loadIoSnapshotsForRun(nxJson, {}, optedIn());
+    const outcome = await loadUltracacheConfigurationForRun(
+      nxJson,
+      {},
+      optedIn()
+    );
 
     expect(outcome).toEqual({ status: 'cached', snapshots: set });
     expect(lock.wait).toHaveBeenCalledTimes(1);
     expect(lock.unlock).toHaveBeenCalledTimes(1);
-    expect(cloud.fetchIoSnapshots).not.toHaveBeenCalled();
+    expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
   });
 
   it('hashes natively when the read fails, with the reason its code gives', async () => {
@@ -146,15 +156,23 @@ describe('loadIoSnapshotsForRun', () => {
       ['UNSUPPORTED_CLIENT', 'unsupported-client'],
       ['NO_CLOUD_CLIENT', 'no-cloud-client'],
     ]) {
-      cloud.fetchIoSnapshots.mockRejectedValueOnce(coded(code, 'x'));
-      expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toEqual({
+      cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+        coded(code, 'x')
+      );
+      expect(
+        await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+      ).toEqual({
         status: 'skipped',
         reason,
         message: 'x',
       });
     }
-    cloud.fetchIoSnapshots.mockRejectedValueOnce(new Error('no code'));
-    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+    cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+      new Error('no code')
+    );
+    expect(
+      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+    ).toMatchObject({
       reason: 'fetch-failed',
     });
   });
@@ -164,8 +182,12 @@ describe('loadIoSnapshotsForRun', () => {
     store.get.mockImplementation((_commit, maxAgeMs) =>
       maxAgeMs === undefined ? stored() : null
     );
-    cloud.fetchIoSnapshots.mockRejectedValueOnce(coded('ENOTFOUND', 'x'));
-    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toEqual({
+    cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+      coded('ENOTFOUND', 'x')
+    );
+    expect(
+      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+    ).toEqual({
       status: 'skipped',
       reason: 'offline',
       message: 'x',
@@ -179,47 +201,57 @@ describe('loadIoSnapshotsForRun', () => {
 
   // Only reasons that point at misconfiguration warn on every run.
   it('warns for an unauthorized read but not when Nx Cloud has no set', async () => {
-    cloud.fetchIoSnapshots.mockRejectedValueOnce(coded('NO_SNAPSHOTS'));
-    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+    cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+      coded('NO_SNAPSHOTS')
+    );
+    expect(
+      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+    ).toMatchObject({
       reason: 'no-snapshots',
     });
     expect(warn).not.toHaveBeenCalled();
 
-    cloud.fetchIoSnapshots.mockRejectedValueOnce(coded('UNAUTHORIZED'));
-    await loadIoSnapshotsForRun(nxJson, {}, optedIn());
+    cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+      coded('UNAUTHORIZED')
+    );
+    await loadUltracacheConfigurationForRun(nxJson, {}, optedIn());
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it('skips rather than throws when the store cannot be opened', async () => {
-    IoSnapshotStore.mockImplementationOnce(function () {
+    UltracacheConfigurationStore.mockImplementationOnce(function () {
       throw new Error('database disk image is malformed');
     });
-    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+    expect(
+      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+    ).toMatchObject({
       status: 'skipped',
       message: 'database disk image is malformed',
     });
-    expect(cloud.fetchIoSnapshots).not.toHaveBeenCalled();
+    expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
   });
 
   it('skips when the store cannot write what Nx Cloud read', async () => {
     store.import.mockImplementation(() => {
       throw coded('WRITE_FAILED', 'disk full');
     });
-    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+    expect(
+      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+    ).toMatchObject({
       status: 'skipped',
       reason: 'write-failed',
     });
   });
 });
 
-describe('importIoSnapshots', () => {
+describe('importUltracacheConfiguration', () => {
   it('stores what the Nx Cloud client read and returns the handle', () => {
     const handle = { commit: 'head' };
     store.import.mockReturnValue(handle);
     const snapshots = {
       'web:build': { commit: 'head', inputs: ['apps/web/**'], outputs: [] },
     };
-    expect(importIoSnapshots('head', snapshots)).toBe(handle);
+    expect(importUltracacheConfiguration('head', snapshots)).toBe(handle);
     expect(store.import).toHaveBeenCalledWith({
       requestedCommit: 'head',
       snapshotsJson: JSON.stringify(snapshots),
@@ -227,14 +259,14 @@ describe('importIoSnapshots', () => {
   });
 });
 
-describe('openIoSnapshots', () => {
+describe('openUltracacheConfiguration', () => {
   it('reopens the stored version by commit and fetch time', () => {
     const handle = { commit: 'head' };
     store.getVersion.mockReturnValue(handle);
-    expect(openIoSnapshots('head', 7)).toBe(handle);
+    expect(openUltracacheConfiguration('head', 7)).toBe(handle);
     expect(store.getVersion).toHaveBeenCalledWith('head', 7);
 
     store.getVersion.mockReturnValue(null);
-    expect(openIoSnapshots('head', 8)).toBeNull();
+    expect(openUltracacheConfiguration('head', 8)).toBeNull();
   });
 });

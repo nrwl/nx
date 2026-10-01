@@ -22,7 +22,7 @@ const mockGetStored = vi.fn((commit: string, fetchedAt: number) => ({
 }));
 // Lazy so the hoisted mock factory does not touch the const before it exists.
 vi.mock('../../native', () => ({
-  IoSnapshotStore: vi.fn(function () {
+  UltracacheConfigurationStore: vi.fn(function () {
     return {
       getVersion: (commit: string, fetchedAt: number) =>
         mockGetStored(commit, fetchedAt),
@@ -50,17 +50,17 @@ describe('handleHashTasks', () => {
 
   it('gets the version the client names and keeps one handle while it holds', async () => {
     const version = { commit: 'abc', fetchedAt: 1 };
-    await handleHashTasks({ ...base, ioSnapshots: version });
+    await handleHashTasks({ ...base, ultracacheConfiguration: version });
     expect(mockGetStored).toHaveBeenLastCalledWith('abc', 1);
     const first = hashTasks.mock.lastCall[5];
     expect(first).toMatchObject({ commit: 'abc' });
-    await handleHashTasksUpfront({ ...base, ioSnapshots: version });
+    await handleHashTasksUpfront({ ...base, ultracacheConfiguration: version });
     // Identity, not shape: the mock returns an equal object on every call.
     expect(hashTasksUpfront.mock.lastCall[5]).toBe(first);
     // A client on a newer version of the same commit gets that version.
     await handleHashTasks({
       ...base,
-      ioSnapshots: { commit: 'abc', fetchedAt: 2 },
+      ultracacheConfiguration: { commit: 'abc', fetchedAt: 2 },
     });
     const newer = hashTasks.mock.lastCall[5];
     expect(newer).not.toBe(first);
@@ -68,7 +68,7 @@ describe('handleHashTasks', () => {
     // A different commit is a different handle even when the fetch times match.
     await handleHashTasks({
       ...base,
-      ioSnapshots: { commit: 'def', fetchedAt: 2 },
+      ultracacheConfiguration: { commit: 'def', fetchedAt: 2 },
     });
     expect(hashTasks.mock.lastCall[5]).toMatchObject({ commit: 'def' });
     expect(hashTasks.mock.lastCall[5]).not.toBe(newer);
@@ -78,7 +78,7 @@ describe('handleHashTasks', () => {
     mockGetStored.mockImplementationOnce(() => null);
     await handleHashTasks({
       ...base,
-      ioSnapshots: { commit: 'gone', fetchedAt: 1 },
+      ultracacheConfiguration: { commit: 'gone', fetchedAt: 1 },
     });
     expect(hashTasks.mock.lastCall[5]).toBeUndefined();
   });
@@ -89,7 +89,7 @@ describe('handleHashTasks', () => {
     });
     await handleHashTasks({
       ...base,
-      ioSnapshots: { commit: 'broken', fetchedAt: 1 },
+      ultracacheConfiguration: { commit: 'broken', fetchedAt: 1 },
     });
     expect(hashTasks.mock.lastCall[5]).toBeUndefined();
   });

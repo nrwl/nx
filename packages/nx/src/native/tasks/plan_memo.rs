@@ -6,7 +6,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, MutexGuard};
 
-use crate::native::tasks::types::{TaskGraph, TaskTarget, TaskUltracacheConfiguration};
+use crate::native::tasks::types::{TaskGraph, TaskTarget, TaskUltracacheSettings};
 
 #[derive(Default)]
 pub(super) struct PlanMemo {
@@ -30,7 +30,7 @@ struct PlannedTask {
     outputs: Vec<String>,
     dependencies: Vec<String>,
     continuous_dependencies: Vec<String>,
-    ultracache: Option<TaskUltracacheConfiguration>,
+    ultracache: Option<TaskUltracacheSettings>,
     custom_hasher: bool,
 }
 

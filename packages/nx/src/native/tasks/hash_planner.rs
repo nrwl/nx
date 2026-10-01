@@ -19,16 +19,16 @@ use tracing::trace;
 use crate::native::glob::{
     NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
 };
-use crate::native::io_snapshots::IoSnapshots;
 use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
 };
 use crate::native::tasks::plan_memo::PlanMemo;
-use crate::native::tasks::snapshot_eligibility::{
-    self, EligibilityInputs, IoSnapshotEligibilityOptions, SnapshotTask,
+use crate::native::tasks::ultracache_eligibility::{
+    self, EligibilityInputs, SnapshotTask, UltracacheEligibilityOptions,
 };
 use crate::native::tasks::utils;
+use crate::native::ultracache::UltracacheConfiguration;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
 
@@ -64,7 +64,7 @@ impl<'a> SnapshotContext<'a> {
             if glob.starts_with('!') {
                 continue;
             }
-            if snapshot_eligibility::is_literal_path(glob) {
+            if ultracache_eligibility::is_literal_path(glob) {
                 literal.insert(glob);
             } else {
                 patterns.push(glob);
@@ -273,7 +273,7 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-        snapshots: Option<&IoSnapshots>,
+        snapshots: Option<&UltracacheConfiguration>,
         custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
@@ -299,7 +299,7 @@ impl HashPlanner {
             }
             scope.sort_unstable();
             scope.dedup();
-            snapshot_eligibility::resolve(
+            ultracache_eligibility::resolve(
                 snapshots,
                 scope
                     .iter()
@@ -473,7 +473,7 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-        snapshots: Option<&IoSnapshots>,
+        snapshots: Option<&UltracacheConfiguration>,
         custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let hash_plans =
@@ -501,8 +501,8 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
-        snapshots: Option<ClassInstance<'_, IoSnapshots>>,
-        options: Option<IoSnapshotEligibilityOptions>,
+        snapshots: Option<ClassInstance<'_, UltracacheConfiguration>>,
+        options: Option<UltracacheEligibilityOptions>,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
         let options = options.unwrap_or_default();
@@ -519,8 +519,8 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
-        snapshots: Option<ClassInstance<'_, IoSnapshots>>,
-        options: Option<IoSnapshotEligibilityOptions>,
+        snapshots: Option<ClassInstance<'_, UltracacheConfiguration>>,
+        options: Option<UltracacheEligibilityOptions>,
     ) -> anyhow::Result<External<HashPlans>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
         let options = options.unwrap_or_default();
@@ -626,7 +626,7 @@ impl HashPlanner {
             group.extend(declared_negations);
             instructions.push(HashInstruction::IgnoredFileSet(group));
         }
-        instructions.push(HashInstruction::IoSnapshot(io.digest.clone()));
+        instructions.push(HashInstruction::UltracacheConfiguration(io.digest.clone()));
         instructions
     }
 

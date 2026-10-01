@@ -1,6 +1,6 @@
-import type { IoSnapshotDiagnostic, IoSnapshotReport } from '../native';
+import type { UltracacheDiagnostic, UltracacheReport } from '../native';
 
-export interface IoSnapshotSummary {
+export interface UltracacheSummary {
   /** The heading, e.g. "I/O snapshots: 12 tasks hashed from snapshot, 3 fell back". */
   line: string;
   /** Per-reason detail under it. */
@@ -12,10 +12,10 @@ export interface IoSnapshotSummary {
  * `result` is what hashing used, `status` whether the set was fetched or
  * already stored.
  */
-export function formatIoSnapshotSummary(
-  result: IoSnapshotReport,
+export function formatUltracacheSummary(
+  result: UltracacheReport,
   status: 'fetched' | 'cached'
-): IoSnapshotSummary {
+): UltracacheSummary {
   const used = result.used.length;
   const withheld = result.diagnostics.filter((d) => d.taskId != null);
   const byReason = countByReason(withheld);
@@ -39,7 +39,7 @@ export function formatIoSnapshotSummary(
   return { line, bodyLines };
 }
 
-function describeDiagnostic(d: IoSnapshotDiagnostic): string {
+function describeDiagnostic(d: UltracacheDiagnostic): string {
   switch (d.reason) {
     case 'unreadable-set':
       return `unreadable snapshot set: ${d.message}`;
@@ -61,7 +61,7 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
 }
 
 function countByReason(
-  diagnostics: IoSnapshotDiagnostic[]
+  diagnostics: UltracacheDiagnostic[]
 ): Map<string, number> {
   const counts = new Map<string, number>();
   for (const d of diagnostics) {

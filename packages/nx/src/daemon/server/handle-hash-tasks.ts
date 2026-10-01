@@ -2,8 +2,8 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
-import type { IoSnapshotVersion } from '../message-types/io-snapshot-version';
-import { getIoSnapshotsForVersion } from './io-snapshots-state';
+import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
+import { getUltracacheConfigurationForVersion } from './ultracache-configuration-state';
 import { planningContextFor } from './planning-context';
 
 /**
@@ -20,7 +20,7 @@ interface HashTasksPayload {
   perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
   cwd: string;
   collectInputs?: boolean;
-  ioSnapshots?: IoSnapshotVersion;
+  ultracacheConfiguration?: UltracacheConfigurationVersion;
 }
 
 async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
@@ -54,7 +54,7 @@ export async function handleHashTasks(payload: HashTasksPayload) {
     payload.perTaskEnvs,
     payload.cwd,
     payload.collectInputs,
-    getIoSnapshotsForVersion(payload.ioSnapshots)
+    getUltracacheConfigurationForVersion(payload.ultracacheConfiguration)
   );
   return {
     response,
@@ -70,7 +70,7 @@ export async function handleHashTasksUpfront(payload: HashTasksPayload) {
     payload.perTaskEnvs,
     payload.cwd,
     payload.collectInputs,
-    getIoSnapshotsForVersion(payload.ioSnapshots)
+    getUltracacheConfigurationForVersion(payload.ultracacheConfiguration)
   );
   return {
     response,

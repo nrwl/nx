@@ -4,25 +4,25 @@ import {
   type NxCloudClient,
 } from '../nx-cloud/update-manager';
 import { workspaceRoot } from '../utils/workspace-root';
-import type { IoSnapshotCloudOptions } from './config';
+import type { UltracacheCloudOptions } from './config';
 
 const READ_TIMEOUT_MS = 10_000;
 
-/** The Nx Cloud client's `readIoSnapshots` contract, as far as nx uses it. */
-export interface ReadIoSnapshotsOptions {
+/** The Nx Cloud client's `readUltracacheConfiguration` contract, as far as nx uses it. */
+export interface ReadUltracacheConfigurationOptions {
   workspaceRoot?: string;
-  nxCloudOptions?: IoSnapshotCloudOptions;
+  nxCloudOptions?: UltracacheCloudOptions;
   timeoutMs?: number;
 }
 
-export interface ReadIoSnapshot {
+export interface ReadUltracacheTaskConfiguration {
   commit: string;
   inputs: readonly string[];
   outputs: readonly string[];
 }
 
-export interface ReadIoSnapshotsResult {
-  snapshots: Readonly<Record<string, ReadIoSnapshot>>;
+export interface ReadUltracacheConfigurationResult {
+  snapshots: Readonly<Record<string, ReadUltracacheTaskConfiguration>>;
 }
 
 /**
@@ -30,9 +30,9 @@ export interface ReadIoSnapshotsResult {
  * could not: the client's own, or `NO_CLOUD_CLIENT`, `UNSUPPORTED_CLIENT` or
  * `NO_SNAPSHOTS`.
  */
-export async function fetchIoSnapshots(
-  runnerOptions: IoSnapshotCloudOptions
-): Promise<ReadIoSnapshotsResult> {
+export async function fetchUltracacheConfiguration(
+  runnerOptions: UltracacheCloudOptions
+): Promise<ReadUltracacheConfigurationResult> {
   const client = await loadCloudClient(runnerOptions).catch((e) => {
     throw codedError(
       'NO_CLOUD_CLIENT',
@@ -45,13 +45,13 @@ export async function fetchIoSnapshots(
       'The Nx Cloud client could not be loaded'
     );
   }
-  if (typeof client.readIoSnapshots !== 'function') {
+  if (typeof client.readUltracacheConfiguration !== 'function') {
     throw codedError(
       'UNSUPPORTED_CLIENT',
       'The installed Nx Cloud client does not expose I/O snapshots; update nx-cloud'
     );
   }
-  const result = await client.readIoSnapshots({
+  const result = await client.readUltracacheConfiguration({
     workspaceRoot,
     nxCloudOptions: runnerOptions,
     timeoutMs: READ_TIMEOUT_MS,
@@ -65,7 +65,7 @@ export async function fetchIoSnapshots(
 }
 
 async function loadCloudClient(
-  runnerOptions: IoSnapshotCloudOptions
+  runnerOptions: UltracacheCloudOptions
 ): Promise<NxCloudClient | undefined> {
   const client = (await verifyOrUpdateNxCloudClient(runnerOptions))
     ?.nxCloudClient;

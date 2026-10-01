@@ -1,11 +1,11 @@
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import {
-  getIoSnapshotReport,
-  type IoSnapshotEligibilityOptions,
-  type IoSnapshotReport,
-  type IoSnapshots,
-  type TaskUltracacheConfiguration,
+  getUltracacheReport,
+  type UltracacheEligibilityOptions,
+  type UltracacheReport,
+  type UltracacheConfiguration,
+  type TaskUltracacheSettings,
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getExecutorForTask } from '../tasks-runner/utils';
@@ -46,9 +46,9 @@ function customHasherTaskIds(
  * Each task's ultracache configuration: all the native eligibility walk reads
  * from a task. `null`, not `undefined`: the native map drops `undefined` keys.
  */
-export function getUltraCacheConfig(
+export function getUltracacheSettings(
   taskGraph: TaskGraph
-): Record<string, TaskUltracacheConfiguration | null> {
+): Record<string, TaskUltracacheSettings | null> {
   return Object.fromEntries(
     Object.entries(taskGraph.tasks).map(([id, task]) => [
       id,
@@ -58,10 +58,10 @@ export function getUltraCacheConfig(
 }
 
 /** The eligibility walk's view of the run's tasks, as JS resolves it. */
-export function ioSnapshotEligibilityOptions(
+export function ultracacheEligibilityOptions(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph
-): IoSnapshotEligibilityOptions {
+): UltracacheEligibilityOptions {
   return {
     customHasherTaskIds: customHasherTaskIds(projectGraph, taskGraph),
   };
@@ -73,14 +73,14 @@ export function ioSnapshotEligibilityOptions(
  * planner (no project-graph transfer). Never fetches, never throws. Feeds
  * the `--verbose` run summary.
  */
-export function buildIoSnapshotOverrides(
+export function buildUltracacheOverrides(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  snapshots: IoSnapshots
-): IoSnapshotReport {
-  return getIoSnapshotReport(
+  snapshots: UltracacheConfiguration
+): UltracacheReport {
+  return getUltracacheReport(
     snapshots,
-    getUltraCacheConfig(taskGraph),
-    ioSnapshotEligibilityOptions(projectGraph, taskGraph)
+    getUltracacheSettings(taskGraph),
+    ultracacheEligibilityOptions(projectGraph, taskGraph)
   );
 }

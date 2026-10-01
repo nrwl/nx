@@ -3,8 +3,8 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import {
   IS_WASM,
-  getIoSnapshotDeferredTaskIds,
-  type IoSnapshots,
+  getUltracacheDeferredTaskIds,
+  type UltracacheConfiguration,
   TaskDetails,
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
@@ -33,7 +33,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   tasksDetails: TaskDetails | null,
-  ioSnapshots?: IoSnapshots
+  ultracacheConfiguration?: UltracacheConfiguration
 ) {
   performance.mark('hashMultipleTasks:start');
 
@@ -41,8 +41,8 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
   // A snapshot can make a task depend on producer outputs its declared
   // inputs never mentioned; those hash after their producers too.
-  const deferredBySnapshot = ioSnapshots
-    ? new Set(getIoSnapshotDeferredTaskIds(ioSnapshots, taskGraph))
+  const deferredBySnapshot = ultracacheConfiguration
+    ? new Set(getUltracacheDeferredTaskIds(ultracacheConfiguration, taskGraph))
     : null;
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(

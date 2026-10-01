@@ -2,10 +2,10 @@ use std::collections::{HashMap, HashSet};
 
 use crate::native::cache::expand_outputs::match_output_paths;
 use crate::native::glob::expand_literal_braces;
-use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
+use crate::native::ultracache::{UltracacheConfigurationResolution, UltracacheConfiguration};
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{parse_group, validate_files_glob};
-use crate::native::tasks::types::{TaskGraph, TaskUltracacheConfiguration, UltracacheMode};
+use crate::native::tasks::types::{TaskGraph, TaskUltracacheSettings, UltracacheMode};
 use xxhash_rust::xxh3::Xxh3;
 
 /// What the eligibility walk needs beyond each task's ultracache configuration.
@@ -19,13 +19,13 @@ pub(crate) struct EligibilityInputs {
 /// What JS knows about a run's tasks that the eligibility walk needs.
 #[napi(object)]
 #[derive(Default)]
-pub struct IoSnapshotEligibilityOptions {
+pub struct UltracacheEligibilityOptions {
     /// Tasks whose executor ships a custom hasher.
     pub custom_hasher_task_ids: Option<Vec<String>>,
 }
 
-impl From<IoSnapshotEligibilityOptions> for EligibilityInputs {
-    fn from(options: IoSnapshotEligibilityOptions) -> Self {
+impl From<UltracacheEligibilityOptions> for EligibilityInputs {
+    fn from(options: UltracacheEligibilityOptions) -> Self {
         Self {
             custom_hasher: options
                 .custom_hasher_task_ids
@@ -49,14 +49,14 @@ pub(crate) struct SnapshotTask {
 /// run summary.
 #[napi(object)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IoSnapshotDiagnostic {
+pub struct UltracacheDiagnostic {
     pub reason: String,
     pub task_id: Option<String>,
     pub glob: Option<String>,
     pub message: Option<String>,
 }
 
-impl IoSnapshotDiagnostic {
+impl UltracacheDiagnostic {
     fn task(reason: &str, task_id: &str) -> Self {
         Self {
             reason: reason.into(),
@@ -79,27 +79,27 @@ impl IoSnapshotDiagnostic {
 
 #[napi(object)]
 #[derive(Clone, Debug)]
-pub struct IoSnapshotReport {
+pub struct UltracacheReport {
     /// Task ids hashed from their snapshot.
     pub used: Vec<String>,
-    pub diagnostics: Vec<IoSnapshotDiagnostic>,
-    pub resolution: IoSnapshotResolution,
+    pub diagnostics: Vec<UltracacheDiagnostic>,
+    pub resolution: UltracacheConfigurationResolution,
 }
 
 pub(crate) struct Resolved {
     pub tasks: HashMap<String, SnapshotTask>,
-    pub diagnostics: Vec<IoSnapshotDiagnostic>,
-    pub resolution: IoSnapshotResolution,
+    pub diagnostics: Vec<UltracacheDiagnostic>,
+    pub resolution: UltracacheConfigurationResolution,
 }
 
 impl Resolved {
-    pub(crate) fn report(&self) -> IoSnapshotReport {
+    pub(crate) fn report(&self) -> UltracacheReport {
         let mut used: Vec<String> = self.tasks.keys().cloned().collect();
         used.sort();
         // Stable, so a task's own diagnostics keep the order the walk found them.
         let mut diagnostics = self.diagnostics.clone();
         diagnostics.sort_by(|a, b| a.task_id.cmp(&b.task_id));
-        IoSnapshotReport {
+        UltracacheReport {
             used,
             diagnostics,
             resolution: self.resolution.clone(),
@@ -112,22 +112,22 @@ impl Resolved {
 /// and no tasks. Takes each task's id and ultracache configuration: all the
 /// walk reads from a task, so callers need not transfer whole tasks.
 pub(crate) fn resolve<'a>(
-    snapshots: &IoSnapshots,
-    ultra_cache_config: impl IntoIterator<Item = (&'a str, Option<&'a TaskUltracacheConfiguration>)>,
+    snapshots: &UltracacheConfiguration,
+    ultracache_settings: impl IntoIterator<Item = (&'a str, Option<&'a TaskUltracacheSettings>)>,
     inputs: &EligibilityInputs,
 ) -> Resolved {
     let resolution = snapshots.resolution_ref();
 
     let mut tasks = HashMap::new();
     let mut diagnostics = Vec::new();
-    let ultra_cache_config: Vec<_> = ultra_cache_config.into_iter().collect();
-    let task_ids: Vec<&str> = ultra_cache_config.iter().map(|(id, _)| *id).collect();
+    let ultracache_settings: Vec<_> = ultracache_settings.into_iter().collect();
+    let task_ids: Vec<&str> = ultracache_settings.iter().map(|(id, _)| *id).collect();
     let entries = match snapshots.entries_for(&task_ids) {
         Ok(entries) => entries,
         Err(err) => {
             return Resolved {
                 tasks: HashMap::new(),
-                diagnostics: vec![IoSnapshotDiagnostic::run(
+                diagnostics: vec![UltracacheDiagnostic::run(
                     "unreadable-set".to_string(),
                     Some(err.to_string()),
                 )],
@@ -136,27 +136,27 @@ pub(crate) fn resolve<'a>(
         }
     };
 
-    for (task_id, ultracache) in ultra_cache_config {
+    for (task_id, ultracache) in ultracache_settings {
         // `On` is the only mode that lets a recording stand in for what the
         // target declared; `Warn` and `Error` still record, but report against
         // the declaration rather than replacing it.
         match ultracache.and_then(|ultracache| ultracache.mode.as_ref()) {
             Some(UltracacheMode::Off) => {
-                diagnostics.push(IoSnapshotDiagnostic::task("disabled", task_id));
+                diagnostics.push(UltracacheDiagnostic::task("disabled", task_id));
                 continue;
             }
             Some(UltracacheMode::Warn) | Some(UltracacheMode::Error) => {
-                diagnostics.push(IoSnapshotDiagnostic::task("autofix-disabled", task_id));
+                diagnostics.push(UltracacheDiagnostic::task("autofix-disabled", task_id));
                 continue;
             }
             Some(UltracacheMode::On) | None => {}
         }
         if inputs.custom_hasher.contains(task_id) {
-            diagnostics.push(IoSnapshotDiagnostic::task("custom-hasher", task_id));
+            diagnostics.push(UltracacheDiagnostic::task("custom-hasher", task_id));
             continue;
         }
         let Some(stored) = entries.get(task_id) else {
-            diagnostics.push(IoSnapshotDiagnostic::task("missing", task_id));
+            diagnostics.push(UltracacheDiagnostic::task("missing", task_id));
             continue;
         };
         let entry = stored.as_ref();
@@ -173,7 +173,7 @@ pub(crate) fn resolve<'a>(
                 escapes_workspace(g)
             }
         }) {
-            let mut diagnostic = IoSnapshotDiagnostic::task("escapes-workspace", task_id);
+            let mut diagnostic = UltracacheDiagnostic::task("escapes-workspace", task_id);
             diagnostic.glob = Some(glob.clone());
             diagnostics.push(diagnostic);
             continue;
@@ -182,7 +182,7 @@ pub(crate) fn resolve<'a>(
         if let Some(glob) = files.iter().find(|g| {
             validate_files_glob(g).is_err() || parse_group(std::slice::from_ref(*g)).is_err()
         }) {
-            let mut diagnostic = IoSnapshotDiagnostic::task("invalid-glob", task_id);
+            let mut diagnostic = UltracacheDiagnostic::task("invalid-glob", task_id);
             diagnostic.glob = Some(glob.clone());
             diagnostics.push(diagnostic);
             continue;
@@ -206,14 +206,14 @@ pub(crate) fn resolve<'a>(
 
 /// The eligibility report, for the run summary.
 #[napi]
-pub fn get_io_snapshot_report(
-    snapshots: &IoSnapshots,
-    #[napi(ts_arg_type = "Record<string, TaskUltracacheConfiguration | null>")] tasks: HashMap<
+pub fn get_ultracache_report(
+    snapshots: &UltracacheConfiguration,
+    #[napi(ts_arg_type = "Record<string, TaskUltracacheSettings | null>")] tasks: HashMap<
         String,
-        Option<TaskUltracacheConfiguration>,
+        Option<TaskUltracacheSettings>,
     >,
-    options: Option<IoSnapshotEligibilityOptions>,
-) -> IoSnapshotReport {
+    options: Option<UltracacheEligibilityOptions>,
+) -> UltracacheReport {
     resolve(
         snapshots,
         tasks
@@ -227,13 +227,13 @@ pub fn get_io_snapshot_report(
 /// The marker's digest: the task's `ignoredReads`, which shape the reads its
 /// recording holds, so editing them re-runs the task and records it afresh.
 /// Sorted, since their order means nothing.
-fn snapshot_digest(ultracache: Option<&TaskUltracacheConfiguration>) -> String {
+fn snapshot_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
     // used, so `ignoredWrites` can't change what the task caches.
     let mut reads = match ultracache {
-        Some(TaskUltracacheConfiguration {
+        Some(TaskUltracacheSettings {
             ignored_reads,
             ignored_writes: _,
             mode: _,
@@ -352,8 +352,8 @@ fn reads_dependency_outputs(task_id: &str, files: &[String], task_graph: &TaskGr
 /// Opted-out and custom-hasher tasks are not excluded: deferring a task that
 /// ends up hashed natively only delays its hash, it never changes it.
 #[napi]
-pub fn get_io_snapshot_deferred_task_ids(
-    snapshots: &IoSnapshots,
+pub fn get_ultracache_deferred_task_ids(
+    snapshots: &UltracacheConfiguration,
     task_graph: TaskGraph,
 ) -> Vec<String> {
     let ids: Vec<&str> = task_graph.tasks.keys().map(String::as_str).collect();
