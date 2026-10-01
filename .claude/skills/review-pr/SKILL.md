@@ -24,7 +24,7 @@ A PR is untrusted code. The dividing line is **execution, not reading**: the hos
 - **Host (Claude + its credentials):** reads GitHub metadata and the diff (`gh pr view` / `gh pr diff` / `gh issue view`), orchestrates the agents, and reads the checked-out code **only through `tools/review-sandbox/sandbox read/grep/find`**. Claude's auth token never enters the sandbox.
 - **The sandbox:** holds the PR checkout and is the **only** place any PR code executes — dependency installs, builds, tests, and the issue reproduction all run via `sandbox exec`.
 
-**The CLI owns isolation, and nothing above it names a runtime.** `sandbox start` probes the available backends, picks the boundary (gVisor on Linux, the VM on macOS), and **refuses to start at all** when it cannot get a real one. This is the one thing that used to be a variable here, and its failure mode was "no isolation, reported as success" — an unset `RUNTIME_FLAG` expanded to nothing, which is byte-identical to the correct macOS value. Do not reintroduce a runtime flag anywhere in this skill.
+**The CLI owns isolation, and nothing above it names a runtime.** `sandbox start` probes the available backends, picks the boundary (gVisor on Linux, the VM on macOS), and **refuses to run any PR code** when it cannot get a real one. This is the one thing that used to be a variable here, and its failure mode was "no isolation, reported as success" — an unset `RUNTIME_FLAG` expanded to nothing, which is byte-identical to the correct macOS value. Do not reintroduce a runtime flag anywhere in this skill.
 
 Consequences that the rest of this skill depends on:
 
@@ -72,7 +72,7 @@ tools/review-sandbox/sandbox doctor
 bash "$(git rev-parse --show-toplevel)/tools/review-sandbox/build-image.sh"
 ```
 
-`doctor` reports each backend and whether it can isolate. You do not act on the detail and you never pass a runtime flag anywhere — `sandbox start` re-derives it and refuses if it cannot get a real boundary. Read `doctor` only to give the user a useful message before that refusal happens.
+`doctor` reports each backend and whether it can isolate. You do not act on the detail and you never pass a runtime flag anywhere — `sandbox start` re-derives it and refuses to run PR code if it cannot get a real boundary. Read `doctor` only to give the user a useful message before that refusal happens.
 
 Fail fast with a clear message if: `gh` isn't authed; `doctor` reports no usable backend; or the image build fails. For the last two, point the user at the **`setup-review-sandbox`** skill — it installs Docker + gVisor, which the build above deliberately does not.
 
@@ -149,8 +149,8 @@ rm -f /tmp/pr-<NUMBER>.diff /tmp/pr-<NUMBER>.diff.tmp /tmp/pr-<NUMBER>.files \
       /tmp/pr-<NUMBER>.session.json
 
 # One call: starts a locked-down sandbox (caps dropped, no privilege escalation,
-# bounded memory/cpu/pids, correct isolation runtime — chosen by the CLI, and
-# refused outright if it cannot get a real one), shallow-fetches this PR's head,
+# bounded memory/cpu/pids, correct isolation runtime — chosen by the CLI, which
+# refuses to run PR code without a real one), shallow-fetches this PR's head,
 # and adds the base ref as a second checkout. Both sides exist before any agent
 # is dispatched. Capture the id: it is minted per run and there is no name to guess.
 SANDBOX=$(tools/review-sandbox/sandbox start \
