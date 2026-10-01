@@ -165,6 +165,17 @@ export function formatAffectedExplanation(
       ? `${own} and ${others} other ${others === 1 ? 'task' : 'tasks'}`
       : own;
   };
+  // The tasks a list leaves out, as "N other build tasks and M other tasks".
+  const otherCounted = (group: string[]) => {
+    const mine = group.filter((name) => requestedSet.has(name)).length;
+    const others = group.length - mine;
+    return [
+      mine && `${mine} other ${asked} ${mine === 1 ? 'task' : 'tasks'}`,
+      others && `${others} other ${others === 1 ? 'task' : 'tasks'}`,
+    ]
+      .filter(Boolean)
+      .join(' and ');
+  };
   const requestedFirst = (group: string[]) => [
     ...group.filter((name) => requestedSet.has(name)),
     ...group.filter((name) => !requestedSet.has(name)),
@@ -193,7 +204,7 @@ export function formatAffectedExplanation(
       lines.push(`${indent}- ${shown(name)}`);
     }
     if (ordered.length > 5) {
-      lines.push(`${indent}- and ${ordered.length - 5} more`);
+      lines.push(`${indent}- and ${otherCounted(ordered.slice(5))}`);
     }
   };
   const hint = '. Pass --verbose to list each with its reasons.';
@@ -244,7 +255,7 @@ export function formatAffectedExplanation(
       list(members, '  ', detailed);
     } else {
       for (const [changed, inGroup] of sorted) {
-        lines.push('', `  ${changed} -> ${counted(inGroup)}:`);
+        lines.push('', `  ${changed}:`);
         list(inGroup, '    ', detailed);
       }
     }

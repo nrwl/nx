@@ -108,7 +108,7 @@ describe('formatAffectedExplanation', () => {
     };
     const out = formatAffectedExplanation(explanation, 'Affected tasks');
     expect(out).toContain(
-      'Changing pnpm-lock.yaml touches 1 e2e task and 6 other tasks. Pass --verbose to list each with its reasons.\n  - z:e2e\n  - a:build\n  - b:build\n  - c:build\n  - d:build\n  - and 2 more'
+      'Changing pnpm-lock.yaml touches 1 e2e task and 6 other tasks. Pass --verbose to list each with its reasons.\n  - z:e2e\n  - a:build\n  - b:build\n  - c:build\n  - d:build\n  - and 2 other tasks'
     );
     const verbose = formatAffectedExplanation(explanation, 'Affected tasks', {
       verbose: true,
@@ -150,7 +150,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      'Changing 2 files touches 2 test tasks:\n\n  a.ts -> 1 test task:\n    a:test\n'
+      'Changing 2 files touches 2 test tasks:\n\n  a.ts:\n    a:test\n'
     );
   });
 
@@ -354,16 +354,39 @@ describe('formatAffectedExplanation', () => {
         '',
         'Changing 2 packages touches 2 requested tasks:',
         '',
-        '  npm:react -> 1 requested task:',
+        '  npm:react:',
         '    app:build',
         '      - depends on npm:react, whose version changes',
         '',
-        '  npm:react and npm:scheduler -> 1 requested task:',
+        '  npm:react and npm:scheduler:',
         '    app:e2e',
         '      - apps/app/main.ts matches an input',
         '      - hashes every external dependency, including npm:react and 1 other package, which moved',
       ].join('\n')
     );
     expect(out).not.toContain('pnpm-lock.yaml');
+  });
+
+  it('counts the tasks a short list leaves out, yours apart', () => {
+    const reason = [{ kind: 'input-file' as const, file: 'a.ts' }];
+    const ids = [
+      ...['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((p) => `${p}:e2e`),
+      'x:build',
+      'y:build',
+    ];
+    const out = formatAffectedExplanation(
+      {
+        affected: Object.fromEntries(
+          ids.filter((id) => id.endsWith(':e2e')).map((id) => [id, reason])
+        ),
+        upstream: { 'x:build': reason, 'y:build': reason },
+        touched: ids,
+        requested: { targets: ['e2e'], total: 7 },
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain(
+      '  - e:e2e\n  - and 2 other e2e tasks and 2 other tasks'
+    );
   });
 });
