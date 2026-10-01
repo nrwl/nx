@@ -268,9 +268,11 @@ NX_LEGACY_AFFECTED=false nx affected -t build --explain
 ```text
  NX   3 out of 12 build tasks are affected
 
-Changing libs/ui/src/index.ts touches 1 build task:
-  ui:build
-    - libs/ui/src/index.ts matches libs/ui/**/*
+Changing 1 file touches 1 build task:
+
+  libs/ui/src/index.ts:
+    ui:build
+      - libs/ui/src/index.ts matches libs/ui/**/*
 
 Touching those tasks changes outputs read by 2 build tasks:
   admin:build

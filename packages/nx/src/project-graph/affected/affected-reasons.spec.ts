@@ -80,9 +80,11 @@ describe('formatAffectedExplanation', () => {
       [
         '3 out of 12 build tasks are affected:',
         '',
-        'Changing libs/ui/src/index.ts touches 1 build task:',
-        '  ui:build',
-        '    - libs/ui/src/index.ts matches libs/ui/**/*',
+        'Changing 1 file touches 1 build task:',
+        '',
+        '  libs/ui/src/index.ts:',
+        '    ui:build',
+        '      - libs/ui/src/index.ts matches libs/ui/**/*',
         '',
         'Touching those tasks changes outputs read by 2 build tasks:',
         '  admin:build',
@@ -108,15 +110,15 @@ describe('formatAffectedExplanation', () => {
     };
     const out = formatAffectedExplanation(explanation, 'Affected tasks');
     expect(out).toContain(
-      'Changing pnpm-lock.yaml touches 1 e2e task and 6 other tasks. Pass --verbose to list each with its reasons.\n  - z:e2e\n  - a:build\n  - b:build\n  - c:build\n  - d:build\n  - and 2 other tasks'
+      'Changing 1 file touches 1 e2e task and 6 other tasks. Pass --verbose to list each with its reasons.\n\n  pnpm-lock.yaml:\n    - z:e2e\n    - a:build\n    - b:build\n    - c:build\n    - d:build\n    - and 2 other tasks'
     );
     const verbose = formatAffectedExplanation(explanation, 'Affected tasks', {
       verbose: true,
     });
     expect(verbose).toContain(
-      '  z:e2e\n    - hashes every external dependency, and pnpm-lock.yaml changes\n'
+      '    z:e2e\n      - hashes every external dependency, and pnpm-lock.yaml changes\n'
     );
-    expect(verbose).toContain('  f:build\n');
+    expect(verbose).toContain('    f:build\n');
     expect(verbose).not.toContain('Pass --verbose');
   });
 
@@ -168,7 +170,9 @@ describe('formatAffectedExplanation', () => {
       },
       'Affected tasks'
     );
-    expect(out).toContain('Changing a.ts and 2 other files touches');
+    expect(out).toContain(
+      'Changing 3 files touches 1 requested task:\n\n  a.ts and 2 other files:'
+    );
   });
 
   it('says so when a touched task names no changed file', () => {
@@ -347,10 +351,12 @@ describe('formatAffectedExplanation', () => {
       [
         'Affected tasks (2):',
         '',
-        'Changing apps/app/main.ts touches 1 requested task:',
-        '  app:e2e',
-        '    - apps/app/main.ts matches an input',
-        '    - hashes every external dependency, including npm:react and 1 other package, which moved',
+        'Changing 1 file touches 1 requested task:',
+        '',
+        '  apps/app/main.ts:',
+        '    app:e2e',
+        '      - apps/app/main.ts matches an input',
+        '      - hashes every external dependency, including npm:react and 1 other package, which moved',
         '',
         'Changing 2 packages touches 2 requested tasks:',
         '',
@@ -386,7 +392,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '  - e:e2e\n  - and 2 other e2e tasks and 2 other tasks'
+      '    - e:e2e\n    - and 2 other e2e tasks and 2 other tasks'
     );
   });
 
@@ -403,7 +409,7 @@ describe('formatAffectedExplanation', () => {
     );
     expect(out).toMatch(/^3 out of 10 e2e-ci and test tasks are affected:/);
     expect(out).toContain(
-      'Changing a.ts touches 1 e2e-ci task, 2 test tasks and 1 other task:'
+      'Changing 1 file touches 1 e2e-ci task, 2 test tasks and 1 other task:'
     );
   });
 });

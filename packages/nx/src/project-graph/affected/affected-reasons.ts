@@ -270,18 +270,13 @@ export function formatAffectedExplanation(
           .map((change) => change.name)
       )
     );
-    const header =
-      sorted.length === 1
-        ? `Changing ${sorted[0][0]} touches ${counted(members)}`
-        : `Changing ${changes.size} ${noun}s touches ${counted(members)}`;
+    const header = `Changing ${changes.size} ${noun}${
+      changes.size === 1 ? '' : 's'
+    } touches ${counted(members)}`;
     lines.push(detailed ? `${header}:` : `${header}${hint}`);
-    if (sorted.length === 1) {
-      list(members, '  ', detailed);
-    } else {
-      for (const [changed, inGroup] of sorted) {
-        lines.push('', `  ${changed}:`);
-        list(inGroup, '    ', detailed);
-      }
+    for (const [changed, inGroup] of sorted) {
+      lines.push('', `  ${changed}:`);
+      list(inGroup, '    ', detailed);
     }
     lines.push('');
   }
