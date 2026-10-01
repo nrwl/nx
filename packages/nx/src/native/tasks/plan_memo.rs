@@ -1,6 +1,6 @@
 //! Whole-task plans kept between `get_plans` calls on one planner. A plan
 //! reads its task's target, outputs, edges and Ultracache eligibility and those
-//! of everything it depends on, plus the Ultracache configuration, so it stays valid while
+//! of everything it depends on, plus the Ultracache configurations, so it stays valid while
 //! none of those changed.
 
 use std::collections::{HashMap, HashSet};
@@ -17,8 +17,8 @@ pub(super) struct PlanMemo {
 /// it was when the plan was made.
 #[derive(Default)]
 struct Recorded {
-    /// The Ultracache configuration's commit and fetch time; plans made against another are dropped.
-    configuration: Option<(String, i64)>,
+    /// The Ultracache configurations' commit and fetch time; plans made against others are dropped.
+    configurations: Option<(String, i64)>,
     tasks: HashMap<String, PlannedTask>,
     plans: HashMap<String, Vec<u32>>,
 }
@@ -58,18 +58,18 @@ fn edges<'a>(edges: &'a HashMap<String, Vec<String>>, id: &str) -> &'a [String] 
 
 impl PlanMemo {
     /// Holds the memo for one planning call, with every plan that no longer
-    /// holds for `task_graph` under `configuration` dropped. `custom_hasher` are
+    /// holds for `task_graph` under `configurations` dropped. `custom_hasher` are
     /// the tasks Ultracache eligibility withholds.
     pub(super) fn begin(
         &self,
         task_graph: &TaskGraph,
-        configuration: Option<(String, i64)>,
+        configurations: Option<(String, i64)>,
         custom_hasher: &[String],
     ) -> PlanMemoGuard<'_> {
         let mut recorded = self.recorded.lock().expect("plan memo lock");
-        if recorded.configuration != configuration {
+        if recorded.configurations != configurations {
             *recorded = Recorded {
-                configuration,
+                configurations,
                 ..Default::default()
             };
         }
@@ -182,11 +182,11 @@ mod tests {
     fn plan_all_under(
         memo: &PlanMemo,
         graph: &TaskGraph,
-        configuration: Option<(String, i64)>,
+        configurations: Option<(String, i64)>,
         custom_hasher: &[String],
     ) -> Vec<String> {
         let ids: Vec<&str> = graph.tasks.keys().map(String::as_str).collect();
-        let guard = memo.begin(graph, configuration, custom_hasher);
+        let guard = memo.begin(graph, configurations, custom_hasher);
         let mut missing = guard.missing(&ids);
         let planned = missing.iter().map(|id| (id.to_string(), vec![0])).collect();
         guard.finish(planned, &ids);

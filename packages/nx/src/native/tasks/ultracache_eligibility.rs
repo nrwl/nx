@@ -5,7 +5,7 @@ use crate::native::glob::expand_literal_braces;
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{parse_group, validate_files_glob};
 use crate::native::tasks::types::{TaskGraph, TaskUltracacheSettings, UltracacheMode};
-use crate::native::ultracache::{UltracacheConfiguration, UltracacheConfigurationResolution};
+use crate::native::ultracache::{UltracacheConfigurationResolution, UltracacheConfigurations};
 use xxhash_rust::xxh3::Xxh3;
 
 /// What the eligibility walk needs beyond each task's Ultracache settings.
@@ -66,7 +66,7 @@ impl UltracacheDiagnostic {
         }
     }
 
-    /// A run-level diagnostic: nothing hashed from its configuration, for `reason`.
+    /// A run-level diagnostic: nothing hashed from Ultracache configurations, for `reason`.
     fn run(reason: String, message: Option<String>) -> Self {
         Self {
             reason,
@@ -108,21 +108,21 @@ impl Resolved {
 }
 
 /// Decides per task whether its entry can be hashed; each withheld task gets
-/// one diagnostic naming why. A configuration-level read failure yields one diagnostic
+/// one diagnostic naming why. A failure to read the configurations yields one diagnostic
 /// and no tasks. Takes each task's id and Ultracache settings: all the
 /// walk reads from a task, so callers need not transfer whole tasks.
 pub(crate) fn resolve<'a>(
-    configuration: &UltracacheConfiguration,
+    configurations: &UltracacheConfigurations,
     ultracache_settings: impl IntoIterator<Item = (&'a str, Option<&'a TaskUltracacheSettings>)>,
     inputs: &EligibilityInputs,
 ) -> Resolved {
-    let resolution = configuration.resolution_ref();
+    let resolution = configurations.resolution_ref();
 
     let mut tasks = HashMap::new();
     let mut diagnostics = Vec::new();
     let ultracache_settings: Vec<_> = ultracache_settings.into_iter().collect();
     let task_ids: Vec<&str> = ultracache_settings.iter().map(|(id, _)| *id).collect();
-    let entries = match configuration.entries_for(&task_ids) {
+    let entries = match configurations.entries_for(&task_ids) {
         Ok(entries) => entries,
         Err(err) => {
             return Resolved {
@@ -207,7 +207,7 @@ pub(crate) fn resolve<'a>(
 /// The eligibility report, for the run summary.
 #[napi]
 pub fn get_ultracache_report(
-    configuration: &UltracacheConfiguration,
+    configurations: &UltracacheConfigurations,
     #[napi(ts_arg_type = "Record<string, TaskUltracacheSettings | null>")] tasks: HashMap<
         String,
         Option<TaskUltracacheSettings>,
@@ -215,7 +215,7 @@ pub fn get_ultracache_report(
     options: Option<UltracacheEligibilityOptions>,
 ) -> UltracacheReport {
     resolve(
-        configuration,
+        configurations,
         tasks
             .iter()
             .map(|(id, ultracache)| (id.as_str(), ultracache.as_ref())),
@@ -279,7 +279,7 @@ fn candidates_under(sorted: &[String], root: &str) -> Vec<String> {
 }
 
 /// A glob that would resolve outside the workspace: absolute, drive-lettered,
-/// or carrying a `..` segment. The configuration is server-supplied, so this is
+/// or carrying a `..` segment. Configurations are server-supplied, so this is
 /// the line that keeps a hostile one from turning hashing into a read oracle.
 fn escapes_workspace(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
@@ -354,11 +354,11 @@ fn reads_dependency_outputs(task_id: &str, files: &[String], task_graph: &TaskGr
 /// ends up hashed natively only delays its hash, it never changes it.
 #[napi]
 pub fn get_ultracache_deferred_task_ids(
-    configuration: &UltracacheConfiguration,
+    configurations: &UltracacheConfigurations,
     task_graph: TaskGraph,
 ) -> Vec<String> {
     let ids: Vec<&str> = task_graph.tasks.keys().map(String::as_str).collect();
-    let entries = configuration.entries_for(&ids).unwrap_or_default();
+    let entries = configurations.entries_for(&ids).unwrap_or_default();
     let mut deferred: Vec<String> = task_graph
         .tasks
         .keys()

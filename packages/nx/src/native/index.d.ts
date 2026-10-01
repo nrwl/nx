@@ -97,13 +97,13 @@ export declare class HashPlanInspector {
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   /**
-   * `configuration` is this run's Ultracache configuration; a task with an
+   * `configurations` is this run's Ultracache configurations; a task with an
    * eligible entry hashes its observed reads instead of its declared filesets.
    * `options` carries the task ids decided in JS, where executors and
    * target configuration are resolved.
    */
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, configuration?: UltracacheConfiguration | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, configuration?: UltracacheConfiguration | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, configurations?: UltracacheConfigurations | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): Record<string, string[]>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, configurations?: UltracacheConfigurations | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -289,12 +289,12 @@ export declare class TaskInvocationTracker {
 }
 
 /**
- * One stored version of a commit's Ultracache configuration. Handed to the hash planner as-is.
+ * One stored version of a commit's Ultracache configurations. Handed to the hash planner as-is.
  * A fresh import holds every entry; a handle reopened from storage reads
  * them per task as they are asked for and remembers them, so it costs the
  * tasks it plans rather than the workspace's whole set.
  */
-export declare class UltracacheConfiguration {
+export declare class UltracacheConfigurations {
   get commit(): string
   get resolution(): UltracacheConfigurationResolution
 }
@@ -311,18 +311,18 @@ export declare class UltracacheConfigurationStore {
    * Stores the set the Nx Cloud client read for `requested_commit` as a new
    * version, and returns it with every entry in hand.
    */
-  import(options: UltracacheConfigurationImportOptions): UltracacheConfiguration
+  import(options: UltracacheConfigurationImportOptions): UltracacheConfigurations
   /**
    * The newest stored set for `commit`, without touching the network;
    * `null` when none is stored, its row cannot be read, or it was fetched
    * more than `max_age_ms` ago. Reads only the version's summary row.
    */
-  get(commit: string, maxAgeMs?: number | undefined | null): UltracacheConfiguration | null
+  get(commit: string, maxAgeMs?: number | undefined | null): UltracacheConfigurations | null
   /**
    * Exactly the version of `commit` fetched at `fetched_at`; `null` when it
    * is not stored or its row cannot be read.
    */
-  getVersion(commit: string, fetchedAt: number): UltracacheConfiguration | null
+  getVersion(commit: string, fetchedAt: number): UltracacheConfigurations | null
 }
 
 export declare class WorkspaceContext {
@@ -728,10 +728,10 @@ export declare function getTransformableOutputs(outputs: Array<string>): Array<s
  * Opted-out and custom-hasher tasks are not excluded: deferring a task that
  * ends up hashed natively only delays its hash, it never changes it.
  */
-export declare function getUltracacheDeferredTaskIds(configuration: UltracacheConfiguration, taskGraph: TaskGraph): Array<string>
+export declare function getUltracacheDeferredTaskIds(configurations: UltracacheConfigurations, taskGraph: TaskGraph): Array<string>
 
 /** The eligibility report, for the run summary. */
-export declare function getUltracacheReport(configuration: UltracacheConfiguration, tasks: Record<string, TaskUltracacheSettings | null>, options?: UltracacheEligibilityOptions | undefined | null): UltracacheReport
+export declare function getUltracacheReport(configurations: UltracacheConfigurations, tasks: Record<string, TaskUltracacheSettings | null>, options?: UltracacheEligibilityOptions | undefined | null): UltracacheReport
 
 /**
  * Group information - union of different process group types
@@ -1089,7 +1089,7 @@ export interface Task {
   parallelism?: boolean
   /** This denotes if the task runs continuously */
   continuous?: boolean
-  /** The target's ultracache configuration, if declared */
+  /** The target's Ultracache settings, if declared */
   ultracache?: TaskUltracacheSettings
 }
 
@@ -1159,7 +1159,7 @@ export interface TaskTarget {
   configuration?: string
 }
 
-/** Ultracache configuration of a task's target */
+/** Ultracache settings of a task's target */
 export interface TaskUltracacheSettings {
   /** How this target's tasks participate. Defaults to `on`. */
   mode?: 'on' | 'warn' | 'error' | 'off'
@@ -1212,11 +1212,11 @@ export interface TuiConfig {
   suppressHints?: boolean
 }
 
-/** The Ultracache configuration the Nx Cloud client read for HEAD, as JS hands it over. */
+/** The Ultracache configurations the Nx Cloud client read for HEAD, as JS hands them over. */
 export interface UltracacheConfigurationImportOptions {
   requestedCommit: string
   /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
-  configurationJson: string
+  configurationsJson: string
 }
 
 /** What was resolved for a commit; stored beside its entries. */

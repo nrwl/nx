@@ -74,10 +74,10 @@ function graph(...ids: string[]): TaskGraph {
   };
 }
 
-function writeConfiguration(entries: Record<string, unknown>) {
+function writeConfigurations(entries: Record<string, unknown>) {
   return new UltracacheConfigurationStore(configurationDb).import({
     requestedCommit: HEAD,
-    configurationJson: JSON.stringify(entries),
+    configurationsJson: JSON.stringify(entries),
   });
 }
 
@@ -95,7 +95,7 @@ describe('buildUltracacheOverrides', () => {
   });
 
   it('uses flat entries, including one that read nothing', () => {
-    const configuration = writeConfiguration({
+    const configurations = writeConfigurations({
       'web:build': {
         commit: HEAD,
         inputs: ['apps/web/src/**/*.ts', 'dist/libs/ui/index.js'],
@@ -106,7 +106,7 @@ describe('buildUltracacheOverrides', () => {
     const result = buildUltracacheOverrides(
       projectGraph,
       graph('web:build', 'ui:build', 'root:build'),
-      configuration
+      configurations
     );
     expect(result.used).toEqual(['root:build', 'web:build']);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
@@ -115,7 +115,7 @@ describe('buildUltracacheOverrides', () => {
   });
 
   it('withholds disabled, custom-hasher, and invalid-glob tasks', () => {
-    const configuration = writeConfiguration({
+    const configurations = writeConfigurations({
       'web:lint': { commit: HEAD, inputs: [], outputs: [] },
       'web:custom': { commit: HEAD, inputs: [], outputs: [] },
       'ui:build': {
@@ -127,7 +127,7 @@ describe('buildUltracacheOverrides', () => {
     const result = buildUltracacheOverrides(
       projectGraph,
       graph('web:lint', 'web:custom', 'ui:build'),
-      configuration
+      configurations
     );
     expect(result.used).toEqual([]);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([

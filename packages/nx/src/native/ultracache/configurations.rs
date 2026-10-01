@@ -13,24 +13,24 @@ type Db = store::UltracacheConfigurationStore;
 #[cfg(target_arch = "wasm32")]
 type Db = ();
 
-/// One stored version of a commit's Ultracache configuration. Handed to the hash planner as-is.
+/// One stored version of a commit's Ultracache configurations. Handed to the hash planner as-is.
 /// A fresh import holds every entry; a handle reopened from storage reads
 /// them per task as they are asked for and remembers them, so it costs the
 /// tasks it plans rather than the workspace's whole set.
 #[napi]
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-pub struct UltracacheConfiguration {
+pub struct UltracacheConfigurations {
     resolution: UltracacheConfigurationResolution,
     db: Db,
-    entries: Mutex<HashMap<String, Option<Arc<set::UltracacheTaskConfiguration>>>>,
+    entries: Mutex<HashMap<String, Option<Arc<set::UltracacheConfiguration>>>>,
 }
 
-impl UltracacheConfiguration {
+impl UltracacheConfigurations {
     #[cfg(not(target_arch = "wasm32"))]
     pub(super) fn new(
         resolution: UltracacheConfigurationResolution,
         db: Db,
-        entries: HashMap<String, Option<Arc<set::UltracacheTaskConfiguration>>>,
+        entries: HashMap<String, Option<Arc<set::UltracacheConfiguration>>>,
     ) -> Self {
         Self {
             resolution,
@@ -41,7 +41,7 @@ impl UltracacheConfiguration {
 }
 
 #[napi]
-impl UltracacheConfiguration {
+impl UltracacheConfigurations {
     #[napi(getter)]
     pub fn commit(&self) -> String {
         self.resolution.requested_commit.clone()
@@ -61,7 +61,7 @@ impl UltracacheConfiguration {
     pub(crate) fn entries_for(
         &self,
         task_ids: &[&str],
-    ) -> anyhow::Result<HashMap<String, Arc<set::UltracacheTaskConfiguration>>> {
+    ) -> anyhow::Result<HashMap<String, Arc<set::UltracacheConfiguration>>> {
         let mut entries = self.entries.lock().unwrap();
         let missing: Vec<&str> = task_ids
             .iter()
@@ -76,7 +76,7 @@ impl UltracacheConfiguration {
                 &missing,
             )?;
             #[cfg(target_arch = "wasm32")]
-            let read: Vec<(String, set::UltracacheTaskConfiguration)> = Vec::new();
+            let read: Vec<(String, set::UltracacheConfiguration)> = Vec::new();
             for id in &missing {
                 entries.insert((*id).to_string(), None);
             }

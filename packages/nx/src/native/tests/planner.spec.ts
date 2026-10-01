@@ -1831,7 +1831,7 @@ describe('task planner', () => {
       }
     });
   });
-  describe('ultracache configuration', () => {
+  describe('ultracache configurations', () => {
     function fixture(
       opts: { cyclic?: boolean; extraParentInputs?: unknown[] } = {}
     ) {
@@ -1921,7 +1921,7 @@ describe('task planner', () => {
     });
     let setCount = 0;
     /** Stores a set with the given entries and loads it as the daemon would. */
-    function configurationFor(
+    function configurationsFor(
       entries: Record<
         string,
         {
@@ -1933,7 +1933,7 @@ describe('task planner', () => {
       const commit = `c${setCount++}`.padEnd(40, 'c');
       new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
-        configurationJson: JSON.stringify(
+        configurationsJson: JSON.stringify(
           Object.fromEntries(
             Object.entries(entries).map(([id, e]) => [
               id,
@@ -1966,13 +1966,13 @@ describe('task planner', () => {
         ])
       );
       expect(
-        planner.getPlans(['parent:build'], taskGraph, configurationFor({}))
+        planner.getPlans(['parent:build'], taskGraph, configurationsFor({}))
       ).toEqual(plain);
       expect(
         planner.getPlans(
           ['parent:build'],
           taskGraph,
-          configurationFor({ 'child:build': {} })
+          configurationsFor({ 'child:build': {} })
         )['parent:build']
       ).toEqual(plain['parent:build']);
       expect(plain['parent:build']).not.toContainEqual(
@@ -1982,12 +1982,12 @@ describe('task planner', () => {
 
     it('marks a task by its own ultracache settings, so no configuration moves it', () => {
       const { planner, taskGraph } = fixture();
-      const planFor = (configuration: ReturnType<typeof configurationFor>) =>
-        planner.getPlans(['parent:build'], taskGraph, configuration)[
+      const planFor = (configurations: ReturnType<typeof configurationsFor>) =>
+        planner.getPlans(['parent:build'], taskGraph, configurations)[
           'parent:build'
         ];
-      const marker = (configuration: ReturnType<typeof configurationFor>) =>
-        planFor(configuration).find((i) => i.startsWith('io-snapshot:'));
+      const marker = (configurations: ReturnType<typeof configurationsFor>) =>
+        planFor(configurations).find((i) => i.startsWith('io-snapshot:'));
       const base = {
         'parent:build': {
           inputs: ['libs/parent/filea.ts'],
@@ -1995,15 +1995,15 @@ describe('task planner', () => {
         },
         'child:build': { inputs: ['libs/child/fileb.ts'] },
       };
-      const same = marker(configurationFor(base));
+      const same = marker(configurationsFor(base));
       const childChanged = marker(
-        configurationFor({
+        configurationsFor({
           ...base,
           'child:build': { inputs: ['libs/child/other.ts'] },
         })
       );
       const parentWroteMore = marker(
-        configurationFor({
+        configurationsFor({
           ...base,
           'parent:build': {
             ...base['parent:build'],
@@ -2011,7 +2011,7 @@ describe('task planner', () => {
           },
         })
       );
-      const parentReadOther = configurationFor({
+      const parentReadOther = configurationsFor({
         ...base,
         'parent:build': {
           ...base['parent:build'],
@@ -2028,12 +2028,12 @@ describe('task planner', () => {
       // read the plan drops, or one naming a missing file, move the key.
       expect(marker(parentReadOther)).toBe(same);
       expect(planFor(parentReadOther)).not.toEqual(
-        planFor(configurationFor(base))
+        planFor(configurationsFor(base))
       );
     });
 
     it('keeps a negation only when every visit of the project declares it', () => {
-      const read = configurationFor({
+      const read = configurationsFor({
         'parent:build': { inputs: ['libs/child/readme.md'] },
       });
       const groupFor = (extraParentInputs?: unknown[]) => {
@@ -2056,7 +2056,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         withContinuousDependency(taskGraph),
-        configurationFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
         })
       )['parent:build'];
@@ -2074,7 +2074,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         graph,
-        configurationFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
           'child:build': { inputs: ['libs/child/src/index.ts'] },
         })
@@ -2098,7 +2098,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         graph,
-        configurationFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
           'child:build': { inputs: ['libs/child/src/index.ts'] },
         })
@@ -2113,7 +2113,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        configurationFor({
+        configurationsFor({
           'parent:build': {
             inputs: [
               'docs/readme.md',
@@ -2154,7 +2154,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        configurationFor({
+        configurationsFor({
           'parent:build': {
             inputs: ['libs/parent/package.json', 'tsconfig.base.json'],
           },
@@ -2177,7 +2177,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        configurationFor({
+        configurationsFor({
           'parent:build': {
             inputs: [
               'node_modules/foo/index.js',
@@ -2258,7 +2258,7 @@ describe('task planner', () => {
           const plan = planner.getPlans(
             ['tools:audit'],
             taskGraph,
-            configurationFor({
+            configurationsFor({
               'tools:audit': {
                 inputs: ['package-lock.json', 'tools/audit-deps.js'],
               },
@@ -2287,7 +2287,7 @@ describe('task planner', () => {
         const plan = planner.getPlans(
           ['tools:audit'],
           taskGraph,
-          configurationFor({
+          configurationsFor({
             'tools:audit': { inputs: ['tools/audit-deps.js'] },
           })
         )['tools:audit'];
@@ -2323,7 +2323,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        configurationFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
         })
       )['parent:build'];
@@ -2352,7 +2352,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        configurationFor({
+        configurationsFor({
           'parent:build': {
             inputs: ['libs/child/a.gen.ts', 'libs/child/fileb.ts'],
           },
@@ -2403,7 +2403,7 @@ describe('task planner', () => {
         planner.getPlans(
           ['parent:build'],
           taskGraph,
-          configurationFor({ 'parent:build': { inputs } })
+          configurationsFor({ 'parent:build': { inputs } })
         )['parent:build'];
 
       expect(
@@ -2464,7 +2464,7 @@ describe('task planner', () => {
         const plan = planner.getPlans(
           ['parent:build'],
           taskGraph,
-          configurationFor({
+          configurationsFor({
             'parent:build': { inputs: ['libs/child/gen/used.json'] },
           })
         )['parent:build'];
@@ -2478,13 +2478,13 @@ describe('task planner', () => {
 
     it("moves the configuration marker when the task's ignoredReads change, and only then", () => {
       const { planner, taskGraph } = fixture();
-      const configuration = configurationFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
       const markerWith = (ultracache: object | undefined) => {
         taskGraph.tasks['parent:build'].ultracache = ultracache;
         return planner
-          .getPlans(['parent:build'], taskGraph, configuration)
+          .getPlans(['parent:build'], taskGraph, configurations)
           ['parent:build'].find((entry) => entry.startsWith('io-snapshot:'));
       };
 
@@ -2500,26 +2500,28 @@ describe('task planner', () => {
 
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
       const { planner, taskGraph } = fixture();
-      const configuration = configurationFor({
+      const configurations = configurationsFor({
         'parent:build': {
           inputs: ['dist/libs/child/index.js'],
         },
       });
-      const plan = planner.getPlans(['parent:build'], taskGraph, configuration)[
-        'parent:build'
-      ];
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
       expect(plan).toContain(`files:[dist/libs/child/index.js,${PARENT_NEG}]`);
       expect(plan).not.toContainEqual(
         expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
       );
-      expect(getUltracacheDeferredTaskIds(configuration, taskGraph)).toEqual([
+      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual([
         'parent:build',
       ]);
     });
 
     it('reports eligibility the same way it plans', () => {
       const { planner, taskGraph } = fixture();
-      const withheld = configurationFor({
+      const withheld = configurationsFor({
         'parent:build': { inputs: ['libs/./parent/*.gen'] },
       });
       const report = getUltracacheReport(
@@ -2538,7 +2540,7 @@ describe('task planner', () => {
 
       const plain = planner.getPlans(['parent:build'], taskGraph);
       for (const negation of ['!', '!libs/parent/[']) {
-        const negated = configurationFor({
+        const negated = configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts', negation] },
         });
         expect(
@@ -2572,15 +2574,15 @@ describe('task planner', () => {
         const { planner, taskGraph } = fixture();
         // Read off the task, where the task graph resolved target defaults.
         taskGraph.tasks['parent:build'].ultracache = ultracache;
-        const configuration = configurationFor({
+        const configurations = configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
         });
         const plain = planner.getPlans(['parent:build'], taskGraph);
         expect(
-          planner.getPlans(['parent:build'], taskGraph, configuration)
+          planner.getPlans(['parent:build'], taskGraph, configurations)
         ).toEqual(plain);
         expect(
-          getUltracacheReport(configuration, getUltracacheSettings(taskGraph))
+          getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
             .diagnostics
         ).toContainEqual(
           expect.objectContaining({ reason, taskId: 'parent:build' })
@@ -2590,17 +2592,19 @@ describe('task planner', () => {
 
     it('hashes a configuration glob that reads from the workspace root', () => {
       const { planner, taskGraph } = fixture();
-      const configuration = configurationFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['**/*.gen', 'libs/parent/a.ts'] },
       });
-      const plan = planner.getPlans(['parent:build'], taskGraph, configuration)[
-        'parent:build'
-      ];
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
       expect(plan).toContainEqual(
         expect.stringMatching(/^files:\[\*\*\/\*\.gen,/)
       );
       expect(
-        getUltracacheReport(configuration, getUltracacheSettings(taskGraph))
+        getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
           .used
       ).toContain('parent:build');
     });
@@ -2610,7 +2614,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        configurationFor({ 'parent:build': {} })
+        configurationsFor({ 'parent:build': {} })
       )['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
@@ -2634,7 +2638,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        configurationFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
@@ -2644,14 +2648,14 @@ describe('task planner', () => {
 
     it("defers a task whose reads sit under a producer's declared outputs", () => {
       const { planner, taskGraph } = fixture();
-      const configuration = configurationFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
       });
-      expect(getUltracacheDeferredTaskIds(configuration, taskGraph)).toEqual([
+      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual([
         'parent:build',
       ]);
       expect(
-        getUltracacheReport(configuration, getUltracacheSettings(taskGraph))
+        getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
           .used
       ).toEqual(['parent:build']);
     });
@@ -2660,15 +2664,15 @@ describe('task planner', () => {
       const { planner, taskGraph } = fixture();
       const plain = planner.getPlans(['parent:build'], taskGraph);
       for (const glob of ['../secret.txt', 'libs/../../x', '/etc/passwd']) {
-        const configuration = configurationFor({
+        const configurations = configurationsFor({
           'parent:build': { inputs: ['libs/parent/a.ts', glob] },
         });
         expect(
-          planner.getPlans(['parent:build'], taskGraph, configuration)
+          planner.getPlans(['parent:build'], taskGraph, configurations)
         ).toEqual(plain);
         expect(
           getUltracacheReport(
-            configuration,
+            configurations,
             getUltracacheSettings(taskGraph)
           ).diagnostics.find((d) => d.taskId === 'parent:build')
         ).toMatchObject({ reason: 'escapes-workspace', glob });
@@ -2700,31 +2704,33 @@ describe('task planner', () => {
         {} as any,
         transferProjectGraph(toRustProjectGraph(projectGraph))
       );
-      const configuration = configurationFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
-      return { planner, taskGraph, configuration };
+      return { planner, taskGraph, configurations };
     }
 
     it('rejects an invalid declared includeIgnored group with a configuration too', () => {
       // A well-formed negation with nothing to filter: native planning throws,
       // and a configuration must not turn it into a plan.
-      const { planner, taskGraph, configuration } = lonelyParent([
+      const { planner, taskGraph, configurations } = lonelyParent([
         { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
       ]);
       expect(() =>
-        planner.getPlans(['parent:build'], taskGraph, configuration)
+        planner.getPlans(['parent:build'], taskGraph, configurations)
       ).toThrow(/no positive includeIgnored fileset/);
     });
 
     it('keeps the configuration when a declared includeIgnored negation has a positive fileset to filter', () => {
-      const { planner, taskGraph, configuration } = lonelyParent([
+      const { planner, taskGraph, configurations } = lonelyParent([
         { fileset: '{projectRoot}/dist/**', includeIgnored: true },
         { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
       ]);
-      const plan = planner.getPlans(['parent:build'], taskGraph, configuration)[
-        'parent:build'
-      ];
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
       // Validated, then replaced by the reads like any declared fileset.
       expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:\d+$/));
       expect(plan).not.toContain(

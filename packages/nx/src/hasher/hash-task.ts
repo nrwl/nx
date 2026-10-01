@@ -4,7 +4,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import {
   IS_WASM,
   getUltracacheDeferredTaskIds,
-  type UltracacheConfiguration,
+  type UltracacheConfigurations,
   TaskDetails,
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
@@ -33,7 +33,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   tasksDetails: TaskDetails | null,
-  ultracacheConfiguration?: UltracacheConfiguration
+  ultracacheConfigurations?: UltracacheConfigurations
 ) {
   performance.mark('hashMultipleTasks:start');
 
@@ -41,8 +41,8 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
   // An Ultracache configuration can make a task depend on producer outputs its declared
   // inputs never mentioned; those hash after their producers too.
-  const deferredByConfiguration = ultracacheConfiguration
-    ? new Set(getUltracacheDeferredTaskIds(ultracacheConfiguration, taskGraph))
+  const deferredByConfiguration = ultracacheConfigurations
+    ? new Set(getUltracacheDeferredTaskIds(ultracacheConfigurations, taskGraph))
     : null;
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(

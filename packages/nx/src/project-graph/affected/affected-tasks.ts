@@ -5,11 +5,11 @@ import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
   type FileRevisions,
-  type UltracacheConfiguration,
+  type UltracacheConfigurations,
 } from '../../native';
 import { ultracacheEligibilityOptions } from '../../ultracache/overrides';
 import {
-  configurationOf,
+  configurationsOf,
   type UltracacheConfigurationOutcome,
 } from '../../ultracache/store';
 import type { UltracacheConfigurationVersion } from '../../daemon/message-types/ultracache-configuration-version';
@@ -87,7 +87,7 @@ export interface ComputeAffectedTasksOptions {
   /** `--exclude` project patterns. Their tasks leave the selection but still carry a change and run as dependencies. */
   exclude?: string[];
   packageJson?: any;
-  /** This command's Ultracache configuration. Selection plans with it, as the run hashes with it. */
+  /** This command's Ultracache configurations. Selection plans with them, as the run hashes with them. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
   selectivelyHashTsConfig?: boolean;
 }
@@ -108,7 +108,7 @@ export interface AffectedTasksRequest {
   extraTargetDependencies: TargetDependencies;
   excludeTaskDependencies: boolean;
   exclude: string[];
-  ultracacheConfiguration?: UltracacheConfigurationVersion;
+  ultracacheConfigurations?: UltracacheConfigurationVersion;
   /** The runner's `selectivelyHashTsConfig`, which decides what the tsconfig hash reads. */
   selectivelyHashTsConfig?: boolean;
 }
@@ -135,13 +135,13 @@ export async function computeAffectedTasks(
     exclude: opts.exclude ?? [],
     selectivelyHashTsConfig: opts.selectivelyHashTsConfig,
   };
-  const ultracacheConfiguration = configurationOf(
+  const ultracacheConfigurations = configurationsOf(
     opts.ultracacheConfigurationOutcome ?? null
   );
-  if (ultracacheConfiguration) {
-    request.ultracacheConfiguration = {
-      commit: ultracacheConfiguration.commit,
-      fetchedAt: ultracacheConfiguration.resolution.fetchedAt,
+  if (ultracacheConfigurations) {
+    request.ultracacheConfigurations = {
+      commit: ultracacheConfigurations.commit,
+      fetchedAt: ultracacheConfigurations.resolution.fetchedAt,
     };
   }
 
@@ -177,7 +177,7 @@ export async function computeAffectedTasks(
     {
       touchedFiles: opts.touchedFiles,
       packageJson: opts.packageJson,
-      ultracacheConfiguration,
+      ultracacheConfigurations,
     }
   );
   return {
@@ -195,7 +195,7 @@ export async function computeAffectedTasks(
 
 /**
  * Plans the targets' full task graph and matches the changed paths against
- * every plan. No project-level prefilter: under an Ultracache configuration a
+ * every plan. No project-level prefilter: under Ultracache configurations a
  * task can read files no affected project owns. Shared by the client and the
  * daemon.
  */
@@ -210,11 +210,11 @@ export async function selectAffectedTasks(
       request.fileChangeArgs as NxArgs
     ),
     packageJson,
-    ultracacheConfiguration,
+    ultracacheConfigurations,
   }: {
     touchedFiles?: FileChange[];
     packageJson?: any;
-    ultracacheConfiguration?: UltracacheConfiguration;
+    ultracacheConfigurations?: UltracacheConfigurations;
   } = {}
 ): Promise<{
   affectedTaskIds: Set<string>;
@@ -252,11 +252,11 @@ export async function selectAffectedTasks(
       false
     );
   const taskIds = Object.keys(taskGraph.tasks);
-  const plans = ultracacheConfiguration
+  const plans = ultracacheConfigurations
     ? planningContext.planner.getPlansReference(
         taskIds,
         taskGraph,
-        ultracacheConfiguration,
+        ultracacheConfigurations,
         ultracacheEligibilityOptions(projectGraph, taskGraph)
       )
     : planningContext.planner.getPlansReference(taskIds, taskGraph);

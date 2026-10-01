@@ -1,19 +1,19 @@
-import type { UltracacheConfiguration } from '../../native';
+import type { UltracacheConfigurations } from '../../native';
 import { getUltracacheConfigurationStore } from '../../ultracache/store';
 import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
 
 // One handle at a time: entries read for a request serve the next one while
 // the version holds, and another version replaces it, so nothing accumulates
 // over a long-lived daemon.
-let remembered: UltracacheConfiguration | undefined;
+let remembered: UltracacheConfigurations | undefined;
 
 /**
  * Exactly the version the client hashes from, never a newer import for the
  * same commit. `undefined` when it is not stored, e.g. after `nx reset`.
  */
-export function getUltracacheConfigurationForVersion(
+export function getUltracacheConfigurationsForVersion(
   version: UltracacheConfigurationVersion | undefined
-): UltracacheConfiguration | undefined {
+): UltracacheConfigurations | undefined {
   if (!version) {
     return undefined;
   }
@@ -33,7 +33,7 @@ export function getUltracacheConfigurationForVersion(
 function readStored({
   commit,
   fetchedAt,
-}: UltracacheConfigurationVersion): UltracacheConfiguration | undefined {
+}: UltracacheConfigurationVersion): UltracacheConfigurations | undefined {
   try {
     return (
       getUltracacheConfigurationStore().getVersion(commit, fetchedAt) ??

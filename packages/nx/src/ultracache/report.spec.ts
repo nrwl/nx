@@ -26,8 +26,8 @@ describe('formatUltracacheSummary', () => {
       'Ultracache: 2 tasks hashed from their configuration, 6 tasks fell back (2 missing, 1 autofix-disabled, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
     );
     expect(summary.bodyLines).toEqual([
-      'configuration: cached',
-      'commit abc123, 3 tasks in configuration',
+      'configurations: cached',
+      'commit abc123, configurations for 3 tasks',
       'c:e2e: ultracache.mode is off',
       'h:deploy: ultracache.mode is not on',
       'd:test: no Ultracache configuration for this task',
@@ -37,7 +37,7 @@ describe('formatUltracacheSummary', () => {
     ]);
   });
 
-  it('says none were used when the configuration could not be read', () => {
+  it('says none were used when the configurations could not be read', () => {
     expect(
       formatUltracacheSummary(
         {
@@ -47,6 +47,6 @@ describe('formatUltracacheSummary', () => {
         },
         'cached'
       ).line
-    ).toBe('Ultracache: none used (unreadable configuration: bad)');
+    ).toBe('Ultracache: none used (unreadable configurations: bad)');
   });
 });

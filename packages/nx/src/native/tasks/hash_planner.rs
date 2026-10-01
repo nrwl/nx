@@ -28,7 +28,7 @@ use crate::native::tasks::ultracache_eligibility::{
     self, EligibilityInputs, UltracacheEligibilityOptions, UltracacheTask,
 };
 use crate::native::tasks::utils;
-use crate::native::ultracache::UltracacheConfiguration;
+use crate::native::ultracache::UltracacheConfigurations;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
 
@@ -129,7 +129,7 @@ pub struct HashPlanner {
     /// Interner backing every plan this planner produces.
     instruction_pool: Arc<InstructionPool>,
     /// Whole-task plans from earlier calls, reused while the task graph
-    /// around them and the Ultracache configuration are unchanged.
+    /// around them and the Ultracache configurations are unchanged.
     plan_memo: PlanMemo,
 }
 
@@ -274,20 +274,20 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-        configuration: Option<&UltracacheConfiguration>,
+        configurations: Option<&UltracacheConfigurations>,
         custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
         let memo = self.plan_memo.begin(
             &task_graph,
-            configuration.map(|configuration| {
-                let resolution = configuration.resolution_ref();
+            configurations.map(|configurations| {
+                let resolution = configurations.resolution_ref();
                 (resolution.requested_commit.clone(), resolution.fetched_at)
             }),
             custom_hasher_task_ids,
         );
         let to_plan = memo.missing(&task_ids);
-        let ultracache_tasks = configuration.map(|configuration| {
+        let ultracache_tasks = configurations.map(|configurations| {
             // Continuous dependencies are planned into their dependents, so
             // their entries are needed too.
             let mut scope: Vec<&str> = to_plan.clone();
@@ -301,7 +301,7 @@ impl HashPlanner {
             scope.sort_unstable();
             scope.dedup();
             ultracache_eligibility::resolve(
-                configuration,
+                configurations,
                 scope
                     .iter()
                     .filter_map(|id| task_graph.tasks.get_key_value(*id))
@@ -480,11 +480,11 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-        configuration: Option<&UltracacheConfiguration>,
+        configurations: Option<&UltracacheConfigurations>,
         custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let hash_plans =
-            self.get_plans_internal(task_ids, task_graph, configuration, custom_hasher_task_ids)?;
+            self.get_plans_internal(task_ids, task_graph, configurations, custom_hasher_task_ids)?;
         Ok(hash_plans
             .plans
             .into_iter()
@@ -499,7 +499,7 @@ impl HashPlanner {
             .collect())
     }
 
-    /// `configuration` is this run's Ultracache configuration; a task with an
+    /// `configurations` is this run's Ultracache configurations; a task with an
     /// eligible entry hashes its observed reads instead of its declared filesets.
     /// `options` carries the task ids decided in JS, where executors and
     /// target configuration are resolved.
@@ -508,7 +508,7 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
-        configuration: Option<ClassInstance<'_, UltracacheConfiguration>>,
+        configurations: Option<ClassInstance<'_, UltracacheConfigurations>>,
         options: Option<UltracacheEligibilityOptions>,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
@@ -516,7 +516,7 @@ impl HashPlanner {
         self.get_plans_materialized(
             task_ids,
             task_graph,
-            configuration.as_deref(),
+            configurations.as_deref(),
             options.custom_hasher_task_ids.as_deref().unwrap_or(&[]),
         )
     }
@@ -526,7 +526,7 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
-        configuration: Option<ClassInstance<'_, UltracacheConfiguration>>,
+        configurations: Option<ClassInstance<'_, UltracacheConfigurations>>,
         options: Option<UltracacheEligibilityOptions>,
     ) -> anyhow::Result<External<HashPlans>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
@@ -534,7 +534,7 @@ impl HashPlanner {
         let plans = self.get_plans_internal(
             task_ids,
             task_graph,
-            configuration.as_deref(),
+            configurations.as_deref(),
             options.custom_hasher_task_ids.as_deref().unwrap_or(&[]),
         )?;
         Ok(External::new(plans))

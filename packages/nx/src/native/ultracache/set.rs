@@ -1,4 +1,4 @@
-//! An Ultracache configuration and its task entries, as Nx Cloud sends them and the store keeps them.
+//! A commit's Ultracache configurations, as Nx Cloud sends them and the store keeps them.
 
 #[cfg(not(target_arch = "wasm32"))]
 use std::collections::BTreeMap;
@@ -14,15 +14,15 @@ use crate::native::utils::time::current_timestamp_millis;
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ImportedSet {
     pub resolution: UltracacheConfigurationResolution,
-    pub entries: BTreeMap<String, UltracacheTaskConfiguration>,
+    pub entries: BTreeMap<String, UltracacheConfiguration>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ImportedSet {
-    /// Describes `entries` as the configuration fetched now for `requested_commit`.
+    /// Describes `entries` as the configurations fetched now for `requested_commit`.
     pub fn new(
         requested_commit: String,
-        entries: BTreeMap<String, UltracacheTaskConfiguration>,
+        entries: BTreeMap<String, UltracacheConfiguration>,
     ) -> Self {
         let resolution = UltracacheConfigurationResolution {
             requested_commit,
@@ -38,7 +38,7 @@ impl ImportedSet {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct UltracacheTaskConfiguration {
+pub struct UltracacheConfiguration {
     pub commit: String,
     /// Workspace-relative globs the task read.
     pub inputs: Vec<String>,

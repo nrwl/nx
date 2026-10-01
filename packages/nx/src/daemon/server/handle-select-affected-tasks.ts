@@ -4,7 +4,7 @@ import {
   selectAffectedTasks,
 } from '../../project-graph/affected/affected-tasks';
 import type { SelectAffectedTasksResponse } from '../message-types/select-affected-tasks';
-import { getUltracacheConfigurationForVersion } from './ultracache-configuration-state';
+import { getUltracacheConfigurationsForVersion } from './ultracache-configuration-state';
 import { planningContextFor } from './planning-context';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import type { HandlerResult } from './server';
@@ -25,8 +25,8 @@ export async function handleSelectAffectedTasks(
     planningContextFor(projectGraph, nxJson),
     request,
     {
-      ultracacheConfiguration: getUltracacheConfigurationForVersion(
-        request.ultracacheConfiguration
+      ultracacheConfigurations: getUltracacheConfigurationsForVersion(
+        request.ultracacheConfigurations
       ),
     }
   );

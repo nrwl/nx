@@ -32,8 +32,8 @@ import { logger } from '../utils/logger';
 import { buildUltracacheOverrides } from '../ultracache/overrides';
 import { formatUltracacheSummary } from '../ultracache/report';
 import {
-  loadUltracacheConfigurationForRun,
-  configurationOf,
+  loadUltracacheConfigurationsForRun,
+  configurationsOf,
   type UltracacheConfigurationOutcome,
 } from '../ultracache/store';
 import {
@@ -74,7 +74,7 @@ export interface TaskSelection {
   taskIds?: string[];
   /** The planner selection used. It remembers those plans, so hashing the run reuses them. */
   planningContext?: TaskPlanningContext;
-  /** The Ultracache configuration selection planned with; the run hashes with the same one. */
+  /** The Ultracache configurations selection planned with; the run hashes with the same ones. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
@@ -1067,12 +1067,12 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  // Must precede hashing: the Ultracache configuration is a source for task hashes.
+  // Must precede hashing: the Ultracache configurations are a source for task hashes.
   const ultracacheConfigurationOutcome =
     loadedUltracacheConfigurationOutcome !== undefined
       ? loadedUltracacheConfigurationOutcome
-      : await loadUltracacheConfigurationForRun(nxJson, runnerOptions);
-  const ultracacheConfiguration = configurationOf(
+      : await loadUltracacheConfigurationsForRun(nxJson, runnerOptions);
+  const ultracacheConfigurations = configurationsOf(
     ultracacheConfigurationOutcome
   );
 
@@ -1080,7 +1080,7 @@ export async function invokeTasksRunner({
     projectGraph,
     nxJson,
     runnerOptions,
-    ultracacheConfiguration,
+    ultracacheConfigurations,
     planningContext
   );
 
@@ -1094,9 +1094,9 @@ export async function invokeTasksRunner({
     taskGraph,
     nxJson,
     taskDetails,
-    ultracacheConfiguration
+    ultracacheConfigurations
   );
-  reportUltracacheConfiguration(
+  reportUltracacheConfigurations(
     ultracacheConfigurationOutcome,
     projectGraph,
     taskGraph,
@@ -1296,7 +1296,7 @@ function loadTasksRunner(modulePath: string): TasksRunner {
   }
 }
 
-function reportUltracacheConfiguration(
+function reportUltracacheConfigurations(
   outcome: UltracacheConfigurationOutcome | null,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
@@ -1305,7 +1305,7 @@ function reportUltracacheConfiguration(
   if (!outcome || outcome.status === 'skipped') return;
   if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
   const summary = formatUltracacheSummary(
-    buildUltracacheOverrides(projectGraph, taskGraph, outcome.configuration),
+    buildUltracacheOverrides(projectGraph, taskGraph, outcome.configurations),
     outcome.status
   );
   output.note({ title: summary.line, bodyLines: summary.bodyLines });
@@ -1313,7 +1313,7 @@ function reportUltracacheConfiguration(
 
 /**
  * What affected task selection reads from the runner options, so it plans as
- * the run hashes. The Ultracache configuration is loaded once, for selection and the run.
+ * the run hashes. The Ultracache configurations are loaded once, for selection and the run.
  */
 export async function runnerInputsForSelection(
   nxArgs: NxArgs,
@@ -1324,7 +1324,7 @@ export async function runnerInputsForSelection(
 }> {
   const { runnerOptions } = getRunner(nxArgs, nxJson);
   return {
-    ultracacheConfigurationOutcome: await loadUltracacheConfigurationForRun(
+    ultracacheConfigurationOutcome: await loadUltracacheConfigurationsForRun(
       nxJson,
       runnerOptions
     ),

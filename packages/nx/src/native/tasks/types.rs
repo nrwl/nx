@@ -38,7 +38,7 @@ pub struct Task {
     pub parallelism: Option<bool>,
     /// This denotes if the task runs continuously
     pub continuous: Option<bool>,
-    /// The target's ultracache configuration, if declared
+    /// The target's Ultracache settings, if declared
     pub ultracache: Option<TaskUltracacheSettings>,
 }
 
@@ -62,7 +62,7 @@ pub enum UltracacheMode {
     Off,
 }
 
-/// Ultracache configuration of a task's target
+/// Ultracache settings of a task's target
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct TaskUltracacheSettings {
@@ -211,7 +211,7 @@ pub enum HashInstruction {
     External(String),
     AllExternalDependencies,
     JsonFileSet(Box<JsonFileSetInput>),
-    /// Digest of the Ultracache configuration entry a task's plan was built from, so its
+    /// Digest of the Ultracache configuration a task's plan was built from, so its
     /// hash moves when its own observations do. Hashed as the text `Display`
     /// renders, which also keeps it from colliding with a native key.
     UltracacheConfiguration(String),

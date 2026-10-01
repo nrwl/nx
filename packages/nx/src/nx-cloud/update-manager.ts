@@ -17,8 +17,8 @@ import { HttpClient, HttpError, HttpResponse } from '../utils/http-client';
 import { debugLog } from './debug-logger';
 import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
 import type {
-  ReadUltracacheConfigurationOptions,
-  ReadUltracacheConfigurationResult,
+  ReadUltracacheConfigurationsOptions,
+  ReadUltracacheConfigurationsResult,
 } from '../ultracache/fetch';
 import * as tar from 'tar-stream';
 import { cacheDir, cacheDirectoryForWorkspace } from '../utils/cache-directory';
@@ -65,10 +65,10 @@ export interface NxCloudClient {
   commands: Record<string, () => Promise<void>>;
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
   getRemoteCache: () => RemoteCacheV2;
-  /** Clients that expose Ultracache configuration; see `fetchUltracacheConfiguration`. */
+  /** Clients that expose Ultracache configurations; see `fetchUltracacheConfigurations`. */
   readIoSnapshots?: (
-    options: ReadUltracacheConfigurationOptions
-  ) => Promise<ReadUltracacheConfigurationResult | null>;
+    options: ReadUltracacheConfigurationsOptions
+  ) => Promise<ReadUltracacheConfigurationsResult | null>;
 }
 export async function verifyOrUpdateNxCloudClient(options?: {
   url?: string;

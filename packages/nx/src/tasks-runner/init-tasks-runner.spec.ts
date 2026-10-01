@@ -45,8 +45,8 @@ describe.each([
 
   beforeEach(() => vi.clearAllMocks());
 
-  it('hashes from the configuration the caller passes', async () => {
-    const configuration = {
+  it('hashes from the configurations the caller passes', async () => {
+    const configurations = {
       commit: 'head',
       resolution: { fetchedAt: 1 },
     } as any;
@@ -57,14 +57,14 @@ describe.each([
       fullTaskGraph,
       {},
       {} as any,
-      configuration
+      configurations
     );
 
     expect(createTaskHasher).toHaveBeenCalledWith(
       projectGraph,
       {},
       { accessToken: 't' },
-      configuration
+      configurations
     );
   });
 

@@ -8,10 +8,10 @@ use rusqlite::params;
 use rusqlite::types::Value;
 use tracing::debug;
 
-use super::set::{ImportedSet, UltracacheTaskConfiguration};
+use super::set::{ImportedSet, UltracacheConfiguration};
 use super::{
-    UltracacheConfiguration, UltracacheConfigurationImportOptions,
-    UltracacheConfigurationResolution,
+    UltracacheConfigurationImportOptions, UltracacheConfigurationResolution,
+    UltracacheConfigurations,
 };
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::time::current_timestamp_millis;
@@ -46,12 +46,12 @@ impl UltracacheConfigurationStore {
     pub fn import_set(
         &self,
         options: UltracacheConfigurationImportOptions,
-    ) -> napi::Result<UltracacheConfiguration, String> {
-        let entries: BTreeMap<String, UltracacheTaskConfiguration> =
-            serde_json::from_str(&options.configuration_json).map_err(|err| {
+    ) -> napi::Result<UltracacheConfigurations, String> {
+        let entries: BTreeMap<String, UltracacheConfiguration> =
+            serde_json::from_str(&options.configurations_json).map_err(|err| {
                 napi::Error::new(
                     "INVALID_RESPONSE".to_string(),
-                    format!("Nx Cloud returned an Ultracache configuration nx cannot read: {err}"),
+                    format!("Nx Cloud returned Ultracache configurations nx cannot read: {err}"),
                 )
             })?;
         let set = ImportedSet::new(options.requested_commit, entries);
@@ -66,7 +66,7 @@ impl UltracacheConfigurationStore {
             .into_iter()
             .map(|(id, entry)| (id, Some(Arc::new(entry))))
             .collect();
-        Ok(UltracacheConfiguration::new(
+        Ok(UltracacheConfigurations::new(
             resolution,
             self.clone(),
             entries,
@@ -77,12 +77,12 @@ impl UltracacheConfigurationStore {
     /// `null` when none is stored, its row cannot be read, or it was fetched
     /// more than `max_age_ms` ago. Reads only the version's summary row.
     #[napi]
-    pub fn get(&self, commit: String, max_age_ms: Option<i64>) -> Option<UltracacheConfiguration> {
+    pub fn get(&self, commit: String, max_age_ms: Option<i64>) -> Option<UltracacheConfigurations> {
         let resolution = readable(&commit, self.read_resolution(&commit, None))?;
         if max_age_ms.is_some_and(|max| current_timestamp_millis() - resolution.fetched_at > max) {
             return None;
         }
-        Some(UltracacheConfiguration::new(
+        Some(UltracacheConfigurations::new(
             resolution,
             self.clone(),
             HashMap::new(),
@@ -92,9 +92,9 @@ impl UltracacheConfigurationStore {
     /// Exactly the version of `commit` fetched at `fetched_at`; `null` when it
     /// is not stored or its row cannot be read.
     #[napi]
-    pub fn get_version(&self, commit: String, fetched_at: i64) -> Option<UltracacheConfiguration> {
+    pub fn get_version(&self, commit: String, fetched_at: i64) -> Option<UltracacheConfigurations> {
         let resolution = readable(&commit, self.read_resolution(&commit, Some(fetched_at)))?;
-        Some(UltracacheConfiguration::new(
+        Some(UltracacheConfigurations::new(
             resolution,
             self.clone(),
             HashMap::new(),
@@ -108,7 +108,7 @@ fn readable(
     read: Result<Option<UltracacheConfigurationResolution>>,
 ) -> Option<UltracacheConfigurationResolution> {
     read.unwrap_or_else(|err| {
-        debug!("ultracache: the stored configuration for {commit} is unreadable: {err}");
+        debug!("ultracache: the stored configurations for {commit} are unreadable: {err}");
         None
     })
 }
@@ -144,7 +144,7 @@ impl UltracacheConfigurationStore {
             .iter()
             .map(|(task_id, entry)| Ok((task_id, serde_json::to_string(entry)?)))
             .collect::<Result<_>>()
-            .context("serializing Ultracache configuration entries")?;
+            .context("serializing Ultracache configurations")?;
         let resolution = &set.resolution;
         let commit = &resolution.requested_commit;
         let fetched_at = resolution.fetched_at;
@@ -198,7 +198,7 @@ impl UltracacheConfigurationStore {
         commit: &str,
         fetched_at: i64,
         task_ids: &[&str],
-    ) -> Result<Vec<(String, UltracacheTaskConfiguration)>> {
+    ) -> Result<Vec<(String, UltracacheConfiguration)>> {
         let ids = Rc::new(
             task_ids
                 .iter()
@@ -237,10 +237,10 @@ mod tests {
     fn import(
         store: &UltracacheConfigurationStore,
         json: &str,
-    ) -> napi::Result<UltracacheConfiguration, String> {
+    ) -> napi::Result<UltracacheConfigurations, String> {
         store.import_set(UltracacheConfigurationImportOptions {
             requested_commit: "head".into(),
-            configuration_json: json.into(),
+            configurations_json: json.into(),
         })
     }
 
@@ -342,12 +342,12 @@ mod tests {
     }
 
     fn imported(commit: &str, fetched_at: i64, tasks: &[&str]) -> ImportedSet {
-        let entries: BTreeMap<String, UltracacheTaskConfiguration> = tasks
+        let entries: BTreeMap<String, UltracacheConfiguration> = tasks
             .iter()
             .map(|id| {
                 (
                     id.to_string(),
-                    UltracacheTaskConfiguration {
+                    UltracacheConfiguration {
                         commit: commit.into(),
                         inputs: vec![format!("libs/{id}/a.ts"), "b.ts".into()],
                     },

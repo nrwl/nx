@@ -1,4 +1,4 @@
-import { fetchUltracacheConfiguration } from './fetch';
+import { fetchUltracacheConfigurations } from './fetch';
 
 const cloud = vi.hoisted(() => ({
   verifyOrUpdateNxCloudClient: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock('../nx-cloud/resolution-helpers', () => ({
   findAncestorNodeModules: () => [],
 }));
 
-describe('fetchUltracacheConfiguration', () => {
+describe('fetchUltracacheConfigurations', () => {
   const withClient = (client: object) =>
     cloud.verifyOrUpdateNxCloudClient.mockResolvedValue({
       nxCloudClient: { configureLightClientRequire: () => () => {}, ...client },
@@ -28,7 +28,7 @@ describe('fetchUltracacheConfiguration', () => {
   it('reads with the run options and returns what Nx Cloud sent', async () => {
     const result = { snapshots: {} };
     cloud.readIoSnapshots.mockResolvedValue(result);
-    expect(await fetchUltracacheConfiguration({ accessToken: 't' })).toBe(
+    expect(await fetchUltracacheConfigurations({ accessToken: 't' })).toBe(
       result
     );
     expect(cloud.readIoSnapshots).toHaveBeenCalledWith(
@@ -41,7 +41,7 @@ describe('fetchUltracacheConfiguration', () => {
       code: 'ENOTFOUND',
     });
     cloud.readIoSnapshots.mockRejectedValue(offline);
-    await expect(fetchUltracacheConfiguration({})).rejects.toBe(offline);
+    await expect(fetchUltracacheConfigurations({})).rejects.toBe(offline);
   });
 
   it.each([
@@ -70,7 +70,7 @@ describe('fetchUltracacheConfiguration', () => {
     ],
   ])('throws a coded error for %s', async (_, arrange, code) => {
     arrange();
-    await expect(fetchUltracacheConfiguration({})).rejects.toMatchObject({
+    await expect(fetchUltracacheConfigurations({})).rejects.toMatchObject({
       code,
     });
   });

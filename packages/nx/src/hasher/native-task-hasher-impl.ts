@@ -7,7 +7,7 @@ import {
   HasherOptions,
   hashArray,
   HashPlanner,
-  UltracacheConfiguration,
+  UltracacheConfigurations,
   ProjectGraph as NativeProjectGraph,
   NxWorkspaceFilesExternals,
   TaskHasher,
@@ -89,7 +89,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     env: NodeJS.ProcessEnv,
     cwd?: string,
     collectInputs?: boolean,
-    ultracacheConfiguration?: UltracacheConfiguration
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<PartialHash> {
     const hashes = await this.hashTasks(
       [task],
@@ -97,7 +97,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       { [task.id]: env },
       cwd,
       collectInputs,
-      ultracacheConfiguration
+      ultracacheConfigurations
     );
     return hashes[0];
   }
@@ -108,7 +108,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
     collectInputs?: boolean,
-    ultracacheConfiguration?: UltracacheConfiguration
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<PartialHash[]> {
     const envs = perTaskEnvs as Record<string, Record<string, string>>;
     const shouldCollectInputs =
@@ -120,7 +120,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       this.upfrontPlans &&
       unplanned.some((id) => this.upfrontPlans.taskIds.has(id)) &&
       this.upfrontPlans.fingerprint ===
-        taskGraphFingerprint(taskGraph, ultracacheConfiguration)
+        taskGraphFingerprint(taskGraph, ultracacheConfigurations)
     ) {
       Object.assign(
         hashes,
@@ -135,7 +135,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       unplanned = unplanned.filter((id) => !(id in hashes));
     }
     if (unplanned.length > 0) {
-      const plans = this.plan(unplanned, taskGraph, ultracacheConfiguration);
+      const plans = this.plan(unplanned, taskGraph, ultracacheConfigurations);
       Object.assign(
         hashes,
         this.hasher.hashPlans(plans, envs, resolvedCwd, shouldCollectInputs)
@@ -145,22 +145,22 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   }
 
   /**
-   * Plans through the native planner. With an Ultracache configuration, the
+   * Plans through the native planner. With Ultracache configurations, the
    * tasks JS resolves as custom-hashed or opted out ride along so the
    * planner's eligibility walk withholds their entries.
    */
   private plan(
     taskIds: string[],
     taskGraph: TaskGraph,
-    ultracacheConfiguration?: UltracacheConfiguration
+    ultracacheConfigurations?: UltracacheConfigurations
   ) {
-    if (!ultracacheConfiguration) {
+    if (!ultracacheConfigurations) {
       return this.planner.getPlansReference(taskIds, taskGraph);
     }
     return this.planner.getPlansReference(
       taskIds,
       taskGraph,
-      ultracacheConfiguration,
+      ultracacheConfigurations,
       ultracacheEligibilityOptions(this.projectGraph, taskGraph)
     );
   }
@@ -171,15 +171,15 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
     collectInputs?: boolean,
-    ultracacheConfiguration?: UltracacheConfiguration
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Record<string, PartialHash>> {
     const plans = this.plan(
       tasks.map((t) => t.id),
       taskGraph,
-      ultracacheConfiguration
+      ultracacheConfigurations
     );
     this.upfrontPlans = {
-      fingerprint: taskGraphFingerprint(taskGraph, ultracacheConfiguration),
+      fingerprint: taskGraphFingerprint(taskGraph, ultracacheConfigurations),
       taskIds: new Set(tasks.map((t) => t.id)),
       plans,
     };
@@ -196,7 +196,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 
 /**
  * Everything the planner reads from a task graph: each task's target and
- * outputs, and the graph's edges, plus the Ultracache configuration the plans were
+ * outputs, and the graph's edges, plus the Ultracache configurations the plans were
  * built against. The project graph and nx.json are fixed for the life of a
  * hasher, so equal fingerprints mean equal plans. A run's
  * results (hash, timings) are left out so hashing one task does not
@@ -204,11 +204,11 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
  */
 function taskGraphFingerprint(
   taskGraph: TaskGraph,
-  ultracacheConfiguration?: UltracacheConfiguration
+  ultracacheConfigurations?: UltracacheConfigurations
 ): string {
   const parts: string[] = [
-    ultracacheConfiguration
-      ? `${ultracacheConfiguration.commit}@${ultracacheConfiguration.resolution.fetchedAt}`
+    ultracacheConfigurations
+      ? `${ultracacheConfigurations.commit}@${ultracacheConfigurations.resolution.fetchedAt}`
       : '',
   ];
   for (const id of Object.keys(taskGraph.tasks).sort()) {

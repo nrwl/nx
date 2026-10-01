@@ -4,7 +4,7 @@ import {
   getUltracacheReport,
   type UltracacheEligibilityOptions,
   type UltracacheReport,
-  type UltracacheConfiguration,
+  type UltracacheConfigurations,
   type TaskUltracacheSettings,
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
@@ -69,7 +69,7 @@ export function ultracacheEligibilityOptions(
 }
 
 /**
- * Reports which tasks in `taskGraph` hash from `configuration` and why the rest
+ * Reports which tasks in `taskGraph` hash from `configurations` and why the rest
  * do not, with the same eligibility walk the planner uses, without building a
  * planner (no project-graph transfer). Never fetches, never throws. Feeds
  * the `--verbose` run summary.
@@ -77,10 +77,10 @@ export function ultracacheEligibilityOptions(
 export function buildUltracacheOverrides(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  configuration: UltracacheConfiguration
+  configurations: UltracacheConfigurations
 ): UltracacheReport {
   return getUltracacheReport(
-    configuration,
+    configurations,
     getUltracacheSettings(taskGraph),
     ultracacheEligibilityOptions(projectGraph, taskGraph)
   );

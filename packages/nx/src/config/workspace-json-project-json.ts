@@ -182,7 +182,7 @@ export interface TargetMetadata {
 export type Spreadable<T> = T & { '...'?: true };
 
 /**
- * Ultracache configuration for a target's tasks.
+ * Ultracache settings for a target's tasks.
  *
  * The resolved shape rides on each Task instance (`Task['ultracache']`), which
  * is why it is shared with the native task definition. Authoring additionally

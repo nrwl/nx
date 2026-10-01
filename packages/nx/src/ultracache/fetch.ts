@@ -9,30 +9,30 @@ import type { UltracacheCloudOptions } from './config';
 const READ_TIMEOUT_MS = 10_000;
 
 /** The Nx Cloud client's `readIoSnapshots` contract, as far as nx uses it. */
-export interface ReadUltracacheConfigurationOptions {
+export interface ReadUltracacheConfigurationsOptions {
   workspaceRoot?: string;
   nxCloudOptions?: UltracacheCloudOptions;
   timeoutMs?: number;
 }
 
-export interface ReadUltracacheTaskConfiguration {
+export interface ReadUltracacheConfiguration {
   commit: string;
   inputs: readonly string[];
   outputs: readonly string[];
 }
 
-export interface ReadUltracacheConfigurationResult {
-  snapshots: Readonly<Record<string, ReadUltracacheTaskConfiguration>>;
+export interface ReadUltracacheConfigurationsResult {
+  snapshots: Readonly<Record<string, ReadUltracacheConfiguration>>;
 }
 
 /**
- * Reads HEAD's Ultracache configuration from Nx Cloud. Throws with a `code` saying why it
- * could not: the client's own, or `NO_CLOUD_CLIENT`, `UNSUPPORTED_CLIENT` or
+ * Reads HEAD's Ultracache configurations from Nx Cloud. Throws with a `code`
+ * saying why it could not: the client's own, or `NO_CLOUD_CLIENT`, `UNSUPPORTED_CLIENT` or
  * `NO_SNAPSHOTS`.
  */
-export async function fetchUltracacheConfiguration(
+export async function fetchUltracacheConfigurations(
   runnerOptions: UltracacheCloudOptions
-): Promise<ReadUltracacheConfigurationResult> {
+): Promise<ReadUltracacheConfigurationsResult> {
   const client = await loadCloudClient(runnerOptions).catch((e) => {
     throw codedError(
       'NO_CLOUD_CLIENT',
@@ -48,7 +48,7 @@ export async function fetchUltracacheConfiguration(
   if (typeof client.readIoSnapshots !== 'function') {
     throw codedError(
       'UNSUPPORTED_CLIENT',
-      'The installed Nx Cloud client does not expose Ultracache configuration; update nx-cloud'
+      'The installed Nx Cloud client does not expose Ultracache configurations; update nx-cloud'
     );
   }
   const result = await client.readIoSnapshots({
@@ -61,7 +61,7 @@ export async function fetchUltracacheConfiguration(
     // never sends; treat it as nothing to serve rather than a broken reply.
     throw codedError(
       'NO_SNAPSHOTS',
-      'Nx Cloud returned no Ultracache configuration'
+      'Nx Cloud returned no Ultracache configurations'
     );
   }
   return result;

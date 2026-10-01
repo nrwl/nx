@@ -8,8 +8,8 @@ export interface UltracacheSummary {
 }
 
 /**
- * Formats the once-per-run verbose summary of a run that resolved an Ultracache
- * configuration: `result` is what hashing used, `status` whether it was
+ * Formats the once-per-run verbose summary of a run that resolved Ultracache
+ * configurations: `result` is what hashing used, `status` whether they were
  * fetched or already stored.
  */
 export function formatUltracacheSummary(
@@ -23,15 +23,15 @@ export function formatUltracacheSummary(
   const setLevel = result.diagnostics.find((d) => d.taskId == null);
 
   const line = setLevel
-    ? `Ultracache: none used (unreadable configuration: ${setLevel.message})`
+    ? `Ultracache: none used (unreadable configurations: ${setLevel.message})`
     : `Ultracache: ${plural(used, 'task')} hashed from their configuration, ${plural(
         fellBack,
         'task'
       )} fell back${fellBack ? ` (${summarizeReasons(byReason)})` : ''}`;
 
-  const bodyLines: string[] = [`configuration: ${status}`];
+  const bodyLines: string[] = [`configurations: ${status}`];
   bodyLines.push(
-    `commit ${result.resolution.requestedCommit}, ${result.resolution.tasks} tasks in configuration`
+    `commit ${result.resolution.requestedCommit}, configurations for ${result.resolution.tasks} tasks`
   );
   for (const d of result.diagnostics) {
     bodyLines.push(describeDiagnostic(d));
@@ -42,7 +42,7 @@ export function formatUltracacheSummary(
 function describeDiagnostic(d: UltracacheDiagnostic): string {
   switch (d.reason) {
     case 'unreadable-set':
-      return `unreadable Ultracache configuration: ${d.message}`;
+      return `unreadable Ultracache configurations: ${d.message}`;
     case 'disabled':
       return `${d.taskId}: ultracache.mode is off`;
     case 'autofix-disabled':

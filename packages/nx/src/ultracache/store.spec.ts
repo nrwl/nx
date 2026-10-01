@@ -1,7 +1,7 @@
 import {
-  importUltracacheConfiguration,
-  loadUltracacheConfigurationForRun,
-  openUltracacheConfiguration,
+  importUltracacheConfigurations,
+  loadUltracacheConfigurationsForRun,
+  openUltracacheConfigurations,
 } from './store';
 
 const store = vi.hoisted(() => ({
@@ -9,7 +9,7 @@ const store = vi.hoisted(() => ({
   get: vi.fn(),
   getVersion: vi.fn(),
 }));
-const cloud = vi.hoisted(() => ({ fetchUltracacheConfiguration: vi.fn() }));
+const cloud = vi.hoisted(() => ({ fetchUltracacheConfigurations: vi.fn() }));
 
 const UltracacheConfigurationStore = vi.hoisted(() =>
   vi.fn(function () {
@@ -29,7 +29,7 @@ vi.mock('../native', () => ({
   }),
 }));
 vi.mock('./fetch', () => ({
-  fetchUltracacheConfiguration: cloud.fetchUltracacheConfiguration,
+  fetchUltracacheConfigurations: cloud.fetchUltracacheConfigurations,
 }));
 vi.mock('../utils/git-utils', () => ({ getLatestCommitSha: () => 'head' }));
 vi.mock('../utils/db-connection', () => ({
@@ -43,7 +43,7 @@ const warn = vi.hoisted(() => vi.fn());
 vi.mock('../utils/output', () => ({ output: { warn } }));
 vi.mock('../utils/logger', () => ({ logger: { verbose: vi.fn() } }));
 
-describe('loadUltracacheConfigurationForRun', () => {
+describe('loadUltracacheConfigurationsForRun', () => {
   afterEach(() => vi.unstubAllEnvs());
 
   const nxJson = {} as any;
@@ -70,7 +70,7 @@ describe('loadUltracacheConfigurationForRun', () => {
     store.get.mockReset();
     store.import.mockReset();
     store.get.mockReturnValue(null);
-    cloud.fetchUltracacheConfiguration.mockResolvedValue({
+    cloud.fetchUltracacheConfigurations.mockResolvedValue({
       snapshots: {},
     });
   });
@@ -80,53 +80,53 @@ describe('loadUltracacheConfigurationForRun', () => {
   it('does nothing for a run that did not opt in', async () => {
     for (const NX_CLOUD_USE_ULTRACACHE of [undefined, 'false']) {
       expect(
-        await loadUltracacheConfigurationForRun(
+        await loadUltracacheConfigurationsForRun(
           nxJson,
           {},
           optedIn({ NX_CLOUD_USE_ULTRACACHE })
         )
       ).toBeNull();
     }
-    expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
+    expect(cloud.fetchUltracacheConfigurations).not.toHaveBeenCalled();
   });
 
   it('serves a stored set under an hour old without asking Nx Cloud', async () => {
     const set = stored();
     store.get.mockReturnValue(set);
     expect(
-      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+      await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
     ).toEqual({
       status: 'cached',
-      configuration: set,
+      configurations: set,
     });
     expect(store.get).toHaveBeenCalledWith('head', 60 * 60 * 1000);
-    expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
+    expect(cloud.fetchUltracacheConfigurations).not.toHaveBeenCalled();
   });
 
   it('imports what Nx Cloud read when no stored set is young enough', async () => {
-    const configuration = {
+    const configurations = {
       'web:build': { commit: 'parent', inputs: ['apps/web/**'], outputs: [] },
     };
-    cloud.fetchUltracacheConfiguration.mockResolvedValue({
-      snapshots: configuration,
+    cloud.fetchUltracacheConfigurations.mockResolvedValue({
+      snapshots: configurations,
     });
     const set = stored();
     store.import.mockReturnValue(set);
-    const result = await loadUltracacheConfigurationForRun(
+    const result = await loadUltracacheConfigurationsForRun(
       nxJson,
       { accessToken: 't' },
       optedIn()
     );
-    expect(cloud.fetchUltracacheConfiguration).toHaveBeenCalledWith({
+    expect(cloud.fetchUltracacheConfigurations).toHaveBeenCalledWith({
       accessToken: 't',
     });
     expect(store.import).toHaveBeenCalledWith(
       expect.objectContaining({
         requestedCommit: 'head',
-        configurationJson: JSON.stringify(configuration),
+        configurationsJson: JSON.stringify(configurations),
       })
     );
-    expect(result).toEqual({ status: 'fetched', configuration: set });
+    expect(result).toEqual({ status: 'fetched', configurations: set });
   });
 
   it('fetches once under the lock, and uses a set another process stored meanwhile', async () => {
@@ -137,16 +137,16 @@ describe('loadUltracacheConfigurationForRun', () => {
     // Missed before the lock; the holder stored one before releasing it.
     store.get.mockReturnValueOnce(null).mockReturnValueOnce(set);
 
-    const outcome = await loadUltracacheConfigurationForRun(
+    const outcome = await loadUltracacheConfigurationsForRun(
       nxJson,
       {},
       optedIn()
     );
 
-    expect(outcome).toEqual({ status: 'cached', configuration: set });
+    expect(outcome).toEqual({ status: 'cached', configurations: set });
     expect(lock.wait).toHaveBeenCalledTimes(1);
     expect(lock.unlock).toHaveBeenCalledTimes(1);
-    expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
+    expect(cloud.fetchUltracacheConfigurations).not.toHaveBeenCalled();
   });
 
   it('hashes natively when the read fails, with the reason its code gives', async () => {
@@ -156,22 +156,22 @@ describe('loadUltracacheConfigurationForRun', () => {
       ['UNSUPPORTED_CLIENT', 'unsupported-client'],
       ['NO_CLOUD_CLIENT', 'no-cloud-client'],
     ]) {
-      cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+      cloud.fetchUltracacheConfigurations.mockRejectedValueOnce(
         coded(code, 'x')
       );
       expect(
-        await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+        await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
       ).toEqual({
         status: 'skipped',
         reason,
         message: 'x',
       });
     }
-    cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+    cloud.fetchUltracacheConfigurations.mockRejectedValueOnce(
       new Error('no code')
     );
     expect(
-      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+      await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
     ).toMatchObject({
       reason: 'fetch-failed',
     });
@@ -182,11 +182,11 @@ describe('loadUltracacheConfigurationForRun', () => {
     store.get.mockImplementation((_commit, maxAgeMs) =>
       maxAgeMs === undefined ? stored() : null
     );
-    cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+    cloud.fetchUltracacheConfigurations.mockRejectedValueOnce(
       coded('ENOTFOUND', 'x')
     );
     expect(
-      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+      await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
     ).toEqual({
       status: 'skipped',
       reason: 'offline',
@@ -201,20 +201,20 @@ describe('loadUltracacheConfigurationForRun', () => {
 
   // Only reasons that point at misconfiguration warn on every run.
   it('warns for an unauthorized read but not when Nx Cloud has no set', async () => {
-    cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+    cloud.fetchUltracacheConfigurations.mockRejectedValueOnce(
       coded('NO_SNAPSHOTS')
     );
     expect(
-      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+      await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
     ).toMatchObject({
       reason: 'no-snapshots',
     });
     expect(warn).not.toHaveBeenCalled();
 
-    cloud.fetchUltracacheConfiguration.mockRejectedValueOnce(
+    cloud.fetchUltracacheConfigurations.mockRejectedValueOnce(
       coded('UNAUTHORIZED')
     );
-    await loadUltracacheConfigurationForRun(nxJson, {}, optedIn());
+    await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn());
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
@@ -223,12 +223,12 @@ describe('loadUltracacheConfigurationForRun', () => {
       throw new Error('database disk image is malformed');
     });
     expect(
-      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+      await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
     ).toMatchObject({
       status: 'skipped',
       message: 'database disk image is malformed',
     });
-    expect(cloud.fetchUltracacheConfiguration).not.toHaveBeenCalled();
+    expect(cloud.fetchUltracacheConfigurations).not.toHaveBeenCalled();
   });
 
   it('skips when the store cannot write what Nx Cloud read', async () => {
@@ -236,7 +236,7 @@ describe('loadUltracacheConfigurationForRun', () => {
       throw coded('WRITE_FAILED', 'disk full');
     });
     expect(
-      await loadUltracacheConfigurationForRun(nxJson, {}, optedIn())
+      await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
     ).toMatchObject({
       status: 'skipped',
       reason: 'write-failed',
@@ -244,29 +244,29 @@ describe('loadUltracacheConfigurationForRun', () => {
   });
 });
 
-describe('importUltracacheConfiguration', () => {
+describe('importUltracacheConfigurations', () => {
   it('stores what the Nx Cloud client read and returns the handle', () => {
     const handle = { commit: 'head' };
     store.import.mockReturnValue(handle);
-    const configuration = {
+    const configurations = {
       'web:build': { commit: 'head', inputs: ['apps/web/**'], outputs: [] },
     };
-    expect(importUltracacheConfiguration('head', configuration)).toBe(handle);
+    expect(importUltracacheConfigurations('head', configurations)).toBe(handle);
     expect(store.import).toHaveBeenCalledWith({
       requestedCommit: 'head',
-      configurationJson: JSON.stringify(configuration),
+      configurationsJson: JSON.stringify(configurations),
     });
   });
 });
 
-describe('openUltracacheConfiguration', () => {
+describe('openUltracacheConfigurations', () => {
   it('reopens the stored version by commit and fetch time', () => {
     const handle = { commit: 'head' };
     store.getVersion.mockReturnValue(handle);
-    expect(openUltracacheConfiguration('head', 7)).toBe(handle);
+    expect(openUltracacheConfigurations('head', 7)).toBe(handle);
     expect(store.getVersion).toHaveBeenCalledWith('head', 7);
 
     store.getVersion.mockReturnValue(null);
-    expect(openUltracacheConfiguration('head', 8)).toBeNull();
+    expect(openUltracacheConfigurations('head', 8)).toBeNull();
   });
 });

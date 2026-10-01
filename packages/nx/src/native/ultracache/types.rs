@@ -10,10 +10,10 @@ pub struct UltracacheConfigurationResolution {
     pub tasks: u32,
 }
 
-/// The Ultracache configuration the Nx Cloud client read for HEAD, as JS hands it over.
+/// The Ultracache configurations the Nx Cloud client read for HEAD, as JS hands them over.
 #[napi(object)]
 pub struct UltracacheConfigurationImportOptions {
     pub requested_commit: String,
     /// `Record<taskId, { commit, inputs, outputs }>` as JSON.
-    pub configuration_json: String,
+    pub configurations_json: String,
 }

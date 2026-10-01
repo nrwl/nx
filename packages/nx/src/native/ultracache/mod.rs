@@ -1,10 +1,10 @@
-mod configuration;
+mod configurations;
 pub(crate) mod set;
 #[cfg(not(target_arch = "wasm32"))]
 mod store;
 mod types;
 
-pub use configuration::UltracacheConfiguration;
+pub use configurations::UltracacheConfigurations;
 #[cfg(not(target_arch = "wasm32"))]
 pub use store::UltracacheConfigurationStore;
 pub use types::{UltracacheConfigurationImportOptions, UltracacheConfigurationResolution};

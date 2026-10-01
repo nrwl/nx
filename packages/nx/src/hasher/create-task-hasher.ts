@@ -1,7 +1,7 @@
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
-import type { UltracacheConfiguration } from '../native';
+import type { UltracacheConfigurations } from '../native';
 import type { TaskPlanningContext } from './task-planning-context';
 import { getFileMap } from '../project-graph/build-project-graph';
 import {
@@ -11,7 +11,7 @@ import {
 } from './task-hasher';
 
 /**
- * `ultracacheConfiguration` is this run's set (see `loadUltracacheConfigurationForRun`); undefined
+ * `ultracacheConfigurations` is this run's set (see `loadUltracacheConfigurationsForRun`); undefined
  * hashes natively. The daemon gets its version, so it hashes from the same
  * set even after a newer one is imported for the commit.
  */
@@ -19,17 +19,17 @@ export function createTaskHasher(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   runnerOptions?: any,
-  ultracacheConfiguration?: UltracacheConfiguration,
+  ultracacheConfigurations?: UltracacheConfigurations,
   planningContext?: TaskPlanningContext
 ): TaskHasher {
   if (daemonClient.enabled()) {
     return new DaemonBasedTaskHasher(
       daemonClient,
       runnerOptions,
-      ultracacheConfiguration
+      ultracacheConfigurations
         ? {
-            commit: ultracacheConfiguration.commit,
-            fetchedAt: ultracacheConfiguration.resolution.fetchedAt,
+            commit: ultracacheConfigurations.commit,
+            fetchedAt: ultracacheConfigurations.resolution.fetchedAt,
           }
         : undefined
     );
@@ -41,7 +41,7 @@ export function createTaskHasher(
       rustReferences,
       runnerOptions,
       planningContext,
-      ultracacheConfiguration
+      ultracacheConfigurations
     );
   }
 }

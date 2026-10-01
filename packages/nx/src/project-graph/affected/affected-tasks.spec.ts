@@ -395,7 +395,7 @@ describe('the run graph with --exclude-task-dependencies', () => {
   });
 });
 
-describe('selection with an Ultracache configuration', () => {
+describe('selection with Ultracache configurations', () => {
   let dir: string;
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'affected-ultracache-'));
@@ -409,11 +409,11 @@ describe('selection with an Ultracache configuration', () => {
     const db = connectToNxDb(dir, 'ultracache');
     new UltracacheConfigurationStore(db).import({
       requestedCommit: commit,
-      configurationJson: JSON.stringify({
+      configurationsJson: JSON.stringify({
         'lib:test': { commit, inputs: ['docs/README.md'], outputs: [] },
       }),
     });
-    const configuration = new UltracacheConfigurationStore(db).get(commit);
+    const configurations = new UltracacheConfigurationStore(db).get(commit);
     const select = (ultracacheConfigurationOutcome?: any) =>
       computeAffectedTasks({
         projectGraph: graph(),
@@ -428,13 +428,13 @@ describe('selection with an Ultracache configuration', () => {
       });
 
     expect([...(await select()).affectedTaskIds]).toEqual([]);
-    const outcome = { status: 'fetched', configuration };
-    const withConfiguration = await select(outcome);
-    expect([...withConfiguration.affectedTaskIds]).toEqual(['lib:test']);
-    // The run hashes with the same configuration rather than loading its own.
-    expect(withConfiguration.taskSelection.ultracacheConfigurationOutcome).toBe(
-      outcome
-    );
+    const outcome = { status: 'fetched', configurations };
+    const withConfigurations = await select(outcome);
+    expect([...withConfigurations.affectedTaskIds]).toEqual(['lib:test']);
+    // The run hashes with the same configurations rather than loading its own.
+    expect(
+      withConfigurations.taskSelection.ultracacheConfigurationOutcome
+    ).toBe(outcome);
   });
 });
 
@@ -452,7 +452,7 @@ describe('computeAffectedTasks with the daemon on', () => {
   beforeEach(() => vi.clearAllMocks());
 
   // The daemon resolves the same stored version, so it selects as the run hashes.
-  it('sends the configuration version and keeps the loaded configuration for the run', async () => {
+  it('sends the configurations version and keeps the loaded configurations for the run', async () => {
     daemon.enabled.mockReturnValueOnce(true);
     const empty = {
       roots: [],
@@ -468,7 +468,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     });
     const outcome = {
       status: 'cached',
-      configuration: { commit: 'abc', resolution: { fetchedAt: 7 } },
+      configurations: { commit: 'abc', resolution: { fetchedAt: 7 } },
     } as any;
 
     const result = await computeAffectedTasks({
@@ -479,7 +479,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     });
 
     const [request] = daemon.selectAffectedTasks.mock.calls[0];
-    expect(request.ultracacheConfiguration).toEqual({
+    expect(request.ultracacheConfigurations).toEqual({
       commit: 'abc',
       fetchedAt: 7,
     });

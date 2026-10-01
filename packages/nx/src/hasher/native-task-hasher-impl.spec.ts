@@ -1591,10 +1591,10 @@ describe('native task hasher', () => {
       join(tempFs.tempDir, 'ultracache-read-db'),
       'ultracache'
     );
-    const configurationFor = (inputs: string[]) => {
+    const configurationsFor = (inputs: string[]) => {
       new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
-        configurationJson: JSON.stringify({
+        configurationsJson: JSON.stringify({
           'child:compile': { commit, inputs, outputs: ['dist/child'] },
         }),
       });
@@ -1608,7 +1608,7 @@ describe('native task hasher', () => {
         {},
         tempFs.tempDir,
         true,
-        configurationFor(inputs)
+        configurationsFor(inputs)
       );
 
     const one = await hashWith(['libs/child/one.txt']);
@@ -1638,7 +1638,7 @@ describe('native task hasher', () => {
       );
       new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
-        configurationJson: JSON.stringify({
+        configurationsJson: JSON.stringify({
           'child:compile': {
             commit,
             inputs: [input],
@@ -1676,7 +1676,7 @@ describe('native task hasher', () => {
     );
     new UltracacheConfigurationStore(configurationDb).import({
       requestedCommit: commit,
-      configurationJson: JSON.stringify({
+      configurationsJson: JSON.stringify({
         'child:compile': { commit, inputs: [input], outputs: [] },
       }),
     });
@@ -1700,16 +1700,16 @@ describe('native task hasher', () => {
       join(tempFs.tempDir, 'ultracache-db'),
       'ultracache'
     );
-    const configurationFor = (inputs: string[]) => {
+    const configurationsFor = (inputs: string[]) => {
       new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
-        configurationJson: JSON.stringify({
+        configurationsJson: JSON.stringify({
           'child:compile': { commit, inputs, outputs: [] },
         }),
       });
       return new UltracacheConfigurationStore(configurationDb).get(commit);
     };
-    const configuration = configurationFor(['libs/child/observed.txt']);
+    const configurations = configurationsFor(['libs/child/observed.txt']);
     const task = taskGraph.tasks['child:compile'];
 
     const native = await impl.hashTask(
@@ -1725,7 +1725,7 @@ describe('native task hasher', () => {
       {},
       tempFs.tempDir,
       true,
-      configuration
+      configurations
     );
 
     expect(fromConfiguration.value).not.toBe(native.value);
@@ -1750,7 +1750,7 @@ describe('native task hasher', () => {
       {},
       tempFs.tempDir,
       true,
-      configuration
+      configurations
     );
     expect(changed.value).not.toBe(fromConfiguration.value);
     closeDbConnection(configurationDb);
@@ -1771,7 +1771,7 @@ describe('native task hasher', () => {
     const importReads = (inputs: string[]) =>
       store.import({
         requestedCommit: commit,
-        configurationJson: JSON.stringify({
+        configurationsJson: JSON.stringify({
           'child:compile': { commit, inputs, outputs: [] },
         }),
       });
@@ -1782,8 +1782,8 @@ describe('native task hasher', () => {
     importReads(['libs/child/two.txt']);
 
     const task = taskGraph.tasks['child:compile'];
-    const hashWith = (configuration: typeof first) =>
-      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, configuration);
+    const hashWith = (configurations: typeof first) =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, configurations);
     const fromPinned = await hashWith(pinned);
     expect(fromPinned.inputs.files).toContain('libs/child/one.txt');
     expect(fromPinned.inputs.files).not.toContain('libs/child/two.txt');
@@ -1803,16 +1803,16 @@ describe('native task hasher', () => {
     );
     new UltracacheConfigurationStore(configurationDb).import({
       requestedCommit: commit,
-      configurationJson: JSON.stringify({
+      configurationsJson: JSON.stringify({
         'child:compile': { commit, inputs: ['package-lock.json'], outputs: [] },
       }),
     });
-    const configuration = new UltracacheConfigurationStore(configurationDb).get(
-      commit
-    );
+    const configurations = new UltracacheConfigurationStore(
+      configurationDb
+    ).get(commit);
     const task = taskGraph.tasks['child:compile'];
     const hash = () =>
-      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, configuration);
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, configurations);
 
     const before = await hash();
     expect(before.inputs.files).toContain('package-lock.json');
