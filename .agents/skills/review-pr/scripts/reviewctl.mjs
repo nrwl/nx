@@ -1489,6 +1489,16 @@ function carriedSection(previous, heading) {
   return body ? `\n## ${heading}\n\n${body}\n` : '';
 }
 
+// Embedded external text is fenced past its own longest backtick run so it
+// cannot open a record section: the outbox reads `## Grill` as human evaluation.
+function inertBlock(text, info) {
+  const runs = [...text.matchAll(/^\s*(`{3,})/gm)].map(
+    (match) => match[1].length + 1
+  );
+  const fence = '`'.repeat(Math.max(3, ...runs));
+  return `${fence}${info}\n${text}\n${fence}`;
+}
+
 async function composeTriage(state, result, triagePath) {
   const previous = existsSync(triagePath)
     ? await readFile(triagePath, 'utf8')
@@ -1514,7 +1524,7 @@ async function composeTriage(state, result, triagePath) {
     ? checks
         .map(
           (item) =>
-            `### ${item.name}\n\n\`\`\`text\n${item.content.trim()}\n\`\`\``
+            `### ${item.name}\n\n${inertBlock(item.content.trim(), 'text')}`
         )
         .join('\n\n')
     : 'none';
@@ -1605,11 +1615,11 @@ ${checkText}
 
 ## Public grounding
 
-${publicGrounding.trim()}
+${inertBlock(publicGrounding.trim(), 'markdown')}
 
 ## Private context
 
-${privateContext.trim()}
+${inertBlock(privateContext.trim(), 'markdown')}
 
 ## Posted
 

@@ -51,7 +51,8 @@ Then come `## Review draft` and `## Prior reviews`. Below those it keeps:
   merged, resolved, and unavailable items;
 - the frozen scope and artifact hashes;
 - all verified lane reports and any parent-run check results;
-- public grounding and private context;
+- public grounding and private context, each inside a fence longer than any it contains, so
+  neither can open a record section;
 - failures and limitations.
 
 The private review records whether optional Polygraph context was not needed, unavailable, unmatched,
