@@ -561,12 +561,34 @@ export function removeTasksFromTaskGraph(
   ids: string[]
 ): TaskGraph {
   const newGraph = removeIdsFromTaskGraph<Task>(graph, ids, graph.tasks);
+  const continuousDependenciesWithoutInputs = pruneEdges(
+    graph.continuousDependenciesWithoutInputs,
+    newGraph.mapWithIds
+  );
   return {
     dependencies: newGraph.dependencies,
     continuousDependencies: newGraph.continuousDependencies,
+    ...(continuousDependenciesWithoutInputs
+      ? { continuousDependenciesWithoutInputs }
+      : {}),
     roots: newGraph.roots,
     tasks: newGraph.mapWithIds,
   };
+}
+
+function pruneEdges(
+  edges: Record<string, string[]> | undefined,
+  kept: Record<string, unknown>
+): Record<string, string[]> | undefined {
+  let pruned: Record<string, string[]> | undefined;
+  for (const [id, deps] of Object.entries(edges ?? {})) {
+    if (!(id in kept)) continue;
+    const keptDeps = deps.filter((dep) => dep in kept);
+    if (keptDeps.length > 0) {
+      (pruned ??= {})[id] = keptDeps;
+    }
+  }
+  return pruned;
 }
 
 function removeIdsFromTaskGraph<T>(
