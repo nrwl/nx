@@ -1,5 +1,5 @@
 import { GitRepository } from '../../../utils/git-utils';
-const createSpinner = require('ora');
+import { Spinner } from '../../../utils/spinner';
 
 export async function mergeRemoteSource(
   destinationGitClient: GitRepository,
@@ -9,7 +9,7 @@ export async function mergeRemoteSource(
   remoteName: string,
   branchName: string
 ) {
-  const spinner = createSpinner();
+  const spinner = new Spinner();
   spinner.start(
     `Merging ${branchName} from ${sourceRemoteUrl} into ${destination}`
   );
