@@ -855,9 +855,11 @@ See [validating launch templates](/docs/kb/launch-templates#validating-launch-te
 
 #### Subcommands
 
-##### `nx-cloud validate sandbox-violations`
+##### `nx-cloud validate io-violations`
 
-Replay a downloaded [sandbox report](/docs/kb/sandboxing) against your current `nx.json`.
+`nx-cloud validate sandbox-violations` is an alias for this command.
+
+Replay a downloaded Ultracache report against your current `nx.json`.
 For every task in the report, the command prints which unexpected reads and writes your latest input and output declarations now cover, and which ones remain unexplained.
 
 It accepts a single per-task report, an array of reports, or the `index.json` written next to them, in which case every referenced report is loaded.
@@ -866,7 +868,7 @@ Exits `0` when every task is reconciled and `1` when at least one task still has
 **Usage:**
 
 ```shell
-npx nx-cloud validate sandbox-violations <report-path>
+npx nx-cloud validate io-violations <report-path>
 ```
 
 | Option          | Type    | Description                                                           | Default |
@@ -875,20 +877,22 @@ npx nx-cloud validate sandbox-violations <report-path>
 | `--json`        | boolean | Emit a machine-readable summary on stdout instead of the printed view | `false` |
 
 ```shell
-npx nx-cloud get sandbox-reports --branch <branch> --since 1d
-npx nx-cloud validate sandbox-violations .nx/workspace-data/sandbox-reports/<branch>/index.json --json
+npx nx-cloud get io-reports --branch <branch> --since 1d
+npx nx-cloud validate io-violations .nx/workspace-data/sandbox-reports/<branch>/index.json --json
 ```
 
-For the fix workflow, see [fix sandbox violations](/docs/kb/fix-sandbox-violations).
+For the fix workflow, see [improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs).
 
-### `nx-cloud get sandbox-reports`
+### `nx-cloud get io-reports`
 
-Download sandbox reports for tasks that ran on a branch. Reports capture unexpected file reads and writes detected by the Nx Cloud task sandbox and are written to disk as JSON files for inspection or post-processing.
+`nx-cloud get sandbox-reports` is an alias for this command.
+
+Download I/O reports for tasks that ran on a branch. Reports capture unexpected file reads and writes detected by Nx Cloud and are written to disk as JSON files for inspection or post-processing.
 
 **Usage:**
 
 ```shell
-npx nx-cloud get sandbox-reports [options]
+npx nx-cloud get io-reports [options]
 ```
 
 #### Options
@@ -911,13 +915,13 @@ npx nx-cloud get sandbox-reports [options]
 Download reports for a feature branch over the last hour:
 
 ```shell
-npx nx-cloud get sandbox-reports --branch 11249 --since 1h
+npx nx-cloud get io-reports --branch 11249 --since 1h
 ```
 
 Fall back to `main` for any task that has no report on the feature branch:
 
 ```shell
-npx nx-cloud get sandbox-reports --branch my-feature --fallback-branch main
+npx nx-cloud get io-reports --branch my-feature --fallback-branch main
 ```
 
 ### `nx-cloud record`

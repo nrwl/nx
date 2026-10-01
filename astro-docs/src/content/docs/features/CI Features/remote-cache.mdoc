@@ -1,6 +1,15 @@
 ---
 title: Remote caching
-description: Share cached task results across developer machines and CI with Nx Cloud remote caching, so CI skips work that already ran and costs less.
+description: Share cached task results across developer machines and CI with Nx Cloud remote caching, and hash each task from the files it actually reads with Ultracache, so CI skips work that already ran and costs less.
+keywords:
+  [
+    remote cache,
+    remote caching,
+    ultracache,
+    cache hit rate,
+    task inputs,
+    nx replay,
+  ]
 sidebar:
   order: 11
 filter: 'type:Features'
@@ -65,10 +74,74 @@ The cache entry doesn't contain the input source files.
 Nx hashes those inputs to calculate the task hash.
 For more information, see [how caching works](/docs/concepts/how-caching-works#what-nx-caches).
 
-Cache correctness depends on accurate `inputs` and `outputs`.
-A missing input can produce a stale cache hit, while an undeclared output won't be restored.
-[Task sandboxing](/docs/kb/sandboxing) can identify file access that isn't represented
-in the task configuration.
+A task's `inputs` decide whether it hits or misses the cache, and its `outputs` decide which files are
+restored on a hit.
+To see which tasks read or write files outside them, open **Analytics** > **Cache inputs and outputs**
+in Nx Cloud, and open a task's **Report** tab for the files each process read and wrote.
+[Improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs) walks through fixing them
+with a coding agent, and on Nx Cloud, Ultracache handles most of them for you.
+
+## Ultracache
+
+Whether a task hits or misses the remote cache depends on its `inputs`.
+You can configure them in three ways:
+
+- **By hand.** You [list every file and setting](/docs/kb/configure-inputs) the task depends on in
+  `project.json` or `package.json`, and keep the list up to date as the task changes.
+- **From inference.** Nx plugins [infer inputs](/docs/concepts/mental-model#inferred-tasks) from the
+  tool's own configuration, such as the `include` and `files` a `tsconfig.json` lists, so they
+  follow the tool without hand-written configuration. Making those settings precise is still up to
+  you.
+- **With Ultracache.** When a task runs on Nx Agents, Nx Cloud traces the files it reads and records
+  them as its inputs. Later runs use that record in place of the declared file inputs, so a change to
+  a file the task never reads no longer invalidates it.
+
+Ultracache is part of every Nx Cloud plan, including Hobby, and every task that runs on Nx Agents uses
+it, with nothing to turn on.
+It needs Nx 22.6 or later.
+It uses 1 credit per traced task, as listed in [credit pricing](/docs/reference/nx-cloud/credits-pricing).
+
+### How Ultracache works
+
+1. A task runs on Nx Agents with no recording yet. Nx hashes it from its declared `inputs`, runs it,
+   and traces every file it reads and writes.
+1. When the task succeeds, Nx Cloud records the files it read as its inputs at that commit.
+1. Later runs of that task are hashed from the recorded inputs.
+   A cache hit there means none of the files the task read have changed.
+1. When a later run reads a file the recording doesn't cover, Nx Cloud updates the recording.
+
+The recording lives in Nx Cloud, so your `project.json`, `package.json`, and `nx.json` don't
+change.
+Declared `outputs` still decide which files Nx stores in the cache and restores on a hit.
+
+Cache hits, continuous tasks, tasks with `cache: false`, and tasks run by a batch executor aren't
+traced.
+Tasks that run outside Nx Agents, including on CI machines you manage yourself, are hashed from their
+declared `inputs`.
+
+### Turn off Ultracache for a target
+
+Every target uses Ultracache by default.
+Set `ultracache.mode` to `off` to hash a target from its declared `inputs` instead.
+This also turns off tracing for the target, so its reads and writes no longer appear under
+**Analytics** > **Cache inputs and outputs**:
+
+```json
+// project.json
+{
+  "targets": {
+    "e2e": {
+      "ultracache": {
+        "mode": "off"
+      }
+    }
+  }
+}
+```
+
+To keep Ultracache on but leave paths such as a tool's scratch directory out of a target's recording,
+list them in `ultracache.ignoredReads` and `ultracache.ignoredWrites`.
+For every mode and option, see the [`ultracache` target property](/docs/reference/project-configuration#ultracache).
 
 ## Remote cache security
 
