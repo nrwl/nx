@@ -10,7 +10,6 @@ import { loadRootEnvFiles } from '../utils/dotenv';
 import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
 import { createTaskHasher } from '../hasher/create-task-hasher';
-import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
 import type { IoSnapshots } from '../native';
 import type { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
@@ -60,12 +59,6 @@ async function createOrchestrator(
     }, {} as any),
   };
 
-  // As in run-command, unhashed tasks hash from the caller's set. Applying is
-  // idempotent, so both graphs may share the same Task objects.
-  if (ioSnapshots) {
-    applyIoSnapshotOutputs(projectGraph, fullTaskGraph, ioSnapshots);
-    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
-  }
   const hasher = createTaskHasher(projectGraph, nxJson, options, ioSnapshots);
 
   const nxArgs = {

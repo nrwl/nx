@@ -730,12 +730,6 @@ export declare function getIoSnapshotReport(snapshots: IoSnapshots, tasks: Recor
  */
 export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
-/**
- * Observed outputs per eligible task, for the runner to union into
- * `task.outputs`.
- */
-export declare function getObservedIoSnapshotOutputs(snapshots: IoSnapshots, tasks: Record<string, TaskUltracacheConfiguration | null>, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, Array<string>>
-
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
 /**
@@ -857,8 +851,6 @@ export interface IoSnapshotImportOptions {
 export interface IoSnapshotReport {
   /** Task ids hashed from their snapshot. */
   used: Array<string>
-  /** Subset of `used` whose snapshot also contributes observed outputs. */
-  tasksWithOutputs: Array<string>
   diagnostics: Array<IoSnapshotDiagnostic>
   resolution: IoSnapshotResolution
 }

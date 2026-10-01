@@ -1980,7 +1980,7 @@ describe('task planner', () => {
       );
     });
 
-    it("marks a task with the digest of its own writes, so another task's snapshot does not move it", () => {
+    it('marks a task by its own ultracache config, so no snapshot moves it', () => {
       const { planner, taskGraph } = fixture();
       const planFor = (snapshots: ReturnType<typeof snapshotsFor>) =>
         planner.getPlans(['parent:build'], taskGraph, snapshots)[
@@ -2021,7 +2021,8 @@ describe('task planner', () => {
 
       expect(same).toMatch(/^io-snapshot:\d+$/);
       expect(childChanged).toBe(same);
-      expect(parentWroteMore).not.toBe(same);
+      // Outputs come from the declaration, so recorded writes don't count.
+      expect(parentWroteMore).toBe(same);
       // The reads are hashed as the file group they become, so they move the
       // plan without moving the digest — hashing them here too would make a
       // read the plan drops, or one naming a missing file, move the key.
@@ -2064,15 +2065,14 @@ describe('task planner', () => {
 
     it('hashes a continuous dependency from its own snapshot when it has one', () => {
       const { planner, taskGraph } = fixture();
+      const graph = withContinuousDependency(taskGraph);
+      graph.tasks['child:build'].ultracache = { ignoredReads: ['tmp/**'] };
       const plan = planner.getPlans(
         ['parent:build'],
-        withContinuousDependency(taskGraph),
+        graph,
         snapshotsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
-          'child:build': {
-            inputs: ['libs/child/src/index.ts'],
-            outputs: ['dist/libs/child'],
-          },
+          'child:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
 
@@ -2080,8 +2080,8 @@ describe('task planner', () => {
       expect(plan).toContainEqual(
         expect.stringMatching(/^files:\[libs\/child\/src\/index\.ts[,\]]/)
       );
-      // Its marker joins the task's, so its outputs and exclusions count too
-      // (identical digests would share one).
+      // Its marker joins the task's, so its exclusions count too (identical
+      // digests would share one).
       expect(
         plan.filter((entry) => entry.startsWith('io-snapshot:'))
       ).toHaveLength(2);
@@ -2468,7 +2468,7 @@ describe('task planner', () => {
       }
     );
 
-    it("moves the snapshot marker when the task's ultracache exclusions change, and only then", () => {
+    it("moves the snapshot marker when the task's ignoredReads change, and only then", () => {
       const { planner, taskGraph } = fixture();
       const snapshots = snapshotsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
@@ -2486,10 +2486,8 @@ describe('task planner', () => {
       // Order means nothing; an empty list is no exclusion.
       expect(markerWith({ ignoredReads: ['cache/**', 'tmp/**'] })).toBe(reads);
       expect(markerWith({ ignoredReads: [] })).toBe(none);
-      // Writes shape the recording too, and are told apart from reads.
-      const writes = markerWith({ ignoredWrites: ['tmp/**', 'cache/**'] });
-      expect(writes).not.toBe(none);
-      expect(writes).not.toBe(reads);
+      // Recorded writes are never used, so their exclusions don't count.
+      expect(markerWith({ ignoredWrites: ['tmp/**', 'cache/**'] })).toBe(none);
     });
 
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {

@@ -621,7 +621,6 @@ module.exports.getHardcodedIgnorePatterns = nativeBinding.getHardcodedIgnorePatt
 module.exports.getIoSnapshotDeferredTaskIds = nativeBinding.getIoSnapshotDeferredTaskIds
 module.exports.getIoSnapshotReport = nativeBinding.getIoSnapshotReport
 module.exports.getMainWorktreeRoot = nativeBinding.getMainWorktreeRoot
-module.exports.getObservedIoSnapshotOutputs = nativeBinding.getObservedIoSnapshotOutputs
 module.exports.getTransformableOutputs = nativeBinding.getTransformableOutputs
 module.exports.GroupType = nativeBinding.GroupType
 module.exports.hashArray = nativeBinding.hashArray

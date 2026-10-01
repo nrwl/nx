@@ -239,12 +239,12 @@ mod tests {
 
         let stored = store.get("head".into(), None).unwrap();
         assert_eq!(stored.resolution().fetched_at, resolution.fetched_at);
-        // Read per task; outputs are sorted and deduped on import for the digest.
+        // Read per task; the recorded `outputs` Nx Cloud sends are dropped.
         let entries = stored.entries_for(&["web:build", "gone:build"]).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(
-            entries["web:build"].outputs,
-            vec!["dist/web/a".to_string(), "dist/web/b".into()]
+            entries["web:build"].inputs,
+            vec!["apps/web/src/**/*.ts".to_string()]
         );
         // A second ask does not go back to the database: rewrite the version
         // without the entry and the handle still answers from memory.
@@ -328,7 +328,6 @@ mod tests {
                     TaskIoSnapshot {
                         commit: commit.into(),
                         inputs: vec![format!("libs/{id}/a.ts"), "b.ts".into()],
-                        outputs: vec![],
                     },
                 )
             })
