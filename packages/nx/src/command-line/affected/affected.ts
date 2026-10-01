@@ -31,7 +31,7 @@ import {
 } from '../../project-graph/affected/affected-tasks';
 import type { TaskSelection } from '../../tasks-runner/run-command';
 import {
-  EXPLAIN_NEEDS_TASK_SELECTION,
+  explainUnavailable,
   isExplaining,
   type AffectedExplanation,
 } from '../../project-graph/affected/affected-reasons';
@@ -76,7 +76,14 @@ export async function affected(
     !!nxArgs.targets?.length;
 
   if (isExplaining(nxArgs.explain) && !useTasks) {
-    throw new Error(EXPLAIN_NEEDS_TASK_SELECTION);
+    throw new Error(
+      explainUnavailable(
+        [
+          !selectsAffectedTasks() && 'NX_LEGACY_AFFECTED=false',
+          !nxArgs.targets?.length && 'targets passed with -t',
+        ].filter(Boolean)
+      )
+    );
   }
 
   // Outside the try so errors reach handleErrors, as they did from inside runCommand.

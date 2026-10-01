@@ -11,7 +11,7 @@ import {
 } from '../../project-graph/affected/affected-tasks';
 import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
 import {
-  EXPLAIN_NEEDS_TASK_SELECTION,
+  explainUnavailable,
   isExplaining,
 } from '../../project-graph/affected/affected-reasons';
 import {
@@ -52,7 +52,14 @@ export async function showProjectsHandler(
     !args.projects;
   if (isExplaining(nxArgs.explain) && !explainsTasks) {
     throw new Error(
-      `${EXPLAIN_NEEDS_TASK_SELECTION} With show projects it also needs --affected, and does not combine with --projects.`
+      explainUnavailable(
+        [
+          !selectsAffectedTasks() && 'NX_LEGACY_AFFECTED=false',
+          !args.affected && '--affected',
+          !args.withTarget?.length && 'targets passed with -t',
+        ].filter(Boolean),
+        args.projects ? ['--projects'] : []
+      )
     );
   }
 

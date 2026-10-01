@@ -117,7 +117,7 @@ describe('nx affected --explain', () => {
   // Project selection has no task layers to explain.
   it('refuses to explain when projects are selected', async () => {
     await expect(run({ explain: true })).rejects.toThrow(
-      'needs task selection'
+      '--explain needs NX_LEGACY_AFFECTED=false.'
     );
     expect(runCommand).not.toHaveBeenCalled();
   });

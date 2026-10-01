@@ -386,7 +386,18 @@ describe('show projects', () => {
         explain: true,
         files: ['libs/ui/src/x.ts'],
       } as any)
-    ).rejects.toThrow('needs task selection');
+    ).rejects.toThrow('--explain needs targets passed with -t.');
+  });
+
+  it('names each thing explaining is missing or conflicts with', async () => {
+    await expect(
+      showProjectsHandler({
+        explain: true,
+        projects: ['proj1'],
+      } as any)
+    ).rejects.toThrow(
+      "--explain needs --affected and targets passed with -t. --explain can't be combined with --projects."
+    );
   });
 });
 

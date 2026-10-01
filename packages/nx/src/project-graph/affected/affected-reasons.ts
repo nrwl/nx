@@ -44,9 +44,23 @@ export interface AffectedReason {
   producer?: string;
 }
 
-/** Shown where `--explain` is used without task selection, which is all it explains. */
-export const EXPLAIN_NEEDS_TASK_SELECTION =
-  '--explain explains which tasks are affected, so it needs task selection: set NX_LEGACY_AFFECTED=false and pass the targets with -t.';
+/**
+ * Why `--explain` cannot run here, naming only what is missing or in the way.
+ * It explains task selection, so it needs what task selection needs.
+ */
+export function explainUnavailable(
+  missing: string[],
+  conflicting: string[] = []
+): string {
+  const sentences = [
+    missing.length && `--explain needs ${listed(missing)}.`,
+    conflicting.length &&
+      `--explain can't be combined with ${listed(conflicting)}.`,
+  ].filter(Boolean);
+  return sentences.length
+    ? sentences.join(' ')
+    : '--explain only works with nx affected and nx show projects --affected.';
+}
 
 /** What `--explain` reports, keyed by task id. */
 export interface AffectedExplanation {
