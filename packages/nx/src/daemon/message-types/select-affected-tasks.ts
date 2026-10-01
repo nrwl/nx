@@ -2,6 +2,7 @@ import type { ProjectGraph } from '../../config/project-graph';
 import type { TaskGraph } from '../../config/task-graph';
 import type { TaskSelection } from '../../tasks-runner/run-command';
 import type { AffectedTasksRequest } from '../../project-graph/affected/affected-tasks';
+import type { AffectedExplanation } from '../../project-graph/affected/affected-reasons';
 
 export const SELECT_AFFECTED_TASKS = 'SELECT_AFFECTED_TASKS' as const;
 
@@ -17,6 +18,7 @@ export type SelectAffectedTasksResponse = {
   taskGraph: TaskGraph;
   /** Without a planning context: the plans stay in the daemon. */
   taskSelection: TaskSelection;
+  explanation: AffectedExplanation;
 };
 
 export function isHandleSelectAffectedTasksMessage(

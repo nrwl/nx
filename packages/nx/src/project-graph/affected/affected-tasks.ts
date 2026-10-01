@@ -4,7 +4,6 @@ import type { ProjectConfiguration } from '../../config/workspace-json-project-j
 import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
-  explainAffectedTasks,
   type AffectedTaskExplanation,
   type FileRevisions,
   type IoSnapshots,
@@ -74,10 +73,9 @@ export interface AffectedTasksResult {
   taskSelection: TaskSelection;
   /**
    * Why each task is affected, plus the tasks outside the selection that
-   * carried the change to it, such as a `prebuild` under `-t build`. Only
-   * when `explain`.
+   * carried the change to it, such as a `prebuild` under `-t build`.
    */
-  explanation?: AffectedExplanation;
+  explanation: AffectedExplanation;
 }
 
 export interface ComputeAffectedTasksOptions {
@@ -98,8 +96,6 @@ export interface ComputeAffectedTasksOptions {
   /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
   ioSnapshotOutcome?: IoSnapshotOutcome | null;
   selectivelyHashTsConfig?: boolean;
-  /** Collect why each task was selected. Costs an extra native pass. */
-  explain?: boolean;
 }
 
 export type FileChangeArgs = Pick<NxArgs, 'base' | 'head' | 'files'>;
@@ -153,9 +149,7 @@ export async function computeAffectedTasks(
     };
   }
 
-  // Explaining runs nothing, so there is no run to share the daemon's plans
-  // with, and reasons would have to cross back from it.
-  if (!opts.explain && !isOnDaemon() && daemonClient.enabled()) {
+  if (!isOnDaemon() && daemonClient.enabled()) {
     try {
       const selection = await daemonClient.selectAffectedTasks(request);
       return {
@@ -188,7 +182,6 @@ export async function computeAffectedTasks(
       touchedFiles: opts.touchedFiles,
       packageJson: opts.packageJson,
       ioSnapshots,
-      explain: opts.explain,
     }
   );
   return {
@@ -222,18 +215,16 @@ export async function selectAffectedTasks(
     ),
     packageJson,
     ioSnapshots,
-    explain = false,
   }: {
     touchedFiles?: FileChange[];
     packageJson?: any;
     ioSnapshots?: IoSnapshots;
-    explain?: boolean;
   } = {}
 ): Promise<{
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;
   taskSelection: TaskSelection;
-  explanation?: AffectedExplanation;
+  explanation: AffectedExplanation;
 }> {
   const { targets } = request;
   // Only projects that have one of the targets: with a single target,
@@ -251,6 +242,12 @@ export async function selectAffectedTasks(
       affectedTaskIds: new Set(),
       taskGraph: empty,
       taskSelection: { taskGraph: empty, initiatingTaskIds: [], taskIds: [] },
+      explanation: {
+        affected: {},
+        upstream: {},
+        touched: [],
+        requested: { targets, total: 0 },
+      },
     };
   }
 
@@ -331,29 +328,20 @@ export async function selectAffectedTasks(
     ? selection.required.filter((id) => initial.has(id))
     : selection.required;
 
-  // A second native pass, so the selection path stays a membership test.
-  const explanation = explain
-    ? explainTasks(
-        selection.affected,
-        explainAffectedTasks(
-          planningContext.projectGraphRef,
-          plans,
-          taskGraph,
-          request.changedFiles,
-          options
-        ),
-        dependencies,
-        request.changedFiles,
-        taskGraph,
-        customHashed,
-        keep
-      )
-    : undefined;
+  const explanation = explainTasks(
+    selection.affected,
+    selection.explanation,
+    dependencies,
+    request.changedFiles,
+    taskGraph,
+    customHashed,
+    keep
+  );
 
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
-    explanation: explanation && {
+    explanation: {
       ...explanation,
       requested: requestedTasks(taskIds, taskGraph, targets, options),
     },
@@ -484,9 +472,7 @@ function dependencyChanges(
  * Why each selected task is in the answer, and why each task outside it that
  * a reason names as a producer is too.
  *
- * Assembled after the fact rather than accumulated during selection, so the
- * selection path costs nothing when `--explain` is off. Every reason that
- * applies is listed: a task can match a changed file, hash a package that
+ * Every reason that applies is listed: a task can match a changed file, hash a package that
  * moved, and read an affected producer, all at once.
  */
 function explainTasks(

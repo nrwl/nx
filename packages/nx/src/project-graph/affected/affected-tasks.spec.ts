@@ -134,7 +134,6 @@ describe('computeAffectedTasks', () => {
           getChanges: () => [new WholeFileChange()],
         },
       ] as any,
-      explain: true,
     });
     for (const task of ['lib:test', 'app:test']) {
       expect(explanation.affected[task]).toContainEqual({
@@ -169,7 +168,6 @@ describe('computeAffectedTasks', () => {
           getChanges: () => [new DeletedFileChange()],
         },
       ] as any,
-      explain: true,
     });
     expect(explanation.affected['lib:test']).toEqual([
       {
@@ -226,7 +224,6 @@ describe('computeAffectedTasks', () => {
       touchedFiles: [
         { file: 'pnpm-lock.yaml', getChanges: () => [new WholeFileChange()] },
       ] as any,
-      explain: true,
     });
     expect(explanation.affected['lib:test']).toEqual([
       { kind: 'moved-ecosystem', ecosystem: 'npm', file: 'pnpm-lock.yaml' },
@@ -335,7 +332,6 @@ describe('computeAffectedTasks', () => {
           ],
         },
       ] as any,
-      explain: true,
     });
     expect([...result.affectedTaskIds].sort()).toEqual([
       'hashes_all:test',
@@ -366,7 +362,6 @@ describe('computeAffectedTasks', () => {
           getChanges: () => [new WholeFileChange()],
         },
       ] as any,
-      explain: true,
     });
     expect(explanation.affected['lib:test']).toContainEqual({
       kind: 'lockfile',
@@ -396,7 +391,6 @@ describe('computeAffectedTasks', () => {
             },
           ] as any,
           exclude,
-          explain: true,
         })
       ).explanation.requested;
     expect(await explain([])).toEqual({ targets: ['test'], total: 2 });
@@ -440,7 +434,6 @@ describe('computeAffectedTasks', () => {
             file,
             getChanges: () => [new WholeFileChange()],
           })) as any,
-          explain: true,
         })
       ).explanation.affected;
 
@@ -510,7 +503,6 @@ describe('explaining a change carried by a dependency-only task', () => {
           getChanges: () => [new WholeFileChange()],
         },
       ] as any,
-      explain: true,
     });
 
     expect(Object.keys(result.explanation.affected)).toEqual(['app:build']);
@@ -612,7 +604,6 @@ describe('explaining a touched task outside the selection', () => {
       touchedFiles: ['packages/js/src/index.ts', 'packages/js/bin/nx.ts'].map(
         (file) => ({ file, getChanges: () => [new WholeFileChange()] })
       ) as any,
-      explain: true,
     });
     expect(explanation.upstream['app:prebuild']).toContainEqual(
       expect.objectContaining({
@@ -747,7 +738,6 @@ describe('tasks with a custom hasher', () => {
       touchedFiles: [
         { file: 'docs/README.md', getChanges: () => [new WholeFileChange()] },
       ] as any,
-      explain: true,
     });
     expect(explanation.affected).toEqual({
       'lib:test': [{ kind: 'custom-hasher' }],
@@ -924,31 +914,35 @@ describe('computeAffectedTasks with the daemon on', () => {
 
   // Reasons are assembled from native plans, which stay in whichever process
   // planned them, and an explanation runs nothing to share them with.
-  it('explains in-process rather than asking the daemon', async () => {
+  // The daemon's selection carries its reasons back.
+  it('returns the explanation the daemon selected with', async () => {
     daemon.enabled.mockReturnValueOnce(true);
-
-    const result = await computeAffectedTasks({
+    const empty = {
+      roots: [],
+      tasks: {},
+      dependencies: {},
+      continuousDependencies: {},
+    };
+    const explanation = {
+      affected: { 'lib:test': [{ kind: 'input-file', file: 'x.ts' }] },
+      upstream: {},
+      touched: ['lib:test'],
+    };
+    daemon.selectAffectedTasks.mockResolvedValueOnce({
       projectGraph: graph(),
-      nxJson: {
-        namedInputs: { production: ['{projectRoot}/src/**/*'] },
-      } as any,
-      targets: ['test'],
-      touchedFiles: [
-        {
-          file: 'packages/nx/src/x.ts',
-          getChanges: () => [new WholeFileChange()],
-        },
-      ] as any,
-      explain: true,
+      affectedTaskIds: ['lib:test'],
+      taskGraph: empty,
+      taskSelection: { taskGraph: empty, initiatingTaskIds: [], taskIds: [] },
+      explanation,
     });
 
-    expect(daemon.selectAffectedTasks).not.toHaveBeenCalled();
-    expect(result.explanation.affected['lib:test']).toContainEqual(
-      expect.objectContaining({
-        kind: 'input-file',
-        file: 'packages/nx/src/x.ts',
-      })
-    );
+    const result = await computeAffectedTasks({
+      nxJson: {} as any,
+      targets: ['test'],
+      touchedFiles: [],
+    });
+
+    expect(result.explanation).toBe(explanation);
   });
 });
 

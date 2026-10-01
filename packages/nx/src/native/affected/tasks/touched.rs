@@ -3,7 +3,6 @@
 //!
 //! Globs are matched rather than resolved to file lists, since a deleted file is in no file index.
 
-use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 
@@ -70,55 +69,6 @@ impl<'a> ChangedExternals<'a> {
 
 pub(crate) const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 
-/// Task ids with at least one changed file or moved package among their plan's
-/// inputs.
-///
-/// `changed_project_configs` is the subset of `changed_files` that is project
-/// configuration.
-pub(crate) fn touched_tasks(
-    graph: &ProjectGraph,
-    hash_plans: &HashPlans,
-    changed_files: &[String],
-    changed_project_configs: &[String],
-    externals: &ChangedExternals,
-    contents: &ChangedContents,
-) -> anyhow::Result<HashSet<String>> {
-    let roots = ProjectRoots::new(graph);
-    let changed = ChangedFiles::new(&roots, changed_files);
-
-    // The projects whose configuration changed. ProjectConfiguration resolves to
-    // no files, so nothing else in the plan can see this.
-    let reconfigured: HashSet<&str> = changed_project_configs
-        .iter()
-        .filter_map(|file| roots.owner_of(&normalize_js_path(file)))
-        .collect();
-
-    let ids = referenced_ids(hash_plans);
-    let hits: Vec<bool> = ids
-        .par_iter()
-        .map(|&id| {
-            instruction_matches(
-                hash_plans.pool.get(id).value(),
-                &changed,
-                &reconfigured,
-                externals,
-                contents,
-            )
-        })
-        .collect::<anyhow::Result<_>>()?;
-    let mut matched = vec![false; ids.last().map_or(0, |&id| id as usize + 1)];
-    for (&id, hit) in ids.iter().zip(hits) {
-        matched[id as usize] = hit;
-    }
-
-    Ok(hash_plans
-        .plans
-        .par_iter()
-        .filter(|(_, plan)| plan.iter().any(|&id| matched[id as usize]))
-        .map(|(task_id, _)| task_id.clone())
-        .collect())
-}
-
 /// The changed paths, normalized and indexed by owning project, so an instruction
 /// scoped to a project that owns no changed file never compiles its globs.
 struct ChangedFiles<'a> {
@@ -181,79 +131,6 @@ fn under_literal_prefix(
                 .any(|prefix| is_path_prefix(prefix, &changed.files[index]))
         })
         .collect()
-}
-
-/// Whether any changed file is one this instruction would hash. `TaskOutput` never
-/// matches; `affected_through_output_reads` carries it instead.
-fn instruction_matches(
-    instruction: &HashInstruction,
-    changed: &ChangedFiles,
-    reconfigured: &HashSet<&str>,
-    externals: &ChangedExternals,
-    contents: &ChangedContents,
-) -> anyhow::Result<bool> {
-    // Scoped to one project, the way the hasher scopes the same globs with
-    // project_file_map, or workspace-wide when there is no owner to match.
-    let any_matching = |globs: &[String], project: Option<&str>| -> anyhow::Result<bool> {
-        let candidates = under_literal_prefix(globs, changed, changed.candidates(project));
-        if candidates.is_empty() {
-            return Ok(false);
-        }
-        let glob = build_glob_set(&fileset_patterns(globs))?;
-        Ok(candidates
-            .iter()
-            .any(|&index| glob.is_match(&changed.files[index])))
-    };
-
-    match instruction {
-        HashInstruction::WorkspaceFileSet(file_sets) => {
-            any_matching(&globs_from_workspace_globs(file_sets), None)
-        }
-        HashInstruction::ProjectFileSet(project, file_sets) => {
-            any_matching(file_sets, Some(project))
-        }
-        // Unscoped: the hasher expands these workspace-wide. Normalized as disk
-        // expansion does, so `apps//app/**` still matches `apps/app/x.ts`.
-        HashInstruction::IgnoredFileSet(globs) => {
-            let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
-            any_matching(&globs, None)
-        }
-        // Filtered to some fields, it hashes only those, so an unrelated edit is not a change.
-        HashInstruction::JsonFileSet(json)
-            if json.fields.is_some() || json.exclude_fields.is_some() =>
-        {
-            Ok(json_files_in_diff(json, changed)?
-                .into_iter()
-                .any(|file| contents.json_file_changed(file, json)))
-        }
-        HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
-            Some(project) => any_matching(std::slice::from_ref(&json.json_path), Some(project)),
-            None => any_matching(
-                &globs_from_workspace_globs(std::slice::from_ref(&json.json_path)),
-                None,
-            ),
-        },
-        // Also prefixed by the `typescript` node's hash, as the hasher looks it up.
-        HashInstruction::TsConfiguration(project) => Ok((changed
-            .files
-            .iter()
-            .any(|f| ROOT_TSCONFIG_FILES.contains(&f.as_str()))
-            && contents.ts_config_changed(project))
-            || externals.includes("typescript")),
-        // Hashes the project's config object, which resolves to no files, so it
-        // is matched on the config having changed rather than on a fileset. The
-        // planner splices one of these per dependency, which is what carries a
-        // dependency's config change to its consumers.
-        HashInstruction::ProjectConfiguration(project) => {
-            Ok(reconfigured.contains(project.as_str()))
-        }
-        HashInstruction::External(name) => Ok(externals.includes(name)),
-        // Hashes every external node, so any one moving changes it.
-        HashInstruction::AllExternalDependencies => Ok(externals.any()),
-        // Not judgeable from a diff: runtime output, env, cwd and the snapshot
-        // marker. Task outputs are carried by propagation instead.
-        _ => Ok(false),
-    }
 }
 
 /// The changed files a `JsonFileSet` reads, matched as `collect_json_input_files` does.
@@ -341,7 +218,8 @@ pub(crate) fn compute_input_matches(
 
     // Per instruction, what it matched. Only instructions that matched
     // something are kept.
-    let matched: HashMap<u32, TaskInputMatches> = referenced_ids(hash_plans)
+    let ids = referenced_ids(hash_plans);
+    let hits: HashMap<u32, TaskInputMatches> = ids
         .par_iter()
         .map(|&id| {
             let hits = instruction_matches_detail(
@@ -356,13 +234,19 @@ pub(crate) fn compute_input_matches(
         })
         .filter(|entry| entry.as_ref().map_or(true, |(_, hits)| hits.matched()))
         .collect::<anyhow::Result<HashMap<_, _>>>()?;
+    // Indexed by instruction id: every plan entry is looked up, most to no match.
+    let mut matched: Vec<Option<TaskInputMatches>> =
+        vec![None; ids.last().map_or(0, |&id| id as usize + 1)];
+    for (id, hit) in hits {
+        matched[id as usize] = Some(hit);
+    }
 
     Ok(hash_plans
         .plans
         .par_iter()
         .filter_map(|(task_id, plan)| {
             let mut merged = TaskInputMatches::default();
-            for hits in plan.iter().filter_map(|id| matched.get(id)) {
+            for hits in plan.iter().filter_map(|&id| matched[id as usize].as_ref()) {
                 merged.files.extend(hits.files.iter().cloned());
                 merged.packages.extend(hits.packages.iter().cloned());
                 merged.all_externals |= hits.all_externals;
@@ -394,11 +278,11 @@ pub(crate) fn compute_input_matches(
 }
 
 /// What an instruction matched: the files and which pattern reached each, or
-/// the package that moved.
+/// the package that moved. `TaskOutput` never matches;
+/// `affected_through_output_reads` carries it instead.
 ///
-/// Mirrors `instruction_matches`, but reports rather than short-circuits. The
-/// whole glob set decides the match, so negations still exclude; the individual
-/// positives are then tested only to name the one responsible.
+/// The whole glob set decides the match, so negations still exclude; the
+/// individual positives are then tested only to name the one responsible.
 fn instruction_matches_detail(
     instruction: &HashInstruction,
     changed: &ChangedFiles,
@@ -429,32 +313,43 @@ fn instruction_matches_detail(
             return Ok(vec![]);
         }
         let full = build_glob_set(&fileset_patterns(globs))?;
+        let hits: Vec<usize> = candidates
+            .into_iter()
+            .filter(|&i| full.is_match(&changed.files[i]))
+            .collect();
+        if hits.is_empty() {
+            return Ok(vec![]);
+        }
         // Keyed by the entry as declared, so the reason names what the user
         // wrote rather than the `/**` twin a glob-free path expands to.
-        let positives: Vec<(&String, _)> = globs
-            .iter()
-            .filter(|glob| !glob.starts_with('!'))
-            .map(|glob| {
-                build_glob_set(&fileset_patterns(std::slice::from_ref(glob))).map(|set| (glob, set))
-            })
-            .collect::<anyhow::Result<Vec<_>>>()?;
+        let declared: Vec<&String> = globs.iter().filter(|glob| !glob.starts_with('!')).collect();
+        // A lone positive is responsible for every match, with nothing to compile.
+        let positives: Vec<(&String, _)> = if declared.len() == 1 {
+            vec![]
+        } else {
+            declared
+                .iter()
+                .map(|glob| {
+                    build_glob_set(&fileset_patterns(std::slice::from_ref(*glob)))
+                        .map(|set| (*glob, set))
+                })
+                .collect::<anyhow::Result<Vec<_>>>()?
+        };
 
-        let mut matches = Vec::new();
-        for i in candidates {
-            let file = &changed.files[i];
-            if !full.is_match(file) {
-                continue;
-            }
-            matches.push(InputMatch {
+        Ok(hits
+            .into_iter()
+            .map(|i| InputMatch {
                 // The path as it was given, so it reads back like the diff.
                 file: raw_files[i].clone(),
-                pattern: positives
-                    .iter()
-                    .find(|(_, set)| set.is_match(file))
-                    .map(|(glob, _)| (*glob).clone()),
-            });
-        }
-        Ok(matches)
+                pattern: match declared.as_slice() {
+                    [only] => Some((*only).clone()),
+                    _ => positives
+                        .iter()
+                        .find(|(_, set)| set.is_match(&changed.files[i]))
+                        .map(|(glob, _)| (*glob).clone()),
+                },
+            })
+            .collect())
     };
 
     match instruction {
@@ -529,6 +424,27 @@ mod tests {
     use crate::native::tasks::types::InstructionPool;
     use crate::native::test_utils::{graph_of_roots as graph, hash_plans, strings};
     use std::sync::Arc;
+
+    /// The tasks with any input match: what selection treats as touched.
+    fn touched_tasks(
+        graph: &ProjectGraph,
+        hash_plans: &HashPlans,
+        changed_files: &[String],
+        changed_project_configs: &[String],
+        externals: &ChangedExternals,
+        contents: &ChangedContents,
+    ) -> anyhow::Result<HashSet<String>> {
+        Ok(compute_input_matches(
+            graph,
+            hash_plans,
+            changed_files,
+            changed_project_configs,
+            externals,
+            contents,
+        )?
+        .into_keys()
+        .collect())
+    }
 
     /// Builds a one-task plan from the given instructions.
     fn plans(task: &str, instructions: Vec<HashInstruction>) -> HashPlans {

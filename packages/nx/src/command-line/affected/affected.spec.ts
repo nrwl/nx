@@ -104,9 +104,6 @@ describe('nx affected --explain', () => {
     tasks.enabled = true;
     await expect(run({ explain: true })).rejects.toThrow('exit 0');
 
-    expect(tasks.computeAffectedTasks).toHaveBeenCalledWith(
-      expect.objectContaining({ explain: true })
-    );
     expect(runCommand).not.toHaveBeenCalled();
     expect(written.join('')).toContain('Affected tasks (2)');
   });

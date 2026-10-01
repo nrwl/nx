@@ -610,7 +610,6 @@ module.exports.directlyTouchedProjects = nativeBinding.directlyTouchedProjects
 module.exports.EventType = nativeBinding.EventType
 module.exports.expandFilesInput = nativeBinding.expandFilesInput
 module.exports.expandOutputs = nativeBinding.expandOutputs
-module.exports.explainAffectedTasks = nativeBinding.explainAffectedTasks
 module.exports.findImports = nativeBinding.findImports
 module.exports.flushTelemetry = nativeBinding.flushTelemetry
 module.exports.formatDuration = nativeBinding.formatDuration

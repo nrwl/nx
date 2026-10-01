@@ -11,7 +11,7 @@ use tracing::{debug, trace};
 use super::changed_contents::{ChangedContents, FileRevisions};
 use super::dependency_closure::dependency_closure;
 use super::dependent_outputs::compute_dependent_output_edges;
-use super::touched::{ChangedExternals, TaskInputMatches, compute_input_matches, touched_tasks};
+use super::touched::{ChangedExternals, TaskInputMatches, compute_input_matches};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::types::{HashPlans, TaskGraph};
@@ -55,6 +55,24 @@ pub struct AffectedTaskSelection {
     pub affected: Vec<String>,
     /// `affected` plus everything it depends on, sorted: what a run keeps.
     pub required: Vec<String>,
+    /// Why the change reached each task.
+    pub explanation: AffectedTaskExplanation,
+}
+
+/// Why the change reached each task. Covers every task it reached, not just
+/// the selection, so a reason naming a producer can be looked up too.
+#[napi(object)]
+pub struct AffectedTaskExplanation {
+    /// The reached tasks the change touched directly, sorted: a matched input,
+    /// or always touched. Every other reached task was carried through outputs.
+    pub touched: Vec<String>,
+    /// Consumer -> the reached producers whose outputs it reads.
+    pub producers_of: HashMap<String, Vec<String>>,
+    /// Changed project configs no longer on disk. Every task was seeded for them.
+    pub deleted_project_configs: Vec<String>,
+    /// Per reached task, the changed files and moved packages among its inputs.
+    #[napi(ts_type = "Record<string, TaskInputMatches>")]
+    pub input_matches: HashMap<String, TaskInputMatches>,
 }
 
 #[napi]
@@ -85,23 +103,50 @@ pub(crate) fn compute_affected_task_selection(
     let start = Instant::now();
     let (configs, deleted) = changed_project_configs(changed_files, options);
 
+    let matches_start = Instant::now();
+    let externals = ChangedExternals::new(
+        &options.changed_externals,
+        &options.changed_external_types,
+        &graph.external_nodes,
+    );
+    let contents = ChangedContents::new(
+        graph,
+        &options.workspace_root,
+        options.revisions.as_ref(),
+        changed_files,
+        options.selectively_hash_ts_config,
+    );
+    let mut input_matches = compute_input_matches(
+        graph,
+        hash_plans,
+        changed_files,
+        &configs,
+        &externals,
+        &contents,
+    )?;
+    let matches_duration = matches_start.elapsed();
+
     // The project a deleted config described is gone, so no surviving task has
     // a fileset that names it and nothing narrower than everything is sound.
-    let mut reached: Vec<String> = if deleted.is_empty() {
-        reached_by_change(
-            graph,
-            hash_plans,
-            task_graph,
-            changed_files,
-            &configs,
-            options,
-        )?
-        .tasks
+    let Reached {
+        tasks: mut reached,
+        touched,
+        producers_of,
+    } = if deleted.is_empty() {
+        reached_by_change(hash_plans, task_graph, &input_matches, options)
     } else {
         debug!("a project config was deleted, so every task is affected");
-        task_graph.tasks.keys().cloned().collect()
+        Reached {
+            tasks: task_graph.tasks.keys().cloned().collect(),
+            touched: task_graph.tasks.keys().cloned().collect(),
+            producers_of: compute_dependent_output_edges(hash_plans, task_graph),
+        }
     };
     reached.sort_unstable();
+    let explanation = explain(reached.as_slice(), touched, producers_of, deleted, {
+        input_matches.retain(|id, _| reached.binary_search(id).is_ok());
+        input_matches
+    });
 
     let excluded: HashSet<&str> = options
         .excluded_projects
@@ -123,15 +168,20 @@ pub(crate) fn compute_affected_task_selection(
     let closure_duration = closure_start.elapsed();
 
     debug!(
-        "affected tasks selected in {:?} - {} changed files over {} tasks: {} affected, {} required ({:?})",
+        "affected tasks selected in {:?} - {} changed files over {} tasks: {} affected, {} required (inputs matched in {:?}, closure {:?})",
         start.elapsed(),
         changed_files.len(),
         task_graph.tasks.len(),
         affected.len(),
         required.len(),
+        matches_duration,
         closure_duration
     );
-    Ok(AffectedTaskSelection { affected, required })
+    Ok(AffectedTaskSelection {
+        affected,
+        required,
+        explanation,
+    })
 }
 
 /// What a change reached before `targets` and `--exclude` narrow it, and the
@@ -143,170 +193,54 @@ struct Reached {
     producers_of: HashMap<String, Vec<String>>,
 }
 
-/// Why the change reached each task. Covers every task it reached, not just
-/// the selection, so a reason naming a producer can be looked up too.
-#[napi(object)]
-pub struct AffectedTaskExplanation {
-    /// The reached tasks the change touched directly, sorted: a matched input,
-    /// or always touched. Every other reached task was carried through outputs.
-    pub touched: Vec<String>,
-    /// Consumer -> the reached producers whose outputs it reads.
-    pub producers_of: HashMap<String, Vec<String>>,
-    /// Changed project configs no longer on disk. Every task was seeded for them.
-    pub deleted_project_configs: Vec<String>,
-    /// Per reached task, the changed files and moved packages among its inputs.
-    #[napi(ts_type = "Record<string, TaskInputMatches>")]
-    pub input_matches: HashMap<String, TaskInputMatches>,
-}
-
-/// Separate from `affected_tasks` because the explanation costs a string per
-/// match and only `--explain` reads it; the selection path stays a membership
-/// test over interned instruction ids.
-#[napi]
-pub fn explain_affected_tasks(
-    project_graph: &External<Arc<ProjectGraph>>,
-    #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
-    hash_plans: &External<HashPlans>,
-    task_graph: TaskGraph,
-    changed_files: Vec<String>,
-    options: AffectedTasksOptions,
-) -> Result<AffectedTaskExplanation> {
-    Ok(compute_affected_task_explanation(
-        project_graph,
-        hash_plans,
-        &task_graph,
-        &changed_files,
-        &options,
-    )?)
-}
-
-/// Walks what selection walks, then keeps the edges it crossed and what matched.
-pub(crate) fn compute_affected_task_explanation(
-    graph: &ProjectGraph,
-    hash_plans: &HashPlans,
-    task_graph: &TaskGraph,
-    changed_files: &[String],
-    options: &AffectedTasksOptions,
-) -> anyhow::Result<AffectedTaskExplanation> {
-    let (configs, deleted) = changed_project_configs(changed_files, options);
-    let Reached {
-        tasks: reached,
-        touched,
-        producers_of,
-    } = if deleted.is_empty() {
-        reached_by_change(
-            graph,
-            hash_plans,
-            task_graph,
-            changed_files,
-            &configs,
-            options,
-        )?
-    } else {
-        // A deleted config seeds every task, so every task is touched.
-        Reached {
-            tasks: task_graph.tasks.keys().cloned().collect(),
-            touched: task_graph.tasks.keys().cloned().collect(),
-            producers_of: compute_dependent_output_edges(hash_plans, task_graph),
-        }
-    };
-    let reached: HashSet<&str> = reached.iter().map(String::as_str).collect();
-
-    // Only the edges the walk crossed: a reached consumer and a reached producer.
+/// Keeps only the edges the walk crossed: a reached consumer and a reached producer.
+fn explain(
+    reached: &[String],
+    touched: HashSet<String>,
+    producers_of: HashMap<String, Vec<String>>,
+    deleted_project_configs: Vec<String>,
+    input_matches: HashMap<String, TaskInputMatches>,
+) -> AffectedTaskExplanation {
+    let is_reached = |id: &String| reached.binary_search(id).is_ok();
     let producers_of = producers_of
         .into_iter()
-        .filter(|(consumer, _)| reached.contains(consumer.as_str()))
+        .filter(|(consumer, _)| is_reached(consumer))
         .filter_map(|(consumer, producers)| {
-            let mut hit: Vec<String> = producers
-                .into_iter()
-                .filter(|producer| reached.contains(producer.as_str()))
-                .collect();
+            let mut hit: Vec<String> = producers.into_iter().filter(is_reached).collect();
             hit.sort_unstable();
             hit.dedup();
             (!hit.is_empty()).then_some((consumer, hit))
         })
         .collect();
-
-    let externals = ChangedExternals::new(
-        &options.changed_externals,
-        &options.changed_external_types,
-        &graph.external_nodes,
-    );
-    let contents = ChangedContents::new(
-        graph,
-        &options.workspace_root,
-        options.revisions.as_ref(),
-        changed_files,
-        options.selectively_hash_ts_config,
-    );
-    let mut input_matches = compute_input_matches(
-        graph,
-        hash_plans,
-        changed_files,
-        &configs,
-        &externals,
-        &contents,
-    )?;
-    input_matches.retain(|id, _| reached.contains(id.as_str()));
-
-    // The detail pass mirrors `instruction_matches`; a touched task it cannot
-    // attribute means the two matchers have drifted apart.
-    debug_assert!(
-        !deleted.is_empty()
-            || touched.iter().all(|id| {
-                input_matches.contains_key(id) || options.always_touched_task_ids.contains(id)
-            }),
-        "a touched task has no input match: instruction_matches_detail has drifted"
-    );
     let mut touched: Vec<String> = touched.into_iter().collect();
     touched.sort_unstable();
-    Ok(AffectedTaskExplanation {
+    AffectedTaskExplanation {
         touched,
         producers_of,
-        deleted_project_configs: deleted,
+        deleted_project_configs,
         input_matches,
-    })
+    }
 }
 
 /// The tasks a change touches directly, the always-touched ones, and every
 /// task reading their outputs, before filtering to the requested targets.
 fn reached_by_change(
-    graph: &ProjectGraph,
     hash_plans: &HashPlans,
     task_graph: &TaskGraph,
-    changed_files: &[String],
-    configs: &[String],
+    input_matches: &HashMap<String, TaskInputMatches>,
     options: &AffectedTasksOptions,
-) -> anyhow::Result<Reached> {
-    let touched_start = Instant::now();
-    let externals = ChangedExternals::new(
-        &options.changed_externals,
-        &options.changed_external_types,
-        &graph.external_nodes,
-    );
-    let contents = ChangedContents::new(
-        graph,
-        &options.workspace_root,
-        options.revisions.as_ref(),
-        changed_files,
-        options.selectively_hash_ts_config,
-    );
-    let mut touched = touched_tasks(
-        graph,
-        hash_plans,
-        changed_files,
-        configs,
-        &externals,
-        &contents,
-    )?;
-    touched.extend(
-        options
-            .always_touched_task_ids
-            .iter()
-            .filter(|id| task_graph.tasks.contains_key(*id))
-            .cloned(),
-    );
-    let touched_duration = touched_start.elapsed();
+) -> Reached {
+    let touched: HashSet<String> = input_matches
+        .keys()
+        .cloned()
+        .chain(
+            options
+                .always_touched_task_ids
+                .iter()
+                .filter(|id| task_graph.tasks.contains_key(*id))
+                .cloned(),
+        )
+        .collect();
 
     let edges_start = Instant::now();
     let producers_of = compute_dependent_output_edges(hash_plans, task_graph);
@@ -315,19 +249,18 @@ fn reached_by_change(
     let propagate_start = Instant::now();
     let reached = affected_through_output_reads(&touched, task_graph, &producers_of);
     debug!(
-        "{} touched ({:?}), {} consumers of outputs ({:?}), {} reached ({:?})",
+        "{} touched, {} consumers of outputs ({:?}), {} reached ({:?})",
         touched.len(),
-        touched_duration,
         producers_of.len(),
         edges_duration,
         reached.len(),
         propagate_start.elapsed()
     );
-    Ok(Reached {
+    Reached {
         tasks: reached,
         touched,
         producers_of,
-    })
+    }
 }
 
 /// Changed paths that are project configuration, split by whether the file is
@@ -1015,14 +948,15 @@ mod tests {
             ..options(&[])
         };
 
-        let e = compute_affected_task_explanation(
+        let e = compute_affected_task_selection(
             &graph(&[("app", "apps/app"), ("lib", "libs/lib")]),
             &p,
             &tg,
             &strings(&["x.txt"]),
             &options,
         )
-        .unwrap();
+        .unwrap()
+        .explanation;
 
         assert_eq!(
             e.producers_of,
@@ -1040,8 +974,9 @@ mod tests {
         let p = hash_plans(&[("a:build", vec![])]);
         let tg = task_graph(&[("a:build", &[])], &[]);
         let deleted = "packages/nx/does-not-exist/project.json";
-        let e = compute_affected_task_explanation(&g, &p, &tg, &strings(&[deleted]), &options(&[]))
-            .unwrap();
+        let e = compute_affected_task_selection(&g, &p, &tg, &strings(&[deleted]), &options(&[]))
+            .unwrap()
+            .explanation;
         assert_eq!(e.deleted_project_configs, strings(&[deleted]));
     }
 
@@ -1055,14 +990,15 @@ mod tests {
             vec![HashInstruction::ProjectConfiguration("a".into())],
         );
         let tg = task_graph(&[("b:build", &[])], &[]);
-        let e = compute_affected_task_explanation(
+        let e = compute_affected_task_selection(
             &g,
             &p,
             &tg,
             &strings(&["packages/nx/package.json"]),
             &options(&[]),
         )
-        .unwrap();
+        .unwrap()
+        .explanation;
         assert_eq!(
             e.input_matches["b:build"].project_configs,
             strings(&["packages/nx/package.json"])

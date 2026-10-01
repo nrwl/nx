@@ -73,7 +73,6 @@ export async function showProjectsHandler(
           files: nxArgs.files,
         },
         ...(await runCommandModule().runnerInputsForSelection(nxArgs, nxJson)),
-        explain: isExplaining(nxArgs.explain),
       });
       if (isExplaining(nxArgs.explain)) {
         printAffectedExplanation(

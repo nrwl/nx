@@ -18,6 +18,11 @@ const state = vi.hoisted(() => ({
       initiatingTaskIds: ['app:build'],
       taskIds: ['app:build'],
     },
+    explanation: {
+      affected: { 'app:build': [{ kind: 'input-file', file: 'x.ts' }] },
+      upstream: {},
+      touched: ['app:build'],
+    },
   },
 }));
 
@@ -60,6 +65,7 @@ describe('handleSelectAffectedTasks', () => {
     expect((response as any).projectGraph).toBe(state.graph.projectGraph);
     expect((response as any).affectedTaskIds).toEqual(['app:build']);
     expect((response as any).taskSelection).toBe(state.selection.taskSelection);
+    expect((response as any).explanation).toBe(state.selection.explanation);
     expect(planningContextFor).toHaveBeenCalledWith(
       state.graph.projectGraph,
       {}

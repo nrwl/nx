@@ -460,6 +460,8 @@ export interface AffectedTaskSelection {
   affected: Array<string>
   /** `affected` plus everything it depends on, sorted: what a run keeps. */
   required: Array<string>
+  /** Why the change reached each task. */
+  explanation: AffectedTaskExplanation
 }
 
 export interface AffectedTasksOptions {
@@ -646,13 +648,6 @@ export declare const enum EventType {
 export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
 
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
-
-/**
- * Separate from `affected_tasks` because the explanation costs a string per
- * match and only `--explain` reads it; the selection path stays a membership
- * test over interned instruction ids.
- */
-export declare function explainAffectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph, changedFiles: Array<string>, options: AffectedTasksOptions): AffectedTaskExplanation
 
 export interface ExternalDependenciesInput {
   externalDependencies: Array<string>

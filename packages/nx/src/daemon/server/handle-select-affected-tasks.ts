@@ -32,6 +32,7 @@ export async function handleSelectAffectedTasks(
     affectedTaskIds: [...selection.affectedTaskIds],
     taskGraph: selection.taskGraph,
     taskSelection: selection.taskSelection,
+    explanation: selection.explanation,
   };
   return { response, description: 'handleSelectAffectedTasks' };
 }
