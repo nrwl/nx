@@ -8,11 +8,7 @@ test('renders the reference with usable schema links and a Markdown export', asy
 }) => {
   await page.goto(referencePath);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  for (const name of [
-    'Authentication',
-    'Endpoint reference',
-    'Schema and field definitions',
-  ]) {
+  for (const name of ['Endpoint reference', 'Schema and field definitions']) {
     await expect(
       page.getByRole('heading', { name, level: 2, exact: true })
     ).toBeVisible();

@@ -69,23 +69,15 @@ export interface OpenApiReference {
   title: string;
   version: string;
   overview: ReferenceProse;
-  navigation: { label: string; href: string }[];
+  navigation: { label: string; href: string; id?: string }[];
   servers: ReferenceProse[];
   sections: {
     servers: ReferenceHeading;
-    authentication: ReferenceHeading;
     endpoints: ReferenceHeading;
     responses: ReferenceHeading;
     headers: ReferenceHeading;
     schemas: ReferenceHeading;
   };
-  authentication: ReferenceProse;
-  securitySchemes: {
-    heading: ReferenceHeading;
-    description: ReferenceProse;
-    properties: ReferenceTable;
-    flows?: string;
-  }[];
   endpoints: ReferenceEndpoint[];
   responses: (ReferenceResponse & { heading: ReferenceHeading })[];
   headers: {
@@ -655,6 +647,7 @@ export function buildOpenApiReference(
     throw new Error('The OpenAPI specification contains no operations.');
   const catalog = responseCatalog(document, operations);
   const slugger = new GithubSlugger();
+  const authenticationGuideId = slugger.slug('authentication');
   const heading = (
     depth: ReferenceHeading['depth'],
     text: string,
@@ -663,28 +656,11 @@ export function buildOpenApiReference(
   // Retain the existing section and endpoint slugs. Schema and catalog IDs stay raw.
   const sections: OpenApiReference['sections'] = {
     servers: heading(2, 'Servers'),
-    authentication: heading(2, 'Authentication'),
     endpoints: heading(2, 'Endpoint reference', 'operations'),
     responses: heading(2, 'HTTP response codes'),
     headers: heading(3, 'Response headers'),
     schemas: heading(2, 'Schema and field definitions', 'schemas'),
   };
-  const securitySchemes = Object.entries(
-    object(components.securitySchemes)
-  ).map(([name, raw]) => {
-    const scheme = resolve(document, raw);
-    return {
-      heading: heading(3, securityLabel(document, name)),
-      description: prose(text(scheme.description)),
-      properties: referenceTable(
-        ['Property', 'Value'],
-        ['type', 'scheme', 'bearerFormat', 'in', 'name', 'openIdConnectUrl']
-          .filter((key) => key in scheme)
-          .map((key) => [code(key), code(scheme[key])])
-      ),
-      ...(scheme.flows ? { flows: JSON.stringify(scheme.flows, null, 2) } : {}),
-    };
-  });
   const endpoints: ReferenceEndpoint[] = operations.map(
     ({ path, method, operation, parameters }, index) => {
       const merged = new Map<string, OpenApiObject>();
@@ -841,8 +817,17 @@ export function buildOpenApiReference(
     overview: prose(text(document.info.description)),
     navigation: [
       {
+        label: 'Authenticate with the Nx Cloud Public API',
+        href: '/docs/kb/authenticate-public-api',
+        id: authenticationGuideId,
+      },
+      {
         label: 'Query the Nx Cloud Public API',
         href: '/docs/kb/query-public-api',
+      },
+      {
+        label: 'Read raw resource-utilization reports',
+        href: '/docs/kb/read-resource-utilization-reports',
       },
       {
         label: 'Investigate flaky tasks',
@@ -861,16 +846,12 @@ export function buildOpenApiReference(
       prose(`${code(object(server).url)} ${text(object(server).description)}`)
     ),
     sections,
-    authentication: prose(securityMarkdown(document, document.security)),
-    securitySchemes,
     endpoints,
     responses,
     headers,
     schemas,
     headings: [
       ...(array(document.servers).length ? [sections.servers] : []),
-      sections.authentication,
-      ...securitySchemes.map((item) => item.heading),
       sections.endpoints,
       ...endpoints.map((item) => item.heading),
       sections.responses,
@@ -977,7 +958,7 @@ export function renderOpenApiReference(reference: OpenApiReference): string {
   const lines = [
     `Generated from the [deployed OpenAPI specification](${reference.sourceUrl}). API version: ${code(reference.version)}.`,
     `API: ${reference.title}.`,
-    `For usage examples: ${reference.navigation.map(({ label, href }) => `[${label}](${href})`).join(', ')}.`,
+    `For usage examples: ${reference.navigation.map(({ label, href, id }) => `${id ? anchor(id) : ''}[${label}](${href})`).join(', ')}.`,
     reference.overview.markdown,
     ...(reference.servers.length
       ? [
@@ -985,16 +966,7 @@ export function renderOpenApiReference(reference: OpenApiReference): string {
           ...reference.servers.map((server) => `- ${server.markdown}`),
         ]
       : []),
-    headingMarkdown(reference.sections.authentication),
-    reference.authentication.markdown,
   ];
-  for (const scheme of reference.securitySchemes)
-    lines.push(
-      headingMarkdown(scheme.heading),
-      scheme.description.markdown,
-      tableMarkdown(scheme.properties),
-      ...(scheme.flows ? [fencedCode(scheme.flows)] : [])
-    );
   lines.push(headingMarkdown(reference.sections.endpoints));
   for (const endpoint of reference.endpoints) {
     lines.push(

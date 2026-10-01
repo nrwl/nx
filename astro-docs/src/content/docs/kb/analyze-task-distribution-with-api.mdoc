@@ -29,9 +29,9 @@ A repeated task ID does not prove duplicate or wasted work. Compare the run, has
 
 ## Compare resource demand with allocation
 
-Download each relevant agent's `resource-utilization` asset. It contains per-sample CPU, memory, and I/O data. Use instance `resourceUsage` or the launch-template allocation to compare demand with capacity.
+Download each relevant agent's `resource-utilization` asset. Follow [Read raw resource-utilization reports](/docs/kb/read-resource-utilization-reports) to interpret the records and map CPU and memory samples to tasks. Use instance `resourceUsage` or the launch-template allocation to compare demand with capacity.
 
-Agent `cpuCores` and `totalMemory` describe the reported host system. They are not the allocated container limits. Agent averages and maxima describe the tracked Nx process set, not all host activity. CPU uses 100 percent per core.
+Agent `cpuCores` and `totalMemory` describe detected system capacity, which can depend on the Nx version and operating-system limits. They do not establish the requested resource class. Agent averages and maxima describe the tracked Nx process set, not all host activity. CPU uses 100 percent per core.
 
 Use the evidence to distinguish these cases:
 

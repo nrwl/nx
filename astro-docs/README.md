@@ -113,7 +113,7 @@ The site uses custom content loaders to dynamically generate documentation:
 - **PluginLoader** (`plugin.loader.ts`) - Generates official plugin documentation (generators, executors, migrations)
 - **CommunityPluginsLoader** (`community-plugins.loader.ts`) - Generates data for plugin registry (e.g. GitHub stars, npm downloads)
 - **NxReferencePackagesLoader** (`nx-reference-packages.loader.ts`) - Generated data for CNW, Devkit, nx cli (e.g. nx core related things)
-- **NxCloudPublicApiLoader** (`nx-cloud-public-api.loader.ts`) - Fetches the deployed OpenAPI specification into the `nx-cloud-public-api` collection and generates the API reference, including authentication, parameters, responses, headers, and schemas.
+- **NxCloudPublicApiLoader** (`nx-cloud-public-api.loader.ts`) - Fetches the deployed OpenAPI specification into the `nx-cloud-public-api` collection and generates the API reference, including parameters, responses, headers, and schemas.
 
 ### Nx Cloud Public API reference
 
@@ -129,9 +129,9 @@ Shared HTTP response descriptions and header definitions appear once. Status-key
 
 The Markdown body retains the source URL, API version, and Knowledge Base links. The page supplies that body to the copy feature. `/docs/reference/nx-cloud/public-api.md` and `/docs/reference/llms.txt` continue to use the collection body; the export contains no Astro component tags.
 
-Authentication labels use the scheme's `x-displayName` extension, or its name with the first letter capitalized. The renderer does not change scheme keys or header names.
+Authentication setup is authored manually in `src/content/docs/kb/authenticate-public-api.mdoc`. Raw metrics records and their interpretation are documented in `src/content/docs/kb/read-resource-utilization-reports.mdoc`. The reference and Markdown export link to these guides instead of generating their usage instructions. The existing `#authentication` anchor points to the guide link. Operation-specific security requirements remain with their endpoint.
 
-The `astro-docs:build` target does not use the Nx task cache because the remote specification can change independently of repository files. Package build dependencies still use their normal caches. Restart the local server to fetch a new deployed specification. The source override also works for a preview build, for example `NX_CLOUD_OPENAPI_URL=http://127.0.0.1:4203/nx-cloud/data/openapi.json mise exec -- pnpm exec nx build astro-docs --excludeTaskDependencies`. The docs show the selected source's routes and metadata without rewriting beta routes or overriding upstream authentication descriptions.
+The `astro-docs:build` target does not use the Nx task cache because the remote specification can change independently of repository files. Package build dependencies still use their normal caches. Restart the local server to fetch a new deployed specification. The source override also works for a preview build, for example `NX_CLOUD_OPENAPI_URL=http://127.0.0.1:4203/nx-cloud/data/openapi.json mise exec -- pnpm exec nx build astro-docs --excludeTaskDependencies`. The docs show the selected source's routes and metadata without rewriting beta routes.
 
 Run `pnpm nx run astro-docs:test-openapi` for the loader tests. Run `pnpm nx run astro-docs:pw-e2e -- public-api.spec.ts` for the reference page tests.
 

@@ -1,0 +1,137 @@
+---
+title: Read raw resource-utilization reports
+description: Understand Nx Cloud resource-report records, process-to-task metadata, and the meaning of CPU and memory samples.
+filter: 'type:Guides'
+topics:
+  - 'Nx Cloud'
+  - 'Continuous integration'
+---
+
+The raw `resource-utilization` report records CPU and memory measurements for processes that Nx tracks during an agent execution. Use it to identify resource demand, associate that demand with tasks, and decide what to investigate.
+
+Nx core collects process measurements and metadata. The Nx Cloud client stores these updates as newline-delimited JSON (NDJSON): each line contains one JSON object, rather than the file containing one JSON array.
+
+The file has two related kinds of information:
+
+- **Measurements** describe a process's CPU and memory use at a collection time.
+- **Metadata** explains which process and task group those measurements belong to.
+
+## Understand a metrics update
+
+The following illustrative record is formatted for readability. In the file, it occupies one line:
+
+```json
+{
+  "timestamp": 1760000000000,
+  "processes": [{ "pid": 412, "cpu": 150, "memory": 268435456 }],
+  "metadata": {
+    "groups": {
+      "demo:build": {
+        "groupType": "Task",
+        "displayName": "demo:build",
+        "id": "demo:build"
+      }
+    },
+    "processes": {
+      "412": {
+        "ppid": 100,
+        "name": "node",
+        "command": "node build.js",
+        "exePath": "/usr/bin/node",
+        "cwd": "/workspace",
+        "groupId": "demo:build",
+        "isRoot": true
+      }
+    }
+  }
+}
+```
+
+| Field                | Meaning                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------- |
+| `timestamp`          | Unix epoch time in milliseconds for the collection cycle.                                         |
+| `processes[].pid`    | Process identifier used to look up metadata.                                                      |
+| `processes[].cpu`    | CPU usage percentage across cores. `100` represents one fully used core; values can exceed `100`. |
+| `processes[].memory` | Resident set size (RSS) in bytes for an Nx core process sample. It is not virtual memory.         |
+| `metadata.processes` | Process definitions, keyed by the PID as a string.                                                |
+| `metadata.groups`    | Group definitions, keyed by group ID.                                                             |
+
+In this example, PID `412` is a `node` process in the `demo:build` task group. Its CPU value of `150` represents approximately **1.5 used cores**. Its memory value of `268435456` represents **256 MiB**, or **0.25 GiB**, of process RSS. These are process measurements, not whole-machine utilization.
+
+Process metadata also describes the parent PID (`ppid`), command line (`command`), executable path (`exePath`), and working directory (`cwd`). An optional `alias` provides a process label. Command lines and paths can contain sensitive information; redact them before sharing a report.
+
+## Carry metadata between updates
+
+A later update can contain measurements without repeating earlier process or group definitions:
+
+```json
+{
+  "timestamp": 1760000001000,
+  "processes": [{ "pid": 412, "cpu": 75, "memory": 301989888 }],
+  "metadata": { "groups": {}, "processes": {} }
+}
+```
+
+This update occurs one second after the first example. PID `412` still belongs to `demo:build`. Its CPU value now represents approximately **0.75 used cores**, and its memory value represents **288 MiB** of RSS.
+
+An empty metadata map does not remove earlier definitions. Retain the process and group maps as you read the file. Merge new entries into them, and replace an entry when a later update supplies the same key.
+
+Do not interpret a line in isolation unless you also have the preceding metadata. Measurements without a known process definition have unknown attribution, not zero usage.
+
+## Map processes to tasks
+
+For each process sample, follow this chain:
+
+```text
+sample.pid
+  → metadata.processes[String(pid)].groupId
+  → metadata.groups[groupId]
+```
+
+Nx core uses these group types:
+
+| Group type            | Meaning                                              |
+| --------------------- | ---------------------------------------------------- |
+| `MainCLI`             | The main Nx CLI process.                             |
+| `MainCliSubprocesses` | Registered CLI subprocesses and their descendants.   |
+| `Daemon`              | The Nx daemon process.                               |
+| `DaemonSubprocesses`  | The daemon's subprocesses.                           |
+| `Task`                | A task's registered processes and their descendants. |
+| `Batch`               | A shared batch worker and its descendants.           |
+
+A group's `displayName` is its display label. For a `Task` group, `id` identifies the task. For a `Batch` group, `taskIds` lists the tasks that share the worker. Batch measurements do not provide separate CPU or memory values for each task. Do not divide the values equally without evidence.
+
+`isRoot` identifies a registered root process, not a task total. A task group can contain several processes. To calculate its usage at one timestamp, combine the measurements for that group, with checks for repeated PIDs to avoid double-counting.
+
+A PID or task ID alone is not an identity across reports. Keep the agent, boot, run, batch, and attempt context when you compare the samples with task records.
+
+## Interpret CPU, memory, and time
+
+- **CPU is a rate, not accumulated CPU time.** Divide `cpu` by `100` for approximate used cores. For an allocation of four cores, total tracked CPU of `200` represents approximately two used cores, or `50%` of that allocation.
+- **Memory is measured in bytes.** Divide by `1024**2` for MiB or `1024**3` for GiB. Summed process RSS does not measure free memory or the complete machine's memory use.
+- **Use the recorded timestamps.** The collector's default interval is one second, but collection work and refresh timing can change the spacing. Short-lived processes can finish between samples.
+- **Missing data is not zero usage.** A missing process, metadata entry, or sampling interval does not prove that a task was idle or suffered an OOM kill. Use task results, termination information, and logs for those conclusions.
+
+For capacity comparisons, use the selected agent's launch-template allocation or instance `resourceUsage`. Detected `cpuCores` and `totalMemory` describe capacity, not sampled total utilization. Detection can depend on the Nx version, CPU affinity, and operating-system limits; it does not establish the requested resource class.
+
+These Nx core process samples describe CPU and memory. Do not infer disk or network I/O from these fields.
+
+Reports can also contain other record types, such as `containerSpan`, or groups from another metrics producer. These are not all Nx core process measurements. A container series can use a synthetic PID and a different memory measurement. Inspect the record type and `groupType` before applying process-specific assumptions.
+
+## Use the samples to guide a decision
+
+Start with the process or task group you want to understand. Read several updates across its execution, not just its largest sample. Compare its demand with other simultaneous tasks and the agent's allocation.
+
+In the two example updates, the process's CPU usage falls from approximately 1.5 cores to 0.75 cores while its RSS increases by 32 MiB. This describes a change over one second. It does not establish a memory leak, sustained CPU pressure, or a reason to change the agent size. Later samples and task duration provide the context for those decisions.
+
+| Observation across several samples                               | What to investigate                                                                                                                               |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Combined tracked CPU remains near the agent's allocated capacity | Check whether concurrent tasks compete for CPU. Compare a larger allocation or less concurrency with the same workload.                           |
+| One task group accounts for most of the tracked memory           | Inspect that task's memory demand and its overlap with other tasks before changing the allocation.                                                |
+| A process's RSS continues to grow during a long execution        | Check whether growth is expected for its workload. Repeated comparable executions can help distinguish expected allocations from a possible leak. |
+| A task takes a long time but uses little CPU                     | Check logs and task dependencies for waits or external work. Low CPU alone does not identify the cause or justify more parallelism.               |
+| A process disappears or samples stop                             | Check task completion, termination information, and report completeness. The absence alone does not prove an OOM kill or zero usage.              |
+
+The report measures tracked processes, not every source of resource pressure on the machine. Treat an observation as evidence for a focused investigation, not a complete explanation of a failure or delay.
+
+See [Analyze task distribution](/docs/kb/analyze-task-distribution-with-api) for resource comparisons and allocation experiments. The Nx core [metrics types](https://github.com/nrwl/nx/blob/master/packages/nx/src/native/metrics/types.rs) and [collector](https://github.com/nrwl/nx/blob/master/packages/nx/src/native/metrics/collector.rs) describe the producer measurements.
