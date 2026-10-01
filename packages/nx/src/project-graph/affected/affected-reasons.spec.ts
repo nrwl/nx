@@ -171,24 +171,6 @@ describe('formatAffectedExplanation', () => {
     expect(out).toContain('Changing a.ts and 2 other files touches');
   });
 
-  it('heads the reached tasks by what was touched, or by the change', () => {
-    const out = formatAffectedExplanation(
-      {
-        affected: {
-          'app:e2e': [{ kind: 'dependent-output', producer: 'app:build' }],
-        },
-        upstream: {
-          'app:build': [{ kind: 'dependent-output', producer: 'app:gen' }],
-        },
-        touched: [],
-      },
-      'Affected tasks'
-    );
-    expect(out).toContain(
-      'The change reaches outputs read by 1 requested task and 1 other task:\n  app:e2e\n'
-    );
-  });
-
   it('says so when a touched task names no changed file', () => {
     const out = formatAffectedExplanation(
       {

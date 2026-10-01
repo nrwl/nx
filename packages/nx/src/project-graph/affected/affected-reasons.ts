@@ -227,9 +227,7 @@ export function formatAffectedExplanation(
   // Tasks reached only through outputs the touched ones changed.
   if (reachedAll.length) {
     const detailed = verbose || reachedAll.length <= 5;
-    const header = touchedAll.length
-      ? `Touching those tasks changes outputs read by ${counted(reachedAll)}`
-      : `The change reaches outputs read by ${counted(reachedAll)}`;
+    const header = `Touching those tasks changes outputs read by ${counted(reachedAll)}`;
     lines.push(detailed ? `${header}:` : `${header}${hint}`);
     list(reachedAll, '  ', detailed);
     lines.push('');
