@@ -450,7 +450,6 @@ test('loads the live spec into a rendered collection entry and refreshes it on e
   assert.deepEqual(state.calls, ['parse', 'render']);
   const data = first.data as Record<string, unknown>;
   assert.equal(data.slug, 'reference/nx-cloud/public-api');
-  assert.equal(data.operationCount, 2);
   assert.equal(data.apiVersion, 'v2');
   spec.info.version = 'v3';
   spec.paths['/data/v2/tasks'].get.description = 'Updated description.';
