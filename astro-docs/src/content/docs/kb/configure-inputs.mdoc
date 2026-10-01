@@ -9,7 +9,7 @@ topics:
 When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of file sets, runtime inputs, and environment variables that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
-In CI, when your workspace has Ultracache turned on in Nx Cloud, Nx can hash a task from the files it read on a recorded run instead of its declared file sets, so a change to a declared file that run didn't read doesn't re-run it.
+In CI, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) hashes a task from the files it read on a recorded run instead of its declared file sets, so a change to a declared file that run didn't read doesn't re-run it.
 Set [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false` to turn this off for a run.
 Set [`ultracache.mode: "warn"`](/docs/reference/project-configuration#ultracache) on a target to keep its declared inputs authoritative.
 

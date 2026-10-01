@@ -764,9 +764,8 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 
 {% aside type="note" title="Nx Cloud only" %}
 Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it.
-Applying a recording also needs a CI run, a recording for the task in question, and Ultracache turned on for your workspace in Nx Cloud.
+Applying a recording needs a CI run and a recording for the task in question, which [Ultracache](/docs/features/ci-features/remote-cache#ultracache) makes when the task runs on Nx Agents.
 Setting [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false` turns it off for a run.
-See [task sandboxing](/docs/kb/sandboxing).
 {% /aside %}
 
 A target that defines `ultracache` replaces the inherited settings rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoreReads` and `ignoreWrites` to keep inherited patterns.
@@ -787,7 +786,7 @@ A target that defines `ultracache` replaces the inherited settings rather than a
 A key written after the spread token overrides the inherited value. For example, `"ultracache": { "...": true, "collectStats": false }` keeps the other inherited settings and turns off successful stat collection, even if the inherited `collectStats` is `true`.
 
 {% aside type="note" title="Workspace-wide exclusions live elsewhere" %}
-`ultracache` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/ultracache-config.yaml`. See [Excluding paths](/docs/kb/sandboxing#excluding-paths). The two combine: a task is checked against its own `ultracache` patterns and the workspace-wide ones together, so neither overrides the other.
+`ultracache` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/ultracache-config.yaml`. See [improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs). The two combine: a task is checked against its own `ultracache` patterns and the workspace-wide ones together, so neither overrides the other.
 {% /aside %}
 
 ### Sync generators

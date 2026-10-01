@@ -37,6 +37,9 @@ change and projects that depend on them.
 Some affected tasks may have already run with the same inputs.
 [Remote caching](/docs/features/ci-features/remote-cache) lets developer machines and CI jobs share
 those results, so Nx can restore terminal output and artifacts instead of repeating the task.
+On Nx Cloud, Ultracache records the files each task reads and
+hashes later runs from those files, so changes to files a task never reads don't cause cache
+misses.
 
 Affected calculations reduce the task graph before execution.
 Caching removes repeated work from the remaining graph.
