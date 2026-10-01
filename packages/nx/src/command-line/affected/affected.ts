@@ -80,7 +80,7 @@ export async function affected(
       explainUnavailable(
         [
           !selectsAffectedTasks() && 'NX_LEGACY_AFFECTED=false',
-          !nxArgs.targets?.length && 'targets passed with -t',
+          !nxArgs.targets?.length && 'targets passed with --targets (-t)',
         ].filter(Boolean)
       )
     );

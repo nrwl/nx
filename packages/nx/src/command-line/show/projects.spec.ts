@@ -386,7 +386,7 @@ describe('show projects', () => {
         explain: true,
         files: ['libs/ui/src/x.ts'],
       } as any)
-    ).rejects.toThrow('--explain needs targets passed with -t.');
+    ).rejects.toThrow('--explain needs targets passed with --withTarget (-t).');
   });
 
   it('names each thing explaining is missing or conflicts with', async () => {
@@ -396,7 +396,7 @@ describe('show projects', () => {
         projects: ['proj1'],
       } as any)
     ).rejects.toThrow(
-      "--explain needs --affected and targets passed with -t. --explain can't be combined with --projects."
+      "--explain needs --affected and targets passed with --withTarget (-t). --explain can't be combined with --projects."
     );
   });
 });

@@ -56,7 +56,7 @@ export async function showProjectsHandler(
         [
           !selectsAffectedTasks() && 'NX_LEGACY_AFFECTED=false',
           !args.affected && '--affected',
-          !args.withTarget?.length && 'targets passed with -t',
+          !args.withTarget?.length && 'targets passed with --withTarget (-t)',
         ].filter(Boolean),
         args.projects ? ['--projects'] : []
       )
