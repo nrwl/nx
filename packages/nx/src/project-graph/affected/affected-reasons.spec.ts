@@ -80,7 +80,7 @@ describe('formatAffectedExplanation', () => {
       [
         '3 out of 12 build tasks are affected:',
         '',
-        'Changing libs/ui/src/index.ts touches 1 build task (tasks where 1 or more direct inputs change):',
+        'Changing libs/ui/src/index.ts touches 1 build task:',
         '  ui:build',
         '    - libs/ui/src/index.ts matches libs/ui/**/*',
         '',
@@ -108,7 +108,7 @@ describe('formatAffectedExplanation', () => {
     };
     const out = formatAffectedExplanation(explanation, 'Affected tasks');
     expect(out).toContain(
-      'Changing pnpm-lock.yaml touches 1 e2e task and 6 other tasks (tasks where 1 or more direct inputs change). Pass --verbose to list each with its reasons.\n  - z:e2e\n  - a:build\n  - b:build\n  - c:build\n  - d:build\n  - and 2 more'
+      'Changing pnpm-lock.yaml touches 1 e2e task and 6 other tasks. Pass --verbose to list each with its reasons.\n  - z:e2e\n  - a:build\n  - b:build\n  - c:build\n  - d:build\n  - and 2 more'
     );
     const verbose = formatAffectedExplanation(explanation, 'Affected tasks', {
       verbose: true,
@@ -150,7 +150,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      'Changing 2 files touches 2 test tasks (tasks where 1 or more direct inputs change):\n\n  a.ts -> 1 test task:\n    a:test\n'
+      'Changing 2 files touches 2 test tasks:\n\n  a.ts -> 1 test task:\n    a:test\n'
     );
   });
 
@@ -199,7 +199,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '1 requested task is touched with no changed file to name (tasks where 1 or more direct inputs change):\n  b:e2e\n    - its executor uses a custom hasher, so it is always selected'
+      '1 requested task is touched with no changed file to name:\n  b:e2e\n    - its executor uses a custom hasher, so it is always selected'
     );
   });
 

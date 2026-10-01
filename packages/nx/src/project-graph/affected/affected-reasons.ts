@@ -205,11 +205,10 @@ export function formatAffectedExplanation(
       changed
         ? `Changing ${changed} touches ${counted(members)}`
         : `${counted(members)} ${members.length === 1 ? 'is' : 'are'} touched with no changed file to name`;
-    const header = `${
+    const header =
       groups.length === 1
         ? touchedBy(groups[0][0], touchedAll)
-        : `Changing ${files.size} ${files.size === 1 ? 'file' : 'files'} touches ${counted(touchedAll)}`
-    } (tasks where 1 or more direct inputs change)`;
+        : `Changing ${files.size} ${files.size === 1 ? 'file' : 'files'} touches ${counted(touchedAll)}`;
     lines.push(detailed ? `${header}:` : `${header}${hint}`);
     if (groups.length === 1) {
       list(touchedAll, '  ', detailed);
