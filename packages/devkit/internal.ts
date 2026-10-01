@@ -112,6 +112,11 @@ export {
 } from './src/utils/require-esm-race';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';
+export {
+  parseNxDependsOnDirective,
+  readTestFileDependsOn,
+  scopeTestTargetToProjects,
+} from './src/utils/test-file-depends-on';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';
 export { checkAndCleanWithSemver } from './src/utils/semver';
