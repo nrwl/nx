@@ -12,7 +12,7 @@ import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
-import { getInputs, TaskHasher } from '../hasher/task-hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
@@ -219,7 +219,9 @@ export class TaskOrchestrator {
     private readonly specifiedOutputStyle: OutputStyle | undefined,
     /** What this run renders with, after defaults. */
     private readonly resolvedOutputStyle: OutputStyle,
-    private readonly fullTaskGraph: TaskGraph = taskGraph
+    private readonly fullTaskGraph: TaskGraph = taskGraph,
+    /** Tasks the up-front pass left to hash once the tasks they read from have run. */
+    private readonly deferredTaskIds?: ReadonlySet<string>
   ) {}
 
   async init() {
@@ -670,8 +672,8 @@ export class TaskOrchestrator {
    * Hash all batch tasks and resolve cache hits topologically.
    *
    * Walks the task graph level by level. Every task gets a preliminary hash
-   * (so startTasks always has a valid hash for Cloud). Tasks with depsOutputs
-   * whose deps weren't cached are ineligible for cache lookup but still
+   * (so startTasks always has a valid hash for Cloud). Tasks the up-front
+   * pass deferred, whose deps weren't cached, are ineligible for cache lookup but still
    * receive a preliminary hash — they'll be re-hashed after execution.
    */
   private async applyBatchCachedResults(
@@ -704,10 +706,7 @@ export class TaskOrchestrator {
         const depIds = batch.taskGraph.dependencies[task.id];
         const hasNonCachedDep = depIds.some((id) => nonCachedTaskIds.has(id));
 
-        if (
-          hasNonCachedDep &&
-          getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length > 0
-        ) {
+        if (hasNonCachedDep && this.deferredTaskIds?.has(task.id)) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
         } else {
@@ -790,7 +789,7 @@ export class TaskOrchestrator {
       await this.preRunSteps(nonCachedTasks, { groupId });
     }
 
-    // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
+    // Phase 2: Run non-cached tasks, then re-hash tasks that read their outputs
     const taskIdsToSkip = cachedResults.map((r) => r.task.id);
     let batchResults: TaskResult[] = [];
 
@@ -811,7 +810,7 @@ export class TaskOrchestrator {
         groupId
       );
 
-      // Re-hash depsOutputs tasks — their dep outputs are now on disk
+      // Re-hash tasks that read dep outputs — those outputs are now on disk
       const tasksToRehash = batchResults
         .filter(
           (r) =>

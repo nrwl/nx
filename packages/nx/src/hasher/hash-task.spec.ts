@@ -78,7 +78,7 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
     const hashTasksUpfront = vi.fn(async (tasks: { id: string }[]) => ({
       'app:build': hashOf('app:build'),
     }));
-    await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+    const deferred = await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
       { hashTasksUpfront } as unknown as TaskHasher,
       projectGraph,
       taskGraph,
@@ -97,6 +97,7 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
     expect(taskGraph.tasks['app:e2e'].hash).toBeUndefined();
     expect(taskGraph.tasks['app:test'].hash).toBeUndefined();
     expect(taskGraph.tasks['app:custom'].hash).toBeUndefined();
+    expect([...deferred].sort()).toEqual(['app:custom', 'app:e2e', 'app:test']);
   });
 
   it('holds back a task whose Ultracache configuration reads producer outputs, even when its inputs never said so', async () => {
