@@ -345,6 +345,32 @@ The option has no effect on dependencies that aren't continuous.
 Set `NX_LEGACY_AFFECTED=false` to make `nx affected` select tasks by their inputs.
 Without it, `nx affected` selects whole projects, regardless of `"inputs": false`.
 
+### Inputs kept under ultracache
+
+When a task hashes from a recorded run under [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables), its declared filesets give way to the files it read.
+An `e2e` task usually doesn't read the libraries its app serves, so a library listed in its inputs drops out of the hash.
+Add `"always": true` to an input to keep the files it resolves to:
+
+```jsonc
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "inputs": [
+        "default",
+        { "input": "production", "projects": ["checkout"], "always": true },
+      ],
+    },
+  },
+}
+```
+
+The `fileset`, `json`, and `input` forms accept `always`, including `{ "input": "production", "dependencies": true, "always": true }`, which keeps every dependency in the chain.
+A task hashed from its declared inputs hashes the same with or without it.
+With `always`, a `projects` pattern that matches no project is a configuration error, so a misspelled name can't drop a project unnoticed.
+
+To narrow an atomized test file to the projects it exercises, see [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
+
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 
 When a root `tsconfig.json` or `tsconfig.base.json` is present, Nx will always consider parts of the file which apply to the project of a task being run.
