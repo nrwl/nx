@@ -43,7 +43,6 @@ export function partitionDiagnostics(
   return byTask;
 }
 
-/** The nested roots a task excludes: the ones inside the paths it lints. */
 export function excludedNestedRoots(
   paths: string[],
   nestedProjectRoots: string[]
@@ -136,7 +135,6 @@ function contains(path: string, file: string): boolean {
   return dir === '' || file === dir || file.startsWith(`${dir}/`);
 }
 
-/** `./libs/a/` -> `libs/a`, and `.` -> the empty string for the workspace root. */
 function normalizePath(path: string): string {
   const normalized = path.replace(/^\.\//, '').replace(/\/$/, '');
   return normalized === '.' ? '' : normalized;

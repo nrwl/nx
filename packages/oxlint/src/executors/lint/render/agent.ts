@@ -16,7 +16,6 @@ export function renderAgent(diagnostics: OxlintDiagnostic[]): string {
     .join('');
 }
 
-/** Joins lines and runs of whitespace with single spaces, as Oxlint does. */
 function compact(text: string): string {
   return text.split(/\s+/).filter(Boolean).join(' ');
 }

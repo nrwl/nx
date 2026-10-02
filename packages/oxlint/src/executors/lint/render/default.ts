@@ -56,7 +56,6 @@ export function renderGraphical(
   return out;
 }
 
-/** Prefixes every line after the first, as Oxlint does for multi-line text. */
 function indent(text: string, prefix: string): string {
   return text.replaceAll('\n', `\n${prefix}`);
 }
