@@ -177,6 +177,32 @@ describe('ProjectGraphBuilder', () => {
     });
   });
 
+  it(`should keep each project's dependency on a non-project file`, () => {
+    const nonProjectFiles = [{ file: 'shared.lock', hash: 'x' }];
+    builder = new ProjectGraphBuilder(undefined, fileMap, nonProjectFiles);
+    for (const name of ['source', 'second', 'target']) {
+      builder.addNode({ name, type: 'lib', data: { root: name } } as any);
+    }
+
+    builder.addStaticDependency('source', 'target', 'shared.lock');
+    builder.addStaticDependency('second', 'target', 'shared.lock');
+    builder.addStaticDependency('second', 'target', 'shared.lock');
+
+    const graph = builder.getUpdatedProjectGraph();
+    expect(graph.dependencies.source).toEqual([
+      { source: 'source', target: 'target', type: 'static' },
+    ]);
+    expect(graph.dependencies.second).toEqual([
+      { source: 'second', target: 'target', type: 'static' },
+    ]);
+    expect(nonProjectFiles[0]).toMatchObject({
+      deps: [
+        ['source', 'target', 'static'],
+        ['second', 'target', 'static'],
+      ],
+    });
+  });
+
   it(`remove dependency`, () => {
     builder.addNode({
       name: 'target2',
