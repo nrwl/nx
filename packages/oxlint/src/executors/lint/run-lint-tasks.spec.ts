@@ -243,7 +243,9 @@ describe('runLintTasks', () => {
 
     expect(mockRunOxlint.mock.calls[0][0]).toContain('libs/a/src');
     expect(results['libs/a:lint'].success).toBe(false);
-    expect(results['libs/a:lint'].terminalOutput).toContain('libs/a/src/x.ts');
+    expect(results['libs/a:lint'].terminalOutput).toBe(
+      'libs/a/src/x.ts:1:1: error c: m\n'
+    );
   });
 
   it('should honour --silent on the output only', () => {
