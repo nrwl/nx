@@ -7,7 +7,6 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
@@ -43,13 +42,6 @@ export interface WebpackPluginOptions {
 }
 
 type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const webpackConfigGlob = '**/webpack.config.{js,ts,mjs,cjs}';
 
