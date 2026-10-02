@@ -248,9 +248,7 @@ Nx selects a task when your change reaches one of its inputs, rather than by whe
 
 **`dependsOn` alone doesn't make a task affected.** A change to a dependency reaches a task only through the task's own inputs, for example `^production` or the dependency's build output through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks). An edge that only orders the two tasks doesn't carry the change across.
 
-**A target with `"cache": false` and its own `inputs` can stop running** when only its dependency changed. Add `^default` or `dependentTasksOutputFiles` to its inputs so the dependency's files reach its hash.
-
-**Files a task writes but doesn't declare don't carry a change.** When a later task needs what a task writes, list those files in the task's `outputs` and read them with `dependentTasksOutputFiles`, even when the task isn't cached.
+**Inputs and outputs matter even when a task isn't cached.** Nx uses them to select tasks, not only to cache them. A task whose inputs miss what it depends on can stop running when that dependency changes, and files a task writes without listing them in `outputs` don't carry a change to the tasks that read them.
 
 **A task whose executor defines a custom hasher is always selected** for the targets you run. Its hash comes from code outside its inputs, so Nx can't tell which changes reach it.
 
