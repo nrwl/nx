@@ -22,6 +22,7 @@ export interface OxlintDiagnostic {
   filename?: string;
   labels: OxlintLabel[];
   help?: string;
+  note?: string;
   url?: string;
 }
 

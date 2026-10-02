@@ -3,6 +3,7 @@ import {
   createFixtureWorkspace,
   diagnostics,
   filelessDiagnostic,
+  multilineDiagnostic,
 } from './fixtures.spec-util';
 
 // picocolors decides on colors at import time, so an env var set in the test is too late.
@@ -56,6 +57,29 @@ describe('renderDiagnostics', () => {
     ).toBe(
       '\n  × There are suppressions that do not occur anymore.\n' +
         '  help: Run `oxlint --prune-suppressions` to remove unused suppressions.\n' +
+        '\nFound 0 warnings and 1 error.\n'
+    );
+  });
+
+  it('should indent the continuation lines of default text the way Oxlint does', () => {
+    expect(
+      renderDiagnostics('default', [multilineDiagnostic], {
+        workspaceRoot,
+        agentMode: false,
+      })
+    ).toBe(
+      '\n  × probe(multi): First line.\n' +
+        '  │ Second   line\n' +
+        '  │     indented third.\n' +
+        '   ╭─[libs/a/src/x.ts:1:1]\n' +
+        ' 1 │ console.log(1);\n' +
+        '   · ───────────\n' +
+        ' 2 │ function f() { debugger; }\n' +
+        '   ╰────\n' +
+        '  help: Check the first.\n' +
+        '        Then the second.\n' +
+        '  note: These paths form a cycle:\n' +
+        '           ╭──▶ ../b/y.js\n' +
         '\nFound 0 warnings and 1 error.\n'
     );
   });

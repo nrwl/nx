@@ -4,9 +4,9 @@ import { position, SourceCache, type RenderContext } from './shared.js';
 
 /**
  * Oxlint's terminal report: a code frame per diagnostic with a file, with one
- * line of context either side, the span underlined, and the label and `help`
- * text below. Source lines come from disk since the JSON report carries no
- * source text, so a run with no diagnostics reads nothing.
+ * line of context either side, the span underlined, and the label, `help` and
+ * `note` text below. Source lines come from disk since the JSON report carries
+ * no source text, so a run with no diagnostics reads nothing.
  */
 export function renderGraphical(
   diagnostics: OxlintDiagnostic[],
@@ -19,7 +19,7 @@ export function renderGraphical(
     const paint = isError ? pc.red : pc.yellow;
     const { line, column } = position(d);
     const code = d.code ? `${paint(d.code)}: ` : '';
-    out += `\n  ${paint(isError ? '×' : '⚠')} ${code}${d.message}\n`;
+    out += `\n  ${paint(isError ? '×' : '⚠')} ${code}${indent(d.message, `  ${paint('│')} `)}\n`;
     if (d.filename) {
       out += `   ${pc.dim(`╭─[${d.filename}:${line}:${column}]`)}\n`;
 
@@ -47,10 +47,18 @@ export function renderGraphical(
       out += `   ${pc.dim('╰────')}\n`;
     }
     if (d.help) {
-      out += `  ${pc.cyan('help')}: ${d.help}\n`;
+      out += `  ${pc.cyan('help')}: ${indent(d.help, ' '.repeat(8))}\n`;
+    }
+    if (d.note) {
+      out += `  ${pc.cyan('note')}: ${indent(d.note, ' '.repeat(11))}\n`;
     }
   }
   return out;
+}
+
+/** Prefixes every line after the first, as Oxlint does for multi-line text. */
+function indent(text: string, prefix: string): string {
+  return text.replaceAll('\n', `\n${prefix}`);
 }
 
 function underline(

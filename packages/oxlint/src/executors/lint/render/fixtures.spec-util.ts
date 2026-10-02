@@ -40,6 +40,18 @@ export const filelessDiagnostic: OxlintDiagnostic = {
   help: 'Run `oxlint --prune-suppressions` to remove unused suppressions.',
 };
 
+// The message is a JS plugin rule's, captured from Oxlint 1.77.0; the help
+// and note span lines the same way.
+export const multilineDiagnostic: OxlintDiagnostic = {
+  message: 'First line.\nSecond   line\n    indented third.',
+  code: 'probe(multi)',
+  severity: 'error',
+  filename: 'libs/a/src/x.ts',
+  labels: [{ span: { offset: 0, length: 11, line: 1, column: 1 } }],
+  help: 'Check the first.\nThen the second.',
+  note: 'These paths form a cycle:\n╭──▶ ../b/y.js',
+};
+
 /** A workspace holding the fixture source, for renderers that read files. */
 export function createFixtureWorkspace(): string {
   const workspaceRoot = mkdtempSync(join(tmpdir(), 'oxlint-render-'));

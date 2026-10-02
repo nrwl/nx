@@ -10,8 +10,13 @@ export function renderAgent(diagnostics: OxlintDiagnostic[]): string {
         ? `${d.filename}:${line}:${column}`
         : '<unknown>';
       const code = d.code ? ` ${d.code}` : '';
-      const help = d.help ? ` help: ${d.help}` : '';
-      return `${location}: ${d.severity}${code}: ${d.message}${help}\n`;
+      const help = d.help ? ` help: ${compact(d.help)}` : '';
+      return `${location}: ${d.severity}${code}: ${compact(d.message)}${help}\n`;
     })
     .join('');
+}
+
+/** Joins lines and runs of whitespace with single spaces, as Oxlint does. */
+function compact(text: string): string {
+  return text.split(/\s+/).filter(Boolean).join(' ');
 }
