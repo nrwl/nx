@@ -126,7 +126,7 @@ describe('formatAffectedExplanation', () => {
     };
     const out = formatAffectedExplanation(explanation, 'Affected tasks');
     expect(out).toContain(
-      'Changing 1 file touches 1 e2e task and 6 other tasks. Pass --verbose to list each with its reasons.\n\n  pnpm-lock.yaml:\n    - z:e2e\n    - a:build\n    - b:build\n    - c:build\n    - d:build\n    - and 2 other tasks'
+      'Changing 1 file touches 1 e2e task and 6 tasks it depends on. Pass --verbose to list each with its reasons.\n\n  pnpm-lock.yaml:\n    - z:e2e\n    - a:build\n    - b:build\n    - c:build\n    - d:build\n    - and 2 more tasks the e2e tasks depend on'
     );
     const verbose = formatAffectedExplanation(explanation, 'Affected tasks', {
       verbose: true,
@@ -418,7 +418,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '    - e:e2e\n    - and 2 other e2e tasks and 2 other tasks'
+      '    - e:e2e\n    - and 2 more e2e tasks and 2 tasks they depend on'
     );
   });
 
@@ -436,7 +436,7 @@ describe('formatAffectedExplanation', () => {
     );
     expect(out).toMatch(/^3 out of 10 e2e-ci and test tasks are affected:/);
     expect(out).toContain(
-      'Changing 1 file touches 1 e2e-ci task, 2 test tasks and 1 other task:'
+      'Changing 1 file touches 1 e2e-ci task, 2 test tasks and 1 task they depend on:'
     );
   });
 
@@ -552,5 +552,27 @@ describe('formatAffectedExplanation', () => {
       { verbose: true, dim: (text) => `~${text}~` }
     );
     expect(out).toContain('      - a.ts ~(src/**)~');
+  });
+
+  // With none of yours in a section, "they" would name nothing.
+  it('names your targets when a section holds only tasks they depend on', () => {
+    const reason = [{ kind: 'input-file' as const, file: 'a.ts' }];
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'app:e2e-ci': [{ kind: 'dependent-output', producer: 'app:build' }],
+        },
+        upstream: { 'app:build': reason },
+        touched: ['app:build'],
+        requested: { targets: ['e2e-ci', 'test'], total: 4 },
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain(
+      'Changing 1 file touches 1 task the e2e-ci and test tasks depend on.'
+    );
+    expect(out).toContain(
+      'Touching those tasks changes outputs read by 1 e2e-ci task.'
+    );
   });
 });

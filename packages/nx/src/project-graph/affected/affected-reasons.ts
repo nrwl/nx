@@ -168,7 +168,6 @@ export function formatAffectedExplanation(
       } ${n === 1 ? 'is' : 'are'} affected`
     : `${heading} (${n})`;
   const lines = [`${title}:`, ''];
-  const tasks = (count: number) => `${count} ${count === 1 ? 'task' : 'tasks'}`;
   // The tasks asked for are marked by count and listed first in each group,
   // rather than split into a section of their own, so each cause shows once.
   const requestedSet = new Set(names);
@@ -178,7 +177,7 @@ export function formatAffectedExplanation(
     targets.find(
       (target) => name.endsWith(`:${target}`) || name.includes(`:${target}:`)
     ) ?? 'requested';
-  const breakdown = (group: string[], other: string) => {
+  const breakdown = (group: string[], more: string) => {
     const byTarget = new Map<string, number>(
       [...targets, 'requested'].map((target) => [target, 0])
     );
@@ -191,32 +190,29 @@ export function formatAffectedExplanation(
         rest++;
       }
     }
+    const mine = [...byTarget.values()].reduce((sum, count) => sum + count, 0);
     const parts = [...byTarget]
       .filter(([, count]) => count)
       .map(
         ([target, count]) =>
-          `${count} ${other}${target} ${count === 1 ? 'task' : 'tasks'}`
+          `${count} ${more}${target} ${count === 1 ? 'task' : 'tasks'}`
       );
-    return { parts, rest };
+    // Named as the run summary names them: the tasks yours depend on.
+    if (rest) {
+      const whose = mine
+        ? mine === 1
+          ? 'it depends on'
+          : 'they depend on'
+        : `the ${listed(targets.length ? targets : ['requested'])} tasks depend on`;
+      parts.push(
+        `${rest} ${mine ? '' : more}${rest === 1 ? 'task' : 'tasks'} ${whose}`
+      );
+    }
+    return listed(parts);
   };
-  const counted = (group: string[]) => {
-    const { parts, rest } = breakdown(group, '');
-    if (!parts.length) return tasks(rest);
-    return listed(
-      rest
-        ? [...parts, `${rest} other ${rest === 1 ? 'task' : 'tasks'}`]
-        : parts
-    );
-  };
-  // The tasks a list leaves out, as "N other build tasks and M other tasks".
-  const otherCounted = (group: string[]) => {
-    const { parts, rest } = breakdown(group, 'other ');
-    return listed(
-      rest
-        ? [...parts, `${rest} other ${rest === 1 ? 'task' : 'tasks'}`]
-        : parts
-    );
-  };
+  const counted = (group: string[]) => breakdown(group, '');
+  // The tasks a list leaves out, as "N more build tasks and M tasks they depend on".
+  const otherCounted = (group: string[]) => breakdown(group, 'more ');
   const requestedFirst = (group: string[]) => [
     ...group.filter((name) => requestedSet.has(name)),
     ...group.filter((name) => !requestedSet.has(name)),
