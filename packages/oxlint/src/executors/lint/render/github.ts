@@ -1,5 +1,5 @@
 import type { OxlintDiagnostic } from '../run-oxlint.js';
-import { position, SourceCache, type RenderContext } from './shared.js';
+import { position, SourceCache } from './shared.js';
 
 /**
  * GitHub Actions workflow commands, one annotation per diagnostic
@@ -7,9 +7,9 @@ import { position, SourceCache, type RenderContext } from './shared.js';
  */
 export function renderGithub(
   diagnostics: OxlintDiagnostic[],
-  context: RenderContext
+  workspaceRoot: string
 ): string {
-  const sources = new SourceCache(context.workspaceRoot);
+  const sources = new SourceCache(workspaceRoot);
   return diagnostics
     .map((d) => {
       const level = d.severity === 'error' ? 'error' : 'warning';

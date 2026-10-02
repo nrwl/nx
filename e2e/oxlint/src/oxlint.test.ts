@@ -1,3 +1,4 @@
+import { stripVTControlCharacters } from 'node:util';
 import {
   checkFilesExist,
   cleanupProject,
@@ -45,14 +46,10 @@ function runExpectingFailure(command: string): string {
   try {
     runCLI(command);
   } catch (e: any) {
-    return stripAnsi(`${e.stdout ?? ''}${e.stderr ?? ''}`);
+    // `runCLI` sets FORCE_COLOR=false, which picocolors reads as "forced on".
+    return stripVTControlCharacters(`${e.stdout ?? ''}${e.stderr ?? ''}`);
   }
   throw new Error(`Expected "${command}" to fail, but it succeeded.`);
-}
-
-// `runCLI` sets FORCE_COLOR=false, which picocolors reads as "forced on".
-function stripAnsi(output: string): string {
-  return output.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
 describe('Oxlint', () => {

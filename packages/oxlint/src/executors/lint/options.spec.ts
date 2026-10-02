@@ -21,22 +21,11 @@ const resolveFromCli = (cli: string[], target: LintExecutorSchema = {}) =>
   );
 
 describe('resolveLintOptions', () => {
-  it('should forward target options as Oxlint flags', () => {
-    expect(
-      resolveLintOptions({ typeAware: true, config: 'a.json', quiet: false })
-    ).toMatchObject({ flags: ['--type-aware', '--config=a.json'] });
-  });
-
-  it('should forward CLI overrides verbatim and not duplicate their parsed form', () => {
-    const resolved = resolveLintOptions({
-      typeAware: true,
-      __unparsed__: ['--type-aware', '--threads', '2'],
-    });
-    expect(resolved.flags).toEqual(['--type-aware', '--threads', '2']);
-  });
-
   it('should forward any CLI flag form once, as typed', () => {
     expect(resolveFromCli(['-c', 'a.json']).flags).toEqual(['-c', 'a.json']);
+    expect(resolveFromCli(['--type-aware'], { typeAware: true }).flags).toEqual(
+      ['--type-aware']
+    );
     expect(resolveFromCli(['-Dno-debugger']).flags).toEqual(['-Dno-debugger']);
     expect(resolveFromCli(['libs/a/tools']).flags).toEqual(['libs/a/tools']);
     expect(resolveFromCli(['-f', 'json'])).toMatchObject({

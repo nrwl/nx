@@ -1,5 +1,6 @@
 import type { ExecutorContext, TaskGraph } from '@nx/devkit';
-import { runLintTasks, type LintTaskResult } from './run-lint-tasks.js';
+import type { TaskResult } from '@nx/devkit/internal';
+import { runLintTasks } from './run-lint-tasks.js';
 import type { LintExecutorSchema } from './schema.js';
 
 /**
@@ -11,7 +12,7 @@ export default async function* batchLintExecutor(
   inputs: Record<string, LintExecutorSchema>,
   _overrides: LintExecutorSchema,
   context: ExecutorContext
-): AsyncGenerator<{ task: string; result: LintTaskResult }> {
+): AsyncGenerator<{ task: string; result: TaskResult }> {
   const tasks = Object.values(taskGraph.tasks).map((task) => ({
     taskId: task.id,
     projectName: task.target.project,

@@ -132,6 +132,17 @@ describe('renderDiagnostics', () => {
     ).toContain('\nFound 1 warning and 1 error.\n');
   });
 
+  it("should render json as the task's slice of the report", () => {
+    expect(
+      JSON.parse(
+        renderDiagnostics('json', diagnostics, {
+          workspaceRoot,
+          agentMode: false,
+        })
+      )
+    ).toEqual({ diagnostics });
+  });
+
   it('should render only the summary for a clean default run', () => {
     expect(
       renderDiagnostics('default', [], { workspaceRoot, agentMode: false })

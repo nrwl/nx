@@ -1,7 +1,7 @@
 import { createCliOptions, createOverrides } from '@nx/devkit/internal';
 import type { LintExecutorSchema, OxlintOutputFormat } from './schema.js';
 
-export const SUPPORTED_FORMATS: readonly OxlintOutputFormat[] = [
+const SUPPORTED_FORMATS: readonly OxlintOutputFormat[] = [
   'default',
   'agent',
   'github',
@@ -18,31 +18,24 @@ export interface ResolvedLintOptions {
 }
 
 /**
- * Splits the executor options into flags Oxlint gets and flags this executor
- * interprets itself. `--format` is always ours (the run needs JSON), `--silent`
- * would empty the JSON so it is honoured on the rendered output instead, and
- * the warning thresholds decide per-project success after the diagnostics are
- * split — Oxlint's exit code covers the whole run, not a project.
+ * Splits the executor options into flags for Oxlint and the ones this executor
+ * applies per task: the run needs `--format=json`, `--silent` would empty the
+ * JSON, and Oxlint's exit code covers the whole run, not one project.
  */
 export function resolveLintOptions(
   options: LintExecutorSchema
 ): ResolvedLintOptions {
   const {
     lintFilePatterns: _patterns,
-    // Carried for the batch's nested exclusions, not an Oxlint flag.
     nestedProjectRoots: _nestedRoots,
     args,
     __unparsed__: unparsed = [],
-    // Nx keeps its own --verbose in the options it hands an executor.
-    verbose: _verbose,
     ...forwarded
   } = options;
 
-  // A CLI override arrives both parsed (`config: 'a.json'`) and verbatim
-  // (`--config=a.json`); the verbatim copy wins so the flag reaches Oxlint
-  // exactly as typed. Nx's own parse names every parsed copy, `-c` and
-  // positionals included; the raw names add `--no-*` flags, which it names
-  // without the prefix.
+  // Nx passes each CLI override parsed (`config: 'a.json'`) and verbatim
+  // (`--config=a.json`), and the verbatim copy wins. Nx's parse names `-c` and
+  // positionals; the raw names add `--no-*` flags, which it names unprefixed.
   const cliOverrides = createOverrides(unparsed);
   const cliNames = new Set([
     ...unparsed.map(flagName).filter(Boolean),
@@ -72,6 +65,7 @@ export function resolveLintOptions(
       flag.includes('=') ? flag.slice(flag.indexOf('=') + 1) : candidates[++i];
 
     if (name === 'verbose' || name === 'no-verbose') {
+      // Nx keeps its own --verbose in the options it hands an executor.
       continue;
     } else if (
       name &&
@@ -110,12 +104,7 @@ function assertSupportedFormat(value: string): OxlintOutputFormat {
   return value as OxlintOutputFormat;
 }
 
-/**
- * Quote-aware split for string-form `args`: whitespace separates arguments
- * unless it sits inside single or double quotes, and the quotes themselves are
- * stripped. Tokens are otherwise forwarded verbatim, so `--config "a b.json"`
- * stays two arguments and the second keeps its space.
- */
+/** Splits on whitespace outside single or double quotes, and strips the quotes. */
 function splitArgsString(args: string | undefined): string[] {
   if (!args) {
     return [];

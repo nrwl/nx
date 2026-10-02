@@ -31,15 +31,10 @@ import {
 } from '@nx/js/internal';
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import {
-  dirname as nativeDirname,
-  join as nativeJoin,
-  relative as nativeRelative,
-  sep as nativeSep,
-} from 'node:path';
+import { relative as nativeRelative, sep as nativeSep } from 'node:path';
 import { basename, dirname, join, normalize, sep } from 'node:path/posix';
 import { OXLINT_CONFIG_FILENAMES } from '../utils/config-file.js';
+import { resolveOxlintBin } from '../utils/oxlint-bin.js';
 
 export interface OxlintPluginOptions {
   targetName?: string;
@@ -107,9 +102,8 @@ const internalCreateNodes = async (
       }
 
       // Require something lintable, so docs-only projects get no target even
-      // when they own a config — a target there fails with "No files found to
-      // lint". This spans the whole workspace, so it stays behind the cache
-      // check and is memoized across configs.
+      // when they own a config. This spans the whole workspace, so it stays
+      // behind the cache check and is memoized across configs.
       const shouldInferTarget =
         ((await getLintableFilesPerProjectRoot()).get(projectRoot) ?? 0) > 0;
 
@@ -669,8 +663,6 @@ function collectTsconfigChainsByProjectRoot(
   return result;
 }
 
-const localRequire = createRequire(import.meta.url);
-
 /**
  * Asks Oxlint itself which files it would lint. A glob cannot answer this:
  * Oxlint honours `ignorePatterns`, `.eslintignore` and `.gitignore`, including
@@ -684,19 +676,8 @@ const localRequire = createRequire(import.meta.url);
 function enumerateLintableFilesWithOxlint(
   workspaceRoot: string
 ): string[] | null {
-  let bin: string;
-  try {
-    bin = nativeJoin(
-      nativeDirname(
-        localRequire.resolve('oxlint/package.json', { paths: [workspaceRoot] })
-      ),
-      'bin',
-      'oxlint'
-    );
-  } catch {
-    return null;
-  }
-  if (!existsSync(bin)) {
+  const bin = resolveOxlintBin(workspaceRoot);
+  if (!bin) {
     return null;
   }
 
@@ -852,8 +833,8 @@ function getProjectUsingOxlintConfig(
   tsconfigChainOutsideProjectRoot: string[],
   rootConfig: string | undefined
 ): CreateNodesResult['projects'][string] | null {
-  // Linter-agnostic on purpose: a nested ESLint project's files are still its
-  // own. The executor excludes the roots that are not linting in the same run.
+  // Linter-agnostic on purpose: a nested ESLint project's files are still
+  // its own.
   const nestedProjectRoots = nestedRootsByParent.get(projectRoot) ?? [];
 
   let standaloneSrcPath: string | undefined;

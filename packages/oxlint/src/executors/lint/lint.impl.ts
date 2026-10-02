@@ -10,25 +10,20 @@ export default async function lintExecutor(
   options: LintExecutorSchema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  const taskId = [
-    context.projectName,
-    context.targetName,
-    context.configurationName,
-  ]
-    .filter(Boolean)
-    .join(':');
-  const results = runLintTasks(
-    [
-      {
-        taskId,
-        projectName: context.projectName,
-        projectRoot:
-          context.projectsConfigurations.projects[context.projectName].root,
-        options,
-      },
-    ],
-    context.root
+  const [result] = Object.values(
+    runLintTasks(
+      [
+        {
+          taskId: context.projectName,
+          projectName: context.projectName,
+          projectRoot:
+            context.projectsConfigurations.projects[context.projectName].root,
+          options,
+        },
+      ],
+      context.root
+    )
   );
-  process.stdout.write(results[taskId].terminalOutput);
-  return { success: results[taskId].success };
+  process.stdout.write(result.terminalOutput);
+  return { success: result.success };
 }

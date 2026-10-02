@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { OxlintDiagnostic } from '../run-oxlint.js';
 
 // Captured from `oxlint --format=json` 1.77.0 on this source.
-export const source = 'console.log(1);\nfunction f() { debugger; }\n';
+const source = 'console.log(1);\nfunction f() { debugger; }\n';
 
 export const diagnostics: OxlintDiagnostic[] = [
   {

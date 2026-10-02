@@ -1,18 +1,16 @@
 import pc from 'picocolors';
 import type { OxlintDiagnostic, OxlintSpan } from '../run-oxlint.js';
-import { position, SourceCache, type RenderContext } from './shared.js';
+import { position, SourceCache } from './shared.js';
 
 /**
- * Oxlint's terminal report: a code frame per diagnostic with a file, with one
- * line of context either side, the span underlined, and the label, `help` and
- * `note` text below. Source lines come from disk since the JSON report carries
- * no source text, so a run with no diagnostics reads nothing.
+ * Oxlint's terminal report. Source lines come from disk because the JSON report
+ * carries no source text.
  */
 export function renderGraphical(
   diagnostics: OxlintDiagnostic[],
-  context: RenderContext
+  workspaceRoot: string
 ): string {
-  const sources = new SourceCache(context.workspaceRoot);
+  const sources = new SourceCache(workspaceRoot);
   let out = '';
   for (const d of diagnostics) {
     const isError = d.severity === 'error';

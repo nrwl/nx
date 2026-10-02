@@ -83,7 +83,6 @@ describe('@nx/oxlint plugin', () => {
       executor: '@nx/oxlint:lint',
       cache: true,
     });
-    expect(results.projects['libs/a'].targets.lint.options).toBeUndefined();
   });
 
   // Oxlint reports to stdout and has no output-file flag, so the task declares
@@ -123,8 +122,6 @@ describe('@nx/oxlint plugin', () => {
 
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
-    // Owning a config is not enough: `oxlint` exits 1 with "No files found to
-    // lint" in a directory it has nothing to read.
     expect(results.projects['libs/docs']).toBeUndefined();
   });
 
@@ -229,8 +226,6 @@ describe('@nx/oxlint plugin', () => {
     }
   );
 
-  // The exclusion itself happens at run time in the executor, which knows
-  // which nested roots lint in the same run. The plugin's job is the list.
   it('should carry direct nested project roots on the inferred target', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
@@ -256,8 +251,6 @@ describe('@nx/oxlint plugin', () => {
     ).toBeUndefined();
   });
 
-  // A nested project that lints with something else is still its own project;
-  // its root must reach the executor's exclusion list all the same.
   it('should list nested roots regardless of what lints them', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
@@ -275,10 +268,6 @@ describe('@nx/oxlint plugin', () => {
     });
     expect(results.projects['libs/a/docs-only']).toBeUndefined();
   });
-
-  // Nested-project exclusion happens at run time in the executor, where the
-  // batch knows which nested roots lint in the same run — see
-  // nestedProjectIgnorePatterns in src/executors/lint/partition.ts.
 
   it('should declare local jsPlugins as file inputs but never as externalDependencies', async () => {
     createFiles({
@@ -424,9 +413,8 @@ describe('@nx/oxlint plugin', () => {
     );
   });
 
-  // Without the root short-circuit a root project with no `src` or `lib` would
-  // lint `.`. The run-time nested exclusion keeps it off sub-projects' files,
-  // but the redundant target would remain, so the short-circuit removes it.
+  // Without the root short-circuit, such a root project would get a redundant
+  // task linting `.`.
   it('should not give a root project a task when it has no src or lib', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,

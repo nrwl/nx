@@ -1,5 +1,10 @@
 import { logger } from '@nx/devkit';
-import { interpolate, isAiAgent, isCI } from '@nx/devkit/internal';
+import {
+  interpolate,
+  isAiAgent,
+  isCI,
+  type TaskResult,
+} from '@nx/devkit/internal';
 import { resolveLintOptions } from './options.js';
 import {
   excludedNestedRoots,
@@ -18,13 +23,6 @@ export interface LintTask {
   options: LintExecutorSchema;
 }
 
-export interface LintTaskResult {
-  success: boolean;
-  terminalOutput: string;
-  startTime: number;
-  endTime: number;
-}
-
 /**
  * Lints every task with a single Oxlint run and splits the report back per
  * task. Oxlint takes one flag set per process, so the run uses the first
@@ -33,7 +31,7 @@ export interface LintTaskResult {
 export function runLintTasks(
   tasks: LintTask[],
   workspaceRoot: string
-): Record<string, LintTaskResult> {
+): Record<string, TaskResult> {
   const resolved = tasks.map((task) => {
     const paths = (task.options.lintFilePatterns ?? ['{projectRoot}']).map(
       (p) =>
@@ -47,8 +45,8 @@ export function runLintTasks(
         )
     );
     return {
-      task,
-      options: resolveLintOptions(task.options),
+      ...task,
+      ...resolveLintOptions(task.options),
       paths,
       excludedRoots: excludedNestedRoots(
         paths,
@@ -57,24 +55,16 @@ export function runLintTasks(
     };
   });
 
-  // One Oxlint process gets one flag set: the first task's. Format, --silent
-  // and the warning thresholds still apply per task.
-  const flags = resolved[0].options.flags;
+  const flags = resolved[0].flags;
   const sharesRunFlags = (r: (typeof resolved)[number]) =>
-    r.options.flags.join('\u0000') === flags.join('\u0000');
+    r.flags.join('\u0000') === flags.join('\u0000');
   const differing = resolved.find((r) => !sharesRunFlags(r));
   if (differing) {
     logger.warn(
-      `[@nx/oxlint] ${differing.task.projectName} resolves different Oxlint options than ${resolved[0].task.projectName}. Oxlint runs once for the whole batch, using ${resolved[0].task.projectName}'s options.`
+      `[@nx/oxlint] ${differing.projectName} resolves different Oxlint options than ${resolved[0].projectName}. Oxlint runs once for the whole batch, using ${resolved[0].projectName}'s options.`
     );
   }
-  const ignores = nestedProjectIgnorePatterns(
-    resolved.map((r) => ({
-      projectRoot: r.task.projectRoot,
-      paths: r.paths,
-      excludedRoots: r.excludedRoots,
-    }))
-  );
+  const ignores = nestedProjectIgnorePatterns(resolved);
   const paths = [...new Set(resolved.flatMap((r) => r.paths))];
 
   const startTime = Date.now();
@@ -92,10 +82,10 @@ export function runLintTasks(
   );
   const endTime = Date.now();
 
-  const results: Record<string, LintTaskResult> = {};
+  const results: Record<string, TaskResult> = {};
   if (run.ok === false) {
-    for (const { task } of resolved) {
-      results[task.taskId] = {
+    for (const { taskId } of resolved) {
+      results[taskId] = {
         success: false,
         terminalOutput: run.output + '\n',
         startTime,
@@ -116,27 +106,23 @@ export function runLintTasks(
   // and those with no file.
   const byTask = partitionDiagnostics(
     run.report.diagnostics,
-    resolved.map((r) => ({
-      taskId: r.task.taskId,
-      paths: r.paths,
-      excludedRoots: r.excludedRoots,
-    })),
-    resolved.filter(sharesRunFlags).map((r) => r.task.taskId)
+    resolved,
+    resolved.filter(sharesRunFlags).map((r) => r.taskId)
   );
   const agentMode = !!isCI() || isAiAgent();
 
-  for (const { task, options } of resolved) {
-    const diagnostics = byTask.get(task.taskId);
+  for (const r of resolved) {
+    const diagnostics = byTask.get(r.taskId);
     const { errors, warnings } = countBySeverity(diagnostics);
     const success =
       errors === 0 &&
-      (!options.denyWarnings || warnings === 0) &&
-      (options.maxWarnings === undefined || warnings <= options.maxWarnings);
-    results[task.taskId] = {
+      (!r.denyWarnings || warnings === 0) &&
+      (r.maxWarnings === undefined || warnings <= r.maxWarnings);
+    results[r.taskId] = {
       success,
-      terminalOutput: options.silent
+      terminalOutput: r.silent
         ? ''
-        : renderDiagnostics(options.format, diagnostics, {
+        : renderDiagnostics(r.format, diagnostics, {
             workspaceRoot,
             agentMode,
           }),
@@ -145,7 +131,7 @@ export function runLintTasks(
     };
   }
 
-  if (resolved.some((r) => !r.options.silent)) {
+  if (resolved.some((r) => !r.silent)) {
     const { number_of_files, threads_count, start_time } = run.report;
     process.stdout.write(
       `Finished in ${Math.round(start_time * 1000)}ms on ${number_of_files} files using ${threads_count} threads.\n`

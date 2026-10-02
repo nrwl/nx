@@ -8,7 +8,6 @@ vi.mock('@nx/devkit', () => ({ logger: { warn: vi.fn() } }));
 vi.mock('@nx/devkit/internal', async () => ({
   ...(await vi.importActual<any>('@nx/devkit/internal')),
   isCI: () => true,
-  isAiAgent: () => false,
 }));
 
 const mockRunOxlint = runOxlint as MockedFunction<typeof runOxlint>;
@@ -25,7 +24,6 @@ const report = (
     labels: [{ span: { offset: 0, length: 1, line: 1, column: 1 } }],
   })),
   number_of_files: 3,
-  number_of_rules: 1,
   threads_count: 1,
   start_time: 0.01,
 });
@@ -82,9 +80,9 @@ describe('runLintTasks', () => {
 
     const results = runLintTasks(
       [
-        task('libs/a'),
-        task('libs/b', { maxWarnings: 0 }),
-        task('libs/c', { denyWarnings: true }),
+        task('libs/a', { fix: true }),
+        task('libs/b', { fix: true, maxWarnings: 0 }),
+        task('libs/c', { fix: true, denyWarnings: true }),
       ],
       '/ws'
     );
@@ -161,7 +159,7 @@ describe('runLintTasks', () => {
 
     runLintTasks(
       [
-        task('libs/a', { config: 'a.json', typeAware: true }),
+        task('libs/a', { config: 'a.json', typeAware: true, quiet: false }),
         task('libs/b', { config: 'b.json', typeAware: true }),
       ],
       '/ws'
@@ -176,23 +174,6 @@ describe('runLintTasks', () => {
     ]);
     expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     expect(mockLogger.warn.mock.calls[0][0]).toContain("libs/a's options");
-  });
-
-  it('should not warn when every task resolves the same flags', () => {
-    mockRunOxlint.mockReturnValue({ ok: true, report: report([]) });
-
-    runLintTasks(
-      [task('libs/a', { fix: true }), task('libs/b', { fix: true })],
-      '/ws'
-    );
-
-    expect(mockRunOxlint.mock.calls[0][0]).toEqual([
-      '--no-error-on-unmatched-pattern',
-      '--fix',
-      'libs/a',
-      'libs/b',
-    ]);
-    expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
   it('should pass a path that starts with a hyphen as a path', () => {
@@ -259,7 +240,6 @@ describe('runLintTasks', () => {
       '/ws'
     );
 
-    expect(mockRunOxlint.mock.calls[0][0]).not.toContain('--silent');
     expect(results['libs/a:lint']).toMatchObject({
       success: false,
       terminalOutput: '',

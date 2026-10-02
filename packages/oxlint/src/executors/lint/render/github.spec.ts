@@ -10,7 +10,7 @@ import {
 describe('renderGithub', () => {
   it('should render workflow commands with end positions from the source', () => {
     const workspaceRoot = createFixtureWorkspace();
-    expect(renderGithub(diagnostics, { workspaceRoot, agentMode: false })).toBe(
+    expect(renderGithub(diagnostics, workspaceRoot)).toBe(
       "::error file=libs/a/src/x.ts,line=2,endLine=2,col=10,endColumn=11,title=eslint(no-unused-vars)::libs/a/src/x.ts:2:10: Function 'f' is declared but never used.\n" +
         '::warning file=libs/a/src/x.ts,line=1,endLine=1,col=1,endColumn=12,title=eslint(no-console)::libs/a/src/x.ts:1:1: Unexpected console statement.\n'
     );
@@ -18,12 +18,7 @@ describe('renderGithub', () => {
 
   it('should count end positions in UTF-8 bytes the way Oxlint does', () => {
     const workspaceRoot = createFixtureWorkspace(nonAsciiSource);
-    expect(
-      renderGithub([nonAsciiDiagnostics[1]], {
-        workspaceRoot,
-        agentMode: false,
-      })
-    ).toBe(
+    expect(renderGithub([nonAsciiDiagnostics[1]], workspaceRoot)).toBe(
       '::error file=libs/a/src/x.ts,line=1,endLine=1,col=22,endColumn=31,title=eslint(no-debugger)::libs/a/src/x.ts:1:22: `debugger` statement is not allowed\n'
     );
   });
@@ -41,7 +36,7 @@ describe('renderGithub', () => {
             labels: [{ span: { offset: 10, length: 0, line: 2, column: 1 } }],
           },
         ],
-        { workspaceRoot, agentMode: false }
+        workspaceRoot
       )
     ).toBe(
       '::error file=libs/a/src/x.ts,line=2,endLine=2,col=1,endColumn=1,title=oxlint::libs/a/src/x.ts:2:1: Unexpected token\n'
@@ -49,12 +44,7 @@ describe('renderGithub', () => {
   });
 
   it('should render a diagnostic with no file or rule the way Oxlint does', () => {
-    expect(
-      renderGithub([filelessDiagnostic], {
-        workspaceRoot: '/ws',
-        agentMode: false,
-      })
-    ).toBe(
+    expect(renderGithub([filelessDiagnostic], '/ws')).toBe(
       '::error title=oxlint::There are suppressions that do not occur anymore.\n'
     );
   });

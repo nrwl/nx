@@ -84,13 +84,10 @@ export function normalizeFilename(
 
 /**
  * `--ignore-pattern` flags for the nested roots the tasks exclude, so Oxlint
- * never lints, fails on, or fixes files that belong to a project outside this
- * run. A root stays linted when it is in the run or another task lints it: an
- * ignore pattern applies to the whole invocation.
- *
- * Patterns are anchored (`/libs/a/nested`) — a bare single-segment pattern
- * would also match a same-named directory a task owns — and gitignore
- * metacharacters are escaped so the root is matched literally.
+ * never lints or fixes files of a project outside this run. A root stays
+ * linted when its project is in the run or another task lints it, since a
+ * pattern applies to the whole run. Anchored, because a bare single-segment
+ * pattern also matches a same-named directory a task owns.
  */
 export function nestedProjectIgnorePatterns(
   tasks: { projectRoot: string; paths: string[]; excludedRoots: string[] }[]
@@ -127,10 +124,7 @@ function escapeIgnorePattern(pattern: string): string {
     .replace(/ +$/, (spaces) => spaces.replace(/ /g, '\\ '));
 }
 
-/**
- * Whether `file` is `path` or lies under it. Oxlint takes paths literally and
- * expands no globs, so containment is the whole match.
- */
+/** Oxlint expands no globs, so containment is the whole match. */
 function contains(path: string, file: string): boolean {
   const dir = normalizePath(path);
   return dir === '' || file === dir || file.startsWith(`${dir}/`);

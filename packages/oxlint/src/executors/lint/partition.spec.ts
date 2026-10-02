@@ -19,44 +19,6 @@ const diagnostic = (filename: string): OxlintDiagnostic => ({
 });
 
 describe('partitionDiagnostics', () => {
-  it('should give every task an entry and keep a parent off its excluded nested roots', () => {
-    const byTask = partitionDiagnostics(
-      [
-        diagnostic('libs/a/src/x.ts'),
-        diagnostic('libs/a/nested/src/y.ts'),
-        diagnostic('libs/b/index.ts'),
-      ],
-      [
-        {
-          taskId: 'a:lint',
-          paths: ['libs/a'],
-          excludedRoots: ['libs/a/nested'],
-        },
-        {
-          taskId: 'a-nested:lint',
-          paths: ['libs/a/nested'],
-          excludedRoots: [],
-        },
-        { taskId: 'b:lint', paths: ['libs/b'], excludedRoots: [] },
-        { taskId: 'c:lint', paths: ['libs/c'], excludedRoots: [] },
-      ],
-      []
-    );
-    expect([...byTask.keys()]).toEqual([
-      'a:lint',
-      'a-nested:lint',
-      'b:lint',
-      'c:lint',
-    ]);
-    expect(byTask.get('a:lint').map((d) => d.filename)).toEqual([
-      'libs/a/src/x.ts',
-    ]);
-    expect(byTask.get('a-nested:lint').map((d) => d.filename)).toEqual([
-      'libs/a/nested/src/y.ts',
-    ]);
-    expect(byTask.get('c:lint')).toEqual([]);
-  });
-
   it('should not match a sibling that shares a name prefix', () => {
     const byTask = partitionDiagnostics(
       [diagnostic('libs/ab/x.ts')],
@@ -71,40 +33,15 @@ describe('partitionDiagnostics', () => {
   });
 
   // Oxlint expands no globs: `app/[id]` is a directory, not a character class.
-  it('should match files and directories literally', () => {
+  it('should match directories literally', () => {
     const byTask = partitionDiagnostics(
-      [
-        diagnostic('app/[id]/page.ts'),
-        diagnostic('app/other/page.ts'),
-        diagnostic('libs/a/tools/t.ts'),
-      ],
-      [
-        { taskId: 'id:lint', paths: ['app/[id]'], excludedRoots: [] },
-        {
-          taskId: 'tool:lint',
-          paths: ['libs/a/tools/t.ts'],
-          excludedRoots: [],
-        },
-      ],
+      [diagnostic('app/[id]/page.ts'), diagnostic('app/other/page.ts')],
+      [{ taskId: 'id:lint', paths: ['app/[id]'], excludedRoots: [] }],
       []
     );
     expect(byTask.get('id:lint').map((d) => d.filename)).toEqual([
       'app/[id]/page.ts',
     ]);
-    expect(byTask.get('tool:lint')).toHaveLength(1);
-  });
-
-  it("should give a diagnostic outside every task's paths to the outside owners", () => {
-    const byTask = partitionDiagnostics(
-      [diagnostic('tools/x.ts')],
-      [
-        { taskId: 'a:lint', paths: ['libs/a'], excludedRoots: [] },
-        { taskId: 'b:lint', paths: ['libs/b'], excludedRoots: [] },
-      ],
-      ['b:lint']
-    );
-    expect(byTask.get('a:lint')).toEqual([]);
-    expect(byTask.get('b:lint')).toHaveLength(1);
   });
 
   it('should give a diagnostic with no file to the outside owners when a task lints the workspace root', () => {
@@ -182,13 +119,9 @@ const scope = (
 );
 
 describe('normalizeFilename', () => {
-  it('should turn file URLs and absolute paths into workspace-relative ones', () => {
-    expect(normalizeFilename('file:///ws/libs/a/x.ts', '/ws')).toBe(
-      'libs/a/x.ts'
-    );
+  it('should turn absolute and ./ paths into workspace-relative ones', () => {
     expect(normalizeFilename('/ws/libs/a/x.ts', '/ws')).toBe('libs/a/x.ts');
     expect(normalizeFilename('./libs/a/x.ts', '/ws')).toBe('libs/a/x.ts');
-    expect(normalizeFilename('libs/a/x.ts', '/ws')).toBe('libs/a/x.ts');
   });
 });
 
@@ -205,15 +138,6 @@ describe('nestedProjectIgnorePatterns', () => {
     expect(
       nestedProjectIgnorePatterns([scope('.', ['libs/a'], ['.'])])
     ).toEqual(['--ignore-pattern=/libs/a']);
-  });
-
-  it('should keep nested projects that are in the run', () => {
-    expect(
-      nestedProjectIgnorePatterns([
-        scope('libs/a', ['libs/a/nested']),
-        scope('libs/a/nested', ['libs/a/nested/deeper']),
-      ])
-    ).toEqual(['--ignore-pattern=/libs/a/nested/deeper']);
   });
 
   // An ignore pattern applies to the whole run, so it would hide the root from

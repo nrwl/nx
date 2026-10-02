@@ -30,7 +30,6 @@ export interface OxlintDiagnostic {
 export interface OxlintReport {
   diagnostics: OxlintDiagnostic[];
   number_of_files: number;
-  number_of_rules: number | null;
   threads_count: number;
   start_time: number;
 }

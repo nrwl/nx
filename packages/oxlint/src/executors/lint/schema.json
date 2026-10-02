@@ -20,7 +20,7 @@
       "items": {
         "type": "string"
       },
-      "description": "Workspace-relative roots of projects nested inside this one. The executor excludes the ones that are not linting in the same run. The inferred target sets this.",
+      "description": "Workspace-relative roots of projects nested inside this one. The inferred target sets this.",
       "hidden": true,
       "x-priority": "internal"
     },
