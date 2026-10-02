@@ -1653,8 +1653,12 @@ function cmdPrune(argv = []) {
           root: WORK_ROOT,
         };
         if (opts.host) {
-          run(backend.bin, ['rm', '-f', host], { stdio: 'ignore' });
-          hostNote += `removed shared host ${host} (next start rebuilds it cold)\n`;
+          if (run(backend.bin, ['rm', '-f', host], { stdio: 'ignore' }).status === 0)
+            hostNote += `removed shared host ${host} (next start rebuilds it cold)\n`;
+          else
+            errors.push(
+              `could not remove shared host ${host} with ${backend.bin}`
+            );
         } else {
           // `pnpm store prune` drops content no lockfile references any more;
           // `git gc` drops objects the deleted review refs were pinning. Both
