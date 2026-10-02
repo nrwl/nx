@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import { satisfies } from 'semver';
 import { workspaceRoot } from '../../../utils/workspace-root';
-import { reverse } from '../../../project-graph/operators';
 import { NormalizedPackageJson } from './utils/package-json';
 import {
   RawProjectGraphDependency,
@@ -16,6 +15,8 @@ import {
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import { mapSnapshots, type MappedPackage } from './utils/npm-placement';
+import { setNpmDependencyFlags } from './utils/npm-dep-flags';
 
 /**
  * NPM
@@ -34,7 +35,7 @@ type NpmDependency = {
   optional?: boolean;
 };
 
-type NpmDependencyV3 = NpmDependency & {
+export type NpmDependencyV3 = NpmDependency & {
   inBundle?: boolean;
   dependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
@@ -44,12 +45,12 @@ type NpmDependencyV3 = NpmDependency & {
   link?: boolean;
 };
 
-type NpmDependencyV1 = NpmDependency & {
+export type NpmDependencyV1 = NpmDependency & {
   requires?: Record<string, string>;
   dependencies?: Record<string, NpmDependencyV1>;
 };
 
-type NpmLockFile = {
+export type NpmLockFile = {
   name?: string;
   version?: string;
   lockfileVersion: number;
@@ -378,11 +379,16 @@ function findTarget(
     return fallback;
   }
   // Walk one level up the nesting chain by dropping the trailing
-  // `node_modules/<pkg>` segment. Slash-index arithmetic avoids the
-  // split/slice/join array allocation on every hop.
+  // `node_modules/<pkg>` segment, or from a workspace directory to its parent,
+  // as Node does. Slash-index arithmetic avoids an array allocation per hop.
   const lastNodeModules = sourcePath.lastIndexOf('node_modules/');
   return findTarget(
-    lastNodeModules === -1 ? '' : sourcePath.substring(0, lastNodeModules),
+    lastNodeModules === -1
+      ? sourcePath.substring(
+          0,
+          sourcePath.lastIndexOf('/', sourcePath.length - 2) + 1
+        )
+      : sourcePath.substring(0, lastNodeModules),
     keyMap,
     targetName,
     versionRange,
@@ -466,7 +472,7 @@ export function stringifyNpmLockfile(
   const { lockfileVersion } = JSON.parse(rootLockFileContent) as NpmLockFile;
   const workspaceModulesFromGraph = getWorkspacePackagesFromGraph(graph);
 
-  const mappedPackages = mapSnapshots(rootLockFile, graph);
+  const mappedPackages = mapSnapshots(rootLockFile, graph, packageJson);
   const workspaceModules = mapWorkspaceModules(
     packageJson,
     rootLockFile,
@@ -486,7 +492,10 @@ export function stringifyNpmLockfile(
   }
   if (lockfileVersion > 1) {
     const packages = mapV3Snapshots(mappedPackages, packageJson);
-    output.packages = { ...packages, ...workspaceModules };
+    output.packages = setNpmDependencyFlags({
+      ...packages,
+      ...workspaceModules,
+    });
   }
   if (lockfileVersion < 3) {
     const dependencies = mapV1Snapshots(mappedPackages);
@@ -500,6 +509,12 @@ const WORKSPACE_DEP_TYPES = [
   'dependencies',
   'optionalDependencies',
   'peerDependencies',
+] as const;
+
+// The pruned package's sections copy-workspace-modules copies a module from.
+const ROOT_WORKSPACE_DEP_TYPES = [
+  ...WORKSPACE_DEP_TYPES,
+  'devDependencies',
 ] as const;
 
 function mapWorkspaceModules(
@@ -518,7 +533,9 @@ function mapWorkspaceModules(
   // Walk transitive workspace deps so every workspace package
   // copy-workspace-modules writes to disk has matching lockfile entries.
   // Without this, `npm ci` errors with "Missing: <pkg> from lock file".
-  const queue: string[] = Object.keys(packageJson.dependencies ?? {});
+  const queue: string[] = ROOT_WORKSPACE_DEP_TYPES.flatMap((depType) =>
+    Object.keys(packageJson[depType] ?? {})
+  );
   const visited = new Set<string>();
   while (queue.length > 0) {
     const pkgName = queue.shift()!;
@@ -536,6 +553,9 @@ function mapWorkspaceModules(
       name: pkgName,
       version: `0.0.1`,
       dependencies: snapshot?.dependencies,
+      optionalDependencies: snapshot?.optionalDependencies,
+      peerDependencies: snapshot?.peerDependencies,
+      peerDependenciesMeta: snapshot?.peerDependenciesMeta,
     };
 
     for (const depType of WORKSPACE_DEP_TYPES) {
@@ -608,308 +628,6 @@ function getPackageParent(
     }
   }
   return parent.dependencies;
-}
-
-type MappedPackage = {
-  path: string;
-  name: string;
-  valueV3?: NpmDependencyV3;
-  valueV1?: NpmDependencyV1;
-};
-
-function mapSnapshots(
-  rootLockFile: NpmLockFile,
-  graph: ProjectGraph
-): MappedPackage[] {
-  const nestedNodes = new Set<ProjectGraphExternalNode>();
-  const visitedNodes = new Map<
-    ProjectGraphExternalNode,
-    {
-      packagePaths: Set<string>;
-      unresolvedParents: Set<string>;
-    }
-  >();
-  const remappedPackages: Map<string, MappedPackage> = new Map();
-  const packageIndex = buildV3Index(rootLockFile.packages);
-
-  // add first level children
-  Object.values(graph.externalNodes).forEach((node) => {
-    if (node.name === `npm:${node.data.packageName}`) {
-      const mappedPackage = mapPackage(
-        rootLockFile,
-        packageIndex,
-        node.data.packageName,
-        node.data.version
-      );
-      remappedPackages.set(mappedPackage.path, mappedPackage);
-      visitedNodes.set(node, {
-        packagePaths: new Set([mappedPackage.path]),
-        unresolvedParents: new Set(),
-      });
-    } else {
-      nestedNodes.add(node);
-    }
-  });
-
-  let remappedPackagesArray: MappedPackage[];
-  if (nestedNodes.size) {
-    const invertedGraph = reverse(graph);
-    nestMappedPackages(
-      invertedGraph,
-      remappedPackages,
-      nestedNodes,
-      visitedNodes,
-      rootLockFile,
-      packageIndex
-    );
-    // initially we naively map package paths to topParent/../parent/child
-    // but some of those should be nested higher up the tree
-    remappedPackagesArray = elevateNestedPaths(remappedPackages);
-  } else {
-    remappedPackagesArray = Array.from(remappedPackages.values());
-  }
-  return remappedPackagesArray.sort((a, b) => a.path.localeCompare(b.path));
-}
-
-function mapPackage(
-  rootLockFile: NpmLockFile,
-  packageIndex: V3Index,
-  packageName: string,
-  version: string,
-  parentPath = ''
-): MappedPackage {
-  const lockfileVersion = rootLockFile.lockfileVersion;
-
-  let valueV3, valueV1;
-  if (lockfileVersion < 3) {
-    valueV1 = findMatchingPackageV1(
-      rootLockFile.dependencies,
-      packageName,
-      version
-    );
-  }
-  if (lockfileVersion > 1) {
-    valueV3 = findMatchingPackageV3(packageIndex, packageName, version);
-  }
-
-  return {
-    path: parentPath + `node_modules/${packageName}`,
-    name: packageName,
-    valueV1,
-    valueV3,
-  };
-}
-
-function nestMappedPackages(
-  invertedGraph: ProjectGraph,
-  result: Map<string, MappedPackage>,
-  nestedNodes: Set<ProjectGraphExternalNode>,
-  visitedNodes: Map<
-    ProjectGraphExternalNode,
-    {
-      packagePaths: Set<string>;
-      unresolvedParents: Set<string>;
-    }
-  >,
-  rootLockFile: NpmLockFile,
-  packageIndex: V3Index
-) {
-  const initialSize = nestedNodes.size;
-
-  if (!initialSize) {
-    return;
-  }
-
-  nestedNodes.forEach((node) => {
-    if (!visitedNodes.has(node)) {
-      visitedNodes.set(node, {
-        packagePaths: new Set(),
-        unresolvedParents: new Set(
-          invertedGraph.dependencies[node.name].map(({ target }) => target)
-        ),
-      });
-    }
-
-    invertedGraph.dependencies[node.name].forEach(({ target }) => {
-      if (!visitedNodes.get(node).unresolvedParents.has(target)) {
-        return;
-      }
-
-      const targetNode = invertedGraph.externalNodes[target];
-      if (
-        visitedNodes.has(targetNode) &&
-        !visitedNodes.get(targetNode).unresolvedParents.size
-      ) {
-        visitedNodes.get(targetNode).packagePaths.forEach((path) => {
-          const mappedPackage = mapPackage(
-            rootLockFile,
-            packageIndex,
-            node.data.packageName,
-            node.data.version,
-            path + '/'
-          );
-          result.set(mappedPackage.path, mappedPackage);
-          visitedNodes.get(node).packagePaths.add(mappedPackage.path);
-          visitedNodes.get(node).unresolvedParents.delete(target);
-        });
-      }
-    });
-    if (!visitedNodes.get(node).unresolvedParents.size) {
-      nestedNodes.delete(node);
-    }
-  });
-
-  if (initialSize === nestedNodes.size) {
-    throw new Error(
-      [
-        'Following packages could not be mapped to the NPM lockfile:',
-        ...Array.from(nestedNodes).map((n) => `- ${n.name}`),
-      ].join('\n')
-    );
-  } else {
-    nestMappedPackages(
-      invertedGraph,
-      result,
-      nestedNodes,
-      visitedNodes,
-      rootLockFile,
-      packageIndex
-    );
-  }
-}
-
-// sort paths by number of segments and then alphabetically
-function sortMappedPackagesPaths(mappedPackages: Map<string, MappedPackage>) {
-  return Array.from(mappedPackages.keys()).sort((a, b) => {
-    const aLength = a.split('/node_modules/').length;
-    const bLength = b.split('/node_modules/').length;
-    if (aLength > bLength) {
-      return 1;
-    }
-    if (aLength < bLength) {
-      return -1;
-    }
-    return a.localeCompare(b);
-  });
-}
-
-function elevateNestedPaths(
-  remappedPackages: Map<string, MappedPackage>
-): MappedPackage[] {
-  const result = new Map<string, MappedPackage>();
-  const sortedPaths = sortMappedPackagesPaths(remappedPackages);
-
-  sortedPaths.forEach((path) => {
-    const segments = path.split('/node_modules/');
-    const mappedPackage = remappedPackages.get(path);
-
-    // we keep hoisted packages intact
-    if (segments.length === 1) {
-      result.set(path, mappedPackage);
-      return;
-    }
-
-    const packageName = segments.pop();
-    const getNewPath = (segs) =>
-      `${segs.join('/node_modules/')}/node_modules/${packageName}`;
-
-    // check if grandparent has the same package
-    const shouldElevate = (segs: string[]) => {
-      const elevatedPath = getNewPath(segs.slice(0, -1));
-      if (result.has(elevatedPath)) {
-        const match = result.get(elevatedPath);
-        return (
-          match.valueV1?.version === mappedPackage.valueV1?.version &&
-          match.valueV3?.version === mappedPackage.valueV3?.version
-        );
-      }
-      return true;
-    };
-
-    while (segments.length > 1 && shouldElevate(segments)) {
-      segments.pop();
-    }
-    const newPath = getNewPath(segments);
-    if (path !== newPath) {
-      if (!result.has(newPath)) {
-        mappedPackage.path = newPath;
-        result.set(newPath, mappedPackage);
-      }
-    } else {
-      result.set(path, mappedPackage);
-    }
-  });
-
-  return Array.from(result.values());
-}
-
-type V3Index = Map<string, NpmDependencyV3[]>;
-
-// Bucket packages by their trailing "node_modules/<name>" segment so a lookup
-// scans only that name's copies instead of every package (was O(nodes *
-// allPackages)). Mirrors the old `key.endsWith(node_modules/<name>)` match:
-// the name is whatever follows the last "node_modules/" in the key.
-function buildV3Index(
-  packages: Record<string, NpmDependencyV3> | undefined
-): V3Index {
-  const index: V3Index = new Map();
-  if (!packages) return index;
-  const marker = 'node_modules/';
-  for (const key of Object.keys(packages)) {
-    const snapshot = packages[key];
-    // Bundled snapshots are not independently installable package candidates.
-    if (snapshot.inBundle) continue;
-    const i = key.lastIndexOf(marker);
-    if (i === -1) continue; // root "" / workspace paths never matched endsWith
-    const name = key.slice(i + marker.length);
-    let bucket = index.get(name);
-    if (!bucket) index.set(name, (bucket = []));
-    bucket.push(snapshot);
-  }
-  return index;
-}
-
-function findMatchingPackageV3(
-  packageIndex: V3Index,
-  name: string,
-  version: string
-) {
-  const bucket = packageIndex.get(name);
-  if (!bucket) return undefined;
-  for (const { dev, peer, ...snapshot } of bucket) {
-    if (
-      [
-        snapshot.version,
-        snapshot.resolved,
-        `npm:${snapshot.name}@${snapshot.version}`,
-      ].includes(version)
-    ) {
-      return snapshot;
-    }
-  }
-}
-
-function findMatchingPackageV1(
-  packages: Record<string, NpmDependencyV1>,
-  name: string,
-  version: string
-) {
-  for (const [
-    packageName,
-    { dev, peer, dependencies, ...snapshot },
-  ] of Object.entries(packages)) {
-    if (packageName === name) {
-      if (snapshot.version === version) {
-        return snapshot;
-      }
-    }
-    if (dependencies) {
-      const found = findMatchingPackageV1(dependencies, name, version);
-      if (found) {
-        return found;
-      }
-    }
-  }
 }
 
 // NPM V1 does not track the peer dependencies in the lock file

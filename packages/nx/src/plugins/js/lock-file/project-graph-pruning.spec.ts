@@ -57,6 +57,52 @@ describe('project-graph-pruning', () => {
       };
     });
 
+    describe('npm aliases', () => {
+      beforeEach(() => {
+        // the npm lock file parser records an aliased dependency's version
+        // as npm:<real name>@<version>
+        graph.externalNodes['npm:cva'] = {
+          type: 'npm',
+          name: 'npm:cva',
+          data: {
+            packageName: 'cva',
+            version: 'npm:class-variance-authority@0.7.1',
+          },
+        };
+        graph.externalNodes['npm:cva@npm:class-variance-authority@0.6.0'] = {
+          type: 'npm',
+          name: 'npm:cva@npm:class-variance-authority@0.6.0',
+          data: {
+            packageName: 'cva',
+            version: 'npm:class-variance-authority@0.6.0',
+          },
+        };
+      });
+
+      it('should match an alias without a version to the hoisted node', () => {
+        expect(
+          findNodeMatchingVersion(graph, 'cva', 'npm:class-variance-authority')
+            ?.name
+        ).toEqual('npm:cva');
+      });
+
+      it('should match an alias range against the aliased versions', () => {
+        expect(
+          findNodeMatchingVersion(
+            graph,
+            'cva',
+            'npm:class-variance-authority@^0.6.0'
+          )?.name
+        ).toEqual('npm:cva@npm:class-variance-authority@0.6.0');
+      });
+
+      it('should not match an alias of another package', () => {
+        expect(
+          findNodeMatchingVersion(graph, 'cva', 'npm:clsx')
+        ).toBeUndefined();
+      });
+    });
+
     it('should find exact version match', () => {
       const node = findNodeMatchingVersion(graph, 'lodash', '4.17.21');
       expect(node).toBeDefined();

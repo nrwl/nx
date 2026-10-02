@@ -199,6 +199,7 @@ describe('copyWorkspaceModules', () => {
 
   it('leaves an unresolvable catalog reference in a copied module devDependencies alone', async () => {
     tempFs.createFilesSync({
+      'pnpm-lock.yaml': '',
       [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
         name: 'app',
         version: '0.0.1',
@@ -228,6 +229,36 @@ describe('copyWorkspaceModules', () => {
     const manifest = readCopiedManifest('@scope/liba');
     expect(manifest.dependencies).toEqual({ lodash: '^4.17.21' });
     expect(manifest.devDependencies).toEqual({ unknown: 'catalog:' });
+  });
+
+  it('drops a copied module devDependencies for npm, which would install them', async () => {
+    tempFs.createFilesSync({
+      'package-lock.json': '{}',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { lodash: '^4.17.21' },
+        devDependencies: { typescript: '^5.0.0' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } } as any],
+      ])
+    );
+
+    await runExecutor();
+
+    const manifest = readCopiedManifest('@scope/liba');
+    expect(manifest.dependencies).toEqual({ lodash: '^4.17.21' });
+    expect(manifest.devDependencies).toBeUndefined();
   });
 
   it('copies a workspace module the app declares only under devDependencies', async () => {
