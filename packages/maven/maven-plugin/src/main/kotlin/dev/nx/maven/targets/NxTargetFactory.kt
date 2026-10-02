@@ -312,6 +312,7 @@ class NxTargetFactory(
       dependsOnNode.addProperty("target", applyPrefix(previousPhase))
       dependsOnNode.addProperty("params", "forward")
       target.dependsOn?.add(dependsOnNode)
+      addOwnBuildStateInput(project, target)
     }
 
     phaseTargets[applyPrefix(phase)] = target
@@ -370,6 +371,7 @@ class NxTargetFactory(
       dependsOnNode.addProperty("target", "${applyPrefix(previousCiPhase)}-ci")
       dependsOnNode.addProperty("params", "forward")
       ciTarget.dependsOn?.add(dependsOnNode)
+      addOwnBuildStateInput(project, ciTarget)
     }
 
     if (hasInstall) {
@@ -641,6 +643,10 @@ class NxTargetFactory(
       analysis.outputs.forEach { output -> target.outputs?.add(output) }
       analysis.ignoredInputs.forEach { input -> target.inputs?.add(ignoredFileset(input)) }
       addExternalDependenciesInput(target, externalDependencies)
+      val dependsOnOwnModule = target.dependsOn?.any {
+        it.asJsonObject.get("dependencies")?.asBoolean != true
+      } == true
+      if (dependsOnOwnModule) addOwnBuildStateInput(project, target)
 
       targets[targetName] = target
       testCiTargetGroup.add(targetName)
@@ -655,10 +661,18 @@ class NxTargetFactory(
     return targets
   }
 
+  private fun buildStateFile(project: MavenProject) =
+    File("${project.build.directory}/nx-build-state.json")
+
+  // Only for a target after another one in its module: every target writes this
+  // file, so one without an upstream would hash its own previous output.
+  private fun addOwnBuildStateInput(project: MavenProject, target: NxTarget) {
+    target.inputs?.add(ignoredFileset(pathFormatter.formatInputPath(buildStateFile(project), project.basedir)))
+  }
+
   private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
-    val buildJsonFile = File("${project.build.directory}/nx-build-state.json")
+    val buildJsonFile = buildStateFile(project)
     val buildState = pathFormatter.formatInputPath(buildJsonFile, project.basedir)
-    target.inputs?.add(ignoredFileset(buildState))
 
     // Upstream modules reach this one through their build output, resolved per dependency.
     listOf(
