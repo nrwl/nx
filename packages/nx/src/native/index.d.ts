@@ -817,6 +817,10 @@ export declare function initializeTelemetryWithSessionId(sessionId: string, work
 
 export interface InputsInput {
   input: string
+  /**
+   * With `projects`: the selected projects' dependencies' `input`, as `^input`
+   * resolves for each, instead of the projects' own files.
+   */
   dependencies?: boolean
   projects?: string | Array<string>
   /**

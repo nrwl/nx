@@ -726,6 +726,12 @@ describe('@nx/cypress/plugin', () => {
           projects: ['feature', 'feature-utils'],
           always: true,
         },
+        {
+          input: 'production',
+          projects: ['feature', 'feature-utils'],
+          dependencies: true,
+          always: true,
+        },
         { externalDependencies: ['cypress'] },
       ]);
       expect(targets['e2e-ci--src/feature.cy.ts'].dependsOn).toEqual([

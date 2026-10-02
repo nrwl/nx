@@ -1,5 +1,7 @@
 import { CreateNodesContext } from '@nx/devkit';
+import { resetWorkspaceContext } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { readdirSync } from 'fs';
 import { join, resolve } from 'path';
 import { createNodesV2 } from './plugin';
 
@@ -559,6 +561,106 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       expect(targets[targetName].outputs).toEqual([]);
       expect(targets[targetName].cache).toBe(false);
     }
+  });
+
+  describe('a test file with an @nx-depends-on directive', () => {
+    async function atomizedTargets() {
+      mockJestConfig(
+        {
+          testMatch: ['**/*.spec.ts'],
+          testPathIgnorePatterns: ['ignore.spec.ts'],
+        },
+        context
+      );
+      const results = await createNodesFunction(
+        ['proj/jest.config.js'],
+        { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+        context
+      );
+      return results[0][1].projects!['proj'].targets!;
+    }
+
+    it("scopes its atomized target's dependency inputs", async () => {
+      await tempFs.createFiles({
+        'proj/src/feature.spec.ts':
+          '// @nx-depends-on: feature, feature-utils\nimport { x } from "feature";\n',
+      });
+
+      const targets = await atomizedTargets();
+
+      expect(targets['test-ci--src/feature.spec.ts'].inputs).toEqual([
+        'default',
+        {
+          input: 'production',
+          projects: ['feature', 'feature-utils'],
+          always: true,
+        },
+        {
+          input: 'production',
+          projects: ['feature', 'feature-utils'],
+          dependencies: true,
+          always: true,
+        },
+        { externalDependencies: ['jest'] },
+      ]);
+      expect(targets['test-ci--src/feature.spec.ts'].dependsOn).toBeUndefined();
+      expect(targets['test-ci--src/unit.spec.ts'].inputs).toEqual(
+        targets['test'].inputs
+      );
+    });
+
+    // The plugin cache key covers the project's files, so the cache on disk
+    // cannot serve targets built before the directive changed.
+    it('rebuilds the cached targets when the directive changes, leaving other files alone', async () => {
+      const previous = process.env.NX_CACHE_PROJECT_GRAPH;
+      process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+      try {
+        await tempFs.createFiles({
+          'proj/src/feature.spec.ts': 'import { x } from "feature";\n',
+        });
+        const before = await atomizedTargets();
+        expect(before['test-ci--src/feature.spec.ts'].inputs).toEqual(
+          before['test'].inputs
+        );
+        expect(
+          readdirSync(join(tempFs.tempDir, 'tmp/project-graph-cache'))
+        ).not.toEqual([]);
+
+        await tempFs.createFiles({
+          'proj/src/feature.spec.ts':
+            '// @nx-depends-on: feature\nimport { x } from "feature";\n',
+        });
+        // A new process (or the daemon's watcher) sees the edit.
+        resetWorkspaceContext();
+        const after = await atomizedTargets();
+
+        expect(after['test-ci--src/feature.spec.ts'].inputs).toContainEqual({
+          input: 'production',
+          projects: ['feature'],
+          always: true,
+        });
+        expect(JSON.stringify(after['test-ci--src/unit.spec.ts'])).toBe(
+          JSON.stringify(before['test-ci--src/unit.spec.ts'])
+        );
+      } finally {
+        if (previous === undefined) {
+          delete process.env.NX_CACHE_PROJECT_GRAPH;
+        } else {
+          process.env.NX_CACHE_PROJECT_GRAPH = previous;
+        }
+      }
+    });
+
+    it('rejects a directive that lists no projects', async () => {
+      await tempFs.createFiles({
+        'proj/src/feature.spec.ts': '// @nx-depends-on:\n',
+      });
+
+      const error = await atomizedTargets().catch((e) => e);
+      expect(error.errors[0][1].message).toBe(
+        'proj/src/feature.spec.ts: "@nx-depends-on:" must list the projects the test depends on, separated by commas.'
+      );
+    });
   });
 
   describe('ciGroupName', () => {

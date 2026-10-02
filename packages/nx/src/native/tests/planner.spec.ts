@@ -134,6 +134,78 @@ describe('task planner', () => {
     });
   });
 
+  describe('project selections with dependencies', () => {
+    function plansFor(e2eInputs: any[]) {
+      const builder = new ProjectGraphBuilder(undefined, {
+        app: [{ file: 'libs/app/index.ts', hash: 'a.hash' }],
+        feature: [{ file: 'libs/feature/index.ts', hash: 'b.hash' }],
+      });
+      const lib = (name: string, inputs?: any[]) =>
+        builder.addNode({
+          name,
+          type: 'lib',
+          data: {
+            root: `libs/${name}`,
+            targets: { build: { executor: 'nx:run-commands', inputs } },
+          },
+        });
+      builder.addNode({
+        name: 'e2e',
+        type: 'app',
+        data: {
+          root: 'apps/e2e',
+          targets: { e2e: { executor: 'nx:run-commands', inputs: e2eInputs } },
+        },
+      });
+      lib('app', ['^default']);
+      lib('feature');
+      lib('util');
+      builder.addStaticDependency('app', 'feature', 'libs/app/index.ts');
+      builder.addStaticDependency('feature', 'util', 'libs/feature/index.ts');
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['e2e', 'app'],
+        ['e2e', 'build'],
+        undefined,
+        {},
+        false
+      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
+      const plans = new HashPlanner({} as any, ref).getPlans(
+        ['e2e:e2e', 'app:build'],
+        taskGraph
+      );
+      const fileSets = (plan: string[]) =>
+        plan.filter((i) => /^[a-z]+:libs\//.test(i));
+      return {
+        e2e: fileSets(plans['e2e:e2e']),
+        app: fileSets(plans['app:build']),
+      };
+    }
+
+    it("hashes the selected projects' dependencies as their own ^ input does", () => {
+      const { e2e, app } = plansFor([
+        { input: 'default', projects: ['app'], dependencies: true },
+      ]);
+      expect(e2e).toEqual(['feature:libs/feature/**/*', 'util:libs/util/**/*']);
+      expect(e2e).toEqual(app);
+    });
+
+    it('covers the selected projects too when paired with the plain selection', () => {
+      const { e2e } = plansFor([
+        { input: 'default', projects: ['app'] },
+        { input: 'default', projects: ['app'], dependencies: true },
+      ]);
+      expect(e2e).toEqual([
+        'app:libs/app/**/*',
+        'feature:libs/feature/**/*',
+        'util:libs/util/**/*',
+      ]);
+    });
+  });
+
   describe('includeIgnored filesets', () => {
     function planFor(inputs: any[], namedInputs?: Record<string, any[]>) {
       const builder = new ProjectGraphBuilder();

@@ -11,6 +11,8 @@ import {
   deriveGroupNameFromTarget,
   globWithWorkspaceContext,
   workspaceDataDirectory,
+  readTestFileDependsOn,
+  scopeTestTargetToProjects,
 } from '@nx/devkit/internal';
 import {
   CreateNodesContext,
@@ -428,28 +430,32 @@ async function buildJestTargets(
           options: 'forward',
         });
 
-        targets[targetName] = {
-          command: `jest ${relativePath}`,
-          cache,
-          inputs,
-          outputs,
-          options: {
-            cwd: projectRoot,
-            env,
-          },
-          metadata: {
-            technologies: ['jest'],
-            description: `Run Jest Tests in ${relativePath}`,
-            help: {
-              command: `${pmc.exec} jest --help`,
-              example: {
-                options: {
-                  coverage: true,
+        targets[targetName] = scopeToDependsOnDirective(
+          {
+            command: `jest ${relativePath}`,
+            cache,
+            inputs,
+            outputs,
+            options: {
+              cwd: projectRoot,
+              env,
+            },
+            metadata: {
+              technologies: ['jest'],
+              description: `Run Jest Tests in ${relativePath}`,
+              help: {
+                command: `${pmc.exec} jest --help`,
+                example: {
+                  options: {
+                    coverage: true,
+                  },
                 },
               },
             },
           },
-        };
+          context.workspaceRoot,
+          joinPathFragments(projectRoot, relativePath)
+        );
         targetGroup.push(targetName);
       }
 
@@ -573,28 +579,32 @@ async function buildJestTargets(
             params: 'forward',
             options: 'forward',
           });
-          targets[targetName] = {
-            command: `jest ${relativePath}`,
-            cache,
-            inputs,
-            outputs,
-            options: {
-              cwd: projectRoot,
-              env,
-            },
-            metadata: {
-              technologies: ['jest'],
-              description: `Run Jest Tests in ${relativePath}`,
-              help: {
-                command: `${pmc.exec} jest --help`,
-                example: {
-                  options: {
-                    coverage: true,
+          targets[targetName] = scopeToDependsOnDirective(
+            {
+              command: `jest ${relativePath}`,
+              cache,
+              inputs,
+              outputs,
+              options: {
+                cwd: projectRoot,
+                env,
+              },
+              metadata: {
+                technologies: ['jest'],
+                description: `Run Jest Tests in ${relativePath}`,
+                help: {
+                  command: `${pmc.exec} jest --help`,
+                  example: {
+                    options: {
+                      coverage: true,
+                    },
                   },
                 },
               },
             },
-          };
+            context.workspaceRoot,
+            joinPathFragments(projectRoot, relativePath)
+          );
           targetGroup.push(targetName);
         }
         targets[options.ciTargetName] = {
@@ -623,6 +633,15 @@ async function buildJestTargets(
   }
 
   return { targets, metadata };
+}
+
+function scopeToDependsOnDirective(
+  target: TargetConfiguration,
+  workspaceRoot: string,
+  testFile: string
+): TargetConfiguration {
+  const projects = readTestFileDependsOn(workspaceRoot, testFile);
+  return projects ? scopeTestTargetToProjects(target, projects) : target;
 }
 
 async function getInputs(
