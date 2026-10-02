@@ -1531,8 +1531,8 @@ function cmdPrune(argv = []) {
       errors.push(`could not probe container ${host} with ${backend.bin}`);
       continue;
     }
-    // Listing needs `exec`, so a stopped host cannot be read. Its trees stay
-    // sealed until the next `start` revives it, which is when they get swept.
+    // Listing needs `exec`, so a stopped host cannot be read. Its trees wait for
+    // the next prune that finds the host running.
     if (hostState !== 'true') {
       if (hostState === 'false')
         hostNote += `skipped the review-tree sweep in ${host}: it is stopped\n`;
