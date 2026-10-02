@@ -1588,7 +1588,11 @@ function cmdPrune(argv = []) {
           `{{index .Config.Labels "${OWNER_LABEL}"}}\t{{.Created}}`,
         name,
       ]);
-      const [hostFlag, owner, created] = (meta.stdout || '').trim().split('\t');
+      // Not `.trim()`: an absent label is an empty field, and trimming the
+      // leading one away shifts every field after it.
+      const [hostFlag, owner, created] = (meta.stdout || '')
+        .replace(/\s+$/, '')
+        .split('\t');
       // An unreadable container is not an absent one. Reporting it beats
       // guessing its age and removing something still in use.
       if (meta.status !== 0 || !Number.isFinite(Date.parse(created))) {
