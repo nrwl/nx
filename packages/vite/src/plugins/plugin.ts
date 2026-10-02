@@ -7,7 +7,6 @@ import {
   retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodes,
@@ -56,13 +55,6 @@ type ViteTargets = Pick<
   ProjectConfiguration,
   'targets' | 'metadata' | 'projectType'
 >;
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const viteConfigGlob = '**/vite.config.{js,ts,mjs,mts,cjs,cts}';
 
