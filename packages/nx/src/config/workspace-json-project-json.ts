@@ -233,9 +233,16 @@ export interface TargetDependencyConfig {
 /**
  * `always`: the files the input resolves to stay in the hash even when the task
  * is hashed from its ultracache recording.
+ * `dependencies` with `projects`: the selected projects' dependencies (as `^input`
+ * resolves for each), not the projects themselves.
  */
 export type InputDefinition =
-  | { input: string; projects: string | string[]; always?: boolean }
+  | {
+      input: string;
+      projects: string | string[];
+      dependencies?: boolean;
+      always?: boolean;
+    }
   | { input: string; dependencies: true; always?: boolean }
   | { input: string; always?: boolean }
   | { fileset: string; includeIgnored?: boolean; always?: boolean }
