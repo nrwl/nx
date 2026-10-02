@@ -670,8 +670,9 @@ export class TaskOrchestrator {
    * Hash all batch tasks and resolve cache hits topologically.
    *
    * Walks the task graph level by level. Every task gets a preliminary hash
-   * (so startTasks always has a valid hash for Cloud). Tasks with depsOutputs
-   * whose deps weren't cached are ineligible for cache lookup but still
+   * (so startTasks always has a valid hash for Cloud). Tasks that read
+   * another task's outputs (depsOutputs, or left unhashed by the up-front
+   * pass) whose deps weren't cached are ineligible for cache lookup but still
    * receive a preliminary hash — they'll be re-hashed after execution.
    */
   private async applyBatchCachedResults(
@@ -696,6 +697,11 @@ export class TaskOrchestrator {
 
     await walkTaskGraph(batch.taskGraph, async (rootTaskIds) => {
       const rootTasks = rootTaskIds.map((id) => batch.taskGraph.tasks[id]);
+      // The up-front pass leaves unhashed every task whose hash reads another
+      // task's outputs, including disk-backed filesets the planner defers.
+      const hashedAtRunTime = new Set(
+        rootTasks.filter((t) => !t.hash).map((t) => t.id)
+      );
 
       await this.hashBatchTasks(rootTasks);
 
@@ -706,7 +712,9 @@ export class TaskOrchestrator {
 
         if (
           hasNonCachedDep &&
-          getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length > 0
+          (hashedAtRunTime.has(task.id) ||
+            getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length >
+              0)
         ) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
@@ -790,7 +798,7 @@ export class TaskOrchestrator {
       await this.preRunSteps(nonCachedTasks, { groupId });
     }
 
-    // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
+    // Phase 2: Run non-cached tasks, then re-hash tasks that read their outputs
     const taskIdsToSkip = cachedResults.map((r) => r.task.id);
     let batchResults: TaskResult[] = [];
 
@@ -811,7 +819,7 @@ export class TaskOrchestrator {
         groupId
       );
 
-      // Re-hash depsOutputs tasks — their dep outputs are now on disk
+      // Re-hash tasks that read dep outputs — those outputs are now on disk
       const tasksToRehash = batchResults
         .filter(
           (r) =>
