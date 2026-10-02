@@ -1,5 +1,3 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import type { Mock, MockInstance } from 'vitest';
 import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
@@ -747,30 +745,24 @@ describe('registerTsConfigPaths', () => {
 });
 
 describe('loadTsFile', () => {
-  // Batch workers and forked tasks load executors without ever loading a
-  // plugin, so loadTsFile must install the NodeNext `.js` -> `.ts` resolvers
-  // itself.
   it('should resolve NodeNext .js specifiers to .ts sources in an ESM package', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'nx-load-ts-file-'));
-    mkdirSync(join(dir, 'src'));
-    writeFileSync(join(dir, 'package.json'), '{ "type": "module" }');
-    writeFileSync(
-      join(dir, 'tsconfig.json'),
-      '{ "compilerOptions": { "module": "nodenext" } }'
-    );
-    writeFileSync(
-      join(dir, 'src/entry.ts'),
-      "import { value } from './dep.js';\nexport default value;\n"
-    );
-    writeFileSync(
-      join(dir, 'src/dep.ts'),
-      'export const value: number = 42;\n'
-    );
+    const tempFs = new TempFs('nx-load-ts-file', false);
+    try {
+      tempFs.createFilesSync({
+        'package.json': '{ "type": "module" }',
+        'tsconfig.json': '{ "compilerOptions": { "module": "nodenext" } }',
+        'src/entry.ts':
+          "import { value } from './dep.js';\nexport default value;\n",
+        'src/dep.ts': 'export const value: number = 42;\n',
+      });
 
-    const loaded = loadTsFile<{ default: number }>(
-      join(dir, 'src/entry.ts'),
-      join(dir, 'tsconfig.json')
-    );
-    expect(loaded.default).toBe(42);
+      const loaded = loadTsFile<{ default: number }>(
+        join(tempFs.tempDir, 'src/entry.ts'),
+        join(tempFs.tempDir, 'tsconfig.json')
+      );
+      expect(loaded.default).toBe(42);
+    } finally {
+      tempFs.cleanup();
+    }
   });
 });

@@ -1,7 +1,7 @@
 /**
- * Turns an options object into CLI flags: `{ maxWarnings: 0 }` → `--max-warnings=0`,
- * `{ fix: true }` → `--fix`, `{ ignorePattern: ['a', 'b'] }` → `--ignore-pattern=a --ignore-pattern=b`.
- * `false`, `null` and `undefined` produce no flag.
+ * Turns options into CLI flags: `{ maxWarnings: 0, fix: true }` gives
+ * `--max-warnings=0 --fix`. Arrays repeat the flag; `false`, `null` and
+ * `undefined` give none.
  */
 export function createCliOptions(
   obj: Record<string, string | number | boolean | string[] | undefined | null>
