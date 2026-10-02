@@ -106,6 +106,21 @@ describe('partitionDiagnostics', () => {
     expect(byTask.get('a:lint')).toEqual([]);
     expect(byTask.get('b:lint')).toHaveLength(1);
   });
+
+  it('should give a diagnostic with no file to the outside owners when a task lints the workspace root', () => {
+    const byTask = partitionDiagnostics(
+      [diagnostic('')],
+      [
+        { taskId: 'root:lint', paths: ['.'], excludedRoots: [] },
+        { taskId: 'a:lint', paths: ['libs/a'], excludedRoots: [] },
+        { taskId: 'b:lint', paths: ['libs/b'], excludedRoots: [] },
+      ],
+      ['root:lint', 'a:lint']
+    );
+    expect(byTask.get('root:lint')).toHaveLength(1);
+    expect(byTask.get('a:lint')).toHaveLength(1);
+    expect(byTask.get('b:lint')).toEqual([]);
+  });
 });
 
 const scope = (

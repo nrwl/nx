@@ -12,9 +12,9 @@ export interface TaskScope {
 
 /**
  * Gives each diagnostic to every task that lints its file when run on its own,
- * so overlapping paths report in each task. A diagnostic outside every task's
- * paths goes to the `outsideOwners` tasks. Every task gets an entry, empty
- * when nothing was reported.
+ * so overlapping paths report in each task. A diagnostic with no file, or
+ * outside every task's paths, goes to the `outsideOwners` tasks. Every task
+ * gets an entry, empty when nothing was reported.
  */
 export function partitionDiagnostics(
   diagnostics: OxlintDiagnostic[],
@@ -26,11 +26,12 @@ export function partitionDiagnostics(
   );
   for (const diagnostic of diagnostics) {
     for (const task of tasks) {
-      if (lintsFile(task, diagnostic.filename)) {
+      if (diagnostic.filename && lintsFile(task, diagnostic.filename)) {
         byTask.get(task.taskId).push(diagnostic);
       }
     }
     if (
+      !diagnostic.filename ||
       !tasks.some((task) =>
         task.paths.some((path) => contains(path, diagnostic.filename))
       )
