@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
@@ -10,6 +10,7 @@ import {
   getForceColorForChild,
   getGraphTimeDotEnvForTask,
   loadAndExpandDotEnvFile,
+  unloadDotEnvFile,
 } from './task-env';
 
 describe('NX_INVOCATION_ROOT_PID', () => {
@@ -131,6 +132,135 @@ describe(loadAndExpandDotEnvFile.name, () => {
       API_URL: 'https://nx.dev/api',
       FULL_URL: 'https://nx.dev/api/v1',
     });
+  });
+});
+
+describe(unloadDotEnvFile.name, () => {
+  let tempDir: string;
+  let envFile: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-unload-env-'));
+    envFile = join(tempDir, '.env');
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it('unloads a value expanded using an inherited variable', () => {
+    writeFileSync(envFile, 'API_URL=https://${NX_TEST_HOST}/api\n');
+    const env = { NX_TEST_HOST: 'example.com' };
+    loadAndExpandDotEnvFile(envFile, env);
+    expect(env).toEqual({
+      NX_TEST_HOST: 'example.com',
+      API_URL: 'https://example.com/api',
+    });
+
+    unloadDotEnvFile(envFile, env);
+
+    expect(env).toEqual({ NX_TEST_HOST: 'example.com' });
+  });
+
+  it('preserves a shell override and unrelated variables', () => {
+    writeFileSync(envFile, 'API_URL=https://${NX_TEST_HOST}/api\n');
+    const env = {
+      NX_TEST_HOST: 'example.com',
+      API_URL: 'https://shell.example.com/api',
+      UNRELATED: 'unchanged',
+    };
+
+    unloadDotEnvFile(envFile, env);
+
+    expect(env).toEqual({
+      NX_TEST_HOST: 'example.com',
+      API_URL: 'https://shell.example.com/api',
+      UNRELATED: 'unchanged',
+    });
+  });
+
+  it('uses the supplied environment instead of the live process environment', () => {
+    writeFileSync(envFile, 'API_URL=https://${NX_TEST_HOST}/api\n');
+    const originalHost = process.env.NX_TEST_HOST;
+    process.env.NX_TEST_HOST = 'live.example.com';
+    try {
+      const env = {
+        NX_TEST_HOST: 'snapshot.example.com',
+        API_URL: 'https://snapshot.example.com/api',
+      };
+      unloadDotEnvFile(envFile, env);
+      expect(env).toEqual({ NX_TEST_HOST: 'snapshot.example.com' });
+      expect(process.env.NX_TEST_HOST).toBe('live.example.com');
+    } finally {
+      if (originalHost === undefined) delete process.env.NX_TEST_HOST;
+      else process.env.NX_TEST_HOST = originalHost;
+    }
+  });
+
+  it('does not mutate the environment for a missing file', () => {
+    const env = { UNRELATED: 'unchanged' };
+    unloadDotEnvFile(envFile, env);
+    expect(env).toEqual({ UNRELATED: 'unchanged' });
+  });
+});
+
+describe('expanded environment precedence', () => {
+  const originalWorkspaceRoot = workspaceRoot;
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-expanded-env-'));
+    setWorkspaceRoot(tempDir);
+    writeFileSync(
+      join(tempDir, '.env'),
+      'API_URL=https://${NX_TEST_HOST}/api\n'
+    );
+    mkdirSync(join(tempDir, 'app'));
+    writeFileSync(
+      join(tempDir, 'app', '.env.build'),
+      'API_URL=https://project.example.com/api\n'
+    );
+  });
+
+  afterEach(() => {
+    setWorkspaceRoot(originalWorkspaceRoot);
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it('allows a project target file to override an expanded root value', () => {
+    const baseEnv: NodeJS.ProcessEnv = { NX_TEST_HOST: 'root.example.com' };
+    loadAndExpandDotEnvFile(join(tempDir, '.env'), baseEnv);
+
+    const env = getGraphTimeDotEnvForTask(
+      'app',
+      'build',
+      undefined,
+      undefined,
+      baseEnv
+    );
+
+    expect(env.API_URL).toBe('https://project.example.com/api');
+    expect(baseEnv.API_URL).toBe('https://root.example.com/api');
+    expect(env.NX_TEST_HOST).toBe('root.example.com');
+  });
+
+  it('preserves an explicit shell value over root and project files', () => {
+    const baseEnv = {
+      NX_TEST_HOST: 'root.example.com',
+      API_URL: 'https://shell.example.com/api',
+    };
+    loadAndExpandDotEnvFile(join(tempDir, '.env'), baseEnv);
+
+    const env = getGraphTimeDotEnvForTask(
+      'app',
+      'build',
+      undefined,
+      undefined,
+      baseEnv
+    );
+
+    expect(env.API_URL).toBe('https://shell.example.com/api');
+    expect(baseEnv.API_URL).toBe('https://shell.example.com/api');
   });
 });
 
@@ -356,6 +486,29 @@ describe('getGraphTimeDotEnvForTask', () => {
     const env = getGraphTimeDotEnvForTask('.', 'e2e');
 
     expect(env.BASE_URL).toBe('http://localhost:4301');
+  });
+
+  it('allows target values to override root values expanded from the environment', () => {
+    writeFileSync(join(tempDir, '.env'), 'BASE_URL=https://${NX_TEST_HOST}\n');
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+    const baseEnv = {
+      NX_TEST_HOST: 'example.com',
+      BASE_URL: 'https://example.com',
+    };
+
+    const env = getGraphTimeDotEnvForTask(
+      '.',
+      'e2e',
+      undefined,
+      undefined,
+      baseEnv
+    );
+
+    expect(env.BASE_URL).toBe('http://localhost:4301');
+    expect(baseEnv.BASE_URL).toBe('https://example.com');
   });
 
   it('does not load dotenv files when NX_LOAD_DOT_ENV_FILES is "false"', () => {

@@ -1112,8 +1112,8 @@ importers:
         specifier: ~16.4.5
         version: 16.4.7
       dotenv-expand:
-        specifier: ~12.0.3
-        version: 12.0.3
+        specifier: ~1000.0.0
+        version: 1000.0.0
       ejs:
         specifier: 5.0.1
         version: 5.0.1
@@ -3362,8 +3362,8 @@ importers:
         specifier: ~16.4.5
         version: 16.4.7
       dotenv-expand:
-        specifier: ~12.0.3
-        version: 12.0.3
+        specifier: ~1000.0.0
+        version: 1000.0.0
       ejs:
         specifier: 5.0.1
         version: 5.0.1
@@ -16938,6 +16938,10 @@ packages:
   dot-prop@9.0.0:
     resolution: {integrity: sha512-1gxPBJpI/pcjQhKgIU91II6Wkay+dLcN3M6rf2uwP8hRur3HtQXjVrdAK3sjC0piaEuxzMwjXChcETiJl47lAQ==}
     engines: {node: '>=18'}
+
+  dotenv-expand@1000.0.0:
+    resolution: {integrity: sha512-3T4TtUjXm5iGKFEirqKjcDJ0EheFJbv9peb5xytC+HNu3l5Ygnu4dYE8yeqkppHMsh1If9C/A//EJu7IPtNu+A==}
+    engines: {node: '>=16'}
 
   dotenv-expand@12.0.3:
     resolution: {integrity: sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==}
@@ -44822,6 +44826,8 @@ snapshots:
   dot-prop@9.0.0:
     dependencies:
       type-fest: 4.41.0
+
+  dotenv-expand@1000.0.0: {}
 
   dotenv-expand@12.0.3:
     dependencies:
