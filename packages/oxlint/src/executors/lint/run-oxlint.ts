@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { resolveOxlintBin } from '../../utils/oxlint-bin.js';
 
+/** Offsets, lengths and columns count UTF-8 bytes. */
 export interface OxlintSpan {
   offset: number;
   length: number;

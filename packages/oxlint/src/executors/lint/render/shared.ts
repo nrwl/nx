@@ -68,12 +68,15 @@ export class SourceCache {
     }
     let remaining = span.offset + span.length;
     for (let i = 0; i < lines.length; i++) {
-      const lineLength = lines[i].length + 1;
-      if (remaining <= lineLength) {
+      const lineLength = Buffer.byteLength(lines[i]) + 1;
+      if (remaining < lineLength) {
         return { line: i + 1, column: remaining + 1 };
       }
       remaining -= lineLength;
     }
-    return { line: lines.length, column: (lines.at(-1)?.length ?? 0) + 1 };
+    return {
+      line: lines.length,
+      column: Buffer.byteLength(lines.at(-1) ?? '') + 1,
+    };
   }
 }

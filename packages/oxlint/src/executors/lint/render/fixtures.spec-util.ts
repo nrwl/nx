@@ -52,10 +52,38 @@ export const multilineDiagnostic: OxlintDiagnostic = {
   note: 'These paths form a cycle:\n╭──▶ ../b/y.js',
 };
 
+// Captured from `oxlint --format=json` 1.77.0 on this source.
+export const nonAsciiSource = 'const olé = "😀"; debugger;\nexport {};\n';
+
+export const nonAsciiDiagnostics: OxlintDiagnostic[] = [
+  {
+    message:
+      "Variable 'olé' is declared but never used. Unused variables should start with a '_'.",
+    code: 'eslint(no-unused-vars)',
+    severity: 'error',
+    filename: 'libs/a/src/x.ts',
+    labels: [
+      {
+        label: "'olé' is declared here",
+        span: { offset: 6, length: 4, line: 1, column: 7 },
+      },
+    ],
+    help: 'Consider removing this declaration.',
+  },
+  {
+    message: '`debugger` statement is not allowed',
+    code: 'eslint(no-debugger)',
+    severity: 'error',
+    filename: 'libs/a/src/x.ts',
+    labels: [{ span: { offset: 21, length: 9, line: 1, column: 22 } }],
+    help: 'Remove the debugger statement',
+  },
+];
+
 /** A workspace holding the fixture source, for renderers that read files. */
-export function createFixtureWorkspace(): string {
+export function createFixtureWorkspace(contents = source): string {
   const workspaceRoot = mkdtempSync(join(tmpdir(), 'oxlint-render-'));
   mkdirSync(join(workspaceRoot, 'libs/a/src'), { recursive: true });
-  writeFileSync(join(workspaceRoot, 'libs/a/src/x.ts'), source);
+  writeFileSync(join(workspaceRoot, 'libs/a/src/x.ts'), contents);
   return workspaceRoot;
 }
