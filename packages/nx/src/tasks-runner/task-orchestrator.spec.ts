@@ -136,8 +136,10 @@ describe('TaskOrchestrator', () => {
         dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
-      const { orchestrator, hasher, hashesAtCacheTime } =
-        createOrchestrator(taskGraph);
+      const { orchestrator, hasher, hashesAtCacheTime } = createOrchestrator(
+        taskGraph,
+        new Set(['consumer:build'])
+      );
 
       await orchestrator.applyFromCacheOrRunBatch(
         true,
@@ -169,7 +171,10 @@ describe('TaskOrchestrator', () => {
         dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
-      const { orchestrator, hasher } = createOrchestrator(taskGraph);
+      const { orchestrator, hasher } = createOrchestrator(
+        taskGraph,
+        new Set(['consumer:build'])
+      );
       // dep resolves from cache, so its outputs are already settled on disk
       // when the consumer's hash is computed
       orchestrator.applyCachedResults = vi.fn(async (tasks: Task[]) =>
@@ -189,8 +194,8 @@ describe('TaskOrchestrator', () => {
       expect(consumer.hash).toBe('consumer:build|call-2');
     });
 
-    // `dep` has no depsOutputs inputs, so it stands in for a task whose plan
-    // reads `dep`'s outputs some other way, e.g. an includeIgnored fileset.
+    // `reader` stands in for any task whose plan reads `dep`'s outputs, e.g.
+    // through an includeIgnored fileset.
     async function runReaderBatch(deferredTaskIds?: Set<string>) {
       const taskGraph: TaskGraph = {
         roots: ['dep:build'],

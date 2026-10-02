@@ -12,7 +12,7 @@ import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
-import { getInputs, TaskHasher } from '../hasher/task-hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
@@ -672,9 +672,8 @@ export class TaskOrchestrator {
    * Hash all batch tasks and resolve cache hits topologically.
    *
    * Walks the task graph level by level. Every task gets a preliminary hash
-   * (so startTasks always has a valid hash for Cloud). Tasks that read
-   * another task's outputs (depsOutputs, or deferred by the up-front pass)
-   * whose deps weren't cached are ineligible for cache lookup but still
+   * (so startTasks always has a valid hash for Cloud). Tasks the up-front
+   * pass deferred, whose deps weren't cached, are ineligible for cache lookup but still
    * receive a preliminary hash — they'll be re-hashed after execution.
    */
   private async applyBatchCachedResults(
@@ -707,12 +706,7 @@ export class TaskOrchestrator {
         const depIds = batch.taskGraph.dependencies[task.id];
         const hasNonCachedDep = depIds.some((id) => nonCachedTaskIds.has(id));
 
-        if (
-          hasNonCachedDep &&
-          (this.deferredTaskIds?.has(task.id) ||
-            getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length >
-              0)
-        ) {
+        if (hasNonCachedDep && this.deferredTaskIds?.has(task.id)) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
         } else {
