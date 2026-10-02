@@ -6,12 +6,12 @@ import {
 } from '@angular/build/private';
 import {
   buildAndAnalyze,
+  createJavaScriptTransformer,
   createJavascriptTransformerCache,
   DiagnosticModes,
   disposeComponentStylesheetBundler,
-  JavaScriptTransformer,
+  type JavaScriptTransformerAdapter,
   SourceFileCache,
-  maxWorkers,
   setupCompilationWithAngularCompilation,
   AngularCompilation,
   type JavascriptTransformerCache,
@@ -47,7 +47,6 @@ import { rspackStatsLogger, statsErrorsToString } from '../utils/stats';
 import { getStatsOptions } from '../config/config-utils/get-stats-options';
 
 const PLUGIN_NAME = 'AngularRspackPlugin';
-type ResolvedJavascriptTransformer = Parameters<typeof buildAndAnalyze>[2];
 
 // A project-scoped directory under the Angular CLI cache directory, with an
 // `angular-rspack` leaf so the state never collides with @angular/build's own
@@ -91,7 +90,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #_options: NormalizedAngularRspackPluginOptions;
   #i18n: I18nOptions | undefined;
   #sourceFileCache: SourceFileCache;
-  #javascriptTransformer: ResolvedJavascriptTransformer;
+  #javascriptTransformer: JavaScriptTransformerAdapter;
   // This will be defined in the apply method correctly
   #angularCompilation: AngularCompilation;
   #collectedStylesheetAssets: Array<{ path: string; text: string }> = [];
@@ -123,7 +122,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       this.#javascriptTransformerCache =
         createJavascriptTransformerCache(persistentCachePath);
     }
-    this.#javascriptTransformer = new JavaScriptTransformer(
+    this.#javascriptTransformer = createJavaScriptTransformer(
       {
         /**
          * Matches https://github.com/angular/angular-cli/blob/33ed6e875e509ebbaa0cbdb57be9e932f9915dff/packages/angular/build/src/tools/esbuild/angular/compiler-plugin.ts#L89
@@ -137,9 +136,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         advancedOptimizations: this.#_options.advancedOptimizations,
         jit: !this.#_options.aot,
       },
-      maxWorkers(),
       this.#javascriptTransformerCache?.cache
-    ) as unknown as ResolvedJavascriptTransformer;
+    );
   }
 
   apply(compiler: Compiler) {
@@ -628,8 +626,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #exposeLoaderState(compiler: Compiler) {
     compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
       (compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] = () => ({
-        javascriptTransformer:
-          this.#javascriptTransformer as unknown as JavaScriptTransformer,
+        javascriptTransformer: this.#javascriptTransformer,
         typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
         babelFileCache: this.#sourceFileCache.babelFileCache,
         useTypeScriptTranspilation: this.#useTypeScriptTranspilation,
