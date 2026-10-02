@@ -106,7 +106,7 @@ export function formatAffectedReason(
         reason.file ?? 'a dependency manifest'
       } ${changes} and can't be narrowed to packages, so every ${
         reason.ecosystem
-      } package counts as moved`;
+      } package counts as changed`;
     case 'input-file':
       return reason.pattern
         ? `${reason.file} (${reason.pattern})`
@@ -391,11 +391,11 @@ function reasonLines(
       const [first] = movedPackages;
       const others = movedPackages.length - 1;
       lines.push(
-        `hashes every external dependency, including ${first}${
+        `hashes every external dependency, and ${first}${
           others
             ? ` and ${others} other ${others === 1 ? 'package' : 'packages'}`
             : ''
-        }, which moved`
+        } changed version`
       );
       continue;
     }
