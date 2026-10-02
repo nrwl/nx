@@ -337,9 +337,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
 
       expect(lines.join('\n')).toMatchInlineSnapshot(`
         "
-        > nx run test:dev
-
-        I was a happy dev server
         ———————————————————————————————————————————————————————————————————————————————
 
          NX   Cancelled running target dev for project test (37w)
@@ -443,15 +440,122 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       // Should show success, not cancelled, because the discrete task (e2e) is the initiating task
       expect(lines.join('\n')).toMatchInlineSnapshot(`
         "
-        > nx run test:serve
-
-        Server running on port 4200
         > nx run test:e2e
 
         All tests passed
         ———————————————————————————————————————————————————————————————————————————————
 
          NX   Successfully ran target e2e for project test and 1 task it depends on (37w)
+        "
+      `);
+    });
+
+    it('should replay a stopped continuous dependency output when the dependent task failed', async () => {
+      // Same shape as the test above, but the e2e task fails. The summary is then the surface the
+      // failure is debugged from, so the stopped dev server's log is replayed in full.
+      const devServer = {
+        id: 'test:serve',
+        continuous: true,
+        target: {
+          target: 'serve',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const e2eTest = {
+        id: 'test:e2e',
+        continuous: false,
+        target: {
+          target: 'e2e',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['e2e'],
+        },
+        initiatingProject: 'test',
+        initiatingTasks: [e2eTest],
+        taskGraph: {
+          tasks: { [devServer.id]: devServer, [e2eTest.id]: e2eTest },
+          dependencies: {
+            [devServer.id]: [],
+            [e2eTest.id]: [devServer.id],
+          },
+          continuousDependencies: {
+            [e2eTest.id]: [devServer.id],
+          },
+          roots: [devServer.id],
+        },
+        overrides: {},
+        projectNames: ['test'],
+        tasks: [devServer, e2eTest],
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
+      });
+
+      lifeCycle.startTasks?.([devServer], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(
+        devServer.id,
+        'Server running on port 4200',
+        true
+      );
+
+      lifeCycle.startTasks?.([e2eTest], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(e2eTest.id, '1 of 3 specs failed', true);
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 1,
+            status: 'failure',
+            task: e2eTest,
+            terminalOutput: '1 of 3 specs failed',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.printTaskTerminalOutput?.(
+        e2eTest,
+        'failure',
+        '1 of 3 specs failed'
+      );
+
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: devServer,
+            terminalOutput: 'Server running on port 4200',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.setTaskStatus?.(devServer.id, NativeTaskStatus.Stopped);
+      lifeCycle.printTaskTerminalOutput?.(
+        devServer,
+        'success',
+        'Server running on port 4200'
+      );
+
+      lifeCycle.endCommand?.();
+
+      const lines = getOutputLines(printSummary);
+
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+        > nx run test:serve
+
+        Server running on port 4200
+        > nx run test:e2e
+
+        1 of 3 specs failed
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Ran target e2e for project test and 1 task(s) they depend on (37w)
+
+           ✖  1/2 failed
+           ✔  1/2 succeeded [0 read from cache]
         "
       `);
     });
@@ -715,10 +819,6 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       expect(lines.join('\n')).toMatchInlineSnapshot(`
         "
 
-        > nx run test:serve
-
-        Server running on port 4200
-
            ◼  nx run test:serve
            ✔  nx run test:e2e
 
@@ -727,6 +827,194 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
          NX   Successfully ran target e2e for project test and 1 task it depends on (37w)
         "
       `);
+    });
+
+    it('should replay a stopped continuous task output when a task in the run failed', async () => {
+      // Same shape as the test above, but the e2e task fails. A run with a failure replays every
+      // task's output, so the stopped dev server's log is still printed above the summary.
+      const devServer = {
+        id: 'test:serve',
+        continuous: true,
+        target: {
+          target: 'serve',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const e2eTest = {
+        id: 'test:e2e',
+        continuous: false,
+        target: {
+          target: 'e2e',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['e2e'],
+        },
+        initiatingProject: '',
+        initiatingTasks: [e2eTest],
+        taskGraph: {
+          tasks: { [devServer.id]: devServer, [e2eTest.id]: e2eTest },
+          dependencies: {
+            [devServer.id]: [],
+            [e2eTest.id]: [devServer.id],
+          },
+          continuousDependencies: {
+            [e2eTest.id]: [devServer.id],
+          },
+          roots: [devServer.id],
+        },
+        overrides: {},
+        projectNames: ['test'],
+        tasks: [devServer, e2eTest],
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
+      });
+
+      lifeCycle.startTasks?.([devServer], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(
+        devServer.id,
+        'Server running on port 4200',
+        true
+      );
+
+      lifeCycle.startTasks?.([e2eTest], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(e2eTest.id, '1 of 3 specs failed', true);
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 1,
+            status: 'failure',
+            task: e2eTest,
+            terminalOutput: '1 of 3 specs failed',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.printTaskTerminalOutput?.(
+        e2eTest,
+        'failure',
+        '1 of 3 specs failed'
+      );
+
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: devServer,
+            terminalOutput: 'Server running on port 4200',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.setTaskStatus?.(devServer.id, NativeTaskStatus.Stopped);
+      lifeCycle.printTaskTerminalOutput?.(
+        devServer,
+        'success',
+        'Server running on port 4200'
+      );
+
+      lifeCycle.endCommand?.();
+
+      const lines = getOutputLines(printSummary);
+
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+
+        > nx run test:serve
+
+        Server running on port 4200
+
+        > nx run test:e2e
+
+        1 of 3 specs failed
+
+           ◼  nx run test:serve
+           ✖  nx run test:e2e
+
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Ran target e2e for project test and 1 task it depends on (37w)
+
+           ✔  1/2 succeeded [0 read from cache]
+
+           ✖  1/2 targets failed, including the following:
+
+              - nx run test:e2e
+
+        "
+      `);
+    });
+
+    it('should not replay task output when a run of continuous tasks is interrupted', async () => {
+      // `nx run-many -t serve` quit with Ctrl-C: every task is stopped and nothing failed, so
+      // replaying each task's buffered scrollback would bury the terminal in output the TUI has
+      // already shown live. The tasks are still listed.
+      const backend = {
+        id: 'backend:serve',
+        continuous: true,
+        target: { target: 'serve', project: 'backend' },
+      } as Partial<Task> as Task;
+      const frontend = {
+        id: 'frontend:serve',
+        continuous: true,
+        target: { target: 'serve', project: 'frontend' },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: { targets: ['serve'] },
+        initiatingProject: '',
+        initiatingTasks: [],
+        taskGraph: {
+          tasks: { [backend.id]: backend, [frontend.id]: frontend },
+          dependencies: { [backend.id]: [], [frontend.id]: [] },
+          continuousDependencies: { [backend.id]: [], [frontend.id]: [] },
+          roots: [backend.id, frontend.id],
+        },
+        overrides: {},
+        projectNames: ['backend', 'frontend'],
+        tasks: [backend, frontend],
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
+      });
+
+      lifeCycle.startTasks?.([backend, frontend], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(
+        backend.id,
+        'Nest application successfully started',
+        true
+      );
+      lifeCycle.appendTaskOutput?.(frontend.id, 'VITE ready in 412 ms', true);
+      lifeCycle.setTaskStatus?.(backend.id, NativeTaskStatus.Stopped);
+      lifeCycle.setTaskStatus?.(frontend.id, NativeTaskStatus.Stopped);
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'stopped',
+            task: backend,
+            terminalOutput: 'Nest application successfully started',
+          },
+          {
+            code: 0,
+            status: 'stopped',
+            task: frontend,
+            terminalOutput: 'VITE ready in 412 ms',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.endCommand?.();
+
+      const summary = getOutputLines(printSummary).join('\n');
+
+      expect(summary).not.toContain('Nest application successfully started');
+      expect(summary).not.toContain('VITE ready in 412 ms');
+      expect(summary).toContain('◼  nx run backend:serve');
+      expect(summary).toContain('◼  nx run frontend:serve');
+      expect(summary).toContain('Cancelled while running');
     });
 
     it('should handle successful run-many tasks', async () => {
