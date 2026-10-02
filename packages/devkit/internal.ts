@@ -12,6 +12,7 @@ export {
   PromptResolutionError,
   acknowledgeBuildScripts,
   createCliOptions,
+  createOverrides,
   isAiAgent,
   // getCatalogManager takes the barrel route here because this file *is*
   // @nx/devkit/internal — first-party consumers only, released in lockstep. Its

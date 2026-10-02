@@ -1,4 +1,24 @@
+import { createOverrides } from '@nx/devkit/internal';
+// The option normalization Nx runs before an executor; no devkit barrel
+// exposes it, and the spec is not published.
+// oxlint-disable-next-line no-restricted-imports
+import { combineOptionsForExecutor } from 'nx/src/utils/params';
 import { resolveLintOptions } from './options';
+import schema from './schema.json' with { type: 'json' };
+import type { LintExecutorSchema } from './schema';
+
+/** Resolves the options Nx hands the executor for `nx lint <project> ...cli`. */
+const resolveFromCli = (cli: string[], target: LintExecutorSchema = {}) =>
+  resolveLintOptions(
+    combineOptionsForExecutor(
+      createOverrides(cli),
+      '',
+      { options: target },
+      schema as any,
+      'a',
+      null
+    ) as LintExecutorSchema
+  );
 
 describe('resolveLintOptions', () => {
   it('should forward target options as Oxlint flags', () => {
@@ -13,6 +33,34 @@ describe('resolveLintOptions', () => {
       __unparsed__: ['--type-aware', '--threads', '2'],
     });
     expect(resolved.flags).toEqual(['--type-aware', '--threads', '2']);
+  });
+
+  it('should forward any CLI flag form once, as typed', () => {
+    expect(resolveFromCli(['-c', 'a.json']).flags).toEqual(['-c', 'a.json']);
+    expect(resolveFromCli(['-Dno-debugger']).flags).toEqual(['-Dno-debugger']);
+    expect(resolveFromCli(['libs/a/tools']).flags).toEqual(['libs/a/tools']);
+    expect(resolveFromCli(['-f', 'json'])).toMatchObject({
+      format: 'json',
+      flags: [],
+    });
+    // Parsed as `ignore: false`, which matches no target option name.
+    expect(resolveFromCli(['--no-ignore'], { noIgnore: true }).flags).toEqual([
+      '--no-ignore',
+    ]);
+  });
+
+  it('should split a CLI --args string as one string', () => {
+    expect(resolveFromCli(['--args=--config configs/a.json']).flags).toEqual([
+      '--config',
+      'configs/a.json',
+    ]);
+    expect(
+      resolveFromCli(["--args=--config 'configs/a,b.json'"]).flags
+    ).toEqual(['--config', 'configs/a,b.json']);
+    expect(resolveFromCli(['--args=-A', '--args=no-debugger']).flags).toEqual([
+      '-A',
+      'no-debugger',
+    ]);
   });
 
   it('should not forward the CLI copies of its own options', () => {
@@ -34,6 +82,9 @@ describe('resolveLintOptions', () => {
       'a.json',
       'src',
     ]);
+    expect(
+      resolveLintOptions({ args: `--config 'configs/a"b".json'` }).flags
+    ).toEqual(['--config', 'configs/a"b".json']);
   });
 
   it('should append args after target options and before CLI overrides', () => {
@@ -77,6 +128,10 @@ describe('resolveLintOptions', () => {
       resolveLintOptions({ __unparsed__: ['--silent', '--format=github'] })
     ).toMatchObject({ silent: true, format: 'github', flags: [] });
     expect(resolveLintOptions({ args: ['-f', 'json'] })).toMatchObject({
+      format: 'json',
+      flags: [],
+    });
+    expect(resolveFromCli(['-fjson'])).toMatchObject({
       format: 'json',
       flags: [],
     });

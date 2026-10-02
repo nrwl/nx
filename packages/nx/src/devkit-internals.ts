@@ -105,6 +105,7 @@ export {
 } from './daemon/client/daemon-environment';
 export { isCI } from './utils/is-ci';
 export { createCliOptions } from './utils/create-cli-options';
+export { createOverrides } from './utils/command-line-utils';
 export {
   isUsingPrettierInTree,
   prettierConfigFiles,

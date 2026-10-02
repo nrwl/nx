@@ -1,4 +1,4 @@
-import { createCliOptions } from '@nx/devkit/internal';
+import { createCliOptions, createOverrides } from '@nx/devkit/internal';
 import type { LintExecutorSchema, OxlintOutputFormat } from './schema.js';
 
 export const SUPPORTED_FORMATS: readonly OxlintOutputFormat[] = [
@@ -40,12 +40,16 @@ export function resolveLintOptions(
 
   // A CLI override arrives both parsed (`config: 'a.json'`) and verbatim
   // (`--config=a.json`); the verbatim copy wins so the flag reaches Oxlint
-  // exactly as typed.
-  const unparsedNames = new Set(unparsed.map(flagName).filter(Boolean));
+  // exactly as typed. Nx's own parse names every parsed copy, `-c` and
+  // positionals included; the raw names add `--no-*` flags, which it names
+  // without the prefix.
+  const cliOverrides = createOverrides(unparsed);
+  const cliNames = new Set([
+    ...unparsed.map(flagName).filter(Boolean),
+    ...Object.keys(cliOverrides).map(kebabCase),
+  ]);
   const fromOptions = Object.fromEntries(
-    Object.entries(forwarded).filter(
-      ([key]) => !unparsedNames.has(kebabCase(key))
-    )
+    Object.entries(forwarded).filter(([key]) => !cliNames.has(kebabCase(key)))
   ) as Parameters<typeof createCliOptions>[0];
 
   const resolved: ResolvedLintOptions = {
@@ -58,7 +62,7 @@ export function resolveLintOptions(
 
   const candidates = [
     ...createCliOptions(fromOptions),
-    ...(Array.isArray(args) ? args : splitArgsString(args)),
+    ...argsTokens(args, cliOverrides.args),
     ...unparsed,
   ];
   for (let i = 0; i < candidates.length; i++) {
@@ -77,8 +81,11 @@ export function resolveLintOptions(
     ) {
       // The CLI copy of an option destructured above: drop it and its value.
       value();
-    } else if (name === 'format' || flag === '-f' || flag.startsWith('-f=')) {
-      resolved.format = assertSupportedFormat(value());
+    } else if (name === 'format' || flag.startsWith('-f')) {
+      // Oxlint also takes the value attached, as in `-fjson`.
+      resolved.format = assertSupportedFormat(
+        /^-f[^=]/.test(flag) ? flag.slice(2) : value()
+      );
     } else if (name === 'silent') {
       resolved.silent = true;
     } else if (name === 'max-warnings') {
@@ -115,8 +122,28 @@ function splitArgsString(args: string | undefined): string[] {
   }
   const tokens = args.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) ?? [];
   return tokens.map((token) =>
-    token.replace(/"([^"]*)"/g, '$1').replace(/'([^']*)'/g, '$1')
+    token.replace(
+      /"([^"]*)"|'([^']*)'/g,
+      (_, double, single) => double ?? single
+    )
   );
+}
+
+/**
+ * Nx splits a CLI `--args` string on commas; rejoining recovers what was typed,
+ * with Nx's interpolation applied. A repeated `--args` arrives as an array.
+ */
+function argsTokens(
+  args: string | string[] | undefined,
+  cliArgs: unknown
+): string[] {
+  if (cliArgs === undefined) {
+    return Array.isArray(args) ? args : splitArgsString(args);
+  }
+  const values = [args].flat();
+  return Array.isArray(cliArgs)
+    ? values.flatMap((value) => splitArgsString(value))
+    : splitArgsString(values.join(','));
 }
 
 function flagName(flag: string): string | null {
