@@ -45,7 +45,7 @@ nx run-many -t lint --fix
 
 ## GitHub Actions annotations
 
-`format` is rendered by Nx from Oxlint's JSON report, so the values are `default`, `agent`, `github`, and `json`. In CI and under an AI agent, `default` renders one line per diagnostic, as Oxlint itself does.
+`format` is rendered by Nx from the Oxlint JSON report, so the values are `default`, `agent`, `github`, and `json`. In CI and under an AI agent, `default` renders one line per diagnostic, as Oxlint itself does.
 
 ```shell
 nx run-many -t lint --format=github

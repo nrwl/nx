@@ -26,7 +26,7 @@
     },
     "format": {
       "type": "string",
-      "description": "Output format. Rendered by Nx from Oxlint's JSON report, so only these values are supported. `default` matches Oxlint's own terminal output, and switches to `agent` in CI or under an AI agent, as Oxlint does.",
+      "description": "Output format. Rendered by Nx from the Oxlint JSON report, so only these values are supported. `default` matches the Oxlint terminal output, and switches to `agent` in CI or under an AI agent, as Oxlint does.",
       "enum": ["default", "agent", "github", "json"],
       "default": "default"
     },
@@ -42,7 +42,7 @@
           "type": "string"
         }
       ],
-      "description": "Extra arguments appended to the Oxlint command. A string is split on whitespace outside quotes, with no shell escaping or expansion; an array passes each item as one argument. Paths are relative to the workspace root, which is where Oxlint runs."
+      "description": "Extra arguments appended to the Oxlint command. A string is split on whitespace outside quotes, with no shell escaping or expansion; an array passes each item as one argument. Paths are relative to the workspace root, which is where Oxlint runs. In a batch, Oxlint uses the first project's arguments, so list extra paths in `lintFilePatterns` instead."
     },
     "__unparsed__": {
       "hidden": true,
