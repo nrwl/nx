@@ -64,9 +64,9 @@ full picture.
 ### Is it safe to cache test results in CI?
 
 Yes, when the cache key covers every input the test depends on.
-Nx hashes source files, dependency graphs, configuration, and declared environment variables, and
-[task sandboxing](/docs/kb/sandboxing) can enforce that tasks don't read
-undeclared inputs.
+Nx hashes source files, dependency graphs, configuration, and declared environment variables.
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) also records the files each test actually reads, so an
+undeclared read inside the workspace doesn't cause a stale hit.
 Flaky tests are the real hazard: a flaky failure cached as a result is misleading, which is why
 Nx Cloud [detects flaky tasks](/docs/kb/flaky-tasks) and retries them instead
 of caching the noise.
