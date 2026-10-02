@@ -1,4 +1,4 @@
-import type { AxiosInstance } from 'axios';
+import type { HttpClient } from '../utils/http-client';
 import {
   existsSync,
   mkdirSync,
@@ -37,18 +37,18 @@ function bundleTarball(files: Record<string, string>): Readable {
   return pack.pipe(createGzip());
 }
 
-function axiosServing(data: Readable | (() => Readable)): AxiosInstance {
+function httpClientServing(data: Readable | (() => Readable)): HttpClient {
   return {
     get: vi.fn(async () => ({
       data: typeof data === 'function' ? data() : data,
     })),
-  } as unknown as AxiosInstance;
+  } as unknown as HttpClient;
 }
 
-function axiosFailing(error: Error): AxiosInstance {
+function httpClientFailing(error: Error): HttpClient {
   return {
     get: vi.fn(async () => Promise.reject(error)),
-  } as unknown as AxiosInstance;
+  } as unknown as HttpClient;
 }
 
 // A stand-in for a second nx process contending for the download lock. It
@@ -214,7 +214,7 @@ describe('update-manager bundle download', () => {
       .sort();
 
   it('extracts the downloaded tarball into a directory named for the version', async () => {
-    const axios = axiosServing(
+    const httpClient = httpClientServing(
       bundleTarball({
         'index.js': 'module.exports = { commands: {} };',
         'lib/inner.js': 'module.exports = 1;',
@@ -222,7 +222,7 @@ describe('update-manager bundle download', () => {
     );
 
     const installed = await updateManager.downloadAndExtractClientBundle(
-      axios,
+      httpClient,
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
@@ -237,7 +237,7 @@ describe('update-manager bundle download', () => {
     expect(
       readFileSync(join(installed.fullPath, 'lib/inner.js'), 'utf-8')
     ).toBe('module.exports = 1;');
-    expect(axios.get).toHaveBeenCalledWith(
+    expect(httpClient.get).toHaveBeenCalledWith(
       'https://example.com/bundle.tar.gz',
       {
         responseType: 'stream',
@@ -247,7 +247,7 @@ describe('update-manager bundle download', () => {
 
   it('records the installed version and a nonce once the install completes', async () => {
     await updateManager.downloadAndExtractClientBundle(
-      axiosServing(bundleTarball({ 'index.js': '' })),
+      httpClientServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
@@ -264,7 +264,7 @@ describe('update-manager bundle download', () => {
   it('writes a distinct nonce per install so a repeat of the same version is distinguishable', async () => {
     const download = () =>
       updateManager.downloadAndExtractClientBundle(
-        axiosServing(bundleTarball({ 'index.js': '' })),
+        httpClientServing(bundleTarball({ 'index.js': '' })),
         '2608.30.0002',
         'https://example.com/bundle.tar.gz'
       );
@@ -289,7 +289,7 @@ describe('update-manager bundle download', () => {
     // and every later nx invocation would abort with a raw EISDIR.
     for (const name of ['verify.lock', 'download.lock', 'download.record']) {
       const installed = await updateManager.downloadAndExtractClientBundle(
-        axiosServing(bundleTarball({ 'index.js': '' })),
+        httpClientServing(bundleTarball({ 'index.js': '' })),
         name,
         'https://example.com/bundle.tar.gz'
       );
@@ -340,7 +340,7 @@ describe('update-manager bundle download', () => {
       });
 
       await wasmManager.downloadAndExtractClientBundle(
-        axiosServing(bundleTarball({ 'index.js': '' })),
+        httpClientServing(bundleTarball({ 'index.js': '' })),
         '2608.30.0002',
         'https://example.com/bundle.tar.gz'
       );
@@ -360,7 +360,7 @@ describe('update-manager bundle download', () => {
     mkdirSync(join(installDir, '.tmp-2608.29.0001-999'), { recursive: true });
 
     await updateManager.downloadAndExtractClientBundle(
-      axiosServing(bundleTarball({ 'index.js': '' })),
+      httpClientServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
@@ -373,18 +373,18 @@ describe('update-manager bundle download', () => {
   it('rejects a server version that would escape the install directory', async () => {
     const outside = join(workspace, 'precious');
     writeFileSync(outside, 'do not delete');
-    const axios = axiosServing(bundleTarball({ 'index.js': '' }));
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': '' }));
 
     await expect(
       updateManager.downloadAndExtractClientBundle(
-        axios,
+        httpClient,
         '../../../../precious',
         'https://example.com/bundle.tar.gz'
       )
     ).rejects.toThrow(/Invalid Nx Cloud client bundle version/);
 
     expect(existsSync(outside)).toBe(true);
-    expect(axios.get).not.toHaveBeenCalled();
+    expect(httpClient.get).not.toHaveBeenCalled();
   });
 
   it('never writes into the file it holds the lock on', async () => {
@@ -392,7 +392,7 @@ describe('update-manager bundle download', () => {
     // the locked file would fail with ERROR_LOCK_VIOLATION. POSIX flock is
     // advisory, so only this assertion catches a regression here.
     await updateManager.downloadAndExtractClientBundle(
-      axiosServing(bundleTarball({ 'index.js': '' })),
+      httpClientServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
@@ -409,7 +409,7 @@ describe('update-manager bundle download', () => {
     mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
 
     await updateManager.downloadAndExtractClientBundle(
-      axiosServing(bundleTarball({ 'index.js': '' })),
+      httpClientServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
@@ -429,7 +429,7 @@ describe('update-manager bundle download', () => {
     mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
 
     await updateManager.downloadAndExtractClientBundle(
-      axiosServing(bundleTarball({ 'index.js': '' })),
+      httpClientServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
@@ -448,7 +448,7 @@ describe('update-manager bundle download', () => {
     symlinkSync(join(installDir, 'gone'), join(installDir, '2608.29.0001'));
 
     const installed = await updateManager.downloadAndExtractClientBundle(
-      axiosServing(bundleTarball({ 'index.js': '' })),
+      httpClientServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
@@ -459,7 +459,7 @@ describe('update-manager bundle download', () => {
   it('leaves no bundle behind when the download request fails', async () => {
     await expect(
       updateManager.downloadAndExtractClientBundle(
-        axiosFailing(new Error('connection reset')),
+        httpClientFailing(new Error('connection reset')),
         '2608.30.0002',
         'https://example.com/bundle.tar.gz'
       )
@@ -470,14 +470,14 @@ describe('update-manager bundle download', () => {
 
   it('does not clobber an installed bundle when a later download fails', async () => {
     await updateManager.downloadAndExtractClientBundle(
-      axiosServing(bundleTarball({ 'index.js': 'good' })),
+      httpClientServing(bundleTarball({ 'index.js': 'good' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
 
     await expect(
       updateManager.downloadAndExtractClientBundle(
-        axiosFailing(new Error('connection reset')),
+        httpClientFailing(new Error('connection reset')),
         '2608.31.0001',
         'https://example.com/bundle.tar.gz'
       )
@@ -498,7 +498,7 @@ describe('update-manager bundle download', () => {
 
     await expect(
       updateManager.downloadAndExtractClientBundle(
-        axiosServing(pack.pipe(createGzip())),
+        httpClientServing(pack.pipe(createGzip())),
         '2608.30.0002',
         'https://example.com/bundle.tar.gz'
       )
@@ -510,7 +510,9 @@ describe('update-manager bundle download', () => {
   it('rejects rather than hanging when the response body is not a valid archive', async () => {
     await expect(
       updateManager.downloadAndExtractClientBundle(
-        axiosServing(() => Readable.from([Buffer.from('not a gzip stream')])),
+        httpClientServing(() =>
+          Readable.from([Buffer.from('not a gzip stream')])
+        ),
         '2608.30.0002',
         'https://example.com/bundle.tar.gz'
       )
@@ -522,7 +524,7 @@ describe('update-manager bundle download', () => {
   it('rejects rather than hanging when the download is truncated mid-stream', async () => {
     await expect(
       updateManager.downloadAndExtractClientBundle(
-        axiosServing(() => {
+        httpClientServing(() => {
           const stream = new Readable({ read() {} });
           process.nextTick(() => stream.destroy(new Error('socket hang up')));
           return stream;
@@ -629,17 +631,17 @@ describe('update-manager download lock', () => {
   }
 
   it('adopts the bundle a peer installed at the version it was asked for', async () => {
-    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
     await startPeer({ version: '2608.30.0002', holdMs: 300, mode: 'install' });
 
     const installed = await updateManager.downloadAndExtractClientBundle(
-      axios,
+      httpClient,
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
 
     expect(installed.version).toBe('2608.30.0002');
-    expect(axios.get).not.toHaveBeenCalled();
+    expect(httpClient.get).not.toHaveBeenCalled();
     expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
       'peer bundle'
     );
@@ -648,17 +650,17 @@ describe('update-manager download lock', () => {
   it('downloads its own bundle when the peer installed a different version', async () => {
     // Including when the peer's is HIGHER: the server asked this process for
     // 2608.30.0002, and a rollback is exactly that case.
-    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
     await startPeer({ version: '2608.31.0001', holdMs: 300, mode: 'install' });
 
     const installed = await updateManager.downloadAndExtractClientBundle(
-      axios,
+      httpClient,
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
 
     expect(installed.version).toBe('2608.30.0002');
-    expect(axios.get).toHaveBeenCalledOnce();
+    expect(httpClient.get).toHaveBeenCalledOnce();
     expect(bundleDirs()).toEqual(['2608.30.0002', '2608.31.0001']);
   });
 
@@ -668,7 +670,7 @@ describe('update-manager download lock', () => {
     await startPeer({ version: '2608.29.0001', holdMs: 300, mode: 'install' });
 
     await updateManager.downloadAndExtractClientBundle(
-      axiosServing(bundleTarball({ 'index.js': 'mine' })),
+      httpClientServing(bundleTarball({ 'index.js': 'mine' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
@@ -689,7 +691,7 @@ describe('update-manager download lock', () => {
     });
 
     const installed = await updateManager.downloadAndExtractClientBundle(
-      axiosServing(bundleTarball({ 'index.js': 'mine' })),
+      httpClientServing(bundleTarball({ 'index.js': 'mine' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
@@ -708,16 +710,16 @@ describe('update-manager download lock', () => {
     mkdirSync(join(installDir, '2608.30.0002'), { recursive: true });
     writeFileSync(join(installDir, '2608.30.0002', 'index.js'), 'CORRUPT');
 
-    const axios = axiosServing(bundleTarball({ 'index.js': 'good' }));
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'good' }));
     await startPeer({ version: '2608.30.0002', holdMs: 300, mode: 'fail' });
 
     const installed = await updateManager.downloadAndExtractClientBundle(
-      axios,
+      httpClient,
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(axios.get).toHaveBeenCalledOnce();
+    expect(httpClient.get).toHaveBeenCalledOnce();
     expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
       'good'
     );
@@ -725,28 +727,28 @@ describe('update-manager download lock', () => {
 
   it('takes over the download when the peer released the lock without installing', async () => {
     mkdirSync(join(installDir, '2608.28.0001'), { recursive: true });
-    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
     await startPeer({ version: '2608.31.0001', holdMs: 300, mode: 'fail' });
 
     const installed = await updateManager.downloadAndExtractClientBundle(
-      axios,
+      httpClient,
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
 
     expect(installed.version).toBe('2608.30.0002');
-    expect(axios.get).toHaveBeenCalledOnce();
+    expect(httpClient.get).toHaveBeenCalledOnce();
     // The peer may still be running from the old bundle, so it stays.
     expect(bundleDirs()).toEqual(['2608.28.0001', '2608.30.0002']);
   });
 
   it('waits for the peer rather than racing it', async () => {
-    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
     await startPeer({ version: '2608.31.0001', holdMs: 600, mode: 'install' });
 
     const start = Date.now();
     await updateManager.downloadAndExtractClientBundle(
-      axios,
+      httpClient,
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
