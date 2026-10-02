@@ -257,7 +257,7 @@ Nx selects a task when your change reaches one of its inputs, rather than by whe
 
 ## Understanding why something is affected
 
-When a task is in the affected set and you can't see why, add `--explain`. Nx prints what it selected and what put it there, then exits without running anything:
+Use the `--explain` flag to show why tasks are affected. Nx prints the explanation, then exits without running anything:
 
 ```shell
 NX_LEGACY_AFFECTED=false nx affected -t build --explain
