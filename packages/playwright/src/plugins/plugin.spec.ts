@@ -1294,6 +1294,12 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
         projects: ['feature', 'feature-utils'],
         always: true,
       },
+      {
+        input: 'production',
+        projects: ['feature', 'feature-utils'],
+        dependencies: true,
+        always: true,
+      },
       { externalDependencies: ['@playwright/test'] },
     ];
 
