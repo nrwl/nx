@@ -236,12 +236,12 @@ describe('TaskOrchestrator', () => {
 
     async function runBatch(
       deps: Record<string, string[]>,
-      opts: { deferred: string[]; cached?: string[]; noOutputs?: string[] }
+      opts: { deferred: string[]; cached?: string[]; uncacheable?: string[] }
     ) {
       const tasks = Object.fromEntries(
         Object.keys(deps).map((id) => {
           const task = createTask(id);
-          if (opts.noOutputs?.includes(id)) task.outputs = [];
+          if (opts.uncacheable?.includes(id)) task.cache = false;
           return [id, task];
         })
       );
@@ -253,7 +253,7 @@ describe('TaskOrchestrator', () => {
           Object.keys(deps).map((id) => [id, []])
         ),
       };
-      const { orchestrator } = createOrchestrator(
+      const { orchestrator, hasher } = createOrchestrator(
         taskGraph,
         new Set(opts.deferred)
       );
@@ -269,22 +269,38 @@ describe('TaskOrchestrator', () => {
         0
       );
 
-      return orchestrator.applyCachedResults.mock.calls.flatMap(
-        ([ts]: [Task[]]) => ts.map((t: Task) => t.id)
-      );
+      const ids = (calls: any[][]) =>
+        calls.map(([arg]) =>
+          (Array.isArray(arg) ? arg : Object.values(arg.taskGraph.tasks)).map(
+            (t: Task) => t.id
+          )
+        );
+      return {
+        lookups: ids(orchestrator.applyCachedResults.mock.calls),
+        hashed: ids(hasher.hashTasks.mock.calls),
+        runs: ids(orchestrator.runBatch.mock.calls),
+      };
     }
 
-    it('should look up a deferred task whose pending deps declare no outputs', async () => {
-      const lookedUp = await runBatch(
+    it('should hash and look up a deferred task behind a non-cacheable task in the next wave', async () => {
+      const { lookups, hashed, runs } = await runBatch(
         { 'dep:install': [], 'reader:build': ['dep:install'] },
-        { deferred: ['reader:build'], noOutputs: ['dep:install'] }
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          cached: ['reader:build'],
+        }
       );
 
-      expect(lookedUp).toEqual(['dep:install', 'reader:build']);
+      // Wave 1 runs only the install; wave 2 hashes reader after it ran and
+      // restores it.
+      expect(lookups).toEqual([['dep:install'], ['reader:build']]);
+      expect(hashed).toEqual([['dep:install'], ['reader:build']]);
+      expect(runs).toEqual([['dep:install']]);
     });
 
-    it('should not look up a deferred task while a producer further upstream has yet to run', async () => {
-      const lookedUp = await runBatch(
+    it('should run a deferred task in the same wave as a cache miss upstream of it', async () => {
+      const { lookups, runs } = await runBatch(
         {
           'dep:build': [],
           'dep:install': ['dep:build'],
@@ -293,11 +309,13 @@ describe('TaskOrchestrator', () => {
         {
           deferred: ['reader:build'],
           cached: ['dep:install'],
-          noOutputs: ['dep:install'],
+          uncacheable: [],
         }
       );
 
-      expect(lookedUp).toEqual(['dep:build', 'dep:install']);
+      // reader is behind dep:build through the cached dep:install.
+      expect(lookups).toEqual([['dep:build'], ['dep:install']]);
+      expect(runs).toEqual([['dep:build', 'reader:build']]);
     });
 
     it('should look up a task the up-front pass did not defer', async () => {
