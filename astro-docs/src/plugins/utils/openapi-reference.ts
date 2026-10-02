@@ -822,10 +822,7 @@ export function buildOpenApiReference(
         label: 'Query the Nx Cloud Public API',
         href: '/docs/kb/query-public-api',
       },
-      {
-        label: 'Migrate the Public API to v1',
-        href: '/docs/kb/migrate-public-api-to-v1',
-      },
+
       {
         label: 'Read raw resource-utilization reports',
         href: '/docs/kb/read-resource-utilization-reports',
