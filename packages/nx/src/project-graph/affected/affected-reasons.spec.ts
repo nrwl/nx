@@ -457,7 +457,28 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '  a.ts and 3 other files:\n    - x:test\n\n  a.ts and 3 other files:\n    - y:test'
+      '  a.ts, b.ts and 2 other files:\n    - x:test\n\n  a.ts, e.ts and 2 other files:\n    - y:test'
     );
+  });
+
+  // Only d.ts sets x apart from y and only c.ts from z, so x names both.
+  it('names as many files as it takes to tell each lookalike apart', () => {
+    const touchedBy = (files: string[]) =>
+      files.map((file) => ({ kind: 'input-file' as const, file }));
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'x:test': touchedBy(['a.ts', 'b.ts', 'c.ts', 'd.ts']),
+          'y:test': touchedBy(['a.ts', 'b.ts', 'c.ts', 'e.ts']),
+          'z:test': touchedBy(['a.ts', 'b.ts', 'd.ts', 'f.ts']),
+        },
+        upstream: {},
+        touched: ['x:test', 'y:test', 'z:test'],
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain('  a.ts, c.ts, d.ts and 1 other file:\n    - x:test');
+    expect(out).toContain('  a.ts, e.ts and 2 other files:\n    - y:test');
+    expect(out).toContain('  a.ts, f.ts and 2 other files:\n    - z:test');
   });
 });

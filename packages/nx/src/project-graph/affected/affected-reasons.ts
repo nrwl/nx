@@ -269,6 +269,7 @@ export function formatAffectedExplanation(
       const key = ofKind.map((change) => change.name).join('\0');
       const group = groups.get(key) ?? {
         heading: describeChanged(ofKind, noun),
+        names: ofKind.map((change) => change.name),
         members: [],
       };
       group.members.push(name);
@@ -277,6 +278,7 @@ export function formatAffectedExplanation(
   }
   for (const { noun, groups } of kinds) {
     if (!groups.size) continue;
+    disambiguate([...groups.values()], noun);
     const members = [
       ...new Set([...groups.values()].flatMap((group) => group.members)),
     ];
@@ -436,7 +438,54 @@ function reasonLines(
 
 interface Group {
   heading: string;
+  /** The changes that touched every member, sorted. */
+  names: string[];
   members: string[];
+}
+
+/**
+ * Two sets of the same size and first name shorten to the same heading. Each
+ * such heading also names the files that tell it apart, picked one at a time
+ * to rule out the most lookalikes, so it grows with the collisions rather
+ * than with the files.
+ */
+function disambiguate(groups: Group[], noun: 'file' | 'package'): void {
+  const byHeading = new Map<string, Group[]>();
+  for (const group of groups) {
+    byHeading.set(group.heading, [
+      ...(byHeading.get(group.heading) ?? []),
+      group,
+    ]);
+  }
+  for (const alike of byHeading.values()) {
+    if (alike.length < 2) continue;
+    for (const group of alike) {
+      const [first, ...rest] = group.names;
+      const extra: string[] = [];
+      let lookalikes = alike
+        .filter((other) => other !== group)
+        .map((other) => new Set(other.names));
+      while (lookalikes.length) {
+        const ruledOut = (name: string) =>
+          lookalikes.filter((names) => !names.has(name)).length;
+        const pick = rest
+          .filter((name) => !extra.includes(name))
+          .reduce((best, name) =>
+            ruledOut(name) > ruledOut(best) ? name : best
+          );
+        extra.push(pick);
+        lookalikes = lookalikes.filter((names) => names.has(pick));
+      }
+      const others = group.names.length - 1 - extra.length;
+      group.heading = listed([
+        first,
+        ...extra.sort(),
+        ...(others
+          ? [`${others} other ${noun}${others === 1 ? '' : 's'}`]
+          : []),
+      ]);
+    }
+  }
 }
 
 interface Changed {
