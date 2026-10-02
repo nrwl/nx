@@ -133,7 +133,7 @@ Authentication setup and plan eligibility are authored manually in `src/content/
 
 The `astro-docs:build` target does not use the Nx task cache because the remote specification can change independently of repository files. Package build dependencies still use their normal caches. Restart the local server to fetch a new deployed specification. The source override also works for a preview build, for example `NX_CLOUD_OPENAPI_URL=http://127.0.0.1:4203/nx-cloud/data/openapi.json mise exec -- pnpm exec nx build astro-docs --excludeTaskDependencies`. The docs show the selected source's routes and metadata without rewriting beta routes.
 
-Run `pnpm nx run astro-docs:test-openapi` for the loader tests. Run `pnpm nx run astro-docs:pw-e2e -- public-api.spec.ts` for the reference page tests.
+Run `pnpm nx run astro-docs:test-openapi` for the loader and generator tests. Run `pnpm nx run astro-docs:pw-e2e -- public-api.spec.ts` for the reference page tests.
 
 ## Content Management
 
