@@ -1833,7 +1833,10 @@ describe('task planner', () => {
   });
   describe('ultracache configurations', () => {
     function fixture(
-      opts: { cyclic?: boolean; extraParentInputs?: unknown[] } = {}
+      opts: {
+        cyclic?: boolean;
+        extraParentInputs?: unknown[];
+      } = {}
     ) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [
@@ -2030,6 +2033,23 @@ describe('task planner', () => {
       expect(planFor(parentReadOther)).not.toEqual(
         planFor(configurationsFor(base))
       );
+    });
+
+    it("keeps an always input's declared files", () => {
+      const read = configurationsFor({
+        'parent:build': { inputs: ['libs/parent/filea.ts'] },
+      });
+      const planWith = (always: boolean) => {
+        const { planner, taskGraph } = fixture({
+          extraParentInputs: [{ input: 'prod', projects: ['child'], always }],
+        });
+        return planner.getPlans(['parent:build'], taskGraph, read)[
+          'parent:build'
+        ];
+      };
+
+      expect(planWith(false)).not.toContain('child:libs/child/**/*');
+      expect(planWith(true)).toContain('child:libs/child/**/*');
     });
 
     it('keeps a negation only when every visit of the project declares it', () => {

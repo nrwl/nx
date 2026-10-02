@@ -484,3 +484,25 @@ jobs:
 ```
 
 Learn more about configuring your [CI provider with these workflow examples](/docs/kb/ci-workflow-examples).
+
+## Scope a test file to its projects
+
+An atomized e2e task depends on the app it tests, so a change to any library the app bundles reruns every test file, and `nx affected` selects all of them.
+For the Cypress and Playwright atomized tasks, name the projects a test file exercises in a comment at the top of the file:
+
+```ts
+// apps/shop-e2e/src/e2e/checkout.cy.ts
+// @nx-depends-on: checkout, checkout-utils
+import { getSubmitButton } from '../support/app.po';
+```
+
+The `e2e-ci--src/e2e/checkout.cy.ts` task then changes in two ways:
+
+- Its `^production` input becomes `{ "input": "production", "projects": ["checkout", "checkout-utils"], "always": true }`, which [ultracache keeps in the hash](/docs/reference/inputs#inputs-kept-under-ultracache).
+- Its dependency on the web server task sets [`"inputs": false`](/docs/reference/inputs#inputs-of-continuous-dependencies), so the server's inputs stop counting.
+
+Only the listed projects count, not the projects they depend on, so list every one the test relies on.
+Nx reads the directive from the comments that open the file and stops at the first line of code.
+A directive without projects, or a name that matches no project, is an error.
+When Playwright starts the web server itself, there's no server task, and only the inputs change.
+Test files without the directive keep the default inputs.

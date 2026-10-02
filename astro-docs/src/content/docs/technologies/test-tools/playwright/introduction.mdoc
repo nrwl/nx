@@ -109,6 +109,9 @@ The `ciTargetName` task uses the [Atomizer](/docs/kb/split-e2e-tasks).
 
 Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
 
+To stop an atomized task from rerunning for every library the app bundles, add an `@nx-depends-on` comment to its test file.
+See [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
+
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/playwright/plugin`.
 
 ## E2E testing
