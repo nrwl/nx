@@ -280,29 +280,7 @@ Touching those tasks changes outputs read by 2 build tasks. Pass --verbose to li
   - app:build
 ```
 
-The title says how many tasks of your targets the change affects.
-The first section lists the tasks your change touches, meaning one of their own inputs changes.
-When several files change, it groups the tasks by the exact set of files that reached them. When two groups would get the same heading, each heading leads with the file that tells it apart.
-When a change to `package.json` or a lockfile changes the version of specific packages, a section after it lists the tasks those packages touch, grouped by package. A task touched by both a file and a package appears in both.
-The last section lists every task that reads the outputs of a touched task. A task touched directly that also reads them appears in both.
-
-Every section can include tasks you didn't ask for, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`, since they carry your change to the tasks you did ask for.
-Each heading counts your tasks per target, then the tasks they depend on. Your tasks are listed first and in bold.
-Each group names up to five tasks. Pass `--verbose` to list every task with its reasons, and every file in each group's heading.
-Under `--verbose`, each task lists every reason that applies, so a task reached through two different producers reports both.
-Each changed file gets its own line, followed by the input pattern it matched. A task that reads several of the tasks above names them all on one line. When several packages changed version, the line names the first and counts the rest, and the JSON lists them all.
-To follow the chain step by step, look up the task named in a reason.
-
-Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
-The JSON has these keys:
-
-- `affected` holds the tasks you asked for.
-- `upstream` holds the other tasks your change reached.
-- `touched` lists which of those your change reached directly.
-- `requested` counts the tasks of your targets that selection considered.
-- `moved` lists the packages whose version each changed dependency file changed, when Nx can name them.
-
-`nx show projects --affected -t build --explain` explains its answer the same way.
+Pass `--explain=stdout` for the data as JSON, or `--explain=reasons.json` to write it to a file. `nx show projects --affected -t build --explain` works the same way.
 
 ## Best paired with remote caching and distribution
 
