@@ -440,4 +440,24 @@ describe('formatAffectedExplanation', () => {
       'Changing 1 file touches 1 e2e-ci task, 2 test tasks and 1 other task:'
     );
   });
+
+  // Both sets shorten to "a.ts and 3 other files", but different files touched them.
+  it('keeps sets apart that share a shortened heading', () => {
+    const touchedBy = (files: string[]) =>
+      files.map((file) => ({ kind: 'input-file' as const, file }));
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'x:test': touchedBy(['a.ts', 'b.ts', 'c.ts', 'd.ts']),
+          'y:test': touchedBy(['a.ts', 'e.ts', 'f.ts', 'g.ts']),
+        },
+        upstream: {},
+        touched: ['x:test', 'y:test'],
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain(
+      '  a.ts and 3 other files:\n    - x:test\n\n  a.ts and 3 other files:\n    - y:test'
+    );
+  });
 });

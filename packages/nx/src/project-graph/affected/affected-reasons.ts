@@ -253,8 +253,8 @@ export function formatAffectedExplanation(
   // Touched tasks: a section for files, then one for packages, each grouped
   // by what changed. A task touched by both is listed in each.
   const kinds = [
-    { noun: 'file' as const, groups: new Map<string, string[]>() },
-    { noun: 'package' as const, groups: new Map<string, string[]>() },
+    { noun: 'file' as const, groups: new Map<string, Group>() },
+    { noun: 'package' as const, groups: new Map<string, Group>() },
   ];
   const unnamed: string[] = [];
   for (const name of touchedAll) {
@@ -265,15 +265,26 @@ export function formatAffectedExplanation(
         (change) => change.isPackage === (noun === 'package')
       );
       if (!ofKind.length) continue;
-      const key = describeChanged(ofKind, noun);
-      groups.set(key, [...(groups.get(key) ?? []), name]);
+      // Keyed by the whole set: two sets can share a shortened heading.
+      const key = ofKind.map((change) => change.name).join('\0');
+      const group = groups.get(key) ?? {
+        heading: describeChanged(ofKind, noun),
+        members: [],
+      };
+      group.members.push(name);
+      groups.set(key, group);
     }
   }
   for (const { noun, groups } of kinds) {
     if (!groups.size) continue;
-    const members = [...new Set([...groups.values()].flat())];
+    const members = [
+      ...new Set([...groups.values()].flatMap((group) => group.members)),
+    ];
     const sorted = [...groups].sort(
-      ([a, x], [b, y]) => y.length - x.length || a.localeCompare(b)
+      ([a, x], [b, y]) =>
+        y.members.length - x.members.length ||
+        x.heading.localeCompare(y.heading) ||
+        a.localeCompare(b)
     );
     const changes = new Set(
       members.flatMap((name) =>
@@ -286,8 +297,8 @@ export function formatAffectedExplanation(
       changes.size === 1 ? '' : 's'
     } touches ${counted(members)}`;
     lines.push(verbose ? `${header}:` : `${header}${hint}`);
-    for (const [changed, inGroup] of sorted) {
-      lines.push('', `  ${changed}:`);
+    for (const [, { heading, members: inGroup }] of sorted) {
+      lines.push('', `  ${heading}:`);
       list(inGroup, '    ', verbose);
     }
     lines.push('');
@@ -421,6 +432,11 @@ function reasonLines(
     }
   }
   return lines;
+}
+
+interface Group {
+  heading: string;
+  members: string[];
 }
 
 interface Changed {
