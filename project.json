@@ -34,14 +34,10 @@
       "inputs": [
         {
           "input": "production",
-          "projects": ["tag:npm:public"]
-        },
-        {
-          "input": "production",
           "projects": ["tag:maven:dev.nx.maven"]
         },
         "{workspaceRoot}/scripts/local-registry",
-        "native"
+        { "dependentTasksOutputFiles": "**/*", "transitive": true }
       ],
       "dependsOn": [
         "local-registry-e2e",
@@ -56,12 +52,7 @@
     "populate-e2e-base-workspace": {
       "cache": true,
       "inputs": [
-        {
-          "input": "production",
-          "projects": ["tag:npm:public"]
-        },
         "{workspaceRoot}/scripts/local-registry/**/*",
-        "native",
         {
           "runtime": "node ./scripts/local-registry/package-manager-versions.mjs"
         },
