@@ -90,6 +90,10 @@ the section the outbox extracts. Emit only the sections that apply, in this orde
 7. `### Suggestions`
 8. `### Pre-existing follow-ups`
 
+A clean first review has no applicable section above, and the draft cannot be empty. Emit
+`### No blocking findings` on its own, with one or two lines naming the changed behavior and how it
+compares with base. Add that section only when nothing else applies.
+
 Mark base-side finding anchors and related locations with `(base)` after the closing backtick; HEAD
 locations may stay unmarked. Deleted-file locations are base-side. Never substitute a base line
 number for a HEAD line.
