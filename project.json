@@ -31,7 +31,6 @@
     },
     "populate-local-registry-storage": {
       "cache": true,
-      "ultracache": { "mode": "off" },
       "inputs": [
         {
           "input": "production",
