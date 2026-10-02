@@ -28,10 +28,10 @@ describe('formatAffectedReason', () => {
     }
   });
 
-  it('falls back when an input match names no pattern', () => {
+  it('shows a match without a pattern as the file alone', () => {
     expect(
       formatAffectedReason({ kind: 'input-file', file: 'tsconfig.json' })
-    ).toBe('tsconfig.json matches an input');
+    ).toBe('tsconfig.json');
   });
 });
 
@@ -100,7 +100,7 @@ describe('formatAffectedExplanation', () => {
         '',
         '  libs/ui/src/index.ts:',
         '    ui:build',
-        '      - libs/ui/src/index.ts matches libs/ui/**/*',
+        '      - libs/ui/src/index.ts (libs/ui/**/*)',
         '',
         'Touching those tasks changes outputs read by 2 build tasks:',
         '  admin:build',
@@ -239,7 +239,7 @@ describe('formatAffectedExplanation', () => {
 
   // A refactor or a dependency bump would otherwise print a line per file or
   // package under every task.
-  it('names every file, and the first package with a count', () => {
+  it('lists each matched file, and the first package with a count', () => {
     const files = ['a.ts', 'b.ts', 'c.ts', 'd.ts', 'e.ts'].map(
       (f) => `libs/ui/${f}`
     );
@@ -266,9 +266,11 @@ describe('formatAffectedExplanation', () => {
       { verbose: true }
     );
     expect(out).toContain(
-      '    - libs/ui/a.ts, libs/ui/b.ts, libs/ui/c.ts, libs/ui/d.ts and libs/ui/e.ts match libs/ui/**/*'
+      ['a', 'b', 'c', 'd', 'e']
+        .map((f) => `      - libs/ui/${f}.ts (libs/ui/**/*)\n`)
+        .join('')
     );
-    expect(out).toContain('    - tsconfig.base.json matches an input');
+    expect(out).toContain('      - tsconfig.base.json\n');
     expect(out).toContain(
       '    - depends on npm:a and 3 other packages, whose versions change'
     );
@@ -295,7 +297,7 @@ describe('formatAffectedExplanation', () => {
     );
   });
 
-  it('names one match, or two', () => {
+  it('gives each matched file its own line', () => {
     const match = (f: string) => ({
       kind: 'input-file' as const,
       file: `libs/ui/${f}`,
@@ -312,10 +314,10 @@ describe('formatAffectedExplanation', () => {
         { verbose: true }
       );
     expect(explain(['a.ts'])).toMatch(
-      /- libs\/ui\/a\.ts matches libs\/ui\/\*\*\/\*$/
+      /- libs\/ui\/a\.ts \(libs\/ui\/\*\*\/\*\)$/
     );
     expect(explain(['a.ts', 'b.ts'])).toContain(
-      '    - libs/ui/a.ts and libs/ui/b.ts match libs/ui/**/*'
+      '      - libs/ui/a.ts (libs/ui/**/*)\n      - libs/ui/b.ts (libs/ui/**/*)'
     );
   });
 
@@ -379,7 +381,7 @@ describe('formatAffectedExplanation', () => {
         '',
         '  apps/app/main.ts:',
         '    app:e2e',
-        '      - apps/app/main.ts matches an input',
+        '      - apps/app/main.ts',
         '      - hashes every external dependency, including npm:react and 1 other package, which moved',
         '',
         'Changing 2 packages touches 2 requested tasks:',
@@ -390,7 +392,7 @@ describe('formatAffectedExplanation', () => {
         '',
         '  npm:react and npm:scheduler:',
         '    app:e2e',
-        '      - apps/app/main.ts matches an input',
+        '      - apps/app/main.ts',
         '      - hashes every external dependency, including npm:react and 1 other package, which moved',
       ].join('\n')
     );
@@ -516,5 +518,39 @@ describe('formatAffectedExplanation', () => {
     expect(out).toContain('  d.ts and 3 other files:\n    - x:test');
     expect(out).toContain('  a.ts, e.ts and 2 other files:\n    - y:test');
     expect(out).toContain('  e.ts and 3 other files:\n    - z:test');
+  });
+
+  it('names every pattern a file matched on its line', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'a:test': ['src/**', '{projectRoot}/**'].map((pattern) => ({
+            kind: 'input-file' as const,
+            file: 'src/a.ts',
+            pattern,
+          })),
+        },
+        upstream: {},
+        touched: ['a:test'],
+      },
+      'Affected tasks',
+      { verbose: true }
+    );
+    expect(out).toContain('      - src/a.ts (src/**, {projectRoot}/**)');
+  });
+
+  it('dims the pattern a file matched, when given a style', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'a:test': [{ kind: 'input-file', file: 'a.ts', pattern: 'src/**' }],
+        },
+        upstream: {},
+        touched: ['a:test'],
+      },
+      'Affected tasks',
+      { verbose: true, dim: (text) => `~${text}~` }
+    );
+    expect(out).toContain('      - a.ts ~(src/**)~');
   });
 });

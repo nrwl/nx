@@ -288,7 +288,7 @@ Every section can include tasks you didn't ask for, such as a `prebuild` under `
 Each heading counts your tasks apart from the others, and your tasks are listed first and in bold.
 Each group names up to five tasks. Pass `--verbose` to list every task with its reasons.
 Under `--verbose`, each task lists every reason that applies, so a task reached through two different producers reports both.
-When several changed files match one input, or a task reads several of the tasks above, they share one line that names them all. When several packages moved, the line names the first and counts the rest, and the JSON lists them all.
+Each changed file gets its own line, followed by the input pattern it matched. A task that reads several of the tasks above names them all on one line. When several packages moved, the line names the first and counts the rest, and the JSON lists them all.
 To follow the chain step by step, look up the task named in a reason.
 
 Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.

@@ -109,8 +109,8 @@ export function formatAffectedReason(
       } package counts as moved`;
     case 'input-file':
       return reason.pattern
-        ? `${reason.file} matches ${reason.pattern}`
-        : `${reason.file} matches an input`;
+        ? `${reason.file} (${reason.pattern})`
+        : reason.file;
     case 'dependent-output':
       return `reads the outputs of ${reason.producer}`;
     case 'external-dependencies':
@@ -142,10 +142,13 @@ export function formatAffectedExplanation(
   {
     verbose = false,
     styleTask = (id: string) => id,
+    dim = (text: string) => text,
   }: {
     verbose?: boolean;
     /** Styles a listed task id; plain unless the printer passes a style. */
     styleTask?: (id: string, requested: boolean) => string;
+    /** Styles the secondary part of a line, such as a matched pattern. */
+    dim?: (text: string) => string;
   } = {}
 ): string {
   const names = Object.keys(affected).sort();
@@ -226,7 +229,7 @@ export function formatAffectedExplanation(
     if (!forName.length) {
       lines.push(`${indent}  - selected, but no reason is recorded`);
     }
-    for (const line of reasonLines(forName, moved)) {
+    for (const line of reasonLines(forName, moved, dim)) {
       lines.push(`${indent}  - ${line}`);
     }
   };
@@ -331,13 +334,15 @@ export function formatAffectedExplanation(
 }
 
 /**
- * One line per reason, with files matching one input, or producers read,
- * sharing a line that names them all. Moved packages name the first and count
- * the rest: a dependency bump can move thousands. The JSON keeps them all.
+ * One line per reason, and per matched file with the patterns it matched.
+ * Producers read share a line that names them all. Moved packages name the
+ * first and count the rest: a dependency bump can move thousands. The JSON
+ * keeps them all.
  */
 function reasonLines(
   reasons: AffectedReason[],
-  moved: Record<string, string[]>
+  moved: Record<string, string[]>,
+  dim: (text: string) => string = (text) => text
 ): string[] {
   const externals = reasons.filter(
     (reason) => reason.kind === 'external-dependencies'
@@ -354,7 +359,7 @@ function reasonLines(
   const keyOf = (reason: AffectedReason) => {
     switch (reason.kind) {
       case 'input-file':
-        return `input-file\0${reason.pattern ?? ''}`;
+        return `input-file\0${reason.file}`;
       case 'npm-package':
       case 'dependent-output':
       case 'external-dependencies':
@@ -394,6 +399,17 @@ function reasonLines(
       continue;
     }
     const group = key ? grouped.get(key) : undefined;
+    if (reason.kind === 'input-file') {
+      if (done.has(key)) continue;
+      done.add(key);
+      const patterns = group.map((r) => r.pattern).filter(Boolean);
+      lines.push(
+        patterns.length
+          ? `${reason.file} ${dim(`(${patterns.join(', ')})`)}`
+          : reason.file
+      );
+      continue;
+    }
     if (!group || group.length === 1) {
       lines.push(formatAffectedReason(reason));
       continue;
@@ -403,13 +419,6 @@ function reasonLines(
     const [first] = group;
     const others = group.length - 1;
     switch (first.kind) {
-      case 'input-file':
-        lines.push(
-          `${listed(group.map((r) => r.file).sort())} match ${
-            first.pattern ?? 'an input'
-          }`
-        );
-        break;
       case 'dependent-output':
         lines.push(
           `reads the outputs of ${listed(group.map((r) => r.producer).sort())}`

@@ -32,6 +32,7 @@ export function printAffectedExplanation(
   const rendered = formatAffectedExplanation(explanation, heading, {
     ...options,
     styleTask,
+    dim: pc.dim,
   });
   if (!Object.keys(explanation.affected).length) {
     output.log({ title: rendered });
