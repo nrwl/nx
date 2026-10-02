@@ -1666,8 +1666,13 @@ function cmdPrune(argv = []) {
           // the row check above is what guarantees.
           const pruned = execIn(
             hostSb,
-            `pnpm store prune 2>&1 | tail -2\n` +
-              `git -C ${HOST_REPO} gc --prune=now -q 2>&1 | tail -2`,
+            // `tail` exits 0 for a failed command, and the last line's status is
+            // the only one the caller would otherwise see.
+            `set -o pipefail\n` +
+              `rc=0\n` +
+              `pnpm store prune 2>&1 | tail -2 || rc=1\n` +
+              `git -C ${HOST_REPO} gc --prune=now -q 2>&1 | tail -2 || rc=1\n` +
+              `exit $rc`,
             { dir: WORK_ROOT }
           );
           if (pruned.status === 0)
