@@ -2,7 +2,6 @@ package dev.nx.maven.targets
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import dev.nx.maven.GitIgnoreClassifier
 import dev.nx.maven.utils.MojoAnalyzer
 import dev.nx.maven.utils.PathFormatter
 import org.apache.maven.execution.MavenSession
@@ -36,7 +35,6 @@ class NxTargetFactory(
   private val session: MavenSession,
   private val mojoAnalyzer: MojoAnalyzer,
   private val pathFormatter: PathFormatter,
-  private val gitIgnoreClassifier: GitIgnoreClassifier,
   private val targetNamePrefix: String
 ) {
   private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
@@ -189,12 +187,7 @@ class NxTargetFactory(
 
       analysis.inputs.forEach { input -> inputs.add(input) }
       analysis.outputs.forEach { output -> outputs.add(output) }
-      analysis.dependentTaskOutputInputs.forEach { input ->
-        val obj = JsonObject()
-        obj.addProperty("dependentTasksOutputFiles", input.path)
-        if (input.transitive) obj.addProperty("transitive", true)
-        inputs.add(obj)
-      }
+      analysis.ignoredInputs.forEach { input -> inputs.add(ignoredFileset(input)) }
     }
 
     log.info("Phase $phase batch analysis: cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
@@ -580,12 +573,7 @@ class NxTargetFactory(
       // Convert inputs to JsonArray
       val inputsArray = JsonArray()
       analysis.inputs.forEach { input -> inputsArray.add(input) }
-      analysis.dependentTaskOutputInputs.forEach { input ->
-        val obj = JsonObject()
-        obj.addProperty("dependentTasksOutputFiles", input.path)
-        if (input.transitive) obj.addProperty("transitive", true)
-        inputsArray.add(obj)
-      }
+      analysis.ignoredInputs.forEach { input -> inputsArray.add(ignoredFileset(input)) }
       target.inputs = inputsArray
 
       // Convert outputs to JsonArray
@@ -651,12 +639,7 @@ class NxTargetFactory(
 
       analysis.inputs.forEach { input -> target.inputs?.add(input) }
       analysis.outputs.forEach { output -> target.outputs?.add(output) }
-      analysis.dependentTaskOutputInputs.forEach { input ->
-        val obj = JsonObject()
-        obj.addProperty("dependentTasksOutputFiles", input.path)
-        if (input.transitive) obj.addProperty("transitive", true)
-        target.inputs?.add(obj)
-      }
+      analysis.ignoredInputs.forEach { input -> target.inputs?.add(ignoredFileset(input)) }
       addExternalDependenciesInput(target, externalDependencies)
 
       targets[targetName] = target
@@ -674,23 +657,26 @@ class NxTargetFactory(
 
   private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
     val buildJsonFile = File("${project.build.directory}/nx-build-state.json")
+    val buildState = pathFormatter.formatInputPath(buildJsonFile, project.basedir)
+    target.inputs?.add(ignoredFileset(buildState))
 
-    val isIgnored = gitIgnoreClassifier.isIgnored(buildJsonFile)
-    if (isIgnored) {
-      log.warn("Input path is gitignored: ${buildJsonFile.path}")
-      // Match the specific build state file in dependency outputs
-      val obj = JsonObject()
-      obj.addProperty("dependentTasksOutputFiles", "nx-build-state.json")
-      obj.addProperty("transitive", true)
-      target.inputs?.add(obj)
-    } else {
-      val input = pathFormatter.formatInputPath(buildJsonFile, projectRoot = project.basedir)
+    // Upstream modules reach this one through their build output, resolved per dependency.
+    listOf(
+      buildState,
+      pathFormatter.formatInputPath(File(project.build.outputDirectory), project.basedir),
+      pathFormatter.formatInputPath(File(project.build.directory, "*.jar"), project.basedir),
+    ).forEach { target.inputs?.add(ignoredFileset(it, dependencies = true)) }
 
-      target.inputs?.add(input)
-    }
     target.outputs?.add(pathFormatter.formatOutputPath(buildJsonFile, project.basedir))
   }
 
+  private fun ignoredFileset(fileset: String, dependencies: Boolean = false): JsonObject {
+    val obj = JsonObject()
+    obj.addProperty("fileset", fileset)
+    obj.addProperty("includeIgnored", true)
+    if (dependencies) obj.addProperty("dependencies", true)
+    return obj
+  }
 
   private fun addExternalDependenciesInput(target: NxTarget, externalDependencies: List<String>) {
     if (externalDependencies.isNotEmpty() && target.inputs != null) {

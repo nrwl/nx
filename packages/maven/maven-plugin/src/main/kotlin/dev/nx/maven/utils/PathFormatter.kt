@@ -11,11 +11,6 @@ class PathFormatter {
     return toProjectPath(path, projectRoot)
   }
 
-  fun toDependentTaskOutputs(path: File, projectRoot: File): DependentTaskOutputs {
-    val relativePath = path.relativeTo(projectRoot)
-    return DependentTaskOutputs(relativePath.invariantSeparatorsPath)
-  }
-
   fun formatOutputPath(path: File, projectRoot: File): String {
     return toProjectPath(path, projectRoot)
   }
@@ -34,5 +29,3 @@ class PathFormatter {
 
   fun relativePath(file: File, base: File): String = file.relativeTo(base).invariantSeparatorsPath.ifEmpty { "." }
 }
-
-data class DependentTaskOutputs(val path: String, val transitive: Boolean = true)
