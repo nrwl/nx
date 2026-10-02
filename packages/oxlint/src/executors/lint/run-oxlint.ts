@@ -15,9 +15,11 @@ export interface OxlintLabel {
 
 export interface OxlintDiagnostic {
   message: string;
-  code: string;
+  /** Absent when no rule raised the diagnostic, as for an unreadable file. */
+  code?: string;
   severity: 'error' | 'warning' | 'advice';
-  filename: string;
+  /** Empty or absent when the diagnostic has no source file. */
+  filename?: string;
   labels: OxlintLabel[];
   help?: string;
   url?: string;

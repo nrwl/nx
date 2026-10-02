@@ -195,6 +195,30 @@ describe('runLintTasks', () => {
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
+  // Outside every task's paths: a path from the forwarded flags, and no file.
+  it.each(['tools/x.ts', '', undefined])(
+    'should report a diagnostic for %j to the tasks that share the run flags',
+    (filename) => {
+      mockRunOxlint.mockReturnValue({
+        ok: true,
+        report: report([{ filename }]),
+      });
+
+      const results = runLintTasks(
+        [
+          task('libs/a', { args: ['tools'] }),
+          task('libs/b', { args: ['tools'] }),
+          task('libs/c'),
+        ],
+        '/ws'
+      );
+
+      expect(results['libs/a:lint'].success).toBe(false);
+      expect(results['libs/b:lint'].success).toBe(false);
+      expect(results['libs/c:lint'].success).toBe(true);
+    }
+  );
+
   it('should interpolate lintFilePatterns and normalize reported filenames', () => {
     mockRunOxlint.mockReturnValue({
       ok: true,

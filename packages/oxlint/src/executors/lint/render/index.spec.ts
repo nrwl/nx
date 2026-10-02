@@ -1,5 +1,9 @@
 import { renderDiagnostics } from './index';
-import { createFixtureWorkspace, diagnostics } from './fixtures.spec-util';
+import {
+  createFixtureWorkspace,
+  diagnostics,
+  filelessDiagnostic,
+} from './fixtures.spec-util';
 
 // picocolors decides on colors at import time, so an env var set in the test is too late.
 vi.mock('picocolors', async () => {
@@ -41,6 +45,19 @@ describe('renderDiagnostics', () => {
       Found 1 warning and 1 error.
       "
     `);
+  });
+
+  it('should render default without a code frame for a diagnostic with no file or rule', () => {
+    expect(
+      renderDiagnostics('default', [filelessDiagnostic], {
+        workspaceRoot,
+        agentMode: false,
+      })
+    ).toBe(
+      '\n  × There are suppressions that do not occur anymore.\n' +
+        '  help: Run `oxlint --prune-suppressions` to remove unused suppressions.\n' +
+        '\nFound 0 warnings and 1 error.\n'
+    );
   });
 
   it('should render default as agent one-liners in agent mode', () => {

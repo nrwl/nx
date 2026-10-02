@@ -12,17 +12,21 @@ export function renderGithub(
   const sources = new SourceCache(context.workspaceRoot);
   return diagnostics
     .map((d) => {
+      const level = d.severity === 'error' ? 'error' : 'warning';
+      const title = `title=${escapeProperty(d.code ?? 'oxlint')}`;
+      if (!d.filename) {
+        return `::${level} ${title}::${escapeData(d.message)}\n`;
+      }
       const span = d.labels[0]?.span;
       const { line, column } = position(d);
       const end = span ? sources.endOf(d.filename, span) : { line, column };
-      const level = d.severity === 'error' ? 'error' : 'warning';
       const props = [
         `file=${escapeProperty(d.filename)}`,
         `line=${line}`,
         `endLine=${end.line}`,
         `col=${column}`,
         `endColumn=${end.column}`,
-        `title=${escapeProperty(d.code)}`,
+        title,
       ].join(',');
       const message = escapeData(
         `${d.filename}:${line}:${column}: ${d.message}`

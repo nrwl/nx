@@ -39,7 +39,8 @@ describe('partitionDiagnostics', () => {
         },
         { taskId: 'b:lint', paths: ['libs/b'], excludedRoots: [] },
         { taskId: 'c:lint', paths: ['libs/c'], excludedRoots: [] },
-      ]
+      ],
+      []
     );
     expect([...byTask.keys()]).toEqual([
       'a:lint',
@@ -62,7 +63,8 @@ describe('partitionDiagnostics', () => {
       [
         { taskId: 'a:lint', paths: ['libs/a'], excludedRoots: [] },
         { taskId: 'ab:lint', paths: ['libs/ab'], excludedRoots: [] },
-      ]
+      ],
+      []
     );
     expect(byTask.get('a:lint')).toEqual([]);
     expect(byTask.get('ab:lint')).toHaveLength(1);
@@ -83,7 +85,8 @@ describe('partitionDiagnostics', () => {
           paths: ['libs/a/tools/t.ts'],
           excludedRoots: [],
         },
-      ]
+      ],
+      []
     );
     expect(byTask.get('id:lint').map((d) => d.filename)).toEqual([
       'app/[id]/page.ts',
@@ -91,12 +94,17 @@ describe('partitionDiagnostics', () => {
     expect(byTask.get('tool:lint')).toHaveLength(1);
   });
 
-  it('should drop a diagnostic no task owns', () => {
+  it("should give a diagnostic outside every task's paths to the outside owners", () => {
     const byTask = partitionDiagnostics(
       [diagnostic('tools/x.ts')],
-      [{ taskId: 'a:lint', paths: ['libs/a'], excludedRoots: [] }]
+      [
+        { taskId: 'a:lint', paths: ['libs/a'], excludedRoots: [] },
+        { taskId: 'b:lint', paths: ['libs/b'], excludedRoots: [] },
+      ],
+      ['b:lint']
     );
     expect(byTask.get('a:lint')).toEqual([]);
+    expect(byTask.get('b:lint')).toHaveLength(1);
   });
 });
 

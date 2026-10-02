@@ -6,8 +6,12 @@ export function renderAgent(diagnostics: OxlintDiagnostic[]): string {
   return diagnostics
     .map((d) => {
       const { line, column } = position(d);
+      const location = d.filename
+        ? `${d.filename}:${line}:${column}`
+        : '<unknown>';
+      const code = d.code ? ` ${d.code}` : '';
       const help = d.help ? ` help: ${d.help}` : '';
-      return `${d.filename}:${line}:${column}: ${d.severity} ${d.code}: ${d.message}${help}\n`;
+      return `${location}: ${d.severity}${code}: ${d.message}${help}\n`;
     })
     .join('');
 }

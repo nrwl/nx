@@ -60,9 +60,9 @@ export function runLintTasks(
   // One Oxlint process gets one flag set: the first task's. Format, --silent
   // and the warning thresholds still apply per task.
   const flags = resolved[0].options.flags;
-  const differing = resolved.find(
-    (r) => r.options.flags.join('\u0000') !== flags.join('\u0000')
-  );
+  const sharesRunFlags = (r: (typeof resolved)[number]) =>
+    r.options.flags.join('\u0000') === flags.join('\u0000');
+  const differing = resolved.find((r) => !sharesRunFlags(r));
   if (differing) {
     logger.warn(
       `[@nx/oxlint] ${differing.task.projectName} resolves different Oxlint options than ${resolved[0].task.projectName}. Oxlint runs once for the whole batch, using ${resolved[0].task.projectName}'s options.`
@@ -99,15 +99,22 @@ export function runLintTasks(
   }
 
   for (const diagnostic of run.report.diagnostics) {
-    diagnostic.filename = normalizeFilename(diagnostic.filename, workspaceRoot);
+    diagnostic.filename = normalizeFilename(
+      diagnostic.filename ?? '',
+      workspaceRoot
+    );
   }
+  // The tasks whose flags the run uses also own the diagnostics outside every
+  // task's paths: those for a path in the forwarded flags or a config file,
+  // and those with no file.
   const byTask = partitionDiagnostics(
     run.report.diagnostics,
     resolved.map((r) => ({
       taskId: r.task.taskId,
       paths: r.paths,
       excludedRoots: r.excludedRoots,
-    }))
+    })),
+    resolved.filter(sharesRunFlags).map((r) => r.task.taskId)
   );
   const agentMode = !!isCI() || isAiAgent();
 

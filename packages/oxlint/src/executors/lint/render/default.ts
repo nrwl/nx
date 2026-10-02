@@ -3,10 +3,10 @@ import type { OxlintDiagnostic, OxlintSpan } from '../run-oxlint.js';
 import { position, SourceCache, type RenderContext } from './shared.js';
 
 /**
- * Oxlint's terminal report: a code frame per diagnostic with one line of
- * context either side, the span underlined, and the label and `help` text
- * below. Source lines come from disk since the JSON report carries offsets
- * only, so a run with no diagnostics reads nothing.
+ * Oxlint's terminal report: a code frame per diagnostic with a file, with one
+ * line of context either side, the span underlined, and the label and `help`
+ * text below. Source lines come from disk since the JSON report carries no
+ * source text, so a run with no diagnostics reads nothing.
  */
 export function renderGraphical(
   diagnostics: OxlintDiagnostic[],
@@ -18,31 +18,34 @@ export function renderGraphical(
     const isError = d.severity === 'error';
     const paint = isError ? pc.red : pc.yellow;
     const { line, column } = position(d);
-    out += `\n  ${paint(isError ? '×' : '⚠')} ${paint(d.code)}: ${d.message}\n`;
-    out += `   ${pc.dim(`╭─[${d.filename}:${line}:${column}]`)}\n`;
+    const code = d.code ? `${paint(d.code)}: ` : '';
+    out += `\n  ${paint(isError ? '×' : '⚠')} ${code}${d.message}\n`;
+    if (d.filename) {
+      out += `   ${pc.dim(`╭─[${d.filename}:${line}:${column}]`)}\n`;
 
-    const lines = sources.lines(d.filename);
-    const span = d.labels[0]?.span;
-    if (lines && span) {
-      const first = Math.max(1, line - 1);
-      const last = Math.min(lines.length, line + 1);
-      const width = String(last).length;
-      for (let n = first; n <= last; n++) {
-        const text = lines[n - 1];
-        out += ` ${pc.dim(String(n).padStart(width))} ${pc.dim('│')}${text ? ` ${text}` : ''}\n`;
-        if (n === line) {
-          out += underline(
-            width,
-            column,
-            span,
-            lines[n - 1],
-            d.labels[0].label,
-            paint
-          );
+      const lines = sources.lines(d.filename);
+      const span = d.labels[0]?.span;
+      if (lines && span) {
+        const first = Math.max(1, line - 1);
+        const last = Math.min(lines.length, line + 1);
+        const width = String(last).length;
+        for (let n = first; n <= last; n++) {
+          const text = lines[n - 1];
+          out += ` ${pc.dim(String(n).padStart(width))} ${pc.dim('│')}${text ? ` ${text}` : ''}\n`;
+          if (n === line) {
+            out += underline(
+              width,
+              column,
+              span,
+              lines[n - 1],
+              d.labels[0].label,
+              paint
+            );
+          }
         }
       }
+      out += `   ${pc.dim('╰────')}\n`;
     }
-    out += `   ${pc.dim('╰────')}\n`;
     if (d.help) {
       out += `  ${pc.cyan('help')}: ${d.help}\n`;
     }

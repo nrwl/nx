@@ -31,6 +31,15 @@ export const diagnostics: OxlintDiagnostic[] = [
   },
 ];
 
+// Captured from `oxlint --format=json` 1.77.0 with a stale suppressions file.
+export const filelessDiagnostic: OxlintDiagnostic = {
+  message: 'There are suppressions that do not occur anymore.',
+  severity: 'error',
+  filename: '',
+  labels: [],
+  help: 'Run `oxlint --prune-suppressions` to remove unused suppressions.',
+};
+
 /** A workspace holding the fixture source, for renderers that read files. */
 export function createFixtureWorkspace(): string {
   const workspaceRoot = mkdtempSync(join(tmpdir(), 'oxlint-render-'));
