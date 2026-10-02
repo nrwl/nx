@@ -96,6 +96,10 @@ export async function resetHandler(args: ResetCommandOptions) {
   if ((cloudEnabled && all) || args.onlyCloud) {
     try {
       await resetCloudClient();
+    } catch (e) {
+      errors.push('Failed to clean up the Nx Cloud client.', e.toString());
+    }
+    try {
       await removeInstalledNxCloudClient();
     } catch (e) {
       errors.push('Failed to reset the Nx Cloud client.', e.toString());
@@ -136,9 +140,8 @@ function cleanupDaemonWorkspaceData() {
 async function resetCloudClient() {
   // Remove nx cloud marker files. This helps if the use happens to run `nx-cloud start-ci-run` or
   // similar commands on their local machine.
-  try {
-    (await getCloudClient(getCloudOptions())).invoke('cleanup');
-  } catch {}
+  // `exit` would end the process here, before reset reports its result.
+  await (await getCloudClient(getCloudOptions())).invoke('cleanup', false);
 }
 
 function removeInstalledNxCloudClient() {

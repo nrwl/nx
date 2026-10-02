@@ -20,7 +20,7 @@ export async function getCloudClient(options: CloudTaskRunnerOptions) {
   return {
     invoke: (command: string, exit = true) => {
       if (command in nxCloudClient.commands) {
-        nxCloudClient.commands[command]()
+        return nxCloudClient.commands[command]()
           .then(() => {
             if (exit) {
               process.exit(0);
