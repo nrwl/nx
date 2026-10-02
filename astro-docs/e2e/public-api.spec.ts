@@ -39,4 +39,11 @@ test('renders the reference with usable schema links and a Markdown export', asy
   expect(body).toContain('## Endpoint reference');
   expect(body).toContain('API version:');
   expect(body).toContain('Other response codes:');
+  expect(body).toContain('/docs/kb/migrate-public-api-to-v1');
+
+  const fullMarkdown = await request.get('/docs/llms-full.txt');
+  expect(fullMarkdown.ok()).toBe(true);
+  expect(await fullMarkdown.text()).toContain(
+    '/docs/reference/nx-cloud/public-api.md -->'
+  );
 });
