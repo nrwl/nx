@@ -575,4 +575,21 @@ describe('formatAffectedExplanation', () => {
       'Touching those tasks changes outputs read by 1 e2e-ci task.'
     );
   });
+
+  it('emphasizes your targets where a count names them, when given a style', () => {
+    const reason = [{ kind: 'input-file' as const, file: 'a.ts' }];
+    const ids = ['a', 'b', 'c', 'd', 'e', 'f'].map((p) => `${p}:build`);
+    const out = formatAffectedExplanation(
+      {
+        affected: { 'z:test': reason },
+        upstream: Object.fromEntries(ids.map((id) => [id, reason])),
+        touched: [...ids, 'z:test'],
+        requested: { targets: ['test'], total: 1 },
+      },
+      'Affected tasks',
+      { bold: (text) => `**${text}**` }
+    );
+    expect(out).toContain('touches 1 **test** task and 6 tasks it depends on');
+    expect(out).toContain('- and 2 more tasks the **test** tasks depend on');
+  });
 });

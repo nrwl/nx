@@ -143,12 +143,15 @@ export function formatAffectedExplanation(
     verbose = false,
     styleTask = (id: string) => id,
     dim = (text: string) => text,
+    bold = (text: string) => text,
   }: {
     verbose?: boolean;
     /** Styles a listed task id; plain unless the printer passes a style. */
     styleTask?: (id: string, requested: boolean) => string;
     /** Styles the secondary part of a line, such as a matched pattern. */
     dim?: (text: string) => string;
+    /** Styles the targets you asked for where a count names them. */
+    bold?: (text: string) => string;
   } = {}
 ): string {
   const names = Object.keys(affected).sort();
@@ -195,7 +198,7 @@ export function formatAffectedExplanation(
       .filter(([, count]) => count)
       .map(
         ([target, count]) =>
-          `${count} ${more}${target} ${count === 1 ? 'task' : 'tasks'}`
+          `${count} ${more}${bold(target)} ${count === 1 ? 'task' : 'tasks'}`
       );
     // Named as the run summary names them: the tasks yours depend on.
     if (rest) {
@@ -203,7 +206,7 @@ export function formatAffectedExplanation(
         ? mine === 1
           ? 'it depends on'
           : 'they depend on'
-        : `the ${listed(targets.length ? targets : ['requested'])} tasks depend on`;
+        : `the ${listed((targets.length ? targets : ['requested']).map(bold))} tasks depend on`;
       parts.push(
         `${rest} ${mine ? '' : more}${rest === 1 ? 'task' : 'tasks'} ${whose}`
       );

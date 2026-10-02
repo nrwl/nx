@@ -33,6 +33,7 @@ export function printAffectedExplanation(
     ...options,
     styleTask,
     dim: pc.dim,
+    bold: pc.bold,
   });
   if (!Object.keys(explanation.affected).length) {
     output.log({ title: rendered });
