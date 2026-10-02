@@ -801,11 +801,13 @@ export class TaskOrchestrator {
   /**
    * Hash all batch tasks and resolve cache hits topologically.
    *
-   * Walks the task graph level by level. Every task gets a preliminary hash
-   * (so startTasks always has a valid hash for Cloud). Tasks the up-front
-   * pass deferred, with an upstream batch task whose outputs are still to be
-   * written, are ineligible for cache lookup but still
-   * receive a preliminary hash — they'll be re-hashed after execution.
+   * Walks the task graph level by level. A deferred task (its hash reads
+   * another task's outputs) behind an upstream batch task that still has to
+   * run is never looked up yet:
+   * - behind a non-cacheable task only, it waits for the next wave, where it
+   *   hashes after that task ran;
+   * - behind a cache miss, it runs in this wave and re-hashes after execution.
+   * Every task run in this wave gets a hash first, for Cloud's startTasks.
    */
   private async applyBatchCachedResults(
     batch: Batch,
@@ -814,41 +816,63 @@ export class TaskOrchestrator {
   ): Promise<{
     cachedResults: TaskResult[];
     needsRehashAfterExecution: Set<string>;
+    nextWave: Set<string>;
   }> {
     const cachedResults: TaskResult[] = [];
     const needsRehashAfterExecution = new Set<string>();
+    const nextWave = new Set<string>();
     const tasks = Object.values(batch.taskGraph.tasks);
 
     if (!doNotSkipCache) {
       // Cache skipped — just hash so startTasks has valid hashes
       await this.hashBatchTasks(tasks);
-      return { cachedResults, needsRehashAfterExecution };
+      return { cachedResults, needsRehashAfterExecution, nextWave };
     }
 
     const nonCachedTaskIds = new Set<string>();
-    // Tasks with a batch task upstream that has yet to write its outputs. A
-    // task declaring no outputs (e.g. a non-cacheable install) writes none.
-    const awaitingOutputs = new Set<string>();
+    // Tasks with a cache miss / a non-cacheable task upstream that still has
+    // to run in this wave.
+    const behindMiss = new Set<string>();
+    const behindUncacheable = new Set<string>();
 
     await walkTaskGraph(batch.taskGraph, async (rootTaskIds) => {
-      const rootTasks = rootTaskIds.map((id) => batch.taskGraph.tasks[id]);
+      const toHash: Task[] = [];
+      const runWithoutLookup = new Set<string>();
+      for (const id of rootTaskIds) {
+        const task = batch.taskGraph.tasks[id];
+        const depIds = batch.taskGraph.dependencies[id].map((dep) => dep.id);
+        if (depIds.some((dep) => nextWave.has(dep))) {
+          nextWave.add(id);
+          continue;
+        }
+        const pending = (dep: string, cacheable: boolean) =>
+          nonCachedTaskIds.has(dep) &&
+          !!batch.taskGraph.tasks[dep].cache === cacheable;
+        const afterMiss = depIds.some(
+          (dep) => behindMiss.has(dep) || pending(dep, true)
+        );
+        const afterUncacheable = depIds.some(
+          (dep) => behindUncacheable.has(dep) || pending(dep, false)
+        );
+        if (afterMiss) behindMiss.add(id);
+        if (afterUncacheable) behindUncacheable.add(id);
 
-      await this.hashBatchTasks(rootTasks);
+        if (this.deferredTaskIds?.has(id)) {
+          if (afterMiss) {
+            runWithoutLookup.add(id);
+          } else if (afterUncacheable) {
+            nextWave.add(id);
+            continue;
+          }
+        }
+        toHash.push(task);
+      }
+
+      await this.hashBatchTasks(toHash);
 
       const eligible: Task[] = [];
-      for (const task of rootTasks) {
-        const depIds = batch.taskGraph.dependencies[task.id].map(({ id }) => id);
-        const awaits = depIds.some(
-          (id) =>
-            awaitingOutputs.has(id) ||
-            (nonCachedTaskIds.has(id) &&
-              batch.taskGraph.tasks[id].outputs?.length > 0)
-        );
-        if (awaits) {
-          awaitingOutputs.add(task.id);
-        }
-
-        if (awaits && this.deferredTaskIds?.has(task.id)) {
+      for (const task of toHash) {
+        if (runWithoutLookup.has(task.id)) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
         } else {
@@ -879,7 +903,7 @@ export class TaskOrchestrator {
       }
     });
 
-    return { cachedResults, needsRehashAfterExecution };
+    return { cachedResults, needsRehashAfterExecution, nextWave };
   }
 
   private async hashBatchTasks(tasks: Task[]): Promise<void> {
@@ -917,12 +941,14 @@ export class TaskOrchestrator {
       taskIds: Object.keys(batch.taskGraph.tasks),
     });
 
-    const { cachedResults, needsRehashAfterExecution } =
+    const { cachedResults, needsRehashAfterExecution, nextWave } =
       await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
 
     // Cached tasks were started and completed inside applyBatchCachedResults;
     // a member skipped meanwhile (a dependency failed) must not run either
-    const nonCachedTasks = tasks.filter((t) => !this.completedTasks.has(t.id));
+    const nonCachedTasks = tasks.filter(
+      (t) => !this.completedTasks.has(t.id) && !nextWave.has(t.id)
+    );
     if (nonCachedTasks.length > 0) {
       await Promise.all(
         nonCachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
@@ -935,7 +961,7 @@ export class TaskOrchestrator {
 
     // Read again: a member can be skipped while the hooks above ran
     const taskIdsToSkip = tasks
-      .filter((t) => this.completedTasks.has(t.id))
+      .filter((t) => this.completedTasks.has(t.id) || nextWave.has(t.id))
       .map((t) => t.id);
     if (taskIdsToSkip.length < tasks.length) {
       const runGraph = removeTasksFromTaskGraph(batch.taskGraph, taskIdsToSkip);
@@ -993,8 +1019,12 @@ export class TaskOrchestrator {
       this.completedTasks.has(taskId)
     );
 
-    // Batch is still not done, run it again
-    if (tasksCompleted.length !== taskEntries.length) {
+    // Batch is still not done (e.g. a next wave), run it again
+    if (
+      tasksCompleted.length !== taskEntries.length &&
+      !this.bailed &&
+      !this.stopRequested
+    ) {
       await this.applyFromCacheOrRunBatch(
         doNotSkipCache,
         {
