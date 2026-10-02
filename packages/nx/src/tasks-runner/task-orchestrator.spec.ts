@@ -1369,6 +1369,29 @@ describe('TaskOrchestrator', () => {
       expect(tracker.unregisterTask).toHaveBeenCalledTimes(1);
       expect(orchestrator.registeredInvocations.size).toBe(0);
     });
+
+    it('should complete a task whose database is unavailable from registration through completion', async () => {
+      const unavailable = () => {
+        throw new Error('database is locked');
+      };
+      const tracker = {
+        registerTask: vi.fn(unavailable),
+        unregisterTask: vi.fn(unavailable),
+      };
+      const orchestrator = createOrchestrator(tracker);
+      orchestrator.completedTasks = new Map();
+      orchestrator.tuiEnabled = false;
+      orchestrator.tasksSchedule = { complete: vi.fn() };
+      orchestrator.options = { lifeCycle: { endTasks: vi.fn(async () => {}) } };
+
+      orchestrator.detectTaskInvocationLoop(task);
+      await expect(
+        orchestrator.completeTasks([{ task, status: 'success' }], 0)
+      ).resolves.toBeUndefined();
+
+      expect(orchestrator.completedTasks.get(task.id)).toBe('success');
+      expect(tracker.unregisterTask).not.toHaveBeenCalled();
+    });
   });
 
   describe('process listener lifecycle', () => {
