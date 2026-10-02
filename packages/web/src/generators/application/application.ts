@@ -93,6 +93,7 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         tmpl: '',
         offsetFromRoot: rootOffset,
         rootTsConfigPath,
+        devServerPort: options.port ?? 4200,
         webpackPluginOptions: hasWebpackPlugin(tree)
           ? {
               compiler: options.compiler,
@@ -184,6 +185,12 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       addPlugin: options.addPlugin,
     });
     const project = readProjectConfiguration(tree, options.projectName);
+    // Only when asked: @nx/webpack:dev-server already defaults to 4200.
+    if (options.port != null && project.targets?.serve) {
+      project.targets.serve.options ??= {};
+      project.targets.serve.options.port = options.port;
+      updateProjectConfiguration(tree, options.projectName, project);
+    }
     if (project.targets?.build) {
       const prodConfig = project.targets.build.configurations.production;
       const buildOptions = project.targets.build.options;
@@ -391,6 +398,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       addPlugin: options.addPlugin,
+      port: options.port,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -400,6 +408,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: false,
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
+        port: options.port,
+        previewPort: options.port,
         useEsmExtension: true,
       },
       false
@@ -468,18 +478,19 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     await staticServeConfiguration(host, {
       buildTarget: `${options.projectName}:build`,
       spa: true,
+      port: options.port,
     });
   }
 
   let e2eWebServerInfo: E2EWebServerDetails = {
-    e2eWebServerAddress: `http://localhost:4200`,
+    e2eWebServerAddress: `http://localhost:${options.port ?? 4200}`,
     e2eWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
       options.projectName
     }:serve`,
     e2eCiWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
       options.projectName
     }:serve-static`,
-    e2eCiBaseUrl: `http://localhost:4200`,
+    e2eCiBaseUrl: `http://localhost:${options.port ?? 4200}`,
     e2eDevServerTarget: `${options.projectName}:serve`,
   };
 
@@ -492,10 +503,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       options.projectName,
       joinPathFragments(options.appProjectRoot, `webpack.config.js`),
       options.addPlugin,
-      // This generator has no `port` option, so there is never an explicit request
-      // to pass on. The helper defaults to 4200 itself, and leaving this undefined
-      // is what lets targetDefaults still apply.
-      undefined
+      // Undefined unless --port was passed, so targetDefaults still apply.
+      options.port
     );
   } else if (options.bundler === 'vite') {
     const { getViteE2EWebServerInfo } = ensurePackage<
@@ -506,7 +515,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       options.projectName,
       joinPathFragments(options.appProjectRoot, `vite.config.ts`),
       options.addPlugin,
-      4200
+      options.port ?? 4200,
+      // An explicit port serves both dev and preview, as in @nx/react:app.
+      options.port
     );
   }
 

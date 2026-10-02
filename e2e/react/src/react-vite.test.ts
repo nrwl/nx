@@ -87,7 +87,7 @@ describe('Build React applications and libraries with Vite', () => {
         verbose: true,
       });
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPorts(customPort)).toBeTruthy();
     }
   }, 300_000);
 
