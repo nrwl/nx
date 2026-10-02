@@ -404,6 +404,19 @@ You can reference named inputs from specific projects or from project dependenci
 
 The `projects` property can be a string or an array of strings specifying which project(s) to reference the named input from. Using just the string name (e.g., `"production"`) is shorthand for referencing the named input from the current project. Prefixing with `^` (e.g., `"^production"`) references the named input from all project dependencies.
 
+Add `"dependencies": true` to a `projects` input to reference the named input from the dependencies of those projects.
+For each listed project, these are the files its own `^production` covers.
+The listed projects themselves don't count, so pair it with the plain form to cover a project and everything it depends on:
+
+```jsonc
+{
+  "inputs": [
+    { "input": "production", "projects": "myapp" },
+    { "input": "production", "projects": "myapp", "dependencies": true },
+  ],
+}
+```
+
 {% aside type="note" title="^ with filesets vs named inputs" %}
 The `^` prefix behaves differently depending on what follows it:
 

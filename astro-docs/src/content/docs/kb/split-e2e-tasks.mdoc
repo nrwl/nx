@@ -504,6 +504,12 @@ Add the test file's task to `project.json` under its name, with two changes to t
           "projects": ["checkout", "checkout-utils"],
           "always": true,
         },
+        {
+          "input": "production",
+          "projects": ["checkout", "checkout-utils"],
+          "dependencies": true,
+          "always": true,
+        },
         { "externalDependencies": ["cypress"] },
       ],
       "dependsOn": [
@@ -514,7 +520,7 @@ Add the test file's task to `project.json` under its name, with two changes to t
 }
 ```
 
-- `^production` becomes an input that selects only the listed projects. With `"always": true`, [ultracache keeps their files in the hash](/docs/reference/inputs#inputs-kept-under-ultracache).
+- `^production` becomes two inputs. The first selects the listed projects, and the second, with `"dependencies": true`, selects the projects they depend on. With `"always": true`, [ultracache keeps their files in the hash](/docs/reference/inputs#inputs-kept-under-ultracache).
 - The dependency on the web server task sets [`"inputs": false`](/docs/reference/inputs#inputs-of-continuous-dependencies), so the server's inputs stop counting.
 
 `inputs` and `dependsOn` in `project.json` replace the arrays the plugin infers, so list every entry you keep.
@@ -524,7 +530,7 @@ The task name comes from the test file's path. When you move or rename the file,
 
 ### Scope a task with a comment in the test file
 
-For Cypress and Playwright atomized tasks, you can name the projects in an `@nx-depends-on` comment at the top of the test file instead:
+For Cypress, Playwright, and Jest atomized tasks, you can name the projects in an `@nx-depends-on` comment at the top of the test file instead:
 
 ```ts
 // apps/shop-e2e/src/e2e/checkout.cy.ts
@@ -539,15 +545,16 @@ The scope moves with the test file, and a new test file opts in with its own com
 Nx reads the comment from the comment block at the top of the file and stops at the first line of code.
 A comment without projects is an error.
 When Playwright starts the web server itself, there's no server task, so only the inputs change.
+Jest atomized tasks have no server task either, so only their inputs change.
 Test files without the comment keep the inferred configuration.
 
 ### What counts after scoping
 
 These rules apply to both ways of scoping:
 
-- Only the listed projects count as dependency inputs, not the projects they depend on.
+- The listed projects and the projects they depend on count as dependency inputs.
 - The task keeps its other declared inputs, such as `default` and any shared globs it includes.
 - Under ultracache, the files the test read during its recorded run replace the declared file inputs, except the `always` ones.
 - A change outside the remaining inputs leaves the task's hash unchanged, so Nx replays the cached result.
-- A listed name that matches no project is an error, but a missing project goes unnoticed, so list every project the test relies on.
+- A listed name that matches no project is an error. A project left off the list goes unnoticed unless a listed project depends on it, so list every project the test exercises.
 - With `NX_LEGACY_AFFECTED=false`, `nx affected` selects the task by these inputs. Without it, `nx affected` selects whole projects.
