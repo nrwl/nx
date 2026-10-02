@@ -77,7 +77,8 @@ exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert wi
     "serve": {
       "executor": "@nx/webpack:dev-server",
       "options": {
-        "buildTarget": "app3224373:build"
+        "buildTarget": "app3224373:build",
+        "port": <port>
       },
       "configurations": {
         "production": {
@@ -100,7 +101,8 @@ exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert wi
       "dependsOn": ["build"],
       "options": {
         "buildTarget": "app3224373:build",
-        "spa": true
+        "spa": true,
+        "port": <port>
       }
     }
   }

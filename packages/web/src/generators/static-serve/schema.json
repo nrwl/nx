@@ -23,6 +23,10 @@
       "type": "boolean",
       "description": "Whether to set the 'spa' flag on the generated target.",
       "default": true
+    },
+    "port": {
+      "type": "number",
+      "description": "The port to serve on. Defaults to 4200."
     }
   },
   "required": ["buildTarget"]
