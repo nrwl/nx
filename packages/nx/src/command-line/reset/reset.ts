@@ -16,6 +16,7 @@ import { getCloudClient } from '../../nx-cloud/utilities/client';
 import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { readNxJson } from '../../config/configuration';
+import { removeDbConnections } from '../../utils/db-connection';
 import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
 
 // Wait at max 5 seconds before giving up on a failing operation.
@@ -192,6 +193,8 @@ function cleanupWorkspaceData() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
+      // Analytics opened the DB at startup; Windows cannot delete an open file.
+      removeDbConnections();
       rmSync(workspaceDataDirectory, { recursive: true, force: true });
 
       // Also clean wherever the DB actually lives, which is outside this
