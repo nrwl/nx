@@ -234,6 +234,72 @@ describe('TaskOrchestrator', () => {
       expect(hashesAtCacheTime['reader:build']).toBe('reader:build|call-3');
     });
 
+    async function runBatch(
+      deps: Record<string, string[]>,
+      opts: { deferred: string[]; cached?: string[]; noOutputs?: string[] }
+    ) {
+      const tasks = Object.fromEntries(
+        Object.keys(deps).map((id) => {
+          const task = createTask(id);
+          if (opts.noOutputs?.includes(id)) task.outputs = [];
+          return [id, task];
+        })
+      );
+      const taskGraph: TaskGraph = {
+        roots: Object.keys(deps).filter((id) => deps[id].length === 0),
+        tasks,
+        dependencies: deps,
+        continuousDependencies: Object.fromEntries(
+          Object.keys(deps).map((id) => [id, []])
+        ),
+      };
+      const { orchestrator } = createOrchestrator(
+        taskGraph,
+        new Set(opts.deferred)
+      );
+      orchestrator.applyCachedResults = vi.fn(async (ts: Task[]) =>
+        ts
+          .filter((t) => opts.cached?.includes(t.id))
+          .map((task) => ({ task, status: 'local-cache', code: 0 }))
+      );
+
+      await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      return orchestrator.applyCachedResults.mock.calls.flatMap(
+        ([ts]: [Task[]]) => ts.map((t: Task) => t.id)
+      );
+    }
+
+    it('should look up a deferred task whose pending deps declare no outputs', async () => {
+      const lookedUp = await runBatch(
+        { 'dep:install': [], 'reader:build': ['dep:install'] },
+        { deferred: ['reader:build'], noOutputs: ['dep:install'] }
+      );
+
+      expect(lookedUp).toEqual(['dep:install', 'reader:build']);
+    });
+
+    it('should not look up a deferred task while a producer further upstream has yet to run', async () => {
+      const lookedUp = await runBatch(
+        {
+          'dep:build': [],
+          'dep:install': ['dep:build'],
+          'reader:build': ['dep:install'],
+        },
+        {
+          deferred: ['reader:build'],
+          cached: ['dep:install'],
+          noOutputs: ['dep:install'],
+        }
+      );
+
+      expect(lookedUp).toEqual(['dep:build', 'dep:install']);
+    });
+
     it('should look up a task the up-front pass did not defer', async () => {
       const { lookedUp, hasher } = await runReaderBatch(new Set());
 
