@@ -239,7 +239,7 @@ describe('formatAffectedExplanation', () => {
 
   // A refactor or a dependency bump would otherwise print a line per file or
   // package under every task.
-  it('names the first file or package and counts the rest', () => {
+  it('names every file, and the first package with a count', () => {
     const files = ['a.ts', 'b.ts', 'c.ts', 'd.ts', 'e.ts'].map(
       (f) => `libs/ui/${f}`
     );
@@ -266,16 +266,15 @@ describe('formatAffectedExplanation', () => {
       { verbose: true }
     );
     expect(out).toContain(
-      '    - libs/ui/a.ts and 4 other files match libs/ui/**/*'
+      '    - libs/ui/a.ts, libs/ui/b.ts, libs/ui/c.ts, libs/ui/d.ts and libs/ui/e.ts match libs/ui/**/*'
     );
     expect(out).toContain('    - tsconfig.base.json matches an input');
     expect(out).toContain(
       '    - depends on npm:a and 3 other packages, whose versions change'
     );
-    expect(out).not.toMatch(/ - .*libs\/ui\/b\.ts/);
   });
 
-  it('names the first producer read and counts the rest', () => {
+  it('names every producer read', () => {
     const out = formatAffectedExplanation(
       {
         affected: {
@@ -292,12 +291,11 @@ describe('formatAffectedExplanation', () => {
       { verbose: true }
     );
     expect(out).toContain(
-      '    - reads the outputs of web:build and 2 other tasks'
+      '    - reads the outputs of web:build, web:build-base and webpack:build'
     );
-    expect(out).not.toContain('web:build-base');
   });
 
-  it('keeps a single match on its own line, and counts one other', () => {
+  it('names one match, or two', () => {
     const match = (f: string) => ({
       kind: 'input-file' as const,
       file: `libs/ui/${f}`,
@@ -317,7 +315,7 @@ describe('formatAffectedExplanation', () => {
       /- libs\/ui\/a\.ts matches libs\/ui\/\*\*\/\*$/
     );
     expect(explain(['a.ts', 'b.ts'])).toContain(
-      '    - libs/ui/a.ts and 1 other file match libs/ui/**/*'
+      '    - libs/ui/a.ts and libs/ui/b.ts match libs/ui/**/*'
     );
   });
 

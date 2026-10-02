@@ -331,11 +331,9 @@ export function formatAffectedExplanation(
 }
 
 /**
- * One line per reason, except that files matching one input, moved packages,
- * or producers read, share a line naming the first and counting the rest: a
- * refactor or a dependency bump would otherwise print a line per file under
- * every task. The JSON keeps them all.
- * The JSON keeps them all.
+ * One line per reason, with files matching one input, or producers read,
+ * sharing a line that names them all. Moved packages name the first and count
+ * the rest: a dependency bump can move thousands. The JSON keeps them all.
  */
 function reasonLines(
   reasons: AffectedReason[],
@@ -407,16 +405,14 @@ function reasonLines(
     switch (first.kind) {
       case 'input-file':
         lines.push(
-          `${first.file} and ${others} other ${
-            others === 1 ? 'file' : 'files'
-          } match ${first.pattern ?? 'an input'}`
+          `${listed(group.map((r) => r.file).sort())} match ${
+            first.pattern ?? 'an input'
+          }`
         );
         break;
       case 'dependent-output':
         lines.push(
-          `reads the outputs of ${first.producer} and ${others} other ${
-            others === 1 ? 'task' : 'tasks'
-          }`
+          `reads the outputs of ${listed(group.map((r) => r.producer).sort())}`
         );
         break;
       case 'npm-package':
@@ -429,11 +425,9 @@ function reasonLines(
       default: {
         // The same reason for several files: name them in one.
         const files = group.map((r) => r.file ?? '').sort();
-        const joined =
-          files.length === 2
-            ? `${files[0]} and ${files[1]}`
-            : `${files[0]} and ${files.length - 1} other files`;
-        lines.push(formatAffectedReason({ ...first, file: joined }, true));
+        lines.push(
+          formatAffectedReason({ ...first, file: listed(files) }, true)
+        );
       }
     }
   }
