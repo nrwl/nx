@@ -106,6 +106,7 @@ export async function affected(
       extraTargetDependencies,
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
       exclude: nxArgs.exclude,
+      explain: isExplaining(nxArgs.explain),
       ...(await runnerInputsForSelection(nxArgs, nxJson)),
     }));
     // --explain reports the selection rather than acting on it: someone asking

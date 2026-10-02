@@ -11,7 +11,7 @@ use tracing::{debug, trace};
 use super::changed_contents::{ChangedContents, FileRevisions};
 use super::dependency_closure::dependency_closure;
 use super::dependent_outputs::compute_dependent_output_edges;
-use super::touched::{ChangedExternals, TaskInputMatches, compute_input_matches};
+use super::touched::{ChangedExternals, InputMatches, TaskInputMatches, compute_input_matches};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::types::{HashPlans, TaskGraph};
@@ -47,6 +47,8 @@ pub struct AffectedTasksOptions {
     /// The runner's `selectivelyHashTsConfig`: a task hashes only its own
     /// project's tsconfig `paths` entries, rather than none.
     pub selectively_hash_ts_config: bool,
+    /// Whether to return why each task was reached, for `--explain`.
+    pub explain: bool,
 }
 
 #[napi(object)]
@@ -55,8 +57,8 @@ pub struct AffectedTaskSelection {
     pub affected: Vec<String>,
     /// `affected` plus everything it depends on, sorted: what a run keeps.
     pub required: Vec<String>,
-    /// Why the change reached each task.
-    pub explanation: AffectedTaskExplanation,
+    /// Why the change reached each task. Only when `explain` was asked for.
+    pub explanation: Option<AffectedTaskExplanation>,
 }
 
 /// Why the change reached each task. Covers every task it reached, not just
@@ -70,9 +72,11 @@ pub struct AffectedTaskExplanation {
     pub producers_of: HashMap<String, Vec<String>>,
     /// Changed project configs no longer on disk. Every task was seeded for them.
     pub deleted_project_configs: Vec<String>,
-    /// Per reached task, the changed files and moved packages among its inputs.
-    #[napi(ts_type = "Record<string, TaskInputMatches>")]
-    pub input_matches: HashMap<String, TaskInputMatches>,
+    /// What each matching plan instruction matched. Shared rather than copied
+    /// per task: one lib's fileset can be in the plan of every dependent.
+    pub input_matches: Vec<TaskInputMatches>,
+    /// Per reached task, the indexes of the matches above that its plan holds.
+    pub task_input_matches: HashMap<String, Vec<u32>>,
 }
 
 #[napi]
@@ -116,13 +120,14 @@ pub(crate) fn compute_affected_task_selection(
         changed_files,
         options.selectively_hash_ts_config,
     );
-    let mut input_matches = compute_input_matches(
+    let input_matches = compute_input_matches(
         graph,
         hash_plans,
         changed_files,
         &configs,
         &externals,
         &contents,
+        options.explain,
     )?;
     let matches_duration = matches_start.elapsed();
 
@@ -133,7 +138,7 @@ pub(crate) fn compute_affected_task_selection(
         touched,
         producers_of,
     } = if deleted.is_empty() {
-        reached_by_change(hash_plans, task_graph, &input_matches, options)
+        reached_by_change(hash_plans, task_graph, &input_matches.by_task, options)
     } else {
         debug!("a project config was deleted, so every task is affected");
         Reached {
@@ -143,9 +148,14 @@ pub(crate) fn compute_affected_task_selection(
         }
     };
     reached.sort_unstable();
-    let explanation = explain(reached.as_slice(), touched, producers_of, deleted, {
-        input_matches.retain(|id, _| reached.binary_search(id).is_ok());
-        input_matches
+    let explanation = options.explain.then(|| {
+        explain(
+            reached.as_slice(),
+            touched,
+            producers_of,
+            deleted,
+            input_matches,
+        )
     });
 
     let excluded: HashSet<&str> = options
@@ -199,7 +209,7 @@ fn explain(
     touched: HashSet<String>,
     producers_of: HashMap<String, Vec<String>>,
     deleted_project_configs: Vec<String>,
-    input_matches: HashMap<String, TaskInputMatches>,
+    InputMatches { table, mut by_task }: InputMatches,
 ) -> AffectedTaskExplanation {
     let is_reached = |id: &String| reached.binary_search(id).is_ok();
     let producers_of = producers_of
@@ -214,11 +224,13 @@ fn explain(
         .collect();
     let mut touched: Vec<String> = touched.into_iter().collect();
     touched.sort_unstable();
+    by_task.retain(|id, _| is_reached(id));
     AffectedTaskExplanation {
         touched,
         producers_of,
         deleted_project_configs,
-        input_matches,
+        input_matches: table,
+        task_input_matches: by_task,
     }
 }
 
@@ -227,7 +239,7 @@ fn explain(
 fn reached_by_change(
     hash_plans: &HashPlans,
     task_graph: &TaskGraph,
-    input_matches: &HashMap<String, TaskInputMatches>,
+    input_matches: &HashMap<String, Vec<u32>>,
     options: &AffectedTasksOptions,
 ) -> Reached {
     let touched: HashSet<String> = input_matches
@@ -365,7 +377,15 @@ mod tests {
             targets: strings(&["build", "serve", "e2e"]),
             revisions: None,
             selectively_hash_ts_config: false,
+            explain: true,
         }
+    }
+
+    /// The matches the explanation records for `task`, when it holds one entry.
+    fn only_match<'e>(e: &'e AffectedTaskExplanation, task: &str) -> &'e TaskInputMatches {
+        let indexes = &e.task_input_matches[task];
+        assert_eq!(indexes.len(), 1, "{task} holds one matching instruction");
+        &e.input_matches[indexes[0] as usize]
     }
 
     /// A changed config is matched against the plugin globs here, so the plan's ProjectConfiguration fires.
@@ -956,14 +976,15 @@ mod tests {
             &options,
         )
         .unwrap()
-        .explanation;
+        .explanation
+        .unwrap();
 
         assert_eq!(
             e.producers_of,
             HashMap::from([("app:build".to_string(), strings(&["app:prebuild"]))])
         );
-        assert_eq!(e.input_matches["app:prebuild"].files[0].file, "x.txt");
-        assert!(!e.input_matches.contains_key("app:build"));
+        assert_eq!(only_match(&e, "app:prebuild").files[0].file, "x.txt");
+        assert!(!e.task_input_matches.contains_key("app:build"));
         assert_eq!(e.touched, strings(&["app:prebuild"]));
         assert!(e.deleted_project_configs.is_empty());
     }
@@ -976,7 +997,8 @@ mod tests {
         let deleted = "packages/nx/does-not-exist/project.json";
         let e = compute_affected_task_selection(&g, &p, &tg, &strings(&[deleted]), &options(&[]))
             .unwrap()
-            .explanation;
+            .explanation
+            .unwrap();
         assert_eq!(e.deleted_project_configs, strings(&[deleted]));
     }
 
@@ -998,10 +1020,57 @@ mod tests {
             &options(&[]),
         )
         .unwrap()
-        .explanation;
+        .explanation
+        .unwrap();
         assert_eq!(
-            e.input_matches["b:build"].project_configs,
+            only_match(&e, "b:build").project_configs,
             strings(&["packages/nx/package.json"])
         );
+    }
+
+    /// Selection alone needs only which tasks matched, not why.
+    #[test]
+    fn the_explanation_is_built_only_when_asked_for() {
+        let p = hash_plans(&[("app:build", vec![reads_x()])]);
+        let tg = task_graph(&[("app:build", &[])], &[]);
+        let options = AffectedTasksOptions {
+            targets: strings(&["build"]),
+            explain: false,
+            ..options(&[])
+        };
+        let s = compute_affected_task_selection(
+            &graph(&[("app", "apps/app")]),
+            &p,
+            &tg,
+            &strings(&["x.txt"]),
+            &options,
+        )
+        .unwrap();
+        assert_eq!(s.affected, strings(&["app:build"]));
+        assert!(s.explanation.is_none());
+    }
+
+    /// Two tasks reaching the same instruction share one entry rather than a copy each.
+    #[test]
+    fn tasks_sharing_an_instruction_share_its_matches() {
+        let p = hash_plans(&[("a:build", vec![reads_x()]), ("b:build", vec![reads_x()])]);
+        let tg = task_graph(&[("a:build", &[]), ("b:build", &[])], &[]);
+        let options = AffectedTasksOptions {
+            targets: strings(&["build"]),
+            ..options(&[])
+        };
+        let e = compute_affected_task_selection(
+            &graph(&[("a", "libs/a"), ("b", "libs/b")]),
+            &p,
+            &tg,
+            &strings(&["x.txt"]),
+            &options,
+        )
+        .unwrap()
+        .explanation
+        .unwrap();
+        assert_eq!(e.input_matches.len(), 1);
+        assert_eq!(e.task_input_matches["a:build"], vec![0]);
+        assert_eq!(e.task_input_matches["b:build"], vec![0]);
     }
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatAffectedExplanation,
   formatAffectedReason,
+  hydrateExplanation,
   isExplaining,
   type AffectedExplanation,
   type AffectedReason,
@@ -615,5 +616,70 @@ describe('formatAffectedExplanation', () => {
     expect(out).toContain(
       'Touching those tasks changes outputs read by 1 test task. Pass --verbose to list each with its reasons.\n  - app:test'
     );
+  });
+});
+
+describe('hydrateExplanation', () => {
+  const file = (file: string, pattern?: string): AffectedReason => ({
+    kind: 'input-file',
+    file,
+    pattern,
+  });
+
+  it('expands a shared entry under every task that holds it', () => {
+    const shared = [file('libs/a/x.ts', 'libs/a/**/*')];
+    const hydrated = hydrateExplanation({
+      inputs: [shared],
+      affected: {
+        'a:build': [{ kind: 'inputs', inputs: [0] }],
+        'b:build': [
+          { kind: 'inputs', inputs: [0] },
+          { kind: 'dependent-output', producer: 'a:build' },
+        ],
+      },
+      upstream: {},
+      touched: ['a:build', 'b:build'],
+    });
+    expect(hydrated).toEqual({
+      affected: {
+        'a:build': shared,
+        'b:build': [
+          ...shared,
+          { kind: 'dependent-output', producer: 'a:build' },
+        ],
+      },
+      upstream: {},
+      touched: ['a:build', 'b:build'],
+    });
+  });
+
+  // Several instructions merge as one task's matches did: kinds in order,
+  // each sorted, a reason two instructions share listed once.
+  it('merges several entries into one sorted, deduplicated list', () => {
+    const hydrated = hydrateExplanation({
+      inputs: [
+        [
+          file('libs/b/y.ts', 'libs/b/**/*'),
+          { kind: 'external-dependencies', file: 'package.json' },
+        ],
+        [
+          { kind: 'npm-package', package: 'npm:react', file: 'package.json' },
+          file('libs/a/x.ts', 'libs/a/**/*'),
+          file('libs/b/y.ts', 'libs/b/**/*'),
+          { kind: 'external-dependencies', file: 'package.json' },
+        ],
+        [{ kind: 'npm-package', package: 'npm:lodash', file: 'package.json' }],
+      ],
+      affected: { 'a:build': [{ kind: 'inputs', inputs: [0, 1, 2] }] },
+      upstream: {},
+      touched: ['a:build'],
+    });
+    expect(hydrated.affected['a:build']).toEqual([
+      file('libs/a/x.ts', 'libs/a/**/*'),
+      file('libs/b/y.ts', 'libs/b/**/*'),
+      { kind: 'npm-package', package: 'npm:lodash', file: 'package.json' },
+      { kind: 'npm-package', package: 'npm:react', file: 'package.json' },
+      { kind: 'external-dependencies', file: 'package.json' },
+    ]);
   });
 });

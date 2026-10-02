@@ -449,8 +449,13 @@ export interface AffectedTaskExplanation {
   producersOf: Record<string, Array<string>>
   /** Changed project configs no longer on disk. Every task was seeded for them. */
   deletedProjectConfigs: Array<string>
-  /** Per reached task, the changed files and moved packages among its inputs. */
-  inputMatches: Record<string, TaskInputMatches>
+  /**
+   * What each matching plan instruction matched. Shared rather than copied
+   * per task: one lib's fileset can be in the plan of every dependent.
+   */
+  inputMatches: Array<TaskInputMatches>
+  /** Per reached task, the indexes of the matches above that its plan holds. */
+  taskInputMatches: Record<string, Array<number>>
 }
 
 export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph, changedFiles: Array<string>, options: AffectedTasksOptions): AffectedTaskSelection
@@ -460,8 +465,8 @@ export interface AffectedTaskSelection {
   affected: Array<string>
   /** `affected` plus everything it depends on, sorted: what a run keeps. */
   required: Array<string>
-  /** Why the change reached each task. */
-  explanation: AffectedTaskExplanation
+  /** Why the change reached each task. Only when `explain` was asked for. */
+  explanation?: AffectedTaskExplanation
 }
 
 export interface AffectedTasksOptions {
@@ -510,6 +515,8 @@ export interface AffectedTasksOptions {
    * project's tsconfig `paths` entries, rather than none.
    */
   selectivelyHashTsConfig: boolean
+  /** Whether to return why each task was reached, for `--explain`. */
+  explain: boolean
 }
 
 export interface BatchInfo {

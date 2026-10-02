@@ -121,8 +121,31 @@ describe('computeAffectedTasks', () => {
     );
   });
 
+  it('collects no reasons unless asked to explain', async () => {
+    const result = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/src/index.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+    });
+
+    expect([...result.affectedTaskIds].sort()).toEqual([
+      'app:test',
+      'lib:test',
+    ]);
+    expect(result.explanation).toBeUndefined();
+  });
+
   it('explains a task reached through a changed project config', async () => {
     const { explanation } = await computeAffectedTasks({
+      explain: true,
       projectGraph: graph(),
       nxJson: {
         namedInputs: { production: ['{projectRoot}/src/**/*'] },
@@ -157,6 +180,7 @@ describe('computeAffectedTasks', () => {
 
   it('explains a deleted project config where nothing narrower applies', async () => {
     const { explanation } = await computeAffectedTasks({
+      explain: true,
       projectGraph: graph(),
       nxJson: {
         namedInputs: { production: ['{projectRoot}/src/**/*'] },
@@ -216,6 +240,7 @@ describe('computeAffectedTasks', () => {
       { externalDependencies: ['left-pad', 'right-pad'] },
     ] as any;
     const { explanation } = await computeAffectedTasks({
+      explain: true,
       projectGraph,
       nxJson: {
         namedInputs: { production: ['{projectRoot}/src/**/*'] },
@@ -317,6 +342,7 @@ describe('computeAffectedTasks', () => {
     } as any;
 
     const result = await computeAffectedTasks({
+      explain: true,
       projectGraph,
       nxJson: {
         pluginsConfig: {
@@ -348,6 +374,7 @@ describe('computeAffectedTasks', () => {
   // The project is named by config, not by an input, so the reason says so.
   it('explains a project projectsAffectedByDependencyUpdates names', async () => {
     const { explanation } = await computeAffectedTasks({
+      explain: true,
       projectGraph: graph(),
       nxJson: {
         namedInputs: { production: ['{projectRoot}/src/**/*'] },
@@ -379,6 +406,7 @@ describe('computeAffectedTasks', () => {
     const explain = async (exclude: string[]) =>
       (
         await computeAffectedTasks({
+          explain: true,
           projectGraph: graph(),
           nxJson: {
             namedInputs: { production: ['{projectRoot}/src/**/*'] },
@@ -425,6 +453,7 @@ describe('computeAffectedTasks', () => {
     const explain = async (files: string[]) =>
       (
         await computeAffectedTasks({
+          explain: true,
           projectGraph: graph(),
           nxJson: {
             namedInputs: { production: ['{projectRoot}/src/**/*'] },
@@ -470,6 +499,7 @@ describe('explaining a change carried by a dependency-only task', () => {
   // is still what the change reached, and the build's reason names it.
   it('lists the producer a reason names, outside the selection', async () => {
     const result = await computeAffectedTasks({
+      explain: true,
       projectGraph: {
         nodes: {
           app: {
@@ -575,6 +605,7 @@ describe('explaining a touched task outside the selection', () => {
   // reading its outputs: it runs as a dependency the change still touched.
   it('lists a touched dependency as touched, not as untouched', async () => {
     const { explanation } = await computeAffectedTasks({
+      explain: true,
       projectGraph: {
         nodes: {
           app: {
@@ -730,6 +761,7 @@ describe('tasks with a custom hasher', () => {
   it('say why they were selected', async () => {
     customHashers.add('lib');
     const { explanation } = await computeAffectedTasks({
+      explain: true,
       projectGraph: graph(),
       nxJson: {
         namedInputs: { production: ['{projectRoot}/src/**/*'] },
@@ -895,6 +927,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     onDaemon.isOnDaemon.mockReturnValueOnce(true);
 
     const result = await computeAffectedTasks({
+      explain: true,
       projectGraph: graph(),
       nxJson: {
         namedInputs: { production: ['{projectRoot}/src/**/*'] },
@@ -914,7 +947,7 @@ describe('computeAffectedTasks with the daemon on', () => {
 
   // Reasons are assembled from native plans, which stay in whichever process
   // planned them, and an explanation runs nothing to share them with.
-  // The daemon's selection carries its reasons back.
+  // The daemon's selection carries its reasons back, interned.
   it('returns the explanation the daemon selected with', async () => {
     daemon.enabled.mockReturnValueOnce(true);
     const empty = {
@@ -924,7 +957,8 @@ describe('computeAffectedTasks with the daemon on', () => {
       continuousDependencies: {},
     };
     const explanation = {
-      affected: { 'lib:test': [{ kind: 'input-file', file: 'x.ts' }] },
+      inputs: [[{ kind: 'input-file', file: 'x.ts' }]],
+      affected: { 'lib:test': [{ kind: 'inputs', inputs: [0] }] },
       upstream: {},
       touched: ['lib:test'],
     };
@@ -937,12 +971,17 @@ describe('computeAffectedTasks with the daemon on', () => {
     });
 
     const result = await computeAffectedTasks({
+      explain: true,
       nxJson: {} as any,
       targets: ['test'],
       touchedFiles: [],
     });
 
-    expect(result.explanation).toBe(explanation);
+    expect(result.explanation).toEqual({
+      affected: { 'lib:test': [{ kind: 'input-file', file: 'x.ts' }] },
+      upstream: {},
+      touched: ['lib:test'],
+    });
   });
 });
 

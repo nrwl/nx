@@ -192,13 +192,62 @@ impl TaskInputMatches {
             || !self.project_configs.is_empty()
             || !self.moved_ecosystems.is_empty()
     }
+
+    fn sort(&mut self) {
+        self.files
+            .sort_by(|a, b| a.file.cmp(&b.file).then(a.pattern.cmp(&b.pattern)));
+        self.files
+            .dedup_by(|a, b| a.file == b.file && a.pattern == b.pattern);
+        self.packages.sort_unstable();
+        self.packages.dedup();
+        self.project_configs.sort_unstable();
+        self.project_configs.dedup();
+        self.moved_ecosystems.sort_unstable();
+        self.moved_ecosystems.dedup();
+    }
 }
 
-/// Per task, every changed file its plan matched with the pattern responsible,
-/// every moved package it hashes, and every changed config it hashes.
+/// What the change matched, once per matching instruction rather than once per
+/// task: a lib's fileset reached through `^production` is one instruction
+/// shared by every dependent, so copying its files into each would grow with
+/// changed files × dependents.
+#[derive(Debug, Default)]
+pub(crate) struct InputMatches {
+    /// One entry per instruction that matched something, sorted.
+    pub table: Vec<TaskInputMatches>,
+    /// Per touched task, the `table` entries its plan holds, ascending.
+    pub by_task: HashMap<String, Vec<u32>>,
+}
+
+impl InputMatches {
+    /// Everything that reached `task`, merged as one task's matches.
+    #[cfg(test)]
+    pub fn for_task(&self, task: &str) -> Option<TaskInputMatches> {
+        let mut merged = TaskInputMatches::default();
+        for &index in self.by_task.get(task)? {
+            let hits = &self.table[index as usize];
+            merged.files.extend(hits.files.iter().cloned());
+            merged.packages.extend(hits.packages.iter().cloned());
+            merged.all_externals |= hits.all_externals;
+            merged
+                .project_configs
+                .extend(hits.project_configs.iter().cloned());
+            merged
+                .moved_ecosystems
+                .extend(hits.moved_ecosystems.iter().cloned());
+        }
+        merged.sort();
+        Some(merged)
+    }
+}
+
+/// Every changed file a plan instruction matched with the pattern responsible,
+/// every moved package it hashes, and every changed config it hashes, and
+/// which of those each task's plan holds.
 ///
 /// `changed_project_configs` is the subset of `changed_files` that is project
-/// configuration still on disk.
+/// configuration still on disk. Without `detail`, a fileset stops at its first
+/// matching file and names no pattern: selection only asks whether it matched.
 pub(crate) fn compute_input_matches(
     graph: &ProjectGraph,
     hash_plans: &HashPlans,
@@ -206,7 +255,8 @@ pub(crate) fn compute_input_matches(
     changed_project_configs: &[String],
     externals: &ChangedExternals,
     contents: &ChangedContents,
-) -> anyhow::Result<HashMap<String, TaskInputMatches>> {
+    detail: bool,
+) -> anyhow::Result<InputMatches> {
     let roots = ProjectRoots::new(graph);
     let changed = ChangedFiles::new(&roots, changed_files);
     let mut reconfigured: HashMap<&str, Vec<String>> = HashMap::new();
@@ -229,52 +279,38 @@ pub(crate) fn compute_input_matches(
                 &reconfigured,
                 externals,
                 contents,
+                detail,
             )?;
             Ok::<_, anyhow::Error>((id, hits))
         })
         .filter(|entry| entry.as_ref().map_or(true, |(_, hits)| hits.matched()))
         .collect::<anyhow::Result<HashMap<_, _>>>()?;
+    // Ordered by instruction id so the table is reproducible.
+    let mut hits: Vec<(u32, TaskInputMatches)> = hits.into_iter().collect();
+    hits.sort_unstable_by_key(|(id, _)| *id);
     // Indexed by instruction id: every plan entry is looked up, most to no match.
-    let mut matched: Vec<Option<TaskInputMatches>> =
-        vec![None; ids.last().map_or(0, |&id| id as usize + 1)];
-    for (id, hit) in hits {
-        matched[id as usize] = Some(hit);
+    let mut slot: Vec<Option<u32>> = vec![None; ids.last().map_or(0, |&id| id as usize + 1)];
+    let mut table = Vec::with_capacity(hits.len());
+    for (index, (id, mut hit)) in hits.into_iter().enumerate() {
+        hit.sort();
+        slot[id as usize] = Some(index as u32);
+        table.push(hit);
     }
 
-    Ok(hash_plans
+    let by_task = hash_plans
         .plans
         .par_iter()
         .filter_map(|(task_id, plan)| {
-            let mut merged = TaskInputMatches::default();
-            for hits in plan.iter().filter_map(|&id| matched[id as usize].as_ref()) {
-                merged.files.extend(hits.files.iter().cloned());
-                merged.packages.extend(hits.packages.iter().cloned());
-                merged.all_externals |= hits.all_externals;
-                merged
-                    .project_configs
-                    .extend(hits.project_configs.iter().cloned());
-                merged
-                    .moved_ecosystems
-                    .extend(hits.moved_ecosystems.iter().cloned());
-            }
-            if !merged.matched() {
+            let mut indexes: Vec<u32> = plan.iter().filter_map(|&id| slot[id as usize]).collect();
+            if indexes.is_empty() {
                 return None;
             }
-            merged
-                .files
-                .sort_by(|a, b| a.file.cmp(&b.file).then(a.pattern.cmp(&b.pattern)));
-            merged
-                .files
-                .dedup_by(|a, b| a.file == b.file && a.pattern == b.pattern);
-            merged.packages.sort_unstable();
-            merged.packages.dedup();
-            merged.project_configs.sort_unstable();
-            merged.project_configs.dedup();
-            merged.moved_ecosystems.sort_unstable();
-            merged.moved_ecosystems.dedup();
-            Some((task_id.clone(), merged))
+            indexes.sort_unstable();
+            indexes.dedup();
+            Some((task_id.clone(), indexes))
         })
-        .collect())
+        .collect();
+    Ok(InputMatches { table, by_task })
 }
 
 /// What an instruction matched: the files and which pattern reached each, or
@@ -290,6 +326,7 @@ fn instruction_matches_detail(
     reconfigured: &HashMap<&str, Vec<String>>,
     externals: &ChangedExternals,
     contents: &ChangedContents,
+    detail: bool,
 ) -> anyhow::Result<TaskInputMatches> {
     let of_files = |files: Vec<InputMatch>| TaskInputMatches {
         files,
@@ -313,6 +350,17 @@ fn instruction_matches_detail(
             return Ok(vec![]);
         }
         let full = build_glob_set(&fileset_patterns(globs))?;
+        if !detail {
+            return Ok(candidates
+                .into_iter()
+                .find(|&i| full.is_match(&changed.files[i]))
+                .map(|i| InputMatch {
+                    file: raw_files[i].clone(),
+                    pattern: None,
+                })
+                .into_iter()
+                .collect());
+        }
         let hits: Vec<usize> = candidates
             .into_iter()
             .filter(|&i| full.is_match(&changed.files[i]))
@@ -385,23 +433,24 @@ fn instruction_matches_detail(
             ),
         }
         .map(of_files),
-        HashInstruction::TsConfiguration(project) => Ok(TaskInputMatches {
-            files: if contents.ts_config_changed(project) {
-                changed
-                    .files
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, file)| ROOT_TSCONFIG_FILES.contains(&file.as_str()))
-                    .map(|(i, _)| InputMatch {
-                        file: raw_files[i].clone(),
-                        pattern: None,
-                    })
-                    .collect()
-            } else {
-                vec![]
-            },
-            ..of_external("typescript")
-        }),
+        HashInstruction::TsConfiguration(project) => {
+            let roots: Vec<InputMatch> = changed
+                .files
+                .iter()
+                .enumerate()
+                .filter(|(_, file)| ROOT_TSCONFIG_FILES.contains(&file.as_str()))
+                .map(|(i, _)| InputMatch {
+                    file: raw_files[i].clone(),
+                    pattern: None,
+                })
+                .collect();
+            // Only read and compare the root tsconfig when one is in the diff.
+            let changed = !roots.is_empty() && contents.ts_config_changed(project);
+            Ok(TaskInputMatches {
+                files: if changed { roots } else { vec![] },
+                ..of_external("typescript")
+            })
+        }
         HashInstruction::External(name) => Ok(of_external(name)),
         HashInstruction::AllExternalDependencies => Ok(TaskInputMatches {
             all_externals: externals.any(),
@@ -441,7 +490,9 @@ mod tests {
             changed_project_configs,
             externals,
             contents,
+            false,
         )?
+        .by_task
         .into_keys()
         .collect())
     }
@@ -1053,9 +1104,10 @@ mod tests {
             &[],
             &no_externals(),
             &ChangedContents::default(),
+            true,
         )
         .unwrap();
-        let hit = &hits["a:build"].files;
+        let hit = &hits.for_task("a:build").unwrap().files;
         assert_eq!(hit.len(), 1, "the negated spec file is excluded");
         assert_eq!(hit[0].file, "libs/a/src/x.ts");
         assert_eq!(hit[0].pattern.as_deref(), Some("libs/a/**/*.ts"));
@@ -1086,13 +1138,15 @@ mod tests {
             &[],
             &ChangedExternals::new(&moved, &[], &g.external_nodes),
             &ChangedContents::default(),
+            true,
         )
         .unwrap();
-        assert_eq!(hits["a:build"].packages, strings(&["npm:lodash"]));
-        assert!(!hits["a:build"].all_externals);
-        assert!(hits["a:lint"].all_externals);
+        let build = hits.for_task("a:build").unwrap();
+        assert_eq!(build.packages, strings(&["npm:lodash"]));
+        assert!(!build.all_externals);
+        assert!(hits.for_task("a:lint").unwrap().all_externals);
         assert!(
-            !hits.contains_key("a:test"),
+            hits.for_task("a:test").is_none(),
             "an unmoved package is no reason"
         );
     }
@@ -1118,9 +1172,11 @@ mod tests {
             &[],
             &ChangedExternals::new(&moved, &types, &g.external_nodes),
             &ChangedContents::default(),
+            true,
         )
         .unwrap();
-        assert_eq!(hits["a:build"].packages, strings(&["npm:react"]));
-        assert_eq!(hits["a:build"].moved_ecosystems, strings(&["npm"]));
+        let build = hits.for_task("a:build").unwrap();
+        assert_eq!(build.packages, strings(&["npm:react"]));
+        assert_eq!(build.moved_ecosystems, strings(&["npm"]));
     }
 }

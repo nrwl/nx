@@ -35,7 +35,13 @@ import type { NxArgs } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { logger } from '../../utils/logger';
 import { DaemonProjectGraphError, ProjectGraphError } from '../error-types';
-import type { AffectedExplanation, AffectedReason } from './affected-reasons';
+import {
+  hydrateExplanation,
+  type AffectedExplanation,
+  type AffectedReason,
+  type InputsReason,
+  type InternedExplanation,
+} from './affected-reasons';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createTaskPlanningContext,
@@ -73,9 +79,10 @@ export interface AffectedTasksResult {
   taskSelection: TaskSelection;
   /**
    * Why each task is affected, plus the tasks outside the selection that
-   * carried the change to it, such as a `prebuild` under `-t build`.
+   * carried the change to it, such as a `prebuild` under `-t build`. Only
+   * when `explain` was asked for.
    */
-  explanation: AffectedExplanation;
+  explanation?: AffectedExplanation;
 }
 
 export interface ComputeAffectedTasksOptions {
@@ -96,6 +103,8 @@ export interface ComputeAffectedTasksOptions {
   /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
   ioSnapshotOutcome?: IoSnapshotOutcome | null;
   selectivelyHashTsConfig?: boolean;
+  /** Whether to say why each task is affected, for `--explain`. */
+  explain?: boolean;
 }
 
 export type FileChangeArgs = Pick<NxArgs, 'base' | 'head' | 'files'>;
@@ -117,6 +126,8 @@ export interface AffectedTasksRequest {
   ioSnapshots?: IoSnapshotVersion;
   /** The runner's `selectivelyHashTsConfig`, which decides what the tsconfig hash reads. */
   selectivelyHashTsConfig?: boolean;
+  /** Whether to return why each task is affected. Off, nothing is collected. */
+  explain?: boolean;
 }
 
 /**
@@ -140,6 +151,7 @@ export async function computeAffectedTasks(
     excludeTaskDependencies: opts.excludeTaskDependencies ?? false,
     exclude: opts.exclude ?? [],
     selectivelyHashTsConfig: opts.selectivelyHashTsConfig,
+    explain: opts.explain,
   };
   const ioSnapshots = snapshotsOf(opts.ioSnapshotOutcome ?? null);
   if (ioSnapshots) {
@@ -155,6 +167,8 @@ export async function computeAffectedTasks(
       return {
         ...selection,
         affectedTaskIds: new Set(selection.affectedTaskIds),
+        explanation:
+          selection.explanation && hydrateExplanation(selection.explanation),
         taskSelection: {
           ...selection.taskSelection,
           ioSnapshotOutcome: opts.ioSnapshotOutcome,
@@ -188,7 +202,8 @@ export async function computeAffectedTasks(
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     taskGraph: selection.taskGraph,
-    explanation: selection.explanation,
+    explanation:
+      selection.explanation && hydrateExplanation(selection.explanation),
     taskSelection: {
       ...selection.taskSelection,
       // The planner remembers what selection planned, so the run's hashing reuses it.
@@ -224,7 +239,7 @@ export async function selectAffectedTasks(
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;
   taskSelection: TaskSelection;
-  explanation: AffectedExplanation;
+  explanation?: InternedExplanation;
 }> {
   const { targets } = request;
   // Only projects that have one of the targets: with a single target,
@@ -242,12 +257,15 @@ export async function selectAffectedTasks(
       affectedTaskIds: new Set(),
       taskGraph: empty,
       taskSelection: { taskGraph: empty, initiatingTaskIds: [], taskIds: [] },
-      explanation: {
-        affected: {},
-        upstream: {},
-        touched: [],
-        requested: { targets, total: 0 },
-      },
+      explanation: request.explain
+        ? {
+            inputs: [],
+            affected: {},
+            upstream: {},
+            touched: [],
+            requested: { targets, total: 0 },
+          }
+        : undefined,
     };
   }
 
@@ -304,6 +322,7 @@ export async function selectAffectedTasks(
     targets,
     revisions: fileRevisions(request.fileChangeArgs),
     selectivelyHashTsConfig: request.selectivelyHashTsConfig ?? false,
+    explain: request.explain ?? false,
   };
   const selection = nativeAffectedTasks(
     planningContext.projectGraphRef,
@@ -328,21 +347,19 @@ export async function selectAffectedTasks(
     ? selection.required.filter((id) => initial.has(id))
     : selection.required;
 
-  const explanation = explainTasks(
-    selection.affected,
-    selection.explanation,
-    dependencies,
-    request.changedFiles,
-    taskGraph,
-    customHashed,
-    keep
-  );
-
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
-    explanation: {
-      ...explanation,
+    explanation: selection.explanation && {
+      ...explainTasks(
+        selection.affected,
+        selection.explanation,
+        dependencies,
+        request.changedFiles,
+        taskGraph,
+        customHashed,
+        keep
+      ),
       requested: requestedTasks(taskIds, taskGraph, targets, options),
     },
     taskSelection: {
@@ -484,7 +501,7 @@ function explainTasks(
   customHashed: Set<string>,
   /** What the run keeps: a reached task in it is listed even if nothing reads its outputs. */
   keep: string[]
-): AffectedExplanation {
+): InternedExplanation {
   // What a plan hashing every external saw change.
   const dependencyFiles = changedPaths.filter(
     (file) =>
@@ -493,38 +510,49 @@ function explainTasks(
   );
   const named = dependencies.named;
 
-  const reasonsFor = (taskId: string): AffectedReason[] => {
-    const forTask: AffectedReason[] = [];
-    const matches = explanation.inputMatches[taskId];
-
-    for (const match of matches?.files ?? []) {
-      forTask.push({
+  // Each matching instruction's reasons, built once and shared by every task
+  // whose plan holds it.
+  const inputs = explanation.inputMatches.map((matches) => {
+    const reasons: AffectedReason[] = [];
+    for (const match of matches.files) {
+      reasons.push({
         kind: 'input-file',
         file: match.file,
         pattern: match.pattern,
       });
     }
-    for (const pkg of matches?.packages ?? []) {
-      forTask.push({
+    for (const pkg of matches.packages) {
+      reasons.push({
         kind: 'npm-package',
         package: pkg,
         file: dependencies.movedBy.get(pkg),
       });
     }
-    for (const ecosystem of matches?.movedEcosystems ?? []) {
+    for (const ecosystem of matches.movedEcosystems) {
       for (const file of dependencyFiles.length
         ? dependencyFiles
         : [undefined]) {
-        forTask.push({ kind: 'moved-ecosystem', ecosystem, file });
+        reasons.push({ kind: 'moved-ecosystem', ecosystem, file });
       }
     }
-    if (matches?.allExternals) {
+    if (matches.allExternals) {
       for (const file of dependencyFiles) {
-        forTask.push({ kind: 'external-dependencies', file });
+        reasons.push({ kind: 'external-dependencies', file });
       }
     }
-    for (const file of matches?.projectConfigs ?? []) {
-      forTask.push({ kind: 'project-configuration', file });
+    for (const file of matches.projectConfigs) {
+      reasons.push({ kind: 'project-configuration', file });
+    }
+    return reasons;
+  });
+
+  const reasonsFor = (taskId: string): (AffectedReason | InputsReason)[] => {
+    const forTask: (AffectedReason | InputsReason)[] = [];
+    const matched = (explanation.taskInputMatches[taskId] ?? []).filter(
+      (index) => inputs[index].length
+    );
+    if (matched.length) {
+      forTask.push({ kind: 'inputs', inputs: matched });
     }
 
     // Only the reached producers: the walk records the edges it crossed.
@@ -551,7 +579,8 @@ function explainTasks(
     return forTask;
   };
 
-  const result: AffectedExplanation = {
+  const result: InternedExplanation = {
+    inputs,
     affected: Object.fromEntries(affected.map((id) => [id, reasonsFor(id)])),
     upstream: {},
     touched: [],

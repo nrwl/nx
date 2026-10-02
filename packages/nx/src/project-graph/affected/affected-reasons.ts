@@ -83,6 +83,100 @@ export interface AffectedExplanation {
   moved?: Record<string, string[]>;
 }
 
+/** Stands in for a task's input reasons: entries of `inputs` to merge. */
+export interface InputsReason {
+  kind: 'inputs';
+  inputs: number[];
+}
+
+/**
+ * An explanation as selection builds it, before `hydrateExplanation`. A lib's
+ * matched files are one `inputs` entry however many tasks reach them, so this
+ * stays small across the daemon boundary where the expanded form would not.
+ */
+export interface InternedExplanation extends Omit<
+  AffectedExplanation,
+  'affected' | 'upstream'
+> {
+  /** The input reasons each matching plan instruction produced, sorted per kind. */
+  inputs: AffectedReason[][];
+  affected: Record<string, (AffectedReason | InputsReason)[]>;
+  upstream: Record<string, (AffectedReason | InputsReason)[]>;
+}
+
+/** The order input reasons are listed in, matching one task's own matches. */
+const INPUT_KINDS: AffectedReasonKind[] = [
+  'input-file',
+  'npm-package',
+  'moved-ecosystem',
+  'external-dependencies',
+  'project-configuration',
+];
+
+/** Expands each task's `inputs` stand-in into its reasons. */
+export function hydrateExplanation({
+  inputs,
+  affected,
+  upstream,
+  ...rest
+}: InternedExplanation): AffectedExplanation {
+  const hydrate = (reasons: (AffectedReason | InputsReason)[]) =>
+    reasons.flatMap((reason) =>
+      reason.kind === 'inputs' ? mergeInputs(reason.inputs, inputs) : [reason]
+    );
+  const all = (byTask: Record<string, (AffectedReason | InputsReason)[]>) =>
+    Object.fromEntries(
+      Object.entries(byTask).map(([id, reasons]) => [id, hydrate(reasons)])
+    );
+  return { affected: all(affected), upstream: all(upstream), ...rest };
+}
+
+/**
+ * Several entries' reasons as one task's: grouped by kind, sorted, and with a
+ * reason two instructions both produced listed once.
+ */
+function mergeInputs(
+  indexes: number[],
+  inputs: AffectedReason[][]
+): AffectedReason[] {
+  // Each entry is already sorted and deduplicated.
+  if (indexes.length === 1) {
+    return inputs[indexes[0]];
+  }
+  const merged = indexes.flatMap((index) => inputs[index]);
+  const sortKey = (reason: AffectedReason) =>
+    reason.kind === 'npm-package'
+      ? reason.package
+      : reason.kind === 'moved-ecosystem'
+        ? reason.ecosystem
+        : reason.kind === 'external-dependencies'
+          ? ''
+          : reason.file;
+  const result: AffectedReason[] = [];
+  for (const kind of INPUT_KINDS) {
+    const seen = new Set<string>();
+    const ofKind = merged
+      .filter((reason) => reason.kind === kind)
+      .sort(
+        (a, b) =>
+          compare(sortKey(a), sortKey(b)) || compare(a.pattern, b.pattern)
+      );
+    for (const reason of ofKind) {
+      const key = `${reason.file}\0${reason.pattern}\0${reason.package}\0${reason.ecosystem}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(reason);
+      }
+    }
+  }
+  return result;
+}
+
+/** Code-point order, as the native side sorts. */
+function compare(a = '', b = ''): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 /**
  * One line of `--explain` output, without the leading bullet. `many` is set
  * when `file` names several files.
