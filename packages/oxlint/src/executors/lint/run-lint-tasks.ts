@@ -78,9 +78,16 @@ export function runLintTasks(
   const paths = [...new Set(resolved.flatMap((r) => r.paths))];
 
   const startTime = Date.now();
-  // A task whose files are all ignored is a clean task, not an error.
+  // A task whose files are all ignored is a clean task, not an error. The
+  // forwarded flags go after this executor's own, so a `--` among them cannot
+  // turn those into paths.
   const run = runOxlint(
-    [...flags, ...ignores, '--no-error-on-unmatched-pattern', ...paths],
+    [
+      ...ignores,
+      '--no-error-on-unmatched-pattern',
+      ...flags,
+      ...paths.map((path) => (path.startsWith('-') ? `./${path}` : path)),
+    ],
     workspaceRoot
   );
   const endTime = Date.now();

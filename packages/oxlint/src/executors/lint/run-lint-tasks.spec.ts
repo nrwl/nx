@@ -168,9 +168,9 @@ describe('runLintTasks', () => {
     );
 
     expect(mockRunOxlint.mock.calls[0][0]).toEqual([
+      '--no-error-on-unmatched-pattern',
       '--config=a.json',
       '--type-aware',
-      '--no-error-on-unmatched-pattern',
       'libs/a',
       'libs/b',
     ]);
@@ -187,12 +187,23 @@ describe('runLintTasks', () => {
     );
 
     expect(mockRunOxlint.mock.calls[0][0]).toEqual([
-      '--fix',
       '--no-error-on-unmatched-pattern',
+      '--fix',
       'libs/a',
       'libs/b',
     ]);
     expect(mockLogger.warn).not.toHaveBeenCalled();
+  });
+
+  it('should pass a path that starts with a hyphen as a path', () => {
+    mockRunOxlint.mockReturnValue({ ok: true, report: report([]) });
+
+    runLintTasks([task('--fix')], '/ws');
+
+    expect(mockRunOxlint.mock.calls[0][0]).toEqual([
+      '--no-error-on-unmatched-pattern',
+      './--fix',
+    ]);
   });
 
   // Outside every task's paths: a path from the forwarded flags, and no file.
