@@ -536,7 +536,6 @@ async function downloadAndExtractBundle(
           writeStream.on('close', () => {
             next();
           });
-          writeStream.on('error', rej);
 
           stream.resume();
         } else {
