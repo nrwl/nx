@@ -12,12 +12,7 @@ import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
-import {
-  expandNamedInput,
-  getInputs,
-  getNamedInputs,
-  TaskHasher,
-} from '../hasher/task-hasher';
+import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
@@ -224,7 +219,9 @@ export class TaskOrchestrator {
     private readonly specifiedOutputStyle: OutputStyle | undefined,
     /** What this run renders with, after defaults. */
     private readonly resolvedOutputStyle: OutputStyle,
-    private readonly fullTaskGraph: TaskGraph = taskGraph
+    private readonly fullTaskGraph: TaskGraph = taskGraph,
+    /** Tasks the up-front pass left to hash once the tasks they read from have run. */
+    private readonly deferredTaskIds?: ReadonlySet<string>
   ) {}
 
   async init() {
@@ -676,8 +673,8 @@ export class TaskOrchestrator {
    *
    * Walks the task graph level by level. Every task gets a preliminary hash
    * (so startTasks always has a valid hash for Cloud). Tasks that read
-   * another task's outputs (depsOutputs or includeIgnored filesets) whose
-   * deps weren't cached are ineligible for cache lookup but still
+   * another task's outputs (depsOutputs, or deferred by the up-front pass)
+   * whose deps weren't cached are ineligible for cache lookup but still
    * receive a preliminary hash — they'll be re-hashed after execution.
    */
   private async applyBatchCachedResults(
@@ -712,7 +709,9 @@ export class TaskOrchestrator {
 
         if (
           hasNonCachedDep &&
-          readsDependencyOutputs(task, this.projectGraph, this.nxJson)
+          (this.deferredTaskIds?.has(task.id) ||
+            getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length >
+              0)
         ) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
@@ -2429,37 +2428,4 @@ export function getThreadPoolSize(
   const total = discrete + continuous;
 
   return { discrete, continuous, total };
-}
-
-/** Whether a task's hash may cover files a dependency task writes. */
-function readsDependencyOutputs(
-  task: Task,
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
-): boolean {
-  const { selfInputs, depsOutputs, depsFilesets, depsInputs } = getInputs(
-    task,
-    projectGraph,
-    nxJson
-  );
-  if (depsOutputs.length > 0) return true;
-  if ([...selfInputs, ...depsFilesets].some(isIgnoredFileset)) return true;
-  // `^name` applies each dependency's own definition of `name`.
-  const deps = projectGraph.dependencies[task.target.project] ?? [];
-  return depsInputs.some(({ input }) =>
-    deps.some(({ target }) => {
-      const node = projectGraph.nodes[target];
-      const namedInputs = node && getNamedInputs(nxJson, node);
-      return (
-        !!namedInputs?.[input] &&
-        expandNamedInput(input, namedInputs).some(isIgnoredFileset)
-      );
-    })
-  );
-}
-
-function isIgnoredFileset(input: object): boolean {
-  return (
-    'fileset' in input && 'includeIgnored' in input && !!input.includeIgnored
-  );
 }

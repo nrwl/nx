@@ -41,16 +41,11 @@ describe('TaskOrchestrator', () => {
     }
 
     function createProjectGraph(): ProjectGraph {
-      const node = (
-        name: string,
-        inputs?: unknown[],
-        namedInputs?: Record<string, unknown[]>
-      ) => ({
+      const node = (name: string, inputs?: unknown[]) => ({
         name,
         type: 'lib' as const,
         data: {
           root: name,
-          ...(namedInputs ? { namedInputs } : {}),
           targets: {
             build: {
               executor: 'my-plugin:build',
@@ -61,40 +56,25 @@ describe('TaskOrchestrator', () => {
       });
       return {
         nodes: {
-          dep: node('dep', undefined, {
-            built: [{ fileset: '{projectRoot}/dist/**', includeIgnored: true }],
-          }),
+          dep: node('dep'),
           consumer: node('consumer', [
             { dependentTasksOutputFiles: '**/*.jar', transitive: true },
           ]),
-          reader: node('reader', [
-            { fileset: '{workspaceRoot}/dist/dep/**', includeIgnored: true },
-          ]),
-          depsReader: node('depsReader', [
-            {
-              fileset: '{projectRoot}/dist/**',
-              includeIgnored: true,
-              dependencies: true,
-            },
-          ]),
-          namedReader: node('namedReader', ['^built']),
-          plain: node('plain', ['{projectRoot}/**/*']),
+          reader: node('reader'),
         },
         dependencies: {
           dep: [],
           consumer: [{ source: 'consumer', target: 'dep', type: 'static' }],
-          ...Object.fromEntries(
-            ['reader', 'depsReader', 'namedReader', 'plain'].map((p) => [
-              p,
-              [{ source: p, target: 'dep', type: 'static' }],
-            ])
-          ),
+          reader: [{ source: 'reader', target: 'dep', type: 'static' }],
         },
         externalNodes: {},
       } as unknown as ProjectGraph;
     }
 
-    function createOrchestrator(taskGraph: TaskGraph) {
+    function createOrchestrator(
+      taskGraph: TaskGraph,
+      deferredTaskIds?: Set<string>
+    ) {
       let hasherCallCount = 0;
       const hasher = {
         hashTasks: vi.fn(async (tasks: Task[]) => {
@@ -118,6 +98,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.projectGraph = createProjectGraph();
       orchestrator.taskGraph = taskGraph;
       orchestrator.fullTaskGraph = taskGraph;
+      orchestrator.deferredTaskIds = deferredTaskIds;
       orchestrator.nxJson = {};
       orchestrator.taskDetails = null;
       orchestrator.taskInvocationTracker = null;
@@ -208,20 +189,22 @@ describe('TaskOrchestrator', () => {
       expect(consumer.hash).toBe('consumer:build|call-2');
     });
 
-    function readerTaskGraph(dep: Task, reader: Task): TaskGraph {
-      return {
+    // `dep` has no depsOutputs inputs, so it stands in for a task whose plan
+    // reads `dep`'s outputs some other way, e.g. an includeIgnored fileset.
+    async function runReaderBatch(deferredTaskIds?: Set<string>) {
+      const taskGraph: TaskGraph = {
         roots: ['dep:build'],
-        tasks: { 'dep:build': dep, [reader.id]: reader },
-        dependencies: { 'dep:build': [], [reader.id]: ['dep:build'] },
-        continuousDependencies: { 'dep:build': [], [reader.id]: [] },
+        tasks: {
+          'dep:build': createTask('dep:build'),
+          'reader:build': createTask('reader:build'),
+        },
+        dependencies: { 'dep:build': [], 'reader:build': ['dep:build'] },
+        continuousDependencies: { 'dep:build': [], 'reader:build': [] },
       };
-    }
-
-    async function runReaderBatch(readerProject: string) {
-      const reader = createTask(`${readerProject}:build`);
-      const taskGraph = readerTaskGraph(createTask('dep:build'), reader);
-      const { orchestrator, hasher, hashesAtCacheTime } =
-        createOrchestrator(taskGraph);
+      const { orchestrator, hasher, hashesAtCacheTime } = createOrchestrator(
+        taskGraph,
+        deferredTaskIds
+      );
 
       await orchestrator.applyFromCacheOrRunBatch(
         true,
@@ -230,37 +213,26 @@ describe('TaskOrchestrator', () => {
       );
 
       const lookedUp = orchestrator.applyCachedResults.mock.calls.flatMap(
-        ([tasks]: [Task[]]) => tasks.map((t) => t.id)
+        ([tasks]: [Task[]]) => tasks.map((t: Task) => t.id)
       );
-      return { reader, lookedUp, hasher, hashesAtCacheTime };
+      return { lookedUp, hasher, hashesAtCacheTime };
     }
 
-    it.each([
-      ['its own includeIgnored fileset', 'reader'],
-      ['an includeIgnored fileset on its dependencies', 'depsReader'],
-      [
-        "a dependency's named input with an includeIgnored fileset",
-        'namedReader',
-      ],
-    ])(
-      'should not look up a task reading %s before its deps run',
-      async (_, project) => {
-        const { lookedUp, hasher, hashesAtCacheTime } =
-          await runReaderBatch(project);
+    it('should not look up a deferred task before its deps run in the same batch', async () => {
+      const { lookedUp, hasher, hashesAtCacheTime } = await runReaderBatch(
+        new Set(['reader:build'])
+      );
 
-        expect(lookedUp).toEqual(['dep:build']);
-        // dep (call 1), reader (call 2), reader re-hashed after the batch (call 3)
-        expect(hasher.hashTasks).toHaveBeenCalledTimes(3);
-        expect(hashesAtCacheTime[`${project}:build`]).toBe(
-          `${project}:build|call-3`
-        );
-      }
-    );
+      expect(lookedUp).toEqual(['dep:build']);
+      // dep (call 1), reader (call 2), reader re-hashed after the batch (call 3)
+      expect(hasher.hashTasks).toHaveBeenCalledTimes(3);
+      expect(hashesAtCacheTime['reader:build']).toBe('reader:build|call-3');
+    });
 
-    it('should look up a task without includeIgnored inputs while its deps run', async () => {
-      const { lookedUp, hasher } = await runReaderBatch('plain');
+    it('should look up a task the up-front pass did not defer', async () => {
+      const { lookedUp, hasher } = await runReaderBatch(new Set());
 
-      expect(lookedUp).toEqual(['dep:build', 'plain:build']);
+      expect(lookedUp).toEqual(['dep:build', 'reader:build']);
       expect(hasher.hashTasks).toHaveBeenCalledTimes(2);
     });
   });

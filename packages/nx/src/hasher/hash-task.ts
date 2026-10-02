@@ -34,7 +34,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   nxJson: NxJsonConfiguration,
   tasksDetails: TaskDetails | null,
   ultracacheConfigurations?: UltracacheConfigurations
-) {
+): Promise<Set<string>> {
   performance.mark('hashMultipleTasks:start');
 
   const projects =
@@ -104,6 +104,8 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     'hashMultipleTasks:start',
     'hashMultipleTasks:end'
   );
+
+  return new Set(tasks.filter((t) => !(t.id in hashes)).map((t) => t.id));
 }
 
 function readsDependencyOutputs(

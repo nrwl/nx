@@ -1088,7 +1088,7 @@ export async function invokeTasksRunner({
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
 
-  await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+  const deferredTaskIds = await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     hasher,
     projectGraph,
     taskGraph,
@@ -1191,6 +1191,7 @@ export async function invokeTasksRunner({
         },
       },
       daemon: daemonClient,
+      deferredTaskIds,
     }
   );
   if ((promiseOrObservable as any).subscribe) {
