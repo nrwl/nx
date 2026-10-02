@@ -4,6 +4,8 @@ import {
   diagnostics,
   filelessDiagnostic,
   multilineDiagnostic,
+  nonAsciiDiagnostics,
+  nonAsciiSource,
 } from './fixtures.spec-util';
 
 // picocolors decides on colors at import time, so an env var set in the test is too late.
@@ -31,7 +33,6 @@ describe('renderDiagnostics', () => {
        2 │ function f() { debugger; }
          ·          ┬
          ·          ╰── 'f' is declared here
-       3 │
          ╰────
         help: Consider removing this declaration.
 
@@ -46,6 +47,32 @@ describe('renderDiagnostics', () => {
       Found 1 warning and 1 error.
       "
     `);
+  });
+
+  it('should place default underlines by UTF-8 byte columns the way Oxlint does', () => {
+    expect(
+      renderDiagnostics('default', nonAsciiDiagnostics, {
+        workspaceRoot: createFixtureWorkspace(nonAsciiSource),
+        agentMode: false,
+      })
+    ).toBe(
+      "\n  × eslint(no-unused-vars): Variable 'olé' is declared but never used. Unused variables should start with a '_'.\n" +
+        '   ╭─[libs/a/src/x.ts:1:7]\n' +
+        ' 1 │ const olé = "😀"; debugger;\n' +
+        '   ·       ─┬─\n' +
+        "   ·        ╰── 'olé' is declared here\n" +
+        ' 2 │ export {};\n' +
+        '   ╰────\n' +
+        '  help: Consider removing this declaration.\n' +
+        '\n  × eslint(no-debugger): `debugger` statement is not allowed\n' +
+        '   ╭─[libs/a/src/x.ts:1:22]\n' +
+        ' 1 │ const olé = "😀"; debugger;\n' +
+        '   ·                   ─────────\n' +
+        ' 2 │ export {};\n' +
+        '   ╰────\n' +
+        '  help: Remove the debugger statement\n' +
+        '\nFound 0 warnings and 2 errors.\n'
+    );
   });
 
   it('should render default without a code frame for a diagnostic with no file or rule', () => {

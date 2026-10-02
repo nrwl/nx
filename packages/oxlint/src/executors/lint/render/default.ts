@@ -26,8 +26,10 @@ export function renderGraphical(
       const lines = sources.lines(d.filename);
       const span = d.labels[0]?.span;
       if (lines && span) {
+        // Oxlint shows no line for the empty string after a final newline.
+        const lineCount = lines.at(-1) === '' ? lines.length - 1 : lines.length;
         const first = Math.max(1, line - 1);
-        const last = Math.min(lines.length, line + 1);
+        const last = Math.min(lineCount, line + 1);
         const width = String(last).length;
         for (let n = first; n <= last; n++) {
           const text = lines[n - 1];
@@ -68,13 +70,14 @@ function underline(
   label: string | undefined,
   paint: (s: string) => string
 ): string {
+  const bytes = Buffer.from(lineText);
   // A multi-line span is underlined to the end of its first line.
   const length = Math.max(
     1,
-    Math.min(span.length, lineText.length - column + 1)
+    bytes.subarray(column - 1, column - 1 + span.length).toString().length
   );
   const gutter = ` ${' '.repeat(width)} ${pc.dim('·')} `;
-  const pad = ' '.repeat(column - 1);
+  const pad = ' '.repeat(bytes.subarray(0, column - 1).toString().length);
   if (!label) {
     return `${gutter}${pad}${paint('─'.repeat(length))}\n`;
   }
