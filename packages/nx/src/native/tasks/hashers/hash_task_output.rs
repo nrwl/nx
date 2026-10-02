@@ -7,6 +7,7 @@ use super::disk_expansion::{
 };
 use super::hash_ignored_files::hash_files;
 use crate::native::glob::{build_glob_set, partition_glob};
+use crate::native::utils::path::escapes_workspace;
 use crate::native::workspace::ignored_index::{IgnoredIndex, RunStage};
 
 /// Result of hashing task output files, including the matched file paths
@@ -170,7 +171,7 @@ fn normalize_output_entry(entry: &str) -> Option<String> {
         Some(rest) => ("!", rest),
         None => ("", entry),
     };
-    if body.starts_with('/') {
+    if body.starts_with('/') || escapes_workspace(Path::new(body)) {
         return None;
     }
     let mut segments: Vec<&str> = Vec::new();

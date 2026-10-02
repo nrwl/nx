@@ -86,8 +86,8 @@ where
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> HashSet<PathBuf> {
-    let walker = create_walker(&directory, use_ignores);
+fn enumerate_watch_paths<P: AsRef<Path>>(directory: P) -> HashSet<PathBuf> {
+    let walker = create_walker(&directory, false);
     let mut path_set: HashSet<PathBuf> = HashSet::new();
 
     for entry in walker.build() {
@@ -165,11 +165,7 @@ struct WatchPipeline {
 }
 
 impl WatchPipeline {
-    fn new(
-        origin: String,
-        additional_globs: &[String],
-        use_ignore: bool,
-    ) -> std::result::Result<Self, String> {
+    fn new(origin: String, additional_globs: &[String]) -> std::result::Result<Self, String> {
         // Canonicalize once, up front, so the filterer, the origin-prefix strip
         // in the transform (origin_path below), and the watch registration all
         // agree on the workspace root. Event paths arrive realpath'd
@@ -181,7 +177,7 @@ impl WatchPipeline {
             .map(|p| p.to_string_lossy().into_owned())
             .unwrap_or(origin);
 
-        let filterer = watch_filterer::create_filter(&origin, additional_globs, use_ignore)
+        let filterer = watch_filterer::create_filter(&origin, additional_globs, None)
             .map_err(|e| format!("failed to create watch filter: {e}"))?;
 
         let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
@@ -201,7 +197,7 @@ impl WatchPipeline {
             tracing::error!(?e, "failed to watch root directory");
         }
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-        register_watches(&mut watcher, enumerate_watch_paths(&origin, use_ignore))
+        register_watches(&mut watcher, enumerate_watch_paths(&origin))
             .map_err(|e| format!("failed to register initial watches: {e}"))?;
 
         let mut origin_path = origin.clone();
@@ -445,7 +441,7 @@ impl WatchPipeline {
     /// through `run()`.
     #[cfg(test)]
     fn with_test_channel(origin: &str) -> (Self, Sender<NotifyResult>) {
-        let filterer = watch_filterer::create_filter(origin, &[], false).expect("test filter");
+        let filterer = watch_filterer::create_filter(origin, &[], None).expect("test filter");
         let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
         let watcher = RecommendedWatcher::new(
             |_res| {},
@@ -639,7 +635,6 @@ impl WatchSession {
     pub(crate) fn start(
         origin: String,
         additional_globs: &[String],
-        use_ignore: bool,
         callback: WatchEventCallback,
     ) -> std::result::Result<Self, String> {
         let origin = if cfg!(windows) {
@@ -647,7 +642,7 @@ impl WatchSession {
         } else {
             origin
         };
-        let pipeline = WatchPipeline::new(origin.clone(), additional_globs, use_ignore)?;
+        let pipeline = WatchPipeline::new(origin.clone(), additional_globs)?;
         let (flush_tx, flush_rx) = unbounded::<FlushRequest>();
         std::thread::spawn(move || pipeline.run(flush_rx, callback));
         debug!(%origin, "watching started");
@@ -682,6 +677,19 @@ mod tests {
 
     type Captured = Arc<Mutex<Vec<WatchEvent>>>;
 
+    /// The ignore files the workspace scan hands the filter.
+    fn scanned_ignore_files(origin: impl AsRef<Path>) -> Option<Vec<PathBuf>> {
+        let root = origin.as_ref();
+        let (_, found) = crate::native::walker::nx_walker_with_ignore_files(root);
+        let mut ignore_files: Vec<PathBuf> = found.iter().map(|path| root.join(path)).collect();
+        ignore_files.extend(
+            crate::native::utils::git::parent_gitignore_files(root)
+                .into_iter()
+                .flatten(),
+        );
+        Some(ignore_files)
+    }
+
     fn start_watcher(dir: &Path) -> (WatchSession, Captured) {
         // Canonicalize: on macOS `/tmp` symlinks to `/private/tmp`, so
         // events arrive with the canonical prefix while origin would
@@ -696,11 +704,9 @@ mod tests {
                 captured_for_cb.lock().unwrap().extend(events);
             }
         });
-        // Gitignore off, so the platform's tmp tree cannot influence the test.
         let w = WatchSession::start(
             canonical.to_str().expect("utf-8 path").to_string(),
             &default_watch_ignores(),
-            false,
             callback,
         )
         .expect("start watch");
@@ -744,12 +750,9 @@ mod tests {
 
         let dir = tempdir().expect("tempdir");
         let canonical = dunce::canonicalize(dir.path()).expect("canonicalize tempdir");
-        let mut pipeline = WatchPipeline::new(
-            canonical.to_str().expect("utf-8 path").to_string(),
-            &[],
-            false,
-        )
-        .expect("pipeline");
+        let mut pipeline =
+            WatchPipeline::new(canonical.to_str().expect("utf-8 path").to_string(), &[])
+                .expect("pipeline");
 
         let file = canonical.join("file.txt");
         fs::write(&file, "x").expect("write");
@@ -793,12 +796,9 @@ mod tests {
 
         let dir = tempdir().expect("tempdir");
         let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
-        let mut pipeline = WatchPipeline::new(
-            canonical.to_str().expect("utf-8 path").to_string(),
-            &[],
-            false,
-        )
-        .expect("pipeline");
+        let mut pipeline =
+            WatchPipeline::new(canonical.to_str().expect("utf-8 path").to_string(), &[])
+                .expect("pipeline");
         let overflow = || notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
 
         // First overflow of a burst: the flag was clear, so the gate logs.
@@ -839,8 +839,12 @@ mod tests {
         fs::create_dir_all(&pkg).expect("mkdir pkg");
         fs::write(pkg.join(".ignore"), "conflict.log\n").expect("write .ignore");
 
-        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
-            .expect("filter");
+        let filterer = watch_filterer::create_filter(
+            origin.to_str().expect("utf-8"),
+            &[],
+            scanned_ignore_files(&origin),
+        )
+        .expect("filter");
 
         let event = RawWatchEvent::new(
             notify::Event::new(EventKind::Create(CreateKind::File))
@@ -868,8 +872,12 @@ mod tests {
         fs::write(pkg.join(".gitignore"), "!keep.tmp\n").expect("write .gitignore");
         fs::write(pkg.join(".nxignore"), "keep.tmp\n").expect("write .nxignore");
 
-        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
-            .expect("filter");
+        let filterer = watch_filterer::create_filter(
+            origin.to_str().expect("utf-8"),
+            &[],
+            scanned_ignore_files(&origin),
+        )
+        .expect("filter");
         let event = RawWatchEvent::new(
             notify::Event::new(EventKind::Create(CreateKind::File)).add_path(pkg.join("keep.tmp")),
         );
@@ -895,8 +903,12 @@ mod tests {
         fs::write(origin.join("pkg").join(".nxignore"), "keep.tmp\n").expect("write .nxignore");
         fs::write(deep.join(".gitignore"), "!keep.tmp\n").expect("write .gitignore");
 
-        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
-            .expect("filter");
+        let filterer = watch_filterer::create_filter(
+            origin.to_str().expect("utf-8"),
+            &[],
+            scanned_ignore_files(&origin),
+        )
+        .expect("filter");
         let event = RawWatchEvent::new(
             notify::Event::new(EventKind::Create(CreateKind::File)).add_path(deep.join("keep.tmp")),
         );
@@ -922,8 +934,12 @@ mod tests {
         fs::write(origin.join(".nxignore"), "!keep.tmp\n").expect("write root .nxignore");
         fs::write(pkg.join(".nxignore"), "keep.tmp\n").expect("write nested .nxignore");
 
-        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
-            .expect("filter");
+        let filterer = watch_filterer::create_filter(
+            origin.to_str().expect("utf-8"),
+            &[],
+            scanned_ignore_files(&origin),
+        )
+        .expect("filter");
         let event = RawWatchEvent::new(
             notify::Event::new(EventKind::Create(CreateKind::File)).add_path(pkg.join("keep.tmp")),
         );
@@ -949,13 +965,46 @@ mod tests {
             notify::Event::new(EventKind::Create(CreateKind::File))
                 .add_path(origin.join("scratch.tmp")),
         );
-        let reporting = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], false)
+        let reporting = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], None)
             .expect("filter");
         assert!(reporting.check_event(&event));
         // With the git sources on, it ranks among them as it always did.
-        let walking = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
-            .expect("filter");
+        let walking = watch_filterer::create_filter(
+            origin.to_str().expect("utf-8"),
+            &[],
+            scanned_ignore_files(&origin),
+        )
+        .expect("filter");
         assert!(!walking.check_event(&event));
+    }
+
+    #[test]
+    fn ignore_files_apply_when_the_root_has_a_hardcoded_ignored_name() {
+        // The walk never vetoes its own root, so the filter must not either or
+        // it admits every file the walk's ignore rules drop.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path())
+            .expect("canonicalize")
+            .join("node_modules");
+        fs::create_dir_all(&origin).expect("mkdir node_modules");
+        fs::write(origin.join(".gitignore"), "secret.txt\n").expect("write .gitignore");
+
+        let filterer = watch_filterer::create_filter(
+            origin.to_str().expect("utf-8"),
+            &[],
+            scanned_ignore_files(&origin),
+        )
+        .expect("filter");
+        let created = |name: &str| {
+            RawWatchEvent::new(
+                notify::Event::new(EventKind::Create(CreateKind::File)).add_path(origin.join(name)),
+            )
+        };
+        assert!(!filterer.check_event(&created("secret.txt")));
+        assert!(filterer.check_event(&created("other.txt")));
     }
 
     #[test]
@@ -978,8 +1027,12 @@ mod tests {
             .join("node_modules")
             .join("x.js");
 
-        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
-            .expect("filter");
+        let filterer = watch_filterer::create_filter(
+            origin.to_str().expect("utf-8"),
+            &[],
+            scanned_ignore_files(&origin),
+        )
+        .expect("filter");
         let event = RawWatchEvent::new(
             notify::Event::new(EventKind::Create(CreateKind::File)).add_path(outside),
         );
@@ -1031,8 +1084,8 @@ mod tests {
             return;
         }
 
-        let pipeline = WatchPipeline::new(link.to_str().expect("utf-8").to_string(), &[], false)
-            .expect("pipeline");
+        let pipeline =
+            WatchPipeline::new(link.to_str().expect("utf-8").to_string(), &[]).expect("pipeline");
 
         let mut expected = real.to_str().expect("utf-8").to_string();
         if !expected.ends_with(MAIN_SEPARATOR) {
@@ -1076,7 +1129,6 @@ mod tests {
         let w = WatchSession::start(
             link.to_str().expect("utf-8").to_string(),
             &default_watch_ignores(),
-            false,
             callback,
         )
         .expect("start watch");
@@ -1125,7 +1177,9 @@ mod tests {
         fs::create_dir_all(origin.join(".git/info")).expect("mkdir .git/info");
         fs::write(origin.join(".git/info/exclude"), "secrets/\n").expect("write exclude");
 
-        let filterer = watch_filterer::create_filter(origin_str, &[], true).expect("filter");
+        let filterer =
+            watch_filterer::create_filter(origin_str, &[], scanned_ignore_files(origin_str))
+                .expect("filter");
 
         let event = |rel: &str| {
             RawWatchEvent::new(
@@ -1161,7 +1215,9 @@ mod tests {
         )
         .expect("write .gitignore");
 
-        let filterer = watch_filterer::create_filter(origin_str, &[], true).expect("filter");
+        let filterer =
+            watch_filterer::create_filter(origin_str, &[], scanned_ignore_files(origin_str))
+                .expect("filter");
 
         let event = |rel: &str| {
             RawWatchEvent::new(
@@ -1190,7 +1246,7 @@ mod tests {
     #[test]
     fn nx_own_globs_outrank_the_hardcoded_veto() {
         // watchOutputFiles passes `!.nx/workspace-data/.../server-process.json`
-        // as an additional glob (use_ignore=false). `.nx/workspace-data` is a
+        // as an additional glob. `.nx/workspace-data` is a
         // hardcoded ignore, so if the veto beat nx's own glob the outputs watcher
         // would never see server-process.json and would lose its prompt shutdown
         // signal — server.ts's 20ms poll is the backstop, not this. nx's internal
@@ -1210,7 +1266,7 @@ mod tests {
                 "*.log".to_string(),
                 "!kept.log".to_string(),
             ],
-            false,
+            None,
         )
         .expect("filter");
 
@@ -1303,12 +1359,9 @@ mod tests {
 
         let dir = tempdir().expect("tempdir");
         let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
-        let mut pipeline = WatchPipeline::new(
-            canonical.to_str().expect("utf-8 path").to_string(),
-            &[],
-            false,
-        )
-        .expect("pipeline");
+        let mut pipeline =
+            WatchPipeline::new(canonical.to_str().expect("utf-8 path").to_string(), &[])
+                .expect("pipeline");
         let overflow = || notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
 
         pipeline
@@ -1409,7 +1462,7 @@ mod tests {
         fs::create_dir_all(&target).expect("mkdir target");
 
         let filterer =
-            watch_filterer::create_filter(origin_str, &["ignored_dir/".to_string()], false)
+            watch_filterer::create_filter(origin_str, &["ignored_dir/".to_string()], None)
                 .expect("filter");
 
         let as_folder = RawWatchEvent::new(
@@ -1659,7 +1712,6 @@ mod tests {
         let watcher = WatchSession::start(
             canonical.to_str().expect("utf-8 path").to_string(),
             &default_watch_ignores(),
-            false,
             callback,
         )
         .expect("start watch");

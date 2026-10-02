@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
@@ -20,12 +19,6 @@ fn classify(glob: &str) -> Option<Lookup> {
     if glob.starts_with('!') {
         return None;
     }
-    // globset reads `\` as `/` on Windows, where node's `join` produces it.
-    let glob: Cow<str> = if cfg!(windows) {
-        Cow::Owned(glob.replace('\\', "/"))
-    } else {
-        Cow::Borrowed(glob)
-    };
     // The path a glob names, escapes resolved, when every segment is literal.
     let plain = |s: &str| -> Option<String> {
         let names = s
@@ -238,22 +231,8 @@ mod tests {
         }
     }
 
-    #[cfg(windows)]
     #[test]
-    fn classifies_backslash_globs_on_windows() {
-        assert!(matches!(
-            classify(r"libs\a\**\*"),
-            Some(Lookup::Prefix(dir)) if dir == "libs/a"
-        ));
-        assert!(matches!(
-            classify(r"libs\a\.eslintignore"),
-            Some(Lookup::Literal(file)) if file == "libs/a/.eslintignore"
-        ));
-    }
-
-    #[cfg(not(windows))]
-    #[test]
-    fn backslash_is_an_escape_off_windows() {
+    fn backslash_is_an_escape() {
         assert!(classify(r"libs\a\**\*").is_none());
         // An escape names its character: a directory literally called `*`.
         assert!(matches!(

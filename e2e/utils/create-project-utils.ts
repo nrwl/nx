@@ -19,7 +19,6 @@ import {
 } from './get-env-info';
 
 import { output, readJsonFile } from '@nx/devkit';
-import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execFileSync, execSync, ExecSyncOptions } from 'node:child_process';
@@ -43,6 +42,10 @@ import {
 import { logError, logInfo } from './log-utils';
 
 let projName: string;
+
+const defaultAngularCliVersion: string = readJsonFile(
+  require.resolve('@angular/cli/package.json')
+).version;
 
 // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
 const nxPackages = [

@@ -38,11 +38,11 @@ pub struct Task {
     pub parallelism: Option<bool>,
     /// This denotes if the task runs continuously
     pub continuous: Option<bool>,
-    /// The target's ultracache configuration, if declared
-    pub ultracache: Option<TaskUltracacheConfiguration>,
+    /// The target's Ultracache settings, if declared
+    pub ultracache: Option<TaskUltracacheSettings>,
 }
 
-/// How a target's tasks participate in ultracache. Nx Cloud only: nothing in
+/// How a target's tasks participate in Ultracache. Nx Cloud only: nothing in
 /// the OSS runner records or applies IO, so every mode behaves as `Off` without
 /// it.
 #[napi(string_enum = "lowercase")]
@@ -62,10 +62,10 @@ pub enum UltracacheMode {
     Off,
 }
 
-/// Ultracache configuration of a task's target
+/// Ultracache settings of a task's target
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
-pub struct TaskUltracacheConfiguration {
+pub struct TaskUltracacheSettings {
     /// How this target's tasks participate. Defaults to `on`.
     #[napi(ts_type = "'on' | 'warn' | 'error' | 'off'")]
     pub mode: Option<UltracacheMode>,
@@ -201,9 +201,9 @@ pub enum HashInstruction {
     /// Globs filtered against one project's tracked files.
     ProjectFileSet(String, Vec<String>),
     /// Workspace-relative globs expanded against the disk, so gitignored and
-    /// generated files count: a project's `includeIgnored` globs, or a
-    /// snapshot's observed reads. The project is not part of it: the same globs
-    /// read the same files wherever they were declared.
+    /// generated files count: a project's `includeIgnored` globs, or the
+    /// reads in a task's Ultracache configuration. The project is not part of
+    /// it: the same globs read the same files wherever they were declared.
     IgnoredFileSet(Vec<String>),
     ProjectConfiguration(String),
     TsConfiguration(String),
@@ -211,10 +211,10 @@ pub enum HashInstruction {
     External(String),
     AllExternalDependencies,
     JsonFileSet(Box<JsonFileSetInput>),
-    /// Digest of the I/O snapshot entry a task's plan was built from, so its
+    /// Digest of the Ultracache configuration a task's plan was built from, so its
     /// hash moves when its own observations do. Hashed as the text `Display`
     /// renders, which also keeps it from colliding with a native key.
-    IoSnapshot(String),
+    UltracacheConfiguration(String),
 }
 
 /// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
@@ -264,16 +264,16 @@ impl InstructionPool {
         }
     }
 
-    /// Whether an I/O snapshot replaces this instruction: every declared
+    /// Whether an Ultracache configuration replaces this instruction: every declared
     /// fileset (`includeIgnored` ones too), TsConfiguration unless the root
     /// tsconfig was read, and a JSON input unless `read` says its file was.
-    pub fn replaced_by_snapshot(
+    pub fn replaced_by_configuration(
         &self,
         id: u32,
         keep_tsconfig: bool,
         read: impl Fn(&str) -> bool,
     ) -> bool {
-        // The snapshot's own reads are disk-backed groups too; the caller keeps those.
+        // The configuration's own reads are disk-backed groups too; the caller keeps those.
         match &*self.get(id) {
             HashInstruction::ProjectFileSet(..)
             | HashInstruction::WorkspaceFileSet(_)
@@ -325,7 +325,7 @@ pub struct HashPlans {
 }
 
 /// Entries above which a disk-backed group's label carries a count and a
-/// digest instead of every path. A snapshot group can run to thousands.
+/// digest instead of every path. An Ultracache group can run to thousands.
 pub const COMPACT_FILES_LABEL_ABOVE: usize = 8;
 
 impl HashInstruction {
@@ -397,7 +397,7 @@ impl fmt::Display for HashInstruction {
                     format!("{task_output}:{dep_outputs}")
                 }
                 HashInstruction::External(external) => external.to_string(),
-                HashInstruction::IoSnapshot(digest) => {
+                HashInstruction::UltracacheConfiguration(digest) => {
                     format!("io-snapshot:{digest}")
                 }
                 HashInstruction::ProjectConfiguration(project_name) => {
@@ -454,15 +454,15 @@ mod tests {
     }
 
     #[test]
-    fn the_snapshot_digest_renders_with_its_prefix_and_interns_by_value() {
+    fn the_configuration_digest_renders_with_its_prefix_and_interns_by_value() {
         let pool = InstructionPool::new();
-        let a = pool.intern(HashInstruction::IoSnapshot("abc".into()));
-        let b = pool.intern(HashInstruction::IoSnapshot("abc".into()));
-        let c = pool.intern(HashInstruction::IoSnapshot("def".into()));
+        let a = pool.intern(HashInstruction::UltracacheConfiguration("abc".into()));
+        let b = pool.intern(HashInstruction::UltracacheConfiguration("abc".into()));
+        let c = pool.intern(HashInstruction::UltracacheConfiguration("def".into()));
         assert_eq!(a, b);
         assert_ne!(a, c);
         assert_eq!(&*pool.key(a), "io-snapshot:abc");
-        // Filesets, disk-backed ones included, are replaced by a snapshot; the
+        // Filesets, disk-backed ones included, are replaced by a configuration; the
         // digest is not.
         let fileset = pool.intern(HashInstruction::ProjectFileSet(
             "p".into(),
@@ -473,20 +473,20 @@ mod tests {
             "!p/**/*.spec.ts".into(),
         ]));
         let unread = |_: &str| false;
-        assert!(pool.replaced_by_snapshot(fileset, true, unread));
-        assert!(pool.replaced_by_snapshot(group, true, unread));
-        assert!(!pool.replaced_by_snapshot(a, true, unread));
+        assert!(pool.replaced_by_configuration(fileset, true, unread));
+        assert!(pool.replaced_by_configuration(group, true, unread));
+        assert!(!pool.replaced_by_configuration(a, true, unread));
         let ts = pool.intern(HashInstruction::TsConfiguration("p".into()));
-        assert!(pool.replaced_by_snapshot(ts, false, unread));
-        assert!(!pool.replaced_by_snapshot(ts, true, unread));
+        assert!(pool.replaced_by_configuration(ts, false, unread));
+        assert!(!pool.replaced_by_configuration(ts, true, unread));
         let json = pool.intern(HashInstruction::JsonFileSet(Box::new(JsonFileSetInput {
             project_name: None,
             json_path: "p/package.json".into(),
             fields: Some(vec!["version".into()]),
             exclude_fields: None,
         })));
-        assert!(pool.replaced_by_snapshot(json, true, unread));
-        assert!(!pool.replaced_by_snapshot(json, true, |path| path == "p/package.json"));
+        assert!(pool.replaced_by_configuration(json, true, unread));
+        assert!(!pool.replaced_by_configuration(json, true, |path| path == "p/package.json"));
     }
 
     #[test]

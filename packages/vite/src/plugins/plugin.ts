@@ -16,6 +16,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
@@ -543,7 +544,7 @@ function normalizeOutputPath(
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      return `{workspaceRoot}/${normalizePath(relative(workspaceRoot, outputPath))}`;
     } else {
       if (outputPath.startsWith('..')) {
         return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);

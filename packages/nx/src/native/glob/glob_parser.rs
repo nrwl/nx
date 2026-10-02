@@ -1,8 +1,8 @@
 use crate::native::glob::glob_group::GlobGroup;
 use nom::branch::alt;
-use nom::bytes::complete::{is_not, tag, take_till, take_until, take_while};
-use nom::combinator::{eof, map, map_parser, not};
-use nom::error::{VerboseError, context, convert_error};
+use nom::bytes::complete::{is_not, tag, take_till, take_until, take_while, take_while1};
+use nom::combinator::{eof, map, map_parser, not, verify};
+use nom::error::{ErrorKind, ParseError, VerboseError, context, convert_error};
 use nom::multi::{many_till, separated_list0};
 use nom::sequence::{preceded, terminated};
 use nom::{Finish, IResult};
@@ -18,6 +18,39 @@ fn special_char_alone<'a>(
         let (rest, matched) = alt((tag("?"), tag("+"), tag("@"), tag("!")))(input)?;
         let _ = not(tag("("))(rest)?;
         Ok((rest, GlobGroup::Literal(matched.into())))
+    })(input)
+}
+
+/// A closed `[...]` class, taken whole so a `(` or `)` in it is a member
+/// rather than a group: `[(]` names a literal `(`, like `\(`.
+fn bracket_class<'a>(input: &'a str) -> IResult<&'a str, GlobGroup<'a>, VerboseError<&'a str>> {
+    context("bracket_class", |input: &'a str| {
+        tag("[")(input)?;
+        let Some(end) = class_end(input, 0) else {
+            return Err(nom::Err::Error(VerboseError::from_error_kind(
+                input,
+                ErrorKind::Char,
+            )));
+        };
+        Ok((&input[end..], GlobGroup::Literal(input[..end].into())))
+    })(input)
+}
+
+/// A `\` and the character after it, kept as text so globset reads the escape:
+/// `\(` is a literal `(`, not a group.
+fn escaped_char<'a>(input: &'a str) -> IResult<&'a str, GlobGroup<'a>, VerboseError<&'a str>> {
+    context("escaped_char", |input: &'a str| {
+        let (rest, _) = tag("\\")(input)?;
+        match rest.chars().next() {
+            Some(c) => {
+                let len = 1 + c.len_utf8();
+                Ok((&input[len..], GlobGroup::Literal(input[..len].into())))
+            }
+            None => Err(nom::Err::Error(VerboseError::from_error_kind(
+                input,
+                ErrorKind::Char,
+            ))),
+        }
     })(input)
 }
 
@@ -91,8 +124,17 @@ fn non_special_character(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseErr
         "non_special_character",
         map(
             alt((
-                take_until("{,"),
-                take_while(|c| c != '?' && c != '+' && c != '@' && c != '!' && c != '('),
+                // Stops at an escape, so `\{,` stays a literal `{,`.
+                verify(take_until("{,"), |text: &str| !text.contains('\\')),
+                take_while1(|c| {
+                    c != '?'
+                        && c != '+'
+                        && c != '@'
+                        && c != '!'
+                        && c != '('
+                        && c != '['
+                        && c != '\\'
+                }),
                 is_not("*("),
             )),
             |i: &str| GlobGroup::Literal(i.into()),
@@ -185,7 +227,6 @@ fn lex_globset(text: &str) -> Vec<GlobGroup<'_>> {
             b'{' => closing_brace(text, i),
             // globset rejects a `}` that closes no group.
             b'}' => i + 1,
-            #[cfg(not(windows))]
             b'\\' => i + 1 + text[i + 1..].chars().next().map_or(0, char::len_utf8),
             _ => {
                 i += 1;
@@ -212,9 +253,14 @@ fn lex_globset(text: &str) -> Vec<GlobGroup<'_>> {
     parts
 }
 
-/// End of the class opened at `start`. A `]` right after `[`, `[!` or `[^` is
-/// a member, as globset reads it; an unclosed class runs to the end.
+/// End of the class opened at `start`; an unclosed class runs to the end.
 fn closing_bracket(text: &str, start: usize) -> usize {
+    class_end(text, start).unwrap_or(text.len())
+}
+
+/// End of the class opened at `start`, or `None` when it is unclosed. A `]`
+/// right after `[`, `[!` or `[^` is a member, as globset reads it.
+fn class_end(text: &str, start: usize) -> Option<usize> {
     let mut i = start + 1;
     if matches!(text.as_bytes().get(i), Some(b'!' | b'^')) {
         i += 1;
@@ -222,7 +268,7 @@ fn closing_bracket(text: &str, start: usize) -> usize {
     if text.as_bytes().get(i) == Some(&b']') {
         i += 1;
     }
-    text[i..].find(']').map_or(text.len(), |at| i + at + 1)
+    text[i..].find(']').map(|at| i + at + 1)
 }
 
 /// End of the brace group opened at `start`, counting nested groups; an
@@ -251,6 +297,8 @@ fn extglob_segment(input: &str) -> IResult<&str, Vec<GlobGroup<'_>>, VerboseErro
             context(
                 "glob_group",
                 alt((
+                    escaped_char,
+                    bracket_class,
                     simple_group,
                     zero_or_more_group,
                     zero_or_one_group,
@@ -391,6 +439,34 @@ mod test {
         );
     }
 
+    #[test]
+    fn a_class_holds_parentheses_as_members() {
+        use GlobGroup::*;
+        assert_eq!(
+            segments("app/[(]marketing[)]/x[()]y"),
+            [
+                vec![Literal("app".into())],
+                vec![
+                    Class("[(]".into()),
+                    Literal("marketing".into()),
+                    Class("[)]".into())
+                ],
+                vec![
+                    Literal("x".into()),
+                    Class("[()]".into()),
+                    Literal("y".into())
+                ],
+            ]
+        );
+        // A group still opens outside a class, and an unclosed class does not
+        // swallow the rest of the segment.
+        assert_eq!(
+            segments("(a|b)[(]"),
+            [vec![NonSpecialGroup("a,b".into()), Class("[(]".into())]]
+        );
+        assert!(parse_glob("[(").is_err());
+    }
+
     /// NXC-5001: a glob is read whole or refused, never cut short.
     #[test]
     fn a_glob_is_read_whole_or_refused() {
@@ -412,7 +488,28 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(windows))]
+    fn a_backslash_escapes_a_parenthesis() {
+        use GlobGroup::*;
+        assert_eq!(
+            segments(r"app/\(marketing\)/x\!(y)"),
+            [
+                vec![Literal("app".into())],
+                vec![
+                    Escaped(r"\(".into()),
+                    Literal("marketing".into()),
+                    Escaped(r"\)".into())
+                ],
+                vec![
+                    Literal("x".into()),
+                    Escaped(r"\!".into()),
+                    NonSpecialGroup("y".into())
+                ],
+            ]
+        );
+        assert_eq!(super::literal_segment(r"\(a\)").as_deref(), Some("(a)"));
+    }
+
+    #[test]
     fn a_backslash_escapes_the_next_character() {
         assert_eq!(super::literal_segment(r"\*").as_deref(), Some("*"));
         // An escape never resolves to `.` or `..`, which would dodge `..` checks.

@@ -5,6 +5,7 @@ use tracing::{debug, trace};
 
 use crate::native::glob::{build_glob_set, glob_transform::partition_glob};
 use crate::native::utils::Normalize;
+use crate::native::utils::path::escapes_workspace;
 use crate::native::walker::{nx_walker, nx_walker_sync};
 
 #[napi]
@@ -184,6 +185,10 @@ pub fn get_files_for_outputs(
     let mut files: Vec<String> = vec![];
     let mut directories: Vec<String> = vec![];
     for entry in entries.into_iter() {
+        let body = entry.strip_prefix('!').unwrap_or(&entry);
+        if escapes_workspace(Path::new(body)) {
+            continue;
+        }
         let path = directory.join(&entry);
 
         if !path.exists() {
@@ -515,6 +520,20 @@ mod test {
                 "test.txt"
             ]
         );
+    }
+
+    #[test]
+    fn an_entry_outside_the_directory_reads_nothing() {
+        let temp = TempDir::new().unwrap();
+        temp.child("outside.txt").write_str("secret").unwrap();
+        temp.child("ws/inside.txt").write_str("x").unwrap();
+        let workspace = temp.path().join("ws");
+        let result = get_files_for_outputs(
+            &workspace,
+            vec!["../outside.txt".into(), "inside.txt".into()],
+        )
+        .unwrap();
+        assert_eq!(result, vec!["inside.txt"]);
     }
 
     #[test]

@@ -428,9 +428,9 @@ describe('target merging', () => {
   });
 
   describe('cache', () => {
-    // Once a consumer reads it, `mode: 'warn'` decides whether a recorded
-    // snapshot may stand in for declared inputs, so losing it in a merge would
-    // silently change how the task hashes.
+    // Once a consumer reads it, `mode: 'warn'` decides whether a task's
+    // Ultracache configuration may stand in for declared inputs, so losing
+    // it in a merge would silently change how the task hashes.
     it('should drop an inherited mode when the target replaces the ultracache', () => {
       const result = mergeTargetConfigurations(
         {
