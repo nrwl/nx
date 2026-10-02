@@ -136,7 +136,8 @@ async function resetCloudClient() {
   // Remove nx cloud marker files. This helps if the use happens to run `nx-cloud start-ci-run` or
   // similar commands on their local machine.
   try {
-    (await getCloudClient(getCloudOptions())).invoke('cleanup');
+    // `exit` would end the process here, before reset reports its result.
+    await (await getCloudClient(getCloudOptions())).invoke('cleanup', false);
   } catch {}
 }
 
