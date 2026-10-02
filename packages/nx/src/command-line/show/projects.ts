@@ -88,7 +88,8 @@ export async function showProjectsHandler(
           'Affected tasks',
           // show projects declares its own --json, which has no executor to
           // pass through to.
-          args.json ? 'stdout' : nxArgs.explain
+          args.json ? 'stdout' : nxArgs.explain,
+          { verbose: args.verbose }
         );
         await output.drain();
         return;

@@ -24,11 +24,15 @@ performance.mark = vi.fn();
 performance.measure = vi.fn();
 
 // The affected path is mocked at its two boundaries rather than driven for
-// real: the point of the test below is what show projects passes to the
+// real: the point of the tests below is what show projects passes to the
 // renderer, not how the selection was computed.
 vi.mock('../../project-graph/file-utils', async (importOriginal) => ({
   ...((await importOriginal()) as object),
   calculateFileChanges: () => [],
+}));
+const printAffectedExplanation = vi.hoisted(() => vi.fn());
+vi.mock('../../project-graph/affected/print-explanation', () => ({
+  printAffectedExplanation,
 }));
 vi.mock('../../project-graph/affected/affected-tasks', () => ({
   selectsAffectedTasks: () => true,
@@ -387,6 +391,38 @@ describe('show projects', () => {
         files: ['libs/ui/src/x.ts'],
       } as any)
     ).rejects.toThrow('--explain needs targets passed with --withTarget (-t).');
+  });
+
+  it('hands the explanation to the renderer with --verbose', async () => {
+    await showProjectsHandler({
+      affected: true,
+      withTarget: ['build'],
+      explain: true,
+      verbose: true,
+      files: ['libs/ui/src/x.ts'],
+    } as any);
+    expect(printAffectedExplanation).toHaveBeenCalledWith(
+      expect.objectContaining({ affected: expect.any(Object) }),
+      'Affected tasks',
+      true,
+      { verbose: true }
+    );
+  });
+
+  it('prints the explanation as JSON for --json', async () => {
+    await showProjectsHandler({
+      affected: true,
+      withTarget: ['build'],
+      explain: true,
+      json: true,
+      files: ['libs/ui/src/x.ts'],
+    } as any);
+    expect(printAffectedExplanation).toHaveBeenLastCalledWith(
+      expect.anything(),
+      'Affected tasks',
+      'stdout',
+      { verbose: undefined }
+    );
   });
 
   it('names each thing explaining is missing or conflicts with', async () => {
