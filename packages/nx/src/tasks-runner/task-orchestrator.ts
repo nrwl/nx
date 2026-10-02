@@ -803,7 +803,8 @@ export class TaskOrchestrator {
    *
    * Walks the task graph level by level. Every task gets a preliminary hash
    * (so startTasks always has a valid hash for Cloud). Tasks the up-front
-   * pass deferred, whose deps weren't cached, are ineligible for cache lookup but still
+   * pass deferred, with an upstream batch task whose outputs are still to be
+   * written, are ineligible for cache lookup but still
    * receive a preliminary hash — they'll be re-hashed after execution.
    */
   private async applyBatchCachedResults(
@@ -825,6 +826,9 @@ export class TaskOrchestrator {
     }
 
     const nonCachedTaskIds = new Set<string>();
+    // Tasks with a batch task upstream that has yet to write its outputs. A
+    // task declaring no outputs (e.g. a non-cacheable install) writes none.
+    const awaitingOutputs = new Set<string>();
 
     await walkTaskGraph(batch.taskGraph, async (rootTaskIds) => {
       const rootTasks = rootTaskIds.map((id) => batch.taskGraph.tasks[id]);
@@ -833,11 +837,18 @@ export class TaskOrchestrator {
 
       const eligible: Task[] = [];
       for (const task of rootTasks) {
-        const hasNonCachedDep = batch.taskGraph.dependencies[task.id].some(
-          ({ id }) => nonCachedTaskIds.has(id)
+        const depIds = batch.taskGraph.dependencies[task.id].map(({ id }) => id);
+        const awaits = depIds.some(
+          (id) =>
+            awaitingOutputs.has(id) ||
+            (nonCachedTaskIds.has(id) &&
+              batch.taskGraph.tasks[id].outputs?.length > 0)
         );
+        if (awaits) {
+          awaitingOutputs.add(task.id);
+        }
 
-        if (hasNonCachedDep && this.deferredTaskIds?.has(task.id)) {
+        if (awaits && this.deferredTaskIds?.has(task.id)) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
         } else {
