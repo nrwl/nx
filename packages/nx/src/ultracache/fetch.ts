@@ -8,7 +8,7 @@ import type { UltracacheCloudOptions } from './config';
 
 const READ_TIMEOUT_MS = 10_000;
 
-/** The Nx Cloud client's `readIoSnapshots` contract, as far as nx uses it. */
+/** The Nx Cloud client's `readUltracacheConfigurations` contract, as far as nx uses it. */
 export interface ReadUltracacheConfigurationsOptions {
   workspaceRoot?: string;
   nxCloudOptions?: UltracacheCloudOptions;
@@ -22,7 +22,7 @@ export interface ReadUltracacheConfiguration {
 }
 
 export interface ReadUltracacheConfigurationsResult {
-  snapshots: Readonly<Record<string, ReadUltracacheConfiguration>>;
+  configurations: Readonly<Record<string, ReadUltracacheConfiguration>>;
 }
 
 /**
@@ -45,13 +45,13 @@ export async function fetchUltracacheConfigurations(
       'The Nx Cloud client could not be loaded'
     );
   }
-  if (typeof client.readIoSnapshots !== 'function') {
+  if (typeof client.readUltracacheConfigurations !== 'function') {
     throw codedError(
       'UNSUPPORTED_CLIENT',
       'The installed Nx Cloud client does not expose Ultracache configurations; update nx-cloud'
     );
   }
-  const result = await client.readIoSnapshots({
+  const result = await client.readUltracacheConfigurations({
     workspaceRoot,
     nxCloudOptions: runnerOptions,
     timeoutMs: READ_TIMEOUT_MS,

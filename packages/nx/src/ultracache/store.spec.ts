@@ -71,7 +71,7 @@ describe('loadUltracacheConfigurationsForRun', () => {
     store.import.mockReset();
     store.get.mockReturnValue(null);
     cloud.fetchUltracacheConfigurations.mockResolvedValue({
-      snapshots: {},
+      configurations: {},
     });
   });
 
@@ -108,7 +108,7 @@ describe('loadUltracacheConfigurationsForRun', () => {
       'web:build': { commit: 'parent', inputs: ['apps/web/**'], outputs: [] },
     };
     cloud.fetchUltracacheConfigurations.mockResolvedValue({
-      snapshots: configurations,
+      configurations,
     });
     const set = stored();
     store.import.mockReturnValue(set);

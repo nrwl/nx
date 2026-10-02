@@ -75,7 +75,7 @@ export function getUltracacheConfigurationStore(): UltracacheConfigurationStore 
  */
 export function importUltracacheConfigurations(
   requestedCommit: string,
-  configurations: ReadUltracacheConfigurationsResult['snapshots']
+  configurations: ReadUltracacheConfigurationsResult['configurations']
 ): UltracacheConfigurations {
   return getUltracacheConfigurationStore().import({
     requestedCommit,
@@ -140,7 +140,7 @@ export async function loadUltracacheConfigurationsForRun(
           status: 'fetched',
           configurations: store.import({
             requestedCommit: head,
-            configurationsJson: JSON.stringify(result.snapshots),
+            configurationsJson: JSON.stringify(result.configurations),
           }),
         });
       }))
