@@ -10,10 +10,11 @@ use thiserror::Error;
 /// the contract `cache.ts` depends on — see `From<HttpRemoteCacheErrors> for
 /// napi::Error` below for how it crosses into JS.
 ///
-/// Recoverable means the run can continue by recomputing the task: the remote
-/// cache is unreachable, slow, or serving damaged data. Fatal means the run
-/// should stop: the server is misconfigured, rejected our credentials, or
-/// served an artifact that tried to write outside the cache directory.
+/// Recoverable means the run can continue by recomputing the task, because the
+/// remote cache is unreachable, slow, rate limiting us, or serving damaged
+/// data. Fatal means the run should stop, because the server is misconfigured,
+/// rejected our credentials, or served an artifact that tried to write outside
+/// the cache directory.
 #[derive(Debug, Error, Clone, Eq, PartialEq)]
 pub enum HttpRemoteCacheErrors {
     #[error("Unauthorized: {0}")]
@@ -22,6 +23,17 @@ pub enum HttpRemoteCacheErrors {
     Misconfigured(String),
     #[error("Failed to send request: {0}")]
     RequestError(String),
+    #[error(
+        "The remote cache server could not serve this request: {0}\n\n\
+         The server answered with a status it reports as temporary, so Nx treats the request as a \
+         cache miss rather than stopping the run.\n\
+         To resolve this:\n  \
+         - Check whether the cache server is healthy and not overloaded.\n  \
+         - On a 429, check whether a proxy or CDN in front of the cache is rate limiting Nx. A run \
+         that misses many hashes requests them all at once, so lowering --parallel reduces how many \
+         requests are in flight."
+    )]
+    ServerUnavailable(String),
     #[error(
         "Timed out downloading from the remote cache: {0}\n\n\
          The cache server accepted the connection but stopped sending data. The task will be \
@@ -84,6 +96,7 @@ impl HttpRemoteCacheErrors {
             | HttpRemoteCacheErrors::UnsafeArtifact(_)
             | HttpRemoteCacheErrors::LocalCacheError(_) => true,
             HttpRemoteCacheErrors::RequestError(_)
+            | HttpRemoteCacheErrors::ServerUnavailable(_)
             | HttpRemoteCacheErrors::DownloadTimeout(_)
             | HttpRemoteCacheErrors::UploadTimeout(_)
             | HttpRemoteCacheErrors::CorruptArtifact(_) => false,
@@ -123,6 +136,18 @@ pub async fn convert_response_to_error(response: Response) -> HttpRemoteCacheErr
                 )
             }
         }
+        // A status the server itself describes as temporary. Treating these as
+        // misconfiguration stopped runs that a retry or a cache miss would have
+        // survived — a 502 from a restarting server, or a 429 from a rate limit
+        // in front of the cache that a run full of misses trips on its own
+        // request volume.
+        status
+            if status == reqwest::StatusCode::REQUEST_TIMEOUT
+                || status == reqwest::StatusCode::TOO_MANY_REQUESTS
+                || status.is_server_error() =>
+        {
+            HttpRemoteCacheErrors::ServerUnavailable(format!("Response status: {}", status))
+        }
         _ => HttpRemoteCacheErrors::Misconfigured(format!(
             "Unexpected response status: {}",
             response.status()
@@ -136,6 +161,7 @@ impl AsRef<str> for HttpRemoteCacheErrors {
             HttpRemoteCacheErrors::Unauthorized(_) => "Unauthorized",
             HttpRemoteCacheErrors::Misconfigured(_) => "Misconfigured",
             HttpRemoteCacheErrors::RequestError(_) => "RequestError",
+            HttpRemoteCacheErrors::ServerUnavailable(_) => "ServerUnavailable",
             HttpRemoteCacheErrors::DownloadTimeout(_) => "DownloadTimeout",
             HttpRemoteCacheErrors::UploadTimeout(_) => "UploadTimeout",
             HttpRemoteCacheErrors::CorruptArtifact(_) => "CorruptArtifact",

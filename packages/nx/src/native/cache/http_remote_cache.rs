@@ -597,6 +597,7 @@ mod test {
     fn damage_is_recoverable_and_malice_is_fatal() {
         let recoverable = [
             HttpRemoteCacheErrors::RequestError("reset".into()),
+            HttpRemoteCacheErrors::ServerUnavailable("429".into()),
             HttpRemoteCacheErrors::DownloadTimeout("stalled".into()),
             HttpRemoteCacheErrors::UploadTimeout("stalled".into()),
             HttpRemoteCacheErrors::CorruptArtifact("truncated".into()),
@@ -617,6 +618,71 @@ mod test {
         ];
         for err in fatal {
             assert!(err.is_fatal(), "{} should stop the run", err.as_ref());
+        }
+    }
+
+    /// Answer one request with a bare `status`, so the classifier runs against a
+    /// real `reqwest::Response` instead of a hand-built one.
+    async fn classify_response_status(status: u16) -> HttpRemoteCacheErrors {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        std::thread::spawn(move || {
+            use std::io::{BufRead, Write};
+            let Some(mut stream) = listener.incoming().flatten().next() else {
+                return;
+            };
+            // Drain the request line and headers before replying, so the client
+            // reads the status under test rather than a connection reset.
+            let mut reader = std::io::BufReader::new(stream.try_clone().unwrap());
+            let mut line = String::new();
+            while reader.read_line(&mut line).unwrap_or(0) > 0 {
+                if line == "\r\n" {
+                    break;
+                }
+                line.clear();
+            }
+            let _ = stream.write_all(
+                format!("HTTP/1.1 {} Stub\r\nContent-Length: 0\r\n\r\n", status).as_bytes(),
+            );
+        });
+
+        let response = ClientBuilder::new()
+            .connect_timeout(CONNECT_TIMEOUT)
+            .build()
+            .unwrap()
+            .get(format!("http://{}/v1/cache/abc", addr))
+            .send()
+            .await
+            .expect("the stub server should answer");
+
+        convert_response_to_error(response).await
+    }
+
+    /// The #36107 502 and the 429 a rate-limited cache answers with both arrive
+    /// as a status rather than a transport failure, so the status has to decide
+    /// the fatal/recoverable split as well.
+    #[tokio::test]
+    async fn temporary_statuses_degrade_and_other_client_errors_stay_fatal() {
+        for status in [408, 429, 500, 502, 503, 504] {
+            let err = classify_response_status(status).await;
+            assert!(
+                matches!(err, HttpRemoteCacheErrors::ServerUnavailable(_)) && !err.is_fatal(),
+                "{} should degrade to a cache miss, got {:?}",
+                status,
+                err
+            );
+        }
+
+        // Nothing about a 400 or a 404 gets better on a retry, so they keep
+        // pointing at the endpoint being wrong.
+        for status in [400, 404] {
+            let err = classify_response_status(status).await;
+            assert!(
+                matches!(err, HttpRemoteCacheErrors::Misconfigured(_)) && err.is_fatal(),
+                "{} should stop the run, got {:?}",
+                status,
+                err
+            );
         }
     }
 
