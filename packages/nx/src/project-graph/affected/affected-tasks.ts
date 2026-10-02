@@ -425,6 +425,8 @@ type NamedDependencyChanges = DependencyChanges & {
   named: Map<string, AffectedReason[]>;
   /** The changed file that moved each external, for naming it in a reason. */
   movedBy: Map<string, string>;
+  /** The changed files that moved each ecosystem whole, unable to name packages. */
+  ecosystemMovedBy: Map<string, string[]>;
 };
 
 function dependencyChanges(
@@ -473,6 +475,18 @@ function dependencyChanges(
   for (const external of lockFile.externals) {
     movedBy.set(external, changedLockFile);
   }
+  const ecosystemMovedBy = new Map<string, string[]>();
+  for (const [changes, file] of [
+    [packageJsonChanges, 'package.json'],
+    [lockFile, changedLockFile],
+  ] as const) {
+    for (const ecosystem of changes.changedExternalTypes) {
+      ecosystemMovedBy.set(ecosystem, [
+        ...(ecosystemMovedBy.get(ecosystem) ?? []),
+        file,
+      ]);
+    }
+  }
 
   return {
     externals: [...new Set(changes.flatMap((c) => c.externals))],
@@ -482,6 +496,7 @@ function dependencyChanges(
     projects: [...new Set(changes.flatMap((c) => c.projects))],
     named,
     movedBy,
+    ecosystemMovedBy,
   };
 }
 
@@ -529,9 +544,12 @@ function explainTasks(
       });
     }
     for (const ecosystem of matches.movedEcosystems) {
-      for (const file of dependencyFiles.length
-        ? dependencyFiles
-        : [undefined]) {
+      // Only the files that could not be narrowed: a package.json naming its
+      // packages beside an unreadable lockfile did not move everything.
+      const files = dependencyFiles.filter((file) =>
+        dependencies.ecosystemMovedBy.get(ecosystem)?.includes(file)
+      );
+      for (const file of files.length ? files : [undefined]) {
         reasons.push({ kind: 'moved-ecosystem', ecosystem, file });
       }
     }

@@ -42,6 +42,7 @@ import { connectToNxDb, IoSnapshotStore } from '../../native';
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { JsonDiffType } from '../../utils/json-diff';
 
 /**
  * `app` depends on `lib`. Both roots are real directories in this repo, because
@@ -251,6 +252,49 @@ describe('computeAffectedTasks', () => {
       ] as any,
     });
     expect(explanation.affected['lib:test']).toEqual([
+      { kind: 'moved-ecosystem', ecosystem: 'npm', file: 'pnpm-lock.yaml' },
+    ]);
+  });
+
+  // package.json named its package, so only the lockfile moved npm whole.
+  it('blames only the file that could not be narrowed', async () => {
+    const projectGraph = graph();
+    projectGraph.externalNodes = Object.fromEntries(
+      ['left-pad', 'right-pad'].map((name) => [
+        `npm:${name}`,
+        {
+          type: 'npm',
+          name: `npm:${name}`,
+          data: { packageName: name, version: '1.0.0' },
+        },
+      ])
+    ) as any;
+    projectGraph.nodes.lib.data.targets.test.inputs = [
+      { externalDependencies: ['left-pad', 'right-pad'] },
+    ] as any;
+    const { explanation } = await computeAffectedTasks({
+      explain: true,
+      projectGraph,
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'package.json',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['dependencies', 'left-pad'],
+              value: { lhs: '1.0.0', rhs: '2.0.0' },
+            },
+          ],
+        },
+        { file: 'pnpm-lock.yaml', getChanges: () => [new WholeFileChange()] },
+      ] as any,
+    });
+    expect(explanation.affected['lib:test']).toEqual([
+      { kind: 'npm-package', package: 'npm:left-pad', file: 'package.json' },
       { kind: 'moved-ecosystem', ecosystem: 'npm', file: 'pnpm-lock.yaml' },
     ]);
   });
