@@ -250,7 +250,10 @@ export function formatAffectedExplanation(
 
   const all = [...new Set([...names, ...Object.keys(upstream)])].sort();
   const touchedAll = all.filter(touched);
-  const reachedAll = all.filter((name) => !touched(name));
+  // Every task reading a changed output, so a touched one can be listed twice.
+  const reachedAll = all.filter(
+    (name) => !touched(name) || reasonsOf(name).some(isUpstreamReason)
+  );
 
   // Touched tasks: a section for files, then one for packages, each grouped
   // by what changed. A task touched by both is listed in each.
@@ -320,7 +323,6 @@ export function formatAffectedExplanation(
     lines.push('');
   }
 
-  // Tasks reached only through outputs the touched ones changed.
   if (reachedAll.length) {
     const header = `Touching those tasks changes outputs read by ${counted(reachedAll)}`;
     lines.push(verbose ? `${header}:` : `${header}${hint}`);

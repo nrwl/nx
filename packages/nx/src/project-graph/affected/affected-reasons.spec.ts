@@ -592,4 +592,28 @@ describe('formatAffectedExplanation', () => {
     expect(out).toContain('touches 1 **test** task and 6 tasks it depends on');
     expect(out).toContain('- and 2 more tasks the **test** tasks depend on');
   });
+
+  // app:test is touched itself, and also reads ui:build's changed outputs.
+  it('lists a touched task again when it also reads changed outputs', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'app:test': [
+            { kind: 'input-file', file: 'apps/app/a.ts' },
+            { kind: 'dependent-output', producer: 'ui:build' },
+          ],
+        },
+        upstream: {
+          'ui:build': [{ kind: 'input-file', file: 'libs/ui/b.ts' }],
+        },
+        touched: ['app:test', 'ui:build'],
+        requested: { targets: ['test'], total: 1 },
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain('  apps/app/a.ts:\n    - app:test');
+    expect(out).toContain(
+      'Touching those tasks changes outputs read by 1 test task. Pass --verbose to list each with its reasons.\n  - app:test'
+    );
+  });
 });

@@ -282,7 +282,7 @@ The title says how many tasks of your targets the change affects.
 The first section lists the tasks your change touches, meaning one of their own inputs changes.
 When several files change, it groups them by the files that reach them.
 When a change to `package.json` or a lockfile moves specific packages, a section after it lists the tasks those packages touch, grouped by package. A task touched by both a file and a package appears in both.
-The last section lists the tasks affected because they read the outputs of a touched task.
+The last section lists every task that reads the outputs of a touched task. A task touched directly that also reads them appears in both.
 
 Every section can include tasks you didn't ask for, such as a `prebuild` under `-t build`, or a task of a project you passed to `--exclude`, since they carry your change to the tasks you did ask for.
 Each heading counts your tasks apart from the others, and your tasks are listed first and in bold.
