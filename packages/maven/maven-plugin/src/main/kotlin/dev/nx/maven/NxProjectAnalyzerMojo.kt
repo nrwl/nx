@@ -85,7 +85,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     allProjects: List<MavenProject>
   ): List<ProjectAnalysis> {
 
-    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
     val startTime = System.currentTimeMillis()
     log.info("Creating shared component instances for optimized analysis...")
 
@@ -95,7 +94,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     // Create shared component instances ONCE for all projects (major optimization)
 
     val pathFormatter = PathFormatter()
-    val mojoAnalyzer = MojoAnalyzer(sharedExpressionResolver, pathFormatter, gitIgnoreClassifier, workspaceRoot)
+    val mojoAnalyzer = MojoAnalyzer(sharedExpressionResolver, pathFormatter, workspaceRoot)
 
     val sharedTestClassDiscovery = TestClassDiscovery()
 
@@ -106,7 +105,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
       session,
       mojoAnalyzer,
       pathFormatter,
-      gitIgnoreClassifier,
       targetNamePrefix ?: ""
     )
 
