@@ -127,6 +127,9 @@ export default defineConfig({
 });
 ```
 
+To stop an atomized task from rerunning for every library the app bundles, add an `@nx-depends-on` comment to its spec file.
+See [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
+
 {% aside type="note" title="Using setupNodeEvents function" %}
 If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/kb/cypress-setup-node-events) for more details.
 {% /aside %}
