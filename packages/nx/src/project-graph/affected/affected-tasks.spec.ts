@@ -105,6 +105,44 @@ describe('computeAffectedTasks', () => {
     ]);
   });
 
+  // `e2e` has no graph edges; it reaches `lib` only through `app`'s dependencies.
+  it.each([
+    ['packages/nx/src/index.ts', ['app:test', 'e2e:test', 'lib:test']],
+    ['packages/js/src/index.ts', ['app:test']],
+  ])(
+    "follows a project selection's dependencies to %s",
+    async (file, expected) => {
+      const projectGraph = graph();
+      projectGraph.nodes.e2e = {
+        name: 'e2e',
+        type: 'e2e',
+        data: {
+          root: 'packages/devkit',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: [
+                { input: 'production', projects: 'app', dependencies: true },
+              ],
+            },
+          },
+        },
+      };
+      projectGraph.dependencies.e2e = [];
+      const result = await computeAffectedTasks({
+        projectGraph,
+        nxJson: {
+          namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        } as any,
+        targets: ['test'],
+        touchedFiles: [
+          { file, getChanges: () => [new WholeFileChange()] },
+        ] as any,
+      });
+      expect([...result.affectedTaskIds].sort()).toEqual(expected);
+    }
+  );
+
   /**
    * ProjectConfiguration is spliced into a consumer's plan for each dependency
    * and is real hash entropy, but it resolves to no files, so nothing in the
