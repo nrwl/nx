@@ -30,6 +30,12 @@ import {
   selectsAffectedTasks,
 } from '../../project-graph/affected/affected-tasks';
 import type { TaskSelection } from '../../tasks-runner/run-command';
+import {
+  explainUnavailable,
+  isExplaining,
+  type AffectedExplanation,
+} from '../../project-graph/affected/affected-reasons';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -69,12 +75,24 @@ export async function affected(
     command === 'affected' &&
     !!nxArgs.targets?.length;
 
+  if (isExplaining(nxArgs.explain) && !useTasks) {
+    throw new Error(
+      explainUnavailable(
+        [
+          !selectsAffectedTasks() && 'NX_LEGACY_AFFECTED=false',
+          !nxArgs.targets?.length && 'targets passed with --targets (-t)',
+        ].filter(Boolean)
+      )
+    );
+  }
+
   // Outside the try so errors reach handleErrors, as they did from inside runCommand.
   let projectGraph: ProjectGraph;
   let taskSelection: TaskSelection | undefined;
   let projects: ProjectGraphProjectNode[] = [];
   if (useTasks) {
-    ({ projectGraph, taskSelection } = await computeAffectedTasks({
+    let explanation: AffectedExplanation | undefined;
+    ({ projectGraph, taskSelection, explanation } = await computeAffectedTasks({
       nxJson,
       targets: nxArgs.targets,
       touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
@@ -88,8 +106,18 @@ export async function affected(
       extraTargetDependencies,
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
       exclude: nxArgs.exclude,
+      explain: isExplaining(nxArgs.explain),
       ...(await runnerInputsForSelection(nxArgs, nxJson)),
     }));
+    // --explain reports the selection rather than acting on it: someone asking
+    // why a task is affected does not also want it to run.
+    if (isExplaining(nxArgs.explain)) {
+      printAffectedExplanation(explanation, 'Affected tasks', nxArgs.explain, {
+        verbose: args.verbose,
+      });
+      await output.drain();
+      process.exit(0);
+    }
   } else {
     projectGraph = await createProjectGraphAsync({ exitOnError: true });
     projects = await getAffectedGraphNodes(nxArgs, projectGraph);

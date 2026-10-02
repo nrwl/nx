@@ -48,6 +48,18 @@ impl<'a> ChangedExternals<'a> {
                 .is_some_and(|kind| self.types.contains(kind))
     }
 
+    /// The ecosystem that counts `name` as moved when the change could not be
+    /// pinned to packages; `None` when it names this package or misses it.
+    fn moved_with_ecosystem(&self, name: &str) -> Option<&str> {
+        if self.names.contains(name) {
+            return None;
+        }
+        self.external_nodes
+            .get(name)
+            .and_then(|node| node.r#type.as_deref())
+            .filter(|kind| self.types.contains(kind))
+    }
+
     /// `AllExternalDependencies` hashes every node, so any moved external
     /// reaches it whatever its type.
     fn any(&self) -> bool {
@@ -56,55 +68,6 @@ impl<'a> ChangedExternals<'a> {
 }
 
 pub(crate) const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
-
-/// Task ids with at least one changed file or moved package among their plan's
-/// inputs.
-///
-/// `changed_project_configs` is the subset of `changed_files` that is project
-/// configuration.
-pub(crate) fn touched_tasks(
-    graph: &ProjectGraph,
-    hash_plans: &HashPlans,
-    changed_files: &[String],
-    changed_project_configs: &[String],
-    externals: &ChangedExternals,
-    contents: &ChangedContents,
-) -> anyhow::Result<HashSet<String>> {
-    let roots = ProjectRoots::new(graph);
-    let changed = ChangedFiles::new(&roots, changed_files);
-
-    // The projects whose configuration changed. ProjectConfiguration resolves to
-    // no files, so nothing else in the plan can see this.
-    let reconfigured: HashSet<&str> = changed_project_configs
-        .iter()
-        .filter_map(|file| roots.owner_of(&normalize_js_path(file)))
-        .collect();
-
-    let ids = referenced_ids(hash_plans);
-    let hits: Vec<bool> = ids
-        .par_iter()
-        .map(|&id| {
-            instruction_matches(
-                hash_plans.pool.get(id).value(),
-                &changed,
-                &reconfigured,
-                externals,
-                contents,
-            )
-        })
-        .collect::<anyhow::Result<_>>()?;
-    let mut matched = vec![false; ids.last().map_or(0, |&id| id as usize + 1)];
-    for (&id, hit) in ids.iter().zip(hits) {
-        matched[id as usize] = hit;
-    }
-
-    Ok(hash_plans
-        .plans
-        .par_iter()
-        .filter(|(_, plan)| plan.iter().any(|&id| matched[id as usize]))
-        .map(|(task_id, _)| task_id.clone())
-        .collect())
-}
 
 /// The changed paths, normalized and indexed by owning project, so an instruction
 /// scoped to a project that owns no changed file never compiles its globs.
@@ -170,79 +133,6 @@ fn under_literal_prefix(
         .collect()
 }
 
-/// Whether any changed file is one this instruction would hash. `TaskOutput` never
-/// matches; `affected_through_output_reads` carries it instead.
-fn instruction_matches(
-    instruction: &HashInstruction,
-    changed: &ChangedFiles,
-    reconfigured: &HashSet<&str>,
-    externals: &ChangedExternals,
-    contents: &ChangedContents,
-) -> anyhow::Result<bool> {
-    // Scoped to one project, the way the hasher scopes the same globs with
-    // project_file_map, or workspace-wide when there is no owner to match.
-    let any_matching = |globs: &[String], project: Option<&str>| -> anyhow::Result<bool> {
-        let candidates = under_literal_prefix(globs, changed, changed.candidates(project));
-        if candidates.is_empty() {
-            return Ok(false);
-        }
-        let glob = build_glob_set(&fileset_patterns(globs))?;
-        Ok(candidates
-            .iter()
-            .any(|&index| glob.is_match(&changed.files[index])))
-    };
-
-    match instruction {
-        HashInstruction::WorkspaceFileSet(file_sets) => {
-            any_matching(&globs_from_workspace_globs(file_sets), None)
-        }
-        HashInstruction::ProjectFileSet(project, file_sets) => {
-            any_matching(file_sets, Some(project))
-        }
-        // Unscoped: the hasher expands these workspace-wide. Normalized as disk
-        // expansion does, so `apps//app/**` still matches `apps/app/x.ts`.
-        HashInstruction::IgnoredFileSet(globs) => {
-            let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
-            any_matching(&globs, None)
-        }
-        // Filtered to some fields, it hashes only those, so an unrelated edit is not a change.
-        HashInstruction::JsonFileSet(json)
-            if json.fields.is_some() || json.exclude_fields.is_some() =>
-        {
-            Ok(json_files_in_diff(json, changed)?
-                .into_iter()
-                .any(|file| contents.json_file_changed(file, json)))
-        }
-        HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
-            Some(project) => any_matching(std::slice::from_ref(&json.json_path), Some(project)),
-            None => any_matching(
-                &globs_from_workspace_globs(std::slice::from_ref(&json.json_path)),
-                None,
-            ),
-        },
-        // Also prefixed by the `typescript` node's hash, as the hasher looks it up.
-        HashInstruction::TsConfiguration(project) => Ok((changed
-            .files
-            .iter()
-            .any(|f| ROOT_TSCONFIG_FILES.contains(&f.as_str()))
-            && contents.ts_config_changed(project))
-            || externals.includes("typescript")),
-        // Hashes the project's config object, which resolves to no files, so it
-        // is matched on the config having changed rather than on a fileset. The
-        // planner splices one of these per dependency, which is what carries a
-        // dependency's config change to its consumers.
-        HashInstruction::ProjectConfiguration(project) => {
-            Ok(reconfigured.contains(project.as_str()))
-        }
-        HashInstruction::External(name) => Ok(externals.includes(name)),
-        // Hashes every external node, so any one moving changes it.
-        HashInstruction::AllExternalDependencies => Ok(externals.any()),
-        // Not judgeable from a diff: runtime output, env, cwd and the snapshot
-        // marker. Task outputs are carried by propagation instead.
-        _ => Ok(false),
-    }
-}
-
 /// The changed files a `JsonFileSet` reads, matched as `collect_json_input_files` does.
 fn json_files_in_diff<'c>(
     json: &JsonFileSetInput,
@@ -267,12 +157,345 @@ fn json_files_in_diff<'c>(
         .collect())
 }
 
+/// A changed file that reached a task, and the input pattern it reached it by.
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct InputMatch {
+    pub file: String,
+    /// The fileset that matched. Absent for an instruction with no pattern to
+    /// name, such as the root tsconfig.
+    pub pattern: Option<String>,
+}
+
+/// What reached one task: the files its filesets matched and the packages it
+/// hashes that moved.
+#[napi(object)]
+#[derive(Clone, Debug, Default)]
+pub struct TaskInputMatches {
+    pub files: Vec<InputMatch>,
+    /// External node names the plan hashes one by one that moved.
+    pub packages: Vec<String>,
+    /// The plan hashes every external dependency, and one moved.
+    pub all_externals: bool,
+    /// Changed config files of the projects whose configuration the plan hashes.
+    pub project_configs: Vec<String>,
+    /// Ecosystems a change moved whole, without naming packages, that the plan
+    /// hashes packages of. Reported once rather than per package.
+    pub moved_ecosystems: Vec<String>,
+}
+
+impl TaskInputMatches {
+    fn matched(&self) -> bool {
+        !self.files.is_empty()
+            || !self.packages.is_empty()
+            || self.all_externals
+            || !self.project_configs.is_empty()
+            || !self.moved_ecosystems.is_empty()
+    }
+
+    fn sort(&mut self) {
+        self.files
+            .sort_by(|a, b| a.file.cmp(&b.file).then(a.pattern.cmp(&b.pattern)));
+        self.files
+            .dedup_by(|a, b| a.file == b.file && a.pattern == b.pattern);
+        self.packages.sort_unstable();
+        self.packages.dedup();
+        self.project_configs.sort_unstable();
+        self.project_configs.dedup();
+        self.moved_ecosystems.sort_unstable();
+        self.moved_ecosystems.dedup();
+    }
+}
+
+/// What the change matched, once per matching instruction rather than once per
+/// task: a lib's fileset reached through `^production` is one instruction
+/// shared by every dependent, so copying its files into each would grow with
+/// changed files × dependents.
+#[derive(Debug, Default)]
+pub(crate) struct InputMatches {
+    /// One entry per instruction that matched something, sorted.
+    pub table: Vec<TaskInputMatches>,
+    /// Per touched task, the `table` entries its plan holds, ascending.
+    pub by_task: HashMap<String, Vec<u32>>,
+}
+
+impl InputMatches {
+    /// Everything that reached `task`, merged as one task's matches.
+    #[cfg(test)]
+    pub fn for_task(&self, task: &str) -> Option<TaskInputMatches> {
+        let mut merged = TaskInputMatches::default();
+        for &index in self.by_task.get(task)? {
+            let hits = &self.table[index as usize];
+            merged.files.extend(hits.files.iter().cloned());
+            merged.packages.extend(hits.packages.iter().cloned());
+            merged.all_externals |= hits.all_externals;
+            merged
+                .project_configs
+                .extend(hits.project_configs.iter().cloned());
+            merged
+                .moved_ecosystems
+                .extend(hits.moved_ecosystems.iter().cloned());
+        }
+        merged.sort();
+        Some(merged)
+    }
+}
+
+/// Every changed file a plan instruction matched with the pattern responsible,
+/// every moved package it hashes, and every changed config it hashes, and
+/// which of those each task's plan holds.
+///
+/// `changed_project_configs` is the subset of `changed_files` that is project
+/// configuration still on disk. Without `detail`, a fileset stops at its first
+/// matching file and names no pattern: selection only asks whether it matched.
+pub(crate) fn compute_input_matches(
+    graph: &ProjectGraph,
+    hash_plans: &HashPlans,
+    changed_files: &[String],
+    changed_project_configs: &[String],
+    externals: &ChangedExternals,
+    contents: &ChangedContents,
+    detail: bool,
+) -> anyhow::Result<InputMatches> {
+    let roots = ProjectRoots::new(graph);
+    let changed = ChangedFiles::new(&roots, changed_files);
+    let mut reconfigured: HashMap<&str, Vec<String>> = HashMap::new();
+    for file in changed_project_configs {
+        if let Some(project) = roots.owner_of(&normalize_js_path(file)) {
+            reconfigured.entry(project).or_default().push(file.clone());
+        }
+    }
+
+    // Per instruction, what it matched. Only instructions that matched
+    // something are kept.
+    let ids = referenced_ids(hash_plans);
+    let hits: HashMap<u32, TaskInputMatches> = ids
+        .par_iter()
+        .map(|&id| {
+            let hits = instruction_matches_detail(
+                hash_plans.pool.get(id).value(),
+                &changed,
+                changed_files,
+                &reconfigured,
+                externals,
+                contents,
+                detail,
+            )?;
+            Ok::<_, anyhow::Error>((id, hits))
+        })
+        .filter(|entry| entry.as_ref().map_or(true, |(_, hits)| hits.matched()))
+        .collect::<anyhow::Result<HashMap<_, _>>>()?;
+    // Ordered by instruction id so the table is reproducible.
+    let mut hits: Vec<(u32, TaskInputMatches)> = hits.into_iter().collect();
+    hits.sort_unstable_by_key(|(id, _)| *id);
+    // Indexed by instruction id: every plan entry is looked up, most to no match.
+    let mut slot: Vec<Option<u32>> = vec![None; ids.last().map_or(0, |&id| id as usize + 1)];
+    let mut table = Vec::with_capacity(hits.len());
+    for (index, (id, mut hit)) in hits.into_iter().enumerate() {
+        hit.sort();
+        slot[id as usize] = Some(index as u32);
+        table.push(hit);
+    }
+
+    let by_task = hash_plans
+        .plans
+        .par_iter()
+        .filter_map(|(task_id, plan)| {
+            let mut indexes: Vec<u32> = plan.iter().filter_map(|&id| slot[id as usize]).collect();
+            if indexes.is_empty() {
+                return None;
+            }
+            indexes.sort_unstable();
+            indexes.dedup();
+            Some((task_id.clone(), indexes))
+        })
+        .collect();
+    Ok(InputMatches { table, by_task })
+}
+
+/// What an instruction matched: the files and which pattern reached each, or
+/// the package that moved. `TaskOutput` never matches;
+/// `affected_through_output_reads` carries it instead.
+///
+/// The whole glob set decides the match, so negations still exclude; the
+/// individual positives are then tested only to name the one responsible.
+fn instruction_matches_detail(
+    instruction: &HashInstruction,
+    changed: &ChangedFiles,
+    raw_files: &[String],
+    reconfigured: &HashMap<&str, Vec<String>>,
+    externals: &ChangedExternals,
+    contents: &ChangedContents,
+    detail: bool,
+) -> anyhow::Result<TaskInputMatches> {
+    let of_files = |files: Vec<InputMatch>| TaskInputMatches {
+        files,
+        ..Default::default()
+    };
+    // A package moved by name, or only because its whole ecosystem did.
+    let of_external = |name: &str| match externals.moved_with_ecosystem(name) {
+        Some(ecosystem) => TaskInputMatches {
+            moved_ecosystems: vec![ecosystem.to_string()],
+            ..Default::default()
+        },
+        None if externals.includes(name) => TaskInputMatches {
+            packages: vec![name.to_string()],
+            ..Default::default()
+        },
+        None => TaskInputMatches::default(),
+    };
+    let collect = |globs: &[String], project: Option<&str>| -> anyhow::Result<Vec<InputMatch>> {
+        let candidates = under_literal_prefix(globs, changed, changed.candidates(project));
+        if candidates.is_empty() {
+            return Ok(vec![]);
+        }
+        let full = build_glob_set(&fileset_patterns(globs))?;
+        if !detail {
+            return Ok(candidates
+                .into_iter()
+                .find(|&i| full.is_match(&changed.files[i]))
+                .map(|i| InputMatch {
+                    file: raw_files[i].clone(),
+                    pattern: None,
+                })
+                .into_iter()
+                .collect());
+        }
+        let hits: Vec<usize> = candidates
+            .into_iter()
+            .filter(|&i| full.is_match(&changed.files[i]))
+            .collect();
+        if hits.is_empty() {
+            return Ok(vec![]);
+        }
+        // Keyed by the entry as declared, so the reason names what the user
+        // wrote rather than the `/**` twin a glob-free path expands to.
+        let declared: Vec<&String> = globs.iter().filter(|glob| !glob.starts_with('!')).collect();
+        // A lone positive is responsible for every match, with nothing to compile.
+        let positives: Vec<(&String, _)> = if declared.len() == 1 {
+            vec![]
+        } else {
+            declared
+                .iter()
+                .map(|glob| {
+                    build_glob_set(&fileset_patterns(std::slice::from_ref(*glob)))
+                        .map(|set| (*glob, set))
+                })
+                .collect::<anyhow::Result<Vec<_>>>()?
+        };
+
+        Ok(hits
+            .into_iter()
+            .map(|i| InputMatch {
+                // The path as it was given, so it reads back like the diff.
+                file: raw_files[i].clone(),
+                pattern: match declared.as_slice() {
+                    [only] => Some((*only).clone()),
+                    _ => positives
+                        .iter()
+                        .find(|(_, set)| set.is_match(&changed.files[i]))
+                        .map(|(glob, _)| (*glob).clone()),
+                },
+            })
+            .collect())
+    };
+
+    match instruction {
+        HashInstruction::WorkspaceFileSet(file_sets) => {
+            collect(&globs_from_workspace_globs(file_sets), None).map(of_files)
+        }
+        HashInstruction::ProjectFileSet(project, file_sets) => {
+            collect(file_sets, Some(project)).map(of_files)
+        }
+        HashInstruction::IgnoredFileSet(globs) => {
+            let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
+            collect(&globs, None).map(of_files)
+        }
+        HashInstruction::JsonFileSet(json)
+            if json.fields.is_some() || json.exclude_fields.is_some() =>
+        {
+            Ok(of_files(
+                json_files_in_diff(json, changed)?
+                    .into_iter()
+                    .filter(|file| contents.json_file_changed(file, json))
+                    .map(|file| InputMatch {
+                        file: file.to_string(),
+                        pattern: Some(json.json_path.clone()),
+                    })
+                    .collect(),
+            ))
+        }
+        HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
+            Some(project) => collect(std::slice::from_ref(&json.json_path), Some(project)),
+            None => collect(
+                &globs_from_workspace_globs(std::slice::from_ref(&json.json_path)),
+                None,
+            ),
+        }
+        .map(of_files),
+        HashInstruction::TsConfiguration(project) => {
+            let roots: Vec<InputMatch> = changed
+                .files
+                .iter()
+                .enumerate()
+                .filter(|(_, file)| ROOT_TSCONFIG_FILES.contains(&file.as_str()))
+                .map(|(i, _)| InputMatch {
+                    file: raw_files[i].clone(),
+                    pattern: None,
+                })
+                .collect();
+            // Only read and compare the root tsconfig when one is in the diff.
+            let changed = !roots.is_empty() && contents.ts_config_changed(project);
+            Ok(TaskInputMatches {
+                files: if changed { roots } else { vec![] },
+                ..of_external("typescript")
+            })
+        }
+        HashInstruction::External(name) => Ok(of_external(name)),
+        HashInstruction::AllExternalDependencies => Ok(TaskInputMatches {
+            all_externals: externals.any(),
+            ..Default::default()
+        }),
+        HashInstruction::ProjectConfiguration(project) => Ok(TaskInputMatches {
+            project_configs: reconfigured
+                .get(project.as_str())
+                .cloned()
+                .unwrap_or_default(),
+            ..Default::default()
+        }),
+        _ => Ok(TaskInputMatches::default()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::native::tasks::types::InstructionPool;
     use crate::native::test_utils::{graph_of_roots as graph, hash_plans, strings};
     use std::sync::Arc;
+
+    /// The tasks with any input match: what selection treats as touched.
+    fn touched_tasks(
+        graph: &ProjectGraph,
+        hash_plans: &HashPlans,
+        changed_files: &[String],
+        changed_project_configs: &[String],
+        externals: &ChangedExternals,
+        contents: &ChangedContents,
+    ) -> anyhow::Result<HashSet<String>> {
+        Ok(compute_input_matches(
+            graph,
+            hash_plans,
+            changed_files,
+            changed_project_configs,
+            externals,
+            contents,
+            false,
+        )?
+        .by_task
+        .into_keys()
+        .collect())
+    }
 
     /// Builds a one-task plan from the given instructions.
     fn plans(task: &str, instructions: Vec<HashInstruction>) -> HashPlans {
@@ -862,5 +1085,98 @@ mod tests {
             ),
             vec!["a:build"]
         );
+    }
+
+    #[test]
+    fn input_matches_name_the_file_and_the_pattern_responsible() {
+        let g = graph(&[("a", "libs/a")]);
+        let p = plans(
+            "a:build",
+            vec![HashInstruction::ProjectFileSet(
+                "a".into(),
+                strings(&["libs/a/**/*.ts", "!libs/a/**/*.spec.ts"]),
+            )],
+        );
+        let hits = compute_input_matches(
+            &g,
+            &p,
+            &strings(&["libs/a/src/x.ts", "libs/a/src/x.spec.ts"]),
+            &[],
+            &no_externals(),
+            &ChangedContents::default(),
+            true,
+        )
+        .unwrap();
+        let hit = &hits.for_task("a:build").unwrap().files;
+        assert_eq!(hit.len(), 1, "the negated spec file is excluded");
+        assert_eq!(hit[0].file, "libs/a/src/x.ts");
+        assert_eq!(hit[0].pattern.as_deref(), Some("libs/a/**/*.ts"));
+    }
+
+    #[test]
+    fn input_matches_name_the_moved_package_and_the_all_externals_hash() {
+        let g = graph(&[("a", "libs/a")]);
+        let p = hash_plans(&[
+            (
+                "a:build",
+                vec![
+                    HashInstruction::External("npm:lodash".into()),
+                    HashInstruction::External("npm:react".into()),
+                ],
+            ),
+            ("a:lint", vec![HashInstruction::AllExternalDependencies]),
+            (
+                "a:test",
+                vec![HashInstruction::External("npm:react".into())],
+            ),
+        ]);
+        let moved = strings(&["npm:lodash"]);
+        let hits = compute_input_matches(
+            &g,
+            &p,
+            &[],
+            &[],
+            &ChangedExternals::new(&moved, &[], &g.external_nodes),
+            &ChangedContents::default(),
+            true,
+        )
+        .unwrap();
+        let build = hits.for_task("a:build").unwrap();
+        assert_eq!(build.packages, strings(&["npm:lodash"]));
+        assert!(!build.all_externals);
+        assert!(hits.for_task("a:lint").unwrap().all_externals);
+        assert!(
+            hits.for_task("a:test").is_none(),
+            "an unmoved package is no reason"
+        );
+    }
+
+    /// An unpinned change moves every package of its ecosystem; naming each one
+    /// under every task would bury the explanation.
+    #[test]
+    fn input_matches_report_an_unpinned_ecosystem_once() {
+        let g = externals_graph(&[("npm:lodash", "npm"), ("npm:react", "npm")]);
+        let p = plans(
+            "a:build",
+            vec![
+                HashInstruction::External("npm:lodash".into()),
+                HashInstruction::External("npm:react".into()),
+            ],
+        );
+        let moved = strings(&["npm:react"]);
+        let types = strings(&["npm"]);
+        let hits = compute_input_matches(
+            &g,
+            &p,
+            &[],
+            &[],
+            &ChangedExternals::new(&moved, &types, &g.external_nodes),
+            &ChangedContents::default(),
+            true,
+        )
+        .unwrap();
+        let build = hits.for_task("a:build").unwrap();
+        assert_eq!(build.packages, strings(&["npm:react"]));
+        assert_eq!(build.moved_ecosystems, strings(&["npm"]));
     }
 }

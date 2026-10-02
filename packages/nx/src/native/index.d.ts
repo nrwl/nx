@@ -435,6 +435,29 @@ export interface AffectedOptions {
   workspaceRoot: string
 }
 
+/**
+ * Why the change reached each task. Covers every task it reached, not just
+ * the selection, so a reason naming a producer can be looked up too.
+ */
+export interface AffectedTaskExplanation {
+  /**
+   * The reached tasks the change touched directly, sorted: a matched input,
+   * or always touched. Every other reached task was carried through outputs.
+   */
+  touched: Array<string>
+  /** Consumer -> the reached producers whose outputs it reads. */
+  producersOf: Record<string, Array<string>>
+  /** Changed project configs no longer on disk. Every task was seeded for them. */
+  deletedProjectConfigs: Array<string>
+  /**
+   * What each matching plan instruction matched. Shared rather than copied
+   * per task: one lib's fileset can be in the plan of every dependent.
+   */
+  inputMatches: Array<TaskInputMatches>
+  /** Per reached task, the indexes of the matches above that its plan holds. */
+  taskInputMatches: Record<string, Array<number>>
+}
+
 export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph, changedFiles: Array<string>, options: AffectedTasksOptions): AffectedTaskSelection
 
 export interface AffectedTaskSelection {
@@ -442,6 +465,8 @@ export interface AffectedTaskSelection {
   affected: Array<string>
   /** `affected` plus everything it depends on, sorted: what a run keeps. */
   required: Array<string>
+  /** Why the change reached each task. Only when `explain` was asked for. */
+  explanation?: AffectedTaskExplanation
 }
 
 export interface AffectedTasksOptions {
@@ -490,6 +515,8 @@ export interface AffectedTasksOptions {
    * project's tsconfig `paths` entries, rather than none.
    */
   selectivelyHashTsConfig: boolean
+  /** Whether to return why each task was reached, for `--explain`. */
+  explain: boolean
 }
 
 export interface BatchInfo {
@@ -810,6 +837,16 @@ export declare function initializeTelemetry(connection: ExternalObject<NxDbConne
  */
 export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
+/** A changed file that reached a task, and the input pattern it reached it by. */
+export interface InputMatch {
+  file: string
+  /**
+   * The fileset that matched. Absent for an instruction with no pattern to
+   * name, such as the root tsconfig.
+   */
+  pattern?: string
+}
+
 export interface InputsInput {
   input: string
   dependencies?: boolean
@@ -1114,6 +1151,25 @@ export interface TaskHashDetails {
   implicitDeps?: Record<string, string>
   /** Hash of the runtime environment which the task was executed */
   runtime?: Record<string, string>
+}
+
+/**
+ * What reached one task: the files its filesets matched and the packages it
+ * hashes that moved.
+ */
+export interface TaskInputMatches {
+  files: Array<InputMatch>
+  /** External node names the plan hashes one by one that moved. */
+  packages: Array<string>
+  /** The plan hashes every external dependency, and one moved. */
+  allExternals: boolean
+  /** Changed config files of the projects whose configuration the plan hashes. */
+  projectConfigs: Array<string>
+  /**
+   * Ecosystems a change moved whole, without naming packages, that the plan
+   * hashes packages of. Reported once rather than per package.
+   */
+  movedEcosystems: Array<string>
 }
 
 /**
