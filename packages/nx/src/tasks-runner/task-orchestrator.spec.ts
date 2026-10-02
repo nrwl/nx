@@ -41,11 +41,16 @@ describe('TaskOrchestrator', () => {
     }
 
     function createProjectGraph(): ProjectGraph {
-      const node = (name: string, inputs?: unknown[]) => ({
+      const node = (
+        name: string,
+        inputs?: unknown[],
+        namedInputs?: Record<string, unknown[]>
+      ) => ({
         name,
         type: 'lib' as const,
         data: {
           root: name,
+          ...(namedInputs ? { namedInputs } : {}),
           targets: {
             build: {
               executor: 'my-plugin:build',
@@ -56,18 +61,34 @@ describe('TaskOrchestrator', () => {
       });
       return {
         nodes: {
-          dep: node('dep'),
+          dep: node('dep', undefined, {
+            built: [{ fileset: '{projectRoot}/dist/**', includeIgnored: true }],
+          }),
           consumer: node('consumer', [
             { dependentTasksOutputFiles: '**/*.jar', transitive: true },
           ]),
           reader: node('reader', [
             { fileset: '{workspaceRoot}/dist/dep/**', includeIgnored: true },
           ]),
+          depsReader: node('depsReader', [
+            {
+              fileset: '{projectRoot}/dist/**',
+              includeIgnored: true,
+              dependencies: true,
+            },
+          ]),
+          namedReader: node('namedReader', ['^built']),
+          plain: node('plain', ['{projectRoot}/**/*']),
         },
         dependencies: {
           dep: [],
           consumer: [{ source: 'consumer', target: 'dep', type: 'static' }],
-          reader: [{ source: 'reader', target: 'dep', type: 'static' }],
+          ...Object.fromEntries(
+            ['reader', 'depsReader', 'namedReader', 'plain'].map((p) => [
+              p,
+              [{ source: p, target: 'dep', type: 'static' }],
+            ])
+          ),
         },
         externalNodes: {},
       } as unknown as ProjectGraph;
@@ -190,19 +211,15 @@ describe('TaskOrchestrator', () => {
     function readerTaskGraph(dep: Task, reader: Task): TaskGraph {
       return {
         roots: ['dep:build'],
-        tasks: { 'dep:build': dep, 'reader:build': reader },
-        dependencies: { 'dep:build': [], 'reader:build': ['dep:build'] },
-        continuousDependencies: { 'dep:build': [], 'reader:build': [] },
+        tasks: { 'dep:build': dep, [reader.id]: reader },
+        dependencies: { 'dep:build': [], [reader.id]: ['dep:build'] },
+        continuousDependencies: { 'dep:build': [], [reader.id]: [] },
       };
     }
 
-    it('should not look up a task the up-front pass left unhashed before its deps run', async () => {
-      const dep = createTask('dep:build');
-      dep.hash = 'dep-upfront';
-      // Unhashed: the planner deferred it, since its includeIgnored fileset
-      // reads dep's outputs.
-      const reader = createTask('reader:build');
-      const taskGraph = readerTaskGraph(dep, reader);
+    async function runReaderBatch(readerProject: string) {
+      const reader = createTask(`${readerProject}:build`);
+      const taskGraph = readerTaskGraph(createTask('dep:build'), reader);
       const { orchestrator, hasher, hashesAtCacheTime } =
         createOrchestrator(taskGraph);
 
@@ -215,33 +232,36 @@ describe('TaskOrchestrator', () => {
       const lookedUp = orchestrator.applyCachedResults.mock.calls.flatMap(
         ([tasks]: [Task[]]) => tasks.map((t) => t.id)
       );
-      expect(lookedUp).toEqual(['dep:build']);
-      // Preliminary hash (call 1), then re-hashed once dep's outputs exist
+      return { reader, lookedUp, hasher, hashesAtCacheTime };
+    }
+
+    it.each([
+      ['its own includeIgnored fileset', 'reader'],
+      ['an includeIgnored fileset on its dependencies', 'depsReader'],
+      [
+        "a dependency's named input with an includeIgnored fileset",
+        'namedReader',
+      ],
+    ])(
+      'should not look up a task reading %s before its deps run',
+      async (_, project) => {
+        const { lookedUp, hasher, hashesAtCacheTime } =
+          await runReaderBatch(project);
+
+        expect(lookedUp).toEqual(['dep:build']);
+        // dep (call 1), reader (call 2), reader re-hashed after the batch (call 3)
+        expect(hasher.hashTasks).toHaveBeenCalledTimes(3);
+        expect(hashesAtCacheTime[`${project}:build`]).toBe(
+          `${project}:build|call-3`
+        );
+      }
+    );
+
+    it('should look up a task without includeIgnored inputs while its deps run', async () => {
+      const { lookedUp, hasher } = await runReaderBatch('plain');
+
+      expect(lookedUp).toEqual(['dep:build', 'plain:build']);
       expect(hasher.hashTasks).toHaveBeenCalledTimes(2);
-      expect(hashesAtCacheTime['reader:build']).toBe('reader:build|call-2');
-    });
-
-    it('should look up a task the up-front pass already hashed', async () => {
-      const dep = createTask('dep:build');
-      dep.hash = 'dep-upfront';
-      const reader = createTask('reader:build');
-      reader.hash = 'reader-upfront';
-      const taskGraph = readerTaskGraph(dep, reader);
-      const { orchestrator, hasher, hashesAtCacheTime } =
-        createOrchestrator(taskGraph);
-
-      await orchestrator.applyFromCacheOrRunBatch(
-        true,
-        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
-        0
-      );
-
-      const lookedUp = orchestrator.applyCachedResults.mock.calls.flatMap(
-        ([tasks]: [Task[]]) => tasks.map((t) => t.id)
-      );
-      expect(lookedUp).toEqual(['dep:build', 'reader:build']);
-      expect(hasher.hashTasks).not.toHaveBeenCalled();
-      expect(hashesAtCacheTime['reader:build']).toBe('reader-upfront');
     });
   });
 

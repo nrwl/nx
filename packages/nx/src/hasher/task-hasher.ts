@@ -348,7 +348,7 @@ export class InProcessTaskHasher implements TaskHasher {
 }
 
 export type ExpandedSelfInput =
-  | { fileset: string }
+  | { fileset: string; includeIgnored?: boolean }
   | { runtime: string }
   | { env: string }
   | { externalDependencies: string[] };
@@ -357,6 +357,11 @@ export type ExpandedDepsOutput = {
   transitive?: boolean;
 };
 export type ExpandedInput = ExpandedSelfInput | ExpandedDepsOutput;
+type DepsFileset = {
+  fileset: string;
+  dependencies: true;
+  includeIgnored?: boolean;
+};
 const DEFAULT_INPUTS: ReadonlyArray<InputDefinition> = [
   {
     input: 'default',
@@ -441,11 +446,11 @@ export function splitInputsIntoSelfAndDependencies(
   projectInputs: { input: string; projects: string[] }[];
   selfInputs: ExpandedSelfInput[];
   depsOutputs: ExpandedDepsOutput[];
-  depsFilesets: { fileset: string; dependencies: true }[];
+  depsFilesets: DepsFileset[];
 } {
   const depsInputs: { input: string; dependencies: true }[] = [];
   const projectInputs: { input: string; projects: string[] }[] = [];
-  const depsFilesets: { fileset: string; dependencies: true }[] = [];
+  const depsFilesets: DepsFileset[] = [];
   const selfInputs = [];
   for (const d of inputs) {
     if (typeof d === 'string') {
@@ -464,9 +469,11 @@ export function splitInputsIntoSelfAndDependencies(
       }
     } else {
       if ('fileset' in d && 'dependencies' in d && d.dependencies) {
+        const { fileset, includeIgnored } = d as DepsFileset;
         depsFilesets.push({
-          fileset: (d as { fileset: string; dependencies: true }).fileset,
+          fileset,
           dependencies: true,
+          ...(includeIgnored ? { includeIgnored } : {}),
         });
       } else if (
         'input' in d &&
