@@ -4,7 +4,7 @@ import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 
 const HEAD = 'a'.repeat(40);
-let snapshotDb: ReturnType<typeof connectToNxDb>;
+let configurationDb: ReturnType<typeof connectToNxDb>;
 
 vi.mock('../tasks-runner/utils', () => ({
   getExecutorForTask: vi.fn((task: { target: { target: string } }) => ({
@@ -12,8 +12,12 @@ vi.mock('../tasks-runner/utils', () => ({
   })),
 }));
 
-import { closeDbConnection, connectToNxDb, IoSnapshotStore } from '../native';
-import { buildIoSnapshotOverrides } from './overrides';
+import {
+  closeDbConnection,
+  connectToNxDb,
+  UltracacheConfigurationStore,
+} from '../native';
+import { buildUltracacheOverrides } from './overrides';
 
 function node(name: string, root: string, targets: Record<string, any>) {
   return { name, type: 'lib' as const, data: { root, targets } };
@@ -70,28 +74,28 @@ function graph(...ids: string[]): TaskGraph {
   };
 }
 
-function writeSet(snapshots: Record<string, unknown>) {
-  return new IoSnapshotStore(snapshotDb).import({
+function writeConfigurations(entries: Record<string, unknown>) {
+  return new UltracacheConfigurationStore(configurationDb).import({
     requestedCommit: HEAD,
-    snapshotsJson: JSON.stringify(snapshots),
+    configurationsJson: JSON.stringify(entries),
   });
 }
 
-describe('buildIoSnapshotOverrides', () => {
+describe('buildUltracacheOverrides', () => {
   let tempFs: TempFs;
 
   beforeEach(() => {
-    tempFs = new TempFs('io-snapshot-overrides');
-    snapshotDb = connectToNxDb(join(tempFs.tempDir, 'db'), 'io-snapshots');
+    tempFs = new TempFs('ultracache-overrides');
+    configurationDb = connectToNxDb(join(tempFs.tempDir, 'db'), 'ultracache');
   });
 
   afterEach(() => {
-    closeDbConnection(snapshotDb);
+    closeDbConnection(configurationDb);
     tempFs.cleanup();
   });
 
   it('uses flat entries, including one that read nothing', () => {
-    const set = writeSet({
+    const configurations = writeConfigurations({
       'web:build': {
         commit: HEAD,
         inputs: ['apps/web/src/**/*.ts', 'dist/libs/ui/index.js'],
@@ -99,10 +103,10 @@ describe('buildIoSnapshotOverrides', () => {
       },
       'root:build': { commit: HEAD, inputs: [], outputs: [] },
     });
-    const result = buildIoSnapshotOverrides(
+    const result = buildUltracacheOverrides(
       projectGraph,
       graph('web:build', 'ui:build', 'root:build'),
-      set
+      configurations
     );
     expect(result.used).toEqual(['root:build', 'web:build']);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
@@ -111,7 +115,7 @@ describe('buildIoSnapshotOverrides', () => {
   });
 
   it('withholds disabled, custom-hasher, and invalid-glob tasks', () => {
-    const set = writeSet({
+    const configurations = writeConfigurations({
       'web:lint': { commit: HEAD, inputs: [], outputs: [] },
       'web:custom': { commit: HEAD, inputs: [], outputs: [] },
       'ui:build': {
@@ -120,10 +124,10 @@ describe('buildIoSnapshotOverrides', () => {
         outputs: [],
       },
     });
-    const result = buildIoSnapshotOverrides(
+    const result = buildUltracacheOverrides(
       projectGraph,
       graph('web:lint', 'web:custom', 'ui:build'),
-      set
+      configurations
     );
     expect(result.used).toEqual([]);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([

@@ -1,19 +1,19 @@
-import type { IoSnapshots } from '../../native';
-import { getIoSnapshotStore } from '../../io-snapshots/store';
-import type { IoSnapshotVersion } from '../message-types/io-snapshot-version';
+import type { UltracacheConfigurations } from '../../native';
+import { getUltracacheConfigurationStore } from '../../ultracache/store';
+import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
 
 // One handle at a time: entries read for a request serve the next one while
 // the version holds, and another version replaces it, so nothing accumulates
 // over a long-lived daemon.
-let remembered: IoSnapshots | undefined;
+let remembered: UltracacheConfigurations | undefined;
 
 /**
  * Exactly the version the client hashes from, never a newer import for the
  * same commit. `undefined` when it is not stored, e.g. after `nx reset`.
  */
-export function getIoSnapshotsForVersion(
-  version: IoSnapshotVersion | undefined
-): IoSnapshots | undefined {
+export function getUltracacheConfigurationsForVersion(
+  version: UltracacheConfigurationVersion | undefined
+): UltracacheConfigurations | undefined {
   if (!version) {
     return undefined;
   }
@@ -33,9 +33,12 @@ export function getIoSnapshotsForVersion(
 function readStored({
   commit,
   fetchedAt,
-}: IoSnapshotVersion): IoSnapshots | undefined {
+}: UltracacheConfigurationVersion): UltracacheConfigurations | undefined {
   try {
-    return getIoSnapshotStore().getVersion(commit, fetchedAt) ?? undefined;
+    return (
+      getUltracacheConfigurationStore().getVersion(commit, fetchedAt) ??
+      undefined
+    );
   } catch {
     // An unusable database hashes natively rather than failing the request.
     return undefined;

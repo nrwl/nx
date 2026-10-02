@@ -1,5 +1,5 @@
-import { formatIoSnapshotSummary } from './report';
-import type { IoSnapshotReport } from '../native';
+import { formatUltracacheSummary } from './report';
+import type { UltracacheReport } from '../native';
 
 const resolution = {
   requestedCommit: 'abc123',
@@ -7,9 +7,9 @@ const resolution = {
   tasks: 3,
 };
 
-describe('formatIoSnapshotSummary', () => {
+describe('formatUltracacheSummary', () => {
   it('counts used tasks and groups fallbacks by reason', () => {
-    const result: IoSnapshotReport = {
+    const result: UltracacheReport = {
       used: ['a:build', 'b:build'],
       diagnostics: [
         { reason: 'disabled', taskId: 'c:e2e' },
@@ -21,25 +21,25 @@ describe('formatIoSnapshotSummary', () => {
       ],
       resolution,
     };
-    const summary = formatIoSnapshotSummary(result, 'cached');
+    const summary = formatUltracacheSummary(result, 'cached');
     expect(summary.line).toBe(
-      'I/O snapshots: 2 tasks hashed from snapshot, 6 tasks fell back (2 missing, 1 autofix-disabled, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
+      'Ultracache: 2 tasks hashed from their configuration, 6 tasks fell back (2 missing, 1 autofix-disabled, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
     );
     expect(summary.bodyLines).toEqual([
-      'set: cached',
-      'commit abc123, 3 tasks in set',
+      'configurations: cached',
+      'commit abc123, configurations for 3 tasks',
       'c:e2e: ultracache.mode is off',
       'h:deploy: ultracache.mode is not on',
-      'd:test: no snapshot for this task',
-      'e:test: no snapshot for this task',
-      'f:lint: snapshot glob "libs/./x.ts" is not a valid files glob',
-      'g:build: snapshot glob "../x/**" escapes the workspace',
+      'd:test: no Ultracache configuration for this task',
+      'e:test: no Ultracache configuration for this task',
+      'f:lint: configuration glob "libs/./x.ts" is not a valid files glob',
+      'g:build: configuration glob "../x/**" escapes the workspace',
     ]);
   });
 
-  it('says none were used when the set could not be read', () => {
+  it('says none were used when the configurations could not be read', () => {
     expect(
-      formatIoSnapshotSummary(
+      formatUltracacheSummary(
         {
           used: [],
           diagnostics: [{ reason: 'unreadable-set', message: 'bad' }],
@@ -47,6 +47,6 @@ describe('formatIoSnapshotSummary', () => {
         },
         'cached'
       ).line
-    ).toBe('I/O snapshots: none used (unreadable set: bad)');
+    ).toBe('Ultracache: none used (unreadable configurations: bad)');
   });
 });

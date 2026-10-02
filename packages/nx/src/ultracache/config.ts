@@ -2,14 +2,14 @@ import type { NxJsonConfiguration } from '../config/nx-json';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudConfigured } from '../utils/nx-cloud-utils';
 
-export interface IoSnapshotCloudOptions {
+export interface UltracacheCloudOptions {
   accessToken?: string;
   nxCloudId?: string;
   url?: string;
   cloud?: boolean;
 }
 
-export interface IoSnapshotEnv {
+export interface UltracacheEnv {
   NX_CLOUD_USE_ULTRACACHE?: string;
   NX_NO_CLOUD?: string;
   /** Whether the run's env holds an Nx Cloud token. */
@@ -21,10 +21,10 @@ export interface IoSnapshotEnv {
  * workspace that uses Nx Cloud, since there is nothing to fetch from otherwise.
  * `env` defaults to this process's.
  */
-export function isIoSnapshotFetchEnabled(
+export function isUltracacheConfigurationFetchEnabled(
   nxJson: NxJsonConfiguration,
-  runnerOptions: IoSnapshotCloudOptions = {},
-  env: IoSnapshotEnv = ioSnapshotEnv()
+  runnerOptions: UltracacheCloudOptions = {},
+  env: UltracacheEnv = ultracacheEnv()
 ): boolean {
   if (
     env.NX_NO_CLOUD === 'true' ||
@@ -39,9 +39,9 @@ export function isIoSnapshotFetchEnabled(
 }
 
 /** The subset of this run's environment the decision reads. */
-export function ioSnapshotEnv(
+export function ultracacheEnv(
   env: NodeJS.ProcessEnv = process.env
-): IoSnapshotEnv {
+): UltracacheEnv {
   return {
     NX_CLOUD_USE_ULTRACACHE: env.NX_CLOUD_USE_ULTRACACHE,
     NX_NO_CLOUD: env.NX_NO_CLOUD,

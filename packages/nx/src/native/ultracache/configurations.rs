@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use super::IoSnapshotResolution;
+use super::UltracacheConfigurationResolution;
 use super::set;
 #[cfg(not(target_arch = "wasm32"))]
 use super::store;
@@ -9,28 +9,28 @@ use super::store;
 /// The store the entries are read from. The wasm build has no database, so it
 /// has no store and never holds a set.
 #[cfg(not(target_arch = "wasm32"))]
-type Db = store::IoSnapshotStore;
+type Db = store::UltracacheConfigurationStore;
 #[cfg(target_arch = "wasm32")]
 type Db = ();
 
-/// One stored version of a commit's snapshot set. Handed to the hash planner as-is.
+/// One stored version of a commit's Ultracache configurations. Handed to the hash planner as-is.
 /// A fresh import holds every entry; a handle reopened from storage reads
 /// them per task as they are asked for and remembers them, so it costs the
 /// tasks it plans rather than the workspace's whole set.
 #[napi]
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-pub struct IoSnapshots {
-    resolution: IoSnapshotResolution,
+pub struct UltracacheConfigurations {
+    resolution: UltracacheConfigurationResolution,
     db: Db,
-    entries: Mutex<HashMap<String, Option<Arc<set::TaskIoSnapshot>>>>,
+    entries: Mutex<HashMap<String, Option<Arc<set::UltracacheConfiguration>>>>,
 }
 
-impl IoSnapshots {
+impl UltracacheConfigurations {
     #[cfg(not(target_arch = "wasm32"))]
     pub(super) fn new(
-        resolution: IoSnapshotResolution,
+        resolution: UltracacheConfigurationResolution,
         db: Db,
-        entries: HashMap<String, Option<Arc<set::TaskIoSnapshot>>>,
+        entries: HashMap<String, Option<Arc<set::UltracacheConfiguration>>>,
     ) -> Self {
         Self {
             resolution,
@@ -41,18 +41,18 @@ impl IoSnapshots {
 }
 
 #[napi]
-impl IoSnapshots {
+impl UltracacheConfigurations {
     #[napi(getter)]
     pub fn commit(&self) -> String {
         self.resolution.requested_commit.clone()
     }
 
     #[napi(getter)]
-    pub fn resolution(&self) -> IoSnapshotResolution {
+    pub fn resolution(&self) -> UltracacheConfigurationResolution {
         self.resolution.clone()
     }
 
-    pub(crate) fn resolution_ref(&self) -> &IoSnapshotResolution {
+    pub(crate) fn resolution_ref(&self) -> &UltracacheConfigurationResolution {
         &self.resolution
     }
 
@@ -61,7 +61,7 @@ impl IoSnapshots {
     pub(crate) fn entries_for(
         &self,
         task_ids: &[&str],
-    ) -> anyhow::Result<HashMap<String, Arc<set::TaskIoSnapshot>>> {
+    ) -> anyhow::Result<HashMap<String, Arc<set::UltracacheConfiguration>>> {
         let mut entries = self.entries.lock().unwrap();
         let missing: Vec<&str> = task_ids
             .iter()
@@ -76,7 +76,7 @@ impl IoSnapshots {
                 &missing,
             )?;
             #[cfg(target_arch = "wasm32")]
-            let read: Vec<(String, set::TaskIoSnapshot)> = Vec::new();
+            let read: Vec<(String, set::UltracacheConfiguration)> = Vec::new();
             for id in &missing {
                 entries.insert((*id).to_string(), None);
             }

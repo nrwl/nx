@@ -1,11 +1,11 @@
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import {
-  getIoSnapshotReport,
-  type IoSnapshotEligibilityOptions,
-  type IoSnapshotReport,
-  type IoSnapshots,
-  type TaskUltracacheConfiguration,
+  getUltracacheReport,
+  type UltracacheEligibilityOptions,
+  type UltracacheReport,
+  type UltracacheConfigurations,
+  type TaskUltracacheSettings,
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getExecutorForTask } from '../tasks-runner/utils';
@@ -13,9 +13,10 @@ import { getExecutorForTask } from '../tasks-runner/utils';
 const customHasherMemo = new WeakMap<TaskGraph, string[]>();
 
 /**
- * Tasks whose executor ships a custom hasher; they are never hashed from a
- * snapshot. Detected here because executors are resolved in JS, by the
- * factory's presence only — invoking it would load user modules.
+ * Tasks whose executor ships a custom hasher; they are never hashed from
+ * their Ultracache configuration. Detected here because executors are
+ * resolved in JS, by the factory's presence only — invoking it would load
+ * user modules.
  */
 function customHasherTaskIds(
   projectGraph: ProjectGraph,
@@ -33,7 +34,7 @@ function customHasherTaskIds(
         return !!getExecutorForTask(task, projects).hasherFactory;
       } catch {
         // An unresolvable executor fails later, at execution; it is not a
-        // reason to withhold a snapshot here.
+        // reason to withhold its configuration here.
         return false;
       }
     })
@@ -43,12 +44,12 @@ function customHasherTaskIds(
 }
 
 /**
- * Each task's ultracache configuration: all the native eligibility walk reads
+ * Each task's Ultracache settings: all the native eligibility walk reads
  * from a task. `null`, not `undefined`: the native map drops `undefined` keys.
  */
-export function getUltraCacheConfig(
+export function getUltracacheSettings(
   taskGraph: TaskGraph
-): Record<string, TaskUltracacheConfiguration | null> {
+): Record<string, TaskUltracacheSettings | null> {
   return Object.fromEntries(
     Object.entries(taskGraph.tasks).map(([id, task]) => [
       id,
@@ -58,29 +59,29 @@ export function getUltraCacheConfig(
 }
 
 /** The eligibility walk's view of the run's tasks, as JS resolves it. */
-export function ioSnapshotEligibilityOptions(
+export function ultracacheEligibilityOptions(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph
-): IoSnapshotEligibilityOptions {
+): UltracacheEligibilityOptions {
   return {
     customHasherTaskIds: customHasherTaskIds(projectGraph, taskGraph),
   };
 }
 
 /**
- * Reports which tasks in `taskGraph` hash from `snapshots` and why the rest
+ * Reports which tasks in `taskGraph` hash from `configurations` and why the rest
  * do not, with the same eligibility walk the planner uses, without building a
  * planner (no project-graph transfer). Never fetches, never throws. Feeds
  * the `--verbose` run summary.
  */
-export function buildIoSnapshotOverrides(
+export function buildUltracacheOverrides(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  snapshots: IoSnapshots
-): IoSnapshotReport {
-  return getIoSnapshotReport(
-    snapshots,
-    getUltraCacheConfig(taskGraph),
-    ioSnapshotEligibilityOptions(projectGraph, taskGraph)
+  configurations: UltracacheConfigurations
+): UltracacheReport {
+  return getUltracacheReport(
+    configurations,
+    getUltracacheSettings(taskGraph),
+    ultracacheEligibilityOptions(projectGraph, taskGraph)
   );
 }

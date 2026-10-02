@@ -5,11 +5,14 @@ import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
   type FileRevisions,
-  type IoSnapshots,
+  type UltracacheConfigurations,
 } from '../../native';
-import { ioSnapshotEligibilityOptions } from '../../io-snapshots/overrides';
-import { snapshotsOf, type IoSnapshotOutcome } from '../../io-snapshots/store';
-import type { IoSnapshotVersion } from '../../daemon/message-types/io-snapshot-version';
+import { ultracacheEligibilityOptions } from '../../ultracache/overrides';
+import {
+  configurationsOf,
+  type UltracacheConfigurationOutcome,
+} from '../../ultracache/store';
+import type { UltracacheConfigurationVersion } from '../../daemon/message-types/ultracache-configuration-version';
 import {
   createTaskGraph,
   createTaskGraphWithDependencyOverrides,
@@ -84,8 +87,8 @@ export interface ComputeAffectedTasksOptions {
   /** `--exclude` project patterns. Their tasks leave the selection but still carry a change and run as dependencies. */
   exclude?: string[];
   packageJson?: any;
-  /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
-  ioSnapshotOutcome?: IoSnapshotOutcome | null;
+  /** This command's Ultracache configurations. Selection plans with them, as the run hashes with them. */
+  ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
   selectivelyHashTsConfig?: boolean;
 }
 
@@ -105,7 +108,7 @@ export interface AffectedTasksRequest {
   extraTargetDependencies: TargetDependencies;
   excludeTaskDependencies: boolean;
   exclude: string[];
-  ioSnapshots?: IoSnapshotVersion;
+  ultracacheConfigurationsVersion?: UltracacheConfigurationVersion;
   /** The runner's `selectivelyHashTsConfig`, which decides what the tsconfig hash reads. */
   selectivelyHashTsConfig?: boolean;
 }
@@ -132,11 +135,13 @@ export async function computeAffectedTasks(
     exclude: opts.exclude ?? [],
     selectivelyHashTsConfig: opts.selectivelyHashTsConfig,
   };
-  const ioSnapshots = snapshotsOf(opts.ioSnapshotOutcome ?? null);
-  if (ioSnapshots) {
-    request.ioSnapshots = {
-      commit: ioSnapshots.commit,
-      fetchedAt: ioSnapshots.resolution.fetchedAt,
+  const ultracacheConfigurations = configurationsOf(
+    opts.ultracacheConfigurationOutcome ?? null
+  );
+  if (ultracacheConfigurations) {
+    request.ultracacheConfigurationsVersion = {
+      commit: ultracacheConfigurations.commit,
+      fetchedAt: ultracacheConfigurations.resolution.fetchedAt,
     };
   }
 
@@ -148,7 +153,7 @@ export async function computeAffectedTasks(
         affectedTaskIds: new Set(selection.affectedTaskIds),
         taskSelection: {
           ...selection.taskSelection,
-          ioSnapshotOutcome: opts.ioSnapshotOutcome,
+          ultracacheConfigurationOutcome: opts.ultracacheConfigurationOutcome,
         },
       };
     } catch (e) {
@@ -172,7 +177,7 @@ export async function computeAffectedTasks(
     {
       touchedFiles: opts.touchedFiles,
       packageJson: opts.packageJson,
-      ioSnapshots,
+      ultracacheConfigurations,
     }
   );
   return {
@@ -183,15 +188,16 @@ export async function computeAffectedTasks(
       ...selection.taskSelection,
       // The planner remembers what selection planned, so the run's hashing reuses it.
       planningContext,
-      ioSnapshotOutcome: opts.ioSnapshotOutcome,
+      ultracacheConfigurationOutcome: opts.ultracacheConfigurationOutcome,
     },
   };
 }
 
 /**
  * Plans the targets' full task graph and matches the changed paths against
- * every plan. No project-level prefilter: under an I/O snapshot a task can read
- * files no affected project owns. Shared by the client and the daemon.
+ * every plan. No project-level prefilter: under Ultracache configurations a
+ * task can read files no affected project owns. Shared by the client and the
+ * daemon.
  */
 export async function selectAffectedTasks(
   projectGraph: ProjectGraph,
@@ -204,11 +210,11 @@ export async function selectAffectedTasks(
       request.fileChangeArgs as NxArgs
     ),
     packageJson,
-    ioSnapshots,
+    ultracacheConfigurations,
   }: {
     touchedFiles?: FileChange[];
     packageJson?: any;
-    ioSnapshots?: IoSnapshots;
+    ultracacheConfigurations?: UltracacheConfigurations;
   } = {}
 ): Promise<{
   affectedTaskIds: Set<string>;
@@ -246,12 +252,12 @@ export async function selectAffectedTasks(
       false
     );
   const taskIds = Object.keys(taskGraph.tasks);
-  const plans = ioSnapshots
+  const plans = ultracacheConfigurations
     ? planningContext.planner.getPlansReference(
         taskIds,
         taskGraph,
-        ioSnapshots,
-        ioSnapshotEligibilityOptions(projectGraph, taskGraph)
+        ultracacheConfigurations,
+        ultracacheEligibilityOptions(projectGraph, taskGraph)
       )
     : planningContext.planner.getPlansReference(taskIds, taskGraph);
 

@@ -1,21 +1,21 @@
-import type { IoSnapshotDiagnostic, IoSnapshotReport } from '../native';
+import type { UltracacheDiagnostic, UltracacheReport } from '../native';
 
-export interface IoSnapshotSummary {
-  /** The heading, e.g. "I/O snapshots: 12 tasks hashed from snapshot, 3 fell back". */
+export interface UltracacheSummary {
+  /** The heading, e.g. "Ultracache: 12 tasks hashed from their configuration, 3 fell back". */
   line: string;
   /** Per-reason detail under it. */
   bodyLines: string[];
 }
 
 /**
- * Formats the once-per-run verbose summary of a run that resolved a set:
- * `result` is what hashing used, `status` whether the set was fetched or
- * already stored.
+ * Formats the once-per-run verbose summary of a run that resolved Ultracache
+ * configurations: `result` is what hashing used, `status` whether they were
+ * fetched or already stored.
  */
-export function formatIoSnapshotSummary(
-  result: IoSnapshotReport,
+export function formatUltracacheSummary(
+  result: UltracacheReport,
   status: 'fetched' | 'cached'
-): IoSnapshotSummary {
+): UltracacheSummary {
   const used = result.used.length;
   const withheld = result.diagnostics.filter((d) => d.taskId != null);
   const byReason = countByReason(withheld);
@@ -23,15 +23,15 @@ export function formatIoSnapshotSummary(
   const setLevel = result.diagnostics.find((d) => d.taskId == null);
 
   const line = setLevel
-    ? `I/O snapshots: none used (unreadable set: ${setLevel.message})`
-    : `I/O snapshots: ${plural(used, 'task')} hashed from snapshot, ${plural(
+    ? `Ultracache: none used (unreadable configurations: ${setLevel.message})`
+    : `Ultracache: ${plural(used, 'task')} hashed from their configuration, ${plural(
         fellBack,
         'task'
       )} fell back${fellBack ? ` (${summarizeReasons(byReason)})` : ''}`;
 
-  const bodyLines: string[] = [`set: ${status}`];
+  const bodyLines: string[] = [`configurations: ${status}`];
   bodyLines.push(
-    `commit ${result.resolution.requestedCommit}, ${result.resolution.tasks} tasks in set`
+    `commit ${result.resolution.requestedCommit}, configurations for ${result.resolution.tasks} tasks`
   );
   for (const d of result.diagnostics) {
     bodyLines.push(describeDiagnostic(d));
@@ -39,10 +39,10 @@ export function formatIoSnapshotSummary(
   return { line, bodyLines };
 }
 
-function describeDiagnostic(d: IoSnapshotDiagnostic): string {
+function describeDiagnostic(d: UltracacheDiagnostic): string {
   switch (d.reason) {
     case 'unreadable-set':
-      return `unreadable snapshot set: ${d.message}`;
+      return `unreadable Ultracache configurations: ${d.message}`;
     case 'disabled':
       return `${d.taskId}: ultracache.mode is off`;
     case 'autofix-disabled':
@@ -50,18 +50,18 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
     case 'custom-hasher':
       return `${d.taskId}: uses a custom hasher`;
     case 'missing':
-      return `${d.taskId}: no snapshot for this task`;
+      return `${d.taskId}: no Ultracache configuration for this task`;
     case 'invalid-glob':
-      return `${d.taskId}: snapshot glob "${d.glob}" is not a valid files glob`;
+      return `${d.taskId}: configuration glob "${d.glob}" is not a valid files glob`;
     case 'escapes-workspace':
-      return `${d.taskId}: snapshot glob "${d.glob}" escapes the workspace`;
+      return `${d.taskId}: configuration glob "${d.glob}" escapes the workspace`;
     default:
       return `${d.taskId ? `${d.taskId}: ` : ''}${d.reason}`;
   }
 }
 
 function countByReason(
-  diagnostics: IoSnapshotDiagnostic[]
+  diagnostics: UltracacheDiagnostic[]
 ): Map<string, number> {
   const counts = new Map<string, number>();
   for (const d of diagnostics) {

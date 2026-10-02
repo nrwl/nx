@@ -1,8 +1,8 @@
-import { fetchIoSnapshots } from './fetch';
+import { fetchUltracacheConfigurations } from './fetch';
 
 const cloud = vi.hoisted(() => ({
   verifyOrUpdateNxCloudClient: vi.fn(),
-  readIoSnapshots: vi.fn(),
+  readUltracacheConfigurations: vi.fn(),
 }));
 
 vi.mock('../nx-cloud/update-manager', () => ({
@@ -12,7 +12,7 @@ vi.mock('../nx-cloud/resolution-helpers', () => ({
   findAncestorNodeModules: () => [],
 }));
 
-describe('fetchIoSnapshots', () => {
+describe('fetchUltracacheConfigurations', () => {
   const withClient = (client: object) =>
     cloud.verifyOrUpdateNxCloudClient.mockResolvedValue({
       nxCloudClient: { configureLightClientRequire: () => () => {}, ...client },
@@ -20,14 +20,18 @@ describe('fetchIoSnapshots', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    withClient({ readIoSnapshots: cloud.readIoSnapshots });
+    withClient({
+      readUltracacheConfigurations: cloud.readUltracacheConfigurations,
+    });
   });
 
   it('reads with the run options and returns what Nx Cloud sent', async () => {
-    const result = { snapshots: {} };
-    cloud.readIoSnapshots.mockResolvedValue(result);
-    expect(await fetchIoSnapshots({ accessToken: 't' })).toBe(result);
-    expect(cloud.readIoSnapshots).toHaveBeenCalledWith(
+    const result = { configurations: {} };
+    cloud.readUltracacheConfigurations.mockResolvedValue(result);
+    expect(await fetchUltracacheConfigurations({ accessToken: 't' })).toBe(
+      result
+    );
+    expect(cloud.readUltracacheConfigurations).toHaveBeenCalledWith(
       expect.objectContaining({ nxCloudOptions: { accessToken: 't' } })
     );
   });
@@ -36,18 +40,18 @@ describe('fetchIoSnapshots', () => {
     const offline = Object.assign(new Error('getaddrinfo'), {
       code: 'ENOTFOUND',
     });
-    cloud.readIoSnapshots.mockRejectedValue(offline);
-    await expect(fetchIoSnapshots({})).rejects.toBe(offline);
+    cloud.readUltracacheConfigurations.mockRejectedValue(offline);
+    await expect(fetchUltracacheConfigurations({})).rejects.toBe(offline);
   });
 
   it.each([
     [
       'no set',
-      () => cloud.readIoSnapshots.mockResolvedValue(null),
-      'NO_SNAPSHOTS',
+      () => cloud.readUltracacheConfigurations.mockResolvedValue(null),
+      'NO_CONFIGURATIONS',
     ],
     [
-      'a client that predates snapshots',
+      'a client that predates Ultracache',
       () => withClient({}),
       'UNSUPPORTED_CLIENT',
     ],
@@ -66,6 +70,8 @@ describe('fetchIoSnapshots', () => {
     ],
   ])('throws a coded error for %s', async (_, arrange, code) => {
     arrange();
-    await expect(fetchIoSnapshots({})).rejects.toMatchObject({ code });
+    await expect(fetchUltracacheConfigurations({})).rejects.toMatchObject({
+      code,
+    });
   });
 });

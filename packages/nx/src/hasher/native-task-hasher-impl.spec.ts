@@ -7,7 +7,7 @@ import {
   closeDbConnection,
   connectToNxDb,
   HashPlanner,
-  IoSnapshotStore,
+  UltracacheConfigurationStore,
 } from '../native';
 import { join } from 'path';
 import { TaskGraph } from '../config/task-graph';
@@ -1587,18 +1587,18 @@ describe('native task hasher', () => {
       'libs/child/two.txt': 'two',
     });
     const commit = 'head'.padEnd(40, '0');
-    const snapshotDb = connectToNxDb(
-      join(tempFs.tempDir, 'io-snapshots-read-db'),
-      'io-snapshots'
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-read-db'),
+      'ultracache'
     );
-    const snapshotSet = (inputs: string[]) => {
-      new IoSnapshotStore(snapshotDb).import({
+    const configurationsFor = (inputs: string[]) => {
+      new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
-        snapshotsJson: JSON.stringify({
+        configurationsJson: JSON.stringify({
           'child:compile': { commit, inputs, outputs: ['dist/child'] },
         }),
       });
-      return new IoSnapshotStore(snapshotDb).get(commit);
+      return new UltracacheConfigurationStore(configurationDb).get(commit);
     };
     const task = taskGraph.tasks['child:compile'];
     const hashWith = async (inputs: string[]) =>
@@ -1608,7 +1608,7 @@ describe('native task hasher', () => {
         {},
         tempFs.tempDir,
         true,
-        snapshotSet(inputs)
+        configurationsFor(inputs)
       );
 
     const one = await hashWith(['libs/child/one.txt']);
@@ -1624,7 +1624,7 @@ describe('native task hasher', () => {
   });
 
   it.each(['libs/child/[(]group[)]/page.md', 'libs/child/\\(group\\)/page.md'])(
-    'hashes a snapshot read of a parenthesized directory (%s)',
+    'hashes an Ultracache read of a parenthesized directory (%s)',
     async (input) => {
       const { taskGraph, impl } = await upfrontFixture();
       await tempFs.createFiles({
@@ -1632,13 +1632,13 @@ describe('native task hasher', () => {
         'libs/child/xgroupx/page.md': 'lookalike',
       });
       const commit = 'head'.padEnd(40, '0');
-      const snapshotDb = connectToNxDb(
-        join(tempFs.tempDir, 'io-snapshots-paren-db'),
-        'io-snapshots'
+      const configurationDb = connectToNxDb(
+        join(tempFs.tempDir, 'ultracache-paren-db'),
+        'ultracache'
       );
-      new IoSnapshotStore(snapshotDb).import({
+      new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
-        snapshotsJson: JSON.stringify({
+        configurationsJson: JSON.stringify({
           'child:compile': {
             commit,
             inputs: [input],
@@ -1652,7 +1652,7 @@ describe('native task hasher', () => {
         {},
         tempFs.tempDir,
         true,
-        new IoSnapshotStore(snapshotDb).get(commit)
+        new UltracacheConfigurationStore(configurationDb).get(commit)
       );
 
       expect(hash.inputs.files.filter((f) => f.includes('group'))).toEqual([
@@ -1666,17 +1666,17 @@ describe('native task hasher', () => {
     ['\\(root\\)/page.md', '(root)/page.md'],
     ['\\[id\\].md', '[id].md'],
     ['\\{a,b\\}.md', '{a,b}.md'],
-  ])('hashes a snapshot read of a root-level %s', async (input, file) => {
+  ])('hashes an Ultracache read of a root-level %s', async (input, file) => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({ [file]: 'root' });
     const commit = 'head'.padEnd(40, '0');
-    const snapshotDb = connectToNxDb(
-      join(tempFs.tempDir, 'io-snapshots-root-db'),
-      'io-snapshots'
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-root-db'),
+      'ultracache'
     );
-    new IoSnapshotStore(snapshotDb).import({
+    new UltracacheConfigurationStore(configurationDb).import({
       requestedCommit: commit,
-      snapshotsJson: JSON.stringify({
+      configurationsJson: JSON.stringify({
         'child:compile': { commit, inputs: [input], outputs: [] },
       }),
     });
@@ -1686,30 +1686,30 @@ describe('native task hasher', () => {
       {},
       tempFs.tempDir,
       true,
-      new IoSnapshotStore(snapshotDb).get(commit)
+      new UltracacheConfigurationStore(configurationDb).get(commit)
     );
 
     expect(hash.inputs.files).toContain(file);
   });
 
-  it('hashes a task from its snapshot instead of its declared fileset', async () => {
+  it('hashes a task from its Ultracache configuration instead of its declared fileset', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });
     const commit = 'head'.padEnd(40, '0');
-    const snapshotDb = connectToNxDb(
-      join(tempFs.tempDir, 'io-snapshots-db'),
-      'io-snapshots'
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-db'),
+      'ultracache'
     );
-    const snapshotSet = (inputs: string[]) => {
-      new IoSnapshotStore(snapshotDb).import({
+    const configurationsFor = (inputs: string[]) => {
+      new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
-        snapshotsJson: JSON.stringify({
+        configurationsJson: JSON.stringify({
           'child:compile': { commit, inputs, outputs: [] },
         }),
       });
-      return new IoSnapshotStore(snapshotDb).get(commit);
+      return new UltracacheConfigurationStore(configurationDb).get(commit);
     };
-    const snapshots = snapshotSet(['libs/child/observed.txt']);
+    const configurations = configurationsFor(['libs/child/observed.txt']);
     const task = taskGraph.tasks['child:compile'];
 
     const native = await impl.hashTask(
@@ -1719,25 +1719,25 @@ describe('native task hasher', () => {
       tempFs.tempDir,
       true
     );
-    const fromSnapshot = await impl.hashTask(
+    const fromConfiguration = await impl.hashTask(
       task,
       taskGraph,
       {},
       tempFs.tempDir,
       true,
-      snapshots
+      configurations
     );
 
-    expect(fromSnapshot.value).not.toBe(native.value);
+    expect(fromConfiguration.value).not.toBe(native.value);
     // The observed read plus the always-on workspace files; none of the
     // declared fileset's files.
-    expect(fromSnapshot.inputs.files).toContain('libs/child/observed.txt');
+    expect(fromConfiguration.inputs.files).toContain('libs/child/observed.txt');
     expect(
-      fromSnapshot.inputs.files.filter((f) => f.startsWith('libs/child/'))
+      fromConfiguration.inputs.files.filter((f) => f.startsWith('libs/child/'))
     ).toEqual(['libs/child/observed.txt']);
     const digests = (hash: typeof native) =>
       Object.keys(hash.details).filter((key) => key.startsWith('io-snapshot:'));
-    expect(digests(fromSnapshot)).toEqual([
+    expect(digests(fromConfiguration)).toEqual([
       expect.stringMatching(/^io-snapshot:\d+$/),
     ]);
     expect(digests(native)).toEqual([]);
@@ -1750,10 +1750,10 @@ describe('native task hasher', () => {
       {},
       tempFs.tempDir,
       true,
-      snapshots
+      configurations
     );
-    expect(changed.value).not.toBe(fromSnapshot.value);
-    closeDbConnection(snapshotDb);
+    expect(changed.value).not.toBe(fromConfiguration.value);
+    closeDbConnection(configurationDb);
   });
 
   it('keeps hashing from its own version after the commit is re-imported', async () => {
@@ -1763,15 +1763,15 @@ describe('native task hasher', () => {
       'libs/child/two.txt': 'two',
     });
     const commit = 'head'.padEnd(40, '0');
-    const snapshotDb = connectToNxDb(
-      join(tempFs.tempDir, 'io-snapshots-versions-db'),
-      'io-snapshots'
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-versions-db'),
+      'ultracache'
     );
-    const store = new IoSnapshotStore(snapshotDb);
+    const store = new UltracacheConfigurationStore(configurationDb);
     const importReads = (inputs: string[]) =>
       store.import({
         requestedCommit: commit,
-        snapshotsJson: JSON.stringify({
+        configurationsJson: JSON.stringify({
           'child:compile': { commit, inputs, outputs: [] },
         }),
       });
@@ -1782,42 +1782,44 @@ describe('native task hasher', () => {
     importReads(['libs/child/two.txt']);
 
     const task = taskGraph.tasks['child:compile'];
-    const hashWith = (snapshots: typeof first) =>
-      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, snapshots);
+    const hashWith = (configurations: typeof first) =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, configurations);
     const fromPinned = await hashWith(pinned);
     expect(fromPinned.inputs.files).toContain('libs/child/one.txt');
     expect(fromPinned.inputs.files).not.toContain('libs/child/two.txt');
     expect((await hashWith(store.get(commit))).inputs.files).toContain(
       'libs/child/two.txt'
     );
-    closeDbConnection(snapshotDb);
+    closeDbConnection(configurationDb);
   });
 
-  it('moves a task hash by a lockfile-only edit when the snapshot read the lockfile', async () => {
+  it('moves a task hash by a lockfile-only edit when its configuration read the lockfile', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.20"}' });
     const commit = 'head'.padEnd(40, '0');
-    const snapshotDb = connectToNxDb(
-      join(tempFs.tempDir, 'io-snapshots-lockfile-db'),
-      'io-snapshots'
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-lockfile-db'),
+      'ultracache'
     );
-    new IoSnapshotStore(snapshotDb).import({
+    new UltracacheConfigurationStore(configurationDb).import({
       requestedCommit: commit,
-      snapshotsJson: JSON.stringify({
+      configurationsJson: JSON.stringify({
         'child:compile': { commit, inputs: ['package-lock.json'], outputs: [] },
       }),
     });
-    const snapshots = new IoSnapshotStore(snapshotDb).get(commit);
+    const configurations = new UltracacheConfigurationStore(
+      configurationDb
+    ).get(commit);
     const task = taskGraph.tasks['child:compile'];
     const hash = () =>
-      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, snapshots);
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, configurations);
 
     const before = await hash();
     expect(before.inputs.files).toContain('package-lock.json');
 
     await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.21"}' });
     expect((await hash()).value).not.toBe(before.value);
-    closeDbConnection(snapshotDb);
+    closeDbConnection(configurationDb);
   });
 
   it('plans again for a task graph other than the up-front batch, and for a task the batch never planned', async () => {

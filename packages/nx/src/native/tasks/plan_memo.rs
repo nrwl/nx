@@ -1,12 +1,12 @@
 //! Whole-task plans kept between `get_plans` calls on one planner. A plan
-//! reads its task's target, outputs, edges and snapshot eligibility and those
-//! of everything it depends on, plus the snapshot set, so it stays valid while
+//! reads its task's target, outputs, edges and Ultracache eligibility and those
+//! of everything it depends on, plus the Ultracache configurations, so it stays valid while
 //! none of those changed.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, MutexGuard};
 
-use crate::native::tasks::types::{TaskGraph, TaskTarget, TaskUltracacheConfiguration};
+use crate::native::tasks::types::{TaskGraph, TaskTarget, TaskUltracacheSettings};
 
 #[derive(Default)]
 pub(super) struct PlanMemo {
@@ -17,8 +17,8 @@ pub(super) struct PlanMemo {
 /// it was when the plan was made.
 #[derive(Default)]
 struct Recorded {
-    /// The snapshot set's commit and fetch time; plans made against another are dropped.
-    snapshots: Option<(String, i64)>,
+    /// The Ultracache configurations' commit and fetch time; plans made against others are dropped.
+    configurations: Option<(String, i64)>,
     tasks: HashMap<String, PlannedTask>,
     plans: HashMap<String, Vec<u32>>,
 }
@@ -30,7 +30,7 @@ struct PlannedTask {
     outputs: Vec<String>,
     dependencies: Vec<String>,
     continuous_dependencies: Vec<String>,
-    ultracache: Option<TaskUltracacheConfiguration>,
+    ultracache: Option<TaskUltracacheSettings>,
     custom_hasher: bool,
 }
 
@@ -58,18 +58,18 @@ fn edges<'a>(edges: &'a HashMap<String, Vec<String>>, id: &str) -> &'a [String] 
 
 impl PlanMemo {
     /// Holds the memo for one planning call, with every plan that no longer
-    /// holds for `task_graph` under `snapshots` dropped. `custom_hasher` are
-    /// the tasks snapshot eligibility withholds.
+    /// holds for `task_graph` under `configurations` dropped. `custom_hasher` are
+    /// the tasks Ultracache eligibility withholds.
     pub(super) fn begin(
         &self,
         task_graph: &TaskGraph,
-        snapshots: Option<(String, i64)>,
+        configurations: Option<(String, i64)>,
         custom_hasher: &[String],
     ) -> PlanMemoGuard<'_> {
         let mut recorded = self.recorded.lock().expect("plan memo lock");
-        if recorded.snapshots != snapshots {
+        if recorded.configurations != configurations {
             *recorded = Recorded {
-                snapshots,
+                configurations,
                 ..Default::default()
             };
         }
@@ -182,11 +182,11 @@ mod tests {
     fn plan_all_under(
         memo: &PlanMemo,
         graph: &TaskGraph,
-        snapshots: Option<(String, i64)>,
+        configurations: Option<(String, i64)>,
         custom_hasher: &[String],
     ) -> Vec<String> {
         let ids: Vec<&str> = graph.tasks.keys().map(String::as_str).collect();
-        let guard = memo.begin(graph, snapshots, custom_hasher);
+        let guard = memo.begin(graph, configurations, custom_hasher);
         let mut missing = guard.missing(&ids);
         let planned = missing.iter().map(|id| (id.to_string(), vec![0])).collect();
         guard.finish(planned, &ids);
@@ -278,7 +278,7 @@ mod tests {
     }
 
     #[test]
-    fn another_snapshot_set_replans_everything() {
+    fn another_configuration_replans_everything() {
         let memo = PlanMemo::default();
         let set = |fetched_at| Some(("abc".to_string(), fetched_at));
         plan_all_under(&memo, &graph(), set(1), &[]);
@@ -287,7 +287,8 @@ mod tests {
         assert_eq!(plan_all(&memo, &graph()).len(), 4);
     }
 
-    /// A custom hasher withholds the task's snapshot, so its plan and its dependents' differ.
+    /// A custom hasher withholds the task's Ultracache configuration, so its plan
+    /// and its dependents' differ.
     #[test]
     fn a_task_gaining_a_custom_hasher_replans_it_and_its_dependents() {
         let memo = PlanMemo::default();

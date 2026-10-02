@@ -4,16 +4,16 @@ use serde::{Deserialize, Serialize};
 #[napi(object)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct IoSnapshotResolution {
+pub struct UltracacheConfigurationResolution {
     pub requested_commit: String,
     pub fetched_at: i64,
     pub tasks: u32,
 }
 
-/// The snapshot set the Nx Cloud client read for HEAD, as JS hands it over.
+/// The Ultracache configurations the Nx Cloud client read for HEAD, as JS hands them over.
 #[napi(object)]
-pub struct IoSnapshotImportOptions {
+pub struct UltracacheConfigurationImportOptions {
     pub requested_commit: String,
     /// `Record<taskId, { commit, inputs, outputs }>` as JSON.
-    pub snapshots_json: String,
+    pub configurations_json: String,
 }

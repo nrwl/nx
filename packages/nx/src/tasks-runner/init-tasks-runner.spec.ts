@@ -45,16 +45,26 @@ describe.each([
 
   beforeEach(() => vi.clearAllMocks());
 
-  it('hashes from the set the caller passes', async () => {
-    const snapshots = { commit: 'head', resolution: { fetchedAt: 1 } } as any;
+  it('hashes from the configurations the caller passes', async () => {
+    const configurations = {
+      commit: 'head',
+      resolution: { fetchedAt: 1 },
+    } as any;
 
-    await run([task], projectGraph, fullTaskGraph, {}, {} as any, snapshots);
+    await run(
+      [task],
+      projectGraph,
+      fullTaskGraph,
+      {},
+      {} as any,
+      configurations
+    );
 
     expect(createTaskHasher).toHaveBeenCalledWith(
       projectGraph,
       {},
       { accessToken: 't' },
-      snapshots
+      configurations
     );
   });
 
