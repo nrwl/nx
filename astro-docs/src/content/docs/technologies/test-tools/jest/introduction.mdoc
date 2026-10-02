@@ -211,6 +211,9 @@ Use two plugin entries to separate unit and E2E Jest tasks, and enable CI splitt
 Here `ciTargetName` atomizes only the E2E tasks.
 Use `ciGroupName` to set a custom group label.
 
+To stop an atomized task from rerunning for every library the project depends on, add an `@nx-depends-on` comment to its test file.
+See [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
+
 ### View inferred tasks
 
 Open the project details view in Nx Console or run:
