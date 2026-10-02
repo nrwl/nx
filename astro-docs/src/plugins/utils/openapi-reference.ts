@@ -179,10 +179,13 @@ function resolve(
   }
   let target: unknown = document;
   for (const segment of ref.slice(2).split('/')) {
+    const key = decodeURIComponent(segment)
+      .replace(/~1/g, '/')
+      .replace(/~0/g, '~');
     target =
-      object(target)[
-        decodeURIComponent(segment).replace(/~1/g, '/').replace(/~0/g, '~')
-      ];
+      target && typeof target === 'object' && Object.hasOwn(target, key)
+        ? (target as OpenApiObject)[key]
+        : undefined;
   }
   if (!target || typeof target !== 'object') {
     throw new Error(`Missing OpenAPI reference: ${ref}.`);
@@ -207,7 +210,20 @@ function table(headers: string[], rows: string[][]): string {
 }
 
 function code(value: unknown): string {
-  return `\`${String(value).replace(/`/g, '&#96;')}\``;
+  const source = String(value);
+  const fence = '`'.repeat(
+    Math.max(
+      1,
+      ...[...source.matchAll(/`+/g)].map((match) => match[0].length + 1)
+    )
+  );
+  const pad =
+    source.startsWith('`') ||
+    source.endsWith('`') ||
+    (source.startsWith(' ') && source.endsWith(' ') && /\S/.test(source))
+      ? ' '
+      : '';
+  return `${fence}${pad}${source}${pad}${fence}`;
 }
 
 function anchor(id: string): string {
@@ -215,7 +231,12 @@ function anchor(id: string): string {
 }
 
 function schemaName(ref: unknown): string {
-  return decodeURIComponent(text(ref).split('/').pop() ?? '')
+  const parts = text(ref).split('/');
+  const name =
+    parts[1] === 'components' && parts[2] === 'schemas'
+      ? parts[3]
+      : parts.at(-1);
+  return decodeURIComponent(name ?? '')
     .replace(/~1/g, '/')
     .replace(/~0/g, '~');
 }
@@ -372,16 +393,43 @@ function schemaFields(
   value: unknown
 ): ReferenceTable {
   const rows: string[][] = [];
-  const visit = (value: unknown, prefix = '') => {
+  const requiredProperties = (
+    value: unknown,
+    seen = new Set<string>()
+  ): unknown[] => {
+    const schema = object(value);
+    const ref = text(schema.$ref);
+    if (ref) {
+      if (seen.has(ref)) return [];
+      return requiredProperties(
+        resolve(document, schema),
+        new Set([...seen, ref])
+      );
+    }
+    return [
+      ...array(schema.required),
+      ...array(schema.allOf).flatMap((child) =>
+        requiredProperties(child, seen)
+      ),
+    ];
+  };
+  const visit = (
+    value: unknown,
+    prefix = '',
+    inheritedRequired: unknown[] = []
+  ) => {
     const schema = object(value);
     if (schema.$ref) return;
-    const required = array(schema.required);
+    const required = new Set([
+      ...inheritedRequired,
+      ...requiredProperties(schema),
+    ]);
     for (const [name, raw] of Object.entries(object(schema.properties))) {
       const field = object(raw);
       const path = prefix ? `${prefix}.${name}` : name;
       rows.push([
         code(path),
-        required.includes(name) ? 'Yes' : 'No',
+        required.has(name) ? 'Yes' : 'No',
         schemaType(document, raw),
         [text(field.description), constraints(raw)].filter(Boolean).join(' '),
       ]);
@@ -391,7 +439,8 @@ function schemaFields(
     if (typeof schema.additionalProperties === 'object')
       visit(schema.additionalProperties, `${prefix}.*`);
     for (const key of ['allOf', 'oneOf', 'anyOf']) {
-      for (const child of array(schema[key])) visit(child, prefix);
+      for (const child of array(schema[key]))
+        visit(child, prefix, [...required]);
     }
   };
   visit(value);
@@ -644,13 +693,28 @@ export function buildOpenApiReference(
     throw new Error('The OpenAPI specification contains no operations.');
   const catalog = responseCatalog(document, operations);
   const slugger = new GithubSlugger();
+  // Reserve raw reference anchors before endpoint titles can claim them.
+  for (const id of [
+    ...[...catalog.responses.values()].map(({ id }) => id),
+    ...[...catalog.headers.values()].map(({ id }) => id),
+    ...Object.keys(object(components.schemas)).map((name) => `schema-${name}`),
+    ...operations.flatMap(({ operation }, index) =>
+      Object.keys(object(operation.responses))
+        .filter(isPrimaryResponse)
+        .map((status) => `operation-${index + 1}-response-${status}`)
+    ),
+  ]) {
+    slugger.occurrences[id] = 0;
+  }
   const authenticationGuideId = slugger.slug('authentication');
   const heading = (
     depth: ReferenceHeading['depth'],
     text: string,
     id?: string
-  ): ReferenceHeading => ({ depth, text, slug: id ?? slugger.slug(text) });
-  // Retain the existing section and endpoint slugs. Schema and catalog IDs stay raw.
+  ): ReferenceHeading => {
+    if (id) slugger.occurrences[id] = 0;
+    return { depth, text, slug: id ?? slugger.slug(text) };
+  };
   const sections: OpenApiReference['sections'] = {
     servers: heading(2, 'Servers'),
     endpoints: heading(2, 'Endpoint reference', 'operations'),

@@ -127,7 +127,7 @@
       "dependsOn": ["validate-links", "format", "test-openapi"]
     },
     "test-openapi": {
-      "command": "node --import tsx --test src/plugins/nx-cloud-public-api.loader.test.ts",
+      "command": "node --import tsx --test src/plugins/nx-cloud-public-api.loader.test.ts src/plugins/utils/openapi-reference.test.ts",
       "options": {
         "cwd": "astro-docs"
       }
