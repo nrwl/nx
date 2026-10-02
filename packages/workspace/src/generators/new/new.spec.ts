@@ -91,6 +91,7 @@ describe('new', () => {
 
   describe('--preset', () => {
     it('should generate necessary npm dependencies for empty preset', async () => {
+      vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.0.0');
       await newGenerator(tree, {
         ...defaultOptions,
         name: 'my-workspace',

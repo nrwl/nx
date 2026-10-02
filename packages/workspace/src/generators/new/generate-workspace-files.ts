@@ -1,4 +1,5 @@
 import {
+  detectPackageManager,
   generateFiles,
   getPackageManagerVersion,
   names,
@@ -168,6 +169,10 @@ export async function generateWorkspaceFiles(
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
   }
+  options = {
+    ...options,
+    packageManager: options.packageManager ?? detectPackageManager(tree.root),
+  };
   // we need to check package manager version before the package.json is generated
   // since it might influence the version report
   const packageManagerVersion = getPackageManagerVersion(
@@ -176,6 +181,10 @@ export async function generateWorkspaceFiles(
   );
   options = normalizeOptions(options);
   createFiles(tree, options);
+  updateJson(tree, join(options.directory, 'package.json'), (json) => {
+    json.packageManager = `${options.packageManager}@${packageManagerVersion}`;
+    return json;
+  });
   const nxJson = createNxJson(tree, options);
 
   const token =
