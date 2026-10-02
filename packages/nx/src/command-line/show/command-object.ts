@@ -1,4 +1,4 @@
-import { CommandModule, showHelp } from 'yargs';
+import type { Argv, CommandModule } from 'yargs';
 import type { ProjectGraphProjectNode } from '../../config/project-graph';
 import { isAiAgent } from '../../native';
 import { handleErrors } from '../../utils/handle-errors';
@@ -52,14 +52,17 @@ export type ShowTargetOutputsOptions = ShowTargetBaseOptions & {
   check?: string[];
 };
 
+let showArgv: Argv;
+
 export const yargsShowCommand: CommandModule<
   Record<string, unknown>,
   NxShowArgs
 > = {
   command: 'show',
   describe: 'Show information about the workspace (e.g., list of projects).',
-  builder: (yargs) =>
-    yargs
+  builder: (yargs) => {
+    showArgv = yargs;
+    return yargs
       .command(showProjectsCommand)
       .command(showProjectCommand)
       .command(showTargetCommand)
@@ -96,9 +99,10 @@ export const yargsShowCommand: CommandModule<
       .example(
         '$0 show target outputs my-app:build',
         'List resolved output paths for the build target'
-      ),
-  handler: async (args) => {
-    showHelp();
+      );
+  },
+  handler: async () => {
+    showArgv.showHelp();
     process.exit(1);
   },
 };
@@ -382,13 +386,15 @@ const showTargetCommand: CommandModule<NxShowArgs, ShowTargetBaseOptions> = {
   command: 'target',
   describe:
     'Shows resolved target configuration for a given project target. Use subcommands to inspect inputs or outputs.',
-  builder: (yargs) =>
-    yargs
+  builder: (yargs) => {
+    showArgv = yargs;
+    return yargs
       .command(showTargetInputsCommand)
       .command(showTargetOutputsCommand)
-      .command(showTargetInfoCommand),
+      .command(showTargetInfoCommand);
+  },
   handler: async () => {
-    showHelp();
+    showArgv.showHelp();
     process.exit(1);
   },
 };

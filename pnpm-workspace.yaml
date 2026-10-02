@@ -81,8 +81,8 @@ catalog:
   webpack: '5.109.2'
   webpack-dev-server: '5.2.4'
   which: '^3.0.1'
-  yargs: '^17.6.2'
-  yargs-parser: '21.1.1'
+  yargs: '^18.0.0'
+  yargs-parser: '^22.0.0'
 catalogs:
   angular:
     '@angular-devkit/architect': '~0.2201.0'
