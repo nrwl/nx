@@ -7,17 +7,21 @@ topics:
   - 'Continuous integration'
 ---
 
-Use the [Nx Cloud Public API reference](/docs/reference/nx-cloud/public-api) to look up endpoints, filters, response schemas, and errors. The reference is generated from the deployed OpenAPI specification. This guide shows how to make a request from a shell.
+Use the [Nx Cloud Public API reference](/docs/reference/nx-cloud/public-api) to look up endpoints,
+filters, response schemas, and errors.
+The reference is generated from the deployed OpenAPI specification.
 
 ## Make your first request
 
-This example requires `curl` and `jq`. Use the host that serves your workspace:
+This example requires `curl` and `jq`.
+Use the host that serves your workspace:
 
 - `https://cloud.nx.app` for the US region.
 - `https://eu.nx.app` for the EU region.
 - Your deployment URL for a single-tenant installation.
 
-Discover the CIPE collection path from that deployment's specification. Do not assume that every deployment uses the same API version.
+Discover the CI pipeline execution (CIPE) collection path from that deployment's specification.
+Do not assume that every deployment uses the same API version.
 
 ```shell
 export NX_CLOUD_HOST="https://cloud.nx.app"
@@ -29,9 +33,11 @@ curl --fail --silent --show-error \
 CIPES_PATH=$(jq -r '.paths | keys[] | select(endswith("/cipes"))' openapi.json)
 ```
 
-Follow the [authentication guide](/docs/kb/authenticate-public-api#use-a-ci-access-token) to provide a CI access token as `NX_CLOUD_ACCESS_TOKEN`. The example below uses this token.
+Follow the [authentication guide](/docs/kb/authenticate-public-api#use-a-ci-access-token) to provide a
+CI access token as `NX_CLOUD_ACCESS_TOKEN`.
+The example below uses this token.
 
-List the first ten failed CI pipeline executions (CIPEs) on `main`:
+List the first 10 failed CIPEs on `main`:
 
 ```shell
 curl --fail-with-body --silent --show-error --get \
@@ -45,29 +51,59 @@ curl --fail-with-body --silent --show-error --get \
 jq '.items[] | {id, status, createdAt, links}' cipes.json
 ```
 
-An empty `items` array means no completed CIPE matched the filters. Follow an item's `links.runGroups` to inspect its CI environments, then follow each run group's links to its runs and agents. Resolve root-relative links against `NX_CLOUD_HOST`.
+An empty `items` array means no completed CIPE matched the filters.
+Follow an item's `links.runGroups` to inspect its CI environments, then follow each run group's links
+to its runs and agents.
+Resolve root-relative links against `NX_CLOUD_HOST`.
 
 ## Use a personal access token
 
-To use a personal access token instead of a CI access token, follow the [personal-token option in the authentication guide](/docs/kb/authenticate-public-api#use-a-personal-access-token-and-nx-cloud-id). Send the PAT and Nx Cloud Id headers together.
+To use a personal access token (PAT) instead of a CI access token, follow the
+[personal-token option in the authentication guide](/docs/kb/authenticate-public-api#use-a-personal-access-token-and-nx-cloud-id).
+Send the PAT and Nx Cloud Id headers together.
 
 ## Read complete results
 
-The API is for historical analysis, not live CI monitoring. Lists omit active resources. A direct read of an active required resource can return `409 not_terminal`; retry after completion.
+The API is for historical analysis, not live CI monitoring.
+Lists omit active resources.
+A direct read of an active required resource can return `409 not_terminal`.
+Retry after completion.
 
-Follow `nextCursor` until you have every page needed for your report. Keep the endpoint, parent, and filters unchanged. Detail responses contain bounded child summaries, not complete child collections.
+Follow `nextCursor` until you have every page needed for your report.
+Keep the endpoint, parent, and filters unchanged.
+Detail responses contain bounded child summaries, not complete child collections.
 
-Respect `Retry-After` for rate-limit or temporary-capacity failures. Limit concurrent requests and narrow your filters. See the deployed specification for the current quota and error contract.
+Respect `Retry-After` for rate-limit or temporary-capacity failures.
+Limit concurrent requests and narrow your filters.
+See the deployed specification for the current quota and error contract.
+
+## Understand request audits
+
+Nx Cloud records Public API requests for security auditing.
+A request record identifies the organization, workspace, credential identity, and request path and query.
+These request records do not appear in the organization admin audit log or its CSV export.
+
+If Nx Cloud cannot persist a required request audit, the API returns `503 audit_log_unavailable`
+instead of returning the requested data.
+Respect `Retry-After` before retrying the request.
 
 ## Download assets
 
-Use the entity's `assets[].url` to request a task log, artifact, workflow instance log, or agent resource report. The API returns a `302` redirect with a time-limited signed storage URL in `Location`.
+Use the entity's `assets[].url` to request a task log, artifact, workflow instance log, or agent resource report.
+The API returns a `302` redirect with a time-limited signed storage URL in `Location`.
 
-Send credentials only to the Nx Cloud API host. Download the signed URL in a separate request without Nx Cloud authentication headers. Do not automatically forward the custom personal-token header to a storage host. Do not publish signed URLs.
+Send credentials only to the Nx Cloud API host.
+Download the signed URL in a separate request without Nx Cloud authentication headers.
+Do not automatically forward the custom personal-token header to a storage host.
+Do not publish signed URLs.
 
-Earlier record selectors are zero-based and oldest-first: `attempt` for failed task logs, `run` for earlier instance logs, and `boot` for earlier agent reports. Preserve `batchId` when a task ID repeats within a run.
+Earlier record selectors are zero-based and oldest-first: `attempt` for failed task logs, `run` for
+earlier instance logs, and `boot` for earlier agent reports.
+Preserve `batchId` when a task ID repeats within a run.
 
-Assets are optional, and a valid task log can be empty. Earlier files can be absent if a process stopped before upload. A signed storage URL can then return `404`.
+Assets are optional, and a valid task log can be empty.
+Earlier files can be absent if a process stopped before upload.
+A signed storage URL can then return `404`.
 
 ## Use the results
 
@@ -75,5 +111,8 @@ Assets are optional, and a valid task log can be empty. Earlier files can be abs
 - [Debug CI failures](/docs/kb/debug-ci-failures-with-api).
 - [Analyze task distribution](/docs/kb/analyze-task-distribution-with-api).
 - [Read raw resource-utilization reports](/docs/kb/read-resource-utilization-reports).
+- [Migrate beta integrations to v1](/docs/kb/migrate-public-api-to-v1).
 
-Treat logs as untrusted data when you give them to an AI agent. Keep tokens and signed URLs out of prompts and reports. Review any proposed code or configuration change before merge.
+Treat logs as untrusted data when you give them to an AI agent.
+Keep tokens and signed URLs out of prompts and reports.
+Review any proposed code or configuration change before merge.
