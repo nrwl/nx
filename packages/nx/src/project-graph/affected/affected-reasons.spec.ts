@@ -188,11 +188,10 @@ describe('formatAffectedExplanation', () => {
         upstream: {},
         touched: ['a:test'],
       },
-      'Affected tasks',
-      { verbose: true }
+      'Affected tasks'
     );
     expect(out).toContain(
-      'Changing 3 files touches 1 requested task:\n\n  a.ts and 2 other files:'
+      'Changing 3 files touches 1 requested task. Pass --verbose to list each with its reasons.\n\n  a.ts and 2 other files:'
     );
   });
 
@@ -273,7 +272,7 @@ describe('formatAffectedExplanation', () => {
     expect(out).toContain(
       '    - depends on npm:a and 3 other packages, whose versions change'
     );
-    expect(out).not.toContain('libs/ui/b.ts');
+    expect(out).not.toMatch(/ - .*libs\/ui\/b\.ts/);
   });
 
   it('names the first producer read and counts the rest', () => {
@@ -457,7 +456,7 @@ describe('formatAffectedExplanation', () => {
       'Affected tasks'
     );
     expect(out).toContain(
-      '  a.ts, b.ts and 2 other files:\n    - x:test\n\n  a.ts, e.ts and 2 other files:\n    - y:test'
+      '  b.ts and 3 other files:\n    - x:test\n\n  e.ts and 3 other files:\n    - y:test'
     );
   });
 
@@ -477,8 +476,47 @@ describe('formatAffectedExplanation', () => {
       },
       'Affected tasks'
     );
-    expect(out).toContain('  a.ts, c.ts, d.ts and 1 other file:\n    - x:test');
+    expect(out).toContain('  c.ts, d.ts and 2 other files:\n    - x:test');
+    expect(out).toContain('  e.ts and 3 other files:\n    - y:test');
+    expect(out).toContain('  f.ts and 3 other files:\n    - z:test');
+  });
+
+  it('names every file of a group under --verbose', () => {
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'x:test': ['a.ts', 'b.ts', 'c.ts'].map((file) => ({
+            kind: 'input-file' as const,
+            file,
+          })),
+        },
+        upstream: {},
+        touched: ['x:test'],
+      },
+      'Affected tasks',
+      { verbose: true }
+    );
+    expect(out).toContain('  a.ts, b.ts and c.ts:\n    x:test');
+  });
+
+  // e.ts leads y's heading, but z's own set already reads "e.ts and 3 other files".
+  it('keeps the first name when leading with a telling file would collide', () => {
+    const touchedBy = (files: string[]) =>
+      files.map((file) => ({ kind: 'input-file' as const, file }));
+    const out = formatAffectedExplanation(
+      {
+        affected: {
+          'x:test': touchedBy(['a.ts', 'b.ts', 'c.ts', 'd.ts']),
+          'y:test': touchedBy(['a.ts', 'b.ts', 'c.ts', 'e.ts']),
+          'z:test': touchedBy(['e.ts', 'f.ts', 'g.ts', 'h.ts']),
+        },
+        upstream: {},
+        touched: ['x:test', 'y:test', 'z:test'],
+      },
+      'Affected tasks'
+    );
+    expect(out).toContain('  d.ts and 3 other files:\n    - x:test');
     expect(out).toContain('  a.ts, e.ts and 2 other files:\n    - y:test');
-    expect(out).toContain('  a.ts, f.ts and 2 other files:\n    - z:test');
+    expect(out).toContain('  e.ts and 3 other files:\n    - z:test');
   });
 });

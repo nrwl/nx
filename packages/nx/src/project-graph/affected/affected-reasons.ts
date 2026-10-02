@@ -278,7 +278,11 @@ export function formatAffectedExplanation(
   }
   for (const { noun, groups } of kinds) {
     if (!groups.size) continue;
-    disambiguate([...groups.values()], noun);
+    if (verbose) {
+      for (const group of groups.values()) group.heading = listed(group.names);
+    } else {
+      disambiguate([...groups.values()], noun);
+    }
     const members = [
       ...new Set([...groups.values()].flatMap((group) => group.members)),
     ];
@@ -444,12 +448,14 @@ interface Group {
 }
 
 /**
- * Two sets of the same size and first name shorten to the same heading. Each
- * such heading also names the files that tell it apart, picked one at a time
- * to rule out the most lookalikes, so it grows with the collisions rather
+ * Two sets of the same size and first name shorten to the same heading. Such
+ * a heading instead leads with the files that tell it apart, picked one at a
+ * time to rule out the most lookalikes, so it grows with the collisions rather
  * than with the files.
  */
 function disambiguate(groups: Group[], noun: 'file' | 'package'): void {
+  const others = (count: number) =>
+    count ? [`${count} other ${noun}${count === 1 ? '' : 's'}`] : [];
   const byHeading = new Map<string, Group[]>();
   for (const group of groups) {
     byHeading.set(group.heading, [
@@ -457,11 +463,12 @@ function disambiguate(groups: Group[], noun: 'file' | 'package'): void {
       group,
     ]);
   }
+  const telling = new Map<Group, string[]>();
   for (const alike of byHeading.values()) {
     if (alike.length < 2) continue;
     for (const group of alike) {
-      const [first, ...rest] = group.names;
-      const extra: string[] = [];
+      const [, ...rest] = group.names;
+      const picked: string[] = [];
       let lookalikes = alike
         .filter((other) => other !== group)
         .map((other) => new Set(other.names));
@@ -469,22 +476,38 @@ function disambiguate(groups: Group[], noun: 'file' | 'package'): void {
         const ruledOut = (name: string) =>
           lookalikes.filter((names) => !names.has(name)).length;
         const pick = rest
-          .filter((name) => !extra.includes(name))
+          .filter((name) => !picked.includes(name))
           .reduce((best, name) =>
             ruledOut(name) > ruledOut(best) ? name : best
           );
-        extra.push(pick);
+        picked.push(pick);
         lookalikes = lookalikes.filter((names) => names.has(pick));
       }
-      const others = group.names.length - 1 - extra.length;
-      group.heading = listed([
-        first,
-        ...extra.sort(),
-        ...(others
-          ? [`${others} other ${noun}${others === 1 ? '' : 's'}`]
-          : []),
-      ]);
+      telling.set(group, picked.sort());
     }
+  }
+  const leading = new Map(
+    [...telling].map(([group, picked]) => [
+      group,
+      listed([...picked, ...others(group.names.length - picked.length)]),
+    ])
+  );
+  const taken = new Map<string, number>();
+  for (const group of groups) {
+    const heading = leading.get(group) ?? group.heading;
+    taken.set(heading, (taken.get(heading) ?? 0) + 1);
+  }
+  for (const [group, picked] of telling) {
+    // Leading with a telling file can, rarely, read like an unrelated group;
+    // the first name keeps it apart from everything outside its lookalikes.
+    group.heading =
+      taken.get(leading.get(group)) === 1
+        ? leading.get(group)
+        : listed([
+            group.names[0],
+            ...picked,
+            ...others(group.names.length - 1 - picked.length),
+          ]);
   }
 }
 
