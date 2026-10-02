@@ -200,9 +200,9 @@ export class PerformanceAnalysis {
     durations: Map<string, number>
   ): string[] {
     const start = this.timings.get(id)?.startTime ?? Infinity;
-    const deps = (this.taskGraph.dependencies[id] ?? []).filter((d) =>
-      durations.has(d)
-    );
+    const deps = (this.taskGraph.dependencies[id] ?? [])
+      .map((d) => d.id)
+      .filter((d) => durations.has(d));
     const siblings = (this.batchSiblings.get(id) ?? []).filter((s) => {
       const sEnd = this.timings.get(s)?.endTime;
       return durations.has(s) && sEnd != null && sEnd <= start;
@@ -252,13 +252,13 @@ export class PerformanceAnalysis {
     const start = this.timings.get(id)?.startTime;
     let result = runStart;
     for (const dep of this.taskGraph.dependencies[id] ?? []) {
-      const end = this.timings.get(dep)?.endTime;
+      const end = this.timings.get(dep.id)?.endTime;
       if (end != null) {
         result = Math.max(result, end);
       }
     }
     for (const cdep of this.taskGraph.continuousDependencies?.[id] ?? []) {
-      const cStart = this.timings.get(cdep)?.startTime;
+      const cStart = this.timings.get(cdep.id)?.startTime;
       if (cStart != null) {
         result = Math.max(result, cStart);
       }

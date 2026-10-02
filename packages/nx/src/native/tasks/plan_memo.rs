@@ -6,7 +6,9 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, MutexGuard};
 
-use crate::native::tasks::types::{TaskGraph, TaskTarget, TaskUltracacheConfiguration};
+use crate::native::tasks::types::{
+    TaskGraph, TaskGraphEdge, TaskTarget, TaskUltracacheConfiguration,
+};
 
 #[derive(Default)]
 pub(super) struct PlanMemo {
@@ -40,8 +42,8 @@ impl PlannedTask {
         Some(Self {
             target: task.target.clone(),
             outputs: task.outputs.clone(),
-            dependencies: edges(&task_graph.dependencies, id).to_vec(),
-            continuous_dependencies: edges(&task_graph.continuous_dependencies, id).to_vec(),
+            dependencies: edges(&task_graph.dependencies, id),
+            continuous_dependencies: edges(&task_graph.continuous_dependencies, id),
             ultracache: task.ultracache.clone(),
             custom_hasher: custom_hasher.contains(id),
         })
@@ -52,8 +54,13 @@ impl PlannedTask {
     }
 }
 
-fn edges<'a>(edges: &'a HashMap<String, Vec<String>>, id: &str) -> &'a [String] {
-    edges.get(id).map_or(&[], Vec::as_slice)
+fn edges(edges: &HashMap<String, Vec<TaskGraphEdge>>, id: &str) -> Vec<String> {
+    edges
+        .get(id)
+        .into_iter()
+        .flatten()
+        .map(|edge| edge.id.clone())
+        .collect()
 }
 
 impl PlanMemo {
@@ -151,7 +158,7 @@ fn dependents_of<'a>(task_graph: &'a TaskGraph, changed: Vec<&'a str>) -> HashSe
         for (task, deps) in edges {
             for dep in deps {
                 dependents
-                    .entry(dep.as_str())
+                    .entry(dep.id.as_str())
                     .or_default()
                     .push(task.as_str());
             }
@@ -172,7 +179,7 @@ fn dependents_of<'a>(task_graph: &'a TaskGraph, changed: Vec<&'a str>) -> HashSe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::test_utils::task_graph;
+    use crate::native::test_utils::{edges_to, task_graph};
 
     /// Plans every task of `graph` and returns which ones were planned.
     fn plan_all(memo: &PlanMemo, graph: &TaskGraph) -> Vec<String> {
@@ -241,7 +248,7 @@ mod tests {
         let mut changed = graph();
         changed
             .continuous_dependencies
-            .insert("app:test".into(), vec!["other:build".into()]);
+            .insert("app:test".into(), edges_to(&["other:build"]));
         assert_eq!(plan_all(&memo, &changed), ["app:test"]);
     }
 

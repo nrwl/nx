@@ -3,7 +3,10 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  TargetConfiguration,
+} from '../config/workspace-json-project-json';
 import {
   createTaskGraph,
   createTaskGraphWithDependencyOverrides,
@@ -361,7 +364,7 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'lib1:compile:libDefault': ['lib2:compile'],
+        'lib1:compile:libDefault': [{ id: 'lib2:compile' }],
         'lib2:compile': [],
       },
       continuousDependencies: {
@@ -430,8 +433,8 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile:ci': ['lib1:compile:libDefault'],
-        'lib1:compile:libDefault': ['lib2:compile:ci'],
+        'app1:compile:ci': [{ id: 'lib1:compile:libDefault' }],
+        'lib1:compile:libDefault': [{ id: 'lib2:compile:ci' }],
         'lib2:compile:ci': [],
       },
       continuousDependencies: {
@@ -518,7 +521,7 @@ describe('createTaskGraph', () => {
 
     expect(compileApp).toEqual({
       dependencies: {
-        'app1:compile': ['lib3:compile'],
+        'app1:compile': [{ id: 'lib3:compile' }],
         'lib3:compile': [],
       },
       continuousDependencies: {
@@ -784,9 +787,13 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile': ['lib1:compile', 'lib2:compile', 'app1:precompile'],
+        'app1:compile': [
+          { id: 'lib1:compile' },
+          { id: 'lib2:compile' },
+          { id: 'app1:precompile' },
+        ],
         'app1:precompile': [],
-        'lib1:compile': ['lib2:compile'],
+        'lib1:compile': [{ id: 'lib2:compile' }],
         'lib2:compile': [],
       },
       continuousDependencies: {
@@ -1105,7 +1112,11 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile': ['lib1:compile', 'app1:precompile', 'app1:precompile2'],
+        'app1:compile': [
+          { id: 'lib1:compile' },
+          { id: 'app1:precompile' },
+          { id: 'app1:precompile2' },
+        ],
         'app1:precompile': [],
         'app1:precompile2': [],
         'lib1:compile': [],
@@ -1224,13 +1235,13 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:serve': ['app1:compile'],
-        'app1:compile': ['lib1:compile'],
-        'lib1:serve': ['lib1:compile'],
+        'app1:serve': [{ id: 'app1:compile' }],
+        'app1:compile': [{ id: 'lib1:compile' }],
+        'lib1:serve': [{ id: 'lib1:compile' }],
         'lib1:compile': [],
       },
       continuousDependencies: {
-        'app1:serve': ['lib1:serve'],
+        'app1:serve': [{ id: 'lib1:serve' }],
         'app1:compile': [],
         'lib1:serve': [],
         'lib1:compile': [],
@@ -1315,7 +1326,11 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile': ['lib1:compile', 'app1:precompile', 'app1:precompile2'],
+        'app1:compile': [
+          { id: 'lib1:compile' },
+          { id: 'app1:precompile' },
+          { id: 'app1:precompile2' },
+        ],
         'app1:precompile': [],
         'app1:precompile2': [],
         'lib1:compile': [],
@@ -1475,9 +1490,9 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile': ['lib1:compile', 'lib2:compile'],
-        'lib1:compile': ['lib3:compile'],
-        'lib2:compile': ['lib3:compile'],
+        'app1:compile': [{ id: 'lib1:compile' }, { id: 'lib2:compile' }],
+        'lib1:compile': [{ id: 'lib3:compile' }],
+        'lib2:compile': [{ id: 'lib3:compile' }],
         'lib3:compile': [],
       },
       continuousDependencies: {
@@ -1648,15 +1663,15 @@ describe('createTaskGraph', () => {
       },
       dependencies: {
         'infra1:apply': [
-          'app2:compile',
-          'coreInfra:apply',
-          'app1:compile',
-          'infra2:apply',
+          { id: 'app2:compile' },
+          { id: 'coreInfra:apply' },
+          { id: 'app1:compile' },
+          { id: 'infra2:apply' },
         ],
         'app2:compile': [],
         'coreInfra:apply': [],
         'app1:compile': [],
-        'infra2:apply': ['app2:compile', 'coreInfra:apply'],
+        'infra2:apply': [{ id: 'app2:compile' }, { id: 'coreInfra:apply' }],
       },
       continuousDependencies: {
         'infra1:apply': [],
@@ -1738,8 +1753,8 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile': ['app1:test'],
-        'app1:test': ['app1:compile'],
+        'app1:compile': [{ id: 'app1:test' }],
+        'app1:test': [{ id: 'app1:compile' }],
       },
       continuousDependencies: {
         'app1:compile': [],
@@ -1885,10 +1900,10 @@ describe('createTaskGraph', () => {
         }),
       },
       dependencies: {
-        'lib1:build': ['lib2:build'],
-        'lib2:build': ['lib3:build'],
-        'lib3:build': ['lib4:build'],
-        'lib4:build': ['lib1:build'],
+        'lib1:build': [{ id: 'lib2:build' }],
+        'lib2:build': [{ id: 'lib3:build' }],
+        'lib3:build': [{ id: 'lib4:build' }],
+        'lib4:build': [{ id: 'lib1:build' }],
       },
       continuousDependencies: {
         'lib1:build': [],
@@ -2016,8 +2031,8 @@ describe('createTaskGraph', () => {
         }),
       },
       dependencies: {
-        'lib1:build': ['lib2:build'],
-        'lib2:build': ['lib4:build'],
+        'lib1:build': [{ id: 'lib2:build' }],
+        'lib2:build': [{ id: 'lib4:build' }],
         'lib4:build': [],
       },
       continuousDependencies: {
@@ -2216,9 +2231,9 @@ describe('createTaskGraph', () => {
         }),
       },
       dependencies: {
-        'lib1:build': ['lib2:build'],
+        'lib1:build': [{ id: 'lib2:build' }],
         'lib2:build': [],
-        'lib4:build': ['lib1:build'],
+        'lib4:build': [{ id: 'lib1:build' }],
       },
       continuousDependencies: {
         'lib1:build': [],
@@ -2327,7 +2342,7 @@ describe('createTaskGraph', () => {
         }),
       },
       dependencies: {
-        'lib1:build': ['lib2:build'],
+        'lib1:build': [{ id: 'lib2:build' }],
         'lib2:build': [],
       },
       continuousDependencies: {
@@ -2666,8 +2681,8 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:lint': ['lib2:dep'],
-        'app1:test': ['lib2:dep2'],
+        'app1:lint': [{ id: 'lib2:dep' }],
+        'app1:test': [{ id: 'lib2:dep2' }],
         'lib2:dep': [],
         'lib2:dep2': [],
       },
@@ -2774,7 +2789,7 @@ describe('createTaskGraph', () => {
         'app:serve': [],
       },
       continuousDependencies: {
-        'e2e:e2e': ['app:serve'],
+        'e2e:e2e': [{ id: 'app:serve' }],
         'app:serve': [],
       },
     });
@@ -2910,12 +2925,12 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'e2e:e2e': ['lib:serve'],
+        'e2e:e2e': [{ id: 'lib:serve' }],
         'app:serve': [],
         'lib:serve': [],
       },
       continuousDependencies: {
-        'e2e:e2e': ['app:serve'],
+        'e2e:e2e': [{ id: 'app:serve' }],
         'app:serve': [],
         'lib:serve': [],
       },
@@ -3233,7 +3248,7 @@ describe('createTaskGraph', () => {
         'app:serve': [],
       },
       continuousDependencies: {
-        'e2e:e2e': ['app:serve'],
+        'e2e:e2e': [{ id: 'app:serve' }],
         'app:serve': [],
       },
     });
@@ -3593,7 +3608,7 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile': ['app2:compile'],
+        'app1:compile': [{ id: 'app2:compile' }],
         'app2:compile': [],
       },
       continuousDependencies: {
@@ -3653,8 +3668,8 @@ describe('createTaskGraph', () => {
     expect(taskGraph.tasks).toHaveProperty('lib1:build');
     expect(taskGraph.tasks).toHaveProperty('lib2:build');
     expect(taskGraph.dependencies['app1:build']).toEqual([
-      'lib1:build',
-      'lib2:build',
+      { id: 'lib1:build' },
+      { id: 'lib2:build' },
     ]);
   });
 
@@ -3729,14 +3744,14 @@ describe('createTaskGraph', () => {
     expect(taskGraph.tasks).not.toHaveProperty('lib1:build');
     expect(taskGraph.tasks).toHaveProperty('lib2:build');
     expect(taskGraph.dependencies['app1:build']).toEqual([
-      'lib2:build',
-      'lib3:build',
+      { id: 'lib2:build' },
+      { id: 'lib3:build' },
     ]);
     const taskGraph2 = createTaskGraph(graph, {}, ['lib2'], ['foo'], null, {});
     expect(taskGraph2.tasks).toHaveProperty('lib2:foo');
     expect(taskGraph2.dependencies['lib2:foo']).toEqual([
-      'lib2:build',
-      'lib3:build',
+      { id: 'lib2:build' },
+      { id: 'lib3:build' },
     ]);
   });
 
@@ -3855,12 +3870,12 @@ describe('createTaskGraph', () => {
       {}
     );
 
-    expect(taskGraph.dependencies['a:deploy']).toEqual(['a:build']);
-    expect(taskGraph.dependencies['a:build']).toEqual(['a:compile']);
+    expect(taskGraph.dependencies['a:deploy']).toEqual([{ id: 'a:build' }]);
+    expect(taskGraph.dependencies['a:build']).toEqual([{ id: 'a:compile' }]);
     expect(taskGraph.dependencies['a:compile']).toEqual([]);
-    expect(taskGraph.dependencies['b:deploy']).toEqual(['b:build']);
-    expect(taskGraph.dependencies['b:build']).toEqual(['b:compile']);
-    expect(taskGraph.dependencies['b:compile']).toEqual(['d:compile']);
+    expect(taskGraph.dependencies['b:deploy']).toEqual([{ id: 'b:build' }]);
+    expect(taskGraph.dependencies['b:build']).toEqual([{ id: 'b:compile' }]);
+    expect(taskGraph.dependencies['b:compile']).toEqual([{ id: 'd:compile' }]);
     expect(taskGraph.dependencies['d:compile']).toEqual([]);
   });
 
@@ -3970,36 +3985,60 @@ describe('createTaskGraph', () => {
     expect(taskGraph.dependencies).toMatchInlineSnapshot(`
       {
         "app-1:build": [
-          "lib-1:build",
-          "app-1:codegen",
+          {
+            "id": "lib-1:build",
+          },
+          {
+            "id": "app-1:codegen",
+          },
         ],
         "app-1:codegen": [],
         "app-1:deploy": [
-          "app-1:build",
+          {
+            "id": "app-1:build",
+          },
         ],
         "app-2:build": [
-          "lib-2:build",
-          "app-2:codegen",
+          {
+            "id": "lib-2:build",
+          },
+          {
+            "id": "app-2:codegen",
+          },
         ],
         "app-2:codegen": [],
         "app-2:deploy": [
-          "app-2:build",
+          {
+            "id": "app-2:build",
+          },
         ],
         "app-3:build": [
-          "lib-2:build",
-          "app-3:codegen",
+          {
+            "id": "lib-2:build",
+          },
+          {
+            "id": "app-3:codegen",
+          },
         ],
         "app-3:codegen": [],
         "app-3:deploy": [
-          "app-3:build",
+          {
+            "id": "app-3:build",
+          },
         ],
         "lib-1:build": [
-          "lib-2:build",
-          "lib-1:codegen",
+          {
+            "id": "lib-2:build",
+          },
+          {
+            "id": "lib-1:codegen",
+          },
         ],
         "lib-1:codegen": [],
         "lib-2:build": [
-          "lib-2:codegen",
+          {
+            "id": "lib-2:codegen",
+          },
         ],
         "lib-2:codegen": [],
       }
@@ -4113,7 +4152,7 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile': ['app4:precompile'],
+        'app1:compile': [{ id: 'app4:precompile' }],
         'app4:precompile': [],
       },
       continuousDependencies: {
@@ -4182,8 +4221,8 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app2:compile': ['app4:precompile'],
-        'app3:compile': ['app4:precompile'],
+        'app2:compile': [{ id: 'app4:precompile' }],
+        'app3:compile': [{ id: 'app4:precompile' }],
         'app4:precompile': [],
       },
       continuousDependencies: {
@@ -4329,11 +4368,11 @@ describe('createTaskGraph', () => {
     expect(taskGraph.dependencies).toEqual({
       'app1:compile': [],
       'app2:compile': [],
-      'app3:compile': ['app4:precompile'],
+      'app3:compile': [{ id: 'app4:precompile' }],
       'app4:precompile': [],
       'app5:compile': [],
       'app6:compile': [],
-      'app7:compile': ['app8:precompile'],
+      'app7:compile': [{ id: 'app8:precompile' }],
       'app8:precompile': [],
     });
   });
@@ -4380,31 +4419,183 @@ class GraphBuilder {
   }
 }
 
+describe('waitFor', () => {
+  const serve = { executor: 'nx:run-commands', continuous: true };
+  const build = { executor: 'nx:run-commands' };
+
+  function graphFor(
+    dependsOn: TargetConfiguration['dependsOn'],
+    targets: Record<string, Record<string, TargetConfiguration>>,
+    dependencies: Record<string, string[]> = {}
+  ) {
+    const projectGraph: ProjectGraph = { nodes: {}, dependencies: {} };
+    for (const [name, projectTargets] of Object.entries(targets)) {
+      projectGraph.nodes[name] = {
+        name,
+        type: 'lib',
+        data: { root: name, targets: projectTargets },
+      };
+      projectGraph.dependencies[name] = (dependencies[name] ?? []).map(
+        (target) => ({ source: name, target, type: 'static' })
+      );
+    }
+    projectGraph.nodes.e2e.data.targets.e2e = { ...build, dependsOn };
+    return createTaskGraph(projectGraph, {}, ['e2e'], ['e2e'], undefined, {});
+  }
+
+  function continuousEdges(...args: Parameters<typeof graphFor>) {
+    return graphFor(...args).continuousDependencies['e2e:e2e'];
+  }
+
+  it('records ready only on the edges whose entry asks for it', () => {
+    expect(
+      continuousEdges(
+        [
+          { projects: ['app'], target: 'serve', waitFor: 'ready' },
+          { projects: ['api'], target: 'serve' },
+          { projects: ['db'], target: 'serve', waitFor: 'started' },
+        ],
+        { e2e: {}, app: { serve }, api: { serve }, db: { serve } }
+      )
+    ).toEqual([
+      { id: 'app:serve', waitFor: 'ready' },
+      { id: 'api:serve' },
+      { id: 'db:serve' },
+    ]);
+  });
+
+  it('lets a ready entry win over a plain one reaching the same task, in either order', () => {
+    const plain = { projects: ['app'], target: 'serve' };
+    const ready = { dependencies: true, target: 'serve', waitFor: 'ready' };
+    const targets = { e2e: {}, app: { serve } };
+    const dependencies = { e2e: ['app'] };
+    expect(continuousEdges([plain, ready], targets, dependencies)).toEqual([
+      { id: 'app:serve', waitFor: 'ready' },
+    ]);
+    expect(continuousEdges([ready, plain], targets, dependencies)).toEqual([
+      { id: 'app:serve', waitFor: 'ready' },
+    ]);
+  });
+
+  it('lets a ready entry win over a plain one reaching the same task through a dependency without the target, in either order', () => {
+    const plain = { dependencies: true, target: 'serve' };
+    const ready = { dependencies: true, target: 'serve', waitFor: 'ready' };
+    const targets = { e2e: {}, lib: {}, app: { serve } };
+    const dependencies = { e2e: ['lib'], lib: ['app'] };
+    expect(continuousEdges([plain, ready], targets, dependencies)).toEqual([
+      { id: 'app:serve', waitFor: 'ready' },
+    ]);
+    expect(continuousEdges([ready, plain], targets, dependencies)).toEqual([
+      { id: 'app:serve', waitFor: 'ready' },
+    ]);
+  });
+
+  it('keeps ready on an edge reached through a dependency without the target', () => {
+    expect(
+      continuousEdges(
+        ['^build', { dependencies: true, target: 'serve', waitFor: 'ready' }],
+        { e2e: {}, lib: { serve }, app: { build, serve } },
+        { e2e: ['lib'], lib: ['app'] }
+      )
+    ).toEqual([
+      { id: 'app:serve', waitFor: 'ready' },
+      { id: 'lib:serve', waitFor: 'ready' },
+    ]);
+  });
+
+  it('keeps ready on a self edge reached through a project cycle', () => {
+    expect(
+      continuousEdges(
+        [{ dependencies: true, target: 'serve', waitFor: 'ready' }],
+        { e2e: { serve }, lib: {} },
+        { e2e: ['lib'], lib: ['e2e'] }
+      )
+    ).toEqual([{ id: 'e2e:serve', waitFor: 'ready' }]);
+  });
+
+  it('lets projects win over dependencies in one entry', () => {
+    expect(
+      continuousEdges(
+        [
+          {
+            projects: ['app'],
+            dependencies: true,
+            target: 'serve',
+            waitFor: 'ready',
+          },
+          { projects: ['lib'], target: 'serve' },
+        ],
+        { e2e: {}, lib: { serve }, app: { serve } },
+        { e2e: ['lib'] }
+      )
+    ).toEqual([{ id: 'app:serve', waitFor: 'ready' }, { id: 'lib:serve' }]);
+  });
+
+  it('leaves a started edge alone when the ready entry stops at a closer dependency', () => {
+    expect(
+      continuousEdges(
+        [
+          { dependencies: true, target: 'serve', waitFor: 'ready' },
+          { projects: ['app'], target: 'serve' },
+        ],
+        { e2e: {}, lib: { serve }, app: { serve } },
+        { e2e: ['lib'], lib: ['app'] }
+      )
+    ).toEqual([{ id: 'lib:serve', waitFor: 'ready' }, { id: 'app:serve' }]);
+  });
+
+  it('waits for the start only when a project cycle drops the ready entry chain and a plain entry keeps the edge', () => {
+    expect(
+      continuousEdges(
+        [
+          { dependencies: true, target: 'serve', waitFor: 'ready' },
+          { projects: ['app'], target: 'serve' },
+        ],
+        { e2e: {}, lib: {}, app: { serve } },
+        { e2e: ['lib'], lib: ['e2e', 'app'] }
+      )
+    ).toEqual([{ id: 'app:serve' }]);
+  });
+
+  it('records ready only on continuous edges of a wildcard target', () => {
+    const taskGraph = graphFor(
+      [{ projects: ['app'], target: 'serve*', waitFor: 'ready' }],
+      { e2e: {}, app: { serve, 'serve-static': build } }
+    );
+    expect(taskGraph.continuousDependencies['e2e:e2e']).toEqual([
+      { id: 'app:serve', waitFor: 'ready' },
+    ]);
+    expect(taskGraph.dependencies['e2e:e2e']).toEqual([
+      { id: 'app:serve-static' },
+    ]);
+  });
+});
+
 describe('filterDummyTasks', () => {
   it('should filter out dummy tasks', () => {
     const dependencies = {
-      'app1:compile': ['app2:__nx_dummy_task__'],
-      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
-      'app3:__nx_dummy_task__': ['app4:__nx_dummy_task__'],
-      'app4:__nx_dummy_task__': ['app5:build'],
+      'app1:compile': [{ id: 'app2:__nx_dummy_task__' }],
+      'app2:__nx_dummy_task__': [{ id: 'app3:__nx_dummy_task__' }],
+      'app3:__nx_dummy_task__': [{ id: 'app4:__nx_dummy_task__' }],
+      'app4:__nx_dummy_task__': [{ id: 'app5:build' }],
       'app5:build': [],
     };
     filterDummyTasks(dependencies);
     expect(dependencies).toEqual({
-      'app1:compile': ['app5:build'],
+      'app1:compile': [{ id: 'app5:build' }],
       'app5:build': [],
     });
   });
 
   it('should filter out dummy tasks with 1 cycle', () => {
     const dependencies = {
-      'app1:compile': ['app2:__nx_dummy_task__'],
-      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app1:compile': [{ id: 'app2:__nx_dummy_task__' }],
+      'app2:__nx_dummy_task__': [{ id: 'app3:__nx_dummy_task__' }],
       'app3:__nx_dummy_task__': [
-        'app4:__nx_dummy_task__',
-        'app2:__nx_dummy_task__',
+        { id: 'app4:__nx_dummy_task__' },
+        { id: 'app2:__nx_dummy_task__' },
       ],
-      'app4:__nx_dummy_task__': ['app5:build'],
+      'app4:__nx_dummy_task__': [{ id: 'app5:build' }],
       'app5:build': [],
     };
     filterDummyTasks(dependencies);
@@ -4416,17 +4607,20 @@ describe('filterDummyTasks', () => {
 
   it('should filter out dummy tasks with 2 cycles', () => {
     const dependencies = {
-      'app1:compile': ['app2:__nx_dummy_task__'],
-      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app1:compile': [{ id: 'app2:__nx_dummy_task__' }],
+      'app2:__nx_dummy_task__': [{ id: 'app3:__nx_dummy_task__' }],
       'app3:__nx_dummy_task__': [
-        'app4:__nx_dummy_task__',
-        'app2:__nx_dummy_task__',
+        { id: 'app4:__nx_dummy_task__' },
+        { id: 'app2:__nx_dummy_task__' },
       ],
-      'app4:__nx_dummy_task__': ['app5:build'],
+      'app4:__nx_dummy_task__': [{ id: 'app5:build' }],
       'app5:build': [],
-      'app5:compile': ['app6:__nx_dummy_task__'],
-      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__'],
-      'app7:__nx_dummy_task__': ['app8:precompile', 'app6:__nx_dummy_task__'],
+      'app5:compile': [{ id: 'app6:__nx_dummy_task__' }],
+      'app6:__nx_dummy_task__': [{ id: 'app7:__nx_dummy_task__' }],
+      'app7:__nx_dummy_task__': [
+        { id: 'app8:precompile' },
+        { id: 'app6:__nx_dummy_task__' },
+      ],
       'app8:precompile': [],
     };
     filterDummyTasks(dependencies);
@@ -4440,36 +4634,39 @@ describe('filterDummyTasks', () => {
 
   it('should filter out dummy tasks with a large list of dependencies without cycles', () => {
     const dependencies = {
-      'app1:compile': ['app2:__nx_dummy_task__'],
-      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
-      'app3:__nx_dummy_task__': ['app4:precompile'],
-      'app4:precompile': ['app5:build'],
-      'app5:build': ['app6:__nx_dummy_task__'],
-      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__'],
-      'app7:__nx_dummy_task__': ['app8:precompile'],
-      'app8:precompile': ['app9:__nx_dummy_task__', 'app10:build'],
-      'app9:__nx_dummy_task__': ['app10:__nx_dummy_task__'],
-      'app10:__nx_dummy_task__': ['app11:__nx_dummy_task__'],
-      'app10:build': ['app11:__nx_dummy_task__'],
-      'app11:__nx_dummy_task__': ['app12:__nx_dummy_task__'],
-      'app12:__nx_dummy_task__': ['app13:__nx_dummy_task__'],
-      'app13:__nx_dummy_task__': ['app14:__nx_dummy_task__'],
-      'app14:__nx_dummy_task__': ['app15:__nx_dummy_task__'],
-      'app15:__nx_dummy_task__': ['app16:__nx_dummy_task__'],
-      'app16:__nx_dummy_task__': ['app17:__nx_dummy_task__'],
-      'app17:__nx_dummy_task__': ['app18:__nx_dummy_task__'],
-      'app18:__nx_dummy_task__': ['app19:__nx_dummy_task__'],
-      'app19:__nx_dummy_task__': ['app20:__nx_dummy_task__'],
-      'app20:__nx_dummy_task__': ['app21:build'],
+      'app1:compile': [{ id: 'app2:__nx_dummy_task__' }],
+      'app2:__nx_dummy_task__': [{ id: 'app3:__nx_dummy_task__' }],
+      'app3:__nx_dummy_task__': [{ id: 'app4:precompile' }],
+      'app4:precompile': [{ id: 'app5:build' }],
+      'app5:build': [{ id: 'app6:__nx_dummy_task__' }],
+      'app6:__nx_dummy_task__': [{ id: 'app7:__nx_dummy_task__' }],
+      'app7:__nx_dummy_task__': [{ id: 'app8:precompile' }],
+      'app8:precompile': [
+        { id: 'app9:__nx_dummy_task__' },
+        { id: 'app10:build' },
+      ],
+      'app9:__nx_dummy_task__': [{ id: 'app10:__nx_dummy_task__' }],
+      'app10:__nx_dummy_task__': [{ id: 'app11:__nx_dummy_task__' }],
+      'app10:build': [{ id: 'app11:__nx_dummy_task__' }],
+      'app11:__nx_dummy_task__': [{ id: 'app12:__nx_dummy_task__' }],
+      'app12:__nx_dummy_task__': [{ id: 'app13:__nx_dummy_task__' }],
+      'app13:__nx_dummy_task__': [{ id: 'app14:__nx_dummy_task__' }],
+      'app14:__nx_dummy_task__': [{ id: 'app15:__nx_dummy_task__' }],
+      'app15:__nx_dummy_task__': [{ id: 'app16:__nx_dummy_task__' }],
+      'app16:__nx_dummy_task__': [{ id: 'app17:__nx_dummy_task__' }],
+      'app17:__nx_dummy_task__': [{ id: 'app18:__nx_dummy_task__' }],
+      'app18:__nx_dummy_task__': [{ id: 'app19:__nx_dummy_task__' }],
+      'app19:__nx_dummy_task__': [{ id: 'app20:__nx_dummy_task__' }],
+      'app20:__nx_dummy_task__': [{ id: 'app21:build' }],
       'app21:build': [],
     };
     filterDummyTasks(dependencies);
     expect(dependencies).toEqual({
-      'app1:compile': ['app4:precompile'],
-      'app4:precompile': ['app5:build'],
-      'app5:build': ['app8:precompile'],
-      'app8:precompile': ['app21:build', 'app10:build'],
-      'app10:build': ['app21:build'],
+      'app1:compile': [{ id: 'app4:precompile' }],
+      'app4:precompile': [{ id: 'app5:build' }],
+      'app5:build': [{ id: 'app8:precompile' }],
+      'app8:precompile': [{ id: 'app21:build' }, { id: 'app10:build' }],
+      'app10:build': [{ id: 'app21:build' }],
       'app21:build': [],
     });
   });
@@ -4478,84 +4675,96 @@ describe('filterDummyTasks', () => {
 describe('getNonDummyDeps', () => {
   it('should return the non dummy dependencies', () => {
     const dependencies = {
-      'app1:compile': ['app2:__nx_dummy_task__'],
-      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
-      'app3:__nx_dummy_task__': ['app4:__nx_dummy_task__'],
-      'app4:__nx_dummy_task__': ['app5:build'],
+      'app1:compile': [{ id: 'app2:__nx_dummy_task__' }],
+      'app2:__nx_dummy_task__': [{ id: 'app3:__nx_dummy_task__' }],
+      'app3:__nx_dummy_task__': [{ id: 'app4:__nx_dummy_task__' }],
+      'app4:__nx_dummy_task__': [{ id: 'app5:build' }],
       'app5:build': [],
     };
     expect(
       getNonDummyDeps(
-        'app2:__nx_dummy_task__',
+        { id: 'app2:__nx_dummy_task__' },
         dependencies,
         null,
         new Set(['app1:compile'])
       )
-    ).toEqual(['app5:build']);
+    ).toEqual([{ id: 'app5:build' }]);
   });
 
   it('should return the non dummy dependencies with a cycle even no cycle arg got passed in', () => {
     const dependencies = {
-      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app1:compile': [{ id: 'app2:__nx_dummy_task__' }],
       'app2:__nx_dummy_task__': [
-        'app3:__nx_dummy_task__',
-        'app8:precompile',
-        'app5:build',
+        { id: 'app3:__nx_dummy_task__' },
+        { id: 'app8:precompile' },
+        { id: 'app5:build' },
       ],
-      'app3:__nx_dummy_task__': ['app2:__nx_dummy_task__', 'app4:precompile'],
-      'app4:precompile': ['app5:build'],
-      'app5:build': ['app6:__nx_dummy_task__'],
-      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__', 'app1:compile'],
-      'app7:__nx_dummy_task__': ['app8:precompile'],
+      'app3:__nx_dummy_task__': [
+        { id: 'app2:__nx_dummy_task__' },
+        { id: 'app4:precompile' },
+      ],
+      'app4:precompile': [{ id: 'app5:build' }],
+      'app5:build': [{ id: 'app6:__nx_dummy_task__' }],
+      'app6:__nx_dummy_task__': [
+        { id: 'app7:__nx_dummy_task__' },
+        { id: 'app1:compile' },
+      ],
+      'app7:__nx_dummy_task__': [{ id: 'app8:precompile' }],
       'app8:precompile': [],
     };
-    expect(getNonDummyDeps('app2:__nx_dummy_task__', dependencies)).toEqual([
-      'app4:precompile',
-      'app8:precompile',
-      'app5:build',
+    expect(
+      getNonDummyDeps({ id: 'app2:__nx_dummy_task__' }, dependencies)
+    ).toEqual([
+      { id: 'app4:precompile' },
+      { id: 'app8:precompile' },
+      { id: 'app5:build' },
     ]);
-    expect(getNonDummyDeps('app3:__nx_dummy_task__', dependencies)).toEqual([
-      'app8:precompile',
-      'app5:build',
-      'app4:precompile',
+    expect(
+      getNonDummyDeps({ id: 'app3:__nx_dummy_task__' }, dependencies)
+    ).toEqual([
+      { id: 'app8:precompile' },
+      { id: 'app5:build' },
+      { id: 'app4:precompile' },
     ]);
-    expect(getNonDummyDeps('app6:__nx_dummy_task__', dependencies)).toEqual([
-      'app8:precompile',
-      'app1:compile',
-    ]);
+    expect(
+      getNonDummyDeps({ id: 'app6:__nx_dummy_task__' }, dependencies)
+    ).toEqual([{ id: 'app8:precompile' }, { id: 'app1:compile' }]);
   });
 
   it('should handle a long list of dependencies without cycle', () => {
     const dependencies = {
-      'app1:compile': ['app2:__nx_dummy_task__'],
-      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
-      'app3:__nx_dummy_task__': ['app4:precompile'],
-      'app4:precompile': ['app5:build'],
-      'app5:build': ['app6:__nx_dummy_task__'],
-      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__'],
-      'app7:__nx_dummy_task__': ['app8:precompile'],
-      'app8:precompile': ['app9:__nx_dummy_task__', 'app10:build'],
-      'app9:__nx_dummy_task__': ['app10:__nx_dummy_task__'],
-      'app10:__nx_dummy_task__': ['app11:__nx_dummy_task__'],
-      'app10:build': ['app11:__nx_dummy_task__'],
-      'app11:__nx_dummy_task__': ['app12:__nx_dummy_task__'],
-      'app12:__nx_dummy_task__': ['app13:__nx_dummy_task__'],
-      'app13:__nx_dummy_task__': ['app14:__nx_dummy_task__'],
-      'app14:__nx_dummy_task__': ['app15:__nx_dummy_task__'],
-      'app15:__nx_dummy_task__': ['app16:__nx_dummy_task__'],
-      'app16:__nx_dummy_task__': ['app17:__nx_dummy_task__'],
-      'app17:__nx_dummy_task__': ['app18:__nx_dummy_task__'],
-      'app18:__nx_dummy_task__': ['app19:__nx_dummy_task__'],
-      'app19:__nx_dummy_task__': ['app20:__nx_dummy_task__'],
-      'app20:__nx_dummy_task__': ['app21:build'],
+      'app1:compile': [{ id: 'app2:__nx_dummy_task__' }],
+      'app2:__nx_dummy_task__': [{ id: 'app3:__nx_dummy_task__' }],
+      'app3:__nx_dummy_task__': [{ id: 'app4:precompile' }],
+      'app4:precompile': [{ id: 'app5:build' }],
+      'app5:build': [{ id: 'app6:__nx_dummy_task__' }],
+      'app6:__nx_dummy_task__': [{ id: 'app7:__nx_dummy_task__' }],
+      'app7:__nx_dummy_task__': [{ id: 'app8:precompile' }],
+      'app8:precompile': [
+        { id: 'app9:__nx_dummy_task__' },
+        { id: 'app10:build' },
+      ],
+      'app9:__nx_dummy_task__': [{ id: 'app10:__nx_dummy_task__' }],
+      'app10:__nx_dummy_task__': [{ id: 'app11:__nx_dummy_task__' }],
+      'app10:build': [{ id: 'app11:__nx_dummy_task__' }],
+      'app11:__nx_dummy_task__': [{ id: 'app12:__nx_dummy_task__' }],
+      'app12:__nx_dummy_task__': [{ id: 'app13:__nx_dummy_task__' }],
+      'app13:__nx_dummy_task__': [{ id: 'app14:__nx_dummy_task__' }],
+      'app14:__nx_dummy_task__': [{ id: 'app15:__nx_dummy_task__' }],
+      'app15:__nx_dummy_task__': [{ id: 'app16:__nx_dummy_task__' }],
+      'app16:__nx_dummy_task__': [{ id: 'app17:__nx_dummy_task__' }],
+      'app17:__nx_dummy_task__': [{ id: 'app18:__nx_dummy_task__' }],
+      'app18:__nx_dummy_task__': [{ id: 'app19:__nx_dummy_task__' }],
+      'app19:__nx_dummy_task__': [{ id: 'app20:__nx_dummy_task__' }],
+      'app20:__nx_dummy_task__': [{ id: 'app21:build' }],
       'app21:build': [],
     };
-    expect(getNonDummyDeps('app2:__nx_dummy_task__', dependencies)).toEqual([
-      'app4:precompile',
-    ]);
-    expect(getNonDummyDeps('app9:__nx_dummy_task__', dependencies)).toEqual([
-      'app21:build',
-    ]);
+    expect(
+      getNonDummyDeps({ id: 'app2:__nx_dummy_task__' }, dependencies)
+    ).toEqual([{ id: 'app4:precompile' }]);
+    expect(
+      getNonDummyDeps({ id: 'app9:__nx_dummy_task__' }, dependencies)
+    ).toEqual([{ id: 'app21:build' }]);
   });
 });
 

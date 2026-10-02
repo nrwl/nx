@@ -161,7 +161,7 @@ Some tasks run indefinitely, like development servers. When another task depends
 nx run my-app:e2e
 ```
 
-This works when `e2e` depends on a `serve` task marked as `continuous` (configured in [Configuring Tasks](/docs/getting-started/tutorials/configuring-tasks)). Nx starts the server, waits for it to be ready, then runs the tests.
+This works when `e2e` depends on a `serve` task marked as `continuous` (configured in [Configuring Tasks](/docs/getting-started/tutorials/configuring-tasks)). Nx starts the server and runs the tests once the server task has started. To wait until the server is ready instead, see [Wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
 
 ## Nx Console
 

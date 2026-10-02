@@ -3455,9 +3455,12 @@ impl App {
         // No need to update status in DependencyViewState - we pass the full map to the widget
         if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
             let state = self.core.state().lock();
-            let task_status_map = state.get_task_status_map();
-            let task_graph = state.task_graph();
-            let dependency_view = DependencyView::new(task_status_map, task_graph);
+            let dependency_view = DependencyView::new(
+                state.get_task_status_map(),
+                state.task_graph(),
+                state.get_task_readiness_map(),
+                state.ready_dependencies(),
+            );
             f.render_stateful_widget(dependency_view, pane_area, dep_state);
         }
     }

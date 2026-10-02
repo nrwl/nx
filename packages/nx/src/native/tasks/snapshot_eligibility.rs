@@ -316,11 +316,11 @@ fn reads_dependency_outputs(task_id: &str, files: &[String], task_graph: &TaskGr
     let mut queue: Vec<&str> = vec![task_id];
     while let Some(current) = queue.pop() {
         for dep in task_graph.dependencies.get(current).into_iter().flatten() {
-            if !visited.insert(dep.as_str()) {
+            if !visited.insert(dep.id.as_str()) {
                 continue;
             }
-            queue.push(dep);
-            let Some(producer) = task_graph.tasks.get(dep) else {
+            queue.push(&dep.id);
+            let Some(producer) = task_graph.tasks.get(&dep.id) else {
                 continue;
             };
             // Only reads under an output's walk root can match it; glob
