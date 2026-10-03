@@ -28,12 +28,13 @@ fun effectiveBuildFile(project: Project): File? =
  * canonical. The workspace root itself becomes `.`; paths outside the workspace are kept absolute.
  */
 fun relativizeToWorkspaceRoot(path: String, workspaceRoot: String): String {
-  val root = workspaceRoot.trimEnd(File.separatorChar)
+  val root = File(workspaceRoot).canonicalPath.trimEnd(File.separatorChar)
+  val resolvedPath = File(path).canonicalPath
   val result =
       when {
-        path == root -> "."
-        path.startsWith(root + File.separator) -> path.substring(root.length + 1)
-        else -> path
+        resolvedPath == root -> "."
+        resolvedPath.startsWith(root + File.separator) -> resolvedPath.substring(root.length + 1)
+        else -> resolvedPath
       }
   return result.replace(File.separatorChar, '/')
 }
