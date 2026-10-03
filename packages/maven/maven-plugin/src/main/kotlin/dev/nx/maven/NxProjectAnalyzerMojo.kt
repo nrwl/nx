@@ -107,7 +107,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
       mojoAnalyzer,
       pathFormatter,
       gitIgnoreClassifier,
-      targetNamePrefix ?: ""
+      targetNamePrefix ?: "",
+      workspaceRoot
     )
 
     val setupTime = System.currentTimeMillis() - startTime
