@@ -49,6 +49,10 @@ describe('Vue Plugin', () => {
             /const baseURL = process\.env\['BASE_URL'\] \|\| '[^']*';/,
             `const baseURL = process.env['BASE_URL'] || 'http://localhost:${availablePort}';`
           )
+          .replace(
+            /const webServerAddress = [^;]*;/,
+            `const webServerAddress = 'http://localhost:${availablePort}';`
+          )
           .replace(/url: '[^']*'/, `url: 'http://localhost:${availablePort}'`);
       });
 
