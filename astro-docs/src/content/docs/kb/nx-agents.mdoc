@@ -6,11 +6,12 @@ topics:
   - 'Benchmarks'
 ---
 
-Repo contains:
+The benchmark workspace contains:
 
-- 5 shared buildable packages/libraries with 250 components each
-- 5 Next.js applications built out of 20 app-specific libraries. Each app-specific lib has 250 components each. Each library uses the shared components.
+- 5 shared buildable libraries with 250 components each
+- 5 Next.js applications with 20 application-specific libraries each
+- 5 Cypress projects with deliberately slow end-to-end tests
 
-The repo shows how Nx Agents can make the CI 16 times faster with a small configuration change.
+The workflow compares the same 115-project workload on one GitHub Actions runner and 15 Nx Agents.
 
-{% github_repository url="https://github.com/vsavkin/interstellar" /%}
+{% github_repository title="Nx Agents Benchmark" url="https://github.com/nrwl/nx-benchmarks" /%}
