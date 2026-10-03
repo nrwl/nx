@@ -1,10 +1,18 @@
+import { existsSync } from 'fs';
 import type { Server, Socket } from 'net';
-import { relative } from 'path';
+import { join, relative } from 'path';
+import { hashArray } from '../../hasher/file-hasher';
 import type { ChangeBatch, FileData, WatchEvent } from '../../native';
+import { hashFile } from '../../native';
 import { normalizePath } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
-import { handleServerProcessTermination } from './shutdown-utils';
+import { isNxVersionMismatch } from '../is-nx-version-mismatch';
+import { serverLogger } from '../logger';
+import {
+  handleServerProcessTermination,
+  handleServerProcessTerminationWithRestart,
+} from './shutdown-utils';
 
 // Kept apart from server.ts: the recomputation module needs these, and
 // importing server.ts starts a server.
@@ -63,15 +71,76 @@ export function restartDaemonIfIgnoreFilesChanged(paths: string[]): boolean {
   return false;
 }
 
+// The lockfiles at the workspace root, as the watch reports them. The
+// installed packages decide the project graph, so a change to any of them
+// restarts the daemon.
+const LOCK_FILE_NAMES = [
+  'package-lock.json',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+  'bun.lockb',
+  'bun.lock',
+];
+
+let lockFileHash: string | undefined;
+
+function hashLockFiles(): string {
+  const lockFiles = LOCK_FILE_NAMES.map((name) => join(workspaceRoot, name));
+  return hashArray(lockFiles.filter(existsSync).map(hashFile));
+}
+
+/**
+ * Records the lockfiles as they are now. Later checks compare against this,
+ * so it runs before the watch can report a change to them.
+ */
+export function recordLockFileHash(): void {
+  lockFileHash = hashLockFiles();
+}
+
+/**
+ * Whether the lockfiles differ from the recorded hash. Records the new hash
+ * so the same change is reported once.
+ */
+export function lockFileHashChanged(): boolean {
+  const newHash = hashLockFiles();
+  if (lockFileHash && newHash !== lockFileHash) {
+    serverLogger.log(
+      `[Server] lock file hash changed! old=${lockFileHash}, new=${newHash}`
+    );
+    lockFileHash = newHash;
+    return true;
+  }
+  lockFileHash = newHash;
+  return false;
+}
+
+/**
+ * Restarts the daemon when a lockfile at the workspace root is among the
+ * changed paths and its content differs from what was recorded. Only then
+ * are the lockfiles read: the watch names the paths, so an unrelated change
+ * costs nothing. True when it restarted the daemon.
+ */
+export function restartDaemonIfLockFilesChanged(paths: string[]): boolean {
+  if (!paths.some((path) => LOCK_FILE_NAMES.includes(path))) {
+    return false;
+  }
+  if (!lockFileHashChanged()) {
+    return false;
+  }
+  restartDaemon('LOCK_FILES_CHANGED');
+  return true;
+}
+
 /**
  * Stops this daemon when the events show another process has written the
- * daemon's process file. True when it stopped the daemon.
+ * daemon's process file, or when the watch dropped events and that write
+ * may have been among them. True when it stopped the daemon.
  */
 export function stopDaemonIfReplaced(events: WatchEvent[]): boolean {
   const replaced = events.some(
     (event) =>
-      event.path === relativeServerProcess &&
-      getDaemonProcessIdSync() !== process.pid
+      (event.path === relativeServerProcess || event.type === 'rescan') &&
+      isReplaced()
   );
   if (replaced) {
     stopDaemon('this process is no longer the current daemon (native)');
@@ -79,9 +148,50 @@ export function stopDaemonIfReplaced(events: WatchEvent[]): boolean {
   return replaced;
 }
 
+/**
+ * The checks a client connection makes before the daemon serves it: another
+ * daemon has taken over, the installed nx is not the one running, or a
+ * lockfile changed without the watch reporting it. Each reads one small file,
+ * except the lockfile check, which hashes the lockfiles; that cost is paid
+ * per connection rather than on a timer. True when it stopped the daemon.
+ */
+export function stopDaemonIfOutdated(): boolean {
+  if (isReplaced()) {
+    stopDaemon('this process is no longer the current daemon (native)');
+    return true;
+  }
+  if (isNxVersionMismatch()) {
+    serverLogger.log('[Server] Daemon outdated: NX_VERSION_CHANGED');
+    stopDaemon('NX_VERSION_CHANGED');
+    return true;
+  }
+  if (lockFileHashChanged()) {
+    restartDaemon('LOCK_FILES_CHANGED');
+    return true;
+  }
+  return false;
+}
+
+function isReplaced(): boolean {
+  return getDaemonProcessIdSync() !== process.pid;
+}
+
 function stopDaemon(reason: string) {
   if (!daemon) return;
   handleServerProcessTermination({
+    server: daemon.server,
+    reason,
+    sockets: daemon.sockets,
+  });
+}
+
+// A lockfile change restarts rather than stops: the clients reconnect to the
+// new daemon, which reads the installed packages afresh.
+function restartDaemon(reason: string) {
+  if (!daemon) return;
+  serverLogger.log(`[Server] Daemon outdated: ${reason}`);
+  serverLogger.log('[Server] Restarting daemon...');
+  handleServerProcessTerminationWithRestart({
     server: daemon.server,
     reason,
     sockets: daemon.sockets,
