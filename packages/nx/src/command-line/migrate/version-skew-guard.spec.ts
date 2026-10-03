@@ -37,6 +37,17 @@ describe('findNewMigrateFlag', () => {
     expect(findNewMigrateFlag(['--step-action=retry'])).toBe('--step-action');
   });
 
+  it('includes the final-validation flag spellings and their negations', () => {
+    expect(NEW_MIGRATE_FLAGS).toEqual(
+      expect.arrayContaining([
+        '--final-validation',
+        '--finalValidation',
+        '--no-final-validation',
+        '--no-finalValidation',
+      ])
+    );
+  });
+
   it('returns the first matching flag among several args', () => {
     expect(
       findNewMigrateFlag(['--verbose', '--run-id=abc', '--run-migration=x'])

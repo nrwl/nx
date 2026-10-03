@@ -228,8 +228,8 @@ export function reportMigrateRunComplete(opts: {
   agenticOutcome: MigrateAgenticOutcome;
   agentUsed?: string;
   migrationCount: number;
-  // Fully-completed migrations (excludes deferred prompt-halves); mirrors the
-  // user-facing tally so the metric matches what the run printed.
+  // Fully-completed migrations, excluding deferred prompt-halves and the
+  // final validation pass.
   appliedCount: number;
 }): void {
   safeReport(() => {
