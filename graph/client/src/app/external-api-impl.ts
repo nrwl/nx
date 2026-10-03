@@ -74,12 +74,7 @@ export class ExternalApiImpl extends ExternalApi {
   }
 
   selectAllProjects() {
-    const serializedState = GraphStateSerializer.serialize({
-      c: { showMode: 'all' },
-    });
-    const searchParams = new URLSearchParams();
-    searchParams.set('graph', serializedState);
-    this.router.navigate(`/projects?${searchParams.toString()}`);
+    this.externalApiService.sendProjectGraphEvent?.({ type: 'resetGraph' });
   }
 
   showAffectedProjects() {
