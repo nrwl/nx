@@ -1,5 +1,6 @@
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
+import { statSync } from 'node:fs';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task } from '../config/task-graph';
@@ -23,6 +24,18 @@ export function getForceColorForChild(): string {
   }
   return 'true';
 }
+
+// ── .env parse cache ──────────────────────────────────────────────────────────
+// Keyed by the joined file path(s). Invalidated when any file changes (the
+// signature encodes every file's path + mtime + size + inode). We cache only
+// the raw parsed key=value pairs (pre-expansion). Variable expansion (${FOO}
+// substitutions) still runs live because it depends on the per-task processEnv
+// context which differs between tasks.
+interface DotEnvCacheEntry {
+  signature: string;
+  parsed: Record<string, string>;
+}
+const dotEnvParseCache = new Map<string, DotEnvCacheEntry>();
 
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
@@ -59,8 +72,7 @@ export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
   const cached = taskSpecificEnvCache.get(task.id);
   if (cached) return cached;
 
-  // Unload any dot env files at the root of the workspace that were loaded on init of Nx.
-  const taskEnv = unloadDotEnvFiles({ ...process.env });
+  const taskEnv = { ...getRootUnloadedEnv() };
   const env =
     process.env.NX_LOAD_DOT_ENV_FILES === 'true'
       ? loadDotEnvFilesForTask(task, graph, taskEnv)
@@ -68,6 +80,27 @@ export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
         taskEnv;
   taskSpecificEnvCache.set(task.id, env);
   return env;
+}
+
+const ROOT_DOT_ENV_FILES = ['.env', '.local.env', '.env.local'];
+let rootUnloadedEnv: { signature: string; env: NodeJS.ProcessEnv } | undefined;
+
+// process.env with the root dotenv files Nx loaded on init unloaded again. The
+// same for every task, so it is computed once per run and re-validated by stat:
+// spreading process.env per task cost ~60ms across 1110 tasks on its own.
+function getRootUnloadedEnv(): NodeJS.ProcessEnv {
+  let signature: string;
+  try {
+    signature = ROOT_DOT_ENV_FILES.map(
+      (file) => statSignature(join(workspaceRoot, file)) ?? 'absent'
+    ).join('|');
+  } catch {
+    return unloadDotEnvFiles({ ...process.env });
+  }
+  if (rootUnloadedEnv?.signature !== signature) {
+    rootUnloadedEnv = { signature, env: unloadDotEnvFiles({ ...process.env }) };
+  }
+  return rootUnloadedEnv.env;
 }
 
 /**
@@ -238,21 +271,110 @@ function getNxEnvVariablesForTask(
  * @param filename the .env file(s) to load
  * @param environmentVariables the object to load environment variables into
  * @param override whether to override existing environment variables
+ *
+ * Parsed file content is cached in-process keyed by (path, mtime). Repeated
+ * calls for the same unchanged file skip the file read and re-parse. Variable
+ * expansion still runs live since it depends on the caller's env context.
  */
-export function loadAndExpandDotEnvFile(
+/**
+ * `path:mtime:size:ino` for a file that exists, `null` for one that does not.
+ * Any other stat failure throws.
+ */
+function statSignature(file: string): string | null {
+  const stat = statSync(file, { throwIfNoEntry: false });
+  return stat ? `${file}:${stat.mtimeMs}:${stat.size}:${stat.ino}` : null;
+}
+
+function loadWithDotEnv(
   filename: string | string[],
   environmentVariables: NodeJS.ProcessEnv,
-  override = false
+  override: boolean
 ) {
   const myEnv = loadDotEnvFile({
     path: filename,
     processEnv: environmentVariables,
     override,
   });
-  return expand({
-    ...myEnv,
+  return expand({ ...myEnv, processEnv: environmentVariables });
+}
+
+export function loadAndExpandDotEnvFile(
+  filename: string | string[],
+  environmentVariables: NodeJS.ProcessEnv,
+  override = false
+) {
+  const files = Array.isArray(filename) ? filename : [filename];
+  // Encode every file's path + mtime + size + inode so the entry invalidates
+  // if any change. mtimeMs alone would miss a same-millisecond rewrite, and
+  // long-lived processes (watch mode) live long enough to hit that.
+  const present: string[] = [];
+  const signatures: string[] = [];
+  try {
+    for (const file of files) {
+      const signature = statSignature(file);
+      if (signature !== null) {
+        present.push(file);
+        signatures.push(signature);
+      }
+    }
+  } catch {
+    // Could not stat a file for a reason other than its absence. Fall back to
+    // dotenv's own handling, and skip caching since there is no valid
+    // signature to key on.
+    return loadWithDotEnv(filename, environmentVariables, override);
+  }
+
+  if (present.length === 0) {
+    // A single named file that is missing keeps dotenv's `{ error }` result,
+    // which `loadEnvVarsFile` reports for a required `envFile`. A missing
+    // candidate in a list is the normal case — most tasks have no
+    // `.env.<target>` — and is skipped rather than read, so the files that do
+    // exist can still hit the cache.
+    return Array.isArray(filename)
+      ? expand({ parsed: {}, processEnv: environmentVariables })
+      : loadWithDotEnv(filename, environmentVariables, override);
+  }
+
+  const cacheKey = present.join('\0');
+  const signature = signatures.join('|');
+  const cached = dotEnvParseCache.get(cacheKey);
+  if (cached && cached.signature === signature) {
+    // Cache hit: apply pre-parsed content to environmentVariables, then expand.
+    // `expand` mutates the `parsed` object it is given in place, so it must
+    // never see the cached object itself — hand it a copy.
+    applyParsedToEnv(cached.parsed, environmentVariables, override);
+    return expand({
+      parsed: { ...cached.parsed },
+      processEnv: environmentVariables,
+    });
+  }
+
+  // Cache miss: let dotenv read + parse the file(s), then store the parsed result.
+  const myEnv = loadDotEnvFile({
+    path: present,
     processEnv: environmentVariables,
+    override,
   });
+  if (myEnv.parsed) {
+    // Snapshot before expanding: the `expand` call below mutates `myEnv.parsed`
+    // in place with this caller's substitutions, and the cache must hold the
+    // raw, unexpanded pairs.
+    dotEnvParseCache.set(cacheKey, { signature, parsed: { ...myEnv.parsed } });
+  }
+  return expand({ ...myEnv, processEnv: environmentVariables });
+}
+
+/** Replicate dotenv's apply-to-processEnv step for cache-hit paths. */
+function applyParsedToEnv(
+  parsed: Record<string, string>,
+  processEnv: NodeJS.ProcessEnv,
+  override: boolean
+) {
+  for (const key of Object.keys(parsed)) {
+    if (override || !Object.prototype.hasOwnProperty.call(processEnv, key)) {
+      processEnv[key] = parsed[key];
+    }
+  }
 }
 
 /**
@@ -266,6 +388,7 @@ export function unloadDotEnvFile(
   override = false
 ) {
   const parsedDotEnvFile: NodeJS.ProcessEnv = {};
+  if (statSignature(filename) === null) return;
   loadAndExpandDotEnvFile(filename, parsedDotEnvFile, override);
   Object.keys(parsedDotEnvFile).forEach((envVarKey) => {
     if (environmentVariables[envVarKey] === parsedDotEnvFile[envVarKey]) {
