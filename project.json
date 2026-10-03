@@ -51,6 +51,7 @@
     },
     "populate-e2e-base-workspace": {
       "cache": true,
+      "ultracache": { "mode": "warn" },
       "inputs": [
         "{workspaceRoot}/scripts/local-registry/**/*",
         {
