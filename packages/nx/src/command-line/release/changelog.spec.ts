@@ -70,7 +70,7 @@ const { createProjectGraphAsync } =
   await import('../../project-graph/project-graph');
 const { createProjectFileMapUsingProjectGraph } =
   await import('../../project-graph/file-map-utils');
-const { resolveChangelogFromSHA } =
+const { resolveChangelogFromSHA, resolveWorkspaceChangelogFromSHA } =
   await import('./changelog/version-plan-filtering');
 
 describe('releaseChangelog', () => {
@@ -305,6 +305,97 @@ describe('releaseChangelog', () => {
           tagPatternValues: {
             releaseGroupName: 'group-a',
           },
+        })
+      );
+    });
+  });
+
+  describe('workspace changelog', () => {
+    it('should not require a previous workspace tag when the workspace changelog is disabled', async () => {
+      // Each release group is tagged with its own releaseTag.pattern, so no tag matches the
+      // workspace-level pattern and there is no workspace "from" ref to resolve
+      vi.mocked(resolveWorkspaceChangelogFromSHA).mockResolvedValueOnce(null);
+
+      await tempFs.createFiles({
+        'packages/pkg-b/package.json': JSON.stringify({
+          name: 'pkg-b',
+          version: '1.0.0',
+        }),
+      });
+      projectGraph.nodes['pkg-b'] = {
+        name: 'pkg-b',
+        type: 'lib',
+        data: {
+          root: 'packages/pkg-b',
+          targets: {
+            'nx-release-publish': {},
+          },
+        } as any,
+      };
+      releaseGroup.name = 'group-a';
+      releaseGroup.projectsRelationship = 'independent';
+      const releaseGroupB = {
+        ...releaseGroup,
+        name: 'group-b',
+        projects: ['pkg-b'],
+        changelog: {
+          createRelease: false,
+          entryWhenNoChanges: false,
+          file: false,
+        },
+      } as ReleaseGroupWithName;
+      releaseGraph.releaseGroups = [releaseGroup, releaseGroupB];
+      releaseGraph.releaseGroupToFilteredProjects = new Map([
+        [releaseGroup, new Set(['pkg-a'])],
+        [releaseGroupB, new Set(['pkg-b'])],
+      ]);
+
+      // With more than one release group the workspace changelog defaults to disabled,
+      // while group-b still has project changelogs enabled
+      const releaseChangelog = createAPI(
+        {
+          groups: {
+            'group-a': {
+              projects: ['pkg-a'],
+              projectsRelationship: 'independent',
+              releaseTag: { pattern: 'a@{version}' },
+              changelog: false,
+            },
+            'group-b': {
+              projects: ['pkg-b'],
+              projectsRelationship: 'independent',
+              releaseTag: { pattern: 'b@{version}' },
+              changelog: true,
+            },
+          },
+        },
+        true
+      );
+
+      const result = await releaseChangelog({
+        versionData: {
+          'pkg-a': {
+            currentVersion: '0.0.0',
+            newVersion: null,
+            dependentProjects: [],
+          },
+          'pkg-b': {
+            currentVersion: '1.0.0',
+            newVersion: '1.0.1',
+            dependentProjects: [],
+          },
+        },
+        gitCommit: false,
+        gitTag: false,
+        gitPush: false,
+        stageChanges: false,
+        releaseGraph,
+      } as Parameters<ReturnType<typeof createAPI>>[0]);
+
+      expect(result.workspaceChangelog).toBeUndefined();
+      expect(resolveChangelogFromSHA).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectRoot: 'packages/pkg-b',
         })
       );
     });
