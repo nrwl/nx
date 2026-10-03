@@ -33,6 +33,12 @@
       "description": "Rename imports of `createNodesV2` from `@nx/storybook/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-23-3-0-add-nx-cypress-dependency": {
+      "version": "23.3.0-beta.1",
+      "description": "Add `@nx/cypress` to the root `devDependencies` when the workspace uses it without declaring it, since `@nx/storybook` no longer installs it.",
+      "implementation": "./dist/src/migrations/update-23-3-0/add-nx-cypress-dependency",
+      "documentation": "./dist/src/migrations/update-23-3-0/add-nx-cypress-dependency.md"
     }
   },
   "packageJsonUpdates": {
