@@ -2,6 +2,7 @@ import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   Tree,
+  detectPackageManager,
   addProjectConfiguration,
   getProjects,
   readJson,
@@ -65,6 +66,9 @@ describe('NxPlugin e2e-project Generator', () => {
 
     expect(tree.exists('my-plugin-e2e/tsconfig.json')).toBeTruthy();
     expect(tree.exists('my-plugin-e2e/src/my-plugin.spec.ts')).toBeTruthy();
+    expect(tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8')).toContain(
+      `--packageManager=${detectPackageManager()}`
+    );
   });
 
   it('should budget the setup hook for a cold package manager cache', async () => {

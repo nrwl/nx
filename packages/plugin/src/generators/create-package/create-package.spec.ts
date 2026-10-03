@@ -2,6 +2,7 @@ import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   joinPathFragments,
+  detectPackageManager,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -49,6 +50,9 @@ describe('NxPlugin Create Package Generator', () => {
 
   it('should update the project.json file', async () => {
     await createPackageGenerator(tree, getSchema());
+    expect(
+      tree.read('packages/create-a-workspace/bin/index.ts', 'utf-8')
+    ).toContain(`packageManager: '${detectPackageManager()}'`);
     const project = readProjectConfiguration(tree, 'create-a-workspace');
     expect(project.root).toEqual('packages/create-a-workspace');
     expect(project.sourceRoot).toEqual('packages/create-a-workspace/bin');

@@ -1,4 +1,5 @@
 import {
+  detectPackageManager,
   addDependenciesToPackageJson,
   formatFiles,
   generateFiles,
@@ -193,6 +194,7 @@ async function createCliPackage(
     {
       ...options,
       preset: pluginPackageName,
+      packageManager: detectPackageManager(),
       tmpl: '',
     }
   );
