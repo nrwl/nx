@@ -109,9 +109,11 @@ class GitIgnoreClassifier(
         continue
       }
 
-      // Get path relative to this directory's .gitignore
+      // Get path relative to this directory's .gitignore.
+      // JGit matches gitignore patterns against `/`-separated paths, so the
+      // OS separator would make every nested rule miss on Windows.
       val relativePath = try {
-        path.relativeTo(directory).path
+        path.relativeTo(directory).invariantSeparatorsPath
       } catch (e: IllegalArgumentException) {
         continue
       }
