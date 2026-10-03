@@ -189,9 +189,14 @@ export default class DefaultChangelogRenderer {
             (c) => c.shortHash && revertedHash.startsWith(c.shortHash)
           );
           if (revertedCommitIndex !== -1) {
-            this.relevantChanges.splice(revertedCommitIndex, 1);
-            this.relevantChanges.splice(i, 1);
-            i--;
+            // Remove the later index first so the earlier one stays valid
+            this.relevantChanges.splice(Math.max(i, revertedCommitIndex), 1);
+            this.relevantChanges.splice(Math.min(i, revertedCommitIndex), 1);
+            // The next change to check (at i - 1) only moves down when the
+            // reverted commit sat before it
+            if (revertedCommitIndex < i) {
+              i--;
+            }
             break;
           }
         }
