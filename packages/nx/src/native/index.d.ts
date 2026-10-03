@@ -1139,6 +1139,11 @@ export interface TaskGraph {
   /** Map of Task IDs to IDs of tasks which the task depends on */
   dependencies: Record<string, Array<string>>
   continuousDependencies: Record<string, Array<string>>
+  /**
+   * The subset of `continuous_dependencies` from `dependsOn` entries with
+   * `inputs: false`: still run, but their inputs are not hashed into the task.
+   */
+  continuousDependenciesWithoutInputs?: Record<string, Array<string>>
 }
 
 /** Details about the composition of a task's hash */

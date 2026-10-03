@@ -173,6 +173,9 @@ pub struct TaskGraph {
     /// Map of Task IDs to IDs of tasks which the task depends on
     pub dependencies: HashMap<String, Vec<String>>,
     pub continuous_dependencies: HashMap<String, Vec<String>>,
+    /// The subset of `continuous_dependencies` from `dependsOn` entries with
+    /// `inputs: false`: still run, but their inputs are not hashed into the task.
+    pub continuous_dependencies_without_inputs: Option<HashMap<String, Vec<String>>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]

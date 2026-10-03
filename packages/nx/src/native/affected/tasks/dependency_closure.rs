@@ -90,6 +90,7 @@ mod tests {
                 .collect(),
             dependencies: edges(deps),
             continuous_dependencies: edges(continuous),
+            continuous_dependencies_without_inputs: None,
             roots: vec![],
         }
     }
