@@ -11,6 +11,7 @@ import {
 import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 import { writeMessage } from '../../utils/consume-messages-from-socket';
 import { cleanupLatestNx } from './latest-nx';
+import { releaseDaemonStartLock } from './start-lock';
 import { flushAnalytics } from '../../analytics';
 import { spawn } from 'child_process';
 import { join } from 'path';
@@ -120,6 +121,9 @@ async function performShutdown(
 
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {
+    // In the finally: every await above can reject and land here. Safe from any
+    // process, the file is removed only when it names this pid.
+    releaseDaemonStartLock(true);
     process.exit(0);
   }
 }
