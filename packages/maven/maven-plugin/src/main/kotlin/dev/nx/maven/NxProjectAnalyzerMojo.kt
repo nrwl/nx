@@ -229,13 +229,16 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
   private fun generateCreateNodesResults(inMemoryAnalyses: List<ProjectAnalysis>): JsonArray {
     val createNodesResults = JsonArray()
+    val pathFormatter = PathFormatter()
 
     // Build a deduplicated map of all external nodes across all projects
     val allExternalNodes = buildExternalNodes(inMemoryAnalyses)
 
     inMemoryAnalyses.forEach { analysis ->
       val resultTuple = JsonArray()
-      resultTuple.add(analysis.pomFile.canonicalFile.relativeTo(workspaceRoot).path) // Root path (workspace root)
+      resultTuple.add(pathFormatter.normalizeRelativePath(
+        analysis.pomFile.canonicalFile.relativeTo(workspaceRoot).path
+      )) // Root path (workspace root)
 
       val projects = JsonObject()
 
