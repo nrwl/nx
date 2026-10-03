@@ -72,6 +72,7 @@ const { createProjectFileMapUsingProjectGraph } =
   await import('../../project-graph/file-map-utils');
 const { resolveChangelogFromSHA } =
   await import('./changelog/version-plan-filtering');
+const { gitAdd } = await import('./utils/git');
 
 describe('releaseChangelog', () => {
   let tempFs: TempFs;
@@ -306,6 +307,65 @@ describe('releaseChangelog', () => {
             releaseGroupName: 'group-a',
           },
         })
+      );
+    });
+
+    it('should keep a changelog file shared by every project in a fixed release group staged', async () => {
+      await tempFs.createFiles({
+        'packages/pkg-b/package.json': JSON.stringify({
+          name: 'pkg-b',
+          version: '0.0.0',
+        }),
+      });
+      projectGraph.nodes['pkg-b'] = {
+        name: 'pkg-b',
+        type: 'lib',
+        data: {
+          root: 'packages/pkg-b',
+          targets: {
+            'nx-release-publish': {},
+          },
+        } as any,
+      };
+      releaseGroup.projectsRelationship = 'fixed';
+      releaseGroup.projects = ['pkg-a', 'pkg-b'];
+      releaseGraph.releaseGroupToFilteredProjects.set(
+        releaseGroup,
+        new Set(['pkg-a', 'pkg-b'])
+      );
+      // Both projects resolve to the same file, so the second project re-writes identical content
+      releaseGroup.changelog = {
+        createRelease: false,
+        entryWhenNoChanges: 'No changes',
+        file: '{workspaceRoot}/CHANGELOG.md',
+        renderer: 'mock-renderer',
+        renderOptions: {},
+      } as unknown as ReleaseGroupWithName['changelog'];
+
+      await runReleaseChangelog({
+        forceChangelogGeneration: true,
+        stageChanges: true,
+        versionData: {
+          'pkg-a': {
+            currentVersion: '0.0.0',
+            newVersion: '1.0.0',
+            dependentProjects: [],
+          },
+          'pkg-b': {
+            currentVersion: '0.0.0',
+            newVersion: '1.0.0',
+            dependentProjects: [],
+          },
+        },
+      });
+
+      // One entry, written once
+      expect(await tempFs.readFile('CHANGELOG.md')).toBe(
+        MOCK_CHANGELOG_CONTENTS
+      );
+      // ...and still staged after the second project's no-op write
+      expect(gitAdd).toHaveBeenCalledWith(
+        expect.objectContaining({ changedFiles: ['CHANGELOG.md'] })
       );
     });
   });
