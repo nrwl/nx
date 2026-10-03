@@ -18,7 +18,7 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import { IS_WASM, NxWorkspaceFiles } from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -121,14 +121,6 @@ import {
   isEmitLogMessage,
   isUpdateProgressMessage,
 } from '../message-types/streaming-messages';
-import {
-  GET_ESTIMATED_TASK_TIMINGS,
-  GET_FLAKY_TASKS,
-  HandleGetEstimatedTaskTimings,
-  HandleGetFlakyTasks,
-  HandleRecordTaskRunsMessage,
-  RECORD_TASK_RUNS,
-} from '../message-types/task-history';
 import {
   type HandleUpdateWorkspaceContextMessage,
   UPDATE_WORKSPACE_CONTEXT,
@@ -990,34 +982,6 @@ export class DaemonClient {
     const message: HandleHashMultiGlobMessage = {
       type: HASH_MULTI_GLOB,
       globGroups: globGroups,
-    };
-    return this.sendToDaemonViaQueue(message);
-  }
-
-  getFlakyTasks(hashes: string[]): Promise<string[]> {
-    const message: HandleGetFlakyTasks = {
-      type: GET_FLAKY_TASKS,
-      hashes,
-    };
-
-    return this.sendToDaemonViaQueue(message);
-  }
-
-  async getEstimatedTaskTimings(
-    targets: TaskTarget[]
-  ): Promise<Record<string, number>> {
-    const message: HandleGetEstimatedTaskTimings = {
-      type: GET_ESTIMATED_TASK_TIMINGS,
-      targets,
-    };
-
-    return this.sendToDaemonViaQueue(message);
-  }
-
-  recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
-    const message: HandleRecordTaskRunsMessage = {
-      type: RECORD_TASK_RUNS,
-      taskRuns,
     };
     return this.sendToDaemonViaQueue(message);
   }
