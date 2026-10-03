@@ -12,7 +12,7 @@ use super::{
 use flate2::Compression;
 use reqwest::{Client, ClientBuilder, StatusCode, header};
 use tar::{Archive, Builder};
-use tracing::trace;
+use tracing::{Instrument, trace};
 
 #[napi]
 pub struct HttpRemoteCache {
@@ -72,8 +72,16 @@ impl HttpRemoteCache {
         cache_directory: String,
     ) -> napi::Result<Option<CachedResult>> {
         let span = tracing::trace_span!("retrieve", hash = %hash);
-        let _guard = span.enter();
+        self.retrieve_inner(hash, cache_directory)
+            .instrument(span)
+            .await
+    }
 
+    async fn retrieve_inner(
+        &self,
+        hash: String,
+        cache_directory: String,
+    ) -> napi::Result<Option<CachedResult>> {
         let url: String = format!("{}/v1/cache/{}", self.url, hash);
         let response = self
             .client
@@ -110,8 +118,18 @@ impl HttpRemoteCache {
         code: u32,
     ) -> napi::Result<bool> {
         let span = tracing::trace_span!("store", hash = %hash);
-        let _guard = span.enter();
+        self.store_inner(hash, cache_directory, terminal_output, code)
+            .instrument(span)
+            .await
+    }
 
+    async fn store_inner(
+        &self,
+        hash: String,
+        cache_directory: String,
+        terminal_output: String,
+        code: u32,
+    ) -> napi::Result<bool> {
         // We can change the creation of the tar in a future version without
         // worrying about breaking existing user cache's, because when the
         // user updates their task's hashes will be changed... so users
@@ -495,6 +513,52 @@ mod test {
             result.is_err(),
             "a missing code entry must be rejected, not panic"
         );
+    }
+
+    #[test]
+    fn pending_requests_leave_no_span_entered_on_the_polling_thread() {
+        use std::future::Future;
+        use std::task::{Context, Waker};
+
+        // The runtime is never driven, so each request stops at its first await (the TCP
+        // connect); the listener only has to exist so the connect is not refused.
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let cache = HttpRemoteCache {
+            client: Client::new(),
+            url: format!("http://{}", listener.local_addr().unwrap()),
+        };
+        let temp = TempDir::new().unwrap();
+        std::fs::create_dir_all(temp.join("123")).unwrap();
+        let cache_dir = temp.to_str().unwrap().to_string();
+
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let _runtime = runtime.enter();
+
+        // A bare registry keeps `trace` spans alive, as the TUI layer does in production.
+        tracing::subscriber::with_default(tracing_subscriber::registry(), || {
+            assert!(
+                !tracing::trace_span!("probe").is_disabled(),
+                "trace spans must be enabled or this test proves nothing"
+            );
+            let mut cx = Context::from_waker(Waker::noop());
+            let current = || tracing::Span::current().metadata().map(|m| m.name());
+
+            let mut retrieve = Box::pin(cache.retrieve("123".into(), cache_dir.clone()));
+            assert!(retrieve.as_mut().poll(&mut cx).is_pending());
+            assert_eq!(
+                current(),
+                None,
+                "retrieve left its span entered while pending"
+            );
+
+            let mut store =
+                Box::pin(cache.store("123".into(), cache_dir.clone(), String::new(), 0));
+            assert!(store.as_mut().poll(&mut cx).is_pending());
+            assert_eq!(current(), None, "store left its span entered while pending");
+        });
     }
 
     #[test]
