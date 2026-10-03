@@ -15,13 +15,11 @@ describe('<%= cliName %>', () => {
     }
   });
 
-
   // This test shells out synchronously, so its budget has to cover a cold
   // package manager cache. Otherwise work that succeeded still fails on return.
   it('should be installed', () => {
     projectDirectory = createTestProject();
 
-    // npm ls will fail if the package is not installed properly
     execSync('<%= packageManagerCommands.list %> <%= pluginPackageName %>', {
       cwd: projectDirectory,
       stdio: 'inherit',
