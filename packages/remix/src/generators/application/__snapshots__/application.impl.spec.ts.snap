@@ -128,7 +128,7 @@ module.exports = defineConfig({
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
       webServerCommands: {
-        default: 'npx nx run test:dev',
+        default: process.env['CI'] ? 'npx nx run test:serve-static' : 'npx nx run test:dev',
         production: 'npx nx run test:serve-static',
       },
       ciWebServerCommand: 'npx nx run test:serve-static',
@@ -377,7 +377,7 @@ export default defineConfig({
     ...nxE2EPreset(import.meta.url, {
       cypressDir: 'src',
       webServerCommands: {
-        default: 'npx nx run test:dev',
+        default: process.env['CI'] ? 'npx nx run test:serve-static' : 'npx nx run test:dev',
         production: 'npx nx run test:serve-static',
       },
       ciWebServerCommand: 'npx nx run test:serve-static',
