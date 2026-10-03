@@ -1,4 +1,9 @@
-import { readNxJson, Tree } from '@nx/devkit';
+import {
+  detectPackageManager,
+  readNxJson,
+  Tree,
+  type PackageManager,
+} from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
 import type { LinterType } from '@nx/js';
 import {
@@ -13,6 +18,7 @@ export interface NormalizedSchema extends CreatePackageSchema {
   bundler: 'swc' | 'tsc';
   projectName: string;
   projectRoot: string;
+  packageManager: PackageManager;
   unitTestRunner: 'jest' | 'vitest' | 'none';
   linter: LinterType;
   useProjectJson: boolean;
@@ -65,6 +71,7 @@ export async function normalizeSchema(
     bundler: schema.compiler ?? 'tsc',
     projectName,
     projectRoot,
+    packageManager: detectPackageManager(host.root),
     name: projectNames.projectSimpleName,
     linter,
     unitTestRunner,
