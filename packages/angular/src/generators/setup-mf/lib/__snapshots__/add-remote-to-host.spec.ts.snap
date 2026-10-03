@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Add remote to host should add remote correctly even in multiline 1`] = `
+exports[`Add remote to host > should add remote correctly even in multiline 1`] = `
 "const obj = {
             remotes: [
                 'remote1',

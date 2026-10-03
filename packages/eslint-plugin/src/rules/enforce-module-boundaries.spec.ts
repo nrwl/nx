@@ -5,7 +5,15 @@ import { DependencyType } from '@nx/devkit';
 import { TargetProjectLocator } from '@nx/js/internal';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
-import { vol } from 'memfs';
+import { createRequire } from 'node:module';
+import { fs as memfs, vol } from 'memfs';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+
+// typescript is loaded with `require` and reads through the CJS `fs`; the
+// import graph has loaded it already, so evict it onto memfs.
+mockCjsModule(import.meta.url, 'fs', memfs);
+const cjsRequire = createRequire(import.meta.url);
+delete cjsRequire.cache[cjsRequire.resolve('typescript')];
 import { join } from 'node:path';
 import {
   FileDataDependency,
@@ -15,17 +23,17 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
-  resolveRelativeToDir: jest.fn().mockImplementation((pathOrPackage) => {
+vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
+  resolveRelativeToDir: vi.fn().mockImplementation((pathOrPackage) => {
     return join(
       '/root',
       'node_modules',

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`remote generator bundler=rspack should create the remote with the correct config files 1`] = `
+exports[`remote generator > bundler=rspack > should create the remote with the correct config files 1`] = `
 "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
 const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
 const { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } = require('@nx/module-federation/rspack');
@@ -49,9 +49,9 @@ module.exports = {
 "
 `;
 
-exports[`remote generator bundler=rspack should create the remote with the correct config files 2`] = `"module.exports = require('./rspack.config');"`;
+exports[`remote generator > bundler=rspack > should create the remote with the correct config files 2`] = `"module.exports = require('./rspack.config');"`;
 
-exports[`remote generator bundler=rspack should create the remote with the correct config files 3`] = `
+exports[`remote generator > bundler=rspack > should create the remote with the correct config files 3`] = `
 "/**
 * Nx requires a default export of the config to allow correct resolution of the module federation graph.
 **/
@@ -64,7 +64,7 @@ module.exports = {
 "
 `;
 
-exports[`remote generator bundler=rspack should create the remote with the correct config files when --js=true 1`] = `
+exports[`remote generator > bundler=rspack > should create the remote with the correct config files when --js=true 1`] = `
 "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
 const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
 const { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } = require('@nx/module-federation/rspack');
@@ -113,9 +113,9 @@ module.exports = {
 "
 `;
 
-exports[`remote generator bundler=rspack should create the remote with the correct config files when --js=true 2`] = `"module.exports = require('./rspack.config');"`;
+exports[`remote generator > bundler=rspack > should create the remote with the correct config files when --js=true 2`] = `"module.exports = require('./rspack.config');"`;
 
-exports[`remote generator bundler=rspack should create the remote with the correct config files when --js=true 3`] = `
+exports[`remote generator > bundler=rspack > should create the remote with the correct config files when --js=true 3`] = `
 "/**
 * Nx requires a default export of the config to allow correct resolution of the module federation graph.
 **/
@@ -128,7 +128,7 @@ module.exports = {
 "
 `;
 
-exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
+exports[`remote generator > bundler=rspack > should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
 "import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
 import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
 import {
@@ -180,12 +180,12 @@ export default {
 "
 `;
 
-exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 2`] = `
+exports[`remote generator > bundler=rspack > should create the remote with the correct config files when --typescriptConfiguration=true 2`] = `
 "export default require('./rspack.config');
 "
 `;
 
-exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
+exports[`remote generator > bundler=rspack > should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
 "import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
@@ -202,7 +202,7 @@ export default config;
 "
 `;
 
-exports[`remote generator bundler=rspack should generate correct remote with config files when using --ssr 1`] = `
+exports[`remote generator > bundler=rspack > should generate correct remote with config files when using --ssr 1`] = `
 "/**
 * Nx requires a default export of the config to allow correct resolution of the module federation graph.
 **/
@@ -221,7 +221,7 @@ module.exports = {
 "
 `;
 
-exports[`remote generator bundler=rspack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 1`] = `
+exports[`remote generator > bundler=rspack > should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 1`] = `
 "import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {

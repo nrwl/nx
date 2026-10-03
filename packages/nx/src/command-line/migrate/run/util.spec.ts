@@ -25,6 +25,7 @@ import {
   pmExecPrefix,
   pmInstallCommand,
   recordInstallLanded,
+  runMigrationsFlag,
   summarizeError,
 } from './util';
 import {
@@ -380,4 +381,47 @@ describe('summarizeError', () => {
     expect(summary).toHaveLength(200);
     expect(summary.endsWith('...')).toBe(true);
   });
+});
+
+describe('runMigrationsFlag', () => {
+  const originalPlatform = process.platform;
+  const setPlatform = (platform: NodeJS.Platform) =>
+    Object.defineProperty(process, 'platform', { value: platform });
+  afterEach(() => setPlatform(originalPlatform));
+
+  it('leaves the default path implicit', () => {
+    expect(runMigrationsFlag('migrations.json')).toBe('--run-migrations');
+  });
+
+  it('quotes the whole argument for a POSIX shell when the path has a space', () => {
+    setPlatform('linux');
+    expect(runMigrationsFlag('tools/my migrations.json')).toBe(
+      "'--run-migrations=tools/my migrations.json'"
+    );
+  });
+
+  it('renders a plain path bare on Windows', () => {
+    setPlatform('win32');
+    expect(runMigrationsFlag('tools/migrations.json')).toBe(
+      '--run-migrations=tools/migrations.json'
+    );
+  });
+
+  it.each([
+    ['a space', 'tools/my migrations.json'],
+    ['a cmd variable', '%USERPROFILE%/migrations.json'],
+    ['a caret', 'tools/^x.json'],
+  ])('renders no flag on Windows when the path has %s', (_case, path) => {
+    setPlatform('win32');
+    expect(runMigrationsFlag(path)).toBeNull();
+  });
+
+  // U+0085 is outside `\s`, so on Windows only the line-break check rejects it.
+  it.each<NodeJS.Platform>(['linux', 'win32'])(
+    'renders no flag on %s when the path has a line terminator',
+    (platform) => {
+      setPlatform(platform);
+      expect(runMigrationsFlag('tools/a\u0085b.json')).toBeNull();
+    }
+  );
 });

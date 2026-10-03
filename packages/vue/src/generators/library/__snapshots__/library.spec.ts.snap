@@ -1,10 +1,10 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`library --publishable should add build targets 1`] = `null`;
+exports[`library > --publishable > should add build targets 1`] = `null`;
 
-exports[`library --unit-test-runner none should not generate test configuration 1`] = `null`;
+exports[`library > --unit-test-runner none > should not generate test configuration 1`] = `null`;
 
-exports[`library nested should create a local tsconfig.json 1`] = `
+exports[`library > nested > should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {
     "allowJs": true,
@@ -29,9 +29,9 @@ exports[`library nested should create a local tsconfig.json 1`] = `
 }
 `;
 
-exports[`library should add vite types to tsconfigs and generate correct vite.config.ts file 1`] = `null`;
+exports[`library > should add vite types to tsconfigs and generate correct vite.config.ts file 1`] = `null`;
 
-exports[`library should add vue and vitest to package.json when non-buildable 1`] = `
+exports[`library > should add vue and vitest to package.json when non-buildable 1`] = `
 {
   "dependencies": {
     "vue": "^3.5.13",
@@ -50,8 +50,8 @@ exports[`library should add vue and vitest to package.json when non-buildable 1`
     "@types/node": "^22.0.0",
     "@typescript-eslint/parser": "^8.58.0",
     "@vitejs/plugin-vue": "^6.0.1",
-    "@vitest/coverage-v8": "~4.1.0",
-    "@vitest/ui": "~4.1.0",
+    "@vitest/coverage-v8": "~5.0.1",
+    "@vitest/ui": "~5.0.1",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/test-utils": "^2.4.6",
@@ -63,14 +63,14 @@ exports[`library should add vue and vitest to package.json when non-buildable 1`
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.58.0",
     "vite": "^8.0.0",
-    "vitest": "~4.1.0",
+    "vitest": "~5.0.1",
     "vue-tsc": "^2.2.8",
   },
   "name": "@proj/source",
 }
 `;
 
-exports[`library should add vue and vitest to package.json when non-buildable 2`] = `
+exports[`library > should add vue and vitest to package.json when non-buildable 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -99,7 +99,7 @@ exports[`library should add vue and vitest to package.json when non-buildable 2`
 "
 `;
 
-exports[`library should ignore test files in tsconfig.lib.json 1`] = `
+exports[`library > should ignore test files in tsconfig.lib.json 1`] = `
 [
   "src/**/__tests__/*",
   "src/**/*.spec.vue",
@@ -119,7 +119,7 @@ exports[`library should ignore test files in tsconfig.lib.json 1`] = `
 ]
 `;
 
-exports[`library should support eslint flat config CJS 1`] = `
+exports[`library > should support eslint flat config CJS 1`] = `
 "const vue = require('eslint-plugin-vue');
 const baseConfig = require('../eslint.config.cjs');
 
@@ -144,7 +144,7 @@ module.exports = [
 "
 `;
 
-exports[`library should support eslint flat config ESM 1`] = `
+exports[`library > should support eslint flat config ESM 1`] = `
 "import vue from 'eslint-plugin-vue';
 import baseConfig from '../eslint.config.mjs';
 

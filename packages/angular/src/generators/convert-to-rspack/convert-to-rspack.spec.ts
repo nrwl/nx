@@ -11,9 +11,9 @@ import {
 } from '@nx/devkit';
 import * as _configUtils from '@nx/devkit/internal';
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  loadConfigFile: jest.fn().mockImplementation(async (path) => {
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  loadConfigFile: vi.fn().mockImplementation(async (path) => {
     return () => {
       return {};
     };
@@ -1086,9 +1086,8 @@ describe('convert-to-rspack', () => {
     );
     tree.write('apps/app/webpack.config.js', ``);
 
-    jest
-      .spyOn(_configUtils, 'loadConfigFile')
-      .mockImplementation(async (path) => {
+    vi.spyOn(_configUtils, 'loadConfigFile').mockImplementation(
+      async (path) => {
         return {
           default: {
             module: {
@@ -1101,7 +1100,8 @@ describe('convert-to-rspack', () => {
             },
           },
         };
-      });
+      }
+    );
 
     // ACT
     await convertToRspack(tree, { project: 'app' });

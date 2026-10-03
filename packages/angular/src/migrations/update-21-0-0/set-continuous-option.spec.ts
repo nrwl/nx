@@ -6,9 +6,9 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration, { continuousExecutors } from './set-continuous-option';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  formatFiles: jest.fn(),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  formatFiles: vi.fn(),
 }));
 
 describe('set-continuous-option migration', () => {

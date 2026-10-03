@@ -15,6 +15,7 @@ import { readNxJson } from '../../config/configuration';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
+import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
@@ -80,6 +81,12 @@ import {
   GET_PLUGIN_CAPABILITIES,
   type HandleGetPluginCapabilitiesMessage,
 } from '../message-types/get-plugin-capabilities';
+import {
+  SELECT_AFFECTED_TASKS,
+  type HandleSelectAffectedTasksMessage,
+  type SelectAffectedTasksResponse,
+} from '../message-types/select-affected-tasks';
+import type { AffectedTasksRequest } from '../../project-graph/affected/affected-tasks';
 import type { NxPluginCapabilities } from '../../project-graph/plugins/nx-plugin-capabilities';
 import {
   GET_SYNC_GENERATOR_CHANGES,
@@ -388,7 +395,8 @@ export class DaemonClient {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -397,6 +405,9 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
+      // An External cannot cross the socket: the version names the stored set
+      // to hash from. Absent means native hashing.
+      ultracacheConfigurationsVersion,
     });
   }
 
@@ -406,7 +417,8 @@ export class DaemonClient {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Record<string, Hash>> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS_UPFRONT',
@@ -415,6 +427,7 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
+      ultracacheConfigurationsVersion,
     });
   }
 
@@ -1042,6 +1055,17 @@ export class DaemonClient {
   getPluginCapabilities(): Promise<NxPluginCapabilities[]> {
     const message: HandleGetPluginCapabilitiesMessage = {
       type: GET_PLUGIN_CAPABILITIES,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  /** Selection runs where hashing does, so the plans it builds are reused. */
+  selectAffectedTasks(
+    request: AffectedTasksRequest
+  ): Promise<SelectAffectedTasksResponse> {
+    const message: HandleSelectAffectedTasksMessage = {
+      type: SELECT_AFFECTED_TASKS,
+      request,
     };
     return this.sendToDaemonViaQueue(message);
   }

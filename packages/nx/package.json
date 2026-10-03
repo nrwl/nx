@@ -11,6 +11,7 @@
   },
   "files": [
     "dist/bin",
+    "dist/nx-cloud-internals.*",
     "dist/plugins",
     "dist/presets",
     "dist/release",
@@ -54,7 +55,6 @@
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@zkochan/js-yaml": "catalog:",
-    "axios": "1.18.1",
     "picocolors": "catalog:",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
@@ -78,6 +78,7 @@
     "tar-stream": "~2.2.0",
     "tmp": "catalog:",
     "tsconfig-paths": "catalog:typescript",
+    "undici": "^7.29.0",
     "tslib": "catalog:typescript",
     "which": "catalog:",
     "yaml": "^2.8.3",
@@ -191,6 +192,9 @@
   },
   "typesVersions": {
     "*": {
+      "nx-cloud-internals": [
+        "dist/nx-cloud-internals.d.ts"
+      ],
       "bin/*": [
         "dist/bin/*.d.ts"
       ],
@@ -279,6 +283,11 @@
     },
     "./package.json": "./package.json",
     "./package": "./package.json",
+    "./nx-cloud-internals": {
+      "@nx/nx-source": "./nx-cloud-internals.ts",
+      "types": "./dist/nx-cloud-internals.d.ts",
+      "default": "./dist/nx-cloud-internals.js"
+    },
     "./migrations.json": "./migrations.json",
     "./migrations": "./migrations.json",
     "./generators.json": "./generators.json",

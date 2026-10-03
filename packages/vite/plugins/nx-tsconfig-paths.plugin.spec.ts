@@ -1,18 +1,34 @@
-import * as devkit from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import Module from 'node:module';
 import { join } from 'node:path';
 import * as ts from 'typescript';
 import { nxViteTsPaths } from './nx-tsconfig-paths.plugin';
+
+// The plugin reads `workspaceRoot` from `@nx/devkit`, which is captured at
+// module load; `TempFs` only moves nx's own binding.
+const mockRoot = vi.hoisted(() => ({ path: '' }));
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  get workspaceRoot() {
+    return mockRoot.path;
+  },
+}));
 
 describe('nxViteTsPaths', () => {
   let tempFs: TempFs;
   let originalTsConfigPath: string | undefined;
 
+  // tsconfig-paths probes every `require.extensions` key. The shared setup's
+  // swc-node hook adds `.ts`, which plain node (and jest's sandbox) lack.
+  let savedExtensions: Record<string, unknown>;
   beforeEach(() => {
+    const extensions = (Module as any)._extensions;
+    savedExtensions = { ...extensions };
+    for (const ext of Object.keys(extensions)) {
+      if (!['.js', '.json', '.node'].includes(ext)) delete extensions[ext];
+    }
     tempFs = new TempFs('nx-vite-ts-paths');
-    // `TempFs` moves nx's own `workspaceRoot`, but the jest setup hands the
-    // plugin a copy of `@nx/devkit` that keeps the value from load time.
-    jest.replaceProperty(devkit, 'workspaceRoot', tempFs.tempDir);
+    mockRoot.path = tempFs.tempDir;
     originalTsConfigPath = process.env.NX_TSCONFIG_PATH;
   });
 
@@ -22,8 +38,10 @@ describe('nxViteTsPaths', () => {
     } else {
       process.env.NX_TSCONFIG_PATH = originalTsConfigPath;
     }
+    delete global.NX_GRAPH_CREATION;
     tempFs.cleanup();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
+    Object.assign((Module as any)._extensions, savedExtensions);
   });
 
   const resolveWith = async (importPath: string) => {
@@ -269,5 +287,44 @@ describe('nxViteTsPaths', () => {
         join(tempFs.tempDir, 'packages/exact/dist/index.js')
       );
     });
+  });
+
+  const configResolved = (plugin: any) =>
+    plugin.configResolved({ root: join(tempFs.tempDir, 'app') });
+
+  it('should defer to other resolvers when the workspace has no tsconfig', async () => {
+    await expect(resolveWith('@repo/util')).resolves.toBeNull();
+  });
+
+  it('should fail config resolution on a malformed tsconfig outside graph construction', async () => {
+    await tempFs.createFiles({ 'tsconfig.base.json': '{ "compilerOptions": ' });
+
+    await expect(configResolved(nxViteTsPaths())).rejects.toThrow(
+      'is malformed'
+    );
+  });
+
+  it('should parse the tsconfigs on the first import after each configResolved during graph construction', async () => {
+    global.NX_GRAPH_CREATION = true;
+    await tempFs.createFiles({
+      'app/tsconfig.app.json': JSON.stringify({
+        compilerOptions: { paths: { '@app/local': ['src/local.ts'] } },
+      }),
+      'app/src/local.ts': '',
+    });
+    const plugin: any = nxViteTsPaths();
+    await configResolved(plugin);
+    plugin.resolveId('@app/local');
+    await tempFs.createFiles({ 'tsconfig.base.json': '{ "compilerOptions": ' });
+
+    expect(plugin.resolveId('@app/local')).toEqual(
+      join(tempFs.tempDir, 'app/src/local.ts')
+    );
+
+    await configResolved(plugin);
+
+    // A failed parse leaves the next import to parse again.
+    expect(() => plugin.resolveId('@app/local')).toThrow('is malformed');
+    expect(() => plugin.resolveId('@app/local')).toThrow('is malformed');
   });
 });

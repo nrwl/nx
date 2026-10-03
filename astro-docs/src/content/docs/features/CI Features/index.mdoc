@@ -1,61 +1,70 @@
 ---
-title: Orchestration & CI with Nx Cloud
+title: Continuous Integration (CI) with Nx Cloud
 sidebar:
   hidden: true
-description: Speed up CI, reduce costs, and eliminate flakiness with Nx Cloud's task-based CI execution model.
+description: Nx Cloud cuts CI time and cost with remote caching and distributed task execution with dynamic task packing, which fills machines by CPU and memory use.
 filter: 'type:Features'
 ---
 
 {% youtube src="https://www.youtube.com/watch?v=cDBihpB3SbI" title="Nx and Nx Cloud" width="100%" /%}
 
-CI is challenging and it's **not your fault**. It's a fundamental issue with how the current, traditional CI execution model works. Nx Cloud adopts a new **task-based** CI model that overcomes slowness and unreliability of the current VM-based CI model.
+Nx Cloud makes CI faster and cheaper in two ways:
 
-Nx Cloud improves many aspects of the CI/CD process:
+- [Remote caching](/docs/features/ci-features/remote-cache) skips any task that already ran with the same inputs, in CI or on a developer machine.
+- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across Nx Agents, and _dynamic task packing_ fills each agent by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
 
-- **Speed** - 30% - 70% faster CI (based on reports from our clients)
-- **Cost** - 40% - 75% reduction in CI costs (observed on the Nx OSS monorepo)
-- **Reliability** - by automatically identifying flaky tasks (e2e tests in particular) and re-running them
+In most workspaces, distribution uses about 50% fewer machine-minutes than remote caching alone.
+Teams using Nx Cloud report 30% to 70% faster CI.
 
 ## What you get with Nx Cloud on top of Nx Core
 
-|                  | Nx Core                                                                                                    | Nx Cloud                                                                                        |
-| ---------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Caching          | Local cache, per machine                                                                                   | Adds a [remote cache](/docs/features/ci-features/remote-cache) shared across your team and CI   |
-| Task scheduling  | Task graph on one machine, [`nx affected`](/docs/features/ci-features/affected) to skip untouched projects | Adds [distribution across agent machines](/docs/features/ci-features/distribute-task-execution) |
-| End-to-end tests | Run as one task per project                                                                                | [Split per file](/docs/features/ci-features/split-e2e-tasks) and distributed                    |
-| Flaky tasks      | You rerun the pipeline                                                                                     | [Detected and rerun](/docs/features/ci-features/flaky-tasks) within the same run                |
-| Failing CI       | You read the logs and fix it                                                                               | [Self-healing CI](/docs/features/ci-features/self-healing-ci) proposes a fix on the PR          |
-| Visibility       | Terminal output for the run in front of you                                                                | Run history, task analytics, and CI observability                                               |
+|                 | Nx Core                                                                                                    | Nx Cloud                                                                                                          |
+| --------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Caching         | [Local cache](/docs/features/cache-task-results), per machine                                              | Adds a [remote cache](/docs/features/ci-features/remote-cache) shared across your team and CI                     |
+| Task scheduling | Task graph on one machine, [`nx affected`](/docs/features/ci-features/affected) to skip untouched projects | Adds [distribution across agents](/docs/features/ci-features/distribute-task-execution) with dynamic task packing |
+| Failing CI      | You read the logs and fix it                                                                               | [Self-healing CI](/docs/features/ci-features/self-healing-ci) proposes a fix on the PR                            |
+| Visibility      | Terminal output for the run in front of you                                                                | [Run history, task analytics, and CI observability](/docs/kb/optimize-your-ttg)                                   |
 
 ## Connect your workspace to Nx Cloud
 
-Run the following command in your Nx workspace (make sure you have it pushed to a remote repository first):
+Push your workspace to a remote repository, then run:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-This connects your workspace to Nx Cloud and enables remote caching and CI features. For more details, [follow our in-depth guide](/docs/kb/setup-ci) for setting up CI with Nx.
+Remote caching works as soon as the workspace is connected.
+To add distribution and the rest of the pipeline, see [setting up CI](/docs/getting-started/setup-ci).
 
 {% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=ci-features" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
-## How Nx Cloud improves CI
+## Why task-based CI costs less
 
-In traditional CI models, work is statically assigned to CI machines. This creates inefficiencies that many teams experience at scale.
+Most CI setups use static partitioning (binning and sharding), assigning work to machines up front, such as one job for tests and another for builds, and each machine runs until its slowest task ends.
+Nx Cloud assigns individual tasks as agents free up, using the task graph and each task's past duration, CPU, and memory use.
+Agents stay busy, an agent that fails during setup has its work picked up by the others, and adding agents needs no change to how work is split.
 
-Nx Cloud uses a **task-based approach to dynamically assign tasks** to agent machines. CI becomes scalable, maintainable, and more reliable because Nx Cloud coordinates work among agent machines automatically and acts on individual tasks directly.
-
-For example:
-
-- An agent machine fails in a setup step — Nx Cloud automatically reassigns the work to other agent machines.
-- More work needs to run in CI — add more agent machines, Nx Cloud automatically assigns available work.
-- Known flaky tasks waste CI time on needed reruns — Nx Cloud automatically detects flaky tasks and reruns them in the current CI execution.
-
-[Learn how our customers use Nx Cloud](https://nx.dev/blog?filterBy=customer+story) to scale their workspaces and be more efficient.
+[Learn how teams use Nx Cloud](https://nx.dev/blog?filterBy=customer+story) to scale their workspaces.
 
 ## Nx Cloud features
 
 {% index_page_cards path="features/ci-features" /%}
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="CI workflow examples" description="Pipelines for CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket" href="/docs/kb/ci-workflow-examples" /%}
+
+{% linkcard title="GitHub Actions integration" description="Run affected tasks with remote caching and PR insights on GitHub Actions" href="/docs/kb/github-integration" /%}
+
+{% linkcard title="Optimize your time to green" description="Find and fix what slows pull requests down" href="/docs/kb/optimize-your-ttg" /%}
+
+{% linkcard title="Record non-Nx commands" description="Send logs from any CI command to Nx Cloud" href="/docs/kb/record-commands" /%}
+
+{% linkcard title="Google identity provider" description="Sign in to Nx Cloud with Google Workspace" href="/docs/kb/google-auth" /%}
+
+{% /cardgrid %}
 
 ## Frequently asked questions
 

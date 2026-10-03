@@ -149,7 +149,7 @@ describe('Remix Library Generator', () => {
   });
 
   // TODO(Colum): Unskip this when buildable is investigated correctly
-  xit('should generate the config files correctly when the library is buildable', async () => {
+  it.skip('should generate the config files correctly when the library is buildable', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 

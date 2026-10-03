@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -11,16 +12,16 @@ import remote from './remote';
 import { getRootTsConfigPathInTree } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    readCachedProjectGraph: jest.fn().mockImplementation(
+    readCachedProjectGraph: vi.fn().mockImplementation(
       (): ProjectGraph => ({
         dependencies: {},
         nodes: {
@@ -111,7 +112,7 @@ describe('remote generator', () => {
 
   describe('bundler=webpack', () => {
     beforeEach(() => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
     });
 
     it('should create the remote with the correct config files', async () => {
@@ -375,7 +376,7 @@ describe('remote generator', () => {
     });
 
     it('should not set production webpack config when using TS Solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {
@@ -399,7 +400,7 @@ describe('remote generator', () => {
     });
 
     it('should set production webpack config when not using TS Solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {

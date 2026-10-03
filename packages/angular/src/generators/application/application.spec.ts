@@ -1,3 +1,4 @@
+import type { Mock, MockInstance } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import * as devkit from '@nx/devkit';
 import {
@@ -19,15 +20,15 @@ import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
 
 // need to mock cypress otherwise it'll use installed version in this repo's package.json
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 describe('app', () => {
   let appTree: Tree;
   let envBackup: string | undefined;
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 
@@ -631,15 +632,14 @@ describe('app', () => {
   });
 
   describe('format files', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest.spyOn(devkitModule, 'formatFiles');
+      formatFilesSpy = vi.spyOn(devkit, 'formatFiles');
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files', async () => {

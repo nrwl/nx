@@ -322,6 +322,28 @@ export function getNpmPackageSharedConfig(
 }
 
 /**
+ * Narrow a list of package names down to those with a version declared in the
+ * root package.json.
+ *
+ * Version resolution matches {@link sharePackages}, so a package kept here never
+ * trips the missing-version warning in {@link getNpmPackageSharedConfig}.
+ * @param packages - Array of package names as strings
+ */
+export function filterPackagesDeclaredInRootPackageJson(
+  packages: string[]
+): string[] {
+  if (packages.length === 0) {
+    return [];
+  }
+
+  const pkgJson = readRootPackageJson();
+
+  return packages.filter((pkg) =>
+    Boolean(getDependencyVersionFromPackageJson(pkg, workspaceRoot, pkgJson))
+  );
+}
+
+/**
  * Create a dictionary of packages and their Module Federation Shared Config
  * from an array of package names.
  *

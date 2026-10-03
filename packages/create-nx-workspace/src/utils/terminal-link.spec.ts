@@ -44,7 +44,7 @@ describe('parseVersion', () => {
     // Missing / malformed input defaults to zeros
     ['', { major: 0, minor: 0, patch: 0 }],
     [undefined, { major: 0, minor: 0, patch: 0 }],
-  ])('parses %p', (input, expected) => {
+  ])('parses %j', (input, expected) => {
     expect(parseVersion(input as string | undefined)).toEqual(expected);
   });
 });

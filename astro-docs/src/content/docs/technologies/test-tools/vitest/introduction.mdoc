@@ -9,7 +9,7 @@ filter: 'type:References'
 
 [Vitest](https://vitest.dev) is a fast test runner built on Vite.
 
-The `@nx/vitest` plugin adds [inferred Vitest targets](#configuration), a [project configuration generator](#add-vitest-to-a-project), and CI-friendly [test splitting](#ci-considerations).
+The `@nx/vitest` plugin adds [inferred Vitest targets](#configuration), a [project configuration generator](#add-vitest-to-a-project), and CI-friendly [test splitting](#plugin-options).
 
 You can use Vitest with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
@@ -17,11 +17,23 @@ You can use Vitest with Nx without the plugin and still get [task caching](/docs
 
 The `@nx/vitest` plugin supports the following package versions.
 
-| Package  | Supported Versions |
-| -------- | ------------------ |
-| `vitest` | ^3.0.0 \|\| ^4.0.0 |
+| Package  | Supported Versions             |
+| -------- | ------------------------------ |
+| `vitest` | ^3.0.0 \|\| ^4.0.0 \|\| ^5.0.0 |
 
-[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+Each Vitest major sets its own Vite requirement.
+
+| Vitest | Vite     |
+| ------ | -------- |
+| 5      | 6.4 to 8 |
+| 4      | 6 to 8   |
+| 3      | 5 to 7   |
+
+For Node.js, follow the [Nx compatibility matrix](/docs/technologies/node/introduction) rather than the Vitest floor. Nx supports a narrower set of Node versions than Vitest 3 and Vitest 4 accept, so the Nx requirement is the one that applies.
+
+Vitest 5 treats Vite as a peer dependency rather than installing its own copy. If you upgrade from Vitest 4 and your `package.json` never listed `vite`, add it. The `nx migrate` path does this for you.
+
+[Nx generators](/docs/features/generate-code) install versions that work together when scaffolding new projects. They pick the highest Vitest major the rest of your workspace supports, so a project on Vite 6.2 gets Vitest 4 rather than a pairing that cannot resolve.
 
 ## Setup
 
@@ -193,7 +205,7 @@ There is no single "disable" flag for inference. Use `include` and `exclude` to 
 
 The test task is cached, with outputs based on your Vitest coverage configuration.
 Custom reporter output files are not inferred.
-Set `ciTargetName` to enable the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+Set `ciTargetName` to enable [task splitting (Atomizer)](/docs/kb/split-e2e-tasks).
 
 When coverage is enabled, each atomized task writes its report to a directory under the configured
 `reportsDirectory` that mirrors the spec file's path.
@@ -249,7 +261,7 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 {% cardgrid %}
 {% linkcard title="Vitest Config Reference" description="Learn about Vitest configuration options and defaults." href="https://vitest.dev/config/" /%}
 {% linkcard title="Migrate from @nx/vite" description="Move Vitest tasks from the Vite plugin to @nx/vitest." href="/docs/kb/migrating-from-nx-vite" /%}
-{% linkcard title="Split E2E Tasks" description="Distribute E2E tests by file with atomized tasks." href="/docs/features/ci-features/split-e2e-tasks" /%}
+{% linkcard title="Split E2E Tasks" description="Distribute E2E tests by file with atomized tasks." href="/docs/kb/split-e2e-tasks" /%}
 {% linkcard title="Feature-Based Testing" description="Organize tests by feature for better caching and targeted CI." href="/docs/kb/feature-based-testing" /%}
 {% linkcard title="Vitest Generators Reference" description="Reference for @nx/vitest generators." href="/docs/technologies/test-tools/vitest/generators" /%}
 {% linkcard title="Vitest Executors Reference" description="Reference for @nx/vitest executors." href="/docs/technologies/test-tools/vitest/executors" /%}

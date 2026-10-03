@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
@@ -7,9 +8,9 @@ import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 describe('react app generator (legacy)', () => {
   let appTree: Tree;
@@ -23,7 +24,7 @@ describe('react app generator (legacy)', () => {
     strict: true,
     addPlugin: false,
   };
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 

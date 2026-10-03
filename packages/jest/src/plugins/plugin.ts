@@ -35,6 +35,7 @@ import {
   resolve,
   sep,
 } from 'node:path';
+import * as posix from 'node:path/posix';
 import { getLockFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
@@ -1020,7 +1021,7 @@ async function getTestPaths(
         '**/__tests__/**/*.?([mc])[jt]s?(x)',
         '**/?(*.)+(spec|test).?([mc])[jt]s?(x)',
       ]
-    ).map((pattern) => join(projectRoot, pattern)),
+    ).map((pattern) => posix.join(projectRoot, pattern)),
     []
   );
 

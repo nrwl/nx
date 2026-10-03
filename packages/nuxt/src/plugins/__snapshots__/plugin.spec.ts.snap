@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
+exports[`@nx/nuxt/plugin > not root project > should create nodes 1`] = `
 [
   [
     "my-app/nuxt.config.ts",
@@ -113,7 +113,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
 ]
 `;
 
-exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
+exports[`@nx/nuxt/plugin > root project > should create nodes 1`] = `
 [
   [
     "nuxt.config.ts",

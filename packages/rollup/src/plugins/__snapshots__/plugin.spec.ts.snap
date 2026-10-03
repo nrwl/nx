@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
+exports[`@nx/rollup/plugin > non-root project > should create nodes 1`] = `
 [
   [
     "mylib/rollup.config.cjs",
@@ -75,7 +75,7 @@ exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
 ]
 `;
 
-exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
+exports[`@nx/rollup/plugin > non-root project > should create nodes 2`] = `
 [
   [
     "mylib/rollup.config.cts",
@@ -150,7 +150,7 @@ exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
 ]
 `;
 
-exports[`@nx/rollup/plugin root project should create nodes 1`] = `
+exports[`@nx/rollup/plugin > root project > should create nodes 1`] = `
 [
   [
     "rollup.config.cjs",
@@ -224,7 +224,7 @@ exports[`@nx/rollup/plugin root project should create nodes 1`] = `
 ]
 `;
 
-exports[`@nx/rollup/plugin root project should create nodes 2`] = `
+exports[`@nx/rollup/plugin > root project > should create nodes 2`] = `
 [
   [
     "rollup.config.cts",
