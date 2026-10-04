@@ -3,6 +3,7 @@ import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { readJsonFile } from '../../../utils/fileutils';
+import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
@@ -778,7 +779,7 @@ export function getTranspiler(
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   compilerOptions.lib = ['es2021'];
@@ -1376,7 +1377,7 @@ function packageIsInstalled(m: string) {
  */
 export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   const flagMap: Partial<{

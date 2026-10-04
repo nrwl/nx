@@ -1,3 +1,4 @@
+import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -13,7 +14,7 @@ export function readTsConfig(
   sys?: ts.System
 ): ts.ParsedCommandLine {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = require(resolveFromWorkspace('typescript'));
   }
 
   sys ??= tsModule.sys;
@@ -30,7 +31,7 @@ export function readTsConfigWithoutFiles(
   tsConfigPath: string
 ): ts.ParsedCommandLine {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = require(resolveFromWorkspace('typescript'));
   }
 
   // We only care about options, so we don't need to scan source files, and thus
