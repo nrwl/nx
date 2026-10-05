@@ -132,18 +132,17 @@ impl OutputRecords {
         reader: &IgnoredIndexReader,
         entries: Vec<TaskOutputs>,
     ) {
-        for entry in &entries {
-            let Ok(outputs) = normalize_outputs(root, entry.outputs.clone()) else {
-                continue;
-            };
-            for output in outputs.iter().filter(|o| !o.starts_with('!')) {
+        entries.into_par_iter().for_each(|entry| {
+            for output in normalize_outputs(root, entry.outputs.clone())
+                .unwrap_or_default()
+                .iter()
+                .filter(|o| !o.starts_with('!'))
+            {
                 let dir = read_root(root, output);
                 if !root.join(&dir).is_file() {
                     reader.track(root, &dir);
                 }
             }
-        }
-        entries.into_par_iter().for_each(|entry| {
             let stamped = match entry.files {
                 Some(given) => Some(given_stamps(given)),
                 None => on_disk(root, &entry.outputs).map(|paths| {
