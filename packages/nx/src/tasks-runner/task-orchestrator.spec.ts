@@ -12,6 +12,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import type { RunningTask } from './running-tasks/running-task';
 import { TaskOrchestrator } from './task-orchestrator';
+import type { TaskResult } from './life-cycle';
 
 performance.mark = vi.fn((name: string) => ({ name }) as PerformanceMark);
 performance.measure = vi.fn();
@@ -100,7 +101,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.projectGraph = createProjectGraph();
       orchestrator.taskGraph = taskGraph;
       orchestrator.fullTaskGraph = taskGraph;
-      orchestrator.deferredTaskIds = deferredTaskIds;
+      orchestrator.hashingDeferredTaskIds = deferredTaskIds;
       orchestrator.nxJson = {};
       orchestrator.taskDetails = null;
       orchestrator.taskInvocationTracker = null;
@@ -355,7 +356,7 @@ describe('TaskOrchestrator', () => {
           .map((task) => ({ task, status: 'local-cache', code: 0 }))
       );
 
-      await orchestrator.applyFromCacheOrRunBatch(
+      const results: TaskResult[] = await orchestrator.applyFromCacheOrRunBatch(
         true,
         { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
         0
@@ -371,11 +372,12 @@ describe('TaskOrchestrator', () => {
         lookups: ids(orchestrator.applyCachedResults.mock.calls),
         hashed: ids(hasher.hashTasks.mock.calls),
         runs: ids(orchestrator.runBatch.mock.calls),
+        resultIds: results.map((r) => r.task.id),
       };
     }
 
     it('should hash and look up a deferred task behind a non-cacheable task in the next wave', async () => {
-      const { lookups, hashed, runs } = await runBatch(
+      const { lookups, hashed, runs, resultIds } = await runBatch(
         { 'dep:install': [], 'reader:build': ['dep:install'] },
         {
           deferred: ['reader:build'],
@@ -389,6 +391,7 @@ describe('TaskOrchestrator', () => {
       expect(lookups).toEqual([['dep:install'], ['reader:build']]);
       expect(hashed).toEqual([['dep:install'], ['reader:build']]);
       expect(runs).toEqual([['dep:install']]);
+      expect(resultIds.sort()).toEqual(['dep:install', 'reader:build']);
     });
 
     it('should run a deferred task in the same wave as a cache miss upstream of it', async () => {
