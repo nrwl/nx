@@ -599,28 +599,63 @@ impl HashPlanner {
             unowned
         };
 
-        // Nx Cloud collapses sibling files into brace groups; class mapping needs
-        // the individual names, so observed groups of literals are expanded.
+        // A recorded glob stays whole unless its brace alternatives belong to
+        // different projects or name a file the always-on set hashes.
         let mut buckets: BTreeMap<&str, Vec<String>> = BTreeMap::new();
-        for glob in entry
-            .files
-            .iter()
-            .flat_map(|glob| expand_literal_braces(glob))
-            .filter(|glob| !covered_by_native_instruction(glob))
-        {
-            buckets.entry(owner(&glob)).or_default().push(glob);
+        let mut exclusions: Vec<String> = Vec::new();
+        for glob in &entry.files {
+            let expanded = expand_literal_braces(glob);
+            let kept: Vec<String> = expanded
+                .iter()
+                .filter(|glob| !covered_by_native_instruction(glob))
+                .cloned()
+                .collect();
+            let whole = kept.len() == expanded.len();
+            if glob.starts_with('!') {
+                match whole {
+                    true => exclusions.push(glob.clone()),
+                    false => exclusions.extend(kept),
+                }
+            } else {
+                let owners: Vec<&str> = kept.iter().map(|g| owner(g)).collect();
+                if whole && owners.iter().all(|o| *o == owners[0]) {
+                    buckets.entry(owners[0]).or_default().push(glob.clone());
+                } else {
+                    for (glob, project) in kept.into_iter().zip(owners) {
+                        buckets.entry(project).or_default().push(glob);
+                    }
+                }
+            }
         }
+        let exclusion_roots: Vec<String> = exclusions
+            .iter()
+            .map(|exclusion| walk_root(&exclusion[1..]))
+            .collect();
 
         let mut instructions = Vec::new();
         for (project, mut group) in buckets {
             group.sort();
             group.dedup();
+            // Exclusions apply to every recorded positive, so each group takes
+            // the ones that could remove its files.
+            let mut group_exclusions: Vec<String> = Vec::new();
+            if !exclusions.is_empty() {
+                let mut roots: Vec<String> = group.iter().map(|glob| walk_root(glob)).collect();
+                roots.sort_unstable();
+                group_exclusions.extend(
+                    exclusions
+                        .iter()
+                        .zip(&exclusion_roots)
+                        .filter(|(_, root)| overlaps_any(&roots, root))
+                        .map(|(exclusion, _)| exclusion.clone()),
+                );
+            }
             let visits: Vec<&Vec<String>> = negations
                 .iter()
                 .filter(|(p, _)| p == project)
                 .map(|(_, patterns)| patterns)
                 .collect();
-            let mut declared_negations: Vec<String> = match visits.split_first() {
+            let declared_negations: Vec<String> = match visits.split_first() {
                 None => Vec::new(),
                 Some((first, rest)) => first
                     .iter()
@@ -628,9 +663,10 @@ impl HashPlanner {
                     .cloned()
                     .collect(),
             };
-            declared_negations.sort();
-            declared_negations.dedup();
-            group.extend(declared_negations);
+            group_exclusions.extend(declared_negations);
+            group_exclusions.sort();
+            group_exclusions.dedup();
+            group.extend(group_exclusions);
             instructions.push(HashInstruction::IgnoredFileSet(group));
         }
         instructions.push(HashInstruction::UltracacheConfiguration(
@@ -1483,6 +1519,31 @@ fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
         stack.extend(dependencies_of(id));
     }
     roots
+}
+
+/// `paths_overlap` against each of `sorted_roots`, by lookup instead of a scan.
+fn overlaps_any(sorted_roots: &[String], root: &str) -> bool {
+    if root.is_empty() || sorted_roots.first().is_some_and(|r| r.is_empty()) {
+        return !sorted_roots.is_empty();
+    }
+    let mut ancestor = root;
+    loop {
+        if sorted_roots
+            .binary_search_by(|r| r.as_str().cmp(ancestor))
+            .is_ok()
+        {
+            return true;
+        }
+        match ancestor.rfind('/') {
+            Some(cut) => ancestor = &ancestor[..cut],
+            None => break,
+        }
+    }
+    let below = format!("{root}/");
+    let start = sorted_roots.partition_point(|r| r.as_str() < below.as_str());
+    sorted_roots
+        .get(start)
+        .is_some_and(|r| r.starts_with(&below))
 }
 
 /// Whether one path is the other or lies inside it. The workspace root, the
@@ -2393,6 +2454,39 @@ mod tests {
                 "web:test"
             ]
         );
+    }
+
+    #[test]
+    fn overlaps_any_matches_paths_overlap() {
+        let roots = ["", "apps/web", "dist", "dist/libs/lib", "libs/a/b"];
+        let probes = [
+            "dist",
+            "dist/libs",
+            "distribution",
+            "apps/webapp",
+            "apps",
+            "libs/a",
+            "x",
+            "",
+        ];
+        for count in 0..=roots.len() {
+            for skip in 0..roots.len() {
+                let mut sorted: Vec<String> = roots
+                    .iter()
+                    .skip(skip)
+                    .take(count)
+                    .map(|r| r.to_string())
+                    .collect();
+                sorted.sort();
+                for probe in probes {
+                    assert_eq!(
+                        overlaps_any(&sorted, probe),
+                        sorted.iter().any(|r| paths_overlap(r, probe)),
+                        "{sorted:?} {probe}"
+                    );
+                }
+            }
+        }
     }
 
     #[test]

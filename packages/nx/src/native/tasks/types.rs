@@ -324,18 +324,32 @@ pub struct HashPlans {
     pub deferred: std::collections::HashSet<String>,
 }
 
-/// Entries above which a disk-backed group's label carries a count and a
-/// digest instead of every path. An Ultracache group can run to thousands.
+/// Entries above which a disk-backed group's label lists only its first
+/// positives and counts the rest. An Ultracache group can run to thousands.
 pub const COMPACT_FILES_LABEL_ABOVE: usize = 8;
 
 impl HashInstruction {
     /// What hash details name this instruction: its Display, except that a
-    /// large disk-backed group folds to a count and a digest of its paths.
+    /// large disk-backed group lists its first positives and counts the rest.
+    /// Unique within a task only: a task's groups never share a positive.
     pub fn label(&self) -> String {
         match self {
             HashInstruction::IgnoredFileSet(globs) if globs.len() > COMPACT_FILES_LABEL_ABOVE => {
-                let digest = crate::native::hasher::hash(globs.join(",").as_bytes());
-                format!("files:[{} paths #{digest}]", globs.len())
+                let (negations, positives): (Vec<&String>, Vec<&String>) =
+                    globs.iter().partition(|glob| glob.starts_with('!'));
+                let shown = positives.len().min(COMPACT_FILES_LABEL_ABOVE);
+                let mut counts = Vec::new();
+                if positives.len() > shown {
+                    counts.push(format!("+{} more", positives.len() - shown));
+                }
+                if !negations.is_empty() {
+                    counts.push(format!("+{} excluded", negations.len()));
+                }
+                let listed: Vec<&str> = positives[..shown].iter().map(|g| g.as_str()).collect();
+                match counts.is_empty() {
+                    true => format!("files:[{}]", listed.join(",")),
+                    false => format!("files:[{} ({})]", listed.join(","), counts.join(", ")),
+                }
             }
             _ => self.to_string(),
         }
@@ -437,14 +451,16 @@ mod tests {
     fn label_folds_a_large_disk_backed_group_and_keeps_small_ones_verbatim() {
         let small = HashInstruction::IgnoredFileSet(vec!["a".into(), "!b".into()]);
         assert_eq!(small.label(), small.to_string());
+        let mut globs: Vec<String> = (0..3).map(|i| format!("libs/p/f{i}.ts")).collect();
+        globs.extend((0..7).map(|i| format!("!libs/p/n{i}.ts")));
+        assert_eq!(
+            HashInstruction::IgnoredFileSet(globs).label(),
+            "files:[libs/p/f0.ts,libs/p/f1.ts,libs/p/f2.ts (+7 excluded)]"
+        );
         let globs: Vec<String> = (0..20).map(|i| format!("libs/p/f{i}.ts")).collect();
         let big = HashInstruction::IgnoredFileSet(globs.clone());
         let label = big.label();
-        assert!(label.starts_with("files:[20 paths #"), "{label}");
-        let mut changed = globs.clone();
-        changed[3] = "libs/p/other.ts".into();
-        let relabeled = HashInstruction::IgnoredFileSet(changed).label();
-        assert_ne!(label, relabeled);
+        assert!(label.ends_with("libs/p/f7.ts (+12 more)]"), "{label}");
         let tracked = HashInstruction::ProjectFileSet("p".into(), globs);
         assert_eq!(tracked.label(), tracked.to_string());
         let pool = InstructionPool::new();
