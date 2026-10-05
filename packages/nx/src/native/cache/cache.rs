@@ -31,14 +31,14 @@ pub struct CachedOutputs {
 
 /// Adds the workspace file at `path` to `files` as it is now. Only a regular
 /// file, or a link to one, is kept: nothing else is an output file to stamp.
-fn note_copied(workspace_root: &Path, path: &Path, files: &Mutex<Vec<OutputFile>>) {
+fn note_copied(workspace_root: &Path, path: &Path, files: &parking_lot::Mutex<Vec<OutputFile>>) {
     let (Ok(relative), Ok(metadata)) = (path.strip_prefix(workspace_root), std::fs::metadata(path))
     else {
         return;
     };
     if metadata.is_file() {
         let file = OutputFile::new(relative.to_normalized_string(), &metadata);
-        files.lock().unwrap_or_else(|e| e.into_inner()).push(file);
+        files.lock().push(file);
     }
 }
 
@@ -431,7 +431,7 @@ impl NxCache {
 
         // Copy the outputs to the cache
         let mut copied_files = 0;
-        let files = Mutex::new(vec![]);
+        let files = parking_lot::Mutex::new(vec![]);
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
@@ -457,7 +457,7 @@ impl NxCache {
         debug!("PUT {} {:?}", &hash, start.elapsed());
         Ok(CachedOutputs {
             expanded_outputs,
-            files: files.into_inner().unwrap_or_else(|e| e.into_inner()),
+            files: files.into_inner(),
         })
     }
 
@@ -476,10 +476,7 @@ impl NxCache {
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs {
             if outputs.len() > 0 && result.code == 0 {
-                size += try_and_retry(|| {
-                    self.restore(result.clone(), outputs.clone(), &mut Vec::new())
-                })?
-                .0;
+                size += try_and_retry(|| self.restore(result.clone(), outputs.clone()))?.0;
             };
         }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
@@ -647,17 +644,15 @@ impl NxCache {
         cached_result: CachedResult,
         outputs: Vec<String>,
     ) -> anyhow::Result<Option<Vec<OutputFile>>> {
-        let mut files = vec![];
-        let (_, exact) = self.restore(cached_result, outputs, &mut files)?;
-        Ok(exact.then_some(files))
+        Ok(self.restore(cached_result, outputs)?.1)
     }
 
+    /// The bytes restored, and the files written when they are all of them.
     fn restore(
         &self,
         cached_result: CachedResult,
         outputs: Vec<String>,
-        files: &mut Vec<OutputFile>,
-    ) -> anyhow::Result<(i64, bool)> {
+    ) -> anyhow::Result<(i64, Option<Vec<OutputFile>>)> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
@@ -672,23 +667,18 @@ impl NxCache {
         );
         // Stamped once the copy is done: a link can be written before the
         // file it points to.
-        let written = Mutex::new(vec![]);
+        let written = parking_lot::Mutex::new(vec![]);
         let size = copy_outputs_into_workspace(
             &self.workspace_root,
             outputs_path,
             &expanded_outputs,
-            &|_, dest| {
-                let mut written = written.lock().unwrap_or_else(|e| e.into_inner());
-                written.push(dest.to_path_buf());
-            },
+            &|_, dest| written.lock().push(dest.to_path_buf()),
         )?;
-        let copied = Mutex::new(vec![]);
+        let files = parking_lot::Mutex::new(vec![]);
         written
             .into_inner()
-            .unwrap_or_else(|e| e.into_inner())
             .par_iter()
-            .for_each(|dest| note_copied(&self.workspace_root, dest, &copied));
-        files.extend(copied.into_inner().unwrap_or_else(|e| e.into_inner()));
+            .for_each(|dest| note_copied(&self.workspace_root, dest, &files));
         let exact = literal && {
             let mut restored = expanded_outputs;
             let mut present = _expand_outputs(&self.workspace_root, outputs)?;
@@ -696,7 +686,7 @@ impl NxCache {
             present.sort();
             restored == present
         };
-        Ok((size, exact))
+        Ok((size, exact.then(|| files.into_inner())))
     }
 
     #[napi]
