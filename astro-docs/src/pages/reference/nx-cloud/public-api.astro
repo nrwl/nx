@@ -61,11 +61,19 @@ Astro.locals.rawContent = entry.body;
       {reference.headers.map((header) => (
         <>
           <AnchorHeading level={4} id={header.heading.slug}>{header.heading.text}</AnchorHeading>
-          <Fragment set:html={header.description.html} />
-          <Fragment set:html={header.schema.html} />
-          <ApiTable table={header.fields} />
-          <ApiContent content={header.content} />
-          <p>Documented with HTTP {header.statuses.map((status, index) => <>{index > 0 && ', '}<code>{status}</code></>)}.</p>
+          {header.definitions.map((definition) => (
+            <>
+              <Fragment set:html={definition.schema.html} />
+              <ApiTable table={definition.fields} />
+              <ApiContent content={definition.content} />
+              {definition.descriptions.map(({ id, description, statuses }) => (
+                <div {id}>
+                  <p>Documented with HTTP {statuses.map((status, index) => <>{index > 0 && ', '}<code>{status}</code></>)}.</p>
+                  <Fragment set:html={description.html} />
+                </div>
+              ))}
+            </>
+          ))}
         </>
       ))}
     </>

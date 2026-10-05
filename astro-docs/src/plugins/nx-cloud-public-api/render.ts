@@ -174,15 +174,22 @@ export function renderOpenApiReference(reference: OpenApiReference): string {
   }
   if (reference.headers.length) {
     lines.push(headingMarkdown(reference.sections.headers));
-    for (const header of reference.headers)
-      lines.push(
-        headingMarkdown(header.heading),
-        header.description.markdown,
-        header.schema.markdown,
-        tableMarkdown(header.fields),
-        contentMarkdown(header.content),
-        `Documented with HTTP ${header.statuses.map(code).join(', ')}.`
-      );
+    for (const header of reference.headers) {
+      lines.push(headingMarkdown(header.heading));
+      for (const definition of header.definitions) {
+        lines.push(
+          definition.schema.markdown,
+          tableMarkdown(definition.fields),
+          contentMarkdown(definition.content)
+        );
+        for (const { id, description, statuses } of definition.descriptions)
+          lines.push(
+            anchor(id),
+            `Documented with HTTP ${statuses.map(code).join(', ')}.`,
+            description.markdown
+          );
+      }
+    }
   }
   lines.push(headingMarkdown(reference.sections.schemas));
   for (const schema of reference.schemas)

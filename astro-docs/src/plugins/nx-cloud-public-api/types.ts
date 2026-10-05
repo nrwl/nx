@@ -6,7 +6,7 @@ export interface ReferenceProse {
 
 export interface ReferenceTable {
   columns: string[];
-  rows: ReferenceProse[][];
+  rows: { id?: string; required: boolean; cells: ReferenceProse[] }[];
 }
 
 export interface ReferenceHeading {
@@ -88,11 +88,16 @@ export interface OpenApiReference {
   }[];
   headers: {
     heading: ReferenceHeading;
-    description: ReferenceProse;
-    schema: ReferenceProse;
-    fields: ReferenceTable;
-    content: ReferenceMedia[];
-    statuses: string[];
+    definitions: {
+      schema: ReferenceProse;
+      fields: ReferenceTable;
+      content: ReferenceMedia[];
+      descriptions: {
+        id: string;
+        description: ReferenceProse;
+        statuses: string[];
+      }[];
+    }[];
   }[];
   schemas: {
     heading: ReferenceHeading;

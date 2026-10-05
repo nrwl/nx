@@ -1,3 +1,5 @@
+import GithubSlugger from 'github-slugger';
+import { optionSlug } from '../utils/option-slug';
 import type { ReferenceHeading, ReferenceProse, ReferenceTable } from './types';
 
 export function prose(markdown: string): ReferenceProse {
@@ -6,9 +8,20 @@ export function prose(markdown: string): ReferenceProse {
 
 export function referenceTable(
   columns: string[],
-  rows: string[][]
+  rows: { required: boolean; cells: string[] }[],
+  anchorPrefix?: string
 ): ReferenceTable {
-  return { columns, rows: rows.map((row) => row.map(prose)) };
+  const slugger = new GithubSlugger();
+  return {
+    columns,
+    rows: rows.map(({ required, cells }) => ({
+      ...(anchorPrefix
+        ? { id: slugger.slug(`${anchorPrefix}-${optionSlug(cells[0])}`) }
+        : {}),
+      required,
+      cells: cells.map(prose),
+    })),
+  };
 }
 
 function cell(value: string): string {
@@ -46,7 +59,15 @@ export function anchor(id: string): string {
 export function tableMarkdown(value: ReferenceTable): string {
   return table(
     value.columns,
-    value.rows.map((row) => row.map((cell) => cell.markdown))
+    value.rows.map(({ id, required, cells }) =>
+      cells.map((cell, index) => {
+        if (index !== 0) return cell.markdown;
+        const name = id
+          ? `${anchor(id)}[${cell.markdown}](#${encodeURIComponent(id)})`
+          : cell.markdown;
+        return required ? `${name} (required)` : name;
+      })
+    )
   );
 }
 

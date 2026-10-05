@@ -1,5 +1,7 @@
 ---
+import { Badge } from '@astrojs/starlight/components';
 import type { ReferenceTable } from '../../plugins/utils/openapi-reference';
+import { LINK_ICON_PATH } from '../../plugins/utils/option-slug';
 interface Props {
   table: ReferenceTable;
 }
@@ -11,7 +13,28 @@ const { table } = Astro.props;
     <table>
       <thead><tr>{table.columns.map((column) => <th scope="col">{column}</th>)}</tr></thead>
       <tbody>
-        {table.rows.map((row) => <tr>{row.map((cell) => <td><Fragment set:html={cell.html} /></td>)}</tr>)}
+        {table.rows.map(({ id, required, cells }) => (
+          <tr {id}>
+            {cells.map((cell, index) => (
+              <td class:list={{ 'name-cell': index === 0 }}>
+                {id && index === 0 ? (
+                  <a href={`#${encodeURIComponent(id)}`} class="sl-option-link name-label">
+                    <Fragment set:html={cell.html} />
+                    {required && <Badge text="required" variant="note" size="small" />}
+                    <span aria-hidden="true" class="sl-anchor-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentcolor"><path d={LINK_ICON_PATH} /></svg>
+                    </span>
+                  </a>
+                ) : index === 0 ? (
+                  <div class="name-label">
+                    <Fragment set:html={cell.html} />
+                    {required && <Badge text="required" variant="note" size="small" />}
+                  </div>
+                ) : <Fragment set:html={cell.html} />}
+              </td>
+            ))}
+          </tr>
+        ))}
       </tbody>
     </table>
   </div>
@@ -22,4 +45,15 @@ const { table } = Astro.props;
   table { width: 100%; min-width: 36rem; }
   td { vertical-align: top; }
   td :global(p) { margin: 0; }
+  .name-label { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .name-cell :global(p) { display: inline; }
+  .name-cell :global(.sl-badge) {
+    flex-shrink: 0;
+    font-family: var(--sl-font);
+    font-size: 0.6875rem;
+    line-height: 1;
+    padding: 0.0625rem 0.25rem;
+  }
+  .name-label .sl-anchor-icon { flex-shrink: 0; margin-inline-start: 0; }
+  .sl-option-link:focus-visible .sl-anchor-icon { opacity: 1; }
 </style>

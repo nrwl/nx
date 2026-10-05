@@ -113,18 +113,32 @@ export function schemaLabel(document: OpenApiDocument, name: string): string {
   return text(schema.title) || name;
 }
 
-export function schemaType(document: OpenApiDocument, value: unknown): string {
-  if (typeof value === 'boolean') return value ? 'Any value' : 'No value';
+export function schemaType(
+  document: OpenApiDocument,
+  value: unknown,
+  arraySuffix = ''
+): string {
+  if (typeof value === 'boolean')
+    return `${value ? 'Any value' : 'No value'}${arraySuffix}`;
   const schema = object(value);
   const union = array(schema.oneOf).length
     ? array(schema.oneOf)
     : array(schema.anyOf);
+  if (
+    arraySuffix &&
+    (union.length ||
+      schema.allOf ||
+      schema.nullable ||
+      array(schema.type).length ||
+      schema.additionalProperties)
+  )
+    return `(${schemaType(document, value)})${arraySuffix}`;
   let type: string;
   if (schema.$ref) {
     // Validate the target but do not expand the schema graph.
     resolve(document, schema);
     const name = schemaName(schema.$ref);
-    type = `[${code(schemaLabel(document, name))}](#${encodeURIComponent(`schema-${name}`)})`;
+    type = `[${code(`${schemaLabel(document, name)}${arraySuffix}`)}](#${encodeURIComponent(`schema-${name}`)})`;
   } else if (union.length) {
     type = union.map((value) => schemaType(document, value)).join(' or ');
   } else if (schema.allOf) {
@@ -143,11 +157,11 @@ export function schemaType(document: OpenApiDocument, value: unknown): string {
     type = types
       .map((type) => {
         if (type === 'array')
-          return `(${schemaType(document, schema.items)})[]`;
+          return schemaType(document, schema.items, `${arraySuffix}[]`);
         if (type === 'object' && schema.additionalProperties) {
           return `Dictionary of ${schemaType(document, schema.additionalProperties)}`;
         }
-        return code(type);
+        return code(`${type}${arraySuffix}`);
       })
       .join(' or ');
   }
@@ -225,9 +239,10 @@ export function openApiOperations(document: OpenApiDocument) {
 
 export function schemaFields(
   document: OpenApiDocument,
-  value: unknown
+  value: unknown,
+  anchorPrefix?: string
 ): ReferenceTable {
-  const rows: string[][] = [];
+  const rows: { required: boolean; cells: string[] }[] = [];
   const requiredProperties = (
     value: unknown,
     seen = new Set<string>()
@@ -262,12 +277,14 @@ export function schemaFields(
     for (const [name, raw] of Object.entries(object(schema.properties))) {
       const field = object(raw);
       const path = prefix ? `${prefix}.${name}` : name;
-      rows.push([
-        code(path),
-        required.has(name) ? 'Yes' : 'No',
-        schemaType(document, raw),
-        [text(field.description), constraints(raw)].filter(Boolean).join(' '),
-      ]);
+      rows.push({
+        required: required.has(name),
+        cells: [
+          code(path),
+          schemaType(document, raw),
+          [text(field.description), constraints(raw)].filter(Boolean).join(' '),
+        ],
+      });
       visit(raw, path);
     }
     if (schema.items) visit(schema.items, `${prefix}[]`);
@@ -279,5 +296,9 @@ export function schemaFields(
     }
   };
   visit(value);
-  return referenceTable(['Property', 'Required', 'Type', 'Description'], rows);
+  return referenceTable(
+    ['Property', 'Type', 'Description'],
+    rows,
+    anchorPrefix
+  );
 }

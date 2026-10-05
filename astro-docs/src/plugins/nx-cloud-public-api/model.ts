@@ -239,7 +239,10 @@ export function buildOpenApiReference(
       id,
       `http-status-${status}`,
     ]),
-    ...[...catalog.headers.values()].map(({ id }) => id),
+    ...[...catalog.headers.values()].flatMap(({ id, name }) => [
+      id,
+      `http-header-${name.toLowerCase()}`,
+    ]),
     ...Object.keys(object(components.schemas)).map((name) => `schema-${name}`),
     ...operations.flatMap(({ operation }, index) =>
       Object.keys(object(operation.responses))
@@ -315,11 +318,12 @@ export function buildOpenApiReference(
       const body = operation.requestBody
         ? resolve(document, operation.requestBody)
         : undefined;
+      const endpointHeading = heading(
+        3,
+        text(operation.summary) || `${method.toUpperCase()} ${path}`
+      );
       return {
-        heading: heading(
-          3,
-          text(operation.summary) || `${method.toUpperCase()} ${path}`
-        ),
+        heading: endpointHeading,
         method: method.toUpperCase(),
         path,
         description: prose(text(operation.description)),
@@ -332,25 +336,28 @@ export function buildOpenApiReference(
             }
           : {}),
         parameters: referenceTable(
-          ['Name', 'Location', 'Required', 'Type', 'Description'],
-          [...merged.values()].map((parameter) => [
-            code(parameter.name),
-            text(parameter.in),
-            parameter.required || parameter.in === 'path' ? 'Yes' : 'No',
-            schemaType(document, parameter.schema),
-            [
-              text(parameter.description),
-              constraints(parameter.schema),
-              parameter.explode ? 'Exploded values.' : '',
-              parameter.deprecated ? 'Deprecated.' : '',
-              parameter.style ? `Style: ${code(parameter.style)}.` : '',
-              'example' in parameter
-                ? `Example: ${code(JSON.stringify(parameter.example))}.`
-                : '',
-            ]
-              .filter(Boolean)
-              .join(' '),
-          ])
+          ['Name', 'Location', 'Type', 'Description'],
+          [...merged.values()].map((parameter) => ({
+            required: !!parameter.required || parameter.in === 'path',
+            cells: [
+              code(parameter.name),
+              text(parameter.in),
+              schemaType(document, parameter.schema),
+              [
+                text(parameter.description),
+                constraints(parameter.schema),
+                parameter.explode ? 'Exploded values.' : '',
+                parameter.deprecated ? 'Deprecated.' : '',
+                parameter.style ? `Style: ${code(parameter.style)}.` : '',
+                'example' in parameter
+                  ? `Example: ${code(JSON.stringify(parameter.example))}.`
+                  : '',
+              ]
+                .filter(Boolean)
+                .join(' '),
+            ],
+          })),
+          `${endpointHeading.slug}-parameter`
         ),
         parameterDetails: [...merged.values()].flatMap((parameter) => {
           const schema = object(parameter.schema);
@@ -470,27 +477,59 @@ export function buildOpenApiReference(
       });
   }
   const responses = [...responseGroups.values()];
-  const headers = [...catalog.headers.values()].map(
-    ({ id, name, header, statuses }) => ({
-      heading: heading(4, name, id),
+  const headerGroups = new Map<string, OpenApiReference['headers'][number]>();
+  for (const { id, name, header, statuses } of catalog.headers.values()) {
+    const key = name.toLowerCase();
+    let group = headerGroups.get(key);
+    if (!group) {
+      group = {
+        heading: heading(4, name, `http-header-${key}`),
+        definitions: [],
+      };
+      headerGroups.set(key, group);
+    }
+    const schema = prose(
+      `Type: ${schemaType(document, header.schema)}. ${constraints(header.schema)}`
+    );
+    const fields = schemaFields(document, header.schema);
+    const content = contentModel(document, header.content);
+    const bodyKey = signature({ schema, fields, content });
+    let definition = group.definitions.find(
+      (item) =>
+        signature({
+          schema: item.schema,
+          fields: item.fields,
+          content: item.content,
+        }) === bodyKey
+    );
+    if (!definition) {
+      definition = { schema, fields, content, descriptions: [] };
+      group.definitions.push(definition);
+    }
+    definition.descriptions.push({
+      id,
       description: prose(text(header.description)),
-      schema: prose(
-        `Type: ${schemaType(document, header.schema)}. ${constraints(header.schema)}`
-      ),
-      fields: schemaFields(document, header.schema),
-      content: contentModel(document, header.content),
       statuses: [...statuses].sort(),
-    })
-  );
+    });
+  }
+  const headers = [...headerGroups.values()];
   const schemas = Object.entries(object(components.schemas)).map(
     ([name, raw]) => ({
       heading: heading(3, schemaLabel(document, name), `schema-${name}`),
       description: prose(text(object(raw).description)),
       type: prose(`Type: ${schemaType(document, raw)}. ${constraints(raw)}`),
-      fields: schemaFields(document, raw),
+      fields: schemaFields(document, raw, `schema-${name}-property`),
       definition: JSON.stringify(raw, null, 2),
     })
   );
+  for (const table of [
+    ...endpoints.map((endpoint) => endpoint.parameters),
+    ...schemas.map((schema) => schema.fields),
+  ]) {
+    for (const row of table.rows) {
+      if (row.id) row.id = slugger.slug(row.id);
+    }
+  }
   return {
     sourceUrl,
     title: document.info.title,
