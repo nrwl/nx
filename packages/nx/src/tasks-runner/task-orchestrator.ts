@@ -815,13 +815,67 @@ export class TaskOrchestrator {
     const applyFromCacheOrRunBatchStart = performance.mark(
       'TaskOrchestrator-apply-from-cache-or-run-batch:start'
     );
-    const taskEntries = Object.entries(batch.taskGraph.tasks);
-    const tasks = taskEntries.map(([, task]) => task);
+    const taskIds = Object.keys(batch.taskGraph.tasks);
 
     this.options.lifeCycle.registerRunningBatch?.(batch.id, {
       executorName: batch.executorName,
-      taskIds: Object.keys(batch.taskGraph.tasks),
+      taskIds,
     });
+
+    // Each wave restores or runs what it can; tasks held back for a later
+    // wave (or left out by the executor) stay incomplete and go again.
+    const results: TaskResult[] = [];
+    let taskGraph = batch.taskGraph;
+    while (true) {
+      results.push(
+        ...(await this.runBatchWave(
+          doNotSkipCache,
+          { ...batch, taskGraph },
+          groupId
+        ))
+      );
+      this.forkedProcessTaskRunner.cleanUpBatchProcesses();
+
+      const completed = Object.keys(taskGraph.tasks).filter((id) =>
+        this.completedTasks.has(id)
+      );
+      if (
+        completed.length === Object.keys(taskGraph.tasks).length ||
+        this.bailed ||
+        this.stopRequested
+      ) {
+        break;
+      }
+      taskGraph = removeTasksFromTaskGraph(taskGraph, completed);
+    }
+
+    // Once, after every wave: an earlier status would end the batch in the TUI.
+    const hasFailures = taskIds.some((taskId) => {
+      const status = this.completedTasks.get(taskId);
+      return status === 'failure' || status === 'skipped';
+    });
+    this.options.lifeCycle.setBatchStatus?.(
+      batch.id,
+      hasFailures ? BatchStatus.Failure : BatchStatus.Success
+    );
+
+    const applyFromCacheOrRunBatchEnd = performance.mark(
+      'TaskOrchestrator-apply-from-cache-or-run-batch:end'
+    );
+    performance.measure(
+      'TaskOrchestrator-apply-from-cache-or-run-batch',
+      applyFromCacheOrRunBatchStart.name,
+      applyFromCacheOrRunBatchEnd.name
+    );
+    return results;
+  }
+
+  private async runBatchWave(
+    doNotSkipCache: boolean,
+    batch: Batch,
+    groupId: number
+  ): Promise<TaskResult[]> {
+    const tasks = Object.values(batch.taskGraph.tasks);
 
     const { cachedResults, tasksToRun, rehashAfterRun } =
       await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
@@ -882,52 +936,7 @@ export class TaskOrchestrator {
       await this.postRunSteps(batchResults, doNotSkipCache, groupId);
     }
 
-    // Update batch status based on all task results
-    const hasFailures = taskEntries.some(([taskId]) => {
-      const status = this.completedTasks.get(taskId);
-      return status === 'failure' || status === 'skipped';
-    });
-    this.options.lifeCycle.setBatchStatus?.(
-      batch.id,
-      hasFailures ? BatchStatus.Failure : BatchStatus.Success
-    );
-
-    this.forkedProcessTaskRunner.cleanUpBatchProcesses();
-
-    const tasksCompleted = taskEntries.filter(([taskId]) =>
-      this.completedTasks.has(taskId)
-    );
-
-    // Batch is still not done (e.g. held-back tasks), run it again
-    let laterResults: TaskResult[] = [];
-    if (
-      tasksCompleted.length !== taskEntries.length &&
-      !this.bailed &&
-      !this.stopRequested
-    ) {
-      laterResults = await this.applyFromCacheOrRunBatch(
-        doNotSkipCache,
-        {
-          id: batch.id,
-          executorName: batch.executorName,
-          taskGraph: removeTasksFromTaskGraph(
-            batch.taskGraph,
-            tasksCompleted.map(([taskId]) => taskId)
-          ),
-        },
-        groupId
-      );
-    }
-    // Batch is done, mark it as completed
-    const applyFromCacheOrRunBatchEnd = performance.mark(
-      'TaskOrchestrator-apply-from-cache-or-run-batch:end'
-    );
-    performance.measure(
-      'TaskOrchestrator-apply-from-cache-or-run-batch',
-      applyFromCacheOrRunBatchStart.name,
-      applyFromCacheOrRunBatchEnd.name
-    );
-    return [...cachedResults, ...batchResults, ...laterResults];
+    return [...cachedResults, ...batchResults];
   }
 
   private async runBatch(

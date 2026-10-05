@@ -11,6 +11,7 @@ import { stripVTControlCharacters } from 'util';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TaskOrchestrator } from './task-orchestrator';
+import { BatchStatus } from '../native';
 import type { TaskResult } from './life-cycle';
 
 performance.mark = vi.fn((name: string) => ({ name }) as PerformanceMark);
@@ -264,6 +265,8 @@ describe('TaskOrchestrator', () => {
         taskGraph,
         new Set(opts.deferred)
       );
+      orchestrator.options.lifeCycle.registerRunningBatch = vi.fn();
+      orchestrator.options.lifeCycle.setBatchStatus = vi.fn();
       orchestrator.applyCachedResults = vi.fn(async (ts: Task[]) =>
         ts
           .filter((t) => opts.cached?.includes(t.id))
@@ -302,6 +305,7 @@ describe('TaskOrchestrator', () => {
           )
         );
       return {
+        lifeCycle: orchestrator.options.lifeCycle,
         lookups: ids(orchestrator.applyCachedResults.mock.calls),
         hashed: ids(hasher.hashTasks.mock.calls),
         runs: ids(orchestrator.runBatch.mock.calls),
@@ -387,6 +391,28 @@ describe('TaskOrchestrator', () => {
         ['dep:build', 'dep:install'],
         ['reader:build'],
         ['reader:build'],
+      ]);
+    });
+
+    it('should register a batch and report its status once across waves', async () => {
+      const { lifeCycle, runs } = await runBatch(
+        {
+          'dep:install': [],
+          'other:build': [],
+          'reader:build': ['dep:install'],
+        },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          failed: ['other:build'],
+        }
+      );
+
+      expect(runs).toEqual([['dep:install', 'other:build'], ['reader:build']]);
+      expect(lifeCycle.registerRunningBatch).toHaveBeenCalledTimes(1);
+      // A wave-1 failure still fails the batch after wave 2 succeeds.
+      expect(lifeCycle.setBatchStatus.mock.calls).toEqual([
+        ['batch-1', BatchStatus.Failure],
       ]);
     });
 
