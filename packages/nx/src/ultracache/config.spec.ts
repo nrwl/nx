@@ -97,4 +97,13 @@ describe('ultracacheEnv', () => {
     ).toBe(true);
     expect(ultracacheEnv({}).hasNxCloudToken).toBe(false);
   });
+
+  it('treats an empty NX_ULTRACACHE_COMMIT as unset', () => {
+    expect(
+      ultracacheEnv({ NX_ULTRACACHE_COMMIT: '' }).NX_ULTRACACHE_COMMIT
+    ).toBeUndefined();
+    expect(
+      ultracacheEnv({ NX_ULTRACACHE_COMMIT: 'abc1234' }).NX_ULTRACACHE_COMMIT
+    ).toBe('abc1234');
+  });
 });

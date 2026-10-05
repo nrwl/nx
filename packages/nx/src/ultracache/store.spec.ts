@@ -129,6 +129,21 @@ describe('loadUltracacheConfigurationsForRun', () => {
     expect(result).toEqual({ status: 'fetched', configurations: set });
   });
 
+  it('reads and stores the set for NX_ULTRACACHE_COMMIT instead of HEAD', async () => {
+    store.import.mockReturnValue(stored());
+    expect(
+      await loadUltracacheConfigurationsForRun(
+        nxJson,
+        {},
+        optedIn({ NX_ULTRACACHE_COMMIT: 'abc1234' })
+      )
+    ).toMatchObject({ status: 'fetched' });
+    expect(store.get).toHaveBeenCalledWith('abc1234', 60 * 60 * 1000);
+    expect(store.import).toHaveBeenCalledWith(
+      expect.objectContaining({ requestedCommit: 'abc1234' })
+    );
+  });
+
   it('fetches once under the lock, and uses a set another process stored meanwhile', async () => {
     lock.wait.mockClear();
     lock.unlock.mockClear();
@@ -155,6 +170,7 @@ describe('loadUltracacheConfigurationsForRun', () => {
       ['UNAUTHORIZED', 'unauthorized'],
       ['UNSUPPORTED_CLIENT', 'unsupported-client'],
       ['NO_CLOUD_CLIENT', 'no-cloud-client'],
+      ['COMMIT_NOT_FOUND', 'commit-not-found'],
     ]) {
       cloud.fetchUltracacheConfigurations.mockRejectedValueOnce(
         coded(code, 'x')

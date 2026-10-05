@@ -12,6 +12,8 @@ export interface UltracacheCloudOptions {
 export interface UltracacheEnv {
   NX_CLOUD_USE_ULTRACACHE?: string;
   NX_NO_CLOUD?: string;
+  /** The commit to read configurations for instead of HEAD. */
+  NX_ULTRACACHE_COMMIT?: string;
   /** Whether the run's env holds an Nx Cloud token. */
   hasNxCloudToken?: boolean;
 }
@@ -45,6 +47,8 @@ export function ultracacheEnv(
   return {
     NX_CLOUD_USE_ULTRACACHE: env.NX_CLOUD_USE_ULTRACACHE,
     NX_NO_CLOUD: env.NX_NO_CLOUD,
+    // CI expands an unset variable to ''.
+    NX_ULTRACACHE_COMMIT: env.NX_ULTRACACHE_COMMIT || undefined,
     hasNxCloudToken: !!(env.NX_CLOUD_ACCESS_TOKEN || env.NX_CLOUD_AUTH_TOKEN),
   };
 }

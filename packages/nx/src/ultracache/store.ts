@@ -61,6 +61,7 @@ const WARNED_REASONS = new Set([
   'unauthorized',
   'invalid-response',
   'write-failed',
+  'commit-not-found',
 ]);
 
 /** The Ultracache configuration store in this process's workspace database. */
@@ -96,9 +97,9 @@ export function openUltracacheConfigurations(
 }
 
 /**
- * This run's Ultracache configurations for HEAD, in the process that owns the
- * fetch: the stored ones while they are fresh, otherwise what Nx Cloud reads,
- * imported into the store. Returns `null` when Ultracache is not enabled for
+ * This run's Ultracache configurations for HEAD, or for `NX_ULTRACACHE_COMMIT`
+ * when set, in the process that owns the fetch: the stored ones while they
+ * are fresh, otherwise what Nx Cloud reads, imported into the store. Returns `null` when Ultracache is not enabled for
  * this workspace; never throws.
  */
 export async function loadUltracacheConfigurationsForRun(
@@ -109,8 +110,8 @@ export async function loadUltracacheConfigurationsForRun(
   if (!isUltracacheConfigurationFetchEnabled(nxJson, runnerOptions, env)) {
     return null;
   }
-  const head = getLatestCommitSha();
-  if (!head) {
+  const commit = env.NX_ULTRACACHE_COMMIT ?? getLatestCommitSha();
+  if (!commit) {
     return reportUltracacheConfigurationResolution(
       skippedUltracacheOutcome('not-a-git-repo', 'Could not resolve HEAD')
     );
@@ -118,7 +119,7 @@ export async function loadUltracacheConfigurationsForRun(
   try {
     const store = getUltracacheConfigurationStore();
     const cached = () => {
-      const stored = store.get(head, STORED_SET_MAX_AGE_MS);
+      const stored = store.get(commit, STORED_SET_MAX_AGE_MS);
       return (
         stored &&
         reportUltracacheConfigurationResolution({
@@ -139,7 +140,7 @@ export async function loadUltracacheConfigurationsForRun(
         return reportUltracacheConfigurationResolution({
           status: 'fetched',
           configurations: store.import({
-            requestedCommit: head,
+            requestedCommit: commit,
             configurationsJson: JSON.stringify(result.configurations),
           }),
         });

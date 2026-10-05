@@ -26,8 +26,9 @@ export interface ReadUltracacheConfigurationsResult {
 }
 
 /**
- * Reads HEAD's Ultracache configurations from Nx Cloud. Throws with a `code`
- * saying why it could not: the client's own, or `NO_CLOUD_CLIENT`, `UNSUPPORTED_CLIENT` or
+ * Reads Ultracache configurations from Nx Cloud for HEAD, or for
+ * `NX_ULTRACACHE_COMMIT` when set. Throws with a `code` saying why it could
+ * not: the client's own, or `NO_CLOUD_CLIENT`, `UNSUPPORTED_CLIENT` or
  * `NO_CONFIGURATIONS`.
  */
 export async function fetchUltracacheConfigurations(
