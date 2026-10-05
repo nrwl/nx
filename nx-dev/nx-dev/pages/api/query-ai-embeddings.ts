@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getTokenizedContext } from '../../lib/getTokenizedContext';
+import { isRestrictedRegion } from '../../lib/restricted-region';
 import { ChatItem, CustomError } from '@nx/nx-dev-util-ai';
 
 export const config = {
@@ -7,19 +8,8 @@ export const config = {
 };
 // TODO: move this endpoint to the nx api. nx.dev shouldn't be for external consumption.
 export default async function handler(request: NextRequest) {
-  const country = request.geo.country;
-  const restrictedCountries: string[] = [
-    'BY', // Belarus
-    'CN', // China
-    'CU', // Cuba
-    'IR', // Iran
-    'KP', // North Korea
-    'RU', // Russia
-    'SY', // Syria
-    'VE', // Venezuela
-  ];
   try {
-    if (restrictedCountries.includes(country)) {
+    if (isRestrictedRegion(request)) {
       throw new CustomError(
         'user_error',
         'Service is not available in your region.'
