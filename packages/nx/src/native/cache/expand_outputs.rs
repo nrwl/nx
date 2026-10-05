@@ -171,30 +171,33 @@ pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::R
     Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
-/// Outputs as the cache reads them: an absolute one made workspace-relative.
-/// An output outside the workspace is an error.
+/// An output as the cache reads it: made workspace-relative if absolute. An
+/// output outside the workspace is an error.
+pub(crate) fn normalize_output(workspace_root: &Path, output: String) -> anyhow::Result<String> {
+    let path = Path::new(&output);
+    let outside = || anyhow::anyhow!("Cache output is outside the workspace: {}", output);
+    if path.is_absolute() {
+        let relative = path.strip_prefix(workspace_root).map_err(|_| outside())?;
+        if escapes_workspace(relative) {
+            return Err(outside());
+        }
+        return Ok(relative.to_normalized_string());
+    }
+    if escapes_workspace(path) {
+        return Err(outside());
+    }
+    // A relative output is a glob, where `\` escapes on every OS.
+    Ok(output)
+}
+
+/// `normalize_output` for each output; one outside the workspace fails them all.
 pub(crate) fn normalize_outputs(
     workspace_root: &Path,
     outputs: Vec<String>,
 ) -> anyhow::Result<Vec<String>> {
     outputs
         .into_iter()
-        .map(|output| {
-            let path = Path::new(&output);
-            let outside = || anyhow::anyhow!("Cache output is outside the workspace: {}", output);
-            if path.is_absolute() {
-                let relative = path.strip_prefix(workspace_root).map_err(|_| outside())?;
-                if escapes_workspace(relative) {
-                    return Err(outside());
-                }
-                return Ok(relative.to_normalized_string());
-            }
-            if escapes_workspace(path) {
-                return Err(outside());
-            }
-            // A relative output is a glob, where `\` escapes on every OS.
-            Ok(output)
-        })
+        .map(|output| normalize_output(workspace_root, output))
         .collect()
 }
 
@@ -226,7 +229,7 @@ pub(crate) fn output_files_via(
     // workspace and read the rest.
     let entries: Vec<String> = entries
         .into_iter()
-        .filter_map(|entry| normalize_outputs(directory, vec![entry]).ok()?.pop())
+        .filter_map(|entry| normalize_output(directory, entry).ok())
         .collect();
     for entry in _expand_outputs(directory, entries)? {
         let entry = Path::new(&entry).to_normalized_string();

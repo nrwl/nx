@@ -80,7 +80,7 @@ fn needs_content(stamp: FileStamp, made_at: u64) -> bool {
     stamp.0.is_multiple_of(1_000_000_000) && (stamp.0 / 1_000_000_000) as u64 >= made_at
 }
 
-fn key(outputs: &[String]) -> String {
+fn record_key(outputs: &[String]) -> String {
     let mut outputs = outputs.to_vec();
     outputs.sort();
     outputs.dedup();
@@ -89,7 +89,7 @@ fn key(outputs: &[String]) -> String {
 
 /// The directory an output is tracked under: the path it names where that
 /// exists as written, with `/` separators, else the root of its glob.
-fn read_root(root: &Path, output: &str) -> String {
+fn tracked_dir(root: &Path, output: &str) -> String {
     if root.join(output).exists() {
         Path::new(output).to_normalized_string()
     } else {
@@ -99,7 +99,7 @@ fn read_root(root: &Path, output: &str) -> String {
 
 /// The output files `outputs` defines, each directory answered from the
 /// index's listing.
-fn listed(root: &Path, index: &IgnoredIndex, outputs: &[String]) -> Option<Vec<String>> {
+fn files_from_index(root: &Path, index: &IgnoredIndex, outputs: &[String]) -> Option<Vec<String>> {
     output_files_via(root, outputs.to_vec(), &|dir| {
         index.files_under(root, dir, true, &|_| true)
     })
@@ -107,12 +107,12 @@ fn listed(root: &Path, index: &IgnoredIndex, outputs: &[String]) -> Option<Vec<S
 }
 
 /// The output files `outputs` defines, read from disk.
-fn on_disk(root: &Path, outputs: &[String]) -> Option<Vec<String>> {
+fn files_from_disk(root: &Path, outputs: &[String]) -> Option<Vec<String>> {
     output_files_via(root, outputs.to_vec(), &|dir| copied_files(root, dir)).ok()
 }
 
 /// The given files with their stamps, in the order an expansion lists them.
-fn given_stamps(given: Vec<OutputFile>) -> Vec<(String, FileStamp)> {
+fn parse_given_files(given: Vec<OutputFile>) -> Vec<(String, FileStamp)> {
     let mut stamped: Vec<_> = given
         .into_iter()
         .filter_map(|file| Some((file.stamp()?, file.path)))
@@ -138,14 +138,14 @@ impl OutputRecords {
                 .iter()
                 .filter(|o| !o.starts_with('!'))
             {
-                let dir = read_root(root, output);
+                let dir = tracked_dir(root, output);
                 if !root.join(&dir).is_file() {
                     reader.track(root, &dir);
                 }
             }
             let stamped = match entry.files {
-                Some(given) => Some(given_stamps(given)),
-                None => on_disk(root, &entry.outputs).map(|paths| {
+                Some(given) => Some(parse_given_files(given)),
+                None => files_from_disk(root, &entry.outputs).map(|paths| {
                     paths
                         .into_par_iter()
                         .filter_map(|path| {
@@ -156,7 +156,7 @@ impl OutputRecords {
                 }),
             };
             let Some(stamped) = stamped else {
-                self.records.remove(&key(&entry.outputs));
+                self.records.remove(&record_key(&entry.outputs));
                 return;
             };
             let made_at = now_secs();
@@ -174,7 +174,7 @@ impl OutputRecords {
                 })
                 .collect();
             self.records.insert(
-                key(&entry.outputs),
+                record_key(&entry.outputs),
                 Recorded {
                     hash: entry.hash,
                     files,
@@ -195,7 +195,7 @@ impl OutputRecords {
         entries
             .into_par_iter()
             .map(|entry| {
-                let Some(recorded) = self.records.get(&key(&entry.outputs)) else {
+                let Some(recorded) = self.records.get(&record_key(&entry.outputs)) else {
                     return false;
                 };
                 if recorded.hash != entry.hash {
@@ -211,10 +211,10 @@ impl OutputRecords {
                 // A listing can lag a write the watch has not delivered, or
                 // skip what the index never lists, so only the disk may say
                 // the set of files changed.
-                if !listed(root, index, &entry.outputs)
+                if !files_from_index(root, index, &entry.outputs)
                     .as_deref()
                     .is_some_and(same_files)
-                    && !on_disk(root, &entry.outputs)
+                    && !files_from_disk(root, &entry.outputs)
                         .as_deref()
                         .is_some_and(same_files)
                 {

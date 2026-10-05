@@ -41,8 +41,8 @@ pub struct IgnoredIndex {
     tracked: RwLock<BTreeSet<String>>,
     /// The tracked directories that have been walked. Only under one of these
     /// is there a listing to answer from, or a hash that may be served
-    /// without a stat. A declared output is tracked and never listed, since
-    /// nothing asks one for its files.
+    /// without a stat. A declared output is listed once the outputs check
+    /// first asks for its files.
     listed: RwLock<BTreeSet<String>>,
     /// Every file under a listed directory, sorted, workspace-relative.
     members: RwLock<BTreeSet<String>>,
@@ -1154,8 +1154,9 @@ mod tests {
         let temp = workspace();
         let index = watched();
         assert!(index.track(temp.path(), "dist/other"));
-        // Tracked but never listed, as a declared output is: its hashes are
-        // kept, and nothing is trusted, because no walk vouched for it.
+        // Tracked but not listed yet, as a declared output is until its first
+        // check: its hashes are kept, and nothing is trusted, because no walk
+        // vouched for it.
         assert!(!index.is_listed("dist/other/c.js"));
         index.hash_file(
             temp.path(),
