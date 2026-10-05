@@ -15,14 +15,7 @@
         "{projectRoot}/target/*.jar",
         "{workspaceRoot}/packages/maven/batch-runner-adapters/maven3/target/*.jar",
         "{workspaceRoot}/packages/maven/batch-runner-adapters/maven4/target/*.jar"
-      ],
-      "ultracache": {
-        "ignoredReads": [
-          "packages/maven/**/target/**",
-          "packages/maven/**/.flattened-pom.xml",
-          ".flattened-pom.xml"
-        ]
-      }
+      ]
     }
   },
   "tags": ["maven:dev.nx.maven"],
