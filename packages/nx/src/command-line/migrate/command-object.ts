@@ -67,6 +67,7 @@ export interface MigrateArgs {
   commitPrefix?: string;
   agentic?: AgenticArg;
   validate?: boolean;
+  finalValidation?: boolean;
   ifExists?: boolean;
   interactive?: boolean;
   // The rest of the yargs args bag flows through untyped.
@@ -197,6 +198,12 @@ function withMigrationOptions(yargs: Argv) {
       describe:
         'When `--agentic` resolves to an enabled agent, run agent-driven validation after generator-only migrations that have no `prompt:` field. Defaults to on; pass `--no-validate` to opt out. Has no effect when `--agentic` is disabled, when running inside an outer agent, or when running non-interactively without an explicit agent.',
       type: 'boolean',
+    })
+    .option('finalValidation', {
+      describe:
+        'With --run-migrations under the orchestrator: end the run with an agent validation pass over the whole workspace once every migration has run. On by default; pass --no-final-validation to opt out.',
+      type: 'boolean',
+      hidden: true,
     })
     .check(
       ({

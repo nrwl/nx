@@ -49,6 +49,7 @@ function runState(step: Partial<MigrateStep> = {}): MigrateRunState {
       {
         id: 'step-1',
         roundIndex: 0,
+        kind: 'migration',
         migrationId: '@nx/js:gen',
         status: 'dispensed',
         attempt: 1,
