@@ -5,7 +5,7 @@ export function openApiSpecificationUrl() {
   return process.env.NX_CLOUD_OPENAPI_URL ?? NX_CLOUD_PUBLIC_API_SPEC_URL;
 }
 
-export async function fetchOpenApiSpecificationText(
+export async function fetchOpenApiSpecificationJson(
   sourceUrl,
   fetchSpecification = fetch
 ) {
@@ -18,7 +18,5 @@ export async function fetchOpenApiSpecificationText(
       `Could not fetch the OpenAPI specification from ${sourceUrl}: HTTP ${response.status}.`
     );
   }
-  const content = await response.text();
-  JSON.parse(content);
-  return content;
+  return response.json();
 }

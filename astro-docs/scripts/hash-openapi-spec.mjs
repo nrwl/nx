@@ -1,8 +1,12 @@
 import { createHash } from 'node:crypto';
 import {
-  fetchOpenApiSpecificationText,
+  fetchOpenApiSpecificationJson,
   openApiSpecificationUrl,
 } from '../src/plugins/nx-cloud-public-api/fetch-specification.mjs';
 
-const content = await fetchOpenApiSpecificationText(openApiSpecificationUrl());
-console.log(createHash('sha256').update(content).digest('hex'));
+const specification = await fetchOpenApiSpecificationJson(
+  openApiSpecificationUrl()
+);
+console.log(
+  createHash('sha256').update(JSON.stringify(specification)).digest('hex')
+);

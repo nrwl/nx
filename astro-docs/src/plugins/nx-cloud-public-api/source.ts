@@ -1,5 +1,5 @@
 import { parseOpenApiDocument } from './openapi';
-import { fetchOpenApiSpecificationText } from './fetch-specification.mjs';
+import { fetchOpenApiSpecificationJson } from './fetch-specification.mjs';
 import type { OpenApiDocument } from './types';
 
 export {
@@ -11,9 +11,7 @@ export async function fetchOpenApiSpecification(
   sourceUrl: string,
   fetchSpecification: typeof fetch = fetch
 ): Promise<OpenApiDocument> {
-  const content = await fetchOpenApiSpecificationText(
-    sourceUrl,
-    fetchSpecification
+  return parseOpenApiDocument(
+    await fetchOpenApiSpecificationJson(sourceUrl, fetchSpecification)
   );
-  return parseOpenApiDocument(JSON.parse(content));
 }
