@@ -1,9 +1,10 @@
-import { daemonClient } from '../daemon/client/client';
-import { isOnDaemon } from '../daemon/is-on-daemon';
 import { IS_WASM, NxTaskHistory, TaskRun, TaskTarget } from '../native';
 import { getDbConnection } from './db-connection';
 
 export class TaskHistory {
+  // TaskDetails records hashes on this process's connection. Keep history on
+  // that same connection: a daemon may have frozen a different cache/database
+  // namespace before a later client supplied its workspace-data overrides.
   taskHistory = new NxTaskHistory(getDbConnection());
 
   /**
@@ -14,24 +15,15 @@ export class TaskHistory {
   async getEstimatedTaskTimings(
     targets: TaskTarget[]
   ): Promise<Record<string, number>> {
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      return this.taskHistory.getEstimatedTaskTimings(targets);
-    }
-    return await daemonClient.getEstimatedTaskTimings(targets);
+    return this.taskHistory.getEstimatedTaskTimings(targets);
   }
 
   async getFlakyTasks(hashes: string[]) {
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      return this.taskHistory.getFlakyTasks(hashes);
-    }
-    return await daemonClient.getFlakyTasks(hashes);
+    return this.taskHistory.getFlakyTasks(hashes);
   }
 
   async recordTaskRuns(taskRuns: TaskRun[]) {
-    if (isOnDaemon() || !daemonClient.enabled()) {
-      return this.taskHistory.recordTaskRuns(taskRuns);
-    }
-    return daemonClient.recordTaskRuns(taskRuns);
+    return this.taskHistory.recordTaskRuns(taskRuns);
   }
 }
 

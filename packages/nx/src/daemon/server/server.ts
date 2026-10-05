@@ -87,14 +87,6 @@ import {
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
 import {
-  GET_ESTIMATED_TASK_TIMINGS,
-  GET_FLAKY_TASKS,
-  isHandleGetEstimatedTaskTimings,
-  isHandleGetFlakyTasksMessage,
-  isHandleWriteTaskRunsToHistoryMessage,
-  RECORD_TASK_RUNS,
-} from '../message-types/task-history';
-import {
   isHandleUpdateWorkspaceContextMessage,
   UPDATE_WORKSPACE_CONTEXT,
 } from '../message-types/update-workspace-context';
@@ -139,11 +131,6 @@ import {
 import { handleProcessInBackground } from './handle-process-in-background';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
 import { handleRequestShutdown } from './handle-request-shutdown';
-import {
-  handleGetEstimatedTaskTimings,
-  handleGetFlakyTasks,
-  handleRecordTaskRuns,
-} from './handle-task-history';
 import {
   handleRunPostTasksExecution,
   handleRunPreTasksExecution,
@@ -417,27 +404,6 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       HASH_GLOB,
       () => handleHashMultiGlob(payload.globGroups),
-      mode
-    );
-  } else if (isHandleGetFlakyTasksMessage(payload)) {
-    await handleResult(
-      socket,
-      GET_FLAKY_TASKS,
-      () => handleGetFlakyTasks(payload.hashes),
-      mode
-    );
-  } else if (isHandleGetEstimatedTaskTimings(payload)) {
-    await handleResult(
-      socket,
-      GET_ESTIMATED_TASK_TIMINGS,
-      () => handleGetEstimatedTaskTimings(payload.targets),
-      mode
-    );
-  } else if (isHandleWriteTaskRunsToHistoryMessage(payload)) {
-    await handleResult(
-      socket,
-      RECORD_TASK_RUNS,
-      () => handleRecordTaskRuns(payload.taskRuns),
       mode
     );
   } else if (isHandleForceShutdownMessage(payload)) {
