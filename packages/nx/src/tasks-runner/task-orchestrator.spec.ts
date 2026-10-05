@@ -237,7 +237,13 @@ describe('TaskOrchestrator', () => {
 
     async function runBatch(
       deps: Record<string, string[]>,
-      opts: { deferred: string[]; cached?: string[]; uncacheable?: string[] }
+      opts: {
+        deferred: string[];
+        cached?: string[];
+        uncacheable?: string[];
+        failed?: string[];
+        bail?: boolean;
+      }
     ) {
       const tasks = Object.fromEntries(
         Object.keys(deps).map((id) => {
@@ -263,6 +269,25 @@ describe('TaskOrchestrator', () => {
           .filter((t) => opts.cached?.includes(t.id))
           .map((task) => ({ task, status: 'local-cache', code: 0 }))
       );
+      orchestrator.runBatch = vi.fn(async (batch: any) =>
+        Object.values(batch.taskGraph.tasks).map((task: Task) =>
+          opts.failed?.includes(task.id)
+            ? { task, status: 'failure', code: 1 }
+            : { task, status: 'success', code: 0 }
+        )
+      );
+      if (opts.bail) {
+        // What completeTasks does under --bail; postRunSteps is mocked here.
+        const postRunSteps = orchestrator.postRunSteps;
+        orchestrator.postRunSteps = vi.fn(
+          async (results: TaskResult[], ...rest) => {
+            await postRunSteps(results, ...rest);
+            if (results.some((r) => r.status === 'failure')) {
+              orchestrator.bailed = true;
+            }
+          }
+        );
+      }
 
       const results: TaskResult[] = await orchestrator.applyFromCacheOrRunBatch(
         true,
@@ -300,6 +325,69 @@ describe('TaskOrchestrator', () => {
       expect(hashed).toEqual([['dep:install'], ['reader:build']]);
       expect(runs).toEqual([['dep:install']]);
       expect(resultIds.sort()).toEqual(['dep:install', 'reader:build']);
+    });
+
+    it('should hold back a task downstream of a held-back task, then restore both', async () => {
+      const { lookups, runs, resultIds } = await runBatch(
+        {
+          'dep:install': [],
+          'reader:build': ['dep:install'],
+          'reader:test': ['reader:build'],
+        },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          cached: ['reader:build', 'reader:test'],
+        }
+      );
+
+      // reader:test is not deferred, but cannot run before reader:build.
+      expect(lookups).toEqual([
+        ['dep:install'],
+        ['reader:build'],
+        ['reader:test'],
+      ]);
+      expect(runs).toEqual([['dep:install']]);
+      expect(resultIds.sort()).toEqual([
+        'dep:install',
+        'reader:build',
+        'reader:test',
+      ]);
+    });
+
+    it('should not start a later wave once the run bails', async () => {
+      const { lookups, runs } = await runBatch(
+        { 'dep:install': [], 'reader:build': ['dep:install'] },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          failed: ['dep:install'],
+          bail: true,
+        }
+      );
+
+      expect(lookups).toEqual([['dep:install']]);
+      expect(runs).toEqual([['dep:install']]);
+    });
+
+    it('should run a deferred task behind both a cache miss and a non-cacheable task in the first wave', async () => {
+      const { lookups, hashed, runs } = await runBatch(
+        {
+          'dep:build': [],
+          'dep:install': [],
+          'reader:build': ['dep:build', 'dep:install'],
+        },
+        { deferred: ['reader:build'], uncacheable: ['dep:install'] }
+      );
+
+      expect(lookups).toEqual([['dep:build', 'dep:install']]);
+      expect(runs).toEqual([['dep:build', 'dep:install', 'reader:build']]);
+      // Preliminary hash, then re-hashed once its deps ran.
+      expect(hashed).toEqual([
+        ['dep:build', 'dep:install'],
+        ['reader:build'],
+        ['reader:build'],
+      ]);
     });
 
     it('should run a deferred task in the same wave as a cache miss upstream of it', async () => {
