@@ -1088,14 +1088,15 @@ export async function invokeTasksRunner({
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
 
-  const deferredTaskIds = await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
-    hasher,
-    projectGraph,
-    taskGraph,
-    nxJson,
-    taskDetails,
-    ultracacheConfigurations
-  );
+  const hashingDeferredTaskIds =
+    await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+      hasher,
+      projectGraph,
+      taskGraph,
+      nxJson,
+      taskDetails,
+      ultracacheConfigurations
+    );
   reportUltracacheConfigurations(
     ultracacheConfigurationOutcome,
     projectGraph,
@@ -1191,7 +1192,7 @@ export async function invokeTasksRunner({
         },
       },
       daemon: daemonClient,
-      deferredTaskIds,
+      hashingDeferredTaskIds,
     }
   );
   if ((promiseOrObservable as any).subscribe) {
