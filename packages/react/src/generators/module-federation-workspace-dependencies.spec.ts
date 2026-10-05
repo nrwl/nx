@@ -9,19 +9,22 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import hostGenerator from './host/host';
 import remoteGenerator from './remote/remote';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  detectPackageManager: jest.fn(),
-  getPackageManagerVersion: jest.fn(),
-  createProjectGraphAsync: jest.fn().mockResolvedValue({
-    dependencies: {},
-    nodes: {},
-  }),
-  readCachedProjectGraph: jest.fn().mockReturnValue({
-    dependencies: {},
-    nodes: {},
-  }),
-}));
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
+  return {
+    ...original,
+    detectPackageManager: vi.fn(),
+    getPackageManagerVersion: vi.fn(),
+    createProjectGraphAsync: vi.fn().mockResolvedValue({
+      dependencies: {},
+      nodes: {},
+    }),
+    readCachedProjectGraph: vi.fn().mockReturnValue({
+      dependencies: {},
+      nodes: {},
+    }),
+  };
+});
 
 describe('Module Federation workspace dependencies', () => {
   it.each([
@@ -33,8 +36,8 @@ describe('Module Federation workspace dependencies', () => {
   ] as const)(
     'links remotes with %s %s',
     async (packageManager, version, expectedSpecifier) => {
-      jest.mocked(detectPackageManager).mockReturnValue(packageManager);
-      jest.mocked(getPackageManagerVersion).mockReturnValue(version);
+      vi.mocked(detectPackageManager).mockReturnValue(packageManager);
+      vi.mocked(getPackageManagerVersion).mockReturnValue(version);
       const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
