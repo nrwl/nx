@@ -5,7 +5,8 @@ import { dirname } from "node:path";
 <% } %>import type { StorybookConfig } from '<%= uiFramework %>';
 <% if (usesVite && !viteConfigFilePath) { %>
 import { mergeConfig } from 'vite';
-<% } %><% if (uiFramework === '@storybook/vue3-vite' && !viteConfigFilePath) { %>import vue from '@vitejs/plugin-vue'<% } %><% if (uiFramework === '@storybook/react-vite' && !viteConfigFilePath) { %>import react from '@vitejs/plugin-react'<% } %>
+<% if (!useNativeTsconfigPaths) { %>import tsconfigPaths from 'vite-tsconfig-paths';
+<% } %><% } %><% if (uiFramework === '@storybook/vue3-vite' && !viteConfigFilePath) { %>import vue from '@vitejs/plugin-vue'<% } %><% if (uiFramework === '@storybook/react-vite' && !viteConfigFilePath) { %>import react from '@vitejs/plugin-react'<% } %>
 
 const config: StorybookConfig = {
   stories: [
@@ -50,7 +51,7 @@ const config: StorybookConfig = {
         global: 'window',
       },<% } %>
       resolve: {
-        tsconfigPaths: true,<% if (usesReactNative) { %>
+<% if (useNativeTsconfigPaths) { %>        tsconfigPaths: true,<% } %><% if (usesReactNative) { %>
         extensions: [
           '.mjs',
           '.web.tsx',
@@ -69,7 +70,7 @@ const config: StorybookConfig = {
           'react-native': 'react-native-web',
         },<% } %>
       },
-      plugins: [<% if(uiFramework === '@storybook/vue3-vite') { %>vue(), <% } %><% if(uiFramework === '@storybook/react-vite') { %>react(), <% } %>],
+      plugins: [<% if(uiFramework === '@storybook/vue3-vite') { %>vue(), <% } %><% if(uiFramework === '@storybook/react-vite') { %>react(), <% } %><% if (!useNativeTsconfigPaths) { %>tsconfigPaths({ loose: true })<% } %>],
     }),
   <% } %>
 };

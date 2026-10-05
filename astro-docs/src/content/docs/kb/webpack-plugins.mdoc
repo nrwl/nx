@@ -456,23 +456,36 @@ match [`ModuleFederationPlugin`'s sharing configuration](https://webpack.js.org/
 {% tabitem label="React Module Federation" %}
 
 ```js
-const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { withModuleFederation } = require('@nx/module-federation/webpack');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }
 const moduleFederationConfig = require('./module-federation.config');
 
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(moduleFederationConfig),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
-);
+module.exports = async () => {
+  const configureFederation = await withModuleFederation(
+    moduleFederationConfig,
+    { dts: false }
+  );
+  const webpackConfig = configureFederation({ output: {}, plugins: [] });
+  const runtimeChunk = webpackConfig.optimization?.runtimeChunk;
+  webpackConfig.plugins.unshift(
+    new NxAppWebpackPlugin(),
+    new NxReactWebpackPlugin(),
+    {
+      // Keep the federation runtimeChunk over the Nx default.
+      apply(compiler) {
+        if (runtimeChunk !== undefined) {
+          compiler.options.optimization.runtimeChunk = runtimeChunk;
+        }
+      },
+    }
+  );
+  // Further customize webpack config
+  return webpackConfig;
+};
 ```
 
 {% /tabitem %}
@@ -493,23 +506,42 @@ module.exports = withModuleFederation(moduleFederationConfig, { dts: false });
 {% tabitem label="React Module Federation for SSR " %}
 
 ```js
-const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { withModuleFederationForSSR } = require('@nx/module-federation/webpack');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }
 const moduleFederationConfig = require('./module-federation.config');
 
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederationForSSR(moduleFederationConfig),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
-);
+module.exports = async () => {
+  const configureFederation = await withModuleFederationForSSR(
+    moduleFederationConfig,
+    { dts: false }
+  );
+  const webpackConfig = configureFederation({
+    entry: {},
+    output: { library: { type: 'commonjs' } },
+    plugins: [],
+  });
+  const runtimeChunk = webpackConfig.optimization?.runtimeChunk;
+  const target = webpackConfig.target;
+  webpackConfig.plugins.unshift(
+    new NxAppWebpackPlugin({ ssr: true }),
+    new NxReactWebpackPlugin(),
+    {
+      // Keep the federation runtimeChunk and server target over the Nx defaults.
+      apply(compiler) {
+        if (runtimeChunk !== undefined) {
+          compiler.options.optimization.runtimeChunk = runtimeChunk;
+        }
+        compiler.options.target = target;
+      },
+    }
+  );
+  // Further customize webpack config
+  return webpackConfig;
+};
 ```
 
 {% /tabitem %}

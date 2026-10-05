@@ -55,10 +55,6 @@ Nx v24 removed the composable plugins behind the second flavor, so write a basic
 
 ### Basic configuration for Nx
 
-{% aside type="tip" title="Module federation support" %}
-Nx module federation still builds on `withModuleFederation`, which composes into an enhanced configuration file. It is deprecated alongside the rest of `@nx/module-federation`. See [Configure Webpack for Module Federation](#configure-webpack-for-module-federation) below.
-{% /aside %}
-
 A basic Webpack configuration looks like this:
 
 ```js
@@ -156,33 +152,39 @@ module.exports = {
 
 ### Configure Webpack for Module Federation
 
-{% aside type="tip" title="Non-standard webpack config" %}
-`withModuleFederation` composes into a config function that does not work with the Webpack CLI. It requires the `@nx/webpack:webpack` executor.
-{% /aside %}
-
 If you use the [Module Federation](/docs/kb/faster-builds-with-module-federation) support
-from `@nx/angular` or `@nx/react` then
-you can customize your Webpack configuration as follows.
+from `@nx/react`, apply `withModuleFederation` to a base configuration and add the Nx plugins to the result.
 
 ```js
 // apps/my-app/webpack.config.js
-const { composePlugins, withNx } = require('@nx/webpack');
-const { merge } = require('webpack-merge');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { withModuleFederation } = require('@nx/module-federation/webpack');
-// or `const { withModuleFederation } = require('@nx/module-federation/angular');`
 
-module.exports = composePlugins(
-  withNx(),
-  async (config, { options, context }) => {
-    const federatedModules = await withModuleFederation({
+module.exports = async () => {
+  const configureFederation = await withModuleFederation(
+    {
       // your options here
-    });
-
-    return merge(federatedModules(config, { options, context }), {
-      // overwrite values here
-    });
-  }
-);
+    },
+    { dts: false }
+  );
+  const webpackConfig = configureFederation({ output: {}, plugins: [] });
+  const runtimeChunk = webpackConfig.optimization?.runtimeChunk;
+  webpackConfig.plugins.unshift(
+    new NxAppWebpackPlugin(),
+    new NxReactWebpackPlugin(),
+    {
+      // Keep the federation runtimeChunk over the Nx default.
+      apply(compiler) {
+        if (runtimeChunk !== undefined) {
+          compiler.options.optimization.runtimeChunk = runtimeChunk;
+        }
+      },
+    }
+  );
+  // overwrite values here
+  return webpackConfig;
+};
 ```
 
 {% aside type="note" title="Install @nx/module-federation" %}

@@ -7,10 +7,11 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  getDependencyVersionFromPackageJson,
   Tree,
 } from '@nx/devkit';
 import { acknowledgeBuildScripts } from '@nx/devkit/internal';
-import { gte, minVersion } from 'semver';
+import { coerce, gte, major, minVersion } from 'semver';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { StorybookConfigureSchema } from './schema';
@@ -47,6 +48,7 @@ import {
   tsLibVersion,
   tsNodeVersion,
   versions,
+  viteTsconfigPathsVersion,
 } from '../../utils/versions';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
@@ -138,6 +140,11 @@ export async function configurationGeneratorInternal(
   const usesVite =
     !!viteConfigFilePath || schema.uiFramework?.endsWith('-vite');
   const usesReactNative = isUsingReactNative(schema.project);
+  // resolve.tsconfigPaths is native only from Vite 8; older majors ignore it.
+  const installedVite = coerce(
+    getDependencyVersionFromPackageJson(tree, 'vite') ?? ''
+  );
+  const useNativeTsconfigPaths = !installedVite || major(installedVite) >= 8;
 
   createProjectStorybookDir(
     tree,
@@ -156,7 +163,8 @@ export async function configurationGeneratorInternal(
     viteConfigFilePath,
     hasPlugin,
     viteConfigFileName,
-    usesReactNative
+    usesReactNative,
+    useNativeTsconfigPaths
   );
 
   if (schema.uiFramework !== '@storybook/angular') {
@@ -222,6 +230,9 @@ export async function configurationGeneratorInternal(
 
   if (usesVite && !viteConfigFilePath) {
     devDeps['tslib'] = tsLibVersion;
+    if (!useNativeTsconfigPaths) {
+      devDeps['vite-tsconfig-paths'] = viteTsconfigPathsVersion;
+    }
   }
 
   if (schema.configureStaticServe) {

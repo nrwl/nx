@@ -1,6 +1,14 @@
 import { composePlugins } from './compose-plugins';
 
 describe('removed Next composePlugins stub', () => {
+  // Nx sets this when it runs the spec; the warning only fires once per process.
+  const target = process.env.NX_TASK_TARGET_TARGET;
+  beforeEach(() => delete process.env.NX_TASK_TARGET_TARGET);
+  afterEach(() => {
+    if (target === undefined) delete process.env.NX_TASK_TARGET_TARGET;
+    else process.env.NX_TASK_TARGET_TARGET = target;
+  });
+
   it('returns the original config without invoking old wrappers', async () => {
     const wrapper = vi.fn(() => {
       throw new Error('requires removed Nx behavior');
@@ -36,6 +44,24 @@ describe('removed Next composePlugins stub', () => {
     } finally {
       vi.doUnmock('./deprecation');
       vi.resetModules();
+    }
+  });
+
+  it('warns during Nx task runs but not on production server start', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    process.env.NX_TASK_TARGET_TARGET = 'build';
+    try {
+      const load = composePlugins()({});
+      await load('phase-production-server', {});
+      expect(warn).not.toHaveBeenCalled();
+      await load('phase-production-build', {});
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          '`composePlugins()` from `@nx/next` was removed'
+        )
+      );
+    } finally {
+      warn.mockRestore();
     }
   });
 });

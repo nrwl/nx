@@ -1,6 +1,7 @@
 <% if (usesVite && !viteConfigFilePath) { %>
 import { mergeConfig } from 'vite';
-<% } %><% if (uiFramework === '@storybook/vue3-vite' && !viteConfigFilePath) { %>import vue from '@vitejs/plugin-vue'<% } %>
+<% if (!useNativeTsconfigPaths) { %>import tsconfigPaths from 'vite-tsconfig-paths';
+<% } %><% } %><% if (uiFramework === '@storybook/vue3-vite' && !viteConfigFilePath) { %>import vue from '@vitejs/plugin-vue'<% } %>
 
 const config = {
   stories: [
@@ -46,7 +47,7 @@ const config = {
         global: 'window',
       },<% } %>
       resolve: {
-        tsconfigPaths: true,<% if (usesReactNative) { %>
+<% if (useNativeTsconfigPaths) { %>        tsconfigPaths: true,<% } %><% if (usesReactNative) { %>
         extensions: [
           '.mjs',
           '.web.tsx',
@@ -65,7 +66,7 @@ const config = {
           'react-native': 'react-native-web',
         },<% } %>
       },
-      plugins: [<% if(uiFramework === '@storybook/vue3-vite') { %>vue(), <% } %>],
+      plugins: [<% if(uiFramework === '@storybook/vue3-vite') { %>vue(), <% } %><% if (!useNativeTsconfigPaths) { %>tsconfigPaths({ loose: true })<% } %>],
     }),
   <% } %>
 };
