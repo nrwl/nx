@@ -1591,14 +1591,24 @@ describe('native task hasher', () => {
       join(tempFs.tempDir, 'ultracache-read-db'),
       'ultracache'
     );
-    const configurationsFor = (inputs: string[]) => {
+    let lastFetchedAt = 0;
+    const configurationsFor = async (inputs: string[]) => {
+      // Plans are memoized per (commit, fetch millisecond), so two imports
+      // in one millisecond would share the first one's plan.
+      while (Date.now() <= lastFetchedAt) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      }
       new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
         configurationsJson: JSON.stringify({
           'child:compile': { commit, inputs, outputs: ['dist/child'] },
         }),
       });
-      return new UltracacheConfigurationStore(configurationDb).get(commit);
+      const configurations = new UltracacheConfigurationStore(
+        configurationDb
+      ).get(commit);
+      lastFetchedAt = configurations.resolution.fetchedAt;
+      return configurations;
     };
     const task = taskGraph.tasks['child:compile'];
     const hashWith = async (inputs: string[]) =>
@@ -1608,7 +1618,7 @@ describe('native task hasher', () => {
         {},
         tempFs.tempDir,
         true,
-        configurationsFor(inputs)
+        await configurationsFor(inputs)
       );
 
     const one = await hashWith(['libs/child/one.txt']);
