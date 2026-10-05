@@ -394,6 +394,35 @@ describe('TaskOrchestrator', () => {
       ]);
     });
 
+    it('should not start a batch once the run has bailed', async () => {
+      const taskGraph: TaskGraph = {
+        roots: ['dep:build'],
+        tasks: { 'dep:build': createTask('dep:build') },
+        dependencies: { 'dep:build': [] },
+        continuousDependencies: { 'dep:build': [] },
+      };
+      const { orchestrator, hasher } = createOrchestrator(taskGraph);
+      orchestrator.options.lifeCycle.registerRunningBatch = vi.fn();
+      orchestrator.options.lifeCycle.setBatchStatus = vi.fn();
+      orchestrator.bailed = true;
+
+      const results = await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      expect(results).toEqual([]);
+      expect(hasher.hashTasks).not.toHaveBeenCalled();
+      expect(orchestrator.runBatch).not.toHaveBeenCalled();
+      expect(
+        orchestrator.options.lifeCycle.registerRunningBatch
+      ).not.toHaveBeenCalled();
+      expect(
+        orchestrator.options.lifeCycle.setBatchStatus
+      ).not.toHaveBeenCalled();
+    });
+
     it('should register a batch and report its status once across waves', async () => {
       const { lifeCycle, runs } = await runBatch(
         {

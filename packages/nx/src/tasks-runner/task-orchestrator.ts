@@ -843,6 +843,9 @@ export class TaskOrchestrator {
     batch: Batch,
     groupId: number
   ): Promise<TaskResult[]> {
+    if (this.bailed || this.stopRequested) {
+      return [];
+    }
     const applyFromCacheOrRunBatchStart = performance.mark(
       'TaskOrchestrator-apply-from-cache-or-run-batch:start'
     );
@@ -857,7 +860,11 @@ export class TaskOrchestrator {
     // wave (or left out by the executor) stay incomplete and go again.
     const results: TaskResult[] = [];
     let taskGraph = batch.taskGraph;
-    while (true) {
+    while (
+      Object.keys(taskGraph.tasks).length > 0 &&
+      !this.bailed &&
+      !this.stopRequested
+    ) {
       results.push(
         ...(await this.runBatchWave(
           doNotSkipCache,
@@ -866,18 +873,10 @@ export class TaskOrchestrator {
         ))
       );
       this.forkedProcessTaskRunner.cleanUpBatchProcesses();
-
-      const completed = Object.keys(taskGraph.tasks).filter((id) =>
-        this.completedTasks.has(id)
+      taskGraph = removeTasksFromTaskGraph(
+        taskGraph,
+        Object.keys(taskGraph.tasks).filter((id) => this.completedTasks.has(id))
       );
-      if (
-        completed.length === Object.keys(taskGraph.tasks).length ||
-        this.bailed ||
-        this.stopRequested
-      ) {
-        break;
-      }
-      taskGraph = removeTasksFromTaskGraph(taskGraph, completed);
     }
 
     // Once, after every wave: an earlier status would end the batch in the TUI.
