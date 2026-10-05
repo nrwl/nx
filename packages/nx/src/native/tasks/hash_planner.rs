@@ -2,7 +2,7 @@ use crate::native::tasks::{
     dep_outputs::{collect_continuous_dependencies, get_dep_output},
     types::{
         ALWAYS_ON_WORKSPACE_FILES, CwdMode, HashInstruction, HashPlans, InstructionPool,
-        JsonFileSetInput, TaskGraph,
+        JsonFileSetInput, TaskGraph, files_display_label,
     },
 };
 use crate::native::types::{Input, NxJson};
@@ -559,7 +559,13 @@ impl HashPlanner {
         let own: hashbrown::HashSet<u32> = self
             .configuration_file_instructions(task, context, negations)
             .into_iter()
-            .map(|instruction| pool.intern(instruction))
+            .map(|(instruction, display)| {
+                let id = pool.intern(instruction);
+                if let Some(display) = display {
+                    pool.set_display_label(id, display);
+                }
+                id
+            })
             .collect();
         ids.retain(|id| {
             *id == always_on_id
@@ -574,7 +580,7 @@ impl HashPlanner {
         task: &Task,
         context: &UltracacheContext,
         negations: &Negations,
-    ) -> Vec<HashInstruction> {
+    ) -> Vec<(HashInstruction, Option<String>)> {
         let entry = context.entry;
         let self_project = task.target.project.as_str();
 
@@ -601,18 +607,22 @@ impl HashPlanner {
 
         // Nx Cloud collapses sibling files into brace groups; class mapping needs
         // the individual names, so observed groups of literals are expanded.
-        let mut buckets: BTreeMap<&str, Vec<String>> = BTreeMap::new();
-        for glob in entry
-            .files
-            .iter()
-            .flat_map(|glob| expand_literal_braces(glob))
-            .filter(|glob| !covered_by_native_instruction(glob))
-        {
-            buckets.entry(owner(&glob)).or_default().push(glob);
+        // Each expansion remembers its recorded glob, which names the group.
+        let mut buckets: BTreeMap<&str, Vec<(usize, String)>> = BTreeMap::new();
+        for (recorded, glob) in entry.files.iter().enumerate() {
+            for expanded in expand_literal_braces(glob) {
+                if !covered_by_native_instruction(&expanded) {
+                    buckets
+                        .entry(owner(&expanded))
+                        .or_default()
+                        .push((recorded, expanded));
+                }
+            }
         }
 
         let mut instructions = Vec::new();
-        for (project, mut group) in buckets {
+        for (project, expansions) in buckets {
+            let mut group: Vec<String> = expansions.iter().map(|(_, g)| g.clone()).collect();
             group.sort();
             group.dedup();
             let visits: Vec<&Vec<String>> = negations
@@ -630,11 +640,17 @@ impl HashPlanner {
             };
             declared_negations.sort();
             declared_negations.dedup();
+            let display = files_display_label(&recorded_globs(
+                &entry.files,
+                &expansions,
+                &declared_negations,
+            ));
             group.extend(declared_negations);
-            instructions.push(HashInstruction::IgnoredFileSet(group));
+            instructions.push((HashInstruction::IgnoredFileSet(group), Some(display)));
         }
-        instructions.push(HashInstruction::UltracacheConfiguration(
-            entry.digest.clone(),
+        instructions.push((
+            HashInstruction::UltracacheConfiguration(entry.digest.clone()),
+            None,
         ));
         instructions
     }
@@ -1692,6 +1708,39 @@ fn collect_negations(
 /// Reads left out of the configuration's file groups: node_modules (never hashed as
 /// files) and nx.json/.gitignore/.nxignore (the always-on set hashes them whole).
 /// Lockfiles stay: externals may cover only a few packages, not the whole file.
+/// A group's globs as the configuration recorded them: a recorded glob stands
+/// for its expansions when all of them landed in the group.
+fn recorded_globs(
+    recorded: &[String],
+    expansions: &[(usize, String)],
+    declared_negations: &[String],
+) -> Vec<String> {
+    let mut globs = Vec::new();
+    let mut i = 0;
+    while i < expansions.len() {
+        let index = expansions[i].0;
+        let end = i + expansions[i..]
+            .iter()
+            .take_while(|(r, _)| *r == index)
+            .count();
+        let landed = &expansions[i..end];
+        let expected = expand_literal_braces(&recorded[index])
+            .into_iter()
+            .filter(|glob| !covered_by_native_instruction(glob))
+            .count();
+        if landed.len() == expected {
+            globs.push(recorded[index].clone());
+        } else {
+            globs.extend(landed.iter().map(|(_, glob)| glob.clone()));
+        }
+        i = end;
+    }
+    globs.extend(declared_negations.iter().cloned());
+    globs.sort();
+    globs.dedup();
+    globs
+}
+
 fn covered_by_native_instruction(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     path.starts_with("node_modules/")

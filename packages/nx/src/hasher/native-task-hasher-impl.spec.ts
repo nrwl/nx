@@ -1623,6 +1623,56 @@ describe('native task hasher', () => {
     expect(two.inputs.files).not.toContain('libs/child/one.txt');
   });
 
+  it('names Ultracache groups in hash details by their recorded globs', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const childFiles = Array.from(
+      { length: 9 },
+      (_, i) => `libs/child/f${i}.txt`
+    );
+    await tempFs.createFiles({
+      ...Object.fromEntries(childFiles.map((file) => [file, file])),
+      'libs/parent/p.txt': 'p',
+      'libs/child/x.json': '{}',
+      'libs/parent/x.json': '{}',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const store = new UltracacheConfigurationStore(
+      connectToNxDb(join(tempFs.tempDir, 'ultracache-label-db'), 'ultracache')
+    );
+    store.import({
+      requestedCommit: commit,
+      configurationsJson: JSON.stringify({
+        'child:compile': {
+          commit,
+          inputs: [
+            'libs/child/f{0,1,2,3,4,5,6,7,8}.txt',
+            'libs/parent/p.txt',
+            'libs/{child,parent}/x.json',
+          ],
+          outputs: [],
+        },
+      }),
+    });
+
+    const hash = await impl.hashTask(
+      taskGraph.tasks['child:compile'],
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      store.get(commit)
+    );
+
+    const groups = Object.keys(hash.details).filter((key) =>
+      key.startsWith('files:[')
+    );
+    // A brace glob split across projects is named by its expansions.
+    expect(groups.sort()).toEqual([
+      'files:[libs/child/f{0,1,2,3,4,5,6,7,8}.txt,libs/child/x.json]',
+      'files:[libs/parent/p.txt,libs/parent/x.json]',
+    ]);
+  });
+
   it.each(['libs/child/[(]group[)]/page.md', 'libs/child/\\(group\\)/page.md'])(
     'hashes an Ultracache read of a parenthesized directory (%s)',
     async (input) => {

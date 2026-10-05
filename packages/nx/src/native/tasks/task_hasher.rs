@@ -214,9 +214,11 @@ fn keep_last_per_rank(entries: &mut Vec<(u32, SharedStr)>, ranks: &KeyRanks) {
     });
 }
 
+/// Orders and hashes entries by `keys`; `detail_keys` only names them.
 fn assemble_ranked_hash(
     mut entries: Vec<(u32, SharedStr)>,
     keys: &Arc<[SharedStr]>,
+    detail_keys: &Arc<[SharedStr]>,
     ranks: &KeyRanks,
     inputs: HashInputsBuilder,
 ) -> HashDetails {
@@ -235,7 +237,7 @@ fn assemble_ranked_hash(
     }
     HashDetails {
         value: hasher.digest().to_string(),
-        details: SharedStrMap::from_indexed_entries(Arc::clone(keys), entries),
+        details: SharedStrMap::from_indexed_entries(Arc::clone(detail_keys), entries),
         inputs: inputs.into(),
     }
 }
@@ -583,6 +585,9 @@ impl TaskHasher {
             .map(|id| SharedStr::from(pool.label(id)))
             .collect();
         let key_ranks = instruction_key_ranks(&instruction_keys);
+        let detail_keys: Arc<[SharedStr]> = (0..pool.len() as u32)
+            .map(|id| SharedStr::from(pool.display_label(id)))
+            .collect();
         // Classify once per instruction, so cache hits do not need the pool's
         // shard lock. The exhaustive match keeps env-dependent inputs out of
         // the shared slots even when new instruction variants are introduced.
@@ -701,7 +706,13 @@ impl TaskHasher {
             hashes.insert(
                 task_id.clone(),
                 trace_span!("Assembling hash", hash_id = task_id).in_scope(|| {
-                    assemble_ranked_hash(entries, &instruction_keys, &key_ranks, inputs)
+                    assemble_ranked_hash(
+                        entries,
+                        &instruction_keys,
+                        &detail_keys,
+                        &key_ranks,
+                        inputs,
+                    )
                 }),
             );
             Ok::<_, anyhow::Error>(())
@@ -1079,14 +1090,20 @@ mod tests {
                     for (_, value) in expected_entries {
                         expected_hash.update(value.as_bytes());
                     }
-                    let actual =
-                        assemble_ranked_hash(entries, &keys, &ranks, HashInputsBuilder::default());
+                    let actual = assemble_ranked_hash(
+                        entries,
+                        &keys,
+                        &keys,
+                        &ranks,
+                        HashInputsBuilder::default(),
+                    );
                     assert_eq!(actual.value, expected_hash.digest().to_string());
                 }
             }
         }
         let empty = assemble_ranked_hash(
             vec![],
+            &Arc::from([]),
             &Arc::from([]),
             &instruction_key_ranks(&[]),
             HashInputsBuilder::default(),
@@ -1103,7 +1120,8 @@ mod tests {
         let entries = (0..keys.len() as u32)
             .map(|id| (id, value.clone()))
             .collect();
-        let result = assemble_ranked_hash(entries, &keys, &ranks, HashInputsBuilder::default());
+        let result =
+            assemble_ranked_hash(entries, &keys, &keys, &ranks, HashInputsBuilder::default());
         assert_eq!(result.value, hash(value.as_bytes()));
         assert!(
             result.details.entry_capacity() <= 2,

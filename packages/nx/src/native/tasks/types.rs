@@ -236,6 +236,9 @@ pub struct InstructionPool {
     keys: DashMap<u32, Arc<str>>,
     /// `HashInstruction::label` per id, rendered once like `keys`.
     labels: DashMap<u32, Arc<str>>,
+    /// Names shown in hash details instead of `labels`, like an Ultracache
+    /// group's recorded globs. Never ranks entries or keys a cache.
+    display_labels: DashMap<u32, Arc<str>>,
     next_id: AtomicU32,
 }
 
@@ -308,6 +311,22 @@ impl InstructionPool {
             .clone()
     }
 
+    /// Names `id` in hash details. The first name set wins; any name set must
+    /// describe the same files.
+    pub fn set_display_label(&self, id: u32, display: String) {
+        self.display_labels
+            .entry(id)
+            .or_insert_with(|| Arc::from(display));
+    }
+
+    /// The name hash details show for `id`: its display label, else its label.
+    pub fn display_label(&self, id: u32) -> Arc<str> {
+        match self.display_labels.get(&id) {
+            Some(display) => display.clone(),
+            None => self.label(id),
+        }
+    }
+
     pub fn len(&self) -> usize {
         self.items.len()
     }
@@ -340,6 +359,31 @@ impl HashInstruction {
             _ => self.to_string(),
         }
     }
+}
+
+/// Names a group of file globs in hash details: every glob when there are
+/// few, otherwise the first few positives and a count of the rest.
+pub fn files_display_label(globs: &[String]) -> String {
+    if globs.len() <= COMPACT_FILES_LABEL_ABOVE {
+        return format!("files:[{}]", globs.join(","));
+    }
+    let (negations, positives): (Vec<&String>, Vec<&String>) =
+        globs.iter().partition(|glob| glob.starts_with('!'));
+    let shown = positives.len().min(COMPACT_FILES_LABEL_ABOVE);
+    let listed: Vec<&str> = positives[..shown].iter().map(|g| g.as_str()).collect();
+    let mut counts = Vec::new();
+    if positives.len() > shown {
+        counts.push(format!("+{} more", positives.len() - shown));
+    }
+    if !negations.is_empty() {
+        counts.push(format!("+{} excluded", negations.len()));
+    }
+    let counts = if counts.is_empty() {
+        String::new()
+    } else {
+        format!(" ({})", counts.join(", "))
+    };
+    format!("files:[{}{counts}]", listed.join(","))
 }
 
 impl ToNapiValue for HashInstruction {
@@ -451,6 +495,21 @@ mod tests {
         let id = pool.intern(big.clone());
         assert_eq!(&*pool.label(id), label.as_str());
         assert_eq!(&*pool.key(id), big.to_string().as_str());
+    }
+
+    #[test]
+    fn files_display_label_lists_positive_globs_and_counts_the_rest() {
+        let small = vec!["a".to_string(), "!b".to_string()];
+        assert_eq!(files_display_label(&small), "files:[a,!b]");
+        let mut globs: Vec<String> = (0..3).map(|i| format!("libs/p/f{i}.ts")).collect();
+        globs.extend((0..7).map(|i| format!("!libs/p/n{i}.ts")));
+        assert_eq!(
+            files_display_label(&globs),
+            "files:[libs/p/f0.ts,libs/p/f1.ts,libs/p/f2.ts (+7 excluded)]"
+        );
+        let many: Vec<String> = (0..10).map(|i| format!("libs/p/f{i}.ts")).collect();
+        let label = files_display_label(&many);
+        assert!(label.ends_with("libs/p/f7.ts (+2 more)]"), "{label}");
     }
 
     #[test]
