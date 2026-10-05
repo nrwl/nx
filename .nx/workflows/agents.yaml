@@ -87,7 +87,7 @@ common-init-steps: &common-init-steps
 
   - name: Install hyperfine
     script: |
-      cargo install hyperfine
+      cargo install hyperfine@1.20.0 --locked
 
   - name: Setup gradle
     script: |
