@@ -728,10 +728,7 @@ export class TaskOrchestrator {
     rehashAfterRun: Set<string>;
   }> {
     const cachedResults: TaskResult[] = [];
-    const tasksToRun: Task[] = [];
     const rehashAfterRun = new Set<string>();
-    // Neither restored nor run in this wave; a later wave picks them up.
-    const heldBack = new Set<string>();
     const tasks = Object.values(batch.taskGraph.tasks);
 
     if (!doNotSkipCache) {
@@ -740,60 +737,55 @@ export class TaskOrchestrator {
       return { cachedResults, tasksToRun: tasks, rehashAfterRun };
     }
 
-    const nonCachedTaskIds = new Set<string>();
+    const toRun = new Map<string, Task>();
+    // Neither restored nor run in this wave; a later wave picks them up.
+    const heldBack = new Set<string>();
     // Tasks with a cache miss / a non-cacheable task upstream that still has
     // to run in this wave.
     const behindMiss = new Set<string>();
     const behindUncacheable = new Set<string>();
+    const pending = (id: string, cacheable: boolean) =>
+      toRun.get(id)?.cache === cacheable;
 
-    await walkTaskGraph(batch.taskGraph, async (rootTaskIds) => {
-      const toHash: Task[] = [];
-      const runWithoutLookup = new Set<string>();
-      for (const id of rootTaskIds) {
+    await walkTaskGraph(batch.taskGraph, async (levelIds) => {
+      const runNow: Task[] = [];
+      const lookUp: Task[] = [];
+      for (const id of levelIds) {
         const task = batch.taskGraph.tasks[id];
-        const depIds = batch.taskGraph.dependencies[id];
-        if (depIds.some((dep) => heldBack.has(dep))) {
+        const deps = batch.taskGraph.dependencies[id];
+        if (deps.some((dep) => heldBack.has(dep))) {
           heldBack.add(id);
           continue;
         }
-        const pending = (dep: string, cacheable: boolean) =>
-          nonCachedTaskIds.has(dep) &&
-          !!batch.taskGraph.tasks[dep].cache === cacheable;
-        const afterMiss = depIds.some(
+
+        const afterMiss = deps.some(
           (dep) => behindMiss.has(dep) || pending(dep, true)
         );
-        const afterUncacheable = depIds.some(
+        const afterUncacheable = deps.some(
           (dep) => behindUncacheable.has(dep) || pending(dep, false)
         );
         if (afterMiss) behindMiss.add(id);
         if (afterUncacheable) behindUncacheable.add(id);
 
-        if (this.hashingDeferredTaskIds?.has(id)) {
-          if (afterMiss) {
-            runWithoutLookup.add(id);
-          } else if (afterUncacheable) {
-            heldBack.add(id);
-            continue;
-          }
-        }
-        toHash.push(task);
-      }
-
-      await this.hashBatchTasks(toHash);
-
-      const eligible: Task[] = [];
-      for (const task of toHash) {
-        if (runWithoutLookup.has(task.id)) {
-          nonCachedTaskIds.add(task.id);
-          tasksToRun.push(task);
-          rehashAfterRun.add(task.id);
+        const deferred = this.hashingDeferredTaskIds?.has(id);
+        if (deferred && afterMiss) {
+          runNow.push(task);
+        } else if (deferred && afterUncacheable) {
+          heldBack.add(id);
         } else {
-          eligible.push(task);
+          lookUp.push(task);
         }
       }
 
-      if (eligible.length > 0) {
-        const cacheResults = await this.applyCachedResults(eligible);
+      await this.hashBatchTasks([...runNow, ...lookUp]);
+
+      for (const task of runNow) {
+        toRun.set(task.id, task);
+        rehashAfterRun.add(task.id);
+      }
+
+      if (lookUp.length > 0) {
+        const cacheResults = await this.applyCachedResults(lookUp);
         const cachedIds = new Set(cacheResults.map((r) => r.task.id));
         cachedResults.push(...cacheResults);
 
@@ -807,16 +799,15 @@ export class TaskOrchestrator {
           await this.postRunSteps(cacheResults, false, groupId);
         }
 
-        for (const task of eligible) {
+        for (const task of lookUp) {
           if (!cachedIds.has(task.id)) {
-            nonCachedTaskIds.add(task.id);
-            tasksToRun.push(task);
+            toRun.set(task.id, task);
           }
         }
       }
     });
 
-    return { cachedResults, tasksToRun, rehashAfterRun };
+    return { cachedResults, tasksToRun: [...toRun.values()], rehashAfterRun };
   }
 
   private async hashBatchTasks(tasks: Task[]): Promise<void> {
