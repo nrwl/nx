@@ -16,6 +16,8 @@ import { TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
+  OutputFile,
+  TaskOutputs,
   TaskStatus as NativeTaskStatus,
   parseTaskStatus,
   RunningTasksService,
@@ -160,6 +162,10 @@ export class TaskOrchestrator {
   // miss waiting for a worker slot is re-queried (including the remote
   // retrieval) on every coordinator cycle.
   private cacheMissedHashes = new Set<string>();
+
+  // The files the cache just wrote or restored, by task id, for postRunSteps
+  // to hand the daemon instead of it walking the outputs again.
+  private copiedOutputFiles = new Map<string, OutputFile[]>();
 
   private completedTasks = new Map<string, TaskStatus>();
   private waitingForTasks: Function[] = [];
@@ -578,11 +584,12 @@ export class TaskOrchestrator {
     await Promise.all(
       cacheHits.map(async ({ task, cachedResult }) => {
         if (shouldCopyMap.get(task.hash)) {
-          await this.cache.copyFilesFromCache(
+          const files = await this.cache.copyFilesFromCache(
             task.hash,
             cachedResult,
             task.outputs
           );
+          if (files) this.copiedOutputFiles.set(task.id, files);
         }
       })
     );
@@ -1766,22 +1773,9 @@ export class TaskOrchestrator {
     groupId: number
   ) {
     const now = Date.now();
-    const tasksToRecord: { outputs: string[]; hash: string }[] = [];
-    for (const { task, status } of results) {
+    for (const { task } of results) {
       // Only set endTime as fallback (batch provides timing via result.task)
       task.endTime ??= now;
-      // Skip recording for tasks whose outputs already match the cache —
-      // the daemon already has the correct hash recorded.
-      if (
-        !this.stopRequested &&
-        task.outputs.length > 0 &&
-        status !== 'local-cache-kept-existing'
-      ) {
-        tasksToRecord.push({ outputs: task.outputs, hash: task.hash });
-      }
-    }
-    if (tasksToRecord.length > 0) {
-      await this.recordOutputsHashBatch(tasksToRecord);
     }
 
     // Caller decides whether these results should be written to the cache.
@@ -1797,9 +1791,15 @@ export class TaskOrchestrator {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(
-        resultsToCache.map(async ({ task, code, terminalOutput, outputs }) =>
-          this.cache.put(task, terminalOutput, outputs, code)
-        )
+        resultsToCache.map(async ({ task, code, terminalOutput, outputs }) => {
+          const files = await this.cache.put(
+            task,
+            terminalOutput,
+            outputs,
+            code
+          );
+          if (files) this.copiedOutputFiles.set(task.id, files);
+        })
       );
       performance.mark('cache-results-end');
       performance.measure(
@@ -1807,6 +1807,24 @@ export class TaskOrchestrator {
         'cache-results-start',
         'cache-results-end'
       );
+    }
+
+    const tasksToRecord: TaskOutputs[] = [];
+    for (const { task, status } of results) {
+      const files = this.copiedOutputFiles.get(task.id);
+      this.copiedOutputFiles.delete(task.id);
+      // Skip recording for tasks whose outputs already match the cache —
+      // the daemon already has the correct hash recorded.
+      if (
+        !this.stopRequested &&
+        task.outputs.length > 0 &&
+        status !== 'local-cache-kept-existing'
+      ) {
+        tasksToRecord.push({ outputs: task.outputs, hash: task.hash, files });
+      }
+    }
+    if (tasksToRecord.length > 0) {
+      await this.recordOutputsHashBatch(tasksToRecord);
     }
 
     await this.complete(results, groupId);
@@ -2122,9 +2140,7 @@ export class TaskOrchestrator {
     return resultMap;
   }
 
-  private async recordOutputsHashBatch(
-    entries: { outputs: string[]; hash: string }[]
-  ) {
+  private async recordOutputsHashBatch(entries: TaskOutputs[]) {
     if (this.daemon?.enabled()) {
       return this.daemon.recordOutputsHashBatch(entries);
     }

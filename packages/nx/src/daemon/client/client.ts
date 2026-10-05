@@ -18,7 +18,13 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import {
+  IS_WASM,
+  NxWorkspaceFiles,
+  TaskOutputs,
+  TaskRun,
+  TaskTarget,
+} from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -916,9 +922,7 @@ export class DaemonClient {
     );
   }
 
-  recordOutputsHashBatch(
-    entries: { outputs: string[]; hash: string }[]
-  ): Promise<any> {
+  recordOutputsHashBatch(entries: TaskOutputs[]): Promise<any> {
     return this.sendToDaemonViaQueue({
       type: 'RECORD_OUTPUTS_HASH_BATCH',
       data: entries,

@@ -6,20 +6,45 @@ use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
 use tracing::{debug, trace};
 
-use crate::native::utils::path::escapes_workspace;
-
 use fs_extra::remove_items;
 use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::{params, types::Value};
 use sysinfo::Disks;
 
-use crate::native::cache::expand_outputs::_expand_outputs;
-use crate::native::cache::file_ops::{_copy, copy_outputs_into_workspace};
+use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
+use crate::native::cache::file_ops::{copy_and_list, copy_outputs_into_workspace};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
+use crate::native::workspace::outputs_tracking::OutputFile;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
+
+/// What `put` copied into the cache.
+#[napi(object)]
+pub struct CachedOutputs {
+    /// The output entries that exist, as `expand_outputs` finds them.
+    pub expanded_outputs: Vec<String>,
+    /// Each file copied, stamped as it is in the workspace.
+    pub files: Vec<OutputFile>,
+}
+
+/// Each workspace file in `paths` as it is now. Only a regular file, or a
+/// link to one, is kept: nothing else is an output file to stamp.
+fn stamp_all<'a>(
+    workspace_root: &Path,
+    paths: impl ParallelIterator<Item = &'a PathBuf>,
+) -> Vec<OutputFile> {
+    paths
+        .filter_map(|path| {
+            let relative = path.strip_prefix(workspace_root).ok()?;
+            let metadata = std::fs::metadata(path).ok()?;
+            metadata
+                .is_file()
+                .then(|| OutputFile::new(relative.to_normalized_string(), &metadata))
+        })
+        .collect()
+}
 
 /// Batch logs older than this are swept. Matches `remove_old_cache_records`.
 const BATCH_OUTPUT_MAX_AGE: Duration = Duration::from_secs(7 * 24 * 60 * 60);
@@ -380,7 +405,7 @@ impl NxCache {
         terminal_output: String,
         outputs: Vec<String>,
         code: i16,
-    ) -> anyhow::Result<Vec<String>> {
+    ) -> anyhow::Result<CachedOutputs> {
         let start = Instant::now();
         trace!("PUT {}", &hash);
         let task_dir = self.cache_path.join(&hash);
@@ -410,12 +435,14 @@ impl NxCache {
 
         // Copy the outputs to the cache
         let mut copied_files = 0;
+        let mut written = vec![];
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
                 trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
-                let copied_size = _copy(p, cached_outputs_dir)?;
+                let (copied_size, wrote) = copy_and_list(&p, &cached_outputs_dir, None)?;
+                written.extend(wrote);
                 total_size += copied_size;
                 copied_files += 1;
                 trace!(
@@ -431,7 +458,10 @@ impl NxCache {
 
         self.record_to_cache(hash.clone(), code, total_size)?;
         debug!("PUT {} {:?}", &hash, start.elapsed());
-        Ok(expanded_outputs)
+        Ok(CachedOutputs {
+            expanded_outputs,
+            files: stamp_all(&self.workspace_root, written.par_iter().map(|(src, _)| src)),
+        })
     }
 
     #[napi]
@@ -449,8 +479,7 @@ impl NxCache {
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs {
             if outputs.len() > 0 && result.code == 0 {
-                size +=
-                    try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
+                size += try_and_retry(|| self.restore(result.clone(), outputs.clone()))?.0;
             };
         }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
@@ -608,16 +637,30 @@ impl NxCache {
         Ok(())
     }
 
+    /// Restores `outputs`. Returns each file written, stamped as it is now,
+    /// when those are all the output files the workspace now holds: every
+    /// output a path, and each one that exists replaced from the cache. A
+    /// glob or a negation can leave other matching files in place.
     #[napi]
     pub fn copy_files_from_cache(
         &self,
         cached_result: CachedResult,
         outputs: Vec<String>,
-    ) -> anyhow::Result<i64> {
+    ) -> anyhow::Result<Option<Vec<OutputFile>>> {
+        Ok(self.restore(cached_result, outputs)?.1)
+    }
+
+    /// The bytes restored, and the files written when they are all of them.
+    fn restore(
+        &self,
+        cached_result: CachedResult,
+        outputs: Vec<String>,
+    ) -> anyhow::Result<(i64, Option<Vec<OutputFile>>)> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
-        let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
+        let literal = all_literal(&outputs);
+        let expanded_outputs = _expand_outputs(outputs_path, outputs.clone())?;
 
         trace!(
             "Restoring {} outputs from cache {:?} -> {:?}",
@@ -625,7 +668,22 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
-        copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)
+        let (size, written) =
+            copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)?;
+        // Stamped once the copy is done: a link can be written before the
+        // file it points to.
+        let files = stamp_all(
+            &self.workspace_root,
+            written.par_iter().map(|(_, dest)| dest),
+        );
+        let exact = literal && {
+            let mut restored = expanded_outputs;
+            let mut present = _expand_outputs(&self.workspace_root, outputs)?;
+            restored.sort();
+            present.sort();
+            restored == present
+        };
+        Ok((size, exact.then_some(files)))
     }
 
     #[napi]
@@ -772,31 +830,6 @@ where
             }
         }
     }
-}
-
-/// Normalize declared output paths for cache use: relativize an in-workspace
-/// absolute path to the workspace root. Errors if any path resolves outside the
-/// workspace (absolute elsewhere, or relative climbing out via `..`).
-fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> anyhow::Result<Vec<String>> {
-    outputs
-        .into_iter()
-        .map(|output| {
-            let path = Path::new(&output);
-            let outside = || anyhow::anyhow!("Cache output is outside the workspace: {}", output);
-            if path.is_absolute() {
-                let relative = path.strip_prefix(workspace_root).map_err(|_| outside())?;
-                if escapes_workspace(relative) {
-                    return Err(outside());
-                }
-                return Ok(relative.to_normalized_string());
-            }
-            if escapes_workspace(path) {
-                return Err(outside());
-            }
-            // A relative output is a glob, where `\` escapes on every OS.
-            Ok(output)
-        })
-        .collect()
 }
 
 #[cfg(test)]

@@ -1,4 +1,3 @@
-use hashbrown::HashMap;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
@@ -6,7 +5,7 @@ use tracing::{debug, trace};
 use crate::native::glob::{build_glob_set, glob_transform::partition_glob};
 use crate::native::utils::Normalize;
 use crate::native::utils::path::escapes_workspace;
-use crate::native::walker::{nx_walker, nx_walker_sync};
+use crate::native::walker::nx_walker_sync_under;
 
 #[napi]
 pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {
@@ -101,7 +100,18 @@ where
         "Walking directory with {} negated globs",
         negated_globs.len()
     );
-    let found_paths = nx_walker_sync(&directory, Some(&negated_globs))
+    // Every match lies under its glob's literal root; with no regular glob,
+    // every path is a match.
+    let roots = if regular_globs.is_empty() {
+        vec![String::new()]
+    } else {
+        regular_globs
+            .iter()
+            .map(|glob| partition_glob(glob).0)
+            .collect()
+    };
+    let found_paths = nx_walker_sync_under(&directory, &roots, Some(&negated_globs))
+        .into_iter()
         .filter_map(|path| {
             if glob_set.is_match(&path) {
                 trace!("Glob match found: {}", path.to_normalized_string());
@@ -161,103 +171,102 @@ pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::R
     Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
-/// The globs grouped by the directory each is read from, so one walk serves
-/// every pattern under it. A glob with no pattern contributes only its root.
-fn partition_globs_into_map(globs: Vec<String>) -> HashMap<String, Vec<String>> {
-    let mut map = HashMap::<String, Vec<String>>::new();
-    for glob in globs.iter() {
-        let (root, pattern) = partition_glob(glob);
-        let entry = map.entry(root).or_insert(vec![]);
-        entry.extend(pattern);
+/// An output as the cache reads it: made workspace-relative if absolute. An
+/// output outside the workspace is an error.
+pub(crate) fn normalize_output(workspace_root: &Path, output: String) -> anyhow::Result<String> {
+    let path = Path::new(&output);
+    let outside = || anyhow::anyhow!("Cache output is outside the workspace: {}", output);
+    if path.is_absolute() {
+        let relative = path.strip_prefix(workspace_root).map_err(|_| outside())?;
+        if escapes_workspace(relative) {
+            return Err(outside());
+        }
+        return Ok(relative.to_normalized_string());
     }
-    map
+    if escapes_workspace(path) {
+        return Err(outside());
+    }
+    // A relative output is a glob, where `\` escapes on every OS.
+    Ok(output)
 }
 
-/// Expands the given outputs into a list of existing files.
-/// This is what the daemon's outputs tracking reads; hashing expands the same
-/// entries through `expand_task_outputs`. Takes a borrowed directory so batch
-/// callers don't pay a String clone per task.
+/// `normalize_output` for each output; one outside the workspace fails them all.
+pub(crate) fn normalize_outputs(
+    workspace_root: &Path,
+    outputs: Vec<String>,
+) -> anyhow::Result<Vec<String>> {
+    outputs
+        .into_iter()
+        .map(|output| normalize_output(workspace_root, output))
+        .collect()
+}
+
+/// Whether every entry names a path rather than a pattern or a negation.
+pub(crate) fn all_literal(entries: &[String]) -> bool {
+    entries
+        .iter()
+        .all(|entry| !entry.starts_with('!') && partition_glob(entry).1.is_none())
+}
+
+/// Every file the cache copies for `entries`, which defines a task's output
+/// files: what `_expand_outputs` finds, each directory read through `read`
+/// (workspace-relative, as `copied_files` reads it from disk).
 pub fn get_files_for_outputs(
     directory: &Path,
     entries: Vec<String>,
 ) -> anyhow::Result<Vec<String>> {
-    let mut globs: Vec<String> = vec![];
-    let mut files: Vec<String> = vec![];
-    let mut directories: Vec<String> = vec![];
-    for entry in entries.into_iter() {
-        let body = entry.strip_prefix('!').unwrap_or(&entry);
-        if escapes_workspace(Path::new(body)) {
-            continue;
-        }
-        let path = directory.join(&entry);
+    output_files_via(directory, entries, &|dir| copied_files(directory, dir))
+}
 
-        if !path.exists() {
-            match partition_glob(&entry) {
-                // Literal once its escapes are resolved: read the path it names.
-                (named, None) if !entry.starts_with('!') => {
-                    let named_path = directory.join(&named);
-                    if named_path.is_dir() {
-                        directories.push(named);
-                    } else if named_path.is_file() {
-                        files.push(named);
-                    }
-                }
-                _ => globs.push(entry),
-            }
-        } else if path.is_dir() {
-            directories.push(entry);
-        } else {
+/// `get_files_for_outputs` with the directory reads supplied.
+pub(crate) fn output_files_via(
+    directory: &Path,
+    entries: Vec<String>,
+    read: &(dyn Fn(&str) -> Option<Vec<String>> + Sync),
+) -> anyhow::Result<Vec<String>> {
+    let mut files = vec![];
+    // Unlike the cache, which refuses the task, skip an output outside the
+    // workspace and read the rest.
+    let entries: Vec<String> = entries
+        .into_iter()
+        .filter_map(|entry| normalize_output(directory, entry).ok())
+        .collect();
+    for entry in _expand_outputs(directory, entries)? {
+        let entry = Path::new(&entry).to_normalized_string();
+        let path = directory.join(&entry);
+        let Ok(link) = std::fs::symlink_metadata(&path) else {
+            continue;
+        };
+        if link.is_dir() {
+            files.extend(read(&entry).unwrap_or_default());
+        } else if std::fs::metadata(&path).is_ok_and(|target| target.is_file()) {
             files.push(entry);
         }
     }
-
-    if !globs.is_empty() {
-        let partitioned_globs = partition_globs_into_map(globs);
-        for (root, patterns) in partitioned_globs {
-            let root_path = directory.join(&root);
-            let glob_set = build_glob_set(&patterns)?;
-            trace!("walking directory: {:?}", root_path);
-
-            let found_paths: Vec<String> = nx_walker(&root_path, false)
-                .filter_map(|file| {
-                    if glob_set.is_match(&file.normalized_path) {
-                        Some(
-                            // root_path contains full directory,
-                            // root is only the leading dirs from glob
-                            PathBuf::from(&root)
-                                .join(&file.normalized_path)
-                                .to_normalized_string(),
-                        )
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            files.extend(found_paths);
-        }
-    }
-
-    if !directories.is_empty() {
-        for dir in directories {
-            let dir = PathBuf::from(dir);
-            let dir_path = directory.join(&dir);
-            let files_in_dir = nx_walker(&dir_path, false).filter_map(|e| {
-                let path = dir_path.join(&e.normalized_path);
-
-                if path.is_file() {
-                    Some(dir.join(e.normalized_path).to_normalized_string())
-                } else {
-                    None
-                }
-            });
-            files.extend(files_in_dir);
-        }
-    }
-
     files.sort();
-
+    files.dedup();
     Ok(files)
+}
+
+/// The files a cache copy of `dir` writes, workspace-relative: every regular
+/// file and every link to one, skipping nothing and entering no linked
+/// directory.
+pub(crate) fn copied_files(directory: &Path, dir: &str) -> Option<Vec<String>> {
+    Some(
+        walkdir::WalkDir::new(directory.join(dir))
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|entry| !entry.file_type().is_dir())
+            .filter(|entry| std::fs::metadata(entry.path()).is_ok_and(|target| target.is_file()))
+            .filter_map(|entry| {
+                entry
+                    .path()
+                    .strip_prefix(directory)
+                    .ok()
+                    .map(|path| path.to_normalized_string())
+            })
+            .collect(),
+    )
 }
 
 #[napi]
