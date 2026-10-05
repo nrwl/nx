@@ -14,30 +14,27 @@ import {
   type WatchEventsListener,
 } from '../../utils/workspace-context';
 
-let outputsWatcherTerminalError: Error | undefined;
+let watchTerminalError: Error | undefined;
 
 /**
- * The error a native outputs watcher failure delivered, if one has. Such an
+ * The error a native watch failure delivered, if one has. Such an
  * error is terminal (the native watch loop exits after delivering it), so the
  * gitignored dotenv edits only that watcher reports stop arriving and a warm
  * graph would go stale silently. The server fails requests closed on it, like
  * a workspace watcher error.
  */
-export function getOutputsWatcherTerminalError(): Error | undefined {
-  return outputsWatcherTerminalError;
+export function getWatchTerminalError(): Error | undefined {
+  return watchTerminalError;
 }
 
-export const handleOutputsChanges: WatchEventsListener = async (
+export const handleWatchEvents: WatchEventsListener = async (
   err,
   changeEvents
 ) => {
   try {
     if (err || !changeEvents || !changeEvents.length) {
       let error = typeof err === 'string' ? new Error(err) : err;
-      serverLogger.watcherLog(
-        'Unexpected outputs watcher error',
-        error.message
-      );
+      serverLogger.watcherLog('Unexpected watch error', error.message);
       console.error(error);
       if (err) {
         // A native error is terminal: the watch loop has exited, so the
@@ -47,7 +44,7 @@ export const handleOutputsChanges: WatchEventsListener = async (
         // that silently goes stale. The original error is preserved so an
         // inotify_add_watch failure still makes the client disable the daemon
         // and rebuild without it.
-        outputsWatcherTerminalError = error;
+        watchTerminalError = error;
       }
       return;
     }
@@ -57,7 +54,7 @@ export const handleOutputsChanges: WatchEventsListener = async (
       // have changed unseen. Recorded outputs are compared by stamp, so they
       // need nothing.
       serverLogger.watcherLog(
-        'The outputs watcher reported dropped events; invalidating the graph cache.'
+        'The watch reported dropped events; invalidating the graph cache.'
       );
       invalidateGraphCache();
       return;
@@ -65,10 +62,10 @@ export const handleOutputsChanges: WatchEventsListener = async (
 
     // A dotenv change that a task chain loads must refresh the graph so
     // createNodes re-resolves config reading process.env. A change to a file
-    // the workspace watcher tracks already schedules a recomputation that
+    // the file-change stream covers already schedules a recomputation that
     // reads the new content; invalidating for it here too would discard that
     // recomputation at commit and force a second one. It is
-    // queued instead of dropped: the two watchers deliver independently, so a
+    // queued instead of dropped: the two streams deliver independently, so a
     // computation already in flight may have read the file before the edit,
     // and only the pre-serve replay can prove that. The context answers from
     // the files the watch keeps, so a path it does not hold is gitignored,
@@ -104,7 +101,7 @@ export const handleOutputsChanges: WatchEventsListener = async (
       invalidateGraphCache();
     }
   } catch (err) {
-    serverLogger.watcherLog(`Unexpected outputs watcher error`, err.message);
+    serverLogger.watcherLog(`Unexpected watch error`, err.message);
     console.error(err);
   }
 };

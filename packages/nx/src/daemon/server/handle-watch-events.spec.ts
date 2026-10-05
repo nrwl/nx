@@ -20,9 +20,9 @@ vi.mock('./dotenv-graph-changes', () => ({
   queuePendingDotEnvEvents: vi.fn(),
 }));
 
-describe('handleOutputsChanges', () => {
-  let handleOutputsChanges: typeof import('./handle-outputs-changes').handleOutputsChanges;
-  let getOutputsWatcherTerminalError: typeof import('./handle-outputs-changes').getOutputsWatcherTerminalError;
+describe('handleWatchEvents', () => {
+  let handleWatchEvents: typeof import('./handle-watch-events').handleWatchEvents;
+  let getWatchTerminalError: typeof import('./handle-watch-events').getWatchTerminalError;
   let recomputation: {
     invalidateGraphCache: Mock;
   };
@@ -41,8 +41,8 @@ describe('handleOutputsChanges', () => {
     // the mock fns persist across tests and their recorded calls are cleared.
     vi.resetModules();
     vi.clearAllMocks();
-    ({ handleOutputsChanges, getOutputsWatcherTerminalError } =
-      await import('./handle-outputs-changes'));
+    ({ handleWatchEvents, getWatchTerminalError } =
+      await import('./handle-watch-events'));
     recomputation =
       (await import('./project-graph-incremental-recomputation')) as any;
     dotenvChanges = (await import('./dotenv-graph-changes')) as any;
@@ -55,39 +55,37 @@ describe('handleOutputsChanges', () => {
   });
 
   it('invalidates the graph on a rescan without classifying per-path events', async () => {
-    await handleOutputsChanges(null, [{ path: '', type: EventType.rescan }]);
+    await handleWatchEvents(null, [{ path: '', type: EventType.rescan }]);
 
     expect(recomputation.invalidateGraphCache).toHaveBeenCalled();
     expect(dotenvChanges.classifyDotEnvChanges).not.toHaveBeenCalled();
     // A rescan is recoverable: the watch stream is still alive.
-    expect(getOutputsWatcherTerminalError()).toBeUndefined();
+    expect(getWatchTerminalError()).toBeUndefined();
   });
 
   it('records a native watcher error as terminal, preserving its message', async () => {
-    await handleOutputsChanges(
+    await handleWatchEvents(
       'inotify_add_watch failed registering new directory watch: limit',
       null
     );
 
-    expect(getOutputsWatcherTerminalError().message).toContain(
-      'inotify_add_watch'
-    );
+    expect(getWatchTerminalError().message).toContain('inotify_add_watch');
   });
 
   it('does not record an empty delivery as terminal', async () => {
-    await handleOutputsChanges(null, []);
+    await handleWatchEvents(null, []);
 
-    expect(getOutputsWatcherTerminalError()).toBeUndefined();
+    expect(getWatchTerminalError()).toBeUndefined();
   });
 
   it('invalidates the graph when dotenv classification fails', async () => {
     dotenvChanges.classifyDotEnvChanges.mockImplementationOnce(() => {
       throw new Error('boom');
     });
-    await handleOutputsChanges(null, events);
+    await handleWatchEvents(null, events);
 
     expect(recomputation.invalidateGraphCache).toHaveBeenCalled();
-    expect(getOutputsWatcherTerminalError()).toBeUndefined();
+    expect(getWatchTerminalError()).toBeUndefined();
   });
 
   it('forwards unclassified dotenv events to the pending queue without invalidating', async () => {
@@ -99,7 +97,7 @@ describe('handleOutputsChanges', () => {
       invalidating: [],
       unclassified: [event],
     });
-    await handleOutputsChanges(null, [event]);
+    await handleWatchEvents(null, [event]);
 
     expect(dotenvChanges.queuePendingDotEnvEvents).toHaveBeenCalledWith(
       ['apps/e2e/.env.e2e'],
@@ -109,7 +107,7 @@ describe('handleOutputsChanges', () => {
   });
 
   it('queues an invalidating edit of a tracked dotenv file instead of invalidating', async () => {
-    // The workspace watcher schedules the recomputation for a tracked file,
+    // The file-change stream schedules the recomputation for a tracked file,
     // but a computation already in flight may have read the file before the
     // edit; only the queued evidence lets the pre-serve replay prove that.
     dotenvChanges.classifyDotEnvChanges.mockReturnValueOnce({
@@ -117,7 +115,7 @@ describe('handleOutputsChanges', () => {
       unclassified: [],
     });
     context.trackedFilesInContext.mockReturnValue(['libs/foo/.env.e2e']);
-    await handleOutputsChanges(null, events);
+    await handleWatchEvents(null, events);
 
     expect(dotenvChanges.queuePendingDotEnvEvents).toHaveBeenCalledWith(
       ['libs/foo/.env.e2e'],
