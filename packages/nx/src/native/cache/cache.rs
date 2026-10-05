@@ -670,13 +670,24 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
-        let copied = Mutex::new(vec![]);
+        // Stamped once the copy is done: a link can be written before the
+        // file it points to.
+        let written = Mutex::new(vec![]);
         let size = copy_outputs_into_workspace(
             &self.workspace_root,
             outputs_path,
             &expanded_outputs,
-            &|_, dest| note_copied(&self.workspace_root, dest, &copied),
+            &|_, dest| {
+                let mut written = written.lock().unwrap_or_else(|e| e.into_inner());
+                written.push(dest.to_path_buf());
+            },
         )?;
+        let copied = Mutex::new(vec![]);
+        written
+            .into_inner()
+            .unwrap_or_else(|e| e.into_inner())
+            .par_iter()
+            .for_each(|dest| note_copied(&self.workspace_root, dest, &copied));
         files.extend(copied.into_inner().unwrap_or_else(|e| e.into_inner()));
         let exact = literal && {
             let mut restored = expanded_outputs;

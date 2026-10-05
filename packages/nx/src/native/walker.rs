@@ -63,7 +63,8 @@ where
 /// What `nx_walker_sync` yields at or under any of `roots`, relative to
 /// `directory`, without walking the rest of it: a root is skipped where the
 /// full walk would never reach it (a vetoed or linked parent), and a linked
-/// root is yielded but not entered.
+/// root is yielded but not entered. Roots keep the case they are given, so on
+/// a case-insensitive filesystem paths can differ in case from the full walk's.
 pub fn nx_walker_sync_under(
     directory: &Path,
     roots: &[String],

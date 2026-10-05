@@ -155,6 +155,27 @@ describe('Cache', () => {
     ).toBe(null);
   });
 
+  it('should return restored links to files the same restore writes', () => {
+    tempFs.createFileSync('dist/b/target.js', 'target');
+    symlinkSync(
+      join(tempFs.tempDir, 'dist/b/target.js'),
+      join(tempFs.tempDir, 'dist/link-to-b.js')
+    );
+    for (let i = 0; i < 40; i++) {
+      tempFs.createFileSync(`dist/a/real-${i}.js`, `${i}`);
+      symlinkSync(`real-${i}.js`, join(tempFs.tempDir, `dist/a/link-${i}.js`));
+    }
+    const outputs = ['dist/a', 'dist/link-to-b.js', 'dist/b'];
+    cache.put('123', 'output 123', outputs, 0);
+    rmSync(join(tempFs.tempDir, 'dist'), { recursive: true, force: true });
+
+    const restored = cache
+      .copyFilesFromCache(cache.get('123'), outputs)
+      ?.map((file) => file.path);
+    const [defined] = getFilesForOutputsBatch(tempFs.tempDir, [outputs]);
+    expect([...new Set(restored)].sort()).toEqual(defined);
+  });
+
   it('should handle storing hashes that already exist in the cache', async () => {
     cache.put('123', 'output 123', ['dist'], 0);
     expect(() => cache.put('123', 'output 123', ['dist'], 0)).not.toThrow();
