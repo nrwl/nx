@@ -12,7 +12,6 @@ import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenge
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
-import { openUrl } from '../../native';
 import {
   basename,
   dirname,
@@ -55,7 +54,7 @@ import type { NxArgs } from '../../utils/command-line-utils';
 import { runnableForTarget } from '../../utils/project-graph-utils';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { expandFilesInput, HashPlanner } from '../../native';
+import { expandFilesInput, HashPlanner, openUrl } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
