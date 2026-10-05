@@ -1,6 +1,9 @@
 import { STATUS_CODES } from 'node:http';
 import GithubSlugger from 'github-slugger';
 
+export const NX_CLOUD_PUBLIC_API_SPEC_URL =
+  'https://cloud.nx.app/nx-cloud/data/openapi.json';
+
 /** Markdown is the source for rich prose; the loader renders each fragment once. */
 export interface ReferenceProse {
   markdown: string;
@@ -67,8 +70,12 @@ export interface OpenApiReference {
   sourceUrl: string;
   title: string;
   version: string;
-  overview: ReferenceProse;
-  navigation: { label: string; href: string; id?: string }[];
+  introduction: ReferenceProse;
+  description: ReferenceProse;
+  navigation: {
+    heading: ReferenceHeading;
+    links: { label: string; href: string; id?: string }[];
+  }[];
   servers: ReferenceProse[];
   sections: {
     servers: ReferenceHeading;
@@ -78,7 +85,13 @@ export interface OpenApiReference {
     schemas: ReferenceHeading;
   };
   endpoints: ReferenceEndpoint[];
-  responses: (ReferenceResponse & { heading: ReferenceHeading })[];
+  responses: {
+    heading: ReferenceHeading;
+    definitions: {
+      response: ReferenceResponse;
+      descriptions: { ids: string[]; description: ReferenceProse }[];
+    }[];
+  }[];
   headers: {
     heading: ReferenceHeading;
     description: ReferenceProse;
@@ -241,41 +254,9 @@ function schemaName(ref: unknown): string {
     .replace(/~0/g, '~');
 }
 
-function readableSchemaName(name: string): string {
-  const label = name
-    .replace(/Response$/, '')
-    .replace(/_/g, ' ')
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
-    .replace(/([a-z\d])([A-Z])/g, '$1 $2')
-    .replace(/\b[A-Z][a-z]+\b/g, (word) => word.toLowerCase());
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-function schemaLabel(
-  document: OpenApiDocument,
-  name: string,
-  seen = new Set<string>()
-): string {
+function schemaLabel(document: OpenApiDocument, name: string): string {
   const schema = object(object(object(document.components).schemas)[name]);
-  if (schema.title && schema.title !== name) return text(schema.title);
-  const properties = object(schema.properties);
-  const items = object(properties.items);
-  const itemRef = object(items.items).$ref;
-  if (
-    !seen.has(name) &&
-    items.type === 'array' &&
-    itemRef &&
-    properties.nextCursor &&
-    properties.prevCursor
-  ) {
-    const itemLabel = schemaLabel(
-      document,
-      schemaName(itemRef),
-      new Set([...seen, name])
-    );
-    return `Paginated ${itemLabel.charAt(0).toLowerCase()}${itemLabel.slice(1)}`;
-  }
-  return readableSchemaName(name);
+  return text(schema.title) || name;
 }
 
 function schemaType(document: OpenApiDocument, value: unknown): string {
@@ -525,37 +506,6 @@ function isSuccess(status: string): boolean {
   return /^2(?:\d\d|XX)$/i.test(status);
 }
 
-function responseMeaning(
-  document: OpenApiDocument,
-  status: string,
-  response: OpenApiObject
-): OpenApiObject {
-  const raw = object(object(document.components).responses)[status];
-  if (!raw) return response;
-  const shared = resolve(document, raw);
-  const shape = (value: OpenApiObject) =>
-    Object.fromEntries(
-      Object.entries(value).filter(([key, value]) => {
-        if (key === 'description') return false;
-        // Swagger may emit empty maps on operations but omit them on components.
-        return !(
-          ['headers', 'links', 'content'].includes(key) &&
-          value &&
-          typeof value === 'object' &&
-          !Array.isArray(value) &&
-          Object.keys(value).length === 0
-        );
-      })
-    );
-  // A status-keyed component supplies the common meaning only for the same response
-  // shape. Keep different payloads, headers, and links as distinct response details.
-  const commonVariation = ['400', '404', '409'].includes(status);
-  return signature(shape(response)) === signature(shape(shared)) &&
-    (commonVariation || response.description === shared.description)
-    ? shared
-    : response;
-}
-
 function responseKey(status: string, response: OpenApiObject): string {
   return `${status}:${signature(response)}`;
 }
@@ -587,13 +537,12 @@ function responseCatalog(
     for (const [status, raw] of Object.entries(object(operation.responses))) {
       const response = resolve(document, raw);
       if (!isPrimaryResponse(status)) {
-        const meaning = responseMeaning(document, status, response);
-        const key = responseKey(status, meaning);
+        const key = responseKey(status, response);
         if (!responses.has(key)) {
           responses.set(key, {
             id: `http-response-${responses.size + 1}`,
             status,
-            response: meaning,
+            response,
           });
         }
       }
@@ -658,10 +607,7 @@ function responseModel(
 function securityLabel(document: OpenApiDocument, name: string): string {
   const schemes = object(object(document.components).securitySchemes);
   const scheme = resolve(document, schemes[name]);
-  return (
-    text(scheme['x-displayName']) ||
-    name.charAt(0).toUpperCase() + name.slice(1)
-  );
+  return text(scheme['x-displayName']) || name;
 }
 
 function securityMarkdown(document: OpenApiDocument, value: unknown): string {
@@ -695,7 +641,10 @@ export function buildOpenApiReference(
   const slugger = new GithubSlugger();
   // Reserve raw reference anchors before endpoint titles can claim them.
   for (const id of [
-    ...[...catalog.responses.values()].map(({ id }) => id),
+    ...[...catalog.responses.values()].flatMap(({ id, status }) => [
+      id,
+      `http-status-${status}`,
+    ]),
     ...[...catalog.headers.values()].map(({ id }) => id),
     ...Object.keys(object(components.schemas)).map((name) => `schema-${name}`),
     ...operations.flatMap(({ operation }, index) =>
@@ -722,6 +671,43 @@ export function buildOpenApiReference(
     headers: heading(3, 'Response headers'),
     schemas: heading(2, 'Schema and field definitions', 'schemas'),
   };
+  const navigation: OpenApiReference['navigation'] = [
+    {
+      heading: heading(2, 'Get started with the API'),
+      links: [
+        {
+          label: 'Authenticate with the Nx Cloud Public API',
+          href: '/docs/kb/authenticate-public-api',
+          id: authenticationGuideId,
+        },
+        {
+          label: 'Query the Nx Cloud Public API',
+          href: '/docs/kb/query-public-api',
+        },
+      ],
+    },
+    {
+      heading: heading(2, 'Use cases'),
+      links: [
+        {
+          label: 'Investigate flaky tasks',
+          href: '/docs/kb/investigate-flaky-tasks-with-api',
+        },
+        {
+          label: 'Debug CI failures',
+          href: '/docs/kb/debug-ci-failures-with-api',
+        },
+        {
+          label: 'Use the API with an AI agent',
+          href: '/docs/kb/use-public-api-with-ai-agent',
+        },
+        {
+          label: 'Read raw resource-utilization reports',
+          href: '/docs/kb/read-resource-utilization-reports',
+        },
+      ],
+    },
+  ];
   const endpoints: ReferenceEndpoint[] = operations.map(
     ({ path, method, operation, parameters }, index) => {
       const merged = new Map<string, OpenApiObject>();
@@ -837,19 +823,59 @@ export function buildOpenApiReference(
           .map(({ status, response }) => ({
             status,
             label: statusLabel(status),
-            target: catalog.responses.get(
-              responseKey(status, responseMeaning(document, status, response))
-            )!.id,
+            target: catalog.responses.get(responseKey(status, response))!.id,
           })),
       };
     }
   );
-  const responses = [...catalog.responses.values()]
-    .sort((a, b) => a.status.localeCompare(b.status))
-    .map(({ id, status, response }) => ({
-      ...responseModel(document, id, status, response, catalog.headers),
-      heading: heading(3, statusLabel(status), id),
-    }));
+  const responseGroups = new Map<
+    string,
+    OpenApiReference['responses'][number]
+  >();
+  const responseBodies = new Map<
+    string,
+    OpenApiReference['responses'][number]['definitions'][number]
+  >();
+  for (const { id, status, response } of [...catalog.responses.values()].sort(
+    (a, b) => a.status.localeCompare(b.status)
+  )) {
+    let group = responseGroups.get(status);
+    if (!group) {
+      group = {
+        heading: heading(3, statusLabel(status), `http-status-${status}`),
+        definitions: [],
+      };
+      responseGroups.set(status, group);
+    }
+    const rendered = responseModel(
+      document,
+      id,
+      status,
+      response,
+      catalog.headers
+    );
+    const bodyKey = `${status}:${signature({
+      content: rendered.content,
+      headers: rendered.headers,
+      links: rendered.links,
+    })}`;
+    let definition = responseBodies.get(bodyKey);
+    if (!definition) {
+      definition = { response: rendered, descriptions: [] };
+      responseBodies.set(bodyKey, definition);
+      group.definitions.push(definition);
+    }
+    const description = definition.descriptions.find(
+      (item) => item.description.markdown === rendered.description.markdown
+    );
+    if (description) description.ids.push(id);
+    else
+      definition.descriptions.push({
+        ids: [id],
+        description: rendered.description,
+      });
+  }
+  const responses = [...responseGroups.values()];
   const headers = [...catalog.headers.values()].map(
     ({ id, name, header, statuses }) => ({
       heading: heading(4, name, id),
@@ -875,35 +901,11 @@ export function buildOpenApiReference(
     sourceUrl,
     title: document.info.title,
     version: document.info.version,
-    overview: prose(text(document.info.description)),
-    navigation: [
-      {
-        label: 'Authenticate with the Nx Cloud Public API',
-        href: '/docs/kb/authenticate-public-api',
-        id: authenticationGuideId,
-      },
-      {
-        label: 'Query the Nx Cloud Public API',
-        href: '/docs/kb/query-public-api',
-      },
-
-      {
-        label: 'Read raw resource-utilization reports',
-        href: '/docs/kb/read-resource-utilization-reports',
-      },
-      {
-        label: 'Investigate flaky tasks',
-        href: '/docs/kb/investigate-flaky-tasks-with-api',
-      },
-      {
-        label: 'Debug CI failures',
-        href: '/docs/kb/debug-ci-failures-with-api',
-      },
-      {
-        label: 'Analyze task distribution',
-        href: '/docs/kb/analyze-task-distribution-with-api',
-      },
-    ],
+    introduction: prose(
+      `This is an API reference of the Nx Cloud Public API.\n[View OpenAPI specification](${NX_CLOUD_PUBLIC_API_SPEC_URL})`
+    ),
+    description: prose(text(document.info.description)),
+    navigation,
     servers: array(document.servers).map((server) =>
       prose(`${code(object(server).url)} ${text(object(server).description)}`)
     ),
@@ -921,6 +923,7 @@ export function referenceHeadings(
   const { sections, endpoints, responses, headers, schemas, servers } =
     reference;
   return [
+    ...reference.navigation.map((group) => group.heading),
     ...(servers.length ? [sections.servers] : []),
     sections.endpoints,
     ...endpoints.map((item) => item.heading),
@@ -1009,9 +1012,12 @@ function contentMarkdown(content: ReferenceMedia[]): string {
     .join('\n\n');
 }
 
-function responseDetailsMarkdown(response: ReferenceResponse): string {
+function responseDetailsMarkdown(
+  response: ReferenceResponse,
+  description = true
+): string {
   return [
-    response.description.markdown,
+    description ? response.description.markdown : '',
     contentMarkdown(response.content),
     response.headers.length
       ? `Response headers: ${response.headers.map(({ name, target }) => `[${code(name)}](#${target})`).join(', ')}.`
@@ -1025,10 +1031,19 @@ function responseDetailsMarkdown(response: ReferenceResponse): string {
 /** The export uses the same facts, labels, and link targets as the Astro templates. */
 export function renderOpenApiReference(reference: OpenApiReference): string {
   const lines = [
-    `Generated from the [deployed OpenAPI specification](${reference.sourceUrl}). API version: ${code(reference.version)}.`,
-    `API: ${reference.title}.`,
-    `For usage examples: ${reference.navigation.map(({ label, href, id }) => `${id ? anchor(id) : ''}[${label}](${href})`).join(', ')}.`,
-    reference.overview.markdown,
+    reference.introduction.markdown,
+    reference.description.markdown,
+    `API: ${reference.title}. API version: ${code(reference.version)}.`,
+    `Specification source: ${code(reference.sourceUrl)}.`,
+    ...reference.navigation.flatMap((group) => [
+      headingMarkdown(group.heading),
+      group.links
+        .map(
+          ({ label, href, id }) =>
+            `- ${id ? anchor(id) : ''}[${label}](${href})`
+        )
+        .join('\n'),
+    ]),
     ...(reference.servers.length
       ? [
           headingMarkdown(reference.sections.servers),
@@ -1073,15 +1088,15 @@ export function renderOpenApiReference(reference: OpenApiReference): string {
         `Other response codes: ${endpoint.otherResponses.map(({ status, target, label }) => `[${code(status)}](#${target} "${label}")`).join(' • ')}`
       );
   }
-  lines.push(
-    headingMarkdown(reference.sections.responses),
-    'These descriptions apply to the endpoints that list each code. Response-code links select the matching details.'
-  );
-  for (const response of reference.responses)
-    lines.push(
-      headingMarkdown(response.heading),
-      responseDetailsMarkdown(response)
-    );
+  lines.push(headingMarkdown(reference.sections.responses));
+  for (const group of reference.responses) {
+    lines.push(headingMarkdown(group.heading));
+    for (const definition of group.definitions) {
+      for (const { ids, description } of definition.descriptions)
+        lines.push(ids.map(anchor).join('\n'), description.markdown);
+      lines.push(responseDetailsMarkdown(definition.response, false));
+    }
+  }
   if (reference.headers.length) {
     lines.push(headingMarkdown(reference.sections.headers));
     for (const header of reference.headers)

@@ -5,10 +5,10 @@ import {
   parseOpenApiDocument,
   renderOpenApiReference,
   renderReferenceProse,
+  NX_CLOUD_PUBLIC_API_SPEC_URL,
 } from './utils/openapi-reference';
 
-export const NX_CLOUD_PUBLIC_API_SPEC_URL =
-  'https://cloud.nx.app/nx-cloud/data/openapi.json';
+export { NX_CLOUD_PUBLIC_API_SPEC_URL } from './utils/openapi-reference';
 export const NX_CLOUD_PUBLIC_API_SLUG = 'reference/nx-cloud/public-api';
 
 interface LoaderOptions {

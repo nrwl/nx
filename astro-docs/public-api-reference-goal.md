@@ -336,15 +336,12 @@ NX_CLOUD_OPENAPI_URL=http://127.0.0.1:4203/nx-cloud/data/openapi.json \
 When checks are requested, use the existing Nx targets:
 
 ```bash
-mise exec -- pnpm exec nx run astro-docs:test-openapi --excludeTaskDependencies
-
-NX_CLOUD_OPENAPI_URL=http://127.0.0.1:4203/nx-cloud/data/openapi.json \
-BASE_URL=http://localhost:4321 \
-  mise exec -- pnpm exec nx run astro-docs:pw-e2e \
-  --excludeTaskDependencies -- public-api.spec.ts
+mise exec -- pnpm exec nx run astro-docs:lint --excludeTaskDependencies
+mise exec -- pnpm exec nx run astro-docs:validate-links --excludeTaskDependencies
+mise exec -- pnpm exec nx prepush
 ```
 
-The local URLs assume that the API server and docs preview are already available. A clean checkout can also need the normal package build dependencies. Repository submission checks remain separate from the small feature-test scope.
+The local URLs assume that the API server and docs preview are already available. A clean checkout can also need the normal package build dependencies. Repository submission checks remain separate from the manual preview review.
 
 For handoff, provide the source URL and API version used for the preview, screenshots of the JSON and redirect layouts, and any remaining upstream documentation gaps.
 

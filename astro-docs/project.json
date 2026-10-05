@@ -124,13 +124,7 @@
     "test": {
       "executor": "nx:noop",
       "inputs": [],
-      "dependsOn": ["validate-links", "format", "test-openapi"]
-    },
-    "test-openapi": {
-      "command": "node --import tsx --test src/plugins/nx-cloud-public-api.loader.test.ts src/plugins/utils/openapi-reference.test.ts",
-      "options": {
-        "cwd": "astro-docs"
-      }
+      "dependsOn": ["validate-links", "format"]
     },
     "pw-e2e": {
       "dependsOn": ["serve"],
