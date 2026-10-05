@@ -117,11 +117,16 @@ The site uses custom content loaders to dynamically generate documentation:
 
 ### Nx Cloud Public API reference
 
-The reference at `/docs/reference/nx-cloud/public-api` is an Astro page backed by the `nx-cloud-public-api` collection, not an authored Markdoc page. Its loader reads `https://cloud.nx.app/nx-cloud/data/openapi.json` on each content sync. Set `NX_CLOUD_OPENAPI_URL` to use another deployment's specification.
+The reference at `/docs/reference/nx-cloud/public-api` is an Astro page backed by the `nx-cloud-public-api` collection, not an authored Markdoc page.
+Set `NX_CLOUD_OPENAPI_URL` to use another deployment instead of `https://cloud.nx.app/nx-cloud/data/openapi.json`.
+The loader fetches the specification directly on each content sync.
 
 The loader fails if the specification cannot be fetched or parsed. It does not publish a static fallback. API descriptions belong in the OpenAPI source; usage instructions belong in the Knowledge Base articles. The generated reference also has a `.md` endpoint and appears in the reference `llms.txt` index.
 
-`src/plugins/utils/openapi-reference.ts` builds one serializable reference model from the fetched specification. The loader stores the model in `data.reference` and generates the Markdown `body` from that same model. It renders rich Markdown prose fragments during content loading, not a duplicate full HTML page.
+The modules in `src/plugins/nx-cloud-public-api/` separate model types, OpenAPI helpers, formatting, model construction, and rendering.
+`model.ts` builds one serializable reference model from the specification.
+The loader stores the model in `data.reference` and generates the Markdown `body` from that same model.
+It renders rich Markdown prose fragments during content loading, not a duplicate full HTML page.
 
 `src/pages/reference/nx-cloud/public-api.astro` renders the model inside `StarlightPage`. The components in `src/components/public-api/` use Starlight headings, badges, and copyable code examples. Each endpoint shows its method, path, description, and parameters before its successful outcome. Response bodies start collapsed, with the successful status beside the summary. Redirects and responses without a body show their declared status and description instead. Other declared codes link to shared details after the successful response.
 
@@ -131,7 +136,15 @@ Usage guides appear in two card grids: API setup and use cases. The Markdown exp
 
 Authentication setup and plan eligibility are authored manually in `src/content/docs/kb/authenticate-public-api.mdoc`. Request-audit behavior belongs in `src/content/docs/kb/query-public-api.mdoc`. Raw metrics records and their interpretation are documented in `src/content/docs/kb/read-resource-utilization-reports.mdoc`. The reference and Markdown export link to these guides instead of generating their usage instructions. The existing `#authentication` anchor points to the guide link. Operation-specific security requirements remain with their endpoint.
 
-The `astro-docs:build` target does not use the Nx task cache because the remote specification can change independently of repository files. Package build dependencies still use their normal caches. Restart the local server to fetch a new deployed specification. The source override also works for a preview build, for example `NX_CLOUD_OPENAPI_URL=http://127.0.0.1:4203/nx-cloud/data/openapi.json mise exec -- pnpm exec nx build astro-docs --excludeTaskDependencies`. The docs show the selected source's routes and metadata without rewriting beta routes.
+The `astro-docs:build` target uses the Nx task cache.
+Its runtime input runs `scripts/hash-openapi-spec.mjs`, which fetches the specification and prints its SHA-256 digest.
+The source override also contributes to the cache key.
+A changed specification invalidates the cache without a repository change.
+Content syncs fetch the specification separately and fail if that fetch or parsing fails.
+
+The source override also works for a preview build, for example `NX_CLOUD_OPENAPI_URL=https://snapshot.nx.app/nx-cloud/data/openapi.json mise exec -- pnpm nx build astro-docs`.
+Restart the local development server to fetch a new deployed specification.
+The docs show the selected source's routes and metadata without rewriting beta routes.
 
 ## Content Management
 

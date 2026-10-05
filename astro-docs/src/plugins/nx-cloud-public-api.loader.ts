@@ -1,14 +1,17 @@
 import type { Loader } from 'astro/loaders';
+import { fileURLToPath } from 'node:url';
 import { watchAndCall } from './utils/watch';
+import { buildOpenApiReference } from './nx-cloud-public-api/model';
 import {
-  buildOpenApiReference,
-  parseOpenApiDocument,
   renderOpenApiReference,
   renderReferenceProse,
-  NX_CLOUD_PUBLIC_API_SPEC_URL,
-} from './utils/openapi-reference';
+} from './nx-cloud-public-api/render';
+import {
+  fetchOpenApiSpecification,
+  openApiSpecificationUrl,
+} from './nx-cloud-public-api/source';
 
-export { NX_CLOUD_PUBLIC_API_SPEC_URL } from './utils/openapi-reference';
+export { NX_CLOUD_PUBLIC_API_SPEC_URL } from './nx-cloud-public-api/source';
 export const NX_CLOUD_PUBLIC_API_SLUG = 'reference/nx-cloud/public-api';
 
 interface LoaderOptions {
@@ -18,9 +21,7 @@ interface LoaderOptions {
 
 export function NxCloudPublicApiLoader(options: LoaderOptions = {}): Loader {
   const specificationUrl =
-    options.specificationUrl ??
-    process.env.NX_CLOUD_OPENAPI_URL ??
-    NX_CLOUD_PUBLIC_API_SPEC_URL;
+    options.specificationUrl ?? openApiSpecificationUrl();
   const fetchSpecification = options.fetch ?? fetch;
 
   return {
@@ -34,17 +35,11 @@ export function NxCloudPublicApiLoader(options: LoaderOptions = {}): Loader {
       watcher,
     }) {
       const load = async () => {
-        // Fetch on every content sync. A failed fetch must not silently publish stale API docs.
-        const response = await fetchSpecification(specificationUrl, {
-          headers: { Accept: 'application/json' },
-          signal: AbortSignal.timeout(30_000),
-        });
-        if (!response.ok) {
-          throw new Error(
-            `Could not fetch the OpenAPI specification from ${specificationUrl}: HTTP ${response.status}.`
-          );
-        }
-        const document = parseOpenApiDocument(await response.json());
+        // Fetch on every content sync. Never fall back to a stale specification.
+        const document = await fetchOpenApiSpecification(
+          specificationUrl,
+          fetchSpecification
+        );
         const reference = buildOpenApiReference(document, specificationUrl);
         await renderReferenceProse(reference, renderMarkdown);
         const body = renderOpenApiReference(reference);
@@ -74,8 +69,8 @@ export function NxCloudPublicApiLoader(options: LoaderOptions = {}): Loader {
         watchAndCall(
           watcher,
           [
-            new URL(import.meta.url).pathname,
-            new URL('./utils/openapi-reference.ts', import.meta.url).pathname,
+            fileURLToPath(import.meta.url),
+            fileURLToPath(new URL('./nx-cloud-public-api/', import.meta.url)),
           ],
           load
         );
