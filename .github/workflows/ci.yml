@@ -22,6 +22,7 @@ env:
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
 
 jobs:
   main-linux:
