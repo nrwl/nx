@@ -65,6 +65,7 @@ import {
   changedPaths,
   fileNames,
   restartDaemonIfIgnoreFilesChanged,
+  restartDaemonIfLockFilesChanged,
 } from './restart-checks';
 import { serverLogger } from '../logger';
 
@@ -354,11 +355,15 @@ function summarize(files: string[]): string {
 
 /**
  * Takes in changes the workspace context handed out: restarts the daemon if
- * an ignore file changed, otherwise schedules the recomputation.
+ * an ignore file or a lockfile changed, otherwise schedules the recomputation.
  */
 export function routeAppliedChanges(batch: ChangeBatch): void {
   if (!isEmptyBatch(batch)) {
-    if (restartDaemonIfIgnoreFilesChanged(changedPaths(batch))) {
+    const paths = changedPaths(batch);
+    if (
+      restartDaemonIfIgnoreFilesChanged(paths) ||
+      restartDaemonIfLockFilesChanged(paths)
+    ) {
       return;
     }
     serverLogger.watcherLog(
