@@ -599,28 +599,53 @@ impl HashPlanner {
             unowned
         };
 
-        // Nx Cloud collapses sibling files into brace groups; class mapping needs
-        // the individual names, so observed groups of literals are expanded.
+        // A recorded glob stays whole unless its brace alternatives belong to
+        // different projects or name a file the always-on set hashes.
         let mut buckets: BTreeMap<&str, Vec<String>> = BTreeMap::new();
-        for glob in entry
-            .files
-            .iter()
-            .flat_map(|glob| expand_literal_braces(glob))
-            .filter(|glob| !covered_by_native_instruction(glob))
-        {
-            buckets.entry(owner(&glob)).or_default().push(glob);
+        let mut exclusions: Vec<String> = Vec::new();
+        for glob in &entry.files {
+            let expanded = expand_literal_braces(glob);
+            let kept: Vec<String> = expanded
+                .iter()
+                .filter(|glob| !covered_by_native_instruction(glob))
+                .cloned()
+                .collect();
+            let whole = kept.len() == expanded.len();
+            if glob.starts_with('!') {
+                match whole {
+                    true => exclusions.push(glob.clone()),
+                    false => exclusions.extend(kept),
+                }
+            } else if whole && kept.iter().all(|g| owner(g) == owner(glob)) {
+                buckets.entry(owner(glob)).or_default().push(glob.clone());
+            } else {
+                for glob in kept {
+                    buckets.entry(owner(&glob)).or_default().push(glob);
+                }
+            }
         }
 
         let mut instructions = Vec::new();
         for (project, mut group) in buckets {
             group.sort();
             group.dedup();
+            // Exclusions apply to every recorded positive, so each group takes
+            // the ones that could remove its files.
+            let roots: Vec<String> = group.iter().map(|glob| walk_root(glob)).collect();
+            let mut group_exclusions: Vec<String> = exclusions
+                .iter()
+                .filter(|exclusion| {
+                    let root = walk_root(&exclusion[1..]);
+                    roots.iter().any(|positive| paths_overlap(positive, &root))
+                })
+                .cloned()
+                .collect();
             let visits: Vec<&Vec<String>> = negations
                 .iter()
                 .filter(|(p, _)| p == project)
                 .map(|(_, patterns)| patterns)
                 .collect();
-            let mut declared_negations: Vec<String> = match visits.split_first() {
+            let declared_negations: Vec<String> = match visits.split_first() {
                 None => Vec::new(),
                 Some((first, rest)) => first
                     .iter()
@@ -628,9 +653,10 @@ impl HashPlanner {
                     .cloned()
                     .collect(),
             };
-            declared_negations.sort();
-            declared_negations.dedup();
-            group.extend(declared_negations);
+            group_exclusions.extend(declared_negations);
+            group_exclusions.sort();
+            group_exclusions.dedup();
+            group.extend(group_exclusions);
             instructions.push(HashInstruction::IgnoredFileSet(group));
         }
         instructions.push(HashInstruction::UltracacheConfiguration(

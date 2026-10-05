@@ -1623,6 +1623,91 @@ describe('native task hasher', () => {
     expect(two.inputs.files).not.toContain('libs/child/one.txt');
   });
 
+  it('applies an Ultracache exclusion to the group of the positive it trims', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/doc.md': 'child',
+      'libs/parent/doc.md': 'parent',
+      'libs/parent/README.md': 'excluded',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const store = new UltracacheConfigurationStore(
+      connectToNxDb(
+        join(tempFs.tempDir, 'ultracache-exclusion-db'),
+        'ultracache'
+      )
+    );
+    store.import({
+      requestedCommit: commit,
+      configurationsJson: JSON.stringify({
+        'child:compile': {
+          commit,
+          inputs: ['libs/**/*.md', '!libs/parent/README.md'],
+          outputs: [],
+        },
+      }),
+    });
+
+    const hash = await impl.hashTask(
+      taskGraph.tasks['child:compile'],
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      store.get(commit)
+    );
+
+    expect(hash.inputs.files).toContain('libs/parent/doc.md');
+    expect(hash.inputs.files).not.toContain('libs/parent/README.md');
+  });
+
+  it('names Ultracache groups in hash details by their recorded globs', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/a.ts': 'a',
+      'libs/child/x.json': '{}',
+      'libs/parent/x.json': '{}',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const store = new UltracacheConfigurationStore(
+      connectToNxDb(join(tempFs.tempDir, 'ultracache-label-db'), 'ultracache')
+    );
+    store.import({
+      requestedCommit: commit,
+      configurationsJson: JSON.stringify({
+        'child:compile': {
+          commit,
+          inputs: [
+            'libs/child/**/*.{ts,js}',
+            'libs/{child,parent}/x.json',
+            '!libs/child/gen/**',
+            '!apps/app/**',
+          ],
+          outputs: [],
+        },
+      }),
+    });
+
+    const hash = await impl.hashTask(
+      taskGraph.tasks['child:compile'],
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      store.get(commit)
+    );
+
+    // Braces split only across projects; an exclusion trimming nothing is dropped.
+    expect(
+      Object.keys(hash.details)
+        .filter((key) => key.startsWith('files:['))
+        .sort()
+    ).toEqual([
+      'files:[libs/child/**/*.{ts,js},libs/child/x.json,!libs/child/gen/**]',
+      'files:[libs/parent/x.json]',
+    ]);
+  });
+
   it.each(['libs/child/[(]group[)]/page.md', 'libs/child/\\(group\\)/page.md'])(
     'hashes an Ultracache read of a parenthesized directory (%s)',
     async (input) => {
