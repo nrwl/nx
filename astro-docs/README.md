@@ -113,38 +113,20 @@ The site uses custom content loaders to dynamically generate documentation:
 - **PluginLoader** (`plugin.loader.ts`) - Generates official plugin documentation (generators, executors, migrations)
 - **CommunityPluginsLoader** (`community-plugins.loader.ts`) - Generates data for plugin registry (e.g. GitHub stars, npm downloads)
 - **NxReferencePackagesLoader** (`nx-reference-packages.loader.ts`) - Generated data for CNW, Devkit, nx cli (e.g. nx core related things)
-- **NxCloudPublicApiLoader** (`nx-cloud-public-api.loader.ts`) - Fetches the deployed OpenAPI specification into the `nx-cloud-public-api` collection and generates the API reference, including parameters, responses, headers, and schemas.
+- **NxCloudPublicApiLoader** (`nx-cloud-public-api.loader.ts`) - Generates the Public API reference from the deployed OpenAPI specification.
 
 ### Nx Cloud Public API reference
 
-The reference at `/docs/reference/nx-cloud/public-api` is an Astro page backed by the `nx-cloud-public-api` collection, not an authored Markdoc page.
-Set `NX_CLOUD_OPENAPI_URL` to use another deployment instead of `https://cloud.nx.app/nx-cloud/data/openapi.json`.
-The loader fetches the specification directly on each content sync.
+The reference at `/docs/reference/nx-cloud/public-api` uses one model in
+`src/plugins/nx-cloud-public-api/` for the Astro page, Markdown, copy content, and AI exports.
+Edit API descriptions in the upstream OpenAPI source and usage guides in `src/content/docs/kb/`.
 
-The loader fails if the specification cannot be fetched or parsed. It does not publish a static fallback. API descriptions belong in the OpenAPI source; usage instructions belong in the Knowledge Base articles. The generated reference also has a `.md` endpoint and appears in the reference `llms.txt` index.
+The loader fetches `https://cloud.nx.app/nx-cloud/data/openapi.json` on each content sync.
+Set `NX_CLOUD_OPENAPI_URL` to use another deployment.
+Fetch or parse errors fail the sync instead of publishing stale documentation.
 
-The modules in `src/plugins/nx-cloud-public-api/` separate model types, OpenAPI helpers, formatting, model construction, and rendering.
-`model.ts` builds one serializable reference model from the specification.
-The loader stores the model in `data.reference` and generates the Markdown `body` from that same model.
-It renders rich Markdown prose fragments during content loading, not a duplicate full HTML page.
-
-`src/pages/reference/nx-cloud/public-api.astro` renders the model inside `StarlightPage`. The components in `src/components/public-api/` use Starlight headings, badges, and copyable code examples. Each endpoint shows its method, path, description, and parameters before its successful outcome. Response bodies start collapsed, with the successful status beside the summary. Redirects and responses without a body show their declared status and description instead. Other declared codes link to shared details after the successful response.
-
-Descriptions come from the specification unchanged, including `info.description`. Change the OpenAPI source to correct or shorten them. Each HTTP status appears once. Matching body, header, and link definitions share one display, while distinct source descriptions retain their endpoint link targets. Inline response descriptions stay distinct from component descriptions unless the source uses a `$ref`. Schema labels use source titles or component names without changing raw schema anchors. The model supplies explicit heading IDs. `referenceHeadings()` derives the table of contents from the model.
-
-Usage guides appear in two card grids: API setup and use cases. The Markdown export uses the same groups as link lists. The Markdown body retains the source URL, API version, and Knowledge Base links. The page supplies that body to the copy feature. `/docs/reference/nx-cloud/public-api.md`, `/docs/reference/llms.txt`, and `/docs/llms-full.txt` use the collection body; the exports contain no Astro component tags.
-
-Authentication setup and plan eligibility are authored manually in `src/content/docs/kb/authenticate-public-api.mdoc`. Request-audit behavior belongs in `src/content/docs/kb/query-public-api.mdoc`. Raw metrics records and their interpretation are documented in `src/content/docs/kb/read-resource-utilization-reports.mdoc`. The reference and Markdown export link to these guides instead of generating their usage instructions. The existing `#authentication` anchor points to the guide link. Operation-specific security requirements remain with their endpoint.
-
-The `astro-docs:build` target uses the Nx task cache.
-Its runtime input runs `scripts/hash-openapi-spec.mjs`, which fetches the specification and prints its SHA-256 digest.
-The source override also contributes to the cache key.
-A changed specification invalidates the cache without a repository change.
-Content syncs fetch the specification separately and fail if that fetch or parsing fails.
-
-The source override also works for a preview build, for example `NX_CLOUD_OPENAPI_URL=https://snapshot.nx.app/nx-cloud/data/openapi.json mise exec -- pnpm nx build astro-docs`.
-Restart the local development server to fetch a new deployed specification.
-The docs show the selected source's routes and metadata without rewriting beta routes.
+The build uses `scripts/hash-openapi-spec.mjs` as a runtime input.
+Specification changes invalidate the Nx cache without a repository change.
 
 ## Content Management
 
