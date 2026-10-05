@@ -161,6 +161,31 @@ describe('react app generator (legacy)', () => {
     ).toBe(4321);
   });
 
+  it('should serve serve-static on the requested port, where the e2e runner waits', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'pinned-e2e-app',
+      bundler: 'webpack',
+      e2eTestRunner: 'playwright',
+      port: 6123,
+      skipFormat: true,
+    });
+
+    // Playwright starts serve-static and waits on the configured URL. A
+    // serve-static left on @nx/web:file-server's 4200 is never reached.
+    expect(
+      readProjectConfiguration(appTree, 'pinned-e2e-app').targets[
+        'serve-static'
+      ].options.port
+    ).toBe(6123);
+    const pwConfig = appTree.read(
+      'pinned-e2e-app-e2e/playwright.config.mts',
+      'utf-8'
+    );
+    expect(pwConfig).toContain('nx run pinned-e2e-app:serve-static');
+    expect(pwConfig).toContain(`url: 'http://localhost:6123'`);
+  });
+
   it('should write port 0, which asks the dev server for a free port', async () => {
     await applicationGenerator(appTree, {
       ...schema,
