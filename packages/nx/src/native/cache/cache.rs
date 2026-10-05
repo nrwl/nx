@@ -13,7 +13,7 @@ use rusqlite::{params, types::Value};
 use sysinfo::Disks;
 
 use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
-use crate::native::cache::file_ops::{copy_outputs_into_workspace, copy_reporting};
+use crate::native::cache::file_ops::{copy_and_list, copy_outputs_into_workspace};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 use crate::native::workspace::outputs_tracking::OutputFile;
@@ -29,17 +29,21 @@ pub struct CachedOutputs {
     pub files: Vec<OutputFile>,
 }
 
-/// Adds the workspace file at `path` to `files` as it is now. Only a regular
-/// file, or a link to one, is kept: nothing else is an output file to stamp.
-fn note_copied(workspace_root: &Path, path: &Path, files: &parking_lot::Mutex<Vec<OutputFile>>) {
-    let (Ok(relative), Ok(metadata)) = (path.strip_prefix(workspace_root), std::fs::metadata(path))
-    else {
-        return;
-    };
-    if metadata.is_file() {
-        let file = OutputFile::new(relative.to_normalized_string(), &metadata);
-        files.lock().push(file);
-    }
+/// Each workspace file in `paths` as it is now. Only a regular file, or a
+/// link to one, is kept: nothing else is an output file to stamp.
+fn stamp_all<'a>(
+    workspace_root: &Path,
+    paths: impl ParallelIterator<Item = &'a PathBuf>,
+) -> Vec<OutputFile> {
+    paths
+        .filter_map(|path| {
+            let relative = path.strip_prefix(workspace_root).ok()?;
+            let metadata = std::fs::metadata(path).ok()?;
+            metadata
+                .is_file()
+                .then(|| OutputFile::new(relative.to_normalized_string(), &metadata))
+        })
+        .collect()
 }
 
 /// Batch logs older than this are swept. Matches `remove_old_cache_records`.
@@ -431,15 +435,14 @@ impl NxCache {
 
         // Copy the outputs to the cache
         let mut copied_files = 0;
-        let files = parking_lot::Mutex::new(vec![]);
+        let mut written = vec![];
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
                 trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
-                let copied_size = copy_reporting(&p, &cached_outputs_dir, None, &|src, _| {
-                    note_copied(&self.workspace_root, src, &files)
-                })?;
+                let (copied_size, wrote) = copy_and_list(&p, &cached_outputs_dir, None)?;
+                written.extend(wrote);
                 total_size += copied_size;
                 copied_files += 1;
                 trace!(
@@ -457,7 +460,7 @@ impl NxCache {
         debug!("PUT {} {:?}", &hash, start.elapsed());
         Ok(CachedOutputs {
             expanded_outputs,
-            files: files.into_inner(),
+            files: stamp_all(&self.workspace_root, written.par_iter().map(|(src, _)| src)),
         })
     }
 
@@ -665,20 +668,14 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
+        let (size, written) =
+            copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)?;
         // Stamped once the copy is done: a link can be written before the
         // file it points to.
-        let written = parking_lot::Mutex::new(vec![]);
-        let size = copy_outputs_into_workspace(
+        let files = stamp_all(
             &self.workspace_root,
-            outputs_path,
-            &expanded_outputs,
-            &|_, dest| written.lock().push(dest.to_path_buf()),
-        )?;
-        let files = parking_lot::Mutex::new(vec![]);
-        written
-            .into_inner()
-            .par_iter()
-            .for_each(|dest| note_copied(&self.workspace_root, dest, &files));
+            written.par_iter().map(|(_, dest)| dest),
+        );
         let exact = literal && {
             let mut restored = expanded_outputs;
             let mut present = _expand_outputs(&self.workspace_root, outputs)?;
@@ -686,7 +683,7 @@ impl NxCache {
             present.sort();
             restored == present
         };
-        Ok((size, exact.then(|| files.into_inner())))
+        Ok((size, exact.then_some(files)))
     }
 
     #[napi]
