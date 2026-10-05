@@ -8,7 +8,6 @@ import {
   recordOutputsInContext,
 } from '../../utils/workspace-context';
 import {
-  disableOutputsTracking,
   outputsHashesMatchBatch,
   recordOutputsHashBatch,
 } from './outputs-tracking';
@@ -27,15 +26,9 @@ describe('outputs tracking', () => {
       entries
     );
     expect(outputsHashesMatchBatch(entries)).toEqual([true]);
-  });
-
-  // Runs last: disabling is permanent for the module.
-  it('stops recording and never matches once disabled', () => {
-    disableOutputsTracking();
-
-    recordOutputsHashBatch(entries);
-    expect(recordOutputsInContext).not.toHaveBeenCalled();
-    expect(outputsHashesMatchBatch(entries)).toEqual([false]);
-    expect(outputsUnchangedInContext).not.toHaveBeenCalled();
+    expect(outputsUnchangedInContext).toHaveBeenCalledWith(
+      expect.any(String),
+      entries
+    );
   });
 });

@@ -4,9 +4,6 @@ import { EventType, type WatchEvent } from '../../native';
 vi.mock('../logger', () => ({
   serverLogger: { watcherLog: vi.fn() },
 }));
-vi.mock('./outputs-tracking', () => ({
-  disableOutputsTracking: vi.fn(),
-}));
 vi.mock('./project-graph-incremental-recomputation', () => ({
   currentProjectGraph: undefined,
   getRecomputationGeneration: vi.fn(() => 7),
@@ -26,9 +23,6 @@ vi.mock('./dotenv-graph-changes', () => ({
 describe('handleOutputsChanges', () => {
   let handleOutputsChanges: typeof import('./handle-outputs-changes').handleOutputsChanges;
   let getOutputsWatcherTerminalError: typeof import('./handle-outputs-changes').getOutputsWatcherTerminalError;
-  let outputsTracking: {
-    disableOutputsTracking: Mock;
-  };
   let recomputation: {
     invalidateGraphCache: Mock;
   };
@@ -49,7 +43,6 @@ describe('handleOutputsChanges', () => {
     vi.clearAllMocks();
     ({ handleOutputsChanges, getOutputsWatcherTerminalError } =
       await import('./handle-outputs-changes'));
-    outputsTracking = (await import('./outputs-tracking')) as any;
     recomputation =
       (await import('./project-graph-incremental-recomputation')) as any;
     dotenvChanges = (await import('./dotenv-graph-changes')) as any;
@@ -68,10 +61,9 @@ describe('handleOutputsChanges', () => {
     expect(dotenvChanges.classifyDotEnvChanges).not.toHaveBeenCalled();
     // A rescan is recoverable: the watch stream is still alive.
     expect(getOutputsWatcherTerminalError()).toBeUndefined();
-    expect(outputsTracking.disableOutputsTracking).not.toHaveBeenCalled();
   });
 
-  it('records a native watcher error as terminal, preserving its message, and disables outputs tracking', async () => {
+  it('records a native watcher error as terminal, preserving its message', async () => {
     await handleOutputsChanges(
       'inotify_add_watch failed registering new directory watch: limit',
       null
@@ -80,17 +72,15 @@ describe('handleOutputsChanges', () => {
     expect(getOutputsWatcherTerminalError().message).toContain(
       'inotify_add_watch'
     );
-    expect(outputsTracking.disableOutputsTracking).toHaveBeenCalled();
   });
 
   it('does not record an empty delivery as terminal', async () => {
     await handleOutputsChanges(null, []);
 
     expect(getOutputsWatcherTerminalError()).toBeUndefined();
-    expect(outputsTracking.disableOutputsTracking).toHaveBeenCalled();
   });
 
-  it('invalidates the graph when dotenv classification fails, leaving outputs tracking on', async () => {
+  it('invalidates the graph when dotenv classification fails', async () => {
     dotenvChanges.classifyDotEnvChanges.mockImplementationOnce(() => {
       throw new Error('boom');
     });
@@ -98,7 +88,6 @@ describe('handleOutputsChanges', () => {
 
     expect(recomputation.invalidateGraphCache).toHaveBeenCalled();
     expect(getOutputsWatcherTerminalError()).toBeUndefined();
-    expect(outputsTracking.disableOutputsTracking).not.toHaveBeenCalled();
   });
 
   it('forwards unclassified dotenv events to the pending queue without invalidating', async () => {

@@ -3,7 +3,6 @@ import {
   classifyDotEnvChanges,
   queuePendingDotEnvEvents,
 } from './dotenv-graph-changes';
-import { disableOutputsTracking } from './outputs-tracking';
 import {
   currentProjectGraph,
   getRecomputationGeneration,
@@ -40,7 +39,6 @@ export const handleOutputsChanges: WatchEventsListener = async (
         error.message
       );
       console.error(error);
-      disableOutputsTracking();
       if (err) {
         // A native error is terminal: the watch loop has exited, so the
         // gitignored dotenv edits only this watcher reports stop arriving and
@@ -76,9 +74,7 @@ export const handleOutputsChanges: WatchEventsListener = async (
     // the files the watch keeps, so a path it does not hold is gitignored,
     // already deleted, or not yet ingested, and each of those needs the
     // invalidation. A missing context answers with nothing, which invalidates
-    // too. Its own try/catch so a fault
-    // here cannot trip the outputs-tracking kill switch below, which belongs
-    // to an unrelated subsystem, and it fails safe by invalidating: a stale
+    // too. Its own try/catch so a fault fails safe by invalidating: a stale
     // graph on a dotenv edit is the bug this prevents.
     try {
       const { invalidating, unclassified } = classifyDotEnvChanges(
@@ -110,6 +106,5 @@ export const handleOutputsChanges: WatchEventsListener = async (
   } catch (err) {
     serverLogger.watcherLog(`Unexpected outputs watcher error`, err.message);
     console.error(err);
-    disableOutputsTracking();
   }
 };
