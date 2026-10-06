@@ -43,6 +43,10 @@ const NONINTERACTIVE = process.env.REVIEW_NONINTERACTIVE === '1';
 // working or this floor has passed. Measured misfires: 2026-08-31 killed 3/3 on a
 // transient `gone`, 2026-08-28 killed 2/2 on a transient `idle`.
 const MIN_RUN_SECS = int(process.env.MIN_RUN_SECS, 90);
+// A child settles its turn while its own background shells keep running. Most reviews
+// rebuild the native binding first, which parks the child for minutes, so wait this long
+// without progress before believing a settled child with a live shell is dead.
+const SHELL_HOLD_MS = int(process.env.SHELL_HOLD_MS, 20 * 60 * 1000);
 
 type PrState =
   | 'queued'
@@ -63,6 +67,8 @@ interface Pr {
   pane?: string;
   /** Set once the child has been observed `working` — see `startupGrace`. */
   sawWorking?: boolean;
+  /** Deadline for excusing a settled child that still has a shell running. */
+  shellHoldUntil?: number;
   /** Epoch seconds at `agent start`; the draft must be newer than this to count. */
   startedAt: number;
   /** What to send the child. Differs for a draft PR opened in with --include-drafts. */
@@ -224,6 +230,25 @@ async function paneLooksThrottled(name: string): Promise<boolean> {
     '40',
   ]);
   return CAPACITY_BANNER.test(stdout || stderr || '');
+}
+
+/**
+ * Claude Code settles a turn while its own background shells keep running, and re-invokes
+ * the child when one exits. A settled child with a live shell is mid-review, not dead.
+ */
+export const RUNNING_SHELL = /\b(?:\d+ )?shells? still running\b/i;
+
+async function paneHasRunningShell(name: string): Promise<boolean> {
+  const { stdout, stderr } = await run('herdr', [
+    'agent',
+    'read',
+    name,
+    '--source',
+    'visible',
+    '--lines',
+    '40',
+  ]);
+  return RUNNING_SHELL.test(stdout || stderr || '');
 }
 
 async function agentStatus(name: string): Promise<string> {
@@ -510,7 +535,11 @@ async function watch(pr: Pr, board: Board): Promise<Outcome> {
     if (verdict) return { kind: 'parked', verdict };
 
     const status = await agentStatus(name);
-    if (status === 'working') pr.sawWorking = true;
+    if (status === 'working') {
+      pr.sawWorking = true;
+      // Progress, so the shell hold below measures time since the last of it.
+      pr.shellHoldUntil = undefined;
+    }
     switch (status) {
       case 'blocked': {
         // No draft, so this is a permission dialog and not the grill. Keep the slot:
@@ -557,6 +586,17 @@ async function watch(pr: Pr, board: Board): Promise<Outcome> {
           log(`#${pr.number} resumed`);
           await waitSettled(name);
           break;
+        }
+        // A settled turn with a live shell is a child waiting on its own work, most often
+        // the native rebuild a stale sandbox binding forces. Poll rather than wait on a
+        // state change, so the hold deadline still gets checked while the shell runs.
+        if (status !== 'gone' && (await paneHasRunningShell(name))) {
+          pr.shellHoldUntil ??= Date.now() + SHELL_HOLD_MS;
+          if (Date.now() < pr.shellHoldUntil) {
+            board.set(pr, 'running', 'background shell still running');
+            await sleep(15000);
+            break;
+          }
         }
         return {
           kind: 'failed',

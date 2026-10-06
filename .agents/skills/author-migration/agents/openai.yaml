@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Author Migration'
+  short_description: 'Nx workflow: author migration'

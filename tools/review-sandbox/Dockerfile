@@ -55,11 +55,25 @@ RUN mise trust /work/mise.toml \
 #                        Without it corepack silently activates the LATEST pnpm.
 #   pnpm-lock.yaml       what `pnpm fetch` resolves.
 #   pnpm-workspace.yaml  declares patchedDependencies (and the catalog).
-#   patches/             without it the fetch aborts: ERR_PNPM_PATCH_FILE_PATH_MISSING.
-#                        Empty when the repo patches no dependency.
+#   patches/             the directory must exist for the COPY below. Its contents matter
+#                        only while pnpm-workspace declares patchedDependencies; without
+#                        them the fetch aborts with ERR_PNPM_PATCH_FILE_PATH_MISSING.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml /work/
 COPY patches /work/patches
+# Drop the release-age gate from this copy. It re-checks ~4850 lockfile entries against the
+# registry on every build and starves the tarball fetches below until they abort. The gate
+# governs policy, not resolution, so what gets fetched is unchanged.
+RUN awk '/^minimumReleaseAge/ { skip=1; next } skip && /^[[:space:]]/ { next } { skip=0; print }' \
+      /work/pnpm-workspace.yaml > /work/pnpm-workspace.next \
+    && mv /work/pnpm-workspace.next /work/pnpm-workspace.yaml
+
+# Large metadata documents (playwright-core and friends) take ~18 s alone and stretch
+# well past pnpm's 60 s default under parallel load, which aborts the whole fetch.
+# A longer ceiling with less concurrency completes where the default times out.
+# Set as env rather than --config.*, which passes values as strings and trips pnpm's
+# own numeric validation ("Expected `concurrency` to be a number ... got `8` (string)").
 RUN corepack prepare --activate \
-    && pnpm fetch --dir /work \
+    && NPM_CONFIG_FETCH_TIMEOUT=600000 NPM_CONFIG_NETWORK_CONCURRENCY=8 \
+       pnpm fetch --lockfile-dir /work \
     && rm -rf /work/node_modules \
     && pnpm store path

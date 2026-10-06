@@ -145,6 +145,19 @@ On a maintainer's own PR, drop the thanks and say the state:
 
 > Assigned. Ready for review whenever there's a slot.
 
+**When the assignee is the account the comment posts from, write in the first person.** The comment
+goes out under a maintainer's name, so "someone will review it as time allows" on a record that
+assigns that same maintainer has them referring to themselves in the third person. It reads as a bot
+wearing their account, which is the one impression this whole section exists to avoid. Say what they
+are actually doing:
+
+> Thanks for the PR. I've picked this up and will review it as time allows.
+
+The `assign` field is what to check, not the scope label, and it is worth checking on every record
+rather than only on the ones that feel like yours. Routing on continuity, on an `os:` row, or on a
+single-owner scope such as `scope: repo` or `scope: devkit` all land on the same person often enough
+that the third-person phrasing slips through unnoticed.
+
 **Never leave the block alone with no prose above it.** Someone opening the issue then sees a single
 summary line and nothing else, which reads as a bot dropping an artifact on their thread. That is the
 exact impression the attribution split exists to avoid.

@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Check Docs Style'
+  short_description: 'Nx workflow: check docs style'

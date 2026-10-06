@@ -142,12 +142,21 @@ So the draft on disk is authoritative and herdr state only corroborates it:
 | -------------------------------------- | -------------- | --------------------------------------------------------------- |
 | settled (`blocked`/`idle`/`done`/gone) | yes            | release slot → `awaiting-grill`, **permanently**                |
 | `blocked`                              | no             | **hold** slot, print `NEEDS INPUT`; resume on `--until working` |
+| `idle` / `done`, shell still running   | no             | **hold** slot and poll — it is waiting on its own background work |
 | `idle` / `done` / gone                 | no             | **only past the startup floor** → `failed`, ready to re-run     |
 
 The `idle`-with-no-draft row is load-bearing: a review can die mid-run (session limit)
 and review-pr writes **no partial draft**, so without it the scheduler waits on a corpse.
 The record still exists in that case — `review stage` created it at launch — and moves to
 `status: failed`, so a death is visible to `review watch` rather than being an absence.
+
+A settled child is not always a dead one. Claude Code ends its turn while its own background
+shells keep running, and the harness re-invokes the child when one exits. Most reviews hit
+this, because the sandbox ships a published native binding that lags the PR and rebuilding it
+takes minutes the child spends parked. So a settled child whose pane still reports a running
+shell keeps its slot and gets polled, for `SHELL_HOLD_MS` measured from the last time it was
+seen `working`. The match is deliberately narrow, because the transcript prints "Ran N shell
+commands" on every tool call and matching that would hold every child forever.
 
 ### The startup floor
 
@@ -252,7 +261,8 @@ else entirely — set them deliberately), `NX_REPO_PATH`
 (`~/repos/nx`), `TICK_SECS` (30), `SETTLE_TIMEOUT_MS` (1 h), `RESUME_TIMEOUT_MS` (24 h — how long a
 permission prompt may sit unanswered while holding its slot), `DISK_RESERVE_GB` (12),
 `SEED_SANDBOX_GB` (6), `PRUNE_AT_END` (1), `MIN_RUN_SECS` (90 — the startup floor below
-which a settled-looking child is re-checked instead of failed).
+which a settled-looking child is re-checked instead of failed), `SHELL_HOLD_MS` (20 min — how
+long a settled child with a background shell still running is excused before it is failed).
 
 `REVIEW_NONINTERACTIVE` is deliberately **not** set by default: setting it makes children skip the
 grill and run to completion, which gives up the slot model's handoff — the parking _is_ how the

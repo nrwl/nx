@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Review Pending Pr Reviews'
+  short_description: 'Nx workflow: review pending pr reviews'

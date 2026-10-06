@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Triage Issues'
+  short_description: 'Nx workflow: triage issues'

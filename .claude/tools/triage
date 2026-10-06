@@ -1476,7 +1476,20 @@ function cmdApply(args) {
       if (dryRun) continue;
       const res = spawnSync('gh', argv, { encoding: 'utf8' });
       if (res.status !== 0) {
-        failed = (res.stderr || res.stdout || `gh exited ${res.status}`).trim();
+        const err = (res.stderr || res.stdout || `gh exited ${res.status}`).trim();
+        // `pendingRunIds` reads a repo-wide action_required listing, which is a
+        // snapshot: a run can be approved by an earlier record in the same batch,
+        // or start on its own, before this POST lands. The run is approved either
+        // way, and failing here would replay the comment on the next attempt.
+        const alreadyApproved =
+          argv[0] === 'api' &&
+          String(argv[3] || '').endsWith('/approve') &&
+          /not waiting for approval/i.test(err);
+        if (alreadyApproved) {
+          console.log('    already approved, continuing');
+          continue;
+        }
+        failed = err;
         break;
       }
     }

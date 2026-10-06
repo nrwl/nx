@@ -3,6 +3,7 @@
  * Run: npx tsx .claude/skills/review-many-prs/scripts/review-many-prs.spec.ts
  */
 import {
+  RUNNING_SHELL,
   SlotPool,
   parsePrs,
   projectSandboxCostKb,
@@ -133,6 +134,32 @@ async function main() {
     'never negative long after launch',
     startupGrace({ startedAt: started, sawWorking: false }, t0 + 3_600_000, 90),
     0
+  );
+
+  console.log('RUNNING_SHELL');
+  check(
+    'settled status line with a live shell',
+    RUNNING_SHELL.test(
+      '✻ Cooked for 4m 35s · done 12:50 AM · 1 shell still running'
+    ),
+    true
+  );
+  check(
+    'plural',
+    RUNNING_SHELL.test('done 12:50 AM · 3 shells still running'),
+    true
+  );
+  // The transcript says this whenever the child runs anything, so matching a bare
+  // "N shell" would hold every settled child forever.
+  check(
+    'transcript shell-command lines do not match',
+    RUNNING_SHELL.test('  Ran 2 shell commands'),
+    false
+  );
+  check(
+    'footer shell count alone does not match',
+    RUNNING_SHELL.test('⏵⏵ auto mode on · 1 shell · ← 5 agents'),
+    false
   );
 
   console.log('SlotPool');

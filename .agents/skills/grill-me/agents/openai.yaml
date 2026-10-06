@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Grill Me'
+  short_description: 'Resolve open decisions through questions'

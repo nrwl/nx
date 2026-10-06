@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Multi Version Compliance'
+  short_description: 'Nx workflow: multi version compliance'
