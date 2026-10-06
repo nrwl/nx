@@ -10,7 +10,7 @@ topics:
 ---
 
 {% llm_copy_prompt title="Migrate server-side rendered Angular Module Federation apps" %}
-Migrate the server build of each server-side rendered Angular Module Federation app in this workspace off the Nx Module Federation APIs that Nx v24 removes. An app with a `server` target or a `webpack.server.config.*` file is server-side rendered. Follow Path A of https://nx.dev/docs/kb/migrate-angular-module-federation for the browser build, and do the server steps at {pageUrl} before that guide's Step 3. Native Federation is not covered, so stop and report if the user asks for it on a server-side rendered app.
+Migrate the server build of each server-side rendered Angular Module Federation app in this workspace off the Nx Module Federation APIs that Nx v24 removes. An app with a `server` target or a `webpack.server.config.*` file is server-side rendered. Complete Path A of https://nx.dev/docs/kb/migrate-angular-module-federation for the browser build first, then follow every step at {pageUrl}. Native Federation is not covered, so stop and report if the user asks for it on a server-side rendered app.
 
 Rules that override any shortcut you are tempted to take:
 
@@ -18,17 +18,17 @@ Rules that override any shortcut you are tempted to take:
 2. Replace `withModuleFederationForSSR` from `@nx/module-federation/angular` with `ModuleFederationPlugin` from `@module-federation/enhanced/webpack`. Keep `@module-federation/node` as a dependency.
 3. The server container sets `library: { type: 'commonjs-module' }`, `remoteType: 'script'`, `experiments: { asyncStartup: true }`, and `runtimePlugins: [require.resolve('@module-federation/node/runtimePlugin')]`. Its remote URLs keep the `name@` prefix and point at `<origin>/server/remoteEntry.js`, even though the browser container is `.mjs`.
 4. Copy the server `shared` map from the server stats.
-5. Write the server configs before the browser `module-federation.config.js`. The old server config imports it without an extension and breaks once it exists.
+5. The server build fails after Path A until the server configs are replaced, because the old `webpack.server.config.ts` imports the new browser `module-federation.config.js`. Only validate the server build at the end.
 6. Swap `@nx/angular:module-federation-dev-ssr` for `@angular-devkit/build-angular:ssr-dev-server` with an explicit `port`. A static run is `node dist/apps/<app>/server/main.js`, never `@nx/web:file-server`.
 7. Accept the migration only when each host route's HTML holds the remote's markup and client scripts, and the page hydrates in a browser without errors. Report what you verified and what you did not.
 
 Reference: {pageUrl}
 {% /llm_copy_prompt %}
 
-{% aside type="caution" title="Follow the browser guide alongside this one" %}
-This guide covers only the server build. Start with Path A of
-[migrating the browser build](/docs/kb/migrate-angular-module-federation), do the steps below
-before its Step 3, then finish the browser guide.
+{% aside type="caution" title="Migrate the browser build first" %}
+This guide covers only the server build. Complete Path A of
+[migrating Angular Module Federation](/docs/kb/migrate-angular-module-federation) for every app,
+then come back here.
 {% /aside %}
 
 A host or remote generated with `--ssr` builds the same container twice, once for the browser and
@@ -56,9 +56,9 @@ Each remote's Express server serves its server build under `/server`, and the ho
 remote URLs point there. Keep that static mount in every remote's `server.ts`.
 
 A host or remote generated with `--ssr` has a `server` target on `@nx/angular:webpack-server`
-whose `webpack.server.config.ts` calls `withModuleFederationForSSR`. Do these steps before you
-write the browser guide's Step 3 files, because the old `webpack.server.config.ts` imports
-`./module-federation.config` without an extension and breaks once the new file exists.
+whose `webpack.server.config.ts` calls `withModuleFederationForSSR`. That config imports the
+browser federation config, so the server build fails after Path A until you finish the steps
+below.
 
 ## Server federation config
 
@@ -121,7 +121,7 @@ module.exports = (config) => ({
 ```
 
 `main.server.ts`, `bootstrap.server.ts`, and the routes need no change. Delete
-`webpack.server.config.ts` along with the other old files.
+`webpack.server.config.ts`.
 
 ## Targets
 
