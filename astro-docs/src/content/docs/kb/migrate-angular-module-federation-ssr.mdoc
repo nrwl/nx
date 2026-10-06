@@ -47,7 +47,7 @@ Native Federation server-side rendering is not covered.
 With `--ssr`, copy the browser stats from `dist/apps/<app>/browser/mf-stats.json` and the server
 stats from `dist/apps/<app>/server/mf-stats.json`.
 
-Save the HTML each host route returns with `curl`. You compare against it at the end.
+Also save the HTML each host route returns with `curl` to compare against at the end.
 
 ## Server container settings
 
@@ -121,7 +121,7 @@ module.exports = (config) => ({
 ```
 
 `main.server.ts`, `bootstrap.server.ts`, and the routes need no change. Delete
-`webpack.server.config.ts` with the other old files.
+`webpack.server.config.ts` along with the other old files.
 
 ## Targets
 

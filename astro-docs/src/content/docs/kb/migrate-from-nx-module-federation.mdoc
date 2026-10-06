@@ -29,9 +29,9 @@ Reference: {pageUrl}
 
 Nx v23 deprecates the Module Federation wrappers, runtime helpers, dev-server executors, and
 generators that `@nx/module-federation`, `@nx/react`, `@nx/rspack`, and `@nx/angular` ship today.
-Nx v24 will remove them. The replacement is the official
-[Module Federation](https://module-federation.io) plugins. `withModuleFederation` already wraps
-them, so each app keeps its bundler.
+Nx v24 will remove them and leave you on the official
+[Module Federation](https://module-federation.io) plugins, which `withModuleFederation` already
+wraps, so each app keeps its bundler.
 
 Migrate before you upgrade to v24, while the old setup still builds and you can compare against
 it. Nx will also ship migrations for this later.
@@ -82,8 +82,8 @@ library. Write down what works now:
 - Serve the host and its remotes, and visit the routes that load each remote.
 - Edit a file in the host and in a remote. Both should refresh the app.
 - Run a production build and note the artifacts you depend on, such as each remote's
-  `remoteEntry.js`. Expect chunk names and order to change. The federation config is what you
-  reproduce.
+  `remoteEntry.js`. Chunk names and order will change, so reproduce the federation config rather
+  than the exact output.
 - Copy each `dist/apps/<app>/mf-stats.json` out of `dist` before you rebuild. Steps 3 and 4
   reproduce its `shared` map, `exposes`, and container name.
 - Note each app's `serve` port for the remote URLs in Step 5.
@@ -122,7 +122,7 @@ reinstall to update the lockfile. If it's missing, install it:
 npm add --save-prod @module-federation/enhanced
 ```
 
-Step 7 calls the bundler CLI. Rspack workspaces already declare `@rspack/cli`. Webpack
+Step 7 calls the bundler CLI. Rspack workspaces already declare `@rspack/cli`, but webpack
 workspaces that only built through the Nx executor usually lack `webpack-cli`:
 
 ```shell
@@ -145,9 +145,9 @@ generated `rspack.config.prod.ts`, which the inferred build never loads.
 
 ### Container name and import alias
 
-The container name is normalized. Every character outside `[a-zA-Z0-9_$]` becomes `_`, as does
-a leading character that can't start an identifier. `webpack-host` publishes as `webpack_host`.
-Use that form for `name`.
+The container name is normalized: every character outside `[a-zA-Z0-9_$]` becomes `_`, as does
+a leading character that can't start an identifier, so `webpack-host` publishes as
+`webpack_host`. Use that form for `name`.
 
 The import alias stays the original project name. The key in `remotes` is the alias, and
 `webpackRemoteA/Module` keeps working.
@@ -277,7 +277,7 @@ Check these against the stats.
 - **Secondary entry points are separate keys.** `pkg` does not cover `pkg/subpath`. List the
   subpaths the stats show.
 - **`additionalShared` entries set their own values.** The same package can appear with a
-  different range and no `strictVersion`. Copy each entry as it is. Drop entries the stats don't
+  different range and no `strictVersion`, so copy each entry as it is and drop any the stats don't
   list.
 - **The stats rewrite one field.** A callback that set `requiredVersion: false` shows up as
   `requiredVersion: '^<version>'`. For a workspace library, keep the `false` and your callback's
@@ -408,7 +408,7 @@ map. Hosts load its exposed module, not its `main.ts`, and a registration there 
 
 {% aside type="note" title="Staying with static remotes" %}
 Keep the `remotes` map from Step 3 and the `tsconfig.base.json` paths, and skip this step.
-Every remote then has to run before the host boots. Serve them together:
+Every remote then has to be running before the host boots, so serve them together:
 `nx run-many -t serve -p webpack-host webpackRemoteA webpackRemoteB`.
 {% /aside %}
 
@@ -424,8 +424,8 @@ resolved URL as the `entry` in `registerRemotes`.
 ## Step 6: swap the wrapper in the bundler config
 
 `composePlugins(withNx(), withReact(), withModuleFederation(config))` returns an Nx-specific
-config function. The Rspack and webpack CLIs can't run it. Replace it with a standard config object
-that adds `ModuleFederationPlugin`, then move `build` and `serve` to the CLI in Step 7.
+config function that the Rspack and webpack CLIs can't run. Replace it with a standard config
+object that adds `ModuleFederationPlugin`, then move `build` and `serve` to the CLI in Step 7.
 
 The options on your old `build` target become `NxAppRspackPlugin` or `NxAppWebpackPlugin`
 options. When you move them:
@@ -441,7 +441,7 @@ options. When you move them:
 - Leave no build options on the target. The plugin merges in the running target's `project.json`
   options, and they win.
 
-The wrapper also changed these bundler settings. Set them yourself.
+The wrapper also changed these bundler settings, which you now set yourself.
 
 | Setting                     | Value                                                                                                                                                                                              |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -573,8 +573,8 @@ file.
 The official plugin only covers the build. The host's `serve` no longer starts its remotes, so
 you start the ones you need.
 
-Point `build` and `serve` at the bundler CLI. `NODE_ENV` replaces the named configurations the
-executor passed:
+Point `build` and `serve` at the bundler CLI, with `NODE_ENV` in place of the named
+configurations the executor passed:
 
 ```jsonc
 // apps/rspack-host/project.json
@@ -744,7 +744,7 @@ with these checks.
 - In development, with at least one remote served statically, an edit to a host file and an edit
   to a live remote both update the page without a reload.
 
-Record baseline failures separately. Don't weaken an assertion to get a pass.
+Record baseline failures separately instead of weakening an assertion to get a pass.
 
 ## Step 9: remove the package
 

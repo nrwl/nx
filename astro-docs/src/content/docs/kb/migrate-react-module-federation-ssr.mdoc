@@ -43,10 +43,9 @@ once for Node. The server build needs its own container format, runtime plugin, 
 
 ## Capture the server baseline
 
-With `--ssr`, copy the browser stats from `dist/apps/<app>/browser/mf-stats.json`. Server builds
-write none.
-
-Save the HTML each host route returns with `curl`. You compare against it at the end.
+With `--ssr`, copy the browser stats from `dist/apps/<app>/browser/mf-stats.json`, since server
+builds write none. Also save the HTML each host route returns with `curl` to compare against at
+the end.
 
 ## Server container settings
 
