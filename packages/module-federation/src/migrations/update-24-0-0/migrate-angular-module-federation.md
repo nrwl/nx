@@ -31,7 +31,7 @@ Rules 2 to 7 cover Path A. On Path B, follow that section of the page instead:
 7. Remove `@nx/module-federation` only after the new setup builds and runs. Move `@module-federation/enhanced` to `dependencies` (`pnpm add -P` on pnpm). Rebuild uncached, production last. On Rspack a development build needs `NGRS_CONFIG=development`, or it exits 0 with production output. After removing the package, rename any copy left in `node_modules` (pnpm keeps one under `.pnpm/` for optional peers) for one uncached build, then put it back.
 8. Do not claim hot-update parity or shared-state parity from a green build. Remote edits reach the host after a reload, before and after this migration. On Rspack the first load after the dev server starts can need one reload. `Cannot find module '<id>'` while loading `./Routes` means a stale cache: run `nx reset`, delete `.angular/cache`, and rebuild. Report what you verified and what you did not.
 9. On Path B, install the `@angular-architects/native-federation` release matching the workspace's Angular major and minor. A host calling `loadRemote('remoteA/Routes')` switches to `loadRemoteModule('remoteA', './Routes')`.
-10. For apps with a server build (a `server` target or a `webpack.server.config.*` file), also follow https://nx.dev/docs/kb/migrate-angular-module-federation-ssr before Step 3. Path B does not cover server-side rendering. Stop and report if the user asks for Path B on one.
+10. For apps with a server build (a `server` target or a `webpack.server.config.*` file), follow https://nx.dev/docs/kb/migrate-angular-module-federation-ssr after Path A. Path B does not cover server-side rendering. Stop and report if the user asks for Path B on one.
 
 Nx v23 deprecates the Angular Module Federation generators, executors, runtime helpers, and the
 `withModuleFederation` and `NxModuleFederationPlugin` wrappers in `@nx/module-federation/angular`.
@@ -50,9 +50,9 @@ You have one decision to make before you start:
   and onto the esbuild-based `@angular/build:application` builder. It is the larger change, and
   the one more likely to track Angular's own direction.
 
-> **Scope:** Static and runtime-loaded remotes. For server-side rendered (`--ssr`) apps, follow Path A and
-> [migrate server-side rendered apps](https://nx.dev/docs/kb/migrate-angular-module-federation-ssr), which changes the
-> server build before Step 3. Path B does not cover them. For React, see the
+> **Scope:** Static and runtime-loaded remotes. For server-side rendered (`--ssr`) apps, follow Path A, then
+> [migrate server-side rendered apps](https://nx.dev/docs/kb/migrate-angular-module-federation-ssr). Path B does
+> not cover them. For React, see the
 > [React guide](https://nx.dev/docs/kb/migrate-from-nx-module-federation).
 
 ## What replaces what
@@ -117,9 +117,9 @@ group.
   on Path A. Nx 23.2 generates `--dynamic` hosts this way. If it ends in `setRemoteDefinitions`
   from `@nx/angular/mf`, Step 5 converts it.
 
-For server-side rendered apps (a `server` target or a `webpack.server.config.ts`), read
-[migrate server-side rendered apps](https://nx.dev/docs/kb/migrate-angular-module-federation-ssr) before you start
-Step 3.
+Server-side rendered apps (a `server` target or a `webpack.server.config.ts`) follow Path A, then
+[migrate server-side rendered apps](https://nx.dev/docs/kb/migrate-angular-module-federation-ssr). Their server
+build fails in between.
 
 ## Path A, the official plugin on webpack or Rspack
 
@@ -723,7 +723,7 @@ Path B, the
 
 ## Rules
 
-Migrate the server build of each server-side rendered Angular Module Federation app in this workspace off the Nx Module Federation APIs that Nx v24 removes. An app with a `server` target or a `webpack.server.config.*` file is server-side rendered. Follow Path A of https://nx.dev/docs/kb/migrate-angular-module-federation for the browser build, and do the server steps at https://nx.dev/docs/kb/migrate-angular-module-federation-ssr before that guide's Step 3. Native Federation is not covered, so stop and report if the user asks for it on a server-side rendered app.
+Migrate the server build of each server-side rendered Angular Module Federation app in this workspace off the Nx Module Federation APIs that Nx v24 removes. An app with a `server` target or a `webpack.server.config.*` file is server-side rendered. Complete Path A of https://nx.dev/docs/kb/migrate-angular-module-federation for the browser build first, then follow every step at https://nx.dev/docs/kb/migrate-angular-module-federation-ssr. Native Federation is not covered, so stop and report if the user asks for it on a server-side rendered app.
 
 Rules that override any shortcut you are tempted to take:
 
@@ -731,13 +731,13 @@ Rules that override any shortcut you are tempted to take:
 2. Replace `withModuleFederationForSSR` from `@nx/module-federation/angular` with `ModuleFederationPlugin` from `@module-federation/enhanced/webpack`. Keep `@module-federation/node` as a dependency.
 3. The server container sets `library: { type: 'commonjs-module' }`, `remoteType: 'script'`, `experiments: { asyncStartup: true }`, and `runtimePlugins: [require.resolve('@module-federation/node/runtimePlugin')]`. Its remote URLs keep the `name@` prefix and point at `<origin>/server/remoteEntry.js`, even though the browser container is `.mjs`.
 4. Copy the server `shared` map from the server stats.
-5. Write the server configs before the browser `module-federation.config.js`. The old server config imports it without an extension and breaks once it exists.
+5. The server build fails after Path A until the server configs are replaced, because the old `webpack.server.config.ts` imports the new browser `module-federation.config.js`. Only validate the server build at the end.
 6. Swap `@nx/angular:module-federation-dev-ssr` for `@angular-devkit/build-angular:ssr-dev-server` with an explicit `port`. A static run is `node dist/apps/<app>/server/main.js`, never `@nx/web:file-server`.
 7. Accept the migration only when each host route's HTML holds the remote's markup and client scripts, and the page hydrates in a browser without errors. Report what you verified and what you did not.
 
-> **Follow the browser guide alongside this one:** This guide covers only the server build. Start with Path A of
-> [migrating the browser build](https://nx.dev/docs/kb/migrate-angular-module-federation), do the steps below
-> before its Step 3, then finish the browser guide.
+> **Migrate the browser build first:** This guide covers only the server build. Complete Path A of
+> [migrating Angular Module Federation](https://nx.dev/docs/kb/migrate-angular-module-federation) for every app,
+> then come back here.
 
 A host or remote generated with `--ssr` builds the same container twice, once for the browser and
 once for Node. The server build needs its own container format, runtime plugin, and serve targets.
@@ -764,9 +764,9 @@ Each remote's Express server serves its server build under `/server`, and the ho
 remote URLs point there. Keep that static mount in every remote's `server.ts`.
 
 A host or remote generated with `--ssr` has a `server` target on `@nx/angular:webpack-server`
-whose `webpack.server.config.ts` calls `withModuleFederationForSSR`. Do these steps before you
-write the browser guide's Step 3 files, because the old `webpack.server.config.ts` imports
-`./module-federation.config` without an extension and breaks once the new file exists.
+whose `webpack.server.config.ts` calls `withModuleFederationForSSR`. That config imports the
+browser federation config, so the server build fails after Path A until you finish the steps
+below.
 
 ## Server federation config
 
@@ -829,7 +829,7 @@ module.exports = (config) => ({
 ```
 
 `main.server.ts`, `bootstrap.server.ts`, and the routes need no change. Delete
-`webpack.server.config.ts` along with the other old files.
+`webpack.server.config.ts`.
 
 ## Targets
 
