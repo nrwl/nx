@@ -14,9 +14,10 @@ import { normalizeVersion } from './version-utils';
 // the plan phase instead.
 export const NEW_MIGRATE_FLAGS_FLOOR = '23.2.0';
 
-// yargs accepts both spellings of each flag, plus the --no- negation of a
-// boolean, and the raw argv is forwarded across both migrate hops, so
-// detection must catch every one.
+// List only flags that pick which migrate path runs: an older nx drops them
+// and runs another one. Flags read only by --run-migrations do not belong.
+// yargs accepts both spellings of each flag and the raw argv is forwarded
+// across both migrate hops, so detection must catch every one.
 export const NEW_MIGRATE_FLAGS = [
   '--run-migration',
   '--runMigration',
@@ -24,10 +25,6 @@ export const NEW_MIGRATE_FLAGS = [
   '--runId',
   '--step-action',
   '--stepAction',
-  '--final-validation',
-  '--finalValidation',
-  '--no-final-validation',
-  '--no-finalValidation',
 ] as const;
 
 const RUN_ID_FLAGS = ['--run-id', '--runId'] as const;
