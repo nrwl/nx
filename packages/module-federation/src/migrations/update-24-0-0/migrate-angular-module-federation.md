@@ -35,8 +35,9 @@ Rules 2 to 7 cover Path A. On Path B, follow that section of the page instead:
 
 Nx v23 deprecates the Angular Module Federation generators, executors, runtime helpers, and the
 `withModuleFederation` and `NxModuleFederationPlugin` wrappers in `@nx/module-federation/angular`.
-Nx v24 will remove them, but Module Federation itself stays: the Nx APIs wrapped the official
-[Module Federation](https://module-federation.io) plugin, which supports both webpack and Rspack.
+These APIs wrap the official [Module Federation](https://module-federation.io) plugin, which
+supports both webpack and Rspack. Nx v24 removes the wrappers, so migrate your apps to the official
+plugin directly.
 
 Migrate before you upgrade to v24. The old packages still build, which gives you a baseline to
 compare against. Nx will also ship migrations for this later.
