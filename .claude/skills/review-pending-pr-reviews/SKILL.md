@@ -58,8 +58,10 @@ Flag before the action prompt:
   `/review-pr PR_NUMBER`.
 - **Closed/merged** — `state != OPEN`. Recommend `discard`.
 - **Draft PR** — `isDraft == true`. The maintainer may not want to post yet.
-- **Old pipeline** — `pipeline_version` is missing or below `/review-pr`'s current constant. The
-  draft was produced by weaker criteria. Recommend `skip` + re-review rather than posting.
+- **Old pipeline** — `pipeline_version` is missing or below the current constant for the draft's
+  writer. The `reviewer` key names that writer: absent means Claude's `/review-pr`, whose constant is
+  9; `codex` means the Codex `review-pr` skill, which keeps its own. The draft was produced by weaker
+  criteria. Recommend `skip` + re-review rather than posting.
 
 ## 3. Grill the findings before offering to post
 
