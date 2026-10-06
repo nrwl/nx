@@ -43,12 +43,24 @@ where
     _copy_impl(src.as_ref(), dest.as_ref(), None)
 }
 
+/// The source and destination of each file or link a copy wrote.
+pub(crate) type Written = Vec<(PathBuf, PathBuf)>;
+
+pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::Result<i64> {
+    Ok(copy_and_list(src, dest, boundary)?.0)
+}
+
 /// Copy `src` to `dest`.
 ///
 /// With `boundary = Some(root)` the copy is confined to `root` (cache restore):
 /// parents are realized as real dirs (any symlink under `root` is replaced) and
 /// existing entries are removed, not written through. `None` keeps the original.
-pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::Result<i64> {
+/// Returns the bytes copied and what was written.
+pub(crate) fn copy_and_list(
+    src: &Path,
+    dest: &Path,
+    boundary: Option<&Path>,
+) -> anyhow::Result<(i64, Written)> {
     let dest: PathBuf = remove_trailing_single_dot(dest);
     let dest_parent = dest.parent().unwrap_or(&dest);
     let src: PathBuf = src.into();
@@ -74,21 +86,22 @@ pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::R
     // target's contents in). The link is recreated verbatim even if it points
     // outside the workspace — it is only a pointer, and we never write *through*
     // a symlink (create_dir_all_within realizes parents as real directories).
-    let size = if src.is_symlink() {
+    let (size, written) = if src.is_symlink() {
         trace!("Copying symlink: {:?}", &src);
         remove_existing_symlink(&dest)?;
         symlink(fs::read_link(&src)?, &dest)?;
-        0
+        (0, vec![(src.clone(), dest.clone())])
     } else if src.is_dir() {
         trace!("Copying directory: {:?}", &src);
         copy_dir_all(&src, &dest, boundary).map_err(anyhow::Error::new)?
     } else {
         trace!("Copying file: {:?}", &src);
-        fs::copy(&src, &dest)?
+        let size = fs::copy(&src, &dest)?;
+        (size, vec![(src.clone(), dest.clone())])
     };
 
     debug!("Copy completed: {:?} -> {:?} ({} bytes)", &src, &dest, size);
-    Ok(size as i64)
+    Ok((size as i64, written))
 }
 
 /// Create `dir` and missing ancestors without traversing a symlink at or below
@@ -141,8 +154,9 @@ pub fn copy_outputs_into_workspace(
     workspace_root: &Path,
     outputs_path: &Path,
     expanded_outputs: &[String],
-) -> anyhow::Result<i64> {
+) -> anyhow::Result<(i64, Written)> {
     let mut size = 0;
+    let mut written = vec![];
     for output in expanded_outputs {
         let from = outputs_path.join(output);
         // Only restore entries the artifact actually contains.
@@ -151,9 +165,11 @@ pub fn copy_outputs_into_workspace(
             continue;
         }
         let to = workspace_root.join(output);
-        size += _copy_impl(&from, &to, Some(workspace_root))?;
+        let (copied, wrote) = copy_and_list(&from, &to, Some(workspace_root))?;
+        size += copied;
+        written.extend(wrote);
     }
-    Ok(size)
+    Ok((size, written))
 }
 
 fn remove_trailing_single_dot(path: impl AsRef<Path>) -> PathBuf {
@@ -201,7 +217,7 @@ fn copy_dir_all(
     src: impl AsRef<Path>,
     dst: impl AsRef<Path>,
     boundary: Option<&Path>,
-) -> io::Result<u64> {
+) -> io::Result<(u64, Written)> {
     let src = src.as_ref();
     let dst = dst.as_ref();
 
@@ -221,36 +237,42 @@ fn copy_dir_all(
     // `dst` exists before any entry is copied, every entry has its own
     // destination, and a subdirectory creates itself before touching its
     // own entries, so the parallel copies never race one another.
-    let total_size = COPY_POOL.install(|| {
+    let (total_size, written) = COPY_POOL.install(|| {
         entries
             .par_iter()
-            .map(|entry| -> io::Result<u64> {
+            .map(|entry| -> io::Result<(u64, Written)> {
                 let ty = entry.file_type()?;
                 let dest_path = dst.join(entry.file_name());
 
                 if ty.is_dir() {
                     trace!("Copying subdirectory: {:?}", entry.path());
-                    let subdir_size = copy_dir_all(entry.path(), dest_path, boundary)?;
+                    let subdir = copy_dir_all(entry.path(), dest_path, boundary)?;
                     dirs_copied.fetch_add(1, Ordering::Relaxed);
-                    Ok(subdir_size)
+                    Ok(subdir)
                 } else if ty.is_symlink() {
                     trace!("Copying symlink: {:?}", entry.path());
                     remove_existing_symlink(&dest_path)?;
-                    symlink(fs::read_link(entry.path())?, dest_path)?;
+                    symlink(fs::read_link(entry.path())?, &dest_path)?;
                     symlinks_copied.fetch_add(1, Ordering::Relaxed);
-                    Ok(0)
+                    Ok((0, vec![(entry.path(), dest_path)]))
                 } else {
                     trace!("Copying file: {:?}", entry.path());
                     // On restore, don't follow a pre-existing dest symlink.
                     if boundary.is_some() {
                         remove_existing_symlink(&dest_path)?;
                     }
-                    let file_size = fs::copy(entry.path(), dest_path)?;
+                    let file_size = fs::copy(entry.path(), &dest_path)?;
                     files_copied.fetch_add(1, Ordering::Relaxed);
-                    Ok(file_size)
+                    Ok((file_size, vec![(entry.path(), dest_path)]))
                 }
             })
-            .try_reduce(|| 0, |a, b| Ok(a + b))
+            .try_reduce(
+                || (0, vec![]),
+                |(a, mut written), (b, more)| {
+                    written.extend(more);
+                    Ok((a + b, written))
+                },
+            )
     })?;
 
     debug!(
@@ -262,7 +284,7 @@ fn copy_dir_all(
         symlinks_copied.load(Ordering::Relaxed),
         total_size
     );
-    Ok(total_size)
+    Ok((total_size, written))
 }
 
 #[cfg(test)]
@@ -562,7 +584,8 @@ mod test {
             .unwrap();
 
         let expanded = vec!["dist".to_string()];
-        let size = copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        let (size, _) =
+            copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
 
         assert_eq!(size as u64, bytes);
         assert_eq!(

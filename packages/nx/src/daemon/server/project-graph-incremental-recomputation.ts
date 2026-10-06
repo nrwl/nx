@@ -242,8 +242,8 @@ export async function getCachedSerializedProjectGraphPromise(
     await new Promise(setImmediate);
 
     // The queue can hold evidence against the settled cached graph itself: a
-    // tracked dotenv edit only the outputs watcher has delivered yet queues
-    // without invalidating, and the workspace watcher's recomputation may lag
+    // tracked dotenv edit only the raw-event stream has delivered yet queues
+    // without invalidating, and the file-change stream's recomputation may lag
     // this request. Classified against the exact graph the cache serves; an
     // in-flight computation needs no check here because its own pre-serve
     // replay consumes the queue. Content hashes are dropped before the
@@ -377,7 +377,7 @@ export function routeAppliedChanges(batch: ChangeBatch): void {
 }
 
 /**
- * Applies everything the workspace watcher has seen and routes what changed.
+ * Applies everything the file-change stream has seen and routes what changed.
  * Call before serving a cached project graph, so a change the watcher already
  * saw is never missed.
  */
@@ -749,8 +749,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // against the graph about to be served. Runs after the last staleness
     // gate so a stale compute leaves the queue for its successor, and only
     // on the success path: an error result is never notified or persisted.
-    // Queue evidence is decisive here even for files the workspace watcher
-    // tracks: the two watchers deliver independently, so tracking alone does
+    // Queue evidence is decisive here even for files the file-change stream
+    // covers: the two streams deliver independently, so tracking alone does
     // not prove that watcher's recomputation was already scheduled.
     let staleDotEnv: boolean;
     try {

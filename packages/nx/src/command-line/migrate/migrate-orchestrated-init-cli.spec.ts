@@ -489,6 +489,7 @@ describe('migrate() orchestrated init dispatch', () => {
         skipInstall: false,
         installedNxVersion: '23.0.0',
         validate: undefined,
+        finalValidation: undefined,
         agent: selectedAgent,
         interactive: undefined,
         runId: undefined,
@@ -585,20 +586,34 @@ describe('migrate() orchestrated init dispatch', () => {
     });
   });
 
-  it.each<[string, boolean | undefined, string[]]>([
-    ['forwards --validate=false to the run', false, ['--no-validate']],
+  it.each<
+    [string, 'validate' | 'finalValidation', boolean | undefined, string[]]
+  >([
+    [
+      'forwards --validate=false to the run',
+      'validate',
+      false,
+      ['--no-validate'],
+    ],
     [
       'leaves the validation policy unset when the flag is omitted',
+      'validate',
       undefined,
       [],
     ],
-  ])('%s', async (_label, validate, extraArgs) => {
-    await migrate(root, runMigrationsArgs({ validate }), [
+    [
+      'forwards --final-validation=false to the run',
+      'finalValidation',
+      false,
+      ['--no-final-validation'],
+    ],
+  ])('%s', async (_label, option, value, extraArgs) => {
+    await migrate(root, runMigrationsArgs({ [option]: value }), [
       '--run-migrations',
       ...extraArgs,
     ]);
 
     // Raw flag value on purpose: the run records the resolved policy itself.
-    expect(mockRunOrchestratorInit.mock.calls[0][0].validate).toBe(validate);
+    expect(mockRunOrchestratorInit.mock.calls[0][0][option]).toBe(value);
   });
 });

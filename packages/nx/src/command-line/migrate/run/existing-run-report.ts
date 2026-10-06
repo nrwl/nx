@@ -19,7 +19,7 @@ import {
 } from './run-state';
 import { unresolvedIssues } from './issues';
 import { describeHolders, liveRunActivityPids } from './state-lock';
-import { tallySteps, type StepTally } from './state-machine';
+import { stepLabel, tallySteps, type StepTally } from './state-machine';
 import { isPidAlive, pmExecPrefix, runMigrationsFlag } from './util';
 
 // The stalled count is a subset of `remaining`, called out separately: the
@@ -51,7 +51,7 @@ export interface ExistingRunFacts {
     // sha null when the newest entry landed without one.
     newest: { sha: string | null; status: AncestorStatus } | null;
   };
-  liveWorkers: { pid: number; stepId: string; migrationId: string }[];
+  liveWorkers: { pid: number; stepId: string; label: string }[];
   // The other nx migrate processes holding the run's activity lock (an agent
   // session, a reconcile, a step); 'unknown' where nx cannot tell (WASM).
   otherHolders: number[] | 'unknown';
@@ -110,7 +110,10 @@ export function collectExistingRunFacts(
     otherActiveRuns: otherActiveRuns(root, runId),
     appliedStillPlanned: planned
       ? state.steps.filter(
-          (s) => s.status === 'succeeded' && planned.has(s.migrationId)
+          (s) =>
+            s.kind === 'migration' &&
+            s.status === 'succeeded' &&
+            planned.has(s.migrationId)
         ).length
       : undefined,
   };
@@ -125,7 +128,7 @@ export function liveWorkers(
     .filter(
       (s) => s.status === 'running' && s.pid !== undefined && isPidAlive(s.pid)
     )
-    .map((s) => ({ pid: s.pid, stepId: s.id, migrationId: s.migrationId }));
+    .map((s) => ({ pid: s.pid, stepId: s.id, label: stepLabel(s) }));
 }
 
 // The commits the run made, in ledger order.
@@ -347,6 +350,6 @@ export function workersLine(workers: ExistingRunFacts['liveWorkers']): string {
     return 'none running';
   }
   return workers
-    .map((w) => `pid ${w.pid} is still running ${w.stepId} (${w.migrationId})`)
+    .map((w) => `pid ${w.pid} is still running ${w.stepId} (${w.label})`)
     .join('; ');
 }

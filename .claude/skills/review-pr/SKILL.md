@@ -7,7 +7,7 @@ description: >-
   A reproduce-verifier executes a runnable repro only when verification identifies one. The skill
   saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md and never posts it. Claude
   reads/executes PR code only through the sandbox CLI; credentials never enter the sandbox.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh api repos/nrwl/nx/compare/*), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Bash(awk *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh api repos/nrwl/nx/compare/*), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(tools/review-sandbox/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Bash(awk *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -21,10 +21,10 @@ Runs this repo's review agents against a remote PR in `nrwl/nx`. The PR is check
 
 A PR is untrusted code. The dividing line is **execution, not reading**: the host may freely _read_ public PR/issue information, but must never _run_ PR-authored code (install scripts, builds, tests, the linked-issue reproduction). This skill enforces that with a strict split:
 
-- **Host (Claude + its credentials):** reads GitHub metadata and the diff (`gh pr view` / `gh pr diff` / `gh issue view`), orchestrates the agents, and reads the checked-out code **only through `.claude/tools/sandbox read/grep/find`**. Claude's auth token never enters the sandbox.
+- **Host (Claude + its credentials):** reads GitHub metadata and the diff (`gh pr view` / `gh pr diff` / `gh issue view`), orchestrates the agents, and reads the checked-out code **only through `tools/review-sandbox/sandbox read/grep/find`**. Claude's auth token never enters the sandbox.
 - **The sandbox:** holds the PR checkout and is the **only** place any PR code executes — dependency installs, builds, tests, and the issue reproduction all run via `sandbox exec`.
 
-**The CLI owns isolation, and nothing above it names a runtime.** `sandbox start` probes the available backends, picks the boundary (gVisor on Linux, the VM on macOS), and **refuses to start at all** when it cannot get a real one. This is the one thing that used to be a variable here, and its failure mode was "no isolation, reported as success" — an unset `RUNTIME_FLAG` expanded to nothing, which is byte-identical to the correct macOS value. Do not reintroduce a runtime flag anywhere in this skill.
+**The CLI owns isolation, and nothing above it names a runtime.** `sandbox start` probes the available backends, picks the boundary (gVisor on Linux, the VM on macOS), and **refuses to run any PR code** when it cannot get a real one. This is the one thing that used to be a variable here, and its failure mode was "no isolation, reported as success" — an unset `RUNTIME_FLAG` expanded to nothing, which is byte-identical to the correct macOS value. Do not reintroduce a runtime flag anywhere in this skill.
 
 Consequences that the rest of this skill depends on:
 
@@ -53,7 +53,7 @@ mkdir -p "$TRIAGE_DIR"
 # Probe the backends and report what is usable. This subsumes the old uname/docker
 # info/runsc checks: the CLI owns backend selection, so asking it is the only
 # answer that matches what `sandbox start` will actually do.
-.claude/tools/sandbox doctor
+tools/review-sandbox/sandbox doctor
 
 # Bring the image up to date. Do NOT probe whether it exists and skip on a hit: an image
 # built from ANY older revision passes an existence check identically, so a missing
@@ -72,7 +72,7 @@ mkdir -p "$TRIAGE_DIR"
 bash "$(git rev-parse --show-toplevel)/tools/review-sandbox/build-image.sh"
 ```
 
-`doctor` reports each backend and whether it can isolate. You do not act on the detail and you never pass a runtime flag anywhere — `sandbox start` re-derives it and refuses if it cannot get a real boundary. Read `doctor` only to give the user a useful message before that refusal happens.
+`doctor` reports each backend and whether it can isolate. You do not act on the detail and you never pass a runtime flag anywhere — `sandbox start` re-derives it and refuses to run PR code if it cannot get a real boundary. Read `doctor` only to give the user a useful message before that refusal happens.
 
 Fail fast with a clear message if: `gh` isn't authed; `doctor` reports no usable backend; or the image build fails. For the last two, point the user at the **`setup-review-sandbox`** skill — it installs Docker + gVisor, which the build above deliberately does not.
 
@@ -149,17 +149,17 @@ rm -f /tmp/pr-<NUMBER>.diff /tmp/pr-<NUMBER>.diff.tmp /tmp/pr-<NUMBER>.files \
       /tmp/pr-<NUMBER>.session.json
 
 # One call: starts a locked-down sandbox (caps dropped, no privilege escalation,
-# bounded memory/cpu/pids, correct isolation runtime — chosen by the CLI, and
-# refused outright if it cannot get a real one), shallow-fetches this PR's head,
+# bounded memory/cpu/pids, correct isolation runtime — chosen by the CLI, which
+# refuses to run PR code without a real one), shallow-fetches this PR's head,
 # and adds the base ref as a second checkout. Both sides exist before any agent
 # is dispatched. Capture the id: it is minted per run and there is no name to guess.
-SANDBOX=$(.claude/tools/sandbox start \
+SANDBOX=$(tools/review-sandbox/sandbox start \
   --image "$SANDBOX_IMAGE" \
   --checkout https://github.com/nrwl/nx \
   --ref pull/<NUMBER>/head \
   --base <BASE_REF_NAME> | head -1)
 
-.claude/tools/sandbox exec "$SANDBOX" -- git rev-parse HEAD    # HEAD_SHA
+tools/review-sandbox/sandbox exec "$SANDBOX" -- git rev-parse HEAD    # HEAD_SHA
 
 # Install HEAD once, here, before any agent is dispatched. `exec` would install it
 # on first use anyway, so this is not what makes it correct — it is what stops
@@ -167,7 +167,7 @@ SANDBOX=$(.claude/tools/sandbox start \
 # The base side is deliberately NOT installed here: `read --ref base` answers the
 # usual base question without running anything, and most reviews never run
 # base-side at all. The first `exec --base` pays for it if one does.
-.claude/tools/sandbox install "$SANDBOX"
+tools/review-sandbox/sandbox install "$SANDBOX"
 ```
 
 This is the slowest step in the skill, but the image ships a warm pnpm store, so the install mostly links rather than downloads. It buys correctness as much as speed: a deterministic tree at the versions the PR pins. Do not skip it, even for docs-only changes.
@@ -190,19 +190,19 @@ Notes:
 Each agent already carries this protocol in its own definition; what follows is here so you can check a dispatch prompt against it, not to be pasted into the charter. The PR source is **not on the host** — it is reached only through the CLI, which presents identical commands whether the checkout is isolated or local:
 
 ```bash
-.claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
-.claude/tools/sandbox diff <SANDBOX> [--name-only] [-- <path>...]
-.claude/tools/sandbox exec <SANDBOX> [--base] -- <CMD>
+tools/review-sandbox/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
+tools/review-sandbox/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+tools/review-sandbox/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+tools/review-sandbox/sandbox diff <SANDBOX> [--name-only] [-- <path>...]
+tools/review-sandbox/sandbox exec <SANDBOX> [--base] -- <CMD>
 ```
 
 Those verbs each read a **single** side. To answer "what differs between base and HEAD?", use `diff`,
 which compares tree hashes instead of walking files:
 
 ```bash
-.claude/tools/sandbox diff <SANDBOX> --name-only
-.claude/tools/sandbox diff <SANDBOX> -- <path>
+tools/review-sandbox/sandbox diff <SANDBOX> --name-only
+tools/review-sandbox/sandbox diff <SANDBOX> -- <path>
 ```
 
 **Do not spell the comparison out as `exec -- git diff origin/<BASE_REF_NAME>..HEAD`.** Reviews share
@@ -219,7 +219,7 @@ single file's base version is `read <path> --ref base`, which needs no install a
 **Hand the read-only lanes a narrowed id.** `sandbox view` mints a second id onto the same checkout at a lower exec tier, so "this agent may read but not run things" is enforced by the sandbox rather than by instructions — agent frontmatter grants bare tool names (`Bash`), never per-verb patterns, so it cannot be expressed there:
 
 ```bash
-READONLY_SANDBOX=$(.claude/tools/sandbox view "$SANDBOX" --exec none | head -1)
+READONLY_SANDBOX=$(tools/review-sandbox/sandbox view "$SANDBOX" --exec none | head -1)
 ```
 
 Give `$READONLY_SANDBOX` to `alternative-approach`, and `$SANDBOX` to the lanes that may need to run something.
@@ -227,7 +227,7 @@ Give `$READONLY_SANDBOX` to `alternative-approach`, and `$SANDBOX` to the lanes 
 If an agent must edit tracked files, apply a patch, or run a command known to rewrite sources, it creates its own tree — never mutating the shared checkout:
 
 ```bash
-.claude/tools/sandbox worktree <SANDBOX> <AGENT> head
+tools/review-sandbox/sandbox worktree <SANDBOX> <AGENT> head
 ```
 
 That returns a **new sandbox id**, already installed, which the agent uses in place of its original. Pass `base` instead of `head` only when the experiment must mutate the baseline. One agent owns one tree; never share or reuse another agent's. If it is refused, the dynamic check is unavailable — report that rather than working around it. Build output and ignored caches from ordinary non-rewriting commands are fine in the shared checkout; the prohibition is against changes to tracked source or refs.
@@ -244,7 +244,7 @@ mv /tmp/pr-<NUMBER>.diff.tmp /tmp/pr-<NUMBER>.diff
 
 Write-then-verify-then-move, rather than redirecting straight onto the final path. A bare `>` truncates the target _before_ `gh` runs, so a token expiry or a transient 5xx leaves a 0-byte file that every agent is then told is "the complete PR diff" — and because the changed-file list is fetched by a _separate_ `gh` call, agents can end up with a populated file list and an empty diff, which is exactly the shape the Step 5 verification is least able to catch. Cross-check `wc -l < /tmp/pr-<NUMBER>.files` against the `changedFiles` count already parsed in Step 2 before dispatching anyone.
 
-**Hard rule for every agent:** never execute PR code on the host. Any command that _runs_ the checkout — `npm`/`pnpm install`, `nx …`, a build, a test, the linked-issue reproduction — goes through `.claude/tools/sandbox exec "$SANDBOX" -- <cmd>`, never bare on the host.
+**Hard rule for every agent:** never execute PR code on the host. Any command that _runs_ the checkout — `npm`/`pnpm install`, `nx …`, a build, a test, the linked-issue reproduction — goes through `tools/review-sandbox/sandbox exec "$SANDBOX" -- <cmd>`, never bare on the host.
 
 ## Step 4: Gather incremental-review context (only if a prior review exists)
 
@@ -259,11 +259,12 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    What you pass to the **agents** is a different, much smaller artifact — see step 4. Keep the two straight: full history in your head, distilled carry-forward on disk.
 
-2. Compute the incremental diff inside the sandbox, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded:
+2. Compute the incremental diff inside the sandbox, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded. Name the URL: the shared object store has no `origin`, deliberately, so a review of a fork cannot inherit another review's remote.
 
    ```bash
-   if .claude/tools/sandbox exec "$SANDBOX" -- git fetch -q --depth 1 origin "$PRIOR_SHA"; then
-     .claude/tools/sandbox exec "$SANDBOX" -- git diff "$PRIOR_SHA".."<HEAD_REF_OID>" \
+   if tools/review-sandbox/sandbox exec "$SANDBOX" -- \
+     git fetch -q --depth 1 https://github.com/nrwl/nx "$PRIOR_SHA"; then
+     tools/review-sandbox/sandbox exec "$SANDBOX" -- git diff "$PRIOR_SHA".."<HEAD_REF_OID>" \
        > /tmp/pr-<NUMBER>-incremental.diff \
        || { echo "FATAL: failed to build incremental diff"; exit 1; }
    else
@@ -297,8 +298,8 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
        /tmp/pr-<NUMBER>-incremental.diff) \
        || { echo "FATAL: failed to count incremental changes"; exit 1; }
    else
-     .claude/tools/sandbox exec "$SANDBOX" -- \
-       git fetch -q --depth 1 origin "$OLD_MB" "$NEW_MB" \
+     tools/review-sandbox/sandbox exec "$SANDBOX" -- \
+       git fetch -q --depth 1 https://github.com/nrwl/nx "$OLD_MB" "$NEW_MB" \
        || { echo "FATAL: failed to fetch merge bases"; exit 1; }
    fi
    ```
@@ -307,7 +308,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    ```bash
    if [ "$OLD_MB" != "$NEW_MB" ]; then
-     if .claude/tools/sandbox exec "$SANDBOX" -- bash -s -- \
+     if tools/review-sandbox/sandbox exec "$SANDBOX" -- bash -s -- \
        "$OLD_MB" "$PRIOR_SHA" "$NEW_MB" \
        < "${CLAUDE_SKILL_DIR}/scripts/replay-prior-patch.sh" \
        > /tmp/pr-<NUMBER>-incremental.diff
@@ -577,7 +578,7 @@ once, deliberately, before the first `Agent` call.
 
 1. **Keep the shared checkout immutable.** Read it through `sandbox read`/`grep` directly. If
    the measurement needs to create a harness, edit tracked files, or run source-rewriting tooling,
-   run `.claude/tools/sandbox worktree "$SANDBOX" orchestrator-head head`; it returns a new
+   run `tools/review-sandbox/sandbox worktree "$SANDBOX" orchestrator-head head`; it returns a new
    sandbox id for an already-installed tree. Use a separately created
    `orchestrator-base base` worktree if the baseline measurement also writes. Never copy or patch
    files into the shared reference worktrees.
@@ -744,7 +745,7 @@ plumbing, NOT so everyone reuses one case list. Example wording:
 
     <name>-probe.js in sandbox <RIG_SANDBOX> executes the SHIPPED implementation (it transpiles the
     real source; it is not a reimplementation). Run it with:
-        .claude/tools/sandbox exec <RIG_SANDBOX> -- node <name>-probe.js <inputs>
+        tools/review-sandbox/sandbox exec <RIG_SANDBOX> -- node <name>-probe.js <inputs>
     Supply inputs your dimension cares about without editing this shared rig. If an edit is
     unavoidable, get your own tree from `sandbox worktree` and copy it there first.
 
@@ -967,7 +968,7 @@ find yourself with an empty file list, you have the wrong scope — re-read the 
 
 - REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with `Read`; this is what you review)
 - CHANGED FILES: /tmp/pr-<NUMBER>.files  (host file — one path per line; `Read` it)
-- SANDBOX: <SANDBOX>  (the checkout under review; reach it only with `.claude/tools/sandbox`)
+- SANDBOX: <SANDBOX>  (the checkout under review; reach it only with `tools/review-sandbox/sandbox`)
 - BASE_REF: <BASE_REF_NAME>  (read base state with `sandbox read <SANDBOX> <path> --ref base`)
 <ONLY IF <EVIDENCE_FILE> is the incremental diff, ADD:>
 - FULL DIFF (reference only): /tmp/pr-<NUMBER>.diff — the whole PR against its base. Consult it to
@@ -1072,7 +1073,7 @@ If the second attempt also fails, record that agent as **failed** in the draft a
 
 Aggregate the surviving agents' output into Critical / Important / Strengths yourself. That aggregate is `$RAW_REVIEW_BODY`.
 
-**Backstop — run the changed shell yourself.** If the diff added or modified an executable block with control flow, do not rely solely on the agents' reports: independently extract that block's _literal bytes_ from the checkout (`.claude/tools/sandbox read "$SANDBOX" <path> --range a,b`), substitute only the path placeholders, and run it against the same adversarial matrix (honest + forgery + injection). Confirm the observed outputs before finalizing. Every time this pipeline converged, it was because the changed block was actually run, not read — so the orchestrator runs it too, as a check on the agents rather than a substitute for them.
+**Backstop — run the changed shell yourself.** If the diff added or modified an executable block with control flow, do not rely solely on the agents' reports: independently extract that block's _literal bytes_ from the checkout (`tools/review-sandbox/sandbox read "$SANDBOX" <path> --range a,b`), substitute only the path placeholders, and run it against the same adversarial matrix (honest + forgery + injection). Confirm the observed outputs before finalizing. Every time this pipeline converged, it was because the changed block was actually run, not read — so the orchestrator runs it too, as a check on the agents rather than a substitute for them.
 
 ### Trim to critical + important
 
@@ -1131,7 +1132,7 @@ Evaluate whether PR <NUMBER> in nrwl/nx takes the right approach to the problem 
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- SANDBOX: <READONLY_SANDBOX>  (read-only view of the checkout; reach it only with `.claude/tools/sandbox`)
+- SANDBOX: <READONLY_SANDBOX>  (read-only view of the checkout; reach it only with `tools/review-sandbox/sandbox`)
 - REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
 - FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
 - CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
@@ -1170,7 +1171,7 @@ Review PR <NUMBER> in nrwl/nx for untrusted-input paths, command execution, file
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- SANDBOX: <SANDBOX>  (the checkout under review; reach it only with `.claude/tools/sandbox`)
+- SANDBOX: <SANDBOX>  (the checkout under review; reach it only with `tools/review-sandbox/sandbox`)
 - REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
 - FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
 - CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
@@ -1201,8 +1202,8 @@ The verifier runs in the **same** sandbox as the review — one per PR holds eve
 **Confirm both checkouts are at the refs you think before dispatching** — a verifier pointed at a stale or missing base side reports a baseline verdict for the wrong tree, and `BASELINE_PASSES`/`BASELINE_FAILS` both feed the verdict:
 
 ```bash
-.claude/tools/sandbox exec "$SANDBOX" -- git rev-parse HEAD          # HEAD side
-.claude/tools/sandbox exec "$SANDBOX" --base -- git rev-parse HEAD   # base side
+tools/review-sandbox/sandbox exec "$SANDBOX" -- git rev-parse HEAD          # HEAD side
+tools/review-sandbox/sandbox exec "$SANDBOX" --base -- git rev-parse HEAD   # base side
 ```
 
 The base call is also what installs the base side, so running it here rather than mid-review keeps
@@ -1262,7 +1263,7 @@ The checkout is inside the sandbox, not on the host. Run EVERY reproduction step
 
 ```
 
-.claude/tools/sandbox exec <SANDBOX> [--base] -- <cmd>
+tools/review-sandbox/sandbox exec <SANDBOX> [--base] -- <cmd>
 
 ```
 
@@ -1285,7 +1286,7 @@ which puts the text back through a host shell — and feed it over stdin:
 
 Write(file_path="/tmp/repro-<NUMBER>.cmd", content=<REPRO_CMD>)
 
-.claude/tools/sandbox exec <SANDBOX> [--base] -- bash -s < /tmp/repro-<NUMBER>.cmd
+tools/review-sandbox/sandbox exec <SANDBOX> [--base] -- bash -s < /tmp/repro-<NUMBER>.cmd
 
 ```
 
@@ -1463,9 +1464,9 @@ Write `$TRIAGE_DIR/<NUMBER>.md`. **If the file already exists** (re-review):
 
 1. Read the existing file.
 2. Move the existing `## Review draft` content into a new entry at the top of `## Prior reviews`, prefixed with a header like `### attempt <N-1> — head_sha=<PRIOR_SHA> — <PRIOR_DATE>`.
-3. Preserve the `## Author follow-ups (not for the PR)`, `## Posted` and `## Failures` sections verbatim.
+3. Preserve the `## Author follow-ups (not for the PR)`, `## Posted` and `## Failures` sections verbatim, along with every other section the file already carries. The Codex `review-pr` skill writes its own private evidence into this same file, so rewriting it from the template below would drop that evidence. One exception: move `## Grill` into the demoted `### attempt <N-1>` entry from item 2, under a `**Grill (attempt <N-1>):**` line. Left at top level it tells `/review-pending-pr-reviews` that the new draft was already grilled, and `post all` then posts its findings unevaluated.
 4. Replace `## Review draft` with the new `$REVIEW_BODY` (formatted in Step 6).
-5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, increment `attempt`. Preserve `posted_at` / `posted_url` (the user fills those in).
+5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, `pipeline_version` (the current constant, since this re-review ran under it), increment `attempt`. Remove `reviewer` if the file carries it: an absent key means this skill wrote the draft, and `/review-pending-pr-reviews` compares `pipeline_version` against the writer's own constant. Clear `posted_at` and `posted_url`. The new draft has not been posted, and `/review-pending-pr-reviews` treats a non-empty `posted_at` as already handled, so leaving them hides this draft from the outbox. The earlier posting stays recorded under `## Posted`.
 
 **No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top. This file is the archive and stays uncapped; it is read only by you and by the human reviewer, never by the review agents. The trimming in Step 4 applies solely to the agents' `review-context.md`, which is a distilled carry-forward derived from this file — so keeping the archive complete is what makes trimming the derived copy safe.
 
@@ -1540,7 +1541,7 @@ destroys the only copy of the checkout. A grill placed after cleanup can only re
 which is precisely the evidence the finding already cited. Sub-agent fact-finding depends on this
 too. The cost is that the sandbox lives for the length of the interview: if the maintainer walks
 away mid-grill, stop and run Step 9 anyway rather than leaking the review's subtree — the draft on
-disk is already valid, and `.claude/tools/sandbox prune` sweeps anything left behind.
+disk is already valid, and `tools/review-sandbox/sandbox prune` sweeps anything left behind.
 
 **Never answer your own questions.** If a question goes unanswered, stop and leave the draft exactly
 as written. A grill that invents the maintainer's answers is worse than no grill: it edits the draft
@@ -1665,10 +1666,10 @@ so nothing needs re-committing here.
 Always stop the PR's sandbox, even on failure. It persists across the review by design, so this step is mandatory — a skipped cleanup leaks the review's checkouts and installed trees. Stopping it also drops every view and mutation tree derived from it:
 
 ```bash
-.claude/tools/sandbox stop "$SANDBOX"
+tools/review-sandbox/sandbox stop "$SANDBOX"
 ```
 
-The sandbox is ephemeral: stopping it destroys the only copy of the PR checkout. What it does **not** destroy is the shared host container — other reviews are running in it, and its warm store is what makes the next review cheap. If a batch run leaked sandboxes from a crash, sweep them with `.claude/tools/sandbox prune`, which reclaims review subtrees whose row is gone. `prune --store` and `prune --host` give the rest of the disk back, and both refuse while any sandbox row is live; neither belongs in a review.
+The sandbox is ephemeral: stopping it destroys the only copy of the PR checkout. What it does **not** destroy is the shared host container — other reviews are running in it, and its warm store is what makes the next review cheap. If a batch run leaked sandboxes from a crash, sweep them with `tools/review-sandbox/sandbox prune`, which reclaims review subtrees whose row is gone. `prune --store` and `prune --host` give the rest of the disk back, and both refuse while any sandbox row is live; neither belongs in a review.
 
 ## Step 10: Commit the draft (only for durable triage dirs)
 

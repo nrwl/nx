@@ -749,6 +749,161 @@ describe('app', () => {
     });
   });
 
+  describe('--port', () => {
+    // The CI web server and the URL the e2e runner waits on must be the same
+    // port. If they drift, Playwright's `reuseExistingServer` silently tests
+    // whatever else is listening on the URL's port.
+    const playwrightUrl = (e2eRoot: string) =>
+      tree
+        .read(`${e2eRoot}/playwright.config.mts`, 'utf-8')
+        .match(/baseURL = process\.env\['BASE_URL'\] \|\| '([^']+)'/)[1];
+
+    it('should write the port to serve, serve-static and the e2e config on the executor path (webpack)', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      const { targets } = readProjectConfiguration(tree, 'my-app');
+      expect(targets.serve.options.port).toBe(6123);
+      expect(targets['serve-static'].options.port).toBe(6123);
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+      const pwConfig = tree.read('my-app-e2e/playwright.config.mts', 'utf-8');
+      expect(pwConfig).toContain(`url: 'http://localhost:6123'`);
+      expect(pwConfig).toContain(`nx run my-app:serve-static`);
+    });
+
+    it('should write the port to the webpack config and the e2e config on the plugin path (webpack)', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      // The plugin infers serve and serve-static from devServer.port.
+      expect(tree.read('my-app/webpack.config.js', 'utf-8')).toContain(
+        'port: 6123'
+      );
+      expect(readProjectConfiguration(tree, 'my-app').targets ?? {}).toEqual(
+        {}
+      );
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+    });
+
+    it('should use the port for the dev server, preview server and e2e config (vite, executor path)', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'vite',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      const viteConfig = tree.read('my-app/vite.config.mts', 'utf-8');
+      expect(viteConfig).toMatch(/server:\s*\{[^}]*port: 6123/);
+      expect(viteConfig).toMatch(/preview:\s*\{[^}]*port: 6123/);
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+      expect(tree.read('my-app-e2e/playwright.config.mts', 'utf-8')).toContain(
+        `nx run my-app:preview`
+      );
+    });
+
+    it('should use the port for the dev server, preview server and e2e config (vite, plugin path)', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'vite',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      const viteConfig = tree.read('my-app/vite.config.mts', 'utf-8');
+      expect(viteConfig).toMatch(/server:\s*\{[^}]*port: 6123/);
+      expect(viteConfig).toMatch(/preview:\s*\{[^}]*port: 6123/);
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+    });
+
+    it('should use the port for the cypress base URLs', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'cypress',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      const cypressConfig = tree.read('my-app-e2e/cypress.config.ts', 'utf-8');
+      expect(cypressConfig).toContain('http://localhost:6123');
+      expect(cypressConfig).not.toContain('4200');
+    });
+
+    it('should prefer an explicit port over the serve targetDefaults', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = { serve: { options: { port: 6999 } } };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+    });
+
+    it('should leave the defaults untouched when --port is not passed', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      const { targets } = readProjectConfiguration(tree, 'my-app');
+      expect(targets.serve.options.port).toBeUndefined();
+      expect(targets['serve-static'].options.port).toBeUndefined();
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:4200');
+    });
+
+    it('should still follow the serve targetDefaults when --port is not passed', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = { serve: { options: { port: 6999 } } };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6999');
+    });
+  });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();

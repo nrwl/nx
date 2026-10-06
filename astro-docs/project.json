@@ -74,6 +74,10 @@
         "{projectRoot}/src/content/banner.json",
         "{projectRoot}/netlify.toml",
         { "env": "NX_DEV_URL" },
+        { "env": "NX_CLOUD_OPENAPI_URL" },
+        {
+          "runtime": "node astro-docs/scripts/hash-openapi-spec.mjs"
+        },
         "{workspaceRoot}/packages/*/package.json",
         "{workspaceRoot}/packages/*/{generators,executors,migrations}.json",
         "{workspaceRoot}/packages/*/src/{generators,executors}/**/schema.json",

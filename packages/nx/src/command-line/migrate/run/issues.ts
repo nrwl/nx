@@ -299,8 +299,9 @@ function parseIssueUpdate(
       value.id
     )}, which is not an issue nx has recorded for this run`;
   }
-  if (issue.claimedByStepId !== reportingStep.id) {
-    return `${label} references ${issue.id}, which is not assigned to this step; only issues the dispensed digest marks assigned to the current step can be updated`;
+  const refusal = issueUpdateRefusal(issue, reportingStep);
+  if (refusal !== null) {
+    return `${label} references ${issue.id}, which ${refusal}`;
   }
   const disposition = value.disposition;
   if (disposition !== 'resolved' && disposition !== 'deferred-final') {
@@ -320,16 +321,43 @@ function parseIssueUpdate(
   };
 }
 
+// Claims serialize the migration steps that could fix an issue. The final
+// validation pass runs alone after all of them, so it takes every issue still
+// open instead: by then any it could claim has been deferred to it.
+function issueUpdateRefusal(
+  issue: MigrateRunIssue,
+  reportingStep: MigrateStep
+): string | null {
+  switch (reportingStep.kind) {
+    case 'migration':
+      return issue.claimedByStepId === reportingStep.id
+        ? null
+        : 'is not assigned to this step; only issues the dispensed digest marks assigned to the current step can be updated';
+    case 'final-validation':
+      return issue.disposition !== 'resolved'
+        ? null
+        : 'is already resolved; the pass may update any issue still open';
+    default: {
+      const exhaustive: never = reportingStep;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+}
+
 // A bare identifier matches the whole package name, scoped names included:
 // nothing splits on '/'. Step ids are unique, so the result needs no dedup.
 function mappedStepIds(identifier: string, state: MigrateRunState): string[] {
   if (identifier.includes(':')) {
     return state.steps
-      .filter((s) => s.migrationId === identifier)
+      .filter((s) => s.kind === 'migration' && s.migrationId === identifier)
       .map((s) => s.id);
   }
   return state.steps
-    .filter((s) => splitMigrationId(s.migrationId).package === identifier)
+    .filter(
+      (s) =>
+        s.kind === 'migration' &&
+        splitMigrationId(s.migrationId).package === identifier
+    )
     .map((s) => s.id);
 }
 
@@ -363,9 +391,20 @@ export function mintUnresolvedIssue(
   step: MigrateStep
 ): { application: IssueApplication; issueId: string } {
   const attempts = `${step.attempt} attempt${step.attempt === 1 ? '' : 's'}`;
-  const prefix = `Migration ${abbreviatedMigrationId(
-    step.migrationId
-  )} was left unresolved after ${attempts}: `;
+  let subject: string;
+  switch (step.kind) {
+    case 'migration':
+      subject = `Migration ${abbreviatedMigrationId(step.migrationId)}`;
+      break;
+    case 'final-validation':
+      subject = 'The final validation pass';
+      break;
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+  const prefix = `${subject} was left unresolved after ${attempts}: `;
   const room = MAX_SUMMARY_CHARS - prefix.length;
   const detail = unresolvedFailureDetail(step);
   const summary =
@@ -966,21 +1005,38 @@ export function renderIssueDigestLines(
 ): string[] {
   const unresolved = unresolvedIssues(state);
   if (unresolved.length === 0) return [];
-  const assigned = unresolved.filter(
-    (i) => i.disposition === 'recorded' && i.claimedByStepId === currentStepId
-  );
-  const entries = [
-    ...assigned.map((i) => digestEntry(i, 'assigned to this step')),
-    ...unresolved
-      .filter(
+  const currentStep = state.steps.find((s) => s.id === currentStepId);
+  // Deferred issues are the pass's own work; every other step reads them as
+  // out of reach.
+  const passDispense = currentStep?.kind === 'final-validation';
+  const assigned = passDispense
+    ? unresolved
+    : unresolved.filter(
         (i) =>
-          i.disposition === 'recorded' && i.claimedByStepId !== currentStepId
+          i.disposition === 'recorded' && i.claimedByStepId === currentStepId
+      );
+  const entries = passDispense
+    ? assigned.map((i) =>
+        digestEntry(
+          i,
+          i.disposition === 'deferred-final'
+            ? 'deferred to this step'
+            : 'assigned to this step'
+        )
       )
-      .map((i) => digestEntry(i, 'recorded')),
-    ...unresolved
-      .filter((i) => i.disposition === 'deferred-final')
-      .map((i) => digestEntry(i, 'deferred past the migration steps')),
-  ];
+    : [
+        ...assigned.map((i) => digestEntry(i, 'assigned to this step')),
+        ...unresolved
+          .filter(
+            (i) =>
+              i.disposition === 'recorded' &&
+              i.claimedByStepId !== currentStepId
+          )
+          .map((i) => digestEntry(i, 'recorded')),
+        ...unresolved
+          .filter((i) => i.disposition === 'deferred-final')
+          .map((i) => digestEntry(i, 'deferred past the migration steps')),
+      ];
   const fixedLines = [
     ``,
     stepDigestHeading(runId),
@@ -1390,10 +1446,10 @@ function reconstructedArchiveShell(
     summary: entry.summary,
     reportedByStepId: entry.reportedByStepId,
     applicableMigrations: Array.isArray(entry.applicableStepIds)
-      ? entry.applicableStepIds.map(
-          (stepId) =>
-            state.steps.find((s) => s.id === stepId)?.migrationId ?? stepId
-        )
+      ? entry.applicableStepIds.map((stepId) => {
+          const step = state.steps.find((s) => s.id === stepId);
+          return step?.kind === 'migration' ? step.migrationId : stepId;
+        })
       : 'unknown',
     reconstructed: true,
   };
