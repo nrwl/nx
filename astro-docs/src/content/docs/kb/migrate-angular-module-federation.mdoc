@@ -46,8 +46,9 @@ You have one decision to make before you start:
 
 {% aside type="note" title="Scope" %}
 Static and runtime-loaded remotes. For server-side rendered (`--ssr`) apps, follow Path A and
-then [migrate server-side rendered apps](/docs/kb/migrate-module-federation-ssr). Path B does not
-cover them. For React, see the [React guide](/docs/kb/migrate-from-nx-module-federation).
+[migrate server-side rendered apps](/docs/kb/migrate-module-federation-ssr), which changes the
+server build before Step 3. Path B does not cover them. For React, see the
+[React guide](/docs/kb/migrate-from-nx-module-federation).
 {% /aside %}
 
 ## What replaces what
@@ -595,8 +596,9 @@ Check the result in a browser against your baseline:
 Then check the builds:
 
 - Production and development both build with `--skipNxCache` after you delete `dist/apps/<app>`
-  and `.angular/cache`. Build production last. Both write the same `mf-stats.json`. On Rspack,
-  build development as `NGRS_CONFIG=development nx build <app> --configuration=development`.
+  and `.angular/cache`. Build production last because both configurations write the same
+  `mf-stats.json`. On Rspack, build development as
+  `NGRS_CONFIG=development nx build <app> --configuration=development`.
 - Each app's production `mf-stats.json` lists the same container name, remotes, exposes, and
   `shared` entries as the baseline. Compare those fields only. Asset hashes and `usedIn` text
   change.
