@@ -1,6 +1,6 @@
-# Migrate Remix v2 to React Router v8
+# Migrate Remix v2 to React Router v7
 
-Migrate this workspace's Remix v2 applications to React Router v8 framework mode with `@nx/react`. Finish the application and Nx configuration changes, then validate the result. Do not replace an existing application with a generated starter.
+Migrate this workspace's Remix v2 applications to React Router v7 framework mode with `@nx/react`. Finish the application and Nx configuration changes, then validate the result. Do not replace an existing application with a generated starter.
 
 Nx 24 removes `@nx/remix` executors and all generators except `convert-to-inferred`. A separate automatic migration converts legacy executors to `@nx/remix/plugin` inference without upgrading Remix. That inference plugin and the remaining helpers are deprecated for removal in Nx 25. This prompt performs the framework upgrade; users can defer it and keep Remix v2 on Nx 24.
 
@@ -9,12 +9,11 @@ Nx 24 removes `@nx/remix` executors and all generators except `convert-to-inferr
 Use the official guides as the source of framework migration details:
 
 - [Remix v2 to React Router v7](https://reactrouter.com/7.18.4/upgrading/remix), including its linked codemod and Remix future flags.
-- [React Router v7 to v8](https://reactrouter.com/upgrading/v7), including its runtime requirements and future flags.
-- [React Router framework documentation](https://reactrouter.com/start/framework/installation) for routing, type generation, rendering, and deployment.
+- [React Router framework documentation](https://reactrouter.com/7.18.4/start/framework/installation) for routing, type generation, rendering, and deployment.
 - [Nx React Router integration](https://nx.dev/docs/kb/react-router).
 - For classic Remix compiler applications, first follow the [Remix Vite migration guide](https://v2.remix.run/docs/guides/vite/).
 
-Read the resources rather than guessing changed APIs. Follow relevant links for the application's deployment adapter, custom server, or other features. Use the staged Remix v2 -> React Router v7 -> React Router v8 path where required. Keep React Router packages on compatible versions and check the installed `@nx/react` integration against the selected version. Do not claim completion if compatibility blocks the upgrade.
+Read the resources rather than guessing changed APIs. Follow relevant links for the application's deployment adapter, custom server, or other features. Stay on React Router v7, the major `@nx/react` supports. Keep all React Router packages on the same v7 version. Do not claim completion if compatibility blocks the upgrade.
 
 ## Inspect the workspace
 
