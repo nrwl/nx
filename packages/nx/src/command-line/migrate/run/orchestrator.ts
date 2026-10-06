@@ -1670,8 +1670,6 @@ async function installFailedForStep(
   }
 }
 
-// For a settle that skipped the install its step had already failed. Any later
-// install covers the step too, clearing its mark and the report's line.
 function warnInstallLeftToUser(root: string, step: MigrateStep): void {
   warnToAgent({
     title: `The dependency changes made by ${stepLabel(step)} are not installed.`,
@@ -1941,9 +1939,8 @@ async function stepActionSideEffects(
   switch (action) {
     case 'adopt':
       // A died worker's commit request is reused while nothing records its
-      // outcome: the session may still answer it. A failed step, or a recorded
-      // commit or install failure, needs an adopt request of its own, or the
-      // old answer would be replayed.
+      // outcome, since the session may still answer it. Otherwise the adopt
+      // asks under its own request, or the old answer would be replayed.
       return state.createCommits
         ? commitForStep(
             root,
@@ -2753,7 +2750,11 @@ function emitHeld(
         treeBusyMessage(held),
         // Quitting this session frees the terminal only for its own parent.
         ...(held.owner === process.env[BROKER_ENV_VAR]
-          ? [sessionOperationWayOut(treeOperationLabel(held))]
+          ? [
+              `If it seems stuck, the user can ${sessionOperationWayOut(
+                treeOperationLabel(held)
+              )}.`,
+            ]
           : []),
       ],
     },
@@ -2789,7 +2790,9 @@ function emitStillRunning(
     )} minutes and may be hung.`;
     lines.push(
       parentOperation
-        ? `${hung} Report this to the user: they can quit this session, then press Ctrl+C in the terminal to end ${parentOperation}, and resume the run afterwards.`
+        ? `${hung} Report this to the user: they can ${sessionOperationWayOut(
+            parentOperation
+          )}.`
         : `${hung} Verify pid ${step.pid}; either keep waiting, or kill it so the next reconcile can classify it as died.`
     );
   }

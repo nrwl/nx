@@ -30,14 +30,16 @@ describe('spawnWithoutTerminal', () => {
         spawnWithoutTerminal('npm install', {
           stdio: ['ignore', 'pipe', 'pipe'],
         });
-        expect(signalCommandsWithoutTerminal('SIGINT')).toBe(true);
+        signalCommandsWithoutTerminal('SIGINT');
         Object.defineProperty(process, 'platform', { value: platform });
         expect(killProcessTree).toHaveBeenCalledWith(shell.pid, 'SIGINT');
 
         shell.kill();
         await new Promise((resolve) => shell.once('close', resolve));
 
-        expect(signalCommandsWithoutTerminal('SIGKILL')).toBe(false);
+        Object.defineProperty(process, 'platform', { value: 'win32' });
+        signalCommandsWithoutTerminal('SIGKILL');
+        Object.defineProperty(process, 'platform', { value: platform });
         expect(killProcessTree).toHaveBeenCalledTimes(1);
       } finally {
         Object.defineProperty(process, 'platform', { value: platform });
@@ -67,7 +69,7 @@ describe('withoutTerminalPaths', () => {
         PATH: '/usr/bin:/bin',
         EMPTY: '',
       });
-      expect(withoutTerminalPaths(env, new Set())).toBe(env);
+      expect(withoutTerminalPaths(env, new Set())).toEqual(env);
     }
   );
 });

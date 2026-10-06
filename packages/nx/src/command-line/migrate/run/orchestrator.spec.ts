@@ -8599,95 +8599,54 @@ describe('orchestrator', () => {
       expect(lastBlock().action).toBe('complete');
     });
 
-    it('adopts a failed step through the session under an adopt request of its own', async () => {
-      mockGetWorkingTreeStatus.mockReturnValue('dirty');
-      mockCommit.mockResolvedValue({
-        status: 'committed',
-        sha: 'face0031face0031face0031face0031face0031',
-      });
-      const dir = setupRun('run-1', {
-        steps: [
-          migStep('step-1', '@nx/js:gen', 'failed', {
-            generatorCompleted: true,
-            outcome: { summary: 'registry unreachable' },
-          }),
-        ],
-        createCommits: true,
-        plan: [genMig('@nx/js', 'gen')],
-      });
-      const broker = new MigrateCommitBroker(
-        root,
-        dir,
-        'npx nx migrate',
-        POLICY
-      );
-      process.env.NX_MIGRATE_BROKER = broker.nonce;
-      // The answer that failed the step, still on disk under the worker's
-      // request; reusing that request would replay it.
-      writeFileSync(
-        join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.result.json`),
-        JSON.stringify({
-          kind: 'install-failed',
-          message: 'registry unreachable',
-          peerDeps: false,
-          output: [],
-        })
-      );
-
-      const adopting = runOrchestratorReconcile({
-        root,
-        runId: 'run-1',
-        stepAction: 'adopt',
-      });
-      for (let i = 0; i < 100; i++) {
-        await broker.service();
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
-      await adopting;
-      expect(readRequest(dir)).toEqual({
-        kind: 'commit',
-        stepId: 'step-1',
-        attempt: 1,
-        commitAs: 'adopt',
-      });
-      broker.close();
-
-      expect(mockCommit).toHaveBeenCalledTimes(1);
-      expect(mockCommit.mock.calls[0][1]).toEqual({ name: 'gen' });
-      expect(readRunState(dir).steps[0].status).toBe('succeeded');
-    });
-
+    const installedDepsHash = createHash('sha256')
+      .update('{"deps":1}')
+      .digest('hex');
+    const installFailedAnswer = {
+      kind: 'install-failed',
+      message: 'registry unreachable',
+      peerDeps: false,
+      output: [],
+    };
     it.each<
       [
         string,
+        MigrateStepStatus,
         Partial<MigrateStepBase>,
         { commits?: MigrateCommitLedgerEntry[] },
         object,
       ]
     >([
       [
-        'install',
+        'a failed step',
+        'failed',
         {
+          outcome: { summary: 'registry unreachable' },
+          depsHashAtDispense: installedDepsHash,
+        },
+        {},
+        installFailedAnswer,
+      ],
+      [
+        'a died step once its failed install is on record',
+        'died',
+        {
+          pid: 999999,
           installFailed: true,
           depsHashAtDispense: 'baseline-from-an-earlier-dispense',
         },
         {},
-        {
-          kind: 'install-failed',
-          message: 'registry unreachable',
-          peerDeps: false,
-          output: [],
-        },
+        installFailedAnswer,
       ],
       [
-        'commit',
+        'a died step once its failed commit is on record',
+        'died',
         // The install landed before the commit failed.
         {
+          pid: 999999,
           commitStarted: true,
           commitLedgerIndex: 0,
-          depsHashAtDispense: createHash('sha256')
-            .update('{"deps":1}')
-            .digest('hex'),
+          depsHashAtDispense: installedDepsHash,
         },
         { commits: [{ kind: 'failed', stepIds: ['step-1'] }] },
         {
@@ -8701,8 +8660,8 @@ describe('orchestrator', () => {
         },
       ],
     ])(
-      'adopts a died step through the session under an adopt request of its own once its failed %s is on record',
-      async (_, stepFields, runFields, workerAnswer) => {
+      'adopts %s through the session under an adopt request of its own',
+      async (_, status, stepFields, runFields, workerAnswer) => {
         vi.spyOn(process, 'kill').mockReturnValue(true as never);
         mockGetWorkingTreeStatus.mockReturnValue('dirty');
         mockCommit.mockImplementation(async (...args: unknown[]) => {
@@ -8714,8 +8673,7 @@ describe('orchestrator', () => {
         });
         const dir = setupRun('run-1', {
           steps: [
-            migStep('step-1', '@nx/js:gen', 'died', {
-              pid: 999999,
+            migStep('step-1', '@nx/js:gen', status, {
               generatorCompleted: true,
               ...stepFields,
             }),
@@ -8731,8 +8689,8 @@ describe('orchestrator', () => {
           POLICY
         );
         process.env.NX_MIGRATE_BROKER = broker.nonce;
-        // The worker's request was answered before the worker was found
-        // dead; reusing it would replay that answer.
+        // The worker's answered request, still on disk; reusing it would
+        // replay that answer.
         writeFileSync(
           join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.result.json`),
           JSON.stringify(workerAnswer)

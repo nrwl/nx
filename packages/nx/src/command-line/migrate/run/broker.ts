@@ -60,14 +60,14 @@ import { installDepsChangedSinceDispense, isPidAlive } from './util';
 export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
 const BROKER_DIR_NAME = 'broker';
 const CHILD_POLL_INTERVAL_MS = 250;
-// When the waiting command prints its `[nx]` line, which the agent relays.
+// The runbook's "Long-running commands" section states both intervals.
 const FIRST_WAITING_LINE_MS = 15_000;
 const WAITING_LINE_INTERVAL_MS = 60_000;
 
 // Repeated requests reuse the first answer; a reset asks anew (see
 // `invocation`). A died step's adopt shares the worker's commit request until
-// that commit is recorded; later adopts and a failed step's actions ask under
-// their own request id.
+// a commit or a failed install is recorded for the step; later adopts and a
+// failed step's actions ask under their own request id.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -192,7 +192,7 @@ export function acquireTreeOperation(
     const held = liveTreeOperation(fresh, owner);
     if (held) throw new TreeBusyError(treeBusyMessage(held));
     marks =
-      (request.kind === 'commit' || request.kind === 'give-up') &&
+      commitsStep(request.kind) &&
       fresh.steps.find((s) => s.id === request.stepId)?.commitStarted !== true;
     return {
       ...(marks ? markCommitStarted(fresh, request.stepId) : fresh),
@@ -539,24 +539,25 @@ function waitingLine(
       request,
       stepName
     )} (${formatElapsed(waitedMs)} so far).`,
-    ...(requestCommits(request.kind)
+    ...(commitsStep(request.kind)
       ? [
           COMMIT_INSTALLS_FIRST,
           'A signing popup or a security key can also hold a commit until the user answers it.',
         ]
       : []),
-    sessionOperationWayOut('it'),
+    `If it seems stuck, the user can ${sessionOperationWayOut('it')}.`,
   ].join(' ');
 }
 
 export const COMMIT_INSTALLS_FIRST =
   'A commit first installs any dependency changes.';
 
-export function requestCommits(kind: BrokerRequestKind): boolean {
+export function commitsStep(kind: MigrateTreeOperation['kind']): boolean {
   switch (kind) {
     case 'commit':
     case 'give-up':
       return true;
+    case 'checkpoint':
     case 'install':
     case 'fold-install':
     case 'action-install':
@@ -564,14 +565,13 @@ export function requestCommits(kind: BrokerRequestKind): boolean {
       return false;
     default: {
       const exhaustive: never = kind;
-      throw new Error(`Unhandled broker request kind '${exhaustive}'.`);
+      throw new Error(`Unhandled tree operation '${exhaustive}'.`);
     }
   }
 }
 
-/** How the user ends an operation the session's parent runs for a step. */
 export function sessionOperationWayOut(operation: string): string {
-  return `If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end ${operation}, and resume the run afterwards.`;
+  return `quit this session, then press Ctrl+C in the terminal to end ${operation}, and resume the run afterwards`;
 }
 
 export function formatElapsed(ms: number): string {
@@ -624,6 +624,12 @@ function settle(result: BrokerResult): BrokerAnswer {
   }
 }
 
+export interface InFlightOperation {
+  request: BrokerRequest;
+  startedAt: number;
+  stepName: string;
+}
+
 /**
  * The parent side. Holds one exclusive lock for the session's lifetime so a
  * waiting step can tell a slow parent from a dead one, answers each request
@@ -633,13 +639,6 @@ function settle(result: BrokerResult): BrokerAnswer {
  * the policy the session started with, never from run state, which the
  * agent's sandbox can write.
  */
-export interface InFlightOperation {
-  request: BrokerRequest;
-  startedAt: number;
-  // Once the step is read.
-  stepName?: string;
-}
-
 export class MigrateCommitBroker {
   readonly nonce = randomBytes(4).toString('hex');
   private readonly handled = new Set<string>();
@@ -690,7 +689,6 @@ export class MigrateCommitBroker {
       this.handled.add(id);
       let result: BrokerResult;
       try {
-        if (lease) this.inFlight = { request, startedAt: Date.now() };
         result = lease ? await this.answer(request, lease) : { kind: 'stale' };
         // Recorded by the process that ran the commit, before the answer: the
         // step reading it can die with the commit already in history. A failed
@@ -749,15 +747,14 @@ export class MigrateCommitBroker {
     if (
       !Object.hasOwn(SEAM_STATUSES, request.kind) ||
       !isAtSeam(step, request) ||
-      ((request.kind === 'commit' ||
-        request.kind === 'reset' ||
-        request.kind === 'give-up') &&
+      ((commitsStep(request.kind) || request.kind === 'reset') &&
         !this.policy.createCommits) ||
       (request.commitAs !== undefined && request.commitAs !== 'adopt')
     ) {
       return { kind: 'stale' };
     }
-    if (this.inFlight) this.inFlight.stepName = stepLabel(step);
+    const stepName = stepLabel(step);
+    this.inFlight = { request, startedAt: Date.now(), stepName };
     if (request.kind === 'give-up') {
       const output = new DeferredOutputCollector();
       const outcome = await giveUpWithCommit({
@@ -850,7 +847,7 @@ export class MigrateCommitBroker {
     }
   }
 
-  /** Releases the lock; call after the last `service` settled. */
+  /** Releases the lock; call after the last `service` settled, or once giving up on it. */
   close(): void {
     this.lock?.unlock();
     // A reservation this session still holds would only expire with its pid.
