@@ -20,6 +20,7 @@ import {
 } from './clean-retry';
 import {
   acquireTreeOperation,
+  BROKER_ENV_VAR,
   BrokerStaleRequestError,
   BrokerUnavailableError,
   commitStepTree,
@@ -27,6 +28,7 @@ import {
   installStepTree,
   resetStepTree,
   liveTreeOperation,
+  sessionOperationWayOut,
   TreeBusyError,
   treeBusyMessage,
   treeOperationLabel,
@@ -118,7 +120,6 @@ import {
   commitResultToLedgerEntry,
   completionSummaryLines,
   coveringLandedEntries,
-  hasPendingCommitDebt,
   latestRound,
   markInstallFailed,
   commitNameForStep,
@@ -1208,6 +1209,7 @@ export async function runOrchestratorReconcile(
           return;
         }
         warnAboutGiveUp(target, outcome);
+        if (target.installFailed === true) warnInstallLeftToUser(root, target);
         // Settled already; the dispense refuses a tree still held.
         scope.lease?.release();
         scope.lease = undefined;
@@ -1218,8 +1220,9 @@ export async function runOrchestratorReconcile(
       // sections stay synchronous); the transition and any unrecorded entry then
       // land in one write. Adopt and skip keep the tree, so the install they owe
       // runs here: the next dispense would take the changed deps as its baseline.
-      // Giving up keeps it the same way when the run does not commit. Retries
-      // owe nothing: the rearmed attempt reconciles itself.
+      // Giving up keeps it the same way when the run does not commit. An install
+      // that already failed is left to the step's mark instead. Retries owe
+      // nothing: the rearmed attempt reconciles itself.
       const { entry, installFailed, recorded } = await stepActionSideEffects(
         root,
         dir,
@@ -1310,6 +1313,13 @@ export async function runOrchestratorReconcile(
       }
       if (unresolvedArchiveError !== undefined) {
         warnUnresolvedNotArchived(stepLabel(target), unresolvedArchiveError);
+      }
+      // A retry's rearm drops the mark: its next attempt installs.
+      if (
+        target.installFailed === true &&
+        written.steps.find((s) => s.id === target.id)?.installFailed === true
+      ) {
+        warnInstallLeftToUser(root, target);
       }
       state = written;
     } finally {
@@ -1660,6 +1670,17 @@ async function installFailedForStep(
   }
 }
 
+// For a settle that skipped the install its step had already failed. Any later
+// install covers the step too, clearing its mark and the report's line.
+function warnInstallLeftToUser(root: string, step: MigrateStep): void {
+  warnToAgent({
+    title: `The dependency changes made by ${stepLabel(step)} are not installed.`,
+    bodyLines: [
+      `Run \`${pmInstallCommand(root)}\` once the cause of the failed install is fixed. The run's final report repeats this unless a later install covers them.`,
+    ],
+  });
+}
+
 // A failed handoff fails the prompt; a success handoff completes it, unless it
 // marks the prompt not applicable via `extras.outcome === 'skipped'`.
 function handoffToPromptOutcome(
@@ -1919,9 +1940,10 @@ async function stepActionSideEffects(
 ): Promise<StepSideEffects> {
   switch (action) {
     case 'adopt':
-      // A died worker's unrecorded commit request is reused. A failed step, or
-      // a recorded commit, needs an adopt request of its own, or the old answer
-      // would be replayed.
+      // A died worker's commit request is reused while nothing records its
+      // outcome: the session may still answer it. A failed step, or a recorded
+      // commit or install failure, needs an adopt request of its own, or the
+      // old answer would be replayed.
       return state.createCommits
         ? commitForStep(
             root,
@@ -1930,6 +1952,8 @@ async function stepActionSideEffects(
             step,
             scope,
             step.status === 'failed' ||
+              step.commitLedgerIndex !== undefined ||
+              step.installFailed === true ||
               coveringLandedEntries(state, step.id).length > 0
               ? 'adopt'
               : undefined
@@ -2349,6 +2373,7 @@ function emitRetryFailed(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
+    ...unfinishedOperationLines(root, state, step),
     retryBudgetLine(step, committed),
     ``,
     `Decide how to proceed and re-run reconcile with one of:`,
@@ -2440,6 +2465,37 @@ function retryBudgetLine(step: MigrateStep, committed: boolean): string {
       ? `adopt only once you have inspected the tree and finished the ${stepNoun(step)}; otherwise stop and report`
       : 'give the step up with unresolved and continue'
   }.`;
+}
+
+// A recorded failed commit with the mark standing withdraws skip and
+// unresolved, so every choice left commits.
+function unfinishedOperationLines(
+  root: string,
+  state: MigrateRunState,
+  step: MigrateStep
+): string[] {
+  const lines: string[] = [];
+  if (step.installFailed === true) {
+    lines.push(
+      `Its dependency install did not complete. A retry runs it again, so fix the cause first if it can be fixed. Any other choice settles the step without installing and leaves the install to you; the run's final report asks for \`${pmInstallCommand(
+        root
+      )}\`.`,
+      ``
+    );
+  }
+  // Not commitReceipt, which throws on an index the ledger lacks: a dispense
+  // has to render whatever run.json holds.
+  const receipt =
+    step.commitLedgerIndex === undefined
+      ? undefined
+      : state.commits[step.commitLedgerIndex];
+  if (step.commitStarted === true && receipt?.kind === 'failed') {
+    lines.push(
+      `Its commit did not complete. Every choice below commits again.`,
+      ``
+    );
+  }
+  return lines;
 }
 
 // Opens a capped dispense and is the reason a retry past the cap is refused.
@@ -2595,6 +2651,7 @@ function emitDied(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
+    ...unfinishedOperationLines(root, state, step),
     retryBudgetLine(step, committed),
     ``,
   ];
@@ -2692,7 +2749,13 @@ function emitHeld(
     'held',
     {
       next: reconcileCommand(root, runId),
-      instructionLines: [treeBusyMessage(held)],
+      instructionLines: [
+        treeBusyMessage(held),
+        // Quitting this session frees the terminal only for its own parent.
+        ...(held.owner === process.env[BROKER_ENV_VAR]
+          ? [sessionOperationWayOut(treeOperationLabel(held))]
+          : []),
+      ],
     },
     noProgress
   );
@@ -3043,15 +3106,22 @@ export function completionWarnings(
   // fact absorbed; suppress the warning only on a verified-clean tree. A dirty
   // tree can still be unrelated edits, so the warning only claims the changes
   // "may remain".
-  const commitDebt =
-    hasPendingCommitDebt(state) && getWorkingTreeStatus(root) !== 'clean';
+  const debtStepIds = uncoveredFailedStepIds(state);
+  const uncommitted =
+    debtStepIds.length > 0 && getWorkingTreeStatus(root) !== 'clean'
+      ? state.steps.filter((s) => debtStepIds.includes(s.id))
+      : [];
   const uninstalled = state.steps.filter((s) => s.installFailed);
   const issueLines = renderUnresolvedIssueLines(state, runId);
   return [
-    ...(commitDebt
+    ...(uncommitted.length > 0
       ? [
           [
-            'Some migration changes could not be committed and may remain in the working tree; review and commit them manually.',
+            `The changes made by ${uncommitted
+              .map(stepLabel)
+              .join(
+                ', '
+              )} could not be committed and may remain in the working tree; review and commit them manually.`,
           ],
         ]
       : []),
