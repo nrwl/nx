@@ -35,10 +35,14 @@
       "inputs": [
         {
           "input": "production",
+          "projects": ["tag:npm:public"]
+        },
+        {
+          "input": "production",
           "projects": ["tag:maven:dev.nx.maven"]
         },
         "{workspaceRoot}/scripts/local-registry",
-        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+        "native"
       ],
       "dependsOn": [
         "local-registry-e2e",
