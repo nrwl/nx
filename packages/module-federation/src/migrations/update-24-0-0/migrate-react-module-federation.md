@@ -823,8 +823,90 @@ old server config did.
 
 ## Server bundler config
 
-On webpack, the old server build is `webpack.server.config.ts` with `withModuleFederationForSSR`.
-Replace it with a `webpack.server.config.js` next to the browser one:
+**Rspack:**
+
+The generated `rspack.config.ts` already exports a `[browser, server]` array, with a second
+`NxModuleFederationPlugin({ config, isServer: true })` and an `NxModuleFederationSSRDevServerPlugin`.
+Keep the array in a new `rspack.config.js`. Both compilers get the browser guide's Step 6
+settings, and the server compiler also gets `target: 'async-node'`:
+
+```js
+// apps/shell/rspack.config.js
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const {
+  ModuleFederationPlugin,
+} = require('@module-federation/enhanced/rspack');
+const { join } = require('node:path');
+
+const workspaceRoot = join(__dirname, '../..');
+const shared = {
+  resolve: { modules: ['node_modules', workspaceRoot] },
+  optimization: {
+    runtimeChunk: false,
+    splitChunks: { cacheGroups: { default: false, common: false } },
+  },
+};
+
+const browser = {
+  name: 'browser',
+  lazyCompilation: false,
+  ...shared,
+  output: {
+    path: join(workspaceRoot, 'dist/apps/shell/browser'),
+    publicPath: 'auto',
+    uniqueName: 'shell',
+    clean: true,
+  },
+  devServer: {
+    port: 4757, // the Express server owns the app port
+    hot: true,
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    devMiddleware: {
+      writeToDisk: (file) => !file.includes('.hot-update.'),
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      // ... your existing browser options
+      runtimeChunk: false,
+      commonChunk: false,
+    }),
+    new NxReactRspackPlugin(),
+    new ModuleFederationPlugin(require('./module-federation.config')),
+  ],
+};
+
+const server = {
+  name: 'server',
+  target: 'async-node',
+  ...shared,
+  output: {
+    path: join(workspaceRoot, 'dist/apps/shell/server'),
+    filename: 'server.js',
+    uniqueName: 'shell',
+    clean: true,
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      outputPath: join(workspaceRoot, 'dist/apps/shell/server'),
+      outputFileName: 'server.js',
+      tsConfig: './tsconfig.app.json',
+      main: './server.ts',
+      runtimeChunk: false,
+      commonChunk: false,
+    }),
+    new ModuleFederationPlugin(require('./module-federation.server.config')),
+  ],
+};
+
+module.exports = [browser, server];
+```
+
+**webpack:**
+
+The old server build is `webpack.server.config.ts` with `withModuleFederationForSSR`. Replace it
+with a `webpack.server.config.js` next to the browser one:
 
 ```js
 // apps/shell/webpack.server.config.js
@@ -862,12 +944,6 @@ module.exports = {
 };
 ```
 
-On Rspack, the old server build is a second `NxModuleFederationPlugin({ config, isServer: true })`
-plus an `NxModuleFederationSSRDevServerPlugin` in `rspack.config.ts`. Keep the generated
-`[browser, server]` array. Both compilers get the browser guide's Step 6 settings, and the server
-compiler also gets `target: 'async-node'`. Move the browser `devServer.port` off the app port,
-because the Express server listens there.
-
 ## Runtime manifest on the server
 
 A host moved to a runtime manifest renders `loadRemote` on the server too, where `main.ts` never
@@ -888,9 +964,38 @@ skips that scope.
 
 ## Targets
 
-Add a `server` target that runs the server config, with `dependsOn: ["build"]`. For development,
-replace the SSR dev server with a `serve` that watches both builds. Node restarts when the app's
-server bundle or a remote's changes:
+Replace the SSR dev server with a `serve` that watches the browser and server builds and restarts
+Node when the server bundle changes.
+
+**Rspack:**
+
+`rspack serve` builds both compilers and writes them to disk:
+
+```jsonc
+// apps/shell/project.json
+{
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "cwd": "apps/shell",
+        "env": { "PORT": "4755" },
+        "parallel": true,
+        "commands": [
+          "rspack serve --node-env=development",
+          "until [ -f ../../dist/apps/shell/server/server.js ]; do sleep 1; done; node --watch-path=../../dist/apps/shell/server ../../dist/apps/shell/server/server.js",
+        ],
+      },
+    },
+  },
+}
+```
+
+**webpack:**
+
+Add a `server` target that runs `webpack.server.config.js`, with `dependsOn: ["build"]`. The
+`serve` target also watches each remote's server output:
 
 ```jsonc
 // apps/shell/project.json
@@ -913,11 +1018,9 @@ server bundle or a remote's changes:
 }
 ```
 
-On Rspack, replace the two watch builds with `rspack serve`. It writes both builds to disk.
-
 Start host and remotes together with `nx run-many -t serve -p shell remoteA -c development`.
-`serve-static` becomes `node dist/apps/<app>/server/server.js` with `dependsOn: ["server"]`, in
-place of `@nx/web:file-server`.
+`serve-static` becomes `node dist/apps/<app>/server/server.js` in place of `@nx/web:file-server`,
+depending on the build that writes the server bundle.
 
 ## Validate the result
 
