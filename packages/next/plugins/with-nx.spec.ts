@@ -26,6 +26,10 @@ describe('removed withNx stub', () => {
   it('supports both generated CommonJS import forms', async () => {
     const legacy = require('./with-nx');
     expect(legacy).toBe(legacy.withNx);
+    expect(legacy.getNextConfig({ distDir: 'custom' })).toEqual({
+      distDir: 'custom',
+    });
+    expect(legacy.getAliasForProject({}, {})).toBeNull();
     const config = { distDir: 'custom' };
     expect(await legacy(config)('phase-production-server', {})).toBe(config);
   });

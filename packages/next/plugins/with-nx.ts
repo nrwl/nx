@@ -40,7 +40,25 @@ function withNx(
   };
 }
 
+/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+export function getNextConfig(
+  nextConfig: WithNxOptions = {},
+  _context?: WithNxContext
+): NextConfig {
+  return nextConfig;
+}
+
+/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+export function getAliasForProject(
+  _node: unknown,
+  _paths: Record<string, string[]>
+): null | string {
+  return null;
+}
+
 // Both import forms exist in generated configs and copied production configs.
 module.exports = withNx;
 module.exports.withNx = withNx;
+module.exports.getNextConfig = getNextConfig;
+module.exports.getAliasForProject = getAliasForProject;
 export { withNx };

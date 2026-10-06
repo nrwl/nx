@@ -229,6 +229,29 @@ describe('migrate-nx-vite-ts-paths', () => {
     );
   });
 
+  it('should keep the import while another reference to the plugin remains', async () => {
+    tree.write(
+      'apps/demo/vite.config.ts',
+      stripIndents`
+      import { defineConfig } from 'vite';
+      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+      const pathsPlugin = nxViteTsPaths;
+
+      export default defineConfig({
+        plugins: [nxViteTsPaths()],
+      });`
+    );
+
+    await migrateNxViteTsPaths(tree);
+
+    const updated = tree.read('apps/demo/vite.config.ts', 'utf-8');
+    expect(updated).toContain(
+      "import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';"
+    );
+    expect(updated).toContain('plugins: []');
+  });
+
   it('should not run on workspaces below Vite 8, where the option is ignored', async () => {
     setViteVersion('^7.0.0');
     const content = stripIndents`

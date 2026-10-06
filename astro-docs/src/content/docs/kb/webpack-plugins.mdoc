@@ -469,7 +469,16 @@ module.exports = async () => {
     moduleFederationConfig,
     { dts: false }
   );
-  const webpackConfig = configureFederation({ output: {}, plugins: [] });
+  const webpackConfig = configureFederation({
+    // A dev host with several remotes needs the single runtime chunk.
+    mode:
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'production'
+        ? process.env.NODE_ENV
+        : 'none',
+    output: {},
+    plugins: [],
+  });
   const runtimeChunk = webpackConfig.optimization?.runtimeChunk;
   webpackConfig.plugins.unshift(
     new NxAppWebpackPlugin(),

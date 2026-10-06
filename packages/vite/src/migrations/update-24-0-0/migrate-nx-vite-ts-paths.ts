@@ -144,6 +144,17 @@ function removePluginUsage(content: string): string {
     });
   }
 
+  // A reference outside the removed calls still needs the (inert) stub import.
+  const survivingReference = (
+    tsquery.query(file, 'Identifier[name="nxViteTsPaths"]') as Node[]
+  ).some(
+    (id) =>
+      !calls.some((call) => call.expression === id) &&
+      !tsModule.isImportSpecifier(id.parent) &&
+      !tsModule.isBindingElement(id.parent)
+  );
+  if (survivingReference) return applyChangesToString(content, changes);
+
   for (const node of findSolePluginImports(tsModule, tsquery, file)) {
     changes.push({
       type: ChangeType.Delete,

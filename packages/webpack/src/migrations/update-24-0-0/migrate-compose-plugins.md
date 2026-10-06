@@ -12,6 +12,9 @@ compatibility only. Helper behavior was removed in Nx 24; the stubs do not confi
 - Find all webpack configs, including `.js`, `.cjs`, `.mjs`, `.ts`, `.cts`, `.mts`,
   alternate production/development files, imported helpers, and `.old` configs.
   Trace aliased imports and re-exports of the deprecated helpers.
+- Check `webpackConfig` target options that name a package path instead of a
+  local file, such as `@nx/react/plugins/webpack`. Those resolve to the same
+  stubs; give the project its own config file.
 - Read each project's target options and configuration overrides. Record which
   values come from `withNx`/`withWeb`/`withReact`, the executor, environment
   variables, and custom callbacks. Include Node/Nest apps and multi-config builds.

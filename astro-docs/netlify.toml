@@ -851,11 +851,7 @@ to = "/docs/kb/wait-for-tasks"
 
 [[redirects]]
 from = "/docs/technologies/react/guides/adding-assets-react"
-to = "/docs/technologies/react/introduction"
-
-[[redirects]]
-from = "/docs/kb/adding-assets-react"
-to = "/docs/technologies/react/introduction"
+to = "/docs/kb/adding-assets-react"
 
 [[redirects]]
 from = "/docs/technologies/react/guides/deploy-nextjs-to-vercel"
