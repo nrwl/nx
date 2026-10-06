@@ -1,0 +1,151 @@
+---
+title: Migrate server-side rendered Angular Module Federation apps
+description: Move the server build of Angular Module Federation apps off @nx/module-federation onto @module-federation/enhanced and @module-federation/node.
+sidebar:
+  label: Migrate Angular SSR Module Federation
+filter: 'type:Guides'
+topics:
+  - 'Module Federation'
+  - 'Angular'
+---
+
+{% llm_copy_prompt title="Migrate server-side rendered Angular Module Federation apps" %}
+Migrate the server build of each server-side rendered Angular Module Federation app in this workspace off the Nx Module Federation APIs that Nx v24 removes. An app with a `server` target or a `webpack.server.config.*` file is server-side rendered. Follow Path A of https://nx.dev/docs/kb/migrate-angular-module-federation for the browser build, and do the server steps at {pageUrl} before that guide's Step 3. Native Federation is not covered, so stop and report if the user asks for it on a server-side rendered app.
+
+Rules that override any shortcut you are tempted to take:
+
+1. Before editing, keep the baseline stats from `dist/apps/<app>/browser/mf-stats.json` and `dist/apps/<app>/server/mf-stats.json`. Record the server-rendered HTML of each host route that renders a remote.
+2. Replace `withModuleFederationForSSR` from `@nx/module-federation/angular` with `ModuleFederationPlugin` from `@module-federation/enhanced/webpack`. Keep `@module-federation/node` as a dependency.
+3. The server container sets `library: { type: 'commonjs-module' }`, `remoteType: 'script'`, `experiments: { asyncStartup: true }`, and `runtimePlugins: [require.resolve('@module-federation/node/runtimePlugin')]`. Its remote URLs keep the `name@` prefix and point at `<origin>/server/remoteEntry.js`, even though the browser container is `.mjs`.
+4. Copy the server `shared` map from the server stats.
+5. Write the server configs before the browser `module-federation.config.js`. The old server config imports it without an extension and breaks once it exists.
+6. Swap `@nx/angular:module-federation-dev-ssr` for `@angular-devkit/build-angular:ssr-dev-server` with an explicit `port`. A static run is `node dist/apps/<app>/server/main.js`, never `@nx/web:file-server`.
+7. Accept the migration only when each host route's HTML holds the remote's markup and client scripts, and the page hydrates in a browser without errors. Report what you verified and what you did not.
+
+Reference: {pageUrl}
+{% /llm_copy_prompt %}
+
+{% aside type="caution" title="Follow the browser guide alongside this one" %}
+This guide covers only the server build. Start with Path A of
+[migrating the browser build](/docs/kb/migrate-angular-module-federation), do the steps below
+before its Step 3, then finish the browser guide.
+{% /aside %}
+
+A host or remote generated with `--ssr` builds the same container twice, once for the browser and
+once for Node. The server build needs its own container format, runtime plugin, and serve targets.
+Native Federation server-side rendering is not covered.
+
+## What replaces what
+
+| Going away in v24                                                 | Replacement                                                         |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `withModuleFederationForSSR` from `@nx/module-federation/angular` | `ModuleFederationPlugin` with the `@module-federation/node` runtime |
+| `@nx/angular:module-federation-dev-ssr`                           | `@angular-devkit/build-angular:ssr-dev-server`                      |
+
+## Capture the server baseline
+
+With `--ssr`, copy the browser stats from `dist/apps/<app>/browser/mf-stats.json` and the server
+stats from `dist/apps/<app>/server/mf-stats.json`.
+
+Save the HTML each host route returns with `curl`. You compare against it at the end.
+
+## Server container settings
+
+The server container is CommonJS and loads remotes over HTTP through the Node runtime plugin.
+Each remote's Express server serves its server build under `/server`, and the host's server-side
+remote URLs point there. Keep that static mount in every remote's `server.ts`.
+
+A host or remote generated with `--ssr` has a `server` target on `@nx/angular:webpack-server`
+whose `webpack.server.config.ts` calls `withModuleFederationForSSR`. Do these steps before you
+write the browser guide's Step 3 files, because the old `webpack.server.config.ts` imports
+`./module-federation.config` without an extension and breaks once the new file exists.
+
+## Server federation config
+
+Write a `module-federation.server.config.js` per app. It keeps the browser config's `name`,
+`exposes`, and `dts: false`. Unlike the browser container, it is CommonJS and its remote URLs
+keep the `name@` prefix and end in `.js`:
+
+```js
+// apps/shell/module-federation.server.config.js
+const isProd = process.env.NX_TASK_TARGET_CONFIGURATION === 'production';
+
+module.exports = {
+  name: 'shell',
+  filename: 'remoteEntry.js',
+  library: { type: 'commonjs-module' },
+  remoteType: 'script',
+  dts: false,
+  remotes: {
+    remoteA: isProd
+      ? 'remoteA@https://remote-a.example.com/server/remoteEntry.js'
+      : 'remoteA@http://localhost:4201/server/remoteEntry.js',
+  },
+  shared: {
+    // ... every entry the baseline server/mf-stats.json lists
+  },
+  experiments: { asyncStartup: true },
+  runtimePlugins: [require.resolve('@module-federation/node/runtimePlugin')],
+};
+```
+
+Copy `shared` from the server stats. They list `@angular/ssr`, `@angular/ssr/node`, `express`,
+and `cors` on top of the browser map.
+
+## Server bundler config
+
+Point `server.options.customWebpackConfig.path` at a `webpack.server.config.js`:
+
+```js
+// apps/shell/webpack.server.config.js
+const {
+  ModuleFederationPlugin,
+} = require('@module-federation/enhanced/webpack');
+const { join } = require('node:path');
+const mf = require('./module-federation.server.config.js');
+
+module.exports = (config) => ({
+  ...config,
+  target: 'async-node',
+  output: { ...config.output, uniqueName: mf.name },
+  resolve: {
+    ...config.resolve,
+    modules: [
+      ...(config.resolve?.modules ?? ['node_modules']),
+      join(__dirname, '../..'),
+    ],
+  },
+  optimization: { ...config.optimization, runtimeChunk: false },
+  plugins: [...(config.plugins ?? []), new ModuleFederationPlugin(mf)],
+});
+```
+
+`main.server.ts`, `bootstrap.server.ts`, and the routes need no change. Delete
+`webpack.server.config.ts` with the other old files.
+
+## Targets
+
+Swap the host's `serve-ssr` from `@nx/angular:module-federation-dev-ssr` to
+`@angular-devkit/build-angular:ssr-dev-server`. Keep `browserTarget` and `serverTarget`, and add
+an explicit `port`. Remotes keep their `serve-ssr` target. Start them together:
+
+```shell
+nx run-many -t serve-ssr -p shell remoteA
+```
+
+Restart the host's `serve-ssr` to pick up a remote's server-side changes.
+
+For a production-like run, start `node dist/apps/<app>/server/main.js` with `PORT` set.
+
+## Validate the result
+
+Request each host route that renders a remote, for example with `curl`, and check that the
+response holds the remote's markup and the client `<script>` tags. Then load it in a browser and
+check that it hydrates without errors.
+
+Keep `@module-federation/node` in `dependencies` when you remove `@nx/module-federation`.
+
+## What the official plugin does not do
+
+- **Dev orchestration.** The SSR dev-server executor started the remotes with the host and
+  proxied the static ones. Start each app's `serve-ssr` yourself.

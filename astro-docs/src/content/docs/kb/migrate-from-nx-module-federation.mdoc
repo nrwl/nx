@@ -22,7 +22,7 @@ Rules that override any shortcut you are tempted to take:
 7. Move `build` and `serve` to `nx:run-commands` running the Rspack or webpack CLI, with `NODE_ENV` per configuration. Add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `spa: true`, `watch: false`, never `buildTarget`. Point e2e web servers at `nx run-many -t serve-static -p <host> <remotes>`. For `@nx/cypress:cypress`, point `devServerTarget` at a continuous `nx:run-commands` target on the e2e project that runs that command with a `readyWhen` per app, and remove the e2e target's `port` option.
 8. Remove `@nx/module-federation` only after the new setup builds and runs. On v23, `@nx/rspack` depends on it, so on Rspack rebuild uncached with the `node_modules` copy renamed aside, then put it back.
 9. Do not claim hot-update parity, shared-state parity, or deployment-path correctness from a green build. Run the development flow with at least one remote served statically, and edit a host file and a live remote file to check hot updates. Report what you verified and what you did not.
-10. For apps with a server build (a `server` target or a `*.server.config.*` file), also follow https://nx.dev/docs/kb/migrate-module-federation-ssr.
+10. For apps with a server build (a `server` target or a `*.server.config.*` file), also follow https://nx.dev/docs/kb/migrate-react-module-federation-ssr.
 
 Reference: {pageUrl}
 {% /llm_copy_prompt %}
@@ -39,7 +39,7 @@ it. Nx will also ship migrations for this later.
 {% aside type="note" title="Scope" %}
 React apps on Rspack or webpack, keeping the same bundler. Server-side rendered apps follow these
 steps for the browser build, then
-[migrate server-side rendered apps](/docs/kb/migrate-module-federation-ssr). For Angular, see
+[migrate server-side rendered apps](/docs/kb/migrate-react-module-federation-ssr). For Angular, see
 [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation).
 {% /aside %}
 
@@ -109,8 +109,8 @@ production remote URLs, custom upstream options, and any runtime plugins.
 
 Apps with a `server` target or a `*.server.config.*` file are server-side rendered. Migrate their
 browser build here, then their server build with
-[migrate server-side rendered apps](/docs/kb/migrate-module-federation-ssr). Angular apps follow
-[migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation) instead.
+[migrate server-side rendered apps](/docs/kb/migrate-react-module-federation-ssr). Angular apps
+follow [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation) instead.
 
 ## Step 2: install the official packages
 

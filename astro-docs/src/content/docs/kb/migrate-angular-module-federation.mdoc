@@ -23,7 +23,7 @@ Rules 2 to 7 cover Path A. On Path B, follow that section of the page instead:
 7. Remove `@nx/module-federation` only after the new setup builds and runs. Move `@module-federation/enhanced` to `dependencies` (`pnpm add -P` on pnpm). Rebuild uncached, production last. On Rspack a development build needs `NGRS_CONFIG=development`, or it exits 0 with production output. After removing the package, rename any copy left in `node_modules` (pnpm keeps one under `.pnpm/` for optional peers) for one uncached build, then put it back.
 8. Do not claim hot-update parity or shared-state parity from a green build. Remote edits reach the host after a reload, before and after this migration. On Rspack the first load after the dev server starts can need one reload. `Cannot find module '<id>'` while loading `./Routes` means a stale cache: run `nx reset`, delete `.angular/cache`, and rebuild. Report what you verified and what you did not.
 9. On Path B, install the `@angular-architects/native-federation` release matching the workspace's Angular major and minor. A host calling `loadRemote('remoteA/Routes')` switches to `loadRemoteModule('remoteA', './Routes')`.
-10. For apps with a server build (a `server` target or a `webpack.server.config.*` file), also follow https://nx.dev/docs/kb/migrate-module-federation-ssr before Step 3. Path B does not cover server-side rendering. Stop and report if the user asks for Path B on one.
+10. For apps with a server build (a `server` target or a `webpack.server.config.*` file), also follow https://nx.dev/docs/kb/migrate-angular-module-federation-ssr before Step 3. Path B does not cover server-side rendering. Stop and report if the user asks for Path B on one.
 
 Reference: {pageUrl}
 {% /llm_copy_prompt %}
@@ -46,7 +46,7 @@ You have one decision to make before you start:
 
 {% aside type="note" title="Scope" %}
 Static and runtime-loaded remotes. For server-side rendered (`--ssr`) apps, follow Path A and
-[migrate server-side rendered apps](/docs/kb/migrate-module-federation-ssr), which changes the
+[migrate server-side rendered apps](/docs/kb/migrate-angular-module-federation-ssr), which changes the
 server build before Step 3. Path B does not cover them. For React, see the
 [React guide](/docs/kb/migrate-from-nx-module-federation).
 {% /aside %}
@@ -114,7 +114,7 @@ group.
   from `@nx/angular/mf`, Step 5 converts it.
 
 For server-side rendered apps (a `server` target or a `webpack.server.config.ts`), read
-[migrate server-side rendered apps](/docs/kb/migrate-module-federation-ssr) before you start
+[migrate server-side rendered apps](/docs/kb/migrate-angular-module-federation-ssr) before you start
 Step 3.
 
 ## Path A, the official plugin on webpack or Rspack
