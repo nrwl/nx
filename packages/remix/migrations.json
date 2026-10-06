@@ -18,7 +18,7 @@
     },
     "migrate-to-react-router": {
       "version": "24.0.0-beta.0",
-      "description": "Migrate Remix v2 applications to React Router v8 with @nx/react, including Nx configuration and validation.",
+      "description": "Migrate Remix v2 applications to React Router v7 with @nx/react, including Nx configuration and validation.",
       "prompt": "./dist/src/migrations/update-24-0-0/migrate-to-react-router.md"
     }
   },
