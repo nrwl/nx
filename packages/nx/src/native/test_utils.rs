@@ -44,7 +44,6 @@ pub(crate) fn strings(v: &[&str]) -> Vec<String> {
     v.iter().map(|s| s.to_string()).collect()
 }
 
-/// Edges to `ids`, each waiting for the start of its task.
 pub(crate) fn edges_to(ids: &[&str]) -> Vec<TaskGraphEdge> {
     ids.iter()
         .map(|id| TaskGraphEdge {

@@ -1,9 +1,4 @@
-import {
-  IS_WASM,
-  LogMatcher,
-  ProbeOutcome,
-  ReadinessProbe,
-} from '../../native';
+import { IS_WASM, LogMatcher, ReadinessProbe } from '../../native';
 import type { RunningTask } from '../running-tasks/running-task';
 import {
   notReadyError,
@@ -29,11 +24,8 @@ export async function waitForReadiness(
       `The WASM build of Nx does not support "readyWhen", so "${context.taskId}" cannot be probed for readiness.`
     );
   }
-  const timedOut = () => readinessTimeoutError(context.taskId, readyWhen);
-  const exited = () => notReadyError(context.taskId, 'exited');
-
   if (readyWhen.kind === 'logMatches') {
-    return waitForLogMatch(readyWhen, context, timedOut, exited);
+    return waitForLogMatch(readyWhen, context);
   }
 
   const probe = new ReadinessProbe(
@@ -53,51 +45,37 @@ export async function waitForReadiness(
   if (context.signal.aborted) {
     probe.cancel();
   }
-  let outcome: ProbeOutcome;
+  let ready: boolean;
   try {
-    outcome = await probe.wait();
+    ready = await probe.wait();
   } finally {
     context.signal.removeEventListener('abort', cancel);
   }
-  switch (outcome) {
-    case ProbeOutcome.Ready:
-      return;
-    case ProbeOutcome.TimedOut:
-      throw timedOut();
-    case ProbeOutcome.Cancelled:
-      throw exited();
-    default: {
-      const unhandled: never = outcome;
-      throw new Error(`Unhandled readiness probe outcome: ${unhandled}`);
-    }
+  if (!ready) {
+    throw context.signal.aborted
+      ? notReadyError(context.taskId, 'exited')
+      : readinessTimeoutError(context.taskId, readyWhen);
   }
 }
 
 function waitForLogMatch(
   readyWhen: Extract<NormalizedReadyWhen, { kind: 'logMatches' }>,
-  context: ReadinessProbeContext,
-  timedOut: () => Error,
-  exited: () => Error
+  context: ReadinessProbeContext
 ): Promise<void> {
-  if (!context.runningTask.onOutput) {
-    return Promise.reject(
-      new Error(
-        `Task "${context.taskId}" declares "readyWhen.logMatches" but its output is not captured.`
-      )
-    );
-  }
   return new Promise<void>((resolve, reject) => {
     const matcher = new LogMatcher(readyWhen.logMatches);
     let settled = false;
     const settle = (error?: Error) => {
-      if (settled) return;
       settled = true;
       clearTimeout(timer);
       context.signal.removeEventListener('abort', onAbort);
       error ? reject(error) : resolve();
     };
-    const onAbort = () => settle(exited());
-    const timer = setTimeout(() => settle(timedOut()), readyWhen.timeout);
+    const onAbort = () => settle(notReadyError(context.taskId, 'exited'));
+    const timer = setTimeout(
+      () => settle(readinessTimeoutError(context.taskId, readyWhen)),
+      readyWhen.timeout
+    );
     timer.unref();
     context.signal.addEventListener('abort', onAbort);
     context.runningTask.onOutput((chunk) => {

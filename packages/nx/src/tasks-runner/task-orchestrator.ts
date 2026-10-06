@@ -61,7 +61,6 @@ import {
   getReadyWhenConfig,
   normalizeReadyWhen,
   notReadyError,
-  readinessFailedElsewhereError,
   readinessTimeoutError,
   type NormalizedReadyWhen,
 } from './readiness/ready-when';
@@ -116,8 +115,6 @@ function hasContent(path: string): boolean {
     return false;
   }
 }
-
-const READINESS_ROW_POLL_INTERVAL = 100;
 
 interface ReadinessState {
   promise: Promise<void>;
@@ -259,8 +256,7 @@ export class TaskOrchestrator {
   >();
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
-  // Keyed by producer id. Settled by its probe when this process owns it, by
-  // the readiness row poll when another process does.
+  // Keyed by producer id: a producer this process started or shares
   private readiness = new Map<string, ReadinessState>();
   private waitingLogged = new Set<string>();
   private cleanupPromise: Promise<void> | null = null;
@@ -1434,9 +1430,9 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Spawn and wait on a task's child process, unconditionally — no cache
-   * lookup. Callers must have already confirmed the task is a cache miss
-   * (or disabled caching entirely).
+   * Spawn and wait on a task's child process once its ready dependencies are
+   * ready, with no cache lookup. Callers must have already confirmed the task
+   * is a cache miss (or disabled caching entirely).
    */
   async runTaskDirectly(
     doNotSkipCache: boolean,
@@ -1462,14 +1458,7 @@ export class TaskOrchestrator {
       };
     }
     if (waitError) {
-      // Lifecycles pair endTasks with startTasks, so start it before failing it
-      await this.preRunSteps([task], { groupId });
-      await this.handleDiscreteWorkerFailure(
-        doNotSkipCache,
-        task,
-        groupId,
-        waitError
-      );
+      await this.failTaskBeforeStart(task, groupId, waitError, doNotSkipCache);
       return {
         task,
         code: 1,
@@ -1780,7 +1769,7 @@ export class TaskOrchestrator {
       try {
         readyWhen = this.getReadyWhen(task);
       } catch (e) {
-        return this.failContinuousTaskBeforeStart(task, groupId, e);
+        return this.failTaskBeforeStart(task, groupId, e);
       }
       await this.preRunSteps([task], { groupId });
 
@@ -1839,7 +1828,7 @@ export class TaskOrchestrator {
       await this.waitForReadyDependencies(task);
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
-      return this.failContinuousTaskBeforeStart(task, groupId, e);
+      return this.failTaskBeforeStart(task, groupId, e);
     }
     // Skipped by a failed dependency's propagation while waiting
     if (this.completedTasks.has(task.id)) {
@@ -1946,10 +1935,8 @@ export class TaskOrchestrator {
         }
         continue;
       }
-      // Run or shared by this process: its probe or row poll settles the
-      // deferred, and dispatch already held this task until then. Otherwise
-      // another process owns it (an Nx Cloud agent worker runs with a flat
-      // task graph) and the row is the only signal.
+      // A producer in this task graph is held by dispatch and settled by its
+      // probe or row poll; one outside it (an agent's flat graph) has only its row
       if (this.taskGraph.tasks[producerId]) {
         await this.readinessOf(producerId).promise;
       } else {
@@ -1970,9 +1957,8 @@ export class TaskOrchestrator {
     }
   }
 
-  // Resolves when the row is absent from the start: the producer is not
-  // managed by an Nx process this one can see, so there is nothing to wait
-  // for. A row that disappears mid-wait means the producer exited.
+  // A row absent from the start means there is no readiness status to wait on.
+  // A row that disappears mid-wait means the producer exited.
   private async pollReadinessRow(
     producer: Task,
     readyWhen: NormalizedReadyWhen,
@@ -2003,14 +1989,16 @@ export class TaskOrchestrator {
         return;
       }
       if (status === TaskReadiness.Failed) {
-        throw readinessFailedElsewhereError(producer.id);
+        // The row carries only the status; the owner prints the reason under
+        // NX_VERBOSE_LOGGING
+        throw new Error(
+          `Task "${producer.id}" failed its readiness check in the process that started it.`
+        );
       }
       if (Date.now() >= deadline) {
         throw readinessTimeoutError(producer.id, readyWhen);
       }
-      await new Promise((resolve) =>
-        setTimeout(resolve, READINESS_ROW_POLL_INTERVAL)
-      );
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 
@@ -2079,13 +2067,12 @@ export class TaskOrchestrator {
     return state;
   }
 
-  // Also rejects a state whose probe was stopped earlier by aborting its signal
   private abortReadiness(
     taskId: string,
     reason: 'exited' | 'was stopped' | 'failed'
   ) {
     const state = this.readiness.get(taskId);
-    if (!state || state.settled) return;
+    if (!state) return;
     state.abort.abort();
     state.reject(notReadyError(taskId, reason));
   }
@@ -2096,17 +2083,18 @@ export class TaskOrchestrator {
     }
   }
 
-  private async failContinuousTaskBeforeStart(
+  private async failTaskBeforeStart(
     task: Task,
     groupId: number,
-    e: any
+    e: any,
+    doNotSkipCache = false
   ): Promise<RunningTask> {
     this.abortReadiness(task.id, 'failed');
     // Already skipped by a failed dependency's propagation
     if (!this.completedTasks.has(task.id)) {
       // Lifecycles pair endTasks with startTasks, so start it before failing it
       await this.preRunSteps([task], { groupId });
-      await this.handleDiscreteWorkerFailure(false, task, groupId, e);
+      await this.handleDiscreteWorkerFailure(doNotSkipCache, task, groupId, e);
     }
     return new NoopChildProcess({ code: 1, terminalOutput: e?.message ?? '' });
   }

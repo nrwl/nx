@@ -853,23 +853,35 @@ describe('Nx Running Tests', () => {
         checkFilesExist(`one.txt`);
       }, 10000);
 
+      function continuousServe(file: string, readyWhen: object) {
+        return {
+          command: `node ${file}`,
+          options: { cwd: `libs/${mylib1}` },
+          continuous: true,
+          readyWhen,
+        };
+      }
+
+      function readyMarkerCheck(
+        dependsOn: unknown[] = [{ target: 'serve', waitFor: 'ready' }]
+      ) {
+        return {
+          command:
+            "node -e \"process.exit(require('fs').existsSync('ready.txt') ? 0 : 1)\"",
+          options: { cwd: `libs/${mylib1}` },
+          dependsOn,
+        };
+      }
+
       it('should wait for a continuous dependency to be ready when the edge asks for it', async () => {
         // A server that never becomes ready: with the default edge the check
         // runs right away and fails, whatever the machine's speed.
         updateFile(`libs/${mylib1}/serve.js`, 'setInterval(() => {}, 1000);');
-        const check = {
-          command:
-            "node -e \"process.exit(require('fs').existsSync('ready.txt') ? 0 : 1)\"",
-          options: { cwd: `libs/${mylib1}` },
-        };
         updateJson(`libs/${mylib1}/project.json`, (config) => {
-          config.targets.serve = {
-            command: 'node serve.js',
-            options: { cwd: `libs/${mylib1}` },
-            continuous: true,
-            readyWhen: { logMatches: 'server listening' },
-          };
-          config.targets.check = { ...check, dependsOn: ['serve'] };
+          config.targets.serve = continuousServe('serve.js', {
+            logMatches: 'server listening',
+          });
+          config.targets.check = readyMarkerCheck(['serve']);
           return config;
         });
 
@@ -891,10 +903,7 @@ describe('Nx Running Tests', () => {
         `
         );
         updateJson(`libs/${mylib1}/project.json`, (config) => {
-          config.targets.check = {
-            ...check,
-            dependsOn: [{ target: 'serve', waitFor: 'ready' }],
-          };
+          config.targets.check = readyMarkerCheck();
           return config;
         });
 
@@ -918,12 +927,10 @@ describe('Nx Running Tests', () => {
         `
         );
         updateJson(`libs/${mylib1}/project.json`, (config) => {
-          config.targets.serve = {
-            command: 'node serve.js',
-            options: { cwd: `libs/${mylib1}` },
-            continuous: true,
-            readyWhen: { logMatches: 'server listening', timeout: 5000 },
-          };
+          config.targets.serve = continuousServe('serve.js', {
+            logMatches: 'server listening',
+            timeout: 5000,
+          });
           config.targets.check = {
             command: 'echo checked',
             dependsOn: [{ target: 'serve', waitFor: 'ready' }],
@@ -956,18 +963,10 @@ describe('Nx Running Tests', () => {
         `
         );
         updateJson(`libs/${mylib1}/project.json`, (config) => {
-          config.targets.serve = {
-            command: 'node serve.js',
-            options: { cwd: `libs/${mylib1}` },
-            continuous: true,
-            readyWhen: { logMatches: 'server listening' },
-          };
-          config.targets.check = {
-            command:
-              "node -e \"process.exit(require('fs').existsSync('ready.txt') ? 0 : 1)\"",
-            options: { cwd: `libs/${mylib1}` },
-            dependsOn: [{ target: 'serve', waitFor: 'ready' }],
-          };
+          config.targets.serve = continuousServe('serve.js', {
+            logMatches: 'server listening',
+          });
+          config.targets.check = readyMarkerCheck();
           return config;
         });
 
@@ -999,16 +998,9 @@ describe('Nx Running Tests', () => {
 
       describe('readyWhen probes', () => {
         let port: number;
-        let check: object;
 
         beforeAll(async () => {
           port = await reservePort();
-          check = {
-            command:
-              "node -e \"process.exit(require('fs').existsSync('ready.txt') ? 0 : 1)\"",
-            options: { cwd: `libs/${mylib1}` },
-            dependsOn: [{ target: 'serve', waitFor: 'ready' }],
-          };
           updateFile(`libs/${mylib1}/idle.js`, 'setInterval(() => {}, 1000);');
           // The marker exists only once the server listens, so the check
           // passes only if Nx waited for the probe.
@@ -1039,13 +1031,8 @@ describe('Nx Running Tests', () => {
           (_, readyWhen) => {
             removeFile(`libs/${mylib1}/ready.txt`);
             updateJson(`libs/${mylib1}/project.json`, (config) => {
-              config.targets.serve = {
-                command: 'node server.js',
-                options: { cwd: `libs/${mylib1}` },
-                continuous: true,
-                readyWhen: readyWhen(),
-              };
-              config.targets.check = check;
+              config.targets.serve = continuousServe('server.js', readyWhen());
+              config.targets.check = readyMarkerCheck();
               return config;
             });
 
@@ -1064,13 +1051,11 @@ describe('Nx Running Tests', () => {
           removeFile(`libs/${mylib1}/ready.txt`);
           updateJson(`libs/${mylib1}/project.json`, (config) => {
             // idle.js never listens, so the url probe cannot pass
-            config.targets.serve = {
-              command: 'node idle.js',
-              options: { cwd: `libs/${mylib1}` },
-              continuous: true,
-              readyWhen: { url: `http://localhost:${port}`, timeout: 2000 },
-            };
-            config.targets.check = check;
+            config.targets.serve = continuousServe('idle.js', {
+              url: `http://localhost:${port}`,
+              timeout: 2000,
+            });
+            config.targets.check = readyMarkerCheck();
             return config;
           });
 

@@ -59,7 +59,7 @@ terminal-colorsaurus = "0.4.0"
 thiserror = "1.0.40"
 tracing = { version = "0.1.37", features = ["log"] }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-tokio-util = "0.7.9"
+tokio-util = "0.7.12"
 tracing-appender = "0.2"
 tui-logger = { version = "0.18.2", features = ["tracing-support"] }
 urlencoding = "2.1"

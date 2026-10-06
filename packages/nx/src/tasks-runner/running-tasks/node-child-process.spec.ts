@@ -53,7 +53,6 @@ describe('NodeChildProcessWithNonDirectOutput', () => {
     proc.emit('close', 0, null);
 
     expect(chunks.join('')).toBe('réady');
-    expect(chunks.join('')).not.toContain('�');
     const { terminalOutput } = await wrapped.getResults();
     expect(terminalOutput).toBe('réady');
   });

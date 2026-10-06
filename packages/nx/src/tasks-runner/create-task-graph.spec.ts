@@ -4428,17 +4428,11 @@ describe('waitFor', () => {
     targets: Record<string, Record<string, TargetConfiguration>>,
     dependencies: Record<string, string[]> = {}
   ) {
-    const projectGraph: ProjectGraph = { nodes: {}, dependencies: {} };
+    const builder = new GraphBuilder().addDependencies(dependencies);
     for (const [name, projectTargets] of Object.entries(targets)) {
-      projectGraph.nodes[name] = {
-        name,
-        type: 'lib',
-        data: { root: name, targets: projectTargets },
-      };
-      projectGraph.dependencies[name] = (dependencies[name] ?? []).map(
-        (target) => ({ source: name, target, type: 'static' })
-      );
+      builder.addProjectConfiguration({ name, targets: projectTargets });
     }
+    const projectGraph = builder.build();
     projectGraph.nodes.e2e.data.targets.e2e = { ...build, dependsOn };
     return createTaskGraph(projectGraph, {}, ['e2e'], ['e2e'], undefined, {});
   }

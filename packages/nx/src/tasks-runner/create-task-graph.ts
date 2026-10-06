@@ -1,6 +1,5 @@
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
-  getAllTargetNames,
   getDependencyConfigs,
   getOutputs,
   interpolate,
@@ -48,7 +47,14 @@ export class ProcessTasks {
     private readonly projectGraph: ProjectGraph,
     private readonly recordDependencyOverrides = false
   ) {
-    this.allTargetNames = getAllTargetNames(projectGraph);
+    const allTargetNames = new Set<string>();
+    for (const projectName in projectGraph.nodes) {
+      const project = projectGraph.nodes[projectName];
+      for (const targetName in project.data.targets ?? {}) {
+        allTargetNames.add(targetName);
+      }
+    }
+    this.allTargetNames = Array.from(allTargetNames);
   }
 
   processTasks(
@@ -111,26 +117,7 @@ export class ProcessTasks {
     }
 
     filterDummyTasks(this.dependencies);
-
-    for (const taskId of Object.keys(this.dependencies)) {
-      if (this.dependencies[taskId].length > 0) {
-        this.dependencies[taskId] = mergeEdges(
-          this.dependencies[taskId],
-          taskId
-        );
-      }
-    }
-
     filterDummyTasks(this.continuousDependencies);
-
-    for (const taskId of Object.keys(this.continuousDependencies)) {
-      if (this.continuousDependencies[taskId].length > 0) {
-        this.continuousDependencies[taskId] = mergeEdges(
-          this.continuousDependencies[taskId],
-          taskId
-        );
-      }
-    }
 
     return Object.keys(this.tasks).filter(
       (d) =>
@@ -639,21 +626,12 @@ function continuousEdge(
     : { id };
 }
 
-/**
- * One edge per task, self edges dropped. A producer reached twice waits for
- * ready when any of its edges does.
- */
-function mergeEdges(edges: TaskGraphEdge[], selfId: string): TaskGraphEdge[] {
+// A task reached by several edges waits for ready when any of them does
+function mergeEdges(edges: TaskGraphEdge[]): TaskGraphEdge[] {
   const byId = new Map<string, TaskGraphEdge>();
   for (const edge of edges) {
-    if (edge.id === selfId) {
-      continue;
-    }
-    const existing = byId.get(edge.id);
-    if (!existing) {
+    if (byId.get(edge.id)?.waitFor !== 'ready') {
       byId.set(edge.id, edge);
-    } else if (edge.waitFor === 'ready') {
-      existing.waitFor = 'ready';
     }
   }
   return [...byId.values()];
@@ -676,7 +654,7 @@ export function filterDummyTasks(dependencies: {
         );
       }
 
-      dependencies[key] = normalizedDeps;
+      dependencies[key] = mergeEdges(normalizedDeps);
     }
   }
 
@@ -697,23 +675,27 @@ export function getNonDummyDeps(
   seen: Set<string> = new Set()
 ): TaskGraphEdge[] {
   const currentTask = currentEdge.id;
-  if (!currentTask.endsWith(DUMMY_TASK_TARGET)) {
-    return [currentEdge];
-  }
-  if (seen.has(currentTask) || cycles?.has(currentTask)) {
+  if (seen.has(currentTask)) {
     return [];
   }
-  seen.add(currentTask);
-  const deps = dependencies[currentTask] ?? [];
-  if (!Array.isArray(deps)) {
-    throw new Error(
-      `Expected dependencies of task ${currentTask} to be an array, but got ${typeof deps}`
+  if (currentTask.endsWith(DUMMY_TASK_TARGET)) {
+    seen.add(currentTask);
+    if (cycles?.has(currentTask)) {
+      return [];
+    }
+    const deps = dependencies[currentTask] ?? [];
+    if (!Array.isArray(deps)) {
+      throw new Error(
+        `Expected dependencies of task ${currentTask} to be an array, but got ${typeof deps}`
+      );
+    }
+    // if not a cycle, recursively get the non dummy dependencies
+    return deps.flatMap((dep) =>
+      getNonDummyDeps(dep, dependencies, cycles, seen)
     );
+  } else {
+    return [currentEdge];
   }
-  // if not a cycle, recursively get the non dummy dependencies
-  return deps.flatMap((dep) =>
-    getNonDummyDeps(dep, dependencies, cycles, seen)
-  );
 }
 
 function createTaskOverrides(

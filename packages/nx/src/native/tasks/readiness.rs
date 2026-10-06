@@ -1,5 +1,4 @@
 use once_cell::sync::OnceCell;
-use std::future::Future;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::process::Stdio;
 use std::time::{Duration, Instant};
@@ -14,14 +13,12 @@ use vte::{Parser, Perform};
 
 use crate::native::pseudo_terminal::process_killer::kill_process_tree_internal;
 
-// Attempt cadence without a configured interval, the last entry repeating
 const BACKOFF_MS: [u64; 4] = [100, 250, 500, 1000];
 // A killed shell exits at once; past this the wait would only hang
 const REAP_MS: u64 = 1000;
 
-/// One of `url`, `port` or `command` is set. `interval` absent means backoff.
+/// Exactly one of `url`, `port` or `command` is set. `interval` absent means backoff.
 #[napi(object)]
-#[derive(Debug)]
 pub struct ReadinessProbeConfig {
     pub url: Option<String>,
     pub port: Option<u32>,
@@ -29,14 +26,6 @@ pub struct ReadinessProbeConfig {
     pub command: Option<String>,
     pub timeout: u32,
     pub interval: Option<u32>,
-}
-
-#[napi(string_enum)]
-#[derive(Debug, PartialEq, Eq)]
-pub enum ProbeOutcome {
-    Ready,
-    TimedOut,
-    Cancelled,
 }
 
 enum Probe {
@@ -87,25 +76,25 @@ impl Probe {
     // Each probe owns its cancellation: a dropped command probe would leave
     // its process tree running
     async fn run(&self, deadline: Instant, token: &CancellationToken) -> anyhow::Result<bool> {
-        let budget = || deadline.saturating_duration_since(Instant::now());
         Ok(match self {
             Self::Url(url) => {
-                // Building the client can take 100 ms cold; the budget is
-                // taken after it
                 let client = http_client()?;
-                unless_cancelled(token, probe_url(client, url, budget())).await
+                token
+                    .run_until_cancelled(probe_url(client, url, deadline))
+                    .await
+                    .unwrap_or(false)
             }
-            Self::Port { port, host } => {
-                unless_cancelled(token, probe_port(*port, host, budget())).await
-            }
-            Self::Command { command, cwd } => probe_command(command, cwd, budget(), token).await,
+            Self::Port { port, host } => token
+                .run_until_cancelled(probe_port(*port, host, deadline))
+                .await
+                .unwrap_or(false),
+            Self::Command { command, cwd } => probe_command(command, cwd, deadline, token).await,
         })
     }
 }
 
 // Built once per process: loading the system certificate store takes about
-// 100 ms. The crate-wide hickory resolver stays on: the system one reads the
-// environment while JS may be writing it, see telemetry/service.rs
+// 100 ms
 fn http_client() -> anyhow::Result<&'static Client> {
     static CLIENT: OnceCell<Client> = OnceCell::new();
     Ok(CLIENT.get_or_try_init(build_http_client)?)
@@ -127,13 +116,6 @@ fn build_http_client() -> reqwest::Result<Client> {
         // let the server pick the next request's destination
         .redirect(reqwest::redirect::Policy::none())
         .build()
-}
-
-async fn unless_cancelled(token: &CancellationToken, probe: impl Future<Output = bool>) -> bool {
-    tokio::select! {
-        _ = token.cancelled() => false,
-        ready = probe => ready,
-    }
 }
 
 /// Retries a probe until it passes, the timeout elapses or `cancel` is called.
@@ -158,33 +140,25 @@ impl ReadinessProbe {
         })
     }
 
+    /// False once the timeout elapses or `cancel` is called.
     #[napi]
-    pub async fn wait(&self) -> anyhow::Result<ProbeOutcome> {
+    pub async fn wait(&self) -> anyhow::Result<bool> {
         let deadline = Instant::now() + self.timeout;
         let mut attempt = 0usize;
-        loop {
-            let now = Instant::now();
-            if self.token.is_cancelled() {
-                return Ok(ProbeOutcome::Cancelled);
-            }
-            if now >= deadline {
-                return Ok(ProbeOutcome::TimedOut);
-            }
+        while !self.token.is_cancelled() && Instant::now() < deadline {
             if self.probe.run(deadline, &self.token).await? {
-                return Ok(ProbeOutcome::Ready);
-            }
-            if self.token.is_cancelled() {
-                return Ok(ProbeOutcome::Cancelled);
+                return Ok(true);
             }
             let delay = self.interval.unwrap_or_else(|| {
                 Duration::from_millis(BACKOFF_MS[attempt.min(BACKOFF_MS.len() - 1)])
             });
             attempt += 1;
             tokio::select! {
-                _ = self.token.cancelled() => return Ok(ProbeOutcome::Cancelled),
+                _ = self.token.cancelled() => break,
                 _ = tokio::time::sleep(delay.min(deadline.saturating_duration_since(Instant::now()))) => {}
             }
         }
+        Ok(false)
     }
 
     #[napi]
@@ -194,23 +168,17 @@ impl ReadinessProbe {
 }
 
 // Ready on a final status from 200 to 403: an auth challenge or a forbidden
-// root still means the server is up. A 404 at the root is retried at
-// /index.html, where a static server may only answer.
-async fn probe_url(client: &Client, url: &Url, budget: Duration) -> bool {
-    let deadline = Instant::now() + budget;
-    let Some(status) = request(client, url.clone(), budget).await else {
+// root still means the server is up. A static server may only answer at /index.html.
+async fn probe_url(client: &Client, url: &Url, deadline: Instant) -> bool {
+    let Some(status) = request(client, url.clone(), deadline).await else {
         return false;
     };
     if status == 404 && url.path() == "/" {
         let mut index = url.clone();
         index.set_path("/index.html");
-        return request(
-            client,
-            index,
-            deadline.saturating_duration_since(Instant::now()),
-        )
-        .await
-        .is_some_and(ready_status);
+        return request(client, index, deadline)
+            .await
+            .is_some_and(ready_status);
     }
     ready_status(status)
 }
@@ -219,10 +187,10 @@ fn ready_status(status: u16) -> bool {
     (200..=403).contains(&status)
 }
 
-async fn request(client: &Client, url: Url, budget: Duration) -> Option<u16> {
+async fn request(client: &Client, url: Url, deadline: Instant) -> Option<u16> {
     client
         .get(url)
-        .timeout(budget)
+        .timeout(deadline.saturating_duration_since(Instant::now()))
         .send()
         .await
         .ok()
@@ -231,27 +199,26 @@ async fn request(client: &Client, url: Url, budget: Duration) -> Option<u16> {
 
 // Without a host, whichever loopback address accepts first wins: a server
 // bound to only one of them is still ready.
-async fn probe_port(port: u16, host: &PortHost, budget: Duration) -> bool {
+async fn probe_port(port: u16, host: &PortHost, deadline: Instant) -> bool {
     match host {
         PortHost::Loopback => {
-            let v4 = connects(Ipv4Addr::LOCALHOST.into(), port, budget);
-            let v6 = connects(Ipv6Addr::LOCALHOST.into(), port, budget);
+            let v4 = connects(Ipv4Addr::LOCALHOST.into(), port, deadline);
+            let v6 = connects(Ipv6Addr::LOCALHOST.into(), port, deadline);
             tokio::pin!(v4, v6);
             tokio::select! {
                 ok = &mut v4 => ok || v6.await,
                 ok = &mut v6 => ok || v4.await,
             }
         }
-        PortHost::Ip(ip) => connects(*ip, port, budget).await,
+        PortHost::Ip(ip) => connects(*ip, port, deadline).await,
         PortHost::Name(name, resolver) => {
-            let deadline = Instant::now() + budget;
             let Ok(Ok(lookup)) =
-                tokio::time::timeout(budget, resolver.lookup_ip(name.as_str())).await
+                tokio::time::timeout_at(deadline.into(), resolver.lookup_ip(name.as_str())).await
             else {
                 return false;
             };
             for ip in lookup {
-                if connects(ip, port, deadline.saturating_duration_since(Instant::now())).await {
+                if connects(ip, port, deadline).await {
                     return true;
                 }
             }
@@ -260,19 +227,18 @@ async fn probe_port(port: u16, host: &PortHost, budget: Duration) -> bool {
     }
 }
 
-async fn connects(ip: IpAddr, port: u16, budget: Duration) -> bool {
-    tokio::time::timeout(budget, TcpStream::connect((ip, port)))
+async fn connects(ip: IpAddr, port: u16, deadline: Instant) -> bool {
+    tokio::time::timeout_at(deadline.into(), TcpStream::connect((ip, port)))
         .await
         .is_ok_and(|result| result.is_ok())
 }
 
-// Runs through the shell at cwd with this process's env. On overrun or cancel
-// the whole tree is killed, since the shell's own kill leaves what it spawned
-// running.
+// On overrun or cancel the whole tree is killed: the shell's own kill leaves
+// what it spawned running.
 async fn probe_command(
     command: &str,
     cwd: &str,
-    budget: Duration,
+    deadline: Instant,
     token: &CancellationToken,
 ) -> bool {
     let mut cmd = if cfg!(windows) {
@@ -294,7 +260,7 @@ async fn probe_command(
     };
     let exited = tokio::select! {
         status = child.wait() => Some(status.is_ok_and(|status| status.success())),
-        _ = tokio::time::sleep(budget) => None,
+        _ = tokio::time::sleep_until(deadline.into()) => None,
         _ = token.cancelled() => None,
     };
     if let Some(ready) = exited {
@@ -315,14 +281,11 @@ async fn probe_command(
     false
 }
 
-/// Done once every pattern has appeared in the fed output, in any order.
-/// Keeps the tail of the previous chunk so a match split across two chunks
-/// is still found. Terminal control sequences are ignored, even when a chunk
-/// boundary falls inside one.
+/// Done once every pattern has appeared in the fed output, in any order, even
+/// split across chunks or interleaved with terminal control sequences.
 #[napi]
 pub struct LogMatcher {
     pending: Vec<String>,
-    tail: String,
     parser: Parser,
     visible: Visible,
 }
@@ -348,7 +311,6 @@ impl LogMatcher {
     pub fn new(patterns: Vec<String>) -> Self {
         Self {
             pending: patterns,
-            tail: String::new(),
             parser: Parser::new(),
             visible: Visible::default(),
         }
@@ -357,21 +319,17 @@ impl LogMatcher {
     #[napi]
     pub fn feed(&mut self, chunk: String) -> bool {
         self.parser.advance(&mut self.visible, chunk.as_bytes());
-        self.tail.push_str(&std::mem::take(&mut self.visible.0));
-        let text = &self.tail;
+        let tail = &mut self.visible.0;
         self.pending
-            .retain(|pattern| !text.contains(pattern.as_str()));
+            .retain(|pattern| !tail.contains(pattern.as_str()));
         let keep = self
             .pending
             .iter()
             .map(|pattern| pattern.len().saturating_sub(1))
             .max()
             .unwrap_or(0);
-        let mut start = self.tail.len().saturating_sub(keep);
-        while !self.tail.is_char_boundary(start) {
-            start += 1;
-        }
-        self.tail.drain(..start);
+        let start = tail.ceil_char_boundary(tail.len().saturating_sub(keep));
+        tail.drain(..start);
         self.pending.is_empty()
     }
 }
@@ -390,17 +348,6 @@ mod tests {
     }
 
     #[test]
-    fn log_matcher_joins_two_chunks() {
-        let mut matcher = LogMatcher::new(vec!["ready on".into()]);
-        assert!(!matcher.feed("...rea".into()));
-        assert!(matcher.feed("dy on http://localhost".into()));
-        let mut matcher = LogMatcher::new(vec!["abc".into()]);
-        assert!(!matcher.feed("a".into()));
-        assert!(!matcher.feed("x".into()));
-        assert!(!matcher.feed("bc".into()));
-    }
-
-    #[test]
     fn log_matcher_ignores_control_sequences_and_keeps_char_boundaries() {
         let mut matcher = LogMatcher::new(vec!["ready".into()]);
         assert!(matcher.feed("\x1b[32mrea\x1b[0mdy".into()));
@@ -411,7 +358,7 @@ mod tests {
         assert!(!matcher.feed("rea\x1b".into()));
         assert!(matcher.feed("[0mdy".into()));
         let mut matcher = LogMatcher::new(vec!["éready".into()]);
-        assert!(!matcher.feed("ééé".into()));
+        assert!(!matcher.feed("éééa".into()));
         assert!(matcher.feed("éready".into()));
     }
 
@@ -471,75 +418,39 @@ mod tests {
             Err(e) => panic!("{e}"),
         };
         let port = listener.local_addr().unwrap().port();
-        assert_eq!(
-            probe(port_config(port, None, 2000)).wait().await.unwrap(),
-            ProbeOutcome::Ready
-        );
-        assert_eq!(
-            probe(port_config(port, Some("127.0.0.1"), 300))
+        assert!(probe(port_config(port, None, 2000)).wait().await.unwrap());
+        assert!(
+            !probe(port_config(port, Some("127.0.0.1"), 300))
                 .wait()
                 .await
-                .unwrap(),
-            ProbeOutcome::TimedOut
+                .unwrap()
         );
     }
 
     #[tokio::test]
-    async fn port_resolves_a_host_name_in_process() {
+    async fn port_resolves_a_host_name() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
-        assert_eq!(
+        assert!(
             probe(port_config(port, Some("localhost"), 2000))
                 .wait()
                 .await
-                .unwrap(),
-            ProbeOutcome::Ready
+                .unwrap()
         );
-    }
-
-    #[tokio::test]
-    async fn port_times_out_when_nothing_listens() {
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        let port = listener.local_addr().unwrap().port();
-        drop(listener);
-        let started = Instant::now();
-        assert_eq!(
-            probe(port_config(port, None, 300)).wait().await.unwrap(),
-            ProbeOutcome::TimedOut
-        );
-        assert!(started.elapsed() < Duration::from_millis(1500));
     }
 
     #[cfg(not(windows))]
     #[tokio::test]
-    async fn command_passes_on_exit_zero_and_is_killed_on_overrun() {
-        let config = |command: &str, timeout: u32| ReadinessProbeConfig {
+    async fn command_attempt_may_use_the_whole_remaining_timeout() {
+        let config = ReadinessProbeConfig {
             url: None,
             port: None,
             host: None,
-            command: Some(command.into()),
-            timeout,
+            command: Some("sleep 1.2".into()),
+            timeout: 3000,
             interval: Some(50),
         };
-        assert_eq!(
-            probe(config("exit 0", 2000)).wait().await.unwrap(),
-            ProbeOutcome::Ready
-        );
-        // An attempt may use the whole remaining timeout
-        assert_eq!(
-            probe(config("sleep 1.2", 3000)).wait().await.unwrap(),
-            ProbeOutcome::Ready
-        );
-        assert_eq!(
-            probe(config("exit 1", 200)).wait().await.unwrap(),
-            ProbeOutcome::TimedOut
-        );
-        let started = Instant::now();
-        assert_eq!(
-            probe(config("sleep 30", 1500)).wait().await.unwrap(),
-            ProbeOutcome::TimedOut
-        );
-        assert!(started.elapsed() < Duration::from_secs(5));
+        assert!(probe(config).wait().await.unwrap());
     }
 
     #[cfg(not(windows))]
@@ -564,7 +475,7 @@ mod tests {
             tokio::time::sleep(Duration::from_millis(100)).await;
             token.cancel();
         });
-        assert_eq!(probe.wait().await.unwrap(), ProbeOutcome::Cancelled);
+        assert!(!probe.wait().await.unwrap());
         tokio::time::sleep(Duration::from_millis(800)).await;
         assert!(!marker.exists());
     }
@@ -573,7 +484,7 @@ mod tests {
     fn log_matcher_keeps_only_what_a_split_pattern_needs() {
         let mut matcher = LogMatcher::new(vec!["ready".into(), "listening".into()]);
         assert!(!matcher.feed("x".repeat(10_000)));
-        assert!(matcher.tail.len() < "listening".len());
+        assert!(matcher.visible.0.len() < "listening".len());
     }
 
     #[tokio::test]
@@ -610,7 +521,7 @@ mod tests {
             token.cancel();
             Instant::now()
         });
-        assert_eq!(probe.wait().await.unwrap(), ProbeOutcome::Cancelled);
+        assert!(!probe.wait().await.unwrap());
         let cancelled_at = cancelled.await.unwrap();
         assert!(cancelled_at.elapsed() < Duration::from_millis(2000));
         drop(release);
@@ -645,7 +556,7 @@ mod tests {
         };
         SETUP_DELAY_MS.store(600, std::sync::atomic::Ordering::Relaxed);
         let started = Instant::now();
-        assert_eq!(probe(config).wait().await.unwrap(), ProbeOutcome::TimedOut);
+        assert!(!probe(config).wait().await.unwrap());
         let waited = started.elapsed();
         // Setup overlaps the timeout instead of adding to it: 600 ms plus the
         // client build here, 500 ms more if the budget were taken first

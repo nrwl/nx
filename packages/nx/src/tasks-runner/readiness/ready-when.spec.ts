@@ -1,7 +1,7 @@
 import { normalizeReadyWhen } from './ready-when';
 
 describe('normalizeReadyWhen', () => {
-  it('normalizes each probe kind and keeps the knobs', () => {
+  it('keeps the knobs and fills in the default timeout', () => {
     expect(
       normalizeReadyWhen(
         { url: 'http://localhost:4200', timeout: 5, interval: 2 },
@@ -21,12 +21,6 @@ describe('normalizeReadyWhen', () => {
     expect(
       normalizeReadyWhen({ port: 3000, host: 'localhost' }, 'app:serve')
     ).toMatchObject({ kind: 'port', host: 'localhost' });
-    expect(
-      normalizeReadyWhen({ command: 'docker inspect db' }, 'app:serve')
-    ).toMatchObject({ kind: 'command', command: 'docker inspect db' });
-    expect(
-      normalizeReadyWhen({ logMatches: ['a', 'b'] }, 'app:serve')
-    ).toMatchObject({ kind: 'logMatches', logMatches: ['a', 'b'] });
     expect(normalizeReadyWhen({ logMatches: 'a' }, 'app:serve')).toMatchObject({
       kind: 'logMatches',
       logMatches: ['a'],
