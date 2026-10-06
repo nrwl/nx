@@ -5,7 +5,7 @@
 // which command-string assertions cannot see.
 
 import { execSync } from 'child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
@@ -14,6 +14,7 @@ import {
   tryCommitChanges,
   tryCommitChangesAsync,
 } from './git-utils';
+import { signalCommandsWithoutTerminal } from './spawn-without-terminal';
 
 const SCRATCH = '.nx/migrate-runs';
 
@@ -127,6 +128,57 @@ describe('tryCommitChanges exclusions (real git)', () => {
     expect(sha).toMatch(GIT_SHA);
     expect(committedPaths(root)).toEqual(['workspace/a.txt']);
   });
+});
+
+describe('tryCommitChangesAsync without the terminal (real git)', () => {
+  let root: string;
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'nx-git-commit-'));
+    initRepo(root);
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('commits, and reports a failure with git output', async () => {
+    writeFileSync(join(root, 'a.txt'), 'a');
+
+    const sha = await tryCommitChangesAsync('first', root, [], {
+      withoutTerminal: true,
+    });
+
+    expect(sha).toMatch(GIT_SHA);
+    expect(committedPaths(root)).toEqual(['a.txt']);
+    await expect(
+      tryCommitChangesAsync('nothing', root, [], { withoutTerminal: true })
+    ).rejects.toThrow(/nothing to commit/);
+  });
+
+  it.skipIf(process.platform === 'win32')(
+    'runs git in a process group the session can signal',
+    async () => {
+      const started = join(root, 'started');
+      git(
+        root,
+        `config filter.slow.clean "sh -c 'touch ${started}; sleep 30; cat'"`
+      );
+      writeFileSync(join(root, '.gitattributes'), '*.txt filter=slow\n');
+      writeFileSync(join(root, 'a.txt'), 'a');
+
+      const committing = tryCommitChangesAsync('slow', root, [], {
+        withoutTerminal: true,
+      });
+      while (!existsSync(started)) {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+
+      expect(signalCommandsWithoutTerminal('SIGTERM')).toBe(true);
+      await expect(committing).rejects.toThrow();
+    },
+    10_000
+  );
 });
 
 describe('getGitRepositoryStatus (real git)', () => {

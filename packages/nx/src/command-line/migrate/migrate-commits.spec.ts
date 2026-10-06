@@ -155,9 +155,12 @@ describe('commitMigrationIfRequested', () => {
     expect(result).toEqual({ status: 'committed', sha: 'abc123' });
     // The scratch exclusion rides on every migration commit so `git add -A`
     // cannot capture run state even when its ignore rule went missing mid-run.
-    expect(mockTryAsync).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
-      '.nx/migrate-runs',
-    ]);
+    expect(mockTryAsync).toHaveBeenCalledWith(
+      `${PREFIX}m1`,
+      ROOT,
+      ['.nx/migrate-runs'],
+      { withoutTerminal: false }
+    );
   });
 
   it('annotates the commit body with the package: name of prior migrations whose commits failed', async () => {
@@ -222,9 +225,12 @@ describe('commitMigrationIfRequested', () => {
       installDeps,
       []
     );
-    expect(mockTryAsync).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
-      '.nx/migrate-runs',
-    ]);
+    expect(mockTryAsync).toHaveBeenCalledWith(
+      `${PREFIX}m1`,
+      ROOT,
+      ['.nx/migrate-runs'],
+      { withoutTerminal: false }
+    );
   });
 
   it('returns failed with the real git stderr from tryCommitChanges; message tells the user a future commit will absorb the diff', async () => {
@@ -338,6 +344,35 @@ describe('commitMigrationIfRequested with an output sink', () => {
       expect(mockInfo).not.toHaveBeenCalled();
     }
   );
+
+  it('commits without the terminal and, on a failure, has the agent ask the user before the next step', async () => {
+    mockHas.mockReturnValue(true);
+    mockTryAsync.mockImplementation(() => {
+      throw new Error('error: gpg failed to sign the data');
+    });
+    const out = sink();
+
+    await commitMigrationIfRequested(
+      ROOT,
+      { name: 'm1' },
+      true,
+      PREFIX,
+      installDeps,
+      [],
+      undefined,
+      out
+    );
+
+    expect(mockTryAsync).toHaveBeenCalledWith(
+      `${PREFIX}m1`,
+      ROOT,
+      ['.nx/migrate-runs'],
+      { withoutTerminal: true }
+    );
+    expect(out.lines[0][1]).toContain(
+      'Before the next step, tell the user what failed and ask whether to fix the cause first'
+    );
+  });
 });
 
 describe('commitCheckpointBeforeMigrations', () => {

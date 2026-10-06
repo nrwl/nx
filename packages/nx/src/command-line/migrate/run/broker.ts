@@ -13,6 +13,8 @@ import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { parseJson } from '../../../utils/json';
+import { logger } from '../../../utils/logger';
+import { prettyTime } from '../../../tasks-runner/life-cycles/pretty-time';
 import {
   ensureRunSubdir,
   handoffsDirState,
@@ -47,6 +49,7 @@ import {
   gitRan,
   markCommitStarted,
   markInstallFailed,
+  stepLabel,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
 } from './state-machine';
@@ -57,6 +60,9 @@ import { installDepsChangedSinceDispense, isPidAlive } from './util';
 export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
 const BROKER_DIR_NAME = 'broker';
 const CHILD_POLL_INTERVAL_MS = 250;
+// When the waiting command prints its `[nx]` line, which the agent relays.
+const FIRST_WAITING_LINE_MS = 15_000;
+const WAITING_LINE_INTERVAL_MS = 60_000;
 
 // Repeated requests reuse the first answer; a reset asks anew (see
 // `invocation`). A died step's adopt shares the worker's commit request until
@@ -240,20 +246,21 @@ export function treeBusyMessage(held: MigrateTreeOperation): string {
 }
 
 export function treeOperationLabel(
-  held: Pick<MigrateTreeOperation, 'kind' | 'stepId'>
+  held: Pick<MigrateTreeOperation, 'kind' | 'stepId'>,
+  stepName = `step '${held.stepId}'`
 ): string {
   switch (held.kind) {
     case 'checkpoint':
       return 'the checkpoint commit';
     case 'commit':
     case 'give-up':
-      return `the commit of step '${held.stepId}'`;
+      return `the commit of ${stepName}`;
     case 'reset':
-      return `the reset of step '${held.stepId}'`;
+      return `the reset of ${stepName}`;
     case 'install':
     case 'fold-install':
     case 'action-install':
-      return `the install of step '${held.stepId}'`;
+      return `the install of ${stepName}`;
     default: {
       const exhaustive: never = held.kind;
       throw new Error(`Unhandled tree operation '${exhaustive}'.`);
@@ -361,7 +368,7 @@ export async function commitStepTree(
     if (gitRan(result)) lease.markedStepId = undefined;
     return { result, absorbedStepIds, recorded: false };
   }
-  const answer = await ask(dir, nonce, request);
+  const answer = await ask(dir, nonce, request, stepLabel(step));
   if (answer.kind !== 'commit') {
     throw new Error(`Unexpected '${answer.kind}' answer to a commit request.`);
   }
@@ -393,7 +400,7 @@ export async function installStepTree(
     scope.lease = acquireTreeOperation(dir, request);
     return installInProcess();
   }
-  const answer = await ask(dir, nonce, request);
+  const answer = await ask(dir, nonce, request, stepLabel(step));
   if (answer.kind !== 'installed') {
     throw new Error(
       `Unexpected '${answer.kind}' answer to an install request.`
@@ -423,7 +430,7 @@ export async function resetStepTree(
     scope.lease = acquireTreeOperation(dir, request);
     return resetInProcess();
   }
-  const answer = await ask(dir, nonce, request);
+  const answer = await ask(dir, nonce, request, stepLabel(step));
   if (answer.kind !== 'reset') {
     throw new Error(`Unexpected '${answer.kind}' answer to a reset request.`);
   }
@@ -460,7 +467,7 @@ export async function giveUpStepTree(
       reconcileCommand,
     });
   }
-  const answer = await ask(dir, nonce, request);
+  const answer = await ask(dir, nonce, request, stepLabel(step));
   if (answer.kind !== 'give-up') {
     throw new Error(`Unexpected '${answer.kind}' answer to a give-up request.`);
   }
@@ -470,7 +477,8 @@ export async function giveUpStepTree(
 async function ask(
   dir: string,
   nonce: string,
-  request: BrokerRequest
+  request: BrokerRequest,
+  stepName: string
 ): Promise<BrokerAnswer> {
   const id = `${nonce}-${request.stepId}-${request.attempt}-${request.kind}${
     request.invocation ? `-${request.invocation}` : ''
@@ -500,6 +508,8 @@ async function ask(
   } catch (e) {
     throw notAccepting(e);
   }
+  const askedAt = Date.now();
+  let nextWaitingLineAt = askedAt + FIRST_WAITING_LINE_MS;
   for (;;) {
     if (existsSync(path)) {
       return settle(readJsonFile<BrokerResult>(path));
@@ -511,8 +521,61 @@ async function ask(
         `The nx migrate session that started this step ended before its request was answered. The install or the commit may still have landed; check the working tree and git log.`
       );
     }
+    if (Date.now() >= nextWaitingLineAt) {
+      nextWaitingLineAt = Date.now() + WAITING_LINE_INTERVAL_MS;
+      logger.info(waitingLine(request, stepName, Date.now() - askedAt));
+    }
     await new Promise((resolve) => setTimeout(resolve, CHILD_POLL_INTERVAL_MS));
   }
+}
+
+function waitingLine(
+  request: BrokerRequest,
+  stepName: string,
+  waitedMs: number
+): string {
+  return [
+    `[nx] Waiting for the nx process that started this session to finish ${treeOperationLabel(
+      request,
+      stepName
+    )} (${formatElapsed(waitedMs)} so far).`,
+    ...(requestCommits(request.kind)
+      ? [
+          COMMIT_INSTALLS_FIRST,
+          'A signing popup or a security key can also hold a commit until the user answers it.',
+        ]
+      : []),
+    sessionOperationWayOut('it'),
+  ].join(' ');
+}
+
+export const COMMIT_INSTALLS_FIRST =
+  'A commit first installs any dependency changes.';
+
+export function requestCommits(kind: BrokerRequestKind): boolean {
+  switch (kind) {
+    case 'commit':
+    case 'give-up':
+      return true;
+    case 'install':
+    case 'fold-install':
+    case 'action-install':
+    case 'reset':
+      return false;
+    default: {
+      const exhaustive: never = kind;
+      throw new Error(`Unhandled broker request kind '${exhaustive}'.`);
+    }
+  }
+}
+
+/** How the user ends an operation the session's parent runs for a step. */
+export function sessionOperationWayOut(operation: string): string {
+  return `If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end ${operation}, and resume the run afterwards.`;
+}
+
+export function formatElapsed(ms: number): string {
+  return prettyTime(Math.max(0, Math.round(ms)) * 1e6, 's');
 }
 
 function notAccepting(e: unknown): BrokerUnavailableError {
@@ -570,10 +633,17 @@ function settle(result: BrokerResult): BrokerAnswer {
  * the policy the session started with, never from run state, which the
  * agent's sandbox can write.
  */
+export interface InFlightOperation {
+  request: BrokerRequest;
+  startedAt: number;
+  // Once the step is read.
+  stepName?: string;
+}
+
 export class MigrateCommitBroker {
   readonly nonce = randomBytes(4).toString('hex');
   private readonly handled = new Set<string>();
-  private inFlight: BrokerRequest | null = null;
+  private inFlight: InFlightOperation | null = null;
   // Kept referenced: the lock is released when the instance is collected.
   private readonly lock: FileLock | null;
 
@@ -588,8 +658,8 @@ export class MigrateCommitBroker {
     this.lock?.lock();
   }
 
-  /** The request whose operation this process is running right now. */
-  get requestInFlight(): BrokerRequest | null {
+  /** The request whose operation this process is running right now, and since when. */
+  get requestInFlight(): InFlightOperation | null {
     return this.inFlight;
   }
 
@@ -620,7 +690,7 @@ export class MigrateCommitBroker {
       this.handled.add(id);
       let result: BrokerResult;
       try {
-        if (lease) this.inFlight = request;
+        if (lease) this.inFlight = { request, startedAt: Date.now() };
         result = lease ? await this.answer(request, lease) : { kind: 'stale' };
         // Recorded by the process that ran the commit, before the answer: the
         // step reading it can die with the commit already in history. A failed
@@ -687,6 +757,7 @@ export class MigrateCommitBroker {
     ) {
       return { kind: 'stale' };
     }
+    if (this.inFlight) this.inFlight.stepName = stepLabel(step);
     if (request.kind === 'give-up') {
       const output = new DeferredOutputCollector();
       const outcome = await giveUpWithCommit({

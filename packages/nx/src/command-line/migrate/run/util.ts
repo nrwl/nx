@@ -52,6 +52,11 @@ export function depsHash(root: string): string | null {
  * dispense-time probe failed has no baseline, which says the dependencies it
  * started from are unknown rather than unchanged, and skipping there would
  * strand the change with nothing left to detect it.
+ *
+ * Settling a failed or died step whose install already failed leaves it
+ * uninstalled, so the settle cannot hang on the install that was given up on;
+ * the mark the step keeps has the completion report ask for it. A retry rearms
+ * the step, which drops the mark, so it installs again.
  */
 export async function installDepsChangedSinceDispense(
   root: string,
@@ -61,6 +66,12 @@ export async function installDepsChangedSinceDispense(
   rerunCommand?: string,
   sink?: MigrateOutputSink
 ): Promise<void> {
+  if (
+    step.installFailed === true &&
+    (step.status === 'failed' || step.status === 'died')
+  ) {
+    return;
+  }
   const current = depsHash(root);
   if (current !== null && current === step.depsHashAtDispense) return;
   if (skipInstall) {

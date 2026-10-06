@@ -407,6 +407,23 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     ]);
   });
 
+  it.skipIf(process.platform === 'win32')(
+    'outlives a Ctrl+C while the local nx it runs handles it',
+    async () => {
+      process.argv = ['node', 'nx', 'migrate', '--run-id=run-1'];
+      // Another listener would catch the signal whatever the code under test does.
+      expect(process.listenerCount('SIGINT')).toBe(0);
+      mockRunNxArgvSync.mockImplementation(() => {
+        process.kill(process.pid, 'SIGINT');
+      });
+
+      const exitCode = await runMigration();
+
+      expect(exitCode).toBe(0);
+      expect(process.listenerCount('SIGINT')).toBe(0);
+    }
+  );
+
   it('runs the local nx instead of installing the temp CLI when routed to local-nx', async () => {
     mockResolveRunTarget.mockResolvedValue('local-nx');
 

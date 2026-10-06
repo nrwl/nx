@@ -240,7 +240,11 @@ export function formatCommandFailure(
   );
 }
 
+// The child handles Ctrl+C. Killed by it, this process would hand the
+// terminal back to the shell while the child still runs.
 function runOrReturnExitCode(run: () => void): number {
+  const leaveSigintToChild = () => {};
+  process.on('SIGINT', leaveSigintToChild);
   try {
     run();
     return 0;
@@ -254,6 +258,8 @@ function runOrReturnExitCode(run: () => void): number {
       return e.status;
     }
     throw e;
+  } finally {
+    process.removeListener('SIGINT', leaveSigintToChild);
   }
 }
 
@@ -3314,7 +3320,23 @@ async function runMigrations(
     activeRunToReplace(root, opts.runId);
   }
 
-  if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
+  // The run must resume while the cause of a failed install persists: that
+  // step settles without the install, and only its retry installs again.
+  const failedInstallSteps =
+    continued?.steps.filter((s) => s.installFailed === true) ?? [];
+  if (failedInstallSteps.length > 0) {
+    const { stepLabel } = require('./run') as typeof import('./run');
+    output.warn({
+      title: 'Skipping the dependency install',
+      bodyLines: [
+        `The dependency install of ${failedInstallSteps
+          .map(stepLabel)
+          .join(
+            ', '
+          )} did not complete earlier in this run. Retrying that step installs again; any other choice leaves the install to you.`,
+      ],
+    });
+  } else if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
     await runInstall();
   }
 

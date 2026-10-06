@@ -21,7 +21,13 @@ vi.mock('child_process', () => ({
 const mockBrokerCtor = vi.fn();
 const mockBrokerService = vi.fn();
 const mockBrokerClose = vi.fn();
-let mockBrokerInFlight: BrokerRequest | null = null;
+let mockBrokerInFlight: { request: BrokerRequest; startedAt: number } | null =
+  null;
+const mockSignalCommands = vi.fn((_signal: NodeJS.Signals) => true);
+vi.mock('../../../../utils/spawn-without-terminal', () => ({
+  signalCommandsWithoutTerminal: (signal: NodeJS.Signals) =>
+    mockSignalCommands(signal),
+}));
 vi.mock('../../run/broker', async () => ({
   ...(await vi.importActual<typeof import('../../run/broker')>(
     '../../run/broker'
@@ -31,7 +37,10 @@ vi.mock('../../run/broker', async () => ({
     constructor(...args: unknown[]) {
       mockBrokerCtor(...args);
     }
-    get requestInFlight(): BrokerRequest | null {
+    get requestInFlight(): {
+      request: BrokerRequest;
+      startedAt: number;
+    } | null {
       return mockBrokerInFlight;
     }
     service(): Promise<void> {
@@ -137,22 +146,26 @@ const pollsElapsed = (n: number) =>
 describe('spawnMasterSession', () => {
   const originalPlatform = process.platform;
   const originalEnv = { ...process.env };
-  let sigintListeners: number;
+  const handledSignals = ['SIGINT', 'SIGHUP', 'SIGTERM'] as const;
+  let signalListeners: number[];
 
   beforeEach(() => {
     mockSpawn.mockReset();
     mockBrokerCtor.mockReset();
     mockBrokerService.mockReset().mockResolvedValue(undefined);
     mockBrokerClose.mockReset();
+    mockSignalCommands.mockClear();
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-    sigintListeners = process.listeners('SIGINT').length;
+    signalListeners = handledSignals.map((s) => process.listeners(s).length);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
     Object.defineProperty(process, 'platform', { value: originalPlatform });
     process.env = { ...originalEnv };
-    expect(process.listeners('SIGINT').length).toBe(sigintListeners);
+    expect(handledSignals.map((s) => process.listeners(s).length)).toEqual(
+      signalListeners
+    );
   });
 
   function setPlatform(platform: NodeJS.Platform): void {
@@ -227,8 +240,8 @@ describe('spawnMasterSession', () => {
     child.emit('exit', null, 'SIGINT');
 
     expect(await pending).toEqual({ kind: 'exited' });
-    expect(beforeSpawnEvent).toBe(sigintListeners + 1);
-    expect(afterSpawnEvent).toBe(sigintListeners + 1);
+    expect(beforeSpawnEvent).toBe(signalListeners[0] + 1);
+    expect(afterSpawnEvent).toBe(signalListeners[0] + 1);
   });
 
   it('settles on an error event after the agent started', async () => {
@@ -252,7 +265,7 @@ describe('spawnMasterSession', () => {
       kind: 'spawn-failed',
       error,
     });
-    expect(process.listeners('SIGINT').length).toBe(sigintListeners);
+    expect(process.listeners('SIGINT').length).toBe(signalListeners[0]);
     expect(process.stdout.write).not.toHaveBeenCalled();
   });
 
@@ -378,8 +391,117 @@ describe('spawnMasterSession', () => {
         expect(sttyCalls()).toBe(1);
       });
 
-      it('names the operation still running once the agent exited and says Ctrl+C ends it', async () => {
-        const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+      it.each([
+        [
+          'install',
+          "Still running the install of step 'step-1' for this migrate run (1m 15s so far). Press Ctrl+C to end it, and again to stop everything it started. The run can be resumed afterwards.",
+        ],
+        [
+          'commit',
+          "Still running the commit of step 'step-1' for this migrate run (1m 15s so far). A commit first installs any dependency changes. Press Ctrl+C to end it, and again to stop everything it started. The run can be resumed afterwards.",
+        ],
+      ] as const)(
+        'names the %s still running once the agent exited, for how long, and says Ctrl+C ends it',
+        async (kind, title) => {
+          const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+          const child = fakeChild({ exitAfterSpawn: false });
+          mockSpawn.mockImplementation(() => child);
+          let finishInFlight: () => void;
+          const inFlight = new Promise<void>((resolve) => {
+            finishInFlight = resolve;
+          });
+
+          const pending = spawnMasterSession(input());
+          await pollsElapsed(2);
+          mockBrokerService.mockReturnValue(inFlight);
+          mockBrokerInFlight = {
+            request: { kind, stepId: 'step-1', attempt: 1 },
+            startedAt: Date.now() - 75_000,
+          };
+          await pollsElapsed(2);
+          child.exitCode = 0;
+          child.emit('exit', 0, null);
+          await pollsElapsed(2);
+          const warnedWhileWaiting = warn.mock.calls.length;
+          mockBrokerInFlight = null;
+          finishInFlight();
+
+          expect(await pending).toEqual({ kind: 'exited' });
+          expect(warnedWhileWaiting).toBe(1);
+          expect(warn).toHaveBeenCalledTimes(1);
+          expect(warn.mock.calls[0][0].title).toBe(title);
+        }
+      );
+
+      it.each([
+        ['settles once its process group is killed', true, []],
+        [
+          'outlives the kill of its process group',
+          false,
+          [
+            {
+              title: "Stopped waiting for the install of step 'step-1'.",
+              bodyLines: [
+                'A process it started may still be running. Resume the run once it has exited.',
+              ],
+            },
+          ],
+        ],
+      ])(
+        'passes the first Ctrl+C after the warning on and kills the operation on the second, when it %s',
+        async (_, settlesOnKill, laterWarnings) => {
+          const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+          const child = fakeChild({ exitAfterSpawn: false });
+          mockSpawn.mockImplementation(() => child);
+          let finishInFlight: () => void;
+          const inFlight = new Promise<void>((resolve) => {
+            finishInFlight = resolve;
+          });
+          mockSignalCommands.mockImplementation((signal) => {
+            if (signal === 'SIGKILL' && settlesOnKill) finishInFlight();
+            return true;
+          });
+
+          const pending = spawnMasterSession(
+            input({ operationKillWaitMs: 20, samePressMs: 10 })
+          );
+          let settled = false;
+          void pending.then(() => (settled = true));
+          await pollsElapsed(2);
+          mockBrokerService.mockReturnValue(inFlight);
+          mockBrokerInFlight = {
+            request: { kind: 'install', stepId: 'step-1', attempt: 1 },
+            startedAt: Date.now(),
+          };
+          await pollsElapsed(2);
+          child.exitCode = 0;
+          child.emit('exit', 0, null);
+          await pollsElapsed(4);
+          process.emit('SIGINT');
+          await pollsElapsed(4);
+          const afterOnePress = [...mockSignalCommands.mock.calls];
+          const settledAfterOnePress = settled;
+          process.emit('SIGINT');
+          const result = await pending;
+          mockBrokerInFlight = null;
+
+          expect(afterOnePress).toEqual([['SIGINT']]);
+          expect(settledAfterOnePress).toBe(false);
+          expect(mockSignalCommands.mock.calls).toEqual([
+            ['SIGINT'],
+            ['SIGINT'],
+            ['SIGKILL'],
+          ]);
+          expect(result).toEqual({ kind: 'exited' });
+          expect(warn.mock.calls.slice(1).map(([message]) => message)).toEqual(
+            laterWarnings
+          );
+          expect(mockBrokerClose).toHaveBeenCalled();
+        }
+      );
+
+      it('counts the SIGINT npx passes on with the one from the terminal as a single Ctrl+C', async () => {
+        vi.spyOn(output, 'warn').mockImplementation(() => {});
         const child = fakeChild({ exitAfterSpawn: false });
         mockSpawn.mockImplementation(() => child);
         let finishInFlight: () => void;
@@ -387,25 +509,51 @@ describe('spawnMasterSession', () => {
           finishInFlight = resolve;
         });
 
-        const pending = spawnMasterSession(input());
+        const pending = spawnMasterSession(input({ samePressMs: 1_000 }));
         await pollsElapsed(2);
         mockBrokerService.mockReturnValue(inFlight);
-        mockBrokerInFlight = { kind: 'install', stepId: 'step-1', attempt: 1 };
+        mockBrokerInFlight = {
+          request: { kind: 'install', stepId: 'step-1', attempt: 1 },
+          startedAt: Date.now(),
+        };
         await pollsElapsed(2);
         child.exitCode = 0;
         child.emit('exit', 0, null);
-        await pollsElapsed(2);
-        const warnedWhileWaiting = warn.mock.calls.length;
+        await pollsElapsed(4);
+        process.emit('SIGINT');
+        process.emit('SIGINT');
+        await pollsElapsed(4);
+        const signalled = [...mockSignalCommands.mock.calls];
         mockBrokerInFlight = null;
         finishInFlight();
 
         expect(await pending).toEqual({ kind: 'exited' });
-        expect(warnedWhileWaiting).toBe(1);
-        expect(warn).toHaveBeenCalledTimes(1);
-        expect(warn.mock.calls[0][0].title).toBe(
-          "Still running the install of step 'step-1' for this migrate run. Press Ctrl+C to end it; the run can be resumed afterwards."
-        );
+        expect(signalled).toEqual([['SIGINT']]);
       });
+
+      it.each([
+        ['SIGHUP', 129],
+        ['SIGTERM', 143],
+      ] as const)(
+        'passes %s on to the operations the session runs and exits',
+        async (signal, code) => {
+          const exit = vi
+            .spyOn(process, 'exit')
+            .mockImplementation((() => {}) as never);
+          const child = fakeChild({ exitAfterSpawn: false });
+          mockSpawn.mockImplementation(() => child);
+
+          const pending = spawnMasterSession(input());
+          await pollsElapsed(2);
+          process.emit(signal);
+          child.exitCode = 0;
+          child.emit('exit', 0, null);
+
+          expect(await pending).toEqual({ kind: 'exited' });
+          expect(mockSignalCommands).toHaveBeenCalledWith(signal);
+          expect(exit).toHaveBeenCalledWith(code);
+        }
+      );
 
       it('says nothing on exit when no operation is in flight', async () => {
         const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});

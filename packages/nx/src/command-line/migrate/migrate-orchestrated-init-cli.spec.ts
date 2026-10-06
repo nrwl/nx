@@ -11,7 +11,7 @@ const mockActiveRunToReplace = vi.fn();
 // intercept; replace the module in the require channel instead.
 import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
 import { runDir } from './run/run-state';
-import { latestRound } from './run/state-machine';
+import { latestRound, stepLabel } from './run/state-machine';
 mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: vi.fn(),
   runOrchestratorInit: (...args: unknown[]) => mockRunOrchestratorInit(...args),
@@ -22,6 +22,7 @@ mockCjsModule(import.meta.url, './run', {
   activeRunToReplace: (...args: unknown[]) => mockActiveRunToReplace(...args),
   latestRound,
   runDir,
+  stepLabel,
 });
 const mockRunMasterSession = vi.fn();
 mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
@@ -155,9 +156,10 @@ describe('migrate() orchestrated init dispatch', () => {
       join(runDir(root, 'run-1'), 'plan-0.json'),
       JSON.stringify({ migrations: [] })
     );
-    mockHoldRunToContinue
-      .mockReset()
-      .mockReturnValue({ rounds: [{ index: 0, planSnapshot: 'plan-0.json' }] });
+    mockHoldRunToContinue.mockReset().mockReturnValue({
+      rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
+      steps: [],
+    });
     mockActiveRunToReplace.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockRunMasterSession.mockReset().mockResolvedValue(undefined);
@@ -328,6 +330,36 @@ describe('migrate() orchestrated init dispatch', () => {
       policy: { createCommits: true, skipInstall: false },
     });
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+    expect(mockRunInstall).toHaveBeenCalled();
+  });
+
+  it('continues a run whose step install failed without the preflight install, which would fail on the same cause', async () => {
+    mockHoldRunToContinue.mockReturnValue({
+      rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
+      steps: [
+        {
+          kind: 'migration',
+          id: 'step-1',
+          migrationId: '@nx/js:gen',
+          installFailed: true,
+        },
+      ],
+    });
+
+    await migrate(
+      root,
+      runMigrationsArgs({ runId: 'run-1', agentic: 'claude-code' }),
+      ['--run-migrations', '--agentic=claude-code', '--run-id=run-1']
+    );
+
+    expect(mockRunInstall).not.toHaveBeenCalled();
+    expect(output.warn).toHaveBeenCalledWith({
+      title: 'Skipping the dependency install',
+      bodyLines: [
+        'The dependency install of @nx/js:gen did not complete earlier in this run. Retrying that step installs again; any other choice leaves the install to you.',
+      ],
+    });
+    expect(mockRunOrchestratorResume).toHaveBeenCalled();
   });
 
   it('refuses a start-fresh naming no active run before the preflight install', async () => {

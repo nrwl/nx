@@ -34,6 +34,7 @@ export {
   hasPendingCommitDebt,
   latestRound,
   runTallies,
+  stepLabel,
   tallySteps,
 } from './state-machine';
 export { hasUnresolvedIssues } from './issues';
@@ -71,6 +72,9 @@ export {
 
 export {
   BROKER_ENV_VAR,
+  COMMIT_INSTALLS_FIRST,
+  formatElapsed,
   MigrateCommitBroker,
+  requestCommits,
   treeOperationLabel,
 } from './broker';
