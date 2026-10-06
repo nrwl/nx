@@ -12,7 +12,7 @@ export default async function migrate(tree: Tree) {
     logger.warn(
       `Skipping the @nx/remix executor conversion.\n\n${
         error instanceof Error ? error.message : error
-      }\n\nRun \`nx g @nx/remix:convert-to-inferred\` once Remix is on a supported version.`
+      }\n\nRun \`nx g @nx/remix:convert-to-inferred\` after resolving the issue above.`
     );
     return;
   }

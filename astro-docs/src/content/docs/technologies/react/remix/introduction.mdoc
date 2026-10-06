@@ -29,7 +29,7 @@ Run your application's build and other existing targets after conversion. Review
 
 ## Migrate your applications
 
-Use the `migrate-to-react-router` prompt migration with your AI agent to upgrade to React Router v7 with [`@nx/react`](/docs/kb/react-router). The prompt covers framework changes and Nx configuration, including last-mile fixes. It asks the agent to run build and other relevant targets to validate the result.
+The `migrate-to-react-router` prompt migration upgrades your applications to React Router v7 with [`@nx/react`](/docs/kb/react-router). When you run `nx migrate --run-migrations` with the [agentic flow](/docs/features/automate-updating-dependencies#running-the-migrations) enabled, your AI agent applies it. Otherwise, Nx lists the prompt file in the next-steps output so you can give it to your agent yourself. The prompt covers framework changes and Nx configuration, including last-mile fixes. It asks the agent to run build and other relevant targets to validate the result.
 
 You can also follow the official [Remix v2 migration guide](https://reactrouter.com/7.18.4/upgrading/remix). Register `@nx/react/router-plugin` for the migrated applications and update any target overrides or CI commands that still reference Remix.
 
