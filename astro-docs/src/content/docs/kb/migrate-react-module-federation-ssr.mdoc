@@ -19,7 +19,7 @@ Rules that override any shortcut you are tempted to take:
 3. The server container sets `library: { type: 'commonjs-module' }`, `remoteType: 'script'` on both bundlers, `experiments: { asyncStartup: true }`, and `runtimePlugins: [require.resolve('@module-federation/node/runtimePlugin')]`. Its remote URLs keep the `name@` prefix and point at `<origin>/server/remoteEntry.js`.
 4. Server builds write no stats. Reuse the browser `shared` map, with every entry `eager: true` on Rspack.
 5. A host on a runtime manifest also calls `registerRemotes` in `server.ts` with the `/server` URLs. On webpack keep `@module-federation/*` inside the server bundle, or the server fails with `#RUNTIME-009`.
-6. Replace the SSR dev server with watch builds plus `node --watch-path`. A static run is `node dist/apps/<app>/server/server.js`, never `@nx/web:file-server`.
+6. Replace the SSR dev server with watch builds plus `node --watch-path`. A static run is `node dist/apps/<app>/server/server.js`, never `@nx/web:file-server`. On Rspack, run it from `apps/<app>` (`node ../../dist/apps/<app>/server/server.js`), since the generated `server.ts` resolves `dist` from the working directory.
 7. Accept the migration only when each host route's HTML holds the remote's markup and client scripts, and the page hydrates in a browser without errors. Report what you verified and what you did not.
 
 Reference: {pageUrl}
@@ -295,7 +295,9 @@ Add a `server` target that runs `webpack.server.config.js`, with `dependsOn: ["b
 
 Start host and remotes together with `nx run-many -t serve -p shell remoteA -c development`.
 `serve-static` becomes `node dist/apps/<app>/server/server.js` in place of `@nx/web:file-server`,
-depending on the build that writes the server bundle.
+depending on the build that writes the server bundle. On Rspack, set `"cwd": "apps/<app>"` and run
+`node ../../dist/apps/<app>/server/server.js`, since the generated `server.ts` resolves `dist` from the
+working directory.
 
 ## Validate the result
 
