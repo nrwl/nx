@@ -63,7 +63,6 @@ const matrixData: MatrixData = {
     { name: 'e2e-eslint', codeowners: 'S04SYJGKSCT', is_golden: true },
     { name: 'e2e-node', codeowners: 'S04SJ6HHP0X', is_golden: true },
     { name: 'e2e-playwright', codeowners: 'S04SVQ8H0G5', is_golden: true },
-    { name: 'e2e-remix', codeowners: 'S04SVQ8H0G5', is_golden: true },
     { name: 'e2e-rspack', codeowners: 'S04SJ6HHP0X', is_golden: true },
     { name: 'e2e-vite', codeowners: 'S04SJ6PL98X', is_golden: true },
     { name: 'e2e-vue', codeowners: 'S04SJ6PL98X', is_golden: true },

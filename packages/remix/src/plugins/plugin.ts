@@ -51,6 +51,9 @@ export const createDependencies: CreateDependencies = () => {
 
 const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
 
+/**
+ * @deprecated Migrate to React Router with `@nx/react`. This will be removed in Nx 25.
+ */
 export const createNodes: CreateNodes<RemixPluginOptions> = [
   remixConfigGlob,
   async (configFilePaths, options, context) => {
@@ -117,6 +120,9 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
   },
 ];
 
+/**
+ * @deprecated Migrate to React Router with `@nx/react`. This will be removed in Nx 25.
+ */
 export const createNodesV2 = createNodes;
 
 async function createNodesInternal(

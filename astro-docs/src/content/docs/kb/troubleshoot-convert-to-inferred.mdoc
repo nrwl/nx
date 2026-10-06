@@ -1,6 +1,6 @@
 ---
 title: Troubleshoot Convert to Inferred Migration
-description: Learn how to resolve common issues when migrating from executor-based tasks to inferred tasks in Nx, with specific solutions for Next.js and other frameworks.
+description: Learn how to resolve common issues when migrating from executor-based tasks to inferred tasks in Nx, with specific solutions for Next.js, Remix, and other frameworks.
 filter: 'type:Guides'
 topics:
   - 'Troubleshooting'
@@ -94,6 +94,35 @@ To better align with Next.js CLI, projects after the migration have two targets 
 
 Note that `serve` could be different depending on what you used for `@nx/next:server` previously. After the
 migration, `nx run <proj>:serve --prod` not longer starts the prod server. Use `nx run <proj>:start` instead.
+
+## Remix: unable to migrate `outputPath` option
+
+The `outputPath` option from `@nx/remix:build` is ignored because it often
+leads to ESM errors when the output path is outside the project root. The ESM error occurs because the
+root `package.json` may not have `"type": "module"` set, which means that the compiled ESM code will fail to run. To
+guarantee that `serve` works, we migrate the outputs to the Remix defaults (`build` and `public/build` inside the
+project root). If you have custom directories already defined in your Remix config, it will continue to be used.
+
+To change the outputs after the migration, edit the remix config file, and look for `serverBuildPath`
+and `assetsBuildDirectory` and set it to the locations you want.
+
+```ts
+// ...
+export default {
+  assetsBuildDirectory: '../../dist/apps/demo/public/build',
+  serverBuildPath: '../../dist/apps/demo/build/index.js',
+  // ...
+};
+```
+
+Note that you will need to address potential ESM issues that may arise. For example, change the root `package.json`
+to `"type": "module"`.
+
+## Remix: unsupported `generatePackageJson` and `generateLockfile` options
+
+The `generatePackageJson` and `generateLockfile` options in `@nx/remix:build` cannot be migrated. To keep the
+project's `package.json` dependencies in sync, use the `@nx/dependency-checks` ESLint rule. Lock file generation has
+no replacement.
 
 ## Storybook: conflicting `staticDir` options
 
