@@ -738,15 +738,23 @@ impl NxCache {
 /// and CacheDelete round trips per mount on the thread that is about to run
 /// tasks, and those stall while disk images attach or detach.
 #[napi]
-fn get_default_max_cache_size(cache_path: String) -> anyhow::Result<i64> {
+fn get_default_max_cache_size(cache_path: String) -> i64 {
     for directory in Path::new(&cache_path).ancestors() {
         match fs4::total_space(directory) {
-            Ok(total) => return Ok((total as f64 * 0.1) as i64),
+            Ok(total) => return (total as f64 * 0.1) as i64,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
-            Err(error) => return Err(error.into()),
+            Err(error) => {
+                debug!(
+                    "Could not read the filesystem size of {}: {error}",
+                    directory.display()
+                );
+                break;
+            }
         }
     }
-    anyhow::bail!("no ancestor of the cache directory {cache_path} exists")
+
+    // Default to 100gb
+    100 * 1024 * 1024 * 1024
 }
 
 fn try_and_retry<T, F>(mut f: F) -> anyhow::Result<T>
