@@ -16,7 +16,7 @@ A challenge arises when these federated modules are integrated into a _host_ or 
 To mitigate these issues, Module Federation has a shared API. Its primary function is to act as a gatekeeper, ensuring that only one copy of a dependency is downloaded, regardless of how many federated modules request it.
 
 {% aside type="note" title="Removed in Nx v24" %}
-The automatic sharing described on this page came from `withModuleFederation` and `NxModuleFederationPlugin`, which Nx v24 removed. To move an existing setup, see [migrate from Nx Module Federation](/docs/kb/migrate-from-nx-module-federation). With the v23 `consumer` and `provider` generators, you configure sharing explicitly in the federation plugin's `shared` option. See the [sharing strategy](/docs/kb/micro-frontend-architecture#share-as-few-libraries-as-possible). The Single Version Policy reasoning below applies either way.
+Nx v24 removed `withModuleFederation` and `NxModuleFederationPlugin`, and with them the automatic sharing described below. To move an existing setup, see [migrate from Nx Module Federation](/docs/kb/migrate-from-nx-module-federation). Apps from the `consumer` and `provider` generators list shared packages in the federation plugin's `shared` option, following the [sharing strategy](/docs/kb/micro-frontend-architecture#share-as-few-libraries-as-possible). The Single Version Policy below still applies.
 {% /aside %}
 
 ### How it works

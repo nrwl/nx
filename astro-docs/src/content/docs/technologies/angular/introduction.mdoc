@@ -180,7 +180,7 @@ nx g @nx/angular:lib libs/my-lib --publishable --importPath=@my-org/my-lib
 
 ### Set up micro frontends
 
-Nx v24 removed the `@nx/angular` `host` and `remote` generators. For Angular micro frontends, use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation), with Nx orchestrating, caching, and scoping CI to the affected apps. To move an existing Nx Module Federation setup, see [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation).
+Nx v24 removed the `@nx/angular` `host` and `remote` generators. For Angular micro frontends, use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation), and keep Nx for caching and affected runs in CI. To move an existing Nx Module Federation setup, see [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation).
 
 ## Structure your Angular monorepo
 

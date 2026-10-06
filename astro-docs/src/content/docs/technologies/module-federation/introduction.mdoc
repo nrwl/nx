@@ -68,6 +68,6 @@ nx g @nx/react:provider apps/shop --consumer=shell
 
 The `--consumer` option makes the new remote's `dev` task depend on the host.
 
-If your workspace was set up with the `withModuleFederation` helper or the Module Federation dev-server executors, Nx v24 removed those surfaces. See [migrating off `@nx/module-federation`](/docs/kb/migrate-from-nx-module-federation) for the in-place path that keeps your current bundler, or [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation) for Angular.
+Nx v24 removed the `withModuleFederation` helper and the Module Federation dev-server executors. To migrate a workspace that uses them and keep its bundler, follow [migrating off `@nx/module-federation`](/docs/kb/migrate-from-nx-module-federation) or, for Angular, [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation).
 
 With another framework, add the official Module Federation plugin to each app's bundler config, then give each app the same `continuous` and `dependsOn` tasks. Nx orchestrates the host and remotes the same way, whatever the framework. For the architecture and task-graph details, see [What is Micro Frontend Architecture?](/docs/kb/micro-frontend-architecture).
