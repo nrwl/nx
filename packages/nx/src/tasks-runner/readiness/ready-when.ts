@@ -3,7 +3,7 @@ import type { Task, TaskGraph } from '../../config/task-graph';
 import type { ReadyWhen } from '../../config/workspace-json-project-json';
 
 const DEFAULT_READY_TIMEOUT = 60_000;
-// Node timers and the native probe both take a 32-bit count of milliseconds
+// Node timers take at most a signed 32-bit count of milliseconds
 const MAX_DURATION = 2_147_483_647;
 
 // No interval means the probe backs off on its own
@@ -110,14 +110,6 @@ export function notReadyError(
   return new Error(`Task "${taskId}" ${reason} before it became ready.`);
 }
 
-// The row carries only the status; the owner prints the reason under
-// NX_VERBOSE_LOGGING
-export function readinessFailedElsewhereError(taskId: string): Error {
-  return new Error(
-    `Task "${taskId}" failed its readiness check in the process that started it.`
-  );
-}
-
 function describeReadyWhen(readyWhen: NormalizedReadyWhen): string {
   switch (readyWhen.kind) {
     case 'url':
@@ -147,16 +139,6 @@ export function getReadyWhenConfig(
   ]?.readyWhen;
 }
 
-export function filterProbedProducers(
-  producerIds: string[],
-  taskGraph: TaskGraph,
-  projectGraph: ProjectGraph
-): string[] {
-  return producerIds.filter(
-    (id) => getReadyWhenConfig(taskGraph.tasks[id], projectGraph) != null
-  );
-}
-
 export function getReadyProducerIds(
   task: Task,
   taskGraph: TaskGraph
@@ -166,18 +148,15 @@ export function getReadyProducerIds(
     .map((edge) => edge.id);
 }
 
-// Producers with a probe that each task in the graph waits on, keyed by the
-// waiting task. Tasks with none are left out.
+// Producers with a probe that each task waits on; tasks with none are left out
 export function getReadyDependencies(
   taskGraph: TaskGraph,
   projectGraph: ProjectGraph
 ): Record<string, string[]> {
   const readyDependencies: Record<string, string[]> = {};
   for (const task of Object.values(taskGraph.tasks)) {
-    const producerIds = filterProbedProducers(
-      getReadyProducerIds(task, taskGraph),
-      taskGraph,
-      projectGraph
+    const producerIds = getReadyProducerIds(task, taskGraph).filter(
+      (id) => getReadyWhenConfig(taskGraph.tasks[id], projectGraph) != null
     );
     if (producerIds.length > 0) {
       readyDependencies[task.id] = producerIds;
@@ -195,10 +174,7 @@ function isDuration(value: unknown): value is number {
 }
 
 function isHttpUrl(value: string): boolean {
-  try {
-    const { protocol } = new URL(value);
-    return protocol === 'http:' || protocol === 'https:';
-  } catch {
-    return false;
-  }
+  return (
+    URL.canParse(value) && ['http:', 'https:'].includes(new URL(value).protocol)
+  );
 }

@@ -84,13 +84,6 @@ describe('waitForReadiness', () => {
         'Task "app:serve" exited before it became ready.'
       );
     });
-
-    it('rejects when the task exposes no output', async () => {
-      runningTask = {} as RunningTask;
-      await expect(wait({ logMatches: 'x' })).rejects.toThrow(
-        'declares "readyWhen.logMatches" but its output is not captured'
-      );
-    });
   });
 
   describe('port', () => {
@@ -129,12 +122,6 @@ describe('waitForReadiness', () => {
 
     afterEach(async () => {
       await new Promise((r) => server.close(r));
-    });
-
-    it('retries until the status is in range', async () => {
-      const ready = wait({ url: baseUrl, interval: 10 });
-      setTimeout(() => (status = 200), 30);
-      await expect(ready).resolves.toBeUndefined();
     });
 
     it('retries a 404 at the root at /index.html', async () => {

@@ -129,10 +129,8 @@ export declare class ImportResult {
 }
 
 /**
- * Done once every pattern has appeared in the fed output, in any order.
- * Keeps the tail of the previous chunk so a match split across two chunks
- * is still found. Terminal control sequences are ignored, even when a chunk
- * boundary falls inside one.
+ * Done once every pattern has appeared in the fed output, in any order, even
+ * split across chunks or interleaved with terminal control sequences.
  */
 export declare class LogMatcher {
   constructor(patterns: Array<string>)
@@ -250,7 +248,8 @@ export declare class ProcessMetricsCollector {
  */
 export declare class ReadinessProbe {
   constructor(config: ReadinessProbeConfig, cwd: string)
-  wait(): Promise<ProbeOutcome>
+  /** False once the timeout elapses or `cancel` is called. */
+  wait(): Promise<boolean>
   cancel(): void
 }
 
@@ -1110,12 +1109,6 @@ export interface PerformanceSummaryPayload {
   links: Array<Link>
 }
 
-export declare const enum ProbeOutcome {
-  Ready = 'Ready',
-  TimedOut = 'TimedOut',
-  Cancelled = 'Cancelled'
-}
-
 /** Process metadata (static, doesn't change during process lifetime) */
 export interface ProcessMetadata {
   ppid: number
@@ -1148,7 +1141,7 @@ export interface ProjectGraph {
   externalNodes: Record<string, ExternalNode>
 }
 
-/** One of `url`, `port` or `command` is set. `interval` absent means backoff. */
+/** Exactly one of `url`, `port` or `command` is set. `interval` absent means backoff. */
 export interface ReadinessProbeConfig {
   url?: string
   port?: number

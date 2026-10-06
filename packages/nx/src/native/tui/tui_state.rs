@@ -209,13 +209,8 @@ impl TuiState {
     }
 
     pub fn update_task_readiness(&mut self, task_id: &str, readiness: TaskReadiness) {
-        match self.task_readiness_map.get_mut(task_id) {
-            Some(r) => *r = readiness,
-            None => {
-                self.task_readiness_map
-                    .insert(task_id.to_owned(), readiness);
-            }
-        }
+        self.task_readiness_map
+            .insert(task_id.to_owned(), readiness);
     }
 
     pub fn get_task_readiness_map(&self) -> &HashMap<String, TaskReadiness> {

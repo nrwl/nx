@@ -171,11 +171,11 @@ describe('task planner', () => {
         { fileset: '{workspaceRoot}/.env.generated', includeIgnored: true },
       ]);
 
-      expect(plan).toContainEqual(
+      expect(plan).toContain(
         'files:[libs/parent/dist/**/*.js,!libs/parent/dist/**/*.map,.env.generated]'
       );
       // The map-backed fileset is untouched by the flag.
-      expect(plan).toContainEqual('parent:libs/parent/**/*');
+      expect(plan).toContain('parent:libs/parent/**/*');
     });
 
     it('plans a disk-backed group declared through a named input', () => {
@@ -185,7 +185,7 @@ describe('task planner', () => {
         ],
       });
 
-      expect(plan).toContainEqual('files:[libs/parent/generated]');
+      expect(plan).toContain('files:[libs/parent/generated]');
     });
 
     it('accepts a root brace group of literal file names', () => {
@@ -196,18 +196,18 @@ describe('task planner', () => {
         },
       ]);
 
-      expect(plan).toContainEqual('files:[{nx,tsconfig.base}.json]');
+      expect(plan).toContain('files:[{nx,tsconfig.base}.json]');
     });
 
     it('plans a glob that walks from the workspace root', () => {
       expect(
         planFor([{ fileset: '{workspaceRoot}/**', includeIgnored: true }])
-      ).toContainEqual('files:[**]');
+      ).toContain('files:[**]');
       expect(
         planFor([
           { fileset: '{workspaceRoot}/{nx,*}.json', includeIgnored: true },
         ])
-      ).toContainEqual('files:[{nx,*}.json]');
+      ).toContain('files:[{nx,*}.json]');
     });
 
     it('rejects a negation with no positive includeIgnored fileset to filter', () => {
@@ -317,17 +317,15 @@ describe('task planner', () => {
     it('hands the group on to a dependency of a dependency', () => {
       const plans = chainOfThree(ignoredDepGroup);
       // Both dependencies get the whole group, each rooted at its own project.
-      expect(plans['a:build']).toContainEqual(
+      expect(plans['a:build']).toContain(
         'files:[libs/shared/dist/**,!libs/shared/dist/**/*.map]'
       );
-      expect(plans['a:build']).toContainEqual(
+      expect(plans['a:build']).toContain(
         'files:[libs/core/dist/**,!libs/core/dist/**/*.map]'
       );
       // The negation never leaks across projects.
-      expect(plans['a:build']).not.toContainEqual('files:[libs/core/dist/**]');
-      expect(plans['a:build']).not.toContainEqual(
-        'files:[libs/shared/dist/**]'
-      );
+      expect(plans['a:build']).not.toContain('files:[libs/core/dist/**]');
+      expect(plans['a:build']).not.toContain('files:[libs/shared/dist/**]');
     });
 
     // The group is resolved before the other inputs and shares one cycle
@@ -338,7 +336,7 @@ describe('task planner', () => {
         ...ignoredDepGroup,
         { fileset: '{projectRoot}/src/**/*.ts', dependencies: true },
       ]);
-      expect(plans['a:build']).toContainEqual(
+      expect(plans['a:build']).toContain(
         'files:[libs/shared/dist/**,!libs/shared/dist/**/*.map]'
       );
       const plan = plans['a:build'] as string[];
@@ -386,7 +384,7 @@ describe('task planner', () => {
         taskGraph
       );
       const group = 'files:[libs/b/dist/**,!libs/b/dist/**/*.map]';
-      expect(plans['a:build']).toContainEqual(group);
+      expect(plans['a:build']).toContain(group);
       expect(plans['a:build'].filter((i: string) => i === group)).toHaveLength(
         1
       );
@@ -409,7 +407,7 @@ describe('task planner', () => {
         ['default']
       )(['a:build', 'b:build']);
 
-      expect(plans['a:build']).toContainEqual(
+      expect(plans['a:build']).toContain(
         'files:[libs/shared/dist/**,!libs/shared/dist/**/*.map]'
       );
     });
@@ -468,10 +466,10 @@ describe('task planner', () => {
         ['b:build', 'a:build'],
       ]) {
         const plans = plansIn(order);
-        expect(plans['a:build']).toContainEqual(
+        expect(plans['a:build']).toContain(
           'files:[libs/shared/dist/**,!libs/shared/dist/**/*.map]'
         );
-        expect(plans['b:build']).toContainEqual(
+        expect(plans['b:build']).toContain(
           'files:[libs/shared/dist/**,!libs/shared/dist/**/*.d.ts]'
         );
       }
@@ -495,14 +493,10 @@ describe('task planner', () => {
         ['b:build', 'a:build'],
       ]) {
         const plans = plansIn(order);
-        expect(plans['a:build']).toContainEqual('files:[libs/shared/dist/**]');
-        expect(plans['a:build']).not.toContainEqual(
-          'shared:libs/shared/dist/**'
-        );
-        expect(plans['b:build']).toContainEqual('shared:libs/shared/dist/**');
-        expect(plans['b:build']).not.toContainEqual(
-          'files:[libs/shared/dist/**]'
-        );
+        expect(plans['a:build']).toContain('files:[libs/shared/dist/**]');
+        expect(plans['a:build']).not.toContain('shared:libs/shared/dist/**');
+        expect(plans['b:build']).toContain('shared:libs/shared/dist/**');
+        expect(plans['b:build']).not.toContain('files:[libs/shared/dist/**]');
       }
     });
   });
@@ -1148,7 +1142,7 @@ describe('task planner', () => {
     const taskIds = Object.keys(taskGraph.tasks);
 
     const plans = planner.getPlans(taskIds, taskGraph);
-    expect(plans['proj:build']).not.toContainEqual('AllExternalDependencies');
+    expect(plans['proj:build']).not.toContain('AllExternalDependencies');
   });
 
   it('should include npm projects', async () => {
@@ -1264,8 +1258,8 @@ describe('task planner', () => {
       expect(
         plan.filter((instruction) => instruction.startsWith('npm:'))
       ).toEqual(['npm:@nx/left', 'npm:leaf', 'npm:right', 'npm:shared']);
-      expect(plan).toContainEqual('child:libs/child/prod.ts');
-      expect(plan).toContainEqual('child:libs/child/test.ts');
+      expect(plan).toContain('child:libs/child/prod.ts');
+      expect(plan).toContain('child:libs/child/test.ts');
       expect(plan.includes('AllExternalDependencies')).toBe(mode === 'all');
       const hashGraph = (
         reverse: boolean,
@@ -1401,11 +1395,11 @@ describe('task planner', () => {
     const plans = planner.getPlans(['parent:build'], taskGraph);
     // {projectRoot} should be interpolated to 'libs/parent', so the workspace fileset
     // should have '{projectRoot}' replaced in the instruction ('{workspaceRoot}/' is stripped later during hashing)
-    expect(plans['parent:build']).toContainEqual(
+    expect(plans['parent:build']).toContain(
       'workspace:[{workspaceRoot}/libs/parent/**/*.go]'
     );
     // The original pattern with uninterpolated {projectRoot} should NOT be present
-    expect(plans['parent:build']).not.toContainEqual(
+    expect(plans['parent:build']).not.toContain(
       'workspace:[{workspaceRoot}/{projectRoot}/**/*.go]'
     );
   });
@@ -1571,7 +1565,7 @@ describe('task planner', () => {
       });
       expect(
         planner.getPlans(['parent:test'], taskGraph)['parent:test']
-      ).toContainEqual('child:libs/child/**/*');
+      ).toContain('child:libs/child/**/*');
     });
 
     it('follows the servers that serve a continuous dependency', () => {

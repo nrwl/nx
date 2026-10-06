@@ -147,7 +147,7 @@ impl PseudoTerminal {
             // copy only — the live stdout passthrough and the TUI parser get
             // raw bytes, so a running child still talks to the real terminal.
             let mut capture_filter = super::strip_queries::QueryFilter::new();
-            let mut capture_decoder = super::utf8_carry::Utf8Carry::new();
+            let mut capture_decoder = super::utf8_carry::Utf8Carry::default();
 
             'read_loop: loop {
                 if let Ok(len) = reader.read(&mut buf) {

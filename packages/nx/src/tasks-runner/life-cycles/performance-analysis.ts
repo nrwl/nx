@@ -246,7 +246,8 @@ export class PerformanceAnalysis {
   /**
    * Earliest this task became eligible, independent of slots: the latest of run
    * start, dependency ends, any continuous dependency's *start* (an ordering
-   * constraint, not contention), and any earlier batch sibling's end.
+   * constraint, not contention; a wait for readiness is not tracked, so it
+   * counts as contention), and any earlier batch sibling's end.
    */
   private readyTime(id: string, runStart: number): number {
     const start = this.timings.get(id)?.startTime;

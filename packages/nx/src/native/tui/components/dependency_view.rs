@@ -253,7 +253,6 @@ impl<'a> DependencyView<'a> {
             .is_some_and(|deps| deps.iter().any(|d| d == dep))
     }
 
-    /// The probe verdict for `dep`, `Pending` until one arrives
     fn readiness_of(&self, dep: &str) -> TaskReadiness {
         self.readiness_map
             .get(dep)
@@ -1137,7 +1136,6 @@ mod tests {
         let mut buf = Buffer::empty(area);
         let view = DependencyView::new(status_map, &task_graph, readiness_map, ready_dependencies);
         StatefulWidget::render(view, area, &mut buf, state);
-        // Inner text only: drop the border column on each side
         (0..area.height)
             .map(|y| {
                 (1..area.width - 1)

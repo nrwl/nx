@@ -1687,7 +1687,6 @@ fn find_external_dependency_node_names<'a>(
 mod tests {
     use super::*;
     use crate::native::project_graph::types::{ExternalNode, Project, Target};
-    use crate::native::tasks::types::TaskGraphEdge;
     use crate::native::test_utils::edges_to;
 
     fn mixed_cycle_planner(with_outputs: bool) -> HashPlanner {
@@ -2283,7 +2282,7 @@ mod tests {
         let edges = |list: &[(&str, &[&str])]| {
             list.iter()
                 .map(|(id, deps)| (id.to_string(), edges_to(deps)))
-                .collect::<HashMap<String, Vec<TaskGraphEdge>>>()
+                .collect::<HashMap<_, _>>()
         };
         let task_graph = TaskGraph {
             roots: vec![],

@@ -166,7 +166,7 @@ describe('TaskOrchestrator', () => {
       expect(hashesAtCacheTime['dep:build']).toBe('dep:build|call-1');
     });
 
-    it('drops a member skipped while the cache was resolved', async () => {
+    function createDepConsumerGraph() {
       const dep = createTask('dep:build');
       const consumer = createTask('consumer:build');
       const taskGraph: TaskGraph = {
@@ -178,6 +178,11 @@ describe('TaskOrchestrator', () => {
         },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
+      return { dep, taskGraph };
+    }
+
+    it('drops a member skipped while the cache was resolved', async () => {
+      const { dep, taskGraph } = createDepConsumerGraph();
       const { orchestrator } = createOrchestrator(taskGraph);
       // A failed dependency elsewhere skips the consumer mid-resolution
       orchestrator.applyCachedResults = vi.fn(async () => {
@@ -200,17 +205,7 @@ describe('TaskOrchestrator', () => {
     });
 
     it('drops a member skipped while the start hooks ran', async () => {
-      const dep = createTask('dep:build');
-      const consumer = createTask('consumer:build');
-      const taskGraph: TaskGraph = {
-        roots: ['dep:build'],
-        tasks: { 'dep:build': dep, 'consumer:build': consumer },
-        dependencies: {
-          'dep:build': [],
-          'consumer:build': [{ id: 'dep:build' }],
-        },
-        continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
-      };
+      const { taskGraph } = createDepConsumerGraph();
       const { orchestrator } = createOrchestrator(taskGraph);
       orchestrator.preRunSteps = vi.fn(async () => {
         orchestrator.completedTasks.set('consumer:build', 'skipped');
@@ -229,17 +224,7 @@ describe('TaskOrchestrator', () => {
     });
 
     it('does not fork a batch whose every member was skipped meanwhile', async () => {
-      const dep = createTask('dep:build');
-      const consumer = createTask('consumer:build');
-      const taskGraph: TaskGraph = {
-        roots: ['dep:build'],
-        tasks: { 'dep:build': dep, 'consumer:build': consumer },
-        dependencies: {
-          'dep:build': [],
-          'consumer:build': [{ id: 'dep:build' }],
-        },
-        continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
-      };
+      const { taskGraph } = createDepConsumerGraph();
       const { orchestrator } = createOrchestrator(taskGraph);
       orchestrator.preRunSteps = vi.fn(async () => {
         orchestrator.completedTasks.set('dep:build', 'skipped');
@@ -1766,11 +1751,9 @@ describe('TaskOrchestrator', () => {
     }
 
     function createOrchestrator({
-      waitFor = 'ready',
       readyWhen = { logMatches: 'listening' },
       flat = false,
     }: {
-      waitFor?: 'started' | 'ready';
       readyWhen?: unknown;
       flat?: boolean;
     } = {}) {
@@ -1781,7 +1764,7 @@ describe('TaskOrchestrator', () => {
         dependencies: { 'app:serve': [], 'e2e:e2e': [] },
         continuousDependencies: {
           'app:serve': [],
-          'e2e:e2e': [{ id: 'app:serve', waitFor }],
+          'e2e:e2e': [{ id: 'app:serve', waitFor: 'ready' }],
         },
         roots: ['app:serve', 'e2e:e2e'],
       };
@@ -1811,15 +1794,6 @@ describe('TaskOrchestrator', () => {
               },
             },
           },
-          e2e: {
-            name: 'e2e',
-            type: 'app',
-            data: { root: 'e2e', targets: { e2e: {} } },
-          },
-        },
-        dependencies: {
-          app: [],
-          e2e: [{ source: 'e2e', target: 'app', type: 'static' }],
         },
       } as unknown as ProjectGraph;
       orchestrator.taskGraph = taskGraph;
@@ -1844,7 +1818,6 @@ describe('TaskOrchestrator', () => {
       };
       orchestrator.options = {
         lifeCycle: {
-          printTaskTerminalOutput: vi.fn(),
           setTaskReadiness: vi.fn(),
         },
       };
@@ -1926,9 +1899,8 @@ describe('TaskOrchestrator', () => {
 
     it('fails the waiter when the producer fails before it starts', async () => {
       const { orchestrator, serve, e2e } = createOrchestrator();
-      orchestrator.postRunSteps = vi.fn();
       const waiting = orchestrator.waitForReadyDependencies(e2e);
-      await orchestrator.failContinuousTaskBeforeStart(
+      await orchestrator.failTaskBeforeStart(
         serve,
         1,
         new Error('Task "db:up" did not become ready within 1ms.')
@@ -2091,26 +2063,11 @@ describe('TaskOrchestrator', () => {
     });
 
     it('does not spawn a continuous task skipped while it waited', async () => {
-      const { orchestrator } = createOrchestrator();
+      const { orchestrator, settled } = createOrchestrator();
       const apiServe = createTask('api:serve', true);
-      orchestrator.projectGraph.nodes.api = {
-        name: 'api',
-        type: 'app',
-        data: {
-          root: 'api',
-          targets: {
-            serve: {
-              continuous: true,
-              dependsOn: [
-                { projects: ['app'], target: 'serve', waitFor: 'ready' },
-              ],
-            },
-          },
-        },
-      };
       orchestrator.fullTaskGraph.tasks['api:serve'] = apiServe;
       orchestrator.fullTaskGraph.continuousDependencies['api:serve'] = [
-        'app:serve',
+        { id: 'app:serve', waitFor: 'ready' },
       ];
       orchestrator.runningTasksService.getRunningTasks = () => [];
       orchestrator.processedTasks.set(
@@ -2120,6 +2077,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.runTask = vi.fn();
 
       const starting = orchestrator.startContinuousTask(apiServe, 1);
+      await expect(settled(starting)).resolves.toBe('pending');
       orchestrator.completedTasks.set('api:serve', 'skipped');
       orchestrator.readinessOf('app:serve').resolve();
       await expect(
@@ -2214,15 +2172,13 @@ describe('TaskOrchestrator', () => {
 
       it('keeps holding the dependents of an exited producer while its completion is pending', async () => {
         const { orchestrator, serve, e2e, runningTask, emit } =
-          createOrchestrator({ readyWhen: { logMatches: 'listening' } });
+          createOrchestrator();
         orchestrator.tuiEnabled = false;
-        orchestrator.bail = false;
         orchestrator.reverseTaskDeps = {
           'app:serve': ['e2e:e2e'],
           'e2e:e2e': [],
         };
         orchestrator.registeredInvocations = new Set();
-        orchestrator.initializingTaskIds = new Set();
         orchestrator.runningDiscreteTasks = new Map();
         orchestrator.runningContinuousTasks = new Map();
         Object.assign(orchestrator.tasksSchedule, {
@@ -2232,7 +2188,7 @@ describe('TaskOrchestrator', () => {
         const { markReady, markReadinessFailed } = orchestrator.tasksSchedule;
         let heldDuringCompletion: boolean;
         orchestrator.options.lifeCycle.endTasks = vi.fn(async () => {
-          // The child is gone but a probe that does not need it still passes
+          // Output still arriving after the exit would pass the probe
           emit('listening');
           await new Promise((r) => setTimeout(r, 20));
           heldDuringCompletion =

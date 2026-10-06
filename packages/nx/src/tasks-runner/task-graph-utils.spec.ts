@@ -16,11 +16,11 @@ describe('task graph utils', () => {
       expect(
         findCycle({
           dependencies: {
-            a: [{ id: 'b' }, { id: 'c' }],
-            b: [{ id: 'd' }],
-            c: [{ id: 'e' }],
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
             d: [],
-            e: [{ id: 'q' }, { id: 'a' }],
+            e: ['q', 'a'],
             q: [],
           },
         })
@@ -29,13 +29,13 @@ describe('task graph utils', () => {
       expect(
         findCycle({
           dependencies: {
-            a: [{ id: 'b' }, { id: 'c' }],
-            b: [{ id: 'd' }],
-            c: [{ id: 'a' }],
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['a'],
             d: [],
-            e: [{ id: 'f' }],
-            f: [{ id: 'q' }],
-            q: [{ id: 'e' }],
+            e: ['f'],
+            f: ['q'],
+            q: ['e'],
           },
         })
       ).toEqual(['a', 'c', 'a']);
@@ -91,11 +91,11 @@ describe('task graph utils', () => {
       expect(
         findCycle({
           dependencies: {
-            a: [{ id: 'b' }, { id: 'c' }],
-            b: [{ id: 'd' }],
-            c: [{ id: 'e' }],
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
             d: [],
-            e: [{ id: 'q' }],
+            e: ['q'],
             q: [],
           },
         })
@@ -108,11 +108,11 @@ describe('task graph utils', () => {
       expect(
         findCycles({
           dependencies: {
-            a: [{ id: 'b' }, { id: 'c' }],
-            b: [{ id: 'd' }],
-            c: [{ id: 'e' }],
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
             d: [],
-            e: [{ id: 'q' }, { id: 'a' }],
+            e: ['q', 'a'],
             q: [],
           },
         })
@@ -121,26 +121,26 @@ describe('task graph utils', () => {
       expect(
         findCycles({
           dependencies: {
-            a: [{ id: 'b' }, { id: 'c' }],
-            b: [{ id: 'd' }],
-            c: [{ id: 'a' }],
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['a'],
             d: [],
-            e: [{ id: 'f' }],
-            f: [{ id: 'q' }],
-            q: [{ id: 'e' }],
+            e: ['f'],
+            f: ['q'],
+            q: ['e'],
           },
         })
       ).toEqual(new Set(['a', 'c', 'e', 'f', 'q']));
       expect(
         findCycles({
           dependencies: {
-            a: [{ id: 'b' }, { id: 'c' }],
-            b: [{ id: 'd' }],
-            c: [{ id: 'f' }],
-            d: [{ id: 'a' }],
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['f'],
+            d: ['a'],
             e: [],
-            f: [{ id: 'q' }],
-            q: [{ id: 'c' }],
+            f: ['q'],
+            q: ['c'],
           },
         })
       ).toEqual(new Set(['a', 'b', 'd', 'c', 'f', 'q']));
@@ -150,11 +150,11 @@ describe('task graph utils', () => {
       expect(
         findCycles({
           dependencies: {
-            a: [{ id: 'b' }, { id: 'c' }],
-            b: [{ id: 'd' }],
-            c: [{ id: 'e' }],
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
             d: [],
-            e: [{ id: 'q' }],
+            e: ['q'],
             q: [],
           },
         })
