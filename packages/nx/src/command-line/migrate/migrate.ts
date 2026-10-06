@@ -3320,8 +3320,7 @@ async function runMigrations(
     activeRunToReplace(root, opts.runId);
   }
 
-  // The run must resume while the cause of a failed install persists: that
-  // step settles without the install, and only its retry installs again.
+  // The run must resume while the cause of a step's failed install persists.
   const failedInstallSteps =
     continued?.steps.filter((s) => s.installFailed === true) ?? [];
   if (failedInstallSteps.length > 0) {

@@ -20,19 +20,15 @@ export function spawnWithoutTerminal(
   command: string,
   options: Omit<SpawnOptions, 'shell' | 'detached'>
 ): ChildProcess {
-  const child =
-    process.platform === 'win32'
-      ? spawn(command, { ...options, shell: true, windowsHide: true })
-      : spawn(command, {
-          ...options,
-          shell: true,
-          detached: true,
-          windowsHide: true,
-          env: withoutTerminalPaths(
-            options.env ?? process.env,
-            stdioTerminals()
-          ),
-        });
+  const child = spawn(command, {
+    ...options,
+    shell: true,
+    windowsHide: true,
+    ...(process.platform !== 'win32' && {
+      detached: true,
+      env: withoutTerminalPaths(options.env ?? process.env, stdioTerminals()),
+    }),
+  });
   const pid = child.pid;
   if (pid !== undefined) {
     if (commands.size === 0) process.on('exit', killCommands);
@@ -49,9 +45,9 @@ export function spawnWithoutTerminal(
  * Sends `signal` to every command started by `spawnWithoutTerminal` whose
  * output is still open: to its process group on POSIX. Windows has no process
  * groups, so there the processes still descending from the command's shell
- * are terminated, whatever the signal. Returns whether there was one.
+ * are terminated, whatever the signal.
  */
-export function signalCommandsWithoutTerminal(signal: NodeJS.Signals): boolean {
+export function signalCommandsWithoutTerminal(signal: NodeJS.Signals): void {
   for (const pid of commands) {
     try {
       if (process.platform === 'win32') {
@@ -65,7 +61,6 @@ export function signalCommandsWithoutTerminal(signal: NodeJS.Signals): boolean {
       // The command already ended; its `close` is on the way.
     }
   }
-  return commands.size > 0;
 }
 
 function killCommands(): void {
@@ -89,7 +84,6 @@ export function withoutTerminalPaths(
   env: NodeJS.ProcessEnv,
   terminals: ReadonlySet<number>
 ): NodeJS.ProcessEnv {
-  if (terminals.size === 0) return env;
   return Object.fromEntries(
     Object.entries(env).filter(([, value]) => !namesTerminal(value, terminals))
   );

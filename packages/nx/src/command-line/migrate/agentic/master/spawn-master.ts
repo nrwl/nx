@@ -9,11 +9,11 @@ import { signalCommandsWithoutTerminal } from '../../../../utils/spawn-without-t
 import { resetSgrAfterAgent } from '../../migrate-output';
 import {
   BROKER_ENV_VAR,
+  commitsStep,
   COMMIT_INSTALLS_FIRST,
   formatElapsed,
   MigrateCommitBroker,
   type MigrateRunPolicy,
-  requestCommits,
   runDir,
   runHandoffsDir,
   treeOperationLabel,
@@ -48,8 +48,6 @@ export interface SpawnMasterSessionInput {
   sentinelPollIntervalMs?: number;
   gracefulExitMs?: number;
   forceKillWaitMs?: number;
-  operationKillWaitMs?: number;
-  samePressMs?: number;
 }
 
 export type SpawnMasterSessionResult =
@@ -114,8 +112,6 @@ export async function spawnMasterSession(
     sentinelPollIntervalMs = 500,
     gracefulExitMs = AGENT_GRACEFUL_EXIT_MS,
     forceKillWaitMs = FORCE_KILL_WAIT_MS,
-    operationKillWaitMs = OPERATION_KILL_WAIT_MS,
-    samePressMs = SAME_PRESS_MS,
   } = input;
   let sentinelPath: string;
   let child: ChildProcess;
@@ -173,7 +169,7 @@ export async function spawnMasterSession(
   let lastPressAt = -Infinity;
   const forwardSigint = () => {
     const now = Date.now();
-    if (now - lastPressAt < samePressMs) return;
+    if (now - lastPressAt < SAME_PRESS_MS) return;
     lastPressAt = now;
     signalCommandsWithoutTerminal('SIGINT');
     ctrlC.emit('press');
@@ -182,11 +178,9 @@ export async function spawnMasterSession(
     signalCommandsWithoutTerminal(signal);
     process.exit(signalToCode(signal));
   };
-  const exitOnSighup = () => exitOnSignal('SIGHUP');
-  const exitOnSigterm = () => exitOnSignal('SIGTERM');
   process.on('SIGINT', forwardSigint);
-  process.on('SIGHUP', exitOnSighup);
-  process.on('SIGTERM', exitOnSigterm);
+  process.on('SIGHUP', exitOnSignal);
+  process.on('SIGTERM', exitOnSignal);
   const sentinelWatch = new AbortController();
   let brokerFailure: Error | undefined;
   // Settles when the poll aborts and the request in flight is answered, or
@@ -254,8 +248,7 @@ export async function spawnMasterSession(
   } finally {
     sentinelWatch.abort();
     // With the agent gone, the terminal is restored before the wait: an
-    // agent that left it raw would keep a Ctrl+C from reaching the operation
-    // in flight as a signal.
+    // agent that left it raw would keep a Ctrl+C from reaching nx as a signal.
     const exited = child.exitCode !== null || child.signalCode !== null;
     let stoppedWaiting = false;
     if (started && exited) {
@@ -263,12 +256,7 @@ export async function spawnMasterSession(
       const inFlight = warnOperationInFlight(broker);
       if (inFlight && (await interruptedTwice(brokerDone, ctrlC))) {
         signalCommandsWithoutTerminal('SIGKILL');
-        let settled = false;
-        await raceWithTimeout(
-          brokerDone.then(() => (settled = true)),
-          operationKillWaitMs
-        );
-        if (!settled) {
+        if (!(await raceWithTimeout(brokerDone, OPERATION_KILL_WAIT_MS))) {
           stoppedWaiting = true;
           output.warn({
             title: `Stopped waiting for ${treeOperationLabel(
@@ -282,12 +270,13 @@ export async function spawnMasterSession(
         }
       }
     }
-    // The request in flight settles before the lock is released.
+    // The request in flight settles before the lock is released, unless nx
+    // stopped waiting on it above.
     if (!stoppedWaiting) await brokerDone;
     broker.close();
     process.removeListener('SIGINT', forwardSigint);
-    process.removeListener('SIGHUP', exitOnSighup);
-    process.removeListener('SIGTERM', exitOnSigterm);
+    process.removeListener('SIGHUP', exitOnSignal);
+    process.removeListener('SIGTERM', exitOnSignal);
     if (started && !exited) restoreTerminal();
   }
   return brokerFailure
@@ -313,7 +302,7 @@ function warnOperationInFlight(
     )} for this migrate run (${formatElapsed(
       Date.now() - inFlight.startedAt
     )} so far).${
-      requestCommits(inFlight.request.kind) ? ` ${COMMIT_INSTALLS_FIRST}` : ''
+      commitsStep(inFlight.request.kind) ? ` ${COMMIT_INSTALLS_FIRST}` : ''
     } Press Ctrl+C to end it, and again to stop everything it started. The run can be resumed afterwards.`,
   });
   return inFlight;
@@ -325,15 +314,13 @@ async function interruptedTwice(
   done: Promise<void>,
   ctrlC: EventEmitter
 ): Promise<boolean> {
-  let presses = 0;
-  let onSecondPress: () => void;
+  let countPress: () => void;
   const secondPress = new Promise<true>((resolve) => {
-    onSecondPress = () => resolve(true);
+    let presses = 0;
+    countPress = () => {
+      if (++presses === 2) resolve(true);
+    };
   });
-  const countPress = () => {
-    presses += 1;
-    if (presses === 2) onSecondPress();
-  };
   ctrlC.on('press', countPress);
   try {
     return await Promise.race([done.then(() => false), secondPress]);

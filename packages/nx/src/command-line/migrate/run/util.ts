@@ -53,10 +53,8 @@ export function depsHash(root: string): string | null {
  * started from are unknown rather than unchanged, and skipping there would
  * strand the change with nothing left to detect it.
  *
- * Settling a failed or died step whose install already failed leaves it
- * uninstalled, so the settle cannot hang on the install that was given up on;
- * the mark the step keeps has the completion report ask for it. A retry rearms
- * the step, which drops the mark, so it installs again.
+ * A failed or died step whose install already failed settles without it, so
+ * the settle cannot hang on that install again. A retry's rearm drops the mark.
  */
 export async function installDepsChangedSinceDispense(
   root: string,

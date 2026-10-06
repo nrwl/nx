@@ -160,9 +160,11 @@ describe('tryCommitChangesAsync without the terminal (real git)', () => {
     'runs git in a process group the session can signal',
     async () => {
       const started = join(root, 'started');
+      // `exec` keeps the filter from forking after `started`. A child forked
+      // while the group signal lands can miss it and hold the commit open.
       git(
         root,
-        `config filter.slow.clean "sh -c 'touch ${started}; sleep 30; cat'"`
+        `config filter.slow.clean "sh -c 'touch ${started}; exec sleep 30'"`
       );
       writeFileSync(join(root, '.gitattributes'), '*.txt filter=slow\n');
       writeFileSync(join(root, 'a.txt'), 'a');
@@ -174,7 +176,7 @@ describe('tryCommitChangesAsync without the terminal (real git)', () => {
         await new Promise((resolve) => setTimeout(resolve, 20));
       }
 
-      expect(signalCommandsWithoutTerminal('SIGTERM')).toBe(true);
+      signalCommandsWithoutTerminal('SIGTERM');
       await expect(committing).rejects.toThrow();
     },
     10_000

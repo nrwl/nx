@@ -1087,7 +1087,7 @@ function execAsync(
   });
 }
 
-// What `exec` reports through its callback, for a child it cannot spawn.
+// What `exec` reports through its callback; `exec` itself ignores `detached`.
 function collectOutput(
   child: ChildProcess,
   command: string,

@@ -75,6 +75,6 @@ export {
   COMMIT_INSTALLS_FIRST,
   formatElapsed,
   MigrateCommitBroker,
-  requestCommits,
+  commitsStep,
   treeOperationLabel,
 } from './broker';
