@@ -51,7 +51,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "smol-toml": "1.7.1",
+    "smol-toml": "1.9.0",
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@zkochan/js-yaml": "catalog:",
