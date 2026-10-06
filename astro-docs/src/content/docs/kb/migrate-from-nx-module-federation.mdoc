@@ -29,9 +29,9 @@ Reference: {pageUrl}
 
 Nx v23 deprecates the Module Federation wrappers, runtime helpers, dev-server executors, and
 generators that `@nx/module-federation`, `@nx/react`, `@nx/rspack`, and `@nx/angular` ship today.
-Nx v24 will remove them and leave you on the official
-[Module Federation](https://module-federation.io) plugins, which `withModuleFederation` already
-wraps, so each app keeps its bundler.
+These APIs wrap the official [Module Federation](https://module-federation.io) plugins. Nx v24
+removes the wrappers, so migrate your apps to the official plugins directly and keep each app on
+its current bundler.
 
 Migrate before you upgrade to v24, while the old setup still builds and you can compare against
 it. Nx will also ship migrations for this later.
