@@ -131,10 +131,8 @@ workspaces that only built through the Nx executor usually lack `webpack-cli`:
 npm add -D webpack-cli
 ```
 
-Use `pnpm add`, `yarn add`, or `bun add` in place of `npm add` throughout.
-
-On pnpm, `pnpm add` leaves an existing devDependency in place. Pass `-P` to move it to
-`dependencies`.
+Use `pnpm add`, `yarn add`, or `bun add` in place of `npm add` throughout. On pnpm, pass `-P`
+to move an existing devDependency to `dependencies`.
 
 ## Step 3: translate the federation config
 
@@ -221,7 +219,8 @@ Remote configs keep their `exposes` map unchanged. A top-level host needs these 
 Step 5 moves them to a runtime manifest. A remote that consumes other remotes keeps its map.
 
 > **JavaScript config files:** The samples use CommonJS `.js`, which both CLIs load without a TypeScript loader. Recent Node
-> versions run TypeScript configs directly. Rename them back to `.ts` once the migration works.
+> versions run TypeScript configs directly, so you can rename them back to `.ts` once the migration
+> works.
 
 ## Step 4: write the shared map
 
@@ -374,8 +373,6 @@ const Greeting = React.lazy(() =>
   "webpackRemoteB": "http://localhost:4702/remoteEntry.js"
 }
 ```
-
-Check each of these.
 
 - **Every value is a full entry URL.** `loadRemoteModule` appended `/remoteEntry.mjs` to a bare
   origin such as `http://localhost:4701`. `registerRemotes` uses the string as given. With
