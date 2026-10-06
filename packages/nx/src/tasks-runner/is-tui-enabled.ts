@@ -3,6 +3,7 @@ import { IS_WASM, isAiAgent } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { isCI } from '../utils/is-ci';
 import { logger } from '../utils/logger';
+import { isStaticOutputStyle } from '../utils/output';
 
 export const ORIGINAL_TUI_ENV_VALUE = process.env.NX_TUI;
 
@@ -49,15 +50,19 @@ export function shouldUseTui(
   }
 
   if (
-    ['static', 'stream', 'stream-without-prefixes', 'dynamic-legacy'].includes(
-      nxArgs.outputStyle
+    isStaticOutputStyle(nxArgs.specifiedOutputStyle) ||
+    ['summary', 'stream', 'stream-without-prefixes', 'dynamic-legacy'].includes(
+      nxArgs.specifiedOutputStyle
     )
   ) {
     // If the user has specified a non-TUI output style, we disable the TUI
     return false;
   }
 
-  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+  if (
+    nxArgs.specifiedOutputStyle === 'dynamic' ||
+    nxArgs.specifiedOutputStyle === 'tui'
+  ) {
     return true;
   }
 

@@ -1,3 +1,12 @@
+<% if (e2ePreset) { -%>
+const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+<% } -%>
 const { defineConfig } = require('cypress');
-
-module.exports = defineConfig({});
+<% if (!e2ePreset) { %>
+<% } -%>
+module.exports = defineConfig({<% if (e2ePreset) { %>
+  e2e: {
+    ...nxE2EPreset(__filename, <%- presetOptions %>),<% if (baseUrl) { %>
+    baseUrl: '<%- baseUrl %>',<% } %>
+  },
+<% } %>});

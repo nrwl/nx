@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   addProjectConfiguration,
@@ -32,9 +32,11 @@ describe('@nx/eslint:workspace-rules-project', () => {
     });
     await lintWorkspaceRulesProjectGenerator(tree);
 
-    expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.lint.inputs
-    ).toContain('{workspaceRoot}/tools/eslint-rules/**/*');
+    const td = readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults!;
+    const lint = Array.isArray(td)
+      ? td.find((e) => e.target === 'lint')
+      : td.lint;
+    expect(lint?.inputs).toContain('{workspaceRoot}/tools/eslint-rules/**/*');
   });
 
   it('should generate the required files', async () => {
@@ -148,9 +150,7 @@ describe('@nx/eslint:workspace-rules-project', () => {
         const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
-        const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
-        );
+        const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;

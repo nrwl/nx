@@ -1,20 +1,40 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
-// const mockFormatFiles = jest.fn();
-// jest.mock('@nx/devkit', () => {
-//   return {
-//     ...jest.requireActual('@nx/devkit'),
-//     formatFiles: (...args) => mockFormatFiles(...args),
-// }
-// })
+import type { Mock, MockInstance } from 'vitest';
+// Mock `@nx/devkit` so that (1) the project graph is empty during generation and
+// (2) the detected package manager can be pinned. `beforeEach` pins it to npm,
+// which keeps inferred lock-file outputs (e.g. prune-lockfile) deterministic
+// regardless of which package manager runs the tests. Individual tests can
+// override `detectPackageManager`.
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
+  return {
+    ...actual,
+    createProjectGraphAsync: vi
+      .fn()
+      .mockResolvedValue({ nodes: {}, dependencies: {} }),
+    detectPackageManager: vi.fn(),
+    getPackageManagerCommand: vi.fn((pm = 'npm') =>
+      actual.getPackageManagerCommand(pm)
+    ),
+  };
+});
 
 import {
+  detectPackageManager,
   getProjects,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   Tree,
   updateJson,
+  updateNxJson,
   writeJson,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
+import {
+  PNPM_INSTALL_SETTINGS_INPUTS,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+} from '@nx/js/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 // nx-ignore-next-line
@@ -24,11 +44,66 @@ import { applicationGenerator } from './application';
 
 describe('app', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
+    // `clearAllMocks` keeps configured return values, so re-pin the default.
+    (detectPackageManager as Mock).mockReturnValue('npm');
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    beforeEach(() => {
+      (detectPackageManager as Mock).mockReturnValue('pnpm');
+    });
+
+    it('should deny the esbuild build script for the esbuild bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-node-app',
+          bundler: 'esbuild',
+          framework: 'none',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+          linter: 'none',
+          addPlugin: true,
+        } as Schema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?esbuild['"]?: false/
+      );
+    });
+
+    it('should not record an esbuild decision for the webpack bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-node-app',
+          bundler: 'webpack',
+          framework: 'none',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+          linter: 'none',
+          addPlugin: true,
+        } as Schema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        'esbuild'
+      );
+    });
   });
 
   describe('not nested', () => {
@@ -160,6 +235,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-node-app',
         addPlugin: true,
       });
@@ -195,42 +271,7 @@ describe('app', () => {
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
       ]);
-      const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
-      expect(eslintrc).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      expect(tree.exists('my-node-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -391,6 +432,7 @@ describe('app', () => {
         expect(lookupFn(config)).toEqual(expectedValue);
       };
       await applicationGenerator(tree, {
+        linter: 'eslint',
         name: 'my-node-app',
         directory: 'my-dir/my-node-app/',
         addPlugin: true,
@@ -426,12 +468,8 @@ describe('app', () => {
             'src/**/*.test.ts',
           ],
         },
-        {
-          path: 'my-dir/my-node-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(tree.exists('my-dir/my-node-app/eslint.config.mjs')).toBeTruthy();
     });
   });
 
@@ -447,6 +485,118 @@ describe('app', () => {
       expect(tree.exists('my-node-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('my-node-app/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('my-node-app/jest.config.cts')).toBeFalsy();
+    });
+  });
+
+  describe('--unit-test-runner vitest', () => {
+    it('should generate a vitest configuration', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      expect(tree.exists('my-node-app/vitest.config.mts')).toBeTruthy();
+      expect(tree.exists('my-node-app/jest.config.cts')).toBeFalsy();
+      expect(tree.read('my-node-app/vitest.config.mts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { defineConfig } from 'vitest/config';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig(() => ({
+          root: import.meta.dirname,
+          cacheDir: '../node_modules/.vite/my-node-app',
+          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          test: {
+            name: 'my-node-app',
+            watch: false,
+            globals: true,
+            environment: 'node',
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            passWithNoTests: true,
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../coverage/my-node-app',
+              provider: 'v8' as const,
+            },
+          },
+        }));
+        "
+      `);
+    });
+
+    it('should set up the spec tsconfig for vitest', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      const tsConfig = readJson(tree, 'my-node-app/tsconfig.spec.json');
+      expect(tsConfig.compilerOptions.types).toContain('vitest/globals');
+    });
+
+    it('should keep the generated spec file', async () => {
+      await applicationGenerator(tree, {
+        directory: 'api',
+        framework: 'fastify',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      expect(tree.exists('api/src/app/app.spec.ts')).toBeTruthy();
+    });
+
+    it('should not add dependencies when --skipPackageJson', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        skipPackageJson: true,
+        addPlugin: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies).not.toHaveProperty('vitest');
+      expect(devDependencies).not.toHaveProperty('@vitest/coverage-v8');
+    });
+  });
+
+  describe('--linter', () => {
+    // The lint block used to be gated on `=== 'eslint'`, so asking for oxlint
+    // skipped it entirely and produced an app with no linter and no error.
+    // `@nx/nest:app` and `@nx/express:app` delegate here, so they broke too.
+    it('should set up oxlint when asked for it', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        linter: 'oxlint',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['oxlint']).toBeDefined();
+      expect(devDependencies['@nx/oxlint']).toBeDefined();
+      expect(tree.exists('.oxlintrc.json')).toBe(true);
+    });
+
+    it('should set up no linter for none', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        linter: 'none',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      const { devDependencies = {} } = readJson(tree, 'package.json');
+      expect(devDependencies['oxlint']).toBeUndefined();
+      expect(devDependencies['eslint']).toBeUndefined();
     });
   });
 
@@ -491,6 +641,19 @@ describe('app', () => {
         '/api': { target: 'http://localhost:3000', secure: false },
         '/billing-api': { target: 'http://localhost:3000', secure: false },
       });
+    });
+  });
+
+  describe('eslintrc (legacy)', () => {
+    it('should generate .eslintrc.json when ESLINT_USE_FLAT_CONFIG=false', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await applicationGenerator(tree, {
+        linter: 'eslint',
+        directory: 'my-node-app',
+        addPlugin: true,
+      });
+      const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
+      expect(eslintrc.extends).toEqual(['../.eslintrc.json']);
     });
   });
 
@@ -599,17 +762,16 @@ describe('app', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
-        .spyOn(devkitModule, 'formatFiles')
+      formatFilesSpy = vi
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files by default', async () => {
@@ -693,6 +855,7 @@ describe('app', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         bundler: 'webpack',
         unitTestRunner: 'jest',
@@ -719,8 +882,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
@@ -885,8 +1048,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
     });
@@ -904,9 +1067,7 @@ describe('app', () => {
         const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
-        const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
-        );
+        const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
@@ -1023,6 +1184,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         bundler: 'webpack',
         unitTestRunner: 'jest',
@@ -1139,7 +1301,7 @@ describe('app', () => {
   });
 
   describe('Nest.js with webpack bundler', () => {
-    it('should generate correct build target configuration with webpack-cli args', async () => {
+    it('should not write an explicit build target since the inferred one handles NODE_ENV', async () => {
       await applicationGenerator(tree, {
         directory: 'my-nest-app',
         bundler: 'webpack',
@@ -1148,15 +1310,180 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(tree, 'my-nest-app');
-      const buildTarget = project.targets.build;
+      expect(project.targets.build).toBeUndefined();
+    });
+  });
 
-      expect(buildTarget.executor).toBe('nx:run-commands');
-      expect(buildTarget.options.command).toBe('webpack-cli build');
-      expect(buildTarget.options.env).toEqual({ NODE_ENV: 'production' });
-      expect(buildTarget.options.cwd).toEqual(project.root);
-      expect(buildTarget.configurations.development.env).toEqual({
-        NODE_ENV: 'development',
+  describe('--rootProject base compiler options', () => {
+    it('should inline "bundler" moduleResolution into the root tsconfig.json when typescript is not declared', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-node-app',
+        directory: '.',
+        addPlugin: true,
       });
+
+      const { compilerOptions } = readJson(tree, 'tsconfig.json');
+      // default tree has no declared typescript -> assumes the >=6 default
+      expect(compilerOptions.moduleResolution).toBe('bundler');
+      expect(compilerOptions.strict).toBe(false);
+      // module and target come from the inlined base options
+      expect(compilerOptions.module).toBe('esnext');
+      expect(compilerOptions.target).toBe('es2015');
+      // esModuleInterop is an explicit override on top of the base options
+      expect(compilerOptions.esModuleInterop).toBe(true);
+    });
+
+    it('should inline "node10" moduleResolution into the root tsconfig.json when typescript is pinned below 6', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+
+      await applicationGenerator(tree, {
+        name: 'my-node-app',
+        directory: '.',
+        addPlugin: true,
+      });
+
+      const { compilerOptions } = readJson(tree, 'tsconfig.json');
+      // typescript <6 is declared -> node-family moduleResolution
+      expect(compilerOptions.moduleResolution).toBe('node10');
+      expect(compilerOptions.strict).toBe(false);
+      expect(compilerOptions.esModuleInterop).toBe(true);
+    });
+  });
+
+  describe('pnpm deploy-settings inputs', () => {
+    beforeEach(() => {
+      (detectPackageManager as Mock).mockReturnValue('pnpm');
+      tree.write('pnpm-lock.yaml', 'lockfileVersion: 9.0\n');
+    });
+
+    it('adds them to the build target defaults in a pnpm workspace', async () => {
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).toEqual([
+        'default',
+        '^default',
+        TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+        ...PNPM_INSTALL_SETTINGS_INPUTS,
+      ]);
+    });
+
+    it('appends them to a pre-existing build target defaults entry', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/esbuild:esbuild': { cache: true, inputs: ['production'] },
+      };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).toEqual(['production', ...PNPM_INSTALL_SETTINGS_INPUTS]);
+    });
+
+    it('writes them onto the target when the existing defaults entry declares no inputs', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/esbuild:esbuild': { cache: true },
+      };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['default', '^default', ...PNPM_INSTALL_SETTINGS_INPUTS]);
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).toBeUndefined();
+    });
+
+    it('writes them onto the target when the only inputs-declaring entry is filtered to another project', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/esbuild:esbuild': [
+          { cache: true },
+          { filter: { projects: ['other'] }, inputs: ['production'] },
+        ] as any,
+      };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      // The filtered entry supplies some other project's array; appending
+      // there would leave app1 hashing only nx's implicit default.
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['default', '^default', ...PNPM_INSTALL_SETTINGS_INPUTS]);
+      const entries = readNxJson(tree).targetDefaults[
+        '@nx/esbuild:esbuild'
+      ] as any[];
+      expect(entries[1].inputs).toEqual(['production']);
+    });
+
+    it('completes an existing entry whose json input hashes other manifest fields', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/esbuild:esbuild': {
+          inputs: [
+            'default',
+            { json: '{workspaceRoot}/package.json', fields: ['dependencies'] },
+          ],
+        },
+      };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).toEqual([
+        'default',
+        { json: '{workspaceRoot}/package.json', fields: ['dependencies'] },
+        ...PNPM_INSTALL_SETTINGS_INPUTS,
+      ]);
+    });
+
+    it('adds none of them in a non-pnpm workspace', async () => {
+      (detectPackageManager as Mock).mockReturnValue('npm');
+      tree.delete('pnpm-lock.yaml');
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).not.toEqual(
+        expect.arrayContaining(['{workspaceRoot}/pnpm-workspace.yaml'])
+      );
     });
   });
 });

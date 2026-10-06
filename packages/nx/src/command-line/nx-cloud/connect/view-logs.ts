@@ -46,6 +46,8 @@ export async function viewLogs(): Promise<number> {
   }
 
   const pmc = getPackageManagerCommand();
+  // Intentionally not runNxSync: this invokes the separate `nx-cloud` binary,
+  // not the nx CLI that runNxSync resolves.
   execSync(`${pmc.exec} nx-cloud upload-and-show-run-details`, {
     stdio: [0, 1, 2],
     windowsHide: true,

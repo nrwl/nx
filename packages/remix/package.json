@@ -67,9 +67,17 @@
     "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/playwright": "workspace:*",
     "@remix-run/dev": "^2.0.0"
   },
   "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    },
     "@remix-run/dev": {
       "optional": true
     }

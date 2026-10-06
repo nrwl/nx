@@ -6,7 +6,8 @@
     "types": ["node"],
     "composite": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "rootDir": "."
   },
   "include": ["src/**/*.ts", "config/**/*"],
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]

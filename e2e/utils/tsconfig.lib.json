@@ -7,9 +7,11 @@
     "composite": true,
     "skipLibCheck": true,
     "noImplicitAny": false,
-    "strict": false
+    "strict": false,
+    "rootDir": "."
   },
   "exclude": [
+    "out-tsc",
     "**/*.spec.ts",
     "**/*.test.ts",
     "jest.config.ts",
@@ -18,9 +20,6 @@
   ],
   "include": ["**/*.ts", "**/*.js"],
   "references": [
-    {
-      "path": "../../packages/angular/tsconfig.lib.json"
-    },
     {
       "path": "../../packages/devkit/tsconfig.lib.json"
     },

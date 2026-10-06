@@ -167,13 +167,10 @@ export async function loadWorkspaceRules(
         );
       } catch (err: any) {
         // Top-level await (`ERR_REQUIRE_ASYNC_MODULE`) and ESM-only modules
-        // (`ERR_REQUIRE_ESM`) must be loaded via dynamic import(). Mirror
-        // devkit's loadTypeScriptModule: register tsconfig-paths first so
-        // workspace alias imports resolve, then try native dynamic import.
-        // Only escalate to forceRegisterEsmLoader on unsupported TS syntax
-        // (enum, runtime namespace, etc.) - surface the original ESM error
-        // if no loader can be installed. Without this the outer catch
-        // swallows the error and the lint run silently has no rules.
+        // (`ERR_REQUIRE_ESM`) must be loaded via dynamic import(). Keep
+        // CommonJS tsconfig-path resolution active during the import, and
+        // escalate to an ESM transpiler only for unsupported TS syntax;
+        // surface the original ESM error if no loader can be installed.
         if (
           err?.code !== 'ERR_REQUIRE_ESM' &&
           err?.code !== 'ERR_REQUIRE_ASYNC_MODULE'

@@ -8,8 +8,6 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
     "composite": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
@@ -40,6 +38,9 @@
     },
     {
       "path": "../devkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../vitest/tsconfig.lib.json"
     },
     {
       "path": "../webpack/tsconfig.lib.json"

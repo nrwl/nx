@@ -24,9 +24,8 @@
  */
 
 import { dirname, resolve } from 'node:path';
-import { Project, SyntaxKind } from 'ts-morph';
+import * as ts from 'typescript';
 import { normalize } from 'path';
-import { getAllTextByProperty, getTextByProperty } from './utils';
 
 interface StyleUrlsCacheEntry {
   matchedStyleUrls: string[];
@@ -34,23 +33,10 @@ interface StyleUrlsCacheEntry {
 }
 
 export class StyleUrlsResolver {
-  // These resolvers may be called multiple times during the same
-  // compilation for the same files. Caching is required because these
-  // resolvers use synchronous system calls to the filesystem, which can
-  // degrade performance when running compilations for multiple files.
   private readonly styleUrlsCache = new Map<string, StyleUrlsCacheEntry>();
 
   resolve(code: string, id: string): string[] {
-    // Given the code is the following:
-    // @Component({
-    //   styleUrls: [
-    //     './app.component.scss'
-    //   ]
-    // })
-    // The `matchedStyleUrls` would result in: `styleUrls: [\n    './app.component.scss'\n  ]`.
-    const matchedStyleUrls = getStyleUrls(code)
-      // for type narrowing
-      .filter((v) => v !== undefined);
+    const matchedStyleUrls = getStyleUrls(code);
     const entry = this.styleUrlsCache.get(id);
     // We're using `matchedStyleUrls` as a key because the code may be changing continuously,
     // resulting in the resolver being called multiple times. While the code changes, the
@@ -72,24 +58,91 @@ export class StyleUrlsResolver {
   }
 }
 
-export function getStyleUrls(code: string) {
-  const project = new Project({ useInMemoryFileSystem: true });
-  const sourceFile = project.createSourceFile('cmp.ts', code);
-  const properties = sourceFile.getDescendantsOfKind(
-    SyntaxKind.PropertyAssignment
+// readonly so a caller cannot mutate the memoized arrays out from under the
+// next caller
+interface ComponentResources {
+  readonly styleUrl: readonly string[];
+  readonly styleUrls: readonly string[];
+  readonly templateUrl: readonly string[];
+}
+
+let lastScan: { code: string; resources: ComponentResources } | undefined;
+
+// These resolvers run only when the Angular compilation did not report the
+// component's resource dependencies, so they follow @angular/build's JIT
+// resource transformer: a resource becomes a module only when its URL is a
+// plain string literal, and anything else names no file to watch. Empty is
+// skipped for all three properties because it resolves to the component's own
+// directory rather than a file; Angular skips it for `templateUrl` and
+// `styleUrls` entries but not for `styleUrl`.
+function collectUrl(urls: string[], node: ts.Expression): void {
+  if (ts.isStringLiteralLike(node) && node.text) {
+    urls.push(node.text);
+  }
+}
+
+// Both resolvers run back to back on the same source in the rspack loader, so
+// the last scan is memoized to parse each file once instead of twice.
+function scanComponentResources(code: string): ComponentResources {
+  if (lastScan !== undefined && lastScan.code === code) {
+    return lastScan.resources;
+  }
+
+  const sourceFile = ts.createSourceFile(
+    'cmp.ts',
+    code,
+    ts.ScriptTarget.Latest,
+    // parent pointers are unused: every value below is read off the node itself
+    false,
+    ts.ScriptKind.TS
   );
-  const styleUrl = getTextByProperty('styleUrl', properties);
-  const styleUrls = getAllTextByProperty('styleUrls', properties);
+  const styleUrl: string[] = [];
+  const styleUrls: string[] = [];
+  const templateUrl: string[] = [];
+
+  // Every property assignment in the file is considered, not just the ones in a
+  // @Component decorator: Angular identifies that decorator by resolving its
+  // symbol to @angular/core, which needs a type checker this parse has no
+  // program for.
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isPropertyAssignment(node) &&
+      // identifier and quoted keys name the same property, computed ones are
+      // dropped, matching how Angular reflects @Component metadata
+      (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name))
+    ) {
+      const name = node.name.text;
+      if (name === 'styleUrl') {
+        collectUrl(styleUrl, node.initializer);
+      } else if (name === 'templateUrl') {
+        collectUrl(templateUrl, node.initializer);
+      } else if (
+        name === 'styleUrls' &&
+        ts.isArrayLiteralExpression(node.initializer)
+      ) {
+        for (const element of node.initializer.elements) {
+          collectUrl(styleUrls, element);
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(sourceFile, visit);
+
+  const resources: ComponentResources = { styleUrl, styleUrls, templateUrl };
+  lastScan = { code, resources };
+  return resources;
+}
+
+// the explicit return types keep the memoized `readonly string[]` arrays from
+// being handed to callers unspread
+export function getStyleUrls(code: string): string[] {
+  const { styleUrl, styleUrls } = scanComponentResources(code);
   return [...styleUrls, ...styleUrl];
 }
 
-export function getTemplateUrls(code: string) {
-  const project = new Project({ useInMemoryFileSystem: true });
-  const sourceFile = project.createSourceFile('cmp.ts', code);
-  const properties = sourceFile.getDescendantsOfKind(
-    SyntaxKind.PropertyAssignment
-  );
-  return getTextByProperty('templateUrl', properties);
+export function getTemplateUrls(code: string): string[] {
+  return [...scanComponentResources(code).templateUrl];
 }
 
 export interface TemplateUrlsCacheEntry {

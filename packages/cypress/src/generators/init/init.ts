@@ -1,13 +1,20 @@
-import { addPlugin as _addPlugin } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  addPlugin as _addPlugin,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   ProjectGraph,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
@@ -28,17 +35,32 @@ function setupE2ETargetDefaults(tree: Tree) {
   }
 
   // E2e targets depend on all their project's sources + production sources of dependencies
-  nxJson.targetDefaults ??= {};
-
   const productionFileSet = !!nxJson.namedInputs?.production;
-  nxJson.targetDefaults.e2e ??= {};
-  nxJson.targetDefaults.e2e.cache ??= true;
-  nxJson.targetDefaults.e2e.inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-  ];
+  const existing = findExistingE2eDefault(nxJson.targetDefaults);
+  const patch: Partial<TargetConfiguration> = {};
+  if (existing?.cache === undefined) patch.cache = true;
+  if (existing?.inputs === undefined) {
+    patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
+  }
+  if (Object.keys(patch).length > 0) {
+    upsertTargetDefault(tree, nxJson, { target: 'e2e', ...patch });
+    updateNxJson(tree, nxJson);
+  }
+}
 
-  updateNxJson(tree, nxJson);
+function findExistingE2eDefault(
+  td: TargetDefaults | undefined
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  const value = td['e2e'];
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _f, ...rest } = found;
+    return rest;
+  }
+  return value;
 }
 
 function updateDependencies(tree: Tree, options: Schema) {
@@ -50,6 +72,12 @@ function updateDependencies(tree: Tree, options: Schema) {
   };
   if (!getInstalledCypressVersion(tree)) {
     devDependencies.cypress = cypressVersion;
+    // The user explicitly asked for cypress, and its postinstall downloads
+    // the binary it needs to run at all, so enable it — npm and yarn run it
+    // unconditionally. Transitive deps stay denied.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      cypress: true,
+    });
   }
 
   tasks.push(

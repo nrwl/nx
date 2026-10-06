@@ -5,19 +5,6 @@ export default [
   ...baseConfig,
   { ignores: ['dist'] },
   {
-    files: ['**/*.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        '@angular-devkit/architect',
-        '@angular-devkit/core',
-        '@angular-devkit/schematics',
-        '@nx/workspace',
-      ],
-    },
-    ignores: ['./src/migrations/**'],
-  },
-  {
     files: ['./package.json', './generators.json', './migrations.json'],
     rules: {
       '@nx/nx-plugin-checks': 'error',

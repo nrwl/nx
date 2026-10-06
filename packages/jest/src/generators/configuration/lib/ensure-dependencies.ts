@@ -1,4 +1,10 @@
-import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  detectPackageManager,
+  type Tree,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import { swcCoreVersion } from '@nx/js/internal';
 import { versions } from '../../../utils/versions';
 import type { NormalizedJestProjectSchema } from '../schema';
 
@@ -46,6 +52,13 @@ export function ensureDependencies(
     devDeps['@nx/js'] = nxVersion;
   } else if (options.compiler === 'swc') {
     devDeps['@swc/jest'] = swcJestVersion;
+    // peer dependency of @swc/jest
+    devDeps['@swc/core'] = swcCoreVersion;
+    // @swc/core's postinstall only installs a wasm fallback for platforms not
+    // covered by its prebuilt optional dependencies, so skip it.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      '@swc/core': false,
+    });
   }
 
   return addDependenciesToPackageJson(

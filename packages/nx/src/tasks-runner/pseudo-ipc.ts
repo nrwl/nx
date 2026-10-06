@@ -21,11 +21,11 @@ import { connect, Server, Socket } from 'net';
 import { unlinkSync } from 'fs';
 import {
   consumeMessagesFromSocket,
-  MESSAGE_END_SEQ,
+  writeMessage,
   parseMessage,
 } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';
-import { isWindows, serialize } from '../daemon/socket-utils';
+import { isWindows, sendMessage } from '../daemon/socket-utils';
 
 /**
  * Remove a stale socket file if it exists.
@@ -86,19 +86,29 @@ export class PseudoIPCServer {
   private registerChildMessages(socket: Socket) {
     socket.on(
       'data',
-      consumeMessagesFromSocket(async (rawMessage) => {
-        const { type, message } = parseMessage<PseudoIPCMessage>(rawMessage);
-        if (type === 'TO_PARENT_FROM_CHILDREN') {
+      consumeMessagesFromSocket(
+        async (rawMessage) => {
+          const { type, message } = parseMessage<PseudoIPCMessage>(rawMessage);
+          if (type === 'TO_PARENT_FROM_CHILDREN') {
+            for (const childMessage of this.childMessages) {
+              childMessage.onMessage(message);
+            }
+          } else if (type === 'CHILD_READY') {
+            const childId = message as string;
+            if (this.childReadyMap.has(childId)) {
+              this.childReadyMap.get(childId)();
+            }
+          }
+        },
+        // Nothing resynchronizes a length-prefixed stream, so report it the
+        // same way a socket error is reported and let the peer see the close.
+        (err) => {
           for (const childMessage of this.childMessages) {
-            childMessage.onMessage(message);
+            childMessage.onError?.(err);
           }
-        } else if (type === 'CHILD_READY') {
-          const childId = message as string;
-          if (this.childReadyMap.has(childId)) {
-            this.childReadyMap.get(childId)();
-          }
+          socket.destroy();
         }
-      })
+      )
     );
 
     socket.on('close', () => {
@@ -115,16 +125,13 @@ export class PseudoIPCServer {
 
   sendMessageToChildren(message: Serializable) {
     this.sockets.forEach((socket) => {
-      socket.write(serialize({ type: 'TO_CHILDREN_FROM_PARENT', message }));
-      // send EOT to indicate that the message has been fully written
-      socket.write(MESSAGE_END_SEQ);
+      sendMessage(socket, { type: 'TO_CHILDREN_FROM_PARENT', message });
     });
   }
 
   sendMessageToChild(id: string, message: Serializable) {
     this.sockets.forEach((socket) => {
-      socket.write(serialize({ type: 'TO_CHILDREN_FROM_PARENT', id, message }));
-      socket.write(MESSAGE_END_SEQ);
+      sendMessage(socket, { type: 'TO_CHILDREN_FROM_PARENT', id, message });
     });
   }
 
@@ -152,20 +159,14 @@ export class PseudoIPCClient {
   constructor(private path: string) {}
 
   sendMessageToParent(message: Serializable) {
-    this.socket.write(serialize({ type: 'TO_PARENT_FROM_CHILDREN', message }));
-    // send EOT to indicate that the message has been fully written
-    this.socket.write(MESSAGE_END_SEQ);
+    sendMessage(this.socket, { type: 'TO_PARENT_FROM_CHILDREN', message });
   }
 
   notifyChildIsReady(id: string) {
-    this.socket.write(
-      serialize({
-        type: 'CHILD_READY',
-        message: id,
-      } as PseudoIPCMessage)
-    );
-    // send EOT to indicate that the message has been fully written
-    this.socket.write(MESSAGE_END_SEQ);
+    sendMessage(this.socket, {
+      type: 'CHILD_READY',
+      message: id,
+    } as PseudoIPCMessage);
   }
 
   onMessageFromParent(
@@ -186,7 +187,7 @@ export class PseudoIPCClient {
             onMessage(message);
           }
         }
-      })
+      }, onError)
     );
 
     this.socket.on('close', onClose);

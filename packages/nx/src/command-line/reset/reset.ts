@@ -1,22 +1,22 @@
 import { rmSync } from 'node:fs';
-import { join } from 'node:path';
 
 import { daemonClient } from '../../daemon/client/client';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from '../../daemon/tmp-dir';
 import {
   cacheDir,
+  cacheDirectoryForWorkspace,
+  sharedDataDirectory,
   workspaceDataDirectory,
-  workspaceDataDirectoryForWorkspace,
 } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
-import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
-import { getMainWorktreeRoot } from '../../native';
+import { getNativeFileCacheLocationToDelete } from '../../native/native-file-cache-location';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ResetCommandOptions } from './command-object';
 import { getCloudClient } from '../../nx-cloud/utilities/client';
 import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { readNxJson } from '../../config/configuration';
+import { removeDbConnections } from '../../utils/db-connection';
 import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
 
 // Wait at max 5 seconds before giving up on a failing operation.
@@ -96,6 +96,10 @@ export async function resetHandler(args: ResetCommandOptions) {
   if ((cloudEnabled && all) || args.onlyCloud) {
     try {
       await resetCloudClient();
+    } catch (e) {
+      errors.push('Failed to clean up the Nx Cloud client.', e.toString());
+    }
+    try {
       await removeInstalledNxCloudClient();
     } catch (e) {
       errors.push('Failed to reset the Nx Cloud client.', e.toString());
@@ -136,9 +140,8 @@ function cleanupDaemonWorkspaceData() {
 async function resetCloudClient() {
   // Remove nx cloud marker files. This helps if the use happens to run `nx-cloud start-ci-run` or
   // similar commands on their local machine.
-  try {
-    (await getCloudClient(getCloudOptions())).invoke('cleanup');
-  } catch {}
+  // `exit` would end the process here, before reset reports its result.
+  await (await getCloudClient(getCloudOptions())).invoke('cleanup', false);
 }
 
 function removeInstalledNxCloudClient() {
@@ -146,8 +149,7 @@ function removeInstalledNxCloudClient() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      const cloudClientDir = getCloudClientLocation();
-      rmSync(join(cloudClientDir, 'cloud'), { recursive: true, force: true });
+      rmSync(getCloudClientLocation(), { recursive: true, force: true });
     }
   );
 }
@@ -158,8 +160,20 @@ function cleanupCacheEntries() {
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
       rmSync(cacheDir, { recursive: true, force: true });
+      // `cacheDir` is the shared directory whenever sharing is available, so
+      // this is the checkout's own `.nx/cache`: still there from before the
+      // move, and still what a later run falls back to if `~/.nx` stops being
+      // reachable. Reset means both.
+      removeIfDistinct(cacheDirectoryForWorkspace(workspaceRoot), cacheDir);
     }
   );
+}
+
+/** Skips the no-op when the two resolve to one directory. */
+function removeIfDistinct(dir: string, from: string) {
+  if (dir !== from) {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 function cleanupNativeFileCache() {
@@ -167,7 +181,12 @@ function cleanupNativeFileCache() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      rmSync(getNativeFileCacheLocation(), { recursive: true, force: true });
+      // Null when the native cache root is not a real directory we own, which
+      // would mean deleting through a path another user planted.
+      const cacheDir = getNativeFileCacheLocationToDelete();
+      if (cacheDir) {
+        rmSync(cacheDir, { recursive: true, force: true });
+      }
     }
   );
 }
@@ -177,21 +196,19 @@ function cleanupWorkspaceData() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
+      // Analytics opened the DB at startup; Windows cannot delete an open file.
+      removeDbConnections();
       rmSync(workspaceDataDirectory, { recursive: true, force: true });
 
-      // If in a worktree, also clean the shared workspace data directory
-      // in the main repo where the DB actually lives
-      try {
-        const mainRoot = getMainWorktreeRoot(workspaceRoot);
-        if (mainRoot) {
-          const sharedDir = workspaceDataDirectoryForWorkspace(mainRoot);
-          if (sharedDir !== workspaceDataDirectory) {
-            rmSync(sharedDir, { recursive: true, force: true });
-          }
-        }
-      } catch {
-        // Worktree detection is best-effort during reset
-      }
+      // Also clean wherever the DB actually lives, which is outside this
+      // checkout whenever the shared root is reachable. Resolved through the
+      // same decision the DB itself uses, so reset cannot delete a directory
+      // this process never wrote to -- a sandboxed agent that fell back to its
+      // own checkout, or a configured location, yields nothing extra.
+      removeIfDistinct(
+        sharedDataDirectory(workspaceRoot, 'workspace-data'),
+        workspaceDataDirectory
+      );
     }
   );
 }

@@ -4,10 +4,10 @@ import {
   killProcessAndPorts,
   newProject,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
 import { readPort, runCLI } from './utils';
@@ -129,7 +129,7 @@ describe('Independent Deployability', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!'),
@@ -267,7 +267,7 @@ describe('Independent Deployability', () => {
       `
     );
 
-    if (runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       // test remote e2e
       const remoteE2eResults = await runCommandUntil(
         `e2e ${remote}-e2e --verbose`,
@@ -281,7 +281,10 @@ describe('Independent Deployability', () => {
       const remoteProcess = await runCommandUntil(
         `serve ${remote} --no-watch --verbose`,
         (output) => {
-          return output.includes(`Loopback: http://localhost:${remotePort}/`);
+          // rspack dev-server v1 prints "Loopback:", v2 prints "Local:"
+          return new RegExp(
+            `(Loopback|Local):\\s+http://localhost:${remotePort}/`
+          ).test(output);
         },
         { timeout: 120000 }
       );
@@ -390,7 +393,7 @@ describe('Independent Deployability', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const hostE2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
         (output) =>

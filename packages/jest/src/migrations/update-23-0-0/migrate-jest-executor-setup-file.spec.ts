@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   addProjectConfiguration,
@@ -245,6 +245,39 @@ describe('migrate-jest-executor-setup-file', () => {
         passWithNoTests: true,
       }
     );
+  });
+
+  it('should strip setupFile from the filtered array value form and drop emptied entries', async () => {
+    // Migration order isn't guaranteed, so a default may already be array-shaped.
+    const nxJson = readNxJson(tree) ?? ({} as NxJsonConfiguration);
+    nxJson.targetDefaults = {
+      test: [
+        {
+          filter: { executor: '@nx/jest:jest', projects: ['app-a'] },
+          options: { setupFile: 'src/test-setup.ts', passWithNoTests: true },
+        },
+        // Only the locator-relevant option — strips down to nothing and drops.
+        {
+          filter: { executor: '@nx/jest:jest' },
+          options: { setupFile: 'src/test-setup.ts' },
+        },
+        // Unrelated executor — left untouched.
+        { filter: { executor: '@nx/vite:test' }, options: { setupFile: 'x' } },
+      ],
+    };
+    updateNxJson(tree, nxJson);
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults).toStrictEqual({
+      test: [
+        {
+          filter: { executor: '@nx/jest:jest', projects: ['app-a'] },
+          options: { passWithNoTests: true },
+        },
+        { filter: { executor: '@nx/vite:test' }, options: { setupFile: 'x' } },
+      ],
+    });
   });
 
   it('should leave projects without setupFile untouched', async () => {

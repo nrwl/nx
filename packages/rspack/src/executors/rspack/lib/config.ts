@@ -1,7 +1,7 @@
 import { ExecutorContext } from '@nx/devkit';
 import { type Configuration } from '@rspack/core';
 import {
-  composePluginsSync,
+  composePlugins,
   isNxRspackComposablePlugin,
 } from '../../../utils/config';
 import { suppressRspackComposeHelperWarnings } from '../../../utils/deprecation';
@@ -31,9 +31,9 @@ export async function getRspackConfigs(
 
   // Nx composes these helpers internally to build the default config; suppress
   // their deprecation warning so it fires only for user-authored configs.
-  const config = suppressRspackComposeHelperWarnings(() =>
+  const config = await suppressRspackComposeHelperWarnings(() =>
     (options.target === 'web'
-      ? composePluginsSync(withNx(options), withWeb(options))
+      ? composePlugins(withNx(options), withWeb(options))
       : withNx(options))({}, { options, context })
   );
 

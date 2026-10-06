@@ -1,9 +1,11 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   GeneratorCallback,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { addSwcDependencies } from '@nx/js/internal';
 import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils';
 import {
@@ -41,6 +43,11 @@ export async function installCommonDependencies(
   // TODO(jack): Once we clean up webpack we can remove this check
   if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
     if (options.style === 'scss') {
+      // sass pulls in @parcel/watcher, whose install script only builds from
+      // source when npm_config_build_from_source is set.
+      acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+        '@parcel/watcher': false,
+      });
       devDependencies['sass'] = sassVersion;
     }
   }

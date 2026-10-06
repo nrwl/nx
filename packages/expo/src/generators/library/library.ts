@@ -1,4 +1,8 @@
-import { logShowProjectCommand, getRelativeCwd } from '@nx/devkit/internal';
+import {
+  logShowProjectCommand,
+  getRelativeCwd,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -33,7 +37,6 @@ import {
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/internal';
 import { expoComponentGenerator } from '../component/component';
 import { relative, join } from 'path';

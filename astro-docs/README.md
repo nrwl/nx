@@ -24,7 +24,7 @@ This documentation site leverages Astro's static site generation capabilities wi
 
 ## Information Architecture Principles
 
-When creating or reorganizing documentation, follow these 5 principles to determine where content belongs.
+When creating or reorganizing documentation, follow these 7 principles to determine where content belongs.
 
 ### 1. Progressive Disclosure (The "Journey" Rule)
 
@@ -54,6 +54,17 @@ When creating or reorganizing documentation, follow these 5 principles to determ
 - **The Test:** _Does this feature apply to EVERY user (e.g., Caching, Agents)?_
 - **Yes:** **Platform Features**.
 - **No (Only React users):** **Technologies**.
+
+### 6. The Golden Path (The "One Way" Rule)
+
+- **Concept:** Feature pages teach the default workflow. Limit flags and variants to the ones a reader needs to make a decision.
+- **The Test:** _Would a first-time user need this sentence to succeed or to choose? If not, it belongs in the corresponding Knowledge Base guide._
+
+### 7. One Page Per Feature (The "Don't Make Me Hunt" Rule)
+
+- **Concept:** A feature page answers most of what a new reader arrives with. Specifics fan out to Knowledge Base guides, the questions stay on the page.
+- **The Test:** _List the questions a new reader, or an AI answering for one, would ask about this feature. Does any answer live only on another page?_
+- **Counterweight to rule 6:** Trim variants and edge cases, keep every question a reader has to answer before they can choose or start.
 
 ### Sidebar Structure
 
@@ -102,6 +113,20 @@ The site uses custom content loaders to dynamically generate documentation:
 - **PluginLoader** (`plugin.loader.ts`) - Generates official plugin documentation (generators, executors, migrations)
 - **CommunityPluginsLoader** (`community-plugins.loader.ts`) - Generates data for plugin registry (e.g. GitHub stars, npm downloads)
 - **NxReferencePackagesLoader** (`nx-reference-packages.loader.ts`) - Generated data for CNW, Devkit, nx cli (e.g. nx core related things)
+- **NxCloudPublicApiLoader** (`nx-cloud-public-api.loader.ts`) - Generates the Public API reference from the deployed OpenAPI specification.
+
+### Nx Cloud Public API reference
+
+The reference at `/docs/reference/nx-cloud/public-api` uses one model in
+`src/plugins/nx-cloud-public-api/` for the Astro page, Markdown, copy content, and AI exports.
+Edit API descriptions in the upstream OpenAPI source and usage guides in `src/content/docs/kb/`.
+
+The loader fetches `https://cloud.nx.app/nx-cloud/data/openapi.json` on each content sync.
+Set `NX_CLOUD_OPENAPI_URL` to use another deployment.
+Fetch or parse errors fail the sync instead of publishing stale documentation.
+
+The build uses `scripts/hash-openapi-spec.mjs` as a runtime input.
+Specification changes invalidate the Nx cache without a repository change.
 
 ## Content Management
 

@@ -40,10 +40,8 @@ describe('getTouchedProjectsFromTsConfig', () => {
   ['tsconfig.json', 'tsconfig.base.json'].forEach((tsConfig) => {
     describe(`(${tsConfig})`, () => {
       beforeEach(() => {
-        jest
-          .spyOn(tsUtils, 'getRootTsConfigFileName')
-          .mockReturnValue(tsConfig);
-        jest.clearAllMocks();
+        vi.spyOn(tsUtils, 'getRootTsConfigFileName').mockReturnValue(tsConfig);
+        vi.clearAllMocks();
       });
 
       it(`should not return changes when ${tsConfig} is not touched`, () => {
@@ -300,6 +298,66 @@ describe('getTouchedProjectsFromTsConfig', () => {
           );
           expect(result).toContainEqual('proj1');
           expect(result).toContainEqual('proj2');
+        });
+
+        it('should not match sibling roots that only share a string prefix', () => {
+          graph = {
+            nodes: {
+              'ts-cdk': {
+                name: 'ts-cdk',
+                type: 'lib',
+                data: {
+                  root: 'libs/typescript/cdk',
+                },
+              },
+              'ts-cdk-utils': {
+                name: 'ts-cdk-utils',
+                type: 'lib',
+                data: {
+                  root: 'libs/typescript/cdk-utils',
+                },
+              },
+            },
+            dependencies: {
+              'ts-cdk': [],
+              'ts-cdk-utils': [],
+            },
+          };
+
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                getChanges: () =>
+                  jsonDiff(
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/cdk-utils': [
+                            'libs/typescript/cdk-utils/index.ts',
+                          ],
+                        },
+                      },
+                    },
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/cdk-utils': [
+                            'libs/typescript/cdk-utils/utils.ts',
+                          ],
+                        },
+                      },
+                    }
+                  ),
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+
+          expect(result).toEqual(['ts-cdk-utils', 'ts-cdk-utils']);
         });
       });
     });

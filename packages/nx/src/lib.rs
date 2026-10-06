@@ -1,4 +1,5 @@
 #![deny(clippy::disallowed_types)]
+#![deny(clippy::disallowed_methods)]
 #![cfg_attr(target_os = "wasi", feature(wasi_ext))]
 // add all the napi macros globally
 #[macro_use]

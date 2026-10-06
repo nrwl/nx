@@ -12,17 +12,13 @@
     "generate-dev-environment-js": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/generate-graph-environment.ts"
-        ]
+        "commands": ["tsx ./scripts/generate-graph-environment.ts"]
       }
     },
     "generate-graph-base": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/generate-graph.ts"
-        ]
+        "commands": ["tsx ./scripts/generate-graph.ts"]
       }
     },
     "generate-graph": {

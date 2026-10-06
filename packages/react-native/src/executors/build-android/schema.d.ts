@@ -3,8 +3,7 @@
 
 import { ReactNativeStartOptions } from '../start/schema';
 
-export interface ReactNativeBuildAndroidOptions
-  extends ReactNativeStartOptions {
+export interface ReactNativeBuildAndroidOptions extends ReactNativeStartOptions {
   // react native options
   mode: string; // default is debug
   activeArchOnly: boolean; // default is false

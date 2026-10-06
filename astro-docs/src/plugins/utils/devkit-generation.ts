@@ -5,6 +5,7 @@ import {
   directoryToCategoryMap,
 } from './typedoc/typedoc';
 import type { LoaderContext } from 'astro/loaders';
+import { generatedDocFileURL } from './generated-doc-file-url';
 import { workspaceRoot } from '@nx/devkit';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -122,7 +123,11 @@ export async function loadDevkitPackage(
         .replace(/\.md(?=[#)\s]|$)/gim, '');
     }
 
-    const rendered = content ? await renderMarkdown(content) : undefined;
+    const rendered = content
+      ? await renderMarkdown(content, {
+          fileURL: generatedDocFileURL(`reference/devkit/${slug}`),
+        })
+      : undefined;
 
     const mappedCategory = directoryToCategoryMap[category] || category;
 

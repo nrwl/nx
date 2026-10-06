@@ -8,18 +8,19 @@ export function chunkify(
   let currentChunk = [];
   let currentChunkLength = 0;
   for (const file of target) {
+    const length = file.length;
     if (
       // Prevent empty chunk if first file path is longer than maxChunkLength
       currentChunk.length &&
       // +1 accounts for the space between file names
-      currentChunkLength + file.length + 1 >= maxChunkLength
+      currentChunkLength + length + 1 >= maxChunkLength
     ) {
       chunks.push(currentChunk);
       currentChunk = [];
       currentChunkLength = 0;
     }
     currentChunk.push(file);
-    currentChunkLength += file.length + 1;
+    currentChunkLength += length + 1;
   }
   chunks.push(currentChunk);
   return chunks;

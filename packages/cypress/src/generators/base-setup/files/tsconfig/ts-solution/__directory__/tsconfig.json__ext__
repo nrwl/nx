@@ -1,6 +1,7 @@
 {
   "extends": "<%= tsConfigPath %>",
   "compilerOptions": {
+    "rootDir": "<%= offsetFromProjectRoot ? offsetFromProjectRoot.replace(/\/$/, '') : '.' %>",
     "outDir": "out-tsc/cypress",
     "allowJs": true,
     "types": ["cypress", "node"],

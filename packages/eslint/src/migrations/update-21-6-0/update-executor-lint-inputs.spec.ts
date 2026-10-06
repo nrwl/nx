@@ -27,7 +27,8 @@ describe('update-executor-lint-inputs', () => {
     await migration(tree);
 
     const updated = readNxJson(tree);
-    expect(updated.targetDefaults['@nx/eslint:lint'].inputs).toEqual([
+    const lintEntry = updated.targetDefaults['@nx/eslint:lint'];
+    expect(lintEntry.inputs).toEqual([
       'default',
       '^default',
       '{workspaceRoot}/.eslintrc.json',
@@ -55,7 +56,8 @@ describe('update-executor-lint-inputs', () => {
     await migration(tree);
 
     const updated = readNxJson(tree);
-    expect(updated.targetDefaults['@nx/eslint:lint'].inputs).toEqual([
+    const lintEntry = updated.targetDefaults['@nx/eslint:lint'];
+    expect(lintEntry.inputs).toEqual([
       'default',
       '^default',
       '{workspaceRoot}/.eslintrc.json',
@@ -102,7 +104,8 @@ describe('update-executor-lint-inputs', () => {
     await migration(tree);
 
     const updated = readNxJson(tree);
-    expect(updated.targetDefaults['@nx/eslint:lint'].inputs).toEqual([
+    const lintEntry = updated.targetDefaults['@nx/eslint:lint'];
+    expect(lintEntry.inputs).toEqual([
       '^default',
       '{workspaceRoot}/.eslintrc.json',
       '{workspaceRoot}/tools/eslint-rules/**/*',

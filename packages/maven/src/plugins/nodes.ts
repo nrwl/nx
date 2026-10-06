@@ -1,5 +1,5 @@
 import { CreateNodesResultArray, CreateNodes, hashArray } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
+import { calculateHashesForCreateNodes, hashObject } from '@nx/devkit/internal';
 import { dirname, relative } from 'path';
 import { DEFAULT_OPTIONS, MavenPluginOptions } from './types';
 import { runMavenAnalysis } from './maven-analyzer';
@@ -9,7 +9,6 @@ import {
   setCurrentMavenData,
   writeMavenCache,
 } from './maven-data-cache';
-import { hashObject } from 'nx/src/devkit-internals';
 
 /**
  * Maven plugin that analyzes Maven projects and returns configurations

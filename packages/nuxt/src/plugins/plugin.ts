@@ -3,6 +3,7 @@ import {
   getNamedInputs,
   calculateHashesForCreateNodes,
   PluginCache,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -16,8 +17,8 @@ import {
   joinPathFragments,
   TargetConfiguration,
   workspaceRoot,
+  normalizePath,
 } from '@nx/devkit';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { readdirSync } from 'fs';
@@ -143,9 +144,12 @@ async function buildNuxtTargets(
     projectRoot
   );
 
-  targets[options.serveTargetName] = serveTarget(projectRoot);
+  targets[options.serveTargetName] = serveTarget(projectRoot, namedInputs);
 
-  targets[options.serveStaticTargetName] = serveStaticTarget(options);
+  targets[options.serveStaticTargetName] = serveStaticTarget(
+    options,
+    namedInputs
+  );
 
   targets[options.buildStaticTargetName] = buildStaticTarget(
     options.buildStaticTargetName,
@@ -178,35 +182,48 @@ function buildTarget(
     options: { cwd: projectRoot },
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-
-      {
-        externalDependencies: ['nuxt'],
-      },
-    ],
+    inputs: buildInputs(namedInputs),
     outputs: buildOutputs,
   };
 }
 
-function serveTarget(projectRoot: string) {
+function buildInputs(namedInputs: {
+  [inputName: string]: any[];
+}): TargetConfiguration['inputs'] {
+  return [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['nuxt'],
+    },
+  ];
+}
+
+function serveTarget(
+  projectRoot: string,
+  namedInputs: { [inputName: string]: any[] }
+) {
   const targetConfig: TargetConfiguration = {
     command: `nuxt dev`,
     options: {
       cwd: projectRoot,
     },
     continuous: true,
+    inputs: buildInputs(namedInputs),
   };
 
   return targetConfig;
 }
 
-function serveStaticTarget(options: NuxtPluginOptions) {
+function serveStaticTarget(
+  options: NuxtPluginOptions,
+  namedInputs: { [inputName: string]: any[] }
+) {
   const targetConfig: TargetConfiguration = {
     dependsOn: [`${options.buildStaticTargetName}`],
     continuous: true,
+    inputs: buildInputs(namedInputs),
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStaticTargetName}`,
@@ -306,7 +323,7 @@ function normalizeOutputPath(
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      return `{workspaceRoot}/${normalizePath(relative(workspaceRoot, outputPath))}`;
     } else {
       if (outputPath.startsWith('..')) {
         return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);

@@ -3,7 +3,12 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { findMatchingProjects } from './find-matching-projects';
 import { output } from './output';
 import { ProjectGraphProjectNode } from '../config/project-graph';
-import { WorkspaceValidityError } from '../devkit-internals';
+// Import from the defining module, not the devkit-internals barrel: this file
+// is on the project-graph construction path, and the barrel now eagerly
+// re-exports the project-graph modules, which would create a require cycle back
+// through build-project-graph. (Release modules cross the barrel as erased
+// types only — see the note in packages/devkit/internal.ts.)
+import { WorkspaceValidityError } from '../project-graph/error-types';
 
 export function assertWorkspaceValidity(
   projects: Record<string, ProjectConfiguration>,

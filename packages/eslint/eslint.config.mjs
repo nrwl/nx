@@ -7,13 +7,6 @@ export default [
     ignores: ['dist'],
   },
   {
-    files: ['**/*.ts'],
-    rules: {
-      'no-restricted-imports': ['error', '@nx/workspace'],
-    },
-    ignores: ['./src/migrations/**'],
-  },
-  {
     files: [
       './package.json',
       './generators.json',

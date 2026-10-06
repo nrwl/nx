@@ -1,1 +1,1 @@
-export * from 'nx/src/tasks-runner/life-cycles/dynamic-run-many-terminal-output-life-cycle';
+export { createRunManyDynamicOutputRenderer } from '@nx/devkit/internal';

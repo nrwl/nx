@@ -4,10 +4,11 @@ import {
   killPorts,
   newProject,
   readFile,
+  reservePort,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Rspack', () => {
@@ -31,7 +32,7 @@ describe('Build React applications and libraries with Rspack', () => {
 
   it('should generate app with custom port', async () => {
     const appName = uniq('app');
-    const customPort = 8081;
+    const customPort = await reservePort();
 
     runCLI(
       `generate @nx/react:app ${appName} --bundler=rspack --port=${customPort} --unit-test-runner=vitest --no-interactive --skipFormat --linter=eslint --e2eTestRunner=playwright`
@@ -40,21 +41,22 @@ describe('Build React applications and libraries with Rspack', () => {
     const rspackConfig = readFile(`${appName}/rspack.config.js`);
     expect(rspackConfig).toContain(`port: ${customPort}`);
 
-    if (runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPorts(customPort)).toBeTruthy();
     }
   }, 300_000);
 
   it('should be able to use Rspack to build and test apps', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
+    const port = await reservePort();
 
     runCLI(
-      `generate @nx/react:app ${appName} --bundler=rspack --unit-test-runner=vitest --no-interactive --skipFormat --linter=eslint`
+      `generate @nx/react:app ${appName} --bundler=rspack --port=${port} --unit-test-runner=vitest --no-interactive --skipFormat --linter=eslint`
     );
     runCLI(
       `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
@@ -76,12 +78,12 @@ describe('Build React applications and libraries with Rspack', () => {
 
     checkFilesExist(`dist/${appName}/index.html`);
 
-    if (runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPorts(port)).toBeTruthy();
     }
   }, 250_000);
 });

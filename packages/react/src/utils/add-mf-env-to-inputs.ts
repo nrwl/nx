@@ -1,29 +1,34 @@
 import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 
 export function addMfEnvToTargetDefaultInputs(
   tree: Tree,
   bundler: 'rspack' | 'webpack'
 ) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   const executor =
     bundler === 'rspack' ? '@nx/rspack:rspack' : '@nx/webpack:webpack';
   const mfEnvVar = 'NX_MF_DEV_REMOTES';
 
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults[executor] ??= {};
-  nxJson.targetDefaults[executor].inputs ??= ['production', '^production'];
-  nxJson.targetDefaults[executor].dependsOn ??= ['^build'];
+  const existing = findTargetDefault(nxJson.targetDefaults, { executor });
 
+  const inputs = [...(existing?.inputs ?? ['production', '^production'])];
   let mfEnvVarExists = false;
-  for (const input of nxJson.targetDefaults[executor].inputs) {
+  for (const input of inputs) {
     if (typeof input === 'object' && input['env'] === mfEnvVar) {
       mfEnvVarExists = true;
       break;
     }
   }
   if (!mfEnvVarExists) {
-    nxJson.targetDefaults[executor].inputs.push({ env: mfEnvVar });
+    inputs.push({ env: mfEnvVar });
   }
-  nxJson.targetDefaults[executor].cache = true;
+
+  upsertTargetDefault(tree, nxJson, {
+    executor,
+    cache: true,
+    inputs,
+    dependsOn: existing?.dependsOn ?? ['^build'],
+  });
   updateNxJson(tree, nxJson);
 }

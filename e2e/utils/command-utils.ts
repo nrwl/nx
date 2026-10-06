@@ -9,7 +9,6 @@ import { existsSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { gte } from 'semver';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   ensureCypressInstallation,
@@ -19,13 +18,12 @@ import { fileExists, readJson, updateJson } from './file-utils';
 import {
   detectPackageManager,
   getNpmMajorVersion,
-  getPnpmVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
-import { logError, logInfo } from './log-utils';
+import { logError, logInfo, secondsSince } from './log-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -35,19 +33,12 @@ export interface RunCmdOpts {
   verbose?: boolean;
   redirectStderr?: boolean;
   timeout?: number;
-  /**
-   * Override the daemon mode for this call. Defaults to `true` (matching
-   * runCLI / runCommandAsync's CI default). Set to `false` to exercise the
-   * non-daemon path without setting a process-wide env var.
-   */
+  /** Override daemon mode for this call. Defaults to `true`; set `false` to exercise the non-daemon path. */
   daemon?: boolean;
 }
 
 /**
- * Sets maxWorkers in CI on all projects that require it
- * so that it doesn't try to run it with 34 workers
- *
- * maxWorkers required for: node, web, jest
+ * Caps maxWorkers in CI for node/web/jest builds so they don't spawn ~34 workers.
  */
 export function setMaxWorkers(projectJsonPath: string) {
   if (isCI) {
@@ -108,8 +99,7 @@ export function runCommand(
 
     return stripVTControlCharacters(r as string);
   } catch (e) {
-    // this is intentional
-    // npm ls fails if package is not found
+    // Intentional: some commands (e.g. `npm ls`) exit non-zero but still produce useful output.
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     if (!failOnError && (e.stdout || e.stderr)) {
       return stripVTControlCharacters(e.stdout + e.stderr);
@@ -137,7 +127,6 @@ export function getPackageManagerCommand({
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const yarnMajorVersion = getYarnMajorVersion(path);
-  const pnpmVersion = getPnpmVersion();
   const publishedVersion = getPublishedVersion();
   const isYarnWorkspace = fileExists(join(path, 'package.json'))
     ? readJson('package.json').workspaces
@@ -183,21 +172,20 @@ export function getPackageManagerCommand({
           : `yarn --silent lerna`,
       exec: 'yarn',
     },
-    // Pnpm 3.5+ adds nx to
     pnpm: {
       createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
       runUninstalledPackage: 'pnpm dlx',
-      // We need to install with --no-frozen-lockfile when running e2e tests because pnpm will pick up the fact we are in CI and default to --frozen-lockfile
+      // --no-frozen-lockfile: pnpm detects CI and would otherwise default to --frozen-lockfile.
       install: 'pnpm install --no-frozen-lockfile',
       ciInstall: 'pnpm install --frozen-lockfile',
       addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
       list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
-      exec: pnpmVersion && gte(pnpmVersion, '6.13.0') ? 'pnpm exec' : 'pnpx',
+      exec: 'pnpm exec',
     },
     bun: {
       // See note in runCreateWorkspace in create-project-utils.ts for why we don't set @{version} for `bunx create-nx-workspace` right now
@@ -217,14 +205,34 @@ export function getPackageManagerCommand({
   }[packageManager.trim() as PackageManager];
 }
 
-export function runE2ETests(runner?: 'cypress' | 'playwright') {
+export async function shouldRunCypressTests(): Promise<boolean> {
+  if (!isE2ERunEnabled()) {
+    return false;
+  }
+  const startTime = performance.now();
+  // Cypress unzips into a cache shared by the whole machine, so this has to
+  // finish before the suite starts running tests.
+  await ensureCypressInstallation();
+  logInfo(`Cypress ready (${secondsSince(startTime)}s)`);
+  return true;
+}
+
+export async function shouldRunPlaywrightTests(): Promise<boolean> {
+  if (!isE2ERunEnabled()) {
+    return false;
+  }
+  const startTime = performance.now();
+  // Playwright is deliberately not awaited: `npx playwright install
+  // --with-deps` takes longer than a test's timeout, so waiting on it here
+  // fails the suite outright.
+  ensurePlaywrightBrowsersInstallation().then(() =>
+    logInfo(`Playwright ready (${secondsSince(startTime)}s)`)
+  );
+  return true;
+}
+
+function isE2ERunEnabled(): boolean {
   if (process.env.NX_E2E_RUN_E2E === 'true') {
-    if (!runner || runner === 'cypress') {
-      ensureCypressInstallation();
-    }
-    if (!runner || runner === 'playwright') {
-      ensurePlaywrightBrowsersInstallation();
-    }
     return true;
   }
 
@@ -255,12 +263,11 @@ export function runCommandAsync(
         cwd: opts.cwd || tmpProjPath(),
         env: {
           CI: 'true',
-          // Force daemon on under CI (matches runCLI's default). Callers can
-          // override via opts.daemon = false.
+          // Force daemon on under CI (matches runCLI); override via opts.daemon = false.
           NX_DAEMON: opts.daemon === false ? 'false' : 'true',
           // Use new versioning by default in e2e tests
           NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
-          ...(opts.env || getStrippedEnvironmentVariables()),
+          ...(opts.env || getStrippedEnvironmentVariables(opts.cwd)),
           FORCE_COLOR: 'false',
         },
         encoding: 'utf-8',
@@ -418,6 +425,38 @@ export function runNgAdd(
   }
 }
 
+/**
+ * Replaces the run-to-run durations / core counts in Nx's performance report with
+ * stable placeholders so the report can stay in snapshots. Scoped to the report
+ * block (from `Run duration:` to the next `NX` section header or end of output);
+ * no-op when no report is present.
+ *
+ * The Recommendations section is dropped entirely: runs under 30s (every e2e run
+ * when healthy) print none, and a slow run crossing that floor must not flake the
+ * snapshot by re-introducing it.
+ */
+export function normalizePerformanceReport(output: string): string {
+  return output.replace(
+    /\n[ \t]*Run duration:[\s\S]*?(?=\n[ \t]*\n(?:[ \t]*\n)*[ \t]*NX |\s*$)/g,
+    (block) =>
+      block
+        .replace(/\n[ \t]*\n[ \t]*Recommendations?:[\s\S]*$/, '')
+        // Durations: match the minute form ("1m 30s") first so its "30s" isn't matched
+        // alone; the optional "<" also captures a "<1ms" (sub-millisecond) duration.
+        .replace(/<?(?:\b\d+m \d+s\b|\b\d+(?:\.\d+)?m?s\b)/g, '{DURATION}')
+        .replace(/\b\d+(?= cores?\b)/g, '{CORES}')
+        // Longest-tasks list right-aligns durations (padStart); collapse the varying
+        // id→duration gap back to a fixed 4-space separator so the table is deterministic.
+        .replace(/^([ \t]+\S+) {4,}(\{DURATION\})$/gm, '$1    $2')
+        // Stat rows align values by padding the label column, whose width may change;
+        // collapse the label→value gap so the snapshot doesn't depend on that padding.
+        .replace(
+          /^([ \t]*(?:Run duration|Cache|Critical path|Recoverable time):) +/gm,
+          '$1 '
+        )
+  );
+}
+
 export function runCLI(
   command: string,
   opts: RunCmdOpts = {
@@ -439,14 +478,12 @@ export function runCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
-        // Daemon is normally disabled under CI; force it on so e2e tests
-        // exercise the same daemon-driven graph + watcher path that real
-        // users hit, without each test having to opt in via env override.
-        // Callers can override via opts.daemon = false.
+        // Daemon is normally off under CI; force it on so e2e exercises the same
+        // daemon-driven graph + watcher path real users hit. Override via opts.daemon = false.
         NX_DAEMON: opts.daemon === false ? 'false' : 'true',
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
-        ...getStrippedEnvironmentVariables(),
+        ...getStrippedEnvironmentVariables(opts.cwd),
         ...opts.env,
       },
       encoding: 'utf-8',
@@ -454,8 +491,7 @@ export function runCLI(
       maxBuffer: 50 * 1024 * 1024,
       timeout: timeoutMs,
     });
-    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
-    logInfo(`Run Command: ${command} (${elapsed}s)`);
+    logInfo(`Run Command: ${command} (${secondsSince(startTime)}s)`);
 
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
@@ -481,8 +517,7 @@ export function runCLI(
     }
     if (opts.silenceError) {
       runCLI.lastExitCode = (e.status ?? 1) as number;
-      // When redirectStderr is not set, stderr wasn't merged into stdout by the
-      // shell, so concat both so callers still see everything.
+      // Without redirectStderr the shell didn't merge stderr into stdout, so concat both.
       const output = opts.redirectStderr ? e.stdout : e.stdout + e.stderr;
       return stripVTControlCharacters(output);
     } else {
@@ -508,7 +543,7 @@ export function runLernaCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
-        ...(opts.env || getStrippedEnvironmentVariables()),
+        ...(opts.env || getStrippedEnvironmentVariables(opts.cwd)),
       },
       encoding: 'utf-8',
       stdio: 'pipe',

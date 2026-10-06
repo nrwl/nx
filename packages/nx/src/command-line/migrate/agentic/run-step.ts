@@ -1,4 +1,4 @@
-import { dirname } from 'path';
+import { basename, dirname, join } from 'path';
 import * as pc from 'picocolors';
 import { getRunNxBaseCommand } from '../../../utils/child-process';
 import { FileChange } from '../../../generators/tree';
@@ -8,14 +8,25 @@ import {
   getPackageManagerCommand,
 } from '../../../utils/package-manager';
 import { resetSgrAfterAgent } from '../migrate-output';
+import { resolveFormatCommand } from './format-command';
 import { mkdirSafely, stepHandoffPath } from './handoff';
+import { writeStepInstructionFiles } from './instruction-files';
 import { buildGenericValidationUserPrompt } from './prompts/generic-validation';
 import { buildHybridPromptUserPrompt } from './prompts/hybrid-prompt-migration';
 import { buildPromptMigrationUserPrompt } from './prompts/prompt-migration';
-import { AgenticPromptMode, buildSystemPrompt } from './prompts/system-prompt';
+import {
+  AgenticPromptMode,
+  buildInlineSystemContext,
+  buildMinimalSystemContext,
+  buildSystemPrompt,
+} from './prompts/system-prompt';
 import { getAgentDefinition } from './definitions';
 import { runAgentic } from './runner';
-import { EnabledResolvedAgentic, HandoffOutcome } from './types';
+import {
+  EnabledResolvedAgentic,
+  HANDOFFS_DIR_NAME,
+  HandoffOutcome,
+} from './types';
 
 /**
  * Context describing the deterministic (generator) half of a migration, used
@@ -38,6 +49,17 @@ export interface AgenticStepResult {
    * accordingly.
    */
   ambiguous: boolean;
+}
+
+/**
+ * `runStep` travels in the context rather than being imported by its call
+ * sites, so this module loads only where the context is built, behind an
+ * agentic-enabled gate.
+ */
+export interface AgenticRunContext {
+  agentic: EnabledResolvedAgentic;
+  runDir: string;
+  runStep: typeof runAgenticPromptStep;
 }
 
 export interface RunAgenticPromptStepInput {
@@ -97,12 +119,20 @@ export async function runAgenticPromptStep(
     `handoff directory for ${migration.name}`
   );
   const pm = detectPackageManager(root);
-  const systemContext = buildSystemPrompt({
+  const pmCommand = getPackageManagerCommand(pm, root);
+  const systemPrompt = buildSystemPrompt({
     workspaceRoot: root,
     handoffFileAbsolutePath: handoffFilePath,
     packageManager: pm,
-    nxInvocation: getRunNxBaseCommand(getPackageManagerCommand(pm, root), root),
+    nxInvocation: getRunNxBaseCommand(pmCommand, root),
     mode,
+    pmExec: pmCommand.exec,
+    // Validation prompts carry no format rule, so don't probe the workspace
+    // (detectFormatter can warn) for a command the prompt would discard.
+    formatCommand:
+      mode === 'generic-validation'
+        ? null
+        : resolveFormatCommand(root, pmCommand.exec),
   });
 
   let userPrompt: string;
@@ -143,6 +173,15 @@ export async function runAgenticPromptStep(
     );
   }
 
+  const { systemPromptFilePath, instructionsPointer } =
+    writeStepInstructionFiles({
+      workspaceRoot: root,
+      runDir,
+      migration,
+      systemPrompt,
+      instructions: userPrompt,
+    });
+
   const phase = mode === 'generic-validation' ? 'Validating' : 'Running prompt';
   logger.info(pc.dim(`→ ${phase} with ${agentic.selectedAgent.displayName}…`));
 
@@ -150,11 +189,20 @@ export async function runAgenticPromptStep(
     detected: agentic.selectedAgent,
     definition,
     invocationContext: {
-      systemContext,
-      userPrompt,
+      systemPrompt,
+      systemPromptFilePath,
+      instructionsPointer,
+      inlineSystemContext: buildInlineSystemContext({
+        handoffFileAbsolutePath: handoffFilePath,
+        systemPromptFilePath,
+      }),
+      inlineSystemContextFallback:
+        buildMinimalSystemContext(systemPromptFilePath),
       workspaceRoot: root,
+      runDirName: basename(runDir),
     },
     handoffFilePath,
+    handoffsDir: join(runDir, HANDOFFS_DIR_NAME),
   });
 
   // Some agent TUIs leave cursor/SGR state behind on exit. Reset before our

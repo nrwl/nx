@@ -10,12 +10,15 @@ type SidebarItems = NonNullable<StarlightUserConfig['sidebar']>;
 /**
  * Tab configuration for the sidebar. Each tab directly owns its sidebar groups,
  * making the tab ↔ content relationship explicit and impossible to drift.
+ * A tab may instead be a direct `link` (renders as a nav link, not a panel).
  */
 export interface SidebarTab {
   id: string;
   label: string;
   icon?: string;
   groups: SidebarItems;
+  /** If set, the tab navigates straight to this slug instead of opening a panel. */
+  link?: string;
 }
 
 const learnGroups: SidebarItems = [
@@ -68,10 +71,6 @@ const learnGroups: SidebarItems = [
             label: 'Reducing boilerplate',
             link: 'getting-started/tutorials/reducing-configuration-boilerplate',
           },
-          {
-            label: 'Gradle monorepo',
-            link: 'getting-started/tutorials/gradle-tutorial',
-          },
         ],
       },
     ],
@@ -91,21 +90,11 @@ const learnGroups: SidebarItems = [
         label: 'Types of configuration',
         link: 'concepts/types-of-configuration',
       },
-      {
-        label: 'Executors and configurations',
-        link: 'concepts/executors-and-configurations',
-      },
       { label: 'Nx plugins', link: 'concepts/nx-plugins' },
-      { label: 'Inferred tasks', link: 'concepts/inferred-tasks' },
       {
         label: 'Building blocks of fast CI',
         link: 'concepts/ci-concepts/building-blocks-fast-ci',
       },
-      {
-        label: 'Parallelization and distribution',
-        link: 'concepts/ci-concepts/parallelization-distribution',
-      },
-      { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
     ],
   },
   {
@@ -117,7 +106,11 @@ const learnGroups: SidebarItems = [
         label: 'Cache task results',
         link: 'features/cache-task-results',
       },
-      { label: 'Enhance your LLM', link: 'features/enhance-ai' },
+      { label: 'Enhance your coding agent', link: 'features/enhance-ai' },
+      {
+        label: 'Multi-language support',
+        link: 'features/multi-language-support',
+      },
       {
         label: 'Code organization',
         collapsed: true,
@@ -154,76 +147,28 @@ const learnGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Orchestration & CI',
+        label: 'Continuous integration (CI)',
         collapsed: true,
         items: [
           {
             label: 'Overview',
             link: 'features/ci-features',
           },
-          { label: 'Affected', link: 'features/ci-features/affected' },
           {
-            label: 'Remote cache (Nx Replay)',
+            label: 'Run affected tasks',
+            link: 'features/ci-features/affected',
+          },
+          {
+            label: 'Remote caching',
             link: 'features/ci-features/remote-cache',
           },
-          {
-            label: 'Self-healing CI',
-            link: 'features/ci-features/self-healing-ci',
-          },
-          { label: 'Flaky tasks', link: 'features/ci-features/flaky-tasks' },
           {
             label: 'Distribute task execution (Nx Agents)',
             link: 'features/ci-features/distribute-task-execution',
           },
           {
-            label: 'Split E2E tasks',
-            link: 'features/ci-features/split-e2e-tasks',
-          },
-          {
-            label: 'Dynamically allocate agents',
-            link: 'features/ci-features/dynamic-agents',
-          },
-          {
-            label: 'Optimize your TTG',
-            link: 'guides/nx-cloud/optimize-your-ttg',
-          },
-          {
-            label: 'Record commands',
-            link: 'guides/nx-cloud/record-commands',
-          },
-          {
-            label: 'GitHub integration',
-            link: 'features/ci-features/github-integration',
-          },
-          {
-            label: 'CIPE affected project graph',
-            link: 'guides/nx-cloud/cipe-affected-project-graph',
-          },
-          { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
-          { label: 'Google auth', link: 'guides/nx-cloud/google-auth' },
-          {
-            label: 'Resource usage',
-            link: 'features/ci-features/resource-usage',
-          },
-          {
-            label: 'Dedicated compute cluster',
-            link: 'features/ci-features/dedicated-compute-cluster',
-          },
-          {
-            label: 'Sandboxing',
-            link: 'features/ci-features/sandboxing',
-          },
-          {
-            label: 'Docker layer caching',
-            link: 'features/ci-features/docker-layer-caching',
-          },
-          {
-            label: 'Docker read-through cache',
-            link: 'features/ci-features/docker-read-through-cache',
-          },
-          {
-            label: 'npm read-through cache',
-            link: 'features/ci-features/npm-read-through-cache',
+            label: 'Self-healing CI',
+            link: 'features/ci-features/self-healing-ci',
           },
         ],
       },
@@ -304,23 +249,15 @@ const learnGroups: SidebarItems = [
           },
           {
             label: 'Automate importing projects',
-            link: 'guides/adopting-nx/import-project',
+            link: 'kb/import-project',
           },
           {
             label: 'Manual migrations',
-            link: 'guides/adopting-nx/manual',
+            link: 'kb/manual-migration',
           },
           {
             label: 'Preserving Git histories',
-            link: 'guides/adopting-nx/preserving-git-histories',
-          },
-          {
-            label: 'Nx vs Turborepo',
-            link: 'guides/adopting-nx/nx-vs-turborepo',
-          },
-          {
-            label: 'Migrating from Turborepo',
-            link: 'guides/adopting-nx/from-turborepo',
+            link: 'kb/preserving-git-histories',
           },
         ],
       },
@@ -457,6 +394,7 @@ const technologiesGroups: SidebarItems = [
             link: 'technologies/module-federation/introduction',
           },
           { label: 'ESLint', link: 'technologies/eslint/introduction' },
+          { label: 'Oxlint', link: 'technologies/oxlint/introduction' },
         ],
       },
       {
@@ -519,6 +457,10 @@ const technologiesGroups: SidebarItems = [
             label: 'Rsbuild',
             link: 'technologies/build-tools/rsbuild/introduction',
           },
+          {
+            label: 'Docker',
+            link: 'technologies/build-tools/docker/introduction',
+          },
         ],
       },
       {
@@ -559,522 +501,6 @@ const technologiesGroups: SidebarItems = [
   },
 ];
 
-const knowledgeBaseGroups: SidebarItems = [
-  {
-    label: 'Knowledge base',
-    collapsed: true,
-    items: [
-      {
-        label: 'Troubleshooting',
-        collapsed: true,
-        items: [
-          {
-            label: 'CI execution failed',
-            link: 'troubleshooting/ci-execution-failed',
-          },
-          {
-            label: 'Unknown local cache error',
-            link: 'troubleshooting/unknown-local-cache',
-          },
-          {
-            label: 'Troubleshoot convert to inferred',
-            link: 'troubleshooting/troubleshoot-convert-to-inferred',
-          },
-          {
-            label: 'Profiling performance',
-            link: 'troubleshooting/performance-profiling',
-          },
-          {
-            label: 'Troubleshoot Nx Console issues',
-            link: 'troubleshooting/console-troubleshooting',
-          },
-          {
-            label: 'Troubleshoot cache misses',
-            link: 'troubleshooting/troubleshoot-cache-misses',
-          },
-          {
-            label: 'Troubleshoot Nx installations',
-            link: 'troubleshooting/troubleshoot-nx-install-issues',
-          },
-          {
-            label: 'Fix Nx in Claude Code sandbox',
-            link: 'troubleshooting/nx-sandbox-unix-sockets',
-          },
-          {
-            label: 'Resolve circular dependencies',
-            link: 'troubleshooting/resolve-circular-dependencies',
-          },
-        ],
-      },
-      {
-        label: 'Recipes',
-        collapsed: true,
-        items: [
-          {
-            label: 'Include all package.json files',
-            link: 'guides/tips-n-tricks/include-all-packagejson',
-          },
-          {
-            label: 'Disable graph links from source analysis',
-            link: 'guides/tips-n-tricks/analyze-source-files',
-          },
-          {
-            label: 'Using Yarn PnP with Nx',
-            link: 'guides/tips-n-tricks/yarn-pnp',
-          },
-          {
-            label: 'Identify dependencies between folders',
-            link: 'guides/tips-n-tricks/identify-dependencies-between-folders',
-          },
-          {
-            label: 'Feature-based testing',
-            link: 'guides/tips-n-tricks/feature-based-testing',
-          },
-          {
-            label: 'Configuring browser support',
-            link: 'guides/tips-n-tricks/browser-support',
-          },
-          {
-            label: 'Define environment variables',
-            link: 'guides/tips-n-tricks/define-environment-variables',
-          },
-          {
-            label: 'Including assets in your build',
-            link: 'guides/tips-n-tricks/include-assets-in-build',
-          },
-          {
-            label: 'Keep Nx versions in sync',
-            link: 'guides/tips-n-tricks/keep-nx-versions-in-sync',
-          },
-          {
-            label: 'Standalone to monorepo',
-            link: 'guides/tips-n-tricks/standalone-to-monorepo',
-          },
-          {
-            label: 'Migrate `nx` imports to `@nx/devkit`',
-            link: 'guides/tips-n-tricks/migrate-nx-imports-to-devkit',
-          },
-        ],
-      },
-      {
-        label: 'Creating releases',
-        collapsed: true,
-        items: [
-          {
-            label: 'Release NPM packages',
-            link: 'guides/nx-release/release-npm-packages',
-          },
-          {
-            label: 'Release Rust crates',
-            link: 'guides/nx-release/publish-rust-crates',
-          },
-          {
-            label: 'Release Docker images',
-            link: 'guides/nx-release/release-docker-images',
-          },
-          {
-            label: 'Automate GitHub releases',
-            link: 'guides/nx-release/automate-github-releases',
-          },
-          {
-            label: 'Automate GitLab releases',
-            link: 'guides/nx-release/automate-gitlab-releases',
-          },
-        ],
-      },
-      {
-        label: 'Nx Console',
-        collapsed: true,
-        items: [
-          {
-            label: 'Telemetry',
-            link: 'guides/nx-console/console-telemetry',
-          },
-          {
-            label: 'Run command',
-            link: 'guides/nx-console/console-run-command',
-          },
-          {
-            label: 'Nx Cloud integration',
-            link: 'guides/nx-console/console-nx-cloud',
-          },
-          {
-            label: 'Generate command',
-            link: 'guides/nx-console/console-generate-command',
-          },
-          {
-            label: 'Project details view',
-            link: 'guides/nx-console/console-project-details',
-          },
-          {
-            label: 'Troubleshooting',
-            link: 'guides/nx-console/console-troubleshooting',
-          },
-        ],
-      },
-      {
-        label: 'Installation and updates',
-        collapsed: true,
-        items: [
-          {
-            label: 'Install Nx in non-JavaScript repo',
-            link: 'guides/installation/install-non-javascript',
-          },
-          {
-            label: 'Update global installation',
-            link: 'guides/installation/update-global-installation',
-          },
-          {
-            label: 'Nx Console migration assistance',
-            link: 'guides/nx-console/console-migrate-ui',
-          },
-        ],
-      },
-      {
-        label: 'Organizational decisions',
-        collapsed: true,
-        items: [
-          {
-            label: 'Why monorepos',
-            link: 'concepts/decisions/why-monorepos',
-          },
-          {
-            label: 'Monorepo or polyrepo',
-            link: 'concepts/decisions/overview',
-          },
-          {
-            label: 'Dependency management',
-            link: 'concepts/decisions/dependency-management',
-          },
-          {
-            label: 'Folder structure',
-            link: 'concepts/decisions/folder-structure',
-          },
-          {
-            label: 'Project size',
-            link: 'concepts/decisions/project-size',
-          },
-          {
-            label: 'Code ownership',
-            link: 'concepts/decisions/code-ownership',
-          },
-          {
-            label: 'Project dependency rules',
-            link: 'concepts/decisions/project-dependency-rules',
-          },
-        ],
-      },
-      {
-        label: 'Extending Nx',
-        collapsed: true,
-        items: [
-          { label: 'Intro', link: 'extending-nx/intro' },
-          { label: 'Local generators', link: 'extending-nx/local-generators' },
-          {
-            label: 'Composing generators',
-            link: 'extending-nx/composing-generators',
-          },
-          {
-            label: 'Creating files',
-            link: 'extending-nx/creating-files',
-          },
-          {
-            label: 'Modifying files',
-            link: 'extending-nx/modifying-files',
-          },
-          {
-            label: 'Migration generators',
-            link: 'extending-nx/migration-generators',
-          },
-          {
-            label: 'Create sync generator',
-            link: 'extending-nx/create-sync-generator',
-          },
-          { label: 'Local executors', link: 'extending-nx/local-executors' },
-          {
-            label: 'Compose executors',
-            link: 'extending-nx/compose-executors',
-          },
-          {
-            label: 'Task running lifecycle',
-            link: 'extending-nx/task-running-lifecycle',
-          },
-          {
-            label: 'Project graph plugins',
-            link: 'extending-nx/project-graph-plugins',
-          },
-          {
-            label: 'CreateNodes compatibility',
-            link: 'extending-nx/createnodes-compatibility',
-          },
-          {
-            label: 'Performant project graph plugins',
-            link: 'extending-nx/performant-project-graph-plugins',
-          },
-          {
-            label: 'Organization-specific plugin',
-            link: 'extending-nx/organization-specific-plugin',
-          },
-          {
-            label: 'Tooling plugin',
-            link: 'extending-nx/tooling-plugin',
-          },
-          {
-            label: 'Custom plugin preset',
-            link: 'extending-nx/create-preset',
-          },
-          {
-            label: 'Creating an install package',
-            link: 'extending-nx/create-install-package',
-          },
-          {
-            label: 'Publish your plugin',
-            link: 'extending-nx/publish-plugin',
-          },
-        ],
-      },
-      {
-        label: 'Continuous integration',
-        collapsed: true,
-        items: [
-          { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
-          { label: 'Access tokens', link: 'guides/nx-cloud/access-tokens' },
-          {
-            label: 'Personal access tokens',
-            link: 'guides/nx-cloud/personal-access-tokens',
-          },
-          {
-            label: 'Bring Your Own Compute',
-            link: 'guides/nx-cloud/bring-your-own-compute',
-          },
-          {
-            label: 'Source control integration',
-            link: 'guides/nx-cloud/source-control-integration',
-          },
-          {
-            label: 'Set up CI with Bun',
-            link: 'guides/nx-cloud/use-bun',
-          },
-          {
-            label: 'GitHub app permissions',
-            link: 'guides/nx-cloud/source-control-integration/github-app-permissions',
-          },
-          {
-            label: 'Configuring the cloud runner',
-            link: 'reference/nx-cloud/config',
-          },
-          {
-            label: 'Custom images',
-            link: 'reference/nx-cloud/custom-images',
-          },
-          {
-            label: 'Assignment rules',
-            link: 'reference/nx-cloud/assignment-rules',
-          },
-          {
-            label: 'Custom steps',
-            link: 'reference/nx-cloud/custom-steps',
-          },
-          {
-            label: 'Launch templates',
-            link: 'reference/nx-cloud/launch-templates',
-          },
-          {
-            label: 'Launch template examples',
-            link: 'reference/nx-cloud/launch-template-examples',
-          },
-          {
-            label: 'Reduce waste in CI',
-            link: 'concepts/ci-concepts/reduce-waste',
-          },
-          {
-            label: 'Cache security',
-            link: 'concepts/ci-concepts/cache-security',
-          },
-          {
-            label: 'Heartbeat and manual shutdown handling',
-            link: 'concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
-          },
-          {
-            label: 'Fix sandbox violations',
-            link: 'guides/nx-cloud/fix-sandbox-violations',
-          },
-        ],
-      },
-      {
-        label: 'Tasks & caching',
-        collapsed: true,
-        items: [
-          {
-            label: 'Configure inputs',
-            link: 'guides/tasks--caching/configure-inputs',
-          },
-          {
-            label: 'Configure outputs',
-            link: 'guides/tasks--caching/configure-outputs',
-          },
-          {
-            label: 'Defining task pipeline',
-            link: 'guides/tasks--caching/defining-task-pipeline',
-          },
-          {
-            label: 'Run tasks in parallel',
-            link: 'guides/tasks--caching/run-tasks-in-parallel',
-          },
-          {
-            label: 'Pass args to commands',
-            link: 'guides/tasks--caching/pass-args-to-commands',
-          },
-          {
-            label: 'Run commands executor',
-            link: 'guides/tasks--caching/run-commands-executor',
-          },
-          {
-            label: 'Reduce repetitive configuration',
-            link: 'guides/tasks--caching/reduce-repetitive-configuration',
-          },
-          {
-            label: 'Root level scripts',
-            link: 'guides/tasks--caching/root-level-scripts',
-          },
-          {
-            label: 'Convert to inferred',
-            link: 'guides/tasks--caching/convert-to-inferred',
-          },
-          {
-            label: 'Change cache location',
-            link: 'guides/tasks--caching/change-cache-location',
-          },
-          {
-            label: 'Self-hosted caching',
-            link: 'guides/tasks--caching/self-hosted-caching',
-          },
-          {
-            label: 'Skipping cache',
-            link: 'guides/tasks--caching/skipping-cache',
-          },
-          {
-            label: 'Workspace watching',
-            link: 'guides/tasks--caching/workspace-watching',
-          },
-          { label: 'Terminal UI', link: 'guides/tasks--caching/terminal-ui' },
-        ],
-      },
-      {
-        label: 'Benchmarks',
-        collapsed: true,
-        items: [
-          {
-            label: 'Nx Agents at scale',
-            link: 'reference/benchmarks/nx-agents',
-          },
-          {
-            label: 'Large Next.js apps with caching',
-            link: 'reference/benchmarks/caching',
-          },
-          {
-            label: 'TSC batch mode',
-            link: 'reference/benchmarks/tsc-batch-mode',
-          },
-        ],
-      },
-      {
-        label: 'TypeScript',
-        collapsed: true,
-        items: [
-          {
-            label: 'Maintain TypeScript monorepos',
-            link: 'features/maintain-typescript-monorepos',
-          },
-          ...getTechnologyKBItems('typescript'),
-          {
-            label: 'Buildable and publishable libraries',
-            link: 'concepts/buildable-and-publishable-libraries',
-          },
-          {
-            label: 'TypeScript project linking',
-            link: 'concepts/typescript-project-linking',
-          },
-        ],
-      },
-      {
-        label: 'Angular',
-        collapsed: true,
-        items: [
-          ...getTechnologyKBItems('angular'),
-          ...getTechnologyKBItems('angular-rspack', 'angular'),
-        ],
-      },
-      {
-        label: 'React',
-        collapsed: true,
-        items: [
-          ...getTechnologyKBItems('react'),
-          ...getTechnologyKBItems('next', 'react'),
-        ],
-      },
-      {
-        label: 'Vue',
-        collapsed: true,
-        items: [...getTechnologyKBItems('nuxt', 'vue')],
-      },
-      {
-        label: 'Node',
-        collapsed: true,
-        items: [...getTechnologyKBItems('node')],
-      },
-      {
-        label: '.NET',
-        collapsed: true,
-        items: [...getTechnologyKBItems('dotnet')],
-      },
-      {
-        label: 'Module Federation',
-        collapsed: true,
-        items: [...getTechnologyKBItems('module-federation')],
-      },
-      {
-        label: 'ESLint',
-        collapsed: true,
-        items: [
-          ...getTechnologyKBItems('eslint'),
-          ...getTechnologyKBItems('eslint-plugin', 'eslint'),
-        ],
-      },
-      {
-        label: 'Vite',
-        collapsed: true,
-        items: [...getTechnologyKBItems('vite', 'build-tools')],
-      },
-      {
-        label: 'Webpack',
-        collapsed: true,
-        items: [...getTechnologyKBItems('webpack', 'build-tools')],
-      },
-      {
-        label: 'Cypress',
-        collapsed: true,
-        items: [...getTechnologyKBItems('cypress', 'test-tools')],
-      },
-      {
-        label: 'Playwright',
-        collapsed: true,
-        items: [...getTechnologyKBItems('playwright', 'test-tools')],
-      },
-      {
-        label: 'Storybook',
-        collapsed: true,
-        items: [...getTechnologyKBItems('storybook', 'test-tools')],
-      },
-      {
-        label: 'Vitest',
-        collapsed: true,
-        items: [...getTechnologyKBItems('vitest', 'test-tools')],
-      },
-    ],
-  },
-];
-
 const referenceGroups: SidebarItems = [
   {
     label: 'Reference',
@@ -1091,11 +517,21 @@ const referenceGroups: SidebarItems = [
         link: 'reference/environment-variables',
       },
       { label: 'nxignore', link: 'reference/nxignore' },
+      { label: 'Nx Daemon', link: 'reference/nx-daemon' },
+      { label: 'Code formatting', link: 'reference/code-formatting' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
       { label: 'Nx Console settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
+      {
+        label: 'Nx Cloud Public API',
+        link: 'reference/nx-cloud/public-api',
+      },
+      {
+        label: 'CI configuration file',
+        link: 'reference/nx-cloud/ci-config',
+      },
       { label: 'Telemetry', link: 'reference/telemetry' },
       {
         label: 'TypeScript',
@@ -1177,6 +613,11 @@ const referenceGroups: SidebarItems = [
           ...getTechnologyAPIItems('eslint', undefined, 'ESLint'),
           ...getTechnologyAPIItems('eslint-plugin', 'eslint', 'ESLint Plugin'),
         ],
+      },
+      {
+        label: 'Oxlint',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('oxlint', undefined, 'Oxlint')],
       },
       {
         label: 'Webpack',
@@ -1271,13 +712,21 @@ export const sidebarTabs: SidebarTab[] = [
     id: 'tab-knowledge-base',
     label: 'Knowledge Base',
     icon: 'information',
-    groups: knowledgeBaseGroups,
+    link: 'kb',
+    groups: [],
   },
   {
     id: 'tab-reference',
     label: 'Reference',
     icon: 'document',
     groups: referenceGroups,
+  },
+  {
+    id: 'tab-templates',
+    label: 'Templates',
+    icon: 'rocket',
+    link: 'templates',
+    groups: [],
   },
 ];
 

@@ -55,5 +55,5 @@ export async function normalizeOptions(
 export function unitTestRunnerToSpec(
   unitTestRunner: UnitTestRunner | undefined
 ): boolean | undefined {
-  return unitTestRunner !== undefined ? unitTestRunner === 'jest' : undefined;
+  return unitTestRunner !== undefined ? unitTestRunner !== 'none' : undefined;
 }

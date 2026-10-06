@@ -8,12 +8,13 @@ import {
   listFiles,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { readFileSync } from 'fs-extra';
 import { join } from 'path';
@@ -21,8 +22,9 @@ import { join } from 'path';
 describe('React Applications', () => {
   let proj: string;
   describe('Crystal Supported Tests', () => {
-    beforeAll(() => {
+    beforeAll(async () => {
       proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/react',
           '@nx/webpack',
@@ -33,16 +35,17 @@ describe('React Applications', () => {
           '@nx/eslint',
         ],
       });
-      ensureCypressInstallation();
+      await ensureCypressInstallation();
     });
 
     afterAll(() => cleanupProject());
     it('should be able to use Vite to build and test apps', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
+      const port = await reservePort();
 
       runCLI(
-        `generate @nx/react:app apps/${appName} --name=${appName} --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
+        `generate @nx/react:app apps/${appName} --name=${appName} --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest --port=${port}`
       );
       runCLI(
         `generate @nx/react:lib libs/${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
@@ -64,10 +67,10 @@ describe('React Applications', () => {
 
       checkFilesExist(`dist/apps/${appName}/index.html`);
 
-      if (runE2ETests()) {
+      if (await shouldRunPlaywrightTests()) {
         const e2eResults = runCLI(`e2e ${appName}-e2e`);
         expect(e2eResults).toContain('Successfully ran target e2e for project');
-        expect(await killPorts()).toBeTruthy();
+        expect(await killPorts(port)).toBeTruthy();
       }
     }, 250_000);
 
@@ -276,9 +279,10 @@ describe('React Applications', () => {
 
   // TODO(colum): Revisit when cypress --js works with crystal
   describe('Non-Crystal Tests', () => {
-    beforeAll(() => {
+    beforeAll(async () => {
       process.env.NX_ADD_PLUGINS = 'false';
       proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/react',
           '@nx/webpack',
@@ -287,7 +291,7 @@ describe('React Applications', () => {
           '@nx/eslint',
         ],
       });
-      ensureCypressInstallation();
+      await ensureCypressInstallation();
     });
 
     afterAll(() => {
@@ -454,7 +458,7 @@ async function testGeneratedApp(
     'Test Suites: 1 passed, 1 total'
   );
 
-  if (opts.checkE2E && runE2ETests()) {
+  if (opts.checkE2E && (await shouldRunPlaywrightTests())) {
     const e2eResults = runCLI(`e2e ${appName}-e2e`);
     expect(e2eResults).toContain('Successfully ran target e2e');
     expect(await killPorts()).toBeTruthy();

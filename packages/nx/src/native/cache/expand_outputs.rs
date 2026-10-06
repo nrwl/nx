@@ -1,12 +1,11 @@
-use hashbrown::HashMap;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
-use crate::native::glob::{build_glob_set, contains_glob_pattern, glob_transform::partition_glob};
-use crate::native::logger::enable_logger;
+use crate::native::glob::{build_glob_set, glob_transform::partition_glob};
 use crate::native::utils::Normalize;
-use crate::native::walker::{nx_walker, nx_walker_sync};
+use crate::native::utils::path::escapes_workspace;
+use crate::native::walker::nx_walker_sync_under;
 
 #[napi]
 pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {
@@ -26,23 +25,36 @@ where
         &directory
     );
 
-    let has_glob_pattern = entries.iter().any(|entry| contains_glob_pattern(entry));
+    // Literal entries, each with the path its escapes resolve to, when none
+    // is a pattern or a negation.
+    let literal = entries
+        .iter()
+        .map(|entry| match partition_glob(entry) {
+            (named, None) if !entry.starts_with('!') => Some((entry, named)),
+            _ => None,
+        })
+        .collect::<Option<Vec<_>>>();
 
-    if !has_glob_pattern {
+    if let Some(literal) = literal {
         trace!("No glob patterns found, checking if entries exist");
         let mut existing_count = 0;
-        let existing_directories = entries
+        // A path as written wins, like `get_files_for_outputs`: `dist\app` is a
+        // real name off Windows even though it reads as `distapp`.
+        let existing_directories = literal
             .into_iter()
-            .filter(|entry| {
-                let path = directory.join(entry);
-                let exists = path.exists();
-                if exists {
-                    existing_count += 1;
-                    trace!("Found existing entry: {}", entry);
-                } else {
-                    trace!("Entry does not exist: {}", entry);
+            .filter_map(|(entry, named)| {
+                let existing = [entry.as_str(), named.as_str()]
+                    .into_iter()
+                    .find(|path| directory.join(path).exists())
+                    .map(str::to_string);
+                match &existing {
+                    Some(path) => {
+                        existing_count += 1;
+                        trace!("Found existing entry: {}", path);
+                    }
+                    None => trace!("Entry does not exist: {}", entry),
                 }
-                exists
+                existing
             })
             .collect::<Vec<_>>();
         debug!(
@@ -88,7 +100,18 @@ where
         "Walking directory with {} negated globs",
         negated_globs.len()
     );
-    let found_paths = nx_walker_sync(&directory, Some(&negated_globs))
+    // Every match lies under its glob's literal root; with no regular glob,
+    // every path is a match.
+    let roots = if regular_globs.is_empty() {
+        vec![String::new()]
+    } else {
+        regular_globs
+            .iter()
+            .map(|glob| partition_glob(glob).0)
+            .collect()
+    };
+    let found_paths = nx_walker_sync_under(&directory, &roots, Some(&negated_globs))
+        .into_iter()
         .filter_map(|path| {
             if glob_set.is_match(&path) {
                 trace!("Glob match found: {}", path.to_normalized_string());
@@ -106,95 +129,144 @@ where
     Ok(found_paths)
 }
 
-fn partition_globs_into_map(globs: Vec<String>) -> anyhow::Result<HashMap<String, Vec<String>>> {
-    globs
+#[napi]
+/// Statically checks which `paths` would be captured by the given output
+/// `entries`, without touching the file system. Mirrors `expand_outputs`
+/// semantics: entries match themselves and anything nested under them (so a
+/// directory entry captures its contents), negated (`!`-prefixed) entries
+/// exclude matches from the whole entry set, and a non-empty list with only
+/// negated entries matches everything not excluded. An empty list matches
+/// nothing.
+pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::Result<Vec<bool>> {
+    if entries.is_empty() {
+        return Ok(vec![false; paths.len()]);
+    }
+
+    let globs = entries
         .iter()
-        .map(|glob| partition_glob(glob))
-        // Right now we have an iterator where each item is (root: String, patterns: String[]).
-        // We want a singular root, with the patterns mapped to it.
-        .fold(
-            Ok(HashMap::<String, Vec<String>>::new()),
-            |map_result, parsed_glob| {
-                let mut map = map_result?;
-                let (root, patterns) = parsed_glob?;
-                let entry = map.entry(root).or_insert(vec![]);
-                entry.extend(patterns);
-                Ok(map)
-            },
-        )
+        .flat_map(|entry| {
+            let (negation, pattern) = match entry.strip_prefix('!') {
+                Some(rest) => ("!", rest),
+                None => ("", entry.as_str()),
+            };
+            let pattern = pattern.strip_suffix('/').unwrap_or(pattern);
+            if pattern.ends_with("**") {
+                vec![format!("{negation}{pattern}")]
+            } else {
+                // Match the entry itself and anything nested under it, like
+                // expand_outputs does when it includes an existing directory
+                // wholesale. This cannot be gated on the entry being a glob: a
+                // real directory can carry glob syntax (`app/[id]`), and only
+                // get_files_for_outputs, which stats the path first, can tell.
+                // For a true glob (`dist/*.js/**`) the containment form is inert.
+                vec![
+                    format!("{negation}{pattern}"),
+                    format!("{negation}{pattern}/**"),
+                ]
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let glob_set = build_glob_set(&globs)?;
+    Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
-/// Expands the given outputs into a list of existing files.
-/// This is used when hashing outputs. Takes a borrowed directory so batch
-/// callers don't pay a String clone per task.
+/// An output as the cache reads it: made workspace-relative if absolute. An
+/// output outside the workspace is an error.
+pub(crate) fn normalize_output(workspace_root: &Path, output: String) -> anyhow::Result<String> {
+    let path = Path::new(&output);
+    let outside = || anyhow::anyhow!("Cache output is outside the workspace: {}", output);
+    if path.is_absolute() {
+        let relative = path.strip_prefix(workspace_root).map_err(|_| outside())?;
+        if escapes_workspace(relative) {
+            return Err(outside());
+        }
+        return Ok(relative.to_normalized_string());
+    }
+    if escapes_workspace(path) {
+        return Err(outside());
+    }
+    // A relative output is a glob, where `\` escapes on every OS.
+    Ok(output)
+}
+
+/// `normalize_output` for each output; one outside the workspace fails them all.
+pub(crate) fn normalize_outputs(
+    workspace_root: &Path,
+    outputs: Vec<String>,
+) -> anyhow::Result<Vec<String>> {
+    outputs
+        .into_iter()
+        .map(|output| normalize_output(workspace_root, output))
+        .collect()
+}
+
+/// Whether every entry names a path rather than a pattern or a negation.
+pub(crate) fn all_literal(entries: &[String]) -> bool {
+    entries
+        .iter()
+        .all(|entry| !entry.starts_with('!') && partition_glob(entry).1.is_none())
+}
+
+/// Every file the cache copies for `entries`, which defines a task's output
+/// files: what `_expand_outputs` finds, each directory read through `read`
+/// (workspace-relative, as `copied_files` reads it from disk).
 pub fn get_files_for_outputs(
     directory: &Path,
     entries: Vec<String>,
 ) -> anyhow::Result<Vec<String>> {
-    let mut globs: Vec<String> = vec![];
-    let mut files: Vec<String> = vec![];
-    let mut directories: Vec<String> = vec![];
-    for entry in entries.into_iter() {
-        let path = directory.join(&entry);
+    output_files_via(directory, entries, &|dir| copied_files(directory, dir))
+}
 
-        if !path.exists() {
-            if contains_glob_pattern(&entry) {
-                globs.push(entry);
-            }
-        } else if path.is_dir() {
-            directories.push(entry);
-        } else {
+/// `get_files_for_outputs` with the directory reads supplied.
+pub(crate) fn output_files_via(
+    directory: &Path,
+    entries: Vec<String>,
+    read: &(dyn Fn(&str) -> Option<Vec<String>> + Sync),
+) -> anyhow::Result<Vec<String>> {
+    let mut files = vec![];
+    // Unlike the cache, which refuses the task, skip an output outside the
+    // workspace and read the rest.
+    let entries: Vec<String> = entries
+        .into_iter()
+        .filter_map(|entry| normalize_output(directory, entry).ok())
+        .collect();
+    for entry in _expand_outputs(directory, entries)? {
+        let entry = Path::new(&entry).to_normalized_string();
+        let path = directory.join(&entry);
+        let Ok(link) = std::fs::symlink_metadata(&path) else {
+            continue;
+        };
+        if link.is_dir() {
+            files.extend(read(&entry).unwrap_or_default());
+        } else if std::fs::metadata(&path).is_ok_and(|target| target.is_file()) {
             files.push(entry);
         }
     }
-
-    if !globs.is_empty() {
-        let partitioned_globs = partition_globs_into_map(globs)?;
-        for (root, patterns) in partitioned_globs {
-            let root_path = directory.join(&root);
-            let glob_set = build_glob_set(&patterns)?;
-            trace!("walking directory: {:?}", root_path);
-
-            let found_paths: Vec<String> = nx_walker(&root_path, false)
-                .filter_map(|file| {
-                    if glob_set.is_match(&file.normalized_path) {
-                        Some(
-                            // root_path contains full directory,
-                            // root is only the leading dirs from glob
-                            PathBuf::from(&root)
-                                .join(&file.normalized_path)
-                                .to_normalized_string(),
-                        )
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            files.extend(found_paths);
-        }
-    }
-
-    if !directories.is_empty() {
-        for dir in directories {
-            let dir = PathBuf::from(dir);
-            let dir_path = directory.join(&dir);
-            let files_in_dir = nx_walker(&dir_path, false).filter_map(|e| {
-                let path = dir_path.join(&e.normalized_path);
-
-                if path.is_file() {
-                    Some(dir.join(e.normalized_path).to_normalized_string())
-                } else {
-                    None
-                }
-            });
-            files.extend(files_in_dir);
-        }
-    }
-
     files.sort();
-
+    files.dedup();
     Ok(files)
+}
+
+/// The files a cache copy of `dir` writes, workspace-relative: every regular
+/// file and every link to one, skipping nothing and entering no linked
+/// directory.
+pub(crate) fn copied_files(directory: &Path, dir: &str) -> Option<Vec<String>> {
+    Some(
+        walkdir::WalkDir::new(directory.join(dir))
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|entry| !entry.file_type().is_dir())
+            .filter(|entry| std::fs::metadata(entry.path()).is_ok_and(|target| target.is_file()))
+            .filter_map(|entry| {
+                entry
+                    .path()
+                    .strip_prefix(directory)
+                    .ok()
+                    .map(|path| path.to_normalized_string())
+            })
+            .collect(),
+    )
 }
 
 #[napi]
@@ -205,7 +277,6 @@ pub fn get_files_for_outputs_batch(
     directory: String,
     entries_batch: Vec<Vec<String>>,
 ) -> anyhow::Result<Vec<Vec<String>>> {
-    enable_logger();
     let directory = Path::new(&directory);
     entries_batch
         .into_par_iter()
@@ -306,6 +377,141 @@ mod test {
     }
 
     #[test]
+    fn should_match_output_paths_statically() {
+        let entries = vec![
+            "apps/web/.next/**".to_string(),
+            "!apps/web/.next/cache/**".to_string(),
+        ];
+        let paths = vec![
+            "apps/web/.next/static/chunk.js".to_string(),
+            "apps/web/.next/cache/webpack/a.pack".to_string(),
+            "apps/web/other.txt".to_string(),
+        ];
+        let result = match_output_paths(entries, paths).unwrap();
+        assert_eq!(result, vec![true, false, false]);
+    }
+
+    #[test]
+    fn should_match_output_paths_with_directory_containment() {
+        let entries = vec!["dist/libs/dep".to_string()];
+        let paths = vec![
+            "dist/libs/dep".to_string(),
+            "dist/libs/dep/index.d.ts".to_string(),
+            "dist/libs/dep/nested/deep.js".to_string(),
+            "dist/libs/dep-other/index.d.ts".to_string(),
+        ];
+        let result = match_output_paths(entries, paths).unwrap();
+        assert_eq!(result, vec![true, true, true, false]);
+    }
+
+    #[test]
+    fn should_match_everything_not_excluded_when_only_negated_entries() {
+        // Matches expand_outputs: with no positive entries, the walk keeps
+        // everything the negated globs don't exclude.
+        let entries = vec!["!dist/cache/**".to_string()];
+        let paths = vec![
+            "src/index.ts".to_string(),
+            "dist/main.js".to_string(),
+            "dist/cache/a.js".to_string(),
+        ];
+        let result = match_output_paths(entries, paths).unwrap();
+        assert_eq!(result, vec![true, true, false]);
+    }
+
+    #[test]
+    fn should_match_nothing_for_empty_entries() {
+        let paths = vec!["src/index.ts".to_string()];
+        let result = match_output_paths(vec![], paths).unwrap();
+        assert_eq!(result, vec![false]);
+    }
+
+    /// Asserts the property `match_output_paths` exists to uphold: every path
+    /// `expand_outputs` finds on disk must also match statically.
+    fn assert_static_matches_expansion(files: &[&str], entries: &[&str]) {
+        let temp = TempDir::new().unwrap();
+        for file in files {
+            temp.child(file).touch().unwrap();
+        }
+        let entries: Vec<String> = entries.iter().map(|e| e.to_string()).collect();
+
+        let expanded = expand_outputs(temp.display().to_string(), entries.clone()).unwrap();
+        assert!(
+            !expanded.is_empty(),
+            "fixture expanded to nothing for entries {:?} — the assertion below would be vacuous",
+            entries
+        );
+
+        let matches = match_output_paths(entries.clone(), expanded.clone()).unwrap();
+        assert!(
+            matches.iter().all(|m| *m),
+            "expand_outputs found {:?} for entries {:?}, but match_output_paths returned {:?}",
+            expanded,
+            entries,
+            matches
+        );
+    }
+
+    #[test]
+    fn should_match_output_paths_consistently_with_expand_outputs() {
+        // Plain directory output, with a negated subtree.
+        assert_static_matches_expansion(
+            &[
+                "apps/web/.next/cache/contents",
+                "apps/web/.next/static/contents",
+            ],
+            &["apps/web/.next", "!apps/web/.next/cache"],
+        );
+
+        // Directory outputs named with `@` (scoped packages) or `+` are plain
+        // directories, so the static matcher must capture nested files too.
+        assert_static_matches_expansion(
+            &["dist/libs/@scope/pkg/index.js"],
+            &["dist/libs/@scope/pkg"],
+        );
+        assert_static_matches_expansion(&["dist/libs/a+b/index.js"], &["dist/libs/a+b"]);
+
+        // Genuine globs keep working.
+        assert_static_matches_expansion(&["multi/file.js", "multi/src.ts"], &["multi/*.{js,ts}"]);
+        assert_static_matches_expansion(&["dist/apps/web/main.js"], &["dist/apps/**"]);
+    }
+
+    #[test]
+    fn should_still_exclude_negated_subtrees_when_matching_output_paths() {
+        let entries = vec![
+            "apps/web/.next".to_string(),
+            "!apps/web/.next/cache".to_string(),
+        ];
+        let excluded =
+            match_output_paths(entries, vec!["apps/web/.next/cache/contents".to_string()]).unwrap();
+        assert_eq!(excluded, vec![false]);
+    }
+
+    /// The forward parity assertion (`assert_static_matches_expansion`) cannot
+    /// see a *false positive* — a path the static matcher claims but the runner
+    /// would never cache. Negated subtrees are where that hides: an exclusion
+    /// whose literal characters get mangled silently stops excluding anything.
+    #[test]
+    fn should_not_match_excluded_subtrees_of_dirs_with_glob_like_names() {
+        for (dir, excluded_child) in [
+            ("dist/libs/@scope/pkg", "dist/libs/@scope/pkg/.cache/x"),
+            ("dist/libs/a+b", "dist/libs/a+b/.cache/x"),
+        ] {
+            let entries = vec![dir.to_string(), format!("!{dir}/.cache")];
+            let kept = format!("{dir}/index.js");
+
+            let matches =
+                match_output_paths(entries, vec![kept.clone(), excluded_child.to_string()])
+                    .unwrap();
+
+            assert!(matches[0], "{kept} should still match");
+            assert!(
+                !matches[1],
+                "{excluded_child} is inside a negated subtree and must not be reported as an output"
+            );
+        }
+    }
+
+    #[test]
     fn should_get_files_for_outputs_with_glob() {
         let temp = setup_fs();
         let entries = vec![
@@ -323,6 +529,64 @@ mod test {
                 "test.txt"
             ]
         );
+    }
+
+    #[test]
+    fn an_entry_outside_the_directory_reads_nothing() {
+        let temp = TempDir::new().unwrap();
+        temp.child("outside.txt").write_str("secret").unwrap();
+        temp.child("ws/inside.txt").write_str("x").unwrap();
+        let workspace = temp.path().join("ws");
+        let result = get_files_for_outputs(
+            &workspace,
+            vec!["../outside.txt".into(), "inside.txt".into()],
+        )
+        .unwrap();
+        assert_eq!(result, vec!["inside.txt"]);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn an_escaped_entry_reads_the_path_it_names() {
+        let temp = TempDir::new().unwrap();
+        temp.child("dist/*/x.js").write_str("x").unwrap();
+        temp.child("dist/*/y.js").write_str("y").unwrap();
+        temp.child("dist/other/x.js").write_str("x").unwrap();
+
+        let files = get_files_for_outputs(temp.path(), vec![r"dist/\*".into()]).unwrap();
+        assert_eq!(files, ["dist/*/x.js", "dist/*/y.js"]);
+        let files = get_files_for_outputs(temp.path(), vec![r"dist/\*/x.js".into()]).unwrap();
+        assert_eq!(files, ["dist/*/x.js"]);
+        let expanded = _expand_outputs(temp.path(), vec![r"dist/\*/x.js".into()]).unwrap();
+        assert_eq!(expanded, ["dist/*/x.js"]);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn an_escaped_parent_segment_stays_inside_the_workspace() {
+        let temp = TempDir::new().unwrap();
+        temp.child("victim").write_str("secret").unwrap();
+        let workspace = temp.child("workspace");
+        workspace.child("dist/x.js").write_str("x").unwrap();
+
+        for entry in [r"\.\./victim", r"dist/\.\./\.\./victim"] {
+            let expanded = _expand_outputs(workspace.path(), vec![entry.into()]).unwrap();
+            assert!(expanded.is_empty(), "{entry}: {expanded:?}");
+            let files = get_files_for_outputs(workspace.path(), vec![entry.into()]).unwrap();
+            assert!(files.is_empty(), "{entry}: {files:?}");
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn a_backslash_in_a_real_name_is_read_as_written() {
+        let temp = TempDir::new().unwrap();
+        temp.child(r"dist\app/main.js").write_str("x").unwrap();
+
+        let expanded = _expand_outputs(temp.path(), vec![r"dist\app".into()]).unwrap();
+        assert_eq!(expanded, [r"dist\app"]);
+        let files = get_files_for_outputs(temp.path(), vec![r"dist\app".into()]).unwrap();
+        assert_eq!(files, [r"dist\app/main.js"]);
     }
 
     #[test]
@@ -383,8 +647,6 @@ mod test {
         // Full reproduction of issue #34013 including the cache put and restore cycle
         use crate::native::cache::file_ops::_copy;
         use std::os::unix::fs::symlink;
-
-        enable_logger();
 
         let workspace = TempDir::new().unwrap();
         let cache = TempDir::new().unwrap();
@@ -533,8 +795,6 @@ mod test {
                 .map(|n| n.get())
                 .unwrap_or(1)
         }
-
-        enable_logger();
 
         let initial_count = get_thread_count();
 

@@ -1,1 +1,2 @@
-export * from 'nx/src/utils/workspace-root';
+export { workspaceRoot } from '@nx/devkit';
+export { setWorkspaceRoot, workspaceRootInner } from '@nx/devkit/internal';

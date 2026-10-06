@@ -5,6 +5,55 @@
       "description": "Rename imports of `createNodesV2` from `@nx/rsbuild` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-23-0-0-migrate-rsbuild-config-to-v2": {
+      "cli": "nx",
+      "version": "23.1.0-beta.0",
+      "description": "Rewrites rsbuild.config.{js,ts,mjs,cjs} files for @rsbuild/core@2: renames preview.setupMiddlewares to server.setupMiddlewares, drops the removed performance.removeMomentLocale option, moves source.alias/source.aliasStrategy to the resolve block, and updates server.proxy entries for http-proxy-middleware v4 (context to pathFilter, on* handlers to a unified on object).",
+      "factory": "./dist/src/migrations/update-23-0-0/migrate-rsbuild-config-to-v2",
+      "requires": {
+        "@rsbuild/core": ">=2.0.0"
+      }
+    },
+    "update-23-0-0-migrate-node-output-to-esm": {
+      "cli": "nx",
+      "version": "23.1.0-beta.0",
+      "description": "AI-assisted migration: make Node-target rsbuild builds runnable under @rsbuild/core@2, which emits ESM output by default.",
+      "prompt": "./dist/src/migrations/update-23-0-0/migrate-node-output-to-esm.md",
+      "requires": {
+        "@rsbuild/core": ">=2.0.0"
+      }
+    },
+    "update-23-0-0-migrate-performance-options": {
+      "cli": "nx",
+      "version": "23.1.0-beta.0",
+      "description": "AI-assisted migration: adopt replacements for the performance.bundleAnalyze and performance.profile options removed in @rsbuild/core@2, and migrate the deprecated performance.chunkSplit option to splitChunks.",
+      "prompt": "./dist/src/migrations/update-23-0-0/migrate-performance-options.md",
+      "requires": {
+        "@rsbuild/core": ">=2.0.0"
+      }
+    }
+  },
+  "packageJsonUpdates": {
+    "23.0.0-rsbuild-v2": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@rsbuild/core": ">=1.0.0 <2.0.0"
+      },
+      "packages": {
+        "@rsbuild/core": {
+          "version": "^2.0.7",
+          "alwaysAddToPackageJson": false
+        },
+        "@rsbuild/plugin-react": {
+          "version": "^2.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@rsbuild/plugin-sass": {
+          "version": "^1.5.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

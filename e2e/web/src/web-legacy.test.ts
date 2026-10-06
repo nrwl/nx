@@ -16,6 +16,7 @@ import { join } from 'path';
 describe('Web Components Applications (legacy)', () => {
   beforeEach(() =>
     newProject({
+      keepBackup: true,
       packages: [
         '@nx/web',
         '@nx/react',
@@ -131,7 +132,7 @@ describe('Web Components Applications (legacy)', () => {
 
 describe('Build Options (legacy) ', () => {
   it('should inject/bundle external scripts and styles', async () => {
-    newProject();
+    newProject({ keepBackup: true });
 
     const appName = uniq('app');
 
@@ -216,7 +217,7 @@ describe('Build Options (legacy) ', () => {
 });
 
 describe('index.html interpolation (legacy)', () => {
-  beforeAll(() => newProject());
+  beforeAll(() => newProject({ keepBackup: true }));
   afterAll(() => cleanupProject());
 
   test('should interpolate environment variables', async () => {

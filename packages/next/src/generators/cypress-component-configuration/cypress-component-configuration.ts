@@ -92,12 +92,10 @@ async function addFiles(
   projectConfig: ProjectConfiguration,
   opts: CypressComponentConfigurationGeneratorSchema
 ) {
-  const { addMountDefinition, addDefaultCTConfig } = await import(
-    '@nx/cypress/internal'
-  );
-  const { getInstalledCypressMajorVersion } = await import(
-    '@nx/cypress/internal'
-  );
+  const { addMountDefinition, addDefaultCTConfig } =
+    await import('@nx/cypress/internal');
+  const { getInstalledCypressMajorVersion } =
+    await import('@nx/cypress/internal');
   const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 
   const ctFile = joinPathFragments(
@@ -121,7 +119,8 @@ async function addFiles(
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cyFile, 'utf-8'),
     undefined,
-    '@nx/next/plugins/component-testing'
+    '@nx/next/plugins/component-testing',
+    installedCypressMajorVersion
   );
   tree.write(cyFile, updatedCyConfig);
 

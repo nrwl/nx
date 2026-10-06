@@ -93,36 +93,48 @@
   "peerDependencies": {
     "babel-plugin-react-compiler": "^1.0.0",
     "react": ">=18.0.0 <20.0.0",
-    "react-dom": ">=18.0.0 <20.0.0"
+    "react-dom": ">=18.0.0 <20.0.0",
+    "@nx/module-federation": "workspace:*",
+    "express": "^4.21.2",
+    "http-proxy-middleware": "catalog:"
   },
   "peerDependenciesMeta": {
     "babel-plugin-react-compiler": {
       "optional": true
+    },
+    "@nx/module-federation": {
+      "optional": true
+    },
+    "express": {
+      "optional": true
+    },
+    "http-proxy-middleware": {
+      "optional": true
     }
   },
   "dependencies": {
+    "@babel/preset-react": "^7.22.5",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "@svgr/webpack": "catalog:",
     "minimatch": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/web": "workspace:*",
-    "@nx/module-federation": "workspace:*",
-    "@nx/rollup": "workspace:*",
-    "express": "^4.21.2",
-    "http-proxy-middleware": "catalog:",
     "semver": "catalog:"
   },
   "devDependencies": {
     "@nx/cypress": "workspace:*",
+    "@nx/module-federation": "workspace:*",
     "@nx/playwright": "workspace:*",
+    "@nx/rollup": "workspace:*",
     "@nx/rsbuild": "workspace:*",
     "@nx/vite": "workspace:*",
     "@nx/vitest": "workspace:*",
     "@nx/webpack": "workspace:*",
     "@nx/storybook": "workspace:*",
+    "express": "^4.21.2",
+    "http-proxy-middleware": "catalog:",
     "nx": "workspace:*"
   },
   "optionalDependencies": {

@@ -23,13 +23,15 @@ export function getOutputHashFormat(
     none: { chunk: '', extract: '', file: '', script: '' },
     media: { chunk: '', extract: '', file: `.[hash:${length}]`, script: '' },
     bundles: {
-      chunk: `.[chunkhash:${length}]`,
+      // [contenthash] is rspack's recommended hash for caching, matching the entry
+      // `filename`; [chunkhash] omits module ids and can serve stale chunks (nx#36014).
+      chunk: `.[contenthash:${length}]`,
       extract: `.[contenthash:${length}]`,
       file: '',
       script: `.[contenthash:${length}]`,
     },
     all: {
-      chunk: `.[chunkhash:${length}]`,
+      chunk: `.[contenthash:${length}]`,
       extract: `.[contenthash:${length}]`,
       file: `.[contenthash:${length}]`,
       script: `.[contenthash:${length}]`,

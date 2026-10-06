@@ -6,12 +6,15 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertAndPinRemixTypescript } from '../../utils/assert-and-pin-remix-typescript';
 import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export default async function (tree: Tree) {
   assertSupportedRemixVersion(tree);
 
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(assertAndPinRemixTypescript(tree));
 
   const jsInitTask = await jsInitGenerator(tree, {
     skipFormat: true,

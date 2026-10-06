@@ -15,9 +15,14 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { readModulePackageJson } from 'nx/src/devkit-internals';
+import {
+  findTargetDefault,
+  upsertTargetDefault,
+  readModulePackageJson,
+} from '@nx/devkit/internal';
 import { intersects, satisfies, valid, validRange } from 'semver';
 import { nxVersion, oxcProjectRuntimeVersion } from '../../utils/versions';
+import { acknowledgeAngularBuildScripts } from './acknowledge-build-scripts';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
@@ -55,16 +60,19 @@ export async function addVitestAngular(
   project.targets.test = { executor, options: { watch: false } };
   updateProjectConfiguration(tree, options.name, project);
 
-  const nxJson = readNxJson(tree);
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults[executor] ??= {
-    cache: true,
-    inputs:
-      nxJson.namedInputs && 'production' in nxJson.namedInputs
-        ? ['default', '^production']
-        : ['default', '^default'],
-  };
-  updateNxJson(tree, nxJson);
+  const nxJson = readNxJson(tree) ?? {};
+  const existing = findTargetDefault(nxJson.targetDefaults, { executor });
+  if (!existing) {
+    upsertTargetDefault(tree, nxJson, {
+      executor,
+      cache: true,
+      inputs:
+        nxJson.namedInputs && 'production' in nxJson.namedInputs
+          ? ['default', '^production']
+          : ['default', '^default'],
+    });
+    updateNxJson(tree, nxJson);
+  }
 
   configureTypeScriptForVitest(tree, options.projectRoot);
   addVitestScreenshotsToGitIgnore(tree);
@@ -77,6 +85,7 @@ export async function addVitestAngular(
   const angularDevkitVersion =
     getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
 
+  acknowledgeAngularBuildScripts(tree);
   return addDependenciesToPackageJson(
     tree,
     {},
@@ -126,6 +135,7 @@ export async function addVitestAnalog(
       devDependencies['jsdom'] = pkgVersions.jsdomVersion;
     }
 
+    acknowledgeAngularBuildScripts(tree);
     tasks.push(
       addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true)
     );

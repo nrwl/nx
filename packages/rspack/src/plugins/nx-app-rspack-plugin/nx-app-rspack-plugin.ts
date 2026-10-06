@@ -45,6 +45,7 @@ export class NxAppRspackPlugin {
 
     applyBaseConfig(this.options, compiler.options, {
       useNormalizedEntry: true,
+      compiler,
     });
 
     if (compiler.options.target) {
@@ -54,6 +55,7 @@ export class NxAppRspackPlugin {
     if (this.options.target === 'web' || this.options.target === 'webworker') {
       applyWebConfig(this.options, compiler.options, {
         useNormalizedEntry: true,
+        compiler,
       });
     }
   }

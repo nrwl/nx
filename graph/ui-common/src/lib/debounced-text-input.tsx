@@ -54,7 +54,7 @@ export function DebouncedTextInput({
 
   return (
     <form
-      className="shadow-xs group relative flex rounded-md"
+      className="group relative flex rounded-md shadow-xs"
       onSubmit={(event) => event.preventDefault()}
     >
       <span className="inline-flex items-center rounded-l-md border border-r-0 border-slate-300 bg-slate-50 p-2 dark:border-slate-900 dark:bg-slate-800">
@@ -75,7 +75,7 @@ export function DebouncedTextInput({
           data-cy="textFilterReset"
           type="reset"
           onClick={resetClicked}
-          className="absolute right-1 top-1 inline-block rounded-md bg-slate-50 p-1 text-slate-400 dark:bg-slate-800"
+          className="absolute top-1 right-1 inline-block rounded-md bg-slate-50 p-1 text-slate-400 dark:bg-slate-800"
         >
           <BackspaceIcon className="h-5 w-5"></BackspaceIcon>
         </button>

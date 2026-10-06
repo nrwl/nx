@@ -1,24 +1,23 @@
-import { signalToCode } from '@nx/devkit/internal';
+import {
+  signalToCode,
+  readModulePackageJson,
+  daemonClient,
+  interpolate,
+} from '@nx/devkit/internal';
 import { execFileSync, fork } from 'child_process';
 import * as pc from 'picocolors';
 import {
   ExecutorContext,
+  getPackageManagerCommand,
   output,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
 import { copyFileSync, unlinkSync } from 'fs';
 import { Schema } from './schema';
-import { platform } from 'os';
 import { join, resolve } from 'path';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
-import { daemonClient } from 'nx/src/daemon/client/client';
-import { interpolate } from 'nx/src/tasks-runner/utils';
 import { stripGlobToBaseDir } from '@nx/js/internal';
 import detectPort from 'detect-port';
-
-// platform specific command name
-const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 function getHttpServerArgs(options: Schema) {
   const {
@@ -170,6 +169,9 @@ export default async function* fileServerExecutor(
   let disposeWatch: () => void;
 
   if (options.buildTarget) {
+    // Run the build target through the workspace package manager so workspaces
+    // that pin a non-npm manager (e.g. devEngines.packageManager) don't fail.
+    const pmc = getPackageManagerCommand();
     const run = () => {
       if (!running) {
         running = true;
@@ -181,7 +183,7 @@ export default async function* fileServerExecutor(
         process.env.NX_SERVE_STATIC_BUILD_RUNNING = 'true';
         try {
           const args = getBuildTargetCommand(options, context);
-          execFileSync(pmCmd, args, {
+          execFileSync(pmc.exec, args, {
             stdio: [0, 1, 2],
             shell: true,
             windowsHide: true,

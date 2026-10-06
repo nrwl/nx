@@ -1,12 +1,16 @@
-import { Tree } from '@nx/devkit';
-import { E2EWebServerDetails } from '@nx/devkit/internal';
 import {
+  Tree,
   addProjectConfiguration,
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
 } from '@nx/devkit';
+import {
+  E2EWebServerDetails,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -71,7 +75,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
       rootProject: options.rootProject,
@@ -89,15 +93,13 @@ function getAngularE2EWebServerInfo(
 ): E2EWebServerDetails & { e2ePort: number } {
   const nxJson = readNxJson(tree);
   let e2ePort = portOverride ?? 4200;
+  const serveTargetOptions = readTargetDefaultsForTarget(
+    'serve',
+    nxJson.targetDefaults
+  )?.options;
 
-  if (
-    nxJson.targetDefaults?.['serve'] &&
-    (nxJson.targetDefaults?.['serve'].options?.port ||
-      nxJson.targetDefaults?.['serve'].options?.env?.PORT)
-  ) {
-    e2ePort =
-      nxJson.targetDefaults?.['serve'].options?.port ||
-      nxJson.targetDefaults?.['serve'].options?.env?.PORT;
+  if (serveTargetOptions?.port || serveTargetOptions?.env?.PORT) {
+    e2ePort = serveTargetOptions.port || serveTargetOptions.env.PORT;
   }
 
   const pm = getPackageManagerCommand();

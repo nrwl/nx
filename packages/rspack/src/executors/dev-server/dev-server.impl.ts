@@ -6,7 +6,7 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { Configuration } from '@rspack/core';
+import type { Configuration } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';

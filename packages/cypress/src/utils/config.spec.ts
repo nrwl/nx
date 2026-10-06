@@ -26,6 +26,68 @@ export default defineConfig({
     `);
   });
 
+  it('should disable justInTimeCompile for webpack on Cypress 14+', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    expect(actual).toContain('...nxComponentTestingPreset(import.meta.url)');
+    expect(actual).toContain('justInTimeCompile: false');
+  });
+
+  it('should not disable justInTimeCompile for the vite bundler', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'vite' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    expect(actual).not.toContain('justInTimeCompile');
+  });
+
+  it('should not disable justInTimeCompile on Cypress < 14', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      13
+    );
+    expect(actual).not.toContain('justInTimeCompile');
+  });
+
+  it('should not add the preset import again when re-run on an existing CT config', async () => {
+    const firstRun = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    const secondRun = await addDefaultCTConfig(
+      firstRun,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    expect(secondRun).toBe(firstRun);
+    expect(
+      secondRun.match(/import \{ nxComponentTestingPreset \}/g)
+    ).toHaveLength(1);
+  });
+
   it('should add e2e config to existing CT config', async () => {
     const actual = await addDefaultE2EConfig(
       `import { defineConfig } from 'cypress';
@@ -383,6 +445,76 @@ export default config;
     `);
   });
 
+  it('should handle "export default <variable>" when <variable> holds defineConfig()', async () => {
+    const config = resolveCypressConfigObject(
+      `import { defineConfig } from 'cypress';
+
+const config = defineConfig({
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+});
+
+export default config;
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should follow a chain of variables', async () => {
+    const config = resolveCypressConfigObject(
+      `const base = {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+const config = base;
+
+export default config;
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should return null for a variable that is not an object literal', async () => {
+    expect(
+      resolveCypressConfigObject(`import { getConfig } from './config';
+const config = getConfig();
+
+export default config;
+`)
+    ).toBeNull();
+    expect(
+      resolveCypressConfigObject(`let config;
+
+export default config;
+`)
+    ).toBeNull();
+    expect(
+      resolveCypressConfigObject(`const a = b;
+const b = a;
+
+export default a;
+`)
+    ).toBeNull();
+  });
+
   it('should handle "module.exports = defineConfig()"', async () => {
     const config = resolveCypressConfigObject(
       `const { defineConfig } = require('cypress');
@@ -412,6 +544,30 @@ module.exports = defineConfig({
     baseUrl: 'https://example.com',
   },
 };
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "module.exports = <variable>" when <variable> holds defineConfig()', async () => {
+    const config = resolveCypressConfigObject(
+      `const { defineConfig } = require('cypress');
+
+const config = defineConfig({
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+});
+
+module.exports = config;
 `
     );
 

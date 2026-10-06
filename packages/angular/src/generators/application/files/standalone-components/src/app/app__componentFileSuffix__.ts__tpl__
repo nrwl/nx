@@ -12,5 +12,5 @@ import { NxWelcome<%= componentType %> } from './nx-welcome<%= componentFileSuff
   encapsulation: ViewEncapsulation.<%= viewEncapsulation %>,<% } %>
 })
 export class App<%= componentType %> {<% if(!minimal) { %>
-  <% if (angularMajorVersion >= 20) { %>protected <% } %>title = '<%= appName %>';
+  protected title = '<%= appName %>';
 <% } %>}

@@ -1,16 +1,17 @@
+import type { Mock } from 'vitest';
 import type { CreateNodesContext } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodes, type AngularProjectConfiguration } from './plugin';
 import { loadVite } from './utils/vitest';
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-jest.mock('./utils/vitest', () => ({
-  ...jest.requireActual('./utils/vitest'),
-  loadVite: jest.fn(),
+vi.mock('./utils/vitest', async () => ({
+  ...(await vi.importActual<any>('./utils/vitest')),
+  loadVite: vi.fn(),
 }));
 
 describe('@nx/angular/plugin', () => {
@@ -36,7 +37,7 @@ describe('@nx/angular/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
     process.chdir(cwd);
   });
@@ -1180,8 +1181,8 @@ describe('@nx/angular/plugin', () => {
   });
 
   it('should use coverage.reportsDirectory from vitest config when runnerConfig is set', async () => {
-    (loadVite as jest.Mock).mockResolvedValue({
-      resolveConfig: jest.fn().mockResolvedValue({
+    (loadVite as Mock).mockResolvedValue({
+      resolveConfig: vi.fn().mockResolvedValue({
         test: {
           coverage: {
             reportsDirectory: 'custom-coverage-dir',
@@ -1291,8 +1292,8 @@ describe('@nx/angular/plugin', () => {
   });
 
   it('should use executor outputFile and ignore config outputFile when both are set', async () => {
-    (loadVite as jest.Mock).mockResolvedValue({
-      resolveConfig: jest.fn().mockResolvedValue({
+    (loadVite as Mock).mockResolvedValue({
+      resolveConfig: vi.fn().mockResolvedValue({
         test: {
           outputFile: 'config-results.xml',
         },
@@ -1328,8 +1329,8 @@ describe('@nx/angular/plugin', () => {
   });
 
   it('should use executor reporters and ignore config reporters when both are set', async () => {
-    (loadVite as jest.Mock).mockResolvedValue({
-      resolveConfig: jest.fn().mockResolvedValue({
+    (loadVite as Mock).mockResolvedValue({
+      resolveConfig: vi.fn().mockResolvedValue({
         test: {
           reporters: [['junit', { outputFile: 'config-junit.xml' }]],
         },
@@ -1365,8 +1366,8 @@ describe('@nx/angular/plugin', () => {
   });
 
   it('should use config outputFile and reporters when executor options are not set', async () => {
-    (loadVite as jest.Mock).mockResolvedValue({
-      resolveConfig: jest.fn().mockResolvedValue({
+    (loadVite as Mock).mockResolvedValue({
+      resolveConfig: vi.fn().mockResolvedValue({
         test: {
           outputFile: 'config-results.xml',
           reporters: [['junit', { outputFile: 'config-junit.xml' }]],

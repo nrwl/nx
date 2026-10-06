@@ -9,11 +9,11 @@ import {
   readJson,
   runCLI,
   runCommand,
-  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
@@ -22,7 +22,11 @@ let proj: string;
 describe('@nx/workspace:infer-targets', () => {
   beforeEach(() => {
     proj = newProject({
+      keepBackup: true,
       packages: ['@nx/playwright', '@nx/remix', '@nx/eslint', '@nx/jest'],
+      // Remix rejects TypeScript 6, so keep this workspace on the 5.x line
+      // that @nx/remix pins (packages/remix/src/utils/versions.ts).
+      typescriptVersion: '~5.9.2',
     });
   });
 
@@ -160,6 +164,7 @@ describe('@nx/workspace:infer-targets', () => {
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
     proj = newProject({
+      keepBackup: true,
       packages: [
         '@nx/eslint',
         '@nx/js',
@@ -190,7 +195,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint e2e`)).not.toThrow();
-    if (runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       expect(() => runCLI(`e2e e2e`)).not.toThrow();
     }
   });
@@ -198,7 +203,10 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
 describe('Workspace Tests', () => {
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/workspace', '@nx/js', '@nx/jest'] });
+    proj = newProject({
+      keepBackup: true,
+      packages: ['@nx/workspace', '@nx/js', '@nx/jest'],
+    });
   });
 
   afterAll(() => cleanupProject());

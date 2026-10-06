@@ -1,12 +1,14 @@
+import type { Mock } from 'vitest';
 import {
   extractReferencesFromCommit,
   getLatestGitTagForPattern,
+  parseConventionalCommitsMessage,
   sanitizeProjectNameForGitTag,
 } from './git';
 import { RepoGitTags } from './repository-git-tags';
 
-jest.mock('./exec-command', () => ({
-  execCommand: jest.fn(() =>
+vi.mock('./exec-command', () => ({
+  execCommand: vi.fn(() =>
     Promise.resolve(`
 x5.0.0
 release/4.😐2.2
@@ -43,6 +45,53 @@ gradle/common/lib@1.5.0
 }));
 
 describe('git utils', () => {
+  describe('parseConventionalCommitsMessage', () => {
+    it.each([
+      [
+        '✨ (package-a): Add new feature',
+        {
+          type: '✨',
+          scope: 'package-a',
+          description: 'Add new feature',
+          breaking: false,
+        },
+      ],
+      [
+        '2026_A: Task: #1234 - message',
+        {
+          type: '2026_A',
+          scope: '',
+          description: 'Task: #1234 - message',
+          breaking: false,
+        },
+      ],
+    ])('should parse the configured custom type in "%s"', (message, result) => {
+      expect(parseConventionalCommitsMessage(message)).toEqual(result);
+    });
+
+    it('should preserve standard scoped and breaking commit syntax', () => {
+      expect(
+        parseConventionalCommitsMessage('feat(core)!: Add new feature')
+      ).toEqual({
+        type: 'feat',
+        scope: 'core',
+        description: 'Add new feature',
+        breaking: true,
+      });
+    });
+
+    it('should classify a non-conventional message as invalid', () => {
+      expect(
+        parseConventionalCommitsMessage('This is not a conventional commit')
+      ).toEqual({
+        type: '__INVALID__',
+        scope: '',
+        description: 'This is not a conventional commit',
+        breaking: false,
+      });
+    });
+  });
+
   describe('extractReferencesFromCommit', () => {
     it('should include the given short commit hash even if no other references are found', () => {
       const references = extractReferencesFromCommit({
@@ -126,6 +175,68 @@ Closes #1`,
       `);
     });
 
+    it('should match issue references linked via closing keywords in the commit body', () => {
+      const references = extractReferencesFromCommit({
+        message: 'fix: all the things (#20607)',
+        body: `Some description of the change.
+
+Fixes #789
+Resolves: #790`,
+        shortHash: 'abc123',
+        author: { name: 'Test Author', email: 'test@example.com' },
+      });
+      expect(references).toMatchInlineSnapshot(`
+        [
+          {
+            "type": "pull-request",
+            "value": "#20607",
+          },
+          {
+            "type": "issue",
+            "value": "#789",
+          },
+          {
+            "type": "issue",
+            "value": "#790",
+          },
+          {
+            "type": "hash",
+            "value": "abc123",
+          },
+        ]
+      `);
+    });
+
+    it('should not match issue numbers mentioned in the commit body without a closing keyword', () => {
+      const references = extractReferencesFromCommit({
+        message: 'fix: all the things (#20607)',
+        body: `This works around web-infra-dev/rspack#2292 and the tsx bug
+tracked in [#781](https://github.com/privatenumber/tsx/issues/781).
+
+Similar to the approach taken in #34111.
+
+Fixes #36014`,
+        shortHash: 'abc123',
+        author: { name: 'Test Author', email: 'test@example.com' },
+      });
+      expect(references).toMatchInlineSnapshot(`
+        [
+          {
+            "type": "pull-request",
+            "value": "#20607",
+          },
+          {
+            "type": "issue",
+            "value": "#36014",
+          },
+          {
+            "type": "hash",
+            "value": "abc123",
+          },
+        ]
+      `);
+    });
+
     it('should match GitLab style merge request references', () => {
       const references = extractReferencesFromCommit({
         message: "Merge branch 'mr-to-fix-issue' into 'main'",
@@ -156,7 +267,7 @@ See merge request nx-release-test/nx-release-test!2`,
     const mockResolveTags = mockRepoGitTags.resolveTags.bind(mockRepoGitTags);
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     describe('when releaseTag.strictPreid is false', () => {
@@ -472,7 +583,7 @@ See merge request nx-release-test/nx-release-test!2`,
     it('should return null if execCommand throws an error', async () => {
       // should return null if execCommand throws an error
       (
-        require('./exec-command').execCommand as jest.Mock
+        (await import('./exec-command')).execCommand as Mock
       ).mockImplementationOnce(() => {
         throw new Error('error');
       });

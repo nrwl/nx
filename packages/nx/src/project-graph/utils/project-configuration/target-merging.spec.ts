@@ -428,6 +428,40 @@ describe('target merging', () => {
   });
 
   describe('cache', () => {
+    // Once a consumer reads it, `mode: 'warn'` decides whether a task's
+    // Ultracache configuration may stand in for declared inputs, so losing
+    // it in a merge would silently change how the task hashes.
+    it('should drop an inherited mode when the target replaces the ultracache', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoredReads: ['tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'warn' },
+        }
+      );
+      expect(result.ultracache).toEqual({ ignoredReads: ['tmp/**'] });
+    });
+
+    it('should keep an inherited mode under the spread token', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { '...': true, ignoredReads: ['tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'warn' },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        mode: 'warn',
+        ignoredReads: ['tmp/**'],
+      });
+    });
+
     it('should not be merged for incompatible targets', () => {
       const result = mergeTargetConfigurations(
         {
@@ -439,6 +473,210 @@ describe('target merging', () => {
         }
       );
       expect(result.cache).not.toBeDefined();
+    });
+  });
+
+  describe('ultracache', () => {
+    it('should take the base ultracache when the target does not define one', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands' },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'off', ignoredReads: ['tmp/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        mode: 'off',
+        ignoredReads: ['tmp/**'],
+      });
+    });
+
+    it('should replace the base ultracache wholesale when the target defines one', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoredWrites: ['scratch/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'off', ignoredReads: ['tmp/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({ ignoredWrites: ['scratch/**'] });
+    });
+
+    it('should shallow-merge with the base ultracache via the spread token', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: {
+            '...': true,
+            ignoredWrites: ['scratch/**'],
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'off', ignoredReads: ['tmp/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        mode: 'off',
+        ignoredReads: ['tmp/**'],
+        ignoredWrites: ['scratch/**'],
+      });
+    });
+
+    it('should not be merged for incompatible targets', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'foo' },
+        { executor: 'bar', ultracache: { mode: 'off' } }
+      );
+      expect(result.ultracache).not.toBeDefined();
+    });
+
+    // The guard above already skips a base-only ultracache, so this is the case
+    // that decides whether the base is discarded: the target overrode the
+    // executor, so the base describes a different program.
+    it('should not inherit the base ultracache when an incompatible target declares its own', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'foo',
+          ultracache: { '...': true, ignoredWrites: ['scratch/**'] },
+        },
+        {
+          executor: 'bar',
+          ultracache: { mode: 'off', ignoredReads: ['tmp/**'] },
+        }
+      );
+      // The base contributes nothing — no `mode`, no inherited
+      // `ignoredReads`. The `'...'` survives because there was no base to
+      // expand it against; unlike the target level, `mergeUltracache` does not
+      // strip an unresolved token.
+      expect(result.ultracache).toEqual({
+        '...': true,
+        ignoredWrites: ['scratch/**'],
+      });
+    });
+
+    it('should resolve the spread token inside ignoredReads', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoredReads: ['...', 'tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoredReads: ['dist/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        ignoredReads: ['dist/**', 'tmp/**'],
+      });
+    });
+
+    it('should resolve the spread token inside ignoredWrites under an object spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: {
+            '...': true,
+            ignoredWrites: ['...', 'scratch/**'],
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'off', ignoredWrites: ['dist/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        mode: 'off',
+        ignoredWrites: ['dist/**', 'scratch/**'],
+      });
+    });
+
+    it('should keep a falsy ultracache so validation can reject it', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands', ultracache: false as any },
+        { executor: 'nx:run-commands' }
+      );
+      expect('ultracache' in result).toBe(true);
+      expect(result.ultracache).toBe(false);
+    });
+
+    it('should not turn an array ultracache into an empty object', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands', ultracache: [] as any },
+        { executor: 'nx:run-commands' }
+      );
+      expect(result.ultracache).toEqual([]);
+    });
+
+    it('should let the base win for a glob array authored before the spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoredReads: ['tmp/**'], '...': true },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoredReads: ['dist/**'], mode: 'off' },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        ignoredReads: ['dist/**'],
+        mode: 'off',
+      });
+    });
+
+    it('should let the target win for a glob array authored after the spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { '...': true, ignoredReads: ['tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoredReads: ['dist/**'], mode: 'off' },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        ignoredReads: ['tmp/**'],
+        mode: 'off',
+      });
+    });
+
+    it('should not mutate the target it was given', () => {
+      const target = {
+        executor: 'nx:run-commands',
+        ultracache: { ignoredReads: ['...', 'tmp/**'] },
+      };
+      const before = JSON.stringify(target);
+
+      mergeTargetConfigurations(target, {
+        executor: 'nx:run-commands',
+        ultracache: { ignoredReads: ['dist/**'] },
+      });
+
+      expect(JSON.stringify(target)).toEqual(before);
+    });
+
+    it('should never leave a literal spread token on the merged globs', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoredReads: ['...'], ignoredWrites: ['...'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoredReads: ['dist/**'], ignoredWrites: ['out/**'] },
+        }
+      );
+      expect(result.ultracache.ignoredReads).not.toContain('...');
+      expect(result.ultracache.ignoredWrites).not.toContain('...');
+      expect(result.ultracache).toEqual({
+        ignoredReads: ['dist/**'],
+        ignoredWrites: ['out/**'],
+      });
     });
   });
 });
@@ -589,6 +827,303 @@ describe('spread syntax in mergeTargetConfigurations', () => {
       'nx.json',
       'override-plugin',
     ]);
+  });
+
+  describe('source map provenance for unchanged scalars', () => {
+    it('does not re-attribute an executor a later layer re-stamps to the same value', () => {
+      // Mirrors the target-defaults synthesis path: a plugin authored the
+      // executor, and the synthetic default re-stamps the same executor purely
+      // as a merge guard while introducing `cache`. The executor's provenance
+      // must stay with the plugin; only `cache` is credited to the default.
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['vite.config.ts', '@nx/vite/plugin'],
+        'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'],
+      };
+      const result = mergeTargetConfigurations(
+        { executor: '@nx/vite:build', cache: true },
+        { executor: '@nx/vite:build' },
+        sourceMap,
+        ['nx.json', 'nx/target-defaults'],
+        'targets.build'
+      );
+
+      expect(result.executor).toBe('@nx/vite:build');
+      // Unchanged executor keeps the plugin attribution.
+      expect(sourceMap['targets.build.executor']).toEqual([
+        'vite.config.ts',
+        '@nx/vite/plugin',
+      ]);
+      // The newly introduced field is credited to the default.
+      expect(sourceMap['targets.build.cache']).toEqual([
+        'nx.json',
+        'nx/target-defaults',
+      ]);
+    });
+
+    it('attributes a genuinely new executor to the layer that introduces it', () => {
+      // No prior executor entry — the default authors it, so it correctly
+      // stays credited to the default.
+      const sourceMap: Record<string, SourceInformation> = {};
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands' },
+        {},
+        sourceMap,
+        ['nx.json', 'nx/target-defaults'],
+        'targets.build'
+      );
+
+      expect(result.executor).toBe('nx:run-commands');
+      expect(sourceMap['targets.build.executor']).toEqual([
+        'nx.json',
+        'nx/target-defaults',
+      ]);
+    });
+
+    it('re-attributes a scalar a later layer actually changes', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'],
+      };
+      mergeTargetConfigurations(
+        { executor: 'nx:run-commands' },
+        { executor: '@nx/vite:build' },
+        sourceMap,
+        ['nx.json', 'other-plugin'],
+        'targets.build'
+      );
+
+      // Different value → the changing layer is credited.
+      expect(sourceMap['targets.build.executor']).toEqual([
+        'nx.json',
+        'other-plugin',
+      ]);
+    });
+
+    it('preserves provenance for any unchanged scalar key, not just executor', () => {
+      // The guard is value-based, not key-name-based: `command`, `cache`, etc.
+      // a later layer re-stamps to the same value all keep their origin.
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.run.command': ['plugin.config.ts', 'some-plugin'],
+        'targets.run.cache': ['plugin.config.ts', 'some-plugin'],
+      };
+      mergeTargetConfigurations(
+        { command: 'echo hi', cache: true, parallelism: false },
+        { command: 'echo hi', cache: true },
+        sourceMap,
+        ['nx.json', 'nx/target-defaults'],
+        'targets.run'
+      );
+
+      expect(sourceMap['targets.run.command']).toEqual([
+        'plugin.config.ts',
+        'some-plugin',
+      ]);
+      expect(sourceMap['targets.run.cache']).toEqual([
+        'plugin.config.ts',
+        'some-plugin',
+      ]);
+      // A genuinely new key is still credited to the new layer.
+      expect(sourceMap['targets.run.parallelism']).toEqual([
+        'nx.json',
+        'nx/target-defaults',
+      ]);
+    });
+
+    it('does not let a target default steal the target node key from a plugin', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['vite.config.ts', '@nx/vite/plugin'],
+      };
+      // A target default merges onto the plugin's target, adding `cache`.
+      mergeTargetConfigurations(
+        { executor: '@nx/vite:build', cache: true },
+        { executor: '@nx/vite:build' },
+        sourceMap,
+        ['nx.json#targetDefaults.build', 'nx/target-defaults'],
+        'targets.build'
+      );
+
+      // The plugin still owns the target node — the target default only
+      // stamped a field onto it.
+      expect(sourceMap['targets.build']).toEqual([
+        'vite.config.ts',
+        '@nx/vite/plugin',
+      ]);
+    });
+
+    it('keeps the target node key with its creator when a second plugin only layers fields', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+      };
+      // plugin-b re-states the same executor and adds `cache` — no identity
+      // change, so plugin-a still owns the target.
+      mergeTargetConfigurations(
+        { executor: 'nx:run-commands', cache: true },
+        { executor: 'nx:run-commands' },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
+      expect(sourceMap['targets.build']).toEqual(['a.config.ts', 'plugin-a']);
+    });
+
+    it('transfers the target node key when a plugin changes the target identity', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+        'targets.build.cache': ['a.config.ts', 'plugin-a'],
+      };
+      // plugin-b sets an executor on a target that had none — an identity
+      // change, so ownership of the node moves with it.
+      mergeTargetConfigurations(
+        { executor: '@acme/b:build' },
+        { cache: true },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
+      expect(sourceMap['targets.build']).toEqual(['b.config.ts', 'plugin-b']);
+      // Fields it didn't touch keep their origin.
+      expect(sourceMap['targets.build.cache']).toEqual([
+        'a.config.ts',
+        'plugin-a',
+      ]);
+    });
+
+    it('transfers the target node key when a plugin supplies the command a run-commands target was missing', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+      };
+      // plugin-a created `build` as a bare nx:run-commands target with no
+      // command; plugin-b supplies `options.command` — the runnable identity
+      // for run-commands (see isCompatibleTarget) — so ownership moves, just
+      // like setting an executor on a target that had none.
+      mergeTargetConfigurations(
+        { options: { command: 'vite build' } },
+        { executor: 'nx:run-commands' },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
+      expect(sourceMap['targets.build']).toEqual(['b.config.ts', 'plugin-b']);
+    });
+
+    it('transfers the target node key when a plugin supplies the script a run-script target was missing', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.test': ['a.config.ts', 'plugin-a'],
+      };
+      mergeTargetConfigurations(
+        { options: { script: 'test' } },
+        { executor: 'nx:run-script' },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.test'
+      );
+
+      expect(sourceMap['targets.test']).toEqual(['b.config.ts', 'plugin-b']);
+    });
+
+    it('keeps the target node key with its creator when a second plugin re-states the same command', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+      };
+      // Same runnable identity, just layered fields — no transfer.
+      mergeTargetConfigurations(
+        { options: { command: 'vite build' }, cache: true },
+        { executor: 'nx:run-commands', options: { command: 'vite build' } },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
+      expect(sourceMap['targets.build']).toEqual(['a.config.ts', 'plugin-a']);
+    });
+  });
+
+  // The integer-key/spread ambiguity is a property of the authored config
+  // (key hoisting loses the position), not of the merge base — so it must
+  // throw whether or not the base target is compatible. This also keeps the
+  // error identical between the target-defaults staging merge (default-only
+  // base) and the real merge (full base), so discarding staging errors can't
+  // lose it.
+  it('should throw for an integer-like key alongside a spread even when the base target is incompatible', () => {
+    expect(() =>
+      mergeTargetConfigurations(
+        {
+          executor: '@acme/b:build',
+          '123': 'ambiguous',
+          '...': true,
+        } as any,
+        { executor: '@acme/a:build' }
+      )
+    ).toThrow(/integer-like key/i);
+  });
+
+  // A nested `'...'` spread object with an integer-like key is ambiguous
+  // regardless of which side of the merge owns the key it lives under. When a
+  // pre-`'...'` key is owned by the base, the merge lets the base win and drops
+  // the incoming value without merging it — but the ambiguity is a property of
+  // the authored value, so it must still throw. Otherwise the error would fire
+  // in the target-defaults staging merge (default-only base) but vanish in the
+  // real merge (full base), silently dropping the invalid object.
+  describe('nested integer-like spread under a pre-"..." key', () => {
+    const nestedInvalid = {
+      '...': true,
+      '123': 'ambiguous',
+    };
+
+    it('throws when the base does NOT own the enclosing key', () => {
+      expect(() =>
+        mergeTargetConfigurations(
+          {
+            executor: 'nx:run-commands',
+            metadataThing: nestedInvalid,
+            '...': true,
+          } as any,
+          {
+            executor: 'nx:run-commands',
+            inputs: ['production'],
+          }
+        )
+      ).toThrow(/integer-like key/i);
+    });
+
+    it('throws even when the base OWNS the enclosing key (base-independent)', () => {
+      expect(() =>
+        mergeTargetConfigurations(
+          {
+            executor: 'nx:run-commands',
+            metadataThing: nestedInvalid,
+            '...': true,
+          } as any,
+          {
+            executor: 'nx:run-commands',
+            metadataThing: { existing: 'base-value' },
+            inputs: ['production'],
+          }
+        )
+      ).toThrow(/integer-like key/i);
+    });
+
+    it('throws for a named configuration the base OWNS (base-independent)', () => {
+      expect(() =>
+        mergeTargetConfigurations(
+          {
+            executor: 'nx:run-commands',
+            configurations: {
+              prod: nestedInvalid,
+              '...': true,
+            },
+          } as any,
+          {
+            executor: 'nx:run-commands',
+            configurations: {
+              prod: { existing: 'base-value' },
+            },
+          }
+        )
+      ).toThrow(/integer-like key/i);
+    });
   });
 
   it('should replace array without spread token', () => {

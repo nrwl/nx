@@ -1,5 +1,5 @@
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { splitConfigFiles } from './split-config-files';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('split config files', () => {
   let tempFs: TempFs;
@@ -12,7 +12,7 @@ describe('split config files', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.chdir(cwd);
   });
 

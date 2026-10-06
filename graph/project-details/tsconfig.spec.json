@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/spec",
-    "module": "commonjs",
+    "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"]
   },
   "include": [

@@ -1,23 +1,27 @@
 import { logger } from '../../utils/logger';
 import { getCloudUrl } from './get-cloud-options';
 import { getVcsRemoteInfo } from '../../utils/git-utils';
+import { httpRequest } from '../../utils/http-client';
 
-/**
- * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
- */
 export async function createNxCloudOnboardingURL(
   onboardingSource: string,
   accessToken?: string,
   meta?: string,
   forceManual = false,
   forceGithub = false,
-  directory?: string
+  directory?: string,
+  // Aborting tears down the in-flight request; without it a caller that stops
+  // waiting (see prefetchRemoteCacheOnboardingUrl) leaves the socket holding
+  // the event loop open, since these requests have no timeout.
+  signal?: AbortSignal
 ) {
   const remoteInfo = getVcsRemoteInfo(directory);
   const apiUrl = getCloudUrl();
 
-  const installationSupportsGitHub =
-    await getInstallationSupportsGitHub(apiUrl);
+  const installationSupportsGitHub = await getInstallationSupportsGitHub(
+    apiUrl,
+    signal
+  );
 
   let usesGithub = false;
   if (forceGithub) {
@@ -30,17 +34,18 @@ export async function createNxCloudOnboardingURL(
   }
   const source = getSource(onboardingSource);
   try {
-    const response = await require('axios').post(
-      `${apiUrl}/nx-cloud/onboarding`,
-      {
+    const response = await httpRequest(`${apiUrl}/nx-cloud/onboarding`, {
+      method: 'POST',
+      data: {
         type: usesGithub ? 'GITHUB' : 'MANUAL',
         source,
         accessToken: usesGithub ? null : accessToken,
         selectedRepositoryName: remoteInfo?.slug ?? null,
         repositoryDomain: remoteInfo?.domain ?? null,
         meta,
-      }
-    );
+      },
+      signal,
+    });
 
     if (!response?.data || response.data.message) {
       throw new Error(
@@ -93,11 +98,14 @@ export function getURLifShortenFailed(
   return `${apiUrl}/setup/connect-workspace/manual?accessToken=${accessToken}&source=${source}`;
 }
 
-async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
+async function getInstallationSupportsGitHub(
+  apiUrl: string,
+  signal?: AbortSignal
+): Promise<boolean> {
   try {
-    const response = await require('axios').get(
-      `${apiUrl}/nx-cloud/system/features`
-    );
+    const response = await httpRequest(`${apiUrl}/nx-cloud/system/features`, {
+      signal,
+    });
     if (!response?.data || response.data.message) {
       throw new Error(
         response?.data?.message ?? 'Failed to shorten Nx Cloud URL'

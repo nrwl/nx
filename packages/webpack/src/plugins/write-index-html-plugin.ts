@@ -1,5 +1,4 @@
-import * as webpack from 'webpack';
-import { Compiler } from 'webpack';
+import type { Compilation, Compiler, sources } from 'webpack';
 import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 
@@ -25,6 +24,8 @@ export class WriteIndexHtmlPlugin {
   constructor(private readonly options: WriteIndexHtmlOptions) {}
 
   apply(compiler: Compiler) {
+    const webpack = require('webpack') as typeof import('webpack');
+
     const {
       outputPath,
       indexPath,
@@ -71,7 +72,7 @@ export class WriteIndexHtmlPlugin {
     );
   }
 
-  private getEmittedFiles(compilation: webpack.Compilation): EmittedFile[] {
+  private getEmittedFiles(compilation: Compilation): EmittedFile[] {
     const files: EmittedFile[] = [];
     // adds all chunks to the list of emitted files such as lazy loaded modules
     for (const chunk of compilation.chunks) {
@@ -140,7 +141,9 @@ export class WriteIndexHtmlPlugin {
     loadOutputFile: (file: string) => string;
     /** Used to sort the inseration of files in the HTML file */
     entrypoints: string[];
-  }): webpack.sources.Source {
+  }): sources.Source {
+    const webpack = require('webpack') as typeof import('webpack');
+
     const { loadOutputFile, files, moduleFiles = [], entrypoints } = params;
 
     let { crossOrigin = 'none' } = params;

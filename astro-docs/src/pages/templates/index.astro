@@ -1,0 +1,232 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { TemplateGallery } from '../../components/templates/TemplateGallery';
+import { templates, categories } from '../../data/templates';
+---
+
+<StarlightPage
+  frontmatter={{
+    title: 'Starter templates',
+    description:
+      'Jumpstart your monorepo with a pre-built Nx workspace. Pick a template, run one command, and start shipping with caching and CI baked in.',
+    template: 'splash',
+    tableOfContents: false,
+    pagefind: true,
+  }}
+>
+  <div class="tpl-page">
+    <p class="tpl-hero">
+      Pre-configured Nx monorepos for any stack. Run one command to scaffold a monorepo with caching and CI already set up.
+    </p>
+    <TemplateGallery client:load templates={templates} categories={categories} />
+  </div>
+</StarlightPage>
+
+<!-- Gallery styles. is:global so they reach the <TemplateGallery> React island
+     (Astro scoped styles only apply to elements in this .astro template). -->
+<style is:global>
+  /* No horizontal padding/max-width: inherit Starlight's content gutter so the
+     gallery left edge lines up exactly with the page title above it. */
+  .tpl-page {
+    padding-block: 1rem 4rem;
+  }
+
+  /* Subtitle under Starlight's page title */
+  .tpl-hero {
+    color: var(--sl-color-gray-3);
+    font-size: 1rem;
+    line-height: 1.5;
+    max-width: 40rem;
+    margin: -0.25rem 0 1.75rem;
+  }
+
+  /* ------------------------------------------------------------- Filters --- */
+  .tpl-controls {
+    margin-bottom: 1.5rem;
+  }
+
+  /* Wrap onto multiple rows so every filter stays visible (no off-screen chips
+     on narrow viewports). On desktop they fit on a single row. */
+  .tpl-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  /* Uniform, Framer-style rounded-rectangle chips (fixed height so short labels
+     like "All" match the rest) */
+  .tpl-chip {
+    appearance: none;
+    cursor: pointer;
+    /* neutralize Starlight markdown auto-spacing that pushes non-first chips down */
+    margin: 0;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    height: 2.25rem;
+    padding: 0 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    border-radius: 0.6rem;
+    border: 1px solid var(--sl-color-hairline);
+    background: color-mix(in srgb, var(--sl-color-gray-6) 55%, transparent);
+    color: var(--sl-color-gray-2);
+    transition:
+      border-color 0.15s,
+      color 0.15s,
+      background 0.15s;
+  }
+  .tpl-chip:hover {
+    border-color: var(--sl-color-gray-4);
+    color: var(--sl-color-white);
+  }
+  .tpl-chip[aria-pressed='true'] {
+    border-color: transparent;
+    background: var(--sl-color-gray-1);
+    color: var(--sl-color-bg);
+  }
+
+  .tpl-count {
+    color: var(--sl-color-gray-3);
+    font-size: 0.85rem;
+    margin: 0 0 1.25rem;
+  }
+
+  /* -------------------------------------------------------------- Grid ----- */
+  .tpl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 1.25rem;
+  }
+  /* Two columns on phones (Framer-style) instead of a single stretched column.
+     minmax(0, 1fr) keeps the columns equal even when a card title is long. */
+  @media (max-width: 40rem) {
+    .tpl-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    /* drop the category on narrow cards so the title has room to breathe */
+    .tpl-card-meta {
+      display: none;
+    }
+  }
+
+  /* Framer-style card: cover artwork on top (framed inside the card), then a
+     compact footer with the title and category. */
+  .tpl-card {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    padding: 0.55rem;
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.9rem;
+    transition:
+      border-color 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+  .tpl-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(
+      in srgb,
+      var(--tpl-accent, #64748b) 55%,
+      var(--sl-color-hairline)
+    );
+    box-shadow: 0 16px 34px -20px
+      color-mix(in srgb, var(--tpl-accent, #000) 70%, transparent);
+  }
+
+  /* Cover artwork (real screenshot or gradient) */
+  .tpl-thumb {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 0.6rem;
+    overflow: hidden;
+    background: linear-gradient(
+      135deg,
+      var(--tpl-accent, #475569),
+      var(--tpl-accent-to, #0f172a)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tpl-thumb::after {
+    /* subtle grid texture on the gradient placeholder */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(
+        color-mix(in srgb, white 8%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, white 8%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 28px 28px;
+    mask-image: radial-gradient(ellipse at center, black 35%, transparent 80%);
+  }
+  .tpl-thumb-word {
+    position: relative;
+    z-index: 1;
+    font-weight: 800;
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+    letter-spacing: -0.02em;
+    color: color-mix(in srgb, white 92%, transparent);
+    text-shadow: 0 1px 18px color-mix(in srgb, black 35%, transparent);
+  }
+
+  .tpl-card-body {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 0.5rem 0.35rem;
+  }
+  .tpl-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+  .tpl-card-title {
+    font-size: 0.98rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tpl-card-meta {
+    margin: 0 0 0 auto;
+    font-size: 0.8rem;
+    color: var(--sl-color-gray-4);
+    white-space: nowrap;
+  }
+
+  /* Real app screenshot covering the gradient artwork */
+  .tpl-thumb-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    z-index: 2;
+  }
+  .tpl-thumb--img {
+    background: var(--sl-color-gray-6);
+  }
+
+  .tpl-empty {
+    color: var(--sl-color-gray-3);
+    padding: 3rem 0;
+    text-align: center;
+  }
+</style>

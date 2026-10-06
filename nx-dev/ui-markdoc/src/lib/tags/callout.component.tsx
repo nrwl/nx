@@ -140,7 +140,7 @@ export function Callout({
         onClick={toggleOpen}
         className={cx(
           'flex w-full items-center justify-between p-4',
-          'transition-colors duration-200 hover:bg-opacity-80',
+          'hover:bg-opacity-80 transition-colors duration-200',
           { 'cursor-pointer': isCollapsible }
         )}
       >
@@ -158,7 +158,7 @@ export function Callout({
           ))}
       </div>
       {isOpen && (
-        <div className="px-4 pb-4 pt-0">
+        <div className="px-4 pt-0 pb-4">
           <span className={cx('prose-sm block', ui.textColor)}>{children}</span>
         </div>
       )}

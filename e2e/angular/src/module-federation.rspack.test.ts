@@ -8,10 +8,10 @@ import {
   reservePort,
   runCLI,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
@@ -215,7 +215,7 @@ describe('Angular Module Federation', () => {
       `
     );
 
-    if (runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eProcess = await runCommandUntil(
         `e2e ${hostApp}-e2e`,
         (output) => output.includes('Successfully ran target e2e for project'),

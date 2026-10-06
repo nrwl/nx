@@ -7,9 +7,14 @@
 
 import { workspaceRoot } from '@nx/devkit';
 import browserslist from 'browserslist';
+import { ComponentStylesheetBundler } from 'ng-packagr/src/lib/styles/component-stylesheets';
+import {
+  generateSearchDirectories,
+  getTailwindConfig,
+  loadPostcssConfiguration,
+} from 'ng-packagr/src/lib/styles/postcss-configuration';
 import type { NgPackageEntryConfig } from 'ng-packagr/src/ng-entrypoint.schema';
 import { getNgPackagrVersionInfo } from './ng-packagr-version';
-import { importNgPackagrPath } from './package-imports';
 
 export enum CssUrl {
   inline = 'inline',
@@ -29,17 +34,6 @@ export function getStylesheetProcessor(): new (
 } {
   const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
 
-  const { ComponentStylesheetBundler } = importNgPackagrPath<
-    typeof import('ng-packagr/src/lib/styles/component-stylesheets')
-  >('ng-packagr/src/lib/styles/component-stylesheets', ngPackagrMajorVersion);
-  const {
-    generateSearchDirectories,
-    getTailwindConfig,
-    loadPostcssConfiguration,
-  } = importNgPackagrPath<
-    typeof import('ng-packagr/src/lib/styles/postcss-configuration')
-  >('ng-packagr/src/lib/styles/postcss-configuration', ngPackagrMajorVersion);
-
   class StylesheetProcessor extends ComponentStylesheetBundler {
     constructor(
       protected readonly projectBasePath: string,
@@ -50,21 +44,14 @@ export function getStylesheetProcessor(): new (
       protected readonly cacheDirectory?: string | false,
       protected readonly watch?: boolean
     ) {
-      if (ngPackagrMajorVersion === 21) {
+      if (ngPackagrMajorVersion === 22) {
+        browserslist.defaults = ['baseline widely available on 2026-05-07'];
+      } else if (ngPackagrMajorVersion === 21) {
         browserslist.defaults = ['baseline widely available on 2025-10-20'];
       } else if (ngPackagrMajorVersion === 20) {
         (browserslist.defaults as string[]) = browserslist(undefined, {
           path: require.resolve('ng-packagr/.browserslistrc'),
         });
-      } else if (ngPackagrMajorVersion < 20) {
-        (browserslist.defaults as string[]) = [
-          'last 2 Chrome versions',
-          'last 1 Firefox version',
-          'last 2 Edge major versions',
-          'last 2 Safari major versions',
-          'last 2 iOS major versions',
-          'Firefox ESR',
-        ];
       }
 
       const browserslistData = browserslist(undefined, { path: basePath });

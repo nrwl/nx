@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -129,7 +129,7 @@ describe('monorepo generator', () => {
     await monorepoGenerator(tree, {});
 
     expect(readProjectConfiguration(tree, 'demo')).toMatchObject({
-      sourceRoot: 'apps/demo',
+      sourceRoot: 'apps/demo/src',
     });
     expect(tree.read('apps/demo/src/app/page.tsx', 'utf-8')).toContain('demo');
     expect(readProjectConfiguration(tree, 'util')).toMatchObject({

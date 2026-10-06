@@ -82,6 +82,7 @@ export interface WebpackExecutorOptions {
   crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
   deployUrl?: string;
   extractCss?: boolean;
+  cssModuleHashFunction?: string;
   generateIndexHtml?: boolean;
   index?: string;
   postcssConfig?: string;
@@ -93,8 +94,7 @@ export interface WebpackExecutorOptions {
   rebaseRootRelative?: boolean;
 }
 
-export interface NormalizedWebpackExecutorOptions
-  extends WebpackExecutorOptions {
+export interface NormalizedWebpackExecutorOptions extends WebpackExecutorOptions {
   outputFileName: string;
   assets: AssetGlobPattern[];
   root: string;

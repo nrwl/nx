@@ -3,40 +3,37 @@ import { generateFiles, readProjectConfiguration } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { join } from 'path';
 import { isZonelessApp } from '../../../utils/zoneless';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import {
+  getInstalledAngularVersionInfo,
+  supportsSsrAllowedHosts,
+} from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import { DEFAULT_BROWSER_DIR } from './constants';
 
 export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
   const project = readProjectConfiguration(tree, options.project);
   const { outputPath } = project.targets.build.options;
-  const browserDistDirectory = options.isUsingApplicationBuilder
-    ? getApplicationBuilderBrowserOutputPath(outputPath)
-    : outputPath;
+  const usesApplicationEngine =
+    options.isUsingApplicationBuilder || options.isRspack;
+  let browserDistDirectory: string;
+  if (options.isRspack) {
+    // rspack always emits the browser bundle under the default directory name
+    browserDistDirectory = DEFAULT_BROWSER_DIR;
+  } else if (options.isUsingApplicationBuilder) {
+    browserDistDirectory = getApplicationBuilderBrowserOutputPath(outputPath);
+  } else {
+    browserDistDirectory = outputPath;
+  }
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  const baseFilesPath = join(__dirname, '..', 'files');
-  let pathToFiles: string;
-  if (angularMajorVersion >= 20) {
-    pathToFiles = join(
-      baseFilesPath,
-      'v20+',
-      options.isUsingApplicationBuilder
-        ? 'application-builder'
-        : 'server-builder',
-      'server'
-    );
-  } else {
-    pathToFiles = join(
-      baseFilesPath,
-      'v19',
-      options.isUsingApplicationBuilder
-        ? 'application-builder' +
-            (options.serverRouting ? '' : '-common-engine')
-        : 'server-builder',
-      'server'
-    );
-  }
+  const pathToFiles = join(
+    __dirname,
+    '..',
+    'files',
+    'v20+',
+    usesApplicationEngine ? 'application-builder' : 'server-builder',
+    'server'
+  );
 
   const sourceRoot = getProjectSourceRoot(project, tree);
   const zoneless = isZonelessApp(project);
@@ -47,6 +44,7 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
     zoneless,
     useDefaultImport: angularMajorVersion >= 21,
     angularMajorVersion,
+    supportsAllowedHosts: supportsSsrAllowedHosts(tree),
     tpl: '',
   });
 }

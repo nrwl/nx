@@ -1,6 +1,5 @@
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import type { Mock } from 'vitest';
 import { Tree } from '@nx/devkit';
-import { FsTree } from 'nx/src/generators/tree';
 import {
   addNxProjectGraphPlugin,
   extractNxPluginVersion,
@@ -8,19 +7,21 @@ import {
 } from './gradle-project-graph-plugin-utils';
 import { gradleProjectGraphPluginName } from '../../utils/versions';
 import * as execGradle from '../../utils/exec-gradle';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { FsTree } from '@nx/devkit/internal';
 
-jest.mock('../../utils/exec-gradle', () => ({
-  findGradlewFile: jest.fn(),
-  execGradleAsync: jest.fn(),
+vi.mock('../../utils/exec-gradle', () => ({
+  findGradlewFile: vi.fn(),
+  execGradleAsync: vi.fn(),
 }));
 
-const mockFindGradlewFile = execGradle.findGradlewFile as jest.Mock;
-const mockExecGradleAsync = execGradle.execGradleAsync as jest.Mock;
+const mockFindGradlewFile = execGradle.findGradlewFile as Mock;
+const mockExecGradleAsync = execGradle.execGradleAsync as Mock;
 
 describe('Gradle Project Graph Plugin Utils', () => {
   describe('extractNxPluginVersion', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it.each([
@@ -92,7 +93,7 @@ describe('Gradle Project Graph Plugin Utils', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.chdir(cwd);
     });
 
@@ -186,9 +187,34 @@ allprojects {
           /plugins\s*{\s*id\s*['"]dev\.nx\.gradle\.project-graph['"]\s*version\s*['"][^'"]+['"]/
         );
         expect(content).toMatch(
-          /allprojects\s*{\s*apply\s*plugin\s*['"]dev\.nx\.gradle\.project-graph['"]/
+          /allprojects\s*{\s*apply\s*plugin:\s*['"]dev\.nx\.gradle\.project-graph['"]/
         );
         expect(content).toContain('repositories {');
+      });
+
+      it('should not re-apply the plugin to an allprojects block that already has it', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle': '',
+          'proj/build.gradle': `plugins {
+    id "java"
+}
+
+allprojects {
+    apply plugin: "dev.nx.gradle.project-graph"
+    repositories {
+        mavenCentral()
+    }
+}`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle', 'utf-8');
+        expect(
+          content.match(
+            /apply\s+plugin:\s*['"]dev\.nx\.gradle\.project-graph['"]/g
+          )
+        ).toHaveLength(1);
       });
     });
 

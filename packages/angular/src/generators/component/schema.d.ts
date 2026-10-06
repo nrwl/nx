@@ -6,7 +6,7 @@ export interface Schema {
   inlineTemplate?: boolean;
   standalone?: boolean;
   viewEncapsulation?: 'Emulated' | 'None' | 'ShadowDom';
-  changeDetection?: 'Default' | 'OnPush';
+  changeDetection?: 'Default' | 'Eager' | 'OnPush';
   style?: 'css' | 'scss' | 'sass' | 'less' | 'none';
   skipTests?: boolean;
   type?: string;

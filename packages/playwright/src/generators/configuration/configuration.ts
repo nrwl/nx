@@ -1,4 +1,11 @@
-import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
+import {
+  findTargetDefault,
+  resolveImportPath,
+  isInteractive,
+  textPrompt,
+  upsertTargetDefault,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -12,6 +19,7 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  type TargetConfiguration,
   toJS,
   Tree,
   updateJson,
@@ -30,7 +38,6 @@ import {
 } from '@nx/js/internal';
 import { warnPlaywrightExecutorGenerating } from '../../utils/deprecation';
 import { execSync } from 'child_process';
-import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
 import { assertSupportedPlaywrightVersion } from '../../utils/assert-supported-playwright-version';
@@ -40,7 +47,10 @@ import type {
   ConfigurationGeneratorSchema,
   NormalizedGeneratorOptions,
 } from './schema';
-import { addIgnoresToLintConfig } from '@nx/eslint/internal';
+import {
+  addIgnoresToLintConfig,
+  isTypedLintingEnabled,
+} from '@nx/eslint/internal';
 
 export function configurationGenerator(
   tree: Tree,
@@ -223,7 +233,7 @@ export async function configurationGeneratorInternal(
       skipPackageJson: options.skipPackageJson,
       js: options.js,
       directory: options.directory,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject ?? projectConfig.root === '.',
       addPlugin: options.addPlugin,
     })
@@ -302,28 +312,26 @@ async function normalizeOptions(
 }
 
 async function promptForMissingServeData(projectName: string) {
-  const { command, port } = await promptWhenInteractive<{
-    command: string;
-    port: number;
-  }>(
-    [
-      {
-        type: 'input',
-        name: 'command',
-        message: 'What command should be run to serve the application locally?',
-        initial: `npx nx serve ${projectName}`,
-      },
-      {
-        type: 'numeral',
-        name: 'port',
-        message: 'What port will the application be served on?',
-        initial: 3000,
-      },
-    ],
-    {
-      command: `npx nx serve ${projectName}`,
-      port: 3000,
-    }
+  if (!isInteractive()) {
+    return {
+      webServerCommand: `npx nx serve ${projectName}`,
+      webServerAddress: 'http://localhost:3000',
+    };
+  }
+
+  const command = await textPrompt({
+    message: 'What command should be run to serve the application locally?',
+    initialValue: `npx nx serve ${projectName}`,
+  });
+  const port = Number(
+    await textPrompt({
+      message: 'What port will the application be served on?',
+      initialValue: '3000',
+      validate: (value) =>
+        value !== '' && !Number.isNaN(Number(value))
+          ? undefined
+          : 'Please enter a number',
+    })
   );
 
   return {
@@ -372,17 +380,31 @@ function setupE2ETargetDefaults(tree: Tree) {
   }
 
   // E2e targets depend on all their project's sources + production sources of dependencies
-  nxJson.targetDefaults ??= {};
-
   const productionFileSet = !!nxJson.namedInputs?.production;
-  nxJson.targetDefaults.e2e ??= {};
-  nxJson.targetDefaults.e2e.cache ??= true;
-  nxJson.targetDefaults.e2e.inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-  ];
-
-  updateNxJson(tree, nxJson);
+  // Either a `target: 'e2e'` default or a default keyed on the executor
+  // we're about to scaffold will apply to the new target — consider both
+  // before deciding to add cache/inputs. Target-keyed wins when both are
+  // present.
+  const existingForTarget = findTargetDefault(nxJson.targetDefaults, {
+    target: 'e2e',
+  });
+  const existingForExecutor = findTargetDefault(nxJson.targetDefaults, {
+    executor: '@nx/playwright:playwright',
+  });
+  const existingCache = existingForTarget?.cache ?? existingForExecutor?.cache;
+  const existingInputs =
+    existingForTarget?.inputs ?? existingForExecutor?.inputs;
+  const patch: Partial<TargetConfiguration> = {};
+  if (existingCache === undefined) {
+    patch.cache = true;
+  }
+  if (existingInputs === undefined) {
+    patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
+  }
+  if (Object.keys(patch).length > 0) {
+    upsertTargetDefault(tree, nxJson, { target: 'e2e', ...patch });
+    updateNxJson(tree, nxJson);
+  }
 }
 
 function addE2eTarget(tree: Tree, options: ConfigurationGeneratorSchema) {

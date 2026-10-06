@@ -3,6 +3,7 @@ import {
   BatchInfo,
   BatchStatus,
   ExternalObject,
+  PerformanceSummaryPayload,
   TaskResult,
   TaskStatus as NativeTaskStatus,
 } from '../native';
@@ -31,9 +32,14 @@ export interface TaskMetadata {
 }
 
 export interface LifeCycle {
-  startCommand?(parallel?: number): void | Promise<void>;
+  /**
+   * @param threadCount total thread-pool size (drives the TUI display)
+   * @param parallel resolved `--parallel` (discrete slots), for the performance report
+   */
+  startCommand?(threadCount?: number, parallel?: number): void | Promise<void>;
 
-  endCommand?(): void | Promise<void>;
+  /** @param summary performance report payload for the TUI exit popup (TUI runs only) */
+  endCommand?(summary?: PerformanceSummaryPayload): void | Promise<void>;
 
   scheduleTask?(task: Task): void | Promise<void>;
 
@@ -66,7 +72,7 @@ export interface LifeCycle {
 
   registerRunningTask?(
     taskId: string,
-    parserAndWriter: ExternalObject<[any, any]>
+    ptyHandles: ExternalObject<[any, any, any]>
   ): void;
 
   registerRunningTaskWithEmptyParser?(taskId: string): void;
@@ -86,24 +92,38 @@ export interface LifeCycle {
 
   appendBatchOutput?(batchId: string, output: string): void;
 
+  /**
+   * The batch worker's own log is on disk and worth reading — its tasks did not
+   * all succeed. One log per worker, so this is addressed once for the batch
+   * rather than copied into any task's output.
+   */
+  batchOutputAvailable?(batchId: string, path: string): void;
+
   setBatchStatus?(batchId: string, status: BatchStatus): void;
+
+  /**
+   * Set a clickable Nx Cloud link in the terminal UI: `label` is the text
+   * shown, `url` is opened when it's clicked. Implemented by the TUI lifecycle;
+   * callers (e.g. the Nx Cloud client) should feature-detect it.
+   */
+  setCloudLink?(label: string, url: string): void | Promise<void>;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
   constructor(private readonly lifeCycles: LifeCycle[]) {}
 
-  async startCommand(parallel?: number): Promise<void> {
+  async startCommand(threadCount?: number, parallel?: number): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.startCommand) {
-        await l.startCommand(parallel);
+        await l.startCommand(threadCount, parallel);
       }
     }
   }
 
-  async endCommand(): Promise<void> {
+  async endCommand(summary?: PerformanceSummaryPayload): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.endCommand) {
-        await l.endCommand();
+        await l.endCommand(summary);
       }
     }
   }
@@ -169,11 +189,11 @@ export class CompositeLifeCycle implements LifeCycle {
 
   registerRunningTask(
     taskId: string,
-    parserAndWriter: ExternalObject<[any, any]>
+    ptyHandles: ExternalObject<[any, any, any]>
   ): void {
     for (let l of this.lifeCycles) {
       if (l.registerRunningTask) {
-        l.registerRunningTask(taskId, parserAndWriter);
+        l.registerRunningTask(taskId, ptyHandles);
       }
     }
   }
@@ -242,10 +262,26 @@ export class CompositeLifeCycle implements LifeCycle {
     }
   }
 
+  batchOutputAvailable(batchId: string, path: string): void {
+    for (let l of this.lifeCycles) {
+      if (l.batchOutputAvailable) {
+        l.batchOutputAvailable(batchId, path);
+      }
+    }
+  }
+
   setBatchStatus(batchId: string, status: BatchStatus): void {
     for (let l of this.lifeCycles) {
       if (l.setBatchStatus) {
         l.setBatchStatus(batchId, status);
+      }
+    }
+  }
+
+  async setCloudLink(label: string, url: string): Promise<void> {
+    for (let l of this.lifeCycles) {
+      if (l.setCloudLink) {
+        await l.setCloudLink(label, url);
       }
     }
   }

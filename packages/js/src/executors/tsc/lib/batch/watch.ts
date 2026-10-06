@@ -1,7 +1,7 @@
 import { logger } from '@nx/devkit';
-import { daemonClient } from 'nx/src/daemon/client/client';
 import { join } from 'path';
 import type { TaskInfo } from './types';
+import { daemonClient } from '@nx/devkit/internal';
 
 export async function watchTaskProjectsPackageJsonFileChanges(
   taskInfos: TaskInfo[],

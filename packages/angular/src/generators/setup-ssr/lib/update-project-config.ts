@@ -11,7 +11,9 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
+import { supportsSsrAllowedHosts } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
   DEFAULT_BROWSER_DIR,
@@ -66,10 +68,12 @@ export function updateProjectConfigForApplicationBuilder(
   buildTarget.options.ssr = {
     entry: joinPathFragments(sourceRoot, options.serverFileName),
   };
-  if (options.serverRouting) {
-    buildTarget.options.outputMode = 'server';
-  } else {
-    buildTarget.options.prerender = true;
+  buildTarget.options.outputMode = 'server';
+  if (supportsSsrAllowedHosts(tree)) {
+    // The engine matches the request host against this list and an unset list
+    // matches nothing, so surface it for the deployment to fill in
+    buildTarget.options.security ??= {};
+    buildTarget.options.security.allowedHosts ??= [];
   }
 
   updateProjectConfiguration(tree, options.project, project);
@@ -96,7 +100,9 @@ export function updateProjectConfigForBrowserBuilder(
 
   projectConfig.targets.server = {
     dependsOn: ['build'],
-    executor: buildTarget.executor.startsWith('@angular-devkit/build-angular:')
+    executor: options.buildTargetExecutor.startsWith(
+      '@angular-devkit/build-angular:'
+    )
       ? '@angular-devkit/build-angular:server'
       : '@nx/angular:webpack-server',
     options: {
@@ -145,7 +151,7 @@ export function updateProjectConfigForBrowserBuilder(
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   if (
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
     !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
@@ -156,9 +162,12 @@ export function updateProjectConfigForBrowserBuilder(
       'server'
     );
   }
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.server ??= {};
-  nxJson.targetDefaults.server.cache ??= true;
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    target: 'server',
+  });
+  if (!existing || existing.cache === undefined) {
+    upsertTargetDefault(tree, nxJson, { target: 'server', cache: true });
+  }
   updateNxJson(tree, nxJson);
 }
 

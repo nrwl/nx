@@ -6,6 +6,7 @@ import {
 import {
   applyAdditionalShared,
   applySharedFunction,
+  filterPackagesDeclaredInRootPackageJson,
   getDependentPackagesForProject,
   mapRemotes,
   mapRemotesForSSR,
@@ -109,12 +110,13 @@ function buildModuleFederationConfig(
     bundler
   );
 
-  // Build npm packages list with framework-specific defaults
+  // Build npm packages list with framework-specific defaults. Undeclared defaults
+  // are dropped; a real project dependency still warns when its version is missing.
   let npmPackagesList = dependencies.npmPackages;
   if (defaultPackagesToShare.length > 0 || packagesToAvoid.length > 0) {
     npmPackagesList = Array.from(
       new Set([
-        ...defaultPackagesToShare,
+        ...filterPackagesDeclaredInRootPackageJson(defaultPackagesToShare),
         ...dependencies.npmPackages.filter(
           (pkg) => !packagesToAvoid.includes(pkg)
         ),
@@ -193,9 +195,7 @@ function createDefaultRemoteUrlResolver(
   isServer: boolean = false,
   remoteEntryExt: 'js' | 'mjs' = 'js'
 ): (remote: string) => string {
-  const {
-    readCachedProjectConfiguration,
-  } = require('nx/src/project-graph/project-graph');
+  const { readCachedProjectConfiguration } = require('@nx/devkit/internal');
   const target = 'serve';
   const remoteEntry = isServer
     ? 'server/remoteEntry.js'

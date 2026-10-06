@@ -7,8 +7,9 @@ import {
   getUserQuery,
   MIN_CONTENT_LENGTH,
   PageSection,
+  getOpenAI,
+  getSupabaseClient,
 } from '@nx/nx-dev-util-ai';
-import { getOpenAI, getSupabaseClient } from '@nx/nx-dev-util-ai';
 import { SupabaseClient } from '@supabase/supabase-js';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import OpenAI from 'openai';

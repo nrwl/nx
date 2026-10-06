@@ -1,4 +1,8 @@
-import { getE2EWebServerInfo } from '@nx/devkit/internal';
+import {
+  getE2EWebServerInfo,
+  readTargetDefaultsForTarget,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import {
   type Tree,
   addProjectConfiguration,
@@ -10,7 +14,6 @@ import {
 } from '@nx/devkit';
 import { type NormalizedSchema } from './normalize-options';
 import { nxVersion } from '../../../utils/versions';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2E(
   tree: Tree,
@@ -120,7 +123,7 @@ export async function addE2E(
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
       webServerCommand: e2eWebsServerInfo.e2eCiWebServerCommand,
       webServerAddress: e2eWebsServerInfo.e2eCiBaseUrl,
       rootProject: options.rootProject,
@@ -143,12 +146,13 @@ async function getRemixE2EWebServerInfo(
   let e2ePort = isPluginBeingAdded ? 3000 : 4200;
 
   const defaultServeTarget = isPluginBeingAdded ? 'dev' : 'serve';
+  const serveTargetOptions = readTargetDefaultsForTarget(
+    defaultServeTarget,
+    nxJson.targetDefaults
+  )?.options;
 
-  if (
-    nxJson.targetDefaults?.[defaultServeTarget] &&
-    nxJson.targetDefaults?.[defaultServeTarget].options?.port
-  ) {
-    e2ePort = nxJson.targetDefaults?.[defaultServeTarget].options?.port;
+  if (serveTargetOptions?.port) {
+    e2ePort = serveTargetOptions.port;
   }
 
   return getE2EWebServerInfo(

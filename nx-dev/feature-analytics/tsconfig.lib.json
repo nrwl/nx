@@ -4,7 +4,8 @@
     "outDir": "dist",
     "types": ["node"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "rootDir": "."
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

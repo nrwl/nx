@@ -18,6 +18,24 @@
       "description": "Rename imports of `createNodesV2` from `@nx/rspack/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-23-0-0-migrate-rspack-config-to-v2": {
+      "cli": "nx",
+      "version": "23.1.0-beta.0",
+      "description": "Rewrites rspack.config.{js,ts,mjs,cjs} files for @rspack/core@2: replaces output.libraryTarget with output.library.type and drops experiments.css: false (no-op on v2).",
+      "factory": "./dist/src/migrations/update-23-0-0/migrate-rspack-config-to-v2",
+      "requires": {
+        "@rspack/core": ">=2.0.0"
+      }
+    },
+    "update-23-0-0-rewrite-experiments-css-to-module-rules": {
+      "cli": "nx",
+      "version": "23.1.0-beta.0",
+      "description": "AI-assisted migration: rewrite experiments.css: true configs for @rspack/core@2 by injecting a CSS rule into module.rules.",
+      "prompt": "./dist/src/migrations/update-23-0-0/rewrite-experiments-css-to-module-rules.md",
+      "requires": {
+        "@rspack/core": ">=2.0.0"
+      }
     }
   },
   "packageJsonUpdates": {
@@ -124,6 +142,50 @@
       "packages": {
         "@module-federation/node": {
           "version": "^2.7.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-rspack-v2": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@rspack/core": ">=1.0.0 <2.0.0"
+      },
+      "packages": {
+        "@rspack/core": {
+          "version": "^2.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/dev-server": {
+          "version": "^2.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/plugin-react-refresh": {
+          "version": "^2.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-module-federation-rspack-v2": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@rspack/core": ">=1.0.0 <2.0.0"
+      },
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^2.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^2.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^2.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.7.42",
           "alwaysAddToPackageJson": false
         }
       }

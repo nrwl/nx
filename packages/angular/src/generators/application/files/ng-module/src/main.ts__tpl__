@@ -1,14 +1,6 @@
-<%_ if (usePlatformBrowserDynamic) { _%>
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-<%_ } else { _%>
 import { platformBrowser } from '@angular/platform-browser';
-<%_ } _%>
 import { AppModule } from './app/app<%= moduleTypeSeparator %>module';
 
-<%_ if (usePlatformBrowserDynamic) { _%>
-platformBrowserDynamic()
-<%_ } else { _%>
 platformBrowser()
-<%_ } _%>
   .bootstrapModule(AppModule<% if (!zoneless) { %>, { ngZoneEventCoalescing: true }<% } %>)
   .catch((err) => console.error(err));

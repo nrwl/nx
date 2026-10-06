@@ -1,4 +1,5 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import type { Mock } from 'vitest';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { assertMinimumCypressVersion } from '@nx/cypress/internal';
 import { Tree } from '@nx/devkit';
@@ -6,10 +7,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../library/library';
 import { componentTestGenerator } from './component-test';
 
-jest.mock('@nx/cypress/internal');
+vi.mock('@nx/cypress/internal');
 describe(componentTestGenerator.name, () => {
   let tree: Tree;
-  let mockedAssertMinimumCypressVersion: jest.Mock<
+  let mockedAssertMinimumCypressVersion: Mock<
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
   beforeEach(() => {

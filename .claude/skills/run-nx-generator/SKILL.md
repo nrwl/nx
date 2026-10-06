@@ -43,13 +43,13 @@ Only use these if workspace-plugin generators don't fit:
 4. **Verify the changes**:
    - Review generated files
    - Run tests: `nx affected -t test`
-   - Format code: `npx prettier --write [files]`
+   - Format code: `npx oxfmt [files]`
 
 ## Best Practices
 
 - ✅ Always check workspace-plugin first - it has your custom solutions
 - ✅ Use `--dry-run` flag to preview changes before applying
-- ✅ Format generated code immediately with Prettier
+- ✅ Format generated code immediately with oxfmt
 - ✅ Test affected projects after generation
 - ✅ Commit generator changes separately from manual edits
 

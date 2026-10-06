@@ -1,4 +1,5 @@
-import { ensurePackage, readJson, stripIndents, type Tree } from '@nx/devkit';
+import { ensurePackage, stripIndents, type Tree } from '@nx/devkit';
+import { detectLinters } from '@nx/js/internal';
 import { nxVersion } from './versions';
 
 export async function ignoreVitestTempFiles(
@@ -10,22 +11,35 @@ export async function ignoreVitestTempFiles(
 }
 
 export function addVitestTempFilesToGitIgnore(tree: Tree): void {
-  let gitIgnoreContents = tree.exists('.gitignore')
+  const contents = tree.exists('.gitignore')
     ? tree.read('.gitignore', 'utf-8')
     : '';
-  if (!/^vitest\.config\.\*\.timestamp\*$/m.test(gitIgnoreContents)) {
-    gitIgnoreContents = stripIndents`${gitIgnoreContents}
-      vitest.config.*.timestamp*`;
+  // Vitest 5 writes attachments, blob reports, failure screenshots and the
+  // json/junit reporter output to `.vitest`.
+  const additions = ['vitest.config.*.timestamp*', '.vitest'].filter(
+    (entry) =>
+      !new RegExp(
+        `^${entry.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
+        'm'
+      ).test(contents)
+  );
+  if (!additions.length) {
+    return;
   }
 
-  tree.write('.gitignore', gitIgnoreContents);
+  // Plain concatenation rather than a template: `stripIndents` would rewrite
+  // every existing line of the user's file.
+  const separator = !contents || contents.endsWith('\n') ? '' : '\n';
+  tree.write('.gitignore', `${contents}${separator}${additions.join('\n')}\n`);
 }
 
 async function ignoreVitestTempFilesInEslintConfig(
   tree: Tree,
   projectRoot: string | undefined
 ): Promise<void> {
-  if (!isEslintInstalled(tree)) {
+  // Checked before `ensurePackage` so an Oxlint workspace does not install
+  // `@nx/eslint` only for `isEslintConfigSupported` to send it straight back.
+  if (!detectLinters(tree).includes('eslint')) {
     return;
   }
 
@@ -57,18 +71,4 @@ async function ignoreVitestTempFilesInEslintConfig(
   const directory = isUsingFlatConfig ? '' : (projectRoot ?? '');
 
   addIgnoresToLintConfig(tree, directory, ['**/vitest.config.*.timestamp*']);
-}
-
-export function isEslintInstalled(tree: Tree): boolean {
-  try {
-    require('eslint');
-    return true;
-  } catch {}
-
-  // it might not be installed yet, but it might be in the tree pending install
-  const { devDependencies, dependencies } = tree.exists('package.json')
-    ? readJson(tree, 'package.json')
-    : {};
-
-  return !!devDependencies?.['eslint'] || !!dependencies?.['eslint'];
 }

@@ -1,5 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import type { LoaderContext } from 'astro/loaders';
+import { generatedDocFileURL } from './generated-doc-file-url';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import {
@@ -74,12 +75,18 @@ export async function loadNxSpecialPackage(
   // Process generators
   const generators = parseGenerators(pluginPath);
   if (generators && generators.size > 0) {
-    const markdown = getGeneratorsMarkdown(packageName, generators);
+    const markdown = getGeneratorsMarkdown(
+      packageName,
+      generators,
+      `/docs/reference/${packageName}`
+    );
     entries.push({
       id: `${packageName}-generators`,
       body: markdown,
       // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
-      rendered: await renderMarkdown(markdown),
+      rendered: await renderMarkdown(markdown, {
+        fileURL: generatedDocFileURL(`reference/${packageName}/generators`),
+      }),
       collection: 'nx-reference-packages',
       data: {
         title: `${npmPackageName} Generators`,
@@ -98,12 +105,18 @@ export async function loadNxSpecialPackage(
   // Process executors
   const executors = parseExecutors(pluginPath);
   if (executors && executors.size > 0) {
-    const markdown = getExecutorsMarkdown(packageName, executors);
+    const markdown = getExecutorsMarkdown(
+      packageName,
+      executors,
+      `/docs/reference/${packageName}`
+    );
     entries.push({
       id: `${packageName}-executors`,
       body: markdown,
       // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
-      rendered: await renderMarkdown(markdown),
+      rendered: await renderMarkdown(markdown, {
+        fileURL: generatedDocFileURL(`reference/${packageName}/executors`),
+      }),
       collection: 'nx-reference-packages',
       data: {
         title: `${npmPackageName} Executors`,
@@ -122,12 +135,18 @@ export async function loadNxSpecialPackage(
   // Process migrations
   const migrations = parseMigrations(pluginPath);
   if (migrations && migrations.size > 0) {
-    const markdown = getMigrationsMarkdown(packageName, migrations);
+    const markdown = getMigrationsMarkdown(
+      packageName,
+      migrations,
+      `/docs/reference/${packageName}`
+    );
     entries.push({
       id: `${packageName}-migrations`,
       body: markdown,
       // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
-      rendered: await renderMarkdown(markdown),
+      rendered: await renderMarkdown(markdown, {
+        fileURL: generatedDocFileURL(`reference/${packageName}/migrations`),
+      }),
       collection: 'nx-reference-packages',
       data: {
         title: `${npmPackageName} Migrations`,

@@ -1106,75 +1106,137 @@ export class LibModule {}
     });
   });
 
-  describe('compat', () => {
-    it('should generate files with the "component" type for versions below v20', async () => {
+  describe('changeDetection', () => {
+    function setup(): Tree {
       const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '~19.2.0';
-        return json;
-      });
       addProjectConfiguration(tree, 'lib1', {
         projectType: 'library',
         sourceRoot: 'libs/lib1/src',
         root: 'libs/lib1',
       });
+      tree.write('libs/lib1/src/index.ts', '');
+
+      return tree;
+    }
+
+    it('should default to OnPush without emitting a strategy', async () => {
+      const tree = setup();
 
       await componentGenerator(tree, {
         path: 'libs/lib1/src/lib/example/example',
+        skipFormat: true,
       });
 
-      expect(
-        tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
-      ).toMatchInlineSnapshot(`
-        "import { Component } from '@angular/core';
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).not.toContain('changeDetection');
+      expect(content).not.toContain('ChangeDetectionStrategy');
+    });
 
-        @Component({
-          selector: 'example',
-          imports: [],
-          templateUrl: './example.component.html',
-          styleUrl: './example.component.css',
+    it('should emit the Eager strategy when requested', async () => {
+      const tree = setup();
+
+      await componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        changeDetection: 'Eager',
+        skipFormat: true,
+      });
+
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).toContain(
+        'changeDetection: ChangeDetectionStrategy.Eager'
+      );
+    });
+
+    it('should not emit a strategy when OnPush is explicitly passed', async () => {
+      const tree = setup();
+
+      await componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        changeDetection: 'OnPush',
+        skipFormat: true,
+      });
+
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).not.toContain('changeDetection');
+      expect(content).not.toContain('ChangeDetectionStrategy');
+    });
+  });
+
+  describe('angular compat support', () => {
+    function setup(angularCoreVersion: string): Tree {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': angularCoreVersion,
+        },
+      }));
+      addProjectConfiguration(tree, 'lib1', {
+        projectType: 'library',
+        sourceRoot: 'libs/lib1/src',
+        root: 'libs/lib1',
+      });
+      tree.write('libs/lib1/src/index.ts', '');
+
+      return tree;
+    }
+
+    it('should default changeDetection to Default without emitting a strategy on Angular < 22', async () => {
+      const tree = setup('~21.0.0');
+
+      await componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        skipFormat: true,
+      });
+
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).not.toContain('changeDetection');
+      expect(content).not.toContain('ChangeDetectionStrategy');
+    });
+
+    it('should emit the OnPush changeDetection strategy on Angular < 22', async () => {
+      const tree = setup('~21.0.0');
+
+      await componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        changeDetection: 'OnPush',
+        skipFormat: true,
+      });
+
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).toContain(
+        'changeDetection: ChangeDetectionStrategy.OnPush'
+      );
+    });
+
+    it('should throw when the Eager changeDetection strategy is used on Angular < 22', async () => {
+      const tree = setup('~21.0.0');
+
+      await expect(
+        componentGenerator(tree, {
+          path: 'libs/lib1/src/lib/example/example',
+          changeDetection: 'Eager',
+          skipFormat: true,
         })
-        export class ExampleComponent {}
-        "
-      `);
-      expect(
-        tree.read('libs/lib1/src/lib/example/example.component.html', 'utf-8')
-      ).toMatchInlineSnapshot(`
-        "<p>example works!</p>
-        "
-      `);
-      expect(
-        tree.read('libs/lib1/src/lib/example/example.component.css', 'utf-8')
-      ).toMatchInlineSnapshot(`""`);
-      expect(
-        tree.read(
-          'libs/lib1/src/lib/example/example.component.spec.ts',
-          'utf-8'
-        )
-      ).toMatchInlineSnapshot(`
-        "import { ComponentFixture, TestBed } from '@angular/core/testing';
-        import { ExampleComponent } from './example.component';
-
-        describe('ExampleComponent', () => {
-          let component: ExampleComponent;
-          let fixture: ComponentFixture<ExampleComponent>;
-
-          beforeEach(async () => {
-            await TestBed.configureTestingModule({
-              imports: [ExampleComponent],
-            }).compileComponents();
-
-            fixture = TestBed.createComponent(ExampleComponent);
-            component = fixture.componentInstance;
-            await fixture.whenStable();
-          });
-
-          it('should create', () => {
-            expect(component).toBeTruthy();
-          });
-        });
-        "
-      `);
+      ).rejects.toThrow(
+        'The "Eager" change detection strategy is only supported for Angular versions >= 22.0.0.'
+      );
     });
   });
 });

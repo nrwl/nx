@@ -43,10 +43,20 @@
       }
     },
     "targetDefaults": {
+      "description": "Target defaults — a map keyed by target name, glob (e.g. 'e2e-ci--*'), or executor (e.g. '@nx/js:tsc'). Each value is either a configuration object applied to that target, or an ordered array of filtered entries (used when one target needs different defaults per plugin, projects, or executor). Array entries apply in document order, last match winning.",
       "type": "object",
-      "description": "Target defaults",
       "additionalProperties": {
-        "$ref": "#/definitions/targetDefaultsConfig"
+        "oneOf": [
+          {
+            "$ref": "#/definitions/targetDefaultsConfig"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/targetDefaultArrayEntry"
+            }
+          }
+        ]
       }
     },
     "workspaceLayout": {
@@ -654,6 +664,10 @@
               "dependencies": {
                 "type": "boolean",
                 "description": "Include files matching the fileset for all the project dependencies of this target."
+              },
+              "includeIgnored": {
+                "type": "boolean",
+                "description": "Hash the glob straight from disk instead of the workspace file map, so gitignored or generated files can be inputs. A missing exact path still takes part in the hash. A ! negation only filters includeIgnored matches when it also sets includeIgnored: true."
               }
             },
             "required": ["fileset"],
@@ -850,6 +864,75 @@
       },
       "additionalProperties": false
     },
+    "targetDefaultArrayEntry": {
+      "type": "object",
+      "description": "A filtered target defaults entry. The optional `filter` narrows where the entry applies; the remaining fields are the configuration applied when it matches. An entry with no `filter` is a catch-all baseline for its target key.",
+      "properties": {
+        "filter": {
+          "type": "object",
+          "description": "Narrows where this entry applies. When present, every listed criterion must match the target being resolved.",
+          "properties": {
+            "plugin": {
+              "type": "string",
+              "description": "Restrict to targets originated by a specific plugin (e.g. '@nx/vite')."
+            },
+            "projects": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Restrict the default to matching projects. A list of project names, globs, or tags (e.g. ['apps/*', '!apps/legacy', 'tag:dotnet']). Uses findMatchingProjects syntax."
+            },
+            "executor": {
+              "type": "string",
+              "description": "Restrict to targets that resolve to a specific executor (e.g. '@nx/jest:jest')."
+            }
+          },
+          "additionalProperties": false
+        },
+        "executor": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/executor"
+        },
+        "command": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/command"
+        },
+        "metadata": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/metadata"
+        },
+        "options": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/options"
+        },
+        "outputs": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/outputs"
+        },
+        "defaultConfiguration": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/defaultConfiguration"
+        },
+        "configurations": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/configurations"
+        },
+        "continuous": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/continuous"
+        },
+        "parallelism": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/parallelism"
+        },
+        "inputs": {
+          "$ref": "#/definitions/inputs"
+        },
+        "dependsOn": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/dependsOn"
+        },
+        "cache": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/cache"
+        },
+        "ultracache": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/ultracache"
+        },
+        "syncGenerators": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/syncGenerators"
+        }
+      },
+      "additionalProperties": false
+    },
     "targetDefaultsConfig": {
       "type": "object",
       "description": "Target defaults",
@@ -857,6 +940,15 @@
         "executor": {
           "description": "The function that Nx will invoke when you run this target",
           "type": "string"
+        },
+        "command": {
+          "description": "Shorthand for `nx:run-commands` — the shell command to run.",
+          "type": "string"
+        },
+        "metadata": {
+          "description": "Free-form metadata about the target (description, technologies, help text, etc.).",
+          "type": "object",
+          "additionalProperties": true
         },
         "options": {
           "type": "object"
@@ -960,6 +1052,37 @@
         "cache": {
           "type": "boolean",
           "description": "Specifies if the given target should be cacheable"
+        },
+        "ultracache": {
+          "type": "object",
+          "description": "Configures ultracache for tasks of this target. Nx Cloud only.",
+          "properties": {
+            "...": {
+              "type": "boolean",
+              "const": true,
+              "description": "Merges with the inherited ultracache configuration instead of replacing it. Keys before this token defer to the inherited value; keys after it win."
+            },
+            "mode": {
+              "enum": ["on", "warn", "error", "off"],
+              "default": "on",
+              "description": "How this target's tasks participate. 'on' records IO and lets the recording stand in for the declared inputs and outputs. 'warn' records and reports undeclared reads and writes without applying them. 'error' is reserved for failing the task on an undeclared read or write; until per-target enforcement lands it behaves as 'warn'. 'off' records nothing."
+            },
+            "ignoredReads": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Workspace-relative glob patterns for reads excluded from ultracache reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
+            },
+            "ignoredWrites": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Workspace-relative glob patterns for writes excluded from ultracache reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
+            }
+          },
+          "additionalProperties": false
         },
         "syncGenerators": {
           "type": "array",

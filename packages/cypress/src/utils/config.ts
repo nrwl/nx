@@ -24,6 +24,13 @@ const TS_QUERY_COMMON_JS_EXPORT_SELECTOR =
   'BinaryExpression:has(Identifier[name="module"]):has(Identifier[name="exports"])';
 const TS_QUERY_EXPORT_CONFIG_PREFIX = `:matches(ExportAssignment, ${TS_QUERY_COMMON_JS_EXPORT_SELECTOR}) `;
 
+// Shared so the CT generator (addDefaultCTConfig) and the
+// disable-webpack-ct-just-in-time-compile migration emit the identical note.
+export const JIT_COMPILE_DISABLE_COMMENT = [
+  '// Cypress 14+ defaults justInTimeCompile to true (webpack only), which can',
+  '// intermittently run 0 tests in CI. Remove this line to opt back in.',
+];
+
 export async function addDefaultE2EConfig(
   cyConfigContents: string,
   options: NxCypressE2EPresetOptions,
@@ -106,11 +113,17 @@ ${updatedConfigContents}`;
  * doing so unconditionally produces mixed-syntax files in CJS workspaces
  * (an ESM `import` followed by a CJS `module.exports`), so prefer passing
  * `presetImportPath`.
+ *
+ * Pass `cypressMajorVersion` to opt webpack setups out of `justInTimeCompile`
+ * on Cypress 14+, where it defaults to `true` and can intermittently run 0
+ * tests in CI. The opt-out is emitted as an explicit `justInTimeCompile: false`
+ * so it is visible and reversible.
  **/
 export async function addDefaultCTConfig(
   cyConfigContents: string,
   options: NxComponentTestingOptions = {},
-  presetImportPath?: string
+  presetImportPath?: string,
+  cypressMajorVersion?: number | null
 ) {
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
@@ -131,6 +144,12 @@ export async function addDefaultCTConfig(
     // See addDefaultE2EConfig for the rationale on __filename vs
     // import.meta.url.
     const pathToConfig = isCommonJS ? '__filename' : 'import.meta.url';
+    // justInTimeCompile only applies to the webpack dev server and only exists
+    // on Cypress 14+, where it defaults to true.
+    const disableJustInTimeCompile =
+      options.bundler !== 'vite' &&
+      cypressMajorVersion != null &&
+      cypressMajorVersion >= 14;
     let configValue = `nxComponentTestingPreset(${pathToConfig})`;
     if (options) {
       if (options.bundler !== 'vite') {
@@ -145,6 +164,17 @@ export async function addDefaultCTConfig(
       }
     }
 
+    const jitComment = JIT_COMPILE_DISABLE_COMMENT.map(
+      (line) => `    ${line}`
+    ).join('\n');
+    const componentValue = disableJustInTimeCompile
+      ? `{
+    ...${configValue},
+${jitComment}
+    justInTimeCompile: false,
+  }`
+      : configValue;
+
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
       `${TS_QUERY_EXPORT_CONFIG_PREFIX} ObjectLiteralExpression:first-child`,
@@ -152,17 +182,25 @@ export async function addDefaultCTConfig(
         if (node.properties.length > 0) {
           return `{
   ${node.properties.map((p) => p.getText()).join(',\n')},
-  component: ${configValue}
+  component: ${componentValue}
 }`;
         }
         return `{
-  component: ${configValue}
+  component: ${componentValue}
 }`;
       }
     );
   }
 
-  if (presetImportPath) {
+  // Re-running the generator must not prepend a second declaration - Cypress
+  // loads TS configs through esbuild, which rejects duplicate bindings.
+  const isPresetAlreadyDeclared =
+    tsquery.query(
+      updatedConfigContents,
+      ':matches(ImportSpecifier, BindingElement) Identifier[name="nxComponentTestingPreset"]'
+    ).length > 0;
+
+  if (presetImportPath && !isPresetAlreadyDeclared) {
     // Use the path verbatim - callers pass the public exported subpath. Don't
     // append `.js`: @nx/react and @nx/angular's package exports only declare
     // the bare `./plugins/component-testing` subpath, so a `.js` suffix
@@ -248,10 +286,7 @@ export function resolveCypressConfigObject(
   );
 
   if (exportDefaultStatement) {
-    return resolveCypressConfigObjectFromExportExpression(
-      exportDefaultStatement.expression,
-      sourceFile
-    );
+    return resolveObjectLiteral(exportDefaultStatement.expression, sourceFile);
   }
 
   const moduleExportsStatement = sourceFile.statements.find(
@@ -264,7 +299,7 @@ export function resolveCypressConfigObject(
   );
 
   if (moduleExportsStatement) {
-    return resolveCypressConfigObjectFromExportExpression(
+    return resolveObjectLiteral(
       moduleExportsStatement.expression.right,
       sourceFile
     );
@@ -273,45 +308,62 @@ export function resolveCypressConfigObject(
   return null;
 }
 
-function resolveCypressConfigObjectFromExportExpression(
-  exportExpression: Expression,
-  sourceFile: SourceFile
+/**
+ * Resolves the object literal an expression stands for in a Cypress config
+ * file: the literal itself, the argument of a `defineConfig()` call, or a
+ * variable declared at the top level of the file that holds either. Anything
+ * else (a spread, a function call, an import) resolves to `null`.
+ */
+export function resolveObjectLiteral(
+  expression: Expression,
+  sourceFile: SourceFile,
+  visitedIdentifiers = new Set<string>()
 ): ObjectLiteralExpression | null {
   const ts = ensureTypescript();
 
-  if (ts.isObjectLiteralExpression(exportExpression)) {
-    return exportExpression;
-  }
-
-  if (ts.isIdentifier(exportExpression)) {
-    // try to locate the identifier in the source file
-    const variableStatements = sourceFile.statements.filter((statement) =>
-      ts.isVariableStatement(statement)
-    );
-
-    for (const variableStatement of variableStatements) {
-      for (const declaration of variableStatement.declarationList
-        .declarations) {
-        if (
-          ts.isIdentifier(declaration.name) &&
-          declaration.name.getText() === exportExpression.getText() &&
-          ts.isObjectLiteralExpression(declaration.initializer)
-        ) {
-          return declaration.initializer;
-        }
-      }
-    }
-
-    return null;
+  if (ts.isObjectLiteralExpression(expression)) {
+    return expression;
   }
 
   if (
-    ts.isCallExpression(exportExpression) &&
-    ts.isIdentifier(exportExpression.expression) &&
-    exportExpression.expression.getText() === 'defineConfig' &&
-    ts.isObjectLiteralExpression(exportExpression.arguments[0])
+    ts.isCallExpression(expression) &&
+    ts.isIdentifier(expression.expression) &&
+    expression.expression.text === 'defineConfig' &&
+    expression.arguments[0]
   ) {
-    return exportExpression.arguments[0];
+    return resolveObjectLiteral(
+      expression.arguments[0],
+      sourceFile,
+      visitedIdentifiers
+    );
+  }
+
+  if (ts.isIdentifier(expression)) {
+    // `const a = b; const b = a;` would otherwise loop forever.
+    if (visitedIdentifiers.has(expression.text)) {
+      return null;
+    }
+    visitedIdentifiers.add(expression.text);
+
+    for (const statement of sourceFile.statements) {
+      if (!ts.isVariableStatement(statement)) {
+        continue;
+      }
+      for (const declaration of statement.declarationList.declarations) {
+        if (
+          ts.isIdentifier(declaration.name) &&
+          declaration.name.text === expression.text
+        ) {
+          return declaration.initializer
+            ? resolveObjectLiteral(
+                declaration.initializer,
+                sourceFile,
+                visitedIdentifiers
+              )
+            : null;
+        }
+      }
+    }
   }
 
   return null;

@@ -1,18 +1,18 @@
 import { CreateNodesContext } from '@nx/devkit';
 
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { type GradleReport } from './utils/get-gradle-report';
 
 let gradleReport: GradleReport;
-jest.mock('./utils/get-gradle-report', () => {
+vi.mock('./utils/get-gradle-report', () => {
   return {
     GRADLE_BUILD_FILES: new Set(['build.gradle', 'build.gradle.kts']),
-    populateGradleReport: jest.fn().mockImplementation(() => void 0),
-    getCurrentGradleReport: jest.fn().mockImplementation(() => gradleReport),
+    populateGradleReport: vi.fn().mockImplementation(() => void 0),
+    getCurrentGradleReport: vi.fn().mockImplementation(() => gradleReport),
   };
 });
 
 import { createNodesV2 } from './nodes';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/gradle/plugin-v1/nodes', () => {
   let createNodesFunction = createNodesV2[1];
@@ -67,7 +67,7 @@ describe('@nx/gradle/plugin-v1/nodes', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.chdir(cwd);
   });
 

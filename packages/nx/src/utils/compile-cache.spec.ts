@@ -17,7 +17,7 @@ describe('enableCompileCache', () => {
 
   it('returns false when NX_COMPILE_CACHE=false and does not call enableImpl', () => {
     process.env.NX_COMPILE_CACHE = 'false';
-    const enableImpl = jest.fn();
+    const enableImpl = vi.fn();
     expect(enableCompileCache(enableImpl)).toBe(false);
     expect(enableImpl).not.toHaveBeenCalled();
   });
@@ -27,14 +27,14 @@ describe('enableCompileCache', () => {
   });
 
   it('calls enableImpl with no arguments and returns true', () => {
-    const enableImpl = jest.fn();
+    const enableImpl = vi.fn();
     expect(enableCompileCache(enableImpl)).toBe(true);
     expect(enableImpl).toHaveBeenCalledTimes(1);
     expect(enableImpl).toHaveBeenCalledWith();
   });
 
   it('returns false when enableImpl throws', () => {
-    const enableImpl = jest.fn(() => {
+    const enableImpl = vi.fn(() => {
       throw new Error('boom');
     });
     expect(enableCompileCache(enableImpl)).toBe(false);

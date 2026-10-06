@@ -68,7 +68,6 @@
     "@nx/vitest": "workspace:*",
     "@nx/web": "workspace:*",
     "picomatch": "catalog:",
-    "semver": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

@@ -1,10 +1,12 @@
 mod dep_outputs;
 mod hash_plan_inspector;
-mod hash_planner;
+pub(crate) mod hash_planner;
 pub mod hashers;
 mod inputs;
+mod plan_memo;
 pub mod task_hasher;
 pub mod types;
+pub(crate) mod ultracache_eligibility;
 mod utils;
 
 #[cfg(not(target_arch = "wasm32"))]

@@ -5,7 +5,7 @@ import { createPreset } from './create-preset';
 import { createSandbox } from './create-sandbox';
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { setupCI } from './utils/ci/setup-ci';
-import { mapErrorToBodyLines } from './utils/error-utils';
+import { mapErrorToBodyLines, CnwError } from './utils/error-utils';
 import {
   GitHubPushError,
   initializeGitRepo,
@@ -19,12 +19,11 @@ import {
   getSkippedNxCloudInfo,
   openCloudSetupUrl,
   readNxCloudToken,
-  setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
-import { cloneTemplate } from './utils/template/clone-template';
+import { downloadTemplate } from './utils/template/download-template';
 import {
   addConnectUrlToReadme,
   amendOrCommitReadme,
@@ -36,7 +35,6 @@ import {
 } from './utils/package-manager';
 import { isAiAgent, logProgress } from './utils/ai/ai-output';
 import { confirmThirdPartyPreset } from './internal-utils/prompts';
-import { CnwError } from './utils/error-utils';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;
@@ -71,36 +69,55 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     output.setCliName(cliName ?? 'NX');
   }
 
+  // Skip formatting during generation - the single pass at the end covers
+  // everything once dependencies are on disk. A user who set this deliberately
+  // still gets no formatting at all, so remember their value rather than
+  // silently taking it over.
+  const skipFormatRequested = process.env.NX_SKIP_FORMAT === 'true';
+  process.env.NX_SKIP_FORMAT = 'true';
+
   let directory: string;
 
   if (options.template) {
     // Resolve shorthand template names to full GitHub org/repo format
     options.template = resolveTemplateShorthand(options.template);
 
-    if (!options.template.startsWith('nrwl/'))
+    // Strict slug match - a bare startsWith('nrwl/') check lets path
+    // traversal (`nrwl/../evil`) resolve to another org's repo.
+    if (!/^nrwl\/[\w.-]+$/.test(options.template))
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );
-    const templateUrl = `https://github.com/${options.template}`;
     const workingDir = (options.workingDir ?? process.cwd()).replace(
       /\\/g,
       '/'
     );
     directory = join(workingDir, name);
 
+    // downloadTemplate extracts into `directory`, creating it and overwriting
+    // files. That is intended only when scaffolding into the current directory.
+    // Otherwise refuse to write over an existing path (the CLI already guards
+    // this in determineFolder; this protects direct createWorkspace() callers).
+    if (!options.useCurrentDir && existsSync(directory)) {
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The directory '${directory}' already exists. Choose a different name or remove the existing directory.`
+      );
+    }
+
     const aiMode = isAiAgent();
 
     // Use spinner for human mode, progress logs for AI mode
     let workspaceSetupSpinner: any;
     if (aiMode) {
-      logProgress('cloning', `Cloning template ${options.template}...`);
+      logProgress('downloading', `Downloading template ${options.template}...`);
     } else {
       const ora = require('ora');
       workspaceSetupSpinner = ora(`Creating workspace from template`).start();
     }
 
     try {
-      await cloneTemplate(templateUrl, name, workingDir);
+      await downloadTemplate(options.template, directory);
 
       // Remove npm lockfile from template since we'll generate the correct one
       const npmLockPath = join(directory, 'package-lock.json');
@@ -146,11 +163,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
 
     // Connect to Nx Cloud for template flow
-    if (
-      nxCloud !== 'skip' &&
-      nxCloud !== 'never' &&
-      !options.skipCloudConnect
-    ) {
+    if (nxCloud !== 'skip' && !options.skipCloudConnect) {
       await connectToNxCloudForTemplate(
         directory,
         'create-nx-workspace',
@@ -214,11 +227,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const isTemplate = !!options.template;
 
-  // Handle "Never" opt-out: set neverConnectToCloud in nx.json
-  if (options.neverConnectToCloud) {
-    setNeverConnectToCloud(directory);
-  }
-
   // For template flow, save analytics preference directly to nx.json.
   // For preset flow, this is handled by the workspace generator via createNxJson.
   if (isTemplate && typeof options.analytics === 'boolean') {
@@ -227,9 +235,50 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   // Generate CI for preset flow (not template)
   // When nxCloud === 'yes' (from simplified prompt), use GitHub as the CI provider
-  if (nxCloud !== 'skip' && nxCloud !== 'never' && !isTemplate) {
+  if (nxCloud !== 'skip' && !isTemplate) {
     const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
     await setupCI(directory, ciProvider, packageManager);
+  }
+
+  // Only now are dependencies on disk: the passes inside `@nx/workspace:new`
+  // run before the install, when no formatter resolves yet.
+  if (skipFormatRequested) {
+    process.env.NX_SKIP_FORMAT = 'true';
+  } else {
+    delete process.env.NX_SKIP_FORMAT;
+  }
+
+  if (!skipFormatRequested && workspaceHasFormatter(directory)) {
+    try {
+      const pmc = getPackageManagerCommand(packageManager);
+      // `--all` because git is not initialised yet, so there is nothing to diff
+      // changed files against.
+      await execAndWait(`${pmc.exec} nx format --all`, directory);
+    } catch (e) {
+      // `execAndWait` names a log file only when there was no output at all,
+      // and that file is deleted below - so report the exit code instead.
+      const reason =
+        e?.logFile && e?.message?.includes(e.logFile)
+          ? `The command failed with exit code ${
+              e.exitCode ?? 'unknown'
+            } and produced no output.`
+          : e?.message;
+      output.warn({
+        title: 'Could not format the new workspace.',
+        bodyLines: [
+          'The workspace was created successfully, but its files are not formatted.',
+          ...(reason ? [reason] : []),
+          'Run "nx format:write" inside the workspace to format them.',
+        ],
+      });
+      // Otherwise `initializeGitRepo`'s `git add .` puts an error.log in the
+      // workspace's first commit; the .gitignore templates do not cover it.
+      if (e?.logFile && existsSync(e.logFile)) {
+        try {
+          unlinkSync(e.logFile);
+        } catch {}
+      }
+    }
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
@@ -293,7 +342,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
 
-  if (nxCloud !== 'skip' && nxCloud !== 'never') {
+  if (nxCloud !== 'skip') {
     // "Yes" or "Maybe later" — generate URL, update README, show banner
     const aiModeForCloud = isAiAgent();
     if (aiModeForCloud) {
@@ -336,7 +385,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     if (!options.skipCloudConnect) {
       await openCloudSetupUrl(connectUrl);
     }
-  } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
+  } else if (isTemplate && nxCloud === 'skip') {
     // Strip marker comments from README
     const readmeUpdated = addConnectUrlToReadme(directory, undefined);
     if (readmeUpdated && !skipGit && commit) {
@@ -344,10 +393,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       await amendOrCommitReadme(directory, alreadyPushed);
     }
 
-    // Only show "nx connect" message for 'skip', not 'never'
-    if (nxCloud === 'skip') {
-      nxCloudInfo = getSkippedNxCloudInfo();
-    }
+    nxCloudInfo = getSkippedNxCloudInfo();
   }
 
   return {
@@ -401,5 +447,32 @@ function getWorkspaceGlobsFromPreset(preset: string): string[] {
       return ['apps/*'];
     default:
       return ['packages/*'];
+  }
+}
+
+/**
+ * Asks the workspace rather than the caller. `formatter` is only populated for
+ * the known-preset stacks, so trusting it skips the pass for third-party
+ * presets and templates - which is the only formatting those flows get, since
+ * everything before the install runs under `NX_SKIP_FORMAT`.
+ *
+ * Formats when detection cannot run: an unformatted new workspace fails its own
+ * `nx format:check`, which is worse than a spawn that finds nothing to do.
+ */
+function workspaceHasFormatter(directory: string): boolean {
+  try {
+    // nx-ignore-next-line
+    const { detectFormatter } = require(
+      require.resolve('nx/src/devkit-internals', {
+        paths: [directory],
+        // nx-ignore-next-line
+      })
+      // Typed locally: `detectFormatter` is new in this release, so the
+      // published nx these types resolve against does not export it.
+    ) as { detectFormatter: (root: string) => string | null };
+
+    return detectFormatter(directory) !== null;
+  } catch {
+    return true;
   }
 }

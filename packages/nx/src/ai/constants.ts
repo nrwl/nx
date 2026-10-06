@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { major } from 'semver';
 import { readJsonFile } from '../utils/fileutils';
+import { NX_TMP_DIR_POSIX } from '../utils/nx-tmp-dir';
 import {
   getAgentRules,
   AgentRulesOptions,
@@ -86,3 +87,19 @@ command = "npx"
 args = ${args}
 `;
 }
+
+/**
+ * The Nx runtime roots as they belong in a *committed* sandbox allowlist.
+ *
+ * `~/.nx` is the literal tilde rather than an expanded `NX_HOME_TMP_DIR`: the
+ * sandbox expands it per user, which is the property that makes the entry worth
+ * committing at all. An absolute home would pin the file to whoever ran the
+ * generator.
+ *
+ * Both are listed because socket resolution walks a chain — `/tmp/.nx` first,
+ * `~/.nx` when a peer already owns the shared container. Allowing only the first
+ * leaves every user on a machine where someone else got there first silently
+ * uncovered. Windows resolves `NX_TMP_DIR` to a machine-specific `%TMP%` and has
+ * no sandbox to configure, so the POSIX root is the one that belongs here.
+ */
+export const NX_ALLOWLIST_ROOTS = [NX_TMP_DIR_POSIX, '~/.nx'] as const;

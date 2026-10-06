@@ -39,11 +39,11 @@ async function runMigrationProcess() {
     const installer = new ChangedDepInstaller(workspacePath);
     const installDepsIfChanged = () => installer.installDepsIfChanged();
 
-    const { changes: fileChanges, nextSteps } = await runNxOrAngularMigration(
-      workspacePath,
-      migration,
-      false
-    );
+    const {
+      changes: fileChanges,
+      nextSteps,
+      skipAgentic,
+    } = await runNxOrAngularMigration(workspacePath, migration, false);
 
     if (configuration.createCommits) {
       const commitResult = await commitMigrationIfRequested(
@@ -81,6 +81,7 @@ async function runMigrationProcess() {
         })),
         gitRefAfter,
         nextSteps,
+        skipAgentic,
       })
     );
 

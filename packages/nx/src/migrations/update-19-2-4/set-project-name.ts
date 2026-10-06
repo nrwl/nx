@@ -1,7 +1,7 @@
 import { toProjectName } from '../../config/to-project-name';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { Tree } from '../../generators/tree';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { readJson, writeJson } from '../../generators/utils/json';
 import { getProjects } from '../../generators/utils/project-configuration';
 import type { PackageJson } from '../../utils/package-json';
@@ -39,5 +39,5 @@ export default async function setProjectName(tree: Tree) {
     }
   }
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }

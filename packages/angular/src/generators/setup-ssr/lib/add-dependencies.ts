@@ -3,15 +3,17 @@ import {
   getDependencyVersionFromPackageJson,
   type Tree,
 } from '@nx/devkit';
+import { nxVersion } from '../../../utils/versions';
 import {
   getInstalledAngularDevkitVersion,
-  getInstalledAngularVersionInfo,
   versions,
+  withSsrAllowedHostsSupport,
 } from '../../utils/version-utils';
+import type { NormalizedGeneratorOptions } from '../schema';
 
 export function addDependencies(
   tree: Tree,
-  isUsingApplicationBuilder: boolean
+  options: NormalizedGeneratorOptions
 ): void {
   const pkgVersions = versions(tree);
 
@@ -28,14 +30,19 @@ export function addDependencies(
 
   const angularDevkitVersion =
     getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
-  dependencies['@angular/ssr'] = angularDevkitVersion;
+  // The setup below configures the allowed hosts when the version allows it,
+  // so ask for one that does rather than for whichever the range resolves to
+  dependencies['@angular/ssr'] =
+    withSsrAllowedHostsSupport(angularDevkitVersion);
 
-  if (!isUsingApplicationBuilder) {
+  if (options.isUsingApplicationBuilder) {
+    dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+  } else if (!options.isRspack) {
+    // The rspack conversion removes the targets that use these packages
     devDependencies['browser-sync'] = pkgVersions.browserSyncVersion;
-  } else {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-    if (angularMajorVersion >= 20) {
-      dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+    if (options.isUsingWebpackBuilder) {
+      devDependencies['@nx/webpack'] = nxVersion;
+      devDependencies['webpack-merge'] = pkgVersions.webpackMergeVersion;
     }
   }
 

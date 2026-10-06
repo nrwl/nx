@@ -2,12 +2,13 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "out-tsc/spec",
-    "module": "commonjs",
-    "types": ["jest", "node"],
-    "composite": true
+    "customConditions": ["@nx/nx-source"],
+    "types": ["vitest/globals", "node"],
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
-    "jest.config.ts",
+    "vitest.config.mts",
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.d.ts",

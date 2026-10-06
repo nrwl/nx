@@ -2,10 +2,14 @@ import { CreateNodesContext } from '@nx/devkit';
 import { defineConfig } from 'cypress';
 
 import { createNodesV2 } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { join } from 'path';
 import { nxE2EPreset } from '../../plugins/cypress-preset';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
+import { resetWorkspaceContext } from '@nx/devkit/internal';
 
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -46,7 +50,8 @@ describe('@nx/cypress/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
+    resetCjsMocks();
     tempFs.cleanup();
     tempFs = null;
     process.chdir(cwd);
@@ -1563,10 +1568,11 @@ describe('@nx/cypress/plugin', () => {
         screenshotsFolder: join(tempFs.tempDir, 'dist/screenshots'),
       },
     });
-    jest.mock(
+    // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+    mockCjsModule(
+      import.meta.url,
       join(tempFs.tempDir, 'apps/myapp/cypress.config.js'),
-      () => ({ default: cypressConfig }),
-      { virtual: true }
+      { default: cypressConfig }
     );
 
     const nodes = await createNodesFunction(
@@ -1749,14 +1755,8 @@ describe('@nx/cypress/plugin', () => {
     // is that the hash is different after updating the
     // config file. The actual config read is mocked below.
     tempFs.createFileSync('cypress.config.js', JSON.stringify(cypressConfig));
-    jest.mock(
-      join(tempFs.tempDir, 'cypress.config.js'),
-      () => ({
-        default: cypressConfig,
-      }),
-      {
-        virtual: true,
-      }
-    );
+    mockCjsModule(import.meta.url, join(tempFs.tempDir, 'cypress.config.js'), {
+      default: cypressConfig,
+    });
   }
 });

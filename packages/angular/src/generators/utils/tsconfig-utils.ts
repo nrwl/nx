@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
-import { dirname } from 'node:path';
+import { createTreeParseConfigHost, ensureTypescript } from '@nx/js/internal';
+import { dirname, join } from 'node:path';
 import type * as ts from 'typescript';
 
 /**
@@ -21,21 +21,38 @@ export function getDefinedCompilerOption(
   return compilerOptions[optionName];
 }
 
+/**
+ * Reads a tsconfig with its `extends` chain applied. The `files`, `include` and
+ * `exclude` entries come back relative to `tsConfigPath` no matter which config
+ * in the chain declared them.
+ */
+export function readResolvedTsConfig(
+  tree: Tree,
+  tsConfigPath: string
+): ts.ParsedCommandLine {
+  const ts = ensureTypescript();
+  const host = createTreeParseConfigHost(tree);
+  // an absolute path is what makes the inherited entries come back relative to
+  // this config
+  const absoluteTsConfigPath = join(tree.root, tsConfigPath);
+
+  return ts.parseJsonConfigFileContent(
+    ts.readConfigFile(absoluteTsConfigPath, host.readFile).config,
+    host,
+    dirname(absoluteTsConfigPath)
+  );
+}
+
 export function readCompilerOptionsFromTsConfig(
   tree: Tree,
   tsConfigPath: string
 ): ts.CompilerOptions {
   const ts = ensureTypescript();
-  const tsSysFromTree: ts.System = {
-    ...ts.sys,
-    readDirectory: () => [],
-    readFile: (path) => tree.read(path, 'utf-8'),
-    fileExists: (path) => tree.exists(path),
-  };
+  const host = createTreeParseConfigHost(tree);
 
   const parsed = ts.parseJsonConfigFileContent(
-    ts.readConfigFile(tsConfigPath, tsSysFromTree.readFile).config,
-    tsSysFromTree,
+    ts.readConfigFile(tsConfigPath, host.readFile).config,
+    host,
     dirname(tsConfigPath)
   );
 

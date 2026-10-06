@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import {
   formatDroppedAgentContextForOuterAgent,
   printDroppedAgentContextForOuterAgent,
@@ -102,12 +103,10 @@ describe('formatDroppedAgentContextForOuterAgent', () => {
 });
 
 describe('printDroppedAgentContextForOuterAgent', () => {
-  let writeSpy: jest.SpyInstance;
+  let writeSpy: MockInstance;
 
   beforeEach(() => {
-    writeSpy = jest
-      .spyOn(process.stdout, 'write')
-      .mockImplementation(() => true);
+    writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
   });
   afterEach(() => {
     writeSpy.mockRestore();

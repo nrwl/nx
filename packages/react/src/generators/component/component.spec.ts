@@ -1,4 +1,5 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import type { Mock } from 'vitest';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
@@ -14,15 +15,15 @@ import { componentGenerator } from './component';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 describe('component', () => {
   let appTree: Tree;
   let projectName: string;
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 
@@ -32,12 +33,12 @@ describe('component', () => {
     appTree = createTreeWithEmptyWorkspace();
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should generate files', async () => {

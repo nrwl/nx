@@ -105,6 +105,21 @@ export default async function (tree: Tree, options: Schema) {
     webpackConfigsWithHelpersToConvert.length === 0 &&
     webpackConfigsWithPluginsToConvert.length === 0
   ) {
+    // Projects built by the inferred @nx/webpack/plugin target have no
+    // explicit webpack target to match, only a config file.
+    const webpackConfigPath = findWebpackConfigPath(tree, project.root);
+    if (webpackConfigPath) {
+      webpackConfigsWithPluginsToConvert.push([
+        webpackConfigPath,
+        webpackConfigPath.replace(/webpack(?!.*webpack)/, 'rspack'),
+      ]);
+    }
+  }
+
+  if (
+    webpackConfigsWithHelpersToConvert.length === 0 &&
+    webpackConfigsWithPluginsToConvert.length === 0
+  ) {
     console.error(
       `Project '${options.project}' does not have any webpack targets to convert.`
     );

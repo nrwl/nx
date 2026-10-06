@@ -3,9 +3,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task } from '../config/task-graph';
+import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 import {
   getEnvFilesForTask,
   getEnvVariablesForTask,
+  getForceColorForChild,
+  getGraphTimeDotEnvForTask,
   loadAndExpandDotEnvFile,
 } from './task-env';
 
@@ -269,5 +272,178 @@ describe('getEnvFilesForTask', () => {
     } as any as ProjectGraph;
     const envFiles = getEnvFilesForTask(task, graph);
     expect(envFiles).toMatchSnapshot();
+  });
+  it('should ignore target group members the project does not define', () => {
+    const task = {
+      projectRoot: 'libs/test-project',
+      target: {
+        project: 'test-project',
+        target: 'build',
+      },
+    } as any as Task;
+    const graph = {
+      nodes: {
+        'test-project': {
+          data: {
+            targets: {
+              build: {},
+            },
+            metadata: {
+              targetGroups: {
+                build: ['build', 'phantomTarget'],
+              },
+            },
+          },
+        },
+      },
+    } as any as ProjectGraph;
+    expect(() => getEnvFilesForTask(task, graph)).not.toThrow();
+    expect(getEnvFilesForTask(task, graph)).toEqual(
+      getEnvFilesForTask(task, {
+        nodes: {
+          'test-project': { data: { targets: { build: {} } } },
+        },
+      } as any as ProjectGraph)
+    );
+  });
+});
+
+describe('getGraphTimeDotEnvForTask', () => {
+  const originalEnv = process.env;
+  const originalWorkspaceRoot = workspaceRoot;
+  let tempDir: string;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    // The 'true' marker is only stamped once the graph exists; graph-time
+    // resolution must not depend on it being set.
+    delete process.env.NX_LOAD_DOT_ENV_FILES;
+    delete process.env.BASE_URL;
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-graph-env-'));
+    setWorkspaceRoot(tempDir);
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    setWorkspaceRoot(originalWorkspaceRoot);
+    if (tempDir) {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('loads a target-scoped .env before the run-time marker is stamped', () => {
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+
+    const env = getGraphTimeDotEnvForTask('.', 'e2e');
+
+    expect(env.BASE_URL).toBe('http://localhost:4301');
+  });
+
+  it('resolves a task-scoped value shadowed by an ambient root .env variable', () => {
+    // At Nx init the root .env was loaded into the ambient env. Reconstruction
+    // must unload it so the task-scoped file wins the way it does at run time:
+    // dotenv loading never overrides a key that is already set.
+    writeFileSync(join(tempDir, '.env'), 'BASE_URL=http://localhost:4200\n');
+    process.env.BASE_URL = 'http://localhost:4200';
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+
+    const env = getGraphTimeDotEnvForTask('.', 'e2e');
+
+    expect(env.BASE_URL).toBe('http://localhost:4301');
+  });
+
+  it('does not load dotenv files when NX_LOAD_DOT_ENV_FILES is "false"', () => {
+    process.env.NX_LOAD_DOT_ENV_FILES = 'false';
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+
+    const env = getGraphTimeDotEnvForTask('.', 'e2e');
+
+    expect(env.BASE_URL).toBeUndefined();
+  });
+
+  it('honors the opt-out from the live env when the base env snapshot lacks it', () => {
+    // Windows resolves process.env case-insensitively while a plain snapshot
+    // keeps whichever spelling was exported, so a lowercase opt-out is absent
+    // from the snapshot the playwright plugin passes but live all the same.
+    process.env.NX_LOAD_DOT_ENV_FILES = 'false';
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+    const snapshotWithoutTheKey = { ...process.env };
+    delete snapshotWithoutTheKey.NX_LOAD_DOT_ENV_FILES;
+
+    const env = getGraphTimeDotEnvForTask(
+      '.',
+      'e2e',
+      undefined,
+      undefined,
+      snapshotWithoutTheKey
+    );
+
+    expect(env.BASE_URL).toBeUndefined();
+  });
+
+  it('bases the reconstruction on the given base env, not the live process.env', () => {
+    // A caller running config files in-process passes the snapshot it took
+    // under its load lock; a concurrent load's transient write to the live env
+    // must not be read as ambient, where it would mask the task file's value.
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+    const snapshot = { ...process.env };
+    process.env.BASE_URL = 'http://localhost:9999';
+
+    const env = getGraphTimeDotEnvForTask(
+      '.',
+      'e2e',
+      undefined,
+      undefined,
+      snapshot
+    );
+
+    expect(env.BASE_URL).toBe('http://localhost:4301');
+  });
+});
+
+describe('getForceColorForChild', () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it('should return FORCE_COLOR when it is explicitly set', () => {
+    process.env.FORCE_COLOR = '1';
+    delete process.env.NX_ORIGINAL_FORCE_COLOR;
+    expect(getForceColorForChild()).toBe('1');
+  });
+
+  it('should return "0" when NX_ORIGINAL_FORCE_COLOR is "0" and FORCE_COLOR was deleted', () => {
+    delete process.env.FORCE_COLOR;
+    process.env.NX_ORIGINAL_FORCE_COLOR = '0';
+    expect(getForceColorForChild()).toBe('0');
+  });
+
+  it('should default to "true" when neither FORCE_COLOR nor NX_ORIGINAL_FORCE_COLOR is set', () => {
+    delete process.env.FORCE_COLOR;
+    delete process.env.NX_ORIGINAL_FORCE_COLOR;
+    expect(getForceColorForChild()).toBe('true');
+  });
+
+  it('should prefer FORCE_COLOR over NX_ORIGINAL_FORCE_COLOR when both are set', () => {
+    process.env.FORCE_COLOR = '3';
+    process.env.NX_ORIGINAL_FORCE_COLOR = '0';
+    expect(getForceColorForChild()).toBe('3');
   });
 });

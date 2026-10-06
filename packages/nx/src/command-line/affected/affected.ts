@@ -1,5 +1,9 @@
 import { calculateFileChanges } from '../../project-graph/file-utils';
-import { runCommand } from '../../tasks-runner/run-command';
+import {
+  runnerInputsForSelection,
+  runCommand,
+  selectTasksForProjects,
+} from '../../tasks-runner/run-command';
 import { output } from '../../utils/output';
 import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 import type { NxArgs } from '../../utils/command-line-utils';
@@ -18,9 +22,20 @@ import { projectHasTarget } from '../../utils/project-graph-utils';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
-import { allFileData } from '../../utils/all-file-data';
+import {
+  computeAffectedTasks,
+  selectsAffectedTasks,
+} from '../../project-graph/affected/affected-tasks';
+import type { TaskSelection } from '../../tasks-runner/run-command';
+import {
+  explainUnavailable,
+  isExplaining,
+  type AffectedExplanation,
+} from '../../project-graph/affected/affected-reasons';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -53,17 +68,78 @@ export async function affected(
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
-  const projectGraph = await createProjectGraphAsync({
-    exitOnError: true,
-  });
-  const projects = await getAffectedGraphNodes(nxArgs, projectGraph);
+  // Task selection needs a target to select against, so `nx graph --affected`
+  // and the deprecated print-affected stay project-grained.
+  const useTasks =
+    selectsAffectedTasks() &&
+    command === 'affected' &&
+    !!nxArgs.targets?.length;
+
+  if (isExplaining(nxArgs.explain) && !useTasks) {
+    throw new Error(
+      explainUnavailable(
+        [
+          !selectsAffectedTasks() && 'NX_LEGACY_AFFECTED=false',
+          !nxArgs.targets?.length && 'targets passed with --targets (-t)',
+        ].filter(Boolean)
+      )
+    );
+  }
+
+  // Outside the try so errors reach handleErrors, as they did from inside runCommand.
+  let projectGraph: ProjectGraph;
+  let taskSelection: TaskSelection | undefined;
+  let projects: ProjectGraphProjectNode[] = [];
+  if (useTasks) {
+    let explanation: AffectedExplanation | undefined;
+    ({ projectGraph, taskSelection, explanation } = await computeAffectedTasks({
+      nxJson,
+      targets: nxArgs.targets,
+      touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+      fileChangeArgs: {
+        base: nxArgs.base,
+        head: nxArgs.head,
+        files: nxArgs.files,
+      },
+      configuration: nxArgs.configuration,
+      overrides,
+      extraTargetDependencies,
+      excludeTaskDependencies: extraOptions.excludeTaskDependencies,
+      exclude: nxArgs.exclude,
+      explain: isExplaining(nxArgs.explain),
+      ...(await runnerInputsForSelection(nxArgs, nxJson)),
+    }));
+    // --explain reports the selection rather than acting on it: someone asking
+    // why a task is affected does not also want it to run.
+    if (isExplaining(nxArgs.explain)) {
+      printAffectedExplanation(explanation, 'Affected tasks', nxArgs.explain, {
+        verbose: args.verbose,
+      });
+      await output.drain();
+      process.exit(0);
+    }
+  } else {
+    projectGraph = await createProjectGraphAsync({ exitOnError: true });
+    projects = await getAffectedGraphNodes(nxArgs, projectGraph);
+    if (command === 'affected' && !nxArgs.graph) {
+      taskSelection = selectTasksForProjects(
+        projectGraph,
+        projectsWithTarget(projects, nxArgs),
+        nxArgs,
+        overrides,
+        extraTargetDependencies,
+        extraOptions.excludeTaskDependencies
+      );
+    }
+  }
 
   try {
     switch (command) {
       case 'affected': {
-        const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
         if (nxArgs.graph) {
-          const projectNames = projectsWithTarget.map((t) => t.name);
+          const projectNames = useTasks
+            ? initiatingProjects(taskSelection)
+            : projectsWithTarget(projects, nxArgs);
           const file = readGraphFileFromGraphArg(nxArgs);
 
           return await generateGraph(
@@ -77,12 +153,24 @@ export async function affected(
                 (!nxArgs.projects || nxArgs.projects.length === 0),
               projects: projectNames,
               file,
+              taskSelection:
+                taskSelection ??
+                (() =>
+                  selectTasksForProjects(
+                    projectGraph,
+                    projectNames,
+                    nxArgs,
+                    overrides,
+                    extraTargetDependencies,
+                    extraOptions.excludeTaskDependencies
+                  )),
+              configuration: nxArgs.configuration,
             },
             projectNames
           );
         } else {
           const status = await runCommand(
-            projectsWithTarget,
+            taskSelection,
             projectGraph,
             { nxJson },
             nxArgs,
@@ -91,6 +179,7 @@ export async function affected(
             extraTargetDependencies,
             extraOptions
           );
+          await output.drain();
           process.exit(status);
         }
         break;
@@ -127,13 +216,23 @@ export async function getAffectedGraphNodes(
   return Object.values(affectedGraph.nodes);
 }
 
-function allProjectsWithTarget(
+function initiatingProjects(selection: TaskSelection): string[] {
+  return [
+    ...new Set(
+      selection.initiatingTaskIds.map(
+        (id) => selection.taskGraph.tasks[id].target.project
+      )
+    ),
+  ];
+}
+
+function projectsWithTarget(
   projects: ProjectGraphProjectNode[],
   nxArgs: NxArgs
-) {
-  return projects.filter((p) =>
-    nxArgs.targets.find((target) => projectHasTarget(p, target))
-  );
+): string[] {
+  return projects
+    .filter((p) => nxArgs.targets.find((target) => projectHasTarget(p, target)))
+    .map((p) => p.name);
 }
 
 function printError(e: any, verbose?: boolean) {

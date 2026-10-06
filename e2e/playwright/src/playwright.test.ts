@@ -19,8 +19,9 @@ describe('Playwright E2E Test runner', () => {
 
   beforeAll(() => {
     newProject({
+      keepBackup: true,
       name: uniq('playwright'),
-      packages: ['@nx/playwright', '@nx/web', '@nx/vite'],
+      packages: ['@nx/playwright', '@nx/eslint', '@nx/web', '@nx/vite'],
     });
   });
 
@@ -78,6 +79,7 @@ describe('Playwright E2E Test Runner - legacy', () => {
   beforeAll(() => {
     env = process.env.NX_ADD_PLUGINS;
     newProject({
+      keepBackup: true,
       name: uniq('playwright'),
     });
     process.env.NX_ADD_PLUGINS = 'false';

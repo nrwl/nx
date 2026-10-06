@@ -1,6 +1,7 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
@@ -97,6 +98,12 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
       devDependencies['webpack-cli'] = webpackCliVersion;
     }
 
+    // @nx/webpack depends on sass, which pulls in @parcel/watcher. Its install
+    // script only builds from source when npm_config_build_from_source is set,
+    // so skip it.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      '@parcel/watcher': false,
+    });
     installTask = addDependenciesToPackageJson(
       tree,
       {},

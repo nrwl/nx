@@ -1,11 +1,10 @@
-import { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 
 import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config';
 import {
   ExtraEntryPointClass,
   NormalizedWebpackExecutorOptions,
 } from '../executors/webpack/schema';
-import { applyWebConfig } from '../plugins/nx-webpack-plugin/lib/apply-web-config';
 import { warnWebpackComposeHelpersDeprecation } from './deprecation';
 
 const processed = new Set();
@@ -53,6 +52,10 @@ export function withWeb(
     { options, context }: NxWebpackExecutionContext
   ): Configuration {
     if (processed.has(config)) return config;
+
+    // Lazy-required so importing this module does not load the webpack bundler.
+    const { applyWebConfig } =
+      require('../plugins/nx-webpack-plugin/lib/apply-web-config') as typeof import('../plugins/nx-webpack-plugin/lib/apply-web-config');
 
     applyWebConfig(
       {

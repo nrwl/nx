@@ -99,6 +99,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/node',
     'packages/nuxt',
     'packages/nx',
+    'packages/oxlint',
     'packages/playwright',
     'packages/plugin',
     'packages/react',
@@ -471,8 +472,11 @@ function parseArgs() {
 }
 
 function getRegistry() {
+  // nx release publish delegates to `pnpm publish` in this repo, so pnpm's
+  // config resolution decides where packages would go. Note pnpm 11 reads
+  // pnpm_config_* env vars and ~/.npmrc, but ignores npm_config_* env vars.
   return new URL(
-    execSync('npm config get registry', {
+    execSync('pnpm config get registry', {
       windowsHide: false,
     })
       .toString()

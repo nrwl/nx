@@ -1,5 +1,6 @@
-import { joinPathFragments, Tree } from '@nx/devkit';
 import {
+  joinPathFragments,
+  Tree,
   updateJson,
   generateFiles,
   logger,
@@ -7,7 +8,9 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
   readNxJson,
+  updateNxJson,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import { CustomServerSchema } from './schema';
 import { join } from 'path';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
@@ -143,11 +146,15 @@ export async function customServerGenerator(
         'build-custom-server'
       );
     }
-    json.targetDefaults ??= {};
-    json.targetDefaults['build-custom-server'] ??= {};
-    json.targetDefaults['build-custom-server'].cache ??= true;
     return json;
   });
+
+  const updatedNxJson = readNxJson(host) ?? {};
+  upsertTargetDefault(host, updatedNxJson, {
+    target: 'build-custom-server',
+    cache: true,
+  });
+  updateNxJson(host, updatedNxJson);
 
   if (options.compiler === 'swc') {
     // Update app swc to exlude server files

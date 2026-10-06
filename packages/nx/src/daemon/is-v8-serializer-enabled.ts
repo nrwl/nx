@@ -1,6 +1,6 @@
 /**
- * Check if v8 serializer is enabled for daemon communication.
- * V8 serializer is enabled by default unless explicitly disabled.
+ * Off by default; set `NX_USE_V8_SERIALIZER=true` to opt in. Governs every Nx
+ * socket channel: the daemon client and server, plugin workers, and pseudo-IPC.
  */
 export function isV8SerializerEnabled(): boolean {
   return process.env.NX_USE_V8_SERIALIZER === 'true';

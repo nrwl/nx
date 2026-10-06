@@ -1,25 +1,25 @@
-jest.mock('eslint', () => ({
-  loadESLint: undefined,
+import type { Mock } from 'vitest';
+// `loadESLint` resolves the ESLint class for the requested config format; the
+// legacy (eslintrc) path resolves to this mock so the assertions below can
+// verify the options passed to the eslintrc ESLint constructor.
+const LegacyESLint = vi.fn();
+
+vi.mock('eslint', () => ({
+  loadESLint: vi.fn(),
 }));
 
-jest.mock('eslint/use-at-your-own-risk', () => ({
-  LegacyESLint: jest.fn(),
-}));
-
-const { LegacyESLint } = require('eslint/use-at-your-own-risk');
+import { loadESLint } from 'eslint';
 import { resolveAndInstantiateESLint } from './eslint-utils';
 import * as resolveEslintClassModule from '../../../utils/resolve-eslint-class';
 
 describe('eslint-utils', () => {
   beforeEach(() => {
-    const eslintModule = require('eslint');
-    eslintModule.loadESLint = undefined;
-
-    jest.clearAllMocks();
+    vi.clearAllMocks();
+    vi.mocked(loadESLint).mockResolvedValue(LegacyESLint as any);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should create the ESLint instance with the proper parameters', async () => {
@@ -67,10 +67,10 @@ describe('eslint-utils', () => {
   });
 
   it('should create the ESLint instance with loadESLint when available', async () => {
-    const LoadedESLintClass = jest.fn();
-    jest
-      .spyOn(resolveEslintClassModule, 'resolveESLintClass')
-      .mockResolvedValue(LoadedESLintClass as any);
+    const LoadedESLintClass = vi.fn();
+    vi.spyOn(resolveEslintClassModule, 'resolveESLintClass').mockResolvedValue(
+      LoadedESLintClass as any
+    );
 
     await resolveAndInstantiateESLint('./.eslintrc.json', {} as any);
 
@@ -92,6 +92,18 @@ describe('eslint-utils', () => {
       useEslintrc: true,
     });
     expect(LegacyESLint).not.toHaveBeenCalled();
+  });
+
+  describe('quiet', () => {
+    it('should not pass the flat-config-only ruleFilter to the eslintrc (legacy) instance', async () => {
+      await resolveAndInstantiateESLint('./.eslintrc.json', <any>{
+        quiet: true,
+      });
+
+      expect(LegacyESLint).toHaveBeenCalledWith(
+        expect.not.objectContaining({ ruleFilter: expect.anything() })
+      );
+    });
   });
 
   describe('noEslintrc', () => {
@@ -206,7 +218,7 @@ describe('eslint-utils', () => {
       await expect(
         resolveAndInstantiateESLint('./.eslintrc.json', {} as any, true)
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files"`
+        `[Error: When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files]`
       );
     });
 
@@ -220,7 +232,7 @@ describe('eslint-utils', () => {
           true
         )
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For Flat Config, the \`useEslintrc\` option is not applicable. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `[Error: For Flat Config, the \`useEslintrc\` option is not applicable. See https://eslint.org/docs/latest/use/configure/configuration-files-new]`
       );
 
       await expect(
@@ -232,7 +244,7 @@ describe('eslint-utils', () => {
           true
         )
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For Flat Config, ESLint removed \`resolvePluginsRelativeTo\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `[Error: For Flat Config, ESLint removed \`resolvePluginsRelativeTo\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new]`
       );
 
       await expect(
@@ -244,16 +256,17 @@ describe('eslint-utils', () => {
           true
         )
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For Flat Config, ESLint removed \`ignorePath\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `[Error: For Flat Config, ESLint removed \`ignorePath\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new]`
       );
     });
 
     it('should resolve flat ESLint v9+ using loadESLint when available', async () => {
-      const LoadedESLintClass: jest.Mock & { version?: string } = jest.fn();
+      const LoadedESLintClass: Mock & { version?: string } = vi.fn();
       LoadedESLintClass.version = '9.0.0';
-      jest
-        .spyOn(resolveEslintClassModule, 'resolveESLintClass')
-        .mockResolvedValue(LoadedESLintClass as any);
+      vi.spyOn(
+        resolveEslintClassModule,
+        'resolveESLintClass'
+      ).mockResolvedValue(LoadedESLintClass as any);
 
       await resolveAndInstantiateESLint(
         'eslint.config.mjs',

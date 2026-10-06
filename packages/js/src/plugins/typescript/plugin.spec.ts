@@ -2,13 +2,11 @@ import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
 import { mkdirSync, rmSync } from 'node:fs';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
-import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { getLockFileName, setupWorkspaceContext } from '@nx/devkit/internal';
 import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
@@ -42,7 +40,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
     process.chdir(cwd);
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
@@ -2367,6 +2365,108 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(myLibTargets.typecheck.inputs).toContain(
           '^{projectRoot}/tsconfig.shared.json'
         );
+      });
+
+      it('should preserve shared external reference subtrees with cycles and missing configs', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'tsconfig.base.json': JSON.stringify({
+            compilerOptions: { strict: true },
+          }),
+          'apps/app-one/tsconfig.json': JSON.stringify({
+            references: [{ path: '../../libs/shared' }],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'apps/app-one/package.json': `{}`,
+          'apps/app-two/tsconfig.json': JSON.stringify({
+            references: [{ path: '../../libs/shared' }],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'apps/app-two/package.json': `{}`,
+          'libs/shared/tsconfig.json': JSON.stringify({
+            extends: '../../tsconfig.base.json',
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './nested/tsconfig.json' },
+              { path: './missing/tsconfig.json' },
+            ],
+          }),
+          'libs/shared/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/shared/nested/tsconfig.json': JSON.stringify({
+            references: [{ path: '../tsconfig.json' }],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/shared/package.json': `{}`,
+        });
+
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        const expectedPatterns = [
+          '^{projectRoot}/tsconfig.json',
+          '^{projectRoot}/tsconfig.lib.json',
+          '^{projectRoot}/nested/tsconfig.json',
+        ];
+
+        for (const projectRoot of ['apps/app-one', 'apps/app-two']) {
+          expect(
+            result.projects[projectRoot].targets.typecheck.inputs.filter(
+              (input) =>
+                typeof input === 'string' && input.startsWith('^{projectRoot}/')
+            )
+          ).toEqual(expectedPatterns);
+        }
+      });
+
+      it('should not reuse reference expansions across invocations', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'apps/my-app/tsconfig.json': JSON.stringify({
+            references: [{ path: '../../libs/shared' }],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'apps/my-app/package.json': `{}`,
+          'libs/shared/tsconfig.json': JSON.stringify({
+            references: [{ path: './tsconfig.one.json' }],
+          }),
+          'libs/shared/tsconfig.one.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/shared/tsconfig.two.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/shared/package.json': `{}`,
+        });
+
+        const firstResult = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        expect(
+          firstResult.projects['apps/my-app'].targets.typecheck.inputs
+        ).toContain('^{projectRoot}/tsconfig.one.json');
+
+        await tempFs.createFiles({
+          'libs/shared/tsconfig.json': JSON.stringify({
+            references: [{ path: './tsconfig.two.json' }],
+          }),
+        });
+        setupWorkspaceContext(tempFs.tempDir);
+
+        const secondResult = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        expect(
+          secondResult.projects['apps/my-app'].targets.typecheck.inputs
+        ).toContain('^{projectRoot}/tsconfig.two.json');
+        expect(
+          secondResult.projects['apps/my-app'].targets.typecheck.inputs
+        ).not.toContain('^{projectRoot}/tsconfig.one.json');
       });
 
       it('should normalize and add directories in `include` from internal project references', async () => {

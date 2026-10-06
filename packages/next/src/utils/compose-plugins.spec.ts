@@ -29,6 +29,26 @@ describe('composePlugins', () => {
     });
   });
 
+  it('should not load the deprecation module, which is not copied into the .nx-helpers build output', async () => {
+    vi.resetModules();
+    vi.doMock('./deprecation', () => {
+      throw new Error('compose-plugins must not require ./deprecation');
+    });
+    try {
+      const {
+        composePlugins: isolatedComposePlugins,
+      } = require('./compose-plugins');
+      const { PHASE_PRODUCTION_SERVER } = require('next/constants');
+      const fn = await isolatedComposePlugins();
+      const output = await fn({ env: {} })(PHASE_PRODUCTION_SERVER, {});
+
+      expect(output).toEqual({ env: {} });
+    } finally {
+      vi.doUnmock('./deprecation');
+      vi.resetModules();
+    }
+  });
+
   it('should compose plugins that return an async function', async () => {
     const nextConfig: NextConfig = {
       env: {

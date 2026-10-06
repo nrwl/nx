@@ -1,9 +1,9 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { signalToCode } from '@nx/devkit/internal';
+import { signalToCode, readModulePackageJson } from '@nx/devkit/internal';
 import { ChildProcess, execSync, fork } from 'child_process';
 import detectPort from 'detect-port';
 import { existsSync, rmSync } from 'node:fs';
-import { join, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
 
 import { VerdaccioExecutorSchema } from './schema';
 import { major } from 'semver';
@@ -77,6 +77,17 @@ export async function verdaccioExecutor(
   };
 }
 
+function getVerdaccioBinPath(): string {
+  const { packageJson, path: packageJsonPath } =
+    readModulePackageJson('verdaccio');
+  const bin =
+    typeof packageJson.bin === 'string'
+      ? packageJson.bin
+      : packageJson.bin['verdaccio'];
+
+  return join(dirname(packageJsonPath), bin);
+}
+
 /**
  * Fork the verdaccio process: https://verdaccio.org/docs/verdaccio-programmatically/#using-fork-from-child_process-module
  */
@@ -86,7 +97,7 @@ function startVerdaccio(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('verdaccio/bin/verdaccio'),
+      getVerdaccioBinPath(),
       createVerdaccioOptions(options, workspaceRoot),
       {
         env: {

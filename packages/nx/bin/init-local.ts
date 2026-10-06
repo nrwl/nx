@@ -4,9 +4,10 @@ import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
 import { stripIndents } from '../src/utils/strip-indents';
 import { daemonClient } from '../src/daemon/client/client';
-import { prompt } from 'enquirer';
+import { confirmationPrompt } from '../src/utils/prompt-helpers';
 import { output } from '../src/utils/output';
 import { flushAnalytics } from '../src/analytics';
+import { isCI } from '../src/utils/is-ci';
 
 /**
  * Nx is being run inside a workspace.
@@ -127,6 +128,12 @@ function shouldDelegateToAngularCLI() {
 }
 
 async function ensureNxConsoleInstalledViaDaemon(): Promise<void> {
+  // Asking the daemon makes a fresh daemon install nx@latest in the background,
+  // so skip it whenever the prompt could not be shown anyway.
+  if (!process.stdout.isTTY || isCI()) {
+    return;
+  }
+
   // Only proceed if daemon is available
   if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
     return;
@@ -136,7 +143,7 @@ async function ensureNxConsoleInstalledViaDaemon(): Promise<void> {
   const status = await daemonClient.getNxConsoleStatus();
 
   // If we should prompt the user
-  if (status.shouldPrompt && process.stdout.isTTY) {
+  if (status.shouldPrompt) {
     output.log({
       title: "Install Nx's official editor extension to:",
       bodyLines: [
@@ -147,13 +154,9 @@ async function ensureNxConsoleInstalledViaDaemon(): Promise<void> {
     });
 
     try {
-      const { shouldInstallNxConsole } = await prompt<{
-        shouldInstallNxConsole: boolean;
-      }>({
-        type: 'confirm',
-        name: 'shouldInstallNxConsole',
+      const shouldInstallNxConsole = await confirmationPrompt({
         message: 'Install Nx Console? (you can uninstall anytime)',
-        initial: true,
+        onCancel: () => false,
       });
 
       // Set preference and install if user said yes
@@ -184,7 +187,7 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
       `- change versions of packages to match organizational requirements`
     );
     console.log(
-      `And, in general, it is lot more reliable for non-trivial workspaces. Read more at: https://nx.dev/getting-started/nx-and-angular#ng-update-and-nx-migrate`
+      `And, in general, it is lot more reliable for non-trivial workspaces. Read more at: https://nx.dev/docs/technologies/angular/guides/nx-and-angular#ng-update-vs-nx-migrate`
     );
     console.log(
       `Run "nx migrate latest" to update to the latest version of Nx.`

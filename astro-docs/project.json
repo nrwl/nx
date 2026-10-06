@@ -5,6 +5,10 @@
   "targets": {
     "prebuild-banner": {
       "cache": false,
+      "inputs": [
+        "{workspaceRoot}/scripts/documentation/prebuild-banner.mjs",
+        { "env": "BANNER_URL" }
+      ],
       "outputs": ["{projectRoot}/src/content/banner.json"],
       "command": "node ../scripts/documentation/prebuild-banner.mjs",
       "options": {
@@ -29,6 +33,7 @@
             "esbuild",
             "gradle",
             "nuxt",
+            "@nx/oxlint",
             "plugin",
             "react-native",
             "remix"
@@ -44,6 +49,7 @@
     "build": {
       "dependsOn": [
         "prebuild-banner",
+        "prebuild-agent-skills",
         {
           "projects": [
             "nx",
@@ -54,6 +60,7 @@
             "esbuild",
             "gradle",
             "nuxt",
+            "@nx/oxlint",
             "plugin",
             "react-native",
             "remix"
@@ -65,7 +72,12 @@
         "production",
         "^production",
         "{projectRoot}/src/content/banner.json",
+        "{projectRoot}/netlify.toml",
         { "env": "NX_DEV_URL" },
+        { "env": "NX_CLOUD_OPENAPI_URL" },
+        {
+          "runtime": "node astro-docs/scripts/hash-openapi-spec.mjs"
+        },
         "{workspaceRoot}/packages/*/package.json",
         "{workspaceRoot}/packages/*/{generators,executors,migrations}.json",
         "{workspaceRoot}/packages/*/src/{generators,executors}/**/schema.json",
@@ -93,6 +105,13 @@
     "preview": {
       "dependsOn": ["build"],
       "command": "astro preview",
+      "inputs": [
+        "default",
+        "{workspaceRoot}/packages/*/package.json",
+        "{workspaceRoot}/packages/*/{generators,executors,migrations}.json",
+        { "externalDependencies": ["astro"] },
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
       "continuous": true,
       "options": {
         "cwd": "astro-docs"
@@ -106,6 +125,7 @@
     },
     "test": {
       "executor": "nx:noop",
+      "inputs": [],
       "dependsOn": ["validate-links", "format"]
     },
     "pw-e2e": {
@@ -170,19 +190,37 @@
         "{projectRoot}/scripts/vale-changed.mjs"
       ]
     },
+    "prebuild-agent-skills": {
+      "cache": false,
+      "inputs": [
+        "{projectRoot}/scripts/sync-agent-skills.mjs",
+        { "env": "NETLIFY" }
+      ],
+      "outputs": ["{projectRoot}/public/.well-known/agent-skills"],
+      "command": "node scripts/sync-agent-skills.mjs",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
     "format": {
       "cache": true,
-      "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
-      "command": "prettier **/*.mdoc --check",
+      "//": "oxfmt only formats extensions it knows, so the script mirrors .mdoc files as .md into a temp dir for one oxfmt run",
+      "command": "node scripts/format-mdoc.mjs --check",
+      "options": {
+        "cwd": "astro-docs"
+      },
       "inputs": [
         "{projectRoot}/**/*.mdoc",
-        "{workspaceRoot}/.prettierrc",
-        "{workspaceRoot}/.prettierignore",
+        "{projectRoot}/scripts/format-mdoc.mjs",
+        "{workspaceRoot}/.oxfmtrc.json",
         "{workspaceRoot}/.editorconfig"
       ]
     },
     "format:write": {
-      "command": "prettier **/*.mdoc --write"
+      "command": "node scripts/format-mdoc.mjs",
+      "options": {
+        "cwd": "astro-docs"
+      }
     }
   }
 }

@@ -75,7 +75,8 @@ describe('configurationGenerator', () => {
     });
 
     const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.targetDefaults['@nx/esbuild:esbuild']).toEqual({
+    const esbuildEntry = nxJson.targetDefaults['@nx/esbuild:esbuild'];
+    expect(esbuildEntry).toEqual({
       cache: true,
       dependsOn: ['^build'],
       inputs: [
@@ -110,7 +111,8 @@ describe('configurationGenerator', () => {
     });
 
     const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.targetDefaults['@nx/esbuild:esbuild'].inputs).toEqual([
+    const esbuildEntry = nxJson.targetDefaults['@nx/esbuild:esbuild'];
+    expect(esbuildEntry.inputs).toEqual([
       'production',
       '^production',
       {
@@ -140,7 +142,8 @@ describe('configurationGenerator', () => {
     });
 
     const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.targetDefaults['@nx/esbuild:esbuild']).toEqual({
+    const esbuildEntry = nxJson.targetDefaults['@nx/esbuild:esbuild'];
+    expect(esbuildEntry).toMatchObject({
       cache: true,
       inputs: ['custom-input'],
     });

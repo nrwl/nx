@@ -24,7 +24,8 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "ignoreDeprecations": "6.0"
   },
   "types": ["node", "jest"],
   "include": [
@@ -37,6 +38,9 @@
     "../../nx-dev/nx-dev/.next/types/**/*.ts"
   ],
   "references": [
+    {
+      "path": "../feature-analytics"
+    },
     {
       "path": "../ui-primitives"
     },

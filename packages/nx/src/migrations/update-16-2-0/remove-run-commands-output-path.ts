@@ -1,13 +1,14 @@
 import { joinPathFragments } from '../../utils/path';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { TargetConfiguration } from '../../config/workspace-json-project-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
 import { updateJson } from '../../generators/utils/json';
 import {
   getProjects,
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
+import { targetDefaultConfigs } from '../utils/target-defaults';
 
 export default async function removeRunCommandsOutputPath(tree: Tree) {
   for (const [project, configuration] of getProjects(tree).entries()) {
@@ -22,13 +23,17 @@ export default async function removeRunCommandsOutputPath(tree: Tree) {
   }
   if (tree.exists('nx.json')) {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      for (const [, target] of Object.entries(json.targetDefaults ?? {})) {
-        updateTargetBlock(target);
+      // `targetDefaults` is a map of values; each value may be the object form
+      // or the filtered array form, so flatten to every config block.
+      for (const value of Object.values(json.targetDefaults ?? {})) {
+        for (const block of targetDefaultConfigs(value)) {
+          updateTargetBlock(block);
+        }
       }
       return json;
     });
   }
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }
 
 function updateTargetBlock(target: TargetConfiguration): boolean {

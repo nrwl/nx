@@ -6,14 +6,15 @@ import {
   updateJson,
   NxJsonConfiguration,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { initGenerator } from './init';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
 }));
@@ -27,6 +28,28 @@ describe('@nx/vitest:init', () => {
       dependencies: {},
     };
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the esbuild build script when installing vite below 8', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        initGenerator(tree, { skipFormat: true, viteVersion: 7 })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?esbuild['"]?: false/
+      );
+    });
+
+    it('should not record an esbuild decision for vite 8, which uses rolldown', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        initGenerator(tree, { skipFormat: true })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        'esbuild'
+      );
+    });
   });
 
   it('should add the plugin by default when addPlugin is not provided', async () => {
@@ -215,7 +238,7 @@ describe('@nx/vitest:init', () => {
       });
 
       const nxJson = readNxJson(tree);
-      expect(nxJson.targetDefaults['@nx/vitest:test']).toEqual({
+      expect(nxJson.targetDefaults?.['@nx/vitest:test']).toEqual({
         cache: true,
         inputs: ['default', '^production'],
       });

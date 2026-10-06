@@ -1,4 +1,5 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import type { MockInstance } from 'vitest';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   addProjectConfiguration,
@@ -11,6 +12,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestLibrary } from '../utils/testing';
 import { librarySecondaryEntryPointGenerator } from './library-secondary-entry-point';
+import * as devkitModule from '@nx/devkit';
 
 describe('librarySecondaryEntryPoint generator', () => {
   let tree: Tree;
@@ -268,17 +270,16 @@ describe('librarySecondaryEntryPoint generator', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
+      formatFilesSpy = vi
         .spyOn(devkitModule, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files', async () => {
@@ -333,42 +334,6 @@ describe('librarySecondaryEntryPoint generator', () => {
       expect(
         tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
       ).toMatchSnapshot();
-    });
-  });
-
-  describe('compat', () => {
-    it('should generate the module file with the "." type separator for versions lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-
-      addProjectConfiguration(tree, 'lib1', {
-        root: 'libs/lib1',
-        projectType: 'library',
-      });
-      tree.write(
-        'libs/lib1/package.json',
-        JSON.stringify({ name: '@my-org/lib1' })
-      );
-
-      await librarySecondaryEntryPointGenerator(tree, {
-        name: 'testing',
-        library: 'lib1',
-        skipFormat: true,
-      });
-
-      expect(tree.exists('libs/lib1/testing/src/lib/testing.module.ts')).toBe(
-        true
-      );
-      expect(tree.read('libs/lib1/testing/src/index.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "export * from './lib/testing.module';
-        "
-      `);
     });
   });
 });

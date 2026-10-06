@@ -136,7 +136,7 @@ filter: 'type:References'
 
 ##### Self-healing CI / AI fixes
 
-- See [self-healing CI guide](/docs/guides/nx-cloud/enable-ai-features#self-healing-ci-for-enterprise-on-prem-installations) for enablement steps.
+- See [self-healing CI guide](/docs/kb/enable-ai-features#bring-your-own-api-key-byok) for enablement steps.
 
 - Feat: Automatically detect and fix failing CI tasks with AI-generated solutions
 - Feat: New `nx-cloud self-heal apply-locally` command to test AI fixes before applying them in CI
@@ -289,15 +289,15 @@ nxApi:
 - Feat: Assignment rules updates
   - Parallelism configuration
   - Target globs
-  - See [here](/docs/reference/nx-cloud/assignment-rules#how-to-define-an-assignment-rule) for examples
-- Feat: Parallel agent steps and step groups (docs [here](/docs/reference/nx-cloud/launch-templates#launchtemplatestemplatenamegroupname))
+  - See [here](/docs/kb/assignment-rules#how-to-define-an-assignment-rule) for examples
+- Feat: Parallel agent steps and step groups (docs [here](/docs/kb/launch-templates#launchtemplatestemplatenamegroupname))
 - Feat: Reusable agent launch template snippets via yaml anchors
-  - See example [here](/docs/reference/nx-cloud/launch-templates#full-example)
+  - See example [here](/docs/kb/launch-templates#full-example)
   - Specifically how `common-init-steps: &common-init-steps` is defined
 - Feat: Individual GitHub commit statuses for each run group
   - This is configurable in your workspace settings
-  - See [here](/docs/guides/nx-cloud/setup-ci#github-status-checks) for branch settings configuration
-  - You might also need [to update your GitHub app permissions](/docs/guides/nx-cloud/source-control-integration/github-app-permissions)
+  - See [GitHub integration](/docs/kb/github-integration#connect-your-repository) for branch settings configuration
+  - You might also need [to update your GitHub app permissions](/docs/kb/github-app-permissions)
 - Misc: CIPE list is sortable by duration
 - Fix: early DTE job termination improvements
 - Fix: run details page performance improvements
@@ -342,7 +342,7 @@ Assignment rules allow you to control which tasks can run on which agents. Save 
 
 Assignment rules are defined in yaml files within your workspace's `.nx/workflows` directory. You can use assignment rules with DTE-agents or with dynamic Nx Agents. Note that additional configuration is required when using DTE agents.
 
-Read the full docs [here](/docs/reference/nx-cloud/assignment-rules#assignment-rules-beta).
+Read the full docs [here](/docs/kb/assignment-rules#assignment-rules-beta).
 
 Once you start using assignment rules, you'll be able to see all your configured "rules" in your CIPE "Analysis page".
 
@@ -375,7 +375,7 @@ To enable it, you need to set this env variable on the nx-api deployment:
     - `~/.npm`
     - `~/.cache/yarn`
     - `.pnpm-store` (note PNPM on Nx Agents does not store its cache folder in the \$HOME dir)
-  - Please refer to the [custom launch templates docs](/docs/reference/nx-cloud/launch-templates#full-example) for how you can setup your caching under these new recommendations
+  - Please refer to the [custom launch templates docs](/docs/kb/launch-templates#full-example) for how you can setup your caching under these new recommendations
 - Nx Agents `$HOME` directory mounting
   - previously, when your Nx Agents pods were starting up, we were mounting as a k8s volume just the folder in which you checkout your repo: `$HOME/workspace`
   - however, a lot of dependencies and third-party apps use `$HOME` folder to deposit a lot of files (Rust, NPM cache folders etc.)
@@ -675,7 +675,7 @@ This release contains everything needed to run [Nx Agents](/docs/features/ci-fea
 If you already running DTE, there are a few advantages to upgrading to Agents:
 
 - simplified CI config: you will need to maintain just a single, main CI job config. NxCloud will create needed CI agents for you as needed.
-- [dynamic agent allocation based on PR size](/docs/features/ci-features/dynamic-agents): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
+- [dynamic agent allocation based on PR size](/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
 - access to [Spot instances](https://aws.amazon.com/ec2/spot/): if you are running your clusters on any of the popular cloud providers (AWS, Google Cloud, Azure etc.), you can now use their Spot instances for running your CI job. This is possible due to NxCloud's distribution model, which allows work on a reclaimed node to be re-distributed to the remaining agents.
 
 We will shortly make available a new Helm chart that will allow you to deploy a separate Agents cluster to launch workflows: [https://github.com/nrwl/nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm).
@@ -684,7 +684,7 @@ We will shortly make available a new Helm chart that will allow you to deploy a 
 
 ##### Task Atomizer and task retries
 
-If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](/docs/features/ci-features/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](/docs/features/ci-features/flaky-tasks).
+If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](/docs/kb/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](/docs/kb/flaky-tasks).
 
 ##### CIPE page improvements
 

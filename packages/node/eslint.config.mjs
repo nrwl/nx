@@ -5,19 +5,6 @@ export default [
   ...baseConfig,
   { ignores: ['dist'] },
   {
-    files: ['**/*.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        '@nx/workspace',
-        '@angular-devkit/core',
-        '@angular-devkit/architect',
-        '@angular-devkit/schematics',
-      ],
-    },
-    ignores: ['./src/migrations/**'],
-  },
-  {
     files: ['./package.json', './generators.json', './migrations.json'],
     rules: {
       '@nx/nx-plugin-checks': 'error',
@@ -36,7 +23,10 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            // Installed on demand via `ensurePackage` when the generator is
+            // asked for that bundler / unit test runner.
             '@nx/webpack',
+            '@nx/vitest',
             'express',
             'koa',
             'fastify',

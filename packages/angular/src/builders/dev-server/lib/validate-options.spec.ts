@@ -1,25 +1,26 @@
+import type { MockInstance } from 'vitest';
 import { validateOptions } from './validate-options';
 import * as angularVersionUtils from '../../../executors/utilities/angular-version-utils';
 
 describe('validateOptions', () => {
-  let getInstalledAngularVersionInfoSpy: jest.SpyInstance;
+  let getInstalledAngularVersionInfoSpy: MockInstance;
 
   beforeEach(() => {
-    getInstalledAngularVersionInfoSpy = jest.spyOn(
+    getInstalledAngularVersionInfoSpy = vi.spyOn(
       angularVersionUtils,
       'getInstalledAngularVersionInfo'
     );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('when Angular version is < 21', () => {
     beforeEach(() => {
       getInstalledAngularVersionInfoSpy.mockReturnValue({
-        major: 19,
-        version: '19.2.1',
+        major: 20,
+        version: '20.0.0',
       });
     });
 
@@ -42,14 +43,14 @@ describe('validateOptions', () => {
           define: { API_URL: '"http://localhost:3000"' },
         });
       }).toThrow(
-        'The "define" option is only supported in Angular >= 21.0.0. You are currently using "19.2.1".'
+        'The "define" option is only supported in Angular >= 21.0.0. You are currently using "20.0.0".'
       );
     });
 
     it('should include full Angular version in error message', () => {
       getInstalledAngularVersionInfoSpy.mockReturnValue({
-        major: 19,
-        version: '19.0.0-next.5',
+        major: 20,
+        version: '20.0.0-next.5',
       });
 
       expect(() => {
@@ -57,7 +58,7 @@ describe('validateOptions', () => {
           buildTarget: 'app:build',
           define: { API_URL: '"http://localhost:3000"' },
         });
-      }).toThrow('You are currently using "19.0.0-next.5".');
+      }).toThrow('You are currently using "20.0.0-next.5".');
     });
   });
 

@@ -63,7 +63,7 @@ function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
       {section.hideSectionHeader ? null : (
         <h4
           data-testid={`section-h4:${section.id}`}
-          className="mb-3 mt-8 border-b border-solid border-zinc-200 pb-2 text-xl font-bold dark:border-zinc-700 dark:text-zinc-100"
+          className="mt-8 mb-3 border-b border-solid border-zinc-200 pb-2 text-xl font-bold dark:border-zinc-700 dark:text-zinc-100"
         >
           {section.name}
         </h4>
@@ -362,7 +362,7 @@ export function SidebarMobile({
                 {/*CLOSE BUTTON*/}
                 <button
                   type="button"
-                  className="flex focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                  className="flex focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:ring-inset"
                   onClick={() => toggleNav(!navIsOpen)}
                 >
                   <span className="sr-only">Close sidebar</span>
@@ -394,7 +394,7 @@ export function SidebarMobile({
                           section.current
                             ? 'text-blue-600 dark:text-blue-500'
                             : 'hover:text-zinc-900 dark:hover:text-blue-400',
-                          'whitespace-nowrap p-4 text-center text-sm font-medium'
+                          'p-4 text-center text-sm font-medium whitespace-nowrap'
                         )}
                         aria-current={section.current ? 'page' : undefined}
                         prefetch={false}
@@ -412,7 +412,7 @@ export function SidebarMobile({
                           section.current
                             ? 'text-blue-600 dark:text-blue-500'
                             : 'hover:text-zinc-900 dark:hover:text-blue-400',
-                          'whitespace-nowrap p-4 text-center text-sm font-medium'
+                          'p-4 text-center text-sm font-medium whitespace-nowrap'
                         )}
                         aria-current={section.current ? 'page' : undefined}
                         prefetch={false}

@@ -16,7 +16,10 @@ import {
   typesCorsVersion,
 } from '../../../utils/versions';
 import { getComponentType } from '../../utils/artifact-types';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import {
+  getInstalledAngularVersionInfo,
+  supportsSsrAllowedHosts,
+} from '../../utils/version-utils';
 
 export async function updateSsrSetup(
   tree: Tree,
@@ -63,6 +66,7 @@ export async function updateSsrSetup(
     zoneless,
     useDefaultImport: angularMajorVersion >= 21,
     angularMajorVersion,
+    supportsAllowedHosts: supportsSsrAllowedHosts(tree),
     tmpl: '',
   });
 
@@ -81,11 +85,8 @@ export async function updateSsrSetup(
     const componentType = getComponentType(tree);
     const componentFileSuffix = componentType ? `.${componentType}` : '';
 
-    const useBootstrapContext =
-      // https://github.com/angular/angular-cli/releases/tag/20.3.0
-      gte(angularVersion, '20.3.0') ||
-      // https://github.com/angular/angular-cli/releases/tag/19.2.16
-      (angularMajorVersion === 19 && gte(angularVersion, '19.2.16'));
+    // https://github.com/angular/angular-cli/releases/tag/20.3.0
+    const useBootstrapContext = gte(angularVersion, '20.3.0');
 
     generateFiles(
       tree,

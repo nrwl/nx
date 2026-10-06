@@ -44,7 +44,7 @@ describe('assertSupportedAngularVersion', () => {
     const tree = createTreeWithEmptyWorkspace();
     updateJson(tree, 'package.json', (json) => ({
       ...json,
-      dependencies: { '@angular/core': '~19.2.0' },
+      dependencies: { '@angular/core': '~20.2.0' },
     }));
 
     expect(() => assertSupportedAngularVersion(tree)).not.toThrow();

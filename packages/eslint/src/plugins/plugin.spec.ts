@@ -1,23 +1,46 @@
+import {
+  calculateHashesForCreateNodes,
+  globWithWorkspaceContext,
+} from '@nx/devkit/internal';
 import { CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
 import { mkdirSync, rmSync } from 'fs';
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
+  return {
+    ...actual,
+    calculateHashesForCreateNodes: vi.fn(actual.calculateHashesForCreateNodes),
+    globWithWorkspaceContext: vi.fn(actual.globWithWorkspaceContext),
+  };
+});
+
+// The shared setup's `@nx/devkit` mock spreads the module, freezing
+// `workspaceRoot` before TempFs moves it; `getRootTsConfigFileName` reads it.
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
+  return Object.defineProperty({ ...actual }, 'workspaceRoot', {
+    get: () => actual.workspaceRoot,
+  });
+});
+
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-const resolveESLintClassSpy = jest.fn();
-jest.mock('../utils/resolve-eslint-class', () => ({
-  resolveESLintClass: (...args) => {
-    resolveESLintClassSpy(...args);
-    return jest
-      .requireActual('../utils/resolve-eslint-class')
-      .resolveESLintClass(...args);
-  },
-}));
+const resolveESLintClassSpy = vi.fn();
+vi.mock('../utils/resolve-eslint-class', async () => {
+  const actual = await vi.importActual<any>('../utils/resolve-eslint-class');
+  return {
+    resolveESLintClass: (...args) => {
+      resolveESLintClassSpy(...args);
+      return actual.resolveESLintClass(...args);
+    },
+  };
+});
 
 describe('@nx/eslint/plugin', () => {
   let context: CreateNodesContext;
@@ -47,11 +70,115 @@ describe('@nx/eslint/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     resolveESLintClassSpy.mockClear();
+    vi.mocked(calculateHashesForCreateNodes).mockClear();
+    vi.mocked(globWithWorkspaceContext).mockClear();
     tempFs.cleanup();
     tempFs = null;
     rmSync('tmp/project-graph-cache', { recursive: true, force: true });
+  });
+
+  describe('config hash inputs', () => {
+    async function captureInputs(files: string[]) {
+      const captured = new Error('Hash inputs captured');
+      vi.mocked(globWithWorkspaceContext).mockResolvedValueOnce([]);
+      vi.mocked(calculateHashesForCreateNodes).mockRejectedValueOnce(captured);
+      await expect(createNodesV2[1](files, {}, context)).rejects.toBe(captured);
+      const [roots, , , inputs] = vi
+        .mocked(calculateHashesForCreateNodes)
+        .mock.calls.at(-1);
+      return Object.fromEntries(
+        roots.map((root, index) => [root, inputs[index]])
+      );
+    }
+
+    it('hashes strict descendant configs in discovery order, including duplicates', async () => {
+      const configs = [
+        'libs/a/nested/eslint.config.js',
+        'libs/ab/eslint.config.js',
+        'eslint.config.js',
+        'libs/a/eslint.config.js',
+        'libs/a/nested/.eslintrc.json',
+        'libs/a/nested/eslint.config.js',
+      ];
+      expect(
+        await captureInputs([
+          ...configs,
+          'libs/a/nested/project.json',
+          'project.json',
+          'libs/a/project.json',
+          'libs/project.json',
+          'apps/absent/project.json',
+        ])
+      ).toEqual({
+        'libs/a/nested': ['libs/a/nested/.eslintignore', 'package-lock.json'],
+        '.': [...configs, '.eslintignore', 'package-lock.json'],
+        'libs/a': [
+          configs[0],
+          configs[4],
+          configs[5],
+          'libs/a/.eslintignore',
+          'package-lock.json',
+        ],
+        libs: [
+          configs[0],
+          configs[1],
+          configs[3],
+          configs[4],
+          configs[5],
+          'libs/.eslintignore',
+          'package-lock.json',
+        ],
+        'apps/absent': ['apps/absent/.eslintignore', 'package-lock.json'],
+      });
+    });
+
+    it('normalizes descendant paths without extending the literal-dot exception', async () => {
+      const configs = [
+        'eslint.config.js',
+        'a/eslint.config.js',
+        'a/b/eslint.config.js',
+        'a//c/eslint.config.js',
+        'a/./d/eslint.config.js',
+        'ab/eslint.config.js',
+      ];
+      const descendants = [configs[2], configs[3], configs[4]];
+      expect(
+        await captureInputs([
+          ...configs,
+          'project.json',
+          '././project.json',
+          './a/project.json',
+          'a//project.json',
+          'a/child/../project.json',
+          'a/b/project.json',
+        ])
+      ).toEqual({
+        '.': [...configs, '.eslintignore', 'package-lock.json'],
+        './.': ['.eslintignore', 'package-lock.json'],
+        './a': [...descendants, 'a/.eslintignore', 'package-lock.json'],
+        'a/': [...descendants, 'a/.eslintignore', 'package-lock.json'],
+        'a/child/..': [...descendants, 'a/.eslintignore', 'package-lock.json'],
+        'a/b': ['a/b/.eslintignore', 'package-lock.json'],
+      });
+    });
+
+    it('uses the scoped config list supplied to each invocation', async () => {
+      const project = 'libs/a/project.json';
+      const nested = 'libs/a/nested/eslint.config.js';
+      expect(await captureInputs([project, nested])).toEqual({
+        'libs/a': [nested, 'libs/a/.eslintignore', 'package-lock.json'],
+      });
+      expect(await captureInputs([project, 'libs/b/eslint.config.js'])).toEqual(
+        {
+          'libs/a': ['libs/a/.eslintignore', 'package-lock.json'],
+        }
+      );
+      expect(await captureInputs([project, nested])).toEqual({
+        'libs/a': [nested, 'libs/a/.eslintignore', 'package-lock.json'],
+      });
+    });
   });
 
   it('should not create any nodes when there are no eslint configs', async () => {
@@ -91,7 +218,7 @@ describe('@nx/eslint/plugin', () => {
         'eslint.config.cjs': `module.exports = {};`,
         'project.json': `{}`,
       });
-      // NOTE: It should set ESLINT_USE_FLAT_CONFIG to true because of the use of eslint.config.cjs
+      // NOTE: a flat config (eslint.config.cjs) needs no env var; flat is the default for ESLint v9+
       expect(
         await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' })
       ).toMatchInlineSnapshot(`
@@ -146,6 +273,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -202,6 +332,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -291,6 +424,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -347,6 +483,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -479,6 +618,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -518,6 +660,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "libs/my-lib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -656,6 +801,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -696,6 +844,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "libs/my-lib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -754,6 +905,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/myapp",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -816,6 +970,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/myapp/nested/mylib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -899,6 +1056,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -956,6 +1116,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",

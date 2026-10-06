@@ -1,30 +1,56 @@
-jest.mock('../../utils/git-utils', () => ({
-  hasUncommittedChanges: jest.fn(),
-  tryCommitChanges: jest.fn(),
+import type { Mock } from 'vitest';
+vi.mock('../../utils/git-utils', () => ({
+  hasUncommittedChanges: vi.fn(),
+  tryCommitChanges: vi.fn(),
+  tryCommitChangesAsync: vi.fn(),
+  getGitCurrentBranch: vi.fn(),
+  getGitRemoteNames: vi.fn(),
 }));
-jest.mock('../../utils/logger', () => ({
-  logger: { info: jest.fn() },
+vi.mock('../../utils/logger', () => ({
+  logger: { info: vi.fn() },
 }));
-jest.mock('../../utils/output', () => ({
-  output: { warn: jest.fn() },
+vi.mock('../../utils/output', () => ({
+  output: { warn: vi.fn(), log: vi.fn() },
+}));
+vi.mock('../../config/configuration', () => ({
+  readNxJson: vi.fn(),
+}));
+vi.mock('./safe-prompt', () => ({
+  migrateConfirm: vi.fn(),
 }));
 
-import { hasUncommittedChanges, tryCommitChanges } from '../../utils/git-utils';
+import { readNxJson } from '../../config/configuration';
+import {
+  getGitCurrentBranch,
+  getGitRemoteNames,
+  hasUncommittedChanges,
+  tryCommitChanges,
+  tryCommitChangesAsync,
+} from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
+  confirmMigrationCommitsOnDefaultBranch,
+  currentBranchIfDefault,
 } from './migrate-commits';
+import { migrateConfirm } from './safe-prompt';
 
-const mockHas = hasUncommittedChanges as jest.Mock;
-const mockTry = tryCommitChanges as jest.Mock;
-const mockInfo = logger.info as jest.Mock;
-const mockWarn = output.warn as jest.Mock;
+const mockHas = hasUncommittedChanges as Mock;
+const mockTry = tryCommitChanges as Mock;
+const mockTryAsync = tryCommitChangesAsync as Mock;
+const mockInfo = logger.info as Mock;
+const mockWarn = output.warn as Mock;
+const mockLog = output.log as Mock;
+const mockCurrentBranch = getGitCurrentBranch as Mock;
+const mockRemoteNames = getGitRemoteNames as Mock;
+const mockReadNxJson = readNxJson as Mock;
+const mockMigrateConfirm = migrateConfirm as Mock;
 
 const ROOT = '/workspace';
 const PREFIX = 'chore: [nx migration] ';
-const installDeps = jest.fn().mockResolvedValue(undefined);
+const installDeps = vi.fn().mockResolvedValue(undefined);
 
 // picocolors wraps logger output in ANSI escapes when the runtime detects a
 // TTY. Strip them in snapshot assertions so the snapshot reads as the
@@ -35,8 +61,14 @@ const stripAnsi = (s: string): string => s.replace(ANSI_RE, '');
 beforeEach(() => {
   mockHas.mockReset();
   mockTry.mockReset();
+  mockTryAsync.mockReset();
   mockInfo.mockReset();
   mockWarn.mockReset();
+  mockLog.mockReset();
+  mockCurrentBranch.mockReset();
+  mockRemoteNames.mockReset().mockReturnValue([]);
+  mockReadNxJson.mockReset().mockReturnValue({});
+  mockMigrateConfirm.mockReset().mockResolvedValue(true);
   installDeps.mockReset();
   installDeps.mockResolvedValue(undefined);
 });
@@ -53,12 +85,12 @@ describe('commitMigrationIfRequested', () => {
     expect(result).toEqual({ status: 'disabled' });
     expect(installDeps).not.toHaveBeenCalled();
     expect(mockHas).not.toHaveBeenCalled();
-    expect(mockTry).not.toHaveBeenCalled();
+    expect(mockTryAsync).not.toHaveBeenCalled();
   });
 
   it('runs installDeps before checking for uncommitted changes', async () => {
     let installFinished = false;
-    installDeps.mockImplementation(async () => {
+    installDeps.mockImplementation(() => {
       installFinished = true;
     });
     mockHas.mockImplementation(() => {
@@ -90,15 +122,28 @@ describe('commitMigrationIfRequested', () => {
       installDeps
     );
     expect(result).toEqual({ status: 'no-changes' });
-    expect(mockTry).not.toHaveBeenCalled();
+    expect(mockTryAsync).not.toHaveBeenCalled();
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(
       `"- No changes to commit for m1."`
     );
   });
 
+  it('probes the tree with the same exclusions the commit applies, so scratch-only dirt reads as no-changes', async () => {
+    mockHas.mockReturnValue(false);
+
+    await commitMigrationIfRequested(
+      ROOT,
+      { name: 'm1' },
+      true,
+      PREFIX,
+      installDeps
+    );
+    expect(mockHas).toHaveBeenCalledWith(ROOT, ['.nx/migrate-runs']);
+  });
+
   it('returns the new sha and uses `<prefix><name>` as the commit subject on success', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('abc123');
+    mockTryAsync.mockReturnValue('abc123');
 
     const result = await commitMigrationIfRequested(
       ROOT,
@@ -108,12 +153,16 @@ describe('commitMigrationIfRequested', () => {
       installDeps
     );
     expect(result).toEqual({ status: 'committed', sha: 'abc123' });
-    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT);
+    // The scratch exclusion rides on every migration commit so `git add -A`
+    // cannot capture run state even when its ignore rule went missing mid-run.
+    expect(mockTryAsync).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
+      '.nx/migrate-runs',
+    ]);
   });
 
   it('annotates the commit body with the package: name of prior migrations whose commits failed', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('def456');
+    mockTryAsync.mockReturnValue('def456');
 
     const result = await commitMigrationIfRequested(
       ROOT,
@@ -127,7 +176,7 @@ describe('commitMigrationIfRequested', () => {
       ]
     );
     expect(result).toEqual({ status: 'committed', sha: 'def456' });
-    expect(mockTry.mock.calls[0][0]).toMatchInlineSnapshot(`
+    expect(mockTryAsync.mock.calls[0][0]).toMatchInlineSnapshot(`
       "chore: [nx migration] m4
 
       Includes changes from prior migrations whose own commits failed:
@@ -138,7 +187,7 @@ describe('commitMigrationIfRequested', () => {
 
   it('strips embedded newlines from migration names so hostile entries cannot inject body lines', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('def456');
+    mockTryAsync.mockReturnValue('def456');
 
     await commitMigrationIfRequested(
       ROOT,
@@ -153,7 +202,7 @@ describe('commitMigrationIfRequested', () => {
         },
       ]
     );
-    expect(mockTry.mock.calls[0][0]).toMatchInlineSnapshot(`
+    expect(mockTryAsync.mock.calls[0][0]).toMatchInlineSnapshot(`
       "chore: [nx migration] m4
 
       Includes changes from prior migrations whose own commits failed:
@@ -163,7 +212,7 @@ describe('commitMigrationIfRequested', () => {
 
   it('does not modify the commit message when pendingMigrationNames is empty', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('abc123');
+    mockTryAsync.mockReturnValue('abc123');
 
     await commitMigrationIfRequested(
       ROOT,
@@ -173,12 +222,14 @@ describe('commitMigrationIfRequested', () => {
       installDeps,
       []
     );
-    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT);
+    expect(mockTryAsync).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
+      '.nx/migrate-runs',
+    ]);
   });
 
   it('returns failed with the real git stderr from tryCommitChanges; message tells the user a future commit will absorb the diff', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockImplementation(() => {
+    mockTryAsync.mockImplementation(() => {
       // GPG signing failures aren't bypassed by --no-verify (unlike
       // client-side hooks).
       throw new Error('error: gpg failed to sign the data');
@@ -196,9 +247,9 @@ describe('commitMigrationIfRequested', () => {
       reason: expect.stringContaining('gpg failed to sign'),
     });
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(`
-      "Could not create a commit for m1:
+      "The commit for m1 failed:
       error: gpg failed to sign the data
-      The migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually."
+      Check \`git status\` and \`git log\`; the commit may have landed despite this error. Any uncommitted changes will be included in the next successful commit, which will reference this migration; if they remain uncommitted, the end-of-run output will list this migration so you can commit or revert them manually."
     `);
   });
 
@@ -208,7 +259,7 @@ describe('commitMigrationIfRequested', () => {
     // result is still `committed` (with a null sha) so the executor knows the
     // diff cleared, not `failed` which would push it into pending.
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue(null);
+    mockTryAsync.mockReturnValue(null);
 
     const result = await commitMigrationIfRequested(
       ROOT,
@@ -224,11 +275,77 @@ describe('commitMigrationIfRequested', () => {
   });
 });
 
+describe('commitMigrationIfRequested with an output sink', () => {
+  const sink = () => {
+    const lines: unknown[][] = [];
+    return {
+      lines,
+      notice: vi.fn(),
+      line: (...args: unknown[]) => lines.push(args),
+      raw: vi.fn(),
+    };
+  };
+
+  it.each([
+    [
+      'no-changes',
+      () => mockHas.mockReturnValue(false),
+      [['dim', '- No changes to commit for m1.']],
+    ],
+    [
+      'degraded-sha',
+      () => {
+        mockHas.mockReturnValue(true);
+        mockTryAsync.mockReturnValue(null);
+      },
+      [['yellow', expect.stringContaining('its sha could not be resolved')]],
+    ],
+    [
+      'failure',
+      () => {
+        mockHas.mockReturnValue(true);
+        mockTryAsync.mockImplementation(() => {
+          throw new Error('error: gpg failed to sign the data');
+        });
+      },
+      [
+        [
+          'red',
+          expect.stringContaining(
+            'gpg failed to sign the data\nCheck `git status` and `git log`; the commit may have landed despite this error. Commit or revert the changes manually.'
+          ),
+        ],
+      ],
+    ],
+  ])(
+    'sends the %s message to the sink instead of the logger',
+    async (_, arrange, expected) => {
+      arrange();
+      const out = sink();
+
+      await commitMigrationIfRequested(
+        ROOT,
+        { name: 'm1' },
+        true,
+        PREFIX,
+        installDeps,
+        [],
+        'Commit or revert the changes manually.',
+        out
+      );
+
+      expect(out.lines).toEqual(expected);
+      expect(mockInfo).not.toHaveBeenCalled();
+    }
+  );
+});
+
 describe('commitCheckpointBeforeMigrations', () => {
-  it('does nothing when the working tree is clean', () => {
+  it('does nothing when the working tree is clean outside the excluded scratch dir', () => {
     mockHas.mockReturnValue(false);
 
     commitCheckpointBeforeMigrations(ROOT, PREFIX);
+    expect(mockHas).toHaveBeenCalledWith(ROOT, ['.nx/migrate-runs']);
     expect(mockTry).not.toHaveBeenCalled();
     expect(mockInfo).not.toHaveBeenCalled();
     expect(mockWarn).not.toHaveBeenCalled();
@@ -241,7 +358,8 @@ describe('commitCheckpointBeforeMigrations', () => {
     commitCheckpointBeforeMigrations(ROOT, PREFIX);
     expect(mockTry).toHaveBeenCalledWith(
       `${PREFIX}checkpoint before running migrations`,
-      ROOT
+      ROOT,
+      ['.nx/migrate-runs']
     );
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(
       `"- Checkpoint commit created: chk456"`
@@ -284,5 +402,113 @@ describe('commitCheckpointBeforeMigrations', () => {
         "The checkpoint commit was created, but its sha could not be resolved (\`git rev-parse HEAD\` failed transiently).",
       ]
     `);
+  });
+});
+
+describe('confirmMigrationCommitsOnDefaultBranch', () => {
+  it('prompts when the default base names a remote other than origin', async () => {
+    mockRemoteNames.mockReturnValue(['upstream']);
+    mockReadNxJson.mockReturnValue({ defaultBase: 'upstream/main' });
+    mockCurrentBranch.mockReturnValue('main');
+
+    await expect(
+      confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
+    ).resolves.toBe(true);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('prompts for an origin-qualified default base even when no remote is configured', async () => {
+    mockReadNxJson.mockReturnValue({ defaultBase: 'origin/main' });
+    mockCurrentBranch.mockReturnValue('main');
+
+    await expect(
+      confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
+    ).resolves.toBe(true);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a slash in a local branch name that no remote claims', async () => {
+    mockRemoteNames.mockReturnValue(['origin']);
+    mockReadNxJson.mockReturnValue({ defaultBase: 'release/main' });
+    mockCurrentBranch.mockReturnValue('main');
+
+    await expect(
+      confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
+    ).resolves.toBe(true);
+    expect(mockMigrateConfirm).not.toHaveBeenCalled();
+
+    mockCurrentBranch.mockReturnValue('release/main');
+    await expect(
+      confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
+    ).resolves.toBe(true);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('prompts when a local branch is named after a remote it does not track', async () => {
+    // `up/feature` is a legal local branch name while `up` is a remote, so the
+    // exact match has to win before the prefix is read as a remote's.
+    mockRemoteNames.mockReturnValue(['up']);
+    mockReadNxJson.mockReturnValue({ defaultBase: 'up/feature' });
+    mockCurrentBranch.mockReturnValue('up/feature');
+
+    await expect(
+      confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
+    ).resolves.toBe(true);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('strips the longest remote name when one remote name prefixes another', async () => {
+    mockRemoteNames.mockReturnValue(['a', 'a/b']);
+    mockReadNxJson.mockReturnValue({ defaultBase: 'a/b/main' });
+    mockCurrentBranch.mockReturnValue('main');
+
+    await expect(
+      confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
+    ).resolves.toBe(true);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports the decision when the user declines', async () => {
+    mockRemoteNames.mockReturnValue(['upstream']);
+    mockReadNxJson.mockReturnValue({ defaultBase: 'upstream/main' });
+    mockCurrentBranch.mockReturnValue('main');
+    mockMigrateConfirm.mockResolvedValue(false);
+
+    await expect(
+      confirmMigrationCommitsOnDefaultBranch(
+        '/workspace',
+        'running the migration'
+      )
+    ).resolves.toBe(false);
+    expect(mockLog.mock.calls[0][0].title).toContain(
+      "Skipped running the migration to avoid committing to the default branch 'main'."
+    );
+  });
+});
+
+describe('currentBranchIfDefault', () => {
+  it.each<[string, string | null, string, string]>([
+    ['the default branch', 'main', 'main', 'main'],
+    [
+      'the default branch behind an origin/ base ref',
+      'main',
+      'origin/main',
+      'main',
+    ],
+  ])('names %s', (_label, current, base, expected) => {
+    mockReadNxJson.mockReturnValue({ defaultBase: base });
+    mockCurrentBranch.mockReturnValue(current);
+
+    expect(currentBranchIfDefault('/workspace')).toBe(expected);
+  });
+
+  it.each<[string, string | null]>([
+    ['another branch', 'feat/migrate'],
+    ['a detached HEAD', null],
+  ])('returns null on %s', (_label, current) => {
+    mockReadNxJson.mockReturnValue({ defaultBase: 'main' });
+    mockCurrentBranch.mockReturnValue(current);
+
+    expect(currentBranchIfDefault('/workspace')).toBeNull();
   });
 });

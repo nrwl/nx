@@ -1,14 +1,16 @@
-jest.mock('../package-manager', () => ({
-  packageRegistryView: jest.fn(),
+import type { Mock } from 'vitest';
+vi.mock('../package-manager', async () => ({
+  ...(await vi.importActual('../package-manager')),
+  packageRegistryView: vi.fn(),
 }));
 
 import { packageRegistryView } from '../package-manager';
 import { fetchRegistryMetadata } from './packument';
 
-const viewMock = packageRegistryView as jest.Mock;
+const viewMock = packageRegistryView as Mock;
 
 describe('fetchRegistryMetadata', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it('normalizes a scalar versions field into an array', async () => {
     viewMock.mockResolvedValue(
@@ -22,6 +24,22 @@ describe('fetchRegistryMetadata', () => {
     const meta = await fetchRegistryMetadata('pkg-a');
     expect(meta.versions).toEqual(['1.0.0']);
     expect(meta.distTags).toEqual({ latest: '1.0.0' });
+  });
+
+  it('unwraps the one-element array npm 12 prints for a packument', async () => {
+    viewMock.mockResolvedValue(
+      JSON.stringify([
+        {
+          name: 'pkg-a',
+          versions: ['1.0.0', '1.1.0'],
+          'dist-tags': { latest: '1.1.0' },
+        },
+      ])
+    );
+    const meta = await fetchRegistryMetadata('pkg-a');
+    expect(meta.name).toBe('pkg-a');
+    expect(meta.versions).toEqual(['1.0.0', '1.1.0']);
+    expect(meta.distTags).toEqual({ latest: '1.1.0' });
   });
 
   it('keeps an array versions field', async () => {
@@ -70,6 +88,6 @@ describe('fetchRegistryMetadata', () => {
       JSON.stringify({ name: 'pkg-a', versions: ['1.0.0'] })
     );
     await fetchRegistryMetadata('pkg-a');
-    expect(viewMock).toHaveBeenCalledWith('pkg-a', '', '--json');
+    expect(viewMock).toHaveBeenCalledWith('pkg-a', '', ['--json']);
   });
 });

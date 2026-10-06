@@ -12,8 +12,9 @@ import { join } from 'path';
 import { readCompilerOptionsFromTsConfig } from '../../utils/tsconfig-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
+import { SERVER_APP_CONFIG_FILE } from './constants';
 
-export function setServerTsConfigOptionsForApplicationBuilder(
+export function setServerTsConfigOptionsForSingleProgramBuild(
   tree: Tree,
   options: NormalizedGeneratorOptions
 ) {
@@ -53,13 +54,14 @@ export function generateTsConfigServerJsonForBrowserBuilder(
     !!packageJson.dependencies?.['@angular/localize'] ||
     !!packageJson.devDependencies?.['@angular/localize'];
 
-  const baseFilesPath = join(__dirname, '..', 'files');
-  let pathToFiles: string;
-  if (angularMajorVersion >= 20) {
-    pathToFiles = join(baseFilesPath, 'v20+', 'server-builder', 'root');
-  } else {
-    pathToFiles = join(baseFilesPath, 'v19', 'server-builder', 'root');
-  }
+  const pathToFiles = join(
+    __dirname,
+    '..',
+    'files',
+    'v20+',
+    'server-builder',
+    'root'
+  );
 
   generateFiles(tree, pathToFiles, project.root, {
     ...options,
@@ -74,24 +76,21 @@ export function generateTsConfigServerJsonForBrowserBuilder(
   );
   updateJson(tree, joinPathFragments(project.root, 'tsconfig.json'), (json) => {
     json.references ??= [];
-    json.references.push({
-      path: tsconfigServerPath,
-    });
+    // TypeScript resolves a reference relative to the file declaring it
+    json.references.push({ path: './tsconfig.server.json' });
     return json;
   });
 
-  if (angularMajorVersion >= 20) {
-    updateJson(tree, options.buildTargetTsConfigPath, (json) => {
-      const exclude = new Set(json.exclude ?? []);
-      exclude.add(`src/${options.main}`);
-      exclude.add(`src/${options.serverFileName}`);
-      if (options.standalone) {
-        exclude.add('src/app/app.config.server.ts');
-      }
-      json.exclude = Array.from(exclude);
-      return json;
-    });
-  }
+  updateJson(tree, options.buildTargetTsConfigPath, (json) => {
+    const exclude = new Set(json.exclude ?? []);
+    exclude.add(`src/${options.main}`);
+    exclude.add(`src/${options.serverFileName}`);
+    if (options.standalone) {
+      exclude.add(SERVER_APP_CONFIG_FILE);
+    }
+    json.exclude = Array.from(exclude);
+    return json;
+  });
   if (angularMajorVersion >= 21) {
     // remove module and moduleResolution from tsconfig.server.json
     updateJson(tree, tsconfigServerPath, (json) => {

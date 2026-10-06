@@ -124,7 +124,7 @@ export function Prompt({
           name="query"
           maxLength={500}
           disabled={isGenerating}
-          className="block w-full resize-none border-none bg-transparent p-0 py-3 pl-2 text-sm placeholder-zinc-500 focus-within:outline-none focus:placeholder-zinc-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed dark:text-white dark:focus:placeholder-zinc-300"
+          className="block w-full resize-none border-none bg-transparent p-0 py-3 pl-2 text-sm placeholder-zinc-500 focus-within:outline-none focus:placeholder-zinc-400 focus:ring-0 focus:outline-none disabled:cursor-not-allowed dark:text-white dark:focus:placeholder-zinc-300"
           placeholder="How does caching work?"
           rows={1}
         />

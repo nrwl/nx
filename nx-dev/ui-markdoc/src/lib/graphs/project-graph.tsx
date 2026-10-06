@@ -3,7 +3,7 @@
 import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
+} from '@nx/devkit';
 import { useCallback, useEffect, useMemo } from 'react';
 import { ElementData, RenderTheme } from '@nx/graph';
 import {

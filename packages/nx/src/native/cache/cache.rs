@@ -1,7 +1,9 @@
-use std::fs::{create_dir_all, read_to_string, write};
+use std::fs::{
+    create_dir_all, metadata, read_dir, read_to_string, remove_file, symlink_metadata, write,
+};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::time::Instant;
+use std::time::{Duration, Instant, SystemTime};
 use tracing::{debug, trace};
 
 use fs_extra::remove_items;
@@ -10,12 +12,167 @@ use regex::Regex;
 use rusqlite::{params, types::Value};
 use sysinfo::Disks;
 
-use crate::native::cache::expand_outputs::_expand_outputs;
-use crate::native::cache::file_ops::_copy;
+use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
+use crate::native::cache::file_ops::{copy_and_list, copy_outputs_into_workspace};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
+use crate::native::workspace::outputs_tracking::OutputFile;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
+
+/// What `put` copied into the cache.
+#[napi(object)]
+pub struct CachedOutputs {
+    /// The output entries that exist, as `expand_outputs` finds them.
+    pub expanded_outputs: Vec<String>,
+    /// Each file copied, stamped as it is in the workspace.
+    pub files: Vec<OutputFile>,
+}
+
+/// Each workspace file in `paths` as it is now. Only a regular file, or a
+/// link to one, is kept: nothing else is an output file to stamp.
+fn stamp_all<'a>(
+    workspace_root: &Path,
+    paths: impl ParallelIterator<Item = &'a PathBuf>,
+) -> Vec<OutputFile> {
+    paths
+        .filter_map(|path| {
+            let relative = path.strip_prefix(workspace_root).ok()?;
+            let metadata = std::fs::metadata(path).ok()?;
+            metadata
+                .is_file()
+                .then(|| OutputFile::new(relative.to_normalized_string(), &metadata))
+        })
+        .collect()
+}
+
+/// Batch logs older than this are swept. Matches `remove_old_cache_records`.
+const BATCH_OUTPUT_MAX_AGE: Duration = Duration::from_secs(7 * 24 * 60 * 60);
+/// Budget for `batchOutputs/`, separate from `maxCacheSize`.
+const BATCH_OUTPUT_MAX_BYTES: u64 = 1024 * 1024 * 1024;
+/// How recently a log must have been written to count as live.
+const BATCH_OUTPUT_MIN_EVICTION_AGE: Duration = Duration::from_secs(60 * 60);
+
+/// One directory, one file per batch — keyed by the batch rather than a
+/// task hash, since one worker produces one log and the hash of any task in
+/// it is still preliminary while it runs. Mirrored by
+/// `batchOutputPathForKey` in tasks-runner/cache.ts, which writes them.
+fn batch_outputs_path(cache_path: &str) -> PathBuf {
+    PathBuf::from(cache_path).join("batchOutputs")
+}
+
+/// A free function, not a method: `BatchProcess` writes these logs whichever
+/// cache implementation is active, so the sweep must not be reachable only
+/// through the DB-backed one.
+///
+/// Deletes batch logs by age, then oldest-first while the directory is over
+/// budget.
+///
+/// No database rows: nothing looks a batch log up by key, so a row would be
+/// write-only bookkeeping that a hard-killed process could skip, orphaning
+/// the file forever. The filesystem cannot drift from itself, and the file
+/// is appended to for the life of its batch, so a size recorded anywhere
+/// else is wrong until that batch ends.
+///
+/// The budget is separate from `maxCacheSize` on purpose: these are debug
+/// artifacts, and sharing a budget would let one evict a replayable cache
+/// entry — trading a rebuild for a text file.
+///
+/// The age sweep deletes at `BATCH_OUTPUT_MAX_AGE`; the eviction skips
+/// anything written within `BATCH_OUTPUT_MIN_EVICTION_AGE`. That is
+/// last-write, not creation, so a batch silent through a long quiet phase is
+/// not protected.
+#[napi]
+pub fn sweep_batch_outputs(cache_path: String) -> anyhow::Result<()> {
+    sweep_batch_outputs_with(
+        &batch_outputs_path(&cache_path),
+        SystemTime::now(),
+        BATCH_OUTPUT_MAX_AGE,
+        BATCH_OUTPUT_MAX_BYTES,
+        BATCH_OUTPUT_MIN_EVICTION_AGE,
+    )
+}
+
+/// The sweep proper, with its thresholds as parameters. Split out so tests can
+/// drive the eviction path without writing a gigabyte, and pin the age window
+/// without waiting a week.
+fn sweep_batch_outputs_with(
+    dir: &Path,
+    now: SystemTime,
+    max_age: Duration,
+    max_bytes: u64,
+    min_eviction_age: Duration,
+) -> anyhow::Result<()> {
+    // `read_dir` opens through `opendir(2)`, which follows a symlink on the
+    // directory itself - so without this a `batchOutputs` symlinked elsewhere
+    // would have that directory's aged files deleted instead. The per-entry
+    // handling below already refuses to follow a link; this is the one hop it
+    // cannot see. `~/.nx` is writable by anything sharing our uid, which is why
+    // `probeWritable` opens with `wx` for the same reason.
+    if symlink_metadata(dir).map(|m| !m.is_dir()).unwrap_or(true) {
+        return Ok(());
+    }
+
+    let entries = match read_dir(dir) {
+        Ok(entries) => entries,
+        // Nothing has captured a batch log yet.
+        Err(_) => return Ok(()),
+    };
+
+    let mut files: Vec<(PathBuf, u64, SystemTime)> = Vec::new();
+    for entry in entries.flatten() {
+        // From the dirent, so a symlink is neither followed for its age nor
+        // counted as a file.
+        if !entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
+            continue;
+        }
+        let path = entry.path();
+        let Ok(metadata) = entry.metadata() else {
+            continue;
+        };
+        let Ok(modified) = metadata.modified() else {
+            continue;
+        };
+        let age = now.duration_since(modified).unwrap_or(Duration::ZERO);
+        if age > max_age {
+            // Racing another Nx process sweeping the same directory is fine.
+            let _ = remove_file(&path);
+            continue;
+        }
+        files.push((path, metadata.len(), modified));
+    }
+
+    let mut total: u64 = files.iter().map(|(_, size, _)| size).sum();
+    if total <= max_bytes {
+        return Ok(());
+    }
+
+    // Never evict a log young enough to belong to a batch that is still
+    // running, possibly in another Nx process. Going over budget recovers on
+    // the next sweep; deleting a live batch's only log does not.
+    files.retain(|(_, _, modified)| {
+        now.duration_since(*modified).unwrap_or(Duration::ZERO) > min_eviction_age
+    });
+    files.sort_by_key(|(_, _, modified)| *modified);
+    for (path, size, _) in files {
+        if total <= max_bytes {
+            break;
+        }
+        if remove_file(&path).is_ok() {
+            total = total.saturating_sub(size);
+        }
+    }
+    Ok(())
+}
+
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct TerminalOutputRecord {
+    pub hash: String,
+    /// Byte length of the terminal output written for this hash, so these
+    /// files are counted against `maxCacheSize` like any other cache content.
+    pub size: i64,
+}
 
 #[napi(object)]
 #[derive(Default, Clone, Debug)]
@@ -71,11 +228,17 @@ impl NxCache {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
+        // `is_cache_entry` distinguishes a real cache entry, which owns a
+        // `<cacheDir>/<hash>` directory, from a row that exists only so the
+        // terminal output of an uncacheable run is reachable by the GC. Only
+        // the former may be served as a cache hit, and only while that directory
+        // exists — see `get`/`fetch_cache_rows` and `build_cached_result`.
         let query = if self.link_task_details {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
                 hash    TEXT PRIMARY KEY NOT NULL,
                 code   INTEGER NOT NULL,
                 size   INTEGER NOT NULL,
+                is_cache_entry BOOLEAN NOT NULL DEFAULT TRUE CHECK (is_cache_entry IN (0, 1)),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (hash) REFERENCES task_details (hash)
@@ -86,6 +249,7 @@ impl NxCache {
                 hash    TEXT PRIMARY KEY NOT NULL,
                 code   INTEGER NOT NULL,
                 size   INTEGER NOT NULL,
+                is_cache_entry BOOLEAN NOT NULL DEFAULT TRUE CHECK (is_cache_entry IN (0, 1)),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
@@ -114,7 +278,7 @@ impl NxCache {
             .query_row(
                 "UPDATE cache_outputs
                     SET accessed_at = CURRENT_TIMESTAMP
-                    WHERE hash = ?1
+                    WHERE hash = ?1 AND is_cache_entry
                     RETURNING code, size",
                 params![hash],
                 |row| Ok((row.get::<_, i16>(0)?, row.get::<_, i64>(1)?)),
@@ -122,7 +286,10 @@ impl NxCache {
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
 
         // Terminal output file read happens AFTER the lock is released.
-        let result = row_data.map(|(code, size)| self.build_cached_result(&hash, code, size));
+        let result = row_data.and_then(|(code, size)| self.build_cached_result(&hash, code, size));
+        if row_data.is_some() && result.is_none() {
+            self.demote_stale_cache_records(std::slice::from_ref(&hash));
+        }
 
         trace!("GET {} {:?}", &hash, start.elapsed());
         Ok(result)
@@ -142,13 +309,25 @@ impl NxCache {
 
         // 2. For each requested hash, read its terminal output file in
         //    parallel. Misses stay as None so callers can correlate by index.
-        let results = hashes
+        let results: Vec<Option<CachedResult>> = hashes
             .par_iter()
             .map(|hash| {
                 rows.get(hash)
-                    .map(|&(code, size)| self.build_cached_result(hash, code, size))
+                    .and_then(|&(code, size)| self.build_cached_result(hash, code, size))
             })
             .collect();
+
+        // 3. A row whose artifacts are gone is a miss above; demote those rows
+        //    in one transaction rather than from inside the parallel map.
+        let stale: Vec<String> = hashes
+            .iter()
+            .zip(&results)
+            .filter(|(hash, result)| result.is_none() && rows.contains_key(*hash))
+            .map(|(hash, _)| hash.clone())
+            .collect();
+        if !stale.is_empty() {
+            self.demote_stale_cache_records(&stale);
+        }
 
         trace!("GET_BATCH {} hashes {:?}", hashes.len(), start.elapsed());
         Ok(results)
@@ -183,7 +362,7 @@ impl NxCache {
             .unwrap()
             .query_map(
                 "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP
-                 WHERE hash IN rarray(?1)
+                 WHERE hash IN rarray(?1) AND is_cache_entry
                  RETURNING hash, code, size",
                 [values],
                 |row| {
@@ -198,18 +377,25 @@ impl NxCache {
         Ok(rows)
     }
 
-    /// Assemble a `CachedResult` for a confirmed hit by reading its
-    /// terminal output file. Safe to call concurrently — Rayon invokes
-    /// this from multiple threads during `get_batch`.
-    fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> CachedResult {
+    /// A cache row can outlive its artifact directory. Serving it as a hit
+    /// would skip the task without restoring its outputs.
+    fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> Option<CachedResult> {
+        let outputs_path = self.cache_path.join(hash);
+        if !outputs_path.is_dir() {
+            debug!(
+                "Cache record {} has no artifacts at {:?}, treating as a miss",
+                hash, &outputs_path
+            );
+            return None;
+        }
         let terminal_output =
             read_to_string(self.get_task_outputs_path_internal(hash)).unwrap_or_default();
-        CachedResult {
+        Some(CachedResult {
             code,
             terminal_output: Some(terminal_output),
-            outputs_path: self.cache_path.join(hash).to_normalized_string(),
+            outputs_path: outputs_path.to_normalized_string(),
             size: Some(size),
-        }
+        })
     }
 
     #[napi]
@@ -219,7 +405,7 @@ impl NxCache {
         terminal_output: String,
         outputs: Vec<String>,
         code: i16,
-    ) -> anyhow::Result<Vec<String>> {
+    ) -> anyhow::Result<CachedOutputs> {
         let start = Instant::now();
         trace!("PUT {}", &hash);
         let task_dir = self.cache_path.join(&hash);
@@ -243,17 +429,20 @@ impl NxCache {
         trace!("Successfully wrote terminal outputs ({} bytes)", total_size);
 
         // Expand the outputs
+        let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
         trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
         // Copy the outputs to the cache
         let mut copied_files = 0;
+        let mut written = vec![];
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
                 trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
-                let copied_size = _copy(p, cached_outputs_dir)?;
+                let (copied_size, wrote) = copy_and_list(&p, &cached_outputs_dir, None)?;
+                written.extend(wrote);
                 total_size += copied_size;
                 copied_files += 1;
                 trace!(
@@ -269,7 +458,10 @@ impl NxCache {
 
         self.record_to_cache(hash.clone(), code, total_size)?;
         debug!("PUT {} {:?}", &hash, start.elapsed());
-        Ok(expanded_outputs)
+        Ok(CachedOutputs {
+            expanded_outputs,
+            files: stamp_all(&self.workspace_root, written.par_iter().map(|(src, _)| src)),
+        })
     }
 
     #[napi]
@@ -287,14 +479,69 @@ impl NxCache {
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs {
             if outputs.len() > 0 && result.code == 0 {
-                size +=
-                    try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
+                size += try_and_retry(|| self.restore(result.clone(), outputs.clone()))?.0;
             };
         }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
         let code: i16 = result.code;
         self.record_to_cache(hash, code, size)?;
+        Ok(())
+    }
+
+    /// Register terminal outputs that were written without a cache entry —
+    /// uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.
+    ///
+    /// Without a row the file is invisible to `remove_old_cache_records`,
+    /// which only ever walks hashes it finds in the database, so these files
+    /// would accumulate forever. The row carries `is_cache_entry = FALSE` so it
+    /// can never be served as a cache hit.
+    ///
+    /// On conflict `accessed_at` always moves: the reads filter these rows out,
+    /// so they would otherwise age from the first write and be collected out
+    /// from under a task that is still being run daily. `size` moves only while
+    /// the row is still output-only (`NOT is_cache_entry`), so a task rerun with
+    /// a longer log stops undercounting against `maxCacheSize`. `is_cache_entry`
+    /// is never touched, and a row that already has artifacts keeps the size
+    /// `put` recorded, so a rewrite can neither demote a real entry nor replace
+    /// its whole-entry size with the terminal output's.
+    #[napi]
+    pub fn record_terminal_outputs(
+        &mut self,
+        records: Vec<TerminalOutputRecord>,
+    ) -> anyhow::Result<()> {
+        if records.is_empty() {
+            return Ok(());
+        }
+        trace!("RECORD_TERMINAL_OUTPUTS {}", records.len());
+
+        {
+            let mut db = self.db.lock().unwrap();
+            db.transaction(|conn| {
+                for record in records.iter() {
+                    // `code` is meaningless for a row that can't be replayed;
+                    // the reads all filter it out before it could be read.
+                    conn.execute(
+                        // `size` is refreshed only for a row that is still
+                        // output-only: a task rerun with a longer log would
+                        // otherwise keep its first size forever and undercount
+                        // against maxCacheSize. A row with artifacts is owned by
+                        // `record_to_cache`, whose size covers the whole entry.
+                        "INSERT INTO cache_outputs (hash, code, size, is_cache_entry)
+                         VALUES (?1, 0, ?2, FALSE)
+                         ON CONFLICT(hash) DO UPDATE SET
+                             accessed_at = CURRENT_TIMESTAMP,
+                             size = CASE WHEN NOT is_cache_entry THEN excluded.size ELSE size END",
+                        params![record.hash, record.size],
+                    )?;
+                }
+                Ok(())
+            })?;
+        }
+
+        if self.max_cache_size != 0 {
+            self.ensure_cache_size_within_limit()?;
+        }
         Ok(())
     }
 
@@ -310,9 +557,12 @@ impl NxCache {
 
     fn record_to_cache(&self, hash: String, code: i16, size: i64) -> anyhow::Result<()> {
         trace!("Recording to cache: {}, {}, {}", &hash, code, size);
+        // `is_cache_entry` is forced back to TRUE on conflict: an earlier
+        // uncacheable run of the same hash (`--skip-nx-cache`) may have left a
+        // terminal-output-only row, and this run did write the artifacts.
         self.db.lock().unwrap().execute(
-            "INSERT INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)
-             ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
+            "INSERT INTO cache_outputs (hash, code, size, is_cache_entry) VALUES (?1, ?2, ?3, TRUE)
+             ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, is_cache_entry = TRUE, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
             params![hash, code, size],
         )?;
         if self.max_cache_size != 0 {
@@ -368,7 +618,13 @@ impl NxCache {
                     if let Ok((hash, size)) = row {
                         cache_size -= size;
                         db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
-                        remove_items(&[self.cache_path.join(&hash)])?;
+                        // Both paths, matching remove_old_cache_records. Dropping
+                        // the row without the terminal output file would strand
+                        // that file with nothing left to point the GC at it.
+                        remove_items(&[
+                            self.cache_path.join(&hash),
+                            self.get_task_outputs_path_internal(&hash),
+                        ])?;
                     }
                     // We've deleted enough cache entries to be under the
                     // target cache size, stop looking for more.
@@ -381,49 +637,53 @@ impl NxCache {
         Ok(())
     }
 
+    /// Restores `outputs`. Returns each file written, stamped as it is now,
+    /// when those are all the output files the workspace now holds: every
+    /// output a path, and each one that exists replaced from the cache. A
+    /// glob or a negation can leave other matching files in place.
     #[napi]
     pub fn copy_files_from_cache(
         &self,
         cached_result: CachedResult,
         outputs: Vec<String>,
-    ) -> anyhow::Result<i64> {
+    ) -> anyhow::Result<Option<Vec<OutputFile>>> {
+        Ok(self.restore(cached_result, outputs)?.1)
+    }
+
+    /// The bytes restored, and the files written when they are all of them.
+    fn restore(
+        &self,
+        cached_result: CachedResult,
+        outputs: Vec<String>,
+    ) -> anyhow::Result<(i64, Option<Vec<OutputFile>>)> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
-        let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
-
-        trace!("Removing expanded outputs: {:?}", &expanded_outputs);
-        remove_items(
-            expanded_outputs
-                .iter()
-                .map(|p| self.workspace_root.join(p))
-                .collect::<Vec<_>>()
-                .as_slice(),
-        )?;
+        let outputs = normalize_outputs(&self.workspace_root, outputs)?;
+        let literal = all_literal(&outputs);
+        let expanded_outputs = _expand_outputs(outputs_path, outputs.clone())?;
 
         trace!(
-            "Copying Files from Cache {:?} -> {:?}",
-            &outputs_path, &self.workspace_root
+            "Restoring {} outputs from cache {:?} -> {:?}",
+            expanded_outputs.len(),
+            &outputs_path,
+            &self.workspace_root
         );
-        let sz = _copy(outputs_path, &self.workspace_root);
-
-        match sz {
-            Err(e) => {
-                let kind = underlying_io_error_kind(&e);
-                match kind {
-                    Some(std::io::ErrorKind::NotFound) => {
-                        trace!("No artifacts to copy: {:?}", e);
-                        Ok(0)
-                    }
-                    _ => {
-                        return Err(anyhow::anyhow!("Error copying files from cache: {:?}", e));
-                    }
-                }
-            }
-            Ok(sz) => {
-                trace!("Copied {} bytes from cache", sz);
-                Ok(sz)
-            }
-        }
+        let (size, written) =
+            copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)?;
+        // Stamped once the copy is done: a link can be written before the
+        // file it points to.
+        let files = stamp_all(
+            &self.workspace_root,
+            written.par_iter().map(|(_, dest)| dest),
+        );
+        let exact = literal && {
+            let mut restored = expanded_outputs;
+            let mut present = _expand_outputs(&self.workspace_root, outputs)?;
+            restored.sort();
+            present.sort();
+            restored == present
+        };
+        Ok((size, exact.then_some(files)))
     }
 
     #[napi]
@@ -452,6 +712,40 @@ impl NxCache {
         Ok(())
     }
 
+    /// Stop counting a row whose `<cacheDir>/<hash>` directory is gone as a
+    /// cache entry: `is_cache_entry` becomes FALSE and `size` the bytes of the
+    /// terminal output it still owns, which `remove_old_cache_records` collects
+    /// as for any output-only row. Nothing is deleted.
+    ///
+    /// The directory is checked again inside an immediate transaction: `put`
+    /// creates it before `record_to_cache` writes the row, and that write
+    /// waits for the lock, so a directory still missing here is not one a
+    /// concurrent `put` has just finished. Errors are logged, not returned;
+    /// the lookup has already reported the miss.
+    fn demote_stale_cache_records(&self, hashes: &[String]) {
+        trace!("Demoting {} cache records without artifacts", hashes.len());
+        let mut db = self.db.lock().unwrap();
+        let outcome = db.transaction_immediate(|conn| {
+            for hash in hashes {
+                if self.cache_path.join(hash).is_dir() {
+                    continue;
+                }
+                let terminal_output_size = metadata(self.get_task_outputs_path_internal(hash))
+                    .map(|m| m.len() as i64)
+                    .unwrap_or(0);
+                conn.execute(
+                    "UPDATE cache_outputs SET is_cache_entry = FALSE, size = ?2
+                     WHERE hash = ?1 AND is_cache_entry",
+                    params![hash, terminal_output_size],
+                )?;
+            }
+            Ok(())
+        });
+        if let Err(e) = outcome {
+            debug!("Unable to demote cache records without artifacts: {e:?}");
+        }
+    }
+
     #[napi]
     pub fn check_cache_fs_in_sync(&self) -> anyhow::Result<bool> {
         // Checks that the number of cache records in the database
@@ -461,10 +755,16 @@ impl NxCache {
             .db
             .lock()
             .unwrap()
-            .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", [], |row| {
-                let exists: bool = row.get(0)?;
-                Ok(exists)
-            })?
+            .query_row(
+                // Only real cache entries own a `<hash>` directory, so only
+                // those can be out of sync with the filesystem.
+                "SELECT EXISTS (SELECT 1 FROM cache_outputs WHERE is_cache_entry)",
+                [],
+                |row| {
+                    let exists: bool = row.get(0)?;
+                    Ok(exists)
+                },
+            )?
             .unwrap_or(false);
 
         if !cache_records_exist {
@@ -532,12 +832,379 @@ where
     }
 }
 
-// From: https://docs.rs/anyhow/latest/anyhow/struct.Error.html#example-1
-fn underlying_io_error_kind(error: &anyhow::Error) -> Option<std::io::ErrorKind> {
-    for cause in error.chain() {
-        if let Some(io_error) = cause.downcast_ref::<std::io::Error>() {
-            return Some(io_error.kind());
-        }
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    use assert_fs::TempDir;
+    use std::fs::{File, create_dir_all};
+    use std::time::Duration;
+
+    fn write_log(dir: &Path, name: &str, bytes: usize, age: Duration) -> PathBuf {
+        create_dir_all(dir).unwrap();
+        let path = dir.join(name);
+        std::fs::write(&path, vec![b'x'; bytes]).unwrap();
+        let mtime = SystemTime::now() - age;
+        File::options()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_modified(mtime)
+            .unwrap();
+        path
     }
-    None
+
+    const HOUR: Duration = Duration::from_secs(3600);
+
+    fn sweep(dir: &Path, max_bytes: u64) {
+        sweep_batch_outputs_with(dir, SystemTime::now(), 7 * 24 * HOUR, max_bytes, HOUR).unwrap();
+    }
+
+    #[test]
+    fn sweep_batch_outputs_is_a_noop_without_the_directory() {
+        let temp = TempDir::new().unwrap();
+        // Nothing has captured a batch log yet; this runs on every command.
+        sweep_batch_outputs(temp.path().to_str().unwrap().to_string()).unwrap();
+    }
+
+    #[test]
+    fn sweep_batch_outputs_deletes_by_age() {
+        let temp = TempDir::new().unwrap();
+        let old = write_log(temp.path(), "old.log", 16, 8 * 24 * HOUR);
+        let fresh = write_log(temp.path(), "fresh.log", 16, Duration::from_secs(30));
+
+        sweep(temp.path(), u64::MAX);
+
+        assert!(
+            !old.exists(),
+            "a log past the age limit should be collected"
+        );
+        assert!(fresh.exists(), "a log inside the window should survive");
+    }
+
+    #[test]
+    fn sweep_batch_outputs_evicts_oldest_first_to_the_budget() {
+        let temp = TempDir::new().unwrap();
+        let oldest = write_log(temp.path(), "a.log", 100, 5 * HOUR);
+        let middle = write_log(temp.path(), "b.log", 100, 4 * HOUR);
+        let newest = write_log(temp.path(), "c.log", 100, 3 * HOUR);
+
+        // 300 bytes present, budget 150: the two oldest go.
+        sweep(temp.path(), 150);
+
+        assert!(!oldest.exists());
+        assert!(!middle.exists());
+        assert!(
+            newest.exists(),
+            "eviction stops as soon as it is under budget"
+        );
+    }
+
+    #[test]
+    fn sweep_batch_outputs_will_not_evict_a_log_a_live_batch_may_still_hold() {
+        let temp = TempDir::new().unwrap();
+        // Far over budget, but written seconds ago - a running batch appends to
+        // its log for the life of the batch, possibly from another Nx process,
+        // so evicting this loses the only copy of a run still going.
+        let live = write_log(temp.path(), "live.log", 500, Duration::from_secs(5));
+        let stale = write_log(temp.path(), "stale.log", 500, 3 * HOUR);
+
+        sweep(temp.path(), 100);
+
+        assert!(live.exists(), "a log written within the hour is off limits");
+        assert!(!stale.exists(), "an older one over budget still goes");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn sweep_batch_outputs_will_not_follow_a_symlinked_directory() {
+        let temp = TempDir::new().unwrap();
+        // What an agent confined to `~/.nx` can plant: `batchOutputs` pointing
+        // somewhere it was never granted. Following it would delete that
+        // directory's aged files instead of our own.
+        let victim = temp.path().join("victim");
+        let aged = write_log(&victim, "secrets.env", 16, 8 * 24 * HOUR);
+        let link = temp.path().join("batchOutputs");
+        std::os::unix::fs::symlink(&victim, &link).unwrap();
+
+        sweep(&link, u64::MAX);
+
+        assert!(
+            aged.exists(),
+            "a symlinked sweep root must be refused, not walked"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn normalize_outputs_relativizes_in_workspace_absolute_paths() {
+        let ws = Path::new("/ws/root");
+        let out = normalize_outputs(
+            ws,
+            vec!["dist".to_string(), "/ws/root/build/app".to_string()],
+        )
+        .unwrap();
+        assert_eq!(out, vec!["dist".to_string(), "build/app".to_string()]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn normalize_outputs_errors_on_paths_outside_workspace() {
+        let ws = Path::new("/ws/root");
+        // Absolute path outside the workspace.
+        assert!(normalize_outputs(ws, vec!["/etc/cron.d/evil".to_string()]).is_err());
+        // Relative path climbing out via `..`.
+        assert!(normalize_outputs(ws, vec!["../../escape".to_string()]).is_err());
+        // A valid output alongside an escaping one still errors.
+        assert!(
+            normalize_outputs(ws, vec!["dist".to_string(), "../../escape".to_string()]).is_err()
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn normalize_outputs_relativizes_in_workspace_absolute_paths() {
+        let ws = Path::new(r"C:\ws\root");
+        // A drive-letter absolute path inside the workspace is relativized and
+        // its separators normalized to forward slashes.
+        let out = normalize_outputs(
+            ws,
+            vec!["dist".to_string(), r"C:\ws\root\build\app".to_string()],
+        )
+        .unwrap();
+        assert_eq!(out, vec!["dist".to_string(), "build/app".to_string()]);
+    }
+
+    #[test]
+    fn normalize_outputs_keeps_escapes_in_relative_outputs() {
+        let ws = Path::new(if cfg!(windows) {
+            r"C:\ws\root"
+        } else {
+            "/ws/root"
+        });
+        let outputs = vec![
+            r"app/\(group\)/**".to_string(),
+            r"dist/\[id\].js".to_string(),
+        ];
+        assert_eq!(normalize_outputs(ws, outputs.clone()).unwrap(), outputs);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn normalize_outputs_errors_on_paths_outside_workspace() {
+        let ws = Path::new(r"C:\ws\root");
+        // Absolute path on the same drive but outside the workspace.
+        assert!(normalize_outputs(ws, vec![r"C:\Windows\System32".to_string()]).is_err());
+        // Absolute path on a different drive.
+        assert!(normalize_outputs(ws, vec![r"D:\elsewhere".to_string()]).is_err());
+        // Relative path climbing out via `..`.
+        assert!(normalize_outputs(ws, vec![r"..\..\escape".to_string()]).is_err());
+        // A valid output alongside an escaping one still errors.
+        assert!(
+            normalize_outputs(ws, vec!["dist".to_string(), r"..\..\escape".to_string()]).is_err()
+        );
+    }
+
+    /// A cache over `db` and `cache_dir` with its workspace at `workspace`.
+    /// Two caches can share `db` (two Nx processes in one workspace) or only
+    /// `cache_dir` (two workspaces on one cache directory).
+    fn cache_with(workspace: &Path, db: &Path, cache_dir: &Path) -> NxCache {
+        create_dir_all(workspace).unwrap();
+        let db = crate::native::db::initialize::initialize_db(db).unwrap();
+        NxCache::new(
+            workspace.to_str().unwrap().to_string(),
+            cache_dir.to_str().unwrap().to_string(),
+            &External::new(Arc::new(Mutex::new(db))),
+            None,
+            None,
+        )
+        .unwrap()
+    }
+
+    /// A workspace, a cache directory and a database of its own under `temp`.
+    fn cache_in(temp: &TempDir) -> NxCache {
+        cache_with(
+            &temp.path().join("workspace"),
+            &temp.path().join("test.db"),
+            &temp.path().join("cache"),
+        )
+    }
+
+    /// `cache_outputs.hash` references `task_details`, which Nx fills in
+    /// before it stores a task.
+    fn record_task(cache: &NxCache, hash: &str) {
+        cache
+            .db
+            .lock()
+            .unwrap()
+            .execute(
+                "INSERT OR IGNORE INTO task_details (hash, project, target) VALUES (?1, 'app', 'build')",
+                params![hash],
+            )
+            .unwrap();
+    }
+
+    /// Builds one output file for `hash` in the workspace and stores it with
+    /// the terminal output `log`.
+    fn put_output(cache: &mut NxCache, hash: &str) {
+        record_task(cache, hash);
+        let output = cache.workspace_root.join("dist").join(hash);
+        create_dir_all(&output).unwrap();
+        std::fs::write(output.join("main.js"), b"built").unwrap();
+        cache
+            .put(
+                hash.to_string(),
+                "log".to_string(),
+                vec![format!("dist/{hash}")],
+                0,
+            )
+            .unwrap();
+    }
+
+    /// `(is_cache_entry, size)` of the row for `hash`, if there is one.
+    fn record_for(cache: &NxCache, hash: &str) -> Option<(bool, i64)> {
+        cache
+            .db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT is_cache_entry, size FROM cache_outputs WHERE hash = ?1",
+                params![hash],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap()
+    }
+
+    const LOG_SIZE: i64 = "log".len() as i64;
+
+    #[test]
+    fn get_is_a_miss_once_the_artifact_directory_is_gone() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let hit = cache.get("1".to_string()).unwrap().unwrap();
+        assert!(Path::new(&hit.outputs_path).is_dir());
+        let (_, stored_size) = record_for(&cache, "1").unwrap();
+        assert!(stored_size > LOG_SIZE);
+
+        // The cache directory was emptied, moved or repointed; the database
+        // still holds the row.
+        std::fs::remove_dir_all(&hit.outputs_path).unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        // The row now counts only the terminal output it still owns, which
+        // stays on disk for `remove_old_cache_records`.
+        assert_eq!(record_for(&cache, "1"), Some((false, LOG_SIZE)));
+        assert!(cache.get_task_outputs_path_internal("1").is_file());
+        assert_eq!(cache.get_cache_size().unwrap(), LOG_SIZE);
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+
+        // The task reruns and its next put is a hit again.
+        put_output(&mut cache, "1");
+        assert!(cache.get("1".to_string()).unwrap().is_some());
+        assert_eq!(record_for(&cache, "1"), Some((true, stored_size)));
+    }
+
+    #[test]
+    fn get_batch_demotes_only_the_records_whose_artifacts_are_gone() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        put_output(&mut cache, "2");
+        let (_, stored_size) = record_for(&cache, "1").unwrap();
+        std::fs::remove_dir_all(cache.cache_path.join("2")).unwrap();
+
+        let results = cache
+            .get_batch(vec!["1".to_string(), "2".to_string(), "3".to_string()])
+            .unwrap();
+
+        assert!(results[0].is_some());
+        assert!(results[1].is_none());
+        assert!(results[2].is_none());
+        assert_eq!(record_for(&cache, "1"), Some((true, stored_size)));
+        assert_eq!(record_for(&cache, "2"), Some((false, LOG_SIZE)));
+        assert_eq!(record_for(&cache, "3"), None);
+        assert!(cache.get_task_outputs_path_internal("1").is_file());
+        assert!(cache.get_task_outputs_path_internal("2").is_file());
+        assert_eq!(cache.get_cache_size().unwrap(), stored_size + LOG_SIZE);
+    }
+
+    #[test]
+    fn a_task_with_no_outputs_still_hits() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        // `put` creates the directory whether or not anything is copied into
+        // it, so the directory check cannot turn these into misses.
+        record_task(&cache, "1");
+        cache
+            .put("1".to_string(), "log".to_string(), vec![], 0)
+            .unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_some());
+        assert!(cache.get_batch(vec!["1".to_string()]).unwrap()[0].is_some());
+    }
+
+    /// `get` and `get_batch` both check the directory in `build_cached_result`
+    /// and then call `demote_stale_cache_records`. Runs a `put` from `other`
+    /// between the two, as a second Nx process would.
+    fn put_between_check_and_cleanup(stale: &mut NxCache, other: &mut NxCache, hash: &str) {
+        let (code, size) = stale.fetch_cache_rows(&[hash.to_string()]).unwrap()[hash];
+        assert!(stale.build_cached_result(hash, code, size).is_none());
+        put_output(other, hash);
+        stale.demote_stale_cache_records(&[hash.to_string()]);
+    }
+
+    #[test]
+    fn cleanup_keeps_a_result_stored_meanwhile_in_a_shared_database() {
+        let temp = TempDir::new().unwrap();
+        let workspace = temp.path().join("workspace");
+        let db = temp.path().join("test.db");
+        let cache_dir = temp.path().join("cache");
+        // Two Nx processes in one workspace: two connections to one database.
+        let mut a = cache_with(&workspace, &db, &cache_dir);
+        let mut b = cache_with(&workspace, &db, &cache_dir);
+        put_output(&mut a, "1");
+        let (_, stored_size) = record_for(&a, "1").unwrap();
+        std::fs::remove_dir_all(cache_dir.join("1")).unwrap();
+
+        put_between_check_and_cleanup(&mut a, &mut b, "1");
+
+        // B's row is still a cache entry, and both processes hit it with B's
+        // terminal output.
+        assert_eq!(record_for(&a, "1"), Some((true, stored_size)));
+        let hit = b.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(hit.terminal_output.as_deref(), Some("log"));
+        assert!(a.get("1".to_string()).unwrap().is_some());
+    }
+
+    #[test]
+    fn cleanup_keeps_a_result_stored_meanwhile_through_a_separate_database() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.path().join("cache");
+        // Two workspaces sharing one cache directory, a database each.
+        let mut a = cache_with(
+            &temp.path().join("a/workspace"),
+            &temp.path().join("a/test.db"),
+            &cache_dir,
+        );
+        let mut b = cache_with(
+            &temp.path().join("b/workspace"),
+            &temp.path().join("b/test.db"),
+            &cache_dir,
+        );
+        put_output(&mut a, "1");
+        let (_, stored_size) = record_for(&a, "1").unwrap();
+        std::fs::remove_dir_all(cache_dir.join("1")).unwrap();
+
+        put_between_check_and_cleanup(&mut a, &mut b, "1");
+
+        // B's row, directory and terminal output are untouched, and A's row
+        // describes a directory that exists again.
+        assert_eq!(record_for(&b, "1"), Some((true, stored_size)));
+        assert!(cache_dir.join("terminalOutputs").join("1").is_file());
+        let hit = b.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(hit.terminal_output.as_deref(), Some("log"));
+        assert_eq!(record_for(&a, "1"), Some((true, stored_size)));
+        assert!(a.get("1".to_string()).unwrap().is_some());
+    }
 }

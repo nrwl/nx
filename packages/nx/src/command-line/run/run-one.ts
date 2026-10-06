@@ -11,7 +11,10 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
-import { runCommand } from '../../tasks-runner/run-command';
+import {
+  runCommand,
+  selectTasksForProjects,
+} from '../../tasks-runner/run-command';
 import {
   readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
@@ -74,6 +77,17 @@ export async function runOne(
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
+  // --graph's file output draws this selection; the live graph builds its own.
+  const selectTasks = () =>
+    selectTasksForProjects(
+      projectGraph,
+      projects.map((p) => p.name),
+      nxArgs,
+      overrides,
+      extraTargetDependencies,
+      extraOptions.excludeTaskDependencies
+    );
+
   if (nxArgs.graph) {
     const projectNames = projects.map((t) => t.name);
     const file = readGraphFileFromGraphArg(nxArgs);
@@ -86,12 +100,14 @@ export async function runOne(
         targets: nxArgs.targets,
         projects: projectNames,
         file,
+        taskSelection: selectTasks,
+        configuration: nxArgs.configuration,
       },
       projectNames
     );
   } else {
     const status = await runCommand(
-      projects,
+      selectTasks(),
       projectGraph,
       { nxJson },
       nxArgs,
@@ -100,6 +116,7 @@ export async function runOne(
       extraTargetDependencies,
       extraOptions
     );
+    await output.drain();
     process.exit(status);
   }
 }

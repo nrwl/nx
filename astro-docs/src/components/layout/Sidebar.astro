@@ -18,8 +18,12 @@ function hasCurrentPage(entries: SidebarEntry[]): boolean {
   })
 }
 
-// For each tab, resolve its groups from the sidebar using the tab's group labels
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+
+// For each tab, resolve its groups from the sidebar using the tab's group labels.
+// A tab with a `link` is a direct nav link (no panel) - clicking it navigates.
 const tabs = sidebarTabs.map((config) => {
+  const href = config.link ? `${base}/${config.link}` : undefined
   const groupLabels = config.groups.map((g) =>
     typeof g === 'string' ? g : g.label
   )
@@ -30,7 +34,7 @@ const tabs = sidebarTabs.map((config) => {
   const isSingleGroup = groups.length === 1 && groups[0].type === 'group'
   const entries: SidebarEntry[] = isSingleGroup ? (groups[0] as any).entries : groups
   const active = hasCurrentPage(groups)
-  return { ...config, entries, active }
+  return { ...config, entries, active, href }
 })
 
 // Exactly one tab should be active; if none matched, leave it for the client to decide
@@ -47,9 +51,10 @@ const anyActive = tabs.some((t) => t.active)
                     icon={tab.icon}
                     label={tab.label}
                     active={anyActive ? tab.active : false}
+                    href={tab.href}
                 />
             ))}
-            {tabs.map((tab) => (
+            {tabs.filter((tab) => !tab.href).map((tab) => (
                 <SidebarTabPanel
                     slot="panels"
                     id={`${tab.id}-panel`}

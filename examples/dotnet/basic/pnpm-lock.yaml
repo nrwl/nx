@@ -1,0 +1,16 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      '@nx/dotnet':
+        specifier: link:../../../packages/dotnet
+        version: link:../../../packages/dotnet
+      nx:
+        specifier: link:../../../packages/nx
+        version: link:../../../packages/nx

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`directive generator --no-standalone should export the directive correctly when directory is nested deeper 1`] = `
+exports[`directive generator > --no-standalone > should export the directive correctly when directory is nested deeper 1`] = `
 "import { NgModule } from '@angular/core';
 import { Test } from './my-directives/test/test';
 @NgModule({
@@ -12,7 +12,7 @@ export class TestModule {}
 "
 `;
 
-exports[`directive generator --no-standalone should generate a directive with test files and attach to the NgModule automatically 1`] = `
+exports[`directive generator > --no-standalone > should generate a directive with test files and attach to the NgModule automatically 1`] = `
 "import { Directive } from '@angular/core';
 
 @Directive({
@@ -25,7 +25,7 @@ export class Test {
 "
 `;
 
-exports[`directive generator --no-standalone should generate a directive with test files and attach to the NgModule automatically 2`] = `
+exports[`directive generator > --no-standalone > should generate a directive with test files and attach to the NgModule automatically 2`] = `
 "import { Test } from './test';
 
 describe('Test', () => {
@@ -37,7 +37,7 @@ describe('Test', () => {
 "
 `;
 
-exports[`directive generator --no-standalone should generate a directive with test files and attach to the NgModule automatically 3`] = `
+exports[`directive generator > --no-standalone > should generate a directive with test files and attach to the NgModule automatically 3`] = `
 "import { NgModule } from '@angular/core';
 import { Test } from './test';
 @NgModule({
@@ -49,11 +49,11 @@ export class TestModule {}
 "
 `;
 
-exports[`directive generator --no-standalone should import the directive correctly 1`] = `null`;
+exports[`directive generator > --no-standalone > should import the directive correctly 1`] = `null`;
 
-exports[`directive generator --no-standalone should import the directive correctly 2`] = `null`;
+exports[`directive generator > --no-standalone > should import the directive correctly 2`] = `null`;
 
-exports[`directive generator --no-standalone should import the directive correctly 3`] = `
+exports[`directive generator > --no-standalone > should import the directive correctly 3`] = `
 "import { NgModule } from '@angular/core';
 import { Test } from './test';
 @NgModule({
@@ -65,7 +65,7 @@ export class TestModule {}
 "
 `;
 
-exports[`directive generator --no-standalone should import the directive correctly when directory is nested deeper 1`] = `
+exports[`directive generator > --no-standalone > should import the directive correctly when directory is nested deeper 1`] = `
 "import { Directive } from '@angular/core';
 
 @Directive({
@@ -78,7 +78,7 @@ export class Test {
 "
 `;
 
-exports[`directive generator --no-standalone should import the directive correctly when directory is nested deeper 2`] = `
+exports[`directive generator > --no-standalone > should import the directive correctly when directory is nested deeper 2`] = `
 "import { Test } from './test';
 
 describe('Test', () => {
@@ -90,7 +90,7 @@ describe('Test', () => {
 "
 `;
 
-exports[`directive generator --no-standalone should import the directive correctly when directory is nested deeper 3`] = `
+exports[`directive generator > --no-standalone > should import the directive correctly when directory is nested deeper 3`] = `
 "import { NgModule } from '@angular/core';
 import { Test } from './my-directives/test/test';
 @NgModule({
@@ -102,7 +102,7 @@ export class TestModule {}
 "
 `;
 
-exports[`directive generator should generate correctly 1`] = `
+exports[`directive generator > should generate correctly 1`] = `
 "import { Directive } from '@angular/core';
 
 @Directive({
@@ -114,7 +114,7 @@ export class Test {
 "
 `;
 
-exports[`directive generator should generate correctly 2`] = `
+exports[`directive generator > should generate correctly 2`] = `
 "import { Test } from './test';
 
 describe('Test', () => {
@@ -126,7 +126,7 @@ describe('Test', () => {
 "
 `;
 
-exports[`directive generator should handle path with file extension 1`] = `
+exports[`directive generator > should handle path with file extension 1`] = `
 "import { Directive } from '@angular/core';
 
 @Directive({
@@ -138,7 +138,7 @@ export class Test {
 "
 `;
 
-exports[`directive generator should handle path with file extension 2`] = `
+exports[`directive generator > should handle path with file extension 2`] = `
 "import { Test } from './test.directive';
 
 describe('Test', () => {

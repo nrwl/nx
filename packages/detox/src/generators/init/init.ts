@@ -1,7 +1,8 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -71,6 +72,18 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 export function updateDependencies(host: Tree, schema: Schema) {
+  // The user explicitly asked for detox, and its postinstall builds the
+  // framework cache it needs to run at all, so enable it. npm and yarn run it
+  // unconditionally. Transitive deps stay denied: dtrace-provider (via
+  // bunyan) falls back to a no-op when its build fails, and jest-resolve (via
+  // @nx/detox's @nx/jest dependency) brings unrs-resolver and, from jest
+  // 30.5.0, a jest-haste-map that depends on @parcel/watcher.
+  acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+    detox: true,
+    'dtrace-provider': false,
+    '@parcel/watcher': false,
+    'unrs-resolver': false,
+  });
   return addDependenciesToPackageJson(
     host,
     {},

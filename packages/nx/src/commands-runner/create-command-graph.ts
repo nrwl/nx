@@ -54,6 +54,10 @@ export function createCommandGraph(
     for (const projectName of projectNames) {
       recursiveResolveDeps(projectGraph, projectName, dependencies);
     }
+  } else {
+    for (const projectName of projectNames) {
+      dependencies[projectName] = [];
+    }
   }
   const roots = Object.keys(dependencies).filter(
     (d) => dependencies[d].length === 0

@@ -16,7 +16,7 @@ import { fetchVersionsFromRegistry } from './fetch-versions-from-registry';
 import { updatePackageDependencies } from './update-package-jsons';
 import { updateVersionUtils } from './update-version-utils';
 
-const yargs = require('yargs/yargs');
+const yargs = require('yargs');
 const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv)).argv;
 

@@ -5,7 +5,8 @@ export function getCSSModuleLocalIdent(
   ctx,
   localIdentName,
   localName,
-  options
+  options,
+  hashFunction?: string
 ) {
   // Use the filename or folder name, based on some uses the index.js / index.module.(css|scss|sass) project style
   const fileNameOrFolder = ctx.resourcePath.match(
@@ -16,7 +17,9 @@ export function getCSSModuleLocalIdent(
   // Create a hash based on a the file location and class name. Will be unique across a project, and close to globally unique.
   const hash = getHashDigest(
     posix.relative(ctx.rootContext, ctx.resourcePath) + localName,
-    'md5',
+    // md5 is unavailable under FIPS-restricted OpenSSL (nx#36829). Env var stays
+    // undocumented on purpose - `cssModuleHashFunction` is the documented option.
+    hashFunction || process.env.NX_CSS_MODULE_HASH_FUNCTION || 'md5',
     'base64',
     5
   );

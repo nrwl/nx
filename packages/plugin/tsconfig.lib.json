@@ -8,8 +8,6 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node", "jest"],
     "composite": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
@@ -36,10 +34,13 @@
       "path": "../jest/tsconfig.lib.json"
     },
     {
+      "path": "../devkit/tsconfig.lib.json"
+    },
+    {
       "path": "../nx/tsconfig.lib.json"
     },
     {
-      "path": "../devkit/tsconfig.lib.json"
+      "path": "../vitest/tsconfig.lib.json"
     }
   ]
 }

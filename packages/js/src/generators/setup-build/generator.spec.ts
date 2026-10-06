@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -166,7 +166,7 @@ describe('setup-build generator', () => {
   });
 
   // TODO(@jaysoo): For some reason, there is no vite.config file here. Please re-enable this test
-  xit('should support --bundler=vite', async () => {
+  it.skip('should support --bundler=vite', async () => {
     tree.write('packages/mypkg/src/main.ts', 'console.log("hello world");');
     writeJson(tree, 'packages/mypkg/tsconfig.lib.json', {});
 

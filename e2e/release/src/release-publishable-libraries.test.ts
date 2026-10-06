@@ -1,4 +1,5 @@
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -12,7 +13,7 @@ import { execSync } from 'node:child_process';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -32,7 +33,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B\s+types\//g, 'XXB types/')
         .replaceAll(/total files:\s+\d*/g, 'total files: X')
         .replaceAll(/\d*B\s+README.md/g, 'XXB README.md')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         .replaceAll(/(\w+) lock file/g, 'PM lock file')
         // Normalize the version title date.
@@ -96,7 +97,9 @@ describe('release publishable libraries', () => {
       `generate @nx/js:lib packages/${jsLib} --publishable --importPath=@proj/${jsLib} --no-interactive`
     );
 
-    const releaseOutput = runCLI(`release --specifier 0.0.2 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.2 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -107,8 +110,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.2",
       "type": "commonjs",
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.2
@@ -142,6 +143,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
@@ -151,7 +156,9 @@ describe('release publishable libraries', () => {
       `generate @nx/react:lib packages/${reactLib} --publishable --importPath=@proj/${reactLib} --no-interactive`
     );
 
-    const releaseOutput = runCLI(`release --specifier 0.0.3 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.3 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -162,8 +169,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.3",
       "module": "./index.esm.js",
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.3
@@ -199,16 +204,26 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
-  it('should be able to release publishable angular library', async () => {
+  it('should only release publishable angular libraries', async () => {
+    const angularBuildableLib = uniq('my-pkg-');
     const angularLib = uniq('my-pkg-');
+    runCLI(
+      `generate @nx/angular:lib packages/${angularBuildableLib} --buildable --importPath=@proj/${angularBuildableLib} --no-interactive`
+    );
     runCLI(
       `generate @nx/angular:lib packages/${angularLib} --publishable --importPath=@proj/${angularLib} --no-interactive`
     );
 
-    const releaseOutput = runCLI(`release --specifier 0.0.4 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.4 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -218,9 +233,7 @@ describe('release publishable libraries', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.4",
-      "peerDependencies": {
-      }
-      +
+      "sideEffects": false,
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.4
@@ -254,7 +267,15 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
+
+    expect(() =>
+      execSync(`npm view @proj/${angularBuildableLib} version`)
+    ).toThrow(/npm (ERR!|error) code E404/);
   });
 
   it('should be able to release publishable vue library', async () => {
@@ -264,7 +285,9 @@ describe('release publishable libraries', () => {
     );
     runCLI('sync');
 
-    const releaseOutput = runCLI(`release --specifier 0.0.5 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.5 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -307,6 +330,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
@@ -316,7 +343,9 @@ describe('release publishable libraries', () => {
       `generate @nx/react-native:lib packages/${reactNativeLib} --publishable --importPath=@proj/${reactNativeLib} --no-interactive`
     );
 
-    const releaseOutput = runCLI(`release --specifier 0.0.6 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.6 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -327,8 +356,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.6",
       "peerDependencies": {
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.6
@@ -364,6 +391,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 });

@@ -2,6 +2,8 @@ import {
   getNamedInputs,
   calculateHashesForCreateNodes,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -14,9 +16,8 @@ import {
   joinPathFragments,
   getPackageManagerCommand,
   detectPackageManager,
+  normalizePath,
 } from '@nx/devkit';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import {
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
   addBuildAndWatchDepsTargets,
@@ -168,7 +169,9 @@ async function createRsbuildTargets(
 
   // Required lazily: `@rsbuild/core` is an optional peer dependency, so it
   // may be absent when the plugin is loaded in a workspace that doesn't use
-  // Rsbuild yet (e.g. before a generator installs it).
+  // Rsbuild yet (e.g. before a generator installs it). This path runs in
+  // the CLI/daemon (never Jest), so a plain require works on Node 22.12+
+  // via require(esm) for the pure-ESM @rsbuild/core@2.
   const { loadConfig } =
     require('@rsbuild/core') as typeof import('@rsbuild/core');
   const rsbuildConfig = await loadConfig({
@@ -187,19 +190,21 @@ async function createRsbuildTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  const buildInputs: TargetConfiguration['inputs'] = [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['@rsbuild/core'],
+    },
+  ];
+
   targets[options.buildTargetName] = {
     command: `rsbuild build`,
     options: { cwd: projectRoot, args: ['--mode=production'] },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      {
-        externalDependencies: ['@rsbuild/core'],
-      },
-    ],
+    inputs: [...buildInputs],
     outputs: buildOutputs,
     metadata: {
       technologies: ['rsbuild'],
@@ -217,6 +222,7 @@ async function createRsbuildTargets(
 
   targets[options.devTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rsbuild dev`,
     options: {
       cwd: projectRoot,
@@ -226,6 +232,7 @@ async function createRsbuildTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rsbuild preview`,
     dependsOn: [`${options.buildTargetName}`, `^${options.buildTargetName}`],
     options: {
@@ -301,8 +308,10 @@ function getOutputs(
   // `output.distPath.root` is the directory Rsbuild emits the build into, so
   // it is the build output as-is. (Don't take its `dirname` - that points at
   // the parent directory, which can capture sibling projects' outputs.)
+  // Rsbuild 2 also accepts `distPath` as a string, shorthand for `distPath.root`.
+  const distPath = rsbuildConfig?.output?.distPath;
   const buildOutputPath = normalizeOutputPath(
-    rsbuildConfig?.output?.distPath?.root,
+    typeof distPath === 'string' ? distPath : distPath?.root,
     projectRoot,
     workspaceRoot,
     'dist'
@@ -327,12 +336,12 @@ function normalizeOutputPath(
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      return `{workspaceRoot}/${normalizePath(relative(workspaceRoot, outputPath))}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }

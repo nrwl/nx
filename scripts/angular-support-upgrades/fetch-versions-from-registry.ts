@@ -38,9 +38,11 @@ const packagesToUpdate: PackageSpec[] = [
   'ng-packagr',
 ];
 
-// Resolved from `@angular/core`'s peerDependencies (not their own dist-tags)
-// so they stay aligned with whatever range Angular actually accepts.
-const angularCorePeerResolvedPackages = ['zone.js', 'rxjs'] as const;
+// Resolved from `@angular/core`'s peerDependencies (not its own dist-tags) so it
+// stays aligned with whatever range Angular actually accepts. Only zone.js: rxjs
+// is intentionally excluded - Angular accepts a wide rxjs range (6 || 7), so we
+// don't pin/bump it from here (which would otherwise force it into the migration).
+const angularCorePeerResolvedPackages = ['zone.js'] as const;
 
 export async function fetchVersionsFromRegistry(
   targetVersion: 'latest' | 'next'

@@ -1,0 +1,81 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+import KnowledgeBaseArticleList from '../../components/kb/KnowledgeBaseArticleList.astro';
+import {
+  getKnowledgeBaseArticles,
+  kbTopics,
+  sortArticlesByLastModified,
+  type KnowledgeBaseTopic,
+} from '../../utils/knowledge-base';
+
+export function getStaticPaths() {
+  return kbTopics.map((topic) => ({
+    params: { topic: topic.id },
+    props: { topic },
+  }));
+}
+
+interface Props {
+  topic: KnowledgeBaseTopic;
+}
+
+const { topic } = Astro.props;
+const articles = sortArticlesByLastModified(
+  getKnowledgeBaseArticles(await getCollection('docs')).filter((article) =>
+    article.topics.includes(topic.label)
+  )
+);
+---
+
+<StarlightPage
+  frontmatter={{
+    title: topic.label,
+    description: topic.description,
+    template: 'splash',
+    tableOfContents: false,
+    pagefind: true,
+  }}
+>
+  <div class="kb-topic-page">
+    <p class="kb-topic-description">{topic.description}</p>
+    <p class="kb-topic-count">
+      {articles.length}
+      {articles.length === 1 ? 'article' : 'articles'}
+    </p>
+
+    <section aria-labelledby="topic-articles">
+      <h2 id="topic-articles">All {topic.label} articles</h2>
+      <KnowledgeBaseArticleList
+        articles={articles}
+        label={`${topic.label} Knowledge Base articles`}
+      />
+    </section>
+  </div>
+</StarlightPage>
+
+<style is:global>
+  .kb-topic-page {
+    padding-block: 0.5rem 4rem;
+  }
+
+  .kb-topic-description {
+    max-width: 44rem;
+    margin: 0 0 0.5rem;
+    color: var(--sl-color-gray-3);
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .kb-topic-count {
+    margin: 0 0 2.5rem;
+    color: var(--sl-color-gray-4);
+    font-size: 0.85rem;
+  }
+
+  .kb-topic-page h2 {
+    margin: 0 0 1rem;
+    color: var(--sl-color-white);
+    font-size: 1.45rem;
+  }
+</style>

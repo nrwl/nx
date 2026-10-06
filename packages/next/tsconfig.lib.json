@@ -8,8 +8,6 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
     "composite": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
@@ -27,9 +25,6 @@
   "include": ["*.ts", "src/**/*.ts", "plugins/**/*.ts", "typings/**/*.d.ts"],
   "references": [
     {
-      "path": "../webpack/tsconfig.lib.json"
-    },
-    {
       "path": "../web/tsconfig.lib.json"
     },
     {
@@ -45,13 +40,19 @@
       "path": "../devkit/tsconfig.lib.json"
     },
     {
+      "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../vitest/tsconfig.lib.json"
+    },
+    {
       "path": "../playwright/tsconfig.lib.json"
     },
     {
       "path": "../cypress/tsconfig.lib.json"
     },
     {
-      "path": "../nx/tsconfig.lib.json"
+      "path": "../webpack/tsconfig.lib.json"
     }
   ]
 }

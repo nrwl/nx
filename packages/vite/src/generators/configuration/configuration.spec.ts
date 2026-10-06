@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   addDependenciesToPackageJson,
@@ -23,9 +23,19 @@ import {
 
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { LibraryGeneratorSchema } from '@nx/js/internal';
+import { confirmationPrompt } from '@nx/devkit/internal';
+
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
+  return {
+    ...actual,
+    confirmationPrompt: vi.fn(actual.confirmationPrompt),
+  };
+});
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   describe('transform React app to use Vite', () => {
     beforeAll(async () => {
@@ -68,6 +78,16 @@ describe('@nx/vite:configuration', () => {
         'apps/my-test-react-app/tsconfig.json'
       );
       expect(tsconfigJson.compilerOptions.jsx).toBe('react-jsx');
+    });
+
+    it('should remove esModuleInterop from tsconfig compilerOptions for react', () => {
+      // editTsConfig replaces compilerOptions entirely for react, so any
+      // pre-existing esModuleInterop (set by the webpack scaffold) must be gone.
+      const tsconfigJson = readJson(
+        tree,
+        'apps/my-test-react-app/tsconfig.json'
+      );
+      expect(tsconfigJson.compilerOptions.esModuleInterop).toBeUndefined();
     });
 
     it('should create vite.config file at the root of the app', () => {
@@ -153,9 +173,7 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should throw when trying to convert something unknown and user denies conversion', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
-      confirmSpy.mockResolvedValue(false);
+      vi.mocked(confirmationPrompt).mockResolvedValue(false);
 
       expect.assertions(2);
 
@@ -237,9 +255,7 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should set up non buildable library which already has vite.config.mts correctly', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
-      confirmSpy.mockResolvedValue(true);
+      vi.mocked(confirmationPrompt).mockResolvedValue(true);
 
       mockReactLibNonBuildableVitestRunnerGenerator(tree);
 
@@ -273,7 +289,14 @@ describe('@nx/vite:configuration', () => {
     };
 
     beforeEach(() => {
+      envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    });
+
+    afterEach(() => {
+      if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+      else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     });
 
     it('should add build and test targets with vite and vitest', async () => {
@@ -288,6 +311,44 @@ describe('@nx/vite:configuration', () => {
       expect(tree.read('my-lib/vite.config.mts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
       expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeTruthy();
+      expect(tree.read('my-lib/eslint.config.mjs', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import baseConfig from '../eslint.config.mjs';
+
+        export default [
+          ...baseConfig,
+          {
+            files: ['**/*.json'],
+            rules: {
+              '@nx/dependency-checks': [
+                'error',
+                {
+                  ignoredFiles: [
+                    '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
+                    '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+                  ],
+                },
+              ],
+            },
+            languageOptions: {
+              parser: await import('jsonc-eslint-parser'),
+            },
+          },
+        ];
+        "
+      `);
+    });
+
+    it('should add dependency-checks rule to .eslintrc.json (eslintrc mode)', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await jsLibraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',
@@ -310,7 +371,7 @@ describe('@nx/vite:configuration', () => {
       ${'none'}      | ${undefined}
       ${'jest'}      | ${'my-lib/jest.config.cts'}
     `(
-      'should respect provided unitTestRunner="$unitTestRunner"',
+      'should respect provided unitTestRunner=$unitTestRunner',
       async ({ unitTestRunner, configPath }) => {
         await jsLibraryGenerator(tree, {
           ...defaultOptions,
@@ -472,10 +533,7 @@ describe('@nx/vite:configuration', () => {
           root: import.meta.dirname,
           cacheDir: '../../node_modules/.vite/packages/my-lib',
           plugins: [
-            dts({
-              entryRoot: 'src',
-              tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
-            }),
+            dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json') }),
           ],
           // Uncomment this if you are using workers.
           // worker: {

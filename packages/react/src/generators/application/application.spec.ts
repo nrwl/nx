@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   detectPackageManager,
@@ -12,6 +13,7 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -19,20 +21,20 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    createProjectGraphAsync: jest
+    createProjectGraphAsync: vi
       .fn()
       .mockImplementation(() => Promise.resolve(projectGraph)),
-    detectPackageManager: jest.fn(),
+    detectPackageManager: vi.fn(),
   };
 });
 
@@ -40,6 +42,7 @@ const packageCmd = getPackageManagerCommand().exec;
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
   let schema: Schema = {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
@@ -50,16 +53,62 @@ describe('app', () => {
     strict: true,
     addPlugin: true,
   };
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
-  beforeEach(() => {
+  beforeEach(async () => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
-    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
-      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    const actual =
+      await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
+    (detectPackageManager as Mock).mockImplementation(
+      actual.detectPackageManager
     );
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          bundler: 'vite',
+          style: 'scss',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@parcel\/watcher['"]: false/
+      );
+    });
+
+    it('should not record a @parcel/watcher decision without scss', async () => {
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          bundler: 'vite',
+          style: 'css',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        '@parcel/watcher'
+      );
+    });
   });
 
   describe('not nested', () => {
@@ -105,33 +154,37 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         addPlugin: true,
+        // Let the generator format the tree so we assert on the same
+        // prettier-formatted config a user gets, not the raw intermediate the
+        // e2e generator writes with skipFormat.
+        skipFormat: false,
       });
 
-      // Spot-check the generated cypress config. Avoid inline snapshot here:
-      // the `webServerCommands` interpolate `packageCmd` at runtime (`npx`,
-      // `pnpm exec`, etc), which varies by detected package manager.
-      const cypressConfig = appTree.read(
-        'my-app-e2e/cypress.config.ts',
-        'utf-8'
-      );
+      // The web-server commands interpolate the detected package manager's exec
+      // command (`npx`, `pnpm exec`, ...), so normalize it to keep the snapshot
+      // package-manager agnostic.
+      const cypressConfig = appTree
+        .read('my-app-e2e/cypress.config.ts', 'utf-8')
+        .replaceAll(packageCmd, '<pm-exec>');
       expect(cypressConfig).toMatchInlineSnapshot(`
         "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
         const { defineConfig } = require('cypress');
         module.exports = defineConfig({
-            e2e: {
-                ...nxE2EPreset(__filename, {
-                    "cypressDir": "src",
-                    "bundler": "vite",
-                    "webServerCommands": {
-                        "default": "npx nx run my-app:dev",
-                        "production": "npx nx run my-app:preview"
-                    },
-                    "ciWebServerCommand": "npx nx run my-app:preview",
-                    "ciBaseUrl": "http://localhost:4300"
-                }),
-                baseUrl: 'http://localhost:4200'
-            }
-        });"
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                default: '<pm-exec> nx run my-app:dev',
+                production: '<pm-exec> nx run my-app:preview',
+              },
+              ciWebServerCommand: '<pm-exec> nx run my-app:preview',
+              ciBaseUrl: 'http://localhost:4300',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
       `);
     });
 
@@ -335,11 +388,7 @@ describe('app', () => {
         'jest.config.cts',
       ]);
 
-      const eslintJson = readJson(appTree, 'my-app/.eslintrc.json');
-      expect(eslintJson.extends).toEqual([
-        'plugin:@nx/react',
-        '../.eslintrc.json',
-      ]);
+      expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
 
       expect(appTree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
@@ -348,7 +397,7 @@ describe('app', () => {
           "compilerOptions": {
             "allowJs": true,
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -376,6 +425,17 @@ describe('app', () => {
 
       const tsConfig = readJson(appTree, 'my-app/tsconfig.json');
       expect(tsConfig.extends).toEqual('../tsconfig.base.json');
+    });
+
+    it('should use node10 moduleResolution in e2e tsconfig on TypeScript < 6', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+      await applicationGenerator(appTree, schema);
+
+      const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
+      expect(tsconfigE2E.compilerOptions.moduleResolution).toEqual('node10');
     });
   });
 
@@ -480,12 +540,8 @@ describe('app', () => {
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../dist/out-tsc',
         },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['plugin:@nx/react', '../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(appTree.exists('my-dir/my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should setup playwright', async () => {
@@ -597,7 +653,7 @@ describe('app', () => {
   it('should setup the eslint builder', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.exists('my-app/.eslintrc.json')).toBeTruthy();
+    expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
   });
 
   describe('--unit-test-runner none', () => {
@@ -635,6 +691,46 @@ describe('app', () => {
     });
   });
 
+  describe('--enableTypedLinting', () => {
+    it.each(['playwright', 'cypress'] as const)(
+      'should forward the flag to the %s e2e project',
+      async (e2eTestRunner) => {
+        await applicationGenerator(appTree, {
+          ...schema,
+          e2eTestRunner,
+          enableTypedLinting: true,
+        });
+
+        expect(appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')).toContain(
+          'projectService: true'
+        );
+      }
+    );
+
+    it('should forward the deprecated setParserOptionsProject flag to the e2e project', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        e2eTestRunner: 'playwright',
+        setParserOptionsProject: true,
+      });
+
+      expect(appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')).toContain(
+        'projectService: true'
+      );
+    });
+
+    it('should not set up typed linting in the e2e project by default', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        e2eTestRunner: 'playwright',
+      });
+
+      expect(
+        appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')
+      ).not.toContain('projectService');
+    });
+  });
+
   it('should generate functional components by default', async () => {
     await applicationGenerator(appTree, schema);
 
@@ -654,6 +750,7 @@ describe('app', () => {
   });
 
   it('should add .eslintrc.json and dependencies', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(appTree, { ...schema, linter: 'eslint' });
 
     const packageJson = readJson(appTree, '/package.json');
@@ -941,11 +1038,7 @@ describe('app', () => {
             port: 4300,
             host: 'localhost',
           },
-          plugins: [
-            !process.env.VITEST && reactRouter(),
-            nxViteTsPaths(),
-            nxCopyAssetsPlugin(['*.md']),
-          ],
+          plugins: [!process.env.VITEST && reactRouter(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
           //   plugins: () => [ nxViteTsPaths() ],
@@ -1065,14 +1158,9 @@ describe('app', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "jsx": "react-jsx",
-            "types": [
-              "jest",
-              "node",
-              "@nx/react/typings/cssmodule.d.ts",
-              "@nx/react/typings/image.d.ts"
-            ]
+            "types": ["jest", "node", "@nx/react/typings/cssmodule.d.ts", "@nx/react/typings/image.d.ts"]
           },
           "files": ["src/test-setup.ts"],
           "include": [
@@ -1209,7 +1297,22 @@ describe('app', () => {
 
     // ASSERT
     nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults.build).toMatchInlineSnapshot(`
+    const td = nxJson.targetDefaults!;
+    const buildEntry = Array.isArray(td)
+      ? td.find(
+          (e) =>
+            e.target === 'build' &&
+            e.projects === undefined &&
+            e.plugin === undefined
+        )
+      : td.build;
+    const {
+      target: _t,
+      projects: _p,
+      plugin: _pl,
+      ...buildConfig
+    } = (buildEntry as any) ?? {};
+    expect(buildConfig).toMatchInlineSnapshot(`
       {
         "cache": true,
         "dependsOn": [
@@ -1474,7 +1577,7 @@ describe('app', () => {
     });
 
     it('should add project to workspaces when using TS solution (pnpm)', async () => {
-      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      (detectPackageManager as Mock).mockReturnValue('pnpm');
       updateJson(appTree, 'package.json', (json) => {
         delete json.workspaces;
         return json;

@@ -1,19 +1,16 @@
+import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodes } from './plugin';
+import { mockCjsModule, TempFs } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('@rsbuild/core', () => ({
-  ...jest.requireActual('@rsbuild/core'),
-  loadConfig: jest.fn().mockResolvedValue({
-    filePath: 'my-app/rsbuild.config.ts',
-    content: {},
-  }),
-}));
+// The plugin `require`s `@rsbuild/core` lazily, which `vi.mock` cannot reach.
+const loadConfig = vi.fn();
+mockCjsModule(import.meta.url, '@rsbuild/core', { loadConfig });
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
 describe('@nx/rsbuild', () => {
@@ -22,7 +19,11 @@ describe('@nx/rsbuild', () => {
   let tempFs: TempFs;
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
+    loadConfig.mockResolvedValue({
+      filePath: 'my-app/rsbuild.config.ts',
+      content: {},
+    });
     tempFs = new TempFs('rsbuild-test');
     context = {
       nxJsonConfiguration: {
@@ -43,7 +44,7 @@ describe('@nx/rsbuild', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
   });
 
@@ -117,6 +118,15 @@ describe('@nx/rsbuild', () => {
                   "dev-serve": {
                     "command": "rsbuild dev",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@rsbuild/core",
+                        ],
+                      },
+                    ],
                     "options": {
                       "args": [
                         "--mode=development",
@@ -136,6 +146,15 @@ describe('@nx/rsbuild', () => {
                     "dependsOn": [
                       "build-something",
                       "^build-something",
+                    ],
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@rsbuild/core",
+                        ],
+                      },
                     ],
                     "options": {
                       "args": [
@@ -198,7 +217,7 @@ describe('@nx/rsbuild', () => {
   });
 
   it('should infer typecheck with --build flag when using TS solution setup', async () => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
     tempFs.createFileSync('my-app/tsconfig.json', `{}`);
 
     const nodes = await createNodesFunction(
@@ -255,10 +274,7 @@ describe('@nx/rsbuild', () => {
         configPath,
         `export default {}; // distPath.root=${distPathRoot ?? '(unset)'}`
       );
-      // `@rsbuild/core` is `require`d lazily inside the plugin, so grab the
-      // same (mocked) module instance from the current registry.
-      const { loadConfig } = require('@rsbuild/core');
-      (loadConfig as jest.Mock).mockResolvedValueOnce({
+      loadConfig.mockResolvedValueOnce({
         filePath: configPath,
         content: distPathRoot
           ? { output: { distPath: { root: distPathRoot } } }

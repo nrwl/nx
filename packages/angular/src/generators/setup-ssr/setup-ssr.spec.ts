@@ -1,6 +1,7 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
+  joinPathFragments,
   NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
@@ -8,16 +9,17 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { PackageJson } from 'nx/src/utils/package-json';
-import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import {
   angularDevkitVersion,
   angularVersion,
   expressVersion,
+  nxVersion,
   typesExpressVersion,
+  webpackMergeVersion,
 } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupSsr } from './setup-ssr';
+import { PackageJson } from '@nx/devkit/internal';
 
 describe('setupSSR', () => {
   describe('with application builder', () => {
@@ -97,11 +99,7 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/app/app-module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-        import {
-          BrowserModule,
-          provideClientHydration,
-          withEventReplay,
-        } from '@angular/platform-browser';
+        import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { App } from './app';
         import { appRoutes } from './app.routes';
@@ -110,10 +108,7 @@ describe('setupSSR', () => {
         @NgModule({
           declarations: [App, NxWelcome],
           imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-          providers: [
-            provideBrowserGlobalErrorListeners(),
-            provideClientHydration(withEventReplay()),
-          ],
+          providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
           bootstrap: [App],
         })
         export class AppModule {}
@@ -141,15 +136,11 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import {
-          BootstrapContext,
-          bootstrapApplication,
-        } from '@angular/platform-browser';
+        "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
         import { App } from './app/app';
         import { config } from './app/app.config.server';
 
-        const bootstrap = (context: BootstrapContext) =>
-          bootstrapApplication(App, config, context);
+        const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
         export default bootstrap;
         "
@@ -196,6 +187,81 @@ describe('setupSSR', () => {
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.targetDefaults.server).toBeUndefined();
+    });
+
+    it('should configure the allowed hosts', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.security
+      ).toStrictEqual({ allowedHosts: [] });
+    });
+
+    it('should not overwrite the configured allowed hosts', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.security = {
+        allowedHosts: ['example.com'],
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.security
+      ).toStrictEqual({ allowedHosts: ['example.com'] });
+    });
+
+    it('should not configure the allowed hosts when "@angular/ssr" does not support them', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/ssr': '21.1.4' },
+      }));
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.security
+      ).toBeUndefined();
+    });
+
+    it('should raise the declared "@angular/ssr" range so the allowed hosts can be configured', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '~20.3.0' },
+        devDependencies: { '@angular-devkit/build-angular': '~20.3.0' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      // the declared range is raised so every version it allows accepts the
+      // option, however the package manager resolves it
+      expect(readJson(tree, 'package.json').dependencies['@angular/ssr']).toBe(
+        '~20.3.17'
+      );
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.security
+      ).toStrictEqual({ allowedHosts: [] });
     });
 
     it('should support object output option using a custom "outputPath.browser" and "outputPath.server" values', async () => {
@@ -505,6 +571,29 @@ describe('setupSSR', () => {
         readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
       ).toBe('dist/app1/browser');
     });
+
+    it('should reference the server tsconfig with a path relative to the project tsconfig', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'apps/app1',
+        standalone: false,
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      const { references } = readJson(tree, 'apps/app1/tsconfig.json');
+      const serverReference = references.find((reference) =>
+        reference.path.endsWith('tsconfig.server.json')
+      );
+      expect(serverReference).toStrictEqual({
+        path: './tsconfig.server.json',
+      });
+      expect(
+        tree.exists(joinPathFragments('apps/app1', serverReference.path))
+      ).toBe(true);
+    });
   });
 
   it('should install the correct dependencies', async () => {
@@ -526,6 +615,112 @@ describe('setupSSR', () => {
     expect(dependencies['@nguniversal/express-engine']).toBeUndefined();
     expect(devDependencies['@types/express']).toBe(typesExpressVersion);
     expect(devDependencies['@nguniversal/builders']).toBeUndefined();
+    expect(devDependencies['@nx/webpack']).toBeUndefined();
+    expect(devDependencies['webpack-merge']).toBeUndefined();
+  });
+
+  it('should install webpack dependencies when it creates a webpack server target', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    project.targets.build.executor = '@nx/angular:webpack-browser';
+    updateProjectConfiguration(tree, 'app1', project);
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
+    expect(devDependencies['@nx/webpack']).toBe(nxVersion);
+    expect(devDependencies['webpack-merge']).toBe(webpackMergeVersion);
+  });
+
+  it('should not install webpack dependencies for a non-webpack build executor', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    project.targets.build.executor = '@example/custom:build';
+    updateProjectConfiguration(tree, 'app1', project);
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
+    expect(devDependencies['@nx/webpack']).toBeUndefined();
+    expect(devDependencies['webpack-merge']).toBeUndefined();
+  });
+
+  it('should resolve a webpack build executor inherited from targetDefaults', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    delete project.targets.build.executor;
+    updateProjectConfiguration(tree, 'app1', project);
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        ...json.targetDefaults,
+        build: {
+          ...json.targetDefaults?.build,
+          executor: '@nx/angular:webpack-browser',
+        },
+      },
+    }));
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    expect(readProjectConfiguration(tree, 'app1').targets.server.executor).toBe(
+      '@nx/angular:webpack-server'
+    );
+  });
+
+  it('should resolve the application build executor inherited from targetDefaults', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    const buildExecutor = project.targets.build.executor;
+    delete project.targets.build.executor;
+    updateProjectConfiguration(tree, 'app1', project);
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        ...json.targetDefaults,
+        build: { ...json.targetDefaults?.build, executor: buildExecutor },
+      },
+    }));
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    // application builder configures ssr on the build target rather than
+    // creating a separate server target
+    const build = readProjectConfiguration(tree, 'app1').targets.build;
+    expect(build.options.outputMode).toBe('server');
+    expect(build.options.ssr).toBeDefined();
+  });
+
+  it('should throw when the build target has no resolvable executor', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    delete project.targets.build.executor;
+    updateProjectConfiguration(tree, 'app1', project);
+
+    await expect(
+      setupSsr(tree, { project: 'app1', skipFormat: true })
+    ).rejects.toThrow(/does not specify an executor/);
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
@@ -713,281 +908,6 @@ describe('setupSSR', () => {
   });
 
   describe('compat', () => {
-    it('should install the correct versions when using older versions of Angular', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          '@angular/core': '19.2.0',
-        },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
-      // ACT
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      // ASSERT
-      const pkgJson = readJson(tree, 'package.json');
-      expect(pkgJson.dependencies['@angular/ssr']).toBe(
-        backwardCompatibleVersions[19].angularDevkitVersion
-      );
-      expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        backwardCompatibleVersions[19].angularVersion
-      );
-      expect(pkgJson.dependencies['@angular/ssr']).toEqual(
-        backwardCompatibleVersions[19].angularDevkitVersion
-      );
-      expect(pkgJson.dependencies['express']).toEqual(
-        backwardCompatibleVersions[19].expressVersion
-      );
-      expect(
-        pkgJson.dependencies['@nguniversal/express-engine']
-      ).toBeUndefined();
-      expect(pkgJson.devDependencies['@types/express']).toBe(
-        backwardCompatibleVersions[19].typesExpressVersion
-      );
-      expect(pkgJson.devDependencies['@nguniversal/builders']).toBeUndefined();
-    });
-
-    it('should setup server routing using "provideServerRoutesConfig" for NgModule apps when "serverRouting" is true and @angular/ssr version is lower than 19.2.0', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '19.1.0', '@angular/ssr': '19.1.0' },
-        devDependencies: { '@angular-devkit/build-angular': '19.1.0' },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', serverRouting: true });
-
-      expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { ServerModule } from '@angular/platform-server';
-        import { provideServerRoutesConfig } from '@angular/ssr';
-        import { AppComponent } from './app.component';
-        import { AppModule } from './app.module';
-        import { serverRoutes } from './app.routes.server';
-
-        @NgModule({
-          imports: [AppModule, ServerModule],
-          providers: [provideServerRoutesConfig(serverRoutes)],
-          bootstrap: [AppComponent],
-        })
-        export class AppServerModule {}
-        "
-      `);
-      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
-
-        export const serverRoutes: ServerRoute[] = [
-          {
-            path: '**',
-            renderMode: RenderMode.Prerender,
-          },
-        ];
-        "
-      `);
-    });
-
-    it('should setup server routing using "provideServerRouting" for NgModule apps when "serverRouting" is true and @angular/ssr version is 19.2.x', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '19.2.0', '@angular/ssr': '19.2.0' },
-        devDependencies: { '@angular-devkit/build-angular': '19.2.0' },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', serverRouting: true });
-
-      expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { ServerModule } from '@angular/platform-server';
-        import { provideServerRouting } from '@angular/ssr';
-        import { AppComponent } from './app.component';
-        import { AppModule } from './app.module';
-        import { serverRoutes } from './app.routes.server';
-
-        @NgModule({
-          imports: [AppModule, ServerModule],
-          providers: [provideServerRouting(serverRoutes)],
-          bootstrap: [AppComponent],
-        })
-        export class AppServerModule {}
-        "
-      `);
-      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
-
-        export const serverRoutes: ServerRoute[] = [
-          {
-            path: '**',
-            renderMode: RenderMode.Prerender,
-          },
-        ];
-        "
-      `);
-    });
-
-    it('should setup server routing using "provideServerRoutesConfig" for standalone apps when "serverRouting" is true and @angular/ssr version is lower than 19.2.0', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '19.1.0', '@angular/ssr': '19.1.0' },
-        devDependencies: { '@angular-devkit/build-angular': '19.1.0' },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: true,
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', serverRouting: true });
-
-      expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-        import { provideServerRendering } from '@angular/platform-server';
-        import { provideServerRoutesConfig } from '@angular/ssr';
-        import { appConfig } from './app.config';
-        import { serverRoutes } from './app.routes.server';
-
-        const serverConfig: ApplicationConfig = {
-          providers: [
-            provideServerRendering(),
-            provideServerRoutesConfig(serverRoutes),
-          ],
-        };
-
-        export const config = mergeApplicationConfig(appConfig, serverConfig);
-        "
-      `);
-      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
-
-        export const serverRoutes: ServerRoute[] = [
-          {
-            path: '**',
-            renderMode: RenderMode.Prerender,
-          },
-        ];
-        "
-      `);
-    });
-
-    it('should setup server routing using "provideServerRouting" for standalone apps when "serverRouting" is true and @angular/ssr version is 19.2.x', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '19.2.0', '@angular/ssr': '19.2.0' },
-        devDependencies: { '@angular-devkit/build-angular': '19.2.0' },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: true,
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', serverRouting: true });
-
-      expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-        import { provideServerRendering } from '@angular/platform-server';
-        import { provideServerRouting } from '@angular/ssr';
-        import { appConfig } from './app.config';
-        import { serverRoutes } from './app.routes.server';
-
-        const serverConfig: ApplicationConfig = {
-          providers: [provideServerRendering(), provideServerRouting(serverRoutes)],
-        };
-
-        export const config = mergeApplicationConfig(appConfig, serverConfig);
-        "
-      `);
-      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
-
-        export const serverRoutes: ServerRoute[] = [
-          {
-            path: '**',
-            renderMode: RenderMode.Prerender,
-          },
-        ];
-        "
-      `);
-    });
-
-    it('should add server files to the tsconfig.app.json files for versions lower than v20', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1' });
-
-      expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
-        'src/main.ts',
-        'src/main.server.ts',
-        'src/server.ts',
-      ]);
-    });
-
-    it('should use "BootstrapContext" in the main.server.ts file when using an angular v19 version equal or greater than 19.2.16', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '19.2.16' },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
-        import { AppComponent } from './app/app.component';
-        import { config } from './app/app.config.server';
-
-        const bootstrap = (context: BootstrapContext) =>
-          bootstrapApplication(AppComponent, config, context);
-
-        export default bootstrap;
-        "
-      `);
-    });
-
     it('should use "BootstrapContext" in the main.server.ts file when using an angular v20 version equal or greater than 20.3.0', async () => {
       const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
@@ -1015,32 +935,6 @@ describe('setupSSR', () => {
       `);
     });
 
-    it('should not use "BootstrapContext" in the main.server.ts file when using an angular v19 version lower than 19.2.16', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '19.2.15' },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { bootstrapApplication } from '@angular/platform-browser';
-        import { AppComponent } from './app/app.component';
-        import { config } from './app/app.config.server';
-
-        const bootstrap = () => bootstrapApplication(AppComponent, config);
-
-        export default bootstrap;
-        "
-        `);
-    });
-
     it('should not use "BootstrapContext" in the main.server.ts file when using an angular v20 version lower than 20.3.0', async () => {
       const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
@@ -1065,6 +959,25 @@ describe('setupSSR', () => {
         export default bootstrap;
         "
         `);
+    });
+
+    it('should not configure the allowed hosts in the server file when "@angular/ssr" does not support them', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/ssr': '20.3.16' },
+      }));
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toContain(
+        'const commonEngine = new CommonEngine();'
+      );
     });
 
     it('should import from `zone.js/node` in the server file for the browser builder in angular versions lower than v21', async () => {

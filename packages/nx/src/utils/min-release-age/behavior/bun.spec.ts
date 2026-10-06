@@ -1,4 +1,5 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import type { MockInstance } from 'vitest';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { MinReleaseAgeViolationError } from '../errors';
@@ -102,12 +103,14 @@ function policyWithExcludes(
 }
 
 describe('bun min-release-age behavior', () => {
-  let nowSpy: jest.SpyInstance;
+  let nowSpy: MockInstance;
   beforeAll(() => {
     // Pin the clock so the stability walk's search bound is deterministic.
-    nowSpy = jest.spyOn(Date, 'now').mockReturnValue(NOW);
+    nowSpy = vi.spyOn(Date, 'now').mockReturnValue(NOW);
   });
-  afterAll(() => nowSpy.mockRestore());
+  afterAll(() => {
+    nowSpy.mockRestore();
+  });
 
   describe('pickBunVersion (24h window)', () => {
     const policy = policyWithWindow(24);
@@ -592,6 +595,15 @@ describe('bun min-release-age behavior', () => {
       writeProjectBunfig('[install\nminimumReleaseAge = =\n');
       const result = await readBunPolicy(root, '1.3.0');
       expect(result.outcome).toBe('ambiguous');
+    });
+
+    it('unreadable bunfig -> inactive (bun skips it and resolves on)', async () => {
+      delete process.env.XDG_CONFIG_HOME;
+      process.env.HOME = userHome;
+      mkdirSync(join(root, 'bunfig.toml'));
+      await expect(readBunPolicy(root, '1.3.0')).resolves.toEqual({
+        outcome: 'inactive',
+      });
     });
   });
 });

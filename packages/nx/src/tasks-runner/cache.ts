@@ -12,6 +12,7 @@ import {
   CachedResult as NativeCacheResult,
   NxCache,
   getDefaultMaxCacheSize,
+  sweepBatchOutputs as nativeSweepBatchOutputs,
 } from '../native';
 import {
   NxCloudClientUnavailableError,
@@ -72,6 +73,32 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
         skipRemoteCache: options.skipRemoteCache,
       })
     : new Cache(options);
+}
+
+/**
+ * Collects the batch worker logs written by `batchOutputPathForKey`.
+ *
+ * Guarded rather than called straight through: `cache.rs` is
+ * `#[cfg(not(target_arch = "wasm32"))]`, so this export does not exist in the
+ * WASM binding and calling it there is a `TypeError`. Every other native cache
+ * entry point is kept off that path by `dbCacheEnabled()`; this one is a free
+ * function, so it needs its own guard. The logs are collected on the next
+ * non-WASM run.
+ */
+export function sweepBatchOutputs(): void {
+  if (IS_WASM) {
+    return;
+  }
+  nativeSweepBatchOutputs(cacheDir);
+}
+
+/**
+ * Where a batch worker's own log lives. Mirrors `batch_outputs_path` in
+ * cache.rs, which is what sweeps the directory — the same mirroring
+ * `terminalOutputPathForHash` does for `get_task_outputs_path_internal`.
+ */
+export function batchOutputPathForKey(key: string): string {
+  return join(cacheDir, 'batchOutputs', `${key}.log`);
 }
 
 export class DbCache {
@@ -215,7 +242,7 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
-      const expandedOutputs = this.cache.put(
+      const { expandedOutputs, files } = this.cache.put(
         task.hash,
         terminalOutput,
         outputs,
@@ -233,7 +260,18 @@ export class DbCache {
           code
         );
       }
+      return files;
     });
+  }
+
+  /**
+   * Register terminal outputs that were written outside of `put` — uncacheable
+   * tasks, and cacheable ones run with `--skip-nx-cache`. `removeOldCacheRecords`
+   * only collects hashes it finds in the database, so without this the files
+   * would never be cleaned up.
+   */
+  recordTerminalOutputs(records: { hash: string; size: number }[]) {
+    this.cache.recordTerminalOutputs(records);
   }
 
   copyFilesFromCache(_: string, cachedResult: CachedResult, outputs: string[]) {
@@ -339,6 +377,14 @@ export class DbCache {
           'The HTTP remote cache is not yet supported in the wasm build of Nx.'
         );
         return null;
+      }
+      // The cache request runs in Rust (reqwest), which honors
+      // NODE_TLS_REJECT_UNAUTHORIZED but bypasses Node's TLS stack, so Node's own
+      // insecure-TLS warning never fires for it. Re-emit Node's warning here.
+      if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+        process.emitWarning(
+          "Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification."
+        );
       }
       return new HttpRemoteCache();
     }
@@ -538,6 +584,12 @@ export class Cache {
   temporaryOutputPath(task: Task) {
     return join(this.terminalOutputsDir, task.hash);
   }
+
+  /**
+   * No-op: the legacy cache has no database to record against, and its
+   * collection is directory-based rather than driven by cache records.
+   */
+  recordTerminalOutputs(_records: { hash: string; size: number }[]) {}
 
   private async expandOutputsInWorkspace(outputs: string[]) {
     return this._expandOutputs(outputs, workspaceRoot);

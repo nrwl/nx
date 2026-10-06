@@ -1,27 +1,27 @@
 import { resolve } from './esm-loader';
 import { pathToFileURL } from 'node:url';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { setupWorkspaceContext } from '@nx/devkit/internal';
 
 describe('ESM Loader', () => {
   let tempFs: TempFs;
   let cwd: string;
   const mockContext = {};
-  const mockNextResolve = jest.fn();
+  const mockNextResolve = vi.fn();
 
   beforeEach(() => {
     cwd = process.cwd();
     tempFs = new TempFs('esm-loader');
     process.chdir(tempFs.tempDir);
     setupWorkspaceContext(tempFs.tempDir);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     delete process.env.NX_MAPPINGS;
   });
 
   afterEach(() => {
     tempFs.cleanup();
     process.chdir(cwd);
-    jest.resetModules();
+    vi.resetModules();
   });
 
   describe('resolve', () => {

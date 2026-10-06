@@ -1,0 +1,194 @@
+// Playwright routes its readiness poll through a proxy configured in the
+// environment, so a gate that always connected directly would be answering a
+// different question than the check it exists to satisfy. Selection mirrors the
+// `proxy-from-env` copy playwright-core 1.60.0 bundles (`getProxyForUrl`)
+// together with its own `normalizeProxyURL`; with `npmConfigProxy` it mirrors
+// the copy bundled before 1.59.0, which read npm's `npm_config_*` proxy
+// variables ahead of the standard ones. The transport is left to
+// `https-proxy-agent`, the agent Playwright itself hands to `https.request`
+// for a proxied https target.
+
+const DEFAULT_PORTS: Record<string, number> = {
+  ftp: 21,
+  gopher: 70,
+  http: 80,
+  https: 443,
+  ws: 80,
+  wss: 443,
+};
+
+export type ProxyResolution =
+  | { kind: 'direct' }
+  | { kind: 'proxy'; proxy: URL }
+  | { kind: 'unusable'; variable: string; value: string; reason: string };
+
+export function resolveProxyForUrl(
+  url: URL,
+  env: NodeJS.ProcessEnv = process.env,
+  npmConfigProxy = false
+): ProxyResolution {
+  const protocol = url.protocol.split(':')[0];
+  // Matched on the host with any port stripped, which keeps the brackets on an
+  // IPv6 literal.
+  const hostname = url.host.replace(/:\d*$/, '');
+  if (!hostname || !protocol) {
+    return { kind: 'direct' };
+  }
+
+  const port = parseInt(url.port) || DEFAULT_PORTS[protocol] || 0;
+  if (!shouldProxy(hostname, port, env, npmConfigProxy)) {
+    return { kind: 'direct' };
+  }
+  return resolveProxyForProtocol(protocol, env, npmConfigProxy);
+}
+
+/**
+ * The proxy `env` configures for `protocol`, before any `no_proxy` exclusion:
+ * `<protocol>_proxy`, falling back to `all_proxy`, normalized as the probe
+ * would use it (a value with no scheme takes the target's protocol). With
+ * `npmConfigProxy`, `npm_config_<protocol>_proxy` comes first and
+ * `npm_config_proxy` sits between the two.
+ */
+export function resolveProxyForProtocol(
+  protocol: string,
+  env: NodeJS.ProcessEnv = process.env,
+  npmConfigProxy = false
+): ProxyResolution {
+  const source = readEnv(
+    npmConfigProxy
+      ? [
+          `npm_config_${protocol}_proxy`,
+          `${protocol}_proxy`,
+          'npm_config_proxy',
+          'all_proxy',
+        ]
+      : [`${protocol}_proxy`, 'all_proxy'],
+    env
+  );
+  if (!source.value) {
+    return { kind: 'direct' };
+  }
+
+  // A value with no scheme takes the target's protocol, which is where this
+  // differs from `normalizeProxyURL` alone: that only defaults to http.
+  const scheme = source.value.includes('://') ? '' : `${protocol}://`;
+  const normalized = `${scheme}${source.value}`.trim();
+  // Playwright's own probe errors out on a proxy URL it cannot use instead of
+  // falling back to a direct request, so the gate must not clear here. Each
+  // cause is named, because the value alone often does not show it: redacting
+  // the credentials takes the offending character with them.
+  const unusable = (reason: string): ProxyResolution => ({
+    kind: 'unusable',
+    variable: source.variable,
+    value: withoutCredentials(source.value),
+    reason,
+  });
+
+  let proxy: URL;
+  try {
+    proxy = new URL(
+      /^\w+:\/\//.test(normalized) ? normalized : `http://${normalized}`
+    );
+  } catch {
+    return unusable('is not a valid url');
+  }
+  // Anything else parses but cannot be dialled: an http target throws out of
+  // `http.request`, and an https one gets `CONNECT` spoken at a port that is
+  // not answering HTTP, which surfaces much later as a refused server.
+  if (proxy.protocol !== 'http:' && proxy.protocol !== 'https:') {
+    return unusable('is not an http or https url');
+  }
+  // Credentials are percent-decoded when the request is built, far from the
+  // configuration that produced them, so a value that cannot be decoded is
+  // rejected here where the failure can still name where it came from.
+  try {
+    decodeURIComponent(proxy.username);
+    decodeURIComponent(proxy.password);
+  } catch {
+    return unusable('has credentials that are not valid percent-encoding');
+  }
+  return { kind: 'proxy', proxy };
+}
+
+// `no_proxy` governs where traffic may go. Sending the target URL to an
+// excluded proxy would disclose it even when the direct probe is the one that
+// succeeds.
+function shouldProxy(
+  hostname: string,
+  port: number,
+  env: NodeJS.ProcessEnv,
+  npmConfigProxy: boolean
+): boolean {
+  const noProxy = readNoProxy(env, npmConfigProxy).toLowerCase();
+  if (!noProxy) {
+    return true;
+  }
+  if (noProxy === '*') {
+    return false;
+  }
+
+  return noProxyEntries(env, npmConfigProxy).every((entry) => {
+    const withPort = entry.match(/^(.+):(\d+)$/);
+    let host = withPort ? withPort[1] : entry;
+    const entryPort = withPort ? parseInt(withPort[2]) : 0;
+    if (entryPort && entryPort !== port) {
+      return true;
+    }
+    if (!/^[.*]/.test(host)) {
+      return hostname !== host;
+    }
+    if (host.charAt(0) === '*') {
+      host = host.slice(1);
+    }
+    return !hostname.endsWith(host);
+  });
+}
+
+/**
+ * The `no_proxy` entries `env` configures (`npm_config_no_proxy` first with
+ * `npmConfigProxy`), lowercased and with the empty entries a separator run
+ * leaves dropped. Each entry excludes hosts on its own, so their order carries
+ * no meaning.
+ */
+export function noProxyEntries(
+  env: NodeJS.ProcessEnv,
+  npmConfigProxy = false
+): string[] {
+  return readNoProxy(env, npmConfigProxy)
+    .toLowerCase()
+    .split(/[,\s]/)
+    .filter(Boolean);
+}
+
+function readNoProxy(env: NodeJS.ProcessEnv, npmConfigProxy: boolean): string {
+  return readEnv(
+    npmConfigProxy ? ['npm_config_no_proxy', 'no_proxy'] : ['no_proxy'],
+    env
+  ).value;
+}
+
+// The executor runs in its own process, so a proxy variable the Playwright
+// config sets while loading (through `dotenv`, say) reaches Playwright's probe
+// and not this one. The name that was read is reported alongside the value so a
+// bad one can be found among the variables this looks at. The first name with
+// a value wins, in the lowercase spelling before the uppercase one.
+function readEnv(
+  names: string[],
+  env: NodeJS.ProcessEnv
+): { variable: string; value: string } {
+  for (const name of names) {
+    for (const variable of [name.toLowerCase(), name.toUpperCase()]) {
+      if (env[variable]) {
+        return { variable, value: env[variable] };
+      }
+    }
+  }
+  return { variable: names[names.length - 1].toUpperCase(), value: '' };
+}
+
+// A rejected value is echoed back so it can be recognized in the environment,
+// and it reaches the task log, so the credentials come off first.
+export function withoutCredentials(value: string): string {
+  const at = value.lastIndexOf('@');
+  return at === -1 ? value : `***@${value.slice(at + 1)}`;
+}

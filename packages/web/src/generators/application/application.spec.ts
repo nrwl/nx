@@ -1,4 +1,5 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import type { Mock } from 'vitest';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
@@ -8,33 +9,43 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
+  getProjects,
+  readJson,
 } from '@nx/devkit';
-import { getProjects, readJson } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as devkitExports from '@nx/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
-import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { PackageManagerCommands } from '@nx/devkit/internal';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 describe('app', () => {
   let tree: Tree;
-  let mockedInstalledCypressVersion: jest.Mock<
+  let envBackup: string | undefined;
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
-    jest
-      .spyOn(devkitExports, 'getPackageManagerCommand')
-      .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+    vi.spyOn(devkitExports, 'getPackageManagerCommand').mockReturnValue({
+      exec: 'npx',
+    } as PackageManagerCommands);
 
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   describe('not nested', () => {
@@ -69,6 +80,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-app',
         addPlugin: true,
       });
@@ -116,42 +128,7 @@ describe('app', () => {
         }
       `);
 
-      const eslintJson = readJson(tree, '/my-app/.eslintrc.json');
-      expect(eslintJson).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      expect(tree.exists('my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should setup playwright e2e project', async () => {
@@ -344,6 +321,7 @@ describe('app', () => {
         expect(lookupFn(config)).toEqual(expectedValue);
       };
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-dir/my-app',
         addPlugin: true,
       });
@@ -370,12 +348,8 @@ describe('app', () => {
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../dist/out-tsc',
         },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(tree.exists('my-dir/my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should extend from root tsconfig.base.json', async () => {
@@ -453,8 +427,10 @@ describe('app', () => {
     expect(tree.read('my-app/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should setup eslint', async () => {
+  it('should setup eslint (eslintrc)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: 'my-app',
       addPlugin: true,
     });
@@ -472,8 +448,8 @@ describe('app', () => {
       skipFormat: true,
     });
 
-    const eslintConfig = readJson(tree, 'myapp/.eslintrc.json');
-    expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+    const eslintConfig = tree.read('myapp/eslint.config.mjs', 'utf-8');
+    expect(eslintConfig).not.toContain('**/out-tsc');
   });
 
   it('should not ignore "out-tsc" from eslint with flat config', async () => {
@@ -614,7 +590,6 @@ describe('app', () => {
         "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\.[tj]s$': 'babel-jest',
           },
@@ -640,7 +615,6 @@ describe('app', () => {
         "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\.[tj]s$': '@swc/jest',
           },
@@ -663,6 +637,22 @@ describe('app', () => {
 
       const tsconfig = readJson(tree, 'my-app/tsconfig.json');
       expect(tsconfig.compilerOptions.strict).toBeTruthy();
+    });
+
+    it('should deny the @swc/core build script for the swc compiler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-app',
+          compiler: 'swc',
+          bundler: 'none',
+          unitTestRunner: 'none',
+          addPlugin: true,
+        } as Schema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@swc\/core['"]: false/
+      );
     });
   });
 
@@ -759,6 +749,161 @@ describe('app', () => {
     });
   });
 
+  describe('--port', () => {
+    // The CI web server and the URL the e2e runner waits on must be the same
+    // port. If they drift, Playwright's `reuseExistingServer` silently tests
+    // whatever else is listening on the URL's port.
+    const playwrightUrl = (e2eRoot: string) =>
+      tree
+        .read(`${e2eRoot}/playwright.config.mts`, 'utf-8')
+        .match(/baseURL = process\.env\['BASE_URL'\] \|\| '([^']+)'/)[1];
+
+    it('should write the port to serve, serve-static and the e2e config on the executor path (webpack)', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      const { targets } = readProjectConfiguration(tree, 'my-app');
+      expect(targets.serve.options.port).toBe(6123);
+      expect(targets['serve-static'].options.port).toBe(6123);
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+      const pwConfig = tree.read('my-app-e2e/playwright.config.mts', 'utf-8');
+      expect(pwConfig).toContain(`url: 'http://localhost:6123'`);
+      expect(pwConfig).toContain(`nx run my-app:serve-static`);
+    });
+
+    it('should write the port to the webpack config and the e2e config on the plugin path (webpack)', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      // The plugin infers serve and serve-static from devServer.port.
+      expect(tree.read('my-app/webpack.config.js', 'utf-8')).toContain(
+        'port: 6123'
+      );
+      expect(readProjectConfiguration(tree, 'my-app').targets ?? {}).toEqual(
+        {}
+      );
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+    });
+
+    it('should use the port for the dev server, preview server and e2e config (vite, executor path)', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'vite',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      const viteConfig = tree.read('my-app/vite.config.mts', 'utf-8');
+      expect(viteConfig).toMatch(/server:\s*\{[^}]*port: 6123/);
+      expect(viteConfig).toMatch(/preview:\s*\{[^}]*port: 6123/);
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+      expect(tree.read('my-app-e2e/playwright.config.mts', 'utf-8')).toContain(
+        `nx run my-app:preview`
+      );
+    });
+
+    it('should use the port for the dev server, preview server and e2e config (vite, plugin path)', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'vite',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      const viteConfig = tree.read('my-app/vite.config.mts', 'utf-8');
+      expect(viteConfig).toMatch(/server:\s*\{[^}]*port: 6123/);
+      expect(viteConfig).toMatch(/preview:\s*\{[^}]*port: 6123/);
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+    });
+
+    it('should use the port for the cypress base URLs', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'cypress',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      const cypressConfig = tree.read('my-app-e2e/cypress.config.ts', 'utf-8');
+      expect(cypressConfig).toContain('http://localhost:6123');
+      expect(cypressConfig).not.toContain('4200');
+    });
+
+    it('should prefer an explicit port over the serve targetDefaults', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = { serve: { options: { port: 6999 } } };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        port: 6123,
+        skipFormat: true,
+      });
+
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
+    });
+
+    it('should leave the defaults untouched when --port is not passed', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      const { targets } = readProjectConfiguration(tree, 'my-app');
+      expect(targets.serve.options.port).toBeUndefined();
+      expect(targets['serve-static'].options.port).toBeUndefined();
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:4200');
+    });
+
+    it('should still follow the serve targetDefaults when --port is not passed', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = { serve: { options: { port: 6999 } } };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6999');
+    });
+  });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
@@ -838,6 +983,7 @@ describe('app', () => {
             "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
+              "vite/client",
             ],
           },
           "exclude": [
@@ -998,6 +1144,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'apps/myapp',
         addPlugin: true,
         useProjectJson: true,
@@ -1050,8 +1197,8 @@ describe('app', () => {
         skipFormat: true,
       });
 
-      const eslintConfig = readJson(tree, 'apps/myapp/.eslintrc.json');
-      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+      const eslintConfig = tree.read('apps/myapp/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
 
     it('should ignore "out-tsc" from eslint with flat config', async () => {

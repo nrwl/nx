@@ -139,7 +139,7 @@ export class I18nInlinePlugin implements RspackPluginInstance {
   // - First segment matches a locale subPath: the asset is already inside a
   //   per-locale dir (re-entrancy guard).
   // - Path contains a `..` segment: the asset is globally scoped and emits
-  //   outside the per-locale dir (e.g. `LicenseWebpackPlugin`'s
+  //   outside the per-locale dir (e.g. `ExtractLicensesPlugin`'s
   //   `../3rdpartylicenses.txt`, which lands at `outputPath.base`). This
   //   mirrors how Angular's application builder excludes
   //   `BuildOutputFileType.Root` files from i18n inlining; without the

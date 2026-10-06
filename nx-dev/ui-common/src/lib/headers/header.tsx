@@ -103,7 +103,7 @@ export function Header({
         sendCustomEventViaGtm('contact-click', 'header-cta', 'page-header'),
     },
     {
-      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header',
+      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=header',
       variant: 'contrast',
       size: 'small',
       target: '_blank',
@@ -279,7 +279,7 @@ export function Header({
               Nx Cloud
             </Link>
             <Link
-              href="/nx-cloud#plans"
+              href="/pricing"
               title="Nx Cloud Pricing"
               className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
@@ -471,7 +471,7 @@ export function Header({
                             }`}
                           >
                             <ButtonLink
-                              href="https://cloud.nx.app/get-started"
+                              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=mobile-header"
                               variant="contrast"
                               size="small"
                               target="_blank"
@@ -631,7 +631,7 @@ export function Header({
                             Nx Cloud
                           </Link>
                           <Link
-                            href="/nx-cloud#plans"
+                            href="/pricing"
                             title="Nx Cloud Pricing"
                             className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}

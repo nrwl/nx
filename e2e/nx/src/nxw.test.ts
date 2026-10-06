@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration, TargetConfiguration } from '@nx/devkit';
+import type { NxJsonConfiguration } from '@nx/devkit';
 import {
   newWrappedNxWorkspace,
   updateFile,
@@ -11,7 +11,6 @@ import {
   readJson,
   readFile,
 } from '@nx/e2e-utils';
-import { styleText } from 'node:util';
 
 describe('nx wrapper / .nx installation', () => {
   let runNxWrapper: ReturnType<typeof newWrappedNxWorkspace>;
@@ -20,12 +19,7 @@ describe('nx wrapper / .nx installation', () => {
     runNxWrapper = newWrappedNxWorkspace();
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
       json.targetDefaults ??= {};
-      // The installed (published) nx still types `targetDefaults` as a union
-      // with the array shape until this revert ships, so cast to the record
-      // shape we write here.
-      (json.targetDefaults as Record<string, TargetConfiguration>).echo = {
-        cache: true,
-      };
+      json.targetDefaults.echo = { cache: true };
       json.installation.plugins = {
         '@nx/js': getPublishedVersion(),
       };
@@ -90,13 +84,11 @@ describe('nx wrapper / .nx installation', () => {
       installedPluginEnd
     );
 
-    expect(
-      installedPluginLines.some((x) => x.includes(`${styleText('bold', 'nx')}`))
-    );
-    expect(
-      installedPluginLines.some((x) =>
-        x.includes(`${styleText('bold', '@nx/js')}`)
-      )
+    expect(installedPluginLines).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^nx(?:\s|$)/),
+        expect.stringMatching(/^@nx\/js(?:\s|$)/),
+      ])
     );
 
     output = runNxWrapper('list @nx/js');

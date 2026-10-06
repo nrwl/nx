@@ -3,7 +3,7 @@ import { WorkspaceLibrarySecondaryEntryPoint } from './models';
 import { dirname, join, relative } from 'path';
 import { existsSync, lstatSync, readdirSync } from 'fs';
 import { readJsonFile, joinPathFragments, workspaceRoot } from '@nx/devkit';
-import { PackageJson, readModulePackageJson } from 'nx/src/utils/package-json';
+import { PackageJson, readModulePackageJson } from '@nx/devkit/internal';
 
 export function collectWorkspaceLibrarySecondaryEntryPoints(
   library: WorkspaceLibrary,

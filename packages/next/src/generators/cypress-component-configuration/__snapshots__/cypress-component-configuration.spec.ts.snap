@@ -1,11 +1,11 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`cypress-component-configuration generator should setup nextjs app 1`] = `
+exports[`cypress-component-configuration generator > should setup nextjs app 1`] = `
 {
   "compilerOptions": {
     "allowJs": true,
     "module": "commonjs",
-    "moduleResolution": "node10",
+    "moduleResolution": "bundler",
     "outDir": "../dist/out-tsc",
     "sourceMap": false,
     "types": [
@@ -27,12 +27,12 @@ exports[`cypress-component-configuration generator should setup nextjs app 1`] =
 }
 `;
 
-exports[`cypress-component-configuration generator should setup nextjs lib 1`] = `
+exports[`cypress-component-configuration generator > should setup nextjs lib 1`] = `
 {
   "compilerOptions": {
     "allowJs": true,
     "module": "commonjs",
-    "moduleResolution": "node10",
+    "moduleResolution": "bundler",
     "outDir": "../dist/out-tsc",
     "sourceMap": false,
     "types": [

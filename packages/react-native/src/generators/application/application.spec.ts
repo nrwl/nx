@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   Tree,
@@ -13,10 +13,18 @@ import { reactNativeApplicationGenerator } from './application';
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     appTree = createTreeWithEmptyWorkspace();
     appTree.write('.gitignore', '');
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should update configuration', async () => {
@@ -68,7 +76,7 @@ describe('app', () => {
     const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
     expect(tsconfig.extends).toEqual('../tsconfig.base.json');
 
-    expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
+    expect(appTree.exists('my-app/eslint.config.mjs')).toBe(true);
     expect(appTree.read('my-app/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "/// <reference types="jest" />
@@ -89,9 +97,8 @@ describe('app', () => {
               configFile: __dirname + '/.babelrc.js',
             },
           ],
-          '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
-            'react-native/jest/assetFileTransformer.js',
-          ),
+          '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$':
+            require.resolve('react-native/jest/assetFileTransformer.js'),
         },
         transformIgnorePatterns: [
           'node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)',
@@ -134,6 +141,7 @@ describe('app', () => {
   });
 
   it('should not ignore "out-tsc" from eslint', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await reactNativeApplicationGenerator(appTree, {
       name: 'my-app',
       directory: 'my-app',
@@ -343,8 +351,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
@@ -476,8 +484,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
     });
@@ -529,6 +537,7 @@ describe('app', () => {
     });
 
     it('should ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await reactNativeApplicationGenerator(tree, {
         directory: 'my-app',
         linter: 'eslint',

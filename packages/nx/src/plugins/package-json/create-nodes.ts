@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -25,10 +25,7 @@ import { nxVersion } from '../../utils/versions';
 import { createNodesFromFiles, CreateNodes } from '../../project-graph/plugins';
 import { basename } from 'path';
 import { hashObject } from '../../hasher/file-hasher';
-import {
-  PackageJsonConfigurationCache,
-  readPackageJsonConfigurationCache,
-} from '../../../plugins/package-json';
+import type { PackageJsonConfigurationCache } from '../../../plugins/package-json';
 
 const globPatterns = combineGlobPatterns(
   'package.json',
@@ -59,8 +56,6 @@ export const createNodes: CreateNodes = [
       return projectJsonRoots.has(dirname(packageJsonPath));
     };
 
-    const cache = readPackageJsonConfigurationCache();
-
     const packageManagerCommand = getPackageManagerCommand(
       detectPackageManager(context.workspaceRoot),
       context.workspaceRoot
@@ -81,9 +76,10 @@ export const createNodes: CreateNodes = [
         return createNodeFromPackageJson(
           packageJsonPath,
           context.workspaceRoot,
-          cache,
+          undefined,
           isInPackageManagerWorkspaces,
-          packageManagerCommand
+          packageManagerCommand,
+          context.nxJsonConfiguration
         );
       },
       packageJsons,
@@ -160,10 +156,12 @@ type PackageJsonPatterns = {
 export function buildPackageJsonWorkspacesMatcher(
   patterns: PackageJsonPatterns
 ) {
+  // Compile each glob once; the returned matcher runs per package.json path.
+  const positive = patterns.positive.map((p) => new Minimatch(p));
+  const negative = patterns.negative.map((p) => new Minimatch(p));
   return (p) =>
     // use lookup to avoid unnecessary minimatch calls
-    (patterns.positiveLookup[p] ||
-      patterns.positive.some((positive) => minimatch(p, positive))) &&
+    (patterns.positiveLookup[p] || positive.some((m) => m.match(p))) &&
     /**
      * minimatch will return true if the given p is NOT excluded by the negative pattern.
      *
@@ -174,28 +172,31 @@ export function buildPackageJsonWorkspacesMatcher(
      * excluded by any of the negative patterns.
      */
     !patterns.negativeLookup[p] &&
-    patterns.negative.every((negative) => minimatch(p, negative));
+    negative.every((m) => m.match(p));
 }
 
 export function createNodeFromPackageJson(
   pkgJsonPath: string,
   workspaceRoot: string,
-  cache: PackageJsonConfigurationCache,
+  cache: PackageJsonConfigurationCache | undefined,
   isInPackageManagerWorkspaces: boolean,
-  packageManagerCommand: PackageManagerCommands
+  packageManagerCommand: PackageManagerCommands,
+  nxJson?: NxJsonConfiguration
 ) {
   const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
 
   const projectRoot = dirname(pkgJsonPath);
 
-  const hash = hashObject({
-    ...json,
-    root: projectRoot,
-    isInPackageManagerWorkspaces,
-    nxVersion,
-  });
+  const hash = cache
+    ? hashObject({
+        ...json,
+        root: projectRoot,
+        isInPackageManagerWorkspaces,
+        nxVersion,
+      })
+    : undefined;
 
-  const cached = cache.get(hash);
+  const cached = cache?.get(hash);
   if (cached) {
     return {
       projects: {
@@ -208,12 +209,12 @@ export function createNodeFromPackageJson(
     json,
     workspaceRoot,
     pkgJsonPath,
-    readNxJson(workspaceRoot),
+    nxJson ?? readNxJson(workspaceRoot),
     isInPackageManagerWorkspaces,
     packageManagerCommand
   );
 
-  cache.set(hash, project);
+  cache?.set(hash, project);
   return {
     projects: {
       [project.root]: project,

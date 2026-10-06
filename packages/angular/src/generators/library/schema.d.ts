@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
@@ -19,9 +19,13 @@ export interface Schema {
   parent?: string;
   tags?: string;
   strict?: boolean;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   unitTestRunner?: UnitTestRunner;
   compilationMode?: 'full' | 'partial';
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   skipModule?: boolean;
   skipPackageJson?: boolean;
@@ -30,7 +34,7 @@ export interface Schema {
   inlineStyle?: boolean;
   inlineTemplate?: boolean;
   viewEncapsulation?: 'Emulated' | 'None' | 'ShadowDom';
-  changeDetection?: 'Default' | 'OnPush';
+  changeDetection?: 'Default' | 'Eager' | 'OnPush';
   style?: 'css' | 'scss' | 'sass' | 'less' | 'none';
   skipTests?: boolean;
   selector?: string;

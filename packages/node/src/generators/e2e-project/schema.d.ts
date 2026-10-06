@@ -4,7 +4,7 @@ export interface Schema {
   directory?: string;
   name?: string;
   port?: number;
-  linter?: 'eslint' | 'none';
+  linter?: 'eslint' | 'oxlint' | 'none';
   rootProject?: boolean;
   isNest?: boolean;
   skipFormat?: boolean;

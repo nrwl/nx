@@ -114,7 +114,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         executors: ['@nx/react-native:sync-deps'],
         postTargetTransformer: postTargetTransformer(migrationLogs),
         targetPluginOptionMapper: (targetName) => ({
-          startTargetName: targetName,
+          syncDepsTargetName: targetName,
         }),
       },
       {

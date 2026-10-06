@@ -1,5 +1,6 @@
 import {
   pruneProjectGraph,
+  findLocalPathNode,
   findNodeMatchingVersion,
   addNodesAndDependencies,
   rehoistNodes,
@@ -468,6 +469,151 @@ describe('project-graph-pruning', () => {
     });
   });
 
+  describe('findLocalPathNode', () => {
+    it('throws when two local-path packages share a package name', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendored-lib@file:libs/vendored-a': {
+            type: 'npm',
+            name: 'npm:vendored-lib@file:libs/vendored-a',
+            data: {
+              packageName: 'vendored-lib',
+              version: 'file:libs/vendored-a',
+            },
+          },
+          'npm:vendored-lib@file:libs/vendored-b': {
+            type: 'npm',
+            name: 'npm:vendored-lib@file:libs/vendored-b',
+            data: {
+              packageName: 'vendored-lib',
+              version: 'file:libs/vendored-b',
+            },
+          },
+        },
+      };
+
+      expect(() =>
+        findLocalPathNode(graph, 'vendored-lib', 'file:../../libs/vendored-a')
+      ).toThrow(
+        'Multiple local-path packages named "vendored-lib" were found in the lock file (file:libs/vendored-a, file:libs/vendored-b)'
+      );
+    });
+
+    it('matches the target path before the package name', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendored-lib@file:libs/vendored-a': {
+            type: 'npm',
+            name: 'npm:vendored-lib@file:libs/vendored-a',
+            data: {
+              packageName: 'vendored-lib',
+              version: 'file:libs/vendored-a',
+            },
+          },
+          'npm:vendored-lib@file:libs/vendored-b': {
+            type: 'npm',
+            name: 'npm:vendored-lib@file:libs/vendored-b',
+            data: {
+              packageName: 'vendored-lib',
+              version: 'file:libs/vendored-b',
+            },
+          },
+        },
+      };
+
+      expect(
+        findLocalPathNode(
+          graph,
+          'vendored-lib',
+          'file:local_path_modules/libs/vendored-b'
+        )?.name
+      ).toBe('npm:vendored-lib@file:libs/vendored-b');
+    });
+
+    it('matches an aliased dependency, whose name the lock file never carries', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendor-real-name': {
+            type: 'npm',
+            name: 'npm:vendor-real-name',
+            data: {
+              packageName: 'vendor-real-name',
+              version: 'file:libs/vendor',
+            },
+          },
+        },
+      };
+
+      expect(
+        findLocalPathNode(
+          graph,
+          'aliased-vendor',
+          'file:local_path_modules/libs/vendor'
+        )?.name
+      ).toBe('npm:vendor-real-name');
+    });
+
+    it('does not match a link: manifest spec to a file: package at the same path', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendor-real-name': {
+            type: 'npm',
+            name: 'npm:vendor-real-name',
+            data: {
+              packageName: 'vendor-real-name',
+              version: 'file:libs/vendor',
+            },
+          },
+        },
+      };
+
+      expect(
+        findLocalPathNode(
+          graph,
+          'aliased-vendor',
+          'link:local_path_modules/libs/vendor'
+        )
+      ).toBeUndefined();
+    });
+
+    it('matches a source path that itself starts with the shipped directory name', () => {
+      // Relocation is injective: a workspace directory named local_path_modules
+      // relocates like any other, so the manifest carries the prefix twice while
+      // the lock file carries it once. Reading it back off both sides would
+      // compare two different paths, and an alias has no name to fall back to.
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendor-real-name': {
+            type: 'npm',
+            name: 'npm:vendor-real-name',
+            data: {
+              packageName: 'vendor-real-name',
+              version: 'file:local_path_modules/vendor',
+            },
+          },
+        },
+      };
+
+      expect(
+        findLocalPathNode(
+          graph,
+          'aliased-vendor',
+          'file:local_path_modules/local_path_modules/vendor'
+        )?.name
+      ).toBe('npm:vendor-real-name');
+    });
+  });
+
   describe('pruneProjectGraph', () => {
     let graph: ProjectGraph;
     let workspacePackages: Map<string, ProjectGraphProjectNode>;
@@ -671,6 +817,155 @@ describe('project-graph-pruning', () => {
       expect(() => pruneProjectGraph(graph, prunedPackageJson)).toThrow(
         'Pruned lock file creation failed'
       );
+    });
+
+    it('carries a nodeless link: dependency without throwing under pnpm', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'link:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'pnpm')
+      ).not.toThrow();
+    });
+
+    it('still throws on a nodeless file: dependency under pnpm', () => {
+      // A file: dep needs a packages: entry, so a nodeless one means a stale
+      // lockfile; carrying it would emit a broken importer-only entry.
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'file:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'pnpm')
+      ).toThrow('Pruned lock file creation failed');
+    });
+
+    it('still throws on a nodeless link: dependency under npm', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'link:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'npm')
+      ).toThrow('Pruned lock file creation failed');
+    });
+
+    it('still throws on a nodeless link: dependency under yarn', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'link:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'yarn')
+      ).toThrow('Pruned lock file creation failed');
+    });
+
+    it('still throws on a nodeless link: dependency when no package manager is given', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'link:../vendored-lib' },
+      };
+
+      expect(() => pruneProjectGraph(graph, prunedPackageJson)).toThrow(
+        'Pruned lock file creation failed'
+      );
+    });
+
+    it('treats a link: to a workspace project as a workspace module under any pm', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'workspace-lib': 'link:../workspace-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'npm')
+      ).not.toThrow();
+      expect(
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'npm').nodes[
+          'workspace-lib'
+        ]
+      ).toBeDefined();
+    });
+
+    it('matches a file: dependency to its local-path node by name under pnpm', () => {
+      graph.externalNodes['npm:vendored-lib'] = {
+        type: 'npm',
+        name: 'npm:vendored-lib',
+        data: {
+          packageName: 'vendored-lib',
+          version: 'file:libs/vendored-lib',
+        },
+      };
+      graph.dependencies['npm:vendored-lib'] = [];
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'file:../vendored-lib' },
+      };
+
+      const prunedGraph = pruneProjectGraph(
+        graph,
+        prunedPackageJson,
+        undefined,
+        'pnpm'
+      );
+
+      expect(
+        prunedGraph.externalNodes?.['npm:vendored-lib']?.data.version
+      ).toBe('file:libs/vendored-lib');
+    });
+
+    it('does not match a file: dependency to a local-path node by name under npm', () => {
+      graph.externalNodes['npm:vendored-lib'] = {
+        type: 'npm',
+        name: 'npm:vendored-lib',
+        data: {
+          packageName: 'vendored-lib',
+          version: 'file:libs/vendored-lib',
+        },
+      };
+      graph.dependencies['npm:vendored-lib'] = [];
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'file:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'npm')
+      ).toThrow('Pruned lock file creation failed');
+    });
+
+    it('does not match a file: dependency to a local-path node by name under yarn', () => {
+      graph.externalNodes['npm:vendored-lib'] = {
+        type: 'npm',
+        name: 'npm:vendored-lib',
+        data: {
+          packageName: 'vendored-lib',
+          version: 'file:libs/vendored-lib',
+        },
+      };
+      graph.dependencies['npm:vendored-lib'] = [];
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'file:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'yarn')
+      ).toThrow('Pruned lock file creation failed');
     });
 
     it('should handle complex dependency tree', () => {
@@ -911,6 +1206,95 @@ describe('project-graph-pruning', () => {
 
       expect(prunedGraph.externalNodes?.['npm:lodash@4.17.21']).toBeDefined();
       expect(prunedGraph.externalNodes?.['npm:lodash@4.17.20']).toBeDefined();
+    });
+
+    describe('when a rehoist happens', () => {
+      const externalNode = (
+        name: string,
+        packageName: string,
+        version: string
+      ) => ({
+        type: 'npm' as const,
+        name,
+        data: { version, packageName, hash: `sha512-${packageName}${version}` },
+      });
+
+      // A package resolved to two versions, with the nested one reachable only
+      // through another dependency. Pruning to just that dependency leaves 1.1.1
+      // as the sole version, which triggers the rehoist.
+      const createGraph = (): ProjectGraph => ({
+        nodes: {},
+        externalNodes: {
+          'npm:cookie': externalNode('npm:cookie', 'cookie', '2.0.1'),
+          'npm:cookie@1.1.1': externalNode(
+            'npm:cookie@1.1.1',
+            'cookie',
+            '1.1.1'
+          ),
+          'npm:light-my-request': externalNode(
+            'npm:light-my-request',
+            'light-my-request',
+            '6.6.0'
+          ),
+        },
+        dependencies: {
+          'npm:light-my-request': [
+            {
+              source: 'npm:light-my-request',
+              target: 'npm:cookie@1.1.1',
+              type: 'static' as any,
+            },
+          ],
+        },
+      });
+
+      // Prunes down to a single cookie version, so the rehoist runs.
+      const rehoistingPackageJson: PackageJson = {
+        name: 'app-b',
+        version: '1.0.0',
+        dependencies: { 'light-my-request': '6.6.0' },
+      };
+
+      // Needs both cookie versions, so it depends on the source graph being intact.
+      const multiVersionPackageJson: PackageJson = {
+        name: 'app-a',
+        version: '1.0.0',
+        dependencies: { cookie: '2.0.1', 'light-my-request': '6.6.0' },
+      };
+
+      it('does not mutate the source graph', () => {
+        const graph = createGraph();
+
+        pruneProjectGraph(graph, rehoistingPackageJson);
+
+        expect(graph.externalNodes['npm:cookie@1.1.1'].name).toEqual(
+          'npm:cookie@1.1.1'
+        );
+        expect(graph.externalNodes['npm:cookie'].name).toEqual('npm:cookie');
+      });
+
+      it('stays deterministic when the same graph is pruned repeatedly', () => {
+        const graph = createGraph();
+
+        const first = pruneProjectGraph(graph, multiVersionPackageJson);
+        pruneProjectGraph(graph, rehoistingPackageJson);
+        const third = pruneProjectGraph(graph, multiVersionPackageJson);
+
+        expect(Object.keys(third.externalNodes ?? {}).sort()).toEqual(
+          Object.keys(first.externalNodes ?? {}).sort()
+        );
+        expect(third.dependencies).toEqual(first.dependencies);
+      });
+
+      it('keeps both versions resolvable after an earlier prune rehoisted one', () => {
+        const graph = createGraph();
+
+        pruneProjectGraph(graph, rehoistingPackageJson);
+
+        expect(() =>
+          pruneProjectGraph(graph, multiVersionPackageJson)
+        ).not.toThrow();
+      });
     });
   });
 });

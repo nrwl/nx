@@ -8,8 +8,6 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
     "composite": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
@@ -20,6 +18,7 @@
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
+    "**/*.test-utils.ts",
     "internal-testing-utils.ts",
     "jest.config.ts",
     ".eslintrc.json"

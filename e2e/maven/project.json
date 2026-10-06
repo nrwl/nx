@@ -9,14 +9,16 @@
     "e2e-local": {
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry",
+        "@nx/nx-source:populate-e2e-base-workspace",
+        "@nx/nx-source:local-registry-e2e",
         "dev.nx.maven:nx-maven-plugin:mvn:install"
       ]
     },
     "e2e-ci--**/**": {
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry",
+        "@nx/nx-source:populate-e2e-base-workspace",
+        "@nx/nx-source:local-registry-e2e",
         "dev.nx.maven:nx-maven-plugin:mvn:install"
       ]
     }

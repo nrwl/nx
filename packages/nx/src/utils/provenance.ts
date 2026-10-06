@@ -1,11 +1,9 @@
-import { execSync } from 'child_process';
 import { createRequire } from 'module';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
 import {
-  detectPackageManager,
-  getPackageManagerCommand,
+  getWorkspaceRegistryUrlForDisplay,
   packageRegistryView,
 } from './package-manager';
 
@@ -16,6 +14,16 @@ import {
  *
  * Will throw if the package does not have valid provenance.
  */
+/**
+ * A build the publish workflow cuts from master rather than from a tag:
+ * `23.3.0-pr.36841.f66e88b` from a pull request, `23.2.0-canary.20260908-89f02c1`
+ * from the nightly. Each segment is matched with its leading digits so an
+ * ordinary prerelease like `1.0.0-preview.1` does not qualify.
+ */
+function isPublishedFromMaster(version: string): boolean {
+  return /-pr\.\d+\./.test(version) || /-canary\.\d/.test(version);
+}
+
 export async function ensurePackageHasProvenance(
   packageName: string,
   packageVersion: string
@@ -27,14 +35,27 @@ export async function ensurePackageHasProvenance(
   }
 
   try {
-    const result = await packageRegistryView(
-      packageName,
-      packageVersion,
-      '--json --silent'
-    );
-    const npmViewResult = JSON.parse(result);
+    const result = await packageRegistryView(packageName, packageVersion, [
+      '--json',
+      '--silent',
+    ]);
+    const parsed = JSON.parse(result);
+    // `npm view <pkg>@<spec> --json` returns a bare object on npm <= 11 and
+    // pnpm but an array on npm 12, even for a single resolved version. A version
+    // range matches several versions and the registry lists all of them
+    // (including deprecated ones the installer skips), so we cannot tell which
+    // one will actually be installed; refuse rather than verify the wrong
+    // artifact.
+    if (Array.isArray(parsed) && parsed.length > 1) {
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Provenance can only be verified for a single version, but this version resolved to multiple candidates. Specify an exact version.'
+      );
+    }
+    const npmViewResult = Array.isArray(parsed) ? parsed[0] : parsed;
 
-    const attURL = npmViewResult.dist?.attestations?.url;
+    const attURL = npmViewResult?.dist?.attestations?.url;
 
     if (!attURL)
       throw new ProvenanceError(
@@ -95,11 +116,18 @@ export async function ensurePackageHasProvenance(
         'Publishing workflow does not match .github/workflows/publish.yml'
       );
     }
-    if (workflowParameters.ref !== `refs/tags/${npmViewResult.version}`) {
+    // PR and canary releases are published by this same workflow running on
+    // master, so a tag for them does not exist and never will. Repository,
+    // workflow path and the artifact digest are still checked, so this only
+    // widens which ref of nrwl/nx is allowed to have built it.
+    const allowedRefs = isPublishedFromMaster(npmViewResult.version)
+      ? [`refs/tags/${npmViewResult.version}`, 'refs/heads/master']
+      : [`refs/tags/${npmViewResult.version}`];
+    if (!allowedRefs.includes(workflowParameters.ref)) {
       throw new ProvenanceError(
         packageName,
         packageVersion,
-        `Version ref does not match refs/tags/${npmViewResult.version}`
+        `Version ref does not match ${allowedRefs.join(' or ')}`
       );
     }
 
@@ -133,25 +161,10 @@ export class ProvenanceError extends Error {
   constructor(packageName: string, packageVersion: string, error?: string) {
     let customRegistry: string | undefined = undefined;
     try {
-      const packageManager = detectPackageManager();
-      const commands = getPackageManagerCommand(packageManager);
-
-      // Try to get registry from current package manager, fall back to npm
-      const registryCommand =
-        commands.getRegistryUrl ?? 'npm config get registry';
-
-      const registry = execSync(registryCommand, {
-        timeout: 5000,
-        windowsHide: true,
-        encoding: 'utf-8',
-      }).trim();
+      const registry = getWorkspaceRegistryUrlForDisplay(packageName);
 
       // Only consider it custom if it's not the default npm registry
-      if (
-        registry &&
-        registry !== 'undefined' &&
-        !registry.includes('registry.npmjs.org')
-      ) {
+      if (registry && !registry.includes('registry.npmjs.org')) {
         customRegistry = registry;
       }
     } catch {

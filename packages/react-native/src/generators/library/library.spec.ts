@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   readJson,
@@ -260,7 +260,7 @@ describe('lib', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "jsx": "react-jsx",
             "types": ["jest", "node"]
           },
@@ -301,9 +301,8 @@ describe('lib', () => {
                 configFile: __dirname + '/.babelrc.js',
               },
             ],
-            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
-              'react-native/jest/assetFileTransformer.js',
-            ),
+            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$':
+              require.resolve('react-native/jest/assetFileTransformer.js'),
           },
           transformIgnorePatterns: [
             'node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)',

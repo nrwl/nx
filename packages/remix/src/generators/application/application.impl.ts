@@ -1,4 +1,8 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  logShowProjectCommand,
+  createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
+} from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -16,12 +20,14 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator, extractTsConfigBase } from '@nx/js';
 import {
-  createNxCloudOnboardingURLForWelcomeApp,
-  getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
+  addLintingToProject,
+  addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
+  updateTsconfigFiles,
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
-  eslintVersion,
   isbotVersion,
   nxVersion,
   reactDomVersion,
@@ -42,12 +48,6 @@ import {
   updateUnitTestConfig,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
-import {
-  addProjectToTsSolutionWorkspace,
-  shouldConfigureTsSolutionSetup,
-  updateTsconfigFiles,
-  sortPackageJsonFields,
-} from '@nx/js/internal';
 export function remixApplicationGenerator(
   tree: Tree,
   options: NxRemixGeneratorSchema
@@ -70,6 +70,7 @@ export async function remixApplicationGeneratorInternal(
     _options.addPlugin,
     _options.useTsSolution
   );
+  // initGenerator enforces the TS pin and hard-errors on TS6.
   const tasks: GeneratorCallback[] = [
     await initGenerator(tree, {
       skipFormat: true,
@@ -128,7 +129,6 @@ export async function remixApplicationGeneratorInternal(
     reactDomVersion,
     typesReactVersion,
     typesReactDomVersion,
-    eslintVersion,
     typescriptVersion,
     viteVersion,
   };
@@ -259,7 +259,19 @@ export async function remixApplicationGeneratorInternal(
     );
   }
 
-  if (options.linter !== 'none') {
+  if (options.linter !== 'eslint' && options.linter !== 'none') {
+    tasks.push(
+      await addLintingToProject(tree, {
+        oxlintPlugins: ['react', 'react-perf', 'jsx-a11y'],
+        unitTestRunner: options.unitTestRunner,
+        linter: options.linter,
+        project: options.projectName,
+        addPlugin: options.addPlugin,
+      })
+    );
+  }
+
+  if (options.linter === 'eslint') {
     const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
       '@nx/eslint',
       nxVersion

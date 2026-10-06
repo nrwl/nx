@@ -1,0 +1,220 @@
+// Cross-process mutual exclusion for the migrate run flow, built on the
+// native flock-based FileLock (the same primitive the project graph uses to
+// serialize nx processes): acquisition blocks until the holder releases, and
+// the kernel releases a dead holder's lock automatically, so there is no
+// stale-lock state to detect or clean up. Under WASM the native lock is
+// unavailable and sections run unserialized, matching the project graph's
+// IS_WASM guard for this lock. Not part of run/'s public surface (not
+// re-exported via ./index): import directly within run/.
+//
+// Locked sections must stay synchronous. lock() blocks the whole thread, so
+// if a holder parked on an await while a second in-process caller reached
+// lock(), the holder's continuation could never run to release it. Git and
+// child-process side effects belong outside the lock for the same reason.
+
+import { randomBytes } from 'crypto';
+import { mkdirSync, readdirSync } from 'fs';
+import { join } from 'path';
+import { FileLock, IS_WASM } from '../../../native';
+import {
+  hasRunState,
+  migrateRunsDir,
+  readRunState,
+  runDir,
+  writeRunState,
+  type MigrateRunState,
+} from './run-state';
+
+const STATE_LOCK_FILE_NAME = 'run.json.lock';
+const CREATION_LOCK_FILE_NAME = 'init.lock';
+const ACTIVITY_DIR_NAME = 'activity';
+
+function withFileLock<T>(lockPath: string, fn: () => T): T {
+  if (IS_WASM) {
+    return fn();
+  }
+  const lock = new FileLock(lockPath);
+  lock.lock();
+  try {
+    return fn();
+  } finally {
+    lock.unlock();
+  }
+}
+
+/**
+ * Runs `fn` while holding the run's state lock, releasing it afterwards even
+ * if `fn` throws. writeRunState's tmp+rename gives per-write atomicity, but a
+ * writer that reads state, applies an event, then writes still races a second
+ * nx migrate process that read the same state first; this lock serializes
+ * those sequences so the event always applies to the freshest on-disk state.
+ */
+export function withRunStateLock<T>(runDirPath: string, fn: () => T): T {
+  return withFileLock(join(runDirPath, STATE_LOCK_FILE_NAME), fn);
+}
+
+/**
+ * Serializes active-run discovery and run creation across nx migrate
+ * processes. Two concurrent inits could otherwise both observe "no active
+ * run" and create competing runs against the same workspace; the per-run
+ * state lock cannot cover that window because the run directory does not
+ * exist yet. Callers must redo their active-run check inside `fn`: a check
+ * done before acquiring the lock may predate a concurrent creation.
+ */
+export function withRunCreationLock<T>(root: string, fn: () => T): T {
+  const dir = migrateRunsDir(root);
+  mkdirSync(dir, { recursive: true });
+  return withFileLock(join(dir, CREATION_LOCK_FILE_NAME), fn);
+}
+
+/**
+ * Reads the run state fresh under the lock, hands it to `apply`, and writes the
+ * result back. `apply` returning null means "no change" and skips the write.
+ * `apply` runs exactly once, synchronously, so it may capture out-params; a
+ * corrupt or newer-format run.json propagates from the read.
+ */
+export function updateRunState(
+  runDirPath: string,
+  apply: (fresh: MigrateRunState) => MigrateRunState | null
+): MigrateRunState {
+  return withRunStateLock(runDirPath, () => {
+    const fresh = readRunState(runDirPath);
+    const next = apply(fresh);
+    if (next === null) return fresh;
+    writeRunState(runDirPath, next);
+    return next;
+  });
+}
+
+// The activity locks this process holds, one per run dir. Each is held until
+// the process exits (the kernel releases it) or until this process releases
+// it: deleting the run, or handing a continue off to the workspace-local nx.
+const heldActivity = new Map<string, { lock: FileLock; name: string }>();
+
+/**
+ * Marks this process as acting on the run until it exits or releases the
+ * hold, so a `--start-fresh` elsewhere refuses to delete it. One lock file per
+ * process and run, taken under the creation lock that deletion probes under.
+ * `exclusive` refuses while another process holds the run, even when this one
+ * already does. No-op under WASM, which has no native lock.
+ */
+export function holdRunActivity(
+  root: string,
+  runId: string,
+  exclusive = false
+): void {
+  if (IS_WASM) return;
+  const dir = runDir(root, runId);
+  if (heldActivity.has(dir) && !exclusive) return;
+  withRunCreationLock(root, () => {
+    if (!hasRunState(dir)) {
+      throw new Error(
+        `Migrate run '${runId}' was deleted while this command was starting.`
+      );
+    }
+    if (exclusive) {
+      const others = liveRunActivityPids(dir);
+      if (others === 'unknown' || others.length > 0) {
+        throw heldRunError('continuing', runId, others);
+      }
+    }
+    registerRunActivity(dir);
+  });
+}
+
+// 'unknown' is the fail-closed case: the activity folder could not be read or
+// a lock could not be probed.
+export function heldRunError(
+  action: 'continuing' | 'deleting',
+  runId: string,
+  holders: number[] | 'unknown'
+): Error {
+  const refusal = `Not ${action} migrate run '${runId}'`;
+  return new Error(
+    holders === 'unknown'
+      ? `${refusal}: nx cannot tell whether another nx migrate process is still working on it.`
+      : `${refusal}: ${describeHolders(
+          holders
+        )} (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
+  );
+}
+
+export function describeHolders(holders: number[]): string {
+  return holders.length === 1
+    ? `process ${holders[0]} is still working on it`
+    : `processes ${holders.join(', ')} are still working on it`;
+}
+
+/**
+ * The hold without the creation lock: for the init that creates the run
+ * inside its own creation-lock section, so the run is never discoverable
+ * without a holder. Every other caller goes through holdRunActivity.
+ */
+export function registerRunActivity(dir: string): void {
+  if (IS_WASM || heldActivity.has(dir)) return;
+  const name = `${process.pid}-${randomBytes(4).toString('hex')}.lock`;
+  const lock = new FileLock(join(dir, ACTIVITY_DIR_NAME, name));
+  lock.lock();
+  heldActivity.set(dir, { lock, name });
+}
+
+export function releaseRunActivity(dir: string): void {
+  const held = heldActivity.get(dir);
+  if (held === undefined) return;
+  held.lock.unlock();
+  heldActivity.delete(dir);
+}
+
+/**
+ * The pids of the other live processes holding the run, from their lock
+ * names. This process's own hold is skipped: a deleting init may hold the run
+ * from its report or preflight, which is not competing work. Locks left by
+ * dead holders are free. 'unknown' under WASM, and when the folder cannot be
+ * listed, a lock cannot be probed, or a held lock's name carries no pid.
+ */
+export function liveRunActivityPids(dir: string): number[] | 'unknown' {
+  if (IS_WASM) return 'unknown';
+  const names = liveActivityNames(dir, heldActivity.get(dir)?.name);
+  if (names === 'unknown') return 'unknown';
+  const pids = names.map((name) => Number(name.split('-', 1)[0]));
+  return pids.every((pid) => Number.isInteger(pid) && pid > 0)
+    ? pids
+    : 'unknown';
+}
+
+/**
+ * Whether any live process, this one included, holds an activity lock on the
+ * run: for the init discovery that treats a held directory without run.json
+ * as a run being started, whichever process is starting it. Fails closed.
+ */
+export function hasAnyLiveRunActivity(dir: string): boolean {
+  const names = liveActivityNames(dir, undefined);
+  return names === 'unknown' || names.length > 0;
+}
+
+// The names of the held lock files other than `skip`; 'unknown' when the
+// folder cannot be listed or a lock cannot be probed.
+function liveActivityNames(
+  dir: string,
+  skip: string | undefined
+): string[] | 'unknown' {
+  let names: string[];
+  try {
+    names = readdirSync(join(dir, ACTIVITY_DIR_NAME));
+  } catch (e) {
+    if (e?.code === 'ENOENT') return [];
+    return 'unknown';
+  }
+  const held: string[] = [];
+  for (const name of names) {
+    if (name === skip) continue;
+    try {
+      if (new FileLock(join(dir, ACTIVITY_DIR_NAME, name)).check()) {
+        held.push(name);
+      }
+    } catch {
+      return 'unknown';
+    }
+  }
+  return held;
+}

@@ -20,7 +20,7 @@ const navigation = {
     },
     {
       name: 'Pricing',
-      href: `${nxDevUrl}/nx-cloud#plans`,
+      href: `${nxDevUrl}/pricing`,
     },
     { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],
@@ -271,7 +271,7 @@ export function Footer({
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                <h3 className="text-sm font-semibold tracking-wider text-zinc-400 uppercase">
                   Resources
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -302,7 +302,7 @@ export function Footer({
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                <h3 className="text-sm font-semibold tracking-wider text-zinc-400 uppercase">
                   Solutions
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -323,7 +323,7 @@ export function Footer({
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                <h3 className="text-sm font-semibold tracking-wider text-zinc-400 uppercase">
                   Nx Cloud
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">
@@ -354,7 +354,7 @@ export function Footer({
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                <h3 className="text-sm font-semibold tracking-wider text-zinc-400 uppercase">
                   Company
                 </h3>
                 <ul role="list" className="mt-4 space-y-4 p-0">

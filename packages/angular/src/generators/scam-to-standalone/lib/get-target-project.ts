@@ -1,4 +1,4 @@
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { ProjectConfiguration } from '@nx/devkit';
 
 export function getTargetProject(
   projectName: string,

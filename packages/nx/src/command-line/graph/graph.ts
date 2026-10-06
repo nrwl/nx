@@ -12,7 +12,6 @@ import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenge
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
-import open from 'open';
 import {
   basename,
   dirname,
@@ -46,9 +45,16 @@ import {
   handleProjectGraphError,
 } from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import { pruneToSelectedTasks } from '../../tasks-runner/utils';
+import {
+  selectTasksForProjects,
+  type TaskSelection,
+} from '../../tasks-runner/run-command';
+import type { NxArgs } from '../../utils/command-line-utils';
+import { runnableForTarget } from '../../utils/project-graph-utils';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { HashPlanner, transferProjectGraph } from '../../native';
+import { expandFilesInput, HashPlanner } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -60,6 +66,7 @@ import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { splitTargetFromNodes } from '../../utils/split-target';
 
 export interface GraphError {
   message: string;
@@ -256,6 +263,14 @@ export async function generateGraph(
     focus?: string;
     exclude?: string[];
     affected?: boolean;
+    /**
+     * What the command would run for `targets`, or how to build it. A builder
+     * is only called where an output needs it, so the live graph can still
+     * open, and show the error, when the task graph cannot be built.
+     */
+    taskSelection?: TaskSelection | (() => TaskSelection);
+    /** The `-c` the tasks run with; their ids carry it. */
+    configuration?: string;
   },
   affectedProjects: string[]
 ): Promise<void> {
@@ -306,6 +321,26 @@ export async function generateGraph(
     }
   }
   let prunedGraph = pruneExternalNodes(rawGraph);
+
+  // `nx graph --targets` has no command to take a selection from, so it draws
+  // the projects' targets.
+  const jsonTaskSelection = () =>
+    args.targets?.length
+      ? (resolveSelection(args.taskSelection) ??
+        selectTasksForProjects(
+          rawGraph,
+          args.projects?.length
+            ? args.projects
+            : [...runnableForTarget(rawGraph.nodes, args.targets)],
+          {
+            targets: args.targets,
+            configuration: args.configuration,
+          } as NxArgs,
+          {},
+          {},
+          false
+        ))
+      : undefined;
 
   const projects = Object.values(
     prunedGraph.nodes
@@ -384,12 +419,7 @@ export async function generateGraph(
   if (args.print || args.file === 'stdout') {
     console.log(
       JSON.stringify(
-        await createJsonOutput(
-          prunedGraph,
-          rawGraph,
-          args.projects,
-          args.targets
-        ),
+        await createJsonOutput(prunedGraph, rawGraph, jsonTaskSelection()),
         null,
         2
       )
@@ -427,7 +457,9 @@ export async function generateGraph(
       const taskGraphClientResponse = args.targets
         ? await createTaskGraphForTargetsAndProjects(
             args.targets,
-            args.projects
+            args.projects,
+            args.configuration,
+            args.taskSelection
           )
         : await createTaskGraphClientResponse();
 
@@ -463,8 +495,7 @@ export async function generateGraph(
       const json = await createJsonOutput(
         prunedGraph,
         rawGraph,
-        args.projects,
-        args.targets
+        jsonTaskSelection()
       );
 
       writeJsonFile(fullFilePath, json);
@@ -501,7 +532,14 @@ export async function generateGraph(
         affectedProjects,
         args.focus,
         args.groupByFolder,
-        excludePatterns
+        excludePatterns,
+        typeof args.taskSelection === 'object' && args.taskSelection.taskIds
+          ? {
+              targets: args.targets,
+              configuration: args.configuration,
+              taskIds: args.taskSelection.taskIds,
+            }
+          : undefined
       );
       app = result.app;
       url = result.url;
@@ -566,7 +604,15 @@ export async function generateGraph(
     });
 
     if (args.open) {
-      open(url.toString());
+      (
+        new Function('return import("open")')() as Promise<
+          typeof import('open')
+        >
+      )
+        .then((m) => m.default(url.toString()))
+        .catch(() => {
+          // Ignore errors when opening browser (e.g. no browser available)
+        });
     }
 
     return new Promise((res) => {
@@ -611,7 +657,8 @@ async function startServer(
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
-  exclude: string[] = []
+  exclude: string[] = [],
+  selection?: TaskSelectionForGraph
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
 
@@ -675,7 +722,8 @@ async function startServer(
     if (sanitizePath === 'task-graph.json') {
       const projectsParam = parsedUrl.searchParams.get('projects');
       const targetsParam = parsedUrl.searchParams.get('targets');
-      const configuration = parsedUrl.searchParams.get('configuration');
+      const configuration =
+        parsedUrl.searchParams.get('configuration') || undefined;
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
 
@@ -685,12 +733,14 @@ async function startServer(
           ? projectsParam.split(' ').filter(Boolean)
           : undefined;
 
+        const request = selectedFor(targetNames, configuration, selection);
         return res.end(
           JSON.stringify(
             await createTaskGraphForTargetsAndProjects(
               targetNames,
               projectNames,
-              configuration
+              request.configuration,
+              { taskIds: request.taskIds }
             )
           )
         );
@@ -705,7 +755,11 @@ async function startServer(
 
       const taskId = parsedUrl.searchParams.get('taskId');
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      const inputs = await getExpandedTaskInputs(taskId);
+      const inputs = await getExpandedTaskInputs(
+        currentProjectGraphClientResponse,
+        expandedTaskInputsCache,
+        taskId
+      );
       performance.mark('task input generation:end');
 
       res.end(JSON.stringify({ [taskId]: inputs }));
@@ -1102,7 +1156,7 @@ async function createTaskGraphClientResponse(
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph))
+      transformProjectGraphForRust(graph)
     );
     performance.mark('task hash plan generation:start');
 
@@ -1190,14 +1244,66 @@ function clearTaskGraphCache() {
   expandedTaskInputsCache.clear();
 }
 
+export interface TaskSelectionForGraph {
+  targets: string[];
+  configuration?: string;
+  taskIds: string[];
+}
+
 /**
- * Creates a single task graph for multiple projects with multiple targets
- * If no projects specified, returns graph for all projects with the targets
+ * The selection applies only to a page asking for its exact targets with its configuration
+ * or none (the ids carry it); anything else would prune to nothing, so it is shown whole.
+ */
+export function selectedFor(
+  targets: string[],
+  configuration: string | undefined,
+  selection: TaskSelectionForGraph | undefined
+): { configuration?: string; taskIds?: string[] } {
+  const applies =
+    selection &&
+    targets.length === selection.targets.length &&
+    targets.every((target) => selection.targets.includes(target)) &&
+    (configuration === undefined || configuration === selection.configuration);
+  return applies
+    ? { configuration: selection.configuration, taskIds: selection.taskIds }
+    : { configuration };
+}
+
+function resolveSelection<T>(
+  selection: T | (() => T) | undefined
+): T | undefined {
+  return typeof selection === 'function' ? (selection as () => T)() : selection;
+}
+
+/**
+ * The task graph to draw: the selection's own when it has one, otherwise built
+ * and, given ids, pruned to them. The live graph rebuilds per request, so it
+ * passes only ids.
+ */
+export function taskGraphForSelection(
+  build: () => TaskGraph,
+  selection?: { taskGraph?: TaskGraph; taskIds?: string[] }
+): TaskGraph {
+  if (selection?.taskGraph) {
+    return selection.taskGraph;
+  }
+  const taskGraph = build();
+  return selection?.taskIds
+    ? pruneToSelectedTasks(taskGraph, selection.taskIds)
+    : taskGraph;
+}
+
+/**
+ * The task graph client response for `targetNames`: `selection`'s graph when given,
+ * else built for `projectNames` (default: every project with one of the targets).
  */
 async function createTaskGraphForTargetsAndProjects(
   targetNames: string[],
   projectNames?: string[],
-  configuration?: string
+  configuration?: string,
+  selection?:
+    | { taskGraph?: TaskGraph; taskIds?: string[] }
+    | (() => TaskSelection)
 ): Promise<TaskGraphClientResponse> {
   // Get project graph
   let graph: ProjectGraph;
@@ -1225,21 +1331,25 @@ async function createTaskGraphForTargetsAndProjects(
   }
 
   try {
-    // Create single task graph
-    const taskGraph = createTaskGraph(
-      graph,
-      {},
-      projectsToUse,
-      targetNames,
-      configuration,
-      {}
+    const taskGraph = taskGraphForSelection(
+      () =>
+        createTaskGraph(
+          graph,
+          {},
+          projectsToUse,
+          targetNames,
+          configuration,
+          {}
+        ),
+      // Built in here, so an error is reported in the page like any other.
+      resolveSelection(selection)
     );
 
     performance.mark(`task graph generation:end`);
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph))
+      transformProjectGraphForRust(graph)
     );
     performance.mark('task hash plan generation:start');
 
@@ -1282,7 +1392,9 @@ async function createTaskGraphForTargetsAndProjects(
   }
 }
 
-async function getExpandedTaskInputs(
+export async function getExpandedTaskInputs(
+  depGraphClientResponse: ProjectGraphClientResponse,
+  expandedTaskInputsCache: Map<string, Record<string, string[]>>,
   taskId: string
 ): Promise<Record<string, string[]>> {
   // Check cache first
@@ -1291,7 +1403,17 @@ async function getExpandedTaskInputs(
   }
 
   // Use the optimized version that only creates the specific task graph needed
-  const [projectName, targetName, configuration] = taskId.split(':');
+  // Use colon-aware splitting so that target names containing colons
+  // (e.g. "test:integration") are parsed correctly instead of being
+  // mistaken for a target + configuration pair.
+  const projectNodes = Object.fromEntries(
+    depGraphClientResponse.projects.map((p) => [p.name, p])
+  );
+  const [projectName, targetName, configuration] = splitTargetFromNodes(
+    taskId,
+    projectNodes,
+    { silent: true }
+  );
   const taskGraphResponse = await createTaskGraphForTargetsAndProjects(
     [targetName],
     [projectName],
@@ -1306,11 +1428,9 @@ async function getExpandedTaskInputs(
   if (inputs) {
     result = expandInputs(
       inputs,
-      currentProjectGraphClientResponse.projects.find(
-        (p) => p.name === projectName
-      ),
+      depGraphClientResponse.projects.find((p) => p.name === projectName),
       allWorkspaceFiles,
-      currentProjectGraphClientResponse
+      depGraphClientResponse
     );
   }
 
@@ -1318,6 +1438,31 @@ async function getExpandedTaskInputs(
   expandedTaskInputsCache.set(taskId, result);
 
   return result;
+}
+
+// A brace group ({a,b}.json) carries commas, so a glob list joined with
+// commas can only be split at brace depth zero.
+function splitGlobGroup(group: string): string[] {
+  const globs: string[] = [];
+  let current = '';
+  let depth = 0;
+  for (const char of group) {
+    if (char === '{') {
+      depth++;
+    } else if (char === '}' && depth > 0) {
+      depth--;
+    }
+    if (char === ',' && depth === 0) {
+      globs.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  globs.push(current);
+  // An unbalanced `{` would swallow the rest of the list; a plain split is
+  // the better guess then.
+  return depth === 0 ? globs : group.split(',');
 }
 
 function expandInputs(
@@ -1332,11 +1477,21 @@ function expandInputs(
   const projectRootInputs: string[] = [];
   const externalInputs: string[] = [];
   const otherInputs: string[] = [];
+  const filesInputs: string[][] = [];
   inputs.forEach((input) => {
     // grouped workspace inputs look like workspace:[pattern,otherPattern]
     if (input.startsWith('workspace:[')) {
-      const inputs = input.substring(11, input.length - 1).split(',');
-      workspaceRootInputs.push(...inputs);
+      workspaceRootInputs.push(
+        ...splitGlobGroup(input.substring(11, input.length - 1))
+      );
+      return;
+    }
+    // Disk-backed groups look like files:[glob,!otherGlob]. They expand on
+    // disk, so they must be matched before the `:` catch-all below classifies
+    // them as external dependencies.
+    const diskBacked = /^files:\[(.*)\]$/.exec(input);
+    if (diskBacked) {
+      filesInputs.push(splitGlobGroup(diskBacked[1]));
       return;
     }
     const maybeProjectName = input.split(':')[0];
@@ -1362,6 +1517,9 @@ function expandInputs(
   const workspaceRootsExpanded: string[] = getExpandedWorkspaceRoots(
     workspaceRootInputs,
     allWorkspaceFiles
+  );
+  const filesExpanded = filesInputs.flatMap((globs) =>
+    expandFilesInput(workspaceRoot, globs)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {
@@ -1405,7 +1563,11 @@ function expandInputs(
     }, {});
 
   return {
-    general: [...workspaceRootsExpanded, ...otherInputsExpanded],
+    general: [
+      ...workspaceRootsExpanded,
+      ...filesExpanded,
+      ...otherInputsExpanded,
+    ],
     ...projectRootsExpanded,
     external: externalInputs,
   };
@@ -1469,22 +1631,14 @@ function getExpandedWorkspaceRoots(
 async function createJsonOutput(
   prunedGraph: ProjectGraph,
   rawGraph: ProjectGraph,
-  projects: string[],
-  targets?: string[]
+  taskSelection?: TaskSelection
 ): Promise<GraphJson> {
   const response: GraphJson = {
     graph: prunedGraph,
   };
 
-  if (targets?.length) {
-    const taskGraph = createTaskGraph(
-      rawGraph,
-      {},
-      projects,
-      targets,
-      undefined,
-      {}
-    );
+  if (taskSelection) {
+    const taskGraph = taskSelection.taskGraph;
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
     let tasks = Object.values(taskGraph.tasks);

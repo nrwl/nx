@@ -7,8 +7,6 @@
     "emitDeclarationOnly": false,
     "types": ["node"],
     "composite": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "noImplicitAny": false,
     "noUnusedLocals": false,
     "esModuleInterop": true,

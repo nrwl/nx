@@ -2,6 +2,7 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { getThreadPoolSize, TaskOrchestrator } from './task-orchestrator';
 import { TaskHasher } from '../hasher/task-hasher';
 import { LifeCycle } from './life-cycle';
+import { getPerformanceReport } from './life-cycles/performance-life-cycle';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
@@ -118,14 +119,20 @@ export const defaultTasksRunner: TasksRunner<
     taskGraph: TaskGraph;
     hasher: TaskHasher;
     daemon: DaemonClient;
+    deferredTaskIds?: ReadonlySet<string>;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
-  const { total: threadCount } = getThreadPoolSize(options, context.taskGraph);
-  await options.lifeCycle.startCommand(threadCount);
+  const { total: threadCount, discrete } = getThreadPoolSize(
+    options,
+    context.taskGraph
+  );
+  // Total thread count drives the TUI; the discrete `--parallel` feeds the perf report.
+  await options.lifeCycle.startCommand(threadCount, discrete);
   try {
     return await runAllTasks(options, context);
   } finally {
-    await options.lifeCycle.endCommand();
+    // Hand the TUI exit popup the perf report (multi-task TUI runs); other modes flush it.
+    await options.lifeCycle.endCommand(getPerformanceReport(tasks.length));
   }
 };
 
@@ -140,6 +147,7 @@ async function runAllTasks(
     taskGraph: TaskGraph;
     hasher: TaskHasher;
     daemon: DaemonClient;
+    deferredTaskIds?: ReadonlySet<string>;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   const orchestrator = new TaskOrchestrator(
@@ -152,7 +160,10 @@ async function runAllTasks(
     options,
     context.nxArgs?.nxBail,
     context.daemon,
-    context.nxArgs?.outputStyle
+    context.nxArgs?.specifiedOutputStyle,
+    context.nxArgs?.resolvedOutputStyle ?? 'static-failures-only',
+    context.taskGraph,
+    context.deferredTaskIds
   );
 
   return orchestrator.run();

@@ -18,7 +18,14 @@ describe('Move Angular Project', () => {
 
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/angular', '@nx/workspace', '@nx/jest', '@nx/playwright'],
+      keepBackup: true,
+      packages: [
+        '@nx/angular',
+        '@nx/eslint',
+        '@nx/workspace',
+        '@nx/jest',
+        '@nx/playwright',
+      ],
     });
     app1 = uniq('app1');
     app2 = uniq('app2');
@@ -158,6 +165,7 @@ describe('Convert Angular Webpack Project to Rspack', () => {
 
   beforeAll(() => {
     proj = newProject({
+      keepBackup: true,
       packages: [
         '@nx/angular',
         '@nx/webpack',

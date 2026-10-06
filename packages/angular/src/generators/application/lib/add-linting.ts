@@ -1,4 +1,5 @@
 import type { Tree } from '@nx/devkit';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import type { NormalizedSchema } from './normalized-schema';
 import addLintingGenerator from '../../add-linting/add-linting';
 
@@ -7,10 +8,11 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     return;
   }
   await addLintingGenerator(host, {
+    linter: options.linter,
     projectName: options.name,
     projectRoot: options.appProjectRoot,
     prefix: options.prefix,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
     skipPackageJson: options.skipPackageJson,
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,

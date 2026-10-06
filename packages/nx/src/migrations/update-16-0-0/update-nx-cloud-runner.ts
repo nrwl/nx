@@ -4,7 +4,7 @@ import {
 } from '../../generators/utils/project-configuration';
 import { Tree } from '../../generators/tree';
 import { updateJson } from '../../generators/utils/json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 
 export default async function (tree: Tree) {
   updateJson(tree, 'package.json', (json) => {
@@ -30,5 +30,5 @@ export default async function (tree: Tree) {
   }
   updateNxJson(tree, nxJson);
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }

@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  killPorts,
   newProject,
   readFile,
   rmDist,
@@ -39,6 +38,7 @@ describe('Build React libraries and apps', () => {
     childLib2 = uniq('childlib2');
 
     proj = newProject({
+      keepBackup: true,
       packages: ['@nx/react', '@nx/rspack', '@nx/rollup', '@nx/jest'],
     });
 
@@ -116,7 +116,6 @@ module.exports = withNx(
   });
 
   afterEach(() => {
-    killPorts();
     cleanupProject();
   });
 
@@ -191,6 +190,9 @@ module.exports = withNx(
          */
 
         json.compilerOptions.target = 'es5';
+        // es5 target is a deprecated-as-error option under TS 6; suppression
+        // keeps the user-pinned target compiling so __generator is emitted.
+        json.compilerOptions.ignoreDeprecations = '6.0';
         return JSON.stringify(json, null, 2);
       });
       // What we're testing

@@ -2,6 +2,8 @@ import {
   calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -16,13 +18,12 @@ import {
   readJsonFile,
   type Target,
   type TargetConfiguration,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import * as posix from 'node:path/posix';
-import { hashObject } from 'nx/src/devkit-internals';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { targetFromTargetString } from '../utils/targets';
 import { findVitestBaseConfig, loadVite } from './utils/vitest';
 
@@ -962,14 +963,15 @@ function getOutput(
   angularWorkspaceRoot: string,
   projectRoot: string
 ): string {
-  const relativePath = relative(
-    join(workspaceRoot, angularWorkspaceRoot, projectRoot),
-    path
+  const relativePath = normalizePath(
+    relative(join(workspaceRoot, angularWorkspaceRoot, projectRoot), path)
   );
   if (relativePath.startsWith('..')) {
     return posix.join(
       '{workspaceRoot}',
-      join(angularWorkspaceRoot, projectRoot, relativePath)
+      angularWorkspaceRoot,
+      projectRoot,
+      relativePath
     );
   } else {
     return posix.join('{projectRoot}', relativePath);

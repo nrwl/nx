@@ -1,6 +1,6 @@
 ---
-title: 'Angular Rspack Plugin for Nx'
-description: 'Learn how Rspack can help you speed up your Angular applications.'
+title: Nx with Angular Rspack
+description: Use Angular Rspack with Nx to build and cache Angular projects across your monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: 'Introduction'
 weight: 2
@@ -11,10 +11,10 @@ filter: 'type:References'
 
 The `@angular-rspack/nx` plugin supports the following package versions.
 
-| Package         | Supported Versions                                                                        |
-| --------------- | ----------------------------------------------------------------------------------------- |
-| `@rspack/core`  | >=1.3.5 <1.7.0                                                                            |
-| `@angular/core` | See [Angular version matrix](/docs/technologies/angular/guides/angular-nx-version-matrix) |
+| Package         | Supported Versions                                               |
+| --------------- | ---------------------------------------------------------------- |
+| `@rspack/core`  | ^2.0.0 \|\| >=1.3.5 <1.7.0                                       |
+| `@angular/core` | See [Angular version matrix](/docs/kb/angular-nx-version-matrix) |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -52,10 +52,47 @@ Please note that Angular Rspack support is still experimental and is not yet con
 
 The following are known limitations and missing features of Angular Rspack:
 
-- Server Routing is not supported - still experimental in Angular currently.
-- App Engine APIs are not supported - still experimental in Angular currently.
+- The `static` output mode (build-time prerendering of the full application) is not supported.
+- `RenderMode.Prerender` does not produce build-time output.
+  Routes marked with it render at request time, repeating the full render on each request.
+  Response streaming does not apply.
+  When `inlineCriticalCss` is enabled, each request also repeats the critical CSS inlining.
+  The `prerender` build option does render at build time.
+  Use it to list the routes to prerender.
+- The server route configuration is extracted at runtime, not at build time.
+  Each server process extracts it while handling its first application request.
+  Route configuration errors therefore surface on that request.
+- Automatic content security policy generation (`security.autoCsp`) is not supported.
+- Locale inlining (`localize`) disables the `@angular/ssr` application engine wiring.
+  Server entries that rely on the engine wiring fail at startup.
+  The `outputMode` option cannot be combined with it.
+- With `@rspack/core` before 1.5, the engine manifests are registered inside the server entry.
+  They run before the entry's own statements, but after its imports.
+  An engine constructed at module scope of an imported module does not find them.
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).
+
+{% aside type="note" title="Application engine host validation" %}
+
+- Host validation is available from `@angular/ssr` 21.2.0.
+  It is also available from 20.3.17 within Angular 20 and from 21.1.5 within Angular 21.1.
+  Earlier versions do not validate hosts.
+- With an allowlist configured, requests from unlisted hosts get a 400 response.
+- With an empty allowlist, version 22 and later reject every request.
+  The earlier validating versions log an error and fall back to client-side rendering.
+- Disabling the check requires `@angular/ssr` 21.2.1, or 20.3.25 within Angular 20.3.
+
+Configure the allowed hosts for production with the `security.allowedHosts` option.
+The `AngularNodeAppEngine` API from `@angular/ssr/node` also reads `NG_ALLOWED_HOSTS`.
+It holds a comma-separated list, and only the versions that validate hosts read it.
+
+While serving, the allowlist automatically includes the common local hosts.
+Those are `localhost` and its subdomains, `127.0.0.1`, and `[::1]`.
+It also includes the dev server host, bracketed when it is an IPv6 literal.
+Add another address, such as a LAN IP, to `devServer.allowedHosts` or `NG_ALLOWED_HOSTS`.
+Disable the check entirely with `devServer.disableHostCheck` or `devServer.allowedHosts: true`.
+
+{% /aside %}
 
 ## Benchmarks
 
@@ -76,3 +113,9 @@ Below is a table of benchmarks for different bundlers, tested on an application 
 | Rspack        | 30.589       | 19.269   | 19.940  |
 
 You can find the benchmarks and run them yourself: [https://github.com/nrwl/ng-bundler-benchmark](https://github.com/nrwl/ng-bundler-benchmark)
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

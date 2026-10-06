@@ -108,7 +108,7 @@ export interface PostCSSPluginOptions {
 
   /**
    * File extensions to process
-   * @default ['.css', '.sss', '.pcss']
+   * @default ['.css', '.sss', '.pcss', '.scss', '.sass', '.less', '.styl', '.stylus']
    */
   extensions?: string[];
 }
@@ -131,6 +131,21 @@ export interface NormalizedPostCSSOptions extends PostCSSPluginOptions {
 }
 
 /**
+ * Default file extensions processed by the postcss plugin.
+ * Includes plain CSS formats and all supported preprocessor extensions.
+ */
+export const defaultExtensions = [
+  '.css',
+  '.sss',
+  '.pcss',
+  '.scss',
+  '.sass',
+  '.less',
+  '.styl',
+  '.stylus',
+];
+
+/**
  * Normalize plugin options with defaults
  */
 export function normalizeOptions(
@@ -144,7 +159,7 @@ export function normalizeOptions(
     modules: options.modules ?? false,
     plugins: options.plugins ?? [],
     use: options.use ?? {},
-    extensions: options.extensions ?? ['.css', '.sss', '.pcss'],
+    extensions: options.extensions ?? defaultExtensions,
     sourceMap: options.sourceMap ?? false,
   };
 }

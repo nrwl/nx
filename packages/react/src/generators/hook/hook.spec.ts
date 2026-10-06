@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createApp, createLib } from '../../utils/testing-generators';
 import { logger, Tree } from '@nx/devkit';
@@ -14,12 +14,12 @@ describe('hook', () => {
     appTree = createTreeWithEmptyWorkspace();
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should generate files', async () => {

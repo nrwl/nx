@@ -4,10 +4,10 @@ import {
   killPorts,
   newProject,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Next.js App Router', () => {
@@ -16,7 +16,7 @@ describe('Next.js App Router', () => {
   beforeAll(
     () =>
       (proj = newProject({
-        packages: ['@nx/next', '@nx/js', '@nx/playwright'],
+        packages: ['@nx/next', '@nx/eslint', '@nx/js', '@nx/playwright'],
       }))
   );
 
@@ -72,7 +72,7 @@ describe('Next.js App Router', () => {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('Successfully ran target lint');
 
-    if (runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(
         `e2e ${appName}-e2e --configuration=production`
       );

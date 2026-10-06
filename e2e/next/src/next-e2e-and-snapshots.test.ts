@@ -2,8 +2,8 @@ import {
   getStrippedEnvironmentVariables,
   readFile,
   runCLI,
-  runE2ETests,
   uniq,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import {
   setupNextTest,
@@ -36,7 +36,7 @@ describe('Next.js Applications - E2E and Snapshots', () => {
       `generate @nx/next:app ${appName} --no-interactive --style=css --linter=eslint --unitTestRunner=jest`
     );
 
-    if (runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {
         verbose: true,
         env: {

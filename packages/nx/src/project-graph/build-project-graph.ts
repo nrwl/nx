@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import { customDimensions, PERF_SPAN_SAMPLE_RATE } from '../analytics';
 import { readNxJson } from '../config/configuration';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
@@ -378,7 +379,12 @@ async function updateProjectGraphWithPlugins(
       performance.measure(`${plugin.name}:createDependencies`, {
         start: `${plugin.name}:createDependencies - start`,
         end: `${plugin.name}:createDependencies - end`,
-        detail: { track: true },
+        detail: {
+          track: true,
+          ...(customDimensions && {
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
+          }),
+        },
       });
     })
   );

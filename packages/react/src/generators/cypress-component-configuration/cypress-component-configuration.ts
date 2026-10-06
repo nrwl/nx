@@ -9,7 +9,10 @@ import { assertSupportedReactVersion } from '../../utils/assert-supported-react-
 import type { GeneratorCallback } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { addFiles } from './lib/add-files';
-import { configureCypressCT } from '../../utils/ct-utils';
+import {
+  configureCypressCT,
+  resolveCypressCTTarget,
+} from '../../utils/ct-utils';
 import { CypressComponentConfigurationSchema } from './schema.d';
 
 export function cypressComponentConfigGenerator(
@@ -45,14 +48,7 @@ export async function cypressComponentConfigGeneratorInternal(
   options.addPlugin ??= addPlugin;
 
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const installTask = await baseCyCtConfig(tree, {
-    project: options.project,
-    skipFormat: true,
-    jsx: true,
-    addPlugin: options.addPlugin,
-  });
-
-  const found = await configureCypressCT(tree, {
+  const { found, bundler } = await resolveCypressCTTarget(tree, {
     project: options.project,
     buildTarget: options.buildTarget,
     bundler: options.bundler,
@@ -61,6 +57,16 @@ export async function cypressComponentConfigGeneratorInternal(
       '@nx/vite:build',
     ]),
   });
+
+  const installTask = await baseCyCtConfig(tree, {
+    project: options.project,
+    skipFormat: true,
+    jsx: true,
+    addPlugin: options.addPlugin,
+    bundler,
+  });
+
+  await configureCypressCT(tree, { project: options.project, found, bundler });
 
   await addFiles(tree, projectConfig, options, found);
 

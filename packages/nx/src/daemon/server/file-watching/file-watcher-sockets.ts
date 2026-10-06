@@ -27,6 +27,33 @@ export function hasRegisteredFileWatcherSockets() {
   return registeredFileWatcherSockets.length > 0;
 }
 
+/**
+ * The workspace watcher has died; no further change events will ever arrive.
+ * Registered clients are passive, so without this push they wait forever.
+ */
+export function notifyFileWatcherSocketsOfError(error: Error) {
+  if (!hasRegisteredFileWatcherSockets()) {
+    return;
+  }
+
+  queue.sendToQueue(async () => {
+    await Promise.all(
+      registeredFileWatcherSockets.map(({ socket }) =>
+        handleResult(
+          socket,
+          'FILE-WATCH-CHANGED',
+          () =>
+            Promise.resolve({
+              description: 'File watch error',
+              response: JSON.stringify({ watcherError: error.message }),
+            }),
+          'json'
+        )
+      )
+    );
+  });
+}
+
 export function notifyFileWatcherSockets(
   createdFiles: string[] | null,
   updatedFiles: string[],

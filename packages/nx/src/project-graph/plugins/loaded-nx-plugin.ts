@@ -1,6 +1,6 @@
 import type { ProjectGraph } from '../../config/project-graph';
 import { type PluginConfiguration } from '../../config/nx-json';
-import { customDimensions } from '../../analytics';
+import { customDimensions, PERF_SPAN_SAMPLE_RATE } from '../../analytics';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
@@ -12,12 +12,16 @@ import type {
   CreateNodesContext,
   CreateNodesResult,
   NxPlugin,
-  PostTasksExecutionContext,
   PreTasksExecutionContext,
   ProjectsMetadata,
 } from './public-api';
 import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
+import {
+  rehydrateTerminalOutputs,
+  type MaybeStubbedPostTasksExecutionContext,
+} from './task-results-stub';
+import type { NxPluginCapabilities } from './nx-plugin-capabilities';
 
 /**
  * NOTE: Avoid using `import type` with this class. It causes issues with
@@ -48,7 +52,7 @@ export class LoadedNxPlugin {
     context: PreTasksExecutionContext
   ) => Promise<NodeJS.ProcessEnv>;
   readonly postTasksExecution?: (
-    context: PostTasksExecutionContext
+    context: MaybeStubbedPostTasksExecutionContext
   ) => Promise<void>;
 
   readonly options?: unknown;
@@ -133,6 +137,7 @@ export class LoadedNxPlugin {
               track: true,
               ...(customDimensions && {
                 [customDimensions.projectCount]: projectCount,
+                [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
               }),
             },
           });
@@ -173,8 +178,26 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.postTasksExecution) {
-      this.postTasksExecution = async (context: PostTasksExecutionContext) =>
-        plugin.postTasksExecution(this.options, context);
+      // The single rehydration point: every transport hands its context
+      // straight here, so a context bound for an isolated plugin stays stubbed
+      // across that second hop rather than being read and re-stubbed.
+      this.postTasksExecution = async (
+        context: MaybeStubbedPostTasksExecutionContext
+      ) =>
+        plugin.postTasksExecution(
+          this.options,
+          await rehydrateTerminalOutputs(context)
+        );
     }
+  }
+
+  capabilities(): NxPluginCapabilities {
+    return {
+      createNodesPattern: this.createNodes?.[0],
+      hasCreateDependencies: !!this.createDependencies,
+      hasCreateMetadata: !!this.createMetadata,
+      hasPreTasksExecution: !!this.preTasksExecution,
+      hasPostTasksExecution: !!this.postTasksExecution,
+    };
   }
 }

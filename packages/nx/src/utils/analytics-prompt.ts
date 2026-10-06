@@ -1,7 +1,5 @@
-import { createHash } from 'crypto';
-import { execSync } from 'child_process';
 import { existsSync } from 'fs';
-import { prompt } from 'enquirer';
+import { confirmationPrompt } from './prompt-helpers';
 import { join } from 'path';
 import { output } from './output';
 import { isCI } from './is-ci';
@@ -54,16 +52,12 @@ export async function promptForAnalyticsPreference(): Promise<boolean> {
       ],
     });
 
-    const { enableAnalytics } = await prompt<{ enableAnalytics: boolean }>({
-      type: 'confirm',
-      name: 'enableAnalytics',
+    return await confirmationPrompt({
       message: 'Share usage data with the Nx team?',
-      initial: true,
+      // Cancelling is a decline, not a failure.
+      onCancel: () => false,
     });
-
-    return enableAnalytics;
   } catch {
-    // User cancelled - default to false
     return false;
   }
 }
@@ -91,57 +85,4 @@ async function saveAnalyticsPreference(
   } catch {
     // Silently fail - don't block user's command
   }
-}
-
-/**
- * Generates a deterministic workspace ID.
- * Priority: nxCloudId > git remote URL (hashed).
- * Returns null if neither is available (no telemetry).
- */
-export function generateWorkspaceId(cwd?: string): string | null {
-  const root = cwd ?? workspaceRoot;
-
-  // Use nxCloudId if available — most stable identifier
-  const nxJson = readNxJson(root);
-  const nxCloudId = nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken;
-  if (nxCloudId) {
-    return nxCloudId;
-  }
-
-  // Fall back to git remote URL hash
-  try {
-    const remoteUrl = execSync('git remote get-url origin', {
-      stdio: 'pipe',
-      cwd: root,
-      windowsHide: true,
-    })
-      .toString()
-      .trim();
-
-    if (remoteUrl) {
-      return createHash('sha256').update(remoteUrl).digest('hex').slice(0, 32);
-    }
-  } catch {
-    // No git remote available
-  }
-
-  // Fall back to first commit SHA — already a hash
-  try {
-    const firstCommit = execSync('git rev-list --max-parents=0 HEAD', {
-      stdio: 'pipe',
-      cwd: root,
-      windowsHide: true,
-    })
-      .toString()
-      .trim()
-      .split('\n')[0];
-
-    if (firstCommit) {
-      return firstCommit;
-    }
-  } catch {
-    // Not a git repo
-  }
-
-  return null;
 }

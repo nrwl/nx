@@ -1,28 +1,32 @@
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn((...args: any[]) =>
-    (jest.requireActual('fs') as any).existsSync(...args)
-  ),
-}));
-const fs = require('fs');
+import type { Mock } from 'vitest';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+vi.mock('fs', async () => {
+  const actual = await vi.importActual<any>('fs');
+  return {
+    ...actual,
+    existsSync: vi.fn((...args: any[]) => actual.existsSync(...args)),
+  };
+});
+import * as fs from 'fs';
 
 let readConfigFileResult: any;
 let parseJsonConfigFileContentResult: any;
-jest.mock('typescript', () => ({
-  ...jest.requireActual('typescript'),
-  readConfigFile: jest.fn().mockImplementation(() => readConfigFileResult),
-  parseJsonConfigFileContent: jest
+// The source loads typescript with a lazy require(), which vi.mock cannot reach.
+mockCjsModule(import.meta.url, 'typescript', {
+  ...require('typescript'),
+  readConfigFile: vi.fn().mockImplementation(() => readConfigFileResult),
+  parseJsonConfigFileContent: vi
     .fn()
     .mockImplementation(() => parseJsonConfigFileContentResult),
-}));
+});
 
 import { readTsPathMappings } from './typescript';
 
 describe('readTsPathMappings', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it('should normalize paths', () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
+    (fs.existsSync as Mock).mockReturnValue(true);
     readConfigFileResult = {
       config: {
         options: {

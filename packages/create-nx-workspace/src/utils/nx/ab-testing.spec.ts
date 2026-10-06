@@ -2,6 +2,9 @@ import {
   isEnterpriseCloudUrl,
   getBannerVariant,
   getFlowVariant,
+  NX_CLOUD_DEMO_HYPERLINK,
+  NX_CLOUD_HYPERLINK,
+  NX_CLOUD_URL,
   PromptMessages,
 } from './ab-testing';
 
@@ -54,7 +57,7 @@ describe('ab-testing', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.env = { ...originalEnv };
     });
 
@@ -62,11 +65,10 @@ describe('ab-testing', () => {
       process.env = originalEnv;
     });
 
-    it('should return 0 for docs generation', () => {
+    it('should return 0 for docs generation', async () => {
       process.env.NX_GENERATE_DOCS_PROCESS = 'true';
-      const { getFlowVariant: freshGetFlowVariant } = jest.requireActual(
-        './ab-testing'
-      ) as typeof import('./ab-testing');
+      const { getFlowVariant: freshGetFlowVariant } =
+        await import('./ab-testing');
       expect(freshGetFlowVariant()).toBe('0');
     });
   });
@@ -75,7 +77,7 @@ describe('ab-testing', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.env = { ...originalEnv };
     });
 
@@ -83,11 +85,10 @@ describe('ab-testing', () => {
       process.env = originalEnv;
     });
 
-    it('should return 0 for docs generation', () => {
+    it('should return 0 for docs generation', async () => {
       process.env.NX_GENERATE_DOCS_PROCESS = 'true';
-      const { getBannerVariant: freshGetBannerVariant } = jest.requireActual(
-        './ab-testing'
-      ) as typeof import('./ab-testing');
+      const { getBannerVariant: freshGetBannerVariant } =
+        await import('./ab-testing');
       expect(freshGetBannerVariant('https://cloud.nx.app/connect/abc')).toBe(
         '0'
       );
@@ -108,7 +109,7 @@ describe('ab-testing', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.env = { ...originalEnv };
     });
 
@@ -118,10 +119,11 @@ describe('ab-testing', () => {
 
     it.each(['0', '1', '2'])(
       'should return the same prompt for flow variant %s',
-      (flowVariant) => {
-        jest.resetModules();
+      async (flowVariant) => {
+        vi.resetModules();
         process.env.NX_CNW_FLOW_VARIANT = flowVariant;
-        const { PromptMessages: FreshPromptMessages } = require('./ab-testing');
+        const { PromptMessages: FreshPromptMessages } =
+          await import('./ab-testing');
         const pm = new FreshPromptMessages();
         expect(pm.getPrompt('setupNxCloudV2').code).toBe(
           'cloud-ci-providers-speed'
@@ -129,15 +131,85 @@ describe('ab-testing', () => {
       }
     );
 
-    it('should return the same prompt for docs generation', () => {
+    it('should return the same prompt for docs generation', async () => {
       process.env.NX_GENERATE_DOCS_PROCESS = 'true';
-      const { PromptMessages: FreshPromptMessages } = jest.requireActual(
-        './ab-testing'
-      ) as typeof import('./ab-testing');
+      const { PromptMessages: FreshPromptMessages } =
+        await import('./ab-testing');
       const pm = new FreshPromptMessages();
       expect(pm.getPrompt('setupNxCloudV2').code).toBe(
         'cloud-ci-providers-speed'
       );
     });
   });
+});
+
+describe('NX_CLOUD_HYPERLINK', () => {
+  const BEL = '\u0007';
+  const OSC = '\u001B]';
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    vi.resetModules();
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it('embeds UTM attribution in the link target while keeping the visible text clean', async () => {
+    process.env.FORCE_HYPERLINK = '1';
+    const { NX_CLOUD_HYPERLINK: link, NX_CLOUD_URL: url } =
+      await import('./ab-testing');
+
+    expect(link).toContain(`${BEL}${url}${OSC}`);
+    expect(link).toContain(
+      `${url}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace`
+    );
+  });
+
+  it('falls back to the bare URL when hyperlinks are unsupported', async () => {
+    process.env.FORCE_HYPERLINK = '0';
+    const { NX_CLOUD_HYPERLINK: link, NX_CLOUD_URL: url } =
+      await import('./ab-testing');
+
+    expect(link).toBe(url);
+  });
+
+  it('points the demo link at the demo with the same attribution', async () => {
+    process.env.FORCE_HYPERLINK = '1';
+    const { NX_CLOUD_DEMO_HYPERLINK: link, NX_CLOUD_DEMO_URL: url } =
+      await import('./ab-testing');
+
+    expect(link).toContain(`${BEL}${url}${OSC}`);
+    expect(link).toContain(
+      `${url}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace`
+    );
+  });
+});
+
+describe('cloud prompt footers', () => {
+  let originalDocs: string | undefined;
+
+  beforeAll(() => {
+    originalDocs = process.env.NX_GENERATE_DOCS_PROCESS;
+    process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+  });
+
+  afterAll(() => {
+    if (originalDocs === undefined) delete process.env.NX_GENERATE_DOCS_PROCESS;
+    else process.env.NX_GENERATE_DOCS_PROCESS = originalDocs;
+  });
+
+  // Drift guard: every cloud prompt footer must embed the baked hyperlink so a
+  // future footer edit that drops it fails loudly instead of silently losing
+  // attribution.
+  it.each(['setupCI', 'setupNxCloud', 'setupNxCloudV2'] as const)(
+    'embeds the Nx Cloud hyperlink in %s',
+    (key) => {
+      const { footer } = new PromptMessages().getPrompt(key);
+      expect(footer).toContain(NX_CLOUD_HYPERLINK);
+      expect(footer).toContain(NX_CLOUD_DEMO_HYPERLINK);
+    }
+  );
 });

@@ -1,10 +1,27 @@
-import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  detectPackageManager,
+  Tree,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import {
   swcCliVersion,
   swcCoreVersion,
   swcHelpersVersion,
   swcNodeVersion,
 } from '../versions';
+
+// @swc/core's postinstall only installs a wasm fallback for platforms not
+// covered by its prebuilt optional dependencies, so skip it.
+const swcAllowBuilds = { '@swc/core': false };
+
+export function acknowledgeSwcBuildScripts(tree: Tree): void {
+  acknowledgeBuildScripts(
+    tree,
+    detectPackageManager(tree.root),
+    swcAllowBuilds
+  );
+}
 
 export function getSwcDependencies(): {
   dependencies: Record<string, string>;
@@ -24,6 +41,7 @@ export function getSwcDependencies(): {
 export function addSwcDependencies(tree: Tree) {
   const { dependencies, devDependencies } = getSwcDependencies();
 
+  acknowledgeSwcBuildScripts(tree);
   return addDependenciesToPackageJson(
     tree,
     dependencies,
@@ -34,6 +52,7 @@ export function addSwcDependencies(tree: Tree) {
 }
 
 export function addSwcRegisterDependencies(tree: Tree) {
+  acknowledgeSwcBuildScripts(tree);
   return addDependenciesToPackageJson(
     tree,
     {},

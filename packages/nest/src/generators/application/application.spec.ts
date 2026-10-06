@@ -1,3 +1,19 @@
+import * as devkit from '@nx/devkit';
+import type { MockInstance } from 'vitest';
+// Pin the detected package manager so inferred lock-file outputs (e.g.
+// prune-lockfile) and package-manager commands are deterministic regardless of
+// which package manager runs the tests.
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
+  return {
+    ...actual,
+    detectPackageManager: vi.fn(() => 'npm'),
+    getPackageManagerCommand: vi.fn((pm = 'npm') =>
+      actual.getPackageManagerCommand(pm)
+    ),
+  };
+});
+
 import {
   getProjects,
   readJson,
@@ -15,7 +31,7 @@ describe('application generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should generate project configurations', async () => {
@@ -37,23 +53,6 @@ describe('application generator', () => {
         "sourceRoot": "my-node-app/src",
         "tags": [],
         "targets": {
-          "build": {
-            "configurations": {
-              "development": {
-                "env": {
-                  "NODE_ENV": "development",
-                },
-              },
-            },
-            "executor": "nx:run-commands",
-            "options": {
-              "command": "webpack-cli build",
-              "cwd": "my-node-app",
-              "env": {
-                "NODE_ENV": "production",
-              },
-            },
-          },
           "copy-workspace-modules": {
             "cache": true,
             "dependsOn": [
@@ -118,8 +117,27 @@ describe('application generator', () => {
     `);
   });
 
+  it('should set up the formatter it was given', async () => {
+    // The preset forwards `formatter`, and Nest reaches @nx/js:init only through
+    // the Node generator - so dropping it here left the workspace with no
+    // formatter config or dependency at all.
+    const unformatted = createTreeWithEmptyWorkspace({ formatter: 'none' });
+
+    await applicationGenerator(unformatted, {
+      directory: appDirectory,
+      addPlugin: true,
+      formatter: 'prettier',
+    });
+
+    expect(unformatted.exists('.prettierrc')).toBe(true);
+    expect(
+      readJson(unformatted, 'package.json').devDependencies['prettier']
+    ).toBeDefined();
+  });
+
   it('should generate files', async () => {
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: appDirectory,
       addPlugin: true,
     });
@@ -148,7 +166,93 @@ describe('application generator', () => {
     ).toBeTruthy();
   });
 
+  it('should generate spec files and a vitest config when unitTestRunner is vitest', async () => {
+    await applicationGenerator(tree, {
+      directory: appDirectory,
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+
+    expect(tree.exists(`${appDirectory}/vitest.config.mts`)).toBeTruthy();
+    expect(tree.exists(`${appDirectory}/jest.config.cts`)).toBeFalsy();
+    expect(
+      tree.exists(`${appDirectory}/src/app/app.controller.spec.ts`)
+    ).toBeTruthy();
+    expect(
+      tree.exists(`${appDirectory}/src/app/app.service.spec.ts`)
+    ).toBeTruthy();
+  });
+
+  describe('vitest requires vite 8', () => {
+    const setViteVersion = (version: string) =>
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { ...json.devDependencies, vite: version };
+        return json;
+      });
+
+    it.each(['^7.0.0', '7.3.6', '~6.2.0'])(
+      'should throw when vite is %s',
+      async (version) => {
+        setViteVersion(version);
+
+        await expect(
+          applicationGenerator(tree, {
+            directory: appDirectory,
+            unitTestRunner: 'vitest',
+            e2eTestRunner: 'none',
+            addPlugin: true,
+          })
+        ).rejects.toThrow(/requires Vite 8 or later/);
+      }
+    );
+
+    it('should not throw when vite is 8', async () => {
+      setViteVersion('^8.0.0');
+
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'vitest',
+          e2eTestRunner: 'none',
+          addPlugin: true,
+        })
+      ).resolves.toBeDefined();
+    });
+
+    it('should not throw when vite is not installed', async () => {
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'vitest',
+          e2eTestRunner: 'none',
+          addPlugin: true,
+        })
+      ).resolves.toBeDefined();
+    });
+
+    it('should not throw for jest on an older vite', async () => {
+      setViteVersion('^7.0.0');
+
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'jest',
+          e2eTestRunner: 'none',
+          addPlugin: true,
+        })
+      ).resolves.toBeDefined();
+    });
+  });
+
   it('should configure tsconfig correctly', async () => {
+    // pin TS<6 to exercise the 'node10' branch deterministically
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies ??= {};
+      json.devDependencies.typescript = '~5.9.2';
+      return json;
+    });
+
     await applicationGenerator(tree, {
       directory: appDirectory,
       addPlugin: true,
@@ -157,13 +261,30 @@ describe('application generator', () => {
     const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2021');
-    expect(tsConfig.compilerOptions.moduleResolution).toBe('node');
+    // commonjs context: 'node10' is valid on TS<6, deprecated on TS>=6
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('node10');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
       'jest.config.cts',
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
     ]);
+  });
+
+  it('should set moduleResolution to "bundler" when typescript is >=6', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies ??= {};
+      json.devDependencies.typescript = '~6.0.3';
+      return json;
+    });
+
+    await applicationGenerator(tree, {
+      directory: appDirectory,
+      addPlugin: true,
+    });
+
+    const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('bundler');
   });
 
   it('should add strict checks with --strict', async () => {
@@ -184,17 +305,16 @@ describe('application generator', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
-        .spyOn(devkitModule, 'formatFiles')
+      formatFilesSpy = vi
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files', async () => {
@@ -253,6 +373,7 @@ describe('application generator', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         unitTestRunner: 'jest',
         addPlugin: true,
@@ -285,23 +406,6 @@ describe('application generator', () => {
           "name": "@proj/myapp",
           "nx": {
             "targets": {
-              "build": {
-                "configurations": {
-                  "development": {
-                    "env": {
-                      "NODE_ENV": "development",
-                    },
-                  },
-                },
-                "executor": "nx:run-commands",
-                "options": {
-                  "command": "webpack-cli build",
-                  "cwd": "myapp",
-                  "env": {
-                    "NODE_ENV": "production",
-                  },
-                },
-              },
               "copy-workspace-modules": {
                 "cache": true,
                 "dependsOn": [
@@ -472,6 +576,7 @@ describe('application generator', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         e2eTestRunner: 'jest',
         useProjectJson: true,
@@ -490,23 +595,6 @@ describe('application generator', () => {
           "sourceRoot": "myapp/src",
           "tags": [],
           "targets": {
-            "build": {
-              "configurations": {
-                "development": {
-                  "env": {
-                    "NODE_ENV": "development",
-                  },
-                },
-              },
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "webpack-cli build",
-                "cwd": "myapp",
-                "env": {
-                  "NODE_ENV": "production",
-                },
-              },
-            },
             "copy-workspace-modules": {
               "cache": true,
               "dependsOn": [

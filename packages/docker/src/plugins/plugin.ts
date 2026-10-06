@@ -2,6 +2,9 @@ import {
   calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
+  getLatestCommitSha,
 } from '@nx/devkit/internal';
 import {
   type CreateNodes,
@@ -12,11 +15,8 @@ import {
   CreateNodesContext,
   workspaceRoot,
 } from '@nx/devkit';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import { getLatestCommitSha } from 'nx/src/utils/git-utils';
 import { interpolateObject } from '../utils/interpolate-pattern';
 
 export interface DockerTargetOptions {
@@ -133,7 +133,13 @@ function interpolateDockerTargetOptions(
   imageRef: string,
   context: CreateNodesContext
 ): DockerTargetOptions {
-  const commitSha = getLatestCommitSha();
+  let commitSha: string | null | undefined;
+  const getCommitSha = () => {
+    if (commitSha === undefined) {
+      commitSha = getLatestCommitSha();
+    }
+    return commitSha;
+  };
   const projectName = getProjectName(projectRoot, context.workspaceRoot);
 
   const tokens = {
@@ -141,8 +147,13 @@ function interpolateDockerTargetOptions(
     projectName,
     imageRef,
     currentDate: new Date(),
-    commitSha,
-    shortCommitSha: commitSha ? commitSha.slice(0, 7) : null,
+    get commitSha() {
+      return getCommitSha();
+    },
+    get shortCommitSha() {
+      const sha = getCommitSha();
+      return sha ? sha.slice(0, 7) : null;
+    },
   };
 
   return interpolateObject(options, tokens);

@@ -10,7 +10,6 @@ type Options = {
 
 const DOCS_PATH =
   'astro-docs/src/content/docs/reference/environment-variables.mdoc';
-const NX_CORE_PROJECT = 'nx';
 const MAX_EXAMPLE_FILES = 3;
 
 const SCANNABLE_EXT = /\.(ts|tsx|js|mjs|cjs|rs)$/;
@@ -27,7 +26,7 @@ export default createConformanceRule<Options>({
   category: 'consistency',
   description:
     'Ensures every NX_* environment variable in source code is covered by docs',
-  implementation: async ({ tree, fileMapCache, ruleOptions }) => {
+  implementation: async ({ tree, fileMapCache, projectGraph, ruleOptions }) => {
     const ignore = new Set(ruleOptions?.ignore ?? []);
 
     const docsContent = tree.read(DOCS_PATH, 'utf-8');
@@ -46,11 +45,13 @@ export default createConformanceRule<Options>({
     }
     const documented = extractDocumentedVars(docsContent);
 
-    const nxFiles =
-      fileMapCache.fileMap.projectFileMap?.[NX_CORE_PROJECT] ?? [];
-    const filesToScan = nxFiles
-      .map(({ file }) => file)
-      .filter(isScannableSourceFile);
+    const projectFileMap = fileMapCache.fileMap.projectFileMap ?? {};
+    const filesToScan = Object.entries(projectFileMap).flatMap(
+      ([projectName, projectFiles]) =>
+        projectGraph.nodes[projectName]?.data.root.startsWith('packages/')
+          ? projectFiles.map(({ file }) => file).filter(isScannableSourceFile)
+          : []
+    );
     const usages = extractUsagesFromFiles(tree, filesToScan);
 
     const violations: ConformanceViolation[] = [];

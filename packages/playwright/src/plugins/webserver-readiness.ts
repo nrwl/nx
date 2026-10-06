@@ -1,0 +1,524 @@
+import {
+  applyDaemonEnvFromClient,
+  getAppliedDaemonClientEnv,
+  loadConfigFile,
+} from '@nx/devkit/internal';
+import type { PlaywrightTestConfig } from '@playwright/test';
+import { fork } from 'node:child_process';
+import { cpus } from 'node:os';
+import { dirname, join } from 'node:path';
+import {
+  noProxyEntries,
+  resolveProxyForProtocol,
+} from '../executors/wait-for-webserver/proxy';
+
+/**
+ * The serializable subset of a Playwright `webServer` entry that the readiness
+ * gate needs. Passed back from the config-eval child over IPC.
+ */
+export interface ResolvedWebServer {
+  command: string;
+  url?: string;
+  port?: number;
+  reuseExistingServer?: boolean;
+  ignoreHTTPSErrors?: boolean;
+  timeout?: number;
+  // `wait.stdout`/`wait.stderr` presence projected to a boolean: the RegExp
+  // values do not survive the JSON IPC channel.
+  waitsForOutput?: boolean;
+  // Non-empty `env` presence. Only Playwright can launch such a command with
+  // its environment, so the values themselves are not needed.
+  hasEnv?: boolean;
+}
+
+export function normalizeWebServers(
+  webServer: PlaywrightTestConfig['webServer']
+): ResolvedWebServer[] {
+  if (!webServer) {
+    return [];
+  }
+  const servers = Array.isArray(webServer) ? webServer : [webServer];
+  return servers.map((server) => ({
+    command: server.command,
+    url: server.url,
+    port: server.port,
+    reuseExistingServer: server.reuseExistingServer,
+    ignoreHTTPSErrors: server.ignoreHTTPSErrors,
+    timeout: server.timeout,
+    waitsForOutput:
+      server.wait?.stdout || server.wait?.stderr ? true : undefined,
+    hasEnv: server.env && Object.keys(server.env).length > 0 ? true : undefined,
+  }));
+}
+
+// The TLS material Node reads when a probe verifies an https certificate.
+const TLS_PROBE_VARS = ['NODE_EXTRA_CA_CERTS', 'NODE_TLS_REJECT_UNAUTHORIZED'];
+// The variables a url probe routes a request by, in both spellings the proxy
+// resolution accepts.
+const ROUTE_VARS = ['http_proxy', 'https_proxy', 'all_proxy', 'no_proxy'];
+// The npm-exported ones a Playwright below 1.59.0 reads ahead of them.
+const NPM_CONFIG_ROUTE_VARS = [
+  'npm_config_http_proxy',
+  'npm_config_https_proxy',
+  'npm_config_proxy',
+  'npm_config_no_proxy',
+];
+// Every variable a url probe reads to route and verify a request.
+const PROBE_ENV_VARS = [
+  ...[...ROUTE_VARS, ...NPM_CONFIG_ROUTE_VARS].flatMap((name) => [
+    name,
+    name.toUpperCase(),
+  ]),
+  ...TLS_PROBE_VARS,
+];
+
+/** The values of the probe variables set in an env. */
+export type ProbeEnv = Record<string, string>;
+
+export function pickProbeEnv(env: NodeJS.ProcessEnv): ProbeEnv {
+  const picked: ProbeEnv = {};
+  for (const variable of PROBE_ENV_VARS) {
+    if (env[variable] !== undefined) {
+      picked[variable] = env[variable];
+    }
+  }
+  return picked;
+}
+
+/**
+ * The webServer entries a config evaluation resolved and the probe env it left
+ * behind, which is what Playwright's own probe runs under: the config runs
+ * before the probe and can write env (through `dotenv`, say) that the readiness
+ * task, its own target in its own process, never sees.
+ */
+export interface ConfigEvaluation {
+  webServers: ResolvedWebServer[];
+  probeEnv: ProbeEnv;
+}
+
+let inProcessLoad: Promise<void> = Promise.resolve();
+
+/**
+ * Loads a Playwright config in this process, hands it to `consume`, and
+ * returns the consumed value with the probe env the evaluation left in
+ * `process.env`, then puts `process.env` back the way it was: the task and
+ * gate dotenv files expand against it, and a later env comparison has to see
+ * the graph-time env, not whatever the last config wrote. `consume` must be
+ * synchronous and must not let the config object escape: a config can expose
+ * getters that read env it set while loading, so every read has to happen
+ * before the restore. Loads are serialized because createNodes evaluates
+ * configs concurrently and a concurrent load's writes would be misattributed.
+ * A client env applied mid-load (the daemon forwards it as it arrives) is
+ * re-applied over the restored env; restoring the pre-load values alone would
+ * revert it.
+ *
+ * `ambientEnv` is a snapshot of the restored env, taken while still holding
+ * the load lock. Task-env reconstruction and comparison after this returns
+ * must base on it rather than on the live `process.env`: the lock is released
+ * on return, so a sibling load's transient writes can be visible in the live
+ * env by then and would be read as ambient.
+ */
+export async function loadConfigWithProbeEnv<T extends object, R>(
+  configPath: string,
+  consume: (config: T) => R
+): Promise<{ consumed: R; probeEnv: ProbeEnv; ambientEnv: NodeJS.ProcessEnv }> {
+  const previous = inProcessLoad;
+  let release: () => void;
+  inProcessLoad = new Promise<void>((resolve) => (release = resolve));
+  await previous;
+  try {
+    const applySequence = getAppliedDaemonClientEnv()?.sequence;
+    const before = { ...process.env };
+    let consumed: R;
+    let probeEnv: ProbeEnv;
+    try {
+      const config = await loadConfigFile<T>(configPath);
+      consumed = consume(config);
+      probeEnv = pickProbeEnv(process.env);
+    } finally {
+      restoreEnv(before);
+      const applied = getAppliedDaemonClientEnv();
+      if (applied && applied.sequence !== applySequence) {
+        applyDaemonEnvFromClient(applied.env);
+      }
+    }
+    return { consumed, probeEnv, ambientEnv: { ...process.env } };
+  } finally {
+    release();
+  }
+}
+
+function restoreEnv(snapshot: NodeJS.ProcessEnv): void {
+  for (const key of Object.keys(process.env)) {
+    if (!(key in snapshot)) {
+      delete process.env[key];
+    }
+  }
+  for (const [key, value] of Object.entries(snapshot)) {
+    if (process.env[key] !== value) {
+      process.env[key] = value;
+    }
+  }
+}
+
+/**
+ * The routes a probe under `env` can take, read as the executor's proxy
+ * resolution reads them: the proxy for each protocol a redirect can reach
+ * (`<protocol>_proxy`, falling back to `all_proxy`, normalized as it would be
+ * dialled) and the `no_proxy` filter as its set of entries, the `npm_config_*`
+ * variables included with `npmConfigProxy`. A `no_proxy` that excludes every
+ * host, or no proxy at all, sends every hop direct, so both collapse to empty
+ * routes and a masked variable never counts as a difference.
+ */
+function proxyRoutes(
+  env: NodeJS.ProcessEnv,
+  npmConfigProxy: boolean
+): {
+  http: string;
+  https: string;
+  no_proxy: string;
+} {
+  const route = (protocol: string) => {
+    const resolution = resolveProxyForProtocol(protocol, env, npmConfigProxy);
+    switch (resolution.kind) {
+      case 'direct':
+        return '';
+      case 'proxy':
+        return resolution.proxy.href;
+      case 'unusable':
+        return `unusable ${resolution.value}`;
+      default: {
+        const unhandled: never = resolution;
+        throw new Error(`Unhandled resolution ${JSON.stringify(unhandled)}`);
+      }
+    }
+  };
+  const http = route('http');
+  const https = route('https');
+  // Entries exclude hosts independently, so a differing order or separator is
+  // not a difference. `*.host` and `.host` are the same suffix match, whereas
+  // `*host` (any suffix) and `host` (exact) are not. A bare `*` excludes every
+  // host.
+  const entries = [
+    ...new Set(
+      noProxyEntries(env, npmConfigProxy).map((entry) =>
+        entry.replace(/^\*\./, '.')
+      )
+    ),
+  ].sort();
+  if (entries.includes('*') || !(http || https)) {
+    return { http: '', https: '', no_proxy: '' };
+  }
+  return { http, https, no_proxy: entries.join(',') };
+}
+
+/**
+ * The env var names whose values would make the readiness gate probe `servers`
+ * differently than the consuming task's own Playwright probe: `taskEnv` is the
+ * env that probe runs under (the task env after its config loaded) and
+ * `gateEnv` the env the gate target runs under. The gate is its own target, so
+ * it loads its own dotenv files, not the consumer's, and it never loads the
+ * config: a task-scoped or config-written proxy exclusion or CA bundle never
+ * reaches it, and a gate probing through the wrong route can fail where
+ * Playwright would pass. A non-empty result means the gate cannot reproduce
+ * the task's probe and must not be inferred.
+ *
+ * Both probes follow redirects, so as soon as one server probes a url the
+ * routes for every protocol and host are compared, not only the route the
+ * configured url takes: an `https_proxy` for an http url or a `no_proxy` entry
+ * for another host can still decide how a redirect target is reached.
+ * `NODE_EXTRA_CA_CERTS` is compared unless every url server sets
+ * `ignoreHTTPSErrors`, which turns verification off on both sides for every
+ * hop, except that the tunnel to an https proxy is verified with the process
+ * defaults either way. With `legacyProxiedTls` (an installed Playwright below
+ * 1.59.0, whose probe never verifies the origin behind a proxy tunnel, and
+ * neither does the gate on that version) it is also left out while every
+ * https hop can only take such a tunnel: an http proxy on the https route, no
+ * https proxy on the http route, and no `no_proxy` entry that could send a
+ * redirect target direct. `NODE_TLS_REJECT_UNAUTHORIZED` only reaches that
+ * tunnel to an https proxy, since every request sets `rejectUnauthorized`
+ * itself, and only its `'0'` state counts. With `npmConfigProxy` (an installed
+ * Playwright below 1.59.0, whose probe reads npm's `npm_config_*` proxy
+ * variables ahead of the standard ones, as the gate does on that version) those
+ * variables route the probe and are compared too.
+ */
+export function getProbeEnvDivergence(
+  servers: Array<{ url?: string; ignoreHTTPSErrors?: boolean }>,
+  taskEnv: NodeJS.ProcessEnv,
+  gateEnv: NodeJS.ProcessEnv,
+  legacyProxiedTls = false,
+  npmConfigProxy = false
+): string[] {
+  // A port is probed with a raw TCP connect, and the executor rejects a
+  // malformed url up front; env plays no part in either.
+  const urlServers = servers.filter(
+    (server) => server.url && URL.canParse(server.url)
+  );
+  if (urlServers.length === 0) {
+    return [];
+  }
+  const diverging = new Set<string>();
+  const taskRoutes = proxyRoutes(taskEnv, npmConfigProxy);
+  const gateRoutes = proxyRoutes(gateEnv, npmConfigProxy);
+  // Name the raw variables behind a differing route. A proxy route is decided
+  // by every proxy variable (`no_proxy` can mask them all); the filter only by
+  // `no_proxy`.
+  const readVars = npmConfigProxy
+    ? [...ROUTE_VARS, ...NPM_CONFIG_ROUTE_VARS]
+    : ROUTE_VARS;
+  const routeVars =
+    taskRoutes.http !== gateRoutes.http || taskRoutes.https !== gateRoutes.https
+      ? readVars
+      : taskRoutes.no_proxy !== gateRoutes.no_proxy
+        ? readVars.filter((name) => name.endsWith('no_proxy'))
+        : [];
+  for (const name of routeVars) {
+    for (const variable of [name, name.toUpperCase()]) {
+      if (taskEnv[variable] !== gateEnv[variable]) {
+        diverging.add(variable);
+      }
+    }
+  }
+  // `ignoreHTTPSErrors` reaches the target's certificate only. An https target
+  // is tunnelled through an https proxy over a TLS connection the proxy agent
+  // opens with the process defaults, on both sides, so that certificate is
+  // verified regardless.
+  const tunnelsThroughTlsProxy = [taskRoutes.https, gateRoutes.https].some(
+    (route) => route.startsWith('https:')
+  );
+  const onlyUnverifiedLegacyTunnels =
+    legacyProxiedTls &&
+    [taskRoutes, gateRoutes].every(
+      (routes) =>
+        routes.https.startsWith('http:') &&
+        !routes.http.startsWith('https:') &&
+        routes.no_proxy === ''
+    );
+  if (
+    (tunnelsThroughTlsProxy ||
+      (urlServers.some((server) => !server.ignoreHTTPSErrors) &&
+        !onlyUnverifiedLegacyTunnels)) &&
+    taskEnv.NODE_EXTRA_CA_CERTS !== gateEnv.NODE_EXTRA_CA_CERTS
+  ) {
+    diverging.add('NODE_EXTRA_CA_CERTS');
+  }
+  // Both probes pass `rejectUnauthorized` on every request, which overrides
+  // the env default. Only the proxy agent's own connection to an https proxy
+  // is left to it, and Node reads it as exactly '0'.
+  if (
+    tunnelsThroughTlsProxy &&
+    (taskEnv.NODE_TLS_REJECT_UNAUTHORIZED === '0') !==
+      (gateEnv.NODE_TLS_REJECT_UNAUTHORIZED === '0')
+  ) {
+    diverging.add('NODE_TLS_REJECT_UNAUTHORIZED');
+  }
+  return [...diverging].sort();
+}
+
+/**
+ * Whether the task env a chain would run with differs from the graph-time
+ * ambient env. Only a difference can change how the config resolves, so an
+ * identical env skips the (expensive) child evaluation entirely. `ambientEnv`
+ * is the locked snapshot loadConfigWithProbeEnv returned, not the live
+ * `process.env`, which a concurrent load may be mutating.
+ */
+export function taskEnvDivergesFromAmbient(
+  taskEnv: NodeJS.ProcessEnv,
+  ambientEnv: NodeJS.ProcessEnv
+): boolean {
+  const keys = new Set([...Object.keys(ambientEnv), ...Object.keys(taskEnv)]);
+  for (const key of keys) {
+    if (ambientEnv[key] !== taskEnv[key]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * The messages the config-eval worker sends over IPC. Tagged so the parent can
+ * tell them apart from anything else on the channel: the user's config module
+ * runs in the child and can itself call `process.send` during evaluation, and
+ * such a message must not settle the resolution.
+ */
+export type WebserverConfigWorkerMessage =
+  | ({ type: 'webserver-config-result' } & ConfigEvaluation)
+  | { type: 'webserver-config-error'; error: string };
+
+type ChildEval = (
+  configFilePath: string,
+  workspaceRoot: string,
+  env: NodeJS.ProcessEnv
+) => Promise<ConfigEvaluation>;
+
+// A forked config evaluation holds a full config module graph in memory, so cap
+// how many run at once.
+const MAX_CONCURRENT_EVALS = Math.max(1, Math.min(cpus().length, 8));
+const CHILD_EVAL_TIMEOUT = 30_000;
+// Cap the worker stderr buffered to fold into a failure message.
+const MAX_STDERR = 8192;
+
+let activeEvals = 0;
+const evalQueue: Array<() => void> = [];
+let childEval: ChildEval = forkChildEval;
+let workerScriptPath = join(__dirname, 'webserver-config-worker.js');
+
+/**
+ * Evaluates `configFilePath`'s `webServer` addresses under `taskEnv`, bounded by
+ * the concurrency cap. Used only when the env diverges from ambient.
+ */
+export async function resolveWebServersUnderEnv(
+  configFilePath: string,
+  workspaceRoot: string,
+  taskEnv: NodeJS.ProcessEnv
+): Promise<ConfigEvaluation> {
+  // `while` rather than `if`: a caller arriving between a slot's release and
+  // the woken waiter's resume can claim the slot first, so the waiter must
+  // re-check before taking it.
+  while (activeEvals >= MAX_CONCURRENT_EVALS) {
+    await new Promise<void>((resolve) => evalQueue.push(resolve));
+  }
+  activeEvals++;
+  try {
+    return await childEval(configFilePath, workspaceRoot, taskEnv);
+  } finally {
+    activeEvals--;
+    evalQueue.shift()?.();
+  }
+}
+
+function isWorkerMessage(
+  message: unknown
+): message is WebserverConfigWorkerMessage {
+  if (typeof message !== 'object' || message === null) {
+    return false;
+  }
+  const candidate = message as {
+    type?: unknown;
+    error?: unknown;
+    webServers?: unknown;
+    probeEnv?: unknown;
+  };
+  return (
+    (candidate.type === 'webserver-config-error' &&
+      typeof candidate.error === 'string') ||
+    (candidate.type === 'webserver-config-result' &&
+      Array.isArray(candidate.webServers) &&
+      typeof candidate.probeEnv === 'object' &&
+      candidate.probeEnv !== null)
+  );
+}
+
+function forkChildEval(
+  configFilePath: string,
+  workspaceRoot: string,
+  env: NodeJS.ProcessEnv
+): Promise<ConfigEvaluation> {
+  return new Promise((resolve, reject) => {
+    // Startup env and project-root cwd mirror the inferred task, which runs
+    // `playwright test` from the project root: a NODE_OPTIONS loader runs at
+    // process start and resolves a relative path from there, whichever
+    // directory nx was invoked from.
+    const child = fork(workerScriptPath, [configFilePath, workspaceRoot], {
+      cwd: join(workspaceRoot, dirname(configFilePath)),
+      env,
+      stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+    });
+    let stderr = '';
+    child.stderr?.on('data', (chunk: Buffer) => {
+      if (stderr.length < MAX_STDERR) {
+        stderr += chunk.toString().slice(0, MAX_STDERR - stderr.length);
+      }
+    });
+    // Fold the worker's stderr into a failure so a crash before it can report
+    // over IPC (a missing module, a syntax error, a signal kill) is not
+    // surfaced as a bare exit code.
+    const withStderr = (message: string) => {
+      const tail = stderr.trim();
+      return tail ? `${message}\n${tail}` : message;
+    };
+    let settled = false;
+    const finish = (fn: () => void) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      child.removeAllListeners();
+      if (child.connected) {
+        child.disconnect();
+      }
+      fn();
+    };
+    const timer = setTimeout(() => {
+      // SIGKILL: the eval child holds no state that needs graceful teardown,
+      // and a config stuck in a busy loop would ignore SIGTERM anyway.
+      child.kill('SIGKILL');
+      finish(() =>
+        reject(
+          new Error(withStderr('Timed out evaluating the Playwright config'))
+        )
+      );
+    }, CHILD_EVAL_TIMEOUT);
+
+    child.on('message', (message: unknown) => {
+      // Anything that fails the guard came from the evaluated config itself;
+      // ignore it.
+      if (!isWorkerMessage(message)) {
+        return;
+      }
+      switch (message.type) {
+        case 'webserver-config-error':
+          finish(() => reject(new Error(withStderr(message.error))));
+          break;
+        case 'webserver-config-result':
+          finish(() =>
+            resolve({
+              webServers: message.webServers,
+              probeEnv: message.probeEnv,
+            })
+          );
+          break;
+        default: {
+          // A new message variant has to say how it settles the resolution.
+          const unhandled: never = message;
+          throw new Error(
+            `Unhandled worker message ${JSON.stringify(unhandled)}`
+          );
+        }
+      }
+    });
+    child.on('error', (error) => finish(() => reject(error)));
+    // `close` rather than `exit` so the stderr the failure folds in has fully
+    // flushed before the message is built. A worker that closes before sending a
+    // result (even with code 0, e.g. an IPC delivery failure) rejects here
+    // rather than hanging to the timeout; finish() no-ops once a result settled.
+    child.on('close', (code) => {
+      finish(() =>
+        reject(
+          new Error(
+            withStderr(
+              code
+                ? `Config evaluation worker exited with code ${code}`
+                : 'Config evaluation worker exited without resolving the web server address'
+            )
+          )
+        )
+      );
+    });
+  });
+}
+
+// Test seam: plugin unit tests replace the fork with an in-process evaluation
+// (the compiled worker only exists in dist) and concurrency tests use it to
+// control completion order. The fork itself is exercised against fixture
+// workers via _setWorkerScriptPath below.
+export function _setChildEval(impl: ChildEval | null): void {
+  childEval = impl ?? forkChildEval;
+}
+
+// Test seam: point the fork at a fixture worker so forkChildEval's own timeout,
+// exit and stderr handling can be exercised without the compiled worker.
+export function _setWorkerScriptPath(path: string | null): void {
+  workerScriptPath = path ?? join(__dirname, 'webserver-config-worker.js');
+}

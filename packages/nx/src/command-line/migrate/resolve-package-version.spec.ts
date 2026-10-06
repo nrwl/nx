@@ -1,24 +1,25 @@
-jest.mock('../../config/configuration', () => ({
-  readNxJson: jest.fn(() => ({})),
+import type { Mock, MockInstance } from 'vitest';
+vi.mock('../../config/configuration', () => ({
+  readNxJson: vi.fn(() => ({})),
 }));
-jest.mock('../../utils/catalog', () => ({
-  resolveCatalogReferenceIfNeeded: jest.fn((_pkg, version) => version),
+vi.mock('../../utils/catalog', () => ({
+  resolveCatalogReferenceIfNeeded: vi.fn((_pkg, version) => version),
 }));
-jest.mock('../../utils/package-manager', () => ({
-  resolvePackageVersionUsingRegistry: jest.fn(),
-  resolvePackageVersionUsingInstallation: jest.fn(),
+vi.mock('../../utils/package-manager', () => ({
+  resolvePackageVersionUsingRegistry: vi.fn(),
+  resolvePackageVersionUsingInstallation: vi.fn(),
 }));
-jest.mock('../../utils/min-release-age/policy', () => ({
-  readMinReleaseAgePolicy: jest.fn(),
+vi.mock('../../utils/min-release-age/policy', () => ({
+  readMinReleaseAgePolicy: vi.fn(),
 }));
-jest.mock('../../utils/min-release-age/resolve', () => ({
-  resolveCompliantVersion: jest.fn(),
+vi.mock('../../utils/min-release-age/resolve', () => ({
+  resolveCompliantVersion: vi.fn(),
 }));
-jest.mock('../../utils/min-release-age/pnpm-exclude-writer', () => ({
-  appendMinimumReleaseAgeExcludes: jest.fn(),
+vi.mock('../../utils/min-release-age/pnpm-exclude-writer', () => ({
+  appendMinimumReleaseAgeExcludes: vi.fn(),
 }));
-jest.mock('./safe-prompt', () => ({
-  migratePrompt: jest.fn(),
+vi.mock('./safe-prompt', () => ({
+  migrateConfirm: vi.fn(),
 }));
 
 import { readNxJson } from '../../config/configuration';
@@ -30,20 +31,20 @@ import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors'
 import { readMinReleaseAgePolicy } from '../../utils/min-release-age/policy';
 import { appendMinimumReleaseAgeExcludes } from '../../utils/min-release-age/pnpm-exclude-writer';
 import { resolveCompliantVersion } from '../../utils/min-release-age/resolve';
-import { migratePrompt } from './safe-prompt';
+import { migrateConfirm } from './safe-prompt';
 import {
   isRegistryResolutionEnabled,
   resetResolvePackageVersionState,
   resolvePackageVersionRespectingMinReleaseAge,
 } from './resolve-package-version';
 
-const mockReadNxJson = readNxJson as jest.Mock;
-const mockUsingRegistry = resolvePackageVersionUsingRegistry as jest.Mock;
-const mockUsingInstall = resolvePackageVersionUsingInstallation as jest.Mock;
-const mockReadPolicy = readMinReleaseAgePolicy as jest.Mock;
-const mockResolve = resolveCompliantVersion as jest.Mock;
-const mockWriteExcludes = appendMinimumReleaseAgeExcludes as jest.Mock;
-const mockPrompt = migratePrompt as jest.Mock;
+const mockReadNxJson = readNxJson as Mock;
+const mockUsingRegistry = resolvePackageVersionUsingRegistry as Mock;
+const mockUsingInstall = resolvePackageVersionUsingInstallation as Mock;
+const mockReadPolicy = readMinReleaseAgePolicy as Mock;
+const mockResolve = resolveCompliantVersion as Mock;
+const mockWriteExcludes = appendMinimumReleaseAgeExcludes as Mock;
+const mockPrompt = migrateConfirm as Mock;
 
 function pnpmPolicy(
   overrides: Partial<{
@@ -84,12 +85,12 @@ function violation(blocked: { version: string; publishedAt: string }[]) {
 
 describe('isRegistryResolutionEnabled', () => {
   const originalEnv = { ...process.env };
-  let warnSpy: jest.SpyInstance;
+  let warnSpy: MockInstance;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resetResolvePackageVersionState();
-    warnSpy = jest
-      .spyOn(require('../../utils/output').output, 'warn')
+    warnSpy = vi
+      .spyOn((await import('../../utils/output')).output, 'warn')
       .mockImplementation(() => {});
     delete process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION;
     delete process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH;
@@ -173,7 +174,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
 
   beforeEach(() => {
     resetResolvePackageVersionState();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     delete process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION;
     delete process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH;
     delete process.env.CI;
@@ -182,7 +183,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     mockUsingInstall.mockResolvedValue('install-resolved');
     // Mirror the writer's real contract: returns the entries it actually added.
     mockWriteExcludes.mockImplementation((_root, entries) => entries);
-    // The strict prompt gates on stdin (the surface enquirer reads).
+    // pnpm's strict prompt gates on stdin, and nx mirrors that gate.
     originalIsTTY = Object.getOwnPropertyDescriptor(
       process.stdin,
       'isTTY'
@@ -251,8 +252,8 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
   });
 
   it('logs a one-liner (deduped) when the pick differs from the unconstrained version', async () => {
-    const log = jest
-      .spyOn(require('../../utils/output').output, 'log')
+    const log = vi
+      .spyOn((await import('../../utils/output')).output, 'log')
       .mockImplementation(() => {});
     mockReadPolicy.mockResolvedValue(pnpmPolicy());
     mockResolve.mockResolvedValue({ version: '1.1.1', unconstrained: '1.2.0' });
@@ -268,10 +269,10 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     log.mockRestore();
   });
 
-  it('pnpm loose immature pick writes an exclude + heads-up when the PM writes excludes', async () => {
-    jest
-      .spyOn(require('../../utils/output').output, 'log')
-      .mockImplementation(() => {});
+  it('pnpm loose immature pick returns the version without writing an exclude (the real install writes it)', async () => {
+    // migrate does not replace the install, so the subsequent `pnpm install`
+    // (>=11.1.3) auto-writes the minimumReleaseAgeExclude entry itself. nx
+    // writing it here would be redundant and risks diverging from pnpm's pick.
     mockReadPolicy.mockResolvedValue(pnpmPolicy({ writesExcludes: true }));
     mockResolve.mockResolvedValue({
       version: '1.0.1',
@@ -279,51 +280,12 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
       immature: true,
     });
 
-    const result = await resolvePackageVersionRespectingMinReleaseAge(
-      'pkg-b',
-      '^1.0.0'
-    );
-    expect(result).toBe('1.0.1');
-    expect(mockWriteExcludes).toHaveBeenCalledWith(expect.any(String), [
-      'pkg-b@1.0.1',
-    ]);
-  });
-
-  it('pnpm loose immature pick on a version that does not write excludes installs silently', async () => {
-    mockReadPolicy.mockResolvedValue(pnpmPolicy({ writesExcludes: false }));
-    mockResolve.mockResolvedValue({
-      version: '1.0.1',
-      unconstrained: '1.0.1',
-      immature: true,
-    });
     const result = await resolvePackageVersionRespectingMinReleaseAge(
       'pkg-b',
       '^1.0.0'
     );
     expect(result).toBe('1.0.1');
     expect(mockWriteExcludes).not.toHaveBeenCalled();
-  });
-
-  it('does not repeat the heads-up when the exclude was already present', async () => {
-    const log = jest
-      .spyOn(require('../../utils/output').output, 'log')
-      .mockImplementation(() => {});
-    mockReadPolicy.mockResolvedValue(pnpmPolicy({ writesExcludes: true }));
-    mockResolve.mockResolvedValue({
-      version: '1.0.1',
-      unconstrained: '1.0.1',
-      immature: true,
-    });
-    // Writer reports nothing newly added (entry already present).
-    mockWriteExcludes.mockReturnValue([]);
-
-    await resolvePackageVersionRespectingMinReleaseAge('pkg-b', '^1.0.0');
-
-    const addedLogs = log.mock.calls.filter((c) =>
-      c[0].title.includes('Added pkg-b')
-    );
-    expect(addedLogs).toHaveLength(0);
-    log.mockRestore();
   });
 
   it('rethrows a violation when the policy is not pnpm strict + writesExcludes', async () => {
@@ -445,7 +407,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     mockResolve.mockRejectedValue(
       violation([{ version: '2.0.0', publishedAt: '6h ago' }])
     );
-    mockPrompt.mockResolvedValue({ approved: true });
+    mockPrompt.mockResolvedValue(true);
 
     const result = await resolvePackageVersionRespectingMinReleaseAge(
       'pkg-a',
@@ -466,7 +428,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
         { version: '2.0.0', publishedAt: '6h ago' },
       ])
     );
-    mockPrompt.mockResolvedValue({ approved: true });
+    mockPrompt.mockResolvedValue(true);
 
     const result = await resolvePackageVersionRespectingMinReleaseAge(
       'pkg-a',
@@ -483,7 +445,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     mockResolve.mockRejectedValue(
       violation([{ version: '2.0.0', publishedAt: '6h ago' }])
     );
-    mockPrompt.mockResolvedValue({ approved: false });
+    mockPrompt.mockResolvedValue(false);
 
     // The fetcher catch in migrate.ts only rethrows MinReleaseAgeViolationError;
     // a plain Error here would silently fall back to a real PM install.
@@ -511,7 +473,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
       .mockRejectedValueOnce(
         violation([{ version: '3.0.0', publishedAt: '5h ago' }])
       );
-    mockPrompt.mockResolvedValue({ approved: true });
+    mockPrompt.mockResolvedValue(true);
 
     await resolvePackageVersionRespectingMinReleaseAge('pkg-a', '^2.0.0');
     const second = await resolvePackageVersionRespectingMinReleaseAge(
@@ -546,5 +508,89 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     await expect(
       resolvePackageVersionRespectingMinReleaseAge('pkg-a', 'latest')
     ).rejects.toThrow('registry exploded');
+  });
+});
+
+describe('preapproved packages with min-release-age', () => {
+  it('preapproved packages (exact name and glob) bypass the min-release-age gate during resolution', async () => {
+    resetResolvePackageVersionState();
+    // Simulate yarn policy with npmMinimalAgeGate and npmPreapprovedPackages
+    mockReadPolicy.mockResolvedValue({
+      outcome: 'active',
+      policy: {
+        packageManager: 'yarn',
+        packageManagerVersion: '4.15.0',
+        cutoffMs: Date.now() - 24 * 60 * 60 * 1000, // 24 hours ago
+        windowMs: 24 * 60 * 60 * 1000,
+        sourceDescription: 'yarn npmMinimalAgeGate (1440 min)',
+        // isExcluded checks both exact name ('nx') and glob ('@nx/*')
+        isExcluded: (name: string, version: string) => {
+          return name === 'nx' || name.startsWith('@nx/');
+        },
+        behavior: { packageManager: 'yarn', missingVersionTime: 'pass' },
+      },
+    });
+
+    // Mock the resolution to return an immature version when it would be blocked,
+    // but isApproved() in the actual implementation checks isExcluded first
+    // so preapproved packages should resolve successfully even to fresh versions
+    mockResolve.mockResolvedValue({
+      version: '23.1.0-beta.0', // Fresh prerelease < 24h old
+      unconstrained: '23.1.0-beta.0',
+    });
+
+    // Both exact name and glob-matched packages should resolve to the immature version
+    const nxVersion = await resolvePackageVersionRespectingMinReleaseAge(
+      'nx',
+      '23.1.0-beta.0'
+    );
+    expect(nxVersion).toBe('23.1.0-beta.0');
+
+    const nxParserVersion = await resolvePackageVersionRespectingMinReleaseAge(
+      '@nx/parser',
+      '23.1.0-beta.0'
+    );
+    expect(nxParserVersion).toBe('23.1.0-beta.0');
+  });
+
+  it('non-preapproved packages are still gated by the min-release-age policy', async () => {
+    resetResolvePackageVersionState();
+    mockReadPolicy.mockResolvedValue({
+      outcome: 'active',
+      policy: {
+        packageManager: 'yarn',
+        packageManagerVersion: '4.15.0',
+        cutoffMs: Date.now() - 24 * 60 * 60 * 1000,
+        windowMs: 24 * 60 * 60 * 1000,
+        sourceDescription: 'yarn npmMinimalAgeGate (1440 min)',
+        // Only 'nx' and '@nx/*' are preapproved; other packages are not
+        isExcluded: (name: string, version: string) => {
+          return name === 'nx' || name.startsWith('@nx/');
+        },
+        behavior: { packageManager: 'yarn', missingVersionTime: 'pass' },
+      },
+    });
+
+    // A non-preapproved package hitting a violation should still be gated
+    const blocked = [
+      { version: '2.0.0-rc.0', publishedAt: new Date().toISOString() },
+    ];
+    mockResolve.mockRejectedValue(
+      new MinReleaseAgeViolationError({
+        packageManager: 'yarn',
+        packageName: 'some-other-pkg',
+        spec: '2.0.0-rc.0',
+        pmShapedDetail: 'All versions satisfying "2.0.0-rc.0" are quarantined',
+        blocked,
+        remediation: [],
+      })
+    );
+
+    await expect(
+      resolvePackageVersionRespectingMinReleaseAge(
+        'some-other-pkg',
+        '2.0.0-rc.0'
+      )
+    ).rejects.toThrow(MinReleaseAgeViolationError);
   });
 });

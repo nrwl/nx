@@ -16,7 +16,8 @@ import {
 } from '../../utils/min-release-age/policy';
 import { appendMinimumReleaseAgeExcludes } from '../../utils/min-release-age/pnpm-exclude-writer';
 import { resolveCompliantVersion } from '../../utils/min-release-age/resolve';
-import { migratePrompt } from './safe-prompt';
+import { migrateConfirm } from './safe-prompt';
+import { formatAge } from './text';
 
 /**
  * Whether nx migrate should resolve versions via the npm registry (fast) rather
@@ -189,10 +190,9 @@ async function resolveWithPolicy(
       );
     }
 
-    if (outcome.immature && applySideEffects) {
-      handleImmaturePick(packageName, outcome.version, policy);
-    }
-
+    // An immature loose pick is returned as-is. nx does not write the
+    // minimumReleaseAgeExclude entry here: migrate does not replace the install,
+    // so the real `pnpm install` (>=11.1.3) auto-writes it itself.
     return outcome.version;
   } catch (e) {
     // A side-effect-free probe never installs/prompts/writes, so any failure -
@@ -230,37 +230,6 @@ function reportChangedOutcome(
   });
 }
 
-// pnpm v11 loose installs an immature version; >=11.1.3 also records it as an
-// exclude in pnpm-workspace.yaml. Mirror that so a later real install agrees.
-function handleImmaturePick(
-  packageName: string,
-  version: string,
-  policy: MinReleaseAgePolicy
-): void {
-  if (
-    policy.behavior.packageManager !== 'pnpm' ||
-    !policy.behavior.writesExcludes
-  ) {
-    return;
-  }
-
-  const added = appendMinimumReleaseAgeExcludes(workspaceRoot, [
-    `${packageName}@${version}`,
-  ]);
-  // Already present (e.g. a prior pick or a pre-existing entry): nothing written,
-  // so do not claim we added it.
-  if (added.length === 0) {
-    return;
-  }
-
-  output.log({
-    title: `Added ${packageName}@${version} to minimumReleaseAgeExclude in pnpm-workspace.yaml.`,
-    bodyLines: [
-      `It is within the ${policy.sourceDescription} window; this mirrors what pnpm would write at install time.`,
-    ],
-  });
-}
-
 async function handleViolation(
   packageName: string,
   error: MinReleaseAgeViolationError,
@@ -294,20 +263,16 @@ async function handleViolation(
   // sorted newest-first, so the resolver's pick is the last entry. Mirror the
   // loose path: prompt for, exclude, and return that one version.
   const resolved = error.blocked[error.blocked.length - 1];
-  const blockedLine = `  ${packageName}@${resolved.version} (published ${formatPublishAge(
+  const blockedLine = `  ${packageName}@${resolved.version} (published ${formatAge(
     resolved.publishedAt
   )})`;
 
   // pnpm prompts once for the whole run; remember an approval for later picks.
   if (!strictApprovalGranted) {
-    const { approved } = await migratePrompt<{ approved: boolean }>([
-      {
-        name: 'approved',
-        type: 'confirm',
-        initial: false,
-        message: `The following version does not meet the ${policy.sourceDescription} constraint:\n${blockedLine}\nInstall anyway and add it to minimumReleaseAgeExclude in pnpm-workspace.yaml?`,
-      },
-    ]);
+    const approved = await migrateConfirm({
+      initial: false,
+      message: `The following version does not meet the ${policy.sourceDescription} constraint:\n${blockedLine}\nInstall anyway and add it to minimumReleaseAgeExclude in pnpm-workspace.yaml?`,
+    });
 
     if (!approved) {
       // Deny must surface as a violation: migrate.ts only rethrows
@@ -333,23 +298,4 @@ async function handleViolation(
   ]);
 
   return resolved.version;
-}
-
-// Renders a registry ISO publish timestamp as a human age for the strict prompt
-// (e.g. "6 hours ago"), falling back to the raw value when it is not parseable.
-function formatPublishAge(publishedAt: string): string {
-  const elapsedMs = Date.now() - Date.parse(publishedAt);
-  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
-    return publishedAt;
-  }
-  const minutes = Math.floor(elapsedMs / 60_000);
-  if (minutes < 60) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-  }
-  const hours = Math.floor(elapsedMs / 3_600_000);
-  if (hours < 48) {
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-  }
-  const days = Math.floor(elapsedMs / 86_400_000);
-  return `${days} day${days === 1 ? '' : 's'} ago`;
 }

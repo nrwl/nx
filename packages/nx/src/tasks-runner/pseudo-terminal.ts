@@ -8,14 +8,16 @@ import {
   killProcessTree,
   killProcessTreeGraceful,
 } from '../native';
+import { output } from '../utils/output';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 import { codeToSignal, messageToCode } from '../utils/exit-codes';
 
-// Register single event listeners for all pseudo-terminal instances
-const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
+// Kill any children still alive when Nx exits. Terminals remove themselves once
+// their children exit (see releaseChild), so finished runs skip a per-terminal scan.
+const activePseudoTerminals = new Set<PseudoTerminal>();
 process.on('exit', (code) => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb(code));
+  activePseudoTerminals.forEach((t) => t.shutdown(code));
 });
 
 export function createPseudoTerminal(skipSupportCheck: boolean = false) {
@@ -23,9 +25,7 @@ export function createPseudoTerminal(skipSupportCheck: boolean = false) {
     throw new Error('Pseudo terminal is not supported on this platform.');
   }
   const pseudoTerminal = new PseudoTerminal(new RustPseudoTerminal());
-  pseudoTerminalShutdownCallbacks.push(
-    pseudoTerminal.shutdown.bind(pseudoTerminal)
-  );
+  activePseudoTerminals.add(pseudoTerminal);
   return pseudoTerminal;
 }
 
@@ -70,6 +70,18 @@ export class PseudoTerminal {
     }
   }
 
+  // Once all children have exited, drop the process-exit handler and close IPC.
+  private releaseChild(cp: PseudoTtyProcess) {
+    this.childProcesses.delete(cp);
+    if (this.childProcesses.size === 0) {
+      activePseudoTerminals.delete(this);
+      if (this.initialized) {
+        this.pseudoIPC.close();
+        this.initialized = false;
+      }
+    }
+  }
+
   runCommand(
     command: string,
     {
@@ -95,9 +107,11 @@ export class PseudoTerminal {
         execArgv,
         quiet,
         tty
-      )
+      ),
+      quiet
     );
     this.childProcesses.add(cp);
+    cp.onExit(() => this.releaseChild(cp));
     return cp;
   }
 
@@ -134,9 +148,11 @@ export class PseudoTerminal {
         commandLabel
       ),
       id,
-      this.pseudoIPC
+      this.pseudoIPC,
+      quiet
     );
     this.childProcesses.add(cp);
+    cp.onExit(() => this.releaseChild(cp));
 
     await this.pseudoIPC.waitForChildReady(id);
 
@@ -163,11 +179,21 @@ export class PseudoTtyProcess implements RunningTask {
 
   constructor(
     public rustPseudoTerminal: RustPseudoTerminal,
-    private childProcess: ChildProcess
+    private childProcess: ChildProcess,
+    /**
+     * Whether the native side is suppressing this task's output. When it is
+     * not, Rust writes each chunk straight to our stdout, so `CLIOutput` has to
+     * be told - it never sees those writes and would otherwise assume the
+     * cursor is still at a line start.
+     */
+    private readonly quiet: boolean = false
   ) {
-    childProcess.onOutput((output) => {
-      this.terminalOutputChunks.push(output);
-      this.outputCallbacks.forEach((cb) => cb(output));
+    childProcess.onOutput((chunk) => {
+      if (!this.quiet) {
+        output.noteExternalWrite(chunk);
+      }
+      this.terminalOutputChunks.push(chunk);
+      this.outputCallbacks.forEach((cb) => cb(chunk));
     });
 
     childProcess.onExit((message) => {
@@ -222,8 +248,8 @@ export class PseudoTtyProcess implements RunningTask {
     }
   }
 
-  getParserAndWriter() {
-    return this.childProcess.getParserAndWriter();
+  getPtyHandles() {
+    return this.childProcess.getPtyHandles();
   }
 }
 
@@ -232,9 +258,10 @@ export class PseudoTtyProcessWithSend extends PseudoTtyProcess {
     public rustPseudoTerminal: RustPseudoTerminal,
     _childProcess: ChildProcess,
     private id: string,
-    private pseudoIpc: PseudoIPCServer
+    private pseudoIpc: PseudoIPCServer,
+    quiet: boolean = false
   ) {
-    super(rustPseudoTerminal, _childProcess);
+    super(rustPseudoTerminal, _childProcess, quiet);
   }
 
   send(message: Serializable) {

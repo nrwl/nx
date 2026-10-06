@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import { updateExposesProperty, createObjectEntry, findExposes } from './utils';
 import { Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('federate-module Utils', () => {
   let tree: Tree = null;

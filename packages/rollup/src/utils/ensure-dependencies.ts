@@ -1,8 +1,10 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { swcCoreVersion, swcHelpersVersion } from '@nx/js/internal';
 import { coreJsVersion, swcLoaderVersion, tsLibVersion } from './versions';
 
@@ -16,6 +18,11 @@ export function ensureDependencies(
 ): GeneratorCallback {
   switch (options.compiler) {
     case 'swc':
+      // @swc/core's postinstall only installs a wasm fallback for platforms not
+      // covered by its prebuilt optional dependencies, so skip it.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        '@swc/core': false,
+      });
       return addDependenciesToPackageJson(
         tree,
         {},
@@ -28,6 +35,10 @@ export function ensureDependencies(
         true
       );
     case 'babel':
+      // core-js' install script only prints a funding message.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        'core-js': false,
+      });
       return addDependenciesToPackageJson(
         tree,
         {},

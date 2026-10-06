@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { upsertBaseUrl } from './upsert-baseUrl';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('upsertBaseUrl', () => {
   let tree: Tree;

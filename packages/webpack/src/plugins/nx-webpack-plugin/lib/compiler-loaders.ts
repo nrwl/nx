@@ -44,6 +44,12 @@ export function createLoaderFromCompiler(
           transpileOnly: !hasPlugin,
           // https://github.com/TypeStrong/ts-loader/pull/685
           experimentalWatchApi: true,
+          // ts-loader 9.5.7+ forwards the tsconfig rootDir to transpileModule, so
+          // workspace lib sources bundled from source (outside the app rootDir)
+          // fail with TS6059. rootDir only governs emit layout, which webpack owns
+          // here (the default transpile path emits JS, not declarations), so widen
+          // it to the workspace root to clear the error without altering output.
+          compilerOptions: { rootDir: options.root },
           getCustomTransformers: (program) => ({
             before: compilerPluginHooks.beforeHooks.map((hook) =>
               hook(program)

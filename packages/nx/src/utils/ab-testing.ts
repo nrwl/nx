@@ -2,7 +2,34 @@ import { execSync } from 'node:child_process';
 import { isCI } from './is-ci';
 import { getPackageManagerCommand } from './package-manager';
 import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options';
-import * as pc from 'picocolors';
+import { terminalLink } from './terminal-link';
+import { httpRequest } from './http-client';
+
+export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
+export const NX_CLOUD_DEMO_URL = 'https://cloud.nx.app/demo/intro';
+
+/**
+ * Clickable Nx Cloud marketing link for cloud prompt footers. The visible text
+ * stays the clean `NX_CLOUD_URL` while clicks carry UTM attribution; terminals
+ * without OSC 8 support just render the bare URL (CLOUD-4642). The content tag
+ * is per-command because `nx init` and `nx migrate` share a footer but report
+ * different commands.
+ */
+export function nxCloudHyperlink(utmContent: string): string {
+  return trackedHyperlink(NX_CLOUD_URL, utmContent);
+}
+
+/** Same as `nxCloudHyperlink`, pointing at the Nx Cloud demo (CLOUD-4640). */
+export function nxCloudDemoHyperlink(utmContent: string): string {
+  return trackedHyperlink(NX_CLOUD_DEMO_URL, utmContent);
+}
+
+function trackedHyperlink(url: string, utmContent: string): string {
+  return terminalLink(
+    url,
+    `${url}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=${utmContent}`
+  );
+}
 
 /**
  * Meta payload types for recordStat telemetry (matches CNW format).
@@ -29,7 +56,7 @@ export type RecordStatMeta =
   | RecordStatMetaComplete
   | RecordStatMetaError;
 
-export type MessageOptionKey = 'yes' | 'skip' | 'never';
+export type MessageOptionKey = 'yes' | 'skip';
 
 interface MessageData {
   code: string;
@@ -49,10 +76,9 @@ const messageOptions: Record<string, MessageData[]> = {
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: pc.dim("No, don't ask again") },
       ],
       footer:
-        '\nFree for small teams. Remote caching and task distribution. 2-minute setup: https://nx.dev/nx-cloud',
+        '\nFree for small teams. Remote caching and task distribution. 2-minute setup:',
     },
     {
       code: 'cloud-self-healing-remote-cache',
@@ -61,9 +87,8 @@ const messageOptions: Record<string, MessageData[]> = {
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: pc.dim("No, don't ask again") },
       ],
-      footer: '\nLearn about it at https://nx.dev/nx-cloud',
+      footer: '\nLearn about it at',
       hint: `\n(it's free and can be disabled any time)`,
     },
   ],
@@ -80,7 +105,7 @@ const messageOptions: Record<string, MessageData[]> = {
         },
         { value: 'skip', name: 'No' },
       ],
-      footer: '\nRead more about Nx Cloud at https://nx.dev/nx-cloud',
+      footer: '\nRead more about Nx Cloud at',
       hint: `\n(it's free and can be disabled any time)`,
     },
   ],
@@ -126,20 +151,18 @@ export async function recordStat(opts: {
     if (!shouldRecordStats()) {
       return;
     }
-    const axios = require('axios');
-    await (axios['default'] ?? axios)
-      .create({
-        baseURL: getCloudUrl(),
-        timeout: 400,
-      })
-      .post('/nx-cloud/stats', {
+    await httpRequest(`${getCloudUrl()}/nx-cloud/stats`, {
+      method: 'POST',
+      timeout: 400,
+      data: {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
         meta: opts.meta
           ? JSON.stringify({ ...opts.meta, nxVersion: opts.nxVersion })
           : opts.nxVersion,
-      });
+      },
+    });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);

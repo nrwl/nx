@@ -1,6 +1,7 @@
 import {
   forEachExecutorOptions,
   NoTargetsToMigrateError,
+  findTargetDefault,
 } from '@nx/devkit/internal';
 import {
   formatFiles,
@@ -40,9 +41,18 @@ export async function convertToInferred(tree: Tree, options: Schema) {
 
       // Since targetDefaults for '@nx/rollup:rollup' will no longer apply, we want to copy them to the target options.
       const nxJson = readNxJson(tree);
-      const defaults = nxJson.targetDefaults['@nx/rollup:rollup'];
+      const defaults = findTargetDefault(nxJson?.targetDefaults, {
+        executor: '@nx/rollup:rollup',
+      });
       if (defaults) {
-        for (const [key, value] of Object.entries(defaults)) {
+        const {
+          target: _t,
+          executor: _e,
+          projects: _p,
+          plugin: _pl,
+          ...rest
+        } = defaults;
+        for (const [key, value] of Object.entries(rest)) {
           target[key] ??= value;
         }
       }

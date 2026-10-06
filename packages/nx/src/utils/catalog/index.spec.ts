@@ -2,6 +2,7 @@ import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/cre
 import type { Tree } from '../../generators/tree';
 import { writeJson } from '../../generators/utils/json';
 import { getCatalogDependenciesFromPackageJson } from './index';
+import { BunCatalogManager } from './bun-manager';
 import type { CatalogManager } from './manager';
 import { PnpmCatalogManager } from './pnpm-manager';
 import { YarnCatalogManager } from './yarn-manager';
@@ -164,6 +165,47 @@ catalogs:
             ['typescript', undefined],
             ['lodash', 'utils'],
             ['sharp', 'optional'],
+          ])
+        );
+      });
+    });
+
+    describe('with BunCatalogManager', () => {
+      let manager: CatalogManager;
+
+      beforeEach(() => {
+        manager = new BunCatalogManager();
+      });
+
+      it('should return empty map when package.json has no catalog dependencies', () => {
+        writeJson(tree, 'package.json', {
+          dependencies: { lodash: '^4.17.21' },
+        });
+
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
+
+        expect(result).toStrictEqual(new Map());
+      });
+
+      it('should return map with catalog dependencies', () => {
+        writeJson(tree, 'package.json', {
+          dependencies: { react: 'catalog:', lodash: 'catalog:other' },
+        });
+
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
+
+        expect(result).toStrictEqual(
+          new Map([
+            ['react', undefined],
+            ['lodash', 'other'],
           ])
         );
       });

@@ -1,8 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "module": "commonjs"
-  },
   "files": [],
   "include": [],
   "references": [
@@ -15,5 +12,8 @@
   ],
   "nx": {
     "addTypecheckTarget": false
+  },
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
   }
 }

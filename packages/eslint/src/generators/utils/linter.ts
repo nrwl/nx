@@ -6,4 +6,6 @@ export enum Linter {
   None = 'none',
 }
 
-export type LinterType = 'eslint' | 'none';
+// Canonical definition lives in `@nx/js` so linter-agnostic code can reach it
+// without depending on a specific linter plugin.
+export type { LinterType } from '@nx/js';

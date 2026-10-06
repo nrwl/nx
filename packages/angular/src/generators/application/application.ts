@@ -1,11 +1,13 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  logShowProjectCommand,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
-  generateFiles,
   GeneratorCallback,
   installPackagesTask,
-  joinPathFragments,
   offsetFromRoot,
   readNxJson,
   Tree,
@@ -16,11 +18,11 @@ import { assertSupportedAngularVersion } from '../../utils/assert-supported-angu
 import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
+import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
   getInstalledAngularDevkitVersion,
-  getInstalledAngularVersionInfo,
   versions,
 } from '../utils/version-utils';
 import {
@@ -100,7 +102,7 @@ export async function applicationGenerator(
       project: options.name,
       standalone: options.standalone,
       skipPackageJson: options.skipPackageJson,
-      serverRouting: options.serverRouting,
+      isRspack,
     });
   }
 
@@ -110,52 +112,33 @@ export async function applicationGenerator(
       skipInstall: options.skipPackageJson,
       skipFormat: true,
     });
-
-    if (options.ssr) {
-      const { major: angularMajorVersion } =
-        getInstalledAngularVersionInfo(tree);
-      generateFiles(
-        tree,
-        joinPathFragments(__dirname, './files/rspack-ssr'),
-        options.appProjectSourceRoot,
-        {
-          pathToDistFolder: joinPathFragments(
-            offsetFromRoot(options.appProjectRoot),
-            options.outputPath,
-            'browser'
-          ),
-          zoneless: options.zoneless,
-          useDefaultImport: angularMajorVersion >= 21,
-          angularMajorVersion,
-          tmpl: '',
-        }
-      );
-    }
   }
 
   if (!options.skipPackageJson) {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-
     const devDependencies: Record<string, string> = {};
     const packageVersions = versions(tree);
-    if (angularMajorVersion >= 20) {
-      const angularDevkitVersion =
-        getInstalledAngularDevkitVersion(tree) ??
-        packageVersions.angularDevkitVersion;
+    const angularDevkitVersion =
+      getInstalledAngularDevkitVersion(tree) ??
+      packageVersions.angularDevkitVersion;
 
-      if (options.bundler === 'esbuild') {
-        devDependencies['@angular/build'] = angularDevkitVersion;
-      } else if (isRspack) {
-        devDependencies['@angular/build'] = angularDevkitVersion;
-        devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
-      } else {
-        devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
-      }
+    if (options.bundler === 'esbuild') {
+      devDependencies['@angular/build'] = angularDevkitVersion;
+    } else if (isRspack) {
+      devDependencies['@angular/build'] = angularDevkitVersion;
+      devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+    } else {
+      devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
     }
     if (options.style === 'less') {
       devDependencies['less'] = packageVersions.lessVersion;
+      // less's postinstall only installs Playwright browsers, which nothing
+      // that consumes less needs.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        less: false,
+      });
     }
     if (Object.keys(devDependencies).length) {
+      acknowledgeAngularBuildScripts(tree);
       addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
     }
   }

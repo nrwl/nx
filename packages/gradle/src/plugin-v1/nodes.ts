@@ -1,4 +1,10 @@
-import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
+import {
+  calculateHashesForCreateNodes,
+  workspaceDataDirectory,
+  PluginCache,
+  findProjectForPath,
+  hashObject,
+} from '@nx/devkit/internal';
 import {
   CreateNodes,
   CreateNodesContext,
@@ -7,16 +13,12 @@ import {
   createNodesFromFiles,
 } from '@nx/devkit';
 import { basename, dirname, join } from 'node:path';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
-import { findProjectForPath } from 'nx/src/devkit-internals';
 
 import {
   populateGradleReport,
   getCurrentGradleReport,
   GradleReport,
 } from './utils/get-gradle-report';
-import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   gradleConfigAndTestGlob,
   gradleConfigGlob,

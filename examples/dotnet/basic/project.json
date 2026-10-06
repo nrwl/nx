@@ -1,0 +1,9 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "examples-dotnet-basic",
+  "targets": {
+    "validate-example": {
+      "outputs": ["{projectRoot}/**/bin", "{projectRoot}/**/obj"]
+    }
+  }
+}

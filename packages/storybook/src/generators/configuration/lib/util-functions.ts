@@ -16,7 +16,6 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import type { LinterType } from '@nx/eslint';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -28,6 +27,7 @@ import { StorybookConfigureSchema } from '../schema';
 import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 import { findEslintFile, useFlatConfig } from '@nx/eslint/internal';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import {
   findRuntimeTsConfigName,
   getProjectType,
@@ -96,9 +96,7 @@ export function addAngularStorybookTarget(
     options: {
       port: 4400,
       configDir: `${projectConfig.root}/.storybook`,
-      browserTarget: `${projectName}:${
-        ngBuildTarget ? 'build' : 'build-storybook'
-      }`,
+      browserTarget: `${projectName}:${ngBuildTarget ?? 'build-storybook'}`,
       compodoc: false,
     },
     configurations: {
@@ -114,9 +112,7 @@ export function addAngularStorybookTarget(
     options: {
       outputDir: joinPathFragments('dist/storybook', projectName),
       configDir: `${projectConfig.root}/.storybook`,
-      browserTarget: `${projectName}:${
-        ngBuildTarget ? 'build' : 'build-storybook'
-      }`,
+      browserTarget: `${projectName}:${ngBuildTarget ?? 'build-storybook'}`,
       compodoc: false,
     },
     configurations: {
@@ -470,7 +466,6 @@ export function normalizeSchema(
 ): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
-    linter: 'eslint' as LinterType,
     js: false,
   };
   return {
@@ -479,7 +474,10 @@ export function normalizeSchema(
   };
 }
 
-export function addStorybookToNamedInputs(tree: Tree) {
+export function addStorybookToNamedInputs(
+  tree: Tree,
+  schema: StorybookConfigureSchema
+) {
   const nxJson = readNxJson(tree);
 
   if (nxJson.namedInputs) {
@@ -503,6 +501,7 @@ export function addStorybookToNamedInputs(tree: Tree) {
       }
 
       if (
+        schema.uiFramework !== '@storybook/angular' &&
         !nxJson.namedInputs.production.includes(
           '!{projectRoot}/tsconfig.storybook.json'
         )
@@ -517,51 +516,46 @@ export function addStorybookToNamedInputs(tree: Tree) {
   }
 }
 
-export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
-  const nxJson = readNxJson(tree);
+export function addStorybookToTargetDefaults(
+  tree: Tree,
+  schema: StorybookConfigureSchema,
+  setCache = true
+) {
+  const nxJson = readNxJson(tree) ?? {};
 
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['build-storybook'] ??= {};
-  if (setCache) {
-    nxJson.targetDefaults['build-storybook'].cache ??= true;
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    target: 'build-storybook',
+  });
+
+  const inputs = existing?.inputs
+    ? [...existing.inputs]
+    : [
+        'default',
+        nxJson.namedInputs && 'production' in nxJson.namedInputs
+          ? '^production'
+          : '^default',
+      ];
+
+  if (!inputs.includes('{projectRoot}/.storybook/**/*')) {
+    inputs.push('{projectRoot}/.storybook/**/*');
   }
-  nxJson.targetDefaults['build-storybook'].inputs ??= [
-    'default',
-    nxJson.namedInputs && 'production' in nxJson.namedInputs
-      ? '^production'
-      : '^default',
-  ];
+
+  // Drop the negation glob so Storybook rebuilds when .storybook changes.
+  const negatedIndex = inputs.indexOf('!{projectRoot}/.storybook/**/*');
+  if (negatedIndex !== -1) inputs.splice(negatedIndex, 1);
 
   if (
-    !nxJson.targetDefaults['build-storybook'].inputs.includes(
-      '{projectRoot}/.storybook/**/*'
-    )
+    schema.uiFramework !== '@storybook/angular' &&
+    !inputs.includes('{projectRoot}/tsconfig.storybook.json')
   ) {
-    nxJson.targetDefaults['build-storybook'].inputs.push(
-      '{projectRoot}/.storybook/**/*'
-    );
+    inputs.push('{projectRoot}/tsconfig.storybook.json');
   }
 
-  // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
-  // because we want to rebuild Storybook if the .storybook folder changes
-  const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
-    '!{projectRoot}/.storybook/**/*'
-  );
-
-  if (index !== -1) {
-    nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
-  }
-
-  if (
-    !nxJson.targetDefaults['build-storybook'].inputs.includes(
-      '{projectRoot}/tsconfig.storybook.json'
-    )
-  ) {
-    nxJson.targetDefaults['build-storybook'].inputs.push(
-      '{projectRoot}/tsconfig.storybook.json'
-    );
-  }
-
+  upsertTargetDefault(tree, nxJson, {
+    target: 'build-storybook',
+    ...(setCache && existing?.cache === undefined ? { cache: true } : {}),
+    inputs,
+  });
   updateNxJson(tree, nxJson);
 }
 

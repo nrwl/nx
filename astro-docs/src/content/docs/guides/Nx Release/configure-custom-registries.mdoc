@@ -1,10 +1,10 @@
 ---
 title: Configure Custom Registries
-description: Learn how to configure Nx Release to publish packages to custom npm registries, including setting up multiple registries for different package scopes and per-package registry configuration.
+description: Configure .npmrc to publish with Nx Release to custom npm registries, including multiple registries with scopes and per-package registry configuration.
 filter: 'type:Guides'
 ---
 
-To publish JavaScript packages, Nx Release uses the `npm` CLI under the hood, which defaults to publishing to the `npm` registry (`https://registry.npmjs.org/`). If you need to publish to a different registry, you can configure the registry in the `.npmrc` file in the root of your workspace or at the project level in the project configuration.
+To publish JavaScript packages, Nx Release uses the `npm` CLI under the hood, which defaults to publishing to the `npm` registry (`https://registry.npmjs.org/`). If you need to publish to a different registry, you can configure the registry in the `.npmrc` file in the root of your workspace or at the project level in the project configuration. This covers private registries such as GitHub Packages, JFrog Artifactory, Azure Artifacts, and Verdaccio.
 
 ## Set the registry in the root .npmrc file
 
@@ -25,11 +25,11 @@ registry=https://my-custom-registry.com/
 //my-custom-registry.com/:_authToken=<TOKEN>
 ```
 
-See the [npm documentation](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc#auth-related-configuration) for more information.
+See the [npm documentation](https://docs.npmjs.com/cli/v11/configuring-npm/npmrc#auth-related-configuration) for more information.
 
-## Configure multiple registries
+## Configure multiple registries with npm scopes
 
-The recommended way to determine which registry packages are published to is by using [npm scopes](https://docs.npmjs.com/cli/v10/using-npm/scope). All packages with a name that starts with your scope will be published to the registry specified in the `.npmrc` file for that scope. Consider the following example:
+The recommended way to determine which registry packages are published to is by using [npm scopes](https://docs.npmjs.com/cli/v11/using-npm/scope). All packages with a name that starts with your scope will be published to the registry specified in the `.npmrc` file for that scope. Consider the following example:
 
 ```bash
 // .npmrc
@@ -113,3 +113,7 @@ The publish step of Nx Release is responsible for publishing the package to the 
 
 It is not recommended to set the registry for a package in the `publishConfig` property of its `package.json` file. `npm publish` will always prefer the registry from the `publishConfig` over the `--registry` argument.
 Because of this, the `--registry` CLI and programmatic API options of Nx Release will no longer be able to override the registry for purposes such as publishing locally for end to end testing.
+
+{% aside type="tip" title="Test publishing against a local registry" %}
+To verify your registry configuration without publishing anything real, run a local Verdaccio registry and point `nx release` at it. See [update the local registry setup](/docs/guides/nx-release/update-local-registry-setup).
+{% /aside %}

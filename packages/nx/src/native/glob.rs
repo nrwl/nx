@@ -3,11 +3,15 @@ mod glob_group;
 mod glob_parser;
 pub mod glob_transform;
 
+pub(crate) use crate::native::glob::glob_parser::{literal_segment, parse_glob};
 use crate::native::glob::glob_transform::convert_glob;
+pub(crate) use crate::native::glob::glob_transform::{
+    expand_literal_braces, fileset_patterns, normalize_glob, partition_glob,
+};
 use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::fmt::Debug;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 use tracing::trace;
 
@@ -42,8 +46,10 @@ impl NxGlobSetBuilder {
             glob_string
         };
 
+        // `\` escapes on every platform, so a glob means the same thing everywhere.
         let glob = GlobBuilder::new(&glob_string)
             .literal_separator(true)
+            .backslash_escape(true)
             .build()
             .map_err(anyhow::Error::from)?;
 
@@ -56,10 +62,11 @@ impl NxGlobSetBuilder {
         Ok(self)
     }
 
-    pub fn build(&self) -> anyhow::Result<NxGlobSet> {
+    pub fn build(&self, literal_prefix: Option<PathBuf>) -> anyhow::Result<NxGlobSet> {
         Ok(NxGlobSet {
             excluded_globs: self.excluded_globs.build()?,
             included_globs: self.included_globs.build()?,
+            literal_prefix,
         })
     }
 }
@@ -68,8 +75,13 @@ impl NxGlobSetBuilder {
 pub struct NxGlobSet {
     included_globs: GlobSet,
     excluded_globs: GlobSet,
+    literal_prefix: Option<PathBuf>,
 }
 impl NxGlobSet {
+    pub(crate) fn literal_prefix(&self) -> Option<&Path> {
+        self.literal_prefix.as_deref()
+    }
+
     pub fn is_match<P: AsRef<Path>>(&self, path: P) -> bool {
         if self.included_globs.is_empty() {
             !self.excluded_globs.is_match(path.as_ref())
@@ -82,19 +94,90 @@ impl NxGlobSet {
     }
 }
 
+fn common_glob_prefix(globs: &[String]) -> Option<PathBuf> {
+    let mut common: Option<PathBuf> = None;
+    for glob in globs {
+        if glob.starts_with('!') {
+            continue;
+        }
+        let (directory, _) = partition_glob(&normalize_glob(glob.as_str()));
+        // Drive letters and lossy names cannot safely index the raw file map.
+        if directory.contains([':', '\u{fffd}'])
+            || directory
+                .split('/')
+                .any(|part| part.is_empty() || part == "." || part == "..")
+        {
+            return None;
+        }
+        let directory = PathBuf::from(directory);
+        let prefix = match common {
+            None => directory,
+            Some(prefix) => prefix
+                .components()
+                .zip(directory.components())
+                .take_while(|(left, right)| left == right)
+                .map(|(component, _)| component)
+                .collect::<PathBuf>(),
+        };
+        if prefix.as_os_str().is_empty() {
+            return None;
+        }
+        common = Some(prefix);
+    }
+    common
+}
+
+/// Splits a glob that is a single top-level brace group (`{a,b,c}`) into its
+/// alternatives, so each can be extglob-converted independently; returns
+/// anything else unchanged. A glob that starts with `{` and ends with `}` can
+/// still be several groups (`{a,b}/x.{c,d}`), which globset expands natively,
+/// so only a group whose opening brace closes at the final character is split.
+/// The common path returns a borrowing `Once` to stay allocation-free.
 fn potential_glob_split(
     glob: &str,
-) -> itertools::Either<std::str::Split<'_, char>, std::iter::Once<&str>> {
+) -> itertools::Either<std::vec::IntoIter<&str>, std::iter::Once<&str>> {
     use itertools::Either::*;
-    if glob.starts_with('{') && glob.ends_with('}') {
-        Left(glob.trim_matches('{').trim_end_matches('}').split(','))
-    } else {
-        Right(std::iter::once(glob))
+    let bytes = glob.as_bytes();
+    if bytes.first() != Some(&b'{') || bytes.last() != Some(&b'}') {
+        return Right(std::iter::once(glob));
     }
+
+    // Not a single group if the opening brace closes before the final char.
+    let mut depth = 0usize;
+    for (i, &b) in bytes.iter().enumerate() {
+        match b {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 && i != bytes.len() - 1 {
+                    return Right(std::iter::once(glob));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // Split on commas at the outer depth, leaving any nested `{...}` intact.
+    let inner = &glob[1..bytes.len() - 1];
+    let mut parts = Vec::new();
+    let mut depth = 0usize;
+    let mut start = 0usize;
+    for (i, &b) in inner.as_bytes().iter().enumerate() {
+        match b {
+            b'{' => depth += 1,
+            b'}' => depth -= 1,
+            b',' if depth == 0 => {
+                parts.push(&inner[start..i]);
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    parts.push(&inner[start..]);
+    Left(parts.into_iter())
 }
 
 pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<Arc<NxGlobSet>> {
-    // Build cache key from sorted globs joined by null byte (cannot appear in glob strings)
     let mut sorted_globs: Vec<&str> = globs.iter().map(|s| s.as_ref()).collect();
     sorted_globs.sort();
     let cache_key = sorted_globs.join("\0");
@@ -106,43 +189,134 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     let result = globs
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
-        .map(|glob| {
-            if glob.contains('!') || glob.contains('|') || glob.contains('(') || glob.contains("{,")
-            {
-                convert_glob(glob)
-            } else {
-                Ok(vec![glob.to_string()])
-            }
-        })
+        .map(convert_glob)
         .collect::<anyhow::Result<Vec<_>>>()?
         .concat();
 
     trace!(?globs, ?result, "converted globs");
 
-    let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build()?);
+    let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build(common_glob_prefix(&result))?);
     GLOB_CACHE.insert(cache_key, Arc::clone(&glob_set));
     Ok(glob_set)
 }
 
-pub(crate) fn contains_glob_pattern(value: &str) -> bool {
-    value.contains('!')
-        || value.contains('?')
-        || value.contains('@')
-        || value.contains('+')
-        || value.contains('*')
-        || value.contains('|')
-        || value.contains(',')
-        || value.contains('{')
-        || value.contains('}')
-        || value.contains('[')
-        || value.contains(']')
-        || value.contains('(')
-        || value.contains(')')
+#[napi]
+/// Checks which `paths` match the given `globs`, using the same glob engine
+/// as the task hasher (`build_glob_set`). Used to statically match
+/// `dependentTasksOutputFiles` globs against candidate paths.
+pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Result<Vec<bool>> {
+    let glob_set = build_glob_set(&globs)?;
+    Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::native::utils::Normalize;
+
+    /// Pins convert_glob, partition_glob and the narrowing prefix for a corpus
+    /// of real globs, so a change to them shows up as a snapshot diff.
+    #[test]
+    fn glob_readers_agree_with_the_recorded_corpus() {
+        let corpus = include_str!("glob/fixtures/glob_corpus.txt");
+        let mut report = String::new();
+        for glob in corpus.lines() {
+            let converted = match convert_glob(glob) {
+                Ok(globs) => format!("{globs:?}"),
+                Err(_) => "error".into(),
+            };
+            let prefix = match build_glob_set(&[glob]) {
+                // Normalized so a prefix rebuilt from components prints `/` on Windows too.
+                Ok(set) => format!(
+                    "{:?}",
+                    set.literal_prefix().map(|p| p.to_normalized_string())
+                ),
+                Err(_) => "error".into(),
+            };
+            report.push_str(&format!(
+                "{glob}\n  convert: {converted}\n  partition: {:?}\n  prefix: {prefix}\n",
+                partition_glob(glob),
+            ));
+        }
+        insta::assert_snapshot!(report);
+    }
+
+    #[test]
+    fn jest_extglobs_narrow_to_a_shared_ancestor() {
+        let globs = [
+            "e2e/深/左/**/+(*.)+(spec|test).+(ts|js)?(x)",
+            "e2e/深/右/**",
+        ];
+        assert_eq!(
+            build_glob_set(&globs).unwrap().literal_prefix(),
+            Some(Path::new("e2e/深"))
+        );
+        for globs in [vec!["!e2e/react/**"], vec![]] {
+            assert!(build_glob_set(&globs).unwrap().literal_prefix().is_none());
+        }
+    }
+
+    #[test]
+    fn a_backslash_in_a_prefix_escapes_on_every_platform() {
+        // `\` escapes, as globset reads it: `\r` is `r`.
+        let expected = [None, Some("e2ereact"), Some("e2ereact*.spec.ts")];
+        for (pattern, expected) in [
+            r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)",
+            r"e2e\react/**/*.spec.ts",
+            r"e2e\react\*.spec.ts",
+        ]
+        .into_iter()
+        .zip(expected)
+        {
+            let globs = [pattern.to_string()];
+            assert_eq!(
+                build_glob_set(&globs).unwrap().literal_prefix(),
+                expected.map(Path::new),
+                "{pattern}"
+            );
+        }
+    }
+
+    #[test]
+    fn should_not_strip_literal_chars_from_plain_negated_globs() {
+        // A leading `!` is not extglob syntax. Routing a plain exclusion
+        // through convert_glob because of it used to eat the `@`/`+`, so the
+        // exclusion matched nothing at all.
+        let glob_set = build_glob_set(&["dist/**", "!dist/libs/@scope/pkg/.cache/**"]).unwrap();
+        assert!(glob_set.is_match("dist/libs/@scope/pkg/index.js"));
+        assert!(!glob_set.is_match("dist/libs/@scope/pkg/.cache/x"));
+
+        let glob_set = build_glob_set(&["dist/**", "!dist/libs/a+b/.cache/**"]).unwrap();
+        assert!(!glob_set.is_match("dist/libs/a+b/.cache/x"));
+
+        // A `+` that begins no group is a literal `+`, so this excludes
+        // `b.+spec.ts` and not `b.spec.ts`. The shipped default inputs write
+        // the group out, `+(spec|test)`, and are unaffected.
+        let glob_set = build_glob_set(&["libs/**/*", "!libs/**/?(*.)+spec.ts?(.snap)"]).unwrap();
+        assert!(!glob_set.is_match("libs/a/b.+spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.ts"));
+
+        // The well-formed default still excludes what it always did.
+        let glob_set =
+            build_glob_set(&["libs/**/*", "!libs/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"]).unwrap();
+        assert!(!glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(!glob_set.is_match("libs/a/b.test.tsx"));
+        assert!(glob_set.is_match("libs/a/b.ts"));
+    }
+
+    #[test]
+    fn should_match_glob_paths() {
+        let result = match_glob_paths(
+            vec!["**/*.d.ts".to_string()],
+            vec![
+                "dist/libs/dep/index.d.ts".to_string(),
+                "dist/libs/dep/index.js".to_string(),
+            ],
+        )
+        .unwrap();
+        assert_eq!(result, vec![true, false]);
+    }
 
     #[test]
     fn should_work_with_simple_globs() {
@@ -378,7 +552,111 @@ mod test {
     }
 
     #[test]
-    fn should_handle_invalid_group_globs() {
+    fn a_double_backslash_matches_a_literal_backslash() {
+        let glob_set = build_glob_set(&[r"libs/a\\b/**", r"x\\(y)"]).unwrap();
+        assert!(glob_set.is_match(r"libs/a\b/c.ts"));
+        assert!(!glob_set.is_match("libs/a/b/c.ts"));
+        // `\\(` is a literal `\` followed by a real group.
+        assert!(glob_set.is_match(r"x\y"));
+        assert_eq!(literal_segment(r"a\\b").as_deref(), Some(r"a\b"));
+    }
+
+    /// The Nx Cloud client escapes these before writing a path into a snapshot.
+    fn escape_literal(path: &str) -> String {
+        path.chars()
+            .flat_map(|c| {
+                let escape = matches!(
+                    c,
+                    '\\' | '*' | '?' | '[' | ']' | '{' | '}' | '(' | ')' | '!'
+                );
+                escape.then_some('\\').into_iter().chain([c])
+            })
+            .collect()
+    }
+
+    #[test]
+    fn every_escaped_literal_path_matches_only_itself() {
+        let names = [
+            "(group)", "a(b", "a)b", "!name", "a!b", "!(x)", "?(x)", "+(x)", "@(x)", "*(x)",
+            "a+(b)", "@scope", "a{,b}", "{a,b}", "a,b", "a|b", "[id]", "[!x]", "a*b", "a?b",
+            r"a\b", r"a\(b", "{,", "}", "]", "a b", "雪(x)",
+        ];
+        for name in names {
+            let path = format!("libs/{name}/x.ts");
+            let glob = escape_literal(&path);
+            let glob_set = build_glob_set(&[glob.as_str()])
+                .unwrap_or_else(|e| panic!("{glob:?} failed to build: {e}"));
+            assert!(glob_set.is_match(&path), "{glob:?} should match {path:?}");
+            assert!(
+                !glob_set.is_match("libs/x/x.ts"),
+                "{glob:?} matched a sibling"
+            );
+            assert_eq!(
+                literal_segment(&escape_literal(name)).as_deref(),
+                Some(name),
+                "{name:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_escaped_brace_and_comma_stay_literal() {
+        let glob_set = build_glob_set(&[r"libs/a\{,b\}/x.ts"]).unwrap();
+        assert!(glob_set.is_match("libs/a{,b}/x.ts"));
+        assert!(!glob_set.is_match("libs/a/x.ts"));
+        assert!(!glob_set.is_match("libs/ab/x.ts"));
+        assert_eq!(literal_segment(r"a\{,b\}").as_deref(), Some("a{,b}"));
+    }
+
+    #[test]
+    fn a_backslash_escaped_parenthesis_matches_literally() {
+        let glob_set = build_glob_set(&[r"app/\(marketing\)/**"]).unwrap();
+        assert!(glob_set.is_match("app/(marketing)/page.tsx"));
+        assert!(!glob_set.is_match("app/marketing/page.tsx"));
+    }
+
+    #[test]
+    fn a_class_matches_a_literal_parenthesis() {
+        let glob_set = build_glob_set(&["app/[(]marketing[)]/**"]).unwrap();
+        assert!(glob_set.is_match("app/(marketing)/page.tsx"));
+        assert!(!glob_set.is_match("app/xmarketingx/page.tsx"));
+        assert!(!glob_set.is_match("app/marketing/page.tsx"));
+    }
+
+    #[test]
+    fn supports_multiple_brace_groups() {
+        // The vite/vitest generators write this include; for a workspace-root
+        // project it reaches the native glob unprefixed, so it starts with `{`,
+        // ends with `}`, and spans three groups.
+        let glob_set =
+            build_glob_set(&["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"])
+                .unwrap();
+        assert!(glob_set.is_match("src/a.spec.ts"));
+        assert!(glob_set.is_match("tests/b.test.tsx"));
+        assert!(glob_set.is_match("src/deep/c.spec.mts"));
+        assert!(!glob_set.is_match("src/helper.ts"));
+        assert!(!glob_set.is_match("lib/a.spec.ts"));
+    }
+
+    #[test]
+    fn potential_glob_split_only_splits_a_single_enclosing_group() {
+        let split = |glob| potential_glob_split(glob).collect::<Vec<_>>();
+        // A single top-level group is split so each branch converts on its own.
+        assert_eq!(split("{a,b,c}"), vec!["a", "b", "c"]);
+        // Multiple groups spanning the string are left whole for globset.
+        assert_eq!(
+            split("{src,tests}/**/*.{test,spec}.{js,ts}"),
+            vec!["{src,tests}/**/*.{test,spec}.{js,ts}"]
+        );
+        // A comma nested inside a group is not a split point.
+        assert_eq!(split("{a,@(b|c).{d,e}}"), vec!["a", "@(b|c).{d,e}"]);
+        // Not a single enclosing group -> unchanged.
+        assert_eq!(split("{a,b}/*"), vec!["{a,b}/*"]);
+        assert_eq!(split("src/**/*.ts"), vec!["src/**/*.ts"]);
+    }
+
+    #[test]
+    fn a_malformed_extglob_is_read_literally() {
         let glob_set = build_glob_set(&[
             "libs/**/*",
             "!libs/**/?(*.)+spec.ts?(.snap)",
@@ -390,6 +668,9 @@ mod test {
         .unwrap();
 
         assert!(glob_set.is_match("libs/src/index.ts"));
-        assert!(!glob_set.is_match("libs/src/index.spec.ts"));
+        // `+spec.ts` names a file called that, and no longer stands in for
+        // `spec.ts`, so a real spec file is not excluded by it.
+        assert!(glob_set.is_match("libs/src/index.spec.ts"));
+        assert!(!glob_set.is_match("libs/src/index.+spec.ts"));
     }
 }

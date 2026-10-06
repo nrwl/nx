@@ -6,8 +6,26 @@
   "targets": {
     "next:build": {
       "dependsOn": ["^build", "^typecheck", "typecheck"],
+      "//": "Tailwind forwards each @source dir in styles/main.css to the bundler without its @source not excludes, so keep the spec inputs in sync with those dirs",
       "inputs": [
-        "...",
+        "production",
+        "^production",
+        "{projectRoot}/{pages,app}/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-animations/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-blog/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-common/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-courses/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-fence/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-icons/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-markdoc/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-primitives/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-references/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-theme/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/ui-video-courses/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/feature-ai/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/feature-analytics/src/**/*.{spec,test,stories}.*",
+        "{workspaceRoot}/nx-dev/feature-search/src/**/*.{spec,test,stories}.*",
+        { "externalDependencies": ["next"] },
         { "dependentTasksOutputFiles": "**/*", "transitive": true },
         { "env": "NEXT_PUBLIC_ASTRO_URL" },
         { "env": "NX_DEV_URL" },
@@ -28,7 +46,7 @@
         { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
       "outputs": ["{workspaceRoot}/nx-dev/nx-dev/public/sitemap*.xml"],
-      "command": "pnpm next-sitemap --config ./next-sitemap.config.js && node ./scripts/patch-sitemap-index.mjs",
+      "command": "next-sitemap --config ./next-sitemap.config.js && node ./scripts/patch-sitemap-index.mjs",
       "options": {
         "cwd": "nx-dev/nx-dev"
       }

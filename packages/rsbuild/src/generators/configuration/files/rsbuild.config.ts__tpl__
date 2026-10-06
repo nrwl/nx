@@ -11,7 +11,12 @@ export default defineConfig({
         port: <%= devServerPort %>
     },
     output: {
-        target: '<%= target %>',
+        target: '<%= target %>',<% if (useMjsOutput) { %>
+        // @rsbuild/core@2 emits ESM for Node targets. Emit .mjs so the
+        // output runs without a `"type": "module"` package.json.
+        filename: {
+            js: '[name].mjs',
+        },<% } %>
         distPath: {
             root: 'dist',
         },

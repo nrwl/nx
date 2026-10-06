@@ -4,7 +4,10 @@ test.describe('CLI sub-command formatting', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/docs/reference/nx-commands');
     await expect(
-      page.getByRole('heading', { name: 'Nx Commands' })
+      page.getByRole('heading', {
+        name: 'Nx CLI Command Reference',
+        level: 1,
+      })
     ).toBeVisible();
   });
 

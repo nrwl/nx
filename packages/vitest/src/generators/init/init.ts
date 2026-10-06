@@ -1,7 +1,13 @@
-import { addPlugin } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  addPlugin,
+  upsertTargetDefault,
+  findTargetDefault,
+} from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
+  detectPackageManager,
   readNxJson,
   addDependenciesToPackageJson,
   formatFiles,
@@ -9,10 +15,11 @@ import {
   updateNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
+import { coerce, major } from 'semver';
 import { InitGeneratorSchema } from './schema';
 import {
   nxVersion,
-  vitestVersion,
+  versions,
   viteV5Version,
   viteV6Version,
   viteV7Version,
@@ -39,12 +46,23 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
           ? viteV7Version
           : viteVersion;
 
+  // Vite below 8 depends on esbuild (8 bundles rolldown instead), whose install
+  // script only validates the prebuilt binary that ships as an optional
+  // dependency.
+  if (major(coerce(viteVersionToUse)) < 8) {
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      esbuild: false,
+    });
+  }
+
   return addDependenciesToPackageJson(
     tree,
     {},
     {
       '@nx/vitest': nxVersion,
-      vitest: vitestVersion,
+      // The range about to be installed is passed for the case where the
+      // workspace has no vite of its own; it constrains the vitest major.
+      vitest: versions(tree, { viteRange: viteVersionToUse }).vitestVersion,
       vite: viteVersionToUse,
     },
     undefined,
@@ -53,7 +71,7 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
 }
 
 export function updateNxJsonSettings(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
@@ -70,13 +88,17 @@ export function updateNxJsonSettings(tree: Tree) {
   );
 
   if (!hasPlugin) {
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['@nx/vitest:test'] ??= {};
-    nxJson.targetDefaults['@nx/vitest:test'].cache ??= true;
-    nxJson.targetDefaults['@nx/vitest:test'].inputs ??= [
-      'default',
-      productionFileSet ? '^production' : '^default',
-    ];
+    const existing = findTargetDefault(nxJson.targetDefaults, {
+      executor: '@nx/vitest:test',
+    });
+    upsertTargetDefault(tree, nxJson, {
+      executor: '@nx/vitest:test',
+      cache: existing?.cache ?? true,
+      inputs: existing?.inputs ?? [
+        'default',
+        productionFileSet ? '^production' : '^default',
+      ],
+    });
   }
 
   updateNxJson(tree, nxJson);

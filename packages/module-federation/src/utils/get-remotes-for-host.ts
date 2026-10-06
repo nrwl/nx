@@ -6,11 +6,11 @@ import {
   ProjectGraphProjectNode,
 } from '@nx/devkit';
 import { loadTsFile } from '@nx/js/internal';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import * as pc from 'picocolors';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { ModuleFederationConfig } from './models';
+import { findMatchingProjects } from '@nx/devkit/internal';
 
 interface ModuleFederationExecutorContext {
   projectName: string;

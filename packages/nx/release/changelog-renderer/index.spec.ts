@@ -3,8 +3,8 @@ import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/rele
 import { GithubRemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/github';
 import DefaultChangelogRenderer from './index';
 
-jest.mock('../../src/project-graph/file-map-utils', () => ({
-  createFileMapUsingProjectGraph: jest.fn().mockImplementation(() => {
+vi.mock('../../src/project-graph/file-map-utils', () => ({
+  createFileMapUsingProjectGraph: vi.fn().mockImplementation(() => {
     return Promise.resolve({
       allWorkspaceFiles: [],
       fileMap: {
@@ -183,6 +183,126 @@ describe('ChangelogRenderer', () => {
 
                   - James Henry"
               `);
+      });
+
+      it('should not collect empty author emails (which would otherwise be attributed to the "find" user via ungh)', async () => {
+        const applyUsernameSpy = vi
+          .spyOn(remoteReleaseClient, 'applyUsernameToAuthors')
+          .mockResolvedValue(undefined);
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [
+                {
+                  name: 'Test User',
+                  email: '',
+                },
+              ],
+              body: '"\n\nM\tpackages/pkg-a/src/index.ts\n"',
+              description: 'a change with no author email',
+              type: 'fix',
+              scope: 'pkg-a',
+              githubReferences: [{ value: 'abc1234', type: 'hash' }],
+              isBreaking: false,
+              revertedHashes: [],
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+            applyUsernameToAuthors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+
+        expect(applyUsernameSpy).toHaveBeenCalledTimes(1);
+        const passedAuthors = applyUsernameSpy.mock.calls[0][0];
+        // The empty email must not have been collected, so there is nothing to
+        // look up against ungh and no chance of attributing it to the "find" user.
+        expect([...passedAuthors.get('Test User').email]).toEqual([]);
+        // The author is still credited, just without an @handle.
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - **pkg-a:** a change with no author email
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
+
+        applyUsernameSpy.mockRestore();
+      });
+
+      it('should exclude AI coding agents from the Thank You section', async () => {
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [
+                { name: 'James Henry', email: 'jh@example.com' },
+                // A human whose name happens to match an agent's must still be thanked
+                { name: 'Claude Dubois', email: 'claude.dubois@example.com' },
+                // One email, many display names, because the names track model versions
+                { name: 'Claude', email: 'noreply@anthropic.com' },
+                {
+                  name: 'Claude Opus 5 (1M context)',
+                  email: 'noreply@anthropic.com',
+                },
+                { name: 'Claude Sonnet 5', email: 'noreply@anthropic.com' },
+                { name: 'Claude Code', email: 'claude@anthropic.com' },
+                { name: 'Amp', email: 'amp@ampcode.com' },
+                { name: 'Cursor Agent', email: 'cursoragent@cursor.com' },
+                { name: 'OpenHands', email: 'opendevin@all-hands.dev' },
+                // The Copilot coding agent commits under both of these spellings
+                { name: 'Copilot', email: 'Copilot@users.noreply.github.com' },
+                {
+                  name: 'copilot-swe-agent[bot]',
+                  email: '198982749+Copilot@users.noreply.github.com',
+                },
+              ],
+              body: '"\n\nM\tpackages/pkg-a/src/index.ts\n"',
+              description: 'a change co-authored by agents',
+              type: 'fix',
+              scope: 'pkg-a',
+              githubReferences: [{ value: 'abc1234', type: 'hash' }],
+              isBreaking: false,
+              revertedHashes: [],
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - **pkg-a:** a change co-authored by agents
+
+          ### ❤️ Thank You
+
+          - Claude Dubois
+          - James Henry"
+        `);
       });
 
       it('should not generate a Thank You section when changelogRenderOptions.authors is false', async () => {
@@ -1009,6 +1129,127 @@ A	packages/nx/src/migrations/update-22-0-0/consolidate-release-tag-config.ts
           ### ❤️ Thank You
 
           - James Henry"
+        `);
+      });
+
+      it('should stop the breaking change explanation at trailing PR body sections and metadata', async () => {
+        const breakingChangeFollowedByPrBody: ChangelogChange = {
+          shortHash: '192f66811',
+          authors: [{ name: 'Test User', email: 'test@example.com' }],
+          body: `## Current behavior
+
+Angular v22 is not supported.
+
+## Expected behavior
+
+Angular v22 should be supported.
+
+BREAKING CHANGE: Angular v19 is no longer supported.
+
+## Related issues
+
+Fixes #35910
+
+<!-- polygraph-session-start -->
+---
+[View session information ↗](https://app.trypolygraph.com/orgs/example/sessions/angular-v22)
+<!-- polygraph-session-end -->
+
+---------
+
+Co-authored-by: nx-cloud[bot] <71083854+nx-cloud[bot]@users.noreply.github.com>"
+
+M	packages/angular/src/utils/versions.ts
+"`,
+          description: 'support angular v22',
+          type: 'feat',
+          scope: 'angular',
+          githubReferences: [
+            { type: 'pull-request', value: '#35851' },
+            { value: '192f66811', type: 'hash' },
+          ],
+          isBreaking: true,
+          revertedHashes: [],
+          affectedProjects: ['angular'],
+        };
+
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [breakingChangeFollowedByPrBody],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: { authors: true, commitReferences: true },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🚀 Features
+
+          - ⚠️  **angular:** support angular v22 ([#35851](https://example.com/example/example/pull/35851))
+
+          ### ⚠️  Breaking Changes
+
+          - **angular:** support angular v22  ([#35851](https://example.com/example/example/pull/35851))
+            Angular v19 is no longer supported.
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
+      });
+
+      it('should strip HTML comments from the explanation without truncating the text around them', async () => {
+        const breakingChangeWithInlineComment: ChangelogChange = {
+          shortHash: 'def456',
+          authors: [{ name: 'Test User', email: 'test@example.com' }],
+          body:
+            'BREAKING CHANGE: The old API has been removed.\n' +
+            '<!-- internal review note, please ignore -->\n' +
+            'Migrate to the new API instead.\n' +
+            '"\n\nM\tpackages/nx/file.ts\n"',
+          description: 'remove the old API',
+          type: 'feat',
+          scope: 'core',
+          githubReferences: [
+            { type: 'pull-request', value: '#54321' },
+            { value: 'def456', type: 'hash' },
+          ],
+          isBreaking: true,
+          revertedHashes: [],
+          affectedProjects: ['nx'],
+        };
+
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [breakingChangeWithInlineComment],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: { authors: true, commitReferences: true },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🚀 Features
+
+          - ⚠️  **core:** remove the old API ([#54321](https://example.com/example/example/pull/54321))
+
+          ### ⚠️  Breaking Changes
+
+          - **core:** remove the old API  ([#54321](https://example.com/example/example/pull/54321))
+            The old API has been removed.
+            Migrate to the new API instead.
+
+          ### ❤️ Thank You
+
+          - Test User"
         `);
       });
     });

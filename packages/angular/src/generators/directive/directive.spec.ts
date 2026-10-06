@@ -1,7 +1,6 @@
 import {
   addProjectConfiguration,
   readProjectConfiguration,
-  updateJson,
   updateProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
@@ -267,45 +266,6 @@ describe('directive generator', () => {
 
       const content = tree.read('test/src/app/example/example.ts', 'utf-8');
       expect(content).toMatch(/selector: '\[mySelector\]'/);
-    });
-  });
-
-  describe('compat', () => {
-    it('should generate the files with the "directive" type for versions lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-
-      await generateDirectiveWithDefaultOptions(tree, { skipFormat: false });
-
-      expect(tree.read('test/src/app/test.directive.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Directive } from '@angular/core';
-
-        @Directive({
-          selector: '[test]',
-        })
-        export class TestDirective {
-          constructor() {}
-        }
-        "
-      `);
-      expect(tree.read('test/src/app/test.directive.spec.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { TestDirective } from './test.directive';
-
-        describe('TestDirective', () => {
-          it('should create an instance', () => {
-            const directive = new TestDirective();
-            expect(directive).toBeTruthy();
-          });
-        });
-        "
-      `);
     });
   });
 });

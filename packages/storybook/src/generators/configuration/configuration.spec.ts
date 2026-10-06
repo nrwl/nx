@@ -8,6 +8,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { libraryGenerator } from '@nx/js';
@@ -19,9 +20,9 @@ const variousProjects =
   'default' in _variousProjects ? _variousProjects.default : _variousProjects;
 
 // nested code imports graph from the repo, which might have inaccurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
+vi.mock('nx/src/project-graph/project-graph', async () => ({
+  ...(await vi.importActual<any>('nx/src/project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
@@ -29,13 +30,25 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
 // Mock storybookMajorVersion to simulate behavior when parsing version ranges
 // When version is a range like '^10.1.0', semver.major() throws, causing the function
 // to return undefined. This mock preserves the original test behavior.
-const mockStorybookMajorVersion = jest.fn();
-jest.mock('../../utils/utilities', () => ({
-  ...jest.requireActual('../../utils/utilities'),
+const mockStorybookMajorVersion = vi.fn();
+vi.mock('../../utils/utilities', async () => ({
+  ...(await vi.importActual<any>('../../utils/utilities')),
   storybookMajorVersion: (...args: any[]) => mockStorybookMajorVersion(...args),
 }));
 
 describe('@nx/storybook:configuration', () => {
+  let envBackup: string | undefined;
+
+  beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
   describe('v10', () => {
     beforeEach(() => {
       // Simulate behavior when version is a range ('^10.1.0'):
@@ -60,6 +73,37 @@ describe('@nx/storybook:configuration', () => {
           json.devDependencies['storybook'] = storybookVersion;
           return json;
         });
+      });
+
+      it('should deny the build scripts pulled in by @storybook/test-runner', async () => {
+        await withPnpm(tree, '11.2.2', () =>
+          configurationGenerator(tree, {
+            project: 'test-ui-lib',
+            uiFramework: '@storybook/react-vite',
+            interactionTests: true,
+            addPlugin: true,
+          })
+        );
+
+        const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+        expect(pnpmWorkspace).toMatch(/['"]@swc\/core['"]: false/);
+        expect(pnpmWorkspace).toMatch(/['"]?@parcel\/watcher['"]?: false/);
+        expect(pnpmWorkspace).toMatch(/['"]?unrs-resolver['"]?: false/);
+      });
+
+      it('should deny the core-js build script added for react-webpack5 libraries', async () => {
+        await withPnpm(tree, '11.2.2', () =>
+          configurationGenerator(tree, {
+            project: 'test-ui-lib',
+            uiFramework: '@storybook/react-webpack5',
+            interactionTests: false,
+            addPlugin: true,
+          })
+        );
+
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+          /['"]?core-js['"]?: false/
+        );
       });
 
       it('should add angular related dependencies when using Angular as uiFramework', async () => {
@@ -403,6 +447,63 @@ describe('@nx/storybook:configuration', () => {
       });
     });
 
+    describe('story testing', () => {
+      let tree: Tree;
+
+      beforeEach(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = storybookVersion;
+          return json;
+        });
+      });
+
+      it('should install the test runner so the inferred target has a binary', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBe('^0.24.0');
+      });
+
+      it('should not install a runner when interactionTests is false', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          interactionTests: false,
+          addPlugin: true,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).not.toBeDefined();
+      });
+
+      it('should install the runner the explicit target invokes', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: false,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBeDefined();
+        const project = readJson(tree, 'test-ui-lib/project.json');
+        expect(project.targets['test-storybook'].options.command).toContain(
+          'test-storybook -c'
+        );
+      });
+    });
+
     describe('basic functionalities', () => {
       let tree: Tree;
 
@@ -484,6 +585,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       it("should update the project's .eslintrc.json if config exists", async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
@@ -562,6 +664,38 @@ describe('@nx/storybook:configuration', () => {
           readJson(tree, 'package.json').devDependencies['core-js']
         ).toBeTruthy();
       });
+
+      it('should not add tsconfig.storybook.json to nx.json when using Angular', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/angular',
+          addPlugin: false,
+        });
+
+        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        expect(nxJson.namedInputs.production).not.toContain(
+          '!{projectRoot}/tsconfig.storybook.json'
+        );
+        expect(nxJson.targetDefaults['build-storybook'].inputs).not.toContain(
+          '{projectRoot}/tsconfig.storybook.json'
+        );
+      });
+
+      it('should add tsconfig.storybook.json to nx.json when not using Angular', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: false,
+        });
+
+        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        expect(nxJson.namedInputs.production).toContain(
+          '!{projectRoot}/tsconfig.storybook.json'
+        );
+        expect(nxJson.targetDefaults['build-storybook'].inputs).toContain(
+          '{projectRoot}/tsconfig.storybook.json'
+        );
+      });
     });
 
     describe('update root tsconfig.json', () => {
@@ -581,6 +715,32 @@ describe('@nx/storybook:configuration', () => {
           json.devDependencies['storybook'] = storybookVersion;
           return json;
         });
+      });
+
+      it('should write node10 moduleResolution in ts-node options on TypeScript < 6', async () => {
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+        }));
+        tree.write(
+          'tsconfig.json',
+          JSON.stringify({
+            extends: './tsconfig.base.json',
+            compilerOptions: {},
+            files: [],
+            include: [],
+          })
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          addPlugin: true,
+        });
+
+        const tsconfig = readJson(tree, 'tsconfig.json');
+        expect(tsconfig['ts-node'].compilerOptions.moduleResolution).toEqual(
+          'node10'
+        );
       });
 
       it('should set the tsnode module to commonjs if there is a root tsconfig.json', async () => {
@@ -762,7 +922,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       test.each(testCases)(
-        'should contain the correct configuration in %p',
+        'should contain the correct configuration in %j',
         (storybookConfigPath) => {
           if (tree.exists(storybookConfigPath)) {
             if (tree.exists(`${storybookConfigPath}main.ts`)) {
@@ -838,7 +998,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }
@@ -1268,6 +1428,113 @@ describe('@nx/storybook:configuration', () => {
       });
     });
 
+    describe('story testing', () => {
+      it('should install a test runner without a Storybook peer on an 8.1 range', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '~8.1.11';
+          return json;
+        });
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        // 0.20+ peers storybook ^8.2, so 8.0/8.1 fall back to the 0.17 line.
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBe('^0.17.0');
+      });
+
+      it('should install a test runner compatible with a Storybook 8 caret range', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '^8.0.0';
+          return json;
+        });
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBe('^0.21.0');
+      });
+
+      it('should install the test runner major that peers storybook 9', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '9.1.15';
+          return json;
+        });
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBe('^0.23.0');
+      });
+
+      it.each(['~8.1.11', '^8.0.0', '9.1.15'])(
+        'should not deny the jest 30 build scripts on storybook %s, whose test runner runs on jest 29',
+        async (storybookRange) => {
+          const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+          await libraryGenerator(tree, {
+            directory: 'test-ui-lib',
+            bundler: 'none',
+            skipFormat: true,
+            addPlugin: true,
+          });
+          updateJson(tree, 'package.json', (json) => {
+            json.devDependencies ??= {};
+            json.devDependencies['storybook'] = storybookRange;
+            return json;
+          });
+
+          await withPnpm(tree, '11.2.2', () =>
+            configurationGenerator(tree, {
+              project: 'test-ui-lib',
+              uiFramework: '@storybook/react-vite',
+              interactionTests: true,
+              addPlugin: true,
+            })
+          );
+
+          const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+          expect(pnpmWorkspace).toMatch(/['"]@swc\/core['"]: false/);
+          expect(pnpmWorkspace).not.toContain('@parcel/watcher');
+          expect(pnpmWorkspace).not.toContain('unrs-resolver');
+        }
+      );
+    });
+
     describe('basic functionalities', () => {
       let tree: Tree;
 
@@ -1349,6 +1616,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       it("should update the project's .eslintrc.json if config exists", async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
@@ -1627,7 +1895,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       test.each(testCases)(
-        'should contain the correct configuration in %p',
+        'should contain the correct configuration in %j',
         (storybookConfigPath) => {
           if (tree.exists(storybookConfigPath)) {
             if (tree.exists(`${storybookConfigPath}main.ts`)) {
@@ -1703,7 +1971,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }

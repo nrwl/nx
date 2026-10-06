@@ -1,8 +1,8 @@
 import * as path from 'path';
-import {
+import type {
   Compiler,
-  type Configuration,
-  type RspackOptionsNormalized,
+  Configuration,
+  RspackOptionsNormalized,
 } from '@rspack/core';
 import { workspaceRoot } from '@nx/devkit';
 import {

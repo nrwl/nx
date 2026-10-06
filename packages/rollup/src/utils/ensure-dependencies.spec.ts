@@ -1,12 +1,24 @@
-import { readJson, type Tree } from '@nx/devkit';
+import type { Mock } from 'vitest';
+import {
+  detectPackageManager,
+  readJson,
+  updateJson,
+  type Tree,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ensureDependencies } from './ensure-dependencies';
+
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn(),
+}));
 
 describe('ensureDependencies', () => {
   let tree: Tree;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    (detectPackageManager as Mock).mockReturnValue('npm');
   });
 
   it('should support swc', () => {
@@ -22,6 +34,46 @@ describe('ensureDependencies', () => {
         'swc-loader': expect.any(String),
       },
     });
+  });
+
+  it('should deny the @swc/core build scripts when using pnpm', () => {
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
+    updateJson(tree, 'package.json', (json) => {
+      json.packageManager = 'pnpm@11.2.2';
+      return json;
+    });
+
+    ensureDependencies(tree, { compiler: 'swc' });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toContain(
+      'allowBuilds:\n  "@swc/core": false'
+    );
+  });
+
+  it('should deny the core-js build script when using babel with pnpm', () => {
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
+    updateJson(tree, 'package.json', (json) => {
+      json.packageManager = 'pnpm@11.2.2';
+      return json;
+    });
+
+    ensureDependencies(tree, { compiler: 'babel' });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toContain(
+      'allowBuilds:\n  core-js: false'
+    );
+  });
+
+  it('should not write pnpm-workspace.yaml when not using the swc compiler', () => {
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
+    updateJson(tree, 'package.json', (json) => {
+      json.packageManager = 'pnpm@11.2.2';
+      return json;
+    });
+
+    ensureDependencies(tree, { compiler: 'tsc' });
+
+    expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
   });
 
   it('should support tsc', () => {

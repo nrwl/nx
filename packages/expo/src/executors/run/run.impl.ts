@@ -1,6 +1,7 @@
 import { ExecutorContext, names } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
+import { resolveExpoCliPath } from '../../utils/resolve-expo-cli';
 import { existsSync } from 'node:fs';
 import { platform } from 'os';
 import { join, resolve as pathResolve } from 'path';
@@ -64,7 +65,7 @@ function runCliRun(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('@expo/cli/build/bin/cli'),
+      resolveExpoCliPath(),
       ['run:' + options.platform, ...createRunOptions(options), '--no-install'], // pass in no-install to prevent node_modules install
       {
         cwd: pathResolve(workspaceRoot, projectRoot),

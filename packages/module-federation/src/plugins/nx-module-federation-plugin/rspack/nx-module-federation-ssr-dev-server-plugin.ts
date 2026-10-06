@@ -1,9 +1,5 @@
-import {
-  Compilation,
-  Compiler,
-  DefinePlugin,
-  RspackPluginInstance,
-} from '@rspack/core';
+import type { Compilation, Compiler, RspackPluginInstance } from '@rspack/core';
+import { isServeMode } from '../../../utils/is-serve-mode';
 import * as pc from 'picocolors';
 import {
   logger,
@@ -28,9 +24,7 @@ import { ChildProcess, fork } from 'node:child_process';
 
 const PLUGIN_NAME = 'NxModuleFederationSSRDevServerPlugin';
 
-export class NxModuleFederationSSRDevServerPlugin
-  implements RspackPluginInstance
-{
+export class NxModuleFederationSSRDevServerPlugin implements RspackPluginInstance {
   private devServerProcess: ChildProcess | undefined;
   private nxBin = require.resolve('nx/bin/nx');
 
@@ -46,8 +40,7 @@ export class NxModuleFederationSSRDevServerPlugin
   }
 
   apply(compiler: Compiler) {
-    const isDevServer = process.env['WEBPACK_SERVE'];
-    if (!isDevServer) {
+    if (!isServeMode()) {
       return;
     }
     compiler.hooks.watchRun.tapAsync(
@@ -85,7 +78,7 @@ export class NxModuleFederationSSRDevServerPlugin
               this._options.devServerConfig.host
             );
 
-            new DefinePlugin({
+            new compiler.rspack.DefinePlugin({
               'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
             }).apply(compiler);
 

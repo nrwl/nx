@@ -6,10 +6,10 @@ import {
   reservePorts,
   runCLIAsync,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import {
@@ -172,7 +172,7 @@ describe('React Module Federation - Webpack SSR', () => {
         `;
     });
 
-    if (runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${shell}-e2e --no-watch --verbose`,
         (output) => output.includes('All specs passed!'),

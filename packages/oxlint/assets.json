@@ -1,0 +1,12 @@
+{
+  "outDir": "packages/oxlint/dist",
+  "assets": [
+    {
+      "glob": "src/**/schema.json"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
+    "LICENSE"
+  ]
+}

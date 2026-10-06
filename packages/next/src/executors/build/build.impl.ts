@@ -6,9 +6,9 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
+import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
 import { join, resolve as pathResolve } from 'path';
-import { cpSync, existsSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { gte } from 'semver';
 
@@ -17,8 +17,11 @@ import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
 import { ChildProcess, fork } from 'child_process';
-import { createCliOptions } from '../../utils/create-cli-options';
-import { signalToCode, checkAndCleanWithSemver } from '@nx/devkit/internal';
+import {
+  checkAndCleanWithSemver,
+  createCliOptions,
+  signalToCode,
+} from '@nx/devkit/internal';
 import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
 import { warnNextBuildExecutorDeprecation } from '../../utils/deprecation';
 
@@ -93,30 +96,21 @@ export default async function buildExecutor(
   };
 
   updatePackageJson(builtPackageJson, context);
-  writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
 
+  const packageManager = detectPackageManager(context.root);
   if (options.generateLockfile) {
-    const packageManager = detectPackageManager(context.root);
-
-    if (packageManager === 'bun') {
-      logger.warn(
-        'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
-      );
-    } else {
-      const lockFile = createLockFile(
-        builtPackageJson,
-        context.projectGraph,
-        packageManager
-      );
-      writeFileSync(
-        `${options.outputPath}/${getLockFileName(packageManager)}`,
-        lockFile,
-        {
-          encoding: 'utf-8',
-        }
-      );
-    }
+    generatePrunedDeployOutput(
+      builtPackageJson,
+      context.projectGraph,
+      projectRoot,
+      {
+        outputDirectory: options.outputPath,
+        packageManager,
+        workspaceRoot: context.root,
+      }
+    );
   }
+  writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
 
   // If output path is different from source path, then copy over the config and public files.
   // This is the default behavior when running `nx build <app>`.

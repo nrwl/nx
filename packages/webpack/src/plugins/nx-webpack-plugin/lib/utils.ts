@@ -15,12 +15,26 @@ function resolveConditionalExport(target: any): string | null {
     return target;
   }
 
+  // Fallback arrays: take the first non-empty target. Node resolves them in
+  // order on disk; for the allowlist any valid target marks the subpath.
+  if (Array.isArray(target)) {
+    for (const candidate of target) {
+      const resolved = resolveConditionalExport(candidate);
+      if (resolved) {
+        return resolved;
+      }
+    }
+
+    return null;
+  }
+
   if (typeof target === 'object' && target !== null) {
     // Priority order for conditions
     const conditions = ['development', 'import', 'require', 'default'];
     for (const condition of conditions) {
-      if (target[condition] && typeof target[condition] === 'string') {
-        return target[condition];
+      const resolved = resolveConditionalExport(target[condition]);
+      if (resolved) {
+        return resolved;
       }
     }
   }

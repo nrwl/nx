@@ -1,13 +1,7 @@
 import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/internal';
-import {
-  cacheDir,
-  joinPathFragments,
-  logger,
-  stripIndents,
-  writeJsonFile,
-} from '@nx/devkit';
+import { cacheDir, logger, stripIndents, writeJsonFile } from '@nx/devkit';
 import {
   copyAssets,
   copyPackageJson,
@@ -30,7 +24,7 @@ import {
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/internal';
-import { rmSync } from 'node:fs';
+import { deleteOutputDir } from '../../utils/fs';
 import { join, relative } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${pc.red(
@@ -51,9 +45,9 @@ export async function* esbuildExecutor(
 ) {
   process.env.NODE_ENV ??= context.configurationName ?? 'production';
 
-  const options = normalizeOptions(_options, context);
+  const options = await normalizeOptions(_options, context);
   if (options.deleteOutputPath)
-    rmSync(options.outputPath, { recursive: true, force: true });
+    deleteOutputDir(context.root, options.outputPath);
 
   const assetsResult = await copyAssets(options, context);
 
@@ -215,7 +209,7 @@ export async function* esbuildExecutor(
             ? 'meta.json'
             : `meta.${options.format[i]}.json`;
         writeJsonFile(
-          joinPathFragments(options.outputPath, filename),
+          join(context.root, options.outputPath, filename),
           buildResult.metafile
         );
       }
@@ -254,7 +248,10 @@ function getTypeCheckOptions(
 
   if (watch) {
     typeCheckOptions.incremental = true;
-    typeCheckOptions.cacheDir = cacheDir;
+    // Scope the incremental .tsbuildinfo per project (in its own subdir, not
+    // alongside Nx's cache files) so concurrent serves don't collide on a
+    // single file.
+    typeCheckOptions.cacheDir = join(cacheDir, 'esbuild', projectRoot);
   }
 
   if (options.isTsSolutionSetup && options.skipTypeCheck) {

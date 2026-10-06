@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   readJson,
@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { hasPlugin as hasRollupPlugin } from '@nx/rollup/internal';
-import { expoLibraryGenerator } from './library';
+import { expoLibraryGenerator, expoLibraryGeneratorInternal } from './library';
 import { Schema } from './schema';
 
 describe('lib', () => {
@@ -310,7 +310,7 @@ describe('lib', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "jsx": "react-jsx",
             "types": ["jest", "node"]
           },
@@ -563,7 +563,7 @@ describe('lib', () => {
           "name": "@proj/my-lib",
           "peerDependencies": {
             "react": "^19.2.0",
-            "react-native": "0.83.6",
+            "react-native": "0.85.3",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -694,7 +694,7 @@ describe('lib', () => {
           "name": "@proj/my-lib",
           "peerDependencies": {
             "react": "^19.2.0",
-            "react-native": "0.83.6",
+            "react-native": "0.85.3",
           },
           "types": "./dist/index.esm.d.ts",
           "version": "0.0.1",
@@ -755,6 +755,17 @@ describe('lib', () => {
       });
 
       expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should default to package.json through the cli entry point', async () => {
+      // generators.json registers the internal entry, so this is what `nx g` runs
+      await expoLibraryGeneratorInternal(appTree, {
+        ...defaultSchema,
+        strict: false,
+      });
+
+      expect(appTree.exists('my-lib/project.json')).toBeFalsy();
+      expect(appTree.exists('my-lib/package.json')).toBeTruthy();
     });
 
     it('should generate project.json if useProjectJson is true', async () => {

@@ -1,7 +1,12 @@
-import { addPlugin } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  addPlugin,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
@@ -31,6 +36,12 @@ function checkDependenciesInstalled(
   const storybookVersionToInstall = getStorybookVersionToInstall(host);
   devDependencies['storybook'] = storybookVersionToInstall;
 
+  // storybook depends on esbuild, whose install script only validates the
+  // prebuilt binary that ships as an optional dependency.
+  acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+    esbuild: false,
+  });
+
   return addDependenciesToPackageJson(
     host,
     {},
@@ -41,7 +52,7 @@ function checkDependenciesInstalled(
 }
 
 function addCacheableOperation(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   const cacheableOperations: string[] | null =
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
 
@@ -51,10 +62,7 @@ function addCacheableOperation(tree: Tree) {
     );
   }
 
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['build-storybook'] ??= {};
-  nxJson.targetDefaults['build-storybook'].cache = true;
-
+  upsertTargetDefault(tree, nxJson, { target: 'build-storybook', cache: true });
   updateNxJson(tree, nxJson);
 }
 

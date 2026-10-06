@@ -8,6 +8,23 @@ import type { RemoteReleaseClient } from '../../src/command-line/release/utils/r
  */
 export type { ChangelogChange };
 
+// Stripped from breaking change explanations (e.g. bot/session markers).
+const HtmlCommentRegex = /<!--[\s\S]*?-->/g;
+
+// Keyed on email: agent display names track model versions (e.g. "Claude Opus
+// 5 (1M context)"), and a human contributor can share a name with an agent.
+const AiAgentAuthorEmails = new Set([
+  'noreply@anthropic.com',
+  'claude@anthropic.com',
+  'amp@ampcode.com',
+  'cursoragent@cursor.com',
+  'openhands@all-hands.dev',
+  'opendevin@all-hands.dev',
+]);
+// The Copilot coding agent's trailer is not always [bot]-suffixed.
+const CopilotAuthorEmailRegex =
+  /^(?:\d+\+)?copilot@users\.noreply\.github\.com$/;
+
 /**
  * The ChangelogRenderOptions are specific to each ChangelogRenderer implementation, and are taken
  * from the user's nx.json configuration and passed as is into the ChangelogRenderer function.
@@ -326,14 +343,14 @@ export default class DefaultChangelogRenderer {
       }
       for (const author of change.authors) {
         const name = this.formatName(author.name);
-        if (!name || name.includes('[bot]')) {
+        if (!name || name.includes('[bot]') || this.isAiAgentAuthor(author)) {
           continue;
         }
-        if (_authors.has(name)) {
-          const entry = _authors.get(name);
-          entry.email.add(author.email);
-        } else {
-          _authors.set(name, { email: new Set([author.email]) });
+        if (!_authors.has(name)) {
+          _authors.set(name, { email: new Set<string>() });
+        }
+        if (author.email) {
+          _authors.get(name).email.add(author.email);
         }
       }
     }
@@ -502,21 +519,43 @@ export default class DefaultChangelogRenderer {
 
     const startOfBreakingChange = startIndex + breakingChangeIdentifier.length;
 
-    // Extract all text after BREAKING CHANGE: until we hit a Co-authored-by section or git metadata
-    let endOfBreakingChange = message.length;
-
-    const coAuthoredBySection = message.indexOf('---------\n\nCo-authored-by:');
-    if (coAuthoredBySection !== -1) {
-      endOfBreakingChange = coAuthoredBySection;
-    } else {
-      // Look for the git metadata delimiter (a line with just ")
-      const gitMetadataMarker = message.indexOf('"\n', startOfBreakingChange);
-      if (gitMetadataMarker !== -1) {
-        endOfBreakingChange = gitMetadataMarker;
+    // A squash-merged PR body can trail the note with template sections,
+    // trailers, and git metadata. Strip comments (they can appear anywhere),
+    // then keep lines until the first boundary.
+    const lines = message
+      .slice(startOfBreakingChange)
+      .replace(HtmlCommentRegex, '')
+      .split('\n');
+    // The rest of the "BREAKING CHANGE:" line is always kept; scan from the next.
+    const explanationLines: string[] = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+      if (this.isBreakingChangeBoundary(lines[i])) {
+        break;
       }
+      explanationLines.push(lines[i]);
     }
 
-    return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
+    return explanationLines.join('\n').trim();
+  }
+
+  private isBreakingChangeBoundary(line: string): boolean {
+    const trimmed = line.trim();
+    return (
+      // Markdown heading (e.g. "## Related issues")
+      /^#{1,6}\s/.test(trimmed) ||
+      // Horizontal rule / separator
+      /^-{3,}$/.test(trimmed) ||
+      /^Co-authored-by:/i.test(trimmed) ||
+      // Git metadata delimiter following the body
+      trimmed === '"'
+    );
+  }
+
+  protected isAiAgentAuthor(author: { name: string; email: string }): boolean {
+    const email = (author.email || '').trim().toLowerCase();
+    return (
+      AiAgentAuthorEmails.has(email) || CopilotAuthorEmailRegex.test(email)
+    );
   }
 
   protected formatName(name = ''): string {

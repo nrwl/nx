@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   handleRunPreTasksExecution,
   handleRunPostTasksExecution,
@@ -8,9 +9,9 @@ import type {
 } from '../../project-graph/plugins/public-api';
 
 // Mock the tasks-execution-hooks module
-jest.mock('../../project-graph/plugins/tasks-execution-hooks', () => ({
-  runPreTasksExecution: jest.fn(),
-  runPostTasksExecution: jest.fn(),
+vi.mock('../../project-graph/plugins/tasks-execution-hooks', () => ({
+  runPreTasksExecution: vi.fn(),
+  runPostTasksExecution: vi.fn(),
 }));
 
 import {
@@ -20,7 +21,7 @@ import {
 
 describe('Task Execution Hooks', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('handleRunPreTasksExecution', () => {
@@ -33,7 +34,7 @@ describe('Task Execution Hooks', () => {
         argv: testArgv,
       };
 
-      (runPreTasksExecution as jest.Mock).mockResolvedValue([]);
+      (runPreTasksExecution as Mock).mockResolvedValue([]);
 
       await handleRunPreTasksExecution(context);
 
@@ -54,7 +55,7 @@ describe('Task Execution Hooks', () => {
         argv: testArgv,
       };
 
-      (runPreTasksExecution as jest.Mock).mockResolvedValue([]);
+      (runPreTasksExecution as Mock).mockResolvedValue([]);
 
       await handleRunPreTasksExecution(context);
 
@@ -79,7 +80,7 @@ describe('Task Execution Hooks', () => {
         endTime: Date.now() + 1000,
       };
 
-      (runPostTasksExecution as jest.Mock).mockResolvedValue(undefined);
+      (runPostTasksExecution as Mock).mockResolvedValue(undefined);
 
       await handleRunPostTasksExecution(context);
 
@@ -103,7 +104,7 @@ describe('Task Execution Hooks', () => {
         endTime: Date.now() + 1000,
       };
 
-      (runPostTasksExecution as jest.Mock).mockResolvedValue(undefined);
+      (runPostTasksExecution as Mock).mockResolvedValue(undefined);
 
       await handleRunPostTasksExecution(context);
 

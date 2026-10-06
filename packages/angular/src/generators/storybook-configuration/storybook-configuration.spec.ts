@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { readJson, updateJson, writeJson } from '@nx/devkit';
+import { writeJson } from '@nx/devkit';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import {
@@ -10,9 +10,9 @@ import type { StorybookConfigurationOptions } from './schema';
 import { storybookConfigurationGenerator } from './storybook-configuration';
 
 // nested code imports graph from the repo, which might have inaccurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
+vi.mock('nx/src/project-graph/project-graph', async () => ({
+  ...(await vi.importActual<any>('nx/src/project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
@@ -35,7 +35,7 @@ describe('StorybookConfiguration generator', () => {
   beforeEach(async () => {
     tree = await createStorybookTestWorkspaceForLib(libName);
 
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should only configure storybook', async () => {
@@ -168,29 +168,5 @@ describe('StorybookConfiguration generator', () => {
     });
 
     expect(listFiles(tree)).toMatchSnapshot();
-  });
-
-  it('should exclude Storybook-related files from tsconfig.editor.json for applications', async () => {
-    // the tsconfig.editor.json is only generated for versions lower than v20
-    updateJson(tree, 'package.json', (json) => {
-      json.dependencies = {
-        ...json.dependencies,
-        '@angular/core': '~19.2.0',
-      };
-      return json;
-    });
-    await generateTestApplication(tree, { directory: 'test-app' });
-
-    await storybookConfigurationGenerator(tree, {
-      project: 'test-app',
-      generateStories: false,
-      skipFormat: true,
-      linter: 'eslint',
-    });
-
-    const tsConfig = readJson(tree, 'test-app/tsconfig.editor.json');
-    expect(tsConfig.exclude).toStrictEqual(
-      expect.arrayContaining(['**/*.stories.ts', '**/*.stories.js'])
-    );
   });
 });
