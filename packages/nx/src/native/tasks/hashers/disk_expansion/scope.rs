@@ -5,13 +5,11 @@
 //! only the workspace-root project, matches everything it names.
 
 use std::collections::BTreeSet;
-use std::sync::Arc;
 
 use anyhow::Result;
 
 use super::entries::Positive;
 use super::expansion::parse_group;
-use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::utils::path::parent_dirs;
 
 /// The project roots a group needs to decide ownership: each scoped entry's
@@ -93,7 +91,7 @@ fn roots_below<'a>(roots: &'a BTreeSet<String>, dir: &str) -> impl Iterator<Item
 /// `globs`' positives matches is also admitted by it. `None` when nothing is
 /// scoped, so every match stands.
 pub(crate) struct ScopedMatcher {
-    entries: Vec<(Positive, Option<Arc<NxGlobSet>>)>,
+    entries: Vec<Positive>,
     scope: ProjectScope,
 }
 
@@ -102,40 +100,16 @@ impl ScopedMatcher {
         if project_roots.is_empty() {
             return Ok(None);
         }
-        let entries = parse_group(globs)?
-            .0
-            .into_iter()
-            .map(|entry| {
-                let set = entry
-                    .remainder
-                    .as_deref()
-                    .map(|rest| build_glob_set(&[rest]))
-                    .transpose()?;
-                Ok((entry, set))
-            })
-            .collect::<Result<_>>()?;
         Ok(Some(Self {
-            entries,
+            entries: parse_group(globs)?.0,
             scope: ProjectScope::new(project_roots),
         }))
     }
 
     pub(crate) fn admits(&self, path: &str) -> bool {
-        self.entries.iter().any(|(entry, set)| {
-            let rest = match entry.root.as_str() {
-                "" => Some(path),
-                root => path.strip_prefix(root).and_then(|rest| match rest {
-                    "" => Some(rest),
-                    _ => rest.strip_prefix('/'),
-                }),
-            };
-            let matched = match (rest, set) {
-                (None, _) => false,
-                (Some(_), None) => true,
-                (Some(rest), Some(set)) => set.is_match(rest),
-            };
-            matched && self.scope.admits(entry, path)
-        })
+        self.entries
+            .iter()
+            .any(|entry| entry.matches(path) && self.scope.admits(entry, path))
     }
 }
 

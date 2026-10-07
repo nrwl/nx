@@ -4311,7 +4311,6 @@ mod nested_project_tests {
                     ..
                 } => Some(
                     expand_globs(
-                        temp.path(),
                         globs,
                         project_roots,
                         &Source::fileset_from_disk(temp.path()),

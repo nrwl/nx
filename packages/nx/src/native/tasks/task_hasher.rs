@@ -304,10 +304,10 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
-    // Disk-backed filesets (`includeIgnored` and Ultracache reads): a path index
-    // over the file map so tracked files skip the disk, built only once a plan
-    // carries a disk-backed group. Their content lives in the context's
-    // IgnoredIndex.
+    // A path index over the workspace files, built on first use. Workspace
+    // filesets are expanded from it; disk-backed filesets (`includeIgnored`
+    // and Ultracache reads) ask it which files skip the disk, their content
+    // living in the context's IgnoredIndex.
     workspace_file_index: WorkspaceFileIndex,
 }
 #[napi]
@@ -420,10 +420,10 @@ impl TaskHasher {
         };
         expand_cached(&format!("files#{id}"), files_expansion_cache, || {
             expand_globs(
-                workspace_root,
                 globs,
                 project_roots,
                 &Source::fileset(
+                    workspace_root,
                     &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
                     list_directory,
                 ),
@@ -469,7 +469,7 @@ impl TaskHasher {
                     HashInstruction::WorkspaceFileSet(file_sets) => {
                         collect_workspace_file_paths_cached(
                             &file_sets,
-                            &self.all_workspace_files,
+                            &self.workspace_file_index,
                             &self.workspace_file_indices_cache,
                         )?
                         .into_iter()
@@ -994,14 +994,14 @@ impl TaskHasher {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
                 let hashed = hash_workspace_files_cached(
                     workspace_file_set,
-                    &self.all_workspace_files,
+                    &self.workspace_file_index,
                     workspace_file_set_cache,
                 )?;
                 trace!(parent: &span, "hash_workspace_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
                     let files = collect_workspace_file_paths_cached(
                         workspace_file_set,
-                        &self.all_workspace_files,
+                        &self.workspace_file_index,
                         &self.workspace_file_indices_cache,
                     )?;
                     HashInputsBuilder {
