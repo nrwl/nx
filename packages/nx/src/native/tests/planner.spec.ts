@@ -1353,6 +1353,140 @@ describe('task planner', () => {
     }
   );
 
+  it.each([
+    {
+      name: 'a third-party executor with declared externals',
+      executor: 'nx:run-commands',
+      declared: ['declared'],
+      expected: ['npm:declared', 'npm:declared-dep'],
+    },
+    {
+      name: 'a third-party executor without declared externals',
+      executor: 'nx:run-commands',
+      expected: ['AllExternalDependencies'],
+    },
+    {
+      name: 'a third-party executor declaring no externals',
+      executor: 'nx:run-commands',
+      declared: [],
+      expected: [],
+    },
+    {
+      name: 'an installed @nx executor with declared externals',
+      executor: '@nx/installed:build',
+      declared: ['declared'],
+      expected: [
+        'npm:@nx/installed',
+        'npm:declared',
+        'npm:declared-dep',
+        'npm:installed-dep',
+      ],
+    },
+    {
+      name: 'an installed @nx executor without declared externals',
+      executor: '@nx/installed:build',
+      expected: ['npm:@nx/installed', 'npm:installed-dep'],
+    },
+    {
+      name: 'a local @nx executor named after its project',
+      executor: '@nx/local:build',
+      expected: ['@nx/local:libs/local/**/*'],
+    },
+    {
+      name: 'a local @nx executor found by package name',
+      executor: '@nrwl/packaged:build',
+      expected: ['packaged-plugin:libs/packaged/**/*'],
+    },
+    {
+      name: 'a local @nx executor with declared externals',
+      executor: '@nx/local:build',
+      declared: ['declared'],
+      expected: [
+        '@nx/local:libs/local/**/*',
+        'npm:declared',
+        'npm:declared-dep',
+      ],
+    },
+    {
+      name: 'an @nx executor that is neither installed nor a project',
+      executor: '@nx/missing:build',
+      expected: [],
+    },
+  ])(
+    'should plan executor inputs for $name',
+    ({ executor, declared, expected }) => {
+      const builder = new ProjectGraphBuilder();
+      builder.addNode({
+        name: 'app',
+        type: 'app',
+        data: {
+          root: 'apps/app',
+          targets: {
+            build: {
+              executor,
+              inputs: [
+                '{projectRoot}/**/*',
+                ...(declared ? [{ externalDependencies: declared }] : []),
+              ],
+            },
+          },
+        },
+      });
+      builder.addNode({
+        name: '@nx/local',
+        type: 'lib',
+        data: { root: 'libs/local', targets: {} },
+      });
+      builder.addNode({
+        name: 'packaged-plugin',
+        type: 'lib',
+        data: {
+          root: 'libs/packaged',
+          metadata: { js: { packageName: '@nrwl/packaged' } },
+          targets: {},
+        },
+      });
+      for (const packageName of [
+        '@nx/installed',
+        'installed-dep',
+        'declared',
+        'declared-dep',
+        'unrelated',
+      ]) {
+        builder.addExternalNode({
+          name: `npm:${packageName}`,
+          type: 'npm',
+          data: { packageName, version: '1.0.0' },
+        });
+      }
+      builder.addStaticDependency('npm:@nx/installed', 'npm:installed-dep');
+      builder.addStaticDependency('npm:declared', 'npm:declared-dep');
+      const graph = builder.getUpdatedProjectGraph();
+      const tasks = createTaskGraph(
+        graph,
+        {},
+        ['app'],
+        ['build'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {},
+        transferProjectGraph(toRustProjectGraph(graph))
+      );
+      const plan = planner.getPlans(['app:build'], tasks)['app:build'];
+
+      expect(
+        plan.filter(
+          (instruction) =>
+            instruction.startsWith('npm:') ||
+            instruction === 'AllExternalDependencies' ||
+            (!instruction.startsWith('app:') && instruction.includes(':libs/'))
+        )
+      ).toEqual(expected);
+    }
+  );
+
   it('should interpolate {projectRoot} and {projectName} in {workspaceRoot} input patterns', async () => {
     let projectFileMap = {
       parent: [
