@@ -115,6 +115,16 @@ const PROJECT_FILESETS: &[(&str, &[&str])] = &[
     ("x", &["libs/x/src/lib/!(*.module).ts"]),
     // A file that is not there.
     ("x", &["libs/x/absent.ts"]),
+    // A negating extglob excludes across the whole fileset, not only from
+    // the entry it is written in.
+    (
+        "x",
+        &["libs/x/src/lib/!(*.module).ts", "libs/x/src/lib/*.ts"],
+    ),
+    // A brace group naming directories is a pattern: it names those exact
+    // paths, not everything under them, whether positive or negated.
+    ("x", &["libs/x/{src,README.md}"]),
+    ("x", &["libs/x/**/*", "!libs/x/{src,jest.config.ts}"]),
     // An escaped literal: the project root has glob characters.
     ("y", &[r"libs/\(group\)/y/**/*"]),
     ("y", &[r"libs/\(group\)/y/src"]),
@@ -141,6 +151,8 @@ const WORKSPACE_FILESETS: &[&[&str]] = &[
         "{workspaceRoot}/libs/+state",
     ],
     &["{workspaceRoot}/libs/x", "!{workspaceRoot}/libs/x/src/**"],
+    &["{workspaceRoot}/**/*", "!{workspaceRoot}/libs/{x,x-other}"],
+    &["{workspaceRoot}/libs/{x,x-other}"],
     // Without `{workspaceRoot}/` an entry is dropped.
     &["package.json"],
 ];

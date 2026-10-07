@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use anyhow::{Result, bail};
 
-use super::expansion::parse_group;
 use crate::native::glob::{
     NxGlobSet, build_glob_set, literal_segment, normalize_glob, partition_glob,
 };
@@ -152,40 +151,6 @@ fn extension_wildcard_category(glob: &str) -> Option<String> {
         return None;
     }
     Some(suffix_category(&format!("*.{suffix}")).to_string())
-}
-
-/// A regular fileset, read against the file map rather than the disk.
-/// Entries are independent, so their order never matters.
-pub(crate) struct FileSet {
-    pub(super) positives: Vec<Positive>,
-    pub(super) negations: Vec<Negation>,
-}
-
-impl FileSet {
-    /// A fileset of only negations names every file but those they exclude.
-    /// An empty entry names nothing.
-    pub(crate) fn parse(globs: &[String]) -> Result<Self> {
-        let only_negations = globs.iter().all(|glob| glob.starts_with('!'));
-        let named: Vec<String> = globs
-            .iter()
-            .filter(|glob| !glob.trim_start_matches('!').is_empty())
-            .cloned()
-            .collect();
-        let (mut positives, negations) = parse_group(&named)?;
-        if only_negations {
-            // The empty root is the workspace root, so this is every file.
-            positives.push(Positive::exact(""));
-        }
-        Ok(Self {
-            positives,
-            negations,
-        })
-    }
-
-    pub(crate) fn matches(&self, path: &str) -> bool {
-        self.positives.iter().any(|entry| entry.matches(path))
-            && !self.negations.iter().any(|entry| entry.excludes(path))
-    }
 }
 
 #[cfg(test)]
