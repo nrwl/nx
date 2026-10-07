@@ -143,6 +143,30 @@ mod tests {
         assert_eq!(matched(&[""]), Vec::<&str>::new());
     }
 
+    #[test]
+    fn a_name_starting_with_an_exclamation_mark_is_excluded_as_written() {
+        let files = files(&["foo", "!foo", "dir/x.ts", "!dir/x.ts", "!dir/y.js"]);
+        let index = PathIndex::new(&files);
+        let matched = |list: &[&str]| {
+            let globs: Vec<String> = list.iter().map(|g| g.to_string()).collect();
+            let mut found = paths(
+                &files,
+                match_file_map(&globs, &files, &index).unwrap().into_iter(),
+            );
+            found.sort();
+            found
+        };
+        assert_eq!(
+            matched(&["**/*", "!!foo"]),
+            vec!["!dir/x.ts", "!dir/y.js", "dir/x.ts", "foo"]
+        );
+        assert_eq!(matched(&["**/*", "!!dir"]), vec!["!foo", "dir/x.ts", "foo"]);
+        assert_eq!(
+            matched(&["**/*", "!!dir/*.ts"]),
+            vec!["!dir/y.js", "!foo", "dir/x.ts", "foo"]
+        );
+    }
+
     /// Paths a corpus glob could plausibly name: its literal prefix, and a
     /// handful of shapes under it.
     fn candidates_for(glob: &str) -> Vec<String> {
@@ -200,6 +224,11 @@ mod tests {
             &["libs/{,a}/x"],
             &[""],
             &["!"],
+            &["**/*", "!!foo"],
+            &["**/*", "!!dir"],
+            &["**/*", "!!dir/"],
+            &["**/*", "!!dir/*.ts"],
+            &["!foo"],
         ] {
             filesets.push(fileset.iter().map(|g| g.to_string()).collect());
         }
@@ -219,6 +248,11 @@ mod tests {
                     "libs/x/a/b.ts",
                     "libs/a/x",
                     "libs/x/src/lib/a.module.ts",
+                    "foo",
+                    "!foo",
+                    "dir/x.ts",
+                    "!dir/x.ts",
+                    "!dir/y.js",
                 ]
                 .map(String::from),
             );

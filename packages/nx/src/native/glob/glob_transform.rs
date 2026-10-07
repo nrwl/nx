@@ -59,23 +59,29 @@ pub(crate) fn partition_glob(glob: &str) -> (String, Option<String>) {
         Some(body) => (true, body),
         None => (false, glob),
     };
+    let (directory, remainder) = partition_unsigned(body);
+    let remainder = remainder.map(|rest| match negated {
+        true => format!("!{rest}"),
+        false => rest,
+    });
+    (directory, remainder)
+}
+
+/// `partition_glob` for a glob with no negation marker, so a leading `!` is
+/// part of the first name.
+pub(crate) fn partition_unsigned(glob: &str) -> (String, Option<String>) {
     let mut literal: Vec<String> = Vec::new();
     let mut consumed = 0;
     let mut remainder = None;
-    for segment in body.split('/') {
+    for segment in glob.split('/') {
         let Some(name) = literal_segment(segment) else {
-            remainder = Some(&body[consumed..]);
+            remainder = Some(glob[consumed..].to_string());
             break;
         };
         literal.push(name);
         consumed += segment.len() + 1;
     }
-    let directory = literal.join("/");
-    let remainder = remainder.map(|rest| match negated {
-        true => format!("!{rest}"),
-        false => rest.to_string(),
-    });
-    (directory, remainder)
+    (literal.join("/"), remainder)
 }
 
 /// Collapses repeated and trailing slashes so `dist//gen/` and `dist/gen`
