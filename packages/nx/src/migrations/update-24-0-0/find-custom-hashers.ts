@@ -15,6 +15,7 @@ export default async function findCustomHashers(
   tree: Tree
 ): Promise<MigrationReturnObject> {
   const hits = new Set<string>();
+  const malformed = new Set<string>();
   const unparseable: string[] = [];
   const visited = new Set<string>();
 
@@ -51,12 +52,28 @@ export default async function findCustomHashers(
         continue;
       }
 
-      const entries = [
-        ...Object.entries(executorsJson.executors ?? {}),
-        ...Object.entries(executorsJson.builders ?? {}),
-      ];
+      const entries: [string, unknown][] = [];
+      for (const map of [executorsJson.executors, executorsJson.builders]) {
+        if (map === undefined) {
+          continue;
+        }
+        if (!isPlainObject(map)) {
+          unparseable.push(executorsJsonPath);
+          break;
+        }
+        entries.push(...Object.entries(map));
+      }
       for (const [name, entry] of entries) {
-        if (typeof entry !== 'object' || typeof entry.hasher !== 'string') {
+        if (typeof entry === 'string') {
+          continue;
+        }
+        if (!isPlainObject(entry) || !isValidHasher(entry.hasher)) {
+          malformed.add(
+            `Entry "${name}" in "${executorsJsonPath}" is not a valid executor entry. Check it by hand for a "hasher".`
+          );
+          continue;
+        }
+        if (entry.hasher === undefined) {
           continue;
         }
         const hasherPath = joinPathFragments(
@@ -70,22 +87,33 @@ export default async function findCustomHashers(
     }
   }
 
-  if (hits.size === 0 && unparseable.length === 0) {
+  if (hits.size === 0 && malformed.size === 0 && unparseable.length === 0) {
     return { skipAgentic: true };
   }
 
-  const unparseableNotes = unparseable.map(
-    (path) =>
-      `Could not parse "${path}". Check it by hand for executors that declare a "hasher".`
-  );
+  const manualNotes = [
+    ...malformed,
+    ...unparseable.map(
+      (path) =>
+        `Could not parse "${path}". Check it by hand for executors that declare a "hasher".`
+    ),
+  ];
   return {
     nextSteps: [
       `Custom hashers are deprecated and will be removed in Nx 25. Replace each one with target inputs, then remove "hasher" from executors.json. See ${DOCS_URL}`,
       ...hits,
-      ...unparseableNotes,
+      ...manualNotes,
     ],
-    agentContext: [...hits, ...unparseableNotes],
+    agentContext: [...hits, ...manualNotes],
   };
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isValidHasher(hasher: unknown): hasher is string | undefined {
+  return hasher === undefined || typeof hasher === 'string';
 }
 
 function tryParse<T extends object>(content: string): T | null {

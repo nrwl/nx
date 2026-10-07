@@ -189,6 +189,48 @@ describe('find-custom-hashers migration', () => {
     ]);
   });
 
+  it('should report malformed entries and keep scanning the valid ones', async () => {
+    addLocalPlugin('tools/my-plugin', {
+      executors: {
+        broken: null,
+        numeric: { implementation: './n', hasher: 42, schema: './s.json' },
+        echo: {
+          implementation: './echo',
+          hasher: './hasher',
+          schema: './s.json',
+        },
+      },
+    });
+
+    const result = await migration(tree);
+
+    expect(result.skipAgentic).toBeUndefined();
+    expect(result.agentContext).toEqual([
+      expect.stringContaining('"@acme/my-plugin:echo"'),
+      expect.stringContaining(
+        'Entry "broken" in "tools/my-plugin/executors.json" is not a valid executor entry'
+      ),
+      expect.stringContaining(
+        'Entry "numeric" in "tools/my-plugin/executors.json" is not a valid executor entry'
+      ),
+    ]);
+    expect(result.nextSteps).toEqual(
+      expect.arrayContaining([expect.stringContaining('Entry "broken"')])
+    );
+  });
+
+  it('should report an executors map that is not an object', async () => {
+    addLocalPlugin('tools/my-plugin', { executors: 'oops' });
+
+    const result = await migration(tree);
+
+    expect(result.agentContext).toEqual([
+      expect.stringContaining(
+        'Could not parse "tools/my-plugin/executors.json"'
+      ),
+    ]);
+  });
+
   it('should skip and report a package.json declaring executors that it cannot parse', async () => {
     tree.write(
       'tools/my-plugin/package.json',
