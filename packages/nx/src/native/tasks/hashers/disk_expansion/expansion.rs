@@ -9,8 +9,10 @@ use std::sync::Arc;
 use anyhow::{Result, bail};
 use dashmap::DashMap;
 
-use super::entries::{Negation, Positive};
+use super::entries::{Below, Negation, Positive};
+use super::file_map::PathIndex;
 use crate::native::glob::{expand_literal_braces, normalize_glob};
+use crate::native::types::FileData;
 use crate::native::walker::{PathPredicate, read_directory};
 
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
@@ -18,9 +20,10 @@ use crate::native::walker::{PathPredicate, read_directory};
 pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 
 /// Lists a directory, asked of whoever knows: the ignored index answers from
-/// a listing it keeps or from the disk, a caller without one reads the disk.
-/// `accept` is passed in so the answer is filtered as it is gathered. `None`
-/// when the directory cannot be read at all.
+/// a listing it keeps or from the disk, a caller without one reads the disk,
+/// and a regular fileset lists the file map. `accept` is passed in so the
+/// answer is filtered as it is gathered. `None` when the directory cannot be
+/// read at all.
 pub(crate) type ListDirectory<'a> =
     Box<dyn Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a>;
 
@@ -32,18 +35,19 @@ fn disk_files(workspace_root: &Path) -> ListDirectory<'_> {
 /// For a caller with no workspace context: every path is checked on disk.
 pub(crate) const NOTHING_TRACKED: PathPredicate<'static> = &|_| false;
 
-/// What an expansion may lean on instead of the disk. A path is read
-/// wherever it points: a `dist` linked into a build cache holds the files a
-/// task wrote.
+/// What an expansion may lean on instead of the disk, and whether it reads
+/// the disk at all. On disk a path is read wherever it points: a `dist`
+/// linked into a build cache holds the files a task wrote.
 pub(crate) struct Source<'a> {
     /// Whether the file map already holds this exact path as a file, so it
     /// needs no stat. A directory never answers yes: the file map holds only
     /// files.
-    tracked_file: PathPredicate<'a>,
+    tracked_file: Box<dyn Fn(&str) -> bool + Sync + 'a>,
     /// How a directory is listed, see `ListDirectory`.
     list_directory: ListDirectory<'a>,
-    /// The workspace a path the source does not track is stat'ed in.
-    workspace_root: &'a Path,
+    /// The workspace a path the source does not track is stat'ed in. `None`
+    /// when the source is the whole answer and the disk is never read.
+    disk: Option<&'a Path>,
 }
 
 impl<'a> Source<'a> {
@@ -55,9 +59,9 @@ impl<'a> Source<'a> {
         list_directory: impl Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a,
     ) -> Self {
         Self {
-            tracked_file,
+            tracked_file: Box::new(tracked_file),
             list_directory: Box::new(list_directory),
-            workspace_root,
+            disk: Some(workspace_root),
         }
     }
 
@@ -67,9 +71,9 @@ impl<'a> Source<'a> {
         workspace_root: &'a Path,
     ) -> Self {
         Self {
-            tracked_file,
+            tracked_file: Box::new(tracked_file),
             list_directory: disk_files(workspace_root),
-            workspace_root,
+            disk: Some(workspace_root),
         }
     }
 
@@ -82,6 +86,25 @@ impl<'a> Source<'a> {
     /// run, so the file map predates them and nothing is taken on trust.
     pub(crate) fn declared_outputs(workspace_root: &'a Path) -> Self {
         Self::fileset_from_disk(workspace_root)
+    }
+
+    /// A regular fileset: `files` are all there is, and the disk is never
+    /// read. A path that is not a file in them is a directory or nothing.
+    pub(crate) fn file_map(files: &'a [FileData], index: &'a PathIndex) -> Self {
+        Self {
+            tracked_file: Box::new(move |path| index.find(files, path).is_some()),
+            list_directory: Box::new(move |dir, accept| {
+                Some(
+                    index
+                        .under(files, dir)
+                        .map(|i| &files[i as usize].file)
+                        .filter(|path| accept(path))
+                        .cloned()
+                        .collect(),
+                )
+            }),
+            disk: None,
+        }
     }
 }
 
@@ -132,7 +155,7 @@ pub(crate) fn expand_entries(
     let Source {
         tracked_file,
         list_directory,
-        workspace_root,
+        disk,
     } = source;
 
     // One question asked at every place a path joins `found`, so no entry
@@ -142,20 +165,26 @@ pub(crate) fn expand_entries(
     let mut found: Vec<String> = Vec::new();
     for entry in positives {
         let root = &entry.root;
-        let has_pattern = entry.remainder.is_some();
+        let has_pattern = entry.below.is_pattern();
         if !has_pattern && tracked_file(root) {
             if !excluded(root) {
                 found.push(root.clone());
             }
             continue;
         }
-        let Ok(metadata) = std::fs::metadata(workspace_root.join(root)) else {
-            continue;
-        };
-        if metadata.is_file() {
-            if !has_pattern && !excluded(root) {
-                found.push(root.clone());
+        if let Some(workspace_root) = disk {
+            let Ok(metadata) = std::fs::metadata(workspace_root.join(root)) else {
+                continue;
+            };
+            if metadata.is_file() {
+                if !has_pattern && !excluded(root) {
+                    found.push(root.clone());
+                }
+                continue;
             }
+        }
+        // An exact entry names no directory's contents.
+        if matches!(entry.below, Below::Exact) {
             continue;
         }
         // A directory named by its exact path means everything under it;

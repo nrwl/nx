@@ -1,52 +1,11 @@
-//! Matching a regular fileset against a file map, and the one order every
-//! regular fileset folds its files in.
-
-use std::sync::Arc;
+//! Expanding a regular fileset against a file map instead of the disk, and
+//! the one order every regular fileset folds its files in.
 
 use anyhow::Result;
 
-use crate::native::glob::{
-    NxGlobSet, build_glob_set, expand_literal_braces, fileset_patterns, normalize_glob,
-    partition_glob,
-};
+use super::entries::FileSet;
+use super::expansion::{Source, expand_entries};
 use crate::native::types::FileData;
-
-/// A regular fileset: the directories it reads from, and which files under
-/// them are in it. The directories are each positive glob's literal prefix,
-/// as `partition_glob` splits it for every other fileset. Membership is one
-/// glob set over the whole fileset, so a negation, or an extglob that
-/// negates, excludes across the whole fileset, and a brace group stays a
-/// pattern even when its alternatives are literal.
-pub(crate) struct FileSet {
-    roots: Vec<String>,
-    matcher: Arc<NxGlobSet>,
-}
-
-impl FileSet {
-    /// A fileset of only negations reads every file.
-    pub(crate) fn parse(globs: &[String]) -> Result<Self> {
-        let positives: Vec<&String> = globs.iter().filter(|g| !g.starts_with('!')).collect();
-        let roots = if positives.is_empty() {
-            // The empty root is the workspace root.
-            vec![String::new()]
-        } else {
-            positives
-                .into_iter()
-                .filter(|glob| !glob.is_empty())
-                .flat_map(|glob| expand_literal_braces(glob))
-                .map(|glob| partition_glob(&normalize_glob(&glob)).0)
-                .collect()
-        };
-        Ok(Self {
-            roots,
-            matcher: build_glob_set(&fileset_patterns(globs))?,
-        })
-    }
-
-    pub(crate) fn matches(&self, path: &str) -> bool {
-        self.matcher.is_match(path)
-    }
-}
 
 /// Positions into a file map in path order, so an exact path or a directory's
 /// contents are found by binary search rather than by scanning every file.
@@ -91,27 +50,23 @@ impl PathIndex {
     }
 }
 
-/// The positions in `files` a regular fileset matches, in path order. Only
-/// the files at or under a root are tested; every file the fileset can match
-/// is one of them.
+/// The positions in `files` a regular fileset matches, in path order.
 pub(crate) fn match_file_map(
     globs: &[String],
     files: &[FileData],
     index: &PathIndex,
 ) -> Result<Vec<u32>> {
     let fileset = FileSet::parse(globs)?;
-    let mut matched: Vec<u32> = Vec::new();
-    for root in &fileset.roots {
-        matched.extend(index.find(files, root));
-        matched.extend(index.under(files, root));
-    }
-    matched.retain(|&i| fileset.matches(&files[i as usize].file));
-    // One root yields path order already; more may overlap.
-    if fileset.roots.len() > 1 {
-        matched.sort_unstable_by(|&a, &b| files[a as usize].file.cmp(&files[b as usize].file));
-        matched.dedup();
-    }
-    Ok(matched)
+    let expansion = expand_entries(
+        &fileset.positives,
+        &fileset.negations,
+        &Source::file_map(files, index),
+    )?;
+    Ok(expansion
+        .files
+        .iter()
+        .filter_map(|path| index.find(files, path))
+        .collect())
 }
 
 /// Folds matched files path first, then content hash, in the order given.
@@ -128,6 +83,7 @@ pub(crate) fn fold_files<'f>(files: impl Iterator<Item = &'f FileData>) -> Strin
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::glob::{build_glob_set, fileset_patterns, partition_glob};
 
     fn files(paths: &[&str]) -> Vec<FileData> {
         paths
@@ -185,5 +141,100 @@ mod tests {
         assert_eq!(matched(&["virtual/a.ts/**"]), Vec::<&str>::new());
         assert_eq!(matched(&["!virtual/c/**"]).len(), 2);
         assert_eq!(matched(&[""]), Vec::<&str>::new());
+    }
+
+    /// Paths a corpus glob could plausibly name: its literal prefix, and a
+    /// handful of shapes under it.
+    fn candidates_for(glob: &str) -> Vec<String> {
+        let (root, _) = partition_glob(glob.trim_start_matches('!'));
+        let mut paths = vec![root.clone()];
+        for tail in [
+            "x.ts",
+            "a.ts",
+            "a.module.ts",
+            "ignored.ts",
+            "x.spec.ts",
+            "x.spec.tsx.snap",
+            "x.test.js",
+            "README.md",
+            "a/x",
+            "b/x",
+            "a/b/x.ts",
+            "src/index.ts",
+            "cache/a.js",
+            "main.js",
+            "page.tsx",
+            "__tests__/a/x.mjs",
+        ] {
+            paths.push(if root.is_empty() {
+                tail.to_string()
+            } else {
+                format!("{root}/{tail}")
+            });
+        }
+        paths
+    }
+
+    // The legacy matcher is one glob set over the whole fileset. A fileset
+    // read as entries must name exactly what it named, for every glob the
+    // corpus records, alone and with its neighbour negated beside it.
+    #[test]
+    fn entries_name_what_one_glob_set_over_the_fileset_named() {
+        let corpus: Vec<&str> = include_str!("../../../glob/fixtures/glob_corpus.txt")
+            .lines()
+            .collect();
+        let mut filesets: Vec<Vec<String>> = Vec::new();
+        for (i, glob) in corpus.iter().enumerate() {
+            filesets.push(vec![glob.to_string()]);
+            if let Some(next) = corpus.get(i + 1) {
+                let next = next.trim_start_matches('!');
+                filesets.push(vec![glob.to_string(), format!("!{next}")]);
+                filesets.push(vec![format!("!{glob}"), next.to_string()]);
+            }
+        }
+        for fileset in [
+            &["libs/x/src/lib/!(*.module).ts", "libs/x/src/lib/*.ts"][..],
+            &["libs/{x,y}"],
+            &["**/*", "!libs/{x,y}"],
+            &["libs/x/", "!libs/x/a/"],
+            &["libs/{,a}/x"],
+            &[""],
+            &["!"],
+        ] {
+            filesets.push(fileset.iter().map(|g| g.to_string()).collect());
+        }
+        let mut compared = 0;
+        for fileset in filesets {
+            let Ok(legacy) = build_glob_set(&fileset_patterns(&fileset)) else {
+                continue;
+            };
+            let entries = FileSet::parse(&fileset).unwrap_or_else(|err| {
+                panic!("{fileset:?} builds as one glob set but not as entries: {err}")
+            });
+            let mut paths: Vec<String> = fileset.iter().flat_map(|g| candidates_for(g)).collect();
+            paths.extend(
+                [
+                    "libs/x",
+                    "libs/y",
+                    "libs/x/a/b.ts",
+                    "libs/a/x",
+                    "libs/x/src/lib/a.module.ts",
+                ]
+                .map(String::from),
+            );
+            // Only paths a file map can hold: no empty segment, no trailing `/`.
+            for path in paths
+                .iter()
+                .filter(|p| p.split('/').all(|seg| !seg.is_empty()))
+            {
+                assert_eq!(
+                    entries.matches(path),
+                    legacy.is_match(path),
+                    "{fileset:?} on {path}"
+                );
+                compared += 1;
+            }
+        }
+        assert!(compared > 1000, "compared only {compared} cases");
     }
 }
