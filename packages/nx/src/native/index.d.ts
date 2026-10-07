@@ -1005,6 +1005,14 @@ export interface NxWorkspaceFilesExternals {
   ignoredIndex: ExternalObject<IgnoredIndexReader>
 }
 
+/**
+ * Open `url` in the user's default browser. Returns `true` if an opener
+ * process was spawned, `false` if none could be (e.g. no `xdg-open`) or `url`
+ * isn't `http(s)`, so the caller can tell the user instead of failing
+ * silently. Never throws.
+ */
+export declare function openUrl(url: string): boolean
+
 /** A workspace-relative file with the stamp it was left with. */
 export interface OutputFile {
   path: string
@@ -1014,14 +1022,6 @@ export interface OutputFile {
    */
   stamp: string
 }
-
-/**
- * Open `url` in the user's default browser. Returns `true` if an opener
- * process was spawned, `false` if none could be (e.g. no `xdg-open`) or `url`
- * isn't `http(s)`, so the caller can tell the user instead of failing
- * silently. Never throws.
- */
-export declare function openUrl(url: string): boolean
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
 
