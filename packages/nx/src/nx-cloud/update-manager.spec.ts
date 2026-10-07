@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { dirname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import { type ChildProcess, spawn } from 'child_process';
 import { Readable } from 'stream';
 import * as tar from 'tar-stream';
@@ -53,25 +53,32 @@ function httpClientFailing(error: Error): HttpClient {
 
 // A stand-in for a second nx process contending for the download lock. It
 // takes the real native flock on the real lockfile and writes the same
-// "<version> <nonce>" record, so the code under test is exercised against a
-// genuine cross-process holder rather than a stub.
+// "<version> <directory>" record, so the code under test is exercised against
+// a genuine cross-process holder rather than a stub.
+//
+// The 'version' layout publishes under the server version itself, which is
+// where a released nx puts its bundle and the path a publish step that rewrote
+// <installDir>/<version> would delete - so the same-version tests below fail
+// if the production fix is removed. The 'unique' layout is what this code now
+// does, and it is the only layout under which the record's two fields differ.
 const PEER_SOURCE = `
 const { FileLock } = require(process.argv[2]);
 const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
 
-const [installDir, version, holdMs, mode] = process.argv.slice(3);
+const [installDir, version, holdMs, mode, layout] = process.argv.slice(3);
 const lockPath = path.join(installDir, '.state', 'download.lock');
 
 function install() {
-  const dir = path.join(installDir, version);
+  const dirName = layout === 'unique' ? version + '-' + randomUUID() : version;
+  const dir = path.join(installDir, dirName);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'index.js'), 'peer bundle', 'utf-8');
   // Recorded only on completion, exactly as the code under test does.
   fs.writeFileSync(
     path.join(installDir, '.state', 'download.record'),
-    version + ' ' + randomUUID(),
+    version + ' ' + dirName,
     'utf-8'
   );
 }
@@ -213,7 +220,7 @@ describe('update-manager bundle download', () => {
       .filter((f) => statSync(join(installDir, f)).isDirectory())
       .sort();
 
-  it('extracts the downloaded tarball into a directory named for the version', async () => {
+  it('extracts the downloaded tarball into its own directory under the install root', async () => {
     const httpClient = httpClientServing(
       bundleTarball({
         'index.js': 'module.exports = { commands: {} };',
@@ -227,10 +234,13 @@ describe('update-manager bundle download', () => {
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(installed).toEqual({
-      version: '2608.30.0002',
-      fullPath: join(installDir, '2608.30.0002'),
-    });
+    expect(installed.version).toBe('2608.30.0002');
+    expect(dirname(installed.fullPath)).toBe(installDir);
+    // Named for the version so the directory is still readable on disk, plus a
+    // per-install suffix so no two installs publish over each other.
+    expect(basename(installed.fullPath)).toMatch(
+      /^2608\.30\.0002-[0-9a-f-]{36}$/
+    );
     expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
       'module.exports = { commands: {} };'
     );
@@ -245,8 +255,8 @@ describe('update-manager bundle download', () => {
     );
   });
 
-  it('records the installed version and a nonce once the install completes', async () => {
-    await updateManager.downloadAndExtractClientBundle(
+  it('records the server version and the directory it installed into', async () => {
+    const installed = await updateManager.downloadAndExtractClientBundle(
       httpClientServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
@@ -256,12 +266,15 @@ describe('update-manager bundle download', () => {
       join(installDir, '.state', 'download.record'),
       'utf-8'
     );
-    const [version, nonce] = record.trim().split(' ');
-    expect(version).toBe('2608.30.0002');
-    expect(nonce).toMatch(/^[0-9a-f-]{36}$/);
+    // Two fields, because the directory is not derivable from the version:
+    // several directories can carry the same one.
+    expect(record.trim().split(' ')).toEqual([
+      '2608.30.0002',
+      basename(installed.fullPath),
+    ]);
   });
 
-  it('writes a distinct nonce per install so a repeat of the same version is distinguishable', async () => {
+  it('writes a distinct record per install so a repeat of the same version is distinguishable', async () => {
     const download = () =>
       updateManager.downloadAndExtractClientBundle(
         httpClientServing(bundleTarball({ 'index.js': '' })),
@@ -285,8 +298,8 @@ describe('update-manager bundle download', () => {
   });
 
   it('cannot brick the workspace with a version named after a control file', async () => {
-    // rmSync + renameSync would replace the control file with a directory,
-    // and every later nx invocation would abort with a raw EISDIR.
+    // A bundle published over a control file would leave a directory where
+    // every later nx invocation expects a file, aborting with a raw EISDIR.
     for (const name of ['verify.lock', 'download.lock', 'download.record']) {
       const installed = await updateManager.downloadAndExtractClientBundle(
         httpClientServing(bundleTarball({ 'index.js': '' })),
@@ -359,13 +372,13 @@ describe('update-manager bundle download', () => {
     // A crashed extract leaves this behind and nothing else reclaims it.
     mkdirSync(join(installDir, '.tmp-2608.29.0001-999'), { recursive: true });
 
-    await updateManager.downloadAndExtractClientBundle(
+    const installed = await updateManager.downloadAndExtractClientBundle(
       httpClientServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(bundleDirs()).toEqual(['2608.30.0002']);
+    expect(bundleDirs()).toEqual([basename(installed.fullPath)]);
     expect(statSync(join(installDir, '.state')).isDirectory()).toBe(true);
     expect(existsSync(join(installDir, '.tmp-2608.29.0001-999'))).toBe(false);
   });
@@ -408,13 +421,31 @@ describe('update-manager bundle download', () => {
   it('removes bundles left by earlier versions', async () => {
     mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
 
-    await updateManager.downloadAndExtractClientBundle(
+    const installed = await updateManager.downloadAndExtractClientBundle(
       httpClientServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(bundleDirs()).toEqual(['2608.30.0002']);
+    expect(bundleDirs()).toEqual([basename(installed.fullPath)]);
+  });
+
+  it('removes an earlier install of the same version on an uncontended install', async () => {
+    const download = () =>
+      updateManager.downloadAndExtractClientBundle(
+        httpClientServing(bundleTarball({ 'index.js': '' })),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      );
+
+    const first = await download();
+    const second = await download();
+
+    // Publishing into its own directory must not turn repeat installs of one
+    // version into an unbounded pile. Nothing contended either install, so
+    // cleanup runs and the earlier directory goes.
+    expect(second.fullPath).not.toBe(first.fullPath);
+    expect(bundleDirs()).toEqual([basename(second.fullPath)]);
   });
 
   it('keeps the lock files when cleaning up old bundles', async () => {
@@ -469,7 +500,7 @@ describe('update-manager bundle download', () => {
   });
 
   it('does not clobber an installed bundle when a later download fails', async () => {
-    await updateManager.downloadAndExtractClientBundle(
+    const installed = await updateManager.downloadAndExtractClientBundle(
       httpClientServing(bundleTarball({ 'index.js': 'good' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
@@ -483,10 +514,10 @@ describe('update-manager bundle download', () => {
       )
     ).rejects.toThrow('connection reset');
 
-    expect(bundleDirs()).toEqual(['2608.30.0002']);
-    expect(
-      readFileSync(join(installDir, '2608.30.0002', 'index.js'), 'utf-8')
-    ).toBe('good');
+    expect(bundleDirs()).toEqual([basename(installed.fullPath)]);
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'good'
+    );
   });
 
   it('rejects a tar entry that is neither a file nor a directory', async () => {
@@ -607,6 +638,8 @@ describe('update-manager download lock', () => {
      * before the caller starts waiting, and `fail` never installs.
      */
     mode: 'install' | 'installed' | 'fail';
+    /** Where the peer publishes. Defaults to the version itself. */
+    layout?: 'version' | 'unique';
   }): Promise<void> {
     const script = join(workspace, 'peer.js');
     writeFileSync(script, PEER_SOURCE, 'utf-8');
@@ -620,6 +653,7 @@ describe('update-manager download lock', () => {
           options.version,
           String(options.holdMs),
           options.mode,
+          options.layout ?? 'version',
         ],
         { stdio: 'ignore' }
       )
@@ -647,6 +681,35 @@ describe('update-manager download lock', () => {
     );
   });
 
+  it('adopts the directory the record names rather than one named for the version', async () => {
+    // The peer installed under its own directory, so the record's two fields
+    // differ and only the second one locates the bundle. A decoy sits at the
+    // version itself: resolving selection by version would load that.
+    mkdirSync(join(installDir, '2608.30.0002'), { recursive: true });
+    writeFileSync(join(installDir, '2608.30.0002', 'index.js'), 'DECOY');
+
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({
+      version: '2608.30.0002',
+      holdMs: 300,
+      mode: 'install',
+      layout: 'unique',
+    });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(httpClient.get).not.toHaveBeenCalled();
+    expect(installed.version).toBe('2608.30.0002');
+    expect(installed.fullPath).not.toBe(join(installDir, '2608.30.0002'));
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'peer bundle'
+    );
+  });
+
   it('downloads its own bundle when the peer installed a different version', async () => {
     // Including when the peer's is HIGHER: the server asked this process for
     // 2608.30.0002, and a rollback is exactly that case.
@@ -661,7 +724,9 @@ describe('update-manager download lock', () => {
 
     expect(installed.version).toBe('2608.30.0002');
     expect(httpClient.get).toHaveBeenCalledOnce();
-    expect(bundleDirs()).toEqual(['2608.30.0002', '2608.31.0001']);
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.31.0001'].sort()
+    );
   });
 
   it('leaves the peer bundle in place on a contended install', async () => {
@@ -669,13 +734,15 @@ describe('update-manager download lock', () => {
     // that process's lazy requires. This is the original defect.
     await startPeer({ version: '2608.29.0001', holdMs: 300, mode: 'install' });
 
-    await updateManager.downloadAndExtractClientBundle(
+    const installed = await updateManager.downloadAndExtractClientBundle(
       httpClientServing(bundleTarball({ 'index.js': 'mine' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(bundleDirs()).toEqual(['2608.29.0001', '2608.30.0002']);
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.29.0001'].sort()
+    );
     expect(
       readFileSync(join(installDir, '2608.29.0001', 'index.js'), 'utf-8')
     ).toBe('peer bundle');
@@ -697,16 +764,90 @@ describe('update-manager download lock', () => {
     );
 
     expect(installed.version).toBe('2608.30.0002');
-    expect(bundleDirs()).toEqual(['2608.29.0001', '2608.30.0002']);
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.29.0001'].sort()
+    );
+  });
+
+  it('keeps the peer install loadable when the predated record is for the same version', async () => {
+    // The peer completed 2608.30.0002 and recorded it, then kept the lock. The
+    // record never changes during the wait, so this process cannot prove the
+    // install finished while it waited and must not adopt a directory that
+    // could hold a corrupt bundle - it downloads 2608.30.0002 again.
+    //
+    // Publishing that download over the peer's directory is the defect. The
+    // peer sits between its own install and its first `require`, so any window
+    // in which its directory is absent is a MODULE_NOT_FOUND it cannot recover
+    // from. Both installs stay on disk instead.
+    await startPeer({
+      version: '2608.30.0002',
+      holdMs: 300,
+      mode: 'installed',
+    });
+    const peerPath = join(installDir, '2608.30.0002');
+
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(httpClient.get).toHaveBeenCalledOnce();
+
+    // The holder's installation is still there and still its own.
+    expect(readFileSync(join(peerPath, 'index.js'), 'utf-8')).toBe(
+      'peer bundle'
+    );
+
+    // The replacement is a separate directory, reported at the version the
+    // server asked for, and loads the bundle this process downloaded.
+    expect(installed.version).toBe('2608.30.0002');
+    expect(installed.fullPath).not.toBe(peerPath);
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'mine'
+    );
+
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.30.0002'].sort()
+    );
+  });
+
+  it('collects what contended installs left once an install is uncontended', async () => {
+    // A contended install cannot show any bundle to be unused, so it deletes
+    // nothing and repeat contention at one version piles directories up. The
+    // next uncontended install collects them, and that is the bound on the
+    // growth.
+    await startPeer({
+      version: '2608.30.0002',
+      holdMs: 300,
+      mode: 'installed',
+    });
+
+    const contended = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': 'mine' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(bundleDirs()).toHaveLength(2);
+
+    const uncontended = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': 'newer' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(uncontended.fullPath).not.toBe(contended.fullPath);
+    expect(bundleDirs()).toEqual([basename(uncontended.fullPath)]);
   });
 
   it('does not adopt a pre-existing directory the peer never installed', async () => {
-    // recordedBundle() proves a directory named for the recorded version
-    // exists, not that the holder created it; bundleInstalledSince() is what
-    // requires the record to have changed during the wait. An interrupted
-    // install on a released nx leaves exactly such a directory, and the server
-    // asks for that same version again because the content hash no longer
-    // matches.
+    // recordedBundle() proves the directory the record names exists, not that
+    // the holder created it; bundleInstalledSince() is what requires the
+    // record to have changed during the wait. An interrupted install on a
+    // released nx leaves exactly such a directory, and the server asks for
+    // that same version again because the content hash no longer matches.
     mkdirSync(join(installDir, '2608.30.0002'), { recursive: true });
     writeFileSync(join(installDir, '2608.30.0002', 'index.js'), 'CORRUPT');
 
@@ -720,6 +861,7 @@ describe('update-manager download lock', () => {
     );
 
     expect(httpClient.get).toHaveBeenCalledOnce();
+    expect(installed.fullPath).not.toBe(join(installDir, '2608.30.0002'));
     expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
       'good'
     );
@@ -739,7 +881,9 @@ describe('update-manager download lock', () => {
     expect(installed.version).toBe('2608.30.0002');
     expect(httpClient.get).toHaveBeenCalledOnce();
     // The peer may still be running from the old bundle, so it stays.
-    expect(bundleDirs()).toEqual(['2608.28.0001', '2608.30.0002']);
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.28.0001'].sort()
+    );
   });
 
   it('waits for the peer rather than racing it', async () => {

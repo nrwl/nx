@@ -209,10 +209,8 @@ const runnerBundleInstallDirectory = getBundleInstallDefaultLocation();
 
 // Control files live in their own subdirectory so that no bundle can ever
 // collide with one. A version has to start alphanumeric (see
-// VALID_BUNDLE_VERSION), so it can never name '.state', and installing a
-// bundle rewrites <installDir>/<version> with rmSync + renameSync - which,
-// with the control files alongside it, would replace one with a directory and
-// brick the workspace with no in-band recovery.
+// VALID_BUNDLE_VERSION), so it can never name '.state', and a control file
+// replaced by a directory would brick the workspace with no in-band recovery.
 const stateDirectory = join(runnerBundleInstallDirectory, '.state');
 
 function ensureStateDirectory(): void {
@@ -261,8 +259,11 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
     }
 
     // A contended install can leave several bundles on disk. The record names
-    // the one an install last completed, which is the one to run; fall back to
-    // directory order for a bundle installed before records existed.
+    // the directory an install last completed in, which is the one to run.
+    // Without a record the directory name is all there is to go on and is read
+    // as the version, which is right for a bundle an older nx installed and
+    // otherwise yields a version the server rejects, costing one more
+    // download.
     return recordedBundle() ?? installedBundles[0];
   } catch (e: any) {
     console.log('Could not read runner bundle path:', e.message);
@@ -375,11 +376,13 @@ export async function downloadAndExtractClientBundle(
 ): Promise<CloudBundleInstall> {
   // Parallel nx processes race to install bundles, possibly at different
   // versions. The first to take the lock downloads; the rest wait and adopt
-  // its bundle when the server asked them for that same version. Otherwise
-  // they download their own as a contended install, which leaves the holder's
-  // bundle on disk for the process running from it. The flock is released by
-  // the kernel if the holder dies, so no stale-lock cleanup is needed. Under
-  // WASM the lock is unavailable and downloads run unserialized.
+  // its bundle when an install completed during the wait at the version the
+  // server asked them for. Otherwise they download their own as a contended
+  // install, which publishes its own directory and skips cleanup, so the
+  // holder's bundle stays on disk for the process running from it - at the
+  // same version as well as a different one. The flock is released by the
+  // kernel if the holder dies, so no stale-lock cleanup is needed. Under WASM
+  // the lock is unavailable and downloads run unserialized.
   if (!VALID_BUNDLE_VERSION.test(version)) {
     throw new Error(`Invalid Nx Cloud client bundle version: ${version}`);
   }
@@ -448,11 +451,14 @@ export async function downloadAndExtractClientBundle(
   }
 }
 
-// Records "<version> <nonce>", written only once an install has COMPLETED.
-// The nonce makes every install distinct, so a waiter can tell "an install
-// finished while I waited" from "this record is left over from a past run" by
-// comparing the record it read before contending. Timestamps cannot answer
-// that: filesystem mtime granularity is coarser than the race window.
+// Records "<serverVersion> <directoryName>", written only once an install has
+// COMPLETED. The directory is recorded separately because it cannot be derived
+// from the version - every install publishes its own (see
+// downloadAndExtractBundle), so several directories can carry the same
+// version. That also makes every record distinct, so a waiter can tell "an
+// install finished while I waited" from "this record is left over from a past
+// run" by comparing the record it read before contending. Timestamps cannot
+// answer that: filesystem mtime granularity is coarser than the race window.
 function readDownloadRecord(): string {
   try {
     return readFileSync(downloadRecordFilePath, 'utf-8').trim();
@@ -461,18 +467,28 @@ function readDownloadRecord(): string {
   }
 }
 
-function writeDownloadRecord(version: string): void {
+function writeDownloadRecord(version: string, directoryName: string): void {
   ensureStateDirectory();
-  writeFileSync(downloadRecordFilePath, `${version} ${randomUUID()}`, 'utf-8');
+  writeFileSync(downloadRecordFilePath, `${version} ${directoryName}`, 'utf-8');
 }
 
-/** The bundle the record names, if it is still on disk. */
+/**
+ * The bundle the record names, if it is still on disk. A record whose second
+ * field does not name a live directory resolves to null and leaves selection
+ * on its fallback, which is what a one-field record or anything else
+ * unexpected in the file has to do.
+ */
 function recordedBundle(): CloudBundleInstall | null {
-  const version = readDownloadRecord().split(' ')[0];
-  if (!version || !VALID_BUNDLE_VERSION.test(version)) {
+  const [version, directoryName] = readDownloadRecord().split(' ');
+  if (
+    !version ||
+    !directoryName ||
+    !VALID_BUNDLE_VERSION.test(version) ||
+    !VALID_BUNDLE_VERSION.test(directoryName)
+  ) {
     return null;
   }
-  const fullPath = join(runnerBundleInstallDirectory, version);
+  const fullPath = join(runnerBundleInstallDirectory, directoryName);
   return existsSync(fullPath) ? { version, fullPath } : null;
 }
 
@@ -492,7 +508,17 @@ async function downloadAndExtractBundle(
   url: string,
   contended: boolean
 ): Promise<string> {
-  const bundleExtractLocation = join(runnerBundleInstallDirectory, version);
+  // Every install publishes its own directory. Two processes can be asked for
+  // the same version while one of them is already running from a completed
+  // install of it, so replacing <installDir>/<version> in place would delete
+  // that bundle out from under it - and a holder loading its client in the gap
+  // fails with MODULE_NOT_FOUND, which drops the task runner to running
+  // without Nx Cloud. A directory nothing else has seen cannot be in use.
+  const bundleDirectoryName = `${version}-${randomUUID()}`;
+  const bundleExtractLocation = join(
+    runnerBundleInstallDirectory,
+    bundleDirectoryName
+  );
 
   let resp: HttpResponse<NodeJS.ReadableStream>;
   try {
@@ -559,27 +585,31 @@ async function downloadAndExtractBundle(
       });
     });
 
-    rmSync(bundleExtractLocation, { recursive: true, force: true });
     renameSync(tempExtractLocation, bundleExtractLocation);
     // Recorded only now: the record is the signal that a bundle at this
     // version was installed by this process, which is what lets a waiter
-    // adopt it instead of downloading again.
-    writeDownloadRecord(version);
+    // adopt it instead of downloading again, and it carries the directory
+    // that selection has to load from.
+    writeDownloadRecord(version, bundleDirectoryName);
   } catch (e) {
     rmSync(tempExtractLocation, { recursive: true, force: true });
     throw e;
   }
 
-  // On a contended install another process may be running from a bundle on
-  // disk, so leave it for a later uncontended install to clean up.
+  // On a contended install another process may be running from any bundle on
+  // disk, now including one at this same version, so nothing here can be shown
+  // to be unused and collection waits for a later uncontended install. Repeat
+  // contention accumulates directories until one of those runs. Bounding that
+  // means knowing which bundles are still loaded, which nothing on disk
+  // records today.
   if (!contended) {
-    removeOldClientBundles(version);
+    removeOldClientBundles(bundleDirectoryName);
   }
   writeBundleVerificationLock();
   return bundleExtractLocation;
 }
 
-function removeOldClientBundles(currentInstallVersion: string) {
+function removeOldClientBundles(currentInstallDirectoryName: string) {
   const filesAndFolders = readdirSync(runnerBundleInstallDirectory);
 
   for (let fileOrFolder of filesAndFolders) {
@@ -590,7 +620,7 @@ function removeOldClientBundles(currentInstallVersion: string) {
     // still own that directory: leaving it costs disk, deleting it would
     // fail that process's install.
     if (
-      fileOrFolder === currentInstallVersion ||
+      fileOrFolder === currentInstallDirectoryName ||
       fileOrFolder === '.state' ||
       (IS_WASM && fileOrFolder.startsWith('.tmp-'))
     ) {
