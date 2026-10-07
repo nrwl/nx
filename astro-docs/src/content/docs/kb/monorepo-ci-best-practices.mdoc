@@ -261,10 +261,9 @@ A task that writes outside its declared outputs leaves those files missing on th
 
 Prefer tooling that derives inputs from your build configuration rather than asking you to list them
 by hand.
-To enforce the declarations instead of trusting them, Nx Cloud
-[task sandboxing](/docs/kb/sandboxing) confines each task to its declared inputs
-and outputs and reports a violation when it reads or writes anything else, so an undeclared
-dependency surfaces on the run that introduced it.
+To stop relying on the declarations, Nx Cloud [Ultracache](/docs/features/ci-features/remote-cache#ultracache) records the files each task
+reads in CI and hashes later runs from that record, and reports any read it can't record on the run
+that introduced it.
 
 Nx caches task results locally with inputs inferred from your tool configuration.
 Sharing those results across machines needs Nx Cloud

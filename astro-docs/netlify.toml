@@ -451,7 +451,11 @@ to = "/docs/kb/bring-your-own-compute"
 
 [[redirects]]
 from = "/docs/guides/nx-cloud/fix-sandbox-violations"
-to = "/docs/kb/fix-sandbox-violations"
+to = "/docs/kb/improve-cache-inputs-outputs"
+
+[[redirects]]
+from = "/docs/kb/fix-sandbox-violations"
+to = "/docs/kb/improve-cache-inputs-outputs"
 
 [[redirects]]
 from = "/docs/guides/nx-cloud/personal-access-tokens"

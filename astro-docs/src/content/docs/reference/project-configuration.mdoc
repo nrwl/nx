@@ -646,7 +646,7 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 {% /aside %}
 
 {% aside type="note" title="Nx Cloud only" %}
-Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it. Applying a recording additionally needs [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) set in CI, and a recording for the task in question. See [task sandboxing](/docs/kb/sandboxing).
+Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it. Applying a recording needs the task to run on Nx Agents, where [Ultracache](/docs/features/ci-features/remote-cache#ultracache) records it, and a recording for the task in question.
 {% /aside %}
 
 A target that defines `ultracache` replaces the inherited settings rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoredReads` and `ignoredWrites` to keep inherited patterns.
@@ -665,7 +665,7 @@ A target that defines `ultracache` replaces the inherited settings rather than a
 ```
 
 {% aside type="note" title="Workspace-wide exclusions live elsewhere" %}
-`ultracache` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/sandboxing-config.yaml`. See [Excluding paths](/docs/kb/sandboxing#excluding-paths). The two combine: a task is checked against its own `ultracache` patterns and the workspace-wide ones together, so neither overrides the other.
+`ultracache` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/sandboxing-config.yaml`. See [improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs). The two combine: a task is checked against its own `ultracache` patterns and the workspace-wide ones together, so neither overrides the other.
 {% /aside %}
 
 ### Sync generators
