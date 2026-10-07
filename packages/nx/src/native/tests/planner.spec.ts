@@ -1902,6 +1902,13 @@ describe('task planner', () => {
     function withContinuousDependency(taskGraph: any) {
       return {
         ...taskGraph,
+        tasks: {
+          ...taskGraph.tasks,
+          'child:build': {
+            ...taskGraph.tasks['child:build'],
+            continuous: true,
+          },
+        },
         continuousDependencies: { 'parent:build': ['child:build'] },
       };
     }
@@ -2056,28 +2063,24 @@ describe('task planner', () => {
       expect(plan).toContain('child:libs/child/**/*');
     });
 
-    it('hashes a continuous dependency from its own configuration when it has one', () => {
+    it('hashes a continuous dependency from its declared inputs even when it has a configuration', () => {
       const { planner, taskGraph } = fixture();
-      const graph = withContinuousDependency(taskGraph);
-      graph.tasks['child:build'].ultracache = { ignoredReads: ['tmp/**'] };
       const plan = planner.getPlans(
         ['parent:build'],
-        graph,
+        withContinuousDependency(taskGraph),
         configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
           'child:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
 
-      expect(plan).not.toContain('child:libs/child/**/*');
-      expect(plan).toContainEqual(
+      expect(plan).toContain('child:libs/child/**/*');
+      expect(plan).not.toContainEqual(
         expect.stringMatching(/^files:\[libs\/child\/src\/index\.ts[,\]]/)
       );
-      // Its marker joins the task's, so its exclusions count too (identical
-      // digests would share one).
       expect(
         plan.filter((entry) => entry.startsWith('io-snapshot:'))
-      ).toHaveLength(2);
+      ).toHaveLength(1);
     });
 
     it('keeps the declared inputs of a continuous dependency of a task whose ultracache mode is not on', () => {

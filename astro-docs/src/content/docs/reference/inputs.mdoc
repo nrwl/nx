@@ -317,7 +317,7 @@ Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d
 
 A [continuous task](/docs/kb/defining-task-pipeline#continuous-task-dependencies), such as the `serve` task an `e2e` task depends on, runs in its own process, yet what it reads still decides what the task it serves observes.
 A task therefore also hashes the declared inputs of every continuous dependency it has, and of the servers those depend on in turn: files, environment variables, runtime commands and external dependencies alike.
-In CI with [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) set, when the task hashes from its [Ultracache configuration](/docs/reference/project-configuration#ultracache), a server that has one contributes the files it read instead of its declared filesets.
+This holds even when the task hashes from its [Ultracache configuration](/docs/reference/project-configuration#ultracache): continuous tasks never get one, because what a server reads depends on which of its clients ran.
 There's nothing to declare, and only continuous dependencies count.
 A server that declares no inputs contributes its whole project, so declare inputs on servers that live at the workspace root, such as a local registry.
 When a server reads the outputs of its own build dependencies, Nx hashes the task it serves once the server is running, so those outputs count too.
