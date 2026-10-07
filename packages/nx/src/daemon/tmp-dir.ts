@@ -145,8 +145,7 @@ function lazyLogger() {
 }
 
 /**
- * Report one resolution and hand back its path — a directory for the daemon and
- * plugin sockets, the socket file itself for Nx Console. The native side decides
+ * Report one resolution and hand back the socket path. The native side decides
  * where it is and why; every sentence about it is written here.
  */
 function adopt(details: SocketDirDetails): string {
@@ -257,7 +256,11 @@ function assertWithinBudget(details: SocketDirDetails): string {
   throw new Error(
     [
       'Attempted to open socket that exceeds the maximum socket length.',
-      ...(details.usedWorkspaceFallback || details.demotedFrom !== undefined
+      // A refused NX_SOCKET_DIR also lands in the workspace, but no default
+      // directory was tried, and the line below already names the cause.
+      ...((details.usedWorkspaceFallback &&
+        details.refusedConfiguredDir === undefined) ||
+      details.demotedFrom !== undefined
         ? [
             `Nx fell back to ${details.dir} because the default socket directory could not be used.`,
             'Run the command with --verbose to see why the default directory was rejected.',

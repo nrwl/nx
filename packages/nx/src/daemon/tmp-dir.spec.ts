@@ -22,7 +22,7 @@ import { NX_HOME_TMP_DIR, NX_TMP_DIR } from '../utils/nx-tmp-dir';
 // Where the socket directory *is* now lives in native/utils/socket_path.rs and
 // is covered by that crate's tests. What is left here is the reporting: which
 // sentence a resolution produces, which of them fire once per process, and what
-// `assertValidSocketPath` can read back afterwards. So the resolvers are stubbed
+// the length error `assertWithinBudget` composes. So the resolvers are stubbed
 // and the tests stage their return value.
 vi.mock('../native', async () => ({
   ...(await vi.importActual('../native')),
@@ -208,6 +208,7 @@ describe('socket directories', () => {
         expect(message).toContain('/mnt/read-only/sockets');
         expect(message).toContain('could not be used');
         expect(message).not.toContain('Set NX_SOCKET_DIR to a shorter path');
+        expect(message).not.toContain('the default socket directory');
       }
     });
   });
