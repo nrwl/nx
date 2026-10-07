@@ -1,6 +1,7 @@
 // The run's issue ledger. Agents supply only the handoff's `issues` /
 // `issueUpdates`; ids, fingerprints, routing, claims and archiving are nx's.
 
+import { createHash } from 'crypto';
 import { mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
@@ -22,7 +23,10 @@ import {
 } from './run-state';
 
 export { issueFingerprint };
-import { splitMigrationId } from './state-machine';
+import { splitMigrationId, unresolvedFailureDetail } from './state-machine';
+
+// Reserves summary space for the attempt count and the failure.
+const MAX_UNRESOLVED_ID_CHARS = 200;
 
 const ISSUES_DIR_NAME = 'issues';
 
@@ -295,8 +299,9 @@ function parseIssueUpdate(
       value.id
     )}, which is not an issue nx has recorded for this run`;
   }
-  if (issue.claimedByStepId !== reportingStep.id) {
-    return `${label} references ${issue.id}, which is not assigned to this step; only issues the dispensed digest marks assigned to the current step can be updated`;
+  const refusal = issueUpdateRefusal(issue, reportingStep);
+  if (refusal !== null) {
+    return `${label} references ${issue.id}, which ${refusal}`;
   }
   const disposition = value.disposition;
   if (disposition !== 'resolved' && disposition !== 'deferred-final') {
@@ -316,16 +321,43 @@ function parseIssueUpdate(
   };
 }
 
+// Claims serialize the migration steps that could fix an issue. The final
+// validation pass runs alone after all of them, so it takes every issue still
+// open instead: by then any it could claim has been deferred to it.
+function issueUpdateRefusal(
+  issue: MigrateRunIssue,
+  reportingStep: MigrateStep
+): string | null {
+  switch (reportingStep.kind) {
+    case 'migration':
+      return issue.claimedByStepId === reportingStep.id
+        ? null
+        : 'is not assigned to this step; only issues the dispensed digest marks assigned to the current step can be updated';
+    case 'final-validation':
+      return issue.disposition !== 'resolved'
+        ? null
+        : 'is already resolved; the pass may update any issue still open';
+    default: {
+      const exhaustive: never = reportingStep;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+}
+
 // A bare identifier matches the whole package name, scoped names included:
 // nothing splits on '/'. Step ids are unique, so the result needs no dedup.
 function mappedStepIds(identifier: string, state: MigrateRunState): string[] {
   if (identifier.includes(':')) {
     return state.steps
-      .filter((s) => s.migrationId === identifier)
+      .filter((s) => s.kind === 'migration' && s.migrationId === identifier)
       .map((s) => s.id);
   }
   return state.steps
-    .filter((s) => splitMigrationId(s.migrationId).package === identifier)
+    .filter(
+      (s) =>
+        s.kind === 'migration' &&
+        splitMigrationId(s.migrationId).package === identifier
+    )
     .map((s) => s.id);
 }
 
@@ -344,6 +376,76 @@ export interface IssueApplication {
   state: MigrateRunState;
   newIssues: { entry: MigrateRunIssue; report: ReportedIssue }[];
   updates: IssueArchiveUpdate[];
+}
+
+/**
+ * Mints the run issue carrying a given-up step's last failure to the completion
+ * report: unscoped and deferred, so no later step claims it, with the migration
+ * id in the summary so identical failures stay apart. A report with the same
+ * text is taken over, not merged: the fingerprint is derived from the summary,
+ * so the ledger cannot hold both, and a merge would keep the report's scope.
+ * Same locking contract as {@link applyReportedIssues}.
+ */
+export function mintUnresolvedIssue(
+  state: MigrateRunState,
+  step: MigrateStep
+): { application: IssueApplication; issueId: string } {
+  const attempts = `${step.attempt} attempt${step.attempt === 1 ? '' : 's'}`;
+  let subject: string;
+  switch (step.kind) {
+    case 'migration':
+      subject = `Migration ${abbreviatedMigrationId(step.migrationId)}`;
+      break;
+    case 'final-validation':
+      subject = 'The final validation pass';
+      break;
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+  const prefix = `${subject} was left unresolved after ${attempts}: `;
+  const room = MAX_SUMMARY_CHARS - prefix.length;
+  const detail = unresolvedFailureDetail(step);
+  const summary =
+    prefix +
+    (detail.length > room ? `${detail.slice(0, room - 3)}...` : detail);
+  const ledger = state.issues ?? [];
+  const index = ledger.findIndex(
+    (i) => i.fingerprint === issueFingerprint(summary)
+  );
+  if (index === -1) {
+    const application = applyReportedIssues(
+      state,
+      step,
+      [{ summary, applicableMigrations: 'unknown' }],
+      []
+    );
+    return { application, issueId: application.newIssues[0].entry.id };
+  }
+  const {
+    claimedByStepId: _claim,
+    resolvedByStepId: _credit,
+    resolvedAtCommitCount: _fence,
+    ...rest
+  } = ledger[index];
+  const entry: MigrateRunIssue = {
+    ...rest,
+    applicableStepIds: 'unknown',
+    disposition: 'deferred-final',
+  };
+  const issues = [...ledger];
+  issues[index] = entry;
+  return {
+    application: {
+      state: { ...state, issues },
+      newIssues: [],
+      updates: [
+        { issueId: entry.id, stepId: step.id, disposition: 'deferred-final' },
+      ],
+    },
+    issueId: entry.id,
+  };
 }
 
 /**
@@ -903,21 +1005,38 @@ export function renderIssueDigestLines(
 ): string[] {
   const unresolved = unresolvedIssues(state);
   if (unresolved.length === 0) return [];
-  const assigned = unresolved.filter(
-    (i) => i.disposition === 'recorded' && i.claimedByStepId === currentStepId
-  );
-  const entries = [
-    ...assigned.map((i) => digestEntry(i, 'assigned to this step')),
-    ...unresolved
-      .filter(
+  const currentStep = state.steps.find((s) => s.id === currentStepId);
+  // Deferred issues are the pass's own work; every other step reads them as
+  // out of reach.
+  const passDispense = currentStep?.kind === 'final-validation';
+  const assigned = passDispense
+    ? unresolved
+    : unresolved.filter(
         (i) =>
-          i.disposition === 'recorded' && i.claimedByStepId !== currentStepId
+          i.disposition === 'recorded' && i.claimedByStepId === currentStepId
+      );
+  const entries = passDispense
+    ? assigned.map((i) =>
+        digestEntry(
+          i,
+          i.disposition === 'deferred-final'
+            ? 'deferred to this step'
+            : 'assigned to this step'
+        )
       )
-      .map((i) => digestEntry(i, 'recorded')),
-    ...unresolved
-      .filter((i) => i.disposition === 'deferred-final')
-      .map((i) => digestEntry(i, 'deferred past the migration steps')),
-  ];
+    : [
+        ...assigned.map((i) => digestEntry(i, 'assigned to this step')),
+        ...unresolved
+          .filter(
+            (i) =>
+              i.disposition === 'recorded' &&
+              i.claimedByStepId !== currentStepId
+          )
+          .map((i) => digestEntry(i, 'recorded')),
+        ...unresolved
+          .filter((i) => i.disposition === 'deferred-final')
+          .map((i) => digestEntry(i, 'deferred past the migration steps')),
+      ];
   const fixedLines = [
     ``,
     stepDigestHeading(runId),
@@ -966,8 +1085,12 @@ export function renderUnresolvedIssueLines(
   return [heading, ...boundedEntryLines(entries, runId, budget)];
 }
 
-function unresolvedIssues(state: MigrateRunState): MigrateRunIssue[] {
+export function unresolvedIssues(state: MigrateRunState): MigrateRunIssue[] {
   return (state.issues ?? []).filter((i) => i.disposition !== 'resolved');
+}
+
+export function hasUnresolvedIssues(state: MigrateRunState): boolean {
+  return unresolvedIssues(state).length > 0;
 }
 
 function stepDigestHeading(runId: string): string {
@@ -1174,6 +1297,16 @@ const NEW_ISSUE_ARCHIVE_KEYS = [
   'detail',
 ] as const;
 
+// Hashes the full id so ids sharing a visible prefix stay distinct.
+function abbreviatedMigrationId(migrationId: string): string {
+  if (migrationId.length <= MAX_UNRESOLVED_ID_CHARS) return migrationId;
+  const digest = createHash('sha256')
+    .update(migrationId)
+    .digest('hex')
+    .slice(0, 8);
+  return `${migrationId.slice(0, MAX_UNRESOLVED_ID_CHARS - 12)}...[${digest}]`;
+}
+
 // Shared by the write path and the intactness check so their shapes cannot
 // drift.
 function newIssueArchiveRecord(
@@ -1313,10 +1446,10 @@ function reconstructedArchiveShell(
     summary: entry.summary,
     reportedByStepId: entry.reportedByStepId,
     applicableMigrations: Array.isArray(entry.applicableStepIds)
-      ? entry.applicableStepIds.map(
-          (stepId) =>
-            state.steps.find((s) => s.id === stepId)?.migrationId ?? stepId
-        )
+      ? entry.applicableStepIds.map((stepId) => {
+          const step = state.steps.find((s) => s.id === stepId);
+          return step?.kind === 'migration' ? step.migrationId : stepId;
+        })
       : 'unknown',
     reconstructed: true,
   };

@@ -16,6 +16,7 @@ import {
   joinPathFragments,
   getPackageManagerCommand,
   detectPackageManager,
+  normalizePath,
 } from '@nx/devkit';
 import {
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
@@ -307,8 +308,10 @@ function getOutputs(
   // `output.distPath.root` is the directory Rsbuild emits the build into, so
   // it is the build output as-is. (Don't take its `dirname` - that points at
   // the parent directory, which can capture sibling projects' outputs.)
+  // Rsbuild 2 also accepts `distPath` as a string, shorthand for `distPath.root`.
+  const distPath = rsbuildConfig?.output?.distPath;
   const buildOutputPath = normalizeOutputPath(
-    rsbuildConfig?.output?.distPath?.root,
+    typeof distPath === 'string' ? distPath : distPath?.root,
     projectRoot,
     workspaceRoot,
     'dist'
@@ -333,12 +336,12 @@ function normalizeOutputPath(
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      return `{workspaceRoot}/${normalizePath(relative(workspaceRoot, outputPath))}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }

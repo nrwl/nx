@@ -55,6 +55,10 @@ import {
   isHandleGetPluginCapabilitiesMessage,
 } from '../message-types/get-plugin-capabilities';
 import {
+  SELECT_AFFECTED_TASKS,
+  isHandleSelectAffectedTasksMessage,
+} from '../message-types/select-affected-tasks';
+import {
   GET_SYNC_GENERATOR_CHANGES,
   isHandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
@@ -118,6 +122,7 @@ import { handleClientEnv } from './handle-client-env';
 import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
 import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
 import { handleGetPluginCapabilities } from './handle-get-plugin-capabilities';
+import { handleSelectAffectedTasks } from './handle-select-affected-tasks';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
 import { handleGlob, handleMultiGlob } from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
@@ -145,9 +150,9 @@ import {
 } from './handle-tasks-execution-hooks';
 import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
 import {
-  getOutputsWatcherTerminalError,
-  handleOutputsChanges,
-} from './handle-outputs-changes';
+  getWatchTerminalError,
+  handleWatchEvents,
+} from './handle-watch-events';
 import {
   registerProjectGraphRecomputationListener,
   routeAppliedChanges,
@@ -248,7 +253,7 @@ const server = createServer(async (socket) => {
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket: Socket, data: Buffer) {
+export async function handleMessage(socket: Socket, data: Buffer) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -256,12 +261,12 @@ async function handleMessage(socket: Socket, data: Buffer) {
       workspaceWatcherError
     );
   }
-  const outputsWatcherTerminalError = getOutputsWatcherTerminalError();
-  if (outputsWatcherTerminalError) {
+  const watchTerminalError = getWatchTerminalError();
+  if (watchTerminalError) {
     await respondWithErrorAndExit(
       socket,
       `File watcher error in the workspace '${workspaceRoot}'.`,
-      outputsWatcherTerminalError
+      watchTerminalError
     );
   }
 
@@ -468,6 +473,13 @@ async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       GET_PLUGIN_CAPABILITIES,
       () => handleGetPluginCapabilities(),
+      mode
+    );
+  } else if (isHandleSelectAffectedTasksMessage(payload)) {
+    await handleResult(
+      socket,
+      SELECT_AFFECTED_TASKS,
+      () => handleSelectAffectedTasks(payload.request),
       mode
     );
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
@@ -800,7 +812,7 @@ export async function startServer(): Promise<Server> {
               return;
             }
             if (err || events?.length) {
-              handleOutputsChanges(err, events);
+              handleWatchEvents(err, events);
             }
           });
 

@@ -26,6 +26,7 @@ import {
   renderUnresolvedIssueLines,
   reopenResolutionsForStep,
   settleUnclaimableIssues,
+  mintUnresolvedIssue,
 } from './issues';
 import type {
   MigrateRunIssue,
@@ -42,6 +43,7 @@ describe('migrate run issues', () => {
   ): MigrateStep => ({
     id,
     roundIndex: 0,
+    kind: 'migration',
     migrationId,
     status,
     attempt: 1,
@@ -72,7 +74,7 @@ describe('migrate run issues', () => {
     status: 'active',
     createCommits: false,
     commitPrefix: 'chore: ',
-    rounds: [{ index: 0, planHash: 'h', planSnapshot: 'plan-0.json' }],
+    rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
     steps,
     commits: [],
     ...(issues ? { issues } : {}),
@@ -264,6 +266,47 @@ describe('migrate run issues', () => {
       expect(result.ok).toBe(false);
       expect((result as { ok: false; reason: string }).reason).toContain(
         'not assigned to this step'
+      );
+    });
+
+    it('lets the final validation pass update any open issue, deferred ones included', () => {
+      const pass: MigrateStep = {
+        id: 'step-4',
+        roundIndex: 0,
+        kind: 'final-validation',
+        status: 'awaiting-prompt-outcome',
+        attempt: 1,
+        dispenseCount: 1,
+      };
+      const steps = [...baseSteps(), pass];
+      const ledger = [
+        issue('issue-1', { disposition: 'deferred-final' }),
+        issue('issue-2', { claimedByStepId: 'step-2' }),
+        issue('issue-3', {
+          disposition: 'resolved',
+          resolvedByStepId: 'step-1',
+        }),
+      ];
+      const accepted = parseHandoffIssues(
+        {
+          issueUpdates: [
+            { id: 'issue-1', disposition: 'resolved' },
+            { id: 'issue-2', disposition: 'deferred-final' },
+          ],
+        },
+        stateWith(steps, ledger),
+        pass
+      );
+      expect(accepted.ok).toBe(true);
+
+      const resolvedAgain = parseHandoffIssues(
+        { issueUpdates: [{ id: 'issue-3', disposition: 'resolved' }] },
+        stateWith(steps, ledger),
+        pass
+      );
+      expect(resolvedAgain.ok).toBe(false);
+      expect((resolvedAgain as { ok: false; reason: string }).reason).toContain(
+        'already resolved'
       );
     });
 
@@ -1171,6 +1214,133 @@ describe('migrate run issues', () => {
     });
   });
 
+  describe('mintUnresolvedIssue', () => {
+    it('mints an unscoped, deferred issue naming the migration and its last failure', () => {
+      const steps = [
+        { ...step('step-1', '@nx/js:one', 'unresolved'), attempt: 2 },
+        step('step-2', '@nx/js:two', 'pending'),
+      ];
+      steps[0].outcome = { summary: 'generator threw: boom' };
+
+      const { application, issueId } = mintUnresolvedIssue(
+        stateWith(steps),
+        steps[0]
+      );
+
+      expect(issueId).toBe('issue-1');
+      expect(application.state.issues).toEqual([
+        {
+          id: 'issue-1',
+          fingerprint: issueFingerprint(
+            'Migration @nx/js:one was left unresolved after 2 attempts: generator threw: boom'
+          ),
+          summary:
+            'Migration @nx/js:one was left unresolved after 2 attempts: generator threw: boom',
+          reportedByStepId: 'step-1',
+          applicableStepIds: 'unknown',
+          disposition: 'deferred-final',
+        },
+      ]);
+      expect(application.newIssues.map((n) => n.entry.id)).toEqual(['issue-1']);
+    });
+
+    it("falls back to the prompt outcome's summary and bounds the summary", () => {
+      const prompted = step('step-1', '@nx/js:one', 'unresolved');
+      prompted.promptOutcome = {
+        status: 'failed',
+        summary: `line one\nline two ${'x'.repeat(600)}`,
+      };
+      const minted = mintUnresolvedIssue(stateWith([prompted]), prompted);
+      expect(minted.application.state.issues[0].summary).toMatch(
+        /^Migration @nx\/js:one was left unresolved after 1 attempt: line one line two x+\.\.\.$/
+      );
+      expect(minted.application.state.issues[0].summary.length).toBe(500);
+    });
+
+    it.each([
+      [
+        'recorded and claimed',
+        {
+          applicableStepIds: ['step-2'],
+          disposition: 'recorded' as const,
+          claimedByStepId: 'step-2',
+        },
+      ],
+      [
+        'resolved',
+        {
+          applicableStepIds: ['step-2'],
+          disposition: 'resolved' as const,
+          resolvedByStepId: 'step-1',
+          resolvedAtCommitCount: 0,
+        },
+      ],
+    ])(
+      'takes over an existing %s issue carrying the same summary, leaving it unscoped and deferred',
+      (_case, extra) => {
+        const steps = [
+          step('step-1', '@nx/js:one', 'unresolved'),
+          step('step-2', '@nx/js:two', 'pending'),
+        ];
+        steps[0].outcome = { summary: 'boom' };
+        const summary =
+          'Migration @nx/js:one was left unresolved after 1 attempt: boom';
+        const existing = issue('issue-7', {
+          summary,
+          fingerprint: issueFingerprint(summary),
+          ...extra,
+        });
+
+        const { application, issueId } = mintUnresolvedIssue(
+          stateWith(steps, [existing]),
+          steps[0]
+        );
+
+        expect(issueId).toBe('issue-7');
+        expect(application.newIssues).toEqual([]);
+        expect(application.state.issues).toEqual([
+          {
+            id: 'issue-7',
+            fingerprint: issueFingerprint(summary),
+            summary,
+            reportedByStepId: 'step-1',
+            applicableStepIds: 'unknown',
+            disposition: 'deferred-final',
+          },
+        ]);
+        expect(application.updates).toEqual([
+          {
+            issueId: 'issue-7',
+            stepId: 'step-1',
+            disposition: 'deferred-final',
+          },
+        ]);
+      }
+    );
+
+    it('abbreviates an overlong migration id with a digest that keeps distinct ids distinct', () => {
+      // Hash the full ids: the failures and the visible prefixes are identical.
+      const first = step('step-1', `@nx/js:${'m'.repeat(600)}a`, 'unresolved');
+      first.outcome = { summary: 'boom' };
+      const second = step('step-2', `@nx/js:${'m'.repeat(600)}b`, 'unresolved');
+      second.outcome = { summary: 'boom' };
+      const state = stateWith([first, second]);
+
+      const minted = mintUnresolvedIssue(state, first);
+      const again = mintUnresolvedIssue(minted.application.state, second);
+
+      const summaries = again.application.state.issues.map((i) => i.summary);
+      expect(summaries).toHaveLength(2);
+      for (const summary of summaries) {
+        expect(summary).toMatch(
+          /^Migration @nx\/js:m+\.\.\.\[[0-9a-f]{8}\] was left unresolved after 1 attempt: boom$/
+        );
+        expect(summary.length).toBeLessThan(500);
+      }
+      expect(summaries[0]).not.toBe(summaries[1]);
+    });
+  });
+
   describe('issueIdsForCommit', () => {
     it("carries a named step's resolutions that no earlier landed commit already carries", () => {
       const state = {
@@ -1645,6 +1815,36 @@ describe('migrate run issues', () => {
   });
 
   describe('renderIssueDigestLines', () => {
+    it('hands every open issue to the final validation pass, deferred ones labeled as its own', () => {
+      const pass: MigrateStep = {
+        id: 'step-4',
+        roundIndex: 0,
+        kind: 'final-validation',
+        status: 'awaiting-prompt-outcome',
+        attempt: 1,
+        dispenseCount: 1,
+      };
+      const lines = renderIssueDigestLines(
+        stateWith(
+          [...baseSteps(), pass],
+          [
+            issue('issue-1', {
+              disposition: 'deferred-final',
+              summary: 'deferred one',
+            }),
+            issue('issue-2', { fingerprint: 'fp-b', summary: 'stray one' }),
+          ]
+        ),
+        'step-4',
+        'run-1'
+      );
+      expect(lines.slice(2, 4)).toEqual([
+        '  - issue-1 (deferred to this step): deferred one',
+        '  - issue-2 (assigned to this step): stray one',
+      ]);
+      expect(lines[4]).toContain('"issueUpdates"');
+    });
+
     it('is empty when the ledger holds nothing unresolved', () => {
       expect(
         renderIssueDigestLines(stateWith(baseSteps()), 'step-2', 'run-1')

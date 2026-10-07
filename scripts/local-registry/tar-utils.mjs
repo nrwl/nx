@@ -13,6 +13,7 @@ import {
   mkdirSync,
   readdirSync,
   readlinkSync,
+  rmSync,
   symlinkSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -63,7 +64,29 @@ export async function packDirectory(dir, dest) {
   const pack = tarPack();
   mkdirSync(dirname(dest), { recursive: true });
   const written = pipeline(pack, createWriteStream(dest));
+  // A failed entry destroys the pack, which rejects `written` long before it is
+  // awaited; unhandled, that crashes the process instead of this call.
+  written.catch(() => {});
 
+  try {
+    await addEntries(pack, dir);
+    pack.finalize();
+    await written;
+  } catch (err) {
+    pack.destroy();
+    await written.catch(() => {});
+    // A truncated archive would be extracted as a broken template; a missing one
+    // falls back to create-nx-workspace.
+    rmSync(dest, { force: true });
+    throw err;
+  }
+}
+
+/**
+ * @param {import('tar-stream').Pack} pack
+ * @param {string} dir
+ */
+async function addEntries(pack, dir) {
   for (const relPath of walk(dir)) {
     const absPath = join(dir, relPath);
     const stats = lstatSync(absPath);
@@ -82,14 +105,18 @@ export async function packDirectory(dir, dest) {
         pack,
         { ...shared, name: relPath, type: 'file', size: stats.size },
         absPath
-      );
+      ).catch((err) => {
+        // tar-stream's "size mismatch" doesn't say which file was still being written.
+        const now = lstatSync(absPath, { throwIfNoEntry: false })?.size;
+        throw new Error(
+          `Could not pack ${relPath} (${stats.size} bytes at lstat, ${now ?? 'gone'} now): ${err.message}`,
+          { cause: err }
+        );
+      });
     }
     // Sockets, fifos and devices have no business in a workspace; skip them
     // rather than fail the whole template.
   }
-
-  pack.finalize();
-  await written;
 }
 
 /**

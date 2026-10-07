@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`vue:storybook-configuration should configure everything and install correct dependencies 1`] = `
+exports[`vue:storybook-configuration > should configure everything and install correct dependencies 1`] = `
 "import type { StorybookConfig } from '@storybook/vue3-vite';
 
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -29,7 +29,7 @@ export default config;
 "
 `;
 
-exports[`vue:storybook-configuration should generate stories for components 1`] = `
+exports[`vue:storybook-configuration > should generate stories for components 1`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import myComponent from './my-component.vue';
 
@@ -64,7 +64,7 @@ export const Heading = {
 "
 `;
 
-exports[`vue:storybook-configuration should generate stories for components for app 1`] = `
+exports[`vue:storybook-configuration > should generate stories for components for app 1`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import myComponent from './my-component.vue';
 
@@ -99,7 +99,7 @@ export const Heading = {
 "
 `;
 
-exports[`vue:storybook-configuration should generate stories for components without interaction tests 1`] = `
+exports[`vue:storybook-configuration > should generate stories for components without interaction tests 1`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import myComponent from './my-component.vue';
 

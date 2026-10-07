@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create nodes 1`] = `
+exports[`@nx/remix/plugin > Remix Classic Compiler > non-root project > should create nodes 1`] = `
 [
   [
     "my-app/remix.config.cjs",
@@ -137,7 +137,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
 ]
 `;
 
-exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer watch-deps target 1`] = `
+exports[`@nx/remix/plugin > Remix Classic Compiler > non-root project > should infer watch-deps target 1`] = `
 [
   [
     "my-app/remix.config.cjs",
@@ -274,7 +274,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
 ]
 `;
 
-exports[`@nx/remix/plugin Remix Classic Compiler root project should create nodes 1`] = `
+exports[`@nx/remix/plugin > Remix Classic Compiler > root project > should create nodes 1`] = `
 [
   [
     "remix.config.cjs",
@@ -399,7 +399,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
 ]
 `;
 
-exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nodes 1`] = `
+exports[`@nx/remix/plugin > Remix Vite Compiler > non-root project > should create nodes 1`] = `
 [
   [
     "my-app/vite.config.js",
@@ -535,7 +535,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
 ]
 `;
 
-exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1`] = `
+exports[`@nx/remix/plugin > Remix Vite Compiler > root project > should create nodes 1`] = `
 [
   [
     "vite.config.js",

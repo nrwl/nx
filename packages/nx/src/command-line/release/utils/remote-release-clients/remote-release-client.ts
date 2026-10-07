@@ -1,10 +1,12 @@
 import { inspect } from 'node:util';
-import type { AxiosRequestConfig } from 'axios';
-import axios from 'axios';
 import type { PostGitTask } from '../../changelog';
 import { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import type { Reference } from '../git';
 import { handleImport } from '../../../../utils/handle-import';
+import {
+  httpRequest,
+  type HttpRequestConfig,
+} from '../../../../utils/http-client';
 import { printDiff } from '../print-changes';
 import { noDiffInChangelogMessage, type ReleaseVersion } from '../shared';
 import type { GithubRemoteReleaseClient } from './github';
@@ -70,10 +72,10 @@ export abstract class RemoteReleaseClient<
 
   protected inspectWithRedactedToken(error: unknown): string {
     const inspected = inspect(error);
-    // The dump can hold a different string than the raw token: axios trims
+    // The dump can hold a different string than the raw token: fetch trims
     // header values and inspect() escapes the result, while message/stack keep
     // it bare. Redact every rendering; the Set collapses them for an ordinary
-    // token. The CR/LF needle is belt-and-braces — node rejects such headers.
+    // token. The CR/LF needle is belt-and-braces - fetch rejects such headers.
     const token = this.tokenData?.token?.trim();
     if (!token) {
       return inspected;
@@ -130,7 +132,7 @@ export abstract class RemoteReleaseClient<
    */
   protected async makeRequest(
     url: string,
-    opts: AxiosRequestConfig = {}
+    opts: HttpRequestConfig = {}
   ): Promise<any> {
     const remoteRepoData = this.getRemoteRepoData<RemoteRepoData>();
     if (!remoteRepoData) {
@@ -138,15 +140,15 @@ export abstract class RemoteReleaseClient<
         `No remote repo data could be resolved for the current workspace`
       );
     }
-    const config: AxiosRequestConfig<any> = {
+    const config: HttpRequestConfig = {
       ...opts,
       baseURL: remoteRepoData.apiBaseUrl,
       headers: {
-        ...(opts.headers as any),
+        ...opts.headers,
         ...this.tokenHeader,
       },
     };
-    return (await axios<any, any>(url, config)).data;
+    return (await httpRequest(url, config)).data;
   }
 
   async createOrUpdateRelease(

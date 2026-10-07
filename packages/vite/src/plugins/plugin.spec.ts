@@ -1,18 +1,19 @@
+import type { Mock } from 'vitest';
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('../utils/executor-utils', () => ({
-  loadViteDynamicImport: jest.fn().mockResolvedValue({
-    resolveConfig: jest.fn().mockResolvedValue({}),
+vi.mock('../utils/executor-utils', () => ({
+  loadViteDynamicImport: vi.fn().mockResolvedValue({
+    resolveConfig: vi.fn().mockResolvedValue({}),
   }),
 }));
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
 describe('@nx/vite/plugin', () => {
@@ -20,7 +21,7 @@ describe('@nx/vite/plugin', () => {
   let context: CreateNodesContext;
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
   });
 
   describe('root project', () => {
@@ -50,7 +51,7 @@ describe('@nx/vite/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
     });
 
     it('should create nodes', async () => {
@@ -106,8 +107,8 @@ describe('@nx/vite/plugin', () => {
       // Don't need index.html if we're setting inputs
       tempFs.removeFileSync('index.html');
 
-      (loadViteDynamicImport as jest.Mock).mockResolvedValue({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValue({
+        resolveConfig: vi.fn().mockResolvedValue({
           build: {
             rollupOptions: {
               input: { index: 'src/index.js' },
@@ -174,7 +175,7 @@ describe('@nx/vite/plugin', () => {
     });
 
     it('should infer typecheck with --build flag when using TS solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
       tempFs.createFileSync('tsconfig.json', '');
 
       const nodes = await createNodesFunction(
@@ -241,7 +242,7 @@ describe('@nx/vite/plugin', () => {
     });
 
     it('should use tsgo with --build flag when compiler is tsgo and using TS solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
       tempFs.createFileSync('tsconfig.json', '');
 
       const nodes = await createNodesFunction(
@@ -288,7 +289,7 @@ describe('@nx/vite/plugin', () => {
     });
 
     it('should infer the sync generator when using TS solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
       tempFs.createFileSync('tsconfig.json', '');
 
       const nodes = await createNodesFunction(
@@ -336,7 +337,7 @@ describe('@nx/vite/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
     });
 
@@ -393,8 +394,8 @@ describe('@nx/vite/plugin', () => {
   describe('Library mode', () => {
     it('should exclude serve and preview targets when vite.config.ts is in library mode', async () => {
       const tempFs = new TempFs('test');
-      ((loadViteDynamicImport as jest.Mock).mockResolvedValue({
-        resolveConfig: jest.fn().mockResolvedValue({
+      ((loadViteDynamicImport as Mock).mockResolvedValue({
+        resolveConfig: vi.fn().mockResolvedValue({
           build: {
             lib: {
               entry: 'index.ts',
@@ -433,8 +434,8 @@ describe('@nx/vite/plugin', () => {
     });
     it('should not exclude serve and preview targets when vite.config.ts is in library mode when user has defined a server config', async () => {
       const tempFs = new TempFs('test-exclude');
-      ((loadViteDynamicImport as jest.Mock).mockResolvedValue({
-        resolveConfig: jest.fn().mockResolvedValue({
+      ((loadViteDynamicImport as Mock).mockResolvedValue({
+        resolveConfig: vi.fn().mockResolvedValue({
           build: {
             lib: {
               entry: 'index.ts',

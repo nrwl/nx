@@ -8,6 +8,7 @@ import {
   listFiles,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   runCLIAsync,
   uniq,
@@ -41,9 +42,10 @@ describe('React Applications', () => {
     it('should be able to use Vite to build and test apps', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
+      const port = await reservePort();
 
       runCLI(
-        `generate @nx/react:app apps/${appName} --name=${appName} --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
+        `generate @nx/react:app apps/${appName} --name=${appName} --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest --port=${port}`
       );
       runCLI(
         `generate @nx/react:lib libs/${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
@@ -68,7 +70,7 @@ describe('React Applications', () => {
       if (await shouldRunPlaywrightTests()) {
         const e2eResults = runCLI(`e2e ${appName}-e2e`);
         expect(e2eResults).toContain('Successfully ran target e2e for project');
-        expect(await killPorts()).toBeTruthy();
+        expect(await killPorts(port)).toBeTruthy();
       }
     }, 250_000);
 

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 1`] = `
+exports[`nuxt:storybook-configuration > should configure with vue3 framework and styles import 1`] = `
 "import type { StorybookConfig } from '@storybook/vue3-vite';
 
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -29,12 +29,12 @@ export default config;
 "
 `;
 
-exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 2`] = `
+exports[`nuxt:storybook-configuration > should configure with vue3 framework and styles import 2`] = `
 "import '../src/assets/css/styles.css';
 "
 `;
 
-exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 3`] = `
+exports[`nuxt:storybook-configuration > should configure with vue3 framework and styles import 3`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {

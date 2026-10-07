@@ -64,13 +64,13 @@ Develocity Test Distribution fans JVM test executions out to remote agents, with
 
 ## E2E splitting
 
-Develocity has no support for JS e2e runners. [Atomizer](/docs/features/ci-features/split-e2e-tasks) splits Playwright and Cypress suites into per-file tasks so the slowest suites spread across agents instead of serializing a pipeline.
+Develocity has no support for JS e2e runners. [Atomizer](/docs/kb/split-e2e-tasks) splits Playwright and Cypress suites into per-file tasks so the slowest suites spread across agents instead of serializing a pipeline.
 
 ## Flaky tests
 
 Develocity's flaky test management runs deep: detection across Gradle, Maven, Bazel, and npm builds, retry integration, and org-wide flakiness trends.
 
-Nx Cloud [detects flaky tasks](/docs/features/ci-features/flaky-tasks) from execution history and re-runs them in isolation automatically, covering every task type, so a flaky Playwright spec is handled the same way as a flaky JUnit class.
+Nx Cloud [detects flaky tasks](/docs/kb/flaky-tasks) from execution history and re-runs them in isolation automatically, covering every task type, so a flaky Playwright spec is handled the same way as a flaky JUnit class.
 
 ## AI integration
 

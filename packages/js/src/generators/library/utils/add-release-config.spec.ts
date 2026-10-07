@@ -266,11 +266,9 @@ describe('add release config', () => {
     });
 
     it("should warn the user if their defined groups don't match the new project", async () => {
-      const outputSpy = jest
-        .spyOn(output, 'warn')
-        .mockImplementationOnce(() => {
-          return undefined as never;
-        });
+      const outputSpy = vi.spyOn(output, 'warn').mockImplementationOnce(() => {
+        return undefined as never;
+      });
 
       const existingReleaseConfig = {
         groups: {
@@ -552,11 +550,9 @@ describe('add release config', () => {
     });
 
     it("should warn the user if their defined groups don't match the new project", async () => {
-      const outputSpy = jest
-        .spyOn(output, 'warn')
-        .mockImplementationOnce(() => {
-          return undefined as never;
-        });
+      const outputSpy = vi.spyOn(output, 'warn').mockImplementationOnce(() => {
+        return undefined as never;
+      });
 
       const existingReleaseConfig = {
         groups: {

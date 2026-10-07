@@ -185,10 +185,12 @@ describe('spawnMasterSession', () => {
     );
   });
 
-  it('strips the wrapper and gate variables from the child env and applies the agent env', async () => {
+  it('strips the wrapper, gate and affected-ref variables from the child env and applies the agent env', async () => {
     process.env.NX_MIGRATE_SKIP_INSTALL = 'true';
     process.env.NX_MIGRATE_USE_LOCAL = 'true';
     process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
+    process.env.NX_BASE = 'bead0005bead0005bead0005bead0005bead0005';
+    process.env.NX_HEAD = 'face0006face0006face0006face0006face0006';
     process.env.UNRELATED = 'kept';
     mockSpawn.mockImplementation(() => fakeChild());
 
@@ -206,6 +208,8 @@ describe('spawnMasterSession', () => {
     expect(env).not.toHaveProperty('NX_MIGRATE_SKIP_INSTALL');
     expect(env).not.toHaveProperty('NX_MIGRATE_USE_LOCAL');
     expect(env).not.toHaveProperty('NX_MIGRATE_ORCHESTRATOR');
+    expect(env).not.toHaveProperty('NX_BASE');
+    expect(env).not.toHaveProperty('NX_HEAD');
     expect(env.UNRELATED).toBe('kept');
     expect(JSON.parse(env.OPENCODE_CONFIG_CONTENT).agent['nx-migrate']).toEqual(
       { prompt: expect.stringContaining(`driving Nx migrate run ${runId}`) }

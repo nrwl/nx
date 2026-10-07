@@ -5,13 +5,18 @@ use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, Instant, SystemTime};
 
-use crate::native::glob::glob_files::glob_files;
+use crate::native::glob::{build_glob_set, glob_files::glob_files};
 use crate::native::hasher::hash;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::utils::file_lock::FileLock;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::native::utils::git::parent_gitignore_files;
 use crate::native::utils::{Normalize, NxCondvar, NxMutex, gather_stamp, path::get_child_files};
+use crate::native::walker::nx_walker;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::native::walker::nx_walker_with_ignore_files;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::watch::types::{EventType, WatchEvent};
 #[cfg(not(target_arch = "wasm32"))]
@@ -26,10 +31,12 @@ use crate::native::workspace::files_archive::{
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::glob_hashing::{hash_glob_groups, needs_scan};
 use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader};
+use crate::native::workspace::outputs_tracking::{OutputRecords, TaskOutputs};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
 use crate::native::workspace::{types::NxWorkspaceFiles, workspace_files};
+use itertools::Either;
 #[cfg(not(target_arch = "wasm32"))]
 use napi::bindgen_prelude::AsyncTask;
 use napi::bindgen_prelude::External;
@@ -66,6 +73,8 @@ pub struct WorkspaceContext {
     files: FileState,
     /// The directories the hasher reads from disk, kept current by the watch.
     ignored: Arc<IgnoredIndex>,
+    /// What the daemon recorded of each task's outputs, read through `ignored`.
+    outputs: OutputRecords,
     batches: Publisher<PendingChanges>,
     #[cfg(not(target_arch = "wasm32"))]
     events: Publisher<Vec<WatchEvent>>,
@@ -173,6 +182,23 @@ fn hashes_to_files(hashes: NxFileHashes) -> Files {
     files.into_iter().collect()
 }
 
+/// The workspace files, and the ignore files the walk applied gathering them.
+/// `ignore_files` is `None` when the files came from an archive, or when the
+/// walk was not asked for them because nothing builds rules from them.
+struct GatheredFiles {
+    files: Files,
+    ignore_files: Option<Vec<PathBuf>>,
+}
+
+impl From<Files> for GatheredFiles {
+    fn from(files: Files) -> Self {
+        GatheredFiles {
+            files,
+            ignore_files: None,
+        }
+    }
+}
+
 fn archive_to_files(archive: FilesArchive) -> Files {
     let mut files: Vec<(PathBuf, String)> = archive
         .iter()
@@ -207,7 +233,9 @@ fn acquire_files(
     cache_dir: &str,
     trust_archive: bool,
     wait_for: Duration,
-) -> Files {
+    find_ignore_files: bool,
+) -> GatheredFiles {
+    let gather = || gather_and_hash_files(workspace_root, cache_dir.to_owned(), find_ignore_files);
     let lock_path = Path::new(cache_dir).join(NX_FILES_LOCK);
     let mut lock = match FileLock::new(lock_path.to_string_lossy().to_string()) {
         Ok(lock) => lock,
@@ -216,7 +244,7 @@ fn acquire_files(
                 "could not open {}, walking unshared: {e:?}",
                 lock_path.display()
             );
-            return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+            return gather();
         }
     };
 
@@ -233,11 +261,11 @@ fn acquire_files(
                         trace!(
                             "the walk holding the files lock outlasted the wait, walking unshared"
                         );
-                        return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                        return gather();
                     }
                     Err(e) => {
                         trace!("could not wait on the files lock, walking unshared: {e:?}");
-                        return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                        return gather();
                     }
                 }
             }
@@ -246,13 +274,13 @@ fn acquire_files(
                     "loaded {} files from the archive without walking",
                     archive.len()
                 );
-                return archive_to_files(archive);
+                return archive_to_files(archive).into();
             }
         }
 
         match lock.try_lock() {
             Ok(true) => {
-                let files = gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                let files = gather();
                 let _ = lock.unlock();
                 return files;
             }
@@ -269,11 +297,11 @@ fn acquire_files(
                         trace!(
                             "the walk holding the files lock outlasted the wait, walking unshared"
                         );
-                        return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                        return gather();
                     }
                     Err(e) => {
                         trace!("could not wait on the files lock, walking unshared: {e:?}");
-                        return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                        return gather();
                     }
                 }
                 let fresh =
@@ -283,12 +311,12 @@ fn acquire_files(
                         "loaded {} files from the archive another process wrote",
                         archive.len()
                     );
-                    return archive_to_files(archive);
+                    return archive_to_files(archive).into();
                 }
                 trace!("the other walk left no fresh archive, trying for the lock again");
                 if remaining().is_zero() {
                     trace!("no time left to wait for another walk, walking unshared");
-                    return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                    return gather();
                 }
             }
             Err(e) => {
@@ -296,7 +324,7 @@ fn acquire_files(
                     "could not take {}, walking unshared: {e:?}",
                     lock_path.display()
                 );
-                return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                return gather();
             }
         }
     }
@@ -415,7 +443,11 @@ fn diff_files(before: &Files, after: &Files) -> Outcomes {
     outcomes
 }
 
-fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Files {
+fn gather_and_hash_files(
+    workspace_root: &Path,
+    cache_dir: String,
+    find_ignore_files: bool,
+) -> GatheredFiles {
     let archived_files = read_files_archive(&cache_dir);
 
     trace!("Gathering files in {}", workspace_root.display());
@@ -424,10 +456,22 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Files {
     // may be rewritten within its own mtime tick, so the next gather has to
     // re-hash it rather than trust the timestamp. See `selective_files_hash`.
     let gathered_at = gather_stamp();
-    let file_hashes = if let Some(archived_files) = archived_files {
-        selective_files_hash(workspace_root, &archived_files)
+    #[cfg(not(target_arch = "wasm32"))]
+    let (found, ignore_files) = if find_ignore_files {
+        let (found, ignore_files) = nx_walker_with_ignore_files(workspace_root);
+        (found, Some(ignore_files))
     } else {
-        full_files_hash(workspace_root)
+        (nx_walker(workspace_root, true).collect(), None)
+    };
+    #[cfg(target_arch = "wasm32")]
+    let (found, ignore_files) = {
+        let _ = find_ignore_files;
+        (nx_walker(workspace_root, true).collect(), None)
+    };
+    let file_hashes = if let Some(archived_files) = archived_files {
+        selective_files_hash(found, &archived_files)
+    } else {
+        full_files_hash(found)
     }
     .with_gathered_at(gathered_at);
 
@@ -438,7 +482,10 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Files {
     let files = hashes_to_files(file_hashes);
     trace!("hashed and sorted files in {:?}", now.elapsed());
 
-    files
+    GatheredFiles {
+        files,
+        ignore_files,
+    }
 }
 
 /// Where the files behind a context are in their lifecycle.
@@ -455,12 +502,14 @@ enum Phase {
 /// should hold, so the ignore rules apply here, at the one place a path enters
 /// the files, rather than at the watch. Caller-supplied updates are held to
 /// the same rule, so the files never diverge from what a walk would find. A
-/// context without a watch has none and trusts its callers as before, since
-/// building the rules means walking the workspace for ignore files.
+/// context without a watch has none and trusts its callers as before. A
+/// watching context builds it from each walk's ignore files as the walk lands,
+/// so it is in place before anything is applied.
 type Policy = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 
 struct State {
     phase: Phase,
+    watching: bool,
     policy: Option<Policy>,
     /// Told of every change under a registered directory, see `apply`.
     ignored: Arc<IgnoredIndex>,
@@ -480,7 +529,6 @@ struct State {
     /// only by a watching context, whose batches reach its consumer
     /// asynchronously and so can arrive after `settle` has answered.
     pending: Outcomes,
-    track_pending: bool,
 }
 
 /// Who is asking to apply changes, which decides what happens during a walk.
@@ -498,7 +546,7 @@ enum WhenScanning {
 struct FileState(Option<Arc<(NxMutex<State>, NxCondvar)>>);
 
 impl FileState {
-    fn new(workspace_root: &Path, policy: Option<Policy>, ignored: Arc<IgnoredIndex>) -> Self {
+    fn new(workspace_root: &Path, watching: bool, ignored: Arc<IgnoredIndex>) -> Self {
         if !workspace_root.exists() {
             warn!(
                 "workspace root does not exist: {}",
@@ -506,18 +554,17 @@ impl FileState {
             );
             return FileState(None);
         }
-        let track_pending = policy.is_some();
         FileState(Some(Arc::new((
             NxMutex::new(State {
                 phase: Phase::Scanning,
-                policy,
+                watching,
+                policy: None,
                 ignored,
                 files: Files::new(),
                 queued: Vec::new(),
                 delivered: Vec::new(),
                 change_seq: 0,
                 pending: Outcomes::new(),
-                track_pending,
             }),
             NxCondvar::new(),
         ))))
@@ -538,14 +585,16 @@ impl FileState {
         };
         let state = self.clone();
         let workspace_root = workspace_root.to_owned();
+        let watching = self.watching();
         std::thread::spawn(move || {
             let files = acquire_files(
                 &workspace_root,
                 &cache_dir,
                 trust_archive,
                 files_lock_wait(),
+                watching,
             );
-            trace!(files_len = files.len(), "files retrieved");
+            trace!(files_len = files.files.len(), "files retrieved");
             // Changes the watch reported during the walk land in this batch.
             let batch = state.finish_walk(&workspace_root, &cache_dir, files, true);
             if !batch.is_empty() {
@@ -569,11 +618,21 @@ impl FileState {
             .then(|| read_files_archive(&cache_dir))
             .flatten()
         {
-            Some(archive) => archive_to_files(archive),
-            None => gather_and_hash_files(workspace_root, cache_dir.clone()),
+            Some(archive) => archive_to_files(archive).into(),
+            None => gather_and_hash_files(workspace_root, cache_dir.clone(), false),
         };
-        trace!("{} files retrieved", files.len());
+        trace!("{} files retrieved", files.files.len());
         self.finish_walk(workspace_root, &cache_dir, files, true);
+    }
+
+    /// Whether a watch feeds these files, so a walk must also find the ignore
+    /// files its rules are built from.
+    fn watching(&self) -> bool {
+        let Some(sync) = &self.0 else {
+            return false;
+        };
+        let (lock, _) = sync.deref();
+        lock.lock().expect("Should be able to lock files").watching
     }
 
     /// Marks a walk in progress. False, doing nothing, when one already is.
@@ -599,7 +658,7 @@ impl FileState {
         &self,
         workspace_root: &Path,
         cache_dir: &str,
-        mut fresh: Files,
+        mut fresh: GatheredFiles,
         mut initial: bool,
     ) -> ChangeBatch {
         let Some(sync) = &self.0 else {
@@ -608,6 +667,22 @@ impl FileState {
         let (lock, cvar) = sync.deref();
         let mut outcomes = Outcomes::new();
         loop {
+            // Built unlocked: when the files came from an archive and there is
+            // no policy yet, building it walks the workspace for ignore files.
+            #[cfg(not(target_arch = "wasm32"))]
+            let policy = {
+                let (watching, has_policy) = {
+                    let state = lock.lock().expect("Should be able to lock files");
+                    (state.watching, state.policy.is_some())
+                };
+                match fresh.ignore_files.take() {
+                    _ if !watching => None,
+                    None if has_policy => None,
+                    found => WorkspaceContext::workspace_policy(workspace_root, found)
+                        .inspect_err(|e| warn!("{e}; keeping the previous rules, if any"))
+                        .ok(),
+                }
+            };
             if !initial {
                 // The watch lost events, or a refresh was asked for: the index
                 // can no longer trust what it heard either. Readers wait for
@@ -618,14 +693,19 @@ impl FileState {
             }
             let mut state = lock.lock().expect("Should be able to lock files");
             if !initial {
-                outcomes.extend(diff_files(&state.files, &fresh));
+                outcomes.extend(diff_files(&state.files, &fresh.files));
             }
-            state.files = fresh;
+            state.files = fresh.files;
+            #[cfg(not(target_arch = "wasm32"))]
+            if policy.is_some() {
+                state.policy = policy;
+            }
             if state.queued.iter().any(|c| c.kind == ChangeKind::Rescan) {
                 state.queued.retain(|c| c.kind != ChangeKind::Rescan);
+                let watching = state.watching;
                 drop(state);
                 initial = false;
-                fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned(), watching);
                 continue;
             }
             let queued = std::mem::take(&mut state.queued);
@@ -755,8 +835,9 @@ impl FileState {
             // Walk before locking: the walk is the slow part and readers should
             // not block on it any longer than the phase already makes them.
             state.phase = Phase::Scanning;
+            let watching = state.watching;
             drop(state);
-            let fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned());
+            let fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned(), watching);
             return self.finish_walk(workspace_root, cache_dir, fresh, false);
         }
         let outcomes = apply(&mut state, workspace_root, changes);
@@ -794,10 +875,13 @@ impl FileState {
         Some(f(&state.files))
     }
 
-    fn get_files(&self) -> Vec<FileData> {
+    fn get_files(&self, directory: Option<&Path>) -> Vec<FileData> {
         self.with_files(|files| {
-            files
-                .iter()
+            let entries = match directory {
+                Some(directory) => Either::Left(get_child_files(directory, files)),
+                None => Either::Right(files.iter()),
+            };
+            entries
                 .map(|(path, hash)| FileData {
                     file: path.to_normalized_string(),
                     hash: hash.clone(),
@@ -813,7 +897,7 @@ impl FileState {
 fn seal(state: &mut State, outcomes: Outcomes) -> ChangeBatch {
     if !outcomes.is_empty() {
         state.change_seq += 1;
-        if state.track_pending {
+        if state.watching {
             for (path, outcome) in &outcomes {
                 state.pending.insert(path.clone(), outcome.clone());
             }
@@ -853,12 +937,7 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
             outcomes.insert(change.path.clone(), Outcome::Deleted);
             continue;
         }
-        // Path order puts a directory's files right after it, so the scan
-        // stops at the first path outside it.
-        let under: Vec<PathBuf> = state
-            .files
-            .range(key.clone()..)
-            .take_while(|(path, _)| path.starts_with(&key))
+        let under: Vec<PathBuf> = get_child_files(&key, &state.files)
             .map(|(path, _)| path.clone())
             .collect();
         for path in under {
@@ -1080,48 +1159,46 @@ impl WorkspaceContext {
         let events = Publisher::default();
 
         #[cfg(not(target_arch = "wasm32"))]
-        let (files, ignored, watch) = if options.watch.unwrap_or(false)
-            && workspace_root_path.exists()
-        {
-            let failed = |msg| napi::Error::new(napi::Status::GenericFailure, msg);
-            let policy = Self::workspace_policy(&workspace_root_path).map_err(failed)?;
-            // A watch glob set is a list of ignores, so admitting a path is
-            // a negation in it.
-            let extra_globs: Vec<String> = options
-                .always_watch
-                .unwrap_or_default()
-                .iter()
-                .map(|path| format!("!{path}"))
-                .collect();
-            let ignored = Arc::new(IgnoredIndex::new(Some(
-                Self::index_watch(&workspace_root_path, &extra_globs).map_err(failed)?,
-            )));
-            let files = FileState::new(&workspace_root_path, Some(policy), Arc::clone(&ignored));
-            let session = Self::start_watching(
-                workspace_root.clone(),
-                &workspace_root_path,
-                &cache_dir,
-                extra_globs,
-                &files,
-                &batches,
-                &events,
-            )
-            .map_err(failed)?;
-            (files, ignored, Some(session))
-        } else {
-            let ignored = Arc::new(IgnoredIndex::new(None));
-            (
-                FileState::new(&workspace_root_path, None, Arc::clone(&ignored)),
-                ignored,
-                None,
-            )
-        };
+        let (files, ignored, watch) =
+            if options.watch.unwrap_or(false) && workspace_root_path.exists() {
+                let failed = |msg| napi::Error::new(napi::Status::GenericFailure, msg);
+                // A watch glob set is a list of ignores, so admitting a path is
+                // a negation in it.
+                let extra_globs: Vec<String> = options
+                    .always_watch
+                    .unwrap_or_default()
+                    .iter()
+                    .map(|path| format!("!{path}"))
+                    .collect();
+                let ignored = Arc::new(IgnoredIndex::new(Some(
+                    Self::index_watch(&workspace_root_path, &extra_globs).map_err(failed)?,
+                )));
+                let files = FileState::new(&workspace_root_path, true, Arc::clone(&ignored));
+                let session = Self::start_watching(
+                    workspace_root.clone(),
+                    &workspace_root_path,
+                    &cache_dir,
+                    extra_globs,
+                    &files,
+                    &batches,
+                    &events,
+                )
+                .map_err(failed)?;
+                (files, ignored, Some(session))
+            } else {
+                let ignored = Arc::new(IgnoredIndex::new(None));
+                (
+                    FileState::new(&workspace_root_path, false, Arc::clone(&ignored)),
+                    ignored,
+                    None,
+                )
+            };
         #[cfg(target_arch = "wasm32")]
         let (files, ignored) = {
             let _ = options;
             let ignored = Arc::new(IgnoredIndex::new(None));
             (
-                FileState::new(&workspace_root_path, None, Arc::clone(&ignored)),
+                FileState::new(&workspace_root_path, false, Arc::clone(&ignored)),
                 ignored,
             )
         };
@@ -1136,6 +1213,7 @@ impl WorkspaceContext {
         Ok(WorkspaceContext {
             files,
             ignored,
+            outputs: OutputRecords::default(),
             batches,
             #[cfg(not(target_arch = "wasm32"))]
             events,
@@ -1149,12 +1227,21 @@ impl WorkspaceContext {
 
     /// The ignore rules a walk applies, as a predicate on a workspace-relative
     /// file path. Built against the canonical root, which is what event paths
-    /// are relative to.
+    /// are relative to. `found` is what the walk applied, relative to the root;
+    /// `None` walks for it the same way.
     #[cfg(not(target_arch = "wasm32"))]
-    fn workspace_policy(workspace_root_path: &Path) -> std::result::Result<Policy, String> {
+    fn workspace_policy(
+        workspace_root_path: &Path,
+        found: Option<Vec<PathBuf>>,
+    ) -> std::result::Result<Policy, String> {
         let origin = dunce::canonicalize(workspace_root_path)
             .unwrap_or_else(|_| workspace_root_path.to_path_buf());
-        let filter = create_filter(&origin.to_string_lossy(), &default_watch_ignores(), true)
+        let origin_str = origin.to_string_lossy();
+        let globs = default_watch_ignores();
+        let found = found.unwrap_or_else(|| nx_walker_with_ignore_files(&origin).1);
+        let mut ignore_files: Vec<PathBuf> = found.iter().map(|path| origin.join(path)).collect();
+        ignore_files.extend(parent_gitignore_files(&origin).into_iter().flatten());
+        let filter = create_filter(&origin_str, &globs, Some(ignore_files))
             .map_err(|e| format!("failed to build the workspace ignore rules: {e}"))?;
         Ok(Arc::new(move |path: &str| {
             filter.admits(&origin.join(path), false)
@@ -1173,7 +1260,7 @@ impl WorkspaceContext {
             .unwrap_or_else(|_| workspace_root_path.to_path_buf());
         let mut globs = default_watch_ignores();
         globs.extend(extra_globs.iter().cloned());
-        let filter = create_filter(&origin.to_string_lossy(), &globs, false)
+        let filter = create_filter(&origin.to_string_lossy(), &globs, None)
             .map_err(|e| format!("failed to build the watch gate: {e}"))?;
         Ok(crate::native::workspace::ignored_index::Watch {
             // Only ever asked about a prefix, which is a directory.
@@ -1216,7 +1303,7 @@ impl WorkspaceContext {
         });
         let mut globs = default_watch_ignores();
         globs.extend(extra_globs);
-        WatchSession::start(workspace_root, &globs, false, callback)
+        WatchSession::start(workspace_root, &globs, callback)
     }
 
     /// Pulls what the watch pipeline holds into the files. Returns the batch
@@ -1279,7 +1366,7 @@ impl WorkspaceContext {
     /// first, and a subscriber hears about it as it would any other batch.
     fn current_files(&self) -> Vec<FileData> {
         self.apply_delivered();
-        self.files.get_files()
+        self.files.get_files(None)
     }
 
     /// `current_files` without the copy: `f` reads the files under their lock.
@@ -1325,9 +1412,15 @@ impl WorkspaceContext {
         let cache_dir = self.cache_dir.clone();
         let walk = move || {
             #[cfg(not(target_arch = "wasm32"))]
-            let fresh = acquire_files(&workspace_root, &cache_dir, false, files_lock_wait());
+            let fresh = acquire_files(
+                &workspace_root,
+                &cache_dir,
+                false,
+                files_lock_wait(),
+                files.watching(),
+            );
             #[cfg(target_arch = "wasm32")]
-            let fresh = gather_and_hash_files(&workspace_root, cache_dir.clone());
+            let fresh = gather_and_hash_files(&workspace_root, cache_dir.clone(), false);
             let batch = files.finish_walk(&workspace_root, &cache_dir, fresh, false);
             trace!("files refreshed");
             if !batch.is_empty() {
@@ -1379,8 +1472,12 @@ impl WorkspaceContext {
         globs: Vec<String>,
         exclude: Option<Vec<String>>,
     ) -> napi::Result<Vec<String>> {
-        let file_data = self.current_files();
-        let globbed_files = glob_files(&file_data, globs, exclude)?;
+        self.apply_delivered();
+        // Invalid patterns must also wait for an in-progress walk.
+        self.files.wait_ready();
+        let matcher = build_glob_set(&globs)?;
+        let file_data = self.files.get_files(matcher.literal_prefix());
+        let globbed_files = glob_files(&file_data, matcher, exclude)?;
         Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
@@ -1399,7 +1496,8 @@ impl WorkspaceContext {
         globs
             .into_iter()
             .map(|glob| {
-                let globbed_files = glob_files(&file_data, vec![glob], exclude.clone())?;
+                let globbed_files =
+                    glob_files(&file_data, build_glob_set(&[glob])?, exclude.clone())?;
                 Ok(globbed_files.map(|file| file.file.to_owned()).collect())
             })
             .collect()
@@ -1438,7 +1536,8 @@ impl WorkspaceContext {
             return Ok(hashes.remove(0));
         }
         let files = &self.current_files();
-        let globbed_files = glob_files(files, globs, exclude)?.collect::<Vec<_>>();
+        let globbed_files =
+            glob_files(files, build_glob_set(&globs)?, exclude)?.collect::<Vec<_>>();
 
         let mut hasher = xxh3::Xxh3::new();
         for file in globbed_files {
@@ -1618,9 +1717,38 @@ impl WorkspaceContext {
         self.files.holds(paths)
     }
 
+    /// Remembers each task's outputs, as given or else as they are on disk
+    /// now, so `outputs_unchanged` can tell whether they still are.
+    #[napi]
+    pub fn record_outputs(&self, entries: Vec<TaskOutputs>) {
+        self.outputs
+            .record(&self.workspace_root_path, &self.reader(), entries);
+    }
+
+    /// Whether each task's outputs are still as last recorded for its hash.
+    #[napi]
+    pub fn outputs_unchanged(&self, entries: Vec<TaskOutputs>) -> Vec<bool> {
+        self.outputs
+            .unchanged(&self.workspace_root_path, &self.reader(), entries)
+    }
+
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
-        get_child_files(directory, self.current_files())
+        // A replacement character can match distinct non-UTF-8 paths after normalization.
+        if directory.contains('\u{fffd}') {
+            return self
+                .current_files()
+                .into_iter()
+                .filter(|file| Path::new(&file.file).starts_with(&directory))
+                .map(|file| file.file)
+                .collect();
+        }
+        self.with_current_files(|files| {
+            get_child_files(Path::new(&directory), files)
+                .map(|(path, _)| path.to_normalized_string())
+                .collect()
+        })
+        .unwrap_or_default()
     }
 }
 
@@ -1774,6 +1902,120 @@ mod tests {
     }
 
     #[test]
+    fn glob_and_directory_reads_preserve_full_scan_results() {
+        let temp = workspace_with(&[
+            "e2e/react/x.spec.ts",
+            "e2e/react/nested/y.test.tsx",
+            "e2e/react/.hidden.spec.ts",
+            "e2e/react-other/z.spec.ts",
+            "e2e/vue/x.test.js",
+            "root.json",
+            "root.ts",
+            "truncated",
+            "libs/a/x.ts",
+            "libs/a/nested/x.spec.ts",
+            "libs/foo/x.ts",
+            "libs/prefixsuffix/x.ts",
+            "libs/suffix/x.ts",
+            "libs/雪/x.ts",
+            "other/x.ts",
+        ]);
+        #[cfg(not(windows))]
+        temp.child("libs/a/*.ts").write_str("x").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = context(&temp, &cache);
+        let files = ctx.current_files();
+        for patterns in [
+            vec!["e2e/react/**/+(*.)+(spec|test).+(ts|js)?(x)"],
+            vec![r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)"],
+            vec![r"e2e\react/**/*.spec.ts"],
+            vec![r"e2e\react\*.spec.ts"],
+            vec![r"e2e\react\!(*.test).ts"],
+            vec![r"e2e\react\*(nested)/*.ts"],
+            vec!["e2e/react/**", "!(other)/**"],
+            vec!["truncated/foo+/**/!(ignored).ts"],
+            vec![r"libs/f\oo/*.ts"],
+            vec!["libs/prefix*(suffix)/**"],
+            vec!["{libs/a/**,e2e/vue/**}"],
+            vec!["libs/a/**", "libs/a/nested/**", "libs/a/**"],
+            vec!["libs/a/**", "e2e/vue/**"],
+            vec!["!libs/a/**"],
+        ] {
+            let globs: Vec<String> = patterns.into_iter().map(String::from).collect();
+            let exclude = Some(vec!["**/.hidden.spec.ts".into()]);
+            let matcher = build_glob_set(&globs).unwrap();
+            let expected: Vec<_> = glob_files(&files, matcher, exclude.clone())
+                .unwrap()
+                .map(|file| file.file.clone())
+                .collect();
+            assert_eq!(
+                ctx.glob(globs.clone(), exclude).unwrap(),
+                expected,
+                "{globs:?}"
+            );
+        }
+        for directory in [
+            "",
+            ".",
+            "libs/a",
+            "libs/a/",
+            "libs//a",
+            "libs/./a",
+            "./libs/a",
+            "libs/a/..",
+            "libs/a/x.ts",
+            "missing",
+            "libs/雪",
+            r"libs\a",
+        ] {
+            let expected: Vec<_> = files
+                .iter()
+                .map(|file| file.file.clone())
+                .filter(|file| Path::new(file).starts_with(directory))
+                .collect();
+            assert_eq!(
+                ctx.get_files_in_directory(directory.into()),
+                expected,
+                "{directory}"
+            );
+        }
+        #[cfg(not(windows))]
+        assert_eq!(
+            ctx.glob(vec![r"libs/a/\*.ts".into()], None).unwrap(),
+            ["libs/a/*.ts"]
+        );
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn glob_and_directory_reads_preserve_lossy_path_matches() {
+        use std::ffi::OsString;
+        use std::os::unix::ffi::OsStringExt;
+
+        let temp = TempDir::new().unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = context(&temp, &cache);
+        ctx.files.wait_ready();
+        let (lock, _) = ctx.files.0.as_ref().unwrap().as_ref();
+        lock.lock().unwrap().files = [
+            PathBuf::from(OsString::from_vec(b"libs/\xff/x.ts".to_vec())),
+            PathBuf::from("libs/\u{fffd}/x.ts"),
+            PathBuf::from("libs/other/x.ts"),
+        ]
+        .into_iter()
+        .map(|path| (path, "h".into()))
+        .collect();
+        assert_eq!(
+            ctx.get_files_in_directory("libs/\u{fffd}".into()),
+            ["libs/\u{fffd}/x.ts", "libs/\u{fffd}/x.ts"]
+        );
+        assert_eq!(
+            ctx.glob(vec!["libs/\u{fffd}/*.ts".into()], None).unwrap(),
+            ["libs/\u{fffd}/x.ts", "libs/\u{fffd}/x.ts"]
+        );
+    }
+
+    #[test]
     fn an_empty_workspace_answers_every_read_instead_of_waiting_forever() {
         // The scan-finished signal used to be "the list is non-empty", so a
         // second read of an empty workspace waited for a scan that had
@@ -1808,12 +2050,16 @@ mod tests {
 
         // Change the disk without touching the archive. A walk would see both
         // changes; a load of the archive cannot.
-        std::fs::remove_file(temp.child("a.ts").path()).unwrap();
-        temp.child("c.ts").write_str("c").unwrap();
+        std::fs::remove_file(temp.child("src/b.ts").path()).unwrap();
+        temp.child("src/c.ts").write_str("c").unwrap();
 
         let loaded =
             WorkspaceContext::from_archive(as_string(&temp), as_string(&cache), None).unwrap();
         assert_eq!(files_of(&loaded), recorded);
+        assert_eq!(
+            loaded.glob(vec!["src/*.(ts|js)".into()], None).unwrap(),
+            ["src/b.ts"]
+        );
     }
 
     #[test]
@@ -1910,7 +2156,8 @@ mod tests {
         let root = root.path().to_path_buf();
         let cache_dir = as_string(cache);
         std::thread::spawn(move || {
-            let _ = done.send(acquire_files(&root, &cache_dir, trust_archive, wait_for));
+            let _ =
+                done.send(acquire_files(&root, &cache_dir, trust_archive, wait_for, false).files);
         });
         on_done
             .recv_timeout(ceiling)
@@ -2717,7 +2964,7 @@ mod tests {
         }
         assert_eq!(ctx.change_seq(), scanned);
         // The next read applies it.
-        assert!(names_of(&ctx).contains(&"b.ts".to_string()));
+        assert_eq!(ctx.glob(vec!["b.ts".into()], None).unwrap(), ["b.ts"]);
         assert!(lock.lock().unwrap().delivered.is_empty());
     }
 
@@ -2777,6 +3024,150 @@ mod tests {
 
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
+    fn a_self_ignoring_gitignore_still_applies_though_it_is_not_among_the_files() {
+        // pytest, ruff and mypy write `*` into their cache's .gitignore. The
+        // walk applies it but never lists it, so the rules cannot come from
+        // the files alone.
+        let temp = workspace_with(&["a.ts", ".pytest_cache/v/cache/lastfailed"]);
+        temp.child(".pytest_cache/.gitignore")
+            .write_str("*\n")
+            .unwrap();
+        let cache = TempDir::new().unwrap();
+
+        let ctx = watching_context(&temp, &cache);
+        assert_eq!(names_of(&ctx), vec!["a.ts"]);
+        assert!(
+            ctx.incremental_update(vec![".pytest_cache/v/cache/lastfailed".into()], vec![])
+                .is_empty()
+        );
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_nested_nxignore_applies_to_a_watching_context() {
+        let temp = workspace_with(&["libs/a/src.ts", "libs/a/generated.ts"]);
+        temp.child("libs/a/.nxignore")
+            .write_str("generated.ts\n")
+            .unwrap();
+        let cache = TempDir::new().unwrap();
+
+        let ctx = watching_context(&temp, &cache);
+        assert_eq!(names_of(&ctx), vec!["libs/a/.nxignore", "libs/a/src.ts"]);
+        assert!(
+            ctx.incremental_update(vec!["libs/a/generated.ts".into()], vec![])
+                .is_empty()
+        );
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_negation_inside_a_gitignored_directory_does_not_admit_what_the_walk_skips() {
+        // The walk never enters dist/, so dist/.gitignore cannot re-include
+        // anything. Admitting keep.js would report it deleted on the next rescan.
+        let temp = workspace_with(&["a.ts", "dist/keep.js"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        temp.child("dist/.gitignore")
+            .write_str("!keep.js\n")
+            .unwrap();
+        let cache = TempDir::new().unwrap();
+
+        let ctx = watching_context(&temp, &cache);
+        assert_eq!(names_of(&ctx), vec![".gitignore", "a.ts"]);
+        assert!(
+            ctx.incremental_update(vec!["dist/keep.js".into()], vec![])
+                .is_empty()
+        );
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn only_a_watching_context_reports_watching() {
+        let temp = workspace_with(&["a.ts"]);
+
+        assert!(
+            watching_context(&temp, &TempDir::new().unwrap())
+                .files
+                .watching()
+        );
+        assert!(!context(&temp, &TempDir::new().unwrap()).files.watching());
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn gather_finds_ignore_files_only_when_asked() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let cache_dir = TempDir::new().unwrap();
+        let cache = as_string(&cache_dir);
+
+        assert!(
+            gather_and_hash_files(&root, cache.clone(), false)
+                .ignore_files
+                .is_none()
+        );
+        assert_eq!(
+            gather_and_hash_files(&root, cache, true).ignore_files,
+            Some(vec![PathBuf::from(".gitignore")])
+        );
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn names_held_by(files: &FileState) -> Vec<String> {
+        let sync = files.0.as_ref().unwrap();
+        let state = sync.0.lock().unwrap();
+        names_in(state.files.clone())
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn an_ignored_write_queued_during_the_first_walk_never_lands() {
+        let temp = workspace_with(&["a.ts", "dist/out.js"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let cache_dir = TempDir::new().unwrap();
+        let cache = as_string(&cache_dir);
+
+        let files = FileState::new(&root, true, Arc::new(IgnoredIndex::new(None)));
+        files.deliver(vec![Change {
+            path: "dist/out.js".into(),
+            kind: ChangeKind::Created,
+        }]);
+        let gathered = gather_and_hash_files(&root, cache.clone(), true);
+        files.finish_walk(&root, &cache, gathered, true);
+
+        assert_eq!(names_held_by(&files), vec![".gitignore", "a.ts"]);
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn files_from_an_archive_still_get_rules_before_queued_writes_land() {
+        // No ignore-file list comes with an archive, so the rules come from the
+        // fallback walk.
+        let temp = workspace_with(&["a.ts", "dist/out.js"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let cache_dir = TempDir::new().unwrap();
+        let cache = as_string(&cache_dir);
+
+        let files = FileState::new(&root, true, Arc::new(IgnoredIndex::new(None)));
+        files.deliver(vec![Change {
+            path: "dist/out.js".into(),
+            kind: ChangeKind::Created,
+        }]);
+        gather_and_hash_files(&root, cache.clone(), true);
+        let archived = acquire_files(&root, &cache, true, Duration::from_secs(1), true);
+        assert!(
+            archived.ignore_files.is_none(),
+            "loaded from the archive, not walked"
+        );
+        files.finish_walk(&root, &cache, archived, true);
+
+        assert_eq!(names_held_by(&files), vec![".gitignore", "a.ts"]);
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
     fn a_caller_supplied_update_is_held_to_the_same_rule_as_the_watch() {
         let temp = workspace_with(&["a.ts"]);
         temp.child(".gitignore").write_str("dist/\n").unwrap();
@@ -2793,8 +3184,8 @@ mod tests {
         );
         assert_eq!(names_of(&watching), vec![".gitignore", "a.ts"]);
 
-        // A context without a watch has no rules of its own (building them
-        // walks the workspace for ignore files) and trusts its caller.
+        // A context without a watch has no rules of its own and trusts its
+        // caller.
         let plain = context(&temp, &TempDir::new().unwrap());
         assert!(
             plain
@@ -2908,9 +3299,12 @@ mod tests {
             .queued
             .push(Change::rescan());
 
-        let batch = ctx
-            .files
-            .finish_walk(&ctx.workspace_root_path, &ctx.cache_dir, walked, false);
+        let batch = ctx.files.finish_walk(
+            &ctx.workspace_root_path,
+            &ctx.cache_dir,
+            walked.into(),
+            false,
+        );
 
         assert_eq!(names_of(&ctx), vec!["a.ts", "b.ts"]);
         assert!(

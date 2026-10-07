@@ -7,7 +7,8 @@ import {
 } from '../../utils/module-federation-config';
 
 /**
- * Default npm packages to always share for Angular projects.
+ * Default npm packages to share for Angular projects, each shared only when the
+ * workspace declares it in the root package.json.
  */
 export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
   '@angular/core',

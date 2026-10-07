@@ -3,10 +3,30 @@ import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspac
 import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
-import { HashPlanner } from '../native';
+import {
+  closeDbConnection,
+  connectToNxDb,
+  HashPlanner,
+  UltracacheConfigurationStore,
+} from '../native';
+import { join } from 'path';
 import { TaskGraph } from '../config/task-graph';
+import {
+  createTaskPlanningContext,
+  TaskPlanningContext,
+} from './task-planning-context';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+
+vi.mock('../tasks-runner/utils', async () => {
+  const actual = await vi.importActual('../tasks-runner/utils');
+  return {
+    ...actual,
+    // The real lookup reads this repo's built `packages/nx/dist` executor
+    // schema, which nx:test does not declare as an input.
+    getExecutorForTask: vi.fn(() => ({})),
+  };
+});
 
 // Helper to normalize hash results for deterministic snapshot comparison
 // (parallel processing may produce inputs in arbitrary order)
@@ -1555,6 +1575,348 @@ describe('native task hasher', () => {
     expect(reused.details).toEqual(planned.details);
   });
 
+  // The entry digest covers the writes, not the reads, because a read
+  // reaches the hash as the file group it becomes. That is only true while
+  // every read-driven difference has another carrier, so assert it directly
+  // rather than by reading the planner: two entries differing in one read
+  // must hash differently, with the digest identical.
+  it('moves a task hash by a changed read while the entry digest holds', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/one.txt': 'one',
+      'libs/child/two.txt': 'two',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-read-db'),
+      'ultracache'
+    );
+    let lastFetchedAt = 0;
+    const configurationsFor = async (inputs: string[]) => {
+      // Plans are memoized per (commit, fetch millisecond), so two imports
+      // in one millisecond would share the first one's plan.
+      while (Date.now() <= lastFetchedAt) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      }
+      new UltracacheConfigurationStore(configurationDb).import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: ['dist/child'] },
+        }),
+      });
+      const configurations = new UltracacheConfigurationStore(
+        configurationDb
+      ).get(commit);
+      lastFetchedAt = configurations.resolution.fetchedAt;
+      return configurations;
+    };
+    const task = taskGraph.tasks['child:compile'];
+    const hashWith = async (inputs: string[]) =>
+      impl.hashTask(
+        task,
+        taskGraph,
+        {},
+        tempFs.tempDir,
+        true,
+        await configurationsFor(inputs)
+      );
+
+    const one = await hashWith(['libs/child/one.txt']);
+    const two = await hashWith(['libs/child/two.txt']);
+
+    const digestOf = (hash: typeof one) =>
+      Object.keys(hash.details).filter((key) => key.startsWith('io-snapshot:'));
+    expect(digestOf(one)).toEqual(digestOf(two));
+    expect(digestOf(one)).toEqual([expect.stringMatching(/^io-snapshot:\d+$/)]);
+    expect(two.value).not.toBe(one.value);
+    expect(two.inputs.files).toContain('libs/child/two.txt');
+    expect(two.inputs.files).not.toContain('libs/child/one.txt');
+  });
+
+  it('applies an Ultracache exclusion to the group of the positive it trims', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/doc.md': 'child',
+      'libs/parent/doc.md': 'parent',
+      'libs/parent/README.md': 'excluded',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const store = new UltracacheConfigurationStore(
+      connectToNxDb(
+        join(tempFs.tempDir, 'ultracache-exclusion-db'),
+        'ultracache'
+      )
+    );
+    store.import({
+      requestedCommit: commit,
+      configurationsJson: JSON.stringify({
+        'child:compile': {
+          commit,
+          inputs: ['libs/**/*.md', '!libs/parent/README.md'],
+          outputs: [],
+        },
+      }),
+    });
+
+    const hash = await impl.hashTask(
+      taskGraph.tasks['child:compile'],
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      store.get(commit)
+    );
+
+    expect(hash.inputs.files).toContain('libs/parent/doc.md');
+    expect(hash.inputs.files).not.toContain('libs/parent/README.md');
+  });
+
+  it('names Ultracache groups in hash details by their recorded globs', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/a.ts': 'a',
+      'libs/child/x.json': '{}',
+      'libs/parent/x.json': '{}',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const store = new UltracacheConfigurationStore(
+      connectToNxDb(join(tempFs.tempDir, 'ultracache-label-db'), 'ultracache')
+    );
+    store.import({
+      requestedCommit: commit,
+      configurationsJson: JSON.stringify({
+        'child:compile': {
+          commit,
+          inputs: [
+            'libs/child/**/*.{ts,js}',
+            'libs/{child,parent}/x.json',
+            '!libs/child/gen/**',
+            '!apps/app/**',
+          ],
+          outputs: [],
+        },
+      }),
+    });
+
+    const hash = await impl.hashTask(
+      taskGraph.tasks['child:compile'],
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      store.get(commit)
+    );
+
+    // Braces split only across projects; an exclusion trimming nothing is dropped.
+    expect(
+      Object.keys(hash.details)
+        .filter((key) => key.startsWith('files:['))
+        .sort()
+    ).toEqual([
+      'files:[libs/child/**/*.{ts,js},libs/child/x.json,!libs/child/gen/**]',
+      'files:[libs/parent/x.json]',
+    ]);
+  });
+
+  it.each(['libs/child/[(]group[)]/page.md', 'libs/child/\\(group\\)/page.md'])(
+    'hashes an Ultracache read of a parenthesized directory (%s)',
+    async (input) => {
+      const { taskGraph, impl } = await upfrontFixture();
+      await tempFs.createFiles({
+        'libs/child/(group)/page.md': 'paren',
+        'libs/child/xgroupx/page.md': 'lookalike',
+      });
+      const commit = 'head'.padEnd(40, '0');
+      const configurationDb = connectToNxDb(
+        join(tempFs.tempDir, 'ultracache-paren-db'),
+        'ultracache'
+      );
+      new UltracacheConfigurationStore(configurationDb).import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify({
+          'child:compile': {
+            commit,
+            inputs: [input],
+            outputs: [],
+          },
+        }),
+      });
+      const hash = await impl.hashTask(
+        taskGraph.tasks['child:compile'],
+        taskGraph,
+        {},
+        tempFs.tempDir,
+        true,
+        new UltracacheConfigurationStore(configurationDb).get(commit)
+      );
+
+      expect(hash.inputs.files.filter((f) => f.includes('group'))).toEqual([
+        'libs/child/(group)/page.md',
+      ]);
+    }
+  );
+
+  it.each([
+    ['\\!root.md', '!root.md'],
+    ['\\(root\\)/page.md', '(root)/page.md'],
+    ['\\[id\\].md', '[id].md'],
+    ['\\{a,b\\}.md', '{a,b}.md'],
+  ])('hashes an Ultracache read of a root-level %s', async (input, file) => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ [file]: 'root' });
+    const commit = 'head'.padEnd(40, '0');
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-root-db'),
+      'ultracache'
+    );
+    new UltracacheConfigurationStore(configurationDb).import({
+      requestedCommit: commit,
+      configurationsJson: JSON.stringify({
+        'child:compile': { commit, inputs: [input], outputs: [] },
+      }),
+    });
+    const hash = await impl.hashTask(
+      taskGraph.tasks['child:compile'],
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      new UltracacheConfigurationStore(configurationDb).get(commit)
+    );
+
+    expect(hash.inputs.files).toContain(file);
+  });
+
+  it('hashes a task from its Ultracache configuration instead of its declared fileset', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });
+    const commit = 'head'.padEnd(40, '0');
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-db'),
+      'ultracache'
+    );
+    const configurationsFor = (inputs: string[]) => {
+      new UltracacheConfigurationStore(configurationDb).import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: [] },
+        }),
+      });
+      return new UltracacheConfigurationStore(configurationDb).get(commit);
+    };
+    const configurations = configurationsFor(['libs/child/observed.txt']);
+    const task = taskGraph.tasks['child:compile'];
+
+    const native = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true
+    );
+    const fromConfiguration = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      configurations
+    );
+
+    expect(fromConfiguration.value).not.toBe(native.value);
+    // The observed read plus the always-on workspace files; none of the
+    // declared fileset's files.
+    expect(fromConfiguration.inputs.files).toContain('libs/child/observed.txt');
+    expect(
+      fromConfiguration.inputs.files.filter((f) => f.startsWith('libs/child/'))
+    ).toEqual(['libs/child/observed.txt']);
+    const digests = (hash: typeof native) =>
+      Object.keys(hash.details).filter((key) => key.startsWith('io-snapshot:'));
+    expect(digests(fromConfiguration)).toEqual([
+      expect.stringMatching(/^io-snapshot:\d+$/),
+    ]);
+    expect(digests(native)).toEqual([]);
+
+    // The observed file is what the hash follows now, not the declared fileset.
+    await tempFs.createFiles({ 'libs/child/observed.txt': 'changed' });
+    const changed = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      true,
+      configurations
+    );
+    expect(changed.value).not.toBe(fromConfiguration.value);
+    closeDbConnection(configurationDb);
+  });
+
+  it('keeps hashing from its own version after the commit is re-imported', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/one.txt': 'one',
+      'libs/child/two.txt': 'two',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-versions-db'),
+      'ultracache'
+    );
+    const store = new UltracacheConfigurationStore(configurationDb);
+    const importReads = (inputs: string[]) =>
+      store.import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: [] },
+        }),
+      });
+    const first = importReads(['libs/child/one.txt']);
+    // Read back lazily, as the daemon and a reading client do.
+    const pinned = store.getVersion(commit, first.resolution.fetchedAt);
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    importReads(['libs/child/two.txt']);
+
+    const task = taskGraph.tasks['child:compile'];
+    const hashWith = (configurations: typeof first) =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, configurations);
+    const fromPinned = await hashWith(pinned);
+    expect(fromPinned.inputs.files).toContain('libs/child/one.txt');
+    expect(fromPinned.inputs.files).not.toContain('libs/child/two.txt');
+    expect((await hashWith(store.get(commit))).inputs.files).toContain(
+      'libs/child/two.txt'
+    );
+    closeDbConnection(configurationDb);
+  });
+
+  it('moves a task hash by a lockfile-only edit when its configuration read the lockfile', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.20"}' });
+    const commit = 'head'.padEnd(40, '0');
+    const configurationDb = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-lockfile-db'),
+      'ultracache'
+    );
+    new UltracacheConfigurationStore(configurationDb).import({
+      requestedCommit: commit,
+      configurationsJson: JSON.stringify({
+        'child:compile': { commit, inputs: ['package-lock.json'], outputs: [] },
+      }),
+    });
+    const configurations = new UltracacheConfigurationStore(
+      configurationDb
+    ).get(commit);
+    const task = taskGraph.tasks['child:compile'];
+    const hash = () =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, configurations);
+
+    const before = await hash();
+    expect(before.inputs.files).toContain('package-lock.json');
+
+    await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.21"}' });
+    expect((await hash()).value).not.toBe(before.value);
+    closeDbConnection(configurationDb);
+  });
+
   it('plans again for a task graph other than the up-front batch, and for a task the batch never planned', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     const planned = Object.values(taskGraph.tasks).filter(
@@ -1747,5 +2109,109 @@ describe('native task hasher', () => {
       'gen:compile'
     ].value;
     expect(again).toEqual(upfront);
+  });
+});
+
+describe('native task hasher with a shared planner', () => {
+  let tempFs: TempFs;
+  beforeEach(async () => {
+    tempFs = new TempFs('NativeTaskHasherPlans');
+    await tempFs.createFiles({
+      'libs/parent/filea.ts': 'a',
+      'libs/child/fileb.ts': 'b',
+      'nx.json': JSON.stringify({}),
+    });
+  });
+  afterEach(() => tempFs.cleanup());
+
+  // The planner remembers selection's plans. parent:build reads child:build's
+  // outputs, so a graph without that edge must not get the remembered plan.
+  it('hashes as a fresh hasher does, after selection planned a different graph', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: [
+              'default',
+              { dependentTasksOutputFiles: '**/*.js', transitive: true },
+            ],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{workspaceRoot}/dist/child'],
+          },
+        },
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const nxJson = {} as NxJsonConfiguration;
+    const graphs = {
+      withEdge: createTaskGraph(
+        projectGraph,
+        { build: ['^build'] },
+        ['parent', 'child'],
+        ['build'],
+        undefined,
+        {}
+      ),
+      withoutEdge: createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['build'],
+        undefined,
+        {}
+      ),
+    };
+    const hasherWith = (context?: TaskPlanningContext) =>
+      new NativeTaskHasherImpl(
+        tempFs.tempDir,
+        nxJson,
+        projectGraph,
+        workspaceFiles.rustReferences,
+        { selectivelyHashTsConfig: false },
+        context
+      );
+    const hashOf = async (hasher: NativeTaskHasherImpl, graph: TaskGraph) =>
+      (
+        await hasher.hashTasks([graph.tasks['parent:build']], graph, {
+          'parent:build': {},
+        })
+      )[0].value;
+
+    const context = createTaskPlanningContext(projectGraph, nxJson);
+    context.planner.getPlansReference(
+      Object.keys(graphs.withEdge.tasks),
+      graphs.withEdge
+    );
+    const shared = hasherWith(context);
+
+    const reused = await hashOf(shared, graphs.withEdge);
+    expect(reused).toEqual(await hashOf(hasherWith(), graphs.withEdge));
+    const replanned = await hashOf(shared, graphs.withoutEdge);
+    expect(replanned).toEqual(await hashOf(hasherWith(), graphs.withoutEdge));
+    expect(replanned).not.toEqual(reused);
   });
 });

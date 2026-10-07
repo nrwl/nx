@@ -42,6 +42,13 @@
     },
     "nx-release-publish": {
       "dependsOn": []
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "implicitDependencies": ["rspack"]

@@ -57,13 +57,17 @@ interface DispenseBlock {
 
 interface RunStateFile {
   status: string;
+  gitRefAtInit?: string;
   steps: {
     id: string;
-    migrationId: string;
+    kind: string;
+    migrationId?: string;
     status: string;
     attempt: number;
     pid?: number;
     gitRefBefore?: string;
+    adopted?: boolean;
+    unresolvedIssueId?: string;
   }[];
   commits: {
     kind: string;
@@ -364,10 +368,18 @@ const waiverMig = {
 const slowMig = { package: PKG, name: 'slow-mig', version: '1.0.0' };
 const depsMig = { package: PKG, name: 'deps-mig', version: '1.0.0' };
 
-function runInit(extraArgs = ''): string {
-  return runCLI(`migrate --run-migrations=migrations.json${extraArgs}`, {
-    env: INIT_ENV,
-  });
+// The final validation pass is opted out of by default: it has its own
+// scenario, and every other one reads the run's completion shape without it.
+function runInit(
+  extraArgs = '',
+  { finalValidation = false }: { finalValidation?: boolean } = {}
+): string {
+  return runCLI(
+    `migrate --run-migrations=migrations.json${extraArgs}${
+      finalValidation ? '' : ' --no-final-validation'
+    }`,
+    { env: INIT_ENV }
+  );
 }
 
 // Init is runbook-only; the first dispense comes from its reconcile `next`.
@@ -375,6 +387,23 @@ function reconcileAfterInit(initOutput: string): DispenseBlock {
   const init = parseLastDispense(initOutput);
   expect(init.action).toBe('initialized');
   return parseLastDispense(runDispensed(init.payload.next));
+}
+
+// `output` is the reconcile response that dispensed the worker command.
+function failPromptStep(output: string, summary: string): DispenseBlock {
+  const dispense = parseLastDispense(output);
+  expect(dispense.action).toBe('next-step');
+  runDispensed(dispense.payload.command);
+  const prompt = parseLastDispense(runDispensed(dispense.payload.next));
+  expect(prompt.action).toBe('await-prompt');
+  updateFile(
+    `applied-${prompt.step}.txt`,
+    `applied by fake agent (${summary})`
+  );
+  writeHandoff(prompt, { status: 'failed', summary });
+  const failed = parseLastDispense(runDispensed(prompt.payload.next));
+  expect(failed.action).toBe('retry-failed');
+  return failed;
 }
 
 function commitCountFor(migrationName: string): number {
@@ -588,19 +617,23 @@ describe('migrate orchestrator (dark launch)', () => {
     );
     expect(prompt.payload.instructions).toContain('"outcome": "skipped"');
 
-    // A restarted master re-enters through init: same-plan init resumes, and
-    // the next reconcile restates the parked work.
-    const resumeOutput = runInit();
-    expectRunbookOnlyResponse(resumeOutput);
-    const resumed = parseLastDispense(resumeOutput);
-    expect(resumed.action).toBe('initialized');
-    expect(resumed.runId).toBe(init.runId);
-    expect(resumeOutput).toContain(`resuming run ${init.runId}`);
-    expect(resumeOutput).toContain(
-      'progress: 1 applied, 0 skipped, 2 remaining'
+    // A restarted master re-enters through init: it reports the active run
+    // and starts nothing; the reconcile it names restates the parked work.
+    const reportOutput = runInit();
+    const report = parseLastDispense(reportOutput);
+    expect(report.action).toBe('existing-run');
+    expect(report.runId).toBe(init.runId);
+    expect(reportOutput).toContain(
+      `A migrate run is already active: ${init.runId}`
     );
-    expect(parseRunbookBlock(resumeOutput).content).toBe(persisted);
-    const reawaitOutput = runDispensed(resumed.payload.next);
+    expect(reportOutput).toContain(
+      `To continue the run: ${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --agentic --run-id=${init.runId} --create-commits`
+    );
+    expect(reportOutput).toContain(
+      '  activity: no other nx migrate process is working on it'
+    );
+    expect(reportOutput).not.toContain('<nx_migrate_runbook');
+    const reawaitOutput = runDispensed(reconcile);
     const reawait = parseLastDispense(reawaitOutput);
     expect(reawait.action).toBe('await-prompt');
     expect(parseLastPromptBlock(reawaitOutput).payload.prompt).toBe(
@@ -666,6 +699,74 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(commitCountFor('gen-mig')).toBe(1);
     expect(commitCountFor('prompt-mig')).toBe(1);
     expect(commitCountFor('hybrid-mig')).toBe(1);
+  }, 600000);
+
+  it('should hand the final validation pass to the agent after the last migration and commit its result', () => {
+    writePlan([genMig]);
+
+    // `--no-validate` turns off the per-migration validation only; the pass
+    // is its own policy and stays on.
+    const initOutput = runInit(' --no-validate', { finalValidation: true });
+    const init = parseLastDispense(initOutput);
+    const first = reconcileAfterInit(initOutput);
+    expect(first.action).toBe('next-step');
+    runDispensed(first.payload.command);
+
+    const passOutput = runDispensed(first.payload.next);
+    const pass = parseLastDispense(passOutput);
+    expect(pass.action).toBe('await-prompt');
+    expect(pass.step).toBe('step-2');
+    expect(pass.payload.instructions).toContain(
+      'final validation pass over the workspace is awaiting your outcome'
+    );
+    expect(passOutput).toContain('<nx_migrate_prompt step="step-2">');
+    // The plan file written before init dirtied the tree, so a checkpoint
+    // commit landed; the pass diffs against its parent so the checkpoint's
+    // own content is in the diff.
+    const parked = readRunStateFile(init.runId);
+    expect(parked.commits[0].kind).toBe('checkpoint');
+    expect(parked.gitRefAtInit).toBe(
+      runCommand(`git rev-parse ${parked.commits[0].sha}~1`).trim()
+    );
+    const instructions = readFile(
+      `.nx/migrate-runs/${init.runId}/prompts/step-2/instructions.md`
+    );
+    expect(instructions).toContain(
+      `nx affected --base ${parked.gitRefAtInit} -t <targets>`
+    );
+    expect(instructions).toContain(
+      `up to and including the checkpoint ${parked.commits[0].sha} landed outside the run's steps`
+    );
+    expect(instructions).toContain(
+      `<handoff_path>\n${handoffPathFrom(pass)}\n</handoff_path>`
+    );
+
+    // A later reconcile re-hands the same work.
+    const again = parseLastDispense(runDispensed(pass.payload.next));
+    expect(again.action).toBe('await-prompt');
+    expect(again.step).toBe('step-2');
+
+    updateFile('applied-step-2.txt', 'fixed by fake agent');
+    writeHandoff(pass, {
+      status: 'success',
+      summary: 'lint, build and test ran green',
+    });
+    const complete = parseLastDispense(runDispensed(pass.payload.next));
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain('applied: 2');
+
+    const done = readRunStateFile(init.runId);
+    expect(done.status).toBe('completed');
+    expect(done.steps.map((s) => [s.kind, s.status])).toEqual([
+      ['migration', 'succeeded'],
+      ['final-validation', 'succeeded'],
+    ]);
+    expect(commitCountFor('final validation')).toBe(1);
+    expect(
+      done.commits.filter(
+        (c) => c.kind === 'landed' && c.stepIds.includes('step-2')
+      )
+    ).toHaveLength(1);
   }, 600000);
 
   it('should complete a waived hybrid without agent work and fold a skipped prompt without a commit', () => {
@@ -1123,6 +1224,169 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(state.commits.some((c) => c.stepIds.includes(step.id))).toBe(false);
   }, 600000);
 
+  it('should give up on a killed worker by reset, minting the issue that carries its failure', async () => {
+    writePlan([slowMig]);
+
+    const { runId, diedBlock, gitRefBefore } = await killWorkerAndReconcile(
+      runInit(' --validate=false')
+    );
+    expect(diedBlock.action).toBe('died');
+    const unresolvedCommand = stepActionCommand(runId, 'unresolved');
+    expect(diedBlock.payload.instructions).toContain(unresolvedCommand);
+    // The generator never completed and a restore point exists: the option
+    // is the reset nx runs itself.
+    expect(diedBlock.payload.instructions).toContain(
+      'discarding what the failed attempt left'
+    );
+
+    const complete = parseLastDispense(runDispensed(unresolvedCommand));
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain('unresolved: 1');
+    expect(complete.payload.instructions).toContain('remains unresolved');
+
+    const state = readRunStateFile(runId);
+    expect(state.status).toBe('completed');
+    const step = state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`);
+    expect(step.status).toBe('unresolved');
+    expect(step.attempt).toBe(1);
+    expect(step.unresolvedIssueId).toBe('issue-1');
+    const deathDetail = `the worker process (pid ${step.pid}) died before recording an outcome`;
+    expect(complete.payload.instructions).toContain(
+      `- ${PKG}:slow-mig: ${deathDetail}`
+    );
+    expect(state.issues).toEqual([
+      expect.objectContaining({
+        id: 'issue-1',
+        summary: `Migration ${PKG}:slow-mig was left unresolved after 1 attempt: ${deathDetail}`,
+        disposition: 'deferred-final',
+      }),
+    ]);
+    expect(
+      existsSync(
+        `${tmpProjPath()}/.nx/migrate-runs/${runId}/issues/issue-1.json`
+      )
+    ).toBe(true);
+    expect(existsSync(`${tmpProjPath()}/slow-file`)).toBe(false);
+    expect(commitCountFor('slow-mig')).toBe(0);
+  }, 600000);
+
+  it('should commit the partial tree of a prompt step given up on under its name, marked unresolved', () => {
+    writePlan([promptMig]);
+
+    const failed = failPromptStep(
+      runDispensed(parseLastDispense(runInit()).payload.next),
+      'blocked by fake agent'
+    );
+    const unresolvedCommand = stepActionCommand(failed.runId, 'unresolved');
+    expect(failed.payload.instructions).toContain(unresolvedCommand);
+    // A prompt-only step has no generator output to discard.
+    expect(failed.payload.instructions).toContain(
+      'committed under its name, marked unresolved'
+    );
+
+    const complete = parseLastDispense(runDispensed(unresolvedCommand));
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain('applied: 0');
+    expect(complete.payload.instructions).toContain('unresolved: 1');
+    expect(complete.payload.instructions).toContain(
+      `- ${PKG}:prompt-mig: blocked by fake agent`
+    );
+
+    expect(commitCountFor('prompt-mig (unresolved)')).toBe(1);
+    expect(runCommand('git status --porcelain').trim()).toBe('');
+    const state = readRunStateFile(failed.runId);
+    expect(state.status).toBe('completed');
+    const step = state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`);
+    expect(step.status).toBe('unresolved');
+    expect(step.unresolvedIssueId).toBe('issue-1');
+    expect(
+      state.commits.some(
+        (c) => c.kind === 'landed' && c.stepIds.includes(step.id)
+      )
+    ).toBe(true);
+    expect(state.issues[0].summary).toContain('blocked by fake agent');
+  }, 600000);
+
+  it('should adopt a failed prompt step applied by hand', () => {
+    writePlan([promptMig]);
+
+    const failed = failPromptStep(
+      runDispensed(parseLastDispense(runInit()).payload.next),
+      'blocked by fake agent'
+    );
+    const adoptCommand = stepActionCommand(failed.runId, 'adopt');
+    expect(failed.payload.instructions).toContain(adoptCommand);
+    expect(failed.payload.instructions).toContain('applied by hand');
+
+    const complete = parseLastDispense(runDispensed(adoptCommand));
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain('applied: 0');
+    expect(complete.payload.instructions).toContain('adopted: 1');
+    expect(complete.payload.instructions).toContain('unresolved: 0');
+
+    expect(commitCountFor('prompt-mig')).toBe(1);
+    expect(commitCountFor('prompt-mig (unresolved)')).toBe(0);
+    const state = readRunStateFile(failed.runId);
+    expect(state.status).toBe('completed');
+    const step = state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`);
+    expect(step.status).toBe('succeeded');
+    expect(step.adopted).toBe(true);
+    expect(state.issues ?? []).toEqual([]);
+  }, 600000);
+
+  it('should refuse a retry past two rearms and let the step be given up', () => {
+    writePlan([promptMig]);
+
+    let failed = failPromptStep(
+      runDispensed(parseLastDispense(runInit()).payload.next),
+      'first failure'
+    );
+    const retryCommand = stepActionCommand(failed.runId, 'retry');
+    expect(failed.payload.instructions).toContain(
+      'Retries left for this migration: 2'
+    );
+    failed = failPromptStep(runDispensed(retryCommand), 'second failure');
+    expect(failed.payload.instructions).toContain(
+      'Retries left for this migration: 1'
+    );
+    expect(failed.payload.instructions).toContain(
+      'this is the last one, so ask the user'
+    );
+    failed = failPromptStep(runDispensed(retryCommand), 'third failure');
+    expect(failed.payload.instructions).toContain(
+      'already been retried 2 times'
+    );
+    expect(failed.payload.instructions).not.toContain('retry:');
+    expect(failed.payload.instructions).not.toContain(retryCommand);
+    expect(failed.payload.next).toBeUndefined();
+
+    const refused = parseLastDispense(runDispensed(retryCommand));
+    expect(refused.action).toBe('error');
+    expect(refused.payload.instructions).toContain(
+      "Cannot apply action 'retry'"
+    );
+    expect(refused.payload.instructions).toContain(
+      'already been retried 2 times'
+    );
+    const step = readRunStateFile(failed.runId).steps.find(
+      (s) => s.migrationId === `${PKG}:prompt-mig`
+    );
+    expect(step.status).toBe('failed');
+    expect(step.attempt).toBe(3);
+
+    const complete = parseLastDispense(
+      runDispensed(stepActionCommand(failed.runId, 'unresolved'))
+    );
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain(
+      `- ${PKG}:prompt-mig: third failure`
+    );
+    const state = readRunStateFile(failed.runId);
+    expect(state.issues[0].summary).toContain(
+      'left unresolved after 3 attempts: third failure'
+    );
+  }, 600000);
+
   it("should adopt a killed worker's changes as the migration result", async () => {
     writePlan([slowMig, hybridMig]);
 
@@ -1191,7 +1455,7 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(init.action).toBe('initialized');
   });
 
-  it('should refuse a different plan while a run is active and resume the same run on a same-plan init', () => {
+  it('should report the active run on any init, whatever the plan, and continue it on --run-id', () => {
     const gitignoreMig = {
       package: 'nx',
       name: '23-0-0-add-migrate-runs-to-git-ignore',
@@ -1227,7 +1491,7 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(third.action).toBe('next-step');
     expect(third.payload.command).toContain(`--run-migration=${PKG}:gen-two`);
 
-    // A different plan must not fork, and the refusal precedes any git or
+    // A different plan must not fork, and the report precedes any git or
     // state side effect: the entry is stripped and the mismatched plan carries
     // the v23 migration, so a misordered fallback or checkpoint would show.
     const gitignoreBefore = readFile('.gitignore');
@@ -1247,12 +1511,15 @@ describe('migrate orchestrator (dark launch)', () => {
     const treeBeforeMismatch = runCommand('git status --porcelain').trim();
     const mismatch = runCLI('migrate --run-migrations=migrations.json', {
       env: INIT_ENV,
-      silenceError: true,
+    });
+    expect(parseLastDispense(mismatch)).toMatchObject({
+      runId: first.runId,
+      action: 'existing-run',
     });
     expect(mismatch).toContain(
-      `A migrate run '${first.runId}' is already active with a different plan.`
+      `A migrate run is already active: ${first.runId}`
     );
-    expect(runCLI.lastExitCode).toBe(1);
+    expect(mismatch).not.toContain('<nx_migrate_runbook');
     expect(runCommand('git rev-parse HEAD').trim()).toBe(headBeforeMismatch);
     expect(readFile(`.nx/migrate-runs/${first.runId}/run.json`)).toBe(
       runStateBeforeMismatch
@@ -1264,13 +1531,16 @@ describe('migrate orchestrator (dark launch)', () => {
     updateFile('.gitignore', gitignoreBefore);
     writePlan([genMig, genTwoMig, gitignoreMig]);
 
-    // A killed orchestrator is just init running again: resume, not fork. The
-    // marker proves the stored bytes are re-emitted, not re-rendered.
+    // --run-id continues it, re-emitting the stored runbook. The marker
+    // proves the stored bytes are re-emitted, not re-rendered.
     updateFile(
       `.nx/migrate-runs/${first.runId}/RUNBOOK.md`,
       (content) => `${content}\nstored-runbook-marker\n`
     );
-    const resumeOutput = runInit(' --validate=false');
+    const resumeOutput = runCLI(
+      `migrate --run-migrations=migrations.json --agentic=claude-code --run-id=${first.runId}`,
+      { env: INIT_ENV }
+    );
     expectRunbookOnlyResponse(resumeOutput);
     const resumedRunbook = parseRunbookBlock(resumeOutput);
     expect(resumedRunbook.runId).toBe(first.runId);
@@ -1318,6 +1588,49 @@ describe('migrate orchestrator (dark launch)', () => {
       ).toBe(1);
     }
     expect(runCommand('git status --porcelain').trim()).toBe('');
+  }, 600000);
+
+  it('should warn and continue when a reconcile finds the newest recorded commit gone from HEAD', () => {
+    writePlan([genMig, genTwoMig]);
+    const first = reconcileAfterInit(runInit(' --validate=false'));
+    expect(first.payload.command).toContain(`--run-migration=${PKG}:gen-mig`);
+    runDispensed(first.payload.command);
+    expect(commitCountFor('gen-mig')).toBe(1);
+
+    runCommand('git reset --hard HEAD~1');
+    // The warning goes to stderr, which runCLI does not return.
+    const output = runCommand(`${first.payload.next} 2>&1`, { env: AGENT_ENV });
+    expect(output).toContain(
+      `The newest commit migrate run ${first.runId} recorded is not reachable from HEAD. Continuing the run as asked.`
+    );
+    expect(output).toMatch(
+      /commits: newest recorded commit [0-9a-f]{10} is not reachable from HEAD/
+    );
+    const second = parseLastDispense(output);
+    expect(second.action).toBe('next-step');
+    expect(second.payload.command).toContain(`--run-migration=${PKG}:gen-two`);
+  }, 600000);
+
+  it('should start a new run on --start-fresh', () => {
+    writePlan([genMig, genTwoMig]);
+    const first = reconcileAfterInit(runInit());
+    runDispensed(first.payload.command);
+    const runDirs = () =>
+      listFiles('.nx/migrate-runs').filter((f) => f !== 'init.lock');
+    expect(runDirs()).toEqual([first.runId]);
+
+    const fresh = runInit(` --start-fresh --run-id=${first.runId}`);
+    expect(fresh).toContain(
+      `Deleted the record of migrate run ${first.runId}.`
+    );
+    const freshInit = parseLastDispense(fresh);
+    expect(freshInit.action).toBe('initialized');
+    expect(freshInit.runId).not.toBe(first.runId);
+    expect(runDirs()).toEqual([freshInit.runId]);
+    // The whole plan runs again, the already-applied migration included.
+    const redo = parseLastDispense(runDispensed(freshInit.payload.next));
+    expect(redo.action).toBe('next-step');
+    expect(redo.payload.command).toContain(`--run-migration=${PKG}:gen-mig`);
   }, 600000);
 
   // A `claude` on PATH: as the master it drives the run through its bootstrap
@@ -1405,11 +1718,26 @@ while (block.action !== 'complete') {
     // Both streams: nx prints its warnings to stderr.
     record({ step: block.step, stdout: run(block.payload.command + ' 2>&1') });
   } else if (block.action === 'retry-failed') {
+    if (process.env.FAKE_AGENT_FAIL_PROMPTS) {
+      // The prompt failed on purpose, so a retry has no fix to offer: give
+      // the step up through the option the dispense lists.
+      const giveUp = block.payload.instructions.match(/^  unresolved: .*?[Tt]hen run: (\\S.*?--step-action=unresolved)/m);
+      if (!giveUp) throw new Error('No unresolved option in: ' + block.payload.instructions);
+      record({ gaveUp: block.step });
+      block = lastBlock(run(giveUp[1]));
+      continue;
+    }
     // \`next\` is the retry: the step's generator already ran.
   } else if (block.action === 'await-prompt') {
     fs.writeFileSync(path.join(process.cwd(), 'applied-' + block.step + '.txt'), 'applied by fake agent');
     const handoffPath = block.payload.instructions.match(/^Handoff file: (.+)$/m)[1];
-    fs.writeFileSync(handoffPath, JSON.stringify({ status: 'success', summary: 'applied by fake agent' }));
+    // Generator validation goes through the same action; only a prompt the
+    // agent has to apply itself can fail here.
+    const failing = process.env.FAKE_AGENT_FAIL_PROMPTS && block.payload.instructions.includes('is a prompt-based migration');
+    const handoff = failing
+      ? { status: 'failed', summary: 'fake agent could not finish' }
+      : { status: 'success', summary: 'applied by fake agent' };
+    fs.writeFileSync(handoffPath, JSON.stringify(handoff));
   } else {
     throw new Error('Unexpected action ' + block.action + ': ' + JSON.stringify(block.payload));
   }
@@ -1515,14 +1843,16 @@ process.exit(status ?? 1);
   // exit code comes back through a file since the terminal reports only its own.
   async function runMigrateInTerminal(
     env: Record<string, string>,
-    commitsFlag = '--no-create-commits'
+    commitsFlag = '--no-create-commits',
+    // Opted out by default, as runInit does; the first scenario keeps it.
+    passFlag = '--no-final-validation'
   ): Promise<{ exitCode: number; output: string }> {
     const { RustPseudoTerminal } = require('nx/src/native');
     const exitFile = join(tmpProjPath(), 'migrate-exit-code');
     const nxBin = join(tmpProjPath(), 'node_modules', '.bin', 'nx');
     let output = '';
     const child = new RustPseudoTerminal().runCommand(
-      `${nxBin} migrate --run-migrations=migrations.json --agentic=claude-code ${commitsFlag}; echo $? > ${exitFile}`,
+      `${nxBin} migrate --run-migrations=migrations.json --agentic=claude-code ${commitsFlag} ${passFlag}; echo $? > ${exitFile}`,
       tmpProjPath(),
       {
         ...getStrippedEnvironmentVariables(),
@@ -1584,11 +1914,16 @@ process.exit(status ?? 1);
       writePlan([genMig, promptMig]);
       const { binDir, logFile } = installFakeAgent();
 
-      const { exitCode, output } = await runMigrateInTerminal({
-        PATH: `${binDir}:${process.env.PATH}`,
-        FAKE_AGENT_LOG: logFile,
-        NX_MIGRATE_ORCHESTRATOR: 'true',
-      });
+      const { exitCode, output } = await runMigrateInTerminal(
+        {
+          PATH: `${binDir}:${process.env.PATH}`,
+          FAKE_AGENT_LOG: logFile,
+          NX_MIGRATE_ORCHESTRATOR: 'true',
+        },
+        undefined,
+        // The fake agent takes the pass like any handed-back work.
+        ''
+      );
 
       expect(exitCode).toBe(0);
       expect(output).toContain('Starting Claude Code to drive migrate run');
@@ -1623,10 +1958,44 @@ process.exit(status ?? 1);
       expect(existsSync(join(tmpProjPath(), done.sentinelPath))).toBe(false);
       const state = readRunStateFile(done.complete);
       expect(state.status).toBe('completed');
+      expect(state.steps.map((s) => [s.kind, s.status])).toEqual([
+        ['migration', 'succeeded'],
+        ['migration', 'succeeded'],
+        ['final-validation', 'succeeded'],
+      ]);
+    }, 600000);
+
+    it('should exit 1 with the given-up migration in the report when the agent gives a step up', async () => {
+      writePlan([genMig, promptMig]);
+      const { binDir, logFile } = installFakeAgent();
+
+      const { exitCode, output } = await runMigrateInTerminal({
+        PATH: `${binDir}:${process.env.PATH}`,
+        FAKE_AGENT_LOG: logFile,
+        NX_MIGRATE_ORCHESTRATOR: 'true',
+        FAKE_AGENT_FAIL_PROMPTS: '1',
+      });
+
+      expect(exitCode).toBe(1);
+      expect(output).toContain('is complete');
+      expect(output).toContain('applied: 1');
+      expect(output).toContain('unresolved: 1');
+      expect(output).toContain(
+        `- ${PKG}:prompt-mig: fake agent could not finish`
+      );
+      expect(output).toContain('left work unresolved; exiting with code 1');
+      expect(output).not.toContain('is still active');
+      const log = readFakeAgentLog(logFile);
+      expect(log.find((entry) => entry.gaveUp)).toBeDefined();
+      const done = log.find((entry) => entry.complete);
+      expect(done).toBeDefined();
+      const state = readRunStateFile(done.complete);
+      expect(state.status).toBe('completed');
       expect(state.steps.map((s) => s.status)).toEqual([
         'succeeded',
-        'succeeded',
+        'unresolved',
       ]);
+      expect(state.issues).toHaveLength(1);
     }, 600000);
 
     it('should exit 1 with the resume hint when the agent session ends before the run completes', async () => {
@@ -1641,10 +2010,39 @@ process.exit(status ?? 1);
       });
 
       expect(exitCode).toBe(1);
-      expect(output).toContain('is still active');
-      expect(output).toContain('resume');
       expect(runDirs()).toHaveLength(1);
-      expect(readRunStateFile(runDirs()[0]).status).toBe('active');
+      const runId = runDirs()[0];
+      expect(output).toContain('is still active');
+      expect(readRunStateFile(runId).status).toBe('active');
+
+      // A plain re-run reports the active run; with no terminal to ask on
+      // (CI is set), it exits 1 with both ways forward and starts nothing.
+      const report = await runMigrateInTerminal({
+        PATH: `${binDir}:${process.env.PATH}`,
+        FAKE_AGENT_LOG: logFile,
+        NX_MIGRATE_ORCHESTRATOR: 'true',
+        FAKE_AGENT_EXIT_EARLY: '1',
+      });
+      expect(report.exitCode).toBe(1);
+      expect(report.output).toContain(
+        `A migrate run is already active: ${runId}`
+      );
+      expect(runDirs()).toEqual([runId]);
+      expect(readRunStateFile(runId).status).toBe('active');
+
+      // --run-id hands the same run to a new session, which completes it.
+      const resumed = await runMigrateInTerminal(
+        {
+          PATH: `${binDir}:${process.env.PATH}`,
+          FAKE_AGENT_LOG: logFile,
+          NX_MIGRATE_ORCHESTRATOR: 'true',
+        },
+        `--no-create-commits --run-id=${runId}`
+      );
+      expect(resumed.exitCode).toBe(0);
+      expect(resumed.output).toContain(`Migrate run ${runId} is complete.`);
+      expect(runDirs()).toEqual([runId]);
+      expect(readRunStateFile(runId).status).toBe('completed');
     }, 600000);
 
     const SKIPPED_INSTALL_WARNING =
@@ -1911,7 +2309,7 @@ process.exit(status ?? 1);
           FAKE_AGENT_LOG: logFile,
           NX_MIGRATE_ORCHESTRATOR: 'true',
         },
-        '--create-commits --skip-install --validate=false'
+        `--create-commits --skip-install --validate=false --run-id=${runId}`
       );
 
       expect(resumed.exitCode).toBe(0);

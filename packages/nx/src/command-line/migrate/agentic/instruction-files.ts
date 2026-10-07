@@ -28,21 +28,30 @@ export function writeStepInstructionFiles(
   const promptsDir = stepPromptsDir(runDir, migration);
   mkdirSafely(promptsDir, `prompt directory for ${migration.name}`);
   const systemPromptFilePath = join(promptsDir, 'system.md');
-  const instructionsAbsolutePath = join(promptsDir, 'instructions.md');
   writeStepFile(systemPromptFilePath, systemPrompt, 'system prompt');
-  writeStepFile(instructionsAbsolutePath, instructions, 'instructions');
-
-  // Workspace-relative: the agent resolves this one itself with its cwd pinned
-  // to the workspace root. Forward slashes because it is read as prose out of
-  // the agent's prompt, where a `\` is an escape.
-  const instructionsFilePath = relative(
+  const instructionsFilePath = writeInstructionsFile(
     workspaceRoot,
-    instructionsAbsolutePath
-  ).replace(/\\/g, '/');
+    promptsDir,
+    instructions
+  );
   return {
     systemPromptFilePath,
     instructionsPointer: `Your instructions for this migration step are in the file ${instructionsFilePath} (path is relative to the workspace root). Read it in full, then follow it.`,
   };
+}
+
+/** Writes `instructions.md` into an existing `promptsDir`; returns its path. */
+export function writeInstructionsFile(
+  workspaceRoot: string,
+  promptsDir: string,
+  instructions: string
+): string {
+  const absolutePath = join(promptsDir, 'instructions.md');
+  writeStepFile(absolutePath, instructions, 'instructions');
+  // Workspace-relative: the agent resolves this one itself with its cwd pinned
+  // to the workspace root. Forward slashes because it is read as prose out of
+  // the agent's prompt, where a `\` is an escape.
+  return relative(workspaceRoot, absolutePath).replace(/\\/g, '/');
 }
 
 function writeStepFile(
@@ -55,7 +64,7 @@ function writeStepFile(
   } catch (err) {
     const code = (err as NodeJS.ErrnoException)?.code;
     throw new Error(
-      `Could not write the migration step's ${purpose} to ${filePath}${
+      `Could not write the step's ${purpose} to ${filePath}${
         code ? ` (${code})` : ''
       }: ${err instanceof Error ? err.message : String(err)}`,
       { cause: err }

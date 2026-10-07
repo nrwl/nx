@@ -12,10 +12,12 @@ import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
-import { getInputs, TaskHasher } from '../hasher/task-hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
+  OutputFile,
+  TaskOutputs,
   TaskStatus as NativeTaskStatus,
   parseTaskStatus,
   RunningTasksService,
@@ -161,6 +163,10 @@ export class TaskOrchestrator {
   // retrieval) on every coordinator cycle.
   private cacheMissedHashes = new Set<string>();
 
+  // The files the cache just wrote or restored, by task id, for postRunSteps
+  // to hand the daemon instead of it walking the outputs again.
+  private copiedOutputFiles = new Map<string, OutputFile[]>();
+
   private completedTasks = new Map<string, TaskStatus>();
   private waitingForTasks: Function[] = [];
   private pendingDiscreteWorkers = new Set<Promise<TaskResult | void>>();
@@ -219,7 +225,9 @@ export class TaskOrchestrator {
     private readonly specifiedOutputStyle: OutputStyle | undefined,
     /** What this run renders with, after defaults. */
     private readonly resolvedOutputStyle: OutputStyle,
-    private readonly fullTaskGraph: TaskGraph = taskGraph
+    private readonly fullTaskGraph: TaskGraph = taskGraph,
+    /** Tasks the up-front pass left to hash once the tasks they read from have run. */
+    private readonly deferredTaskIds?: ReadonlySet<string>
   ) {}
 
   async init() {
@@ -576,11 +584,12 @@ export class TaskOrchestrator {
     await Promise.all(
       cacheHits.map(async ({ task, cachedResult }) => {
         if (shouldCopyMap.get(task.hash)) {
-          await this.cache.copyFilesFromCache(
+          const files = await this.cache.copyFilesFromCache(
             task.hash,
             cachedResult,
             task.outputs
           );
+          if (files) this.copiedOutputFiles.set(task.id, files);
         }
       })
     );
@@ -670,8 +679,8 @@ export class TaskOrchestrator {
    * Hash all batch tasks and resolve cache hits topologically.
    *
    * Walks the task graph level by level. Every task gets a preliminary hash
-   * (so startTasks always has a valid hash for Cloud). Tasks with depsOutputs
-   * whose deps weren't cached are ineligible for cache lookup but still
+   * (so startTasks always has a valid hash for Cloud). Tasks the up-front
+   * pass deferred, whose deps weren't cached, are ineligible for cache lookup but still
    * receive a preliminary hash — they'll be re-hashed after execution.
    */
   private async applyBatchCachedResults(
@@ -704,10 +713,7 @@ export class TaskOrchestrator {
         const depIds = batch.taskGraph.dependencies[task.id];
         const hasNonCachedDep = depIds.some((id) => nonCachedTaskIds.has(id));
 
-        if (
-          hasNonCachedDep &&
-          getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length > 0
-        ) {
+        if (hasNonCachedDep && this.deferredTaskIds?.has(task.id)) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
         } else {
@@ -790,7 +796,7 @@ export class TaskOrchestrator {
       await this.preRunSteps(nonCachedTasks, { groupId });
     }
 
-    // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
+    // Phase 2: Run non-cached tasks, then re-hash tasks that read their outputs
     const taskIdsToSkip = cachedResults.map((r) => r.task.id);
     let batchResults: TaskResult[] = [];
 
@@ -811,7 +817,7 @@ export class TaskOrchestrator {
         groupId
       );
 
-      // Re-hash depsOutputs tasks — their dep outputs are now on disk
+      // Re-hash tasks that read dep outputs — those outputs are now on disk
       const tasksToRehash = batchResults
         .filter(
           (r) =>
@@ -1767,22 +1773,9 @@ export class TaskOrchestrator {
     groupId: number
   ) {
     const now = Date.now();
-    const tasksToRecord: { outputs: string[]; hash: string }[] = [];
-    for (const { task, status } of results) {
+    for (const { task } of results) {
       // Only set endTime as fallback (batch provides timing via result.task)
       task.endTime ??= now;
-      // Skip recording for tasks whose outputs already match the cache —
-      // the daemon already has the correct hash recorded.
-      if (
-        !this.stopRequested &&
-        task.outputs.length > 0 &&
-        status !== 'local-cache-kept-existing'
-      ) {
-        tasksToRecord.push({ outputs: task.outputs, hash: task.hash });
-      }
-    }
-    if (tasksToRecord.length > 0) {
-      await this.recordOutputsHashBatch(tasksToRecord);
     }
 
     // Caller decides whether these results should be written to the cache.
@@ -1798,9 +1791,15 @@ export class TaskOrchestrator {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(
-        resultsToCache.map(async ({ task, code, terminalOutput, outputs }) =>
-          this.cache.put(task, terminalOutput, outputs, code)
-        )
+        resultsToCache.map(async ({ task, code, terminalOutput, outputs }) => {
+          const files = await this.cache.put(
+            task,
+            terminalOutput,
+            outputs,
+            code
+          );
+          if (files) this.copiedOutputFiles.set(task.id, files);
+        })
       );
       performance.mark('cache-results-end');
       performance.measure(
@@ -1808,6 +1807,24 @@ export class TaskOrchestrator {
         'cache-results-start',
         'cache-results-end'
       );
+    }
+
+    const tasksToRecord: TaskOutputs[] = [];
+    for (const { task, status } of results) {
+      const files = this.copiedOutputFiles.get(task.id);
+      this.copiedOutputFiles.delete(task.id);
+      // Skip recording for tasks whose outputs already match the cache —
+      // the daemon already has the correct hash recorded.
+      if (
+        !this.stopRequested &&
+        task.outputs.length > 0 &&
+        status !== 'local-cache-kept-existing'
+      ) {
+        tasksToRecord.push({ outputs: task.outputs, hash: task.hash, files });
+      }
+    }
+    if (tasksToRecord.length > 0) {
+      await this.recordOutputsHashBatch(tasksToRecord);
     }
 
     await this.complete(results, groupId);
@@ -2123,9 +2140,7 @@ export class TaskOrchestrator {
     return resultMap;
   }
 
-  private async recordOutputsHashBatch(
-    entries: { outputs: string[]; hash: string }[]
-  ) {
+  private async recordOutputsHashBatch(entries: TaskOutputs[]) {
     if (this.daemon?.enabled()) {
       return this.daemon.recordOutputsHashBatch(entries);
     }

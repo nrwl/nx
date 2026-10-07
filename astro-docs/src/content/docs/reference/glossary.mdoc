@@ -22,7 +22,7 @@ The Atomizer is an Nx Cloud feature that automatically splits tasks so that they
 
 Atomizer automatically splits tasks on [Nx Agents](#nx-agents), providing you detailed task information in the UI, including interpreted logs and artifacts, automatically grouped by project and workflow.
 
-> See: [Automatically Split E2E Tasks](/docs/features/ci-features/split-e2e-tasks)
+> See: [Automatically Split E2E Tasks](/docs/kb/split-e2e-tasks)
 
 ### Batch mode
 
@@ -93,6 +93,12 @@ A system for running [tasks](#task) in CI across multiple agent processes across
 
 > See: [Distribute Task Execution](/docs/features/ci-features/distribute-task-execution)
 
+### Dynamic task packing
+
+The way [Nx Agents](#nx-agents) decide which [tasks](#task) run on which agent and when. Nx Cloud uses the task graph and each task's past duration, CPU, and memory use to keep every agent close to capacity, without a hand-tuned `--parallel` value.
+
+> See: [How dynamic task packing works](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works)
+
 ### Executor
 
 A script that performs some action on your code. This can include building, linting, testing, serving and many other actions. A [target](#target) configuration specifies an executor and a set of options. Executors can be found in [plugins](#plugin).
@@ -103,13 +109,13 @@ A script that performs some action on your code. This can include building, lint
 
 A metric that measures how often a task succeeds due to flakiness rather than reliable code. It represents the percentage of total successes that came from unreliable (flaky) task hashes: `flaky_successes / (flaky_successes + non_flaky_successes)`. This answers the question: "Of all the times this task succeeded, how many successes came from unreliable code?"
 
-> See: [Flaky task analytics](/docs/features/ci-features/flaky-tasks#flaky-task-analytics)
+> See: [Flaky task analytics](/docs/kb/flaky-tasks#flaky-task-analytics)
 
 ### Flaky tasks
 
 Tasks that will sometimes succeed and sometimes fail without any change to the inputs. These tasks are often e2e tests and are particularly problematic in CI. Nx Cloud automatically detects flaky tasks and re-runs them.
 
-> See: [Detect and Retry Flaky Tasks](/docs/features/ci-features/flaky-tasks)
+> See: [Detect and Retry Flaky Tasks](/docs/kb/flaky-tasks)
 
 ### Generator
 
@@ -127,7 +133,7 @@ A computer science concept that consists of nodes connected by edges. In the Nx 
 
 A metric used in [Flaky Task Analytics](#flaky-tasks) to prioritize which flaky tasks need attention. Calculated as `flake_rate × sample_size`, it weights frequently-run flaky tasks higher than rarely-run flaky tasks. For example, a task with 50% flake rate and 100 runs has an impact score of 50, the same as a task with 10% flake rate and 500 runs.
 
-> See: [Flaky task analytics](/docs/features/ci-features/flaky-tasks#flaky-task-analytics)
+> See: [Flaky task analytics](/docs/kb/flaky-tasks#flaky-task-analytics)
 
 ### Launch template
 
@@ -163,7 +169,7 @@ A paid service that hosts and manages customizable worker machines to run parts 
 
 The umbrella term for all CI-related products that Nx provides.
 
-> See: [CI with Nx](/docs/kb/setup-ci)
+> See: [CI with Nx](/docs/getting-started/setup-ci)
 
 ### Nx Replay
 

@@ -53,6 +53,7 @@ export interface MigrateArgs {
   runMigration?: string;
   runId?: string;
   stepAction?: StepAction;
+  startFresh?: boolean;
   include?: MigrateInclude;
   /**
    * nx.json `migrate.include` default. Consumed by `resolveInclude` only when the
@@ -66,6 +67,7 @@ export interface MigrateArgs {
   commitPrefix?: string;
   agentic?: AgenticArg;
   validate?: boolean;
+  finalValidation?: boolean;
   ifExists?: boolean;
   interactive?: boolean;
   // The rest of the yargs args bag flows through untyped.
@@ -115,7 +117,7 @@ function withMigrationOptions(yargs: Argv) {
     .option('runId', {
       // Hidden with the orchestrator itself.
       describe:
-        'The orchestrated migrate run to record a single migration into, or to reconcile when given without --run-migration.',
+        'The orchestrated migrate run to record a single migration into, to continue with --run-migrations, or to reconcile when given alone.',
       type: 'string',
       hidden: true,
     })
@@ -124,6 +126,12 @@ function withMigrationOptions(yargs: Argv) {
         'How an orchestrated reconcile resolves its single failed or died step.',
       choices: STEP_ACTIONS,
       type: 'string',
+      hidden: true,
+    })
+    .option('startFresh', {
+      describe:
+        'With --run-migrations and --run-id=<id> under the orchestrator: delete the record of the active migrate run the id names and start a new run over the whole plan. Migrations the deleted run applied stay applied.',
+      type: 'boolean',
       hidden: true,
     })
     .option('ifExists', {
@@ -190,6 +198,12 @@ function withMigrationOptions(yargs: Argv) {
       describe:
         'When `--agentic` resolves to an enabled agent, run agent-driven validation after generator-only migrations that have no `prompt:` field. Defaults to on; pass `--no-validate` to opt out. Has no effect when `--agentic` is disabled, when running inside an outer agent, or when running non-interactively without an explicit agent.',
       type: 'boolean',
+    })
+    .option('finalValidation', {
+      describe:
+        'With --run-migrations under the orchestrator: end the run with an agent validation pass over the whole workspace once every migration has run. On by default; pass --no-final-validation to opt out.',
+      type: 'boolean',
+      hidden: true,
     })
     .check(
       ({

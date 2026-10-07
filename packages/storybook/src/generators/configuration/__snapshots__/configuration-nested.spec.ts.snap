@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 1`] = `
+exports[`@nx/storybook:configuration for workspaces with Root project > basic functionalities > should generate Storybook files for nested project only 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -36,7 +36,7 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 2`] = `
+exports[`@nx/storybook:configuration for workspaces with Root project > basic functionalities > should generate Storybook files for nested project only 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -73,9 +73,9 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
 "
 `;
 
-exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 3`] = `""`;
+exports[`@nx/storybook:configuration for workspaces with Root project > basic functionalities > should generate Storybook files for nested project only 3`] = `""`;
 
-exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 4`] = `
+exports[`@nx/storybook:configuration for workspaces with Root project > basic functionalities > should generate Storybook files for nested project only 4`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -102,7 +102,7 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 5`] = `
+exports[`@nx/storybook:configuration for workspaces with Root project > basic functionalities > should generate Storybook files for nested project only 5`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -139,4 +139,4 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
 "
 `;
 
-exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 6`] = `""`;
+exports[`@nx/storybook:configuration for workspaces with Root project > basic functionalities > should generate Storybook files for nested project only 6`] = `""`;

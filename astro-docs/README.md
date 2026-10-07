@@ -113,6 +113,20 @@ The site uses custom content loaders to dynamically generate documentation:
 - **PluginLoader** (`plugin.loader.ts`) - Generates official plugin documentation (generators, executors, migrations)
 - **CommunityPluginsLoader** (`community-plugins.loader.ts`) - Generates data for plugin registry (e.g. GitHub stars, npm downloads)
 - **NxReferencePackagesLoader** (`nx-reference-packages.loader.ts`) - Generated data for CNW, Devkit, nx cli (e.g. nx core related things)
+- **NxCloudPublicApiLoader** (`nx-cloud-public-api.loader.ts`) - Generates the Public API reference from the deployed OpenAPI specification.
+
+### Nx Cloud Public API reference
+
+The reference at `/docs/reference/nx-cloud/public-api` uses one model in
+`src/plugins/nx-cloud-public-api/` for the Astro page, Markdown, copy content, and AI exports.
+Edit API descriptions in the upstream OpenAPI source and usage guides in `src/content/docs/kb/`.
+
+The loader fetches `https://cloud.nx.app/nx-cloud/data/openapi.json` on each content sync.
+Set `NX_CLOUD_OPENAPI_URL` to use another deployment.
+Fetch or parse errors fail the sync instead of publishing stale documentation.
+
+The build uses `scripts/hash-openapi-spec.mjs` as a runtime input.
+Specification changes invalidate the Nx cache without a repository change.
 
 ## Content Management
 

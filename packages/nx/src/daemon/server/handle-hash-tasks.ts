@@ -2,6 +2,9 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
+import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
+import { getUltracacheConfigurationsForVersion } from './ultracache-configuration-state';
+import { planningContextFor } from './planning-context';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -17,6 +20,7 @@ interface HashTasksPayload {
   perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
   cwd: string;
   collectInputs?: boolean;
+  ultracacheConfigurationsVersion?: UltracacheConfigurationVersion;
 }
 
 async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
@@ -35,7 +39,8 @@ async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
       projectGraph,
       nxJson,
       rustReferences,
-      runnerOptions
+      runnerOptions,
+      planningContextFor(projectGraph, nxJson)
     );
   }
   return storedHasher;
@@ -48,7 +53,10 @@ export async function handleHashTasks(payload: HashTasksPayload) {
     payload.taskGraph,
     payload.perTaskEnvs,
     payload.cwd,
-    payload.collectInputs
+    payload.collectInputs,
+    getUltracacheConfigurationsForVersion(
+      payload.ultracacheConfigurationsVersion
+    )
   );
   return {
     response,
@@ -63,7 +71,10 @@ export async function handleHashTasksUpfront(payload: HashTasksPayload) {
     payload.taskGraph,
     payload.perTaskEnvs,
     payload.cwd,
-    payload.collectInputs
+    payload.collectInputs,
+    getUltracacheConfigurationsForVersion(
+      payload.ultracacheConfigurationsVersion
+    )
   );
   return {
     response,

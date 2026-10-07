@@ -1,3 +1,4 @@
+pub mod affected;
 pub mod cache;
 pub mod glob;
 pub mod hasher;
@@ -8,7 +9,10 @@ pub mod metadata;
 pub mod plugins;
 pub mod project_graph;
 pub mod tasks;
+#[cfg(test)]
+pub(crate) mod test_utils;
 mod types;
+pub mod ultracache;
 pub mod utils;
 mod walker;
 pub mod workspace;

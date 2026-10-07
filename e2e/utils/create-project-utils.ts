@@ -19,11 +19,17 @@ import {
 } from './get-env-info';
 
 import { output, readJsonFile } from '@nx/devkit';
-import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execFileSync, execSync, ExecSyncOptions } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  lstatSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from 'node:fs';
 import { join, resolve } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -36,6 +42,10 @@ import {
 import { logError, logInfo } from './log-utils';
 
 let projName: string;
+
+const defaultAngularCliVersion: string = readJsonFile(
+  require.resolve('@angular/cli/package.json')
+).version;
 
 // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
 const nxPackages = [
@@ -141,6 +151,43 @@ function alignPnpmStoreDir(workspace: string): void {
   if (updated !== contents) {
     writeFileSync(modulesYaml, updated);
   }
+}
+
+/**
+ * pnpm bin shims hardcode absolute NODE_PATHs, so a copied workspace's shims still
+ * resolve the hidden hoist dir (node_modules/.pnpm/node_modules) of the original.
+ */
+function repointPnpmBinShims(
+  workspace: string,
+  from: string,
+  to: string
+): void {
+  const [fromDir, toDir] = [`${from}/`, `${to}/`];
+  const visit = (dir: string, depth: number) => {
+    const binDir = join(dir, 'node_modules', '.bin');
+    if (existsSync(binDir)) {
+      for (const name of readdirSync(binDir)) {
+        const shim = join(binDir, name);
+        // Symlinked bins point into the store; rewriting them would edit the store.
+        if (!lstatSync(shim).isFile()) continue;
+        const contents = readFileSync(shim, 'utf-8');
+        if (contents.includes(fromDir)) {
+          writeFileSync(shim, contents.split(fromDir).join(toDir));
+        }
+      }
+    }
+    if (depth === 0) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (
+        entry.isDirectory() &&
+        entry.name !== 'node_modules' &&
+        !entry.name.startsWith('.')
+      ) {
+        visit(join(dir, entry.name), depth - 1);
+      }
+    }
+  };
+  visit(workspace, 2);
 }
 
 // Package managers whose workspace has already been built once in this process.
@@ -323,6 +370,13 @@ export function newProject({
           env: { CI: 'true', ...process.env },
           encoding: 'utf-8',
         });
+        // pnpm 12 skips an install whose lockfile is unchanged, so the copied bin
+        // shims keep NODE_PATHs into the staging directory the backup was built in.
+        repointPnpmBinShims(
+          projectDirectory,
+          join(realpathSync(e2eCwd), projScope),
+          realpathSync(projectDirectory)
+        );
       } catch (e) {
         console.log('newProject() - reinstall pnpm dependencies failed');
         console.error('Full error:', e);

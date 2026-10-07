@@ -60,16 +60,21 @@ describe('TaskOrchestrator', () => {
           consumer: node('consumer', [
             { dependentTasksOutputFiles: '**/*.jar', transitive: true },
           ]),
+          reader: node('reader'),
         },
         dependencies: {
           dep: [],
           consumer: [{ source: 'consumer', target: 'dep', type: 'static' }],
+          reader: [{ source: 'reader', target: 'dep', type: 'static' }],
         },
         externalNodes: {},
       } as unknown as ProjectGraph;
     }
 
-    function createOrchestrator(taskGraph: TaskGraph) {
+    function createOrchestrator(
+      taskGraph: TaskGraph,
+      deferredTaskIds?: Set<string>
+    ) {
       let hasherCallCount = 0;
       const hasher = {
         hashTasks: vi.fn(async (tasks: Task[]) => {
@@ -93,6 +98,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.projectGraph = createProjectGraph();
       orchestrator.taskGraph = taskGraph;
       orchestrator.fullTaskGraph = taskGraph;
+      orchestrator.deferredTaskIds = deferredTaskIds;
       orchestrator.nxJson = {};
       orchestrator.taskDetails = null;
       orchestrator.taskInvocationTracker = null;
@@ -130,8 +136,10 @@ describe('TaskOrchestrator', () => {
         dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
-      const { orchestrator, hasher, hashesAtCacheTime } =
-        createOrchestrator(taskGraph);
+      const { orchestrator, hasher, hashesAtCacheTime } = createOrchestrator(
+        taskGraph,
+        new Set(['consumer:build'])
+      );
 
       await orchestrator.applyFromCacheOrRunBatch(
         true,
@@ -163,7 +171,10 @@ describe('TaskOrchestrator', () => {
         dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
-      const { orchestrator, hasher } = createOrchestrator(taskGraph);
+      const { orchestrator, hasher } = createOrchestrator(
+        taskGraph,
+        new Set(['consumer:build'])
+      );
       // dep resolves from cache, so its outputs are already settled on disk
       // when the consumer's hash is computed
       orchestrator.applyCachedResults = vi.fn(async (tasks: Task[]) =>
@@ -181,6 +192,53 @@ describe('TaskOrchestrator', () => {
       // dep (call 1) and consumer (call 2) — no post-execution re-hash needed
       expect(hasher.hashTasks).toHaveBeenCalledTimes(2);
       expect(consumer.hash).toBe('consumer:build|call-2');
+    });
+
+    // `reader` stands in for any task whose plan reads `dep`'s outputs, e.g.
+    // through an includeIgnored fileset.
+    async function runReaderBatch(deferredTaskIds?: Set<string>) {
+      const taskGraph: TaskGraph = {
+        roots: ['dep:build'],
+        tasks: {
+          'dep:build': createTask('dep:build'),
+          'reader:build': createTask('reader:build'),
+        },
+        dependencies: { 'dep:build': [], 'reader:build': ['dep:build'] },
+        continuousDependencies: { 'dep:build': [], 'reader:build': [] },
+      };
+      const { orchestrator, hasher, hashesAtCacheTime } = createOrchestrator(
+        taskGraph,
+        deferredTaskIds
+      );
+
+      await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      const lookedUp = orchestrator.applyCachedResults.mock.calls.flatMap(
+        ([tasks]: [Task[]]) => tasks.map((t: Task) => t.id)
+      );
+      return { lookedUp, hasher, hashesAtCacheTime };
+    }
+
+    it('should not look up a deferred task before its deps run in the same batch', async () => {
+      const { lookedUp, hasher, hashesAtCacheTime } = await runReaderBatch(
+        new Set(['reader:build'])
+      );
+
+      expect(lookedUp).toEqual(['dep:build']);
+      // dep (call 1), reader (call 2), reader re-hashed after the batch (call 3)
+      expect(hasher.hashTasks).toHaveBeenCalledTimes(3);
+      expect(hashesAtCacheTime['reader:build']).toBe('reader:build|call-3');
+    });
+
+    it('should look up a task the up-front pass did not defer', async () => {
+      const { lookedUp, hasher } = await runReaderBatch(new Set());
+
+      expect(lookedUp).toEqual(['dep:build', 'reader:build']);
+      expect(hasher.hashTasks).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -216,6 +274,7 @@ describe('TaskOrchestrator', () => {
         copyFilesFromCache: vi.fn(),
       };
       orchestrator.cacheMissedHashes = new Set();
+      orchestrator.copiedOutputFiles = new Map();
       orchestrator.shouldCopyOutputsFromCacheBatch = vi.fn(
         async () => new Map()
       );
@@ -275,6 +334,75 @@ describe('TaskOrchestrator', () => {
       expect(
         orchestrator.options.lifeCycle.printTaskTerminalOutput
       ).toHaveBeenCalledWith(failing, 'failure', 'boom');
+    });
+  });
+
+  describe('outputs tracking', () => {
+    const files = [{ path: 'dist/app/main.js', stamp: '1:2' }];
+
+    function createOrchestrator() {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      // Object.create bypasses field initializers.
+      orchestrator.tasksWithPersistedOutput = new Set<string>();
+      orchestrator.copiedOutputFiles = new Map();
+      orchestrator.stopRequested = false;
+      orchestrator.cache = {
+        put: vi.fn(async () => files),
+        copyFilesFromCache: vi.fn(async () => files),
+        recordTerminalOutputs: vi.fn(),
+      };
+      orchestrator.options = {
+        lifeCycle: { printTaskTerminalOutput: vi.fn() },
+      };
+      orchestrator.recordOutputsHashBatch = vi.fn();
+      orchestrator.complete = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      return orchestrator;
+    }
+
+    const task = {
+      id: 'app:build',
+      target: { project: 'app', target: 'build' },
+      overrides: {},
+      outputs: ['dist/app'],
+      projectRoot: 'app',
+      cache: true,
+      parallelism: true,
+      hash: 'app-build-hash',
+    } as Task;
+
+    it('records outputs after caching them, with the files the cache wrote', async () => {
+      const orchestrator = createOrchestrator();
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'ok' }],
+        true,
+        0
+      );
+
+      expect(orchestrator.recordOutputsHashBatch).toHaveBeenCalledWith([
+        { outputs: task.outputs, hash: task.hash, files },
+      ]);
+      expect(orchestrator.cache.put.mock.invocationCallOrder[0]).toBeLessThan(
+        orchestrator.recordOutputsHashBatch.mock.invocationCallOrder[0]
+      );
+      expect(orchestrator.copiedOutputFiles.size).toBe(0);
+    });
+
+    it('records restored outputs with the files the restore wrote', async () => {
+      const orchestrator = createOrchestrator();
+      orchestrator.shouldCopyOutputsFromCacheBatch = vi.fn(
+        async () => new Map([[task.hash, true]])
+      );
+
+      const results = await orchestrator.finalizeCacheHits([
+        { task, cachedResult: { code: 0, terminalOutput: '', remote: false } },
+      ]);
+      await orchestrator.postRunSteps(results, false, 0);
+
+      expect(orchestrator.recordOutputsHashBatch).toHaveBeenCalledWith([
+        { outputs: task.outputs, hash: task.hash, files },
+      ]);
     });
   });
 
@@ -445,6 +573,7 @@ describe('TaskOrchestrator', () => {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       // Object.create bypasses field initializers.
       orchestrator.tasksWithPersistedOutput = new Set<string>();
+      orchestrator.copiedOutputFiles = new Map();
       orchestrator.stopRequested = false;
       orchestrator.cache = {
         temporaryOutputPath: (task: Task) =>

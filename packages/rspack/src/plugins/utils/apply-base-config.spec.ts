@@ -14,6 +14,16 @@ import {
 // The source `require`s these lazily, which `vi.mock`/`vi.doMock` cannot reach.
 const cjsRequire = createRequire(import.meta.url);
 
+// applyBaseConfig branches on the loaded @rspack/core's version, so each block pins it.
+function reportingRspackVersion(version: string) {
+  return new Proxy(cjsRequire('@rspack/core'), {
+    get(target, prop) {
+      if (prop === 'rspackVersion') return version;
+      return (target as any)[prop];
+    },
+  });
+}
+
 describe('apply-base-config libraryTarget handling', () => {
   let options: NormalizedNxAppRspackPluginOptions;
   let config: Partial<Configuration>;
@@ -29,8 +39,22 @@ describe('apply-base-config libraryTarget handling', () => {
     global.NX_GRAPH_CREATION = false;
   });
 
+  let applyBaseConfigV1: typeof applyBaseConfig;
+  beforeEach(async () => {
+    vi.resetModules();
+    mockCjsModule(
+      import.meta.url,
+      '@rspack/core',
+      reportingRspackVersion('1.6.8')
+    );
+    ({ applyBaseConfig: applyBaseConfigV1 } =
+      await import('./apply-base-config'));
+  });
+
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
+    unmockCjsModule(import.meta.url, '@rspack/core');
+    vi.resetModules();
   });
 
   it('should not set libraryTarget when user configures library.type', async () => {
@@ -38,7 +62,7 @@ describe('apply-base-config libraryTarget handling', () => {
       library: { type: 'module' },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
   });
@@ -48,7 +72,7 @@ describe('apply-base-config libraryTarget handling', () => {
       libraryTarget: 'umd',
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('umd');
   });
@@ -56,7 +80,7 @@ describe('apply-base-config libraryTarget handling', () => {
   it('should default to commonjs for node targets when nothing configured', async () => {
     config.output = {};
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs');
   });
@@ -65,7 +89,7 @@ describe('apply-base-config libraryTarget handling', () => {
     options.target = 'async-node';
     config.output = {};
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs-module');
   });
@@ -74,7 +98,7 @@ describe('apply-base-config libraryTarget handling', () => {
     options.target = 'web';
     config.output = {};
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
   });
@@ -85,7 +109,7 @@ describe('apply-base-config libraryTarget handling', () => {
       library: { type: 'module' },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
   });
@@ -93,7 +117,7 @@ describe('apply-base-config libraryTarget handling', () => {
   it('should handle empty output config gracefully', async () => {
     config.output = undefined;
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs');
   });
@@ -103,7 +127,7 @@ describe('apply-base-config libraryTarget handling', () => {
       library: { type: undefined as any },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs');
   });
@@ -113,7 +137,7 @@ describe('apply-base-config libraryTarget handling', () => {
       libraryTarget: undefined,
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('commonjs');
   });
@@ -123,7 +147,7 @@ describe('apply-base-config libraryTarget handling', () => {
       libraryTarget: '' as any,
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('');
   });
@@ -136,7 +160,7 @@ describe('apply-base-config libraryTarget handling', () => {
       },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
     expect((config.output.library as any).type).toBe('module');
@@ -149,7 +173,7 @@ describe('apply-base-config libraryTarget handling', () => {
       library: { type: 'module' },
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBeUndefined();
     expect((config.output.library as any).type).toBe('module');
@@ -161,7 +185,7 @@ describe('apply-base-config libraryTarget handling', () => {
       libraryTarget: 'umd',
     };
 
-    applyBaseConfig(options, config);
+    applyBaseConfigV1(options, config);
 
     expect(config.output.libraryTarget).toBe('umd');
   });
@@ -174,12 +198,7 @@ describe('apply-base-config libraryTarget handling', () => {
       mockCjsModule(
         import.meta.url,
         '@rspack/core',
-        new Proxy(cjsRequire('@rspack/core'), {
-          get(target, prop) {
-            if (prop === 'rspackVersion') return '2.0.3';
-            return (target as any)[prop];
-          },
-        })
+        reportingRspackVersion('2.0.3')
       );
     });
 

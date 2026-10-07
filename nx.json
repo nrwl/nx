@@ -1,5 +1,10 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -143,7 +148,11 @@
       "cache": true
     },
     "test-native": {
-      "inputs": ["native", "{projectRoot}/**/*.snap"],
+      "inputs": [
+        "native",
+        "{projectRoot}/**/*.snap",
+        "{projectRoot}/src/native/**/fixtures/**/*"
+      ],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
@@ -198,7 +207,7 @@
       ]
     },
     "e2e-ci": {
-      "inputs": ["e2eInputs", "^production"]
+      "inputs": ["...", "e2eInputs", "^production"]
     },
     "e2e-macos-local": {
       "cache": true,
@@ -213,7 +222,7 @@
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--**/**": {
-      "inputs": ["e2eInputs", "^production"],
+      "inputs": ["...", "e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
@@ -395,7 +404,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3238,
+  "bust": 3240,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
