@@ -515,6 +515,7 @@ mod tests {
             named_inputs: None,
             tags: None,
             targets: HashMap::from([("build".to_string(), target(reads_outputs))]),
+            package_name: None,
         };
         let graph = ProjectGraph {
             nodes: HashMap::from([
