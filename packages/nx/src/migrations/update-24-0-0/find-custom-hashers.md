@@ -7,7 +7,10 @@ Target `inputs` replace them.
 This migration finds every local plugin in the workspace whose `executors.json` (or `builders.json`) declares a `hasher`.
 It doesn't edit any files.
 When it finds one, it lists the executor, the hasher module, and the `executors.json` file in the migration's next steps.
-Under `nx migrate` with an AI agent, the agent reads each hasher, writes `inputs` that hash the same things, and removes the `hasher` once those inputs cover it.
+It also lists files and executor entries it can't read, so you can check those by hand.
+Under `nx migrate` with an AI agent, the agent reads each hasher and writes `inputs` that hash the same things.
+A target that declares its own `inputs` doesn't inherit them from `targetDefaults`, so the agent checks every target that uses the executor and adds the inputs where they're missing.
+It removes the `hasher` only once every one of those targets is covered.
 If something the hasher hashes can't be expressed as an input, the agent leaves the hasher in place and tells you why.
 
 Packages installed in `node_modules` aren't scanned.

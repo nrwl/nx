@@ -235,8 +235,10 @@ To apply the inputs to every target that uses the executor, set them in `targetD
 }
 ```
 
-You can also set `inputs` on the individual targets that use the executor.
-Once the inputs cover everything the hasher hashed, delete the hasher file and remove `hasher` from `executors.json`.
+A target that declares its own `inputs` replaces the `inputs` from `targetDefaults` instead of merging with them.
+Add the new inputs to each of those targets as well, in `project.json` or the `nx.targets` block of `package.json`.
+Run `nx show target <project>:<target>` for every target that uses the executor and check that each one lists the new inputs.
+Once every target covers everything the hasher hashed, delete the hasher file and remove `hasher` from `executors.json`.
 For every input type, see the [inputs reference](/docs/reference/inputs).
 
 ### How custom hashers work
