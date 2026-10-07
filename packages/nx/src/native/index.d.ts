@@ -1122,8 +1122,7 @@ export interface RuntimeInput {
  * so this carries facts rather than prose.
  */
 export interface SocketDirDetails {
-  /** The socket itself — on Windows its `\\.\pipe
-  x\` name. */
+  /** The socket itself, which on Windows is a named pipe rather than a path. */
   path: string
   /** The directory holding it, for the caller that deletes it on shutdown. */
   dir: string

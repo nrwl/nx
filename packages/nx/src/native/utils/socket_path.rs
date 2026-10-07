@@ -420,8 +420,19 @@ fn workspace_socket_dir(workspace_root: &str, env: Option<&HashMap<String, Strin
 }
 
 /// The longest socket path the platform will accept. A `sun_path` is 104 bytes
-/// on macOS and 108 on Linux; 95 leaves room for the longest leaf below.
+/// on macOS and 108 on Linux.
 pub(crate) const MAX_SOCKET_PATH: usize = 95;
+
+/// Bytes on POSIX, where `sun_path` is the limit. UTF-16 units on Windows, which
+/// has no `sun_path`: a byte count there would refuse non-ASCII profile paths
+/// that Node, counting `path.length`, accepted.
+fn socket_path_len(path: &Path) -> usize {
+    if cfg!(windows) {
+        path.to_string_lossy().encode_utf16().count()
+    } else {
+        path.as_os_str().len()
+    }
+}
 
 /// Which socket is being resolved. Each variant knows both the directory it
 /// belongs in and what it is called, so the whole path is built in one place
@@ -488,11 +499,6 @@ enum Placement {
     Configured,
 }
 
-/// The socket directory for `kind`, under the first root whose containment could
-/// be established. Establishing rather than pure: each level is created
-/// non-recursively at `0700` with its ownership re-checked, so a caller that
-/// created the directory itself would leave an intermediate at the ambient
-/// umask, which the next run refuses.
 /// The socket for `kind`: the first root whose containment could be
 /// established, the leaf directory for the workspace, and the socket's own
 /// name — built and measured in one place so no caller can produce a path the
@@ -507,7 +513,7 @@ pub(crate) fn resolve_socket_path(
     Ok(SocketDirResolution {
         // Measured before the Windows prefix: the limit is on the filesystem
         // path, and a pipe name is not one.
-        too_long: path.as_os_str().len() > MAX_SOCKET_PATH,
+        too_long: socket_path_len(&path) > MAX_SOCKET_PATH,
         path: to_socket_path(&path),
         dir: established.dir,
         outcome: established.outcome,
@@ -515,6 +521,11 @@ pub(crate) fn resolve_socket_path(
     })
 }
 
+/// The socket directory for `kind`, under the first root whose containment could
+/// be established. Establishing rather than pure: each level is created
+/// non-recursively at `0700` with its ownership re-checked, so a caller that
+/// created the directory itself would leave an intermediate at the ambient
+/// umask, which the next run refuses.
 fn resolve_socket_dir(
     kind: &SocketKind,
     workspace_root: &str,
@@ -672,7 +683,7 @@ fn to_socket_path(path: &Path) -> PathBuf {
 #[napi(object)]
 #[derive(Default)]
 pub struct SocketDirDetails {
-    /// The socket itself — on Windows its `\\.\pipe\nx\` name.
+    /// The socket itself, which on Windows is a named pipe rather than a path.
     pub path: String,
     /// The directory holding it, for the caller that deletes it on shutdown.
     pub dir: String,
@@ -938,6 +949,10 @@ mod tests {
         assert!(resolved.path.ends_with("d.sock"));
     }
 
+    /// The resolver reads the environment it is handed, not `std::env`. Nx
+    /// Console loads a workspace `.env` into a copy, so a resolver that only
+    /// consulted the process environment would disagree with the extension
+    /// exactly when the workspace configures a socket dir.
     #[test]
     fn a_configured_socket_dir_is_used_and_locked_down() {
         let temp = TempDir::new().unwrap();
@@ -953,10 +968,6 @@ mod tests {
         assert!(configured.is_dir());
     }
 
-    /// The resolver reads the environment it is handed, not `std::env`. Nx
-    /// Console loads a workspace `.env` into a copy, so a resolver that only
-    /// consulted the process environment would disagree with the extension
-    /// exactly when the workspace configures a socket dir.
     #[test]
     fn an_empty_configured_value_counts_as_unset() {
         let ws = workspace();
