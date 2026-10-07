@@ -17,7 +17,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use tracing::trace;
 
 use crate::native::glob::{
-    NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
+    NxGlobSet, NxGlobSetBuilder, escape_glob_literal, expand_literal_braces, normalize_glob,
+    partition_glob,
 };
 use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
@@ -1619,22 +1620,35 @@ fn covered_by_native_instruction(glob: &str) -> bool {
         || ALWAYS_ON_FILES.contains(&path)
 }
 
-/// Resolves `{projectRoot}` and `{projectName}` tokens in a fileset pattern.
-/// For root-level projects (project_root == "."), strips `{projectRoot}/` instead of
-/// replacing with "." to avoid producing invalid paths like `./**/*`.
+/// Resolves `{projectRoot}` and `{projectName}` in a fileset pattern, escaped so
+/// a root like `app/(group)` matches only itself. One pass, so a substituted
+/// value is never read for tokens. A root-level project strips `{projectRoot}/`
+/// rather than producing `./**/*`.
 fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> String {
-    let resolved = if project_root == "." {
-        fileset.replace("{projectRoot}/", "")
-    } else {
-        fileset.replace("{projectRoot}", project_root)
+    let root_token = match project_root {
+        "." => "{projectRoot}/",
+        _ => "{projectRoot}",
     };
-    // Most patterns have no project-name token. Keep the first allocation in
-    // that case, preserving sequential substitution when the root adds a token.
-    if resolved.contains("{projectName}") {
-        resolved.replace("{projectName}", project_name)
-    } else {
-        resolved
+    let mut resolved = String::with_capacity(fileset.len());
+    let mut rest = fileset;
+    while let Some(start) = rest.find('{') {
+        resolved.push_str(&rest[..start]);
+        rest = &rest[start..];
+        if let Some(after) = rest.strip_prefix(root_token) {
+            if project_root != "." {
+                resolved.push_str(&escape_glob_literal(project_root));
+            }
+            rest = after;
+        } else if let Some(after) = rest.strip_prefix("{projectName}") {
+            resolved.push_str(&escape_glob_literal(project_name));
+            rest = after;
+        } else {
+            resolved.push('{');
+            rest = &rest[1..];
+        }
     }
+    resolved.push_str(rest);
+    resolved
 }
 
 /// Disk-backed globs are workspace-relative once resolved: `{workspaceRoot}/`
@@ -1681,6 +1695,7 @@ fn find_external_dependency_node_name<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::glob::{build_glob_set, fileset_patterns};
     use crate::native::project_graph::types::{ExternalNode, Project, Target};
 
     fn mixed_cycle_planner(with_outputs: bool) -> HashPlanner {
@@ -2003,26 +2018,44 @@ mod tests {
     }
 
     #[test]
-    fn token_resolution_preserves_root_and_sequential_substitution() {
-        for (pattern, root, name) in [
-            ("!{projectRoot}/**/*", ".", "app"),
-            ("{projectRoot}", ".", "app"),
-            ("{workspaceRoot}/file", "libs/app", "app"),
+    fn token_resolution_escapes_the_substituted_root_and_name() {
+        for (pattern, root, name, resolved) in [
+            ("!{projectRoot}/**/*", ".", "app", "!**/*"),
+            ("{projectRoot}", ".", "app", "{projectRoot}"),
             (
-                "{projectRoot}/{projectName}/{projectRoot}",
-                "libs/{projectName}",
+                "{workspaceRoot}/file",
+                "libs/app",
                 "app",
+                "{workspaceRoot}/file",
             ),
-            ("{projectRoot}/{projectName}", "libs/app", "{projectRoot}"),
+            ("{projectRoot}/**/*", "libs/(g)", "app", r"libs/\(g\)/**/*"),
+            (
+                "{projectRoot}/{projectName}.ts",
+                "libs/a",
+                "[id]",
+                r"libs/a/\[id\].ts",
+            ),
+            (
+                "{projectRoot}/{projectName}",
+                "libs/{projectName}",
+                "{projectRoot}",
+                r"libs/\{projectName\}/\{projectRoot\}",
+            ),
         ] {
-            let old = if root == "." {
-                pattern.replace("{projectRoot}/", "")
-            } else {
-                pattern.replace("{projectRoot}", root)
-            }
-            .replace("{projectName}", name);
-            assert_eq!(resolve_tokens(pattern, root, name), old);
+            assert_eq!(resolve_tokens(pattern, root, name), resolved, "{pattern}");
         }
+    }
+
+    #[test]
+    fn a_project_root_with_glob_characters_matches_only_itself() {
+        let globs = fileset_patterns(&[resolve_tokens(
+            "{projectRoot}/**/*",
+            "packages/(group)/lib-a",
+            "lib-a",
+        )]);
+        let glob_set = build_glob_set(&globs).unwrap();
+        assert!(glob_set.is_match("packages/(group)/lib-a/src/index.ts"));
+        assert!(!glob_set.is_match("packages/group/lib-a/src/index.ts"));
     }
 
     #[test]
