@@ -225,6 +225,27 @@ describe('syncGenerator()', () => {
       `);
     });
 
+    it('should not report a non-composite project as a missing reference', async () => {
+      addProject('not-composite', [], [], 'packages/not-composite');
+      writeJson(tree, 'packages/not-composite/tsconfig.json', {
+        compilerOptions: {},
+      });
+
+      const result = await syncGenerator(tree);
+
+      // It is dropped before writing, so it must never be named as a reason
+      // the workspace is out of sync.
+      expect((result as any).outOfSyncDetails).toStrictEqual([
+        'tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
+        'packages/b/tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json',
+      ]);
+      expect(readJson(tree, 'tsconfig.json').references).not.toContainEqual({
+        path: './packages/not-composite',
+      });
+    });
+
     it('should respect existing project references and discard non-existing ones in the tsconfig.json', async () => {
       writeJson(tree, 'tsconfig.json', {
         compilerOptions: {
