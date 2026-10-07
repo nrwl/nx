@@ -79,7 +79,6 @@ mod tests {
                 Project {
                     root: "".into(),
                     named_inputs: None,
-                    package_name: None,
                     tags: None,
                     targets: Default::default(),
                 },
@@ -89,7 +88,6 @@ mod tests {
                 Project {
                     root: "libs/js".into(),
                     named_inputs: None,
-                    package_name: None,
                     tags: Some(vec!["type:lib".into(), "scope:js".into()]),
                     targets: HashMap::from([
                         (
@@ -118,7 +116,6 @@ mod tests {
                 Project {
                     root: "libs/js".into(),
                     named_inputs: None,
-                    package_name: None,
                     tags: Some(vec!["type:lib".into(), "scope:js".into()]),
                     targets: HashMap::from([
                         (

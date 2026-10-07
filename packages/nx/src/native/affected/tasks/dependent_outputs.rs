@@ -505,17 +505,13 @@ mod tests {
                     transitive: Some(false),
                 })]
             }),
-            outputs: None,
-            options: None,
-            configurations: None,
-            parallelism: None,
+            ..Default::default()
         };
         let project = |root: &str, reads_outputs: bool| Project {
             root: root.into(),
             named_inputs: None,
             tags: None,
             targets: HashMap::from([("build".to_string(), target(reads_outputs))]),
-            package_name: None,
         };
         let graph = ProjectGraph {
             nodes: HashMap::from([
