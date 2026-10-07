@@ -57,7 +57,7 @@ fun processTask(
     externalNodes: MutableMap<String, ExternalNode>,
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,
-    gitIgnoreClassifier: GitIgnoreClassifier,
+    buildOutputClassifier: BuildOutputClassifier,
     targetNamePrefix: String = "",
     project: Project,
 ): MutableMap<String, Any?> =
@@ -70,7 +70,7 @@ fun processTask(
           externalNodes,
           dependencies,
           targetNameOverrides,
-          gitIgnoreClassifier,
+          buildOutputClassifier,
           targetNamePrefix,
           project)
     }
@@ -83,7 +83,7 @@ private fun processTaskImpl(
     externalNodes: MutableMap<String, ExternalNode>,
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,
-    gitIgnoreClassifier: GitIgnoreClassifier,
+    buildOutputClassifier: BuildOutputClassifier,
     targetNamePrefix: String = "",
     project: Project,
 ): MutableMap<String, Any?> {
@@ -118,7 +118,7 @@ private fun processTaskImpl(
 
   val inputs =
       getInputsForTask(
-          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
+          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, buildOutputClassifier)
   if (!inputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${inputs.size} inputs")
     target["inputs"] = inputs
@@ -181,11 +181,11 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 fun inferExtensionsFromInputProperties(
     task: Task,
     dependentTasks: Set<Task>,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    buildOutputClassifier: BuildOutputClassifier
 ): Set<String> {
   val extensions = mutableSetOf<String>()
   extensions.addAll(extensionsForTaskType(task))
-  extensions.addAll(declaredCopySourceExtensions(task, gitIgnoreClassifier))
+  extensions.addAll(declaredCopySourceExtensions(task, buildOutputClassifier))
   dependentTasks.forEach { depTask -> extensions.addAll(dependencyOutputExtensions(depTask)) }
   return extensions.toSet()
 }
@@ -345,12 +345,12 @@ private fun declaresDirectoryOutput(task: Task): Boolean {
 
 /**
  * Extensions of a copy task's declared concrete-file `from(...)` sources, read from the raw
- * arguments without resolving them. Only gitignored (generated) sources contribute: checked-in
- * sources are already direct inputs.
+ * arguments without resolving them. Only generated sources (build output) contribute: other sources
+ * are already direct inputs.
  */
 private fun declaredCopySourceExtensions(
     task: Task,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    buildOutputClassifier: BuildOutputClassifier
 ): Set<String> {
   if (task !is AbstractCopyTask) return emptySet()
   val extensions = mutableSetOf<String>()
@@ -358,7 +358,7 @@ private fun declaredCopySourceExtensions(
     // getRootSpec() returns an internal type that moved between Gradle 8 and 9; resolve by name.
     val rootSpec = task.javaClass.getMethod("getRootSpec").invoke(task)
     if (rootSpec != null) {
-      collectCopySourceExtensions(rootSpec, extensions, gitIgnoreClassifier)
+      collectCopySourceExtensions(rootSpec, extensions, buildOutputClassifier)
     }
   } catch (t: Throwable) {
     task.logger.debug("Could not read copy source paths for ${task.path}: ${t.message}")
@@ -369,7 +369,7 @@ private fun declaredCopySourceExtensions(
 private fun collectCopySourceExtensions(
     spec: Any,
     into: MutableSet<String>,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    buildOutputClassifier: BuildOutputClassifier
 ) {
   // DefaultCopySpec.getSourcePaths() holds the raw from(...) arguments. Absent (null) on specs that
   // do not expose it -> nothing to read at this level.
@@ -382,7 +382,7 @@ private fun collectCopySourceExtensions(
   sourcePaths?.forEach { source ->
     try {
       val file = fileFromDeclaredSource(source) ?: return@forEach
-      if (gitIgnoreClassifier.isIgnored(file)) {
+      if (buildOutputClassifier.isBuildOutput(file)) {
         file.extension.takeIf { it.isNotEmpty() }?.let { into.add(it) }
       }
     } catch (t: Throwable) {}
@@ -395,7 +395,7 @@ private fun collectCopySourceExtensions(
         null
       }
   children?.filterNotNull()?.forEach { child ->
-    collectCopySourceExtensions(child, into, gitIgnoreClassifier)
+    collectCopySourceExtensions(child, into, buildOutputClassifier)
   }
 }
 
@@ -415,20 +415,20 @@ private fun fileFromDeclaredSource(source: Any?): File? =
     }
 
 /**
- * Declared `from(...)` sources of a copy task that are committed directories; these become globs so
- * files added later are picked up without recomputing the graph. Gitignored dirs are excluded:
+ * Declared `from(...)` sources of a copy task that are source directories; these become globs so
+ * files added later are picked up without recomputing the graph. Build output dirs are excluded:
  * their existence depends on build state.
  */
 private fun declaredCopySourceDirs(
     task: Task,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    buildOutputClassifier: BuildOutputClassifier
 ): Set<File> {
   if (task !is AbstractCopyTask) return emptySet()
   val dirs = mutableSetOf<File>()
   try {
     val rootSpec = task.javaClass.getMethod("getRootSpec").invoke(task)
     if (rootSpec != null) {
-      collectCopySourceDirs(rootSpec, task, dirs, gitIgnoreClassifier)
+      collectCopySourceDirs(rootSpec, task, dirs, buildOutputClassifier)
     }
   } catch (t: Throwable) {
     task.logger.debug("Could not read copy source dirs for ${task.path}: ${t.message}")
@@ -440,13 +440,13 @@ private fun collectCopySourceDirs(
     spec: Any,
     task: Task,
     into: MutableSet<File>,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    buildOutputClassifier: BuildOutputClassifier
 ) {
-  fun addCommittedDir(dir: File) {
+  fun addSourceDir(dir: File) {
     val resolved = if (dir.isAbsolute) dir else File(task.project.projectDir, dir.path)
-    // A committed dir exists identically on a clean and a built tree, so this stat is
+    // A source dir exists identically on a clean and a built tree, so this stat is
     // deterministic.
-    if (!gitIgnoreClassifier.isIgnored(resolved) && resolved.isDirectory) {
+    if (!buildOutputClassifier.isBuildOutput(resolved) && resolved.isDirectory) {
       into.add(resolved)
     }
   }
@@ -459,8 +459,8 @@ private fun collectCopySourceDirs(
   sourcePaths?.forEach { source ->
     try {
       when (source) {
-        is org.gradle.api.file.SourceDirectorySet -> source.srcDirs.forEach { addCommittedDir(it) }
-        else -> fileFromDeclaredSource(source)?.let { addCommittedDir(it) }
+        is org.gradle.api.file.SourceDirectorySet -> source.srcDirs.forEach { addSourceDir(it) }
+        else -> fileFromDeclaredSource(source)?.let { addSourceDir(it) }
       }
     } catch (t: Throwable) {}
   }
@@ -471,7 +471,7 @@ private fun collectCopySourceDirs(
         null
       }
   children?.filterNotNull()?.forEach { child ->
-    collectCopySourceDirs(child, task, into, gitIgnoreClassifier)
+    collectCopySourceDirs(child, task, into, buildOutputClassifier)
   }
 }
 
@@ -501,7 +501,7 @@ private fun candidateSourceRoots(task: Task): Set<File> {
  * @param projectRoot the project root path
  * @param workspaceRoot the workspace root path
  * @param externalNodes map of external nodes
- * @param gitIgnoreClassifier classifier to determine if files match gitignore patterns
+ * @param buildOutputClassifier tells build output apart from sources
  * @return a list of inputs including external dependencies, null if empty or an error occurred
  */
 fun getInputsForTask(
@@ -510,11 +510,11 @@ fun getInputsForTask(
     projectRoot: String,
     workspaceRoot: String,
     externalNodes: MutableMap<String, ExternalNode>? = null,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    buildOutputClassifier: BuildOutputClassifier
 ): List<Any>? =
     NxTracing.withSpan("getInputsForTask", mapOf("task" to task.path)) {
       getInputsForTaskImpl(
-          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
+          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, buildOutputClassifier)
     }
 
 private fun getInputsForTaskImpl(
@@ -523,20 +523,20 @@ private fun getInputsForTaskImpl(
     projectRoot: String,
     workspaceRoot: String,
     externalNodes: MutableMap<String, ExternalNode>? = null,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    buildOutputClassifier: BuildOutputClassifier
 ): List<Any>? {
   return try {
     val inputs = mutableListOf<Any>()
     val externalDependencies = mutableListOf<String>()
 
-    inputs.addAll(getGradleFilesInputs(workspaceRoot))
+    inputs.addAll(getGradleFilesInputs(workspaceRoot).map(::ignoredFileset))
 
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
 
     // Files under a known source root collapse into a `root/**/*` glob so files added later
     // invalidate the cache without recomputing the graph (a per-file listing is frozen at
     // graph-computation time).
-    val copySourceDirs = declaredCopySourceDirs(task, gitIgnoreClassifier)
+    val copySourceDirs = declaredCopySourceDirs(task, buildOutputClassifier)
     val sourceRoots = candidateSourceRoots(task) + copySourceDirs
     // A declared copy source dir globs even when it contributed no file yet.
     val usedRoots = copySourceDirs.toMutableSet()
@@ -555,8 +555,8 @@ private fun getInputsForTaskImpl(
           }
         }
 
-        // Gitignored - a build artifact, recovered from the task model, not the working tree
-        gitIgnoreClassifier.isIgnored(inputFile) -> {}
+        // Build output - recovered from the task model via dependentTasksOutputFiles
+        buildOutputClassifier.isBuildOutput(inputFile) -> {}
 
         // File inside a source root - covered by the root's glob
         else -> {
@@ -564,20 +564,22 @@ private fun getInputsForTaskImpl(
           if (root != null) {
             usedRoots.add(root)
           } else {
-            inputs.add(relativePath)
+            inputs.add(ignoredFileset(relativePath))
           }
         }
       }
     }
     usedRoots.forEach { root ->
-      replaceRootInPath(root.path, projectRoot, workspaceRoot)?.let { inputs.add("$it/**/*") }
+      replaceRootInPath(root.path, projectRoot, workspaceRoot)?.let {
+        inputs.add(ignoredFileset("$it/**/*"))
+      }
     }
 
     // The task's own patterns: its type plus, for a Copy/Sync, its declared generated sources
     // (e.g. processResources bundling a generated dist/*.tar.gz gains **/*.gz on itself). Not
     // routed through dependencyOutputExtensions so a task gains no self-input from its own outputs.
     val taskOwnPatterns =
-        (extensionsForTaskType(task) + declaredCopySourceExtensions(task, gitIgnoreClassifier))
+        (extensionsForTaskType(task) + declaredCopySourceExtensions(task, buildOutputClassifier))
             .filterNot { nonInputDependentOutputExtensions.contains(it) }
             .map { "**/*.$it" }
 
@@ -604,6 +606,10 @@ private fun getInputsForTaskImpl(
     null
   }
 }
+
+/** Ignored files that aren't build output (e.g. local config) still feed the hash. */
+private fun ignoredFileset(fileset: String): Map<String, Any> =
+    mapOf("fileset" to fileset, "includeIgnored" to true)
 
 /**
  * Get outputs for task

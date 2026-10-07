@@ -18,7 +18,6 @@ dependencies {
   implementation(libs.gson)
   implementation(libs.javaparser.core)
   implementation(libs.kotlinx.coroutines.core)
-  implementation(libs.jgit)
   implementation(platform(libs.opentelemetry.bom))
   implementation(libs.opentelemetry.api)
   implementation(libs.opentelemetry.sdk)

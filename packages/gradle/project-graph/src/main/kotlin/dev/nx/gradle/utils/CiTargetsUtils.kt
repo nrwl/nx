@@ -21,7 +21,7 @@ fun addTestCiTargets(
     projectRoot: String,
     workspaceRoot: String,
     ciTestTargetName: String,
-    gitIgnoreClassifier: GitIgnoreClassifier,
+    buildOutputClassifier: BuildOutputClassifier,
     targetNameOverrides: Map<String, String> = emptyMap(),
     targetNamePrefix: String = ""
 ) =
@@ -37,7 +37,7 @@ fun addTestCiTargets(
               projectRoot,
               workspaceRoot,
               ciTestTargetName,
-              gitIgnoreClassifier,
+              buildOutputClassifier,
               targetNameOverrides,
               targetNamePrefix)
         }
@@ -51,7 +51,7 @@ private fun addTestCiTargetsImpl(
     projectRoot: String,
     workspaceRoot: String,
     ciTestTargetName: String,
-    gitIgnoreClassifier: GitIgnoreClassifier,
+    buildOutputClassifier: BuildOutputClassifier,
     targetNameOverrides: Map<String, String> = emptyMap(),
     targetNamePrefix: String = ""
 ) {
@@ -69,7 +69,7 @@ private fun addTestCiTargetsImpl(
       workspaceRoot,
       ciTestTargetName,
       ciDependsOn,
-      gitIgnoreClassifier,
+      buildOutputClassifier,
       targetNameOverrides,
       targetNamePrefix)
 
@@ -82,7 +82,7 @@ private fun addTestCiTargetsImpl(
       projectRoot,
       workspaceRoot,
       ciDependsOn,
-      gitIgnoreClassifier)
+      buildOutputClassifier)
 }
 
 private fun processTestFiles(
@@ -95,14 +95,14 @@ private fun processTestFiles(
     workspaceRoot: String,
     ciTestTargetName: String,
     ciDependsOn: MutableList<DependsOnEntry>,
-    gitIgnoreClassifier: GitIgnoreClassifier,
+    buildOutputClassifier: BuildOutputClassifier,
     targetNameOverrides: Map<String, String>,
     targetNamePrefix: String
 ) {
   val dependsOnTasks = getDependsOnTask(testTask)
   val testTaskInputs =
       getInputsForTask(
-          dependsOnTasks, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
+          dependsOnTasks, testTask, projectRoot, workspaceRoot, null, buildOutputClassifier)
   val testTaskOutputs = getOutputsForTask(testTask, projectRoot, workspaceRoot)
   val testTaskDependsOn =
       getDependsOnForTask(dependsOnTasks, testTask, null, targetNameOverrides, targetNamePrefix)
@@ -186,11 +186,11 @@ private fun ensureParentCiTarget(
     projectRoot: String,
     workspaceRoot: String,
     ciDependsOn: List<DependsOnEntry>,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    buildOutputClassifier: BuildOutputClassifier
 ) {
   if (ciDependsOn.isNotEmpty()) {
     val taskInputs =
-        getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
+        getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, buildOutputClassifier)
 
     targets[ciTestTargetName] =
         mutableMapOf<String, Any?>(
