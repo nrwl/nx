@@ -13,7 +13,6 @@ import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { parseJson } from '../../../utils/json';
-import { logger } from '../../../utils/logger';
 import { prettyTime } from '../../../tasks-runner/life-cycles/pretty-time';
 import {
   ensureRunSubdir,
@@ -30,6 +29,7 @@ import {
   commitMigrationIfRequested,
   type CommitResult,
 } from '../migrate-commits';
+import { logLineToAgent } from './agent-output';
 import { publishFileAtomically } from './atomic-write';
 import { giveUpWithCommit, type GiveUpOutcome } from './give-up';
 import {
@@ -523,7 +523,7 @@ async function ask(
     }
     if (Date.now() >= nextWaitingLineAt) {
       nextWaitingLineAt = Date.now() + WAITING_LINE_INTERVAL_MS;
-      logger.info(waitingLine(request, stepName, Date.now() - askedAt));
+      logLineToAgent(waitingLine(request, stepName, Date.now() - askedAt));
     }
     await new Promise((resolve) => setTimeout(resolve, CHILD_POLL_INTERVAL_MS));
   }
