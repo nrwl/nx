@@ -22,6 +22,8 @@ const CRITICAL_PATH_TOP_MIN_FRACTION = 0.2;
 export interface TaskTiming {
   startTime?: number;
   endTime?: number;
+  /** When a continuous task passed its `readyWhen` check. */
+  readyTime?: number;
   continuous: boolean;
 }
 
@@ -245,9 +247,9 @@ export class PerformanceAnalysis {
 
   /**
    * Earliest this task became eligible, independent of slots: the latest of run
-   * start, dependency ends, any continuous dependency's *start* (an ordering
-   * constraint, not contention; a wait for readiness is not tracked, so it
-   * counts as contention), and any earlier batch sibling's end.
+   * start, dependency ends, any continuous dependency's *start*, or its
+   * readiness when the edge waits for it (an ordering constraint, not
+   * contention), and any earlier batch sibling's end.
    */
   private readyTime(id: string, runStart: number): number {
     const start = this.timings.get(id)?.startTime;
@@ -259,9 +261,13 @@ export class PerformanceAnalysis {
       }
     }
     for (const cdep of this.taskGraph.continuousDependencies?.[id] ?? []) {
-      const cStart = this.timings.get(cdep.id)?.startTime;
-      if (cStart != null) {
-        result = Math.max(result, cStart);
+      const producer = this.timings.get(cdep.id);
+      const usable =
+        cdep.waitFor === 'ready'
+          ? (producer?.readyTime ?? producer?.startTime)
+          : producer?.startTime;
+      if (usable != null) {
+        result = Math.max(result, usable);
       }
     }
     for (const sibling of this.batchSiblings.get(id) ?? []) {
