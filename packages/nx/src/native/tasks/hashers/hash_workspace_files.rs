@@ -243,6 +243,32 @@ mod test {
     }
 
     #[test]
+    fn excludes_a_workspace_root_name_starting_with_an_exclamation_mark() {
+        let all_workspace_files =
+            index(
+                &["foo", "!foo", "!dir/x.ts", "dir/x.ts"].map(|file| FileData {
+                    file: file.into(),
+                    hash: String::new(),
+                }),
+            );
+        let collect = |excluded: &str| {
+            collect_workspace_file_paths(
+                &["{workspaceRoot}/**/*".to_string(), excluded.to_string()],
+                &all_workspace_files,
+            )
+            .unwrap()
+        };
+        assert_eq!(
+            collect("!{workspaceRoot}/!foo"),
+            vec!["!dir/x.ts", "dir/x.ts", "foo"]
+        );
+        assert_eq!(
+            collect("!{workspaceRoot}/!dir"),
+            vec!["!foo", "dir/x.ts", "foo"]
+        );
+    }
+
+    #[test]
     fn indices_expand_to_the_same_paths_as_direct_collection() {
         let all_workspace_files = index(&[
             FileData {
