@@ -23,7 +23,9 @@ import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
   addBuildAndWatchDepsTargets,
+  createTypecheckTargets,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+  type TypecheckTargetProject,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
@@ -40,7 +42,7 @@ export interface VitePluginOptions {
   devTargetName?: string;
   previewTargetName?: string;
   serveStaticTargetName?: string;
-  typecheckTargetName?: string;
+  typecheckTargetName?: string | false;
   /**
    * The compiler to use for type-checking. When unset, defaults to `vue-tsc`
    * for Vue projects (detected via the `vite:vue` plugin) and `tsc` otherwise.
@@ -55,7 +57,9 @@ export interface VitePluginOptions {
 type ViteTargets = Pick<
   ProjectConfiguration,
   'targets' | 'metadata' | 'projectType'
->;
+> & {
+  typecheck?: { compiler: string; hasVuePlugin: boolean };
+};
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -111,8 +115,12 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
       ])
     );
 
+    const typecheckProjects: TypecheckTargetProject[] = [];
+    const vueProjectRoots = new Set<string>();
+    const projectsByRoot = new Map<string, ProjectConfiguration>();
+
     try {
-      return await createNodesFromFiles(
+      const results = await createNodesFromFiles(
         async (configFile, _, context, idx) => {
           const projectRoot = dirname(configFile);
           // Do not create a project if package.json and project.json isn't there.
@@ -151,7 +159,8 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
               )
             );
           }
-          const { projectType, metadata, targets } = targetsCache.get(hash);
+          const { projectType, metadata, targets, typecheck } =
+            targetsCache.get(hash);
 
           const project: ProjectConfiguration = {
             root: projectRoot,
@@ -165,6 +174,20 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
             project.projectType = projectType;
           }
 
+          if (typecheck) {
+            typecheckProjects.push({
+              projectRoot,
+              compiler: typecheck.compiler,
+              buildTargetName: targets[normalizedOptions.buildTargetName]
+                ? normalizedOptions.buildTargetName
+                : undefined,
+            });
+            if (typecheck.hasVuePlugin) {
+              vueProjectRoots.add(projectRoot);
+            }
+            projectsByRoot.set(projectRoot, project);
+          }
+
           return {
             projects: {
               [projectRoot]: project,
@@ -175,6 +198,32 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
         options,
         context
       );
+
+      const { typecheckTargetName } = normalizedOptions;
+      if (typecheckTargetName !== false && typecheckProjects.length) {
+        const typecheckTargets = await createTypecheckTargets(
+          typecheckProjects,
+          context,
+          typecheckTargetName
+        );
+        for (const [projectRoot, target] of Object.entries(typecheckTargets)) {
+          const project = projectsByRoot.get(projectRoot);
+          project.targets = {
+            ...project.targets,
+            [typecheckTargetName]: vueProjectRoots.has(projectRoot)
+              ? {
+                  ...target,
+                  metadata: {
+                    ...target.metadata,
+                    technologies: [...target.metadata.technologies, 'vue'],
+                  },
+                }
+              : target,
+          };
+        }
+      }
+
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
@@ -279,13 +328,8 @@ async function buildViteTargets(
     }
   }
 
-  if (tsConfigFiles.length) {
-    const tsConfigToUse =
-      ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
-        tsConfigFiles.includes(t)
-      ) ?? tsConfigFiles[0];
-
-    // Check if the project uses Vue plugin
+  let typecheck: ViteTargets['typecheck'];
+  if (options.typecheckTargetName !== false && tsConfigFiles.length) {
     const hasVuePlugin = viteBuildConfig.plugins?.some(
       (p) => p.name === 'vite:vue' || p.name === 'vite:vue2'
     );
@@ -293,47 +337,40 @@ async function buildViteTargets(
     // when their setup isn't detected (e.g. custom/non-standard Vue plugin).
     const resolvedCompiler =
       options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc');
-    const typeCheckCommand = resolvedCompiler;
-    const typeCheckExternalDeps =
-      resolvedCompiler === 'tsgo'
-        ? ['@typescript/native-preview']
-        : resolvedCompiler === 'vue-tsc'
-          ? ['vue-tsc', 'typescript']
-          : ['typescript'];
-
-    targets[options.typecheckTargetName] = {
-      cache: true,
-      inputs: [
-        ...('production' in namedInputs
-          ? ['production', '^production']
-          : ['default', '^default']),
-        { externalDependencies: typeCheckExternalDeps },
-      ],
-      command: isUsingTsSolutionSetup
-        ? `${typeCheckCommand} --build --emitDeclarationOnly`
-        : `${typeCheckCommand} --noEmit -p ${tsConfigToUse}`,
-      options: { cwd: joinPathFragments(projectRoot) },
-      metadata: {
-        description: `Runs type-checking for the project.`,
-        technologies: hasVuePlugin ? ['typescript', 'vue'] : ['typescript'],
-        help: {
-          command: isUsingTsSolutionSetup
-            ? `${pmc.exec} ${typeCheckCommand} --build --help`
-            : `${pmc.exec} ${typeCheckCommand} -p ${tsConfigToUse} --help`,
-          example: isUsingTsSolutionSetup
-            ? { args: ['--force'] }
-            : { options: { noEmit: true } },
-        },
-      },
-    };
 
     if (isUsingTsSolutionSetup) {
-      targets[options.typecheckTargetName].dependsOn = [
-        `^${options.typecheckTargetName}`,
-      ];
-      targets[options.typecheckTargetName].syncGenerators = [
-        '@nx/js:typescript-sync',
-      ];
+      typecheck = { compiler: resolvedCompiler, hasVuePlugin: !!hasVuePlugin };
+    } else {
+      const tsConfigToUse =
+        ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
+          tsConfigFiles.includes(t)
+        ) ?? tsConfigFiles[0];
+      const typeCheckExternalDeps =
+        resolvedCompiler === 'tsgo'
+          ? ['@typescript/native-preview']
+          : resolvedCompiler === 'vue-tsc'
+            ? ['vue-tsc', 'typescript']
+            : ['typescript'];
+
+      targets[options.typecheckTargetName] = {
+        cache: true,
+        inputs: [
+          ...('production' in namedInputs
+            ? ['production', '^production']
+            : ['default', '^default']),
+          { externalDependencies: typeCheckExternalDeps },
+        ],
+        command: `${resolvedCompiler} --noEmit -p ${tsConfigToUse}`,
+        options: { cwd: joinPathFragments(projectRoot) },
+        metadata: {
+          description: `Runs type-checking for the project.`,
+          technologies: hasVuePlugin ? ['typescript', 'vue'] : ['typescript'],
+          help: {
+            command: `${pmc.exec} ${resolvedCompiler} -p ${tsConfigToUse} --help`,
+            example: { options: { noEmit: true } },
+          },
+        },
+      };
     }
   }
 
@@ -349,6 +386,7 @@ async function buildViteTargets(
     targets,
     metadata,
     projectType: viteBuildConfig.build?.lib ? 'library' : 'application',
+    typecheck,
   };
 }
 

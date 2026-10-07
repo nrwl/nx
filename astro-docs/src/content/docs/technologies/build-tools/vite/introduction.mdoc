@@ -152,7 +152,7 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 | `serveTargetName`       | Name of the deprecated Vite serve task             | `serve`        |
 | `devTargetName`         | Name of the Vite dev server task                   | `dev`          |
 | `serveStaticTargetName` | Name of the static file server task                | `serve-static` |
-| `typecheckTargetName`   | Name of the typecheck task                         | `typecheck`    |
+| `typecheckTargetName`   | Name of the typecheck task, or `false` to skip it  | `typecheck`    |
 | `compiler`              | Typecheck compiler: `tsc`, `tsgo`, or `vue-tsc`    | auto-detected  |
 | `buildDepsTargetName`   | Name of the build-deps task for dependency builds  | none           |
 | `watchDepsTargetName`   | Name of the watch-deps task for dependency watches | none           |
