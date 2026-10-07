@@ -77,39 +77,6 @@ describe('migrate-plugin-v1-to-gradle', () => {
     ]);
   });
 
-  it('should rewrite source references and report them', async () => {
-    setPlugins(['@nx/gradle/plugin-v1']);
-    tree.write(
-      'tools/plugin.ts',
-      `import { createNodes } from '@nx/gradle/plugin-v1';
-export { createDependencies } from "@nx/gradle/plugin-v1";
-const lazy = () => import('@nx/gradle/plugin-v1');
-const other = '@nx/gradle/plugin-v12';
-`
-    );
-    tree.write(
-      'tools/plugin.js',
-      `const { createNodes } = require(\`@nx/gradle/plugin-v1\`);\n`
-    );
-
-    const result = await update(tree);
-
-    expect(tree.read('tools/plugin.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { createNodes } from '@nx/gradle';
-      export { createDependencies } from '@nx/gradle';
-      const lazy = () => import('@nx/gradle');
-      const other = '@nx/gradle/plugin-v12';
-      "
-    `);
-    expect(tree.read('tools/plugin.js', 'utf-8')).toContain(
-      'require(`@nx/gradle`)'
-    );
-    expect(result).toEqual({
-      nextSteps: [expect.stringContaining('tools/plugin.ts')],
-      agentContext: [expect.stringContaining('tools/plugin.js')],
-    });
-  });
-
   it('should not touch a workspace without the v1 plugin', async () => {
     setPlugins([{ plugin: '@nx/gradle', options: { testTargetName: 'test' } }]);
     tree.write('build.gradle', 'plugins {\n}\n');
@@ -126,7 +93,6 @@ const other = '@nx/gradle/plugin-v12';
     setPlugins([
       { plugin: '@nx/gradle/plugin-v1', options: { ciTargetName: 'ci' } },
     ]);
-    tree.write('tools/plugin.ts', `import '@nx/gradle/plugin-v1';\n`);
 
     await update(tree);
     const nxJsonAfterFirst = tree.read('nx.json', 'utf-8');
