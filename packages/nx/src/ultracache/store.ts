@@ -49,12 +49,6 @@ export function configurationsOf(
     : undefined;
 }
 
-/**
- * Younger sets are served without asking Nx Cloud; older ones re-fetch, since
- * a closer ancestor's recording may have landed.
- */
-const STORED_SET_MAX_AGE_MS = 60 * 60 * 1000;
-
 // Reasons that indicate misconfiguration rather than an expected offline
 // state or a client that simply predates Ultracache.
 const WARNED_REASONS = new Set([
@@ -97,9 +91,10 @@ export function openUltracacheConfigurations(
 
 /**
  * This run's Ultracache configurations for HEAD, in the process that owns the
- * fetch: the stored ones while they are fresh, otherwise what Nx Cloud reads,
- * imported into the store. Returns `null` when Ultracache is not enabled for
- * this workspace; never throws.
+ * fetch: the newest stored set, otherwise what Nx Cloud reads, imported into
+ * the store. The Nx Cloud client imports a fresh set when each CI run starts,
+ * so a stored set is never older than its run. Returns `null` when Ultracache
+ * is not enabled for this workspace; never throws.
  */
 export async function loadUltracacheConfigurationsForRun(
   nxJson: NxJsonConfiguration,
@@ -118,7 +113,7 @@ export async function loadUltracacheConfigurationsForRun(
   try {
     const store = getUltracacheConfigurationStore();
     const cached = () => {
-      const stored = store.get(head, STORED_SET_MAX_AGE_MS);
+      const stored = store.get(head);
       return (
         stored &&
         reportUltracacheConfigurationResolution({

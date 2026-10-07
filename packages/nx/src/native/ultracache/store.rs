@@ -14,7 +14,6 @@ use super::{
     UltracacheConfigurations,
 };
 use crate::native::db::connection::NxDbConnection;
-use crate::native::utils::time::current_timestamp_millis;
 
 /// The workspace database's Ultracache configurations. Each import is its own version,
 /// keyed by commit and fetch time, so a run that pinned one keeps reading it
@@ -74,14 +73,11 @@ impl UltracacheConfigurationStore {
     }
 
     /// The newest stored set for `commit`, without touching the network;
-    /// `null` when none is stored, its row cannot be read, or it was fetched
-    /// more than `max_age_ms` ago. Reads only the version's summary row.
+    /// `null` when none is stored or its row cannot be read. Reads only the
+    /// version's summary row.
     #[napi]
-    pub fn get(&self, commit: String, max_age_ms: Option<i64>) -> Option<UltracacheConfigurations> {
+    pub fn get(&self, commit: String) -> Option<UltracacheConfigurations> {
         let resolution = readable(&commit, self.read_resolution(&commit, None))?;
-        if max_age_ms.is_some_and(|max| current_timestamp_millis() - resolution.fetched_at > max) {
-            return None;
-        }
         Some(UltracacheConfigurations::new(
             resolution,
             self.clone(),
@@ -256,7 +252,7 @@ mod tests {
         assert_eq!(resolution.tasks, 2);
         assert_eq!(imported.commit(), "head");
 
-        let stored = store.get("head".into(), None).unwrap();
+        let stored = store.get("head".into()).unwrap();
         assert_eq!(stored.resolution().fetched_at, resolution.fetched_at);
         // Read per task; the recorded `outputs` Nx Cloud sends are dropped.
         let entries = stored.entries_for(&["web:build", "gone:build"]).unwrap();
@@ -288,22 +284,11 @@ mod tests {
     }
 
     #[test]
-    fn leaves_out_a_set_older_than_the_age_asked_for() {
-        let (_dir, store) = temp_store();
-        let minute = 60 * 1000;
-        let fetched_at = current_timestamp_millis() - 61 * minute;
-        store.write(&imported("head", fetched_at, &[])).unwrap();
-        assert!(store.get("head".into(), Some(60 * minute)).is_none());
-        assert!(store.get("head".into(), Some(62 * minute)).is_some());
-        assert!(store.get("head".into(), None).is_some());
-    }
-
-    #[test]
     fn rejects_a_payload_it_cannot_read_and_stores_nothing() {
         let (_dir, store) = temp_store();
         let err = import(&store, "{ not json").err().unwrap();
         assert_eq!(err.status, "INVALID_RESPONSE");
-        assert!(store.get("head".into(), None).is_none());
+        assert!(store.get("head".into()).is_none());
     }
 
     // Unknown fields are ignored so Nx Cloud can add some; an `inputs` shape
@@ -331,7 +316,7 @@ mod tests {
             .unwrap()
             .execute("UPDATE io_snapshot_versions SET tasks = 'not a number'", [])
             .unwrap();
-        assert!(store.get("head".into(), None).is_none());
+        assert!(store.get("head".into()).is_none());
     }
 
     fn resolution_of(
@@ -389,18 +374,11 @@ mod tests {
         store
             .write(&imported("c1", 1, &["a:build", "b:build"]))
             .unwrap();
-        let pinned = store.get("c1".into(), None).unwrap();
+        let pinned = store.get("c1".into()).unwrap();
         store.write(&imported("c1", 2, &["a:build"])).unwrap();
 
         // `get` serves the newest version; `get_version` the one asked for.
-        assert_eq!(
-            store
-                .get("c1".into(), None)
-                .unwrap()
-                .resolution()
-                .fetched_at,
-            2
-        );
+        assert_eq!(store.get("c1".into()).unwrap().resolution().fetched_at, 2);
         let old = store.get_version("c1".into(), 1).unwrap();
         assert_eq!(old.resolution().tasks, 2);
         // The handle loaded before the re-import still reads its version's entries.
@@ -410,7 +388,7 @@ mod tests {
         );
         assert_eq!(
             store
-                .get("c1".into(), None)
+                .get("c1".into())
                 .unwrap()
                 .entries_for(&["a:build", "b:build"])
                 .unwrap()

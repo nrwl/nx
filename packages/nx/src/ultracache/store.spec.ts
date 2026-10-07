@@ -90,7 +90,7 @@ describe('loadUltracacheConfigurationsForRun', () => {
     expect(cloud.fetchUltracacheConfigurations).not.toHaveBeenCalled();
   });
 
-  it('serves a stored set under an hour old without asking Nx Cloud', async () => {
+  it('serves the stored set without asking Nx Cloud', async () => {
     const set = stored();
     store.get.mockReturnValue(set);
     expect(
@@ -99,11 +99,11 @@ describe('loadUltracacheConfigurationsForRun', () => {
       status: 'cached',
       configurations: set,
     });
-    expect(store.get).toHaveBeenCalledWith('head', 60 * 60 * 1000);
+    expect(store.get).toHaveBeenCalledWith('head');
     expect(cloud.fetchUltracacheConfigurations).not.toHaveBeenCalled();
   });
 
-  it('imports what Nx Cloud read when no stored set is young enough', async () => {
+  it('imports what Nx Cloud read when no set is stored', async () => {
     const configurations = {
       'web:build': { commit: 'parent', inputs: ['apps/web/**'], outputs: [] },
     };
@@ -177,11 +177,8 @@ describe('loadUltracacheConfigurationsForRun', () => {
     });
   });
 
-  it('hashes natively instead of reusing a stale set when the refresh fails', async () => {
-    // As the native store behaves: the old set is there, but not young enough.
-    store.get.mockImplementation((_commit, maxAgeMs) =>
-      maxAgeMs === undefined ? stored() : null
-    );
+  it('hashes natively when nothing is stored and the fetch fails', async () => {
+    store.get.mockReturnValue(null);
     cloud.fetchUltracacheConfigurations.mockRejectedValueOnce(
       coded('ENOTFOUND', 'x')
     );
@@ -192,11 +189,8 @@ describe('loadUltracacheConfigurationsForRun', () => {
       reason: 'offline',
       message: 'x',
     });
-    // Checked before and under the lock, never without the age limit.
-    expect(store.get.mock.calls).toEqual([
-      ['head', 60 * 60 * 1000],
-      ['head', 60 * 60 * 1000],
-    ]);
+    // Checked before and under the lock.
+    expect(store.get.mock.calls).toEqual([['head'], ['head']]);
   });
 
   // Only reasons that point at misconfiguration warn on every run.
