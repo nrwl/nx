@@ -705,6 +705,58 @@ describe('utils', () => {
     });
   });
 
+  describe('legacy dependsOn projects strings', () => {
+    function graphWith(
+      dependsOn: ProjectConfiguration['targets'][string]['dependsOn'],
+      extraProjects: string[] = []
+    ): ProjectGraph {
+      const nodes: ProjectGraph['nodes'] = {
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'apps/app',
+            targets: { test: { dependsOn }, build: {} },
+          },
+        },
+      };
+      for (const name of extraProjects) {
+        nodes[name] = {
+          name,
+          type: 'lib',
+          data: { root: `libs/${name}`, targets: { build: {} } },
+        };
+      }
+      return { nodes, dependencies: {} };
+    }
+
+    it.each(['self', 'dependencies'])(
+      "should reject projects: '%s' and point at nx repair",
+      (value) => {
+        const graph = graphWith([{ projects: value, target: 'build' }]);
+        expect(() =>
+          getDependencyConfigs({ project: 'app', target: 'test' }, {}, graph, [
+            'test',
+            'build',
+          ])
+        ).toThrow(new RegExp(`projects: '${value}'[\\s\\S]*nx repair`));
+      }
+    );
+
+    it("should resolve projects: 'self' to a project named self", () => {
+      const graph = graphWith(
+        [{ projects: 'self', target: 'build' }],
+        ['self']
+      );
+      expect(
+        getDependencyConfigs({ project: 'app', target: 'test' }, {}, graph, [
+          'test',
+          'build',
+        ])
+      ).toEqual([{ projects: ['self'], target: 'build' }]);
+    });
+  });
+
   describe('expandWildcardDependencies', () => {
     it('should expand wildcard dependencies', () => {
       const allTargets = ['build', 'build:test', 'build:prod', 'build:dev'];

@@ -19,12 +19,6 @@ import {
 } from '../native';
 import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
-import {
-  LegacyDependsOnLocation,
-  LegacyDependsOnViolation,
-  flushLegacyDependsOnViolations,
-  warnLegacyDependsOnMagicString,
-} from './legacy-depends-on-warning';
 import { isGlobPattern } from '../utils/globs';
 import { isLongRunningTargetName } from '../utils/long-running-target';
 import { joinPathFragments } from '../utils/path';
@@ -43,47 +37,32 @@ export function getDependencyConfigs(
   projectGraph: ProjectGraph,
   allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] | undefined {
-  const legacyViolations: LegacyDependsOnViolation[] = [];
-  const dependencyConfigs = (
+  return (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
     []
-  ).flatMap((config, index) =>
+  ).flatMap((config) =>
     normalizeDependencyConfigDefinition(
       config,
       project,
       projectGraph,
-      allTargetNames,
-      { ownerTarget: target, index, legacyViolations }
+      allTargetNames
     )
   );
-  if (legacyViolations.length) {
-    flushLegacyDependsOnViolations(
-      project,
-      target,
-      legacyViolations,
-      projectGraph.nodes[project]?.data?.root
-    );
-  }
-  return dependencyConfigs;
 }
-
-export type DependsOnEntryLocation = LegacyDependsOnLocation;
 
 export function normalizeDependencyConfigDefinition(
   definition: string | TargetDependencyConfig,
   currentProject: string,
   graph: ProjectGraph,
-  allTargetNames: string[],
-  location?: DependsOnEntryLocation
+  allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] {
   return expandWildcardTargetConfiguration(
     normalizeDependencyConfigProjects(
       expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
       currentProject,
-      graph,
-      location
+      graph
     ),
     allTargetNames
   );
@@ -92,14 +71,11 @@ export function normalizeDependencyConfigDefinition(
 export function normalizeDependencyConfigProjects(
   dependencyConfig: TargetDependencyConfig,
   currentProject: string,
-  graph: ProjectGraph,
-  location?: DependsOnEntryLocation
+  graph: ProjectGraph
 ): NormalizedTargetDependencyConfig {
-  const noStringConfig = normalizeTargetDependencyWithStringProjects(
-    dependencyConfig,
-    currentProject,
-    location
-  );
+  assertNotLegacyProjectsString(dependencyConfig, currentProject, graph);
+  const noStringConfig =
+    normalizeTargetDependencyWithStringProjects(dependencyConfig);
 
   if (noStringConfig.projects) {
     dependencyConfig.projects = findMatchingProjects(
@@ -110,6 +86,22 @@ export function normalizeDependencyConfigProjects(
     dependencyConfig.projects = [currentProject];
   }
   return dependencyConfig as NormalizedTargetDependencyConfig;
+}
+
+function assertNotLegacyProjectsString(
+  dependencyConfig: TargetDependencyConfig,
+  currentProject: string,
+  graph: ProjectGraph
+) {
+  const projects = dependencyConfig.projects;
+  if (
+    (projects === 'self' || projects === 'dependencies') &&
+    !graph.nodes[projects]
+  ) {
+    throw new Error(
+      `${currentProject} has a dependsOn entry using projects: '${projects}', which is no longer supported: ${JSON.stringify(dependencyConfig)}\nPlease run "nx repair" to repair your configuration`
+    );
+  }
 }
 
 export function expandDependencyConfigSyntaxSugar(
@@ -227,32 +219,10 @@ export function getOutputs(
 }
 
 export function normalizeTargetDependencyWithStringProjects(
-  dependencyConfig: TargetDependencyConfig,
-  currentProject?: string,
-  location?: DependsOnEntryLocation
+  dependencyConfig: TargetDependencyConfig
 ): Omit<TargetDependencyConfig, 'projects'> & { projects?: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
-    // TODO(v24): Remove the `self` / `dependencies` magic-string shim.
-    // The v16 `update-depends-on-to-tokens` migration already rewrites
-    // these to the modern shape, and `nx repair` will re-run it on demand.
-    if (dependencyConfig.projects === 'self') {
-      warnLegacyDependsOnMagicString(
-        currentProject,
-        dependencyConfig,
-        location
-      );
-      delete dependencyConfig.projects;
-    } else if (dependencyConfig.projects === 'dependencies') {
-      warnLegacyDependsOnMagicString(
-        currentProject,
-        dependencyConfig,
-        location
-      );
-      dependencyConfig.dependencies = true;
-      delete dependencyConfig.projects;
-    } else {
-      dependencyConfig.projects = [dependencyConfig.projects];
-    }
+    dependencyConfig.projects = [dependencyConfig.projects];
   }
   return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
     projects?: string[];
