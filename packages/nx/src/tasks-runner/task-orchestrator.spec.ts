@@ -181,7 +181,7 @@ describe('TaskOrchestrator', () => {
       return { dep, taskGraph };
     }
 
-    it('drops a member skipped while the cache was resolved', async () => {
+    it('does not start the lifecycle of a member skipped while the cache was resolved', async () => {
       const { dep, taskGraph } = createDepConsumerGraph();
       const { orchestrator } = createOrchestrator(taskGraph);
       // A failed dependency elsewhere skips the consumer mid-resolution
