@@ -24,8 +24,8 @@ export function spawnWithoutTerminal(
     ...options,
     shell: true,
     windowsHide: true,
+    detached: process.platform !== 'win32',
     ...(process.platform !== 'win32' && {
-      detached: true,
       env: withoutTerminalPaths(options.env ?? process.env, stdioTerminals()),
     }),
   });
