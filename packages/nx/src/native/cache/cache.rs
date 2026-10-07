@@ -10,7 +10,6 @@ use fs_extra::remove_items;
 use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::{params, types::Value};
-use sysinfo::Disks;
 
 use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
 use crate::native::cache::file_ops::{copy_and_list, copy_outputs_into_workspace};
@@ -791,14 +790,24 @@ impl NxCache {
     }
 }
 
+/// A tenth of the filesystem that holds `cache_path`, asked of that one
+/// filesystem through its nearest existing ancestor (the cache directory may
+/// not exist yet). Listing every mounted disk instead costs, on macOS, IOKit
+/// and CacheDelete round trips per mount on the thread that is about to run
+/// tasks, and those stall while disk images attach or detach.
 #[napi]
 fn get_default_max_cache_size(cache_path: String) -> i64 {
-    let disks = Disks::new_with_refreshed_list();
-    let cache_path = PathBuf::from(cache_path);
-
-    for disk in disks.list() {
-        if cache_path.starts_with(disk.mount_point()) {
-            return (disk.total_space() as f64 * 0.1) as i64;
+    for directory in Path::new(&cache_path).ancestors() {
+        match fs4::total_space(directory) {
+            Ok(total) => return (total as f64 * 0.1) as i64,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => {
+                debug!(
+                    "Could not read the filesystem size of {}: {error}",
+                    directory.display()
+                );
+                break;
+            }
         }
     }
 

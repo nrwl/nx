@@ -32,12 +32,6 @@ use crate::native::ultracache::UltracacheConfigurations;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
 
-/// One entry per visit of a project whose inputs include its files: the
-/// workspace-relative negated patterns that visit declares. Natively each
-/// visit is its own fileset, so an Ultracache group keeps only the negations
-/// every visit shares; removing one re-admits the observed reads it excluded.
-type Negations = Vec<(String, Vec<String>)>;
-
 const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
 const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
@@ -136,7 +130,6 @@ pub struct HashPlanner {
 /// Instruction ids contributed by one (project, propagated input) dependency subtree.
 struct SubtreeResult {
     ids: Vec<u32>,
-    negations: Negations,
     /// True when the subtree cannot be spliced from the memo: it contains
     /// deps-outputs inputs (whose resolution depends on the root task) or an
     /// unexpected propagation shape. Callers must use the per-task traversal.
@@ -145,7 +138,6 @@ struct SubtreeResult {
 
 struct LocalDependencyInputs {
     ids: Vec<u32>,
-    negations: Negations,
     needs_legacy: bool,
 }
 
@@ -364,7 +356,6 @@ impl HashPlanner {
                     .as_ref()
                     .and_then(|tasks| tasks.get(*id))
                     .map(UltracacheContext::new);
-                let mut negations: Negations = Vec::new();
                 ids.extend(self.self_and_deps_inputs(
                     &task.target.project,
                     task,
@@ -373,17 +364,10 @@ impl HashPlanner {
                     external_deps_mapped,
                     &mut VisitedTracker::new(task.target.project.as_str()),
                     context.as_ref(),
-                    context.as_ref().map(|_| &mut negations),
                 )?);
 
                 if let Some(context) = &context {
-                    self.replace_with_configuration(
-                        task,
-                        context,
-                        &negations,
-                        &mut ids,
-                        always_on_id,
-                    );
+                    self.replace_with_configuration(task, context, &mut ids, always_on_id);
                 }
 
                 // A continuous dependency serves this task from its own process, so
@@ -401,7 +385,6 @@ impl HashPlanner {
                         .and(ultracache_tasks.as_ref())
                         .and_then(|tasks| tasks.get(&dep_task.id))
                         .map(UltracacheContext::new);
-                    let mut dep_negations: Negations = Vec::new();
                     let mut dep_ids: Vec<u32> = self
                         .target_input(
                             &dep_task.target.project,
@@ -421,13 +404,11 @@ impl HashPlanner {
                         external_deps_mapped,
                         &mut VisitedTracker::new(dep_task.target.project.as_str()),
                         dep_context.as_ref(),
-                        dep_context.as_ref().map(|_| &mut dep_negations),
                     )?);
                     if let Some(dep_context) = &dep_context {
                         self.replace_with_configuration(
                             dep_task,
                             dep_context,
-                            &dep_negations,
                             &mut dep_ids,
                             always_on_id,
                         );
@@ -541,8 +522,8 @@ impl HashPlanner {
     }
 
     /// Observed reads minus natively covered files, one disk-backed group per
-    /// owning project (else the `.` project, else the task's), each with only
-    /// that project's declared negations; plus the entry digest.
+    /// owning project (else the `.` project, else the task's), plus the entry
+    /// digest. Declared filesets, negations included, never shape the groups.
     /// Replaces the declared filesets in `ids` (self, deps, `{input, projects}`)
     /// with `task`'s observed reads; TsConfiguration and JSON inputs survive
     /// only if read.
@@ -550,14 +531,13 @@ impl HashPlanner {
         &self,
         task: &Task,
         context: &UltracacheContext,
-        negations: &Negations,
         ids: &mut Vec<u32>,
         always_on_id: u32,
     ) {
         let pool = &self.instruction_pool;
         let keep_tsconfig = context.root_tsconfig_read();
         let own: hashbrown::HashSet<u32> = self
-            .configuration_file_instructions(task, context, negations)
+            .configuration_file_instructions(task, context)
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -573,7 +553,6 @@ impl HashPlanner {
         &self,
         task: &Task,
         context: &UltracacheContext,
-        negations: &Negations,
     ) -> Vec<HashInstruction> {
         let entry = context.entry;
         let self_project = task.target.project.as_str();
@@ -633,7 +612,7 @@ impl HashPlanner {
             .collect();
 
         let mut instructions = Vec::new();
-        for (project, mut group) in buckets {
+        for mut group in buckets.into_values() {
             group.sort();
             group.dedup();
             // Exclusions apply to every recorded positive, so each group takes
@@ -650,20 +629,6 @@ impl HashPlanner {
                         .map(|(exclusion, _)| exclusion.clone()),
                 );
             }
-            let visits: Vec<&Vec<String>> = negations
-                .iter()
-                .filter(|(p, _)| p == project)
-                .map(|(_, patterns)| patterns)
-                .collect();
-            let declared_negations: Vec<String> = match visits.split_first() {
-                None => Vec::new(),
-                Some((first, rest)) => first
-                    .iter()
-                    .filter(|pattern| rest.iter().all(|visit| visit.contains(pattern)))
-                    .cloned()
-                    .collect(),
-            };
-            group_exclusions.extend(declared_negations);
             group_exclusions.sort();
             group_exclusions.dedup();
             group.extend(group_exclusions);
@@ -792,19 +757,9 @@ impl HashPlanner {
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
         context: Option<&UltracacheContext>,
-        mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<u32>> {
         let pool = &self.instruction_pool;
         let project_deps = &self.project_graph.dependencies[project_name];
-
-        if let Some(negations) = negations.as_deref_mut() {
-            collect_negations(
-                project_name,
-                &self.project_graph,
-                &inputs.self_inputs,
-                negations,
-            );
-        }
 
         let mut ids: Vec<u32> = self
             .gather_self_inputs(project_name, &inputs.self_inputs, context)?
@@ -820,10 +775,9 @@ impl HashPlanner {
             );
         }
         // Always gathered: a selected input can carry env, runtime or externals
-        // too. Its filesets are dropped with the rest of the replaced set, and
-        // their negations scope the selected project's observed reads.
+        // too. Its filesets are dropped with the rest of the replaced set.
         ids.extend(
-            self.gather_project_inputs(&inputs.project_inputs, negations.as_deref_mut())?
+            self.gather_project_inputs(&inputs.project_inputs)?
                 .into_iter()
                 .map(|instruction| pool.intern(instruction)),
         );
@@ -835,7 +789,6 @@ impl HashPlanner {
             project_deps,
             external_deps_mapped,
             visited,
-            negations,
         )?);
 
         Ok(ids)
@@ -934,7 +887,6 @@ impl HashPlanner {
         else {
             return Ok(SubtreeResult {
                 ids: vec![],
-                negations: vec![],
                 needs_legacy: false,
             });
         };
@@ -944,13 +896,6 @@ impl HashPlanner {
         let mut needs_legacy =
             !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != inputs.len();
         let pool = &self.instruction_pool;
-        let mut negations: Negations = Vec::new();
-        collect_negations(
-            dep,
-            &self.project_graph,
-            &dep_inputs.self_inputs,
-            &mut negations,
-        );
         let mut ids: InstructionIdSet = self
             .gather_self_inputs(dep, &dep_inputs.self_inputs, None)?
             .into_iter()
@@ -970,7 +915,6 @@ impl HashPlanner {
                     )?;
                     needs_legacy |= sub.needs_legacy;
                     ids.extend(sub.ids.iter().copied());
-                    negations.extend_from_slice(&sub.negations);
                 } else if let Some(external_deps) = external_deps_mapped.get(child) {
                     external_inputs.insert(child);
                     external_inputs.extend(external_deps);
@@ -983,13 +927,8 @@ impl HashPlanner {
                 .into_iter()
                 .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
         );
-        let ids = ids.into_sorted_vec();
-        negations.sort();
-        negations.dedup();
-
         Ok(SubtreeResult {
-            ids,
-            negations,
+            ids: ids.into_sorted_vec(),
             needs_legacy,
         })
     }
@@ -1013,7 +952,6 @@ impl HashPlanner {
                 else {
                     return Ok(LocalDependencyInputs {
                         ids: vec![],
-                        negations: vec![],
                         needs_legacy: true,
                     });
                 };
@@ -1029,26 +967,15 @@ impl HashPlanner {
                 let needs_legacy = !same_propagation
                     || !inputs.deps_outputs.is_empty()
                     || !inputs.project_inputs.is_empty();
-                let mut negations: Negations = Vec::new();
                 let ids = if needs_legacy {
                     vec![]
                 } else {
-                    collect_negations(
-                        dep,
-                        &self.project_graph,
-                        &inputs.self_inputs,
-                        &mut negations,
-                    );
                     self.gather_self_inputs(dep, &inputs.self_inputs, None)?
                         .into_iter()
                         .map(|instruction| self.instruction_pool.intern(instruction))
                         .collect()
                 };
-                Ok(LocalDependencyInputs {
-                    ids,
-                    negations,
-                    needs_legacy,
-                })
+                Ok(LocalDependencyInputs { ids, needs_legacy })
             })
             .map(Some)
     }
@@ -1062,7 +989,6 @@ impl HashPlanner {
         project_deps: &'a [String],
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
-        mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<u32>> {
         if inputs.len() == 1 {
             return self.gather_dependency_input(
@@ -1072,7 +998,6 @@ impl HashPlanner {
                 project_deps,
                 external_deps_mapped,
                 visited,
-                negations,
             );
         }
 
@@ -1093,7 +1018,6 @@ impl HashPlanner {
                 project_deps,
                 external_deps_mapped,
                 visited,
-                negations.as_deref_mut(),
             )?);
             visited.rollback_to(scope);
         }
@@ -1110,7 +1034,6 @@ impl HashPlanner {
                 project_deps,
                 external_deps_mapped,
                 visited,
-                negations.as_deref_mut(),
             )?);
             visited.rollback_to(scope);
         }
@@ -1126,7 +1049,6 @@ impl HashPlanner {
         project_deps: &'a [String],
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
-        mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<u32>> {
         let pool = &self.instruction_pool;
         let mut deps_inputs = InstructionIdSet::default();
@@ -1159,18 +1081,12 @@ impl HashPlanner {
                         // Shared closures are unioned by id before allocation,
                         // without changing the per-input visitation rules.
                         deps_inputs.extend(sub.ids.iter().copied());
-                        if let Some(negations) = negations.as_deref_mut() {
-                            negations.extend_from_slice(&sub.negations);
-                        }
                         continue;
                     }
                 }
                 if let Some(local) = self.local_dependency_inputs(dep, inputs)? {
                     if !local.needs_legacy {
                         deps_inputs.extend(local.ids.iter().copied());
-                        if let Some(negations) = negations.as_deref_mut() {
-                            negations.extend_from_slice(&local.negations);
-                        }
                         parents.push(children);
                         children = self.project_graph.dependencies[dep].iter();
                         continue;
@@ -1192,7 +1108,6 @@ impl HashPlanner {
                     external_deps_mapped,
                     visited,
                     None,
-                    negations.as_deref_mut(),
                 )?);
             } else {
                 // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
@@ -1399,7 +1314,6 @@ impl HashPlanner {
     fn gather_project_inputs(
         &self,
         project_inputs: &[Input],
-        mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let mut result: Vec<HashInstruction> = vec![];
         for project in project_inputs {
@@ -1417,9 +1331,6 @@ impl HashPlanner {
                     }],
                     &named_inputs,
                 )?;
-                if let Some(negations) = negations.as_deref_mut() {
-                    collect_negations(project, &self.project_graph, &expanded_input, negations);
-                }
                 result.extend(self.gather_self_inputs(project, &expanded_input, None)?)
             }
         }
@@ -1719,37 +1630,6 @@ fn propagates_unchanged(before: &Input, after: &Input) -> bool {
     }
 }
 
-fn collect_negations(
-    project_name: &str,
-    project_graph: &ProjectGraph,
-    self_inputs: &[Input],
-    negations: &mut Negations,
-) {
-    // A visit that hashes none of the project's files cannot keep one hashed.
-    let includes_files = self_inputs
-        .iter()
-        .any(|input| matches!(input, Input::FileSet { fileset, .. } if !fileset.starts_with('!')));
-    if !includes_files {
-        return;
-    }
-    let project_root = &project_graph.nodes[project_name].root;
-    let mut patterns = Vec::new();
-    for input in self_inputs {
-        if let Input::FileSet {
-            fileset,
-            include_ignored: false,
-            ..
-        } = input
-            && fileset.starts_with('!')
-        {
-            patterns.push(resolve_files_glob(fileset, project_root, project_name));
-        }
-    }
-    patterns.sort();
-    patterns.dedup();
-    negations.push((project_name.to_string(), patterns));
-}
-
 /// Reads left out of the configuration's file groups: node_modules (never hashed as
 /// files) and nx.json/.gitignore/.nxignore (the always-on set hashes them whole).
 /// Lockfiles stay: externals may cover only a few packages, not the whole file.
@@ -1927,7 +1807,6 @@ mod tests {
                             local_input_cache_key(name, std::slice::from_ref(&input)).unwrap(),
                             || {
                                 Ok::<_, ()>(LocalDependencyInputs {
-                                    negations: vec![],
                                     ids: vec![],
                                     needs_legacy: true,
                                 })
