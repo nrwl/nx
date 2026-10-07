@@ -216,7 +216,7 @@ describe('@nx/rsbuild', () => {
     ).toBeUndefined();
   });
 
-  it('should infer typecheck with --build flag when using TS solution setup', async () => {
+  it('should infer the @nx/js typecheck target when using TS solution setup', async () => {
     (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
     tempFs.createFileSync('my-app/tsconfig.json', `{}`);
 
@@ -226,11 +226,12 @@ describe('@nx/rsbuild', () => {
       context
     );
 
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.command).toEqual(
-      `tsc --build --emitDeclarationOnly`
+    const typecheck = nodes[0][1].projects['my-app'].targets.typecheck;
+    expect(typecheck.command).toEqual(
+      `tsc --build tsconfig.json --emitDeclarationOnly`
     );
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-      .toMatchInlineSnapshot(`
+    expect(typecheck.outputs).toBeDefined();
+    expect(typecheck.metadata).toMatchInlineSnapshot(`
       {
         "description": "Runs type-checking for the project.",
         "help": {
@@ -246,12 +247,25 @@ describe('@nx/rsbuild', () => {
         ],
       }
     `);
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.dependsOn).toEqual([
-      `^typecheck`,
-    ]);
-    expect(
-      nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-    ).toEqual(['@nx/js:typescript-sync']);
+    expect(typecheck.dependsOn).toEqual(['build', '^typecheck']);
+    expect(typecheck.syncGenerators).toEqual(['@nx/js:typescript-sync']);
+  });
+
+  it('should not infer a typecheck target when typecheckTargetName is false', async () => {
+    tempFs.createFileSync('my-app/tsconfig.json', `{}`);
+
+    for (const tsSolution of [false, true]) {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(tsSolution);
+      const nodes = await createNodesFunction(
+        ['my-app/rsbuild.config.ts'],
+        { typecheckTargetName: false },
+        context
+      );
+
+      const targets = nodes[0][1].projects['my-app'].targets;
+      expect(targets.typecheck).toBeUndefined();
+      expect(targets['false']).toBeUndefined();
+    }
   });
 
   describe('build outputs', () => {

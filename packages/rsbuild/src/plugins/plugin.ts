@@ -21,6 +21,7 @@ import {
 import {
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
   addBuildAndWatchDepsTargets,
+  createTypecheckTargets,
 } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
@@ -32,7 +33,7 @@ export interface RsbuildPluginOptions {
   devTargetName?: string;
   previewTargetName?: string;
   inspectTargetName?: string;
-  typecheckTargetName?: string;
+  typecheckTargetName?: string | false;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
@@ -95,6 +96,15 @@ export const createNodes: CreateNodes<RsbuildPluginOptions> = [
         } else {
           throw e;
         }
+      }
+
+      if (isUsingTsSolutionSetup && normalizedOptions.typecheckTargetName) {
+        await addTypecheckTargets(
+          results,
+          normalizedOptions.typecheckTargetName,
+          normalizedOptions.buildTargetName,
+          context
+        );
       }
 
       const allErrors = [...preErrors, ...nodeErrors];
@@ -248,7 +258,11 @@ async function createRsbuildTargets(
     },
   };
 
-  if (tsConfigFiles.length) {
+  if (
+    options.typecheckTargetName &&
+    !isUsingTsSolutionSetup &&
+    tsConfigFiles.length
+  ) {
     const tsConfigToUse =
       ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
         tsConfigFiles.includes(t)
@@ -261,32 +275,17 @@ async function createRsbuildTargets(
           : ['default', '^default']),
         { externalDependencies: ['typescript'] },
       ],
-      command: isUsingTsSolutionSetup
-        ? `tsc --build --emitDeclarationOnly`
-        : `tsc -p ${tsConfigToUse} --noEmit`,
+      command: `tsc -p ${tsConfigToUse} --noEmit`,
       options: { cwd: joinPathFragments(projectRoot) },
       metadata: {
         description: `Runs type-checking for the project.`,
         technologies: ['typescript'],
         help: {
-          command: isUsingTsSolutionSetup
-            ? `${pmc.exec} tsc --build --help`
-            : `${pmc.exec} tsc -p ${tsConfigToUse} --help`,
-          example: isUsingTsSolutionSetup
-            ? { args: ['--force'] }
-            : { options: { noEmit: true } },
+          command: `${pmc.exec} tsc -p ${tsConfigToUse} --help`,
+          example: { options: { noEmit: true } },
         },
       },
     };
-
-    if (isUsingTsSolutionSetup) {
-      targets[options.typecheckTargetName].dependsOn = [
-        `^${options.typecheckTargetName}`,
-      ];
-      targets[options.typecheckTargetName].syncGenerators = [
-        '@nx/js:typescript-sync',
-      ];
-    }
   }
 
   addBuildAndWatchDepsTargets(
@@ -298,6 +297,35 @@ async function createRsbuildTargets(
   );
 
   return { targets, metadata: {} };
+}
+
+async function addTypecheckTargets(
+  results: CreateNodesResultArray,
+  typecheckTargetName: string,
+  buildTargetName: string,
+  context: CreateNodesContext
+): Promise<void> {
+  const projects = results.flatMap(([, result]) =>
+    Object.entries(result.projects ?? {})
+  );
+  const typecheckTargets = await createTypecheckTargets(
+    projects.map(([projectRoot, project]) => ({
+      projectRoot,
+      buildTargetName: project.targets?.[buildTargetName]
+        ? buildTargetName
+        : undefined,
+    })),
+    context,
+    typecheckTargetName
+  );
+  for (const [projectRoot, project] of projects) {
+    if (typecheckTargets[projectRoot]) {
+      project.targets = {
+        ...project.targets,
+        [typecheckTargetName]: typecheckTargets[projectRoot],
+      };
+    }
+  }
 }
 
 function getOutputs(
