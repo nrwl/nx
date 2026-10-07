@@ -78,7 +78,7 @@ impl Probe {
     async fn run(&self, deadline: Instant, token: &CancellationToken) -> anyhow::Result<bool> {
         Ok(match self {
             Self::Url(url) => {
-                let client = http_client()?;
+                let client = http_client(url)?;
                 token
                     .run_until_cancelled(probe_url(client, url, deadline))
                     .await
@@ -94,28 +94,56 @@ impl Probe {
 }
 
 // Built once per process: loading the system certificate store takes about
-// 100 ms
-fn http_client() -> anyhow::Result<&'static Client> {
-    static CLIENT: OnceCell<Client> = OnceCell::new();
-    Ok(CLIENT.get_or_try_init(build_http_client)?)
+// 100 ms. Only a loopback server may present a self-signed certificate, and
+// that client skips proxies so the request cannot leave the machine
+fn http_client(url: &Url) -> anyhow::Result<&'static Client> {
+    static VERIFYING: OnceCell<Client> = OnceCell::new();
+    static LOOPBACK: OnceCell<Client> = OnceCell::new();
+    Ok(if is_loopback(url) {
+        LOOPBACK.get_or_try_init(|| build_http_client(true))?
+    } else {
+        VERIFYING.get_or_try_init(|| build_http_client(false))?
+    })
+}
+
+fn is_loopback(url: &Url) -> bool {
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    match host
+        .trim_start_matches('[')
+        .trim_end_matches(']')
+        .parse::<IpAddr>()
+    {
+        Ok(IpAddr::V4(ip)) => ip.is_loopback(),
+        Ok(IpAddr::V6(ip)) => {
+            ip.is_loopback() || ip.to_ipv4_mapped().is_some_and(|v4| v4.is_loopback())
+        }
+        Err(_) => {
+            let name = host.trim_end_matches('.');
+            name == "localhost" || name.ends_with(".localhost")
+        }
+    }
 }
 
 #[cfg(test)]
 static SETUP_DELAY_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-fn build_http_client() -> reqwest::Result<Client> {
+fn build_http_client(loopback: bool) -> reqwest::Result<Client> {
     #[cfg(test)]
     std::thread::sleep(Duration::from_millis(
         SETUP_DELAY_MS.load(std::sync::atomic::Ordering::Relaxed),
     ));
-    Client::builder()
-        // A dev server's self-signed certificate must not keep it from
-        // counting as ready
-        .danger_accept_invalid_certs(true)
+    let builder = Client::builder()
         // A redirect already proves the server is up, and following it would
         // let the server pick the next request's destination
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
+        .redirect(reqwest::redirect::Policy::none());
+    if loopback {
+        builder.danger_accept_invalid_certs(true).no_proxy()
+    } else {
+        builder
+    }
+    .build()
 }
 
 /// Retries a probe until it passes, the timeout elapses or `cancel` is called.
@@ -395,6 +423,30 @@ mod tests {
             command: None,
             timeout,
             interval: None,
+        }
+    }
+
+    #[test]
+    fn only_localhost_and_loopback_addresses_are_loopback() {
+        for url in [
+            "https://localhost:4200/",
+            "https://localhost./",
+            "https://app.localhost/",
+            "https://127.0.0.1:4200/",
+            "https://127.1.2.3/",
+            "https://[::1]:4200/",
+            "https://[::ffff:127.0.0.1]/",
+        ] {
+            assert!(is_loopback(&Url::parse(url).unwrap()), "{url}");
+        }
+        for url in [
+            "https://health.example.com/status",
+            "https://app.localhost.example/",
+            "https://127.0.0.1.nip.io/",
+            "https://10.0.0.1/",
+            "https://[::ffff:10.0.0.1]/",
+        ] {
+            assert!(!is_loopback(&Url::parse(url).unwrap()), "{url}");
         }
     }
 
