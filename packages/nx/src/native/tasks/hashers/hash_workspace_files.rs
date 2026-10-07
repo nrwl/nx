@@ -68,7 +68,7 @@ fn collect_workspace_file_indices(
     match_file_map(&globs, workspace_files.files(), workspace_files.by_path())
 }
 
-/// Hashes workspace files without materializing the matched file list.
+/// Hashes the files a workspace fileset matches, in path order.
 pub(crate) fn hash_workspace_files(
     workspace_file_sets: &[String],
     workspace_files: &WorkspaceFileIndex,
