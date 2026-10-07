@@ -649,6 +649,8 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
   `docker inspect --format='{{.State.Health.Status}}' db | grep -qx healthy`.
 - `logMatches`: ready when the task output has contained the string, or every string of an array.
   The order doesn't matter.
+  A `prefix` set on an `nx:run-commands` command is part of the matched text.
+  Color codes and other terminal control sequences are removed before matching.
 
 The optional `timeout` key is how long Nx waits for readiness, in milliseconds.
 It defaults to `60000`.
