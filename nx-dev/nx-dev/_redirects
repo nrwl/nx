@@ -34,7 +34,7 @@
 /using-nx/caching /docs/concepts/how-caching-works 301
 /using-nx/dte /docs/features/ci-features/distribute-task-execution 301
 /using-nx/affected /docs/features/ci-features/affected 301
-/using-nx/ci-overview /docs/guides/nx-cloud/setup-ci 301
+/using-nx/ci-overview /docs/getting-started/setup-ci 301
 /using-nx/updating-nx /docs/features/automate-updating-dependencies 301
 /using-nx/nx-nodejs-typescript-version-matrix /packages/workspace/documents/nx-nodejs-typescript-version-matrix 301
 /extending-nx/nx-devkit /docs/extending-nx/intro 301
@@ -65,13 +65,13 @@
 /core-features/enforce-project-boundaries /docs/features/enforce-module-boundaries 301
 /structure/dependency-graph /docs/features/explore-graph 301
 /structure/project-graph-plugins /docs/extending-nx/project-graph-plugins 301
-/ci/monorepo-ci-azure /docs/guides/nx-cloud/setup-ci 301
-/ci/monorepo-ci-circle-ci /docs/guides/nx-cloud/setup-ci 301
-/ci/monorepo-ci-github-actions /docs/guides/nx-cloud/setup-ci 301
-/ci/monorepo-ci-jenkins /docs/guides/nx-cloud/setup-ci 301
-/ci/monorepo-ci-gitlab /docs/guides/nx-cloud/setup-ci 301
-/ci/monorepo-ci-bitbucket-pipelines /docs/guides/nx-cloud/setup-ci 301
-/ci/distributed-builds /docs/concepts/ci-concepts/parallelization-distribution 301
+/ci/monorepo-ci-azure /docs/kb/ci-workflow-examples 301
+/ci/monorepo-ci-circle-ci /docs/kb/ci-workflow-examples 301
+/ci/monorepo-ci-github-actions /docs/getting-started/setup-ci 301
+/ci/monorepo-ci-jenkins /docs/kb/ci-workflow-examples 301
+/ci/monorepo-ci-gitlab /docs/kb/ci-workflow-examples 301
+/ci/monorepo-ci-bitbucket-pipelines /docs/kb/ci-workflow-examples 301
+/ci/distributed-builds /docs/concepts/ci-concepts/building-blocks-fast-ci 301
 /ci/setup-incremental-builds-angular /recipes/angular/setup-incremental-builds-angular 301
 /guides/turbo-and-nx /docs/kb/from-turborepo 301
 /guides/why-monorepos /docs/concepts/decisions/what-is-a-monorepo 301
@@ -106,7 +106,7 @@
 /core-concepts/configuration /docs/reference/project-configuration 301
 /core-concepts/mental-model /docs/concepts/mental-model 301
 /core-concepts/updating-nx /docs/features/automate-updating-dependencies 301
-/core-concepts/ci-overview /docs/guides/nx-cloud/setup-ci 301
+/core-concepts/ci-overview /docs/getting-started/setup-ci 301
 /getting-started/nx-cli /docs/getting-started/intro 301
 /getting-started/console /docs/getting-started/editor-setup 301
 /core-extended/affected /docs/features/ci-features/affected 301
@@ -156,24 +156,24 @@
 /nx-cloud/private-cloud/standalone /ci/private-cloud/ami-setup 301
 /nx-cloud/private-cloud/kubernetes-setup /docs/enterprise/single-tenant/overview 301
 /recipes/ci /docs/guides/nx-cloud 301
-/recipes/ci/ci-setup /docs/guides/nx-cloud/setup-ci 301
-/nx-cloud/recipes/set-up/ci-setup /docs/guides/nx-cloud/setup-ci 301
-/recipes/ci/monorepo-ci-azure /docs/guides/nx-cloud/setup-ci 301
+/recipes/ci/ci-setup /docs/getting-started/setup-ci 301
+/nx-cloud/recipes/set-up/ci-setup /docs/getting-started/setup-ci 301
+/recipes/ci/monorepo-ci-azure /docs/kb/ci-workflow-examples 301
 /recipes/ci/monorepo-ci-circle-ci /nx-cloud/recipes/set-up/monorepo-ci-circle-ci 301
 /recipes/ci/monorepo-ci-github-action /nx-cloud/recipes/set-up/monorepo-ci-github-action 301
 /recipes/ci/monorepo-ci-jenkins /nx-cloud/recipes/set-up/monorepo-ci-jenkins 301
 /recipes/ci/monorepo-ci-gitlab /nx-cloud/recipes/set-up/monorepo-ci-gitlab 301
 /recipes/ci/monorepo-ci-bitbucket-pipelines /nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines 301
 /recipes/ci/ci-deployment /docs/guides/ci-deployment 301
-/nx-cloud/intro/what-is-nx-cloud /docs/getting-started/nx-cloud 301
-/nx-cloud/set-up /docs/guides/nx-cloud/setup-ci 301
-/nx-cloud/set-up/record-commands /docs/guides/nx-cloud/record-commands 301
-/nx-cloud/set-up/github /docs/guides/nx-cloud/setup-ci 301
-/nx-cloud/recipes/source-control-integration/github /docs/guides/nx-cloud/setup-ci 301
-/nx-cloud/set-up/bitbucket-cloud /docs/guides/nx-cloud/setup-ci 301
-/nx-cloud/recipes/source-control-integration/bitbucket-cloud /docs/guides/nx-cloud/setup-ci 301
-/ci/recipes/source-control-integration/bitbucket-cloud /docs/guides/nx-cloud/setup-ci 301
-/nx-cloud/set-up/gitlab /docs/guides/nx-cloud/setup-ci 301
+/nx-cloud/intro/what-is-nx-cloud /docs/features/ci-features 301
+/nx-cloud/set-up /docs/getting-started/setup-ci 301
+/nx-cloud/set-up/record-commands /docs/kb/record-commands 301
+/nx-cloud/set-up/github /docs/getting-started/setup-ci 301
+/nx-cloud/recipes/source-control-integration/github /docs/getting-started/setup-ci 301
+/nx-cloud/set-up/bitbucket-cloud /docs/getting-started/setup-ci 301
+/nx-cloud/recipes/source-control-integration/bitbucket-cloud /docs/getting-started/setup-ci 301
+/ci/recipes/source-control-integration/bitbucket-cloud /docs/getting-started/setup-ci 301
+/nx-cloud/set-up/gitlab /docs/getting-started/setup-ci 301
 /core-features/remote-cache /docs/features/ci-features/remote-cache 301
 /core-features/distribute-task-execution /docs/features/ci-features/distribute-task-execution 301
 /concepts/affected /docs/features/ci-features/affected 301
@@ -183,27 +183,27 @@
 /nx-cloud/private-cloud/* https://github.com/nrwl/nx-cloud-helm 301
 /ci/recipes/on-premise/* https://github.com/nrwl/nx-cloud-helm 301
 /ci/recipes/enterprise/on-premise/* https://github.com/nrwl/nx-cloud-helm 301
-/concepts/dte /docs/concepts/ci-concepts/parallelization-distribution 301
-/nx-cloud/concepts/dte /docs/concepts/ci-concepts/parallelization-distribution 301
+/concepts/dte /docs/concepts/ci-concepts/building-blocks-fast-ci 301
+/nx-cloud/concepts/dte /docs/concepts/ci-concepts/building-blocks-fast-ci 301
 /nx-cloud/intro/nx-cloud-workflows /ci/features/nx-cloud-workflows 301
 /nx-cloud/account /docs/guides/nx-cloud 301
-/nx-cloud/account/google-auth /docs/guides/nx-cloud/google-auth 301
+/nx-cloud/account/google-auth /docs/kb/google-auth 301
 /nx-cloud/account/access-tokens /docs/guides/nx-cloud/access-tokens 301
 /nx-cloud/account/scenarios /docs/concepts/ci-concepts/cache-security 301
 /nx-cloud/concepts/scenarios /docs/concepts/ci-concepts/cache-security 301
-/nx-cloud/account/encryption /docs/guides/nx-cloud/encryption 301
-/nx-cloud/concepts/encryption /docs/guides/nx-cloud/encryption 301
+/nx-cloud/account/encryption /docs/kb/encryption 301
+/nx-cloud/concepts/encryption /docs/kb/encryption 301
 /nx-cloud/features/nx-cloud-workflows /docs/features/ci-features/distribute-task-execution 301
 /ci/features/nx-agents /docs/features/ci-features/distribute-task-execution 301
-/concepts/more-concepts/illustrated-dte /docs/concepts/ci-concepts/parallelization-distribution 301
+/concepts/more-concepts/illustrated-dte /docs/concepts/ci-concepts/building-blocks-fast-ci 301
 /core-features/* /features/:splat 301
-/ci/recipes/set-up/connect-to-cloud /docs/guides/nx-cloud/setup-ci 301
-/ci/intro/connect-to-cloud /docs/guides/nx-cloud/setup-ci 301
+/ci/recipes/set-up/connect-to-cloud /docs/getting-started/setup-ci 301
+/ci/intro/connect-to-cloud /docs/getting-started/setup-ci 301
 /pricing/special-offer https://forms.gle/FBzvsspz1o63fDAz6 301
 /powerpack/special-offer https://forms.gle/mWjQo6Vrv5Kt6WYh9 301
-/ci/intro/why-nx-cloud /docs/getting-started/nx-cloud 301
-/ci/intro/ci-with-nx /docs/guides/nx-cloud/setup-ci 301
-/ci/intro/connect-to-nx-cloud /docs/guides/nx-cloud/setup-ci 301
+/ci/intro/why-nx-cloud /docs/features/ci-features 301
+/ci/intro/ci-with-nx /docs/getting-started/setup-ci 301
+/ci/intro/connect-to-nx-cloud /docs/getting-started/setup-ci 301
 
 # --- tutorialRedirects ---
 /l/a/tutorial/1-code-generation /docs/getting-started/tutorials/angular-monorepo-tutorial 301
@@ -362,7 +362,7 @@
 /recipes/other/standalone-ngrx-apis /packages/angular/generators/ngrx-root-store 301
 /recipes/other/export-project-graph /recipes/features/explore-graph 301
 /recipes/executors/use-executor-configurations /docs/concepts/executors-and-configurations 301
-/recipes/other/azure-last-successful-commit /docs/guides/nx-cloud/setup-ci 301
+/recipes/other/azure-last-successful-commit /docs/kb/affected-base-commit 301
 /recipes/adopting-nx/migration-angular /docs/technologies/angular 301
 /recipes/adopting-nx-angular/angular-integrated /docs/technologies/angular 301
 /recipes/adopting-nx-angular/angular-manual /docs/technologies/angular 301
@@ -406,7 +406,7 @@
 /recipes/managing-repository/js-and-ts /docs/technologies/typescript/guides/js-and-ts 301
 /recipes/managing-repository/advanced-update /docs/guides/tips-n-tricks/advanced-update 301
 /recipes/executors/run-commands-executor /docs/guides/tasks--caching/run-commands-executor 301
-/recipes/ci/azure-last-successful-commit /docs/guides/nx-cloud/setup-ci 301
+/recipes/ci/azure-last-successful-commit /docs/kb/affected-base-commit 301
 /recipes/module-federation/faster-builds /concepts/module-federation/faster-builds-with-module-federation 301
 /nx-api/js/documents/typescript-project-references /docs/concepts/typescript-project-linking 301
 /reference/commands /docs/reference/nx-commands 301
@@ -806,7 +806,7 @@
 /getting-started/why-nx /docs/getting-started/intro 301
 
 # --- ciTutorialRedirects ---
-/ci/intro/tutorials/circle /docs/guides/nx-cloud/setup-ci 301
+/ci/intro/tutorials/circle /docs/kb/ci-workflow-examples 301
 /ci/intro/tutorials/github-actions /ci/recipes/set-up/monorepo-ci-github-actions 301
 
 # --- dockerReleaseRedirect ---
@@ -889,8 +889,8 @@
 /getting-started/tutorials/angular-monorepo-tutorial /docs/getting-started/tutorials/angular-monorepo-tutorial 301
 /getting-started/tutorials/gradle-tutorial /docs/kb/gradle-tutorial 301
 /getting-started/* /docs/getting-started/intro 301
-/ci/getting-started /docs/getting-started/nx-cloud 301
-/ci/getting-started/intro /docs/getting-started/nx-cloud 301
+/ci/getting-started /docs/features/ci-features 301
+/ci/getting-started/intro /docs/features/ci-features 301
 /ci/features /docs/features/ci-features 301
 /ci/features/self-healing-ci /docs/features/ci-features/self-healing-ci 301
 # DOC-556: linked from the nrwl/nx README (21.5k referring pages)
@@ -898,23 +898,23 @@
 /ci/features/remote-cache /docs/features/ci-features/remote-cache 301
 /ci/features/distribute-task-execution /docs/features/ci-features/distribute-task-execution 301
 /ci/features/affected /docs/features/ci-features/affected 301
-/ci/features/dynamic-agents /docs/features/ci-features/dynamic-agents 301
-/ci/features/split-e2e-tasks /docs/features/ci-features/split-e2e-tasks 301
-/ci/features/flaky-tasks /docs/features/ci-features/flaky-tasks 301
+/ci/features/dynamic-agents /docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size 301
+/ci/features/split-e2e-tasks /docs/kb/split-e2e-tasks 301
+/ci/features/flaky-tasks /docs/kb/flaky-tasks 301
 /ci/features/explain-with-ai /docs/features/ci-features/self-healing-ci 301
-/ci/features/github-integration /docs/features/ci-features/github-integration 301
+/ci/features/github-integration /docs/kb/github-integration 301
 /ci/concepts /docs/concepts/ci-concepts 301
 /ci/concepts/building-blocks-fast-ci /docs/concepts/ci-concepts/building-blocks-fast-ci 301
 /ci/concepts/reduce-waste /docs/concepts/ci-concepts/reduce-waste 301
-/ci/concepts/parallelization-distribution /docs/concepts/ci-concepts/parallelization-distribution 301
+/ci/concepts/parallelization-distribution /docs/concepts/ci-concepts/building-blocks-fast-ci 301
 /ci/concepts/cache-security /docs/concepts/ci-concepts/cache-security 301
 /ci/concepts/heartbeat /docs/concepts/ci-concepts/heartbeat-and-manual-shutdown-handling 301
-/ci/recipes/security/google-auth /docs/guides/nx-cloud/google-auth 301
+/ci/recipes/security/google-auth /docs/kb/google-auth 301
 /ci/recipes/security/access-tokens /docs/guides/nx-cloud/access-tokens 301
 /ci/recipes/security/personal-access-tokens /docs/guides/nx-cloud/personal-access-tokens 301
-/ci/recipes/security/encryption /docs/guides/nx-cloud/encryption 301
+/ci/recipes/security/encryption /docs/kb/encryption 301
 /ci/recipes/source-control-integration /docs/guides/nx-cloud/source-control-integration 301
-/ci/recipes/source-control-integration/* /docs/guides/nx-cloud/setup-ci 301
+/ci/recipes/source-control-integration/* /docs/getting-started/setup-ci 301
 /ci/recipes/enterprise /docs/enterprise 301
 /ci/recipes/enterprise/single-tenant/auth-saml /docs/enterprise/single-tenant 301
 /ci/recipes/enterprise/single-tenant/* /docs/enterprise/single-tenant/:splat 301
@@ -924,9 +924,9 @@
 /ci/recipes/enterprise/polygraph /docs/enterprise/polygraph 301
 /ci/recipes/enterprise/metadata-only-workspace /docs/enterprise/metadata-only-workspace 301
 /ci/recipes/enterprise/custom-workflows /docs/enterprise/custom-workflows 301
-/ci/recipes/other/record-commands /docs/guides/nx-cloud/record-commands 301
+/ci/recipes/other/record-commands /docs/kb/record-commands 301
 /ci/recipes/other/ci-deployment /docs/guides/ci-deployment 301
-/ci/recipes/other/cipe-affected-project-graph /docs/guides/nx-cloud/cipe-affected-project-graph 301
+/ci/recipes/other/cipe-affected-project-graph /docs/kb/cipe-affected-project-graph 301
 /ci/reference /docs/reference 301
 /ci/reference/config /docs/reference/nx-cloud/config 301
 /ci/reference/nx-cloud-cli /docs/reference/nx-cloud-cli 301
@@ -1315,15 +1315,15 @@
 /troubleshooting/convert-to-inferred /docs/troubleshooting/troubleshoot-convert-to-inferred 301
 /troubleshooting /docs/troubleshooting 301
 /troubleshooting/* /docs/troubleshooting/:splat 301
-/ci /docs/getting-started/nx-cloud 301
+/ci /docs/features/ci-features 301
 /ci/recipes /docs/guides/nx-cloud 301
-/ci/recipes/improving-ttg /docs/guides/nx-cloud/optimize-your-ttg 301
-/ci/recipes/set-up /docs/guides/nx-cloud/setup-ci 301
-/ci/recipes/set-up/* /docs/guides/nx-cloud/setup-ci 301
+/ci/recipes/improving-ttg /docs/kb/optimize-your-ttg 301
+/ci/recipes/set-up /docs/getting-started/setup-ci 301
+/ci/recipes/set-up/* /docs/getting-started/setup-ci 301
 /ci/recipes/security /docs/guides/nx-cloud 301
 /ci/recipes/dte /docs/guides/nx-cloud/bring-your-own-compute 301
 /ci/recipes/dte/* /docs/guides/nx-cloud/bring-your-own-compute 301
-/ci/recipes/other /docs/guides/nx-cloud/setup-ci 301
+/ci/recipes/other /docs/getting-started/setup-ci 301
 /see-also /docs/getting-started/intro 301
 /see-also/sitemap /docs/getting-started/intro 301
 /showcase /docs/getting-started/intro 301
@@ -1340,7 +1340,7 @@
 /reference/web /docs/reference/web 301
 /reference/web/executors /docs/reference/web/executors 301
 /reference/web/generators /docs/reference/web/generators 301
-/ci/intro /docs/getting-started/nx-cloud 301
+/ci/intro /docs/features/ci-features 301
 /features/self-healing-ci /docs/features/ci-features/self-healing-ci 301
 
 # --- removeEvolvingNx ---
@@ -1360,3 +1360,6 @@
 /nx/reset /docs/reference/nx-commands#nx-reset 301
 /core-concepts/computation-caching /docs/features/cache-task-results 301
 /nx-community /docs/getting-started/intro 301
+
+# --- DOC-660: indexed mixed-case legacy URL ---
+/Docs/Knowledge /docs/kb 301

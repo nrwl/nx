@@ -5,11 +5,17 @@ import type {
   MigrateStepStatus,
 } from './run-state';
 import {
+  appendCommit,
   applyStepEvent,
+  commitReceipt,
   commitResultToLedgerEntry,
+  completionSummaryLines,
   coveringLandedEntries,
+  discardGeneratorRun,
   hasPendingCommitDebt,
   stepsToPendingMigrations,
+  tallySteps,
+  unresolvedFailureDetail,
   type StepAction,
   type StepEvent,
 } from './state-machine';
@@ -23,6 +29,7 @@ const ALL_STEP_STATUSES: MigrateStepStatus[] = [
   'failed',
   'skipped',
   'died',
+  'unresolved',
 ];
 
 function stateWithStep(overrides: Partial<MigrateStep> = {}): MigrateRunState {
@@ -39,6 +46,8 @@ function stateWithStep(overrides: Partial<MigrateStep> = {}): MigrateRunState {
       {
         id: 'step-1',
         roundIndex: 0,
+        kind: 'migration',
+        migrationId: '@nx/js:a',
         status: 'pending',
         attempt: 1,
         dispenseCount: 0,
@@ -104,6 +113,7 @@ const SIMPLE_CASES: {
       type: 'awaitPromptOutcome',
       stepId,
       finishedAt: '2026-01-01T00:02:00.000Z',
+      awaitingKind: 'migration-prompt',
     }),
     legalFrom: 'running',
     expectedStatus: 'awaiting-prompt-outcome',
@@ -203,14 +213,92 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'markGeneratorCompleted',
         stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: false,
+        madeChanges: true,
       });
 
       expect(result.kind).toBe('ok');
       if (result.kind === 'ok') {
         expect(result.state.steps[0].generatorCompleted).toBe(true);
+        // A false waiver leaves no field behind rather than writing `false`.
+        expect(result.state.steps[0].agenticWaived).toBeUndefined();
+        // Unlike the waiver, this is written either way: absent is reserved
+        // for markers an older nx wrote.
+        expect(result.state.steps[0].generatorMadeChanges).toBe(true);
         // The worker still has its commit to attempt; the step only leaves
         // 'running' when that resolves.
         expect(result.state.steps[0].status).toBe('running');
+      }
+    });
+
+    it('records the attempt the marker was written on as the payload lineage boundary', () => {
+      const state = stateWithStep({ status: 'running', attempt: 3 });
+
+      const result = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: false,
+        madeChanges: true,
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompletedAtAttempt).toBe(3);
+      }
+    });
+
+    it('records an explicit false when the generator made no changes', () => {
+      const state = stateWithStep({ status: 'running' });
+
+      const result = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: false,
+        madeChanges: false,
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorMadeChanges).toBe(false);
+      }
+    });
+
+    it('records the waiver alongside the marker', () => {
+      const state = stateWithStep({ status: 'running' });
+
+      const result = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+        agenticWaived: true,
+        validationOwed: false,
+        madeChanges: true,
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompleted).toBe(true);
+        expect(result.state.steps[0].agenticWaived).toBe(true);
+      }
+    });
+
+    it('records the owed validation alongside the marker', () => {
+      const state = stateWithStep({ status: 'running' });
+
+      const result = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: true,
+        madeChanges: true,
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompleted).toBe(true);
+        expect(result.state.steps[0].validationOwed).toBe(true);
       }
     });
 
@@ -223,6 +311,9 @@ describe('applyStepEvent', () => {
         const result = applyStepEvent(state, {
           type: 'markGeneratorCompleted',
           stepId: 'step-1',
+          agenticWaived: false,
+          validationOwed: false,
+          madeChanges: true,
         });
 
         expect(result.kind).toBe('error');
@@ -237,12 +328,59 @@ describe('applyStepEvent', () => {
         type: 'awaitPromptOutcome',
         stepId: 'step-1',
         finishedAt: '2026-01-01T00:02:00.000Z',
+        awaitingKind: 'migration-prompt',
       });
 
       expect(result.kind).toBe('ok');
       if (result.kind === 'ok') {
         expect(result.state.steps[0].generatorCompleted).toBeUndefined();
       }
+    });
+  });
+
+  describe('parkForFinalValidation', () => {
+    const event: StepEvent = {
+      type: 'parkForFinalValidation',
+      stepId: 'step-1',
+      finishedAt: '2026-01-01T00:02:00.000Z',
+    };
+
+    it.each(ALL_STEP_STATUSES.filter((status) => status !== 'pending'))(
+      'rejects from %s, leaving the input unchanged',
+      (status) => {
+        const state: MigrateRunState = {
+          ...stateWithStep(),
+          steps: [
+            {
+              id: 'step-1',
+              roundIndex: 0,
+              kind: 'final-validation',
+              status,
+              attempt: 1,
+              dispenseCount: 0,
+            },
+          ],
+        };
+        const before = snapshot(state);
+
+        const result = applyStepEvent(state, event);
+
+        expect(result.kind).toBe('error');
+        expect(state).toEqual(before);
+      }
+    );
+
+    it('rejects a migration step, which has a worker to run first', () => {
+      const state = stateWithStep();
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, event);
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining('migration step'),
+      });
+      expect(state).toEqual(before);
     });
   });
 
@@ -315,7 +453,13 @@ describe('applyStepEvent', () => {
   });
 
   describe('stepAction', () => {
-    const ALL_ACTIONS: StepAction[] = ['retry', 'skip', 'retry-clean', 'adopt'];
+    const ALL_ACTIONS: StepAction[] = [
+      'retry',
+      'skip',
+      'retry-clean',
+      'adopt',
+      'unresolved',
+    ];
 
     // The only legal (status, action) pairs for a step with no recorded
     // generator half; every other combination must be rejected. `null` marks
@@ -331,12 +475,18 @@ describe('applyStepEvent', () => {
         if (status === 'failed' && action === 'retry') expected = 'pending';
         else if (status === 'failed' && action === 'retry-clean')
           expected = 'pending';
+        else if (status === 'failed' && action === 'adopt')
+          expected = 'succeeded';
         else if (status === 'failed' && action === 'skip') expected = 'skipped';
+        else if (status === 'failed' && action === 'unresolved')
+          expected = 'unresolved';
         else if (status === 'died' && action === 'retry-clean')
           expected = 'pending';
         else if (status === 'died' && action === 'adopt')
           expected = 'succeeded';
         else if (status === 'died' && action === 'skip') expected = 'skipped';
+        else if (status === 'died' && action === 'unresolved')
+          expected = 'unresolved';
         return { status, action, expected };
       })
     );
@@ -419,6 +569,8 @@ describe('applyStepEvent', () => {
           expect(result.state.steps[0]).toEqual({
             id: 'step-1',
             roundIndex: 0,
+            kind: 'migration',
+            migrationId: '@nx/js:a',
             status: 'pending',
             attempt: 2,
             dispenseCount: 3,
@@ -443,6 +595,65 @@ describe('applyStepEvent', () => {
       expect(result.kind).toBe('ok');
       if (result.kind === 'ok') {
         expect(result.state.steps[0].generatorCompleted).toBe(true);
+      }
+    });
+
+    it('carries the waiver, the owed validation, and the change record with the marker across a rearm', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        generatorCompleted: true,
+        generatorCompletedAtAttempt: 1,
+        agenticWaived: true,
+        validationOwed: true,
+        generatorMadeChanges: false,
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].agenticWaived).toBe(true);
+        expect(result.state.steps[0].validationOwed).toBe(true);
+        // Carried as-is, false included: an explicit false is what lets the
+        // retry skip the no-op commit.
+        expect(result.state.steps[0].generatorMadeChanges).toBe(false);
+        // The lineage boundary describes the marker, not the attempt, so a
+        // retained retry keeps it.
+        expect(result.state.steps[0].generatorCompletedAtAttempt).toBe(1);
+      }
+    });
+
+    it('drops the waiver, the owed validation, and the change record with the marker when a clean retry discards the generator changes', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        generatorCompleted: true,
+        generatorCompletedAtAttempt: 1,
+        agenticWaived: true,
+        validationOwed: true,
+        generatorMadeChanges: true,
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry-clean',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompleted).toBeUndefined();
+        expect(
+          result.state.steps[0].generatorCompletedAtAttempt
+        ).toBeUndefined();
+        expect(result.state.steps[0].agenticWaived).toBeUndefined();
+        expect(result.state.steps[0].validationOwed).toBeUndefined();
+        expect(result.state.steps[0].generatorMadeChanges).toBeUndefined();
       }
     });
 
@@ -544,6 +755,150 @@ describe('applyStepEvent', () => {
       }
     });
 
+    it('rejects skip from died once a landed commit covers the step, steering to adopt', () => {
+      const state = {
+        ...stateWithStep({ status: 'died', generatorCompleted: true }),
+        commits: [
+          { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
+        ] as MigrateCommitLedgerEntry[],
+      };
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'skip',
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining("Use 'adopt'"),
+      });
+      expect(state).toEqual(before);
+    });
+
+    it('steers a rejected pre-marker retry from died away from skip once a landed commit covers the step', () => {
+      // A parent-recorded adopt commit whose transition never landed leaves
+      // the step died, covered, and without the marker.
+      const state = {
+        ...stateWithStep({ status: 'died' }),
+        commits: [
+          { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
+        ] as MigrateCommitLedgerEntry[],
+      };
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining("or 'adopt' instead."),
+      });
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.not.stringContaining("'skip'"),
+      });
+    });
+
+    it('rejects skip from died while a started commit is unaccounted for, steering to adopt', () => {
+      // The committer died between its git commit and the record, or before
+      // committing; the ledger cannot tell which.
+      const state = stateWithStep({
+        status: 'died',
+        generatorCompleted: true,
+        commitStarted: true,
+      });
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'skip',
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining("Use 'adopt'"),
+      });
+      expect(state).toEqual(before);
+    });
+
+    it('retry-clean from died carries the unaccounted commit into the next attempt', () => {
+      const state = stateWithStep({
+        status: 'died',
+        generatorCompleted: true,
+        commitStarted: true,
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry-clean',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].attempt).toBe(2);
+        expect(result.state.steps[0].commitStarted).toBe(true);
+      }
+    });
+
+    it('steers a rejected pre-marker retry from died away from skip while a started commit is unaccounted for', () => {
+      const state = stateWithStep({ status: 'died', commitStarted: true });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.not.stringContaining("'skip'"),
+      });
+    });
+
+    it.each([
+      ['a landed commit covers the step', { commits: true }],
+      ['a started commit is unaccounted for', { commitStarted: true }],
+    ] as const)(
+      'rejects skip from failed while %s, steering to adopt',
+      (_, shape) => {
+        const state = {
+          ...stateWithStep({
+            status: 'failed',
+            generatorCompleted: true,
+            ...('commitStarted' in shape ? { commitStarted: true } : {}),
+          }),
+          commits: ('commits' in shape
+            ? [{ kind: 'landed', sha: 'abc', stepIds: ['step-1'] }]
+            : []) as MigrateCommitLedgerEntry[],
+        };
+        const before = snapshot(state);
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action: 'skip',
+        });
+
+        expect(result).toEqual({
+          kind: 'error',
+          reason: expect.stringContaining("Use 'adopt'"),
+        });
+        expect(state).toEqual(before);
+      }
+    );
+
     it('retry from died re-arms without a reset once the generator half is recorded', () => {
       const state = stateWithStep({
         status: 'died',
@@ -629,7 +984,7 @@ describe('applyStepEvent', () => {
       ['failed', 'retry-clean'],
       ['died', 'retry-clean'],
     ] as const)(
-      'keeps the step kind across a rearm (%s + %s)',
+      'keeps the generator flag across a rearm (%s + %s)',
       (status, action) => {
         const state = stateWithStep({ status, hasGenerator: false });
 
@@ -675,6 +1030,148 @@ describe('applyStepEvent', () => {
       }
     );
 
+    it.each([
+      ['failed', 'Adopted after the attempt failed'],
+      ['died', 'Adopted after the worker died'],
+    ] as const)(
+      'adopt from %s marks the step adopted and records that the tree as it stood was taken',
+      (status, adopted) => {
+        const state = stateWithStep({
+          status,
+          outcome: { summary: 'generator threw', fileChanges: ['a.ts'] },
+        });
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action: 'adopt',
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0]).toMatchObject({
+            status: 'succeeded',
+            adopted: true,
+            outcome: {
+              fileChanges: ['a.ts'],
+              summary: expect.stringContaining(adopted),
+            },
+          });
+        }
+      }
+    );
+
+    describe('on a failed final-validation step', () => {
+      function failedPass(
+        commits: MigrateCommitLedgerEntry[] = []
+      ): MigrateRunState {
+        return {
+          ...stateWithStep(),
+          steps: [
+            {
+              id: 'step-1',
+              roundIndex: 0,
+              kind: 'final-validation',
+              status: 'failed',
+              attempt: 1,
+              dispenseCount: 1,
+              hasGenerator: false,
+              promptOutcome: { status: 'failed', summary: 'tests are red' },
+            },
+          ],
+          commits,
+        };
+      }
+
+      it('adopt names the pass in the recorded summary', () => {
+        const result = applyStepEvent(failedPass(), {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action: 'adopt',
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0].outcome?.summary).toBe(
+            "Adopted after the attempt failed: the working tree as it stood was taken as this validation pass's result."
+          );
+        }
+      });
+
+      it.each(['skip', 'unresolved'] as const)(
+        'refusing %s over a landed commit names the pass',
+        (action) => {
+          const result = applyStepEvent(
+            failedPass([{ kind: 'landed', sha: 'abc', stepIds: ['step-1'] }]),
+            { type: 'stepAction', stepId: 'step-1', attempt: 1, action }
+          );
+
+          expect(result).toMatchObject({
+            kind: 'error',
+            reason: expect.stringContaining(
+              'so the validation pass may be committed.'
+            ),
+          });
+        }
+      );
+    });
+
+    it('unresolved from failed keeps the attempt and the failure it gave up on', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        attempt: 3,
+        gitRefBefore: 'abc123',
+        outcome: { summary: 'generator threw' },
+        promptOutcome: { status: 'failed', summary: 'nope' },
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 3,
+        action: 'unresolved',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          ...state.steps[0],
+          status: 'unresolved',
+        });
+      }
+    });
+
+    it('unresolved from died keeps the attempt and records the death as the failure', () => {
+      // markDied records no outcome; the transition supplies the death detail.
+      const state = stateWithStep({
+        status: 'died',
+        attempt: 3,
+        pid: 4242,
+        gitRefBefore: 'abc123',
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 3,
+        action: 'unresolved',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          ...state.steps[0],
+          status: 'unresolved',
+          outcome: {
+            summary:
+              'the worker process (pid 4242) died before recording an outcome',
+          },
+        });
+      }
+    });
+
     it('adopt keeps the outcome the dead worker had already recorded', () => {
       const state = stateWithStep({
         status: 'died',
@@ -702,6 +1199,9 @@ describe('applyStepEvent', () => {
       const marked = applyStepEvent(state, {
         type: 'markGeneratorCompleted',
         stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: false,
+        madeChanges: true,
       });
       expect(marked.kind).toBe('ok');
       if (marked.kind !== 'ok') return;
@@ -716,6 +1216,7 @@ describe('applyStepEvent', () => {
         type: 'awaitPromptOutcome',
         stepId: 'step-1',
         finishedAt: '2026-01-01T00:00:00.000Z',
+        awaitingKind: 'migration-prompt',
       });
       expect(park.kind).toBe('ok');
       if (park.kind !== 'ok') return;
@@ -781,6 +1282,91 @@ describe('applyStepEvent', () => {
       expect(cleaned.state.steps[0].status).toBe('pending');
     });
   });
+});
+
+describe('appendCommit', () => {
+  it('accounts for the started commits of the steps a landed entry names', () => {
+    const state = {
+      ...stateWithStep({ status: 'died', commitStarted: true }),
+    };
+    state.steps.push({ ...state.steps[0], id: 'step-2' });
+
+    const next = appendCommit(state, {
+      kind: 'landed',
+      sha: 'abc',
+      stepIds: ['step-1'],
+    });
+
+    expect(next.commits).toHaveLength(1);
+    expect(next.steps[0].commitStarted).toBeUndefined();
+    expect(next.steps[1].commitStarted).toBe(true);
+  });
+
+  it('leaves a started commit unaccounted for on a failed or checkpoint entry', () => {
+    // A failed entry describes its own operation only; an earlier commit's
+    // unknown outcome is not resolved by it.
+    const state = stateWithStep({ status: 'died', commitStarted: true });
+
+    const failed = appendCommit(state, { kind: 'failed', stepIds: ['step-1'] });
+    const checkpoint = appendCommit(state, { kind: 'checkpoint', sha: 'abc' });
+
+    expect(failed.steps[0].commitStarted).toBe(true);
+    expect(checkpoint.steps[0].commitStarted).toBe(true);
+  });
+});
+
+describe('tallySteps', () => {
+  it('counts every status once, telling adopted successes and stalled steps apart', () => {
+    const base = stateWithStep();
+    const state: MigrateRunState = {
+      ...base,
+      steps: ALL_STEP_STATUSES.map((status, index) => ({
+        ...base.steps[0],
+        id: `step-${index + 1}`,
+        status,
+      })).concat({
+        ...base.steps[0],
+        id: 'step-10',
+        status: 'succeeded',
+        adopted: true,
+      }),
+    };
+
+    const tally = tallySteps(state);
+
+    expect(tally).toEqual({
+      applied: 1,
+      adopted: 1,
+      skipped: 1,
+      unresolved: [expect.objectContaining({ status: 'unresolved' })],
+      remaining: 6,
+      stalled: 2,
+    });
+  });
+});
+
+describe('unresolvedFailureDetail', () => {
+  it.each([
+    ['no outcome at all', undefined],
+    ['an empty summary', { status: 'failed', summary: '' }],
+    ['a whitespace-only summary', { status: 'failed', summary: ' \n\t ' }],
+  ] as const)(
+    'reports the fallback for %s, in the report and the ledger alike',
+    (_case, promptOutcome) => {
+      const state = stateWithStep({
+        status: 'unresolved',
+        migrationId: '@nx/js:gen',
+        ...(promptOutcome ? { promptOutcome } : {}),
+      });
+
+      expect(unresolvedFailureDetail(state.steps[0])).toBe(
+        'no failure detail was recorded'
+      );
+      expect(completionSummaryLines(state)).toContain(
+        '    - @nx/js:gen: no failure detail was recorded'
+      );
+    }
+  );
 });
 
 describe('hasPendingCommitDebt', () => {
@@ -850,6 +1436,96 @@ describe('coveringLandedEntries', () => {
   });
 });
 
+describe('discardGeneratorRun', () => {
+  const run = {
+    generatorCompleted: true,
+    generatorCompletedAtAttempt: 1,
+    agenticWaived: true,
+    validationOwed: true,
+    generatorMadeChanges: true,
+  } as const;
+
+  it('drops everything the generator run recorded when no landed commit carries it', () => {
+    const state = stateWithStep({ status: 'died', ...run });
+
+    const next = discardGeneratorRun(state, 'step-1');
+
+    expect(next.steps[0]).toEqual({
+      id: 'step-1',
+      roundIndex: 0,
+      kind: 'migration',
+      migrationId: '@nx/js:a',
+      status: 'died',
+      attempt: 1,
+      dispenseCount: 0,
+    });
+    expect(state.steps[0]).toMatchObject(run);
+  });
+
+  it('keeps the run when a landed commit covers the step', () => {
+    const state = {
+      ...stateWithStep({ status: 'died', ...run }),
+      commits: [{ kind: 'landed' as const, sha: 'abc', stepIds: ['step-1'] }],
+    };
+
+    expect(discardGeneratorRun(state, 'step-1')).toBe(state);
+  });
+
+  it('leaves a step without a generator run alone', () => {
+    const state = stateWithStep({ status: 'died' });
+
+    expect(discardGeneratorRun(state, 'step-1').steps[0]).toBe(state.steps[0]);
+  });
+});
+
+describe('commitReceipt', () => {
+  const landed: MigrateCommitLedgerEntry = {
+    kind: 'landed',
+    sha: 'abc',
+    stepIds: ['step-1'],
+  };
+
+  it('is undefined for a step without a receipt', () => {
+    const state = { ...stateWithStep(), commits: [landed] };
+
+    expect(commitReceipt(state, state.steps[0])).toBeUndefined();
+  });
+
+  it('resolves the receipt to its entry', () => {
+    const state = {
+      ...stateWithStep({ commitLedgerIndex: 1 }),
+      commits: [{ kind: 'failed' as const, stepIds: ['step-1'] }, landed],
+    };
+
+    expect(commitReceipt(state, state.steps[0])).toEqual({
+      index: 1,
+      entry: landed,
+    });
+  });
+
+  it('rejects a receipt past the ledger', () => {
+    const state = {
+      ...stateWithStep({ commitLedgerIndex: 1 }),
+      commits: [landed],
+    };
+
+    expect(() => commitReceipt(state, state.steps[0])).toThrow(
+      'Step step-1 records its commit at ledger index 1, which does not exist.'
+    );
+  });
+
+  it('rejects a receipt for an entry that does not name the step', () => {
+    const state = {
+      ...stateWithStep({ commitLedgerIndex: 0 }),
+      commits: [{ ...landed, stepIds: ['step-2'] }],
+    };
+
+    expect(() => commitReceipt(state, state.steps[0])).toThrow(
+      'Step step-1 records its commit at ledger index 0, which does not name it.'
+    );
+  });
+});
+
 describe('stepsToPendingMigrations', () => {
   function stateWithSteps(steps: Partial<MigrateStep>[]): MigrateRunState {
     return {
@@ -857,6 +1533,7 @@ describe('stepsToPendingMigrations', () => {
       steps: steps.map((overrides, i) => ({
         id: `step-${i + 1}`,
         roundIndex: 0,
+        kind: 'migration' as const,
         migrationId: `@nx/js:m${i + 1}`,
         status: 'pending' as const,
         attempt: 1,

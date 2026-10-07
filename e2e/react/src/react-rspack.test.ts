@@ -6,9 +6,9 @@ import {
   readFile,
   reservePort,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Rspack', () => {
@@ -41,12 +41,12 @@ describe('Build React applications and libraries with Rspack', () => {
     const rspackConfig = readFile(`${appName}/rspack.config.js`);
     expect(rspackConfig).toContain(`port: ${customPort}`);
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPorts(customPort)).toBeTruthy();
     }
   }, 300_000);
 
@@ -78,12 +78,12 @@ describe('Build React applications and libraries with Rspack', () => {
 
     checkFilesExist(`dist/${appName}/index.html`);
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPorts(port)).toBeTruthy();
     }
   }, 250_000);
 });

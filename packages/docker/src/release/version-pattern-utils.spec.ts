@@ -1,15 +1,16 @@
+import type { MockedFunction } from 'vitest';
 import { interpolateVersionPattern } from './version-pattern-utils';
 import { getLatestCommitSha } from '@nx/devkit/internal';
 
-jest.mock('nx/src/utils/git-utils');
+vi.mock('nx/src/utils/git-utils');
 
 describe('version-pattern-utils', () => {
-  const mockGetLatestCommitSha = getLatestCommitSha as jest.MockedFunction<
+  const mockGetLatestCommitSha = getLatestCommitSha as MockedFunction<
     typeof getLatestCommitSha
   >;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockGetLatestCommitSha.mockReturnValue(
       'abc123456789def0123456789abcdef012345678'
     );
@@ -126,7 +127,7 @@ describe('version-pattern-utils', () => {
     });
 
     it('should use current date when not provided', () => {
-      jest.useFakeTimers().setSystemTime(new Date('2025-07-25'));
+      vi.useFakeTimers().setSystemTime(new Date('2025-07-25'));
       const result = interpolateVersionPattern('{currentDate|YYYY}', {});
 
       // Should be current year

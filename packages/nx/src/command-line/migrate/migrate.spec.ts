@@ -3220,7 +3220,7 @@ module.exports = {
         await expect(() =>
           parseMigrationsOptions({ runId: 'run-1', stepAction: 'bogus' })
         ).rejects.toThrow(
-          /'--step-action' must be one of retry, skip, retry-clean, adopt/
+          /'--step-action' must be one of retry, skip, retry-clean, adopt, unresolved/
         );
       });
 
@@ -3237,7 +3237,92 @@ module.exports = {
             runMigrations: 'migrations.json',
           })
         ).rejects.toThrow(
+          /'--run-id' .* cannot be combined with '--run-migrations'.*pass '--agentic' \(or '--agentic=<agent>'\) as well/
+        );
+        await expect(() =>
+          parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: false,
+          })
+        ).rejects.toThrow(
           /'--run-id' .* cannot be combined with '--run-migrations'/
+        );
+      });
+
+      it('continues a run in a new agent session for --run-migrations --agentic=<agent> --run-id', async () => {
+        expect(
+          await parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: 'claude-code',
+            ifExists: false,
+          })
+        ).toEqual({
+          type: 'runMigrations',
+          runMigrations: 'migrations.json',
+          ifExists: false,
+          agentic: 'claude-code',
+          validate: undefined,
+          interactive: undefined,
+          runId: 'run-1',
+        });
+        expect(
+          await parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: '',
+            agentic: true,
+            ifExists: false,
+          })
+        ).toMatchObject({ type: 'runMigrations', runId: 'run-1' });
+      });
+
+      it('rejects a step action on a continue', async () => {
+        await expect(() =>
+          parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: 'claude-code',
+            stepAction: 'retry',
+          })
+        ).rejects.toThrow(
+          /'--step-action' cannot be combined with '--run-migrations'/
+        );
+      });
+    });
+
+    describe('--start-fresh', () => {
+      it('carries it on a --run-migrations invocation only', async () => {
+        expect(
+          await parseMigrationsOptions({
+            runMigrations: 'migrations.json',
+            startFresh: true,
+            runId: 'run-1',
+            ifExists: false,
+          })
+        ).toEqual({
+          type: 'runMigrations',
+          runMigrations: 'migrations.json',
+          ifExists: false,
+          agentic: undefined,
+          validate: undefined,
+          interactive: undefined,
+          runId: 'run-1',
+          startFresh: true,
+        });
+      });
+
+      it('rejects it without --run-migrations or --run-id', async () => {
+        await expect(() =>
+          parseMigrationsOptions({ startFresh: true })
+        ).rejects.toThrow(/'--start-fresh' requires '--run-migrations'/);
+        await expect(() =>
+          parseMigrationsOptions({
+            startFresh: true,
+            runMigrations: 'migrations.json',
+          })
+        ).rejects.toThrow(
+          /'--start-fresh' requires '--run-id=<id>' naming the run to replace/
         );
       });
     });
@@ -4884,6 +4969,31 @@ module.exports = {
         });
       }
     );
+
+    it('reads the one-element array npm 12 prints for an exact spec', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify([
+          {
+            dist: {
+              tarball:
+                'https://registry.npmjs.org/mypackage/-/mypackage-2.0.1.tgz',
+            },
+          },
+        ])
+      );
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', '2.0.1')).resolves.toMatchObject({
+        version: '2.0.1',
+      });
+      expect(fetch.stats).toMatchObject({
+        registryCount: 1,
+        installCount: 0,
+      });
+    });
 
     it('skips the tarball-host check when the package declares migration config', async () => {
       // The tarball host is off the allowlist on purpose, so only the declared

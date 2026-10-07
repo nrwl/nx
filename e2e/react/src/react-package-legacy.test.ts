@@ -3,7 +3,6 @@ import {
   checkFilesExist,
   cleanupProject,
   getSize,
-  killPorts,
   newProject,
   readFile,
   readJson,
@@ -44,6 +43,7 @@ describe('Build React libraries and apps', () => {
     childLib2 = uniq('childlib2');
 
     proj = newProject({
+      keepBackup: true,
       packages: ['@nx/react', '@nx/rspack', '@nx/rollup', '@nx/jest'],
     });
 
@@ -110,7 +110,6 @@ describe('Build React libraries and apps', () => {
   });
 
   afterEach(() => {
-    killPorts();
     cleanupProject();
     delete process.env.NX_ADD_PLUGINS;
   });

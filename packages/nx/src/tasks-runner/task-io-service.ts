@@ -1,3 +1,4 @@
+import type { Task } from '../config/task-graph';
 import { getProcessMetricsService } from './process-metrics-service';
 
 /**
@@ -160,10 +161,22 @@ export function getTaskIOService(): TaskIOService {
 /**
  * Register a task process start with both IO and metrics services.
  * This is the standard way to notify the system that a task process has started.
- * Both services need to be notified together - TaskIOService for external subscribers
- * and ProcessMetricsService for native resource monitoring.
+ *
+ * A target on `ultracache: { mode: 'off' }` reports no PID, which suppresses IO
+ * tracing and therefore its report. Every other mode records — they differ in
+ * what is done with the recording, not in whether it is taken. Metrics are
+ * registered either way: the opt-out covers reporting, not the process
+ * management that cleanup and orphan reaping depend on.
+ *
+ * Narrower than a whole `Task` because `run-commands` can synthesize an id for
+ * a task that is not in any graph.
  */
-export function registerTaskProcessStart(taskId: string, pid: number): void {
-  getTaskIOService().notifyPidUpdate({ taskId, pid });
-  getProcessMetricsService().registerTaskProcess(taskId, pid);
+export function registerTaskProcessStart(
+  task: Pick<Task, 'id' | 'ultracache'>,
+  pid: number
+): void {
+  if (task.ultracache?.mode !== 'off') {
+    getTaskIOService().notifyPidUpdate({ taskId: task.id, pid });
+  }
+  getProcessMetricsService().registerTaskProcess(task.id, pid);
 }

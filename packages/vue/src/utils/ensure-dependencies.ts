@@ -1,8 +1,10 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import {
   sassVersion,
   vitePluginVueVersion,
@@ -32,6 +34,11 @@ export function ensureDependencies(
   }
 
   if (options.style === 'scss') {
+    // sass pulls in @parcel/watcher, whose install script only builds from
+    // source when npm_config_build_from_source is set.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      '@parcel/watcher': false,
+    });
     devDependencies['sass'] = sassVersion;
   }
 

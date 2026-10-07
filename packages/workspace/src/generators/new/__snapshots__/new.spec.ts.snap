@@ -1,12 +1,13 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`new --preset should generate necessary npm dependencies for empty preset 1`] = `
+exports[`new > --preset > should generate necessary npm dependencies for empty preset 1`] = `
 {
   "dependencies": {},
   "devDependencies": {
     "@nx/js": "0.0.1",
     "@nx/workspace": "0.0.1",
     "nx": "0.0.1",
+    "typescript": "~6.0.3",
   },
   "license": "MIT",
   "name": "@my-workspace/source",
@@ -16,7 +17,7 @@ exports[`new --preset should generate necessary npm dependencies for empty prese
 }
 `;
 
-exports[`new should generate an empty nx.json 1`] = `
+exports[`new > should generate an empty nx.json 1`] = `
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
@@ -32,7 +33,7 @@ exports[`new should generate an empty nx.json 1`] = `
 }
 `;
 
-exports[`new should skip install 1`] = `
+exports[`new > should skip install 1`] = `
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {

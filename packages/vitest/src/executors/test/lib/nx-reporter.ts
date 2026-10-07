@@ -1,5 +1,4 @@
-import type { RunnerTestFile } from 'vitest/node';
-import type { Reporter } from 'vitest/reporters';
+import type { Reporter, RunnerTestFile } from 'vitest/node';
 
 export class NxReporter implements Reporter {
   deferred: {

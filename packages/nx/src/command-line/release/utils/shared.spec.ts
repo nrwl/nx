@@ -18,10 +18,10 @@ vi.mock('../../../config/nx-json', async () => ({
   readNxJson: vi.fn(),
 }));
 
-// Mock getPlugins to return an empty array, avoiding plugin worker spawning
-// while still allowing filterAffected to run its real logic
-vi.mock('../../../project-graph/plugins/get-plugins', () => ({
-  getPlugins: vi.fn().mockResolvedValue([]),
+// Stubbed so no plugin workers start; filterAffected still runs for real.
+vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
+  ...(await vi.importActual('../../../project-graph/plugins/get-plugins')),
+  capabilitiesOfConfiguredPlugins: vi.fn().mockResolvedValue([]),
 }));
 
 import { createVersionConfig } from './test/test-utils';

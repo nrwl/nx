@@ -12,6 +12,7 @@ on:
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
+  NX_CLOUD_TASK_GRAPH_STORAGE_VERSION: '2'
   PNPM_HOME: ~/.pnpm
   # See the root Cargo.toml: the release profile is incremental for local dev.
   # CI builds cold, so incremental only inflates the cargo cache.
@@ -21,6 +22,7 @@ env:
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
 
 jobs:
   main-linux:
@@ -38,6 +40,9 @@ jobs:
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
       NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'true'
+      NX_FIX_CI_EXPERIMENTAL: 'true'
+      NX_FIX_CI_TRACING: 'true'
+      NX_FIX_CI_STABLE_OUTPUT_SCHEMA: 'true'
 
     steps:
       - name: Checkout
@@ -111,7 +116,7 @@ jobs:
           pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
-          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,gradle:build-ci,vale,run,validate-example &
+          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,run,validate-example &
           pids+=($!)
 
           for pid in "${pids[@]}"; do

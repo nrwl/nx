@@ -24,6 +24,7 @@ describe('Nx Running Tests', () => {
   beforeAll(
     () =>
       (proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/js',
           '@nx/node',
@@ -853,6 +854,7 @@ describe('Nx Running Tests', () => {
     it('should build specific and all projects', () => {
       // This is required to ensure the numbers used in the assertions make sense for this test
       const proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/js',
           '@nx/node',

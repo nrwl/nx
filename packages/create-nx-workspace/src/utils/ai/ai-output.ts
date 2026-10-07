@@ -131,7 +131,7 @@ export interface SuccessResult {
     preset?: string;
   };
   /** Display these to the user as next steps */
-  userNextSteps: UserNextSteps;
+  userNextSteps?: UserNextSteps;
   /** Reference documentation */
   docs: {
     gettingStarted: string;
@@ -163,7 +163,7 @@ export type AiOutputMessage =
 /**
  * Write NDJSON message to stdout.
  * Each message is a single line of JSON.
- * For success results, also outputs plain text instructions at the end.
+ * For success results with next steps, also outputs plain text instructions.
  */
 export function writeAiOutput(message: AiOutputMessage): void {
   if (isAiAgent()) {
@@ -176,7 +176,10 @@ export function writeAiOutput(message: AiOutputMessage): void {
       message.success
     ) {
       const successMsg = message as SuccessResult;
-      const steps = successMsg.userNextSteps.steps;
+      const steps = successMsg.userNextSteps?.steps;
+      if (!steps?.length) {
+        return;
+      }
 
       let plainText = '\n---USER_NEXT_STEPS---\n';
       plainText +=
@@ -300,21 +303,23 @@ export function buildSuccessResult(options: {
     });
   }
 
-  const userNextSteps: UserNextSteps = {
-    description: 'CRITICAL: Show the user these exact steps to complete setup.',
-    steps,
-  };
-
   const successResult: SuccessResult = {
     stage: 'complete',
     success: true,
     result: resultData,
-    userNextSteps,
     docs: {
       gettingStarted: 'https://nx.dev/getting-started/intro',
       nxCloud: 'https://nx.dev/ci/intro/why-nx-cloud',
     },
   };
+
+  if (steps.length > 0) {
+    successResult.userNextSteps = {
+      description:
+        'CRITICAL: Show the user these exact steps to complete setup.',
+      steps,
+    };
+  }
 
   if (nxCloudError) {
     (successResult as PartialSuccessResult).nxCloudError = nxCloudError;

@@ -1,7 +1,8 @@
 import { dirname, isAbsolute, join, resolve, sep } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
+import { readJsonFile } from '../../../utils/fileutils';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
@@ -991,6 +992,14 @@ export function loadTsFile<T = any>(
     return require(filePath) as T;
   }
 
+  // Executors and generators load in processes that never loaded a plugin
+  // (batch workers, forked tasks), so the NodeNext `.js` -> `.ts` resolvers the
+  // plugin loader installs are not there yet. Both are idempotent.
+  ensureCjsResolverPatched();
+  if (preferNodeStripTypes) {
+    ensureNodeNextEsmResolverRegistered();
+  }
+
   if (!preferNodeStripTypes) {
     if (!resolvedTsConfigPath) {
       throw new Error(
@@ -1005,9 +1014,10 @@ export function loadTsFile<T = any>(
     }
   }
 
-  // Native strip path: no registration up front. pnpm/npm/yarn workspaces
-  // resolve aliases without tsconfig-paths. On failure, lazy-register what
-  // the specific error code indicates is needed and retry:
+  // Native strip path: no tsconfig-paths or transpiler registration up
+  // front. pnpm/npm/yarn workspaces resolve aliases without tsconfig-paths.
+  // On failure, lazy-register what the specific error code indicates is
+  // needed and retry:
   //   - MODULE_NOT_FOUND -> first try tsconfig-paths (alias resolution).
   //     If that still fails (e.g. extensionless `import './foo'` when
   //     `foo.ts` is adjacent - Node's resolver doesn't add `.ts`), escalate
@@ -1427,7 +1437,7 @@ function resolvePathsBaseUrl(tsconfigPath: string): string {
     const absolute = resolve(queue.shift()!);
     const dir = dirname(absolute);
     try {
-      const raw = JSON.parse(readFileSync(absolute, 'utf-8'));
+      const raw = readJsonFile(absolute);
       chain.push({ dir, raw });
       const exts: string[] = raw.extends
         ? Array.isArray(raw.extends)

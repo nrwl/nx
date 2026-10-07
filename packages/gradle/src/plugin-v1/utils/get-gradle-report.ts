@@ -316,7 +316,7 @@ export function processProjectReports(
             const taskName = dirName.replace('Dir', '');
             outputDirMap.set(
               taskName,
-              `{workspaceRoot}/${relative(workspaceRoot, dirPath)}`
+              `{workspaceRoot}/${normalizePath(relative(workspaceRoot, dirPath))}`
             );
           }
           if (line.includes(': task ')) {
@@ -331,13 +331,12 @@ export function processProjectReports(
         const buildFile = normalizePath(
           relative(workspaceRoot, absBuildFilePath)
         );
-        const buildDir = relative(workspaceRoot, absBuildDirPath);
+        const buildDir = normalizePath(
+          relative(workspaceRoot, absBuildDirPath)
+        );
 
         outputDirMap.set('build', `{workspaceRoot}/${buildDir}`);
-        outputDirMap.set(
-          'classes',
-          `{workspaceRoot}/${join(buildDir, 'classes')}`
-        );
+        outputDirMap.set('classes', `{workspaceRoot}/${buildDir}/classes`);
 
         gradleFileToOutputDirsMap.set(buildFile, outputDirMap);
         gradleFileToGradleProjectMap.set(buildFile, gradleProject);

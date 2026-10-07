@@ -11,11 +11,11 @@ import {
   runCLI as _runCLI,
   runCLIAsync,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
   getPackageManagerCommand,
   runCommand,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import { readPort } from './utils';
 
@@ -154,7 +154,7 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     // ========================================
     // Test 11: Run E2E tests (if configured)
     // ========================================
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       updateFile(
         `${shell}-e2e/src/integration/app.spec.ts`,
         stripIndents`

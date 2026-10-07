@@ -1,6 +1,7 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { readJson, Tree, updateJson } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { webpackInitGenerator } from './init';
@@ -10,6 +11,16 @@ describe('webpackInitGenerator', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      webpackInitGenerator(tree, { addPlugin: true })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]@parcel\/watcher['"]: false/
+    );
   });
 
   it('should install plugin, webpack, webpack-dev-server, and webpack-cli', async () => {

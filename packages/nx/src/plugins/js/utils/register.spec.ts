@@ -1,8 +1,11 @@
-import type { MockInstance } from 'vitest';
+import type { Mock, MockInstance } from 'vitest';
 import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
+import { join } from 'path';
+import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import {
   getTranspiler,
+  loadTsFile,
   getTsNodeCompilerOptions,
   isCjsSyntaxError,
   isNativeTypeStripError,
@@ -11,6 +14,7 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
   nodeNextEsmResolveHook,
+  registerTsConfigPaths,
   resolveTsNodeEsmCompilerOptions,
 } from './register';
 
@@ -21,6 +25,7 @@ import { createRequire, Module } from 'node:module';
 import {
   mockCjsModule,
   resetCjsMocks,
+  unmockCjsModule,
 } from '../../../internal-testing-utils/cjs-mock';
 {
   const req = createRequire(import.meta.url);
@@ -687,4 +692,77 @@ new Function('s', 'return import(s)')(process.argv[3]).then(
 
     expect(result).toEqual({ ok: true, url: configUrl, kind: 1 });
   }, 60_000);
+});
+
+describe('registerTsConfigPaths', () => {
+  let tempFs: TempFs;
+  let registerPaths: Mock;
+
+  beforeEach(() => {
+    tempFs = new TempFs('register-ts-config-paths', false);
+    // register.ts lazy-requires tsconfig-paths (CJS channel); replace it there.
+    // Stubbing `register` captures the baseUrl without installing a resolver hook.
+    registerPaths = vi.fn(() => () => {});
+    mockCjsModule(import.meta.url, 'tsconfig-paths', {
+      ...require('tsconfig-paths'),
+      register: registerPaths,
+    });
+  });
+
+  afterEach(() => {
+    unmockCjsModule(import.meta.url, 'tsconfig-paths');
+    tempFs.cleanup();
+  });
+
+  it('should resolve the baseUrl through an extends chain containing JSONC', () => {
+    tempFs.createFileSync(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: { '@lib/*': ['libs/*/src/index.ts'] },
+        },
+      })
+    );
+    tempFs.createFileSync(
+      'project/tsconfig.json',
+      `{
+  "extends": "../tsconfig.base.json",
+  /* a block comment */
+  "compilerOptions": {
+    // a line comment
+    "strictPropertyInitialization": false,
+  },
+}`
+    );
+
+    registerTsConfigPaths(join(tempFs.tempDir, 'project', 'tsconfig.json'));
+
+    expect(registerPaths).toHaveBeenCalledWith(
+      expect.objectContaining({ baseUrl: tempFs.tempDir })
+    );
+  });
+});
+
+describe('loadTsFile', () => {
+  it('should resolve NodeNext .js specifiers to .ts sources in an ESM package', () => {
+    const tempFs = new TempFs('nx-load-ts-file', false);
+    try {
+      tempFs.createFilesSync({
+        'package.json': '{ "type": "module" }',
+        'tsconfig.json': '{ "compilerOptions": { "module": "nodenext" } }',
+        'src/entry.ts':
+          "import { value } from './dep.js';\nexport default value;\n",
+        'src/dep.ts': 'export const value: number = 42;\n',
+      });
+
+      const loaded = loadTsFile<{ default: number }>(
+        join(tempFs.tempDir, 'src/entry.ts'),
+        join(tempFs.tempDir, 'tsconfig.json')
+      );
+      expect(loaded.default).toBe(42);
+    } finally {
+      tempFs.cleanup();
+    }
+  });
 });

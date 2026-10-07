@@ -66,14 +66,12 @@ export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
   validateOptions(options, tree);
 
-  const { token, aiAgentsCallback } = await generateWorkspaceFiles(
-    tree,
-    options
-  );
+  const { token, aiAgentsCallback, presetDependencies } =
+    await generateWorkspaceFiles(tree, options);
 
   options.nxCloudToken = token;
 
-  addPresetDependencies(tree, options);
+  addPresetDependencies(tree, options, presetDependencies);
 
   await formatFiles(tree);
 

@@ -46,6 +46,7 @@ describe('nx release releaseTag.pattern', () => {
 
   beforeEach(async () => {
     newProject({
+      keepBackup: true,
       packages: ['@nx/js'],
     });
 

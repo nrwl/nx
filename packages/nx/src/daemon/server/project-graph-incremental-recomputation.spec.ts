@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
@@ -32,65 +38,6 @@ vi.mock('../../utils/perf-logging', () => ({}));
 // every case stalls to the suite timeout; run with NX_ISOLATE_PLUGINS=false.
 // The first case additionally needs real watcher event delivery, which a
 // container filesystem does not provide, and fails there either way.
-
-describe('isKnownWorkspaceFile', () => {
-  let fs: TempFs;
-
-  beforeEach(() => {
-    fs = new TempFs('pgir-known-files');
-  });
-
-  afterEach(() => {
-    fs.cleanup();
-  });
-
-  it('answers membership from the committed ignore-filtered file map', async () => {
-    fs.createFilesSync({
-      'nx.json': JSON.stringify({}),
-      'package.json': JSON.stringify({ name: 'root' }),
-      '.nxignore': '.env\n',
-      '.env': 'A=1\n',
-      'libs/foo/project.json': JSON.stringify({
-        name: 'foo',
-        root: 'libs/foo',
-      }),
-      'libs/foo/src/index.ts': '',
-    });
-
-    vi.resetModules();
-    // The plugin-loader mocks vi.doMock installs in the tests above are
-    // registry-wide and outlive vi.resetModules.
-    vi.doUnmock('../../project-graph/plugins/get-plugins');
-    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
-    setWorkspaceRoot(fs.tempDir);
-
-    const {
-      getCachedSerializedProjectGraphPromise,
-      scheduleProjectGraphRecomputation,
-      isKnownWorkspaceFile,
-    } = await import('./project-graph-incremental-recomputation');
-
-    // Nothing is known before the first recompute commits a map; the caller
-    // (server.ts) then fails safe by invalidating.
-    expect(isKnownWorkspaceFile('package.json')).toBe(false);
-
-    const committed = await getCachedSerializedProjectGraphPromise();
-    expect(committed.error).toBeNull();
-
-    expect(isKnownWorkspaceFile('package.json')).toBe(true);
-    expect(isKnownWorkspaceFile('libs/foo/src/index.ts')).toBe(true);
-    // Ignored, so filtered out of the map (and never watched).
-    expect(isKnownWorkspaceFile('.env')).toBe(false);
-    expect(isKnownWorkspaceFile('never-existed.env')).toBe(false);
-
-    // A later commit replaces the map; membership must follow the new map,
-    // not a lookup structure built from the old one.
-    fs.createFileSync('libs/foo/src/other.ts', '');
-    scheduleProjectGraphRecomputation(['libs/foo/src/other.ts'], [], []);
-    await getCachedSerializedProjectGraphPromise();
-    expect(isKnownWorkspaceFile('libs/foo/src/other.ts')).toBe(true);
-  });
-});
 
 describe('invalidateGraphCache', () => {
   let fs: TempFs;
@@ -243,7 +190,7 @@ describe('pending dotenv replay before serving a graph', () => {
       getCachedSerializedProjectGraphPromise,
       registerProjectGraphRecomputationListener,
     } = await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -261,9 +208,9 @@ describe('pending dotenv replay before serving a graph', () => {
     }
 
     writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'PORT=4201\n');
-    // The outputs watcher is the only reporter of gitignored files. No
+    // The raw-event stream is the only reporter of gitignored files. No
     // graph is committed yet, so the event goes unclassified and is queued.
-    await handleOutputsChanges(null, [
+    await handleWatchEvents(null, [
       { path: 'libs/foo/.env.e2e', type: EventType.update },
     ]);
     releaseFirstRetrieve!();
@@ -357,7 +304,7 @@ describe('pending dotenv replay before serving a graph', () => {
       getCachedSerializedProjectGraphPromise,
       registerProjectGraphRecomputationListener,
     } = await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -377,7 +324,7 @@ describe('pending dotenv replay before serving a graph', () => {
     const first = getCachedSerializedProjectGraphPromise();
     await waitFor(() => aExit.reached, 'compute A to exit');
     writeFileSync(envPath, 'PORT=4201\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
     aExit.release();
 
     // A's drain chains to compute B, which reads an intermediate 4202
@@ -390,7 +337,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // Back to the drain-time bytes; this event is B's only chance to be
     // marked stale, and A committed a graph so it classifies directly.
     writeFileSync(envPath, 'PORT=4201\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
     bExit.release();
 
     const result = await first;
@@ -404,13 +351,13 @@ describe('pending dotenv replay before serving a graph', () => {
     expect(persisted).not.toContain('PORT=4202');
   });
 
-  // The outputs and workspace watchers deliver independently, so an edit to a
-  // NON-ignored dotenv file can reach the outputs callback first and sit in
-  // the pending queue while the workspace watcher has not scheduled anything
+  // The raw-event and file-change streams deliver independently, so an edit
+  // to a NON-ignored dotenv file can reach the raw-event handler first and sit
+  // in the pending queue while the file-change stream has not scheduled anything
   // yet. The drain must treat the queued evidence as decisive: membership in
-  // the file map proves the workspace watcher tracks the file, not that its
+  // the file map proves the file-change stream covers the file, not that its
   // recomputation was already scheduled.
-  it('chains for a queued edit of a tracked dotenv file the workspace watcher has not delivered yet', async () => {
+  it('chains for a queued edit of a tracked dotenv file the file-change stream has not delivered yet', async () => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -462,7 +409,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
     const { getCachedSerializedProjectGraphPromise } =
       await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { EventType } = await import('../../native');
 
     const first = getCachedSerializedProjectGraphPromise();
@@ -471,8 +418,8 @@ describe('pending dotenv replay before serving a graph', () => {
     }
 
     writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'PORT=4201\n');
-    // Only the outputs watcher delivers; the workspace watcher is silent.
-    await handleOutputsChanges(null, [
+    // Only the raw-event stream delivers; the file-change stream is silent.
+    await handleWatchEvents(null, [
       { path: 'libs/foo/.env.e2e', type: EventType.update },
     ]);
     releaseFirstRetrieve!();
@@ -485,7 +432,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
   // Once a computation has committed a graph and the file map, a tracked
   // dotenv edit classifies as invalidating on arrival, and the arrival path
-  // defers to the workspace watcher instead of invalidating. That deferral is
+  // defers to the file-change stream instead of invalidating. That deferral is
   // only sound for the cached graph: a successor already in flight may have
   // read the file before the edit, so the event must be queued for its
   // pre-serve replay rather than dropped.
@@ -553,7 +500,7 @@ describe('pending dotenv replay before serving a graph', () => {
       getCachedSerializedProjectGraphPromise,
       registerProjectGraphRecomputationListener,
     } = await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -574,15 +521,15 @@ describe('pending dotenv replay before serving a graph', () => {
     const first = getCachedSerializedProjectGraphPromise();
     await waitFor(() => aExit.reached, 'compute A to exit');
     writeFileSync(envPath, 'PORT=4201\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
     aExit.release();
 
     // A's drain chains to compute B, which reads 4201 and parks. A
     // committed its graph and file map, so this edit classifies as
-    // invalidating for a tracked file; only the outputs watcher delivers.
+    // invalidating for a tracked file; only the raw-event stream delivers.
     await waitFor(() => bExit.reached, 'compute B to exit');
     writeFileSync(envPath, 'PORT=4202\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
     bExit.release();
 
     const result = await first;
@@ -664,7 +611,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
     const { getCachedSerializedProjectGraphPromise } =
       await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { EventType } = await import('../../native');
 
     const first = getCachedSerializedProjectGraphPromise();
@@ -673,9 +620,9 @@ describe('pending dotenv replay before serving a graph', () => {
     }
 
     writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'MODE=good\n');
-    // Only the outputs watcher reports the gitignored file; no graph is
+    // Only the raw-event stream reports the gitignored file; no graph is
     // committed yet, so the event is queued.
-    await handleOutputsChanges(null, [
+    await handleWatchEvents(null, [
       { path: 'libs/foo/.env.e2e', type: EventType.update },
     ]);
     releaseFirstRetrieve!();
@@ -853,7 +800,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
     const { getCachedSerializedProjectGraphPromise, invalidateGraphCache } =
       await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -873,7 +820,7 @@ describe('pending dotenv replay before serving a graph', () => {
     const second = getCachedSerializedProjectGraphPromise();
     await waitFor(() => bExit.reached, 'compute B to exit');
     writeFileSync(envPath, 'PORT=4201\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
     bExit.release();
 
     // B's retry starts C, which reads an intermediate 4202 the watcher
@@ -884,7 +831,7 @@ describe('pending dotenv replay before serving a graph', () => {
     cEntry.release();
     await waitFor(() => cExit.reached, 'compute C to exit');
     writeFileSync(envPath, 'PORT=4201\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
     cExit.release();
 
     const result = await second;
@@ -898,12 +845,12 @@ describe('pending dotenv replay before serving a graph', () => {
   });
 
   // With the graph warm and no computation in flight, a tracked dotenv edit
-  // the outputs watcher delivers first queues without invalidating, and only
-  // the workspace watcher's later delivery schedules a recomputation. A
+  // the raw-event stream delivers first queues without invalidating, and only
+  // the file-change stream's later delivery schedules a recomputation. A
   // request landing inside that lag must not reuse the cached graph: the
   // queued evidence is classified against the exact graph the cache serves
   // and forces the recomputation the lagging watcher has not scheduled yet.
-  it('recomputes when a tracked dotenv edit reaches only the outputs watcher while the graph is warm', async () => {
+  it('recomputes when a tracked dotenv edit reaches only the raw-event stream while the graph is warm', async () => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -946,7 +893,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
     const { getCachedSerializedProjectGraphPromise } =
       await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -956,8 +903,8 @@ describe('pending dotenv replay before serving a graph', () => {
     expect(retrieveCallCount).toBe(1);
 
     writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'PORT=4201\n');
-    // Only the outputs watcher delivers; the workspace watcher is silent.
-    await handleOutputsChanges(null, [
+    // Only the raw-event stream delivers; the file-change stream is silent.
+    await handleWatchEvents(null, [
       { path: 'libs/foo/.env.e2e', type: EventType.update },
     ]);
 
@@ -1038,7 +985,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
     const { getCachedSerializedProjectGraphPromise } =
       await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -1053,7 +1000,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // Classifying this edit records the hash of the 4201 bytes and queues
     // the tracked path.
     writeFileSync(envPath, 'PORT=4201\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
 
     // The request finds the queued evidence and triggers compute B, which
     // reads an intermediate 4202 whose write the watcher never reports.
@@ -1067,7 +1014,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // event would be suppressed as a byte-identical rewrite and B would
     // serve the intermediate content.
     writeFileSync(envPath, 'PORT=4201\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
     bExit.release();
 
     const result = await second;
@@ -1148,7 +1095,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
     const { getCachedSerializedProjectGraphPromise } =
       await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -1164,7 +1111,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // gitignored, so the committed file map does not know it and the path
     // invalidates directly instead of queueing.
     writeFileSync(envPath, 'PORT=4301\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
 
     // The request finds no cached graph and triggers compute B, which reads
     // an intermediate 4302 whose write the watcher never reports.
@@ -1178,7 +1125,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // retained this event would be suppressed as a byte-identical rewrite
     // and B would serve the intermediate content.
     writeFileSync(envPath, 'PORT=4301\n');
-    await handleOutputsChanges(null, [envEvent]);
+    await handleWatchEvents(null, [envEvent]);
     bExit.release();
 
     const result = await second;
@@ -1265,7 +1212,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
     const { getCachedSerializedProjectGraphPromise } =
       await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -1288,7 +1235,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // the gitignored edit invalidates directly, forcing a successor.
     writeFileSync(trackedPath, 'KPORT=4301\n');
     writeFileSync(ignoredPath, 'UPORT=9001\n');
-    await handleOutputsChanges(null, [trackedEvent, ignoredEvent]);
+    await handleWatchEvents(null, [trackedEvent, ignoredEvent]);
 
     // The request finds no cached graph and triggers compute B, which reads
     // an intermediate 4302 whose write the watcher never reports.
@@ -1302,7 +1249,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // event would be suppressed as a byte-identical rewrite, and B's drain
     // would drop the earlier queued entry as safely pre-dating B.
     writeFileSync(trackedPath, 'KPORT=4301\n');
-    await handleOutputsChanges(null, [trackedEvent]);
+    await handleWatchEvents(null, [trackedEvent]);
     bExit.release();
 
     const result = await second;
@@ -1391,7 +1338,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
     const { getCachedSerializedProjectGraphPromise } =
       await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -1414,9 +1361,9 @@ describe('pending dotenv replay before serving a graph', () => {
     // tracked edit lands in a later callback, so its 4301 hash is recorded
     // after every handler-side clear has run.
     writeFileSync(ignoredPath, 'UPORT=9001\n');
-    await handleOutputsChanges(null, [ignoredEvent]);
+    await handleWatchEvents(null, [ignoredEvent]);
     writeFileSync(trackedPath, 'KPORT=4301\n');
-    await handleOutputsChanges(null, [trackedEvent]);
+    await handleWatchEvents(null, [trackedEvent]);
 
     // The request finds no cached graph and triggers compute B, which reads
     // an intermediate 4302 whose write the watcher never reports.
@@ -1430,7 +1377,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // this event would be suppressed as a byte-identical rewrite, and B's
     // drain would drop the earlier queued entry as safely pre-dating B.
     writeFileSync(trackedPath, 'KPORT=4301\n');
-    await handleOutputsChanges(null, [trackedEvent]);
+    await handleWatchEvents(null, [trackedEvent]);
     bExit.release();
 
     const result = await second;
@@ -1533,7 +1480,7 @@ describe('pending dotenv replay before serving a graph', () => {
 
     const { getCachedSerializedProjectGraphPromise } =
       await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { nxProjectGraph } =
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
@@ -1555,14 +1502,14 @@ describe('pending dotenv replay before serving a graph', () => {
     // The gitignored edit invalidates directly, so the request kicks
     // compute B, which parks while loading plugins.
     writeFileSync(ignoredPath, 'UPORT=9001\n');
-    await handleOutputsChanges(null, [ignoredEvent]);
+    await handleWatchEvents(null, [ignoredEvent]);
     const second = getCachedSerializedProjectGraphPromise();
     await waitFor(() => bPlugins.reached, 'compute B to load plugins');
 
     // The tracked edit is classified while B loads plugins: after B was
     // kicked, before B claims its generation and clears the hashes.
     writeFileSync(trackedPath, 'KPORT=4301\n');
-    await handleOutputsChanges(null, [trackedEvent]);
+    await handleWatchEvents(null, [trackedEvent]);
     bPlugins.release();
 
     // B claims and reads an intermediate 4302 the watcher never reports.
@@ -1574,7 +1521,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // Back to the classified bytes; a hash surviving B's claim would
     // suppress this event and let B serve the intermediate content.
     writeFileSync(trackedPath, 'KPORT=4301\n');
-    await handleOutputsChanges(null, [trackedEvent]);
+    await handleWatchEvents(null, [trackedEvent]);
     bExit.release();
 
     const result = await second;
@@ -1679,7 +1626,7 @@ describe('pending dotenv replay before serving a graph', () => {
       getCachedSerializedProjectGraphPromise,
       scheduleProjectGraphRecomputation,
     } = pgir;
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { EventType } = await import('../../native');
 
     const waitFor = waitForIn(ctx);
@@ -1689,7 +1636,7 @@ describe('pending dotenv replay before serving a graph', () => {
     const first = getCachedSerializedProjectGraphPromise();
     await waitFor(() => aPark.reached, 'compute A to park');
 
-    // The workspace watcher delivers a new project; the winning compute
+    // The file-change stream delivers a new project; the winning compute
     // builds the graph the cache will serve, with bar as a root.
     mkdirSync(join(fs.tempDir, 'libs/bar'), { recursive: true });
     writeFileSync(
@@ -1706,11 +1653,11 @@ describe('pending dotenv replay before serving a graph', () => {
     await first;
     expect(pgir.currentProjectGraph.nodes.bar).toBeUndefined();
 
-    // A gitignored dotenv edit under bar: only the outputs watcher
+    // A gitignored dotenv edit under bar: only the raw-event stream
     // reports it, and against the overwritten currentProjectGraph the
     // path classifies under no root, so it queues.
     writeFileSync(join(fs.tempDir, 'libs/bar/.env.e2e'), 'PORT=7777\n');
-    await handleOutputsChanges(null, [
+    await handleWatchEvents(null, [
       { path: 'libs/bar/.env.e2e', type: EventType.update },
     ]);
 
@@ -1721,12 +1668,12 @@ describe('pending dotenv replay before serving a graph', () => {
     expect(retrieveCallCount).toBe(countBeforeThird + 1);
   });
 
-  // When the workspace watcher delivers the tracked edit too, its
+  // When the file-change stream delivers the tracked edit too, its
   // recomputation alone must satisfy a request racing it: the queued twin
   // event describes an edit that recomputation's read already observes, so
   // the reuse check must neither discard the in-flight computation nor force
   // a second one after it settles.
-  it('does not add a recomputation when the workspace watcher schedules one for the same edit', async (ctx) => {
+  it('does not add a recomputation when the file-change stream schedules one for the same edit', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -1805,7 +1752,7 @@ describe('pending dotenv replay before serving a graph', () => {
       getCachedSerializedProjectGraphPromise,
       scheduleProjectGraphRecomputation,
     } = await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { EventType } = await import('../../native');
 
     const waitFor = waitForIn(ctx);
@@ -1818,7 +1765,7 @@ describe('pending dotenv replay before serving a graph', () => {
     writeFileSync(envPath, 'PORT=4201\n');
     // Outputs watcher first: the event queues. Workspace watcher second:
     // the recomputation it schedules reads the new content.
-    await handleOutputsChanges(null, [
+    await handleWatchEvents(null, [
       { path: 'libs/foo/.env.e2e', type: EventType.update },
     ]);
     scheduleProjectGraphRecomputation([], ['libs/foo/.env.e2e'], []);
@@ -1898,7 +1845,7 @@ describe('pending dotenv replay before serving a graph', () => {
       registerProjectGraphRecomputationListener,
       scheduleProjectGraphRecomputation,
     } = await import('./project-graph-incremental-recomputation');
-    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { handleWatchEvents } = await import('./handle-watch-events');
     const { EventType } = await import('../../native');
 
     const notifiedGraphs: import('../../config/project-graph').ProjectGraph[] =
@@ -1915,11 +1862,11 @@ describe('pending dotenv replay before serving a graph', () => {
     expect(retrieveCallCount).toBe(1);
 
     // A gitignored dotenv file under a directory that is not a project
-    // root yet: only the outputs watcher reports it, and no root of the
+    // root yet: only the raw-event stream reports it, and no root of the
     // served graph classifies it.
     mkdirSync(join(fs.tempDir, 'libs/bar'), { recursive: true });
     writeFileSync(join(fs.tempDir, 'libs/bar/.env.e2e'), 'PORT=7777\n');
-    await handleOutputsChanges(null, [
+    await handleWatchEvents(null, [
       { path: 'libs/bar/.env.e2e', type: EventType.update },
     ]);
 
@@ -1927,7 +1874,7 @@ describe('pending dotenv replay before serving a graph', () => {
     expect(second.projectGraph.nodes.bar).toBeUndefined();
     expect(retrieveCallCount).toBe(1);
 
-    // The project lands; the workspace watcher schedules the computation
+    // The project lands; the file-change stream schedules the computation
     // that knows the root, and its read observes the dotenv content.
     writeFileSync(
       join(fs.tempDir, 'libs/bar/project.json'),

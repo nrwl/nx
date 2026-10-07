@@ -15,6 +15,11 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { fork } from 'child_process';
+import {
+  followsDeletesAndMovesUnderAGitignoredDirectory,
+  hashesAGeneratedInputAfterTheTaskThatWritesIt,
+  hashesGitignoredFilesFromAnIncludeIgnoredFileset,
+} from './include-ignored-cache-utils';
 
 import { readdir, stat } from 'fs/promises';
 
@@ -22,7 +27,10 @@ import { join } from 'path';
 
 describe('cache', () => {
   beforeEach(() =>
-    newProject({ packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'] })
+    newProject({
+      keepBackup: true,
+      packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'],
+    })
   );
 
   afterEach(() => cleanupProject());
@@ -256,11 +264,11 @@ describe('cache', () => {
     // Create a file in the dist that does not match output glob
     updateFile('dist/apps/c.ts', '');
 
-    // Rerun. Outputs were modified (extra file in dist), so the daemon's
-    // outputs-hash check fails and nx restores from cache → "[local cache]"
-    // rather than the "existing outputs match" no-op path.
+    // Rerun. The new file is not an output, so the outputs still match.
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
-    expect(rerunWithNewUnrelatedFile).toContain('local cache');
+    expect(rerunWithNewUnrelatedFile).toContain(
+      'existing outputs match the cache'
+    );
     const outputsAfterAddingUntouchedFileAndRerunning = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -454,6 +462,26 @@ console.log('Build complete');
       'read the output from the cache'
     );
   }, 120000);
+
+  describe('includeIgnored filesets', () => {
+    it(
+      'should hash gitignored files declared through an includeIgnored fileset',
+      () => hashesGitignoredFilesFromAnIncludeIgnoredFileset(runCLI),
+      120000
+    );
+
+    it(
+      'should hash a generated input after the task that writes it',
+      () => hashesAGeneratedInputAfterTheTaskThatWritesIt(runCLI),
+      120000
+    );
+
+    it(
+      'should follow deletes and moves under a gitignored directory',
+      () => followsDeletesAndMovesUnderAGitignoredDirectory(runCLI),
+      120000
+    );
+  });
 
   it('should support dependency filesets with ^{projectRoot} syntax', async () => {
     const parent = uniq('parent');

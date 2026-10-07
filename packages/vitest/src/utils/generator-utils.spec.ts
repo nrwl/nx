@@ -11,8 +11,8 @@ import {
   createOrEditViteConfig,
 } from './generator-utils';
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  isUsingTsSolutionSetup: jest.fn(() => false),
+vi.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  isUsingTsSolutionSetup: vi.fn(() => false),
 }));
 
 describe('createOrEditViteConfig', () => {

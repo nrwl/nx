@@ -45,6 +45,7 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
 
 type LocalDependencyProject = {
   projectName: string;
+  projectRoot: string;
 };
 
 // Cache at the module level to avoid re-detecting the package manager for each instance
@@ -356,6 +357,18 @@ export default class JsVersionActions extends VersionActions {
                   resolveVersion
                 );
               } catch (error) {
+                if (
+                  this.shouldPreserveUnconfiguredPrivateDevDependency(
+                    tree,
+                    json,
+                    depType,
+                    dependencyName,
+                    targetProject,
+                    error
+                  )
+                ) {
+                  continue;
+                }
                 const message =
                   error instanceof Error ? error.message : String(error);
                 throw new Error(
@@ -432,10 +445,50 @@ export default class JsVersionActions extends VersionActions {
       if (!packageName) {
         continue;
       }
-      lookup.set(packageName, { projectName });
+      lookup.set(packageName, {
+        projectName,
+        projectRoot: node.data.root,
+      });
     }
     localDependencyProjectsByGraph.set(projectGraph, lookup);
     return lookup;
+  }
+
+  private shouldPreserveUnconfiguredPrivateDevDependency(
+    tree: Tree,
+    manifest: {
+      dependencies?: Record<string, string>;
+      peerDependencies?: Record<string, string>;
+      optionalDependencies?: Record<string, string>;
+    },
+    dependencyType: string,
+    dependencyName: string,
+    targetProject: LocalDependencyProject,
+    error: unknown
+  ): boolean {
+    if (
+      dependencyType !== 'devDependencies' ||
+      (error as { code?: unknown } | null | undefined)?.code !==
+        'NX_RELEASE_PROJECT_NOT_CONFIGURED' ||
+      [
+        manifest.dependencies,
+        manifest.peerDependencies,
+        manifest.optionalDependencies,
+      ].some((dependencies) => dependencies?.[dependencyName] !== undefined)
+    ) {
+      return false;
+    }
+
+    const targetManifestPath = join(targetProject.projectRoot, 'package.json');
+    if (!tree.exists(targetManifestPath)) {
+      return false;
+    }
+
+    try {
+      return readJson(tree, targetManifestPath).private === true;
+    } catch {
+      return false;
+    }
   }
 
   private async resolveLocalDependencySpecifier(

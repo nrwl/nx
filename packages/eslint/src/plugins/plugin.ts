@@ -180,16 +180,24 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     const lockFilePattern = getLockFileName(
       detectPackageManager(context.workspaceRoot)
     );
+    const configDirectories = eslintConfigFiles.map((config) =>
+      normalize(dirname(config))
+    );
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       options,
       context,
       projectRoots.map((root) => {
-        const parentConfigs = eslintConfigFiles.filter((eslintConfig) =>
-          isSubDir(root, dirname(eslintConfig))
+        const normalizedRoot = normalize(root);
+        const prefix = normalizedRoot.endsWith(sep)
+          ? normalizedRoot
+          : normalizedRoot + sep;
+        const descendantConfigs = eslintConfigFiles.filter(
+          (_, index) =>
+            root === '.' || configDirectories[index].startsWith(prefix)
         );
         return [
-          ...parentConfigs,
+          ...descendantConfigs,
           join(root, '.eslintignore'),
           lockFilePattern,
           ...(tsconfigChainsByProjectRoot.get(root) ?? []),
@@ -530,24 +538,4 @@ function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
   }
 
   return normalizedOptions;
-}
-
-/**
- * Determines if `child` is a subdirectory of `parent`. This is a simplified
- * version that takes into account that paths are always relative to the
- * workspace root.
- */
-function isSubDir(parent: string, child: string): boolean {
-  if (parent === '.') {
-    return true;
-  }
-
-  parent = normalize(parent);
-  child = normalize(child);
-
-  if (!parent.endsWith(sep)) {
-    parent += sep;
-  }
-
-  return child.startsWith(parent);
 }

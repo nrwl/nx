@@ -36,7 +36,6 @@ import {
   isMonorepo,
   printFinalMessage,
   readErrorStderr,
-  setNeverConnectToCloud,
   toErrorString,
   updateGitIgnore,
 } from './implementation/utils';
@@ -493,8 +492,6 @@ async function runInit(
   }
   if (nxCloudChoice === 'yes') {
     await initCloud('nx-init');
-  } else if (nxCloudChoice === 'never') {
-    setNeverConnectToCloud(repoRoot);
   }
 
   const analyticsPrompt = await ensureAnalyticsPreferenceSet(

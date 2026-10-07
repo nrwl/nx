@@ -16,8 +16,7 @@ for (const doc of await getCollection('plugin-docs')) {
   pages[doc.data.slug] = doc;
 }
 
-export const { getStaticPaths, GET } = OGImageRoute({
-  param: 'route',
+export const { getStaticPaths, GET } = await OGImageRoute({
   pages,
   getImageOptions: (path, page) => {
     return {

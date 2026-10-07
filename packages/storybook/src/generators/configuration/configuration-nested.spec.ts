@@ -5,6 +5,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import configurationGenerator from './configuration';
@@ -12,9 +13,9 @@ import * as workspaceConfiguration from './test-configs/root-workspace-configura
 import { storybookVersion } from '../../utils/versions';
 
 // nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
+vi.mock('nx/src/project-graph/project-graph', async () => ({
+  ...(await vi.importActual<any>('nx/src/project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
@@ -76,10 +77,11 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
         },
       });
 
-      jest.resetModules();
-      jest.doMock('storybook/package.json', () => ({
+      vi.resetModules();
+      // getInstalledStorybookVersion `require`s this, which `vi.doMock` cannot reach.
+      mockCjsModule(import.meta.url, 'storybook/package.json', {
         version: storybookVersion,
-      }));
+      });
     });
 
     it('should generate files for root app - js for tsConfiguration: false', async () => {

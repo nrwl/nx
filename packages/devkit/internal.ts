@@ -11,6 +11,9 @@ export {
   resolvePrompt,
   PromptResolutionError,
   acknowledgeBuildScripts,
+  createCliOptions,
+  createOverrides,
+  isAiAgent,
   // getCatalogManager takes the barrel route here because this file *is*
   // @nx/devkit/internal — first-party consumers only, released in lockstep. Its
   // class-1 siblings in packages/devkit/src/utils/ (semver.ts, package-json.ts)
@@ -85,10 +88,13 @@ export { addPlugin } from './src/utils/add-plugin';
 export {
   getDeclaredPackageVersion,
   getInstalledPackageVersion,
+  getInstalledPackageVersionFromTree,
 } from './src/utils/installed-version';
 export {
   assertSupportedInstalledPackageVersion,
   assertSupportedPackageVersion,
+  getResolvedPackageVersion,
+  getSatisfyingInstalledPackageVersion,
 } from './src/utils/version-floor';
 export {
   createAsyncIterable,
@@ -100,6 +106,10 @@ export {
   calculateHashesForCreateNodes,
 } from './src/utils/calculate-hash-for-create-nodes';
 export { loadConfigFile, clearRequireCache } from './src/utils/config-utils';
+export {
+  isRequireEsmRaceError,
+  retryOnRequireEsmRace,
+} from './src/utils/require-esm-race';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';

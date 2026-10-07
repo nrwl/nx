@@ -4,6 +4,8 @@ The `@nx/angular:application` and `@nx/angular:unit-test` executors load the Ang
 
 Executor usage is detected on any target using `@nx/angular:application`, `@nx/angular:unit-test`, or an `@angular/build:*` executor. Targets that inherit their executor from an `nx.json` `targetDefaults` entry are detected too.
 
+On pnpm 11 and above, the migration also writes `pnpm-workspace.yaml`. `@angular/build` reaches four packages that run a build script on install (`esbuild`, `lmdb`, `msgpackr-extract` and `@parcel/watcher`), and pnpm 11 refuses to install a package whose script is neither allowed nor denied, so the migration records an `allowBuilds` decision for each. A decision already in the file is left untouched.
+
 #### Examples
 
 ##### `project.json`
@@ -28,7 +30,7 @@ After (`package.json`):
 // package.json
 {
   "devDependencies": {
-    "@angular/build": "~22.0.4",
+    "@angular/build": "~22.1.0",
   },
 }
 ```

@@ -25,6 +25,7 @@ import {
   pmExecPrefix,
   pmInstallCommand,
   recordInstallLanded,
+  runMigrationsFlag,
   summarizeError,
 } from './util';
 import {
@@ -48,6 +49,7 @@ function runState(step: Partial<MigrateStep> = {}): MigrateRunState {
       {
         id: 'step-1',
         roundIndex: 0,
+        kind: 'migration',
         migrationId: '@nx/js:gen',
         status: 'dispensed',
         attempt: 1,
@@ -133,6 +135,38 @@ describe('installDepsChangedSinceDispense', () => {
     expect(mockRunInstall).toHaveBeenCalledTimes(1);
   });
 
+  it('hands the output sink to the install and to the skip notice', async () => {
+    mockReadPackageJsonDeps.mockReturnValue('{"a":1}');
+    const baseline = depsHash('/ws');
+    mockReadPackageJsonDeps.mockReturnValue('{"a":2}');
+    const sink = { notice: vi.fn(), line: vi.fn(), raw: vi.fn() };
+
+    await installDepsChangedSinceDispense(
+      '/ws',
+      dir,
+      seed({ depsHashAtDispense: baseline }),
+      false,
+      'rerun',
+      sink
+    );
+    await installDepsChangedSinceDispense(
+      '/ws',
+      dir,
+      seed({ depsHashAtDispense: baseline }),
+      true,
+      'rerun',
+      sink
+    );
+
+    expect(mockRunInstall).toHaveBeenCalledWith(
+      '/ws',
+      'post-migration',
+      'rerun',
+      sink
+    );
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws', sink);
+  });
+
   it('installs nothing when the dependencies match the baseline', async () => {
     mockReadPackageJsonDeps.mockReturnValue('{"a":1}');
 
@@ -164,7 +198,7 @@ describe('installDepsChangedSinceDispense', () => {
     await installDepsChangedSinceDispense('/ws', dir, seed({}), true);
 
     expect(mockRunInstall).not.toHaveBeenCalled();
-    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws');
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws', undefined);
   });
 
   it('installs when the probe fails rather than reading the failure as unchanged', async () => {
@@ -197,7 +231,7 @@ describe('installDepsChangedSinceDispense', () => {
     );
 
     expect(mockRunInstall).not.toHaveBeenCalled();
-    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws');
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws', undefined);
   });
 
   it('re-points the baseline once the install lands so the next actor does not repeat it', async () => {
@@ -348,4 +382,47 @@ describe('summarizeError', () => {
     expect(summary).toHaveLength(200);
     expect(summary.endsWith('...')).toBe(true);
   });
+});
+
+describe('runMigrationsFlag', () => {
+  const originalPlatform = process.platform;
+  const setPlatform = (platform: NodeJS.Platform) =>
+    Object.defineProperty(process, 'platform', { value: platform });
+  afterEach(() => setPlatform(originalPlatform));
+
+  it('leaves the default path implicit', () => {
+    expect(runMigrationsFlag('migrations.json')).toBe('--run-migrations');
+  });
+
+  it('quotes the whole argument for a POSIX shell when the path has a space', () => {
+    setPlatform('linux');
+    expect(runMigrationsFlag('tools/my migrations.json')).toBe(
+      "'--run-migrations=tools/my migrations.json'"
+    );
+  });
+
+  it('renders a plain path bare on Windows', () => {
+    setPlatform('win32');
+    expect(runMigrationsFlag('tools/migrations.json')).toBe(
+      '--run-migrations=tools/migrations.json'
+    );
+  });
+
+  it.each([
+    ['a space', 'tools/my migrations.json'],
+    ['a cmd variable', '%USERPROFILE%/migrations.json'],
+    ['a caret', 'tools/^x.json'],
+  ])('renders no flag on Windows when the path has %s', (_case, path) => {
+    setPlatform('win32');
+    expect(runMigrationsFlag(path)).toBeNull();
+  });
+
+  // U+0085 is outside `\s`, so on Windows only the line-break check rejects it.
+  it.each<NodeJS.Platform>(['linux', 'win32'])(
+    'renders no flag on %s when the path has a line terminator',
+    (platform) => {
+      setPlatform(platform);
+      expect(runMigrationsFlag('tools/a\u0085b.json')).toBeNull();
+    }
+  );
 });

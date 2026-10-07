@@ -5,11 +5,11 @@ import type { ProjectGraph } from '../../../config/project-graph';
 import { sendMessage } from '../../../daemon/socket-utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
+import type { MaybeStubbedPostTasksExecutionContext } from '../task-results-stub';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
   CreateNodesContext,
-  PostTasksExecutionContext,
   PreTasksExecutionContext,
 } from '../public-api';
 import type {
@@ -126,7 +126,7 @@ type PluginMessageDefs = DefineMessages<{
 
   postTasksExecution: {
     payload: {
-      context: PostTasksExecutionContext;
+      context: MaybeStubbedPostTasksExecutionContext;
     };
     result:
       | {

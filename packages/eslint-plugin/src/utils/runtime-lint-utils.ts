@@ -457,6 +457,17 @@ export function hasBuildExecutor(
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]dist[\/\\]bin[\/\\]run-executor\.js$/;
+// ESLint's multithreaded mode (`--concurrency`, or the `concurrency` option on
+// the `ESLint` class) lints in worker threads, where Node sets argv[1] to the
+// worker script instead of the eslint binary. Without this, ESLINT_REGEX does
+// not match and `ensureGlobalProjectGraph` (project-graph-utils.ts) re-reads the
+// whole project graph for every linted file. Unlike the language-server cases
+// below, this stays safe when the parent is long-lived: ESLint starts workers
+// per `lintFiles()` call and that call ends when they terminate, so the memo
+// cannot outlive a single lint run.
+const ESLINT_WORKER_REGEX =
+  /node_modules.*[\/\\]eslint[\/\\]lib[\/\\]eslint[\/\\]worker\.js$/;
+
 // `@nx/oxlint` runs this rule through Oxlint's JS-plugin bridge, where argv[1]
 // is `node_modules/oxlint/bin/oxlint`. Without this, `ensureGlobalProjectGraph`
 // (project-graph-utils.ts) never memoizes and every linted file re-reads the
@@ -477,6 +488,7 @@ export function isTerminalRun(): boolean {
     (!!process.argv[1].match(NRWL_CLI_REGEX) ||
       !!process.argv[1].match(JEST_REGEX) ||
       !!process.argv[1].match(ESLINT_REGEX) ||
+      !!process.argv[1].match(ESLINT_WORKER_REGEX) ||
       isOxlintTerminalRun(process.argv) ||
       !!process.argv[1].endsWith('/bin/jest.js'))
   );

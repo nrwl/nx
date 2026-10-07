@@ -4,13 +4,13 @@ import {
   readFile,
   reservePort,
   runCLI,
-  runE2ETests,
   cleanupProject,
   newProject,
   removeFile,
   tmpProjPath,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('React Playwright e2e tests', () => {
@@ -96,7 +96,7 @@ describe('React Playwright e2e tests', () => {
   });
 
   it('should execute e2e tests using playwright', async () => {
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
@@ -105,7 +105,7 @@ describe('React Playwright e2e tests', () => {
   });
 
   it('lets Playwright reuse the server the readiness gate waited for instead of starting its own', async () => {
-    if (!(await runE2ETests('playwright'))) {
+    if (!(await shouldRunPlaywrightTests())) {
       return;
     }
     const e2eProject = `${appName}-e2e`;
@@ -191,7 +191,7 @@ describe('React Playwright e2e tests', () => {
     `
     );
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`

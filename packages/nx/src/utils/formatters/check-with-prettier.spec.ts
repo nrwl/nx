@@ -8,15 +8,15 @@ import { checkWithPrettier } from './prettier';
 // exit code, and must never be read as success.
 vi.mock('node:child_process', async () => ({
   ...require('node:child_process'),
-  exec: vi.fn(),
+  execFile: vi.fn(),
 }));
 
-import { exec } from 'node:child_process';
+import { execFile } from 'node:child_process';
 
 describe('checkWithPrettier', () => {
   function respondWith(error: unknown, stdout = '') {
-    (exec as Mock).mockImplementation(
-      (_cmd: string, _opts: unknown, callback: Function) => {
+    (execFile as Mock).mockImplementation(
+      (_file: string, _args: string[], _opts: unknown, callback: Function) => {
         callback(error, stdout);
         return {};
       }
@@ -24,7 +24,7 @@ describe('checkWithPrettier', () => {
   }
 
   afterEach(() => {
-    (exec as Mock).mockReset();
+    (execFile as Mock).mockReset();
   });
 
   it('reports nothing to fix when prettier exits 0', async () => {
@@ -59,7 +59,7 @@ describe('checkWithPrettier', () => {
 
   it('rejects when prettier exits non-zero without output', async () => {
     // No file list means prettier failed rather than found differences - an
-    // unreadable config, a file it cannot parse. `exec` hands back a real
+    // unreadable config, a file it cannot parse. `execFile` hands back a real
     // Error, and this branch rejects with it untouched.
     respondWith(
       Object.assign(new Error('No parser could be inferred'), { code: 2 }),

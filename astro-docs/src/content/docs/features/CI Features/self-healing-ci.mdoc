@@ -33,7 +33,7 @@ If you haven't already connected to Nx Cloud, run the following command:
 npx nx@latest connect
 ```
 
-{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=website&utm_campaign=self-healing-ci" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
+{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=self-healing-ci" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
 For the full pipeline walkthrough, see [Setting Up CI](/docs/getting-started/setup-ci).
 
@@ -51,7 +51,7 @@ See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config) fo
 ```yaml
 # .nx/ci-config.yaml
 dte:
-  distribute-on: 3 linux-medium-js
+  distribute-on: 3 linux-large-js
 lifecycle:
   stop-after:
     - lint
@@ -402,6 +402,16 @@ After your CI runs, navigate to the CIPE, then the **Configurations** tab to see
 - What the final, effective configuration was
 
 ---
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Enable AI features" description="Turn on AI features for your Nx Cloud organization" href="/docs/kb/enable-ai-features" /%}
+
+{% linkcard title="Bring your own AI API key" description="Use your own model provider key for self-healing CI" href="/docs/kb/bring-your-own-ai-api-key" /%}
+
+{% /cardgrid %}
 
 ## Learn more
 

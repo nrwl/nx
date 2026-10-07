@@ -4,8 +4,8 @@ import {
   newProject,
   reservePort,
   runCLI,
-  runE2ETests,
   uniq,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 
 let proj: string;
@@ -53,7 +53,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint e2e`)).not.toThrow();
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       expect(() => runCLI(`e2e e2e`)).not.toThrow();
     }
   });

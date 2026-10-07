@@ -17,8 +17,7 @@ export type NxCloud =
   | 'azure'
   | 'bitbucket-pipelines'
   | 'circleci'
-  | 'skip'
-  | 'never';
+  | 'skip';
 
 export async function connectToNxCloudForTemplate(
   directory: string,
@@ -160,13 +159,4 @@ export async function openCloudSetupUrl(connectUrl: string): Promise<void> {
   } catch {
     // Fail gracefully — the URL is already displayed in the terminal banner
   }
-}
-
-export function setNeverConnectToCloud(directory: string): void {
-  const { readFileSync, writeFileSync } = require('fs');
-  const { join } = require('path');
-  const nxJsonPath = join(directory, 'nx.json');
-  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
-  nxJson.neverConnectToCloud = true;
-  writeFileSync(nxJsonPath, JSON.stringify(nxJson, null, 2) + '\n');
 }

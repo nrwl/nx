@@ -7,9 +7,9 @@ import {
   reservePort,
   runCLI,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 
@@ -53,7 +53,7 @@ describe('Webpack Plugin (legacy)', () => {
     // TODO: figure out why this test hangs in CI (maybe down to sudo prompt?)
     // expect(() => runCLI(`build ${appName}`)).not.toThrow();
 
-    // if (await runE2ETests()) {
+    // if (await shouldRunCypressTests()) {
     //   runCLI(`e2e ${appName}-e2e --watch=false --verbose`);
     // }
   }, 500_000);
@@ -121,8 +121,11 @@ describe('Webpack Plugin (legacy)', () => {
 
   it('should support standard webpack config with executors', async () => {
     const appName = uniq('app');
+    // Reserved so a parallel suite serving the default 4200 cannot answer the
+    // e2e run: the generated Playwright config reuses any server on its URL.
+    const port = await reservePort();
     runCLI(
-      `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=jest --linter=eslint`
+      `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=jest --linter=eslint --port=${port}`
     );
     updateFile(
       `${appName}/src/main.ts`,
@@ -155,7 +158,7 @@ describe('Webpack Plugin (legacy)', () => {
       runCLI(`build ${appName} --outputHashing none`);
     }).not.toThrow();
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       expect(() => {
         runCLI(`e2e ${appName}-e2e`);
       }).not.toThrow();
@@ -165,8 +168,9 @@ describe('Webpack Plugin (legacy)', () => {
   describe('ConvertConfigToWebpackPlugin,', () => {
     it('should convert withNx webpack config to a standard config using NxWebpackPlugin', async () => {
       const appName = 'app3224373'; // Needs to be reserved so that the snapshot projectName matches
+      const port = await reservePort();
       runCLI(
-        `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=vitest --linter=eslint`
+        `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=vitest --linter=eslint --port=${port}`
       );
       updateFile(
         `${appName}/src/main.ts`,
@@ -182,9 +186,16 @@ describe('Webpack Plugin (legacy)', () => {
         `generate @nx/webpack:convert-config-to-webpack-plugin --project ${appName}`
       );
 
-      const webpackConfig = readFile(`${appName}/webpack.config.js`);
-      const oldWebpackConfig = readFile(`${appName}/webpack.config.old.js`);
-      const projectJSON = readFile(`${appName}/project.json`);
+      // The reserved port differs per run; keep it out of the snapshots.
+      const withoutPort = (contents: string) =>
+        contents.replace(new RegExp(`\\b${port}\\b`, 'g'), '<port>');
+      const webpackConfig = withoutPort(
+        readFile(`${appName}/webpack.config.js`)
+      );
+      const oldWebpackConfig = withoutPort(
+        readFile(`${appName}/webpack.config.old.js`)
+      );
+      const projectJSON = withoutPort(readFile(`${appName}/project.json`));
 
       expect(webpackConfig).toMatchSnapshot();
       expect(projectJSON).toMatchSnapshot(); // This file should be updated adding standardWebpackConfigFunction: true
@@ -195,7 +206,7 @@ describe('Webpack Plugin (legacy)', () => {
         runCLI(`build ${appName}`);
       }).not.toThrow();
 
-      if (await runE2ETests()) {
+      if (await shouldRunPlaywrightTests()) {
         expect(() => {
           runCLI(`e2e ${appName}-e2e`);
         }).not.toThrow();

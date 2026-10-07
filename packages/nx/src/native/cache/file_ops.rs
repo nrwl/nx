@@ -1,8 +1,27 @@
+use std::cmp;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::thread::available_parallelism;
 use std::{fs, io};
 
 use fs_extra::error::ErrorKind;
+use rayon::prelude::*;
 use tracing::{debug, trace};
+
+/// Pool for copying the entries of a directory tree in parallel, kept apart
+/// from the global rayon pool. A third of the available parallelism and never
+/// fewer than two threads, as `workspace/files_hashing.rs` sizes its hashing:
+/// the copy is bound by per-file latency, and more threads than that only
+/// contend in the filesystem.
+static COPY_POOL: LazyLock<rayon::ThreadPool> = LazyLock::new(|| {
+    let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num_parallelism)
+        .thread_name(|i| format!("nx-copy-{i}"))
+        .build()
+        .expect("failed to build the copy thread pool")
+});
 
 #[napi]
 pub fn remove(src: String) -> anyhow::Result<()> {
@@ -24,12 +43,24 @@ where
     _copy_impl(src.as_ref(), dest.as_ref(), None)
 }
 
+/// The source and destination of each file or link a copy wrote.
+pub(crate) type Written = Vec<(PathBuf, PathBuf)>;
+
+pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::Result<i64> {
+    Ok(copy_and_list(src, dest, boundary)?.0)
+}
+
 /// Copy `src` to `dest`.
 ///
 /// With `boundary = Some(root)` the copy is confined to `root` (cache restore):
 /// parents are realized as real dirs (any symlink under `root` is replaced) and
 /// existing entries are removed, not written through. `None` keeps the original.
-pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::Result<i64> {
+/// Returns the bytes copied and what was written.
+pub(crate) fn copy_and_list(
+    src: &Path,
+    dest: &Path,
+    boundary: Option<&Path>,
+) -> anyhow::Result<(i64, Written)> {
     let dest: PathBuf = remove_trailing_single_dot(dest);
     let dest_parent = dest.parent().unwrap_or(&dest);
     let src: PathBuf = src.into();
@@ -55,21 +86,22 @@ pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::R
     // target's contents in). The link is recreated verbatim even if it points
     // outside the workspace — it is only a pointer, and we never write *through*
     // a symlink (create_dir_all_within realizes parents as real directories).
-    let size = if src.is_symlink() {
+    let (size, written) = if src.is_symlink() {
         trace!("Copying symlink: {:?}", &src);
         remove_existing_symlink(&dest)?;
         symlink(fs::read_link(&src)?, &dest)?;
-        0
+        (0, vec![(src.clone(), dest.clone())])
     } else if src.is_dir() {
         trace!("Copying directory: {:?}", &src);
         copy_dir_all(&src, &dest, boundary).map_err(anyhow::Error::new)?
     } else {
         trace!("Copying file: {:?}", &src);
-        fs::copy(&src, &dest)?
+        let size = fs::copy(&src, &dest)?;
+        (size, vec![(src.clone(), dest.clone())])
     };
 
     debug!("Copy completed: {:?} -> {:?} ({} bytes)", &src, &dest, size);
-    Ok(size as i64)
+    Ok((size as i64, written))
 }
 
 /// Create `dir` and missing ancestors without traversing a symlink at or below
@@ -122,8 +154,9 @@ pub fn copy_outputs_into_workspace(
     workspace_root: &Path,
     outputs_path: &Path,
     expanded_outputs: &[String],
-) -> anyhow::Result<i64> {
+) -> anyhow::Result<(i64, Written)> {
     let mut size = 0;
+    let mut written = vec![];
     for output in expanded_outputs {
         let from = outputs_path.join(output);
         // Only restore entries the artifact actually contains.
@@ -132,9 +165,11 @@ pub fn copy_outputs_into_workspace(
             continue;
         }
         let to = workspace_root.join(output);
-        size += _copy_impl(&from, &to, Some(workspace_root))?;
+        let (copied, wrote) = copy_and_list(&from, &to, Some(workspace_root))?;
+        size += copied;
+        written.extend(wrote);
     }
-    Ok(size)
+    Ok((size, written))
 }
 
 fn remove_trailing_single_dot(path: impl AsRef<Path>) -> PathBuf {
@@ -182,65 +217,81 @@ fn copy_dir_all(
     src: impl AsRef<Path>,
     dst: impl AsRef<Path>,
     boundary: Option<&Path>,
-) -> io::Result<u64> {
-    trace!("Creating directory: {:?}", dst.as_ref());
+) -> io::Result<(u64, Written)> {
+    let src = src.as_ref();
+    let dst = dst.as_ref();
+
+    trace!("Creating directory: {:?}", dst);
     match boundary {
-        Some(root) => create_dir_all_within(root, dst.as_ref())?,
-        None => fs::create_dir_all(&dst)?,
+        Some(root) => create_dir_all_within(root, dst)?,
+        None => fs::create_dir_all(dst)?,
     }
 
-    trace!("Reading source directory: {:?}", src.as_ref());
-    let mut total_size = 0;
-    let mut files_copied = 0;
-    let mut dirs_copied = 0;
-    let mut symlinks_copied = 0;
+    trace!("Reading source directory: {:?}", src);
+    let entries = fs::read_dir(src)?.collect::<io::Result<Vec<_>>>()?;
 
-    for entry in fs::read_dir(&src)? {
-        let entry = entry?;
-        let ty = entry.file_type()?;
-        let entry_name = entry.file_name();
-        let dest_path = dst.as_ref().join(&entry_name);
+    let files_copied = AtomicUsize::new(0);
+    let dirs_copied = AtomicUsize::new(0);
+    let symlinks_copied = AtomicUsize::new(0);
 
-        let size: u64 = if ty.is_dir() {
-            trace!("Copying subdirectory: {:?}", entry.path());
-            let subdir_size = copy_dir_all(entry.path(), dest_path, boundary)?;
-            dirs_copied += 1;
-            subdir_size
-        } else if ty.is_symlink() {
-            trace!("Copying symlink: {:?}", entry.path());
-            remove_existing_symlink(&dest_path)?;
-            symlink(fs::read_link(entry.path())?, dest_path)?;
-            symlinks_copied += 1;
-            0
-        } else {
-            trace!("Copying file: {:?}", entry.path());
-            // On restore, don't follow a pre-existing dest symlink.
-            if boundary.is_some() {
-                remove_existing_symlink(&dest_path)?;
-            }
-            let file_size = fs::copy(entry.path(), dest_path)?;
-            files_copied += 1;
-            file_size
-        };
-        total_size += size;
-    }
+    // `dst` exists before any entry is copied, every entry has its own
+    // destination, and a subdirectory creates itself before touching its
+    // own entries, so the parallel copies never race one another.
+    let (total_size, written) = COPY_POOL.install(|| {
+        entries
+            .par_iter()
+            .map(|entry| -> io::Result<(u64, Written)> {
+                let ty = entry.file_type()?;
+                let dest_path = dst.join(entry.file_name());
+
+                if ty.is_dir() {
+                    trace!("Copying subdirectory: {:?}", entry.path());
+                    let subdir = copy_dir_all(entry.path(), dest_path, boundary)?;
+                    dirs_copied.fetch_add(1, Ordering::Relaxed);
+                    Ok(subdir)
+                } else if ty.is_symlink() {
+                    trace!("Copying symlink: {:?}", entry.path());
+                    remove_existing_symlink(&dest_path)?;
+                    symlink(fs::read_link(entry.path())?, &dest_path)?;
+                    symlinks_copied.fetch_add(1, Ordering::Relaxed);
+                    Ok((0, vec![(entry.path(), dest_path)]))
+                } else {
+                    trace!("Copying file: {:?}", entry.path());
+                    // On restore, don't follow a pre-existing dest symlink.
+                    if boundary.is_some() {
+                        remove_existing_symlink(&dest_path)?;
+                    }
+                    let file_size = fs::copy(entry.path(), &dest_path)?;
+                    files_copied.fetch_add(1, Ordering::Relaxed);
+                    Ok((file_size, vec![(entry.path(), dest_path)]))
+                }
+            })
+            .try_reduce(
+                || (0, vec![]),
+                |(a, mut written), (b, more)| {
+                    written.extend(more);
+                    Ok((a + b, written))
+                },
+            )
+    })?;
 
     debug!(
         "Directory copy completed: {:?} -> {:?} ({} files, {} dirs, {} symlinks, {} bytes total)",
-        src.as_ref(),
-        dst.as_ref(),
-        files_copied,
-        dirs_copied,
-        symlinks_copied,
+        src,
+        dst,
+        files_copied.load(Ordering::Relaxed),
+        dirs_copied.load(Ordering::Relaxed),
+        symlinks_copied.load(Ordering::Relaxed),
         total_size
     );
-    Ok(total_size)
+    Ok((total_size, written))
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
     use assert_fs::TempDir;
+    use assert_fs::fixture::ChildPath;
     use assert_fs::prelude::*;
 
     #[test]
@@ -447,5 +498,233 @@ mod test {
         );
         assert_eq!(link.read_link().unwrap(), Path::new("real.js"));
         assert_eq!(std::fs::read_to_string(&link).unwrap(), "ok");
+    }
+
+    /// Every entry below `root` as (relative path, description), sorted, so
+    /// two trees can be compared for structure and contents.
+    fn tree_manifest(root: &Path) -> Vec<(PathBuf, String)> {
+        fn walk(root: &Path, dir: &Path, out: &mut Vec<(PathBuf, String)>) {
+            for entry in fs::read_dir(dir).unwrap() {
+                let entry = entry.unwrap();
+                let path = entry.path();
+                let rel = path.strip_prefix(root).unwrap().to_path_buf();
+                let ty = entry.file_type().unwrap();
+                if ty.is_symlink() {
+                    let target = fs::read_link(&path).unwrap();
+                    out.push((rel, format!("symlink -> {}", target.display())));
+                } else if ty.is_dir() {
+                    out.push((rel, "dir".to_string()));
+                    walk(root, &path, out);
+                } else {
+                    let contents = fs::read_to_string(&path).unwrap();
+                    out.push((rel, format!("file {contents}")));
+                }
+            }
+        }
+        let mut out = Vec::new();
+        walk(root, root, &mut out);
+        out.sort();
+        out
+    }
+
+    /// A tree wide and deep enough to be split across the thread pool: 6 dirs
+    /// x 4 subdirs x 25 files with distinct contents, plus empty directories
+    /// at two depths. Returns the number of bytes written.
+    fn write_wide_tree(root: &ChildPath) -> u64 {
+        let mut bytes = 0;
+        for d in 0..6 {
+            for s in 0..4 {
+                let dir = root.child(format!("d{d}/s{s}"));
+                for f in 0..25 {
+                    let contents = format!("{d}-{s}-{f}:{}", "x".repeat(f * 7));
+                    dir.child(format!("f{f}.txt")).write_str(&contents).unwrap();
+                    bytes += contents.len() as u64;
+                }
+                dir.child("empty").create_dir_all().unwrap();
+            }
+        }
+        root.child("empty-top").create_dir_all().unwrap();
+        bytes
+    }
+
+    #[test]
+    fn should_copy_wide_tree_byte_for_byte() {
+        let temp = TempDir::new().unwrap();
+        let src = temp.child("src");
+        let bytes = write_wide_tree(&src);
+
+        let dest = temp.join("dest");
+        let size = copy(
+            src.path().to_string_lossy().into(),
+            dest.to_string_lossy().into(),
+        )
+        .unwrap();
+
+        assert_eq!(size as u64, bytes);
+        assert_eq!(tree_manifest(&dest), tree_manifest(src.path()));
+        assert!(dest.join("d0/s0/empty").is_dir());
+        assert!(dest.join("empty-top").is_dir());
+    }
+
+    #[test]
+    fn restore_replaces_stale_outputs_with_wide_tree() {
+        let cache = TempDir::new().unwrap();
+        let workspace = TempDir::new().unwrap();
+        let bytes = write_wide_tree(&cache.child("dist"));
+
+        // Stale outputs at the destination: a file the artifact does not have
+        // and one whose contents differ.
+        workspace
+            .child("dist/stale/old.txt")
+            .write_str("old")
+            .unwrap();
+        workspace
+            .child("dist/d0/s0/f0.txt")
+            .write_str("stale")
+            .unwrap();
+
+        let expanded = vec!["dist".to_string()];
+        let (size, _) =
+            copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+
+        assert_eq!(size as u64, bytes);
+        assert_eq!(
+            tree_manifest(&workspace.join("dist")),
+            tree_manifest(&cache.join("dist"))
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn should_copy_nested_symlinks_without_following() {
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new().unwrap();
+        let src = temp.child("src");
+        src.child("a/b/target.txt").write_str("target").unwrap();
+        symlink("target.txt", src.join("a/b/rel-link.txt")).unwrap();
+        symlink("b", src.join("a/dir-link")).unwrap();
+        symlink("missing.txt", src.join("a/dangling")).unwrap();
+
+        let dest = temp.join("dest");
+        copy(
+            src.path().to_string_lossy().into(),
+            dest.to_string_lossy().into(),
+        )
+        .unwrap();
+
+        // Links are recreated as links (targets verbatim), never expanded.
+        assert_eq!(tree_manifest(&dest), tree_manifest(src.path()));
+        assert_eq!(
+            fs::read_to_string(dest.join("a/b/rel-link.txt")).unwrap(),
+            "target"
+        );
+        assert!(
+            dest.join("a/dir-link")
+                .symlink_metadata()
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+        assert!(
+            dest.join("a/dangling")
+                .symlink_metadata()
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+    }
+
+    #[test]
+    fn should_fail_when_a_nested_directory_cannot_be_created() {
+        let temp = TempDir::new().unwrap();
+        let src = temp.child("src");
+        write_wide_tree(&src);
+        // A file sits where a subdirectory of the copy has to go.
+        temp.child("dest/d3/s2").write_str("in the way").unwrap();
+
+        let dest = temp.join("dest");
+        let result = copy(
+            src.path().to_string_lossy().into(),
+            dest.to_string_lossy().into(),
+        );
+
+        assert!(result.is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn remove_path_unlinks_nested_directory_symlink_without_following() {
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new().unwrap();
+        let outside = temp.child("outside");
+        outside.child("keep.txt").write_str("keep").unwrap();
+        let dist = temp.child("dist");
+        write_wide_tree(&dist);
+        symlink(outside.path(), dist.join("d1/s1/link-to-outside")).unwrap();
+        symlink(outside.path(), dist.join("top-link")).unwrap();
+
+        remove_path(dist.path()).unwrap();
+
+        assert!(!dist.path().exists());
+        assert_eq!(
+            fs::read_to_string(outside.join("keep.txt")).unwrap(),
+            "keep"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_replaces_nested_escaping_symlink_without_following_it() {
+        use std::os::unix::fs::symlink;
+
+        let cache = TempDir::new().unwrap();
+        let workspace = TempDir::new().unwrap();
+        let outside = TempDir::new().unwrap();
+        outside.child("keep.txt").write_str("keep").unwrap();
+        write_wide_tree(&cache.child("dist"));
+        // A symlink deep in the stale outputs points outside the workspace.
+        workspace.child("dist/d0").create_dir_all().unwrap();
+        symlink(outside.path(), workspace.join("dist/d0/s0")).unwrap();
+
+        let expanded = vec!["dist".to_string()];
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+
+        assert_eq!(
+            tree_manifest(&workspace.join("dist")),
+            tree_manifest(&cache.join("dist"))
+        );
+        assert_eq!(
+            fs::read_to_string(outside.join("keep.txt")).unwrap(),
+            "keep"
+        );
+        assert_eq!(fs::read_dir(outside.path()).unwrap().count(), 1);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn should_fail_when_a_nested_source_is_unreadable() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp = TempDir::new().unwrap();
+        let src = temp.child("src");
+        write_wide_tree(&src);
+        let locked = src.join("d3/s2");
+        fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).unwrap();
+        if fs::read_dir(&locked).is_ok() {
+            // Running as root: permissions do not apply, nothing to check.
+            fs::set_permissions(&locked, fs::Permissions::from_mode(0o755)).unwrap();
+            return;
+        }
+
+        let dest = temp.join("dest");
+        let result = copy(
+            src.path().to_string_lossy().into(),
+            dest.to_string_lossy().into(),
+        );
+
+        fs::set_permissions(&locked, fs::Permissions::from_mode(0o755)).unwrap();
+        assert!(result.is_err());
     }
 }

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`setupSSR with application builder should create the files correctly for ssr 1`] = `
+exports[`setupSSR > with application builder > should create the files correctly for ssr 1`] = `
 {
   "configurations": {
     "development": {
@@ -36,6 +36,9 @@ exports[`setupSSR with application builder should create the files correctly for
     "browser": "app1/src/main.ts",
     "outputMode": "server",
     "outputPath": "dist/app1",
+    "security": {
+      "allowedHosts": [],
+    },
     "server": "app1/src/main.server.ts",
     "ssr": {
       "entry": "app1/src/server.ts",
@@ -51,7 +54,7 @@ exports[`setupSSR with application builder should create the files correctly for
 }
 `;
 
-exports[`setupSSR with application builder should create the files correctly for ssr 2`] = `
+exports[`setupSSR > with application builder > should create the files correctly for ssr 2`] = `
 "import {
   AngularNodeAppEngine,
   createNodeRequestHandler,
@@ -119,7 +122,7 @@ export const reqHandler = createNodeRequestHandler(app);
 "
 `;
 
-exports[`setupSSR with application builder should create the files correctly for ssr when app is standalone 1`] = `
+exports[`setupSSR > with application builder > should create the files correctly for ssr when app is standalone 1`] = `
 {
   "configurations": {
     "development": {
@@ -155,6 +158,9 @@ exports[`setupSSR with application builder should create the files correctly for
     "browser": "app1/src/main.ts",
     "outputMode": "server",
     "outputPath": "dist/app1",
+    "security": {
+      "allowedHosts": [],
+    },
     "server": "app1/src/main.server.ts",
     "ssr": {
       "entry": "app1/src/server.ts",
@@ -170,7 +176,7 @@ exports[`setupSSR with application builder should create the files correctly for
 }
 `;
 
-exports[`setupSSR with application builder should create the files correctly for ssr when app is standalone 2`] = `
+exports[`setupSSR > with application builder > should create the files correctly for ssr when app is standalone 2`] = `
 "import {
   AngularNodeAppEngine,
   createNodeRequestHandler,
@@ -238,7 +244,7 @@ export const reqHandler = createNodeRequestHandler(app);
 "
 `;
 
-exports[`setupSSR with browser builder should create the files correctly for ssr 1`] = `
+exports[`setupSSR > with browser builder > should create the files correctly for ssr 1`] = `
 {
   "configurations": {
     "development": {
@@ -265,7 +271,7 @@ exports[`setupSSR with browser builder should create the files correctly for ssr
 }
 `;
 
-exports[`setupSSR with browser builder should create the files correctly for ssr 2`] = `
+exports[`setupSSR > with browser builder > should create the files correctly for ssr 2`] = `
 "import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
@@ -281,7 +287,11 @@ export function app(): express.Express {
     ? join(distFolder, 'index.original.html')
     : join(distFolder, 'index.html');
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
@@ -336,7 +346,7 @@ export default AppServerModule;
 "
 `;
 
-exports[`setupSSR with browser builder should create the files correctly for ssr when app is standalone 1`] = `
+exports[`setupSSR > with browser builder > should create the files correctly for ssr when app is standalone 1`] = `
 {
   "configurations": {
     "development": {
@@ -363,7 +373,7 @@ exports[`setupSSR with browser builder should create the files correctly for ssr
 }
 `;
 
-exports[`setupSSR with browser builder should create the files correctly for ssr when app is standalone 2`] = `
+exports[`setupSSR > with browser builder > should create the files correctly for ssr when app is standalone 2`] = `
 "import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
@@ -379,7 +389,11 @@ export function app(): express.Express {
     ? join(distFolder, 'index.original.html')
     : join(distFolder, 'index.html');
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);

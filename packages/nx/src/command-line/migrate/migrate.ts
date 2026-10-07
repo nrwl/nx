@@ -35,6 +35,7 @@ import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { quoteShellArg } from '../../utils/shell-quoting';
 import { logger } from '../../utils/logger';
+import { IS_WASM } from '../../native';
 import {
   getUncommittedChangesSnapshot,
   isGitRepository,
@@ -55,6 +56,7 @@ import {
   PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
+  parseRegistryViewJson,
 } from '../../utils/package-manager';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import {
@@ -134,10 +136,12 @@ import {
   assertCommitPrefixHasCommits,
 } from './migrate-config';
 import type { ResolvedAgentic } from './agentic/types';
+import type { MigrateRunState, RunOrchestratorInitInput } from './run';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
   confirmMigrationCommitsOnDefaultBranch,
+  currentBranchIfDefault,
   resolveCreateCommits,
 } from './migrate-commits';
 import {
@@ -1275,7 +1279,12 @@ type RunMigrations = {
   ifExists: boolean;
   agentic: AgenticArg;
   validate?: boolean;
+  finalValidation?: boolean;
   interactive?: boolean;
+  // The orchestrated run to continue, or the one --start-fresh replaces.
+  runId?: string;
+  // Delete the active orchestrated run's record and start a new run.
+  startFresh?: boolean;
 };
 
 type RunSingleMigration = {
@@ -1304,14 +1313,28 @@ export async function parseMigrationsOptions(
 > {
   // A run recorded or reconciled via `--run-id` is driven by the outer agent;
   // spawning another agent from it would double-drive the run. Only the
-  // explicit "on" values conflict; the nx.json default is ignored for
-  // `--run-id` invocations instead.
+  // explicit "on" values conflict; the nx.json default is not applied to
+  // those invocations instead. The `--run-migrations` shape is the
+  // exception: there `--run-id` names the run a continue re-enters, or the
+  // one a `--start-fresh` replaces.
   if (
     options.runId !== undefined &&
     options.agentic !== undefined &&
-    options.agentic !== false
+    options.agentic !== false &&
+    options.runMigrations === undefined
   ) {
     throw new Error(`Error: '--agentic' cannot be combined with '--run-id'.`);
+  }
+
+  if (options.startFresh === true) {
+    if (options.runMigrations === undefined) {
+      throw new Error(`Error: '--start-fresh' requires '--run-migrations'.`);
+    }
+    if (options.runId === undefined) {
+      throw new Error(
+        `Error: '--start-fresh' requires '--run-id=<id>' naming the run to replace; the report prints it.`
+      );
+    }
   }
 
   if (options.runMigration !== undefined) {
@@ -1369,9 +1392,23 @@ export async function parseMigrationsOptions(
         `Error: '--run-id' requires the id of the migrate run to record into.`
       );
     }
-    if (options.runMigrations !== undefined) {
+    // With `--run-migrations`, `--run-id` continues the named run, which needs
+    // `--agentic`; a start-fresh names the run it replaces instead.
+    if (
+      options.runMigrations !== undefined &&
+      options.startFresh !== true &&
+      (options.agentic === undefined || options.agentic === false)
+    ) {
       throw new Error(
-        `Error: '--run-id' (reconcile an orchestrated run) cannot be combined with '--run-migrations' (run the whole migrations file).`
+        `Error: '--run-id' (reconcile an orchestrated run) cannot be combined with '--run-migrations' (run the whole migrations file). To continue the run, pass '--agentic' (or '--agentic=<agent>') as well.`
+      );
+    }
+    if (
+      options.runMigrations !== undefined &&
+      options.stepAction !== undefined
+    ) {
+      throw new Error(
+        `Error: '--step-action' cannot be combined with '--run-migrations'.`
       );
     }
     // A bare '--run-id' reconciles the run it names. Ungated, unlike init:
@@ -1384,13 +1421,15 @@ export async function parseMigrationsOptions(
         `Error: '--step-action' must be one of ${STEP_ACTIONS.join(', ')}.`
       );
     }
-    return {
-      type: 'orchestratorReconcile',
-      runId: options.runId as string,
-      ...(options.stepAction !== undefined
-        ? { stepAction: options.stepAction }
-        : {}),
-    };
+    if (options.runMigrations === undefined) {
+      return {
+        type: 'orchestratorReconcile',
+        runId: options.runId as string,
+        ...(options.stepAction !== undefined
+          ? { stepAction: options.stepAction }
+          : {}),
+      };
+    }
   }
 
   if (options.stepAction !== undefined) {
@@ -1419,7 +1458,10 @@ export async function parseMigrationsOptions(
       ifExists: options.ifExists,
       agentic: options.agentic,
       validate: options.validate,
+      finalValidation: options.finalValidation,
       interactive: options.interactive,
+      ...(options.runId !== undefined ? { runId: options.runId } : {}),
+      ...(options.startFresh === true ? { startFresh: true } : {}),
     };
   }
 
@@ -2031,7 +2073,7 @@ async function getPackageMigrationsConfigFromRegistry(
     return null;
   }
 
-  const json = JSON.parse(result);
+  const json = parseRegistryViewJson<Record<string, any>>(result);
 
   if (!json['nx-migrations'] && !json['ng-update']) {
     const registry = new URL('dist' in json ? json.dist.tarball : json.tarball)
@@ -3204,6 +3246,10 @@ export async function executeMigrations(
   };
 }
 
+function orchestratorFlagNeedsOrchestrator(flag: string): string {
+  return `'${flag}' acts on an orchestrated migrate run (NX_MIGRATE_ORCHESTRATOR=true with an enabled agent), and this invocation is not orchestrated.`;
+}
+
 // nx is located at spawn time, after the gated pre-install, so the child runs
 // the bytes that install put in place.
 function handOffToLocalNx(args: string[]): number | undefined {
@@ -3227,7 +3273,10 @@ async function runMigrations(
     ifExists: boolean;
     agentic: AgenticArg;
     validate?: boolean;
+    finalValidation?: boolean;
     interactive?: boolean;
+    runId?: string;
+    startFresh?: boolean;
   },
   args: string[],
   isVerbose: boolean,
@@ -3235,6 +3284,36 @@ async function runMigrations(
   commitPrefix: string,
   shouldSkipInstall = false
 ) {
+  // Both flags act on an orchestrated run: refuse them where none can run
+  // (an explicit --agentic=false outside an agent cannot reach one either),
+  // before the install and before --if-exists could return silently.
+  const orchestratorFlag =
+    opts.startFresh === true
+      ? '--start-fresh'
+      : opts.runId !== undefined
+        ? '--run-id'
+        : undefined;
+  if (
+    orchestratorFlag !== undefined &&
+    (process.env.NX_MIGRATE_ORCHESTRATOR !== 'true' ||
+      (opts.agentic === false && !isInsideAgent()))
+  ) {
+    throw new Error(orchestratorFlagNeedsOrchestrator(orchestratorFlag));
+  }
+
+  const isContinue = opts.runId !== undefined && opts.startFresh !== true;
+  let continued: MigrateRunState | undefined;
+  if (isContinue) {
+    // Before the install: a concurrent start-fresh must not delete the run
+    // this command is about to continue.
+    const { holdRunToContinue } = require('./run') as typeof import('./run');
+    continued = holdRunToContinue(root, opts.runId);
+  } else if (opts.startFresh === true) {
+    // Before the install too: with no active run there is nothing to replace.
+    const { activeRunToReplace } = require('./run') as typeof import('./run');
+    activeRunToReplace(root, opts.runId);
+  }
+
   if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
     await runInstall();
   }
@@ -3242,30 +3321,70 @@ async function runMigrations(
   if (!__dirname.startsWith(workspaceRoot)) {
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
+    if (isContinue) {
+      // The child holds the run itself and refuses while this process does.
+      const { releaseRunToHandOff } =
+        require('./run') as typeof import('./run');
+      releaseRunToHandOff(root, opts.runId);
+    }
     return handOffToLocalNx(args);
   }
 
-  const migrationsExists: boolean = fileExists(opts.runMigrations);
-
-  if (opts.ifExists && !migrationsExists) {
-    output.log({
-      title: `Migrations file '${opts.runMigrations}' doesn't exist`,
-    });
-    return;
-  } else if (!opts.ifExists && !migrationsExists) {
-    throw new Error(
-      `File '${opts.runMigrations}' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
+  let migrationsJson: { migrations?: PlannedMigration[]; [k: string]: unknown };
+  if (isContinue) {
+    // A continue runs the plan the run recorded, not whatever the workspace's
+    // migrations file holds now (it may be gone, or belong to another plan).
+    const { latestRound, runDir } = require('./run') as typeof import('./run');
+    const round = latestRound(continued);
+    if (!round) {
+      throw new Error(`Migrate run '${opts.runId}' records no plan.`);
+    }
+    migrationsJson = readJsonFile(
+      join(runDir(root, opts.runId), round.planSnapshot)
     );
-  }
+  } else {
+    const migrationsExists: boolean = fileExists(opts.runMigrations);
 
-  const migrationsJson = readJsonFile(join(root, opts.runMigrations));
+    if (opts.ifExists && !migrationsExists) {
+      output.log({
+        title: `Migrations file '${opts.runMigrations}' doesn't exist`,
+      });
+      return;
+    } else if (!opts.ifExists && !migrationsExists) {
+      throw new Error(
+        `File '${opts.runMigrations}' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
+      );
+    }
+
+    migrationsJson = readJsonFile(join(root, opts.runMigrations));
+  }
   const migrations: PlannedMigration[] = migrationsJson.migrations;
+  // Defer the nx package lookup until an orchestrated branch needs this payload.
+  const orchestratorInitInput = (
+    createCommits: boolean
+  ): Omit<RunOrchestratorInitInput, 'emitAgentInstructions'> => ({
+    root,
+    migrationsJson,
+    migrationsPath: opts.runMigrations,
+    createCommits,
+    commitPrefix,
+    // The flag only, never NX_MIGRATE_SKIP_INSTALL: the wrapper's local
+    // re-exec sets that env var for its own hop, and it says nothing about
+    // what the user asked for.
+    skipInstall: shouldSkipInstall,
+    installedNxVersion: readModulePackageJson('nx', getNxRequirePaths(root))
+      .packageJson.version,
+    validate: opts.validate,
+    finalValidation: opts.finalValidation,
+  });
 
   // An outer agent drives the loop, so hand off to the orchestrator instead of
-  // the classic loop: init either starts a fresh run or resumes an already-
-  // active one. `--run-id` reconciles are dispatched separately and never
-  // reach here.
+  // the classic loop: init starts a fresh run or reports an already-active
+  // one; `--run-id` continues that run. Bare `--run-id` reconciles are
+  // dispatched separately and never reach here.
   if (process.env.NX_MIGRATE_ORCHESTRATOR === 'true' && isInsideAgent()) {
+    const { runOrchestratorInit, runOrchestratorResume } =
+      require('./run') as typeof import('./run');
     // Orchestrated runs are agent-driven, so commits default on exactly as they
     // do under `--agentic=enabled`; the orchestrator replaces `resolveAgentic`.
     const {
@@ -3284,34 +3403,50 @@ async function runMigrations(
     if (createCommitsWarning) {
       output.warn({ title: createCommitsWarning });
     }
-    // The run commits on the user's behalf across many invocations, so the
-    // default-branch confirmation belongs here, once, before any of them.
-    if (
-      effectiveCreateCommits &&
-      canPrompt(opts.interactive) &&
-      !(await confirmMigrationCommitsOnDefaultBranch(
+    if (isContinue) {
+      runOrchestratorResume({
         root,
-        'running migrations'
-      ))
-    ) {
+        runId: opts.runId,
+        policy: {
+          createCommits: effectiveCreateCommits,
+          skipInstall: shouldSkipInstall,
+        },
+      });
       return;
     }
-    const { packageJson: orchestratorNxPackageJson } = readModulePackageJson(
-      'nx',
-      getNxRequirePaths(root)
-    );
-    const { runOrchestratorInit } = require('./run') as typeof import('./run');
-    return await runOrchestratorInit({
-      root,
-      migrationsJson,
-      createCommits: effectiveCreateCommits,
-      commitPrefix,
-      // The flag only, never NX_MIGRATE_SKIP_INSTALL: the wrapper's local
-      // re-exec sets that env var for its own hop, and it says nothing about
-      // what the user asked for.
-      skipInstall: shouldSkipInstall,
-      installedNxVersion: orchestratorNxPackageJson.version,
+    // The run commits on the user's behalf across many invocations and the
+    // agent driving it cannot answer a terminal prompt, so a commit policy the
+    // user never asked for stops the run on the default branch before any of
+    // them. `--create-commits` or nx.json `migrate.createCommits` is that ask.
+    // Asked by init only once it is about to start a run: an active run is
+    // reported instead, and keeps its own policy.
+    const refuseCommitsOnDefaultBranch = async (): Promise<boolean> => {
+      if (!effectiveCreateCommits || shouldCreateCommits !== undefined) {
+        return true;
+      }
+      const defaultBranch = currentBranchIfDefault(root);
+      if (!defaultBranch) {
+        return true;
+      }
+      output.log({
+        title: `Not starting the run: you are on the default branch '${defaultBranch}' and nx migrate would create a commit for each migration on it.`,
+        bodyLines: [
+          'Ask the user how to proceed, then either:',
+          '- re-run with --create-commits to commit on this branch for this run,',
+          '- set "migrate": { "createCommits": true } in nx.json to always allow it, then re-run,',
+          '- or switch to another branch and re-run.',
+        ],
+      });
+      return false;
+    };
+    const init = orchestratorInitInput(effectiveCreateCommits);
+    await runOrchestratorInit({
+      ...init,
+      onExistingRun: opts.startFresh === true ? 'start-fresh' : 'report',
+      ...(opts.startFresh === true ? { replaceRunId: opts.runId } : {}),
+      confirmStart: refuseCommitsOnDefaultBranch,
     });
+    return;
   }
 
   reportMigrateRunStart({
@@ -3351,11 +3486,39 @@ async function runMigrations(
     output.warn({ title: createCommitsWarning });
   }
 
+  // Asked only for a run this invocation starts: the master session hands it
+  // to init, which asks once it is about to start one; a continued run keeps
+  // the policy it was started with.
+  const confirmNewRunCommits = async (): Promise<boolean> =>
+    !effectiveCreateCommits ||
+    !canPrompt(opts.interactive) ||
+    confirmMigrationCommitsOnDefaultBranch(root, 'running migrations');
+
+  // Dark: with the env var set, the agent drives the whole run through the
+  // orchestrator from one session instead of being spawned per step. Not
+  // under WASM, where the broker has no native lock to detect a dead parent.
   if (
-    effectiveCreateCommits &&
-    canPrompt(opts.interactive) &&
-    !(await confirmMigrationCommitsOnDefaultBranch(root, 'running migrations'))
+    agentic.kind === 'enabled' &&
+    process.env.NX_MIGRATE_ORCHESTRATOR === 'true' &&
+    !IS_WASM
   ) {
+    const init = orchestratorInitInput(effectiveCreateCommits);
+    const { runMasterSession } =
+      require('./agentic/master/run-master-session') as typeof import('./agentic/master/run-master-session');
+    return await runMasterSession({
+      ...init,
+      agent: agentic.selectedAgent,
+      interactive: opts.interactive,
+      runId: opts.runId,
+      startFresh: opts.startFresh,
+      confirmStart: confirmNewRunCommits,
+    });
+  }
+  if (orchestratorFlag !== undefined) {
+    throw new Error(orchestratorFlagNeedsOrchestrator(orchestratorFlag));
+  }
+
+  if (!(await confirmNewRunCommits())) {
     return;
   }
 
@@ -3641,7 +3804,7 @@ function stringifyCaught(e: unknown): string {
   }
 }
 
-// A resolver-based lookup (including `resolvePackageJsonWithoutCachePollution`,
+// A resolver-based lookup (including `resolveWithoutCachePollution`,
 // which does defeat Node's package self-reference) is the wrong tool here:
 // resolvers fall back to NODE_PATH after the explicit paths, and NODE_PATH
 // names the temp installation when this runs there. The scan below reads its

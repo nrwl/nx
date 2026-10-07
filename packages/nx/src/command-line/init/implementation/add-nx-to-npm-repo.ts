@@ -14,7 +14,6 @@ import {
   markPackageJsonAsNxProject,
   markRootPackageJsonAsNxProjectLegacy,
   runInstall,
-  setNeverConnectToCloud,
   updateGitIgnore,
 } from './utils';
 import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
@@ -94,7 +93,5 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
   if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init-npm-repo');
-  } else if (nxCloudChoice === 'never') {
-    setNeverConnectToCloud(repoRoot);
   }
 }
