@@ -105,6 +105,33 @@ pub(crate) fn normalize_glob(glob: &str) -> String {
     out
 }
 
+/// A fileset entry that names a path with no glob syntax means that file, or
+/// that directory and everything under it, so it becomes both. Which one it
+/// is depends on the disk, and a glob set never looks; matching both costs
+/// one extra pattern and reads the same in either case. An entry that already
+/// carries a pattern, or ends in `/`, is left alone.
+pub(crate) fn path_or_everything_under(glob: &str) -> Vec<String> {
+    let body = glob.strip_prefix('!').unwrap_or(glob);
+    // `partition_glob` decides what counts as a pattern, so a directory named
+    // `@types` or `+state` is a path here as it is everywhere else. Asking
+    // the glob engine instead would call those characters syntax and leave
+    // such a directory matching nothing.
+    let has_pattern = partition_glob(body).1.is_some();
+    if body.is_empty() || body.ends_with('/') || has_pattern {
+        return vec![glob.to_string()];
+    }
+    vec![glob.to_string(), format!("{glob}/**")]
+}
+
+/// Every fileset glob read as a path or a pattern, ready for `build_glob_set`.
+/// See `path_or_everything_under` for what a pattern-less entry names.
+pub(crate) fn fileset_patterns(globs: &[String]) -> Vec<String> {
+    globs
+        .iter()
+        .flat_map(|glob| path_or_everything_under(glob))
+        .collect()
+}
+
 #[derive(Debug)]
 enum GlobType {
     Negative(String),
@@ -228,6 +255,22 @@ fn build_segment(
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn a_path_without_glob_syntax_also_means_everything_under_it() {
+        assert_eq!(
+            path_or_everything_under("libs/app/src"),
+            vec!["libs/app/src", "libs/app/src/**"]
+        );
+        assert_eq!(
+            path_or_everything_under("!libs/app/src"),
+            vec!["!libs/app/src", "!libs/app/src/**"],
+            "a negation excludes the directory's contents too"
+        );
+        for untouched in ["libs/app/**/*.ts", "libs/app/src/", "*.json", ""] {
+            assert_eq!(path_or_everything_under(untouched), vec![untouched]);
+        }
+    }
 
     #[test]
     fn expands_literal_brace_groups() {
