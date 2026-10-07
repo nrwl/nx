@@ -3,6 +3,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::{collections::HashMap, fmt, ptr};
 
+use crate::native::glob::partition_glob;
 use dashmap::DashMap;
 use napi::{
     bindgen_prelude::{ToNapiValue, check_status},
@@ -280,7 +281,10 @@ impl InstructionPool {
             | HashInstruction::WorkspaceFileSet(_)
             | HashInstruction::IgnoredFileSet(_) => true,
             HashInstruction::TsConfiguration(_) => !keep_tsconfig,
-            HashInstruction::JsonFileSet(json) => !read(&json.json_path),
+            HashInstruction::JsonFileSet(json) => match partition_glob(&json.json_path) {
+                (path, None) => !read(&path),
+                _ => !read(&json.json_path),
+            },
             _ => false,
         }
     }
@@ -639,6 +643,16 @@ mod tests {
         })));
         assert!(pool.replaced_by_configuration(json, true, unread));
         assert!(!pool.replaced_by_configuration(json, true, |path| path == "p/package.json"));
+        // A resolved path is an escaped glob; the read is checked against the file it names.
+        let escaped = pool.intern(HashInstruction::JsonFileSet(Box::new(JsonFileSetInput {
+            project_name: Some("p".into()),
+            json_path: r"p/\(g\)/package.json".into(),
+            fields: None,
+            exclude_fields: None,
+        })));
+        assert!(
+            !pool.replaced_by_configuration(escaped, true, |path| path == "p/(g)/package.json")
+        );
     }
 
     #[test]
