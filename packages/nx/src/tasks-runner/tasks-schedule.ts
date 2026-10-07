@@ -15,6 +15,7 @@ import { TaskReadiness } from '../native';
 import {
   getReadyDependencies,
   getReadyProducerIds,
+  getReadyWhenConfig,
 } from './readiness/ready-when';
 
 export interface Batch {
@@ -305,12 +306,14 @@ export class TasksSchedule {
       return;
     }
 
-    // A batch never waits: only a task whose producers are all ready joins one,
-    // and a continuous consumer starts alone so its start releases dependents
-    const producers = this.readyProducersOf(task);
+    // A batch never waits, so a task joins one once its probed producers are
+    // ready. A continuous task that something waits on, or that declares a
+    // probe, runs alone: only that path records its start and readiness
     if (
-      (task.continuous && producers.all.length > 0) ||
-      producers.probed.some((id) => !this.isProducerReady(id))
+      (task.continuous &&
+        (this.reverseTaskDeps[task.id].length > 0 ||
+          getReadyWhenConfig(task, this.projectGraph) != null)) ||
+      this.readyProducersOf(task).probed.some((id) => !this.isProducerReady(id))
     ) {
       return;
     }
