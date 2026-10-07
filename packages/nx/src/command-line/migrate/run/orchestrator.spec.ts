@@ -5554,6 +5554,31 @@ describe('orchestrator', () => {
         {},
         [],
       ],
+      [
+        'a failed step whose recorded commit failed',
+        'failed',
+        {
+          generatorCompleted: true,
+          commitStarted: true,
+          commitLedgerIndex: 0,
+          outcome: { summary: 'validation failed' },
+        },
+        { commits: [{ kind: 'failed', stepIds: ['step-1'] }] },
+        ['Its commit did not complete. Every choice below commits again.'],
+      ],
+      [
+        'a failed step whose commit outcome is unknown',
+        'failed',
+        {
+          generatorCompleted: true,
+          commitStarted: true,
+          outcome: { summary: 'validation failed' },
+        },
+        {},
+        [
+          "  adopt: a commit of this migration's changes was started and never recorded; keep the current working-tree state as its result, then run: npx nx migrate --run-id=run-1 --step-action=adopt",
+        ],
+      ],
     ])(
       'says what each choice does about the unfinished operation of %s',
       async (_, status, stepFields, runFields, expected) => {
@@ -5569,7 +5594,10 @@ describe('orchestrator', () => {
         expect(
           lastBlock()
             .payload.instructions.split('\n')
-            .filter((line) => line.startsWith('Its '))
+            .filter(
+              (line) =>
+                line.startsWith('Its ') || line.includes('never recorded')
+            )
         ).toEqual(expected);
       }
     );

@@ -2389,6 +2389,14 @@ function emitRetryFailed(
       )}`
     );
   }
+  // A failed commit is already named above the choices.
+  const adoptWhen = recordedCommitFailed(state, step)
+    ? ''
+    : committed
+      ? `a commit of this ${stepNoun(step)}'s changes was started and never recorded; `
+      : `the ${stepNoun(step)} was ${
+          step.kind === 'migration' ? 'applied' : 'done'
+        } by hand; `;
   lines.push(
     landed
       ? `  adopt: keep the landed commit${
@@ -2398,13 +2406,7 @@ function emitRetryFailed(
           runId,
           'adopt'
         )}`
-      : `  adopt: ${
-          committed
-            ? `a commit of this ${stepNoun(step)}'s changes was started and never recorded`
-            : `the ${stepNoun(step)} was ${
-                step.kind === 'migration' ? 'applied' : 'done'
-              } by hand`
-        }; keep the current working-tree state as its result, then run: ${reconcileCommand(
+      : `  adopt: ${adoptWhen}keep the current working-tree state as its result, then run: ${reconcileCommand(
           root,
           runId,
           'adopt'
@@ -2480,19 +2482,26 @@ function unfinishedOperationLines(
       ``
     );
   }
-  // Not commitReceipt, which throws on an index the ledger lacks: a dispense
-  // has to render whatever run.json holds.
-  const receipt =
-    step.commitLedgerIndex === undefined
-      ? undefined
-      : state.commits[step.commitLedgerIndex];
-  if (step.commitStarted === true && receipt?.kind === 'failed') {
+  if (recordedCommitFailed(state, step)) {
     lines.push(
       `Its commit did not complete. Every choice below commits again.`,
       ``
     );
   }
   return lines;
+}
+
+function recordedCommitFailed(
+  state: MigrateRunState,
+  step: MigrateStep
+): boolean {
+  // Not commitReceipt, which throws on an index the ledger lacks: a dispense
+  // has to render whatever run.json holds.
+  const receipt =
+    step.commitLedgerIndex === undefined
+      ? undefined
+      : state.commits[step.commitLedgerIndex];
+  return step.commitStarted === true && receipt?.kind === 'failed';
 }
 
 // Opens a capped dispense and is the reason a retry past the cap is refused.
