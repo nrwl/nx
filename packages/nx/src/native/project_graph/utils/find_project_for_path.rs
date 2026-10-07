@@ -47,6 +47,7 @@ mod test {
                 Project {
                     tags: None,
                     targets: Default::default(),
+                    package_name: None,
                     root: "apps/demo-app".into(),
                     named_inputs: None,
                 },
@@ -56,6 +57,7 @@ mod test {
                 Project {
                     tags: None,
                     targets: Default::default(),
+                    package_name: None,
                     root: "libs/ui".into(),
                     named_inputs: None,
                 },
@@ -65,6 +67,7 @@ mod test {
                 Project {
                     tags: None,
                     targets: Default::default(),
+                    package_name: None,
                     root: "libs/core".into(),
                     named_inputs: None,
                 },
@@ -74,6 +77,7 @@ mod test {
                 Project {
                     tags: None,
                     targets: Default::default(),
+                    package_name: None,
                     root: ".".into(),
                     named_inputs: None,
                 },
@@ -102,6 +106,7 @@ mod test {
         Project {
             tags: None,
             targets: Default::default(),
+            package_name: None,
             root: root.into(),
             named_inputs: None,
         }

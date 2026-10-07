@@ -35,6 +35,8 @@ pub struct Project {
     pub named_inputs: Option<HashMap<String, Vec<JsInputs>>>,
     pub tags: Option<Vec<String>>,
     pub targets: HashMap<String, Target>,
+    /// The `name` in the project's `package.json`, when it has one.
+    pub package_name: Option<String>,
 }
 
 #[napi(object)]
