@@ -424,6 +424,35 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     }
   );
 
+  it.skipIf(process.platform === 'win32')(
+    'ends interrupted when a Ctrl+C ends the local nx it runs',
+    async () => {
+      process.argv = ['node', 'nx', 'migrate', '--run-id=run-1'];
+      const nxBin = join(mkdtempSync(join(tmpdir(), 'guard-wiring-')), 'nx.js');
+      writeFileSync(nxBin, `process.kill(process.pid, 'SIGINT');`);
+      const { runNxArgvSync } = await vi.importActual<
+        typeof import('../../utils/child-process')
+      >('../../utils/child-process');
+      mockRunNxArgvSync.mockImplementation((argv, options) =>
+        runNxArgvSync(argv, { ...options, nxBin })
+      );
+      // A real `kill` would signal this test worker, and a real
+      // `removeAllListeners` would strip its SIGINT handling.
+      vi.spyOn(process, 'removeAllListeners').mockReturnValue(process);
+      const kill = vi
+        .spyOn(process, 'kill')
+        .mockImplementation((() => true) as never);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => {
+        throw new Error('exited');
+      }) as never);
+
+      await runMigration();
+
+      expect(kill).toHaveBeenCalledWith(process.pid, 'SIGINT');
+      expect(exit).toHaveBeenCalledWith(130);
+    }
+  );
+
   it('runs the local nx instead of installing the temp CLI when routed to local-nx', async () => {
     mockResolveRunTarget.mockResolvedValue('local-nx');
 
