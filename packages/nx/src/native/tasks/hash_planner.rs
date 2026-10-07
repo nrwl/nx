@@ -2478,7 +2478,6 @@ mod continuous_inputs_tests {
     use crate::native::types::DepsOutputsInput;
     use napi::bindgen_prelude::Either9;
 
-    /// `app:serve` serves `api:serve` and reads `lib:build`'s outputs.
     fn planner() -> HashPlanner {
         let project = |root: &str, target: &str, inputs| Project {
             root: root.into(),

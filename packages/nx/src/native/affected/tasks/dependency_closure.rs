@@ -1,8 +1,4 @@
 //! What a task depends on, directly or not, over regular and continuous edges.
-//!
-//! The planner splices a served task's reads into its consumer's plan
-//! (`collect_continuous_dependencies`), so a continuous edge carries a read
-//! like any other, and a run needs a served dependency as much as a built one.
 
 use std::collections::HashSet;
 

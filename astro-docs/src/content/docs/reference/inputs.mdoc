@@ -338,9 +338,12 @@ For example, an `e2e` task that tests one feature of an app shouldn't rerun when
 }
 ```
 
-The server still starts first, but the task hashes only its own inputs, and `nx affected` selects it only when those change.
+The task still depends on the server, but this entry doesn't include the server's inputs in the hash.
 Nx also leaves out the servers that entry reaches, unless another entry with inputs reaches them.
-The option has no effect on a dependency that isn't continuous, whose inputs are never part of the hash.
+The option has no effect on dependencies that aren't continuous.
+
+Set `NX_LEGACY_AFFECTED=false` to make `nx affected` select tasks by their inputs.
+Without it, `nx affected` selects whole projects, regardless of `"inputs": false`.
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 

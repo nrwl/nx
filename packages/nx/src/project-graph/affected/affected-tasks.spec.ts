@@ -595,7 +595,6 @@ describe('explaining a change carried by a dependency-only task', () => {
 });
 
 describe('a continuous dependency with inputs: false', () => {
-  // e2e serves app, which bundles feature. Only the served app reads feature.
   function servedGraph(inputs?: boolean): ProjectGraph {
     return {
       nodes: {
