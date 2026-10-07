@@ -36,6 +36,10 @@ const PHASE_ORDER = keys(HOOKS_BY_PHASE);
  * Shutdown occurs when:
  * 1. All phase sessions complete (ref count reaches 0)
  * 2. No later phases have registered hooks
+ * 3. The worker is not resident: a host that recomputes the graph for every
+ *    file change (the daemon) keeps a worker with graph hooks alive, because
+ *    the next change calls those hooks again and a restart costs a process
+ *    spawn plus a plugin load each time
  */
 export class PluginLifecycleManager {
   /** Phases where this plugin has at least one registered hook */
@@ -47,7 +51,10 @@ export class PluginLifecycleManager {
   /** Ordered list of registered phases (derived from HOOKS_BY_PHASE key order, narrowed to registered phases) */
   private readonly registeredPhaseOrder: Phase[] = [];
 
-  constructor(registeredHooks: Iterable<Hook>) {
+  /** Whether this worker outlives its phases (see class doc, rule 3) */
+  private readonly resident: boolean;
+
+  constructor(registeredHooks: Iterable<Hook>, recomputesGraph = false) {
     const registered = new Set(registeredHooks);
 
     // Determine which phases are registered and find first/last hooks per phase
@@ -66,6 +73,9 @@ export class PluginLifecycleManager {
     for (const phase of this.registeredPhaseOrder) {
       this.phaseSessionCount[phase] = 0;
     }
+
+    this.resident =
+      recomputesGraph && this.registeredPhases['graph'] !== undefined;
   }
 
   wrapHook<TArgs extends unknown[], TReturn>(
@@ -143,8 +153,8 @@ export class PluginLifecycleManager {
     // Can only shut down if no more active sessions in this phase
     if (newCount > 0) return false;
 
-    // Can only shut down if this is the last registered phase
-    return this.isLastRegisteredPhase(phase);
+    // Can only shut down a non-resident worker after its last registered phase
+    return !this.resident && this.isLastRegisteredPhase(phase);
   }
 
   /**
@@ -217,7 +227,7 @@ export class PluginLifecycleManager {
       return false;
     }
 
-    return this.isLastRegisteredPhase(phase);
+    return !this.resident && this.isLastRegisteredPhase(phase);
   }
 
   /**

@@ -7,6 +7,7 @@ import path = require('path');
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { serverLogger } from '../../../daemon/logger';
+import { isOnDaemon } from '../../../daemon/is-on-daemon';
 import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
@@ -378,7 +379,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       loadResult.hasPostTasksExecution && 'postTasksExecution'
     );
 
-    this.lifecycle = new PluginLifecycleManager(registeredHooks);
+    this.lifecycle = new PluginLifecycleManager(registeredHooks, isOnDaemon());
 
     const shutdown = (hookName: Hook) => this.shutdownIfInactive(hookName);
     const wrap = <TArgs extends unknown[], TReturn>(

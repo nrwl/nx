@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { isOnDaemon } from '../../../daemon/is-on-daemon';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import {
@@ -13,6 +14,10 @@ import {
 // We need to mock the dependencies before importing the class
 vi.mock('../../../daemon/socket-utils', () => ({
   getPluginOsSocketPath: vi.fn(() => '/mock/socket/path'),
+}));
+
+vi.mock('../../../daemon/is-on-daemon', () => ({
+  isOnDaemon: vi.fn(() => false),
 }));
 
 vi.mock('../../../utils/installation-directory', () => ({
@@ -428,6 +433,41 @@ describe('IsolatedPlugin', () => {
 
       // setupHooks should have called shutdown immediately
       expect(shutdown).toHaveBeenCalled();
+    });
+  });
+
+  describe('on the daemon', () => {
+    beforeEach(() => {
+      vi.mocked(isOnDaemon).mockReturnValue(true);
+    });
+
+    afterEach(() => {
+      vi.mocked(isOnDaemon).mockReturnValue(false);
+    });
+
+    it('should keep a graph worker alive for the next graph computation', async () => {
+      const { plugin, shutdown } = createTestPlugin(
+        createLoadResult({
+          createNodesPattern: '**/*.json',
+          hasCreateDependencies: true,
+        })
+      );
+
+      for (let change = 0; change < 3; change++) {
+        await plugin.createNodes![1]([], {});
+        await plugin.createDependencies!({});
+      }
+
+      expect(shutdown).not.toHaveBeenCalled();
+      expect(plugin.spawnAndConnectCount).toBe(0);
+    });
+
+    it('should still shutdown a worker without graph hooks immediately', () => {
+      const { shutdown } = createTestPlugin(
+        createLoadResult({ hasPostTasksExecution: true })
+      );
+
+      expect(shutdown).toHaveBeenCalledTimes(1);
     });
   });
 

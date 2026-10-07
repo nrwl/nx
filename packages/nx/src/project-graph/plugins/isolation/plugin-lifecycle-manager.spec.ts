@@ -560,6 +560,61 @@ describe('PluginLifecycleManager', () => {
     });
   });
 
+  describe('when the host recomputes the graph for every file change', () => {
+    it('should keep a graph-only worker alive across graph phases', () => {
+      const lifecycle = new PluginLifecycleManager(
+        ['createNodes', 'createDependencies'],
+        true
+      );
+
+      for (let change = 0; change < 3; change++) {
+        lifecycle.enterHook('createNodes');
+        expect(lifecycle.exitHook('createNodes')).toBe(false);
+        lifecycle.enterHook('createDependencies');
+        expect(lifecycle.exitHook('createDependencies')).toBe(false);
+        expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
+      }
+    });
+
+    it('should keep a graph worker alive after its last task phase', () => {
+      const lifecycle = new PluginLifecycleManager(
+        ['createNodes', 'postTasksExecution'],
+        true
+      );
+
+      lifecycle.enterHook('createNodes');
+      expect(lifecycle.exitHook('createNodes')).toBe(false);
+      lifecycle.enterHook('postTasksExecution');
+      expect(lifecycle.exitHook('postTasksExecution')).toBe(false);
+    });
+
+    it('should keep a graph worker alive when its graph phase is aborted', () => {
+      const lifecycle = new PluginLifecycleManager(
+        ['createNodes', 'createDependencies'],
+        true
+      );
+
+      lifecycle.enterHook('createNodes');
+      lifecycle.exitHook('createNodes');
+
+      expect(lifecycle.notifyPhaseAborted('graph', 'createNodes')).toBe(false);
+      expect(lifecycle.getPhaseRefCount('graph')).toBe(0);
+    });
+
+    it('should still stop a worker without graph hooks after its last phase', () => {
+      const lifecycle = new PluginLifecycleManager(
+        ['preTasksExecution', 'postTasksExecution'],
+        true
+      );
+
+      expect(lifecycle.shouldShutdownImmediately()).toBe(true);
+      lifecycle.enterHook('preTasksExecution');
+      expect(lifecycle.exitHook('preTasksExecution')).toBe(false);
+      lifecycle.enterHook('postTasksExecution');
+      expect(lifecycle.exitHook('postTasksExecution')).toBe(true);
+    });
+  });
+
   describe('wrapHook', () => {
     it('should call enterHook before and exitHook after the wrapped function', async () => {
       const lifecycle = new PluginLifecycleManager(['createNodes']);
