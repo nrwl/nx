@@ -8,6 +8,7 @@ use napi::{
     bindgen_prelude::{ToNapiValue, check_status},
     sys,
 };
+use xxhash_rust::xxh3::Xxh3;
 
 /// A representation of the invocation of an Executor
 #[napi(object)]
@@ -333,8 +334,10 @@ pub const COMPACT_FILES_LABEL_ABOVE: usize = 8;
 
 impl HashInstruction {
     /// What hash details name this instruction: its Display, except that a
-    /// large disk-backed group lists its first positives and counts the rest.
-    /// Unique within a task only: a task's groups never share a positive.
+    /// large disk-backed group lists its first positives, counts the rest, and
+    /// ends in its `digest`. Display joins with commas, which paths may
+    /// contain, so distinct instructions can still share a label; the hasher
+    /// suffixes the `digest` onto any label two of a task's instructions share.
     pub fn label(&self) -> String {
         match self {
             HashInstruction::IgnoredFileSet(globs) if globs.len() > COMPACT_FILES_LABEL_ABOVE => {
@@ -349,12 +352,95 @@ impl HashInstruction {
                     counts.push(format!("+{} excluded", negations.len()));
                 }
                 let listed: Vec<&str> = positives[..shown].iter().map(|g| g.as_str()).collect();
+                let digest = self.digest();
                 match counts.is_empty() {
-                    true => format!("files:[{}]", listed.join(",")),
-                    false => format!("files:[{} ({})]", listed.join(","), counts.join(", ")),
+                    true => format!("files:[{} #{digest}]", listed.join(",")),
+                    false => format!(
+                        "files:[{} ({}) #{digest}]",
+                        listed.join(","),
+                        counts.join(", ")
+                    ),
                 }
             }
             _ => self.to_string(),
+        }
+    }
+
+    /// Eight hex digits over the whole value, for telling apart instructions
+    /// whose labels match.
+    pub fn digest(&self) -> String {
+        let mut fields = FieldHasher(Xxh3::new());
+        match self {
+            HashInstruction::WorkspaceFileSet(globs) => {
+                fields.field("workspace");
+                fields.list(globs);
+            }
+            HashInstruction::Runtime(runtime) => fields.fields(&["runtime", runtime]),
+            HashInstruction::Environment(env) => fields.fields(&["env", env]),
+            HashInstruction::Cwd(mode) => fields.fields(&["cwd", &mode.to_string()]),
+            HashInstruction::ProjectFileSet(project, globs) => {
+                fields.fields(&["project", project]);
+                fields.list(globs);
+            }
+            HashInstruction::IgnoredFileSet(globs) => {
+                fields.field("files");
+                fields.list(globs);
+            }
+            HashInstruction::ProjectConfiguration(project) => {
+                fields.fields(&["project-configuration", project])
+            }
+            HashInstruction::TsConfiguration(project) => fields.fields(&["tsconfig", project]),
+            HashInstruction::TaskOutput(output, dep_outputs) => {
+                fields.fields(&["task-output", output]);
+                fields.list(dep_outputs);
+            }
+            HashInstruction::External(external) => fields.fields(&["external", external]),
+            HashInstruction::AllExternalDependencies => fields.field("all-externals"),
+            HashInstruction::JsonFileSet(json) => {
+                fields.field("json");
+                match &json.project_name {
+                    Some(project) => fields.fields(&["project", project]),
+                    None => fields.field("none"),
+                }
+                fields.field(&json.json_path);
+                fields.optional_list(json.fields.as_deref());
+                fields.optional_list(json.exclude_fields.as_deref());
+            }
+            HashInstruction::UltracacheConfiguration(digest) => {
+                fields.fields(&["io-snapshot", digest])
+            }
+        }
+        format!("{:08x}", fields.0.digest() as u32)
+    }
+}
+
+/// Ends each field in NUL, which no path or name contains, and leads each list
+/// with its length, so no two values feed it the same bytes.
+struct FieldHasher(Xxh3);
+
+impl FieldHasher {
+    fn field(&mut self, value: &str) {
+        self.0.update(value.as_bytes());
+        self.0.update(&[0]);
+    }
+
+    fn fields(&mut self, values: &[&str]) {
+        for value in values {
+            self.field(value);
+        }
+    }
+
+    fn list(&mut self, values: &[String]) {
+        self.field(&values.len().to_string());
+        for value in values {
+            self.field(value);
+        }
+    }
+
+    fn optional_list(&mut self, values: Option<&[String]>) {
+        match values {
+            Some(values) => self.list(values),
+            None => self.field("none"),
         }
     }
 }
@@ -456,20 +542,69 @@ mod tests {
         assert_eq!(small.label(), small.to_string());
         let mut globs: Vec<String> = (0..3).map(|i| format!("libs/p/f{i}.ts")).collect();
         globs.extend((0..7).map(|i| format!("!libs/p/n{i}.ts")));
+        let excluding = HashInstruction::IgnoredFileSet(globs);
         assert_eq!(
-            HashInstruction::IgnoredFileSet(globs).label(),
-            "files:[libs/p/f0.ts,libs/p/f1.ts,libs/p/f2.ts (+7 excluded)]"
+            excluding.label(),
+            format!(
+                "files:[libs/p/f0.ts,libs/p/f1.ts,libs/p/f2.ts (+7 excluded) #{}]",
+                excluding.digest()
+            )
         );
         let globs: Vec<String> = (0..20).map(|i| format!("libs/p/f{i}.ts")).collect();
         let big = HashInstruction::IgnoredFileSet(globs.clone());
         let label = big.label();
-        assert!(label.ends_with("libs/p/f7.ts (+12 more)]"), "{label}");
+        assert!(
+            label.ends_with(&format!("libs/p/f7.ts (+12 more) #{}]", big.digest())),
+            "{label}"
+        );
         let tracked = HashInstruction::ProjectFileSet("p".into(), globs);
         assert_eq!(tracked.label(), tracked.to_string());
         let pool = InstructionPool::new();
         let id = pool.intern(big.clone());
         assert_eq!(&*pool.label(id), label.as_str());
         assert_eq!(&*pool.key(id), big.to_string().as_str());
+    }
+
+    #[test]
+    fn groups_that_differ_only_in_where_a_comma_sits_digest_apart() {
+        let left = HashInstruction::IgnoredFileSet(vec!["a,b".into(), "c".into()]);
+        let right = HashInstruction::IgnoredFileSet(vec!["a".into(), "b,c".into()]);
+        assert_eq!(left.label(), right.label());
+        assert_ne!(left.digest(), right.digest());
+        let pool = InstructionPool::new();
+        assert_ne!(pool.intern(left), pool.intern(right));
+        // Fields from different variants or lists cannot shift into each other.
+        assert_ne!(
+            HashInstruction::ProjectFileSet("a".into(), vec!["b".into()]).digest(),
+            HashInstruction::TaskOutput("a".into(), vec!["b".into()]).digest()
+        );
+        let json = |fields: Option<Vec<String>>, exclude_fields: Option<Vec<String>>| {
+            HashInstruction::JsonFileSet(Box::new(JsonFileSetInput {
+                project_name: None,
+                json_path: "package.json".into(),
+                fields,
+                exclude_fields,
+            }))
+        };
+        assert_ne!(
+            json(Some(vec!["a".into()]), None).digest(),
+            json(None, Some(vec!["a".into()])).digest()
+        );
+    }
+
+    #[test]
+    fn folded_groups_sharing_their_shown_positives_and_counts_label_apart() {
+        let shared: Vec<String> = (0..8).map(|i| format!("libs/p/f{i}.ts")).collect();
+        let with_tail = |tail: &str| {
+            let mut globs = shared.clone();
+            globs.push(tail.into());
+            HashInstruction::IgnoredFileSet(globs)
+        };
+        let left = with_tail("libs/p/x.ts");
+        let right = with_tail("libs/p/y.ts");
+        assert_ne!(left.label(), right.label());
+        let prefix = |label: &str| label.rsplit_once(" #").unwrap().0.to_string();
+        assert_eq!(prefix(&left.label()), prefix(&right.label()));
     }
 
     #[test]
