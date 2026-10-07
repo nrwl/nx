@@ -64,6 +64,7 @@ import {
   resolvePackageVersionRespectingMinReleaseAge,
 } from './resolve-package-version';
 import { handleErrors } from '../../utils/handle-errors';
+import { exitAsInterrupted } from '../../utils/exit-codes';
 import {
   connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
@@ -240,7 +241,7 @@ export function formatCommandFailure(
   );
 }
 
-// The child handles Ctrl+C. Killed by it, this process would hand the
+// Ctrl+C is left to the child. Killed by it, this process would hand the
 // terminal back to the shell while the child still runs.
 function runOrReturnExitCode(run: () => void): number {
   const leaveSigintToChild = () => {};
@@ -249,14 +250,9 @@ function runOrReturnExitCode(run: () => void): number {
     run();
     return 0;
   } catch (e) {
-    if (
-      typeof e === 'object' &&
-      e !== null &&
-      'status' in e &&
-      typeof e.status === 'number'
-    ) {
-      return e.status;
-    }
+    if (typeof e !== 'object' || e === null) throw e;
+    if ('signal' in e && e.signal === 'SIGINT') exitAsInterrupted();
+    if ('status' in e && typeof e.status === 'number') return e.status;
     throw e;
   } finally {
     process.removeListener('SIGINT', leaveSigintToChild);
