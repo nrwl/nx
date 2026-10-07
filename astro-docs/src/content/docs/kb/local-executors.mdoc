@@ -192,11 +192,56 @@ For other ideas on how to create your own executors, you can always check out Nx
 
 ## Using custom hashers
 
-For most executors, the default hashing in Nx makes sense. The output of the executor is dependent on the files in the project that it is being run for, or that project's dependencies, and nothing else. Changing a miscellaneous file at the workspace root will not affect that executor, and changing _*any*_ file inside of the project may affect the executor. When dealing with targets which only depend on a small subset of the files in a project, or may depend on arbitrary data that is not stored within the project, the default hasher may not make sense anymore. In these cases, the target will either experience more frequent cache misses than necessary or not be able to be cached.
+{% callout type="warning" title="Custom hashers are deprecated" %}
+Custom hashers are deprecated and will be removed in Nx 25.
+Declare what a task depends on as target `inputs` instead.
+Nx prints a warning once for each executor that declares a `hasher`, when it first hashes one of its tasks.
+{% /callout %}
 
-Executors can provide a custom hasher that Nx uses when determining if a target run should be a cache hit, or if it must be run. When generating an executor for a plugin, you can use `nx g @nx/plugin:executor packages/my-plugin/src/executors/my-executor --includeHasher` to automatically add a custom hasher.
+A custom hasher replaces the hash Nx computes from a task's inputs.
+Executors use them when a target depended on a small subset of the files in a project, or on data stored outside the project.
+Target inputs cover those cases without code.
 
-If you want to add a custom hasher manually, create a new file beside your executor's implementation. We will use `hasher.ts` as an example here. You'll also need to update `executors.json`, so that it resembles something like this:
+### Replace a custom hasher with inputs
+
+Read what your hasher hashes and pick the matching input:
+
+| What the hasher hashes                                | Input                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------- |
+| The project and its dependencies (Nx default hashing) | `"default"` and `"^default"`                            |
+| Files of specific other projects                      | `{ "input": "default", "projects": ["shared-config"] }` |
+| A subset of the files in the project                  | `{ "fileset": "{projectRoot}/src/**/*.graphql" }`       |
+| A file outside any project                            | `{ "fileset": "{workspaceRoot}/schema.json" }`          |
+| An environment variable                               | `{ "env": "API_URL" }`                                  |
+| The output of a command, such as a tool version       | `{ "runtime": "node --version" }`                       |
+
+A `runtime` input runs its command on every hash, so it also covers values a hasher fetched from elsewhere.
+Keep the command fast.
+
+To apply the inputs to every target that uses the executor, set them in `targetDefaults`, keyed by the executor name:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "@my-org/my-plugin:echo": {
+      "inputs": [
+        "default",
+        { "fileset": "{workspaceRoot}/schema.json" },
+        { "runtime": "node --version" }
+      ]
+    }
+  }
+}
+```
+
+You can also set `inputs` on the individual targets that use the executor.
+Once the inputs cover everything the hasher hashed, delete the hasher file and remove `hasher` from `executors.json`.
+For every input type, see the [inputs reference](/docs/reference/inputs).
+
+### How custom hashers work
+
+An executor declares a custom hasher with the `hasher` property in `executors.json`:
 
 ```json
 // executors.json
@@ -211,7 +256,8 @@ If you want to add a custom hasher manually, create a new file beside your execu
 }
 ```
 
-This would allow you to write a custom function in `hasher.ts`, which Nx would use to calculate the target's hash. As an example, consider the below hasher which mimics the behavior of Nx default hashing algorithm.
+The hasher module exports a function that returns the hash for a task.
+The hasher below mimics Nx default hashing:
 
 ```typescript
 // hasher.ts
@@ -227,22 +273,5 @@ export const mimicNxHasher: CustomHasher = async (
 export default mimicNxHasher;
 ```
 
-The hash function can do anything it wants, but it is important to remember that the hasher replaces the hashing done normally by Nx. If you change the hasher, Nx may return cache hits when you do not anticipate it. Imagine the below custom hasher:
-
-```typescript
-// hasher.ts
-import { CustomHasher, Task, HasherContext } from '@nx/devkit';
-
-export const badHasher: CustomHasher = async (
-  task: Task,
-  context: HasherContext
-) => {
-  return {
-    value: 'my-static-hash',
-  };
-};
-
-export default badHasher;
-```
-
-This hasher would never return a different hash, so every run of a task that consumes the executor would be a cache hit. It is important that anything that would change the result of your executor's implementation is accounted for in the hasher.
+Nx uses the returned hash as is, so anything that changes the executor's result has to feed into it.
+A hasher that returns a constant value, such as `{ value: 'my-static-hash' }`, makes every run of the task a cache hit.
