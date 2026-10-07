@@ -38,7 +38,13 @@ impl NxGlobSetBuilder {
 
     pub fn add(&mut self, glob: &str) -> anyhow::Result<&mut NxGlobSetBuilder> {
         let negated = glob.starts_with('!');
-        let glob_string = glob.strip_prefix('!').unwrap_or(glob).to_string();
+        self.add_signed(glob.strip_prefix('!').unwrap_or(glob), negated)
+    }
+
+    /// `add` with the sign given rather than read off a leading `!`, which
+    /// is then part of the glob.
+    fn add_signed(&mut self, glob: &str, negated: bool) -> anyhow::Result<&mut NxGlobSetBuilder> {
+        let glob_string = glob.to_string();
 
         let glob_string = if glob_string.ends_with('/') {
             format!("{}**", glob_string)
@@ -177,10 +183,38 @@ fn potential_glob_split(
     Left(parts.into_iter())
 }
 
+/// `glob` in the matching engine's syntax: a lone top-level brace group split
+/// into its alternatives, extglobs converted. A `!` marks a glob that
+/// excludes, whether the input negated or an extglob negates part of it.
+pub(crate) fn converted_globs(glob: &str) -> anyhow::Result<Vec<String>> {
+    Ok(potential_glob_split(glob)
+        .map(convert_glob)
+        .collect::<anyhow::Result<Vec<_>>>()?
+        .concat())
+}
+
+/// Positive globs already in the engine's syntax, see `converted_globs`,
+/// compiled without converting them again: a path matches if any does. A
+/// leading `!` is part of a glob.
+pub(crate) fn build_converted_glob_set(globs: &[String]) -> anyhow::Result<Arc<NxGlobSet>> {
+    let cache_key = format!("\u{1}converted\0{}", globs.join("\0"));
+    if let Some(cached) = GLOB_CACHE.get(&cache_key) {
+        return Ok(Arc::clone(cached.value()));
+    }
+    let mut builder = NxGlobSetBuilder::new::<&str>(&[])?;
+    for glob in globs {
+        builder.add_signed(glob, false)?;
+    }
+    let glob_set = Arc::new(builder.build(None)?);
+    GLOB_CACHE.insert(cache_key, Arc::clone(&glob_set));
+    Ok(glob_set)
+}
+
 pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<Arc<NxGlobSet>> {
     let mut sorted_globs: Vec<&str> = globs.iter().map(|s| s.as_ref()).collect();
     sorted_globs.sort();
-    let cache_key = sorted_globs.join("\0");
+    // Counted, so no globs and one empty glob do not share a key.
+    let cache_key = format!("{}\0{}", sorted_globs.len(), sorted_globs.join("\0"));
 
     if let Some(cached) = GLOB_CACHE.get(&cache_key) {
         return Ok(Arc::clone(cached.value()));
@@ -188,8 +222,7 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
 
     let result = globs
         .iter()
-        .flat_map(|s| potential_glob_split(s.as_ref()))
-        .map(convert_glob)
+        .map(|glob| converted_globs(glob.as_ref()))
         .collect::<anyhow::Result<Vec<_>>>()?
         .concat();
 
@@ -253,6 +286,12 @@ mod test {
             ));
         }
         insta::assert_snapshot!(report);
+    }
+
+    #[test]
+    fn no_globs_and_one_empty_glob_are_cached_apart() {
+        assert!(build_glob_set::<&str>(&[]).unwrap().is_match("x.ts"));
+        assert!(!build_glob_set(&[""]).unwrap().is_match("x.ts"));
     }
 
     #[test]

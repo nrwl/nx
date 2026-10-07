@@ -7,15 +7,14 @@
 //! - `expansion` resolves the entries into files, leaning on the workspace
 //!   context or an index wherever it can, and walking where it cannot.
 //! - `scope` keeps an entry to its project's files, out of nested projects.
-//! - `file_map` matches a regular fileset against the file map, read from
-//!   the same literal prefixes.
+//! - `file_map` is the source a regular fileset expands from.
 
 mod entries;
 mod expansion;
 mod file_map;
 mod scope;
 
-pub(crate) use entries::{Negation, Positive};
+pub(crate) use entries::{FileSet, Negation, Positive};
 pub use expansion::FilesExpansion;
 #[cfg(test)]
 use expansion::NOTHING_TRACKED;
@@ -26,7 +25,7 @@ pub(crate) use expansion::{
 pub(crate) use expansion::{
     parse_group, parse_group_with_exclusions, validate_files_glob, validate_files_globs,
 };
-pub(crate) use file_map::{FileSet, PathIndex, fold_files, match_file_map};
+pub(crate) use file_map::{PathIndex, fold_files, match_file_map};
 pub(crate) use scope::{ProjectScope, ScopedMatcher, scope_roots};
 
 #[cfg(test)]
