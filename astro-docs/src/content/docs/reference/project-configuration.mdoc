@@ -638,8 +638,10 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
 - `url`: ready when an HTTP or HTTPS `GET` request gets a status from 200 to 403.
   A redirect counts as ready and isn't followed.
   A 404 at the root path is retried at `/index.html`.
-  Certificates aren't verified, so a self-signed development certificate works.
-  Proxy environment variables such as `HTTP_PROXY` and `NO_PROXY` apply.
+  Certificates are verified, except for a loopback host such as `localhost`,
+  where a self-signed development certificate works.
+  Proxy environment variables such as `HTTP_PROXY` and `NO_PROXY` apply to other hosts.
+  A loopback request is never proxied.
 - `port`: ready when a TCP connection to the port succeeds.
   Nx tries both `127.0.0.1` and `::1` unless `host` names the address to connect to.
 - `command`: ready when the command, run through the shell at the workspace root, exits with code 0.
