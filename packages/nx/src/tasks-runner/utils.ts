@@ -679,26 +679,21 @@ export function createTaskId(
 }
 
 /**
- * Identity used by the recursive invocation detector. The task id alone would
- * report `nx run app:build --flag` invoked from within `app:build` as a loop,
- * so the overrides are folded in. A real loop re-invokes through a fixed
- * command, so its overrides stop changing after the first hop and the key
- * still repeats.
+ * Distinguishes two invocations of the same task for the recursive invocation
+ * detector. The task id alone would report `nx run app:build --flag` invoked
+ * from within `app:build` as a loop, so the detector pairs the id with this
+ * hash and only treats an exact repeat as an immediate loop.
+ *
+ * The hash cannot decide recursion on its own. Arguments that accumulate
+ * through forwarding (`app:build` -> `app:build hello` -> `app:build hello
+ * hello`) hash differently on every hop, so the tracker also bounds how many
+ * ancestors may be running one task id.
  *
  * `__overrides_unparsed__` is dropped, matching how the task hasher treats it:
  * it restates the other keys as raw argv, down to flag order and spelling.
  */
-export function createTaskInvocationKey(task: Task): string {
+export function hashTaskOverrides(task: Task): string {
   const overrides = { ...task.overrides };
   delete overrides['__overrides_unparsed__'];
-  return `${task.id}${INVOCATION_KEY_SEPARATOR}${hashObject(overrides)}`;
+  return hashObject(overrides);
 }
-
-export function taskIdFromInvocationKey(key: string): string {
-  const separator = key.lastIndexOf(INVOCATION_KEY_SEPARATOR);
-  return separator === -1 ? key : key.slice(0, separator);
-}
-
-// The hash is a decimal xxh3_64 string, so it never contains the separator: the
-// last one is always the one we appended, even for a task id that contains it.
-const INVOCATION_KEY_SEPARATOR = '|';

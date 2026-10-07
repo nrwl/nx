@@ -1,13 +1,12 @@
 import {
-  createTaskInvocationKey,
   expandDependencyConfigSyntaxSugar,
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
+  hashTaskOverrides,
   interpolate,
   pruneToSelectedTasks,
-  taskIdFromInvocationKey,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
@@ -1231,7 +1230,7 @@ describe('pruneToSelectedTasks', () => {
   });
 });
 
-describe('task invocation keys', () => {
+describe('task overrides hash', () => {
   function task(id: string, overrides: Record<string, unknown>): Task {
     const [project, target, configuration] = id.split(':');
     return {
@@ -1244,24 +1243,24 @@ describe('task invocation keys', () => {
   }
 
   it('should separate the same task run with different overrides', () => {
-    expect(
-      createTaskInvocationKey(task('app:build', { watch: true }))
-    ).not.toBe(createTaskInvocationKey(task('app:build', { watch: false })));
+    expect(hashTaskOverrides(task('app:build', { watch: true }))).not.toBe(
+      hashTaskOverrides(task('app:build', { watch: false }))
+    );
   });
 
   it('should not depend on the order the overrides were written in', () => {
-    expect(createTaskInvocationKey(task('app:build', { a: 1, b: 2 }))).toBe(
-      createTaskInvocationKey(task('app:build', { b: 2, a: 1 }))
+    expect(hashTaskOverrides(task('app:build', { a: 1, b: 2 }))).toBe(
+      hashTaskOverrides(task('app:build', { b: 2, a: 1 }))
     );
   });
 
   it('should ignore the raw argv restatement of the overrides', () => {
     expect(
-      createTaskInvocationKey(
+      hashTaskOverrides(
         task('app:build', { watch: true, __overrides_unparsed__: ['--watch'] })
       )
     ).toBe(
-      createTaskInvocationKey(
+      hashTaskOverrides(
         task('app:build', {
           watch: true,
           __overrides_unparsed__: ['--watch=true'],
@@ -1270,11 +1269,20 @@ describe('task invocation keys', () => {
     );
   });
 
-  it('should recover the task id for display, including ids containing the separator', () => {
-    for (const id of ['app:build', 'app:build:production', 'a|b:build']) {
-      expect(
-        taskIdFromInvocationKey(createTaskInvocationKey(task(id, {})))
-      ).toBe(id);
-    }
+  it('should not depend on the task id, which the tracker stores separately', () => {
+    expect(hashTaskOverrides(task('app:build', { watch: true }))).toBe(
+      hashTaskOverrides(task('other:test:ci', { watch: true }))
+    );
+  });
+
+  it('should grow a different hash on every hop when arguments accumulate', () => {
+    const hashes = [
+      hashTaskOverrides(task('app:build', { _: [] })),
+      hashTaskOverrides(task('app:build', { _: ['hello'] })),
+      hashTaskOverrides(task('app:build', { _: ['hello', 'hello'] })),
+    ];
+
+    // Why the tracker cannot rely on the hash alone to spot this recursion.
+    expect(new Set(hashes).size).toBe(3);
   });
 });

@@ -71,14 +71,13 @@ import { TaskStatus } from './tasks-runner';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import {
   calculateReverseDeps,
-  createTaskInvocationKey,
   expandInitiatingTasksThroughNoop,
   getExecutorForTask,
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
+  hashTaskOverrides,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
-  taskIdFromInvocationKey,
 } from './utils';
 
 type CacheHit = {
@@ -131,9 +130,10 @@ export class TaskOrchestrator {
         getInvocationAncestorPids()
       )
     : null;
-  // Tasks this process has already registered. Recursive code paths (e.g.
+  // Task ids this process has already registered. Recursive code paths (e.g.
   // applyFromCacheOrRunBatch looping on incomplete batches) re-enter the
-  // detector for the same task; skipping them saves a DB round trip.
+  // detector for the same task; skipping them saves a DB round trip. A task id
+  // is unique within one process, so it is enough to identify the row.
   private registeredInvocations = new Set<string>();
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
@@ -491,17 +491,21 @@ export class TaskOrchestrator {
    * *ancestor* Nx process is already running this task — a genuine loop.
    * Sibling processes running the same task are legitimate and register
    * without complaint.
+   *
+   * The overrides hash rides along with the task id so the tracker can tell an
+   * ancestor re-invoking a task with different arguments from one repeating
+   * the same invocation.
    */
   private detectTaskInvocationLoop(task: Task): void {
     if (!this.taskInvocationTracker) return;
-    const invocationKey = createTaskInvocationKey(task);
-    if (this.registeredInvocations.has(invocationKey)) return;
+    if (this.registeredInvocations.has(task.id)) return;
 
     let chain: InvocationRecord[] | null;
     try {
       chain = this.taskInvocationTracker.registerTask(
         process.pid,
-        invocationKey
+        task.id,
+        hashTaskOverrides(task)
       );
     } catch {
       // Loop detection is diagnostic only; a DB failure must not fail the run
@@ -510,13 +514,11 @@ export class TaskOrchestrator {
     }
 
     if (!chain) {
-      this.registeredInvocations.add(invocationKey);
+      this.registeredInvocations.add(task.id);
       return;
     }
 
-    const chainDisplay = chain
-      .map((r) => taskIdFromInvocationKey(r.taskId))
-      .join(' -> ');
+    const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
     output.error({
       title: 'Recursive task invocation detected',
       bodyLines: [
@@ -535,10 +537,9 @@ export class TaskOrchestrator {
   }
 
   private releaseTaskInvocation(task: Task): void {
-    const invocationKey = createTaskInvocationKey(task);
-    if (!this.registeredInvocations.delete(invocationKey)) return;
+    if (!this.registeredInvocations.delete(task.id)) return;
     try {
-      this.taskInvocationTracker?.unregisterTask(process.pid, invocationKey);
+      this.taskInvocationTracker?.unregisterTask(process.pid, task.id);
     } catch {
       // Diagnostic only, like registration. A leftover row is swept as stale.
     }

@@ -8,15 +8,32 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_invocations (
     root_pid INTEGER NOT NULL,
     pid INTEGER NOT NULL,
     task_id TEXT NOT NULL,
+    overrides_hash TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (root_pid, pid, task_id)
 );";
+
+/// How many ancestor processes may already be running a task before another
+/// invocation of it is a loop. Two ancestors is the first depth that cannot be
+/// a terminating `app:build -> app:build --flag` chain, so it bounds a
+/// recursion whose arguments keep changing at three nested Nx processes.
+const MAX_ANCESTOR_INVOCATIONS_PER_TASK: usize = 2;
 
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct InvocationRecord {
     pub pid: u32,
     pub task_id: String,
+}
+
+/// A stored invocation. `task_id` is `project:target:configuration`, so two
+/// rows can share one and still be different invocations of it. The overrides
+/// hash is what tells them apart.
+#[derive(Clone, Debug)]
+struct InvocationRow {
+    pid: u32,
+    task_id: String,
+    overrides_hash: String,
 }
 
 /// Tracks which tasks each Nx process in a nested process tree is running, so
@@ -62,34 +79,51 @@ impl TaskInvocationTracker {
     /// this task, which is a genuine loop. The chain lists every task invoked
     /// along the ancestry path, outermost first. Returns `null` when the task
     /// was registered, including when a *sibling* process is already running it.
+    ///
+    /// An ancestor running this task with the *same* overrides is a loop
+    /// immediately. An ancestor running it with different overrides is allowed
+    /// up to `MAX_ANCESTOR_INVOCATIONS_PER_TASK`, which lets a terminating
+    /// `app:build -> app:build --flag` chain through while still bounding a
+    /// recursion whose forwarded arguments grow on every hop.
     #[napi]
     pub fn register_task(
         &self,
         pid: u32,
         task_id: String,
+        overrides_hash: String,
     ) -> anyhow::Result<Option<Vec<InvocationRecord>>> {
         if !self.ancestor_pids.is_empty() {
             // One read: the chain is rendered from the same snapshot the loop
             // check ran against, so an ancestor unregistering in between
             // cannot leave the reported chain empty.
-            let records = self.invocations_for_root()?;
-            if records
+            let rows = self.invocations_for_root()?;
+            let ancestors_running_task: Vec<&InvocationRow> = rows
                 .iter()
-                .any(|record| record.task_id == task_id && self.ancestor_pids.contains(&record.pid))
-            {
+                .filter(|row| row.task_id == task_id && self.ancestor_pids.contains(&row.pid))
+                .collect();
+
+            let repeats_an_ancestor_invocation = ancestors_running_task
+                .iter()
+                .any(|row| row.overrides_hash == overrides_hash);
+            let nested_too_deeply =
+                ancestors_running_task.len() >= MAX_ANCESTOR_INVOCATIONS_PER_TASK;
+
+            if repeats_an_ancestor_invocation || nested_too_deeply {
                 debug!(
-                    "Loop detected: task {} is already running in an ancestor of pid {}",
-                    &task_id, pid
+                    "Loop detected: task {} is already running in {} ancestor(s) of pid {}",
+                    &task_id,
+                    ancestors_running_task.len(),
+                    pid
                 );
-                return Ok(Some(self.ancestor_invocation_chain(&records)));
+                return Ok(Some(self.ancestor_invocation_chain(&rows)));
             }
         }
 
         // A sibling may already hold this task id, so re-registering is not an
         // error; the primary key includes the pid to keep the rows distinct.
         self.db.lock().unwrap().execute(
-            "INSERT OR REPLACE INTO task_invocations (root_pid, pid, task_id) VALUES (?1, ?2, ?3)",
-            params![self.root_pid, pid, task_id],
+            "INSERT OR REPLACE INTO task_invocations (root_pid, pid, task_id, overrides_hash) VALUES (?1, ?2, ?3, ?4)",
+            params![self.root_pid, pid, task_id, overrides_hash],
         )?;
         debug!(
             "Registered task invocation: root_pid={}, pid={}, task_id={}",
@@ -131,32 +165,36 @@ impl TaskInvocationTracker {
     /// ancestor first. Ordering comes from the ancestry itself rather than
     /// from `created_at`, whose one-second granularity cannot order rows
     /// written within the same second.
-    fn ancestor_invocation_chain(&self, records: &[InvocationRecord]) -> Vec<InvocationRecord> {
+    fn ancestor_invocation_chain(&self, rows: &[InvocationRow]) -> Vec<InvocationRecord> {
         let mut chain = Vec::new();
         for ancestor_pid in &self.ancestor_pids {
-            for record in records {
-                if record.pid == *ancestor_pid {
-                    chain.push(record.clone());
+            for row in rows {
+                if row.pid == *ancestor_pid {
+                    chain.push(InvocationRecord {
+                        pid: row.pid,
+                        task_id: row.task_id.clone(),
+                    });
                 }
             }
         }
         chain
     }
 
-    fn invocations_for_root(&self) -> anyhow::Result<Vec<InvocationRecord>> {
+    fn invocations_for_root(&self) -> anyhow::Result<Vec<InvocationRow>> {
         let db = self.db.lock().unwrap();
         let mut stmt = db.prepare(
-            "SELECT pid, task_id FROM task_invocations WHERE root_pid = ?1 ORDER BY created_at ASC",
+            "SELECT pid, task_id, overrides_hash FROM task_invocations WHERE root_pid = ?1 ORDER BY created_at ASC",
         )?;
-        let records = stmt
+        let rows = stmt
             .query_map(params![self.root_pid], |row| {
-                Ok(InvocationRecord {
+                Ok(InvocationRow {
                     pid: row.get(0)?,
                     task_id: row.get(1)?,
+                    overrides_hash: row.get(2)?,
                 })
             })?
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(records)
+        Ok(rows)
     }
 }
 
@@ -167,6 +205,9 @@ mod tests {
     use rusqlite::Connection;
 
     const ROOT_PID: u32 = 100;
+    /// Overrides hash of a task invoked with no overrides. The tracker treats
+    /// the key as opaque, so any stable string stands in for a real hash.
+    const NO_OVERRIDES: &str = "0";
 
     fn tracker(db: &Arc<Mutex<NxDbConnection>>, ancestor_pids: Vec<u32>) -> TaskInvocationTracker {
         TaskInvocationTracker {
@@ -191,13 +232,13 @@ mod tests {
 
         assert!(
             sibling_a
-                .register_task(200, "app-e2e:serve-static".into())
+                .register_task(200, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
                 .unwrap()
                 .is_none()
         );
         assert!(
             sibling_b
-                .register_task(300, "app-e2e:serve-static".into())
+                .register_task(300, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
                 .unwrap()
                 .is_none(),
             "a sibling running the same task is not a loop"
@@ -210,10 +251,10 @@ mod tests {
         let root = tracker(&db, vec![]);
         let child = tracker(&db, vec![ROOT_PID]);
 
-        root.register_task(ROOT_PID, "app-e2e:serve-static".into())
+        root.register_task(ROOT_PID, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
             .unwrap();
         let chain = child
-            .register_task(200, "app-e2e:serve-static".into())
+            .register_task(200, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
             .unwrap()
             .expect("re-invoking an ancestor's task is a loop");
 
@@ -229,13 +270,17 @@ mod tests {
         let middle = tracker(&db, vec![ROOT_PID]);
         let leaf = tracker(&db, vec![ROOT_PID, 200]);
 
-        root.register_task(ROOT_PID, "app-e2e:e2e-ci--a.cy.ts".into())
-            .unwrap();
+        root.register_task(
+            ROOT_PID,
+            "app-e2e:e2e-ci--a.cy.ts".into(),
+            NO_OVERRIDES.into(),
+        )
+        .unwrap();
         middle
-            .register_task(200, "app-e2e:serve-static".into())
+            .register_task(200, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
             .unwrap();
         let chain = leaf
-            .register_task(300, "app-e2e:serve-static".into())
+            .register_task(300, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
             .unwrap()
             .expect("the grandparent chain re-invokes serve-static");
 
@@ -254,8 +299,11 @@ mod tests {
         let middle = tracker(&db, vec![ROOT_PID]);
         let leaf = tracker(&db, vec![ROOT_PID, 200]);
 
-        root.register_task(ROOT_PID, "root:task".into()).unwrap();
-        middle.register_task(200, "mid:task".into()).unwrap();
+        root.register_task(ROOT_PID, "root:task".into(), NO_OVERRIDES.into())
+            .unwrap();
+        middle
+            .register_task(200, "mid:task".into(), NO_OVERRIDES.into())
+            .unwrap();
         // Make the root's row the newest, so created_at ordering would invert
         // the chain.
         db.lock()
@@ -267,7 +315,7 @@ mod tests {
             .unwrap();
 
         let chain = leaf
-            .register_task(300, "mid:task".into())
+            .register_task(300, "mid:task".into(), NO_OVERRIDES.into())
             .unwrap()
             .expect("re-invoking an ancestor's task is a loop");
 
@@ -283,10 +331,10 @@ mod tests {
         let child_of_b = tracker(&db, vec![ROOT_PID, 300]);
 
         sibling_a
-            .register_task(200, "app-e2e:serve-static".into())
+            .register_task(200, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
             .unwrap();
         sibling_b
-            .register_task(300, "app-e2e:serve-static".into())
+            .register_task(300, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
             .unwrap();
         sibling_a
             .unregister_task(200, "app-e2e:serve-static".into())
@@ -294,7 +342,7 @@ mod tests {
 
         assert!(
             child_of_b
-                .register_task(400, "app-e2e:serve-static".into())
+                .register_task(400, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
                 .unwrap()
                 .is_some(),
             "sibling A's cleanup must not erase sibling B's invocation"
@@ -307,16 +355,87 @@ mod tests {
         let root = tracker(&db, vec![]);
         let child = tracker(&db, vec![ROOT_PID]);
 
-        root.register_task(ROOT_PID, "app-e2e:build".into())
+        root.register_task(ROOT_PID, "app-e2e:build".into(), NO_OVERRIDES.into())
             .unwrap();
         root.unregister_task(ROOT_PID, "app-e2e:build".into())
             .unwrap();
 
         assert!(
             child
-                .register_task(200, "app-e2e:build".into())
+                .register_task(200, "app-e2e:build".into(), NO_OVERRIDES.into())
                 .unwrap()
                 .is_none()
+        );
+    }
+    #[test]
+    fn allows_an_ancestor_to_re_invoke_a_task_with_different_overrides() {
+        let db = in_memory_db();
+        let root = tracker(&db, vec![]);
+        let child = tracker(&db, vec![ROOT_PID]);
+
+        root.register_task(ROOT_PID, "app:build".into(), NO_OVERRIDES.into())
+            .unwrap();
+
+        assert!(
+            child
+                .register_task(200, "app:build".into(), "flag".into())
+                .unwrap()
+                .is_none(),
+            "`nx run app:build --flag` from inside app:build is a different invocation, not a loop"
+        );
+    }
+
+    #[test]
+    fn reports_a_loop_when_forwarded_arguments_accumulate() {
+        let db = in_memory_db();
+        // `app:build` runs `nx run app:build hello`, and run-commands forwards
+        // arguments, so the positional array grows on every hop and no two
+        // overrides hashes match.
+        let root = tracker(&db, vec![]);
+        let middle = tracker(&db, vec![ROOT_PID]);
+        let leaf = tracker(&db, vec![ROOT_PID, 200]);
+
+        root.register_task(ROOT_PID, "app:build".into(), NO_OVERRIDES.into())
+            .unwrap();
+        assert!(
+            middle
+                .register_task(200, "app:build".into(), "hello".into())
+                .unwrap()
+                .is_none(),
+            "one nested invocation with different overrides stays allowed"
+        );
+
+        let chain = leaf
+            .register_task(300, "app:build".into(), "hello-hello".into())
+            .unwrap()
+            .expect("a third invocation of the same task is a loop whatever its arguments");
+
+        let rendered: Vec<&str> = chain.iter().map(|r| r.task_id.as_str()).collect();
+        assert_eq!(rendered, vec!["app:build", "app:build"]);
+    }
+
+    #[test]
+    fn the_accumulation_bound_counts_ancestors_not_siblings() {
+        let db = in_memory_db();
+        let sibling_a = tracker(&db, vec![ROOT_PID]);
+        let sibling_b = tracker(&db, vec![ROOT_PID]);
+        let child_of_b = tracker(&db, vec![ROOT_PID, 300]);
+
+        // Two siblings hold app:build under different overrides. Neither is an
+        // ancestor of child_of_b, so only sibling B's row counts against it.
+        sibling_a
+            .register_task(200, "app:build".into(), "a".into())
+            .unwrap();
+        sibling_b
+            .register_task(300, "app:build".into(), "b".into())
+            .unwrap();
+
+        assert!(
+            child_of_b
+                .register_task(400, "app:build".into(), "c".into())
+                .unwrap()
+                .is_none(),
+            "a sibling's invocation must not push a descendant over the bound"
         );
     }
 }

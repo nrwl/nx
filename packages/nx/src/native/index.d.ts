@@ -308,8 +308,14 @@ export declare class TaskInvocationTracker {
    * this task, which is a genuine loop. The chain lists every task invoked
    * along the ancestry path, outermost first. Returns `null` when the task
    * was registered, including when a *sibling* process is already running it.
+   *
+   * An ancestor running this task with the *same* overrides is a loop
+   * immediately. An ancestor running it with different overrides is allowed
+   * up to `MAX_ANCESTOR_INVOCATIONS_PER_TASK`, which lets a terminating
+   * `app:build -> app:build --flag` chain through while still bounding a
+   * recursion whose forwarded arguments grow on every hop.
    */
-  registerTask(pid: number, taskId: string): Array<InvocationRecord> | null
+  registerTask(pid: number, taskId: string, overridesHash: string): Array<InvocationRecord> | null
   /**
    * Remove a task invocation record after the task completes. Scoped to the
    * registering process so that a sibling finishing the same task does not
