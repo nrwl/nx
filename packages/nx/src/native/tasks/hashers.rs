@@ -12,6 +12,9 @@ mod hash_tsconfig;
 mod hash_workspace_files;
 mod once_cache;
 
+#[cfg(test)]
+mod fileset_characterization;
+
 pub use disk_expansion::*;
 pub use hash_cwd::*;
 pub use hash_env::*;
