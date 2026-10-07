@@ -22,6 +22,7 @@ import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { isGlobPattern } from '../utils/globs';
 import { isLongRunningTargetName } from '../utils/long-running-target';
+import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitTargetFromNodes } from '../utils/split-target';
@@ -504,12 +505,40 @@ export function getExecutorForTask(
   );
 }
 
+// TODO(v25): remove custom hasher support.
 export function getCustomHasher(
   task: Task,
   projects: Record<string, ProjectConfiguration>
 ): CustomHasher | null {
   const factory = getExecutorForTask(task, projects).hasherFactory;
-  return factory ? factory() : null;
+  if (!factory) {
+    return null;
+  }
+  warnCustomHasherDeprecation(
+    projects[task.target.project].targets[task.target.target].executor
+  );
+  return factory();
+}
+
+const customHasherDeprecationWarned = new Set<string>();
+
+function warnCustomHasherDeprecation(executor: string): void {
+  if (customHasherDeprecationWarned.has(executor)) {
+    return;
+  }
+  customHasherDeprecationWarned.add(executor);
+  output.warn({
+    title: `The "${executor}" executor uses a custom hasher. Custom hashers are deprecated and will be removed in Nx 25.`,
+    bodyLines: [
+      'Declare the files and commands the task depends on as target inputs instead.',
+      'See https://nx.dev/docs/kb/local-executors#using-custom-hashers',
+    ],
+  });
+}
+
+/** Test-only: forget which executors have been warned about. */
+export function resetCustomHasherDeprecationWarnings(): void {
+  customHasherDeprecationWarned.clear();
 }
 
 /**
