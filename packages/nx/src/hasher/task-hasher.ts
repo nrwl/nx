@@ -10,6 +10,7 @@ import type { UltracacheConfigurationVersion } from '../daemon/message-types/ult
 import { hashArray } from './file-hasher';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
+import { escapeGlob } from '../utils/globs';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import type { TaskPlanningContext } from './task-planning-context';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -571,8 +572,9 @@ export function filterUsingGlobPatterns(
   files: FileData[],
   patterns: string[]
 ): FileData[] {
+  const escapedRoot = escapeGlob(root);
   const filesetWithExpandedProjectRoot = patterns
-    .map((f) => f.replace('{projectRoot}', root))
+    .map((f) => f.replace('{projectRoot}', escapedRoot))
     .map((r) => {
       // handling root level projects that create './' pattern that doesn't work with minimatch
       if (r.startsWith('./')) return r.substring(2);
@@ -598,7 +600,7 @@ export function filterUsingGlobPatterns(
     let matchedPositive = false;
     if (
       positive.length === 0 ||
-      (positive.length === 1 && positive[0] === `${root}/**/*`)
+      (positive.length === 1 && positive[0] === `${escapedRoot}/**/*`)
     ) {
       matchedPositive = true;
     } else {

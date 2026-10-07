@@ -7,6 +7,7 @@ import {
   getNxRequirePaths,
 } from '@nx/devkit/internal';
 import {
+  escapeGlob,
   createNodesFromFiles,
   detectPackageManager,
   getPackageManagerCommand,
@@ -917,10 +918,10 @@ function getInputs(
     }
     inputs.push(
       ...Array.from(configFiles).map((p: string) =>
-        pathToInputOrOutput(p, workspaceRoot, config.project)
+        filePathToInput(p, workspaceRoot, config.project)
       ),
       ...Array.from(includePaths).map((p: string) =>
-        pathToInputOrOutput(
+        tsSpecToInput(
           joinPathFragments(config.project.root, p),
           workspaceRoot,
           config.project
@@ -937,7 +938,7 @@ function getInputs(
     inputs.push(
       ...Array.from(excludePaths).map(
         (p: string) =>
-          `!${pathToInputOrOutput(
+          `!${tsSpecToInput(
             joinPathFragments(config.project.root, p),
             workspaceRoot,
             config.project
@@ -1170,19 +1171,68 @@ function pathToInputOrOutput(
   workspaceRoot: string,
   project: ProjectContext
 ): string {
-  const fullProjectRoot = project.absolute;
+  const [root, relativePath] = rootAndRelativePath(
+    path,
+    workspaceRoot,
+    project
+  );
+  return joinPathFragments(root, relativePath);
+}
+
+/**
+ * An input for one real file, escaped so glob characters in its path match
+ * literally.
+ */
+function filePathToInput(
+  path: string,
+  workspaceRoot: string,
+  project: ProjectContext
+): string {
+  const [root, relativePath] = rootAndRelativePath(
+    path,
+    workspaceRoot,
+    project
+  );
+  return `${root}/${escapeGlob(relativePath)}`;
+}
+
+/**
+ * An input for a tsconfig include or exclude spec. TS reads only `*` and `?`
+ * as wildcards, so every other glob character is escaped.
+ */
+function tsSpecToInput(
+  spec: string,
+  workspaceRoot: string,
+  project: ProjectContext
+): string {
+  const [root, relativePath] = rootAndRelativePath(
+    spec,
+    workspaceRoot,
+    project
+  );
+  const escaped = relativePath
+    .split(/([*?])/)
+    .map((part, i) => (i % 2 ? part : escapeGlob(part)))
+    .join('');
+  return escaped ? `${root}/${escaped}` : root;
+}
+
+function rootAndRelativePath(
+  path: string,
+  workspaceRoot: string,
+  project: ProjectContext
+): ['{projectRoot}' | '{workspaceRoot}', string] {
   const fullPath = resolve(workspaceRoot, path);
   const pathRelativeToProjectRoot = normalizePath(
-    relative(fullProjectRoot, fullPath)
+    relative(project.absolute, fullPath)
   );
   if (pathRelativeToProjectRoot.startsWith('..')) {
-    return joinPathFragments(
+    return [
       '{workspaceRoot}',
-      relative(workspaceRoot, fullPath)
-    );
+      normalizePath(relative(workspaceRoot, fullPath)),
+    ];
   }
-
-  return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
+  return ['{projectRoot}', pathRelativeToProjectRoot];
 }
 
 function getExtendedConfigFiles(
