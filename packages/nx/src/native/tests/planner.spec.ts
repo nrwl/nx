@@ -1470,6 +1470,11 @@ describe('task planner', () => {
       expected: ['packaged-plugin:libs/packaged/**/*'],
     },
     {
+      name: 'a local @nx executor found by tsconfig path alias',
+      executor: '@nx/aliased:build',
+      expected: ['differently-named:libs/differently-named/**/*'],
+    },
+    {
       name: 'a local @nx executor with declared externals',
       executor: '@nx/local:build',
       declared: ['declared'],
@@ -1518,6 +1523,21 @@ describe('task planner', () => {
           targets: {},
         },
       });
+      builder.addNode({
+        name: 'differently-named',
+        type: 'lib',
+        data: { root: 'libs/differently-named', targets: {} },
+      });
+      tempFs.createFileSync(
+        'tsconfig.base.json',
+        JSON.stringify({
+          compilerOptions: {
+            paths: {
+              '@nx/aliased': ['libs/differently-named/src/index.ts'],
+            },
+          },
+        })
+      );
       for (const packageName of [
         '@nx/installed',
         'installed-dep',
@@ -1544,7 +1564,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {},
-        transferProjectGraph(toRustProjectGraph(graph))
+        transferProjectGraph(toRustProjectGraph(graph, tempFs.tempDir))
       );
       const plan = planner.getPlans(['app:build'], tasks)['app:build'];
 
@@ -1558,6 +1578,73 @@ describe('task planner', () => {
       ).toEqual(expected);
     }
   );
+
+  it('should invalidate a task when its tsconfig-aliased local executor changes', () => {
+    tempFs.createFileSync(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: {
+          paths: { '@nx/aliased': ['libs/plugin-src/src/index.ts'] },
+        },
+      })
+    );
+    const builder = new ProjectGraphBuilder();
+    builder.addNode({
+      name: 'app',
+      type: 'app',
+      data: {
+        root: 'apps/app',
+        targets: {
+          build: {
+            executor: '@nx/aliased:build',
+            inputs: ['{projectRoot}/**/*'],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'plugin-src',
+      type: 'lib',
+      data: { root: 'libs/plugin-src', targets: {} },
+    });
+    const graph = builder.getUpdatedProjectGraph();
+    const tasks = createTaskGraph(graph, {}, ['app'], ['build'], undefined, {});
+    const ref = transferProjectGraph(toRustProjectGraph(graph, tempFs.tempDir));
+    const planner = new HashPlanner({}, ref);
+
+    const hashWithExecutorSource = (executorHash: string) => {
+      const files = testOnlyTransferFileMap(
+        {
+          app: [{ file: 'apps/app/main.ts', hash: 'app-hash' }],
+          'plugin-src': [
+            { file: 'libs/plugin-src/src/index.ts', hash: executorHash },
+          ],
+        },
+        []
+      );
+      const hasher = new TaskHasher(
+        tempFs.tempDir,
+        ref,
+        files.projectFiles,
+        files.allWorkspaceFiles,
+        Buffer.from('{}'),
+        {},
+        undefined,
+        { selectivelyHashTsConfig: false },
+        files.ignoredIndex
+      );
+      return hasher.hashPlans(
+        planner.getPlansReference(['app:build'], tasks),
+        { 'app:build': {} },
+        tempFs.tempDir,
+        true
+      )['app:build'].value;
+    };
+
+    expect(hashWithExecutorSource('changed')).not.toBe(
+      hashWithExecutorSource('original')
+    );
+  });
 
   it('should interpolate {projectRoot} and {projectName} in {workspaceRoot} input patterns', async () => {
     let projectFileMap = {
