@@ -368,11 +368,11 @@ mod tests {
         // Verify we got results
         assert!(!result.is_empty());
 
-        // Without deduplication, this would take exponential time
-        // With deduplication and parallelization, should be very fast
+        // Without deduplication the 2^30 paths take minutes. The bound leaves
+        // headroom for a loaded machine, where a deduplicated walk can exceed 10ms.
         assert!(
-            elapsed.as_millis() < 10,
-            "Performance regression: expected <10ms, got {:?}",
+            elapsed.as_millis() < 1000,
+            "Performance regression: expected <1s, got {:?}",
             elapsed
         );
     }
