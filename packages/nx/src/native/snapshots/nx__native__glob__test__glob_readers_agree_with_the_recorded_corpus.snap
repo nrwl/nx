@@ -1,6 +1,5 @@
 ---
 source: packages/nx/src/native/glob.rs
-assertion_line: 238
 expression: report
 ---
 **
@@ -407,3 +406,27 @@ dist/app/(group)/page.js
   convert: ["/back\\\\slash"]
   partition: ("/back\\slash", None)
   prefix: None
+app/[id]/page.tsx
+  convert: ["app/[id]/page.tsx"]
+  partition: ("app", Some("[id]/page.tsx"))
+  prefix: Some("app")
+app/\[id\]/page.tsx
+  convert: ["app/\\[id\\]/page.tsx"]
+  partition: ("app/[id]/page.tsx", None)
+  prefix: Some("app/[id]/page.tsx")
+app/(mk)/page.tsx
+  convert: ["app/mk/page.tsx"]
+  partition: ("app", Some("(mk)/page.tsx"))
+  prefix: Some("app/mk/page.tsx")
+app/\(mk\)/page.tsx
+  convert: ["app/\\(mk\\)/page.tsx"]
+  partition: ("app/(mk)/page.tsx", None)
+  prefix: Some("app/(mk)/page.tsx")
+app/{a,b}/page.tsx
+  convert: ["app/{a,b}/page.tsx"]
+  partition: ("app", Some("{a,b}/page.tsx"))
+  prefix: Some("app")
+app/\{a,b\}/page.tsx
+  convert: ["app/\\{a,b\\}/page.tsx"]
+  partition: ("app/{a,b}/page.tsx", None)
+  prefix: Some("app/{a,b}/page.tsx")
