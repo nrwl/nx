@@ -835,6 +835,9 @@ importers:
       '@nx/key':
         specifier: 5.0.4
         version: 5.0.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@nx/maven':
+        specifier: 23.3.0-rc.1
+        version: 23.3.0-rc.1(nx@23.3.0-rc.1(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.3)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(supports-color@8.1.1)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
       '@nx/next':
         specifier: 23.3.0-rc.1
         version: 23.3.0-rc.1(ebc6f790f9a1298f11ea4a75fb4ef07c)
@@ -10206,6 +10209,9 @@ packages:
   '@nx/key@5.0.4':
     resolution: {integrity: sha512-qovQhxJyC0xvM5cL+Ic2EQIU7D4J/VrDBrUMEbWItxFX9WcM46kRPS7ZASEJUgBCg5i24JlbP+ehbBwDvs9Kug==}
     engines: {node: '>= 10'}
+
+  '@nx/maven@23.3.0-rc.1':
+    resolution: {integrity: sha512-RwlVFVtXjavczJ9Q4FWIOdfNlp7nB9mCrDEjZij6Z3du0TeYPYsrsDjhLh4sggn+yYLeAGIwyN0lFqb5iAhUEg==}
 
   '@nx/module-federation@23.3.0-rc.1':
     resolution: {integrity: sha512-CqbAiotBBF+Xc5dVP0nRLn+Pvf6PDyAX3kRjRAPgZMU9gnYEKOu7wCKQ258BolVxrtZOQsrnxfDMP5VwEaVOpQ==}
@@ -36314,6 +36320,14 @@ snapshots:
     transitivePeerDependencies:
       - debug
       - supports-color
+
+  '@nx/maven@23.3.0-rc.1(nx@23.3.0-rc.1(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.3)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(supports-color@8.1.1)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
+    dependencies:
+      '@nx/devkit': 23.3.0-rc.1(nx@23.3.0-rc.1(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.3)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(supports-color@8.1.1)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
+      '@xmldom/xmldom': 0.8.11
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - nx
 
   '@nx/module-federation@23.3.0-rc.1(441e4d65cad54ceb423c85da67bb7c69)':
     dependencies:

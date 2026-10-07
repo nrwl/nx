@@ -399,6 +399,12 @@
       "options": {
         "targetName": "oxlint"
       }
+    },
+    {
+      "plugin": "@nx/maven",
+      "options": {
+        "targetNamePrefix": "mvn:"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
