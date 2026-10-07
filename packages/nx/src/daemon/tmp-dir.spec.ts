@@ -236,10 +236,12 @@ describe('socket directories', () => {
     // Outside a sandbox the warning says nothing about one. This path is
     // reached far more often for ordinary reasons — a peer owning the shared
     // container, a read-only home — and naming a sandbox unprompted is the
-    // mistake the socket guidance was corrected for once already.
-    expect(logger.warn).not.toHaveBeenCalledWith(
-      expect.stringMatching(/sandbox|allowlist/i)
+    // mistake the socket guidance was corrected for once already. The path is
+    // masked because the checkout itself may live under a "sandbox" directory.
+    const messages = (logger.warn as Mock).mock.calls.map(([message]) =>
+      String(message).replaceAll(DAEMON_DIR_FOR_CURRENT_WORKSPACE, '<dir>')
     );
+    expect(messages.join('\n')).not.toMatch(/sandbox|allowlist/i);
   });
 
   it('adds the allowlist note only when a sandbox is actually detected', () => {
