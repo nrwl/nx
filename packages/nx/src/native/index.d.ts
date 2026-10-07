@@ -1339,6 +1339,7 @@ export interface UltracacheDiagnostic {
 export interface UltracacheEligibilityOptions {
   /** Tasks whose executor ships a custom hasher. */
   customHasherTaskIds?: Array<string>
+  continuousTaskIds?: Array<string>
 }
 
 /**

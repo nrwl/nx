@@ -280,26 +280,24 @@ impl HashPlanner {
         );
         let to_plan = memo.missing(&task_ids);
         let ultracache_tasks = configurations.map(|configurations| {
-            // Continuous dependencies are planned into their dependents, so
-            // their entries are needed too.
-            let mut scope: Vec<&str> = to_plan.clone();
-            for id in &to_plan {
-                scope.extend(
-                    collect_continuous_dependencies(&task_graph, id)
-                        .iter()
-                        .map(|task| task.id.as_str()),
-                );
-            }
-            scope.sort_unstable();
-            scope.dedup();
             ultracache_eligibility::resolve(
                 configurations,
-                scope
+                to_plan
                     .iter()
                     .filter_map(|id| task_graph.tasks.get_key_value(*id))
                     .map(|(id, task)| (id.as_str(), task.ultracache.as_ref())),
                 &EligibilityInputs {
                     custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
+                    continuous: to_plan
+                        .iter()
+                        .filter(|id| {
+                            task_graph
+                                .tasks
+                                .get(**id)
+                                .is_some_and(|task| task.continuous == Some(true))
+                        })
+                        .map(|id| id.to_string())
+                        .collect(),
                 },
             )
             .tasks
@@ -371,20 +369,13 @@ impl HashPlanner {
                 }
 
                 // A continuous dependency serves this task from its own process, so
-                // its inputs and externals are hashed here, and its own servers' in
-                // turn: its observed reads when both it and this task hash from their
-                // configurations, else its declared inputs, so a task hashed natively
-                // (any `ultracache.mode` but `on` included) stays native throughout.
-                // When it reads
+                // its declared inputs and externals are hashed here, and its own
+                // servers' in turn. Continuous tasks never hash from a configuration:
+                // what they read depends on which clients they served. When it reads
                 // its builds' outputs, those land in this plan too, which holds the
                 // task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
-                    let dep_context = context
-                        .as_ref()
-                        .and(ultracache_tasks.as_ref())
-                        .and_then(|tasks| tasks.get(&dep_task.id))
-                        .map(UltracacheContext::new);
                     let mut dep_ids: Vec<u32> = self
                         .target_input(
                             &dep_task.target.project,
@@ -403,16 +394,8 @@ impl HashPlanner {
                         &task_graph,
                         external_deps_mapped,
                         &mut VisitedTracker::new(dep_task.target.project.as_str()),
-                        dep_context.as_ref(),
+                        None,
                     )?);
-                    if let Some(dep_context) = &dep_context {
-                        self.replace_with_configuration(
-                            dep_task,
-                            dep_context,
-                            &mut dep_ids,
-                            always_on_id,
-                        );
-                    }
                     ids.extend(dep_ids);
                 }
 
