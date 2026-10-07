@@ -17,8 +17,9 @@ pub struct HashPlanInspector {
     all_workspace_files: Arc<Vec<FileData>>,
     project_file_map: Arc<HashMap<String, Vec<FileData>>>,
     workspace_root: String,
-    // Paths the workspace context tracks, so disk-backed groups resolve the
-    // same way here as in the hasher. Built on first use.
+    // The workspace files indexed by path, so workspace filesets and
+    // disk-backed groups resolve the same way here as in the hasher. Built on
+    // first use.
     tracked: WorkspaceFileIndex,
 }
 
@@ -138,8 +139,7 @@ impl HashPlanInspector {
     ) -> anyhow::Result<HashInputsBuilder> {
         match instruction {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
-                let files =
-                    collect_workspace_file_paths(workspace_file_set, &self.all_workspace_files)?;
+                let files = collect_workspace_file_paths(workspace_file_set, &self.tracked)?;
                 Ok(HashInputsBuilder {
                     files: files.into_iter().collect(),
                     ..Default::default()
@@ -160,7 +160,6 @@ impl HashPlanInspector {
             HashInstruction::IgnoredFileSet(globs) => {
                 let workspace_root = std::path::Path::new(&self.workspace_root);
                 let files = collect_ignored_file_paths(
-                    workspace_root,
                     globs,
                     &Source::fileset_reading_disk(
                         &|path| self.tracked.tracks(path),
