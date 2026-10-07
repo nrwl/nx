@@ -17,6 +17,7 @@ import {
   type CreateDependencies,
   type CreateNodesContext,
   type CreateNodes,
+  type CreateNodesResultV2,
   type NxJsonConfiguration,
   type ProjectConfiguration,
   type TargetConfiguration,
@@ -166,6 +167,8 @@ type InvocationCache = {
   projectContexts: Map<string, ProjectContext>;
   configContexts: Map<string, ConfigContext>;
   referenceExpansionCache: ReferenceExpansionCache;
+  loadedConfigs: Set<string>;
+  tsConfigCacheChanged: boolean;
 };
 
 // Module-level cache store — each invocation gets a unique Symbol key
@@ -285,97 +288,59 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
   tsConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
-    const targetsCachePath = join(
-      workspaceDataDirectory,
-      `tsc-${optionsHash}.hash`
-    );
-    const targetsCache =
-      readFromCache<Record<string, TscProjectResult>>(targetsCachePath);
-
-    // Each invocation gets a unique Symbol key — guaranteed no collisions
-    const cacheKey = Symbol('tsc-invocation');
-    cacheStore.set(cacheKey, {
-      fileHashes: {},
-      rawFiles: {},
-      picomatchMatchers: {},
-      extendedFilesHashes: new Map(),
-      configOwners: new Map(),
-      projectContexts: new Map(),
-      configContexts: new Map(),
-      referenceExpansionCache: new Map(),
-    });
-    const cache = cacheStore.get(cacheKey)!;
-
-    initializeTsConfigCache(configFilePaths, context.workspaceRoot, cache);
-
     const normalizedOptions = normalizePluginOptions(options);
-    const packageManager = detectPackageManager(context.workspaceRoot);
-    const pmc = getPackageManagerCommand(packageManager);
-    const lockFileName = getLockFileName(packageManager);
 
-    const {
-      configFilePaths: validConfigFilePaths,
-      hashes,
-      projectRoots,
-    } = await resolveValidConfigFilesAndHashes(
+    return runTscInference<TscProjectResult, CreateNodesResultV2>(
+      context.workspaceRoot,
+      `tsc-${optionsHash}.hash`,
       configFilePaths,
-      normalizedOptions,
-      optionsHash,
-      context,
-      cache,
-      lockFileName
-    );
+      async ({ cache, targetsCache, pmc, lockFileHash }) => {
+        const {
+          configFilePaths: validConfigFilePaths,
+          hashes,
+          projectRoots,
+        } = await resolveValidConfigFilesAndHashes(
+          configFilePaths,
+          normalizedOptions,
+          optionsHash,
+          context,
+          cache,
+          lockFileHash
+        );
 
-    try {
-      return await createNodesFromFiles(
-        (configFilePath, options, context, idx) => {
-          const projectRoot = projectRoots[idx];
-          const hash = hashes[idx];
-          const targetsCacheKey = `${hash}_${configFilePath}`;
+        return createNodesFromFiles(
+          (configFilePath, options, context, idx) => {
+            const projectRoot = projectRoots[idx];
+            const targetsCacheKey = `${hashes[idx]}_${configFilePath}`;
+            const configContext = getConfigContext(
+              join(context.workspaceRoot, configFilePath),
+              context.workspaceRoot,
+              cache
+            );
 
-          const absolutePath = join(context.workspaceRoot, configFilePath);
-          const configContext = getConfigContext(
-            absolutePath,
-            context.workspaceRoot,
-            cache
-          );
+            targetsCache[targetsCacheKey] ??= buildTscTargets(
+              configContext,
+              options,
+              context,
+              validConfigFilePaths,
+              cache,
+              pmc
+            );
 
-          targetsCache[targetsCacheKey] ??= buildTscTargets(
-            configContext,
-            options,
-            context,
-            validConfigFilePaths,
-            cache,
-            pmc
-          );
-
-          const { targets } = targetsCache[targetsCacheKey];
-
-          return {
-            projects: {
-              [projectRoot]: {
-                targets,
+            return {
+              projects: {
+                [projectRoot]: {
+                  targets: targetsCache[targetsCacheKey].targets,
+                },
               },
-            },
-          };
-        },
-        validConfigFilePaths,
-        normalizedOptions,
-        context
-      );
-    } finally {
-      writeToCache(targetsCachePath, targetsCache);
-      writeTsConfigCache(
-        toRelativePaths(tsConfigCacheData, context.workspaceRoot)
-      );
-      // Delete this invocation's cache — unique Symbol means no cross-invocation impact
-      cacheStore.delete(cacheKey);
-      // Reset shared tsconfig cache when all invocations are done
-      if (cacheStore.size === 0) {
-        tsConfigCacheData = {};
-        tsConfigCacheInitialized = false;
+            };
+          },
+          validConfigFilePaths,
+          normalizedOptions,
+          context
+        );
       }
-    }
+    );
   },
 ];
 
@@ -387,15 +352,12 @@ async function resolveValidConfigFilesAndHashes(
   optionsHash: string,
   context: CreateNodesContext,
   cache: InvocationCache,
-  lockFileName: string
+  lockFileHash: string
 ): Promise<{
   configFilePaths: string[];
   hashes: string[];
   projectRoots: string[];
 }> {
-  const lockFileHash =
-    hashFile(join(context.workspaceRoot, lockFileName)) ?? '';
-
   const validConfigFilePaths: string[] = [];
   const hashes: string[] = [];
   const projectRoots: string[] = [];
@@ -426,7 +388,7 @@ async function resolveValidConfigFilesAndHashes(
     projectRoots.push(projectRoot);
     validConfigFilePaths.push(configFilePath);
     hashes.push(
-      await getConfigFileHash(
+      getConfigFileHash(
         configFilePath,
         context.workspaceRoot,
         configContext.project,
@@ -452,14 +414,14 @@ async function resolveValidConfigFilesAndHashes(
  * - hash of the plugin options
  * - current config file path
  */
-async function getConfigFileHash(
+function getConfigFileHash(
   configFilePath: string,
   workspaceRoot: string,
   project: ProjectContext,
   optionsHash: string,
   lockFileHash: string,
   cache: InvocationCache
-): Promise<string> {
+): string {
   const fullConfigPath = join(workspaceRoot, configFilePath);
 
   const tsConfig = retrieveTsConfigFromCache(
@@ -570,97 +532,51 @@ function buildTscTargets(
     config.basename === options.typecheck.configName &&
     tsConfig.raw?.['nx']?.addTypecheckTarget !== false
   ) {
+    let buildTargetName: string | undefined;
+    if (options.build) {
+      const buildConfigPath = joinPathFragments(
+        config.project.root,
+        options.build.configName
+      );
+      if (
+        configFiles.some((f) => f === buildConfigPath) &&
+        (options.build.skipBuildCheck ||
+          isValidPackageJsonBuildConfig(
+            retrieveTsConfigFromCache(
+              buildConfigPath,
+              context.workspaceRoot,
+              cache
+            ),
+            context.workspaceRoot,
+            config.project.root
+          ))
+      ) {
+        buildTargetName = options.build.targetName;
+      }
+    }
+
     internalProjectReferences = resolveInternalProjectReferences(
       tsConfig,
       context.workspaceRoot,
       config.project,
       cache
     );
-    const externalProjectReferences = resolveShallowExternalProjectReferences(
+    targets[options.typecheck.targetName] = buildTypecheckTarget(
+      config,
       tsConfig,
+      internalProjectReferences,
+      namedInputs,
       context.workspaceRoot,
-      config.project,
-      cache
+      cache,
+      {
+        targetName: options.typecheck.targetName,
+        configName: options.typecheck.configName,
+        compiler: options.compiler,
+        verboseOutput: options.verboseOutput,
+        buildTargetName,
+        pmc,
+      }
     );
-    const targetName = options.typecheck.targetName;
-    const compiler = options.compiler;
-    if (!targets[targetName]) {
-      let command = `${compiler} --build ${options.typecheck.configName} --emitDeclarationOnly${
-        options.verboseOutput ? ' --verbose' : ''
-      }`;
-      if (
-        tsConfig.options.noEmit ||
-        Object.values(internalProjectReferences).some(
-          (ref) => ref.options.noEmit
-        ) ||
-        Object.values(externalProjectReferences).some(
-          (ref) => ref.options.noEmit
-        )
-      ) {
-        // `tsc --build` does not work with `noEmit: true`
-        command = `echo "The 'typecheck' target is disabled because one or more project references set 'noEmit: true' in their tsconfig. Remove this property to resolve this issue."`;
-      }
-
-      const dependsOn: string[] = [`^${targetName}`];
-      if (options.build && targets[options.build.targetName]) {
-        // we already processed and have a build target
-        dependsOn.unshift(options.build.targetName);
-      } else if (options.build) {
-        // check if the project will have a build target
-        const buildConfigPath = joinPathFragments(
-          config.project.root,
-          options.build.configName
-        );
-        if (
-          configFiles.some((f) => f === buildConfigPath) &&
-          (options.build.skipBuildCheck ||
-            isValidPackageJsonBuildConfig(
-              retrieveTsConfigFromCache(
-                buildConfigPath,
-                context.workspaceRoot,
-                cache
-              ),
-              context.workspaceRoot,
-              config.project.root
-            ))
-        ) {
-          dependsOn.unshift(options.build.targetName);
-        }
-      }
-
-      targets[targetName] = {
-        dependsOn,
-        command,
-        options: { cwd: config.project.normalized },
-        cache: true,
-        inputs: getInputs(
-          namedInputs,
-          config,
-          tsConfig,
-          internalProjectReferences,
-          context.workspaceRoot,
-          cache
-        ),
-        outputs: getOutputs(
-          config,
-          tsConfig,
-          internalProjectReferences,
-          context.workspaceRoot,
-          /* emitDeclarationOnly */ true
-        ),
-        syncGenerators: ['@nx/js:typescript-sync'],
-        metadata: {
-          technologies: ['typescript'],
-          description: 'Runs type-checking for the project.',
-          help: {
-            command: `${pmc.exec} ${compiler} --build --help`,
-            example: {
-              args: ['--force'],
-            },
-          },
-        },
-      };
-    }
   }
 
   // Build target
@@ -732,6 +648,298 @@ function buildTscTargets(
   }
 
   return { targets };
+}
+
+function buildTypecheckTarget(
+  config: ConfigContext,
+  tsConfig: ParsedTsconfigData,
+  internalProjectReferences: Record<string, ParsedTsconfigData>,
+  namedInputs: NxJsonConfiguration['namedInputs'],
+  workspaceRoot: string,
+  cache: InvocationCache,
+  options: {
+    targetName: string;
+    configName: string;
+    compiler: string;
+    verboseOutput: boolean;
+    buildTargetName: string | undefined;
+    pmc: ReturnType<typeof getPackageManagerCommand>;
+  }
+): TargetConfiguration {
+  const externalProjectReferences = resolveShallowExternalProjectReferences(
+    tsConfig,
+    workspaceRoot,
+    config.project,
+    cache
+  );
+
+  let command = `${options.compiler} --build ${options.configName} --emitDeclarationOnly${
+    options.verboseOutput ? ' --verbose' : ''
+  }`;
+  if (
+    tsConfig.options.noEmit ||
+    Object.values(internalProjectReferences).some(
+      (ref) => ref.options.noEmit
+    ) ||
+    Object.values(externalProjectReferences).some((ref) => ref.options.noEmit)
+  ) {
+    // `tsc --build` does not work with `noEmit: true`
+    command = `echo "The 'typecheck' target is disabled because one or more project references set 'noEmit: true' in their tsconfig. Remove this property to resolve this issue."`;
+  }
+
+  const dependsOn: string[] = [`^${options.targetName}`];
+  if (options.buildTargetName) {
+    dependsOn.unshift(options.buildTargetName);
+  }
+
+  return {
+    dependsOn,
+    command,
+    options: { cwd: config.project.normalized },
+    cache: true,
+    inputs: getInputs(
+      namedInputs,
+      config,
+      tsConfig,
+      internalProjectReferences,
+      workspaceRoot,
+      cache
+    ),
+    outputs: getOutputs(
+      config,
+      tsConfig,
+      internalProjectReferences,
+      workspaceRoot,
+      /* emitDeclarationOnly */ true
+    ),
+    syncGenerators: ['@nx/js:typescript-sync'],
+    metadata: {
+      technologies: ['typescript'],
+      description: 'Runs type-checking for the project.',
+      help: {
+        command: `${options.pmc.exec} ${options.compiler} --build --help`,
+        example: {
+          args: ['--force'],
+        },
+      },
+    },
+  };
+}
+
+export interface TypecheckTargetProject {
+  projectRoot: string;
+  /**
+   * The project's build target. Typecheck runs after it so the build's
+   * tsbuildinfo is reused and both never write the output directory at once.
+   */
+  buildTargetName?: string;
+  /**
+   * Defaults to `tsc`.
+   */
+  compiler?: string;
+}
+
+/**
+ * Infers the `typecheck` target `@nx/js/typescript` infers, for each project
+ * with a `tsconfig.json`, through the same cached run as that plugin. Projects
+ * without one, or whose tsconfig sets `nx.addTypecheckTarget: false`, are left
+ * out of the result.
+ */
+export async function createTypecheckTargets(
+  projects: TypecheckTargetProject[],
+  context: CreateNodesContext,
+  targetName = 'typecheck'
+): Promise<Record<string, TargetConfiguration>> {
+  const configFilePaths = new Map<TypecheckTargetProject, string>();
+  for (const project of projects) {
+    const configFilePath = joinPathFragments(
+      project.projectRoot,
+      'tsconfig.json'
+    );
+    if (existsSync(join(context.workspaceRoot, configFilePath))) {
+      configFilePaths.set(project, configFilePath);
+    }
+  }
+
+  return runTscInference<
+    TargetConfiguration | null,
+    Record<string, TargetConfiguration>
+  >(
+    context.workspaceRoot,
+    `tsc-typecheck-${hashObject({ targetName })}.hash`,
+    Array.from(configFilePaths.values()),
+    async ({ cache, targetsCache, pmc, lockFileHash }) => {
+      const targets: Record<string, TargetConfiguration> = {};
+      for (const [project, configFilePath] of configFilePaths) {
+        const config = getConfigContext(
+          join(context.workspaceRoot, configFilePath),
+          context.workspaceRoot,
+          cache
+        );
+        const hash = getConfigFileHash(
+          configFilePath,
+          context.workspaceRoot,
+          config.project,
+          hashObject({
+            targetName,
+            buildTargetName: project.buildTargetName,
+            compiler: project.compiler,
+          }),
+          lockFileHash,
+          cache
+        );
+        const targetsCacheKey = `${hash}_${configFilePath}`;
+
+        if (!(targetsCacheKey in targetsCache)) {
+          const tsConfig = retrieveTsConfigFromCache(
+            config.absolutePath,
+            context.workspaceRoot,
+            cache
+          );
+          targetsCache[targetsCacheKey] =
+            tsConfig.raw?.['nx']?.addTypecheckTarget === false
+              ? null
+              : buildStandaloneTypecheckTarget(
+                  config,
+                  tsConfig,
+                  context,
+                  cache,
+                  {
+                    targetName,
+                    compiler: project.compiler ?? 'tsc',
+                    buildTargetName: project.buildTargetName,
+                    pmc,
+                  }
+                );
+        }
+
+        if (targetsCache[targetsCacheKey]) {
+          targets[project.projectRoot] = targetsCache[targetsCacheKey];
+        }
+      }
+      return targets;
+    }
+  );
+}
+
+function buildStandaloneTypecheckTarget(
+  config: ConfigContext,
+  tsConfig: ParsedTsconfigData,
+  context: CreateNodesContext,
+  cache: InvocationCache,
+  options: {
+    targetName: string;
+    compiler: string;
+    buildTargetName: string | undefined;
+    pmc: ReturnType<typeof getPackageManagerCommand>;
+  }
+): TargetConfiguration {
+  loadTsConfigGraph(config.absolutePath, context.workspaceRoot, cache);
+  return buildTypecheckTarget(
+    config,
+    tsConfig,
+    resolveInternalProjectReferences(
+      tsConfig,
+      context.workspaceRoot,
+      config.project,
+      cache
+    ),
+    getNamedInputs(config.project.root, context),
+    context.workspaceRoot,
+    cache,
+    { ...options, configName: 'tsconfig.json', verboseOutput: false }
+  );
+}
+
+type TscRun<TCached> = {
+  cache: InvocationCache;
+  targetsCache: Record<string, TCached>;
+  pmc: ReturnType<typeof getPackageManagerCommand>;
+  lockFileHash: string;
+};
+
+/**
+ * One cached inference run: loads the persisted targets and tsconfig caches,
+ * validates `configFilePaths` against them, and writes both back when `infer`
+ * settles.
+ */
+async function runTscInference<TCached, TResult>(
+  workspaceRoot: string,
+  targetsCacheName: string,
+  configFilePaths: readonly string[],
+  infer: (run: TscRun<TCached>) => Promise<TResult>
+): Promise<TResult> {
+  const targetsCachePath = join(workspaceDataDirectory, targetsCacheName);
+  const targetsCache = readFromCache<Record<string, TCached>>(targetsCachePath);
+  const { cacheKey, cache } = acquireInvocationCache(workspaceRoot);
+  try {
+    for (const configFilePath of configFilePaths) {
+      readTsConfigAndCache(
+        join(workspaceRoot, configFilePath),
+        workspaceRoot,
+        cache
+      );
+    }
+    const packageManager = detectPackageManager(workspaceRoot);
+    return await infer({
+      cache,
+      targetsCache,
+      pmc: getPackageManagerCommand(packageManager),
+      lockFileHash:
+        hashFile(join(workspaceRoot, getLockFileName(packageManager))) ?? '',
+    });
+  } finally {
+    writeToCache(targetsCachePath, targetsCache);
+    releaseInvocationCache(cacheKey, workspaceRoot);
+  }
+}
+
+function createInvocationCache(): InvocationCache {
+  return {
+    fileHashes: {},
+    rawFiles: {},
+    picomatchMatchers: {},
+    extendedFilesHashes: new Map(),
+    configOwners: new Map(),
+    projectContexts: new Map(),
+    configContexts: new Map(),
+    referenceExpansionCache: new Map(),
+    loadedConfigs: new Set(),
+    tsConfigCacheChanged: false,
+  };
+}
+
+/**
+ * Reads the tsconfig plus everything it reaches through `extends` and
+ * project references into `tsConfigCacheData`. Reference expansion skips
+ * configs missing from it, which a full plugin run avoids by reading every
+ * tsconfig in the workspace up front.
+ */
+function loadTsConfigGraph(
+  tsConfigPath: string,
+  workspaceRoot: string,
+  cache: InvocationCache
+): void {
+  const queue = [tsConfigPath];
+  for (let i = 0; i < queue.length; i++) {
+    const configPath = queue[i];
+    if (cache.loadedConfigs.has(configPath) || !existsSync(configPath)) {
+      continue;
+    }
+    cache.loadedConfigs.add(configPath);
+
+    const tsConfig = readTsConfigAndCache(configPath, workspaceRoot, cache);
+    for (const extended of tsConfig.extendedConfigFiles) {
+      if (extended.filePath) {
+        queue.push(extended.filePath);
+      }
+    }
+    for (const ref of tsConfig.projectReferences ?? []) {
+      queue.push(
+        ref.path.endsWith('.json') ? ref.path : join(ref.path, 'tsconfig.json')
+      );
+    }
+  }
 }
 
 function getInputs(
@@ -1551,20 +1759,31 @@ function retrieveTsConfigFromCache(
     : readTsConfigAndCache(tsConfigPath, workspaceRoot, cache);
 }
 
-function initializeTsConfigCache(
-  configFilePaths: readonly string[],
-  workspaceRoot: string,
-  cache: InvocationCache
-): void {
+function acquireInvocationCache(workspaceRoot: string): {
+  cacheKey: symbol;
+  cache: InvocationCache;
+} {
   if (!tsConfigCacheInitialized) {
     tsConfigCacheData = toAbsolutePaths(readTsConfigCacheData(), workspaceRoot);
     tsConfigCacheInitialized = true;
   }
 
-  // ensure hashes are checked and the cache is invalidated and populated as needed
-  for (const configFilePath of configFilePaths) {
-    const fullConfigPath = join(workspaceRoot, configFilePath);
-    readTsConfigAndCache(fullConfigPath, workspaceRoot, cache);
+  // Each invocation gets a unique Symbol key — guaranteed no collisions
+  const cacheKey = Symbol('tsc-invocation');
+  const cache = createInvocationCache();
+  cacheStore.set(cacheKey, cache);
+  return { cacheKey, cache };
+}
+
+function releaseInvocationCache(cacheKey: symbol, workspaceRoot: string) {
+  if (cacheStore.get(cacheKey)?.tsConfigCacheChanged) {
+    writeTsConfigCache(toRelativePaths(tsConfigCacheData, workspaceRoot));
+  }
+  cacheStore.delete(cacheKey);
+  // Reset shared tsconfig cache when all invocations are done
+  if (cacheStore.size === 0) {
+    tsConfigCacheData = {};
+    tsConfigCacheInitialized = false;
   }
 }
 
@@ -1594,6 +1813,7 @@ function readTsConfigAndCache(
   }
 
   const tsConfig = readTsConfig(tsConfigPath, workspaceRoot, cache);
+  cache.tsConfigCacheChanged = true;
   const extendedConfigFiles: ExtendedConfigFile[] = [];
   if (tsConfig.raw?.extends) {
     const extendsArray =

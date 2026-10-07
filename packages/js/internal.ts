@@ -108,6 +108,10 @@ export {
   addBuildAndWatchDepsTargets,
   isValidPackageJsonBuildConfig,
 } from './src/plugins/typescript/util';
+export {
+  createTypecheckTargets,
+  type TypecheckTargetProject,
+} from './src/plugins/typescript/plugin';
 
 // Generator helpers
 export {
