@@ -40,7 +40,7 @@ fn project_files<'a>(
         .ok_or_else(|| anyhow!("project {} not found", project_name))
 }
 
-/// Hashes project files without materializing the matched file list.
+/// Hashes the files a project fileset matches, in path order.
 /// Token resolution ({projectRoot}, {projectName}) is handled upstream by the HashPlanner,
 /// so file_sets are expected to contain already-resolved paths.
 pub fn hash_project_files(
