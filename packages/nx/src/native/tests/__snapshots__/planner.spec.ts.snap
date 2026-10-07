@@ -70,8 +70,8 @@ exports[`task planner > should deduplicate overlapping external closures for all
     "app:apps/app/**/*": "3244421341483603138",
     "child:ProjectConfiguration": "14397347420239404290",
     "child:TsConfig": "1389868326933519382",
-    "child:libs/child/prod.ts": "13546527163958192884",
-    "child:libs/child/test.ts": "17746510544300185116",
+    "child:libs/child/prod.ts": "17460304510590350900",
+    "child:libs/child/test.ts": "9715787436246475577",
     "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
     "npm:@nx/left": "11507288172457604164",
     "npm:leaf": "11507288172457604164",
@@ -98,7 +98,7 @@ exports[`task planner > should deduplicate overlapping external closures for all
     ],
     "runtime": [],
   },
-  "value": "6233822002282478864",
+  "value": "14700080009547495206",
 }
 `;
 
@@ -110,8 +110,8 @@ exports[`task planner > should deduplicate overlapping external closures for exe
     "app:apps/app/**/*": "3244421341483603138",
     "child:ProjectConfiguration": "14397347420239404290",
     "child:TsConfig": "1389868326933519382",
-    "child:libs/child/prod.ts": "13546527163958192884",
-    "child:libs/child/test.ts": "17746510544300185116",
+    "child:libs/child/prod.ts": "17460304510590350900",
+    "child:libs/child/test.ts": "9715787436246475577",
     "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
     "npm:@nx/left": "11507288172457604164",
     "npm:leaf": "11507288172457604164",
@@ -137,7 +137,7 @@ exports[`task planner > should deduplicate overlapping external closures for exe
     ],
     "runtime": [],
   },
-  "value": "235537722388302509",
+  "value": "5934008440592990909",
 }
 `;
 
@@ -149,8 +149,8 @@ exports[`task planner > should deduplicate overlapping external closures for exp
     "app:apps/app/**/*": "3244421341483603138",
     "child:ProjectConfiguration": "14397347420239404290",
     "child:TsConfig": "1389868326933519382",
-    "child:libs/child/prod.ts": "13546527163958192884",
-    "child:libs/child/test.ts": "17746510544300185116",
+    "child:libs/child/prod.ts": "17460304510590350900",
+    "child:libs/child/test.ts": "9715787436246475577",
     "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
     "npm:@nx/left": "11507288172457604164",
     "npm:leaf": "11507288172457604164",
@@ -176,7 +176,7 @@ exports[`task planner > should deduplicate overlapping external closures for exp
     ],
     "runtime": [],
   },
-  "value": "17658889447241127891",
+  "value": "3666516061296539155",
 }
 `;
 
