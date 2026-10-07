@@ -305,6 +305,37 @@ describe('migrate commit broker', () => {
       ]);
     });
 
+    it('names what can hold a commit while it waits', async () => {
+      vi.useFakeTimers();
+      try {
+        const broker = new MigrateCommitBroker(
+          root,
+          dir,
+          'npx nx migrate',
+          POLICY
+        );
+        process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+        const pending = commitStepTree(dir, step(), [], vi.fn(), {});
+        await vi.advanceTimersByTimeAsync(15_000);
+        writeFileSync(
+          join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.result.json`),
+          JSON.stringify(ANSWER)
+        );
+        await vi.advanceTimersByTimeAsync(250);
+        await pending;
+        broker.close();
+
+        expect(vi.mocked(logger.info).mock.calls).toEqual([
+          [
+            '[nx] Waiting for the nx process that started this session to finish the commit of @nx/js:gen (15s so far). A commit first installs any dependency changes. A signing popup or a security key can also hold a commit until the user answers it. If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end it, and resume the run afterwards.',
+          ],
+        ]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('lands the commit after a succeeded install, keeping the install output out of the step', async () => {
       parentCommits();
       const broker = new MigrateCommitBroker(

@@ -6718,12 +6718,13 @@ describe('orchestrator', () => {
     });
 
     it.each([
-      ['adopt', 'succeeded'],
-      ['skip', 'skipped'],
-      ['unresolved', 'unresolved'],
+      ['died', 'adopt', 'succeeded'],
+      ['died', 'skip', 'skipped'],
+      ['died', 'unresolved', 'unresolved'],
+      ['failed', 'adopt', 'succeeded'],
     ] as const)(
-      'settles a step whose install already failed with %s without installing, and says the install is left to the user',
-      async (stepAction, status) => {
+      'settles a %s step whose install already failed with %s without installing, and says the install is left to the user',
+      async (from, stepAction, status) => {
         vi.spyOn(process, 'kill').mockReturnValue(true as never);
         const warned: string[] = [];
         vi.spyOn(output, 'warn').mockImplementation((opts) => {
@@ -6739,8 +6740,10 @@ describe('orchestrator', () => {
         });
         const dir = setupRun('run-1', {
           steps: [
-            migStep('step-1', '@nx/js:gen', 'died', {
-              pid: 999999,
+            migStep('step-1', '@nx/js:gen', from, {
+              ...(from === 'died'
+                ? { pid: 999999 }
+                : { outcome: { summary: 'registry unreachable' } }),
               generatorCompleted: true,
               installFailed: true,
               depsHashAtDispense: 'baseline-from-an-earlier-dispense',

@@ -13,6 +13,34 @@ vi.mock('child_process', async (importOriginal) => {
 
 describe('spawnWithoutTerminal', () => {
   it.skipIf(process.platform === 'win32')(
+    'kills each open command when nx exits',
+    async () => {
+      const before = process.listeners('exit');
+      const command = spawnWithoutTerminal('sleep 30', {
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      const closed = new Promise<NodeJS.Signals | null>((resolve) =>
+        command.once('close', (_code, signal) => resolve(signal))
+      );
+      try {
+        // Emitting 'exit' would also run the test runner's own listeners.
+        for (const listener of process.listeners('exit')) {
+          if (!before.includes(listener)) listener(0);
+        }
+        const signal = await Promise.race([
+          closed,
+          new Promise((resolve) =>
+            setTimeout(() => resolve('still running'), 2_000)
+          ),
+        ]);
+        expect(signal).toBe('SIGKILL');
+      } finally {
+        command.kill('SIGKILL');
+      }
+    }
+  );
+
+  it.skipIf(process.platform === 'win32')(
     'terminates the process tree of each open command on Windows',
     async () => {
       const native = require('../native') as typeof import('../native');
