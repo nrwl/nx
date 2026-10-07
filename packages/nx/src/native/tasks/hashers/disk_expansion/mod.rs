@@ -6,14 +6,13 @@
 //!   themselves live in `crate::native::glob::glob_transform`.
 //! - `expansion` resolves the entries into files, leaning on the workspace
 //!   context or an index wherever it can, and walking where it cannot.
-//! - `file_map` matches a regular fileset against the file map, read from
-//!   the same literal prefixes.
+//! - `file_map` is the source a regular fileset expands from.
 
 mod entries;
 mod expansion;
 mod file_map;
 
-pub(crate) use entries::{Negation, Positive};
+pub(crate) use entries::{FileSet, Negation, Positive};
 pub use expansion::FilesExpansion;
 #[cfg(test)]
 use expansion::NOTHING_TRACKED;
@@ -21,7 +20,7 @@ pub(crate) use expansion::{
     FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
 };
 pub(crate) use expansion::{parse_group, validate_files_glob, validate_files_globs};
-pub(crate) use file_map::{FileSet, PathIndex, fold_files, match_file_map};
+pub(crate) use file_map::{PathIndex, fold_files, match_file_map};
 
 #[cfg(test)]
 pub(crate) mod tests {
