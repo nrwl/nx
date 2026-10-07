@@ -228,11 +228,15 @@ module.exports = {
         ).toBeUndefined();
       });
 
-      it('should infer typecheck with --build flag when using TS solution setup', async () => {
+      it('should infer the @nx/js typecheck target when using TS solution setup', async () => {
         (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
         tempFs.createFileSync(
           'my-app/package.json',
           JSON.stringify('{"name": "my-app", "version": "0.0.0"}')
+        );
+        tempFs.createFileSync(
+          'my-app/tsconfig.json',
+          JSON.stringify({ files: [], references: [] })
         );
 
         const nodes = await createNodesFunction(
@@ -241,32 +245,44 @@ module.exports = {
           context
         );
 
+        const typecheck = nodes[0][1].projects['my-app'].targets.typecheck;
+        expect(typecheck.command).toEqual(
+          `tsc --build tsconfig.json --emitDeclarationOnly`
+        );
+        expect(typecheck.outputs).toBeDefined();
+        expect(typecheck.dependsOn).toEqual(['build', '^typecheck']);
+        expect(typecheck.syncGenerators).toEqual(['@nx/js:typescript-sync']);
+      });
+
+      it('should not infer a typecheck target when the project has no tsconfig.json in TS solution setup', async () => {
+        (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+        tempFs.createFileSync(
+          'my-app/package.json',
+          JSON.stringify('{"name": "my-app", "version": "0.0.0"}')
+        );
+
+        const nodes = await createNodesFunction(
+          ['my-app/remix.config.cjs'],
+          // A distinct option hash avoids a cache hit from the previous test's files.
+          { typecheckTargetName: 'check-types' },
+          context
+        );
+
         expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.command
-        ).toEqual(`tsc --build --emitDeclarationOnly`);
-        expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-          .toMatchInlineSnapshot(`
-          {
-            "description": "Runs type-checking for the project.",
-            "help": {
-              "command": "npx tsc --build --help",
-              "example": {
-                "args": [
-                  "--force",
-                ],
-              },
-            },
-            "technologies": [
-              "typescript",
-            ],
-          }
-        `);
-        expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.dependsOn
-        ).toEqual([`^typecheck`]);
-        expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-        ).toEqual(['@nx/js:typescript-sync']);
+          nodes[0][1].projects['my-app'].targets['check-types']
+        ).toBeUndefined();
+      });
+
+      it('should not infer a typecheck target when typecheckTargetName is false', async () => {
+        const nodes = await createNodesFunction(
+          ['my-app/remix.config.cjs'],
+          { typecheckTargetName: false },
+          context
+        );
+
+        const targets = nodes[0][1].projects['my-app'].targets;
+        expect(targets.typecheck).toBeUndefined();
+        expect(targets['false']).toBeUndefined();
       });
     });
   });

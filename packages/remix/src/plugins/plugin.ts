@@ -27,13 +27,14 @@ import { existsSync, readdirSync, readFileSync } from 'fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import {
   addBuildAndWatchDepsTargets,
+  createTypecheckTargets,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 export interface RemixPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
-  typecheckTargetName?: string;
+  typecheckTargetName?: string | false;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
   serveStaticTargetName?: string;
@@ -102,6 +103,15 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
         } else {
           throw e;
         }
+      }
+
+      if (isUsingTsSolutionSetup && normalizedOptions.typecheckTargetName) {
+        await addTypecheckTargets(
+          results,
+          normalizedOptions.typecheckTargetName,
+          normalizedOptions.buildTargetName,
+          context
+        );
       }
 
       const allErrors = [...preErrors, ...nodeErrors];
@@ -213,14 +223,14 @@ async function buildRemixTargets(
     namedInputs,
     isUsingTsSolutionSetup
   );
-  targets[options.typecheckTargetName] = typecheckTarget(
-    options.typecheckTargetName,
-    projectRoot,
-    namedInputs,
-    siblingFiles,
-    isUsingTsSolutionSetup,
-    pmc
-  );
+  if (options.typecheckTargetName && !isUsingTsSolutionSetup) {
+    targets[options.typecheckTargetName] = typecheckTarget(
+      projectRoot,
+      namedInputs,
+      siblingFiles,
+      pmc
+    );
+  }
 
   addBuildAndWatchDepsTargets(
     context.workspaceRoot,
@@ -231,6 +241,31 @@ async function buildRemixTargets(
   );
 
   return { targets, metadata: {} };
+}
+
+async function addTypecheckTargets(
+  results: CreateNodesResultArray,
+  typecheckTargetName: string,
+  buildTargetName: string,
+  context: CreateNodesContext
+) {
+  const projects = results.flatMap(([, result]) =>
+    Object.values(result.projects ?? {})
+  );
+  const typecheckTargets = await createTypecheckTargets(
+    projects.map((project) => ({
+      projectRoot: project.root,
+      buildTargetName,
+    })),
+    context,
+    typecheckTargetName
+  );
+  for (const project of projects) {
+    const target = typecheckTargets[project.root];
+    if (target) {
+      project.targets = { ...project.targets, [typecheckTargetName]: target };
+    }
+  }
 }
 
 function buildTarget(
@@ -348,15 +383,13 @@ function startTarget(
 }
 
 function typecheckTarget(
-  typecheckTargetName: string,
   projectRoot: string,
   namedInputs: { [inputName: string]: any[] },
   siblingFiles: string[],
-  isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): TargetConfiguration {
   const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
-  const typecheckTarget: TargetConfiguration = {
+  return {
     cache: true,
     inputs: [
       ...('production' in namedInputs
@@ -364,9 +397,7 @@ function typecheckTarget(
         : ['default', '^default']),
       { externalDependencies: ['typescript'] },
     ],
-    command: isUsingTsSolutionSetup
-      ? `tsc --build --emitDeclarationOnly`
-      : `tsc${hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``} --noEmit`,
+    command: `tsc${hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``} --noEmit`,
     options: {
       cwd: projectRoot,
     },
@@ -374,24 +405,13 @@ function typecheckTarget(
       description: `Runs type-checking for the project.`,
       technologies: ['typescript'],
       help: {
-        command: isUsingTsSolutionSetup
-          ? `${pmc.exec} tsc --build --help`
-          : `${pmc.exec} tsc${
-              hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``
-            } --help`,
-        example: isUsingTsSolutionSetup
-          ? { args: ['--force'] }
-          : { options: { noEmit: true } },
+        command: `${pmc.exec} tsc${
+          hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``
+        } --help`,
+        example: { options: { noEmit: true } },
       },
     },
   };
-
-  if (isUsingTsSolutionSetup) {
-    typecheckTarget.dependsOn = [`^${typecheckTargetName}`];
-    typecheckTarget.syncGenerators = ['@nx/js:typescript-sync'];
-  }
-
-  return typecheckTarget;
 }
 
 async function getBuildPaths(
