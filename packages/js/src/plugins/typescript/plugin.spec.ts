@@ -3,6 +3,7 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
 import { mkdirSync, rmSync } from 'node:fs';
 import { getLockFileName, setupWorkspaceContext } from '@nx/devkit/internal';
+import { matchGlobPaths } from 'nx/src/native';
 import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
 
 vi.mock('nx/src/utils/cache-directory', async () => ({
@@ -2213,6 +2214,46 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
           }
         `);
+      });
+
+      it('should match include specs of internal references under directories with glob characters literally', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            files: [],
+            references: [{ path: './configs/(group)/tsconfig.json' }],
+          }),
+          'libs/my-lib/configs/(group)/tsconfig.json': JSON.stringify({
+            include: ['src/**/*.ts', '[id].ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{}`,
+        });
+
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        const inputs = result.projects['libs/my-lib'].targets.typecheck
+          .inputs as string[];
+        const includeInputs = inputs.filter(
+          (i) => typeof i === 'string' && i.includes('configs/')
+        );
+        expect(includeInputs).toEqual([
+          '{projectRoot}/configs/\\(group\\)/tsconfig.json',
+          '{projectRoot}/configs/\\(group\\)/src/**/*.ts',
+          '{projectRoot}/configs/\\(group\\)/\\[id\\].ts',
+        ]);
+
+        const globs = includeInputs.map((i) => i.replace('{projectRoot}/', ''));
+        expect(
+          matchGlobPaths(globs, [
+            'configs/(group)/src/a.ts',
+            'configs/group/src/a.ts',
+            'configs/(group)/[id].ts',
+            'configs/(group)/i.ts',
+          ])
+        ).toEqual([true, false, true, false]);
       });
 
       it('should collect distinct tsconfig patterns from file-specific external project references', async () => {
