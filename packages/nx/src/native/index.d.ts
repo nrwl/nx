@@ -320,10 +320,10 @@ export declare class UltracacheConfigurationStore {
   import(options: UltracacheConfigurationImportOptions): UltracacheConfigurations
   /**
    * The newest stored set for `commit`, without touching the network;
-   * `null` when none is stored, its row cannot be read, or it was fetched
-   * more than `max_age_ms` ago. Reads only the version's summary row.
+   * `null` when none is stored or its row cannot be read. Reads only the
+   * version's summary row.
    */
-  get(commit: string, maxAgeMs?: number | undefined | null): UltracacheConfigurations | null
+  get(commit: string): UltracacheConfigurations | null
   /**
    * Exactly the version of `commit` fetched at `fetched_at`; `null` when it
    * is not stored or its row cannot be read.
