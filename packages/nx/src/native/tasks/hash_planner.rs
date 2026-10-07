@@ -7,7 +7,7 @@ use crate::native::tasks::{
 };
 use crate::native::types::{Input, NxJson};
 use crate::native::{
-    project_graph::types::{Project, ProjectGraph},
+    project_graph::types::ProjectGraph,
     tasks::{inputs::SplitInputs, types::Task},
 };
 use itertools::Itertools;
@@ -707,8 +707,10 @@ impl HashPlanner {
         // A local plugin's executor is workspace source, so its project's
         // files stand in for the installed package's closure.
         let mut instructions = external_instructions(external_deps);
-        if let Some((executor_project, executor_config)) =
-            self.find_project_by_package(executor_package)
+        if let Some((executor_project, executor_config)) = target
+            .executor_project
+            .as_ref()
+            .and_then(|name| self.project_graph.nodes.get_key_value(name))
         {
             trace!(
                 "Add Project File Instruction for local executor {executor_project} of {project_name}:{target_name}"
@@ -723,18 +725,6 @@ impl HashPlanner {
             ));
         }
         Ok(Some(instructions))
-    }
-
-    fn find_project_by_package(&self, package_name: &str) -> Option<(&String, &Project)> {
-        self.project_graph
-            .nodes
-            .get_key_value(package_name)
-            .or_else(|| {
-                self.project_graph
-                    .nodes
-                    .iter()
-                    .find(|(_, project)| project.package_name.as_deref() == Some(package_name))
-            })
     }
 
     fn self_and_deps_inputs<'a>(
