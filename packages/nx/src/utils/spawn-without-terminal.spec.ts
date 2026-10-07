@@ -41,7 +41,7 @@ describe('spawnWithoutTerminal', () => {
   );
 
   it.skipIf(process.platform === 'win32')(
-    'terminates the process tree of each open command on Windows',
+    'forwards signals to the Windows tree killer until the command closes',
     async () => {
       const native = require('../native') as typeof import('../native');
       const killProcessTree = vi
