@@ -90,6 +90,48 @@ describe('@nx/react/react-router-plugin', () => {
 
       expect(nodes).toMatchSnapshot();
     });
+
+    it('should infer the @nx/js/typescript typecheck target in a TS solution setup', async () => {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+      mockConfig('acme/react-router.config.js', {}, context);
+      await tempFs.createFiles({
+        'tsconfig.base.json': JSON.stringify({
+          compilerOptions: { composite: true },
+        }),
+        'acme/tsconfig.json': JSON.stringify({
+          extends: '../tsconfig.base.json',
+          files: [],
+          references: [],
+        }),
+      });
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        { buildTargetName: 'build' },
+        context
+      );
+
+      const typecheck = nodes[0][1].projects['acme'].targets['typecheck'];
+      expect(typecheck.command).toBe(
+        'tsc --build tsconfig.json --emitDeclarationOnly'
+      );
+      expect(typecheck.outputs).toBeDefined();
+      expect(typecheck.dependsOn).toContain('build');
+    });
+
+    it('should not infer a typecheck target when typecheckTargetName is false', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        { typecheckTargetName: false },
+        context
+      );
+
+      const targets = nodes[0][1].projects['acme'].targets;
+      expect(targets['typecheck']).toBeUndefined();
+      expect(targets['false']).toBeUndefined();
+    });
   });
 
   // loadConfigFile `require`s the config, which `vi.mock` cannot reach.

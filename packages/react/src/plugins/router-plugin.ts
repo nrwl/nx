@@ -23,13 +23,14 @@ import { readdirSync } from 'fs';
 import { getLockFileName } from '@nx/js';
 import {
   addBuildAndWatchDepsTargets,
+  createTypecheckTargets,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
-  typecheckTargetName?: string;
+  typecheckTargetName?: string | false;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
@@ -84,8 +85,9 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
       projectRoots.map((_) => [lockfile])
     );
 
+    let results: Awaited<ReturnType<typeof createNodesFromFiles>>;
     try {
-      return await createNodesFromFiles(
+      results = await createNodesFromFiles(
         async (configFile, _, context, idx) => {
           const projectRoot = dirname(configFile);
 
@@ -132,6 +134,30 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
     } finally {
       targetsCache.writeToDisk();
     }
+
+    if (isUsingTsSolutionSetup && normalizedOptions.typecheckTargetName) {
+      const projects = results.flatMap(([, result]) =>
+        Object.keys(result.projects).map((projectRoot) => ({
+          projectRoot,
+          buildTargetName: normalizedOptions.buildTargetName,
+        }))
+      );
+      const typecheckTargets = await createTypecheckTargets(
+        projects,
+        context,
+        normalizedOptions.typecheckTargetName
+      );
+      for (const [, result] of results) {
+        for (const [projectRoot, project] of Object.entries(result.projects)) {
+          if (typecheckTargets[projectRoot]) {
+            project.targets[normalizedOptions.typecheckTargetName] =
+              typecheckTargets[projectRoot];
+          }
+        }
+      }
+    }
+
+    return results;
   },
 ];
 
@@ -188,13 +214,13 @@ async function buildReactRouterTargets(
     );
   }
 
-  targets[options.typecheckTargetName] = await typecheckTarget(
-    projectRoot,
-    options.typecheckTargetName,
-    namedInputs,
-    siblingFiles,
-    isUsingTsSolutionSetup
-  );
+  if (options.typecheckTargetName && !isUsingTsSolutionSetup) {
+    targets[options.typecheckTargetName] = typecheckTarget(
+      projectRoot,
+      namedInputs,
+      siblingFiles
+    );
+  }
 
   addBuildAndWatchDepsTargets(
     context.workspaceRoot,
@@ -314,15 +340,15 @@ async function startTarget(
   return startTarget;
 }
 
-async function typecheckTarget(
+function typecheckTarget(
   projectRoot: string,
-  typecheckTargetName: string,
   namedInputs: { [inputName: string]: any[] },
-  siblingFiles: string[],
-  isUsingTsSolutionSetup: boolean
-) {
-  const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
-  const typecheckTarget: TargetConfiguration = {
+  siblingFiles: string[]
+): TargetConfiguration {
+  const tsConfigArg = siblingFiles.includes('tsconfig.app.json')
+    ? ` -p tsconfig.app.json`
+    : ``;
+  return {
     cache: true,
     inputs: [
       ...('production' in namedInputs
@@ -330,9 +356,7 @@ async function typecheckTarget(
         : ['default', '^default']),
       { externalDependencies: ['typescript'] },
     ],
-    command: isUsingTsSolutionSetup
-      ? `tsc --build --emitDeclarationOnly`
-      : `tsc${hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``} --noEmit`,
+    command: `tsc${tsConfigArg} --noEmit`,
     options: {
       cwd: projectRoot,
     },
@@ -340,23 +364,11 @@ async function typecheckTarget(
       description: `Runs type-checking for the project.`,
       technologies: ['typescript'],
       help: {
-        command: isUsingTsSolutionSetup
-          ? `${pmCommand.exec} tsc --build --help`
-          : `${pmCommand.exec} tsc${
-              hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``
-            } --help`,
-        example: isUsingTsSolutionSetup
-          ? { args: ['--force'] }
-          : { options: { noEmit: true } },
+        command: `${pmCommand.exec} tsc${tsConfigArg} --help`,
+        example: { options: { noEmit: true } },
       },
     },
   };
-
-  if (isUsingTsSolutionSetup) {
-    typecheckTarget.dependsOn = [`^${typecheckTargetName}`];
-    typecheckTarget.syncGenerators = ['@nx/js:typescript-sync'];
-  }
-  return typecheckTarget;
 }
 
 function normalizeOptions(options: ReactRouterPluginOptions) {
