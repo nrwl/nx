@@ -176,6 +176,11 @@ impl SharedStrMap {
     ) -> Self {
         Self(SharedStrMapEntries::Indexed { keys, entries })
     }
+
+    /// Callers must resolve duplicate keys before constructing the map.
+    pub(crate) fn from_entries(entries: Vec<(SharedStr, SharedStr)>) -> Self {
+        Self(SharedStrMapEntries::Owned(entries))
+    }
 }
 
 impl From<HashMap<SharedStr, SharedStr>> for SharedStrMap {
