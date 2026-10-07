@@ -34,6 +34,9 @@ export default async function findCustomHashers(
     }
 
     const packageRoot = posix.dirname(packageJsonPath);
+    // A nameless local plugin is referenced by its relative path.
+    const pluginName =
+      packageJson.name ?? (packageRoot === '.' ? '.' : `./${packageRoot}`);
     for (const field of [packageJson.executors, packageJson.builders]) {
       if (typeof field !== 'string') {
         continue;
@@ -81,7 +84,7 @@ export default async function findCustomHashers(
           entry.hasher
         );
         hits.add(
-          `Executor "${packageJson.name ?? packageRoot}:${name}" declares a custom hasher at "${hasherPath}" in "${executorsJsonPath}".`
+          `Executor "${pluginName}:${name}" declares a custom hasher at "${hasherPath}" in "${executorsJsonPath}".`
         );
       }
     }

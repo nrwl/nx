@@ -80,26 +80,32 @@ describe('find-custom-hashers migration', () => {
     expect(tree.read('tools/my-plugin/executors.json', 'utf-8')).toBe(before);
   });
 
-  it('should name an executor by its plugin path when the package has no name', async () => {
-    writeJson(tree, 'tools/my-plugin/package.json', {
-      executors: './executors.json',
-    });
-    writeJson(tree, 'tools/my-plugin/executors.json', {
-      executors: {
-        echo: {
-          implementation: './echo',
-          hasher: './hasher',
-          schema: './schema.json',
+  it.each([
+    ['tools/my-plugin', './tools/my-plugin'],
+    ['.', '.'],
+  ])(
+    'should name an executor in a nameless package at "%s" by its relative path',
+    async (root, pluginName) => {
+      writeJson(tree, `${root}/package.json`, {
+        executors: './executors.json',
+      });
+      writeJson(tree, `${root}/executors.json`, {
+        executors: {
+          echo: {
+            implementation: './echo',
+            hasher: './hasher',
+            schema: './schema.json',
+          },
         },
-      },
-    });
+      });
 
-    const result = await migration(tree);
+      const result = await migration(tree);
 
-    expect(result.agentContext).toEqual([
-      expect.stringContaining('Executor "tools/my-plugin:echo"'),
-    ]);
-  });
+      expect(result.agentContext).toEqual([
+        expect.stringContaining(`Executor "${pluginName}:echo"`),
+      ]);
+    }
+  );
 
   it('should report hashers declared in a builders file', async () => {
     addLocalPlugin(
