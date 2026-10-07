@@ -8,7 +8,7 @@ use dashmap::DashMap;
 
 use crate::native::glob::{
     NxGlobSet, build_converted_glob_set, build_glob_set, converted_globs, fileset_patterns,
-    normalize_glob, partition_glob,
+    normalize_glob, partition_glob, partition_unsigned,
 };
 
 /// What an entry names at and below its root.
@@ -67,12 +67,13 @@ fn split(glob: &str) -> Result<(String, Below)> {
 
 /// Splits a glob already in the matching engine's syntax, see
 /// `converted_globs`, into its root and the pattern after it. It reads as
-/// the engine reads it: a trailing `/` means everything under, and a glob
-/// literal to its end (no pattern) names that path alone.
+/// the engine reads it: a trailing `/` means everything under, a glob
+/// literal to its end (no pattern) names that path alone, and its negation
+/// marker is already stripped, so a leading `!` is part of a name.
 fn split_converted(glob: &str) -> (String, Option<String>) {
     match glob.ends_with('/') {
-        true => partition_glob(&format!("{glob}**")),
-        false => partition_glob(glob),
+        true => partition_unsigned(&format!("{glob}**")),
+        false => partition_unsigned(glob),
     }
 }
 
