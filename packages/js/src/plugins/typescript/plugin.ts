@@ -1031,7 +1031,7 @@ function getInputs(
         filePathToInput(p, workspaceRoot, config.project)
       ),
       ...Array.from(includePaths).map((p: string) =>
-        pathToInputOrOutput(
+        tsSpecToInput(
           joinPathFragments(config.project.root, p),
           workspaceRoot,
           config.project
@@ -1048,7 +1048,7 @@ function getInputs(
     inputs.push(
       ...Array.from(excludePaths).map(
         (p: string) =>
-          `!${pathToInputOrOutput(
+          `!${tsSpecToInput(
             joinPathFragments(config.project.root, p),
             workspaceRoot,
             config.project
@@ -1304,6 +1304,27 @@ function filePathToInput(
     project
   );
   return `${root}/${escapeGlob(relativePath)}`;
+}
+
+/**
+ * An input for a tsconfig include or exclude spec. TS reads only `*` and `?`
+ * as wildcards, so every other glob character is escaped.
+ */
+function tsSpecToInput(
+  spec: string,
+  workspaceRoot: string,
+  project: ProjectContext
+): string {
+  const [root, relativePath] = rootAndRelativePath(
+    spec,
+    workspaceRoot,
+    project
+  );
+  const escaped = relativePath
+    .split(/([*?])/)
+    .map((part, i) => (i % 2 ? part : escapeGlob(part)))
+    .join('');
+  return escaped ? `${root}/${escaped}` : root;
 }
 
 function rootAndRelativePath(
