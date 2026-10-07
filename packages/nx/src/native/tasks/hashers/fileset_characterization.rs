@@ -4,8 +4,12 @@
 //! membership is the contract.
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
-use super::{collect_project_file_paths, collect_workspace_file_paths};
+use super::{
+    FileSet, WorkspaceFileIndex, collect_project_file_paths, collect_workspace_file_paths,
+    globs_from_workspace_globs,
+};
 use crate::native::types::FileData;
 
 const WORKSPACE: &[&str] = &[
@@ -132,7 +136,10 @@ const WORKSPACE_FILESETS: &[&[&str]] = &[
     &["{workspaceRoot}/libs/*/src/index.ts"],
     &["{workspaceRoot}/{nx.json,tsconfig.base.json}"],
     &[r"{workspaceRoot}/libs/\(group\)/**/*"],
-    &["{workspaceRoot}/libs/@scope/z", "{workspaceRoot}/libs/+state"],
+    &[
+        "{workspaceRoot}/libs/@scope/z",
+        "{workspaceRoot}/libs/+state",
+    ],
     &["{workspaceRoot}/libs/x", "!{workspaceRoot}/libs/x/src/**"],
     // Without `{workspaceRoot}/` an entry is dropped.
     &["package.json"],
@@ -141,7 +148,7 @@ const WORKSPACE_FILESETS: &[&[&str]] = &[
 #[test]
 fn regular_filesets_match_the_recorded_files() {
     let project_file_map = project_file_map();
-    let all_workspace_files = file_data(WORKSPACE);
+    let all_workspace_files = WorkspaceFileIndex::new(Arc::new(file_data(WORKSPACE)));
     let mut report = String::new();
     for (project, fileset) in PROJECT_FILESETS {
         let fileset: Vec<String> = fileset.iter().map(|g| g.to_string()).collect();
@@ -160,4 +167,38 @@ fn regular_filesets_match_the_recorded_files() {
         }
     }
     insta::assert_snapshot!(report);
+}
+
+// Affected detection tests one changed path against a fileset; hashing
+// expands the fileset over the file map. Both must name the same files.
+#[test]
+fn matching_a_path_agrees_with_expanding_the_fileset() {
+    let project_file_map = project_file_map();
+    let all_workspace_files = WorkspaceFileIndex::new(Arc::new(file_data(WORKSPACE)));
+    for (project, fileset) in PROJECT_FILESETS {
+        let fileset: Vec<String> = fileset.iter().map(|g| g.to_string()).collect();
+        let parsed = FileSet::parse(&fileset).unwrap();
+        let matched: Vec<String> = project_file_map[*project]
+            .iter()
+            .filter(|file| parsed.matches(&file.file))
+            .map(|file| file.file.clone())
+            .collect();
+        let expanded = collect_project_file_paths(project, &fileset, &project_file_map).unwrap();
+        assert_eq!(sorted(matched), expanded, "{project} {fileset:?}");
+    }
+    for fileset in WORKSPACE_FILESETS {
+        let fileset: Vec<String> = fileset.iter().map(|g| g.to_string()).collect();
+        let globs = globs_from_workspace_globs(&fileset);
+        if globs.is_empty() {
+            continue;
+        }
+        let parsed = FileSet::parse(&globs).unwrap();
+        let matched: Vec<String> = WORKSPACE
+            .iter()
+            .filter(|file| parsed.matches(file))
+            .map(|file| file.to_string())
+            .collect();
+        let expanded = collect_workspace_file_paths(&fileset, &all_workspace_files).unwrap();
+        assert_eq!(sorted(matched), expanded, "{fileset:?}");
+    }
 }

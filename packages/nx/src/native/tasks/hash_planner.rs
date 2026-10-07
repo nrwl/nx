@@ -3965,7 +3965,6 @@ mod nested_project_tests {
                     ultracache,
                 } => Some(
                     expand_globs_with_exclusions(
-                        temp.path(),
                         globs,
                         project_roots,
                         &Source::fileset_from_disk(temp.path()),
