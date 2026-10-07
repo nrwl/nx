@@ -81,7 +81,7 @@ export default async function findCustomHashers(
           entry.hasher
         );
         hits.add(
-          `Executor "${packageJson.name}:${name}" declares a custom hasher at "${hasherPath}" in "${executorsJsonPath}".`
+          `Executor "${packageJson.name ?? packageRoot}:${name}" declares a custom hasher at "${hasherPath}" in "${executorsJsonPath}".`
         );
       }
     }

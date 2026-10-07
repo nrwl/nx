@@ -80,6 +80,27 @@ describe('find-custom-hashers migration', () => {
     expect(tree.read('tools/my-plugin/executors.json', 'utf-8')).toBe(before);
   });
 
+  it('should name an executor by its plugin path when the package has no name', async () => {
+    writeJson(tree, 'tools/my-plugin/package.json', {
+      executors: './executors.json',
+    });
+    writeJson(tree, 'tools/my-plugin/executors.json', {
+      executors: {
+        echo: {
+          implementation: './echo',
+          hasher: './hasher',
+          schema: './schema.json',
+        },
+      },
+    });
+
+    const result = await migration(tree);
+
+    expect(result.agentContext).toEqual([
+      expect.stringContaining('Executor "tools/my-plugin:echo"'),
+    ]);
+  });
+
   it('should report hashers declared in a builders file', async () => {
     addLocalPlugin(
       'tools/my-plugin',
