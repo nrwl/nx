@@ -4,65 +4,23 @@ distribute-on:
   medium-changeset: 6 linux-large, 5 linux-extra-large
   large-changeset: 6 linux-large, 6 linux-extra-large
   extra-large-changeset: 8 linux-large, 8 linux-extra-large
-assignment-rules:
-  - projects:
-      - nx
-      - workspace
-      - remix
-      - nx-maven-plugin
-    targets:
-      - install
-      - test
-    run-on:
-      - agent: linux-large
-        parallelism: 1
-      - agent: linux-extra-large
-        parallelism: 1
+
+scheduling-constraints:
+  - projects: ['nx', 'workspace', 'remix', 'nx-maven-plugin']
+    targets: ['install', 'test']
+    cannot-run-with:
+      - projects: ['nx', 'workspace', 'remix', 'nx-maven-plugin']
+        targets: ['install', 'test']
 
   # Module federation e2e tests build + serve a host and its remotes (several
   # webpack/rspack builds at once) — each one saturates ~7 cores. Pin them to
   # the larger extra-large agents, one per machine. Must precede e2e-ci**.
-  - targets:
-      - e2e-ci--src/module-federation**
-    run-on:
-      - agent: linux-extra-large
-        parallelism: 1
+  - targets: ['e2e-ci--src/module-federation**']
+    cannot-run-with:
+      - targets: ['e2e-ci--src/module-federation**']
 
-  - targets:
-      - e2e-ci**
-    run-on:
-      - agent: linux-large
-        parallelism: 3
-      - agent: linux-extra-large
-        parallelism: 6
 
-  - targets:
-      - bench:*
-    run-on:
-      - agent: linux-large
-        parallelism: 1
+  - targets: ['bench*']
+    cannot-run-with:
+      - targets: ['bench*']
 
-  # These projects should not need to be isolated.
-  - projects:
-      - nx-dev
-      - astro-docs
-    targets:
-      - build*
-    run-on:
-      - agent: linux-extra-large
-        parallelism: 1
-  - targets:
-      - lint
-    run-on:
-      - agent: linux-large
-        parallelism: 6
-      - agent: linux-extra-large
-        parallelism: 6
-
-  - targets:
-      - "*"
-    run-on:
-      - agent: linux-large
-        parallelism: 3
-      - agent: linux-extra-large
-        parallelism: 3
