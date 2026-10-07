@@ -889,8 +889,8 @@ describe('Nx Running Tests', () => {
           runCLI(`check ${mylib1} --skip-nx-cache`, { silenceError: true })
         ).toContain(`Failed tasks:`);
 
-        // The marker exists only once the server has printed its ready line,
-        // so the check passes only if Nx waited for that line.
+        // The marker is written before the ready line, so a check released by
+        // that line finds it.
         updateFile(
           `libs/${mylib1}/serve.js`,
           `
