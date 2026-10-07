@@ -10,9 +10,9 @@ use super::changed_contents::ChangedContents;
 use super::dependent_outputs::is_path_prefix;
 use super::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::ProjectRoots;
-use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob, partition_glob};
+use crate::native::glob::{build_glob_set, normalize_glob, partition_glob};
 use crate::native::project_graph::types::{ExternalNode, ProjectGraph};
-use crate::native::tasks::hashers::globs_from_workspace_globs;
+use crate::native::tasks::hashers::{FileSet, globs_from_workspace_globs};
 use crate::native::tasks::types::{HashInstruction, HashPlans, JsonFileSetInput};
 use crate::native::utils::path::normalize_js_path;
 
@@ -317,7 +317,7 @@ pub(crate) fn compute_input_matches(
 /// the package that moved. `TaskOutput` never matches;
 /// `affected_through_output_reads` carries it instead.
 ///
-/// The whole glob set decides the match, so negations still exclude; the
+/// The whole fileset decides the match, so negations still exclude; the
 /// individual positives are then tested only to name the one responsible.
 fn instruction_matches_detail(
     instruction: &HashInstruction,
@@ -349,11 +349,11 @@ fn instruction_matches_detail(
         if candidates.is_empty() {
             return Ok(vec![]);
         }
-        let full = build_glob_set(&fileset_patterns(globs))?;
+        let full = FileSet::parse(globs)?;
         if !detail {
             return Ok(candidates
                 .into_iter()
-                .find(|&i| full.is_match(&changed.files[i]))
+                .find(|&i| full.matches(&changed.files[i]))
                 .map(|i| InputMatch {
                     file: raw_files[i].clone(),
                     pattern: None,
@@ -363,7 +363,7 @@ fn instruction_matches_detail(
         }
         let hits: Vec<usize> = candidates
             .into_iter()
-            .filter(|&i| full.is_match(&changed.files[i]))
+            .filter(|&i| full.matches(&changed.files[i]))
             .collect();
         if hits.is_empty() {
             return Ok(vec![]);
@@ -377,10 +377,7 @@ fn instruction_matches_detail(
         } else {
             declared
                 .iter()
-                .map(|glob| {
-                    build_glob_set(&fileset_patterns(std::slice::from_ref(*glob)))
-                        .map(|set| (*glob, set))
-                })
+                .map(|glob| FileSet::parse(std::slice::from_ref(*glob)).map(|set| (*glob, set)))
                 .collect::<anyhow::Result<Vec<_>>>()?
         };
 
@@ -393,7 +390,7 @@ fn instruction_matches_detail(
                     [only] => Some((*only).clone()),
                     _ => positives
                         .iter()
-                        .find(|(_, set)| set.is_match(&changed.files[i]))
+                        .find(|(_, set)| set.matches(&changed.files[i]))
                         .map(|(glob, _)| (*glob).clone()),
                 },
             })
