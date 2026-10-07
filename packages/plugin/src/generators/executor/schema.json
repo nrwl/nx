@@ -35,7 +35,8 @@
     "includeHasher": {
       "type": "boolean",
       "default": false,
-      "description": "Should the boilerplate for a custom hasher be generated?"
+      "description": "Should the boilerplate for a custom hasher be generated?",
+      "x-deprecated": "Use target inputs instead. This will be removed in Nx 25."
     },
     "skipLintChecks": {
       "type": "boolean",

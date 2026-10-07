@@ -1,3 +1,4 @@
+<%# TODO(v25): remove custom hasher support. -%>
 import { TaskHasher, HasherContext } from '@nx/devkit';
 
 import { <%=propertyName%>Hasher } from './hasher';

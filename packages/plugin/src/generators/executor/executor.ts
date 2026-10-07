@@ -6,6 +6,7 @@ import {
   formatFiles,
   generateFiles,
   joinPathFragments,
+  logger,
   names,
   readJson,
   readProjectConfiguration,
@@ -145,6 +146,7 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
       schema: `${dir}/schema.json`,
       description: options.description,
     };
+    // TODO(v25): remove custom hasher support.
     if (options.includeHasher) {
       executors[options.name].hasher = `${dir}/hasher`;
     }
@@ -218,7 +220,11 @@ export async function executorGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   addFiles(host, options);
+  // TODO(v25): remove custom hasher support.
   if (options.includeHasher) {
+    logger.warn(
+      'Custom hashers are deprecated and will be removed in Nx 25. Use target inputs instead: https://nx.dev/docs/kb/local-executors#using-custom-hashers'
+    );
     addHasherFiles(host, options);
   }
 

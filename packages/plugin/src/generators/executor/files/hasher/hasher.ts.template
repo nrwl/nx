@@ -1,3 +1,4 @@
+<%# TODO(v25): remove custom hasher support. -%>
 import type { CustomHasher } from '@nx/devkit';
 
 /**

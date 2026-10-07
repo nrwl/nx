@@ -1,6 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
+import { Tree, logger, readJson, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { executorGenerator } from './executor';
 import { pluginGenerator } from '../plugin/plugin';
@@ -254,6 +254,41 @@ describe('NxPlugin Executor Generator', () => {
       expect(executorsJson.executors['my-executor'].hasher).toEqual(
         './src/executors/my-executor/hasher'
       );
+    });
+
+    it('should warn that custom hashers are deprecated', async () => {
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      try {
+        await executorGenerator(tree, {
+          name: 'my-executor',
+          path: 'my-plugin/src/executors/my-executor/executor',
+          unitTestRunner: 'jest',
+          includeHasher: true,
+        });
+
+        expect(warn).toHaveBeenCalledWith(
+          expect.stringContaining('Custom hashers are deprecated')
+        );
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('Nx 25'));
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should not warn when no hasher is generated', async () => {
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      try {
+        await executorGenerator(tree, {
+          name: 'my-executor',
+          path: 'my-plugin/src/executors/my-executor/executor',
+          unitTestRunner: 'jest',
+          includeHasher: false,
+        });
+
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
     });
   });
 
