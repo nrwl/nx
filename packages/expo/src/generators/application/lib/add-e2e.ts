@@ -38,7 +38,7 @@ export async function addE2e(
     tree,
     options.projectName,
     joinPathFragments(options.appProjectRoot, 'app.json'),
-    options.addPlugin
+    hasPlugin
   );
 
   switch (options.e2eTestRunner) {
@@ -138,8 +138,10 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         enableTypedLinting: isTypedLintingEnabled(options),
-        webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
-        webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
+        webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+        webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+        ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       });
@@ -171,10 +173,10 @@ async function getExpoE2EWebServerInfo(
   tree: Tree,
   projectName: string,
   configFilePath: string,
-  isPluginBeingAdded: boolean
+  hasPlugin: boolean
 ) {
   const nxJson = readNxJson(tree);
-  let e2ePort = isPluginBeingAdded ? 8081 : 4200;
+  let e2ePort = hasPlugin ? 8081 : 4200;
   const serveTargetOptions = readTargetDefaultsForTarget(
     'serve',
     nxJson.targetDefaults
@@ -184,7 +186,7 @@ async function getExpoE2EWebServerInfo(
     e2ePort = serveTargetOptions.port;
   }
 
-  return getE2EWebServerInfo(
+  const e2eWebServerInfo = await getE2EWebServerInfo(
     tree,
     projectName,
     {
@@ -200,6 +202,15 @@ async function getExpoE2EWebServerInfo(
       defaultE2ECiBaseUrl: 'http://localhost:4200',
       defaultE2EPort: e2ePort,
     },
-    isPluginBeingAdded
+    hasPlugin
   );
+
+  // The plugin infers no static server and none is generated with it, so CI runs the dev server
+  return hasPlugin
+    ? {
+        ...e2eWebServerInfo,
+        e2eCiWebServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+        e2eCiBaseUrl: e2eWebServerInfo.e2eWebServerAddress,
+      }
+    : e2eWebServerInfo;
 }
