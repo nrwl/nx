@@ -15,6 +15,7 @@ import {
   applyTestFileDirectives,
 } from '@nx/devkit/internal';
 import {
+  escapeGlob,
   AggregateCreateNodesError,
   createNodesFromFiles,
   type CreateNodesContext,
@@ -341,7 +342,7 @@ async function buildPlaywrightTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const tsconfigJsonInputs = externalTsconfigInputs.map((file) => ({
-    json: `{workspaceRoot}/${file}`,
+    json: `{workspaceRoot}/${escapeGlob(file)}`,
     fields: ['compilerOptions', 'extends', 'files', 'include'],
   }));
 

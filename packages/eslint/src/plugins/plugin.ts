@@ -7,6 +7,7 @@ import {
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
+  escapeGlob,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
@@ -482,14 +483,14 @@ function buildEslintTargets(
       'default',
       // Certain lint rules can be impacted by changes to dependencies
       '^default',
-      ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
+      ...eslintConfigs.map((config) => `{workspaceRoot}/${escapeGlob(config)}`),
       ...(existsSync(join(workspaceRoot, projectRoot, '.eslintignore'))
-        ? [join('{workspaceRoot}', projectRoot, '.eslintignore')]
+        ? [`{workspaceRoot}/${escapeGlob(join(projectRoot, '.eslintignore'))}`]
         : []),
       // Tsconfig files reached via `extends` that live outside the project
       // root — declared so the cache invalidates on upstream changes.
       ...tsconfigChainOutsideProjectRoot.map(
-        (file) => `{workspaceRoot}/${file}`
+        (file) => `{workspaceRoot}/${escapeGlob(file)}`
       ),
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
