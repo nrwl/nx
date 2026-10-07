@@ -317,5 +317,25 @@ describe('TaskHasher', () => {
 
       expect(filtered.map((f) => f.file)).toEqual(['a.ts', 'dir/a.ts']);
     });
+
+    it('should match a root with glob characters literally', () => {
+      const files = [
+        { file: 'libs/[id]/a.ts' },
+        { file: 'libs/[id]/a.spec.ts' },
+        { file: 'libs/i/a.ts' },
+      ] as any;
+
+      expect(
+        filterUsingGlobPatterns('libs/[id]', files.slice(0, 2), [
+          '{projectRoot}/**/*',
+          '!{projectRoot}/**/*.spec.ts',
+        ]).map((f) => f.file)
+      ).toEqual(['libs/[id]/a.ts']);
+      expect(
+        filterUsingGlobPatterns('libs/[id]', files, [
+          '{projectRoot}/**/*.ts',
+        ]).map((f) => f.file)
+      ).toEqual(['libs/[id]/a.ts', 'libs/[id]/a.spec.ts']);
+    });
   });
 });
