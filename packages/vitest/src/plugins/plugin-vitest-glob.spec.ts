@@ -149,6 +149,30 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       });
     });
 
+    it('should escape glob characters in a setup file path', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+        'tools/(vitest)/[setup].mts': '',
+        'tools/(vitest)/tsconfig.json': '{"compilerOptions":{}}',
+      });
+      mockResolvedTestConfig(
+        { setupFiles: ['../../tools/(vitest)/[setup].mts'] },
+        join(temp.tempDir, 'libs/lib1')
+      );
+
+      const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+      expect(targets['test'].inputs).toContainEqual(
+        '{workspaceRoot}/tools/\\(vitest\\)/\\[setup\\].mts'
+      );
+      expect(targets['test'].inputs).toContainEqual({
+        json: '{workspaceRoot}/tools/\\(vitest\\)/tsconfig.json',
+        fields: ['compilerOptions'],
+      });
+    });
+
     it('should declare it for a config that authors no root', async () => {
       await temp.createFiles({
         'libs/lib1/vitest.config.ts': '',
