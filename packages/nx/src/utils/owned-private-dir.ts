@@ -3,10 +3,10 @@
  * ours and unreachable by other users on this machine.
  *
  * `native/utils/owned_dir.rs` implements the same rules and must change with
- * this file. That copy is the one everything else uses — this one exists
- * because the native binding loader has to place and lock down the `.node`
- * before Rust can be called, so it is the only caller that cannot reach the
- * native implementation. Node builtins only, for the same reason.
+ * this file. This copy exists because the native binding loader has to place
+ * and lock down the `.node` before Rust can be called, and `cache-directory.ts`,
+ * `git-utils.ts` and `nx-tmp-dir.ts` share it. Node builtins only, for the
+ * loader's sake.
  */
 import {
   closeSync,

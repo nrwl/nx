@@ -130,15 +130,15 @@ pub fn remedy_for(refusal: &DirRefusal) -> Option<String> {
         // Unreachable while `is_safe_shared_root` denies with this variant only
         // for a non-root owner, kept so a future producer cannot ship it
         // unadvised.
-        DirRefusal::ForeignSharedContainer { dir, uid } if *uid != 0 => {
+        DirRefusal::ForeignSharedContainer { uid: 0, .. } => None,
+        DirRefusal::ForeignSharedContainer { dir, .. } => {
             let quoted = shell_quote(dir);
             Some(format!(
                 "{} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with `sudo chown root {quoted} && sudo chmod 1777 {quoted}`; every user can then keep their own directory under it.",
                 dir.display()
             ))
         }
-        DirRefusal::ForeignSharedContainer { .. }
-        | DirRefusal::NotADirectory { symlink: false, .. }
+        DirRefusal::NotADirectory { symlink: false, .. }
         | DirRefusal::NotCreated { .. }
         | DirRefusal::NotInspectable { .. }
         | DirRefusal::PeerWritableNotSticky { .. } => None,
