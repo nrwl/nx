@@ -1388,18 +1388,32 @@ describe('task planner', () => {
       expected: ['npm:@nx/installed', 'npm:installed-dep'],
     },
     {
-      name: 'an uninstalled @nx executor with declared externals',
-      executor: '@nrwl/local:build',
-      declared: ['declared'],
-      expected: ['npm:declared', 'npm:declared-dep'],
+      name: 'a local @nx executor named after its project',
+      executor: '@nx/local:build',
+      expected: ['@nx/local:libs/local/**/*'],
     },
     {
-      name: 'an uninstalled @nx executor without declared externals',
+      name: 'a local @nx executor found by package name',
+      executor: '@nrwl/packaged:build',
+      expected: ['packaged-plugin:libs/packaged/**/*'],
+    },
+    {
+      name: 'a local @nx executor with declared externals',
       executor: '@nx/local:build',
-      expected: ['AllExternalDependencies'],
+      declared: ['declared'],
+      expected: [
+        '@nx/local:libs/local/**/*',
+        'npm:declared',
+        'npm:declared-dep',
+      ],
+    },
+    {
+      name: 'an @nx executor that is neither installed nor a project',
+      executor: '@nx/missing:build',
+      expected: [],
     },
   ])(
-    'should plan executor externals for $name',
+    'should plan executor inputs for $name',
     ({ executor, declared, expected }) => {
       const builder = new ProjectGraphBuilder();
       builder.addNode({
@@ -1416,6 +1430,20 @@ describe('task planner', () => {
               ],
             },
           },
+        },
+      });
+      builder.addNode({
+        name: '@nx/local',
+        type: 'lib',
+        data: { root: 'libs/local', targets: {} },
+      });
+      builder.addNode({
+        name: 'packaged-plugin',
+        type: 'lib',
+        data: {
+          root: 'libs/packaged',
+          metadata: { js: { packageName: '@nrwl/packaged' } },
+          targets: {},
         },
       });
       for (const packageName of [
@@ -1452,7 +1480,8 @@ describe('task planner', () => {
         plan.filter(
           (instruction) =>
             instruction.startsWith('npm:') ||
-            instruction === 'AllExternalDependencies'
+            instruction === 'AllExternalDependencies' ||
+            (!instruction.startsWith('app:') && instruction.includes(':libs/'))
         )
       ).toEqual(expected);
     }

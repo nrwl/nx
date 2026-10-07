@@ -1101,6 +1101,8 @@ export interface Project {
   namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
   tags?: Array<string>
   targets: Record<string, Target>
+  /** The `name` in the project's `package.json`, when it has one. */
+  packageName?: string
 }
 
 export interface ProjectGraph {

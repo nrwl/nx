@@ -7,7 +7,7 @@ use crate::native::tasks::{
 };
 use crate::native::types::{Input, NxJson};
 use crate::native::{
-    project_graph::types::ProjectGraph,
+    project_graph::types::{Project, ProjectGraph},
     tasks::{inputs::SplitInputs, types::Task},
 };
 use itertools::Itertools;
@@ -673,37 +673,68 @@ impl HashPlanner {
             }
         }
 
-        // Only an installed @nx executor has a known package closure.
-        let executor_node = target
+        // Only @nx executors have a known package. Anything else could depend
+        // on any external, unless the target declares which ones it uses.
+        let Some(executor_package) = target
             .executor
             .as_deref()
             .filter(|e| e.starts_with("@nrwl/") || e.starts_with("@nx/"))
-            .and_then(|e| {
-                let package = e
-                    .split(':')
+            .map(|e| {
+                e.split(':')
                     .next()
-                    .expect("Executors should always have a ':'");
-                find_external_dependency_node_name(package, &self.project_graph)
-            });
-        if let Some(executor_node) = executor_node {
+                    .expect("Executors should always have a ':'")
+            })
+        else {
+            return Ok(Some(if declares_external_deps {
+                external_instructions(external_deps)
+            } else {
+                vec![HashInstruction::AllExternalDependencies]
+            }));
+        };
+
+        if let Some(executor_node) =
+            find_external_dependency_node_name(executor_package, &self.project_graph)
+        {
             trace!(
                 "Add External Instructions for executor {executor_node} of {project_name}:{target_name}: {:?}",
                 &external_deps_map[executor_node]
             );
             external_deps.insert(executor_node);
             external_deps.extend(&external_deps_map[executor_node]);
-        } else if !declares_external_deps {
-            // Any other executor, a local @nx plugin included, could depend on
-            // any external unless the target declares which ones it uses.
-            return Ok(Some(vec![HashInstruction::AllExternalDependencies]));
+            return Ok(Some(external_instructions(external_deps)));
         }
 
-        Ok(Some(
-            external_deps
-                .into_iter()
-                .map(|dep| HashInstruction::External(dep.to_string()))
-                .collect(),
-        ))
+        // A local plugin's executor is workspace source, so its project's
+        // files stand in for the installed package's closure.
+        let mut instructions = external_instructions(external_deps);
+        if let Some((executor_project, executor_config)) =
+            self.find_project_by_package(executor_package)
+        {
+            trace!(
+                "Add Project File Instruction for local executor {executor_project} of {project_name}:{target_name}"
+            );
+            instructions.push(HashInstruction::ProjectFileSet(
+                executor_project.to_string(),
+                vec![resolve_tokens(
+                    "{projectRoot}/**/*",
+                    &executor_config.root,
+                    executor_project,
+                )],
+            ));
+        }
+        Ok(Some(instructions))
+    }
+
+    fn find_project_by_package(&self, package_name: &str) -> Option<(&String, &Project)> {
+        self.project_graph
+            .nodes
+            .get_key_value(package_name)
+            .or_else(|| {
+                self.project_graph
+                    .nodes
+                    .iter()
+                    .find(|(_, project)| project.package_name.as_deref() == Some(package_name))
+            })
     }
 
     fn self_and_deps_inputs<'a>(
@@ -1627,6 +1658,13 @@ fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> Str
             .map(str::to_string)
             .unwrap_or(resolved),
     }
+}
+
+fn external_instructions(external_deps: hashbrown::HashSet<&String>) -> Vec<HashInstruction> {
+    external_deps
+        .into_iter()
+        .map(|dep| HashInstruction::External(dep.to_string()))
+        .collect()
 }
 
 fn find_external_dependency_node_name<'a>(
