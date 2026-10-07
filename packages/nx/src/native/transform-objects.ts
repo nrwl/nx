@@ -87,6 +87,7 @@ export function toRustProjectGraph(graph: ProjectGraph): RustProjectGraph {
       namedInputs: projectNode.data.namedInputs,
       targets,
       tags: projectNode.data.tags,
+      packageName: projectNode.data.metadata?.js?.packageName,
     };
     if (graph.dependencies[projectName]) {
       dependencies[projectName] = [];
