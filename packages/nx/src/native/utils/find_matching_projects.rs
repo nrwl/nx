@@ -265,6 +265,7 @@ mod tests {
                 let project = Project {
                     root: root.to_string(),
                     named_inputs: None,
+                    package_name: None,
                     tags: Some(tags.iter().map(|tag| tag.to_string()).collect()),
                     targets: HashMap::new(),
                 };
