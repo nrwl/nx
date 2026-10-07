@@ -10,6 +10,7 @@ import {
   retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
+  escapeGlob,
   CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
@@ -542,12 +543,12 @@ function withSetupFileInputs(
 
   const setupInputs = [
     ...tsconfigs.map((f) => ({
-      json: `{workspaceRoot}/${f}`,
+      json: `{workspaceRoot}/${escapeGlob(f)}`,
       fields: ['compilerOptions'],
     })),
     // Whole-file, not just `compilerOptions`: these are sources Vitest
     // executes, so any change to them changes the run.
-    ...files.map((f) => `{workspaceRoot}/${f}`),
+    ...files.map((f) => `{workspaceRoot}/${escapeGlob(f)}`),
   ];
   const inputs = [...targets[testTargetName].inputs, ...setupInputs];
   return Object.fromEntries(
@@ -598,7 +599,7 @@ async function testTarget(
           ]
         : ['default', '^default']),
       ...tsconfigInputs.map((f) => ({
-        json: `{workspaceRoot}/${f}`,
+        json: `{workspaceRoot}/${escapeGlob(f)}`,
         fields: ['compilerOptions'],
       })),
       {
