@@ -4,8 +4,9 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use tracing::trace;
 
 use super::locators::all_project_names;
-use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob};
+use crate::native::glob::normalize_glob;
 use crate::native::project_graph::types::{Project, ProjectGraph, Target};
+use crate::native::tasks::hashers::FileSet;
 use crate::native::types::{JsInputs, NxJson};
 
 /// What a matched implicit pattern marks affected.
@@ -55,8 +56,8 @@ pub(super) fn implicitly_touched_projects(
         // Read the way the hasher reads it: slashes collapsed, and a literal path
         // is that file or everything under it.
         let pattern = normalize_glob(pattern);
-        let changed = match build_glob_set(&fileset_patterns(std::slice::from_ref(&pattern))) {
-            Ok(glob) => touched_files.iter().any(|file| glob.is_match(file)),
+        let changed = match FileSet::parse(std::slice::from_ref(&pattern)) {
+            Ok(fileset) => touched_files.iter().any(|file| fileset.matches(file)),
             // Taken literally, as minimatch did, so the change still selects the
             // project and the run surfaces the hasher's error for this glob.
             Err(_) => {
