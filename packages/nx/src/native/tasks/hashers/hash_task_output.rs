@@ -30,7 +30,6 @@ pub fn expand_task_outputs(
     let expansion = expand_cached(&key, cache, || {
         let (positives, negations) = output_entries(workspace_root, outputs)?;
         expand_entries(
-            workspace_root,
             &positives,
             &negations,
             &Source::declared_outputs(workspace_root),
