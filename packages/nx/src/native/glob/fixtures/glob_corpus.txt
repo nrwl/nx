@@ -99,3 +99,9 @@ dist/app/(group)/page.js
 .next/server/app/[...slug]/page.js
 @nrwl/
 /back\\slash
+app/[id]/page.tsx
+app/\[id\]/page.tsx
+app/(mk)/page.tsx
+app/\(mk\)/page.tsx
+app/{a,b}/page.tsx
+app/\{a,b\}/page.tsx
