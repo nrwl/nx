@@ -34,10 +34,11 @@ export class ProcessTasks {
   readonly tasks: { [id: string]: Task } = {};
   readonly dependencies: { [k: string]: string[] } = {};
   readonly continuousDependencies: { [k: string]: string[] } = {};
-  // `continuousDependencies` without the edges from `inputs: false`.
-  private readonly continuousDependenciesWithInputs: {
-    [k: string]: string[];
-  } = {};
+  // `from\0to` continuous edges by whether their `dependsOn` entry has
+  // `inputs: false`. Keyed from the creator's target, like `recordEdge`, so
+  // an edge through a dummy task names the real task.
+  private readonly continuousEdgesWithoutInputs = new Set<string>();
+  private readonly continuousEdgesWithInputs = new Set<string>();
   readonly dependencyOverrides: DependencyOverrides = {};
   private readonly allTargetNames: string[];
 
@@ -81,7 +82,8 @@ export class ProcessTasks {
             overrides
           );
           this.tasks[task.id] = task;
-          this.addTaskEdges(task.id);
+          this.dependencies[task.id] = [];
+          this.continuousDependencies[task.id] = [];
         }
       }
     }
@@ -100,7 +102,6 @@ export class ProcessTasks {
           delete this.tasks[t];
           delete this.dependencies[t];
           delete this.continuousDependencies[t];
-          delete this.continuousDependenciesWithInputs[t];
         }
       }
       for (let d of Object.keys(this.dependencies)) {
@@ -108,13 +109,10 @@ export class ProcessTasks {
           (dd) => !!initialTasks[dd]
         );
       }
-      for (const edges of [
-        this.continuousDependencies,
-        this.continuousDependenciesWithInputs,
-      ]) {
-        for (const d of Object.keys(edges)) {
-          edges[d] = edges[d].filter((dd) => !!initialTasks[dd]);
-        }
+      for (let d of Object.keys(this.continuousDependencies)) {
+        this.continuousDependencies[d] = this.continuousDependencies[d].filter(
+          (dd) => !!initialTasks[dd]
+        );
       }
     }
 
@@ -131,7 +129,6 @@ export class ProcessTasks {
     }
 
     filterDummyTasks(this.continuousDependencies);
-    filterDummyTasks(this.continuousDependenciesWithInputs);
 
     for (const taskId of Object.keys(this.continuousDependencies)) {
       if (this.continuousDependencies[taskId].length > 0) {
@@ -268,7 +265,8 @@ export class ProcessTasks {
           taskOverrides
         );
         this.tasks[selfTaskId] = newTask;
-        this.addTaskEdges(selfTaskId);
+        this.dependencies[selfTaskId] = [];
+        this.continuousDependencies[selfTaskId] = [];
         this.processTask(
           newTask,
           newTask.target.project,
@@ -279,7 +277,7 @@ export class ProcessTasks {
       if (task.id !== selfTaskId) {
         this.recordEdge(task, selfTaskId, taskOverrides);
         if (this.tasks[selfTaskId].continuous) {
-          this.addContinuousEdge(task.id, selfTaskId, dependencyConfig);
+          this.addContinuousEdge(task, selfTaskId, dependencyConfig);
         } else {
           this.dependencies[task.id].push(selfTaskId);
         }
@@ -335,7 +333,7 @@ export class ProcessTasks {
         if (task.id !== depTargetId) {
           this.recordEdge(task, depTargetId, taskOverrides);
           if (depTargetConfiguration.continuous) {
-            this.addContinuousEdge(task.id, depTargetId, dependencyConfig);
+            this.addContinuousEdge(task, depTargetId, dependencyConfig);
           } else {
             this.dependencies[task.id].push(depTargetId);
           }
@@ -349,7 +347,8 @@ export class ProcessTasks {
             taskOverrides
           );
           this.tasks[depTargetId] = newTask;
-          this.addTaskEdges(depTargetId);
+          this.dependencies[depTargetId] = [];
+          this.continuousDependencies[depTargetId] = [];
 
           this.processTask(
             newTask,
@@ -371,31 +370,26 @@ export class ProcessTasks {
         );
         this.dependencies[task.id].push(dummyId);
         this.continuousDependencies[task.id].push(dummyId);
-        this.continuousDependenciesWithInputs[task.id].push(dummyId);
         this.dependencies[dummyId] ??= [];
         this.continuousDependencies[dummyId] ??= [];
-        this.continuousDependenciesWithInputs[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
     }
   }
 
-  private addTaskEdges(taskId: string) {
-    this.dependencies[taskId] = [];
-    this.continuousDependencies[taskId] = [];
-    this.continuousDependenciesWithInputs[taskId] = [];
-  }
-
   private addContinuousEdge(
-    taskId: string,
+    task: Task,
     dependencyId: string,
     dependencyConfig: TargetDependencyConfig
   ) {
-    this.continuousDependencies[taskId].push(dependencyId);
-    if (dependencyConfig.inputs !== false) {
-      this.continuousDependenciesWithInputs[taskId].push(dependencyId);
-    }
+    this.continuousDependencies[task.id].push(dependencyId);
+    const { project, target, configuration } = task.target;
+    const edge = `${createTaskId(project, target, configuration)}\0${dependencyId}`;
+    (dependencyConfig.inputs === false
+      ? this.continuousEdgesWithoutInputs
+      : this.continuousEdgesWithInputs
+    ).add(edge);
   }
 
   /**
@@ -405,10 +399,13 @@ export class ProcessTasks {
   continuousDependenciesWithoutInputs(): { [k: string]: string[] } | undefined {
     let without: { [k: string]: string[] } | undefined;
     for (const [taskId, deps] of Object.entries(this.continuousDependencies)) {
-      const withInputs = new Set(
-        this.continuousDependenciesWithInputs[taskId] ?? []
-      );
-      const excluded = deps.filter((d) => !withInputs.has(d));
+      const excluded = deps.filter((dep) => {
+        const edge = `${taskId}\0${dep}`;
+        return (
+          this.continuousEdgesWithoutInputs.has(edge) &&
+          !this.continuousEdgesWithInputs.has(edge)
+        );
+      });
       if (excluded.length > 0) {
         (without ??= {})[taskId] = excluded;
       }
