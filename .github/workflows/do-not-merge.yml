@@ -1,8 +1,14 @@
 name: Unmergeable Labels Check
 
+# pull_request_target grants a write token on fork PRs so the rebase label can be removed.
+# Never check out or execute PR code in this workflow.
 on:
-  pull_request:
+  pull_request_target:
     types: [synchronize, opened, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   do-not-merge:
@@ -10,11 +16,48 @@ jobs:
     name: Prevent Merging
     runs-on: ubuntu-latest
     steps:
-      - name: Check for label
+      - name: Check for conflicts with base
+        id: conflicts
+        if: "${{ github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'blocked: needs rebase') }}"
+        env:
+          REPO: ${{ github.repository }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          echo "${{ toJSON(github.event.*.labels.*.name) }}"
+          git clone --quiet --filter=blob:none --no-checkout "https://github.com/$REPO.git" repo
+          git -C repo fetch --quiet origin "refs/pull/$PR_NUMBER/head"
+          set +e
+          git -C repo merge-tree --write-tree "origin/$BASE_REF" FETCH_HEAD > /dev/null
+          status=$?
+          set -e
+          case $status in
+            0) echo "clean=true" >> "$GITHUB_OUTPUT" ;;
+            1) echo "PR still conflicts with $BASE_REF" ;;
+            *) exit $status ;;
+          esac
+
+      - name: Remove needs rebase label
+        if: ${{ steps.conflicts.outputs.clean == 'true' }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              name: 'blocked: needs rebase',
+            });
+
+      # Label edits made with GITHUB_TOKEN trigger no new run, so this check must see the removal.
+      - name: Check for label
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          REMOVED: "${{ steps.conflicts.outputs.clean == 'true' && 'blocked: needs rebase' || '' }}"
+        run: |
+          echo "$LABELS"
           node -e 'const forbidden = ["target: next major version", "pr status: needs tests", "pr status: in-progress", "blocked: needs rebase", "pr status: do not merge"];
-           const match = ${{ toJSON(github.event.*.labels.*.name) }}.find(l => forbidden.includes(l.toLowerCase()));
+           const labels = JSON.parse(process.env.LABELS).filter(l => l !== process.env.REMOVED);
+           const match = labels.find(l => forbidden.includes(l.toLowerCase()));
            if (match) {
             console.log("Cannot merge PRs that are labeled with " + match);
             process.exit(1)
