@@ -334,7 +334,8 @@ impl HashInstruction {
     /// large disk-backed group lists its first positives, counts the rest, and
     /// ends in its `digest`. Display joins with commas, which paths may
     /// contain, so distinct instructions can still share a label; the hasher
-    /// suffixes the `digest` onto any label two of a task's instructions share.
+    /// suffixes the `digest` onto any label two of a task's instructions share,
+    /// then numbers any that still clash.
     pub fn label(&self) -> String {
         match self {
             HashInstruction::IgnoredFileSet(globs) if globs.len() > COMPACT_FILES_LABEL_ABOVE => {

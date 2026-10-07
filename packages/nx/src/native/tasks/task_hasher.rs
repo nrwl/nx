@@ -234,6 +234,35 @@ impl InstructionKeys {
             }
         }
     }
+
+    /// Names `entries` by their labels. When labels still clash, as when a
+    /// suffixed label equals another entry's label or two digests match, each
+    /// later holder takes the lowest ` #N` that no entry's label uses.
+    /// `entries` must be in rank order.
+    fn name_details(&self, entries: Vec<(u32, SharedStr)>) -> SharedStrMap {
+        let label = |id: u32| &self.labels[id as usize];
+        let labels: HashSet<&str> = entries.iter().map(|(id, _)| &**label(*id)).collect();
+        if labels.len() == entries.len() {
+            return SharedStrMap::from_indexed_entries(Arc::clone(&self.labels), entries);
+        }
+        let mut named: HashSet<String> = HashSet::with_capacity(entries.len());
+        let entries = entries
+            .into_iter()
+            .map(|(id, value)| {
+                let base = label(id);
+                if named.insert(base.to_string()) {
+                    return (base.clone(), value);
+                }
+                let name = (2..)
+                    .map(|n| format!("{} #{n}", &**base))
+                    .find(|name| !labels.contains(name.as_str()) && !named.contains(name))
+                    .expect("a free name");
+                named.insert(name.clone());
+                (SharedStr::from(name), value)
+            })
+            .collect();
+        SharedStrMap::from_entries(entries)
+    }
 }
 
 fn assemble_ranked_hash(
@@ -247,12 +276,16 @@ fn assemble_ranked_hash(
         trace!("Adding {} ({}) to hash", value, keys.labels[*id as usize]);
         hasher.update(value.as_bytes());
     }
-    if !keys.suffixed.is_empty() {
-        keys.name_shared_labels_apart(&mut entries);
-    }
+    let details = match keys.suffixed.is_empty() {
+        true => SharedStrMap::from_indexed_entries(Arc::clone(&keys.labels), entries),
+        false => {
+            keys.name_shared_labels_apart(&mut entries);
+            keys.name_details(entries)
+        }
+    };
     HashDetails {
         value: hasher.digest().to_string(),
-        details: SharedStrMap::from_indexed_entries(Arc::clone(&keys.labels), entries),
+        details,
         inputs: inputs.into(),
     }
 }
@@ -1139,6 +1172,43 @@ mod tests {
         let one = assemble_ranked_hash(entries(&[left_id]), &keys, HashInputsBuilder::default());
         assert_ne!(one.value, both.value);
         assert_eq!(one.details.keys(), ["files:[a,b,c]"]);
+    }
+
+    #[test]
+    fn a_suffixed_label_never_takes_another_instructions_label() {
+        let project_files =
+            |globs: &[&str]| HashInstruction::ProjectFileSet("p".into(), strings(globs));
+        let left = project_files(&["a,b", "c"]);
+        let right = project_files(&["a", "b,c"]);
+        let taken = format!("a,b,c #{}", left.digest());
+        let lookalike = project_files(&[&taken]);
+        let next = project_files(&[&format!("{taken} #2")]);
+        let pool = InstructionPool::new();
+        let ids: Vec<u32> = [left, right, lookalike, next]
+            .into_iter()
+            .map(|instruction| pool.intern(instruction))
+            .collect();
+        let keys = InstructionKeys::of(&pool);
+
+        for task in [&ids[..3], &ids[..]] {
+            let hashed = assemble_ranked_hash(entries(task), &keys, HashInputsBuilder::default());
+            let names = hashed.details.keys();
+            let distinct: HashSet<&String> = names.iter().collect();
+            assert_eq!(names.len(), task.len());
+            assert_eq!(distinct.len(), task.len(), "{names:?}");
+            assert!(names.contains(&format!("p:{taken}")));
+            assert!(names.contains(&format!("p:{taken} #2")));
+        }
+        let mut reversed = ids.clone();
+        reversed.reverse();
+        assert_eq!(
+            assemble_ranked_hash(entries(&reversed), &keys, HashInputsBuilder::default())
+                .details
+                .keys(),
+            assemble_ranked_hash(entries(&ids), &keys, HashInputsBuilder::default())
+                .details
+                .keys(),
+        );
     }
 
     #[test]
