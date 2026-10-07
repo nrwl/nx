@@ -1061,8 +1061,6 @@ export interface Project {
   namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
   tags?: Array<string>
   targets: Record<string, Target>
-  /** The `name` in the project's `package.json`, when it has one. */
-  packageName?: string
 }
 
 export interface ProjectGraph {
@@ -1131,6 +1129,8 @@ export interface Target {
   options?: string
   configurations?: string
   parallelism?: boolean
+  /** The workspace project a local `@nx/*` executor loads from. */
+  executorProject?: string
 }
 
 /** A representation of the invocation of an Executor */
