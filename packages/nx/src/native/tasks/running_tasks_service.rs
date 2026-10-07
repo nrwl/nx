@@ -131,7 +131,9 @@ impl RunningTasksService {
 
 impl Drop for RunningTasksService {
     fn drop(&mut self) {
-        // Remove tasks added by this service. This might happen if process exits because of SIGKILL
+        // Release this service's claims on a normal teardown. A SIGKILL runs no
+        // destructor, so those rows are left for `is_task_running` to reject and
+        // the stale sweep to clear.
         for task_id in self.added_tasks.iter() {
             self.remove_running_task(task_id.clone()).ok();
         }
