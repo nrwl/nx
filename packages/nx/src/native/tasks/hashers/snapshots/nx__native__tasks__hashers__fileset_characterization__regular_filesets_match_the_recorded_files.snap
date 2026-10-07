@@ -91,6 +91,26 @@ x ["libs/x/src", "!libs/x/src/lib"]
 x ["libs/x/src/lib/!(*.module).ts"]
   libs/x/src/lib/a.ts
 x ["libs/x/absent.ts"]
+x ["libs/x/src/lib/!(*.module).ts", "libs/x/src/lib/*.ts"]
+  libs/x/src/lib/a.ts
+x ["libs/x/{src,README.md}"]
+  libs/x/README.md
+x ["libs/x/**/*", "!libs/x/{src,jest.config.ts}"]
+  libs/x/README.md
+  libs/x/package.json
+  libs/x/project.json
+  libs/x/src/app.spec.tsx
+  libs/x/src/app.spec.tsx.snap
+  libs/x/src/app.tsx
+  libs/x/src/fixtures/root.json
+  libs/x/src/fixtures/skip.txt
+  libs/x/src/index.ts
+  libs/x/src/lib/a.module.ts
+  libs/x/src/lib/a.ts
+  libs/x/src/lib/deep/fixtures/two.json
+  libs/x/src/lib/fixtures/one.json
+  libs/x/src/util.test.js
+  libs/x/tsconfig.spec.json
 y ["libs/\\(group\\)/y/**/*"]
   libs/(group)/y/project.json
   libs/(group)/y/src/index.ts
@@ -149,4 +169,36 @@ workspace ["{workspaceRoot}/libs/x", "!{workspaceRoot}/libs/x/src/**"]
   libs/x/package.json
   libs/x/project.json
   libs/x/tsconfig.spec.json
+workspace ["{workspaceRoot}/**/*", "!{workspaceRoot}/libs/{x,x-other}"]
+  .gitignore
+  libs/(group)/y/project.json
+  libs/(group)/y/src/index.ts
+  libs/+state/w/index.ts
+  libs/@scope/z/src/index.ts
+  libs/group/y/src/index.ts
+  libs/x-other/src/index.ts
+  libs/x/README.md
+  libs/x/jest.config.ts
+  libs/x/package.json
+  libs/x/project.json
+  libs/x/src/app.spec.tsx
+  libs/x/src/app.spec.tsx.snap
+  libs/x/src/app.tsx
+  libs/x/src/fixtures/root.json
+  libs/x/src/fixtures/skip.txt
+  libs/x/src/index.ts
+  libs/x/src/lib/a.module.ts
+  libs/x/src/lib/a.ts
+  libs/x/src/lib/deep/fixtures/two.json
+  libs/x/src/lib/fixtures/one.json
+  libs/x/src/util.test.js
+  libs/x/tsconfig.spec.json
+  nx.json
+  package.json
+  tools/README.md
+  tools/scripts/build.spec.ts
+  tools/scripts/build.ts
+  tools/scripts/nested/util.ts
+  tsconfig.base.json
+workspace ["{workspaceRoot}/libs/{x,x-other}"]
 workspace ["package.json"]
