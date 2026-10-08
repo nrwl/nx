@@ -3186,20 +3186,7 @@ module.exports = {
     });
 
     describe('orchestrator reconcile', () => {
-      // Ungated, unlike init: the id has to name a run directory that exists,
-      // and only a gated init creates one. Dispensed commands can therefore
-      // stay plain CLI instead of carrying the gate as an env prefix.
-      let prevGate: string | undefined;
-      beforeEach(() => {
-        prevGate = process.env.NX_MIGRATE_ORCHESTRATOR;
-        delete process.env.NX_MIGRATE_ORCHESTRATOR;
-      });
-      afterEach(() => {
-        if (prevGate === undefined) delete process.env.NX_MIGRATE_ORCHESTRATOR;
-        else process.env.NX_MIGRATE_ORCHESTRATOR = prevGate;
-      });
-
-      it('discriminates a reconcile from a bare --run-id with the gate off', async () => {
+      it('discriminates a reconcile from a bare --run-id', async () => {
         expect(await parseMigrationsOptions({ runId: 'run-1' })).toEqual({
           type: 'orchestratorReconcile',
           runId: 'run-1',

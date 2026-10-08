@@ -63,16 +63,15 @@ const OPERATION_KILL_WAIT_MS = 2_000;
 // pass on to nx the SIGINT the terminal already sent it.
 const SAME_PRESS_MS = 500;
 
-// The wrapper's local re-exec sets the first two for its own hop and the user
-// sets the third to reach this path; inherited, they would change install or
-// routing behavior for every `nx migrate` the agent runs. CI exports the last
-// two for its own `nx affected` runs; inherited, they would replace the base
-// the run names and drop uncommitted files from the pass's selection. The
-// workspace's env files can still set them: every nx command loads those.
+// The wrapper's local re-exec sets the first two for its own hop; inherited,
+// they would change install or routing behavior for every `nx migrate` the
+// agent runs. CI exports the last two for its own `nx affected` runs;
+// inherited, they would replace the base the run names and drop uncommitted
+// files from the pass's selection. The workspace's env files can still set
+// them: every nx command loads those.
 const STRIPPED_ENV_VARS = [
   'NX_MIGRATE_SKIP_INSTALL',
   'NX_MIGRATE_USE_LOCAL',
-  'NX_MIGRATE_ORCHESTRATOR',
   'NX_BASE',
   'NX_HEAD',
 ];

@@ -87,6 +87,13 @@ vi.mock('../../config/configuration', async () => ({
   readNxJson: () => ({}),
 }));
 
+// A person's continue or start-fresh: the flag refusal must not depend on
+// whether the test process runs inside an agent or in CI.
+vi.mock('./agentic/inception', async () => ({
+  ...(await vi.importActual('./agentic/inception')),
+  isInsideAgent: () => false,
+}));
+
 import {
   mkdirSync,
   mkdtempSync,
@@ -114,7 +121,6 @@ function restoreEnv(name: string, value: string | undefined) {
 describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () => {
   const originalArgv = process.argv;
   const originalSkipInstall = process.env.NX_MIGRATE_SKIP_INSTALL;
-  const originalOrchestratorEnv = process.env.NX_MIGRATE_ORCHESTRATOR;
 
   beforeEach(() => {
     mockAssertWorkspaceNx.mockReset().mockReturnValue(undefined);
@@ -136,7 +142,6 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     setWorkspaceRoot(originalWorkspaceRoot);
     process.argv = originalArgv;
     restoreEnv('NX_MIGRATE_SKIP_INSTALL', originalSkipInstall);
-    restoreEnv('NX_MIGRATE_ORCHESTRATOR', originalOrchestratorEnv);
   });
 
   describe('runSingleMigrationFromCli', () => {
@@ -236,7 +241,6 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
 
   describe('runMigrations', () => {
     it('holds the run a continue names through the install, then releases it for the local nx it hands off to', async () => {
-      process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
       const exitCode = await migrate(
         ROOT,
         {
@@ -264,7 +268,6 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     });
 
     it('releases no run for a start-fresh, which holds none', async () => {
-      process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
       const exitCode = await migrate(
         ROOT,
         { runMigrations: 'migrations.json', runId: 'run-1', startFresh: true },
