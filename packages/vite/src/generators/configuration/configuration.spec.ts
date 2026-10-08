@@ -4,6 +4,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   readJson,
+  readNxJson,
   Tree,
   updateJson,
   writeJson,
@@ -417,6 +418,26 @@ describe('@nx/vite:configuration', () => {
         files: [],
         references: [],
       });
+    });
+
+    it('should register @nx/js/typescript', async () => {
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'packages/my-lib',
+      });
+      writeJson(tree, 'packages/my-lib/tsconfig.lib.json', {});
+      writeJson(tree, 'packages/my-lib/tsconfig.json', {});
+
+      await viteConfigurationGenerator(tree, {
+        addPlugin: true,
+        uiFramework: 'none',
+        project: 'my-lib',
+        projectType: 'library',
+        newProject: true,
+      });
+
+      expect(readNxJson(tree).plugins).toContainEqual(
+        expect.objectContaining({ plugin: '@nx/js/typescript' })
+      );
     });
 
     it('should create package.json with exports field for libraries', async () => {

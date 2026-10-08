@@ -2,7 +2,13 @@ import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { addDependenciesToPackageJson, readJson } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  readJson,
+  readNxJson,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import initGenerator, { remixInitGeneratorInternal } from './init';
 
 describe('Remix Init Generator', () => {
@@ -102,6 +108,29 @@ describe('Remix Init Generator', () => {
 
     await expect(remixInitGeneratorInternal(tree, {})).rejects.toThrow(
       /Remix does not support TypeScript 6/
+    );
+  });
+
+  it('should register @nx/js/typescript in a TS solution setup', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['packages/*'];
+      return json;
+    });
+    tree.write('pnpm-workspace.yaml', `packages:\n  - 'packages/*'\n`);
+    writeJson(tree, 'tsconfig.base.json', {
+      compilerOptions: { composite: true },
+    });
+    writeJson(tree, 'tsconfig.json', {
+      extends: './tsconfig.base.json',
+      files: [],
+      references: [],
+    });
+
+    await remixInitGeneratorInternal(tree, { addPlugin: true });
+
+    expect(readNxJson(tree).plugins).toContainEqual(
+      expect.objectContaining({ plugin: '@nx/js/typescript' })
     );
   });
 });

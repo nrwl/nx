@@ -8,6 +8,7 @@ import {
   stripIndents,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
@@ -397,5 +398,27 @@ vite.config.*.timestamp*`
         ],
       }
     `);
+  });
+
+  it('should register @nx/js/typescript in a TS solution setup', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['packages/*'];
+      return json;
+    });
+    tree.write('pnpm-workspace.yaml', `packages:\n  - 'packages/*'\n`);
+    writeJson(tree, 'tsconfig.base.json', {
+      compilerOptions: { composite: true },
+    });
+    writeJson(tree, 'tsconfig.json', {
+      extends: './tsconfig.base.json',
+      files: [],
+      references: [],
+    });
+
+    await initGenerator(tree, { addPlugin: true });
+
+    expect(readNxJson(tree).plugins).toContainEqual(
+      expect.objectContaining({ plugin: '@nx/js/typescript' })
+    );
   });
 });

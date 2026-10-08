@@ -9,6 +9,7 @@ import {
   runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
+import { ensureTypescriptPluginForTsSolution } from '@nx/js/internal';
 import { createNodesV2 } from '../../plugins/plugin';
 import { assertAndPinRemixTypescript } from '../../utils/assert-and-pin-remix-typescript';
 import {
@@ -86,6 +87,10 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
           'remix-watch-deps',
         ],
       },
+      options.updatePackageScripts
+    );
+    await ensureTypescriptPluginForTsSolution(
+      tree,
       options.updatePackageScripts
     );
   }

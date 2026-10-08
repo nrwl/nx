@@ -311,7 +311,7 @@ Otherwise you can manually add the [plugin to your `nx.json#plugins` to enable i
 
 The `@nx/js/typescript` plugin adds tasks based on the files it finds in your project:
 
-The `@nx/js/typescript` plugin will add a `typecheck` task to any project that has a `tsconfig.json`.
+The `@nx/js/typescript` plugin will add a `typecheck` task to any project that has a `tsconfig.json`. In a TypeScript solution setup, it's the only plugin that infers `typecheck` for Vite, Rsbuild, Remix, and React Router projects, except Vue projects, which get a `vue-tsc` task from `@nx/vite/plugin`.
 
 The plugin also adds a `build` task for projects that meet both of the following conditions:
 
