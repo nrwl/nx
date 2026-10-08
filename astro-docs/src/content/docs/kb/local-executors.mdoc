@@ -199,24 +199,14 @@ Nx prints a warning once for each executor that declares a `hasher`, when it fir
 {% /callout %}
 
 A custom hasher replaces the hash Nx computes from a task's inputs.
-Executors use them when a target depended on a small subset of the files in a project, or on data stored outside the project.
+Executors use them when a target depends on a small subset of the files in a project, or on data stored outside the project.
 Target inputs cover those cases without code.
 
 ### Replace a custom hasher with inputs
 
-Read what your hasher hashes and pick the matching input:
-
-| What the hasher hashes                                | Input                                                   |
-| ----------------------------------------------------- | ------------------------------------------------------- |
-| The project and its dependencies (Nx default hashing) | `"default"` and `"^default"`                            |
-| Files of specific other projects                      | `{ "input": "default", "projects": ["shared-config"] }` |
-| A subset of the files in the project                  | `{ "fileset": "{projectRoot}/src/**/*.graphql" }`       |
-| A file outside any project                            | `{ "fileset": "{workspaceRoot}/schema.json" }`          |
-| An environment variable                               | `{ "env": "API_URL" }`                                  |
-| The output of a command, such as a tool version       | `{ "runtime": "node --version" }`                       |
-
-A `runtime` input runs its command on every hash, so it also covers values a hasher fetched from elsewhere.
-Keep the command fast.
+Read what your hasher hashes and declare each value as an input on the targets that use the executor.
+Inputs cover files and filesets, other projects, environment variables, and the output of a command.
+For every input type and its syntax, see the [inputs reference](/docs/reference/inputs).
 
 To apply the inputs to every target that uses the executor, set them in `targetDefaults`, keyed by the executor name:
 
@@ -239,7 +229,6 @@ A target that declares its own `inputs` replaces the `inputs` from `targetDefaul
 Add the new inputs to each of those targets as well, in `project.json` or the `nx.targets` block of `package.json`.
 Run `nx show target <project>:<target>` for every target that uses the executor and check that each one lists the new inputs.
 Once every target covers everything the hasher hashed, delete the hasher file and remove `hasher` from `executors.json`.
-For every input type, see the [inputs reference](/docs/reference/inputs).
 
 ### How custom hashers work
 
