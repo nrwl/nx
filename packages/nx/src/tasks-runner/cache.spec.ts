@@ -3,10 +3,13 @@ import { DbCache, formatCacheSize, parseMaxCacheSize } from './cache';
 import { output } from '../utils/output';
 import type { Task } from '../config/task-graph';
 
+/** What `NxCache.put` really returns — napi's `CachedOutputs`. */
+const cachedOutputs = { expandedOutputs: ['out'], files: ['out/a.js'] };
+
 const nativeCache = {
   get: vi.fn().mockReturnValue(null),
   getBatch: vi.fn().mockReturnValue([]),
-  put: vi.fn().mockReturnValue([]),
+  put: vi.fn().mockReturnValue(cachedOutputs),
   applyRemoteCacheResults: vi.fn(),
   cacheDirectory: '/tmp/nx-cache',
 };
@@ -58,7 +61,7 @@ describe('remote cache failures', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     nativeCache.get.mockReturnValue(null);
-    nativeCache.put.mockReturnValue([]);
+    nativeCache.put.mockReturnValue(cachedOutputs);
   });
 
   it('should treat a failed retrieve as a cache miss', async () => {
@@ -85,8 +88,20 @@ describe('remote cache failures', () => {
     const store = vi.fn().mockRejectedValue(recoverableError('stalled'));
     const cache = cacheWithRemote({ retrieve: vi.fn(), store });
 
-    await expect(cache.put(task, 'output', [], 0)).resolves.toBeUndefined();
+    // Still hands back the copied files: the caller records them against the
+    // task, so swallowing them here would silently stop output tracking.
+    await expect(cache.put(task, 'output', [], 0)).resolves.toEqual(
+      cachedOutputs.files
+    );
     expect(output.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('should return the copied files when there is no remote cache', async () => {
+    const cache = new DbCache({ nxCloudRemoteCache: null as any });
+
+    await expect(cache.put(task, 'output', [], 0)).resolves.toEqual(
+      cachedOutputs.files
+    );
   });
 
   it('should rethrow a fatal upload failure', async () => {
