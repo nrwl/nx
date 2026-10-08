@@ -110,9 +110,16 @@ where
             .map(|glob| partition_glob(glob).0)
             .collect()
     };
+    // A directory is copied whole, so with exclusions only files may be listed.
+    let files_only = !negated_globs.is_empty();
     let found_paths = nx_walker_sync_under(&directory, &roots, Some(&negated_globs))
         .into_iter()
         .filter_map(|path| {
+            if files_only
+                && std::fs::symlink_metadata(directory.join(&path)).is_ok_and(|m| m.is_dir())
+            {
+                return None;
+            }
             if glob_set.is_match(&path) {
                 trace!("Glob match found: {}", path.to_normalized_string());
                 Some(path.to_normalized_string())
@@ -370,8 +377,34 @@ mod test {
             result,
             vec![
                 "apps/web/.next/content-file",
-                "apps/web/.next/static",
                 "apps/web/.next/static/contents"
+            ]
+        );
+    }
+
+    #[test]
+    fn should_not_list_directories_that_would_copy_excluded_files() {
+        let temp = TempDir::new().unwrap();
+        temp.child("target/test-classes/a.properties")
+            .touch()
+            .unwrap();
+        temp.child("target/test-classes/com/App.class")
+            .touch()
+            .unwrap();
+        temp.child("target/test-classes/com/app.xml")
+            .touch()
+            .unwrap();
+        let entries = vec![
+            "target/test-classes".to_string(),
+            "!target/test-classes/**/*.class".to_string(),
+        ];
+        let mut result = expand_outputs(temp.display().to_string(), entries).unwrap();
+        result.sort();
+        assert_eq!(
+            result,
+            vec![
+                "target/test-classes/a.properties",
+                "target/test-classes/com/app.xml"
             ]
         );
     }
