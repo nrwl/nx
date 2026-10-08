@@ -2059,7 +2059,6 @@ export class TaskOrchestrator {
     let state = this.readiness.get(taskId);
     if (!state || state.settled) {
       this.tasksSchedule.markReadinessPending(taskId);
-      // Mark before waking so the woken loops dispatch the held dependents
       state = createReadinessState((outcome) => {
         if (outcome === 'ready') {
           this.tasksSchedule.markReady(taskId);

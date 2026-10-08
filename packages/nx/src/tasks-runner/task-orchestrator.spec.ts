@@ -2165,12 +2165,10 @@ describe('TaskOrchestrator', () => {
         }
       });
 
-      it('marks the producer ready in the schedule, then wakes the parked loops once', async () => {
+      it('wakes the parked loops once when the producer is ready and not again on a later abort', async () => {
         const { orchestrator, serve, runningTask, emit } = createOrchestrator();
         const { markReady, markReadinessFailed } = orchestrator.tasksSchedule;
-        const parked = vi.fn(() => {
-          expect(markReady).toHaveBeenCalledWith('app:serve');
-        });
+        const parked = vi.fn();
         orchestrator.waitingForTasks.push(parked);
         orchestrator.startReadinessProbe(
           serve,
@@ -2182,6 +2180,7 @@ describe('TaskOrchestrator', () => {
 
         emit('listening');
         await orchestrator.readinessOf('app:serve').promise;
+        expect(markReady).toHaveBeenCalledWith('app:serve');
         expect(parked).toHaveBeenCalledTimes(1);
         expect(orchestrator.waitingForTasks).toEqual([]);
 
