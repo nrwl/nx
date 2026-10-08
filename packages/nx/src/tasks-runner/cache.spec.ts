@@ -8,13 +8,22 @@ import {
   remoteCacheRetrieveConcurrency,
 } from './cache';
 
-const nativeCache = vi.hoisted(() => ({
-  cacheDirectory: '/cache',
-  get: vi.fn(),
-  getBatch: vi.fn(),
-  put: vi.fn().mockReturnValue([]),
-  applyRemoteCacheResults: vi.fn(),
-}));
+const { cachedOutputs, nativeCache } = vi.hoisted(() => {
+  /** What `NxCache.put` really returns — napi's `CachedOutputs`. */
+  const cachedOutputs = {
+    expandedOutputs: ['out'],
+    files: ['out/a.js'],
+    outputsBelowALink: [],
+  };
+  const nativeCache = {
+    cacheDirectory: '/cache',
+    get: vi.fn(),
+    getBatch: vi.fn(),
+    put: vi.fn().mockReturnValue(cachedOutputs),
+    applyRemoteCacheResults: vi.fn(),
+  };
+  return { cachedOutputs, nativeCache };
+});
 
 vi.mock('../native', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../native')>()),
@@ -59,7 +68,7 @@ describe('remote cache failures', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     nativeCache.get.mockReturnValue(null);
-    nativeCache.put.mockReturnValue([]);
+    nativeCache.put.mockReturnValue(cachedOutputs);
   });
 
   it('should treat a failed retrieve as a cache miss', async () => {
@@ -86,8 +95,20 @@ describe('remote cache failures', () => {
     const store = vi.fn().mockRejectedValue(recoverableError('stalled'));
     const cache = cacheWithRemote({ retrieve: vi.fn(), store });
 
-    await expect(cache.put(task, 'output', [], 0)).resolves.toBeUndefined();
+    // Still hands back the copied files: the caller records them against the
+    // task, so swallowing them here would silently stop output tracking.
+    await expect(cache.put(task, 'output', [], 0)).resolves.toEqual(
+      cachedOutputs.files
+    );
     expect(output.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('should return the copied files when there is no remote cache', async () => {
+    const cache = new DbCache({ nxCloudRemoteCache: null as any });
+
+    await expect(cache.put(task, 'output', [], 0)).resolves.toEqual(
+      cachedOutputs.files
+    );
   });
 
   it('should rethrow a fatal upload failure', async () => {
