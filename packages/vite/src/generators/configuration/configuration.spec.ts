@@ -568,13 +568,12 @@ describe('@nx/vite:configuration', () => {
     });
   });
 
-  // TODO(v24): swap to vite-tsconfig-paths in the non-ts-solution branch.
-  describe('legacy non-ts-solution plugin emit', () => {
+  describe('path-based workspace config', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     });
 
-    it('should still emit the deprecated helpers for non-ts-solution libraries', async () => {
+    it('should emit native resolution and asset copying for non-ts-solution libraries', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
 
       await viteConfigurationGenerator(tree, {
@@ -586,57 +585,65 @@ describe('@nx/vite:configuration', () => {
 
       expect(tree.read('libs/react-lib-nonb-jest/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
-        import react from '@vitejs/plugin-react';
-        import dts from 'vite-plugin-dts';
-        import * as path from 'path';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+          "/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import react from '@vitejs/plugin-react';
+          import dts from 'vite-plugin-dts';
+          import * as path from 'path';
 
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-          cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-          plugins: [
-            react(),
-            nxViteTsPaths(),
-            nxCopyAssetsPlugin(['*.md']),
-            dts({
-              entryRoot: 'src',
-              tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
-              pathsToAliases: false,
-            }),
-          ],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
-          // },
-          // Configuration for building your library.
-          // See: https://vite.dev/guide/build.html#library-mode
-          build: {
-            outDir: '../../dist/libs/react-lib-nonb-jest',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
+          export default defineConfig(() => ({
+            root: import.meta.dirname,
+            cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
+            resolve: {
+              tsconfigPaths: true,
             },
-            lib: {
-              // Could also be a dictionary or array of multiple entry points.
-              entry: 'src/index.ts',
-              name: 'react-lib-nonb-jest',
-              fileName: 'index',
-              // Change this to the formats you want to support.
-              // Don't forget to update your package.json as well.
-              formats: ['es' as const],
+            plugins: [
+              react(),
+              import('vite-plugin-static-copy').then(({ viteStaticCopy }) =>
+                viteStaticCopy({
+                  targets: [
+                    { src: '*.md', dest: '.' },
+                    { src: 'package.json', dest: '.', overwrite: false },
+                  ],
+                  silent: true,
+                }),
+              ),
+              dts({
+                entryRoot: 'src',
+                tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
+                pathsToAliases: false,
+              }),
+            ],
+            // Uncomment this if you are using workers.
+            // worker: {
+            //  plugins: [],
+            // },
+            // Configuration for building your library.
+            // See: https://vite.dev/guide/build.html#library-mode
+            build: {
+              outDir: '../../dist/libs/react-lib-nonb-jest',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+              lib: {
+                // Could also be a dictionary or array of multiple entry points.
+                entry: 'src/index.ts',
+                name: 'react-lib-nonb-jest',
+                fileName: 'index',
+                // Change this to the formats you want to support.
+                // Don't forget to update your package.json as well.
+                formats: ['es' as const],
+              },
+              rolldownOptions: {
+                // External packages that should not be bundled into your library.
+                external: ['react', 'react-dom', 'react/jsx-runtime'],
+              },
             },
-            rolldownOptions: {
-              // External packages that should not be bundled into your library.
-              external: ['react', 'react-dom', 'react/jsx-runtime'],
-            },
-          },
-        }));
-        "
-      `);
+          }));
+          "
+        `);
     });
   });
 });

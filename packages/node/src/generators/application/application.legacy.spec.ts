@@ -57,7 +57,7 @@ describe('node app generator (legacy)', () => {
     `);
 
     const webpackConfig = tree.read('my-node-app/webpack.config.js', 'utf-8');
-    expect(webpackConfig).toContain(`composePlugins`);
+    expect(webpackConfig).toContain(`new NxAppWebpackPlugin`);
     expect(webpackConfig).toContain(`target: 'node'`);
   });
 });

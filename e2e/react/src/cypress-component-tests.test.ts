@@ -225,27 +225,23 @@ describe(Input.name, () => {
   }, 300_000);
 
   it('should work with async webpack config', async () => {
-    // TODO: (caleb) for whatever reason the MF webpack config + CT is running, but cypress is not starting up?
-    // are they overriding some option on top of each other causing cypress to not see it's running?
     createFile(
       `apps/${appName}/webpack.config.js`,
       `
-        const { composePlugins, withNx } = require('@nx/webpack');
-        const { withReact } = require('@nx/react');
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 
-        module.exports = composePlugins(
-          withNx(),
-          withReact(),
-          async function (configuration) {
+        module.exports = async function () {
             await new Promise((res) => {
               setTimeout(() => {
                 console.log('I am from the custom async Webpack config');
                 res();
               }, 1000);
             });
-            return configuration;
-          }
-        );
+            return {
+              plugins: [new NxAppWebpackPlugin(), new NxReactWebpackPlugin()],
+            };
+        };
       `
     );
     updateJson(join('apps', appName, 'project.json'), (config) => {

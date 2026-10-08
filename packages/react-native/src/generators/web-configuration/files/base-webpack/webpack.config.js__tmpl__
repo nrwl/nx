@@ -35,36 +35,20 @@ module.exports = {
   ],
 };
 <% } else { %>
-const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 
-// Nx plugins for webpack.
-module.exports = composePlugins(
-  withNx(),
-  withReact({
-    // Uncomment this line if you don't want to use SVGR
-    // See: https://react-svgr.com/
-    // svgr: false
-  }),
-  (config) => {
-    // Update the webpack config as needed here.
-    // e.g. `config.plugins.push(new MyPlugin())`
-
-  config.output.clean = true;
-  config.resolve.alias = {
-    ...config.resolve.alias ?? {},
-    'react-native$': 'react-native-web',
-    'react-native-svg': 'react-native-svg-web',
-    '@react-native/assets-registry/registry': 'react-native-web/dist/modules/AssetRegistry/index',
-  };
-  config.resolve.extensions = [
-    '.web.tsx',
-    '.web.ts',
-    '.web.jsx',
-    '.web.js',
-    ...config.resolve.extensions,
-  ];
-  config.module.rules.push({
+module.exports = {
+  output: { clean: true },
+  resolve: {
+    alias: {
+      'react-native$': 'react-native-web',
+      'react-native-svg': 'react-native-svg-web',
+      '@react-native/assets-registry/registry': 'react-native-web/dist/modules/AssetRegistry/index',
+    },
+    extensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js'],
+  },
+  module: { rules: [{
     test: /\.(js|jsx)$/,
     include: /react-native-vector-icons/,
     loader: 'babel-loader',
@@ -74,9 +58,7 @@ module.exports = composePlugins(
         ['@babel/preset-react', { runtime: 'automatic' }],
       ],
     },
-  });
-  
-  return config;
-  }
-);
+  }] },
+  plugins: [new NxAppWebpackPlugin(), new NxReactWebpackPlugin()],
+};
 <% } %>

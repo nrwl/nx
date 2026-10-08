@@ -332,8 +332,7 @@ describe('app', () => {
   it('should set up the nx next build builder', async () => {
     const name = uniq();
 
-    // addPlugin: false -> legacy @nx/next:build executor, which relies on
-    // withNx to redirect the build output to --outputPath.
+    // Retained executor targets still honor their outputPath.
     await applicationGenerator(tree, {
       directory: name,
       style: 'css',
@@ -342,28 +341,99 @@ describe('app', () => {
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
       .toMatchInlineSnapshot(`
-      "//@ts-check
+        "//@ts-check
+        const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
+        const { relative, resolve } = require('path');
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { composePlugins, withNx } = require('@nx/next');
+        /** @type {import('next').NextConfig} */
+        const nextConfig = {};
 
-      /**
-       * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
-       **/
-      const nextConfig = {
-        // Use this to set Nx-specific options
-        // See: https://nx.dev/docs/technologies/react/next/Guides/next-config-setup
-        nx: {},
-      };
+        /**
+         * @param {string} phase
+         * @returns {import('next').NextConfig}
+         */
+        module.exports = (phase) => ({
+          ...nextConfig,
+          ...(phase !== PHASE_DEVELOPMENT_SERVER && process.env.NX_NEXT_OUTPUT_PATH
+            ? {
+                distDir: relative(
+                  __dirname,
+                  resolve(__dirname, '../', process.env.NX_NEXT_OUTPUT_PATH, '.next'),
+                ),
+              }
+            : {}),
+          ...(process.env.NX_SERVE_STATIC_BUILD_RUNNING === 'true'
+            ? { output: 'export', distDir: 'out' }
+            : {}),
+        });
+        "
+      `);
+  });
 
-      const plugins = [
-        // Add more Next.js plugins to this list if needed.
-        withNx,
-      ];
+  it('preserves executor output paths without config helpers', async () => {
+    await applicationGenerator(tree, {
+      directory: 'my-app',
+      style: 'css',
+      addPlugin: false,
+    });
+    const configModule = { exports: undefined as any };
+    const env = { NX_NEXT_OUTPUT_PATH: 'dist/custom-app' };
+    const { runInNewContext } = await import('node:vm');
+    runInNewContext(tree.read('my-app/next.config.js', 'utf-8'), {
+      module: configModule,
+      require,
+      __dirname: '/workspace/my-app',
+      process: { env },
+    });
 
-      module.exports = composePlugins(...plugins)(nextConfig);
-      "
-    `);
+    expect(configModule.exports('phase-production-build').distDir).toBe(
+      '../dist/custom-app/.next'
+    );
+    expect(
+      configModule.exports('phase-development-server').distDir
+    ).toBeUndefined();
+    delete env.NX_NEXT_OUTPUT_PATH;
+    expect(
+      configModule.exports('phase-production-server').distDir
+    ).toBeUndefined();
+  });
+
+  it('typechecks the legacy config under strict JavaScript checking', async () => {
+    await applicationGenerator(tree, {
+      directory: 'my-app',
+      style: 'css',
+      addPlugin: false,
+    });
+    const ts = await import('typescript');
+    const fileName = join(process.cwd(), 'next.config.js');
+    const options = {
+      allowJs: true,
+      checkJs: true,
+      strict: true,
+      noEmit: true,
+      skipLibCheck: true,
+      types: ['node'],
+    };
+    const host = ts.createCompilerHost(options);
+    const getSourceFile = host.getSourceFile.bind(host);
+    host.getSourceFile = (path, languageVersion, ...args) =>
+      path === fileName
+        ? ts.createSourceFile(
+            fileName,
+            tree.read('my-app/next.config.js', 'utf-8'),
+            languageVersion,
+            true,
+            ts.ScriptKind.JS
+          )
+        : getSourceFile(path, languageVersion, ...args);
+    const program = ts.createProgram([fileName], options, host);
+    expect(
+      ts
+        .getPreEmitDiagnostics(program)
+        .map((diagnostic) =>
+          ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
+        )
+    ).toEqual([]);
   });
 
   it('should generate a plain next.config.js for the inferred plugin', async () => {
@@ -377,17 +447,17 @@ describe('app', () => {
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
       .toMatchInlineSnapshot(`
-      "//@ts-check
+        "//@ts-check
 
-      /** @type {import('next').NextConfig} */
-      const nextConfig = {
-        // Next.js options go here
-        // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
-      };
+        /** @type {import('next').NextConfig} */
+        const nextConfig = {
+          // Next.js options go here
+          // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
+        };
 
-      module.exports = nextConfig;
-      "
-    `);
+        module.exports = nextConfig;
+        "
+      `);
   });
 
   describe('--unit-test-runner none', () => {

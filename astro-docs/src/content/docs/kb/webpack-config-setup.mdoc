@@ -46,18 +46,14 @@ In the webpack config file, you can add the necessary configuration for Webpack.
 
 ## Basic and Nx-enhanced configuration files
 
-Nx supports two flavors of Webpack configuration files:
+Nx supported two flavors of Webpack configuration file:
 
 1. [_Basic_](#basic-configuration-for-nx) (or standard) Webpack configuration. The file exports a Webpack config object, or one of the [standard configuration types](https://webpack.js.org/configuration/configuration-types).
-2. [_Nx-enhanced_](#nxenhanced-configuration-with-composable-plugins) Webpack configuration. The file exports a function that takes in a Webpack configuration object, plus the [`@nx/webpack:webpack`](/docs/technologies/build-tools/webpack/executors#webpack) options and context, and returns an updated Webpack configuration object.
+2. [_Nx-enhanced_](#nxenhanced-configuration-with-composable-plugins) Webpack configuration. The file exports a function built with `composePlugins` that takes in a Webpack configuration object plus the [`@nx/webpack:webpack`](/docs/technologies/build-tools/webpack/executors#webpack) options and context.
 
-The basic configuration works with Webpack CLI, whereas the Nx-enhanced configuration requires the use of the `@nx/webpack:webpack` executor.
+Nx v24 removed the composable plugins behind the second flavor, so write a basic configuration. It works with the Webpack CLI and with the inferred `@nx/webpack/plugin`.
 
 ### Basic configuration for Nx
-
-{% aside type="tip" title="Module federation support" %}
-Currently, Nx module federation requires an enhanced Webpack configuration file and the use of the `withModuleFederation` plugin. See the next section for more details.
-{% /aside %}
 
 A basic Webpack configuration looks like this:
 
@@ -92,13 +88,7 @@ For more information, see the [Webpack plugins guide](/docs/kb/webpack-plugins).
 
 ### Nx-enhanced configuration with composable plugins
 
-{% aside type="caution" title="`composePlugins`, `withNx`, and `withWeb` are deprecated" %}
-The `composePlugins`, [`withNx`](/docs/kb/webpack-plugins#withnx), and `withWeb` helpers are deprecated and will be removed in Nx v24. They produce a non-standard config function that only runs under the `@nx/webpack:webpack` executor, so it does not work with the Webpack CLI. They still work in v23, but using them logs a deprecation warning.
-
-Use a standard webpack config built around `NxAppWebpackPlugin` (see [Basic configuration for Nx](#basic-configuration-for-nx) above) under the inferred `@nx/webpack/plugin`. Run `nx g @nx/webpack:convert-to-inferred` to migrate existing projects.
-{% /aside %}
-
-Nx supports a function to be returned from the Webpack configuration file. This function is a composable plugin that is understood by the `@nx/webpack:webpack` executor. The enhanced configuration looks something like this:
+Nx v24 removed `composePlugins`, `withNx`, `withWeb`, and `withReact`. Their exports remain as inert stubs so an unmigrated config still loads, but they no longer configure the build. A configuration written against them looked like this:
 
 ```js
 // apps/demo/webpack.config.js
@@ -118,16 +108,7 @@ module.exports = composePlugins(
 );
 ```
 
-There are two advantages of this approach:
-
-1. You can chain multiple plugins together using the `composePlugins` function. Each plugin can update the webpack configuration as needed.
-2. You gain access to the target options and executor context within the webpack configuration file.
-
-This gives you the ability to customize the Webpack configuration as needed, and make use of the options and context passed to the executor, as well.
-
-#### Additional composable plugins for Nx
-
-In addition to the `withNx` composable plugin, Nx provides other composable plugins such as `withWeb`, `withReact`, and `withModuleFederation`. You can read more about how these plugins work and how to use them in our [Webpack plugins guide](/docs/kb/webpack-plugins).
+Move each composable plugin to its standard equivalent: `withNx` and `withWeb` become [`NxAppWebpackPlugin`](/docs/kb/webpack-plugins#nxappwebpackplugin), and `withReact` becomes [`NxReactWebpackPlugin`](/docs/kb/webpack-plugins#nxreactwebpackplugin). A custom callback that took `options` and `context` becomes a local webpack plugin, or plain configuration with the values supplied directly. Running `nx migrate` generates step-by-step instructions for the projects in your workspace.
 
 ## Customize your Webpack configuration
 
@@ -135,10 +116,7 @@ For most apps, the default configuration of Webpack is sufficient, but sometimes
 
 ### Configure Webpack for React projects
 
-React projects use the `@nx/react` package to build their apps. This package provides `NxReactWebpackPlugin` and a `withReact` composable plugin that adds the necessary configuration for React to work with Webpack. The `NxReactWebpackPlugin` is used in a basic Webpack configuration file, whereas `withReact` is requires a Nx-enhanced Webpack configuration file.
-
-{% tabs %}
-{% tabitem label="Basic Webpack configuration" %}
+React projects use the `@nx/react` package to build their apps. This package provides `NxReactWebpackPlugin`, which adds the necessary configuration for React to work with Webpack.
 
 ```js
 // apps/demo/app/webpack.config.js
@@ -172,59 +150,50 @@ module.exports = {
 };
 ```
 
-{% /tabitem %}
-{% tabitem label="Nx-enhanced Webpack configuration" %}
-
-```js
-// apps/demo/app/webpack.config.js
-const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
-
-// Nx composable plugins for webpack.
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  (config, { options, context }) => {
-    // Update the webpack configuration as needed here.
-    // e.g. config.plugins.push(new MyPlugin())
-    return config;
-  }
-);
-```
-
-{% /tabitem %}
-
-{% /tabs %}
-
 ### Configure Webpack for Module Federation
 
-{% aside type="tip" title="Non-standard webpack config" %}
-`composePlugins`, `withNx`, and `withModuleFederation` do not work with the Webpack CLI and requires the use of the `@nx/webpack:webpack` executor.
-{% /aside %}
-
 If you use the [Module Federation](/docs/kb/faster-builds-with-module-federation) support
-from `@nx/angular` or `@nx/react` then
-you can customize your Webpack configuration as follows.
+from `@nx/react`, apply `withModuleFederation` to a base configuration and add the Nx plugins to the result.
 
 ```js
 // apps/my-app/webpack.config.js
-const { composePlugins, withNx } = require('@nx/webpack');
-const { merge } = require('webpack-merge');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { withModuleFederation } = require('@nx/module-federation/webpack');
-// or `const { withModuleFederation } = require('@nx/module-federation/angular');`
 
-module.exports = composePlugins(
-  withNx(),
-  async (config, { options, context }) => {
-    const federatedModules = await withModuleFederation({
+module.exports = async () => {
+  const configureFederation = await withModuleFederation(
+    {
       // your options here
-    });
-
-    return merge(federatedModules(config, { options, context }), {
-      // overwrite values here
-    });
-  }
-);
+    },
+    { dts: false }
+  );
+  const webpackConfig = configureFederation({
+    // A dev host with several remotes needs the single runtime chunk.
+    mode:
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'production'
+        ? process.env.NODE_ENV
+        : 'none',
+    output: {},
+    plugins: [],
+  });
+  const runtimeChunk = webpackConfig.optimization?.runtimeChunk;
+  webpackConfig.plugins.unshift(
+    new NxAppWebpackPlugin(),
+    new NxReactWebpackPlugin(),
+    {
+      // Keep the federation runtimeChunk over the Nx default.
+      apply(compiler) {
+        if (runtimeChunk !== undefined) {
+          compiler.options.optimization.runtimeChunk = runtimeChunk;
+        }
+      },
+    }
+  );
+  // overwrite values here
+  return webpackConfig;
+};
 ```
 
 {% aside type="note" title="Install @nx/module-federation" %}
@@ -242,8 +211,7 @@ Next.js supports Webpack customization in the `next.config.js` file.
 
 ```js
 // next.config.js
-const { withNx } = require('@nx/next/plugins/with-nx');
-
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack: (
     config,
@@ -254,7 +222,7 @@ const nextConfig = {
   },
 };
 
-return withNx(nextConfig);
+module.exports = nextConfig;
 ```
 
 Read the [official documentation](https://nextjs.org/docs/api-reference/next.config.js/custom-webpack-config) for more details.

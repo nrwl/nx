@@ -109,6 +109,37 @@ describe('app', () => {
     `);
   });
 
+  it.each([
+    ['^7.0.0', false],
+    ['^8.0.0', true],
+  ])(
+    'should resolve tsconfig paths for vite %s',
+    async (viteVersion, native) => {
+      updateJson(appTree, 'package.json', (json) => {
+        json.devDependencies = { ...json.devDependencies, vite: viteVersion };
+        return json;
+      });
+
+      await reactNativeApplicationGenerator(appTree, {
+        directory: 'my-app',
+        displayName: 'myApp',
+        linter: 'none',
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'none',
+        bundler: 'vite',
+      });
+
+      const config = appTree.read('my-app/vite.config.mts', 'utf-8');
+      const packageJson = readJson(appTree, 'package.json');
+      expect(config.includes('tsconfigPaths: true')).toBe(native);
+      expect(config.includes('tsconfigPaths({ loose: true })')).toBe(!native);
+      expect(
+        packageJson.devDependencies['vite-tsconfig-paths'] !== undefined
+      ).toBe(!native);
+    }
+  );
+
   it('should generate targets', async () => {
     await reactNativeApplicationGenerator(appTree, {
       directory: 'my-app',

@@ -85,7 +85,7 @@ describe('rspack e2e legacy', () => {
     );
   });
 
-  it('should support Nx config function that returns a config object', () => {
+  it('should support a standard config function that returns a config object', () => {
     const appName = uniq('non-inferred-app');
 
     runCLI(
@@ -96,21 +96,12 @@ describe('rspack e2e legacy', () => {
     updateFile(
       `apps/${appName}/rspack.config.js`,
       `
-    const { composePlugins, withNx, withReact } = require('@nx/rspack');
-    
-    // Nx plugins for rspack.
-    module.exports = composePlugins(
-      withNx(),
-      withReact({
-        // Uncomment this line if you don't want to use SVGR
-        // See: https://react-svgr.com/
-        // svgr: false
-      }),
-      (config) => {
-        // Update the rspack config as needed here.
-        return config;
-      }
-    );`
+    const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+    const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+
+    module.exports = () => ({
+      plugins: [new NxAppRspackPlugin(), new NxReactRspackPlugin()],
+    });`
     );
 
     const result = runCLI(`build ${appName}`);

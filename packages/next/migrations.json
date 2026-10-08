@@ -35,6 +35,11 @@
       "description": "Add `@svgr/webpack` when a next config references it.",
       "implementation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used",
       "documentation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used.md"
+    },
+    "update-24-0-0-migrate-config-helpers": {
+      "version": "24.0.0-beta.0",
+      "description": "Migrate deprecated next configuration helpers while preserving custom behavior.",
+      "prompt": "./dist/src/migrations/update-24-0-0/migrate-config-helpers.md"
     }
   },
   "packageJsonUpdates": {

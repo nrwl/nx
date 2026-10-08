@@ -24,8 +24,8 @@ const nextConfig = {
 module.exports = nextConfig;
 ```
 
-{% aside type="caution" title="withNx and composePlugins are deprecated" %}
-The `withNx` and `composePlugins` helpers from `@nx/next` are deprecated and will be removed in Nx v24. Existing applications keep working until then. Follow the steps below to migrate to a plain `next.config.js`.
+{% aside type="caution" title="withNx and composePlugins were removed" %}
+Nx v24 removed the `withNx` and `composePlugins` helpers from `@nx/next`. Their exports remain as inert stubs so an unmigrated `next.config.js` still loads, but they no longer configure anything. Follow the steps below to move to a plain `next.config.js`.
 {% /aside %}
 
 ## Workspace libraries
@@ -46,7 +46,7 @@ module.exports = nextConfig;
 
 ## Composing other plugins
 
-`composePlugins` is no longer required. Compose Next.js plugins by calling them directly in `next.config.js`. For example, with [`@next/mdx`](https://www.npmjs.com/package/@next/mdx):
+Compose Next.js plugins by calling them directly in `next.config.js`. For example, with [`@next/mdx`](https://www.npmjs.com/package/@next/mdx):
 
 ```js frame="none"
 // next.config.js
@@ -62,11 +62,11 @@ module.exports = withMDX(nextConfig);
 
 Each plugin wraps the next, so you can nest as many as you need: `withA(withB(nextConfig))`.
 
-## Migrating from withNx
+## Migrating off withNx
 
 Replace the wrapped config with a plain object and remove the `@nx/next` import.
 
-This assumes you use the inferred `@nx/next/plugin` (the default for new apps). If your project still uses the legacy `@nx/next:build` executor, run [`nx g @nx/next:convert-to-inferred`](/docs/kb/convert-to-inferred) first, since that executor relies on `withNx` to honor `--outputPath`.
+This assumes you use the inferred `@nx/next/plugin` (the default for new apps). If your project still uses the legacy `@nx/next:build` executor, run [`nx g @nx/next:convert-to-inferred`](/docs/kb/convert-to-inferred) first, since that executor relied on `withNx` to honor `--outputPath`.
 
 Before:
 

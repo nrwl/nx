@@ -1,50 +1,51 @@
-import { getAliasForProject } from './with-nx';
+import { withNx } from './with-nx';
 
-describe('getAliasForProject', () => {
-  it('should return the matching alias for a project', () => {
-    const paths = {
-      '@x/proj1': ['packages/proj1'],
-      // customized lookup paths with relative path syntax
-      '@x/proj2': ['./something-else', './packages/proj2'],
-    };
+describe('removed withNx stub', () => {
+  // Nx sets this when it runs the spec; the warning only fires once per process.
+  const target = process.env.NX_TASK_TARGET_TARGET;
+  beforeEach(() => delete process.env.NX_TASK_TARGET_TARGET);
+  afterEach(() => {
+    if (target === undefined) delete process.env.NX_TASK_TARGET_TARGET;
+    else process.env.NX_TASK_TARGET_TARGET = target;
+  });
 
-    expect(
-      getAliasForProject(
-        {
-          name: 'proj1',
-          type: 'lib',
-          data: {
-            root: 'packages/proj1',
-          },
-        },
-        paths
-      )
-    ).toEqual('@x/proj1');
+  it('keeps the async config shape without reading an Nx graph or changing options', async () => {
+    const config = Object.freeze({
+      distDir: 'custom',
+      env: { marker: 'preserved' },
+    });
+    for (const phase of [
+      'phase-development-server',
+      'phase-production-build',
+      'phase-production-server',
+    ]) {
+      expect(await withNx(config)(phase, {})).toBe(config);
+    }
+  });
 
-    expect(
-      getAliasForProject(
-        {
-          name: 'proj2',
-          type: 'lib',
-          data: {
-            root: 'packages/proj2', // relative path
-          },
-        },
-        paths
-      )
-    ).toEqual('@x/proj2');
+  it('supports both generated CommonJS import forms', async () => {
+    const legacy = require('./with-nx');
+    expect(legacy).toBe(legacy.withNx);
+    expect(legacy.getNextConfig({ distDir: 'custom' })).toEqual({
+      distDir: 'custom',
+    });
+    expect(legacy.getAliasForProject({}, {})).toBeNull();
+    const config = { distDir: 'custom' };
+    expect(await legacy(config)('phase-production-server', {})).toBe(config);
+  });
 
-    expect(
-      getAliasForProject(
-        {
-          name: 'no-alias',
-          type: 'lib',
-          data: {
-            root: 'packages/no-alias',
-          },
-        },
-        paths
-      )
-    ).toEqual(null);
+  it('warns during Nx task runs but not on production server start', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    process.env.NX_TASK_TARGET_TARGET = 'build';
+    try {
+      await withNx({})('phase-production-server', {});
+      expect(warn).not.toHaveBeenCalled();
+      await withNx({})('phase-production-build', {});
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('`withNx()` from `@nx/next` was removed')
+      );
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

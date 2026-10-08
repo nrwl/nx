@@ -3996,9 +3996,6 @@ importers:
       semver:
         specifier: 'catalog:'
         version: 7.8.5
-      tsconfig-paths:
-        specifier: catalog:typescript
-        version: 4.2.0
       tslib:
         specifier: catalog:typescript
         version: 2.8.1

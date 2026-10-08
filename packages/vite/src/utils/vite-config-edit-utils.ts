@@ -1,4 +1,9 @@
-import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
+import {
+  applyChangesToString,
+  ChangeType,
+  Tree,
+  type StringChange,
+} from '@nx/devkit';
 import { findNodes } from '@nx/js';
 import { TargetFlags } from './generator-utils';
 import type {
@@ -18,7 +23,8 @@ export function ensureViteConfigIsCorrect(
   testConfigString: string,
   testConfigObject: {},
   cacheDir: string,
-  projectAlreadyHasViteTargets?: TargetFlags
+  projectAlreadyHasViteTargets?: TargetFlags,
+  resolveTsconfigPaths?: boolean
 ): boolean {
   const fileContent = tree.read(path, 'utf-8');
 
@@ -51,6 +57,10 @@ export function ensureViteConfigIsCorrect(
       updatedContent ?? fileContent,
       cacheDir
     );
+  }
+
+  if (resolveTsconfigPaths) {
+    updatedContent = addTsconfigPathsResolution(updatedContent ?? fileContent);
   }
 
   if (updatedContent) {
@@ -457,6 +467,201 @@ function filterImport(appFileContent: string, imports: string[]): string[] {
   return imports.filter((importString) => {
     return !importsArrayExisting?.includes(importString);
   });
+}
+
+/**
+ * Enables Vite's native `resolve.tsconfigPaths`, which replaced the removed
+ * `nxViteTsPaths` plugin. Returns the file unchanged when it is already set or
+ * when the config's shape hides the object we would have to edit.
+ */
+export function addTsconfigPathsResolution(appFileContent: string): string {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const tsModule: typeof import('typescript') = require('typescript');
+
+  const file = tsquery.ast(appFileContent);
+  const config = findConfigObject(tsModule, tsquery, file);
+  if (!config || config.properties.some(tsModule.isSpreadAssignment))
+    return appFileContent;
+
+  const existingResolve = config.properties.find(
+    (prop): prop is import('typescript').PropertyAssignment =>
+      tsModule.isPropertyAssignment(prop) &&
+      stripQuotes(prop.name.getText()) === 'resolve'
+  );
+
+  if (existingResolve) {
+    const target = existingResolve.initializer;
+    if (
+      !tsModule.isObjectLiteralExpression(target) ||
+      target.properties.some(tsModule.isSpreadAssignment)
+    )
+      return appFileContent;
+    if (
+      target.properties.some(
+        (prop) =>
+          prop.name && stripQuotes(prop.name.getText()) === 'tsconfigPaths'
+      )
+    ) {
+      return appFileContent;
+    }
+    return applyChangesToString(appFileContent, [
+      {
+        type: ChangeType.Insert,
+        index: target.getStart() + 1,
+        text: `\n    tsconfigPaths: true,`,
+      },
+    ]);
+  }
+
+  return applyChangesToString(appFileContent, [
+    {
+      type: ChangeType.Insert,
+      index: config.getStart() + 1,
+      text: `\n  resolve: {\n    tsconfigPaths: true,\n  },`,
+    },
+  ]);
+}
+
+export function hasTsconfigPathsResolution(content: string): boolean {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const tsModule: typeof import('typescript') = require('typescript');
+  const config = findConfigObject(tsModule, tsquery, tsquery.ast(content));
+  if (!config || config.properties.some(tsModule.isSpreadAssignment))
+    return false;
+  const resolve = config.properties.find(
+    (prop) =>
+      tsModule.isPropertyAssignment(prop) &&
+      stripQuotes(prop.name.getText()) === 'resolve'
+  );
+  if (
+    !resolve ||
+    !tsModule.isPropertyAssignment(resolve) ||
+    !tsModule.isObjectLiteralExpression(resolve.initializer)
+  )
+    return false;
+  if (resolve.initializer.properties.some(tsModule.isSpreadAssignment))
+    return false;
+  return resolve.initializer.properties.some(
+    (prop) =>
+      tsModule.isPropertyAssignment(prop) &&
+      stripQuotes(prop.name.getText()) === 'tsconfigPaths' &&
+      prop.initializer.kind === tsModule.SyntaxKind.TrueKeyword
+  );
+}
+
+export function addTsconfigPathsPlugin(
+  content: string,
+  commonJs = false
+): string {
+  if (content.includes('vite-tsconfig-paths')) return content;
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const tsModule: typeof import('typescript') = require('typescript');
+  const config = findConfigObject(tsModule, tsquery, tsquery.ast(content));
+  if (!config || config.properties.some(tsModule.isSpreadAssignment))
+    return content;
+  const plugins = config.properties.find(
+    (prop) => prop.name && stripQuotes(prop.name.getText()) === 'plugins'
+  );
+  if (
+    plugins &&
+    (!tsModule.isPropertyAssignment(plugins) ||
+      !tsModule.isArrayLiteralExpression(plugins.initializer))
+  )
+    return content;
+  const changes: StringChange[] = [
+    {
+      type: ChangeType.Insert,
+      index: plugins
+        ? (
+            plugins as import('typescript').PropertyAssignment
+          ).initializer.getStart() + 1
+        : config.getStart() + 1,
+      text: plugins
+        ? 'tsconfigPaths({ loose: true }), '
+        : '\nplugins: [tsconfigPaths({ loose: true })],',
+    },
+    {
+      type: ChangeType.Insert,
+      index: 0,
+      text: commonJs
+        ? "const tsconfigPaths = require('vite-tsconfig-paths').default;\n"
+        : "import tsconfigPaths from 'vite-tsconfig-paths';\n",
+    },
+  ];
+  return applyChangesToString(content, changes);
+}
+
+/**
+ * The object literal a Vite config ultimately exports. Handles `defineConfig`
+ * called with an object or with a factory, and a bare default export. Returns
+ * undefined when the config is assembled somewhere we cannot follow.
+ */
+function findConfigObject(
+  tsModule: typeof import('typescript'),
+  tsquery: any,
+  file: import('typescript').SourceFile
+): import('typescript').ObjectLiteralExpression | undefined {
+  const exportAssignment = tsquery.query(file, 'ExportAssignment')[0] as
+    | import('typescript').ExportAssignment
+    | undefined;
+  if (exportAssignment) {
+    return unwrapConfigExpression(tsModule, exportAssignment.expression);
+  }
+
+  const moduleExports = (
+    tsquery.query(
+      file,
+      'BinaryExpression'
+    ) as import('typescript').BinaryExpression[]
+  ).find(
+    (node) =>
+      node.left.getText() === 'module.exports' &&
+      node.operatorToken.kind === tsModule.SyntaxKind.EqualsToken
+  );
+  return moduleExports
+    ? unwrapConfigExpression(tsModule, moduleExports.right)
+    : undefined;
+}
+
+function unwrapConfigExpression(
+  tsModule: typeof import('typescript'),
+  node: import('typescript').Node | undefined
+): import('typescript').ObjectLiteralExpression | undefined {
+  if (!node) return undefined;
+  if (tsModule.isParenthesizedExpression(node)) {
+    return unwrapConfigExpression(tsModule, node.expression);
+  }
+  if (tsModule.isObjectLiteralExpression(node)) return node;
+  if (
+    tsModule.isCallExpression(node) &&
+    node.expression.getText() === 'defineConfig'
+  ) {
+    return unwrapConfigExpression(tsModule, node.arguments[0]);
+  }
+  if (tsModule.isArrowFunction(node) || tsModule.isFunctionExpression(node)) {
+    if (!tsModule.isBlock(node.body)) {
+      return unwrapConfigExpression(tsModule, node.body);
+    }
+    // Only a single, unconditional return is safe to edit.
+    if (
+      node.body.statements.some(
+        (statement) =>
+          !tsModule.isReturnStatement(statement) &&
+          !tsModule.isVariableStatement(statement) &&
+          !tsModule.isExpressionStatement(statement)
+      )
+    )
+      return undefined;
+    const returns = node.body.statements.filter(tsModule.isReturnStatement);
+    return returns.length === 1
+      ? unwrapConfigExpression(tsModule, returns[0].expression)
+      : undefined;
+  }
+  return undefined;
+}
+
+function stripQuotes(text: string): string {
+  return text.replace(/^['"`]|['"`]$/g, '');
 }
 
 function handleCacheDirNode(appFileContent: string, cacheDir: string): string {

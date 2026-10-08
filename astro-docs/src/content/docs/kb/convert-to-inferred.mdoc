@@ -173,12 +173,11 @@ There may also be changes to the configuration files used by the underlying tool
 
 Where we have `development`, `production`, and `ci` configurations. Then running `nx g @nx/vite:convert-to-inferred` will result in these lines added to `vite.config.ts`.
 
-```ts {% meta="{7-16}" %}
+```ts {% meta="{6-15}" %}
 // vite.config.ts
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 // These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
 const configValues = { default: {}, development: {}, production: {}, ci: {} };

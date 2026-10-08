@@ -23,7 +23,7 @@ export async function withModuleFederationForSSR(
   const { DefinePlugin } =
     require('@rspack/core') as typeof import('@rspack/core');
 
-  return (config, { context }) => {
+  return (config, _context?: unknown) => {
     config.target = 'async-node';
     config.output.uniqueName = options.name;
     config.output.library = {

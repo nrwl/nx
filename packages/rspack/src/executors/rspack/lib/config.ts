@@ -1,13 +1,9 @@
 import { ExecutorContext } from '@nx/devkit';
 import { type Configuration } from '@rspack/core';
-import {
-  composePlugins,
-  isNxRspackComposablePlugin,
-} from '../../../utils/config';
-import { suppressRspackComposeHelperWarnings } from '../../../utils/deprecation';
+import { isNxRspackComposablePlugin } from '../../../utils/config';
 import { resolveUserDefinedRspackConfig } from '../../../utils/resolve-user-defined-rspack-config';
-import { withNx } from '../../../utils/with-nx';
-import { withWeb } from '../../../utils/with-web';
+import { applyBaseConfig } from '../../../plugins/utils/apply-base-config';
+import { applyWebConfig } from '../../../plugins/utils/apply-web-config';
 import { type NormalizedRspackExecutorSchema } from '../schema';
 
 export async function getRspackConfigs(
@@ -29,13 +25,22 @@ export async function getRspackConfigs(
     userDefinedConfig = await userDefinedConfig;
   }
 
-  // Nx composes these helpers internally to build the default config; suppress
-  // their deprecation warning so it fires only for user-authored configs.
-  const config = await suppressRspackComposeHelperWarnings(() =>
-    (options.target === 'web'
-      ? composePlugins(withNx(options), withWeb(options))
-      : withNx(options))({}, { options, context })
-  );
+  const config: Configuration = {};
+  const configOptions = {
+    ...options,
+    target: options.target ?? 'web',
+    assets: options.assets ?? [],
+    root: context.root,
+    projectName: context.projectName,
+    targetName: context.targetName,
+    configurationName: context.configurationName,
+    projectGraph: context.projectGraph,
+    useLegacyHtmlPlugin: false,
+  };
+  applyBaseConfig(configOptions, config);
+  if (options.target === 'web') {
+    applyWebConfig(configOptions, config);
+  }
 
   if (
     typeof userDefinedConfig === 'function' &&
