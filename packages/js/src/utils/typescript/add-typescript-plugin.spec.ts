@@ -8,7 +8,10 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { ensureTypescriptPluginForTsSolution } from './add-typescript-plugin';
+import {
+  ensureTypescriptPluginForTsSolution,
+  registerTypescriptPluginForTypecheck,
+} from './add-typescript-plugin';
 
 describe('ensureTypescriptPluginForTsSolution', () => {
   let tree: Tree;
@@ -81,5 +84,108 @@ describe('ensureTypescriptPluginForTsSolution', () => {
     await ensureTypescriptPluginForTsSolution(tree);
 
     expect(typescriptRegistrations()).toEqual([]);
+  });
+});
+
+describe('registerTypescriptPluginForTypecheck', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['packages/*'];
+      return json;
+    });
+    writeJson(tree, 'tsconfig.base.json', {
+      compilerOptions: { composite: true },
+    });
+    writeJson(tree, 'tsconfig.json', {
+      extends: './tsconfig.base.json',
+      files: [],
+      references: [],
+    });
+  });
+
+  function setPlugins(plugins: any[]) {
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = plugins;
+    updateNxJson(tree, nxJson);
+  }
+
+  it('should register @nx/js/typescript with only its typecheck target', () => {
+    setPlugins(['@nx/vite/plugin']);
+
+    expect(registerTypescriptPluginForTypecheck(tree, '@nx/vite/plugin')).toBe(
+      true
+    );
+    expect(readNxJson(tree).plugins).toEqual([
+      '@nx/vite/plugin',
+      {
+        plugin: '@nx/js/typescript',
+        options: { typecheck: { targetName: 'typecheck' } },
+      },
+    ]);
+  });
+
+  it("should reuse the framework plugin's typecheck target name", () => {
+    setPlugins([
+      {
+        plugin: '@nx/remix/plugin',
+        options: { typecheckTargetName: 'remix:typecheck' },
+      },
+    ]);
+
+    registerTypescriptPluginForTypecheck(tree, '@nx/remix/plugin');
+
+    expect(readNxJson(tree).plugins[1]).toEqual({
+      plugin: '@nx/js/typescript',
+      options: { typecheck: { targetName: 'remix:typecheck' } },
+    });
+  });
+
+  it('should skip a framework plugin that opted out of typecheck', () => {
+    setPlugins([
+      { plugin: '@nx/rsbuild', options: { typecheckTargetName: false } },
+    ]);
+    const before = tree.read('nx.json', 'utf-8');
+
+    expect(registerTypescriptPluginForTypecheck(tree, '@nx/rsbuild')).toBe(
+      false
+    );
+    expect(tree.read('nx.json', 'utf-8')).toBe(before);
+  });
+
+  it('should skip a workspace that already registers @nx/js/typescript', () => {
+    setPlugins([
+      '@nx/vite/plugin',
+      { plugin: '@nx/js/typescript', include: ['packages/*'] },
+    ]);
+    const before = tree.read('nx.json', 'utf-8');
+
+    expect(registerTypescriptPluginForTypecheck(tree, '@nx/vite/plugin')).toBe(
+      false
+    );
+    expect(tree.read('nx.json', 'utf-8')).toBe(before);
+  });
+
+  it('should skip a workspace without a TS solution setup', () => {
+    tree.delete('tsconfig.json');
+    setPlugins(['@nx/vite/plugin']);
+    const before = tree.read('nx.json', 'utf-8');
+
+    expect(registerTypescriptPluginForTypecheck(tree, '@nx/vite/plugin')).toBe(
+      false
+    );
+    expect(tree.read('nx.json', 'utf-8')).toBe(before);
+  });
+
+  it('should skip a workspace without the framework plugin', () => {
+    setPlugins(['@nx/react/router-plugin']);
+    const before = tree.read('nx.json', 'utf-8');
+
+    expect(registerTypescriptPluginForTypecheck(tree, '@nx/vite/plugin')).toBe(
+      false
+    );
+    expect(tree.read('nx.json', 'utf-8')).toBe(before);
   });
 });
