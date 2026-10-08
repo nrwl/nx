@@ -31,6 +31,7 @@ describe('applyNxJsonMigrateDefaults', () => {
         commitPrefix: 'chore: migrate ',
         agentic: 'claude-code',
         validate: false,
+        finalValidation: false,
       };
       const result = applyNxJsonMigrateDefaults(base, config, noEnv);
       expect(result).toMatchObject({
@@ -38,6 +39,7 @@ describe('applyNxJsonMigrateDefaults', () => {
         commitPrefix: 'chore: migrate ',
         agentic: 'claude-code',
         validate: false,
+        finalValidation: false,
       });
     });
 
@@ -47,16 +49,19 @@ describe('applyNxJsonMigrateDefaults', () => {
         createCommits: false,
         agentic: 'codex',
         validate: true,
+        finalValidation: true,
       };
       const config: NxMigrateConfiguration = {
         createCommits: true,
         agentic: 'claude-code',
         validate: false,
+        finalValidation: false,
       };
       const result = applyNxJsonMigrateDefaults(args, config, noEnv);
       expect(result.createCommits).toBe(false);
       expect(result.agentic).toBe('codex');
       expect(result.validate).toBe(true);
+      expect(result.finalValidation).toBe(true);
     });
 
     it('treats the default commit prefix as "not provided" so config can override it', () => {
@@ -217,14 +222,20 @@ describe('applyNxJsonMigrateDefaults', () => {
       );
     });
 
-    it('errors on a non-boolean config validate', () => {
-      const config = {
-        validate: 'true',
-      } as unknown as NxMigrateConfiguration;
-      expect(() => applyNxJsonMigrateDefaults(base, config, noEnv)).toThrow(
-        /Invalid nx\.json migrate\.validate .*Expected a boolean/i
-      );
-    });
+    it.each(['validate', 'finalValidation'])(
+      'errors on a non-boolean config %s',
+      (field) => {
+        const config = {
+          [field]: 'true',
+        } as unknown as NxMigrateConfiguration;
+        expect(() => applyNxJsonMigrateDefaults(base, config, noEnv)).toThrow(
+          new RegExp(
+            `Invalid nx\\.json migrate\\.${field} .*Expected a boolean`,
+            'i'
+          )
+        );
+      }
+    );
   });
 
   describe('single-migration phase', () => {
@@ -236,6 +247,7 @@ describe('applyNxJsonMigrateDefaults', () => {
         commitPrefix: 'chore: migrate ',
         agentic: 'claude-code',
         validate: false,
+        finalValidation: false,
         include: 'required',
         multiMajorMode: 'gradual',
       };
@@ -244,6 +256,8 @@ describe('applyNxJsonMigrateDefaults', () => {
       expect(result.commitPrefix).toBe('chore: migrate ');
       expect(result.agentic).toBe('claude-code');
       expect(result.validate).toBe(false);
+      // Only a whole-file run reads it.
+      expect(result.finalValidation).toBeUndefined();
       expect(result.include).toBeUndefined();
       expect(result.includeFromConfig).toBeUndefined();
       expect(result.multiMajorMode).toBeUndefined();
@@ -313,6 +327,7 @@ describe('applyNxJsonMigrateDefaults', () => {
         commitPrefix: 'chore: migrate ',
         agentic: 'claude-code',
         validate: false,
+        finalValidation: false,
       };
       const result = applyNxJsonMigrateDefaults(
         { runMigrations: '', runId: 'run-1' },
@@ -323,6 +338,7 @@ describe('applyNxJsonMigrateDefaults', () => {
       expect(result.createCommits).toBeUndefined();
       expect(result.commitPrefix).toBeUndefined();
       expect(result.validate).toBeUndefined();
+      expect(result.finalValidation).toBeUndefined();
     });
 
     it('fills the run-migrations overlay for a start-fresh, which starts a new run', () => {
@@ -330,6 +346,7 @@ describe('applyNxJsonMigrateDefaults', () => {
         createCommits: true,
         commitPrefix: 'chore: migrate ',
         agentic: 'claude-code',
+        finalValidation: false,
       };
       const result = applyNxJsonMigrateDefaults(
         { runMigrations: 'migrations.json', runId: 'run-1', startFresh: true },
@@ -339,6 +356,7 @@ describe('applyNxJsonMigrateDefaults', () => {
       expect(result.createCommits).toBe(true);
       expect(result.commitPrefix).toBe('chore: migrate ');
       expect(result.agentic).toBe('claude-code');
+      expect(result.finalValidation).toBe(false);
     });
   });
 

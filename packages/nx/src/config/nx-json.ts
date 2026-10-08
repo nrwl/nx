@@ -828,6 +828,14 @@ export interface NxMigrateConfiguration {
    * to `true` when the agentic flow is enabled.
    */
   validate?: boolean;
+
+  /**
+   * Whether a migrate run an AI agent drives ends with a final check, where the
+   * agent makes sure the projects the run touched still lint, build, and pass
+   * their unit tests. Equivalent to the `--final-validation` flag. Defaults to
+   * `true`.
+   */
+  finalValidation?: boolean;
 }
 
 /**
