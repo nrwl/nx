@@ -5,7 +5,7 @@ import {
   TargetConfiguration,
 } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
-import { existsSync } from 'fs-extra';
+import { existsSync, readFileSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
@@ -23,7 +23,7 @@ import {
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
-import { logError, logInfo, secondsSince } from './log-utils';
+import { logError, logInfo, secondsSince, trimDaemonLog } from './log-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -464,6 +464,15 @@ export function normalizePerformanceReport(output: string): string {
   );
 }
 
+/** The e2e workspace's daemon log, trimmed, for failure output; empty if none. */
+function daemonLogSection(cwd = tmpProjPath()): string {
+  const daemonLog = join(cwd, '.nx', 'workspace-data', 'd', 'daemon.log');
+  if (!existsSync(daemonLog)) return '';
+  return `\n\n========== daemon.log (trimmed) ==========\n${trimDaemonLog(
+    readFileSync(daemonLog, 'utf-8')
+  )}`;
+}
+
 export function runCLI(
   command: string,
   opts: RunCmdOpts = {
@@ -518,7 +527,7 @@ export function runCLI(
       const processOutput = stripVTControlCharacters(
         `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
       ).trim();
-      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
+      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}${daemonLogSection(opts.cwd)}`;
       logError(`Command timed out`, msg);
       throw new Error(msg);
     }
@@ -528,7 +537,10 @@ export function runCLI(
       const output = opts.redirectStderr ? e.stdout : e.stdout + e.stderr;
       return stripVTControlCharacters(output);
     } else {
-      logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+      logError(
+        `Original command: ${command}`,
+        `${e.stdout}\n\n${e.stderr}${daemonLogSection(opts.cwd)}`
+      );
       throw e;
     }
   }
@@ -574,14 +586,17 @@ export function runLernaCLI(
       const processOutput = stripVTControlCharacters(
         `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
       ).trim();
-      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
+      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}${daemonLogSection(opts.cwd)}`;
       logError(`Command timed out`, msg);
       throw new Error(msg);
     }
     if (opts.silenceError) {
       return stripVTControlCharacters(e.stdout + e.stderr);
     } else {
-      logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+      logError(
+        `Original command: ${command}`,
+        `${e.stdout}\n\n${e.stderr}${daemonLogSection(opts.cwd)}`
+      );
       throw e;
     }
   }
