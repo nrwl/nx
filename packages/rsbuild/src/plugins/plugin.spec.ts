@@ -179,7 +179,7 @@ describe('@nx/rsbuild', () => {
     `);
   });
 
-  it('should infer typecheck with -p flag when not using TS solution setup', async () => {
+  it('should infer a noEmit typecheck when not using TS solution setup', async () => {
     tempFs.createFileSync('my-app/tsconfig.json', `{}`);
 
     const nodes = await createNodesFunction(
@@ -189,14 +189,14 @@ describe('@nx/rsbuild', () => {
     );
 
     expect(nodes[0][1].projects['my-app'].targets.typecheck.command).toEqual(
-      `tsc -p tsconfig.json --noEmit`
+      `tsc --noEmit`
     );
     expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
       .toMatchInlineSnapshot(`
       {
         "description": "Runs type-checking for the project.",
         "help": {
-          "command": "npx tsc -p tsconfig.json --help",
+          "command": "npx tsc --help",
           "example": {
             "options": {
               "noEmit": true,
@@ -216,7 +216,7 @@ describe('@nx/rsbuild', () => {
     ).toBeUndefined();
   });
 
-  it('should infer typecheck with --build flag when using TS solution setup', async () => {
+  it('should not infer typecheck when using TS solution setup', async () => {
     (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
     tempFs.createFileSync('my-app/tsconfig.json', `{}`);
 
@@ -226,32 +226,22 @@ describe('@nx/rsbuild', () => {
       context
     );
 
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.command).toEqual(
-      `tsc --build --emitDeclarationOnly`
+    expect(nodes[0][1].projects['my-app'].targets.typecheck).toBeUndefined();
+  });
+
+  it('should not infer typecheck when typecheckTargetName is false', async () => {
+    tempFs.createFileSync('my-app/tsconfig.json', `{}`);
+
+    const nodes = await createNodesFunction(
+      ['my-app/rsbuild.config.ts'],
+      { typecheckTargetName: false },
+      context
     );
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-      .toMatchInlineSnapshot(`
-      {
-        "description": "Runs type-checking for the project.",
-        "help": {
-          "command": "npx tsc --build --help",
-          "example": {
-            "args": [
-              "--force",
-            ],
-          },
-        },
-        "technologies": [
-          "typescript",
-        ],
-      }
-    `);
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.dependsOn).toEqual([
-      `^typecheck`,
-    ]);
-    expect(
-      nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-    ).toEqual(['@nx/js:typescript-sync']);
+
+    const targets = nodes[0][1].projects['my-app'].targets;
+    expect(targets.typecheck).toBeUndefined();
+    expect(targets['false']).toBeUndefined();
+    expect(targets.build).toBeDefined();
   });
 
   describe('build outputs', () => {
