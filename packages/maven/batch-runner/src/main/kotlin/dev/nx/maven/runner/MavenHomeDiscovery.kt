@@ -8,9 +8,9 @@ import java.io.File
  * Utility for discovering Maven home directory and version from various sources.
  *
  * Discovery priority order:
- * 1. maven.home system property (explicit override)
- * 2. ./mvnw --version output (respects project's Maven version)
- * 3. .mvn/wrapper/maven-wrapper.properties (project config)
+ * 1. ./mvnw --version output (respects project's Maven version)
+ * 2. .mvn/wrapper/maven-wrapper.properties (project config)
+ * 3. maven.home system property
  * 4. MAVEN_HOME environment variable
  * 5. Maven 4.x installation (fallback for batch executor)
  * 6. Maven wrapper in ~/.m2/wrapper/ (any version)
@@ -27,7 +27,8 @@ data class MavenDiscoveryResult(
 class MavenHomeDiscovery(
   private val workspaceRoot: File = File("."),
   private val userHome: String = System.getProperty("user.home"),
-  private val getenv: (String) -> String? = { System.getenv(it) }
+  private val getenv: (String) -> String? = { System.getenv(it) },
+  private val getProperty: (String) -> String? = { System.getProperty(it) }
 ) {
   private val log = LoggerFactory.getLogger(MavenHomeDiscovery::class.java)
 
@@ -38,9 +39,26 @@ class MavenHomeDiscovery(
   fun discoverMavenHomeWithVersion(): MavenDiscoveryResult? {
     log.debug("🔍 Starting Maven home discovery from workspace: ${workspaceRoot.absolutePath}")
 
-    // 1. Check maven.home system property (explicit override)
-    log.debug("1️⃣ Checking maven.home system property...")
-    val mavenHomeProp = System.getProperty("maven.home")
+    // 1. Run ./mvnw --version to get Maven home (respects project's Maven version).
+    // The wrapper wins over maven.home and MAVEN_HOME (as in maven-invoker), so outside
+    // settings such as a mise/sdkman MAVEN_HOME cannot run a different Maven than ./mvnw.
+    log.debug("1️⃣ Checking ./mvnw --version (respects project's Maven version)...")
+    val (mvnwHome, mvnwVersion) = extractMavenHomeFromMvnwWithVersion()
+    if (mvnwHome != null) {
+      return MavenDiscoveryResult(mvnwHome, mvnwVersion)
+    }
+
+    // 2. Check Maven wrapper config in project (.mvn/wrapper/maven-wrapper.properties)
+    log.debug("2️⃣ Checking .mvn/wrapper/maven-wrapper.properties...")
+    val fromWrapperConfig = extractMavenHomeFromWrapperConfig()
+    if (fromWrapperConfig != null) {
+      val version = detectMavenVersion(fromWrapperConfig)
+      return MavenDiscoveryResult(fromWrapperConfig, version)
+    }
+
+    // 3. Check maven.home system property
+    log.debug("3️⃣ Checking maven.home system property...")
+    val mavenHomeProp = getProperty("maven.home")
     if (mavenHomeProp != null && mavenHomeProp.isNotEmpty()) {
       val dir = File(mavenHomeProp)
       if (dir.isDirectory) {
@@ -48,23 +66,6 @@ class MavenHomeDiscovery(
         val version = detectMavenVersion(dir)
         return MavenDiscoveryResult(dir, version)
       }
-    }
-
-    // 2. Run ./mvnw --version to get Maven home (respects project's Maven version).
-    // Checked before MAVEN_HOME so a globally exported MAVEN_HOME (mise, sdkman, ...)
-    // cannot run a different Maven than the subprocess path, which uses ./mvnw.
-    log.debug("2️⃣ Checking ./mvnw --version (respects project's Maven version)...")
-    val (mvnwHome, mvnwVersion) = extractMavenHomeFromMvnwWithVersion()
-    if (mvnwHome != null) {
-      return MavenDiscoveryResult(mvnwHome, mvnwVersion)
-    }
-
-    // 3. Check Maven wrapper config in project (.mvn/wrapper/maven-wrapper.properties)
-    log.debug("3️⃣ Checking .mvn/wrapper/maven-wrapper.properties...")
-    val fromWrapperConfig = extractMavenHomeFromWrapperConfig()
-    if (fromWrapperConfig != null) {
-      val version = detectMavenVersion(fromWrapperConfig)
-      return MavenDiscoveryResult(fromWrapperConfig, version)
     }
 
     // 4. Check MAVEN_HOME environment variable

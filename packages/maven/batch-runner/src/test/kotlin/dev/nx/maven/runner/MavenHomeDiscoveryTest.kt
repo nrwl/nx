@@ -24,18 +24,35 @@ class MavenHomeDiscoveryTest {
       }
     }
 
+  private fun discover(
+    workspace: File,
+    env: Map<String, String> = emptyMap(),
+    properties: Map<String, String> = emptyMap()
+  ): MavenDiscoveryResult? =
+    MavenHomeDiscovery(workspace, tempDir.absolutePath, { env[it] }, { properties[it] })
+      .discoverMavenHomeWithVersion()
+
   @Test
   fun `prefers the wrapper's Maven over MAVEN_HOME`() {
     val wrapperHome = mavenHome("wrapper-maven", "4.0.0")
     val globalHome = mavenHome("global-maven", "3.9.11")
     val workspace = workspaceWithMvnw(wrapperHome, "4.0.0-rc-7")
 
-    val result = MavenHomeDiscovery(workspace, tempDir.absolutePath) { name ->
-      if (name == "MAVEN_HOME") globalHome.absolutePath else null
-    }.discoverMavenHomeWithVersion()
+    val result = discover(workspace, env = mapOf("MAVEN_HOME" to globalHome.absolutePath))
 
     assertEquals(wrapperHome.absolutePath, result?.mavenHome?.absolutePath)
     assertEquals("4.0.0-rc-7", result?.version)
+  }
+
+  @Test
+  fun `prefers the wrapper's Maven over the maven home property`() {
+    val wrapperHome = mavenHome("wrapper-maven", "4.0.0")
+    val propertyHome = mavenHome("property-maven", "3.9.11")
+    val workspace = workspaceWithMvnw(wrapperHome, "4.0.0-rc-7")
+
+    val result = discover(workspace, properties = mapOf("maven.home" to propertyHome.absolutePath))
+
+    assertEquals(wrapperHome.absolutePath, result?.mavenHome?.absolutePath)
   }
 
   @Test
@@ -43,9 +60,7 @@ class MavenHomeDiscoveryTest {
     val globalHome = mavenHome("global-maven", "3.9.11")
     val workspace = File(tempDir, "workspace").apply { mkdirs() }
 
-    val result = MavenHomeDiscovery(workspace, tempDir.absolutePath) { name ->
-      if (name == "MAVEN_HOME") globalHome.absolutePath else null
-    }.discoverMavenHomeWithVersion()
+    val result = discover(workspace, env = mapOf("MAVEN_HOME" to globalHome.absolutePath))
 
     assertEquals(globalHome.absolutePath, result?.mavenHome?.absolutePath)
   }
