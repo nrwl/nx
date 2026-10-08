@@ -1,14 +1,14 @@
 ---
 name: reproduce-issue
-description: The single skill for reproducing an nx issue. Given a GitHub issue number (human entry) OR explicit repro parameters (agent entry), it runs the reproduction inside the shared sandbox host through `.claude/tools/sandbox`, so the untrusted repro's install scripts and commands never execute on the host, then reports whether it reproduces. Called by humans via "/reproduce-issue #N", "reproduce this bug", "does this reproduce", and by the reproduce-verifier agent (Level 2). Nothing lands on the host.
-allowed-tools: Read, Grep, Glob, Write(/tmp/**), Bash(.claude/tools/sandbox *), Bash(gh issue view *), Bash(gh issue list *), Bash(rm -f /tmp/*)
+description: The single skill for reproducing an nx issue. Given a GitHub issue number (human entry) OR explicit repro parameters (agent entry), it runs the reproduction inside the shared sandbox host through `tools/review-sandbox/sandbox`, so the untrusted repro's install scripts and commands never execute on the host, then reports whether it reproduces. Called by humans via "/reproduce-issue #N", "reproduce this bug", "does this reproduce", and by the reproduce-verifier agent (Level 2). Nothing lands on the host.
+allowed-tools: Read, Grep, Glob, Write(/tmp/**), Bash(tools/review-sandbox/sandbox *), Bash(gh issue view *), Bash(gh issue list *), Bash(rm -f /tmp/*)
 ---
 
 # Reproduce an issue (sandboxed)
 
 Reproduce an nx bug **inside the sandbox** and report the outcome. The untrusted repro — its `install` (arbitrary postinstall scripts) and its repro command — runs only there, never on the host.
 
-Everything goes through `.claude/tools/sandbox`. That CLI owns the container: which isolation runtime applies on this platform, the hardening flags, the shared host, and teardown. **Do not run `docker` yourself** — hand-rolling it is how a repro ends up unisolated on one platform and nobody notices. That is enforced rather than trusted: `allowed-tools` above grants no `docker` at all, and the only writes it permits are the script under `/tmp` and removing it again.
+Everything goes through `tools/review-sandbox/sandbox`. That CLI owns the container: which isolation runtime applies on this platform, the hardening flags, the shared host, and teardown. **Do not run `docker` yourself** — hand-rolling it is how a repro ends up unisolated on one platform and nobody notices. That is enforced rather than trusted: `allowed-tools` above grants no `docker` at all, and the only writes it permits are the script under `/tmp` and removing it again.
 
 This is the one reproduction engine in the repo. It has two front doors:
 
@@ -38,7 +38,7 @@ The caller passes these directly:
 One command. It reports the platform, the backend, and the isolation tier the CLI will use:
 
 ```bash
-.claude/tools/sandbox doctor
+tools/review-sandbox/sandbox doctor
 ```
 
 `isolation=vm` (macOS) or `isolation=runsc` (Linux) with `exec=full` means you are good. Anything
@@ -48,7 +48,7 @@ else prints its own fix — usually the `setup-review-sandbox` skill. On Linux w
 For `nx-build` mode only, the toolchain image must exist:
 
 ```bash
-.claude/tools/sandbox doctor --image nx-review-sandbox:latest
+tools/review-sandbox/sandbox doctor --image nx-review-sandbox:latest
 ```
 
 ## Safety rails
@@ -71,9 +71,9 @@ runtime, and resource limits. What is still yours to get right:
 Three commands: start a workspace, pipe a script into it, stop it.
 
 ```bash
-ID=$(.claude/tools/sandbox start --image node:22 | head -1)
-.claude/tools/sandbox exec "$ID" -- bash -s < /tmp/repro-<N>.sh
-.claude/tools/sandbox stop "$ID"
+ID=$(tools/review-sandbox/sandbox start --image node:22 | head -1)
+tools/review-sandbox/sandbox exec "$ID" -- bash -s < /tmp/repro-<N>.sh
+tools/review-sandbox/sandbox stop "$ID"
 ```
 
 **Write the script to a file with the Write tool and pipe it in.** `exec` joins its argv with spaces after `--`, so an
@@ -170,11 +170,11 @@ object store and installs with the warm pnpm store, so you are not cloning and i
 scratch the way a hand-rolled container had to:
 
 ```bash
-ID=$(.claude/tools/sandbox start --image nx-review-sandbox:latest \
+ID=$(tools/review-sandbox/sandbox start --image nx-review-sandbox:latest \
        --checkout https://github.com/nrwl/nx --ref <GIT_REF> | head -1)
-.claude/tools/sandbox install "$ID"                     # mise + pnpm, idempotent
-.claude/tools/sandbox exec "$ID" -- bash -s < /tmp/build-<N>.sh
-.claude/tools/sandbox stop "$ID"
+tools/review-sandbox/sandbox install "$ID"                     # mise + pnpm, idempotent
+tools/review-sandbox/sandbox exec "$ID" -- bash -s < /tmp/build-<N>.sh
+tools/review-sandbox/sandbox stop "$ID"
 ```
 
 The image matters: `nx-review-sandbox` carries the mise toolchain including **java and dotnet**, which
@@ -208,13 +208,13 @@ Classify the result exactly as in "Classify + report".
 ## Cleanup
 
 ```bash
-.claude/tools/sandbox stop <id>      # removes the workspace; the shared host stays up
+tools/review-sandbox/sandbox stop <id>      # removes the workspace; the shared host stays up
 ```
 
 Stopping is not optional here. The old `--rm` container cleaned itself; a sandbox workspace is a
 directory in a container that outlives it, and the host is deliberately left running because the warm
 store is what makes the next run cheap.
 
-If runs are stacking up: `.claude/tools/sandbox list`, then `prune` for dead rows, `prune --store` to
+If runs are stacking up: `tools/review-sandbox/sandbox list`, then `prune` for dead rows, `prune --store` to
 reclaim the shared pnpm store, or `prune --host` to destroy the host outright. Both `--store` and
 `--host` refuse while any sandbox is live.
