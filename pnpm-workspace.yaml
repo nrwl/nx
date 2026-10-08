@@ -27,7 +27,7 @@ overrides:
   brace-expansion: '^5.0.12'
   axios: '1.18.1'
   minimatch: '^10.2.5'
-  shell-quote: '^1.8.4'
+  shell-quote: '^1.11.0'
   tmp: '~0.2.7'
   form-data: '^4.0.6'
   # form-data@4.0.6 pulls hasown via two paths (direct + es-set-tostringtag);
@@ -38,7 +38,8 @@ overrides:
   'piscina@>=5.0.0 <5.3.2': '5.3.2'
   websocket-driver: '^0.7.5'
   tar: '^7.5.22'
-  seroval: '^1.5.6'
+  seroval: '^1.6.2'
+  proxy-addr: '^2.0.8'
   # astro/ipx/next pull their own sharp, all below 0.35. The libheif RCE behind
   # GHSA-26w7-cxv4-gfx2 is only patched from 0.35.4 on.
   'sharp@<0.35.4': '^0.35.4'
