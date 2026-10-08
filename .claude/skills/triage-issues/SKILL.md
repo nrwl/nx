@@ -6,7 +6,7 @@ description: >-
   proposes a priority and an owner. Produces a plan you approve before anything is written to
   GitHub. Use on "triage this issue", "triage #12345", "triage the untriaged backlog", "does this
   issue have enough information", "is this issue actionable", "what's missing from this issue".
-allowed-tools: Agent, Bash(.claude/tools/triage *), Bash(TRIAGE_DIR=* .claude/tools/triage *), Bash(.claude/tools/sandbox *), Bash(gh issue view *), Bash(gh issue list *), Bash(gh search issues *), Bash(gh pr view *), Bash(gh pr list *), Bash(gh label list *), Bash(gh api graphql *), Bash(gh api repos/nrwl/nx/*), Bash(npm view *), Bash(head *), Read, Grep, Glob, Write(/tmp/**), Skill
+allowed-tools: Agent, Bash(.claude/tools/triage *), Bash(TRIAGE_DIR=* .claude/tools/triage *), Bash(tools/review-sandbox/sandbox *), Bash(gh issue view *), Bash(gh issue list *), Bash(gh search issues *), Bash(gh pr view *), Bash(gh pr list *), Bash(gh label list *), Bash(gh api graphql *), Bash(gh api repos/nrwl/nx/*), Bash(npm view *), Bash(head *), Read, Grep, Glob, Write(/tmp/**), Skill
 argument-hint: '[<issue number or url> ...]  (no args: sweep the untriaged queue)'
 ---
 
@@ -513,7 +513,7 @@ and ask what differs.
 stop each one before moving to the next issue unless it holds something you still need.
 
 ```bash
-.claude/tools/sandbox stop <id>
+tools/review-sandbox/sandbox stop <id>
 ```
 
 ## 8. Priority (proposal)
