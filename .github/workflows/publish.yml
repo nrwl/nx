@@ -825,11 +825,10 @@ jobs:
       - publish
       - report-pending-publish
     runs-on: ubuntu-latest
-    permissions: {} # posts to Slack only
+    permissions:
+      actions: read # reads the run's approvals; the Slack post uses its own token
     timeout-minutes: 10
     continue-on-error: true  # Don't fail the workflow if notification fails
-    permissions:
-      actions: read
     steps:
       # A rejected npm-registry approval fails `publish` the same way a broken publish does,
       # so the run's approvals are the only way to tell the two apart.
