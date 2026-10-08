@@ -245,6 +245,8 @@ function setupMigrationPackage(): void {
     JSON.stringify({
       generators: {
         'gen-mig': { version: '1.0.0', implementation: './gen-mig' },
+        // Not shell-safe, so no orchestrated run can dispense it.
+        'rename files': { version: '1.0.0', implementation: './gen-mig' },
         'gen-two': { version: '1.1.0', implementation: './gen-two' },
         'hybrid-mig': { version: '1.3.0', implementation: './hybrid-mig' },
         'waiver-mig': { version: '1.1.5', implementation: './waiver-mig' },
@@ -333,6 +335,7 @@ function writePlan(migrations: Record<string, unknown>[]): void {
 
 const genMig = { package: PKG, name: 'gen-mig', version: '1.0.0' };
 const genTwoMig = { package: PKG, name: 'gen-two', version: '1.1.0' };
+const unsafeIdMig = { package: PKG, name: 'rename files', version: '1.0.0' };
 const promptMig = {
   package: PKG,
   name: 'prompt-mig',
@@ -1673,6 +1676,26 @@ describe('migrate orchestrator', () => {
     expect(readFile('gen-two-file')).toEqual('gen-two-content');
   }, 600000);
 
+  it('should run a migration whose id orchestration cannot dispense on the classic loop, and orchestrate a safe plan after it', () => {
+    writePlan([unsafeIdMig]);
+
+    // The fallback warning goes to stderr.
+    const output = runCLI(
+      'migrate --run-migrations=migrations.json --no-final-validation',
+      { env: INIT_ENV, redirectStderr: true }
+    );
+    expect(output).toContain(
+      'Running the migrations without an orchestrated run'
+    );
+    expect(output).toContain(`- ${PKG}:rename files`);
+    expect(output).not.toContain('<nx_migrate_runbook');
+    expect(readFile('gen-file')).toEqual('gen-content');
+    expect(existsSync(join(tmpProjPath(), '.nx', 'migrate-runs'))).toBe(false);
+
+    writePlan([genTwoMig]);
+    expect(parseLastDispense(runInit()).action).toBe('initialized');
+  }, 600000);
+
   // A `claude` on PATH: as the master it drives the run through its bootstrap
   // reconcile command; per step it writes the handoff. FAKE_AGENT_KILL_PARENT
   // kills the parent once the first step's request reaches it.
@@ -1990,6 +2013,27 @@ process.exit(status ?? 1);
         ['migration', 'succeeded'],
         ['final-validation', 'succeeded'],
       ]);
+    }, 600000);
+
+    it('should run a migration whose id orchestration cannot dispense without starting the agent', async () => {
+      writePlan([unsafeIdMig]);
+      const { binDir, logFile } = installFakeAgent();
+
+      const { exitCode, output } = await runMigrateInTerminal({
+        PATH: `${binDir}:${process.env.PATH}`,
+        FAKE_AGENT_LOG: logFile,
+      });
+
+      expect(exitCode).toBe(0);
+      expect(output).toContain(
+        'Skipping the agentic flow: it needs shell-safe migration ids'
+      );
+      expect(output).toContain(`- ${PKG}:rename files`);
+      expect(readFile('gen-file')).toEqual('gen-content');
+      expect(readFakeAgentLog(logFile).filter((entry) => entry.args)).toEqual(
+        []
+      );
+      expect(runDirs()).toEqual([]);
     }, 600000);
 
     it('should exit 1 with the given-up migration in the report when the agent gives a step up', async () => {

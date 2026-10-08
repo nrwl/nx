@@ -28,6 +28,7 @@ import {
   type MigrateRunState,
   runDir,
   TERMINAL_STEP_STATUSES,
+  unsafeMigrationIds,
   writeRunState,
 } from './run/run-state';
 import { latestRound, stepLabel } from './run/state-machine';
@@ -53,6 +54,7 @@ mockCjsModule(import.meta.url, './run', {
   runDir,
   stepLabel,
   TERMINAL_STEP_STATUSES,
+  unsafeMigrationIds,
 });
 const mockRunMasterSession = vi.fn();
 mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
@@ -571,6 +573,125 @@ describe('migrate() orchestrated init dispatch', () => {
 
     expect(mockRunInstall).not.toHaveBeenCalled();
     expect(mockHoldRunToContinue).not.toHaveBeenCalled();
+  });
+
+  describe('a plan with a migration id orchestration cannot dispense', () => {
+    const agent = {
+      id: 'claude-code',
+      displayName: 'Claude Code',
+      binary: '/usr/local/bin/claude',
+      source: 'path',
+    };
+    const asUser = () => {
+      mockIsInsideAgent.mockReturnValue(false);
+      mockResolveAgentic.mockResolvedValue({
+        kind: 'enabled',
+        selectedAgent: agent,
+      });
+    };
+
+    beforeEach(() => {
+      writeFileSync(
+        join(root, 'migrations.json'),
+        JSON.stringify({
+          migrations: [
+            {
+              package: '@nx/js',
+              name: 'rename files',
+              version: '1.0.0',
+              implementation: './gen.js',
+            },
+          ],
+        })
+      );
+    });
+
+    it.each<[string, () => void, Record<string, unknown>, string[], string]>([
+      [
+        'an outer agent drives the run',
+        () => {},
+        {},
+        [],
+        'Running the migrations without an orchestrated run: orchestrated runs need shell-safe migration ids (letters, digits and @/:._-), and these are not:',
+      ],
+      [
+        'the user enabled the agentic flow',
+        asUser,
+        { agentic: 'claude-code' },
+        ['--agentic=claude-code'],
+        'Skipping the agentic flow: it needs shell-safe migration ids (letters, digits and @/:._-), and these are not:',
+      ],
+    ])(
+      'runs it on the classic loop, naming the id, when %s',
+      async (_label, arrange, overrides, flags, title) => {
+        arrange();
+
+        // The classic loop runs real migration execution, which fails on this
+        // fixture; only the dispatch itself is under test.
+        await migrate(root, runMigrationsArgs(overrides), [
+          '--run-migrations',
+          ...flags,
+        ]).catch(() => {});
+
+        expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+        expect(mockRunMasterSession).not.toHaveBeenCalled();
+        expect(output.warn).toHaveBeenCalledWith({
+          title,
+          bodyLines: ['- @nx/js:rename files', expect.any(String)],
+        });
+        expect(output.log).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: expect.stringContaining('Running migrations from'),
+          })
+        );
+      }
+    );
+
+    it.each<
+      [string, () => void, Record<string, unknown>, string[], () => void]
+    >([
+      [
+        'an outer agent drives the run',
+        () => {},
+        {},
+        [],
+        () =>
+          expect(mockRunOrchestratorInit).toHaveBeenCalledWith(
+            expect.objectContaining({
+              onExistingRun: 'start-fresh',
+              replaceRunId: 'run-1',
+            })
+          ),
+      ],
+      [
+        'the user enabled the agentic flow',
+        asUser,
+        { agentic: 'claude-code' },
+        ['--agentic=claude-code'],
+        () =>
+          expect(mockRunMasterSession).toHaveBeenCalledWith(
+            expect.objectContaining({ startFresh: true, runId: 'run-1' })
+          ),
+      ],
+    ])(
+      'leaves a start fresh to init, which refuses the id, when %s',
+      async (_label, arrange, overrides, flags, expectInit) => {
+        arrange();
+
+        await migrate(
+          root,
+          runMigrationsArgs({ ...overrides, startFresh: true, runId: 'run-1' }),
+          ['--run-migrations', ...flags, '--start-fresh', '--run-id=run-1']
+        );
+
+        expectInit();
+        expect(output.log).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: expect.stringContaining('Running migrations from'),
+          })
+        );
+      }
+    );
   });
 
   describe('classic loop with an active orchestrated run', () => {

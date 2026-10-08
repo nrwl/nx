@@ -1011,7 +1011,7 @@ describe('orchestrator', () => {
       expect(block.payload.next).toBe(`npx nx migrate --run-id=${runId}`);
     });
 
-    it('refuses a migration id that is not shell-safe, naming it', async () => {
+    it('refuses a migration id that is not shell-safe, naming it and the way to run the plan', async () => {
       await expect(
         runOrchestratorInit({
           root,
@@ -1026,7 +1026,7 @@ describe('orchestrator', () => {
           finalValidation: undefined,
         })
       ).rejects.toThrow(
-        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe`
+        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids. To run the plan without orchestration, re-run with --agentic=false.`
       );
       expect(findActiveRun(root).active).toBeNull();
     });

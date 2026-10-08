@@ -91,7 +91,6 @@ import {
   writeRunState,
   CURRENT_RUN_STATE_FORMAT_VERSION,
   RUN_STATE_FILE_NAME,
-  SHELL_SAFE_VALUE,
   type MigrateCommitLedgerEntry,
   type MigrateRunNoProgress,
   type MigrateRunPolicy,
@@ -100,6 +99,7 @@ import {
   type MigrateStepPromptOutcome,
   type MigrateTreeOperation,
   TERMINAL_STEP_STATUSES,
+  unsafeMigrationIds,
 } from './run-state';
 import {
   hasAnyLiveRunActivity,
@@ -388,12 +388,11 @@ export async function runOrchestratorInit(
   // Dispensed commands interpolate migration ids verbatim, so every init
   // validates the incoming plan's ids. Before the delete below: a run must
   // not be thrown away for a plan that cannot start.
-  for (const id of plannedIds) {
-    if (!SHELL_SAFE_VALUE.test(id)) {
-      throw new Error(
-        `The migration id '${id}' contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids.`
-      );
-    }
+  const [unsafeId] = unsafeMigrationIds(sorted);
+  if (unsafeId !== undefined) {
+    throw new Error(
+      `The migration id '${unsafeId}' contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids. To run the plan without orchestration, re-run with --agentic=false.`
+    );
   }
 
   if (confirmStart && !(await confirmStart())) {

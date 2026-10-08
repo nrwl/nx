@@ -3506,11 +3506,22 @@ async function runMigrations(
     finalValidation: opts.finalValidation,
   });
 
+  // Orchestration refuses ids it cannot dispense verbatim, so a new run with
+  // one falls back to the classic loop. A continue's plan passed that check
+  // at init, and a start fresh still reaches init's refusal.
+  const unsafeIds =
+    isContinue || opts.startFresh === true
+      ? []
+      : (require('./run') as typeof import('./run')).unsafeMigrationIds(
+          migrations
+        );
+  const unsafeIdLines = unsafeIds.map((id) => `- ${singleLine(id)}`);
+
   // An outer agent drives the loop, so hand off to the orchestrator instead of
   // the classic loop: init starts a fresh run or reports an already-active
   // one; `--run-id` continues that run. Bare `--run-id` reconciles are
   // dispatched separately and never reach here.
-  if (outerAgentDrivesRun) {
+  if (outerAgentDrivesRun && unsafeIds.length === 0) {
     const { runOrchestratorInit, runOrchestratorResume } =
       require('./run') as typeof import('./run');
     // Orchestrated runs are agent-driven, so commits default on exactly as they
@@ -3576,6 +3587,16 @@ async function runMigrations(
     });
     return;
   }
+  if (outerAgentDrivesRun) {
+    output.warn({
+      title:
+        'Running the migrations without an orchestrated run: orchestrated runs need shell-safe migration ids (letters, digits and @/:._-), and these are not:',
+      bodyLines: [
+        ...unsafeIdLines,
+        'No run is recorded, so --run-id cannot continue this one. Prompt work is listed as next steps for the AI agent driving this run, and no validation runs.',
+      ],
+    });
+  }
 
   reportMigrateRunStart({
     createCommits: shouldCreateCommits ?? false,
@@ -3601,6 +3622,17 @@ async function runMigrations(
       title:
         'Skipping the agentic flow: it needs the native nx binary, and this run loaded the WASM build.',
       bodyLines: ['Continuing the migration without the agentic flow.'],
+    });
+    agentic = { kind: 'disabled' };
+  }
+  if (agentic.kind === 'enabled' && unsafeIds.length > 0) {
+    output.warn({
+      title:
+        'Skipping the agentic flow: it needs shell-safe migration ids (letters, digits and @/:._-), and these are not:',
+      bodyLines: [
+        ...unsafeIdLines,
+        'Continuing the migration without the agentic flow. Generators still run. Prompt-only migrations and the prompt part of hybrid migrations are skipped and listed as next steps, and no AI validation runs.',
+      ],
     });
     agentic = { kind: 'disabled' };
   }
