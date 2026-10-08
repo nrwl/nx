@@ -40,6 +40,9 @@ overrides:
   tar: '^7.5.22'
   seroval: '^1.6.2'
   proxy-addr: '^2.0.8'
+  # @nuxt/devtools wants simple-git 3, whose advisories are only fixed in 4. v4
+  # breaks the devtools dev-server module, which nothing in this repo runs.
+  simple-git: '^4.0.2'
   # astro/ipx/next pull their own sharp, all below 0.35. The libheif RCE behind
   # GHSA-26w7-cxv4-gfx2 is only patched from 0.35.4 on.
   'sharp@<0.35.4': '^0.35.4'
