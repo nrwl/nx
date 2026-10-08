@@ -150,13 +150,14 @@ describe('watch command-object argument parsing', () => {
     expect(parsed['exclude-files']).toBeUndefined();
   });
 
-  it('does not bind bare --include/--exclude to the file filters', () => {
+  it('rejects bare --include/--exclude rather than binding them to the file filters', () => {
     // `nx watch` deliberately does not spell these `--include`/`--exclude`:
     // the workspace-wide `--exclude` that `run-many`/`affected` take is a
     // comma-separated list of *project names*, so the same spelling here
     // would read as that and silently filter nothing. They are undeclared,
-    // so yargs leaves them as loose values that never reach the glob filter.
-    const parsed = parseArgv([
+    // and `.strictOptions()` turns that into an outright rejection, so they
+    // can never reach the glob filter.
+    const { error, parsedArgs } = parse([
       'watch',
       '--all',
       '--include',
@@ -167,8 +168,8 @@ describe('watch command-object argument parsing', () => {
       'echo',
       'hi',
     ]);
-    expect(parsed.includeFiles).toBeUndefined();
-    expect(parsed.excludeFiles).toBeUndefined();
+    expect(error?.message).toContain('Unknown arguments: include, exclude');
+    expect(parsedArgs).toBeUndefined();
   });
 
   it('keeps a brace glob intact without splitting on the comma', () => {
