@@ -1,5 +1,5 @@
 import type { Mock } from 'vitest';
-import { type CreateNodesContext } from '@nx/devkit';
+import { AggregateCreateNodesError, type CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './router-plugin';
 import {
   mockCjsModule,
@@ -117,6 +117,45 @@ describe('@nx/react/react-router-plugin', () => {
       );
       expect(typecheck.outputs).toBeDefined();
       expect(typecheck.dependsOn).toContain('build');
+    });
+
+    it('should keep the typecheck target on healthy projects when another config fails to load', async () => {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+      mockConfig('acme/react-router.config.js', {}, context);
+      await tempFs.createFiles({
+        'tsconfig.base.json': JSON.stringify({
+          compilerOptions: { composite: true },
+        }),
+        'acme/tsconfig.json': JSON.stringify({
+          extends: '../tsconfig.base.json',
+          files: [],
+          references: [],
+        }),
+        'broken/react-router.config.js': 'throw new Error("broken config");',
+        'broken/vite.config.js': '',
+        'broken/project.json': JSON.stringify({ name: 'broken' }),
+      });
+
+      const error: AggregateCreateNodesError = await createNodesFunction(
+        ['acme/react-router.config.js', 'broken/react-router.config.js'],
+        { buildTargetName: 'build' },
+        context
+      ).then(
+        () => {
+          throw new Error('Expected createNodes to throw');
+        },
+        (e) => e
+      );
+
+      expect(error).toBeInstanceOf(AggregateCreateNodesError);
+      expect(error.errors.map(([file]) => file)).toEqual([
+        'broken/react-router.config.js',
+      ]);
+      const [[file, result]] = error.partialResults;
+      expect(file).toBe('acme/react-router.config.js');
+      expect(result.projects['acme'].targets['typecheck'].command).toBe(
+        'tsc --build tsconfig.json --emitDeclarationOnly'
+      );
     });
 
     it('should not infer a typecheck target when typecheckTargetName is false', async () => {

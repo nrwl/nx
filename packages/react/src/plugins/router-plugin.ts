@@ -8,8 +8,10 @@ import {
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   type CreateNodes,
   type CreateNodesContext,
+  type CreateNodesResultArray,
   detectPackageManager,
   type TargetConfiguration,
   createNodesFromFiles,
@@ -85,7 +87,8 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
       projectRoots.map((_) => [lockfile])
     );
 
-    let results: Awaited<ReturnType<typeof createNodesFromFiles>>;
+    let results: CreateNodesResultArray;
+    let createNodesError: AggregateCreateNodesError | undefined;
     try {
       results = await createNodesFromFiles(
         async (configFile, _, context, idx) => {
@@ -131,6 +134,12 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
         options,
         context
       );
+    } catch (e) {
+      if (!(e instanceof AggregateCreateNodesError)) {
+        throw e;
+      }
+      createNodesError = e;
+      results = e.partialResults ?? [];
     } finally {
       targetsCache.writeToDisk();
     }
@@ -157,6 +166,9 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
       }
     }
 
+    if (createNodesError) {
+      throw createNodesError;
+    }
     return results;
   },
 ];
