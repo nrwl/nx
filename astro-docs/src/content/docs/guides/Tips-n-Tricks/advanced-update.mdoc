@@ -181,10 +181,10 @@ nx migrate --run-migrations=migrations.json
 Some migrations ship an AI prompt that an installed agent applies for you. The [agentic flow](/docs/features/automate-updating-dependencies#step-2-run-migrations) is interactive by default, but you can control it with flags:
 
 - `--agentic` enables it and resolves the installed agent. Use `--agentic=claude-code` (or `codex`, `opencode`) to pin one, or `--no-agentic` to disable it.
-- `--validate` / `--no-validate` toggles agent validation of generator-only migrations - on by default when the agentic flow is enabled.
+- `--validate` / `--no-validate` toggles the agent's review of generator-only migrations. It's on by default.
 - `--final-validation` / `--no-final-validation` toggles the agent's final check of the projects the run touched. It's on by default.
 
-A non-interactive `--agentic` run warns and continues without the agent, since the flow requires an interactive terminal. When the flow is enabled, Nx commits each migration separately by default so the agent can review an isolated diff.
+A non-interactive `--agentic` run warns and continues without the agent, since the agent session needs an interactive terminal. When the flow is enabled, Nx commits each migration separately by default so the agent can review an isolated diff.
 
 To always use the agentic flow (or a specific agent) without passing the flag, set the `agentic`, `validate`, and `finalValidation` options in the [`migrate` section of `nx.json`](/docs/reference/nx-json#migrate).
 

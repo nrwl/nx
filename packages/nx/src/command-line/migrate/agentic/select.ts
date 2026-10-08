@@ -144,7 +144,7 @@ async function resolveFlag(
 function requireInteractiveOrAbort(isInteractive: boolean): void {
   if (isInteractive) return;
   output.error({
-    title: 'The agentic flow is interactive-only in this release.',
+    title: 'The agentic flow needs an interactive terminal.',
     bodyLines: [
       'Re-run in an interactive terminal, or pass `--agentic=false` to skip the agentic flow.',
     ],
@@ -155,9 +155,9 @@ function requireInteractiveOrAbort(isInteractive: boolean): void {
 function warnAgenticInteractiveOnly(): void {
   output.warn({
     title:
-      'Skipping the agentic flow: it is interactive-only in this release and this run is non-interactive.',
+      'Skipping the agentic flow: the agent session needs an interactive terminal, and this run is non-interactive.',
     bodyLines: [
-      'Continuing the migration without the agentic flow. Re-run in an interactive terminal to use it.',
+      'Continuing without the agentic flow. Generators still run, prompt-based changes are left for you to apply, and no AI validation runs. Re-run in an interactive terminal to use the agentic flow.',
     ],
   });
 }

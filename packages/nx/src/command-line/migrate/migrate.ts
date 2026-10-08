@@ -3610,9 +3610,12 @@ async function runMigrations(
       : 'Successfully finished running migrations';
 
   if (notRunMigrationsCount === migrations.length && migrations.length > 0) {
+    // Under WASM or with unsafe ids, an --agentic re-run lands here again.
     const remediation = insideAgent
       ? 'The AI agent driving this run should apply each prompt — see next steps below.'
-      : 'Re-run with --agentic to apply them. See next steps below.';
+      : IS_WASM || unsafeIds.length > 0
+        ? 'Apply each prompt yourself. See next steps below.'
+        : 'Re-run with --agentic to apply them. See next steps below.';
     output.warn({
       title: `No migrations from '${opts.runMigrations}' were applied — every entry is a prompt-only migration. ${remediation}`,
       bodyLines: tallyBody,
