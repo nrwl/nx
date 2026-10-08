@@ -117,6 +117,22 @@ a given `source` project the resulting constraints would be **all** that match i
 | allowedExternalImports   | _Array<string>_ | Exclusive list of external (npm) packages that are allowed to be imported          |
 | bannedExternalImports    | _Array<string>_ | List of external (npm) packages that are banned from importing                     |
 
+## E2E tests that hash from their imports
+
+An atomized e2e test file with `// @nx-ultracache: imports` imports app code so its task
+[hashes from that code](/docs/kb/hash-e2e-tests-from-imports).
+For its imports of other projects, the rule skips these checks:
+
+- Relative and absolute imports.
+- Imports of apps.
+- Static imports of lazy-loaded libraries.
+- `depConstraints`.
+
+It still checks imports of e2e projects, circular dependencies, and direct imports of external
+packages.
+A file counts as atomized when its project has a target named `<target>--<file path>`, with the
+file path relative to the project root, such as `e2e-ci--src/checkout.spec.ts`.
+
 Read more about the proper usage of this rule:
 
 - [Enforce Module Boundaries](/docs/features/enforce-module-boundaries)
