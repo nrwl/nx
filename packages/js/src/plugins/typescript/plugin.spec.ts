@@ -3,10 +3,13 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
 import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { getLockFileName, setupWorkspaceContext } from '@nx/devkit/internal';
+import {
+  getLockFileName,
+  matchGlobPaths,
+  setupWorkspaceContext,
+} from '@nx/devkit/internal';
 import type { Mock } from 'vitest';
 import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
-import { matchGlobPaths } from 'nx/src/native';
 import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
 
 vi.mock('../../utils/typescript/ts-solution-setup', async () => ({
