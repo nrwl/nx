@@ -1021,6 +1021,11 @@
                     "description": "Configuration for params handling.",
                     "enum": ["ignore", "forward"],
                     "default": "ignore"
+                  },
+                  "inputs": {
+                    "type": "boolean",
+                    "description": "Set to false to keep a continuous dependency's inputs out of this target's hash and affected calculation. Has no effect on dependencies that are not continuous.",
+                    "default": true
                   }
                 },
                 "oneOf": [
