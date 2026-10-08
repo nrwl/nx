@@ -658,7 +658,7 @@ The optional `interval` key is the time between attempts, in milliseconds.
 Without it, attempts back off from 100 to 1000 milliseconds.
 
 If the target isn't ready within `timeout`, the tasks waiting for it fail.
-The continuous task keeps running.
+The readiness failure doesn't stop the continuous task.
 Tasks whose `dependsOn` entry doesn't set `waitFor` to `ready` start as before.
 When one entry asks for `ready` and another entry reaches the same continuous target without it, the task waits for `ready`.
 A continuous target without `readyWhen` counts as ready once it has started.
