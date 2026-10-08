@@ -59,6 +59,12 @@
       "description": "Rename imports of `createNodesV2` from `@nx/vite/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-24-0-0-register-typescript-plugin-for-typecheck": {
+      "version": "24.0.0-beta.0",
+      "description": "Register @nx/js/typescript with its typecheck target in TS solution workspaces that use @nx/vite/plugin without it, since @nx/vite/plugin no longer infers typecheck targets in TS solution setups.",
+      "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
+      "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
     }
   },
   "packageJsonUpdates": {
