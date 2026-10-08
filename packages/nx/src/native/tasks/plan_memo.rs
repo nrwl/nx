@@ -29,8 +29,8 @@ struct PlannedTask {
     target: TaskTarget,
     outputs: Vec<String>,
     dependencies: Vec<String>,
-    continuous_dependencies: Vec<String>,
-    continuous_dependencies_without_inputs: Vec<String>,
+    /// Each continuous edge's id and whether its inputs are left out
+    continuous_dependencies: Vec<(String, bool)>,
     ultracache: Option<TaskUltracacheSettings>,
     custom_hasher: bool,
 }
@@ -42,13 +42,13 @@ impl PlannedTask {
             target: task.target.clone(),
             outputs: task.outputs.clone(),
             dependencies: edges(&task_graph.dependencies, id),
-            continuous_dependencies: edges(&task_graph.continuous_dependencies, id),
-            continuous_dependencies_without_inputs: task_graph
-                .continuous_dependencies_without_inputs
-                .as_ref()
-                .and_then(|without| without.get(id))
-                .cloned()
-                .unwrap_or_default(),
+            continuous_dependencies: task_graph
+                .continuous_dependencies
+                .get(id)
+                .into_iter()
+                .flatten()
+                .map(|edge| (edge.id.clone(), edge.inputs == Some(false)))
+                .collect(),
             ultracache: task.ultracache.clone(),
             custom_hasher: custom_hasher.contains(id),
         })
@@ -266,10 +266,11 @@ mod tests {
             .insert("app:test".into(), edges_to(&["other:build"]));
         plan_all(&memo, &served);
         let mut opted_out = served;
-        opted_out.continuous_dependencies_without_inputs = Some(HashMap::from([(
-            "app:test".into(),
-            vec!["other:build".into()],
-        )]));
+        opted_out
+            .continuous_dependencies
+            .get_mut("app:test")
+            .unwrap()[0]
+            .inputs = Some(false);
         assert_eq!(plan_all(&memo, &opted_out), ["app:test"]);
     }
 

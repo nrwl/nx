@@ -4108,7 +4108,6 @@ mod tests {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
             continuous_dependencies: HashMap::new(),
-            continuous_dependencies_without_inputs: None,
             roots: vec![],
         };
         let cli_args = config::TuiCliArgs {

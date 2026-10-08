@@ -1252,11 +1252,6 @@ export interface TaskGraph {
   /** Map of Task IDs to the edges to tasks which the task depends on */
   dependencies: Record<string, Array<TaskGraphEdge>>
   continuousDependencies: Record<string, Array<TaskGraphEdge>>
-  /**
-   * The subset of `continuous_dependencies` from `dependsOn` entries with
-   * `inputs: false`: still run, but their inputs are not hashed into the task.
-   */
-  continuousDependenciesWithoutInputs?: Record<string, Array<string>>
 }
 
 /** An edge from a task to one of the tasks it depends on */
@@ -1265,6 +1260,8 @@ export interface TaskGraphEdge {
   id: string
   /** What the dependent waits for on a continuous dependency. Defaults to `started`. */
   waitFor?: 'started' | 'ready'
+  /** `false` on a continuous dependency whose inputs the dependent does not hash */
+  inputs?: false
 }
 
 /** Details about the composition of a task's hash */
