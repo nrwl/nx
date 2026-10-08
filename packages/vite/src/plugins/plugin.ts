@@ -7,6 +7,7 @@ import {
   retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
@@ -119,6 +120,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     const vueProjectRoots = new Set<string>();
     const projectsByRoot = new Map<string, ProjectConfiguration>();
 
+    let createNodesError: AggregateCreateNodesError | undefined;
     try {
       const results = await createNodesFromFiles(
         async (configFile, _, context, idx) => {
@@ -197,7 +199,15 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
         validConfigFiles,
         options,
         context
-      );
+      ).catch((e) => {
+        if (!(e instanceof AggregateCreateNodesError)) {
+          throw e;
+        }
+        // Partial results hold the same project objects, so typecheck still
+        // reaches the healthy projects before the error is rethrown.
+        createNodesError = e;
+        return e.partialResults;
+      });
 
       const { typecheckTargetName } = normalizedOptions;
       if (typecheckTargetName !== false && typecheckProjects.length) {
@@ -223,6 +233,9 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
         }
       }
 
+      if (createNodesError) {
+        throw createNodesError;
+      }
       return results;
     } finally {
       targetsCache.writeToDisk();

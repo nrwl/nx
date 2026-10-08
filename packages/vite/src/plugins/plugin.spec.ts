@@ -1,5 +1,5 @@
 import type { Mock } from 'vitest';
-import { CreateNodesContext } from '@nx/devkit';
+import { AggregateCreateNodesError, CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
@@ -409,6 +409,50 @@ describe('@nx/vite/plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+
+    it('should keep the typecheck target on healthy projects when another config fails to load', async () => {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+      tempFs.createFileSync('tsconfig.base.json', '{}');
+      tempFs.createFileSync(
+        'my-app/tsconfig.json',
+        JSON.stringify({ extends: '../tsconfig.base.json', files: [] })
+      );
+      tempFs.createFileSync(
+        'broken/project.json',
+        JSON.stringify({ name: 'broken' })
+      );
+      tempFs.createFileSync('broken/vite.config.ts', '');
+      (loadViteDynamicImport as Mock).mockResolvedValue({
+        resolveConfig: vi
+          .fn()
+          .mockImplementation(({ configFile }) =>
+            configFile.includes('broken')
+              ? Promise.reject(new Error('broken config'))
+              : Promise.resolve({})
+          ),
+      });
+
+      const error: AggregateCreateNodesError = await createNodesFunction(
+        ['my-app/vite.config.ts', 'broken/vite.config.ts'],
+        { buildTargetName: 'build' },
+        context
+      ).then(
+        () => {
+          throw new Error('Expected createNodes to throw');
+        },
+        (e) => e
+      );
+
+      expect(error).toBeInstanceOf(AggregateCreateNodesError);
+      expect(error.errors.map(([file]) => file)).toEqual([
+        'broken/vite.config.ts',
+      ]);
+      const [[file, result]] = error.partialResults;
+      expect(file).toBe('my-app/vite.config.ts');
+      expect(result.projects['my-app'].targets['typecheck'].command).toBe(
+        'tsc --build tsconfig.json --emitDeclarationOnly'
+      );
     });
 
     it('should not create nodes when react-router.config is present', async () => {
