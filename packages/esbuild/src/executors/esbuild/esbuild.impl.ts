@@ -23,6 +23,7 @@ import {
   getOutfile,
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
+import { batchedBuild } from './lib/batched-esbuild';
 import { DependentBuildableProjectNode } from '@nx/js/internal';
 import { deleteOutputDir } from '../../utils/fs';
 import { join, relative } from 'path';
@@ -201,7 +202,7 @@ export async function* esbuildExecutor(
     for (let i = 0; i < options.format.length; i++) {
       const format = options.format[i];
       const esbuildOptions = buildEsbuildOptions(format, options, context);
-      const buildResult = await esbuild.build(esbuildOptions);
+      const buildResult = await batchedBuild(esbuild, esbuildOptions);
 
       if (options.metafile) {
         const filename =
