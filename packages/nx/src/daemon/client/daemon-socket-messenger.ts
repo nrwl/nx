@@ -20,6 +20,15 @@ export class VersionMismatchError extends Error {
 export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
+  /**
+   * False once the socket is gone, so a caller can re-dial instead of writing
+   * into a peer that already closed. A connecting socket is alive: writes to it
+   * are buffered until the handshake completes.
+   */
+  isAlive(): boolean {
+    return !!this.socket && !this.socket.destroyed && this.socket.writable;
+  }
+
   sendMessage<T extends DaemonMessage>(
     messageToDaemon: T,
     force?: 'v8' | 'json'

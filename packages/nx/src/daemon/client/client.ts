@@ -178,6 +178,36 @@ const WAIT_FOR_SERVER_CONFIG = {
 };
 
 /**
+ * The reconnect path's own budget. A daemon that restarted itself writes its
+ * new process json within a second or so, while one that shut down because the
+ * installed Nx version changed never writes another — so the wait is short and
+ * the client starts a daemon itself once it expires.
+ */
+const WAIT_FOR_RESTARTED_SERVER_CONFIG = {
+  delayMs: 10,
+  maxAttempts: 500, // 500 * 10ms = 5 seconds
+};
+
+/**
+ * How many times one message may be re-sent after the connection drops. The
+ * daemon exits as soon as it finds itself outdated, so a condition that never
+ * clears — an installed version this client can never match — would otherwise
+ * be restarted and re-dialled for the life of the command.
+ */
+const MAX_RECONNECT_ATTEMPTS = 3;
+
+/**
+ * Whether a socket error means the connection went away rather than that the
+ * daemon is broken. The daemon destroys its open sockets and exits when it
+ * finds itself outdated (`daemonIsOutdated` in server/server.ts), so a payload
+ * still being flushed lands on a closed peer and fails with EPIPE.
+ */
+function isConnectionLost(err: Error): boolean {
+  const code = (err as NodeJS.ErrnoException).code;
+  return code === 'EPIPE' || code === 'ECONNRESET';
+}
+
+/**
  * The daemon's workspace watcher died. Nothing it serves will see file changes
  * again, so a watching client has to restart rather than keep waiting.
  */
@@ -235,6 +265,9 @@ export class DaemonClient {
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
   private _waitForDaemonReady: Promise<void> | null = null;
   private _daemonReady: () => void | null = null;
+
+  // Reconnects spent on the message in flight, against MAX_RECONNECT_ATTEMPTS.
+  private reconnectAttempts = 0;
 
   // Shared file watcher connection state
   private fileWatcherMessenger: DaemonSocketMessenger | undefined;
@@ -331,6 +364,7 @@ export class DaemonClient {
     this.currentResolve = null;
     this.currentReject = null;
     this._enabled = undefined;
+    this.reconnectAttempts = 0;
 
     // Clean up file watcher and project graph listener connections
     this.fileWatcherMessenger?.close();
@@ -1179,7 +1213,13 @@ export class DaemonClient {
 
   private async startDaemonIfNecessary() {
     if (this._daemonStatus == DaemonStatus.CONNECTED) {
-      return;
+      if (this.socketMessenger?.isAlive()) {
+        return;
+      }
+      // The status does not follow the socket on its own, so without this a
+      // request after a lost connection writes into a closed peer and fails
+      // with EPIPE instead of dialling a daemon.
+      this._daemonStatus = DaemonStatus.DISCONNECTED;
     }
     // Ensure daemon is running and socket path is available
     if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
@@ -1221,6 +1261,10 @@ export class DaemonClient {
     parser?: 'v8' | 'json'
   ): Promise<any> {
     return this.queue.sendToQueue(async () => {
+      // Each queued message gets the full reconnect budget. Retries go through
+      // sendMessageToDaemon directly, so they do not come back through here and
+      // cannot refill their own budget.
+      this.reconnectAttempts = 0;
       // Set currentSpinner inside the queued function so it's only
       // active while this specific message is in flight — preventing
       // concurrent callers from overwriting each other's spinner
@@ -1237,24 +1281,31 @@ export class DaemonClient {
     // sendMessageToDaemon method uses a keep-alive setTimeout to
     // explicitly hold the event loop open while awaiting a response.
     socket.unref();
-    this.socketMessenger = new DaemonSocketMessenger(socket).listen(
+    const messenger = new DaemonSocketMessenger(socket);
+    this.socketMessenger = messenger.listen(
       (message) => this.handleMessage(message),
-      () => {
-        // it's ok for the daemon to terminate if the client doesn't wait on
-        // any messages from the daemon
-        if (this.queue.isEmpty()) {
-          this.reset();
-        } else {
-          // Connection closed while we had pending work - try to reconnect
-          this._daemonStatus = DaemonStatus.DISCONNECTED;
-          this.handleConnectionError(
-            daemonProcessException(
-              'Daemon process terminated and closed the connection'
-            )
-          );
-        }
-      },
+      () =>
+        this.onConnectionLost(
+          messenger,
+          'Daemon process terminated and closed the connection'
+        ),
       (err) => {
+        // A dying daemon destroys its sockets, so a payload still being flushed
+        // fails with EPIPE. That is the connection going away rather than a
+        // daemon defect, and the reconnect path can recover from it.
+        if (isConnectionLost(err)) {
+          clientLogger.log(
+            `[Client] Connection lost (${
+              (err as NodeJS.ErrnoException).code
+            }) while sending ${this.currentMessage?.type}`
+          );
+          this.onConnectionLost(
+            messenger,
+            'The daemon closed the connection while handling the request'
+          );
+          return;
+        }
+
         // Every recovery path below is keyed on the socket 'close' event, and a
         // framing failure emits neither 'close' nor 'error'. Without the
         // teardown at the end of this handler the connection stays open and
@@ -1285,10 +1336,6 @@ export class DaemonClient {
           error = daemonProcessException(
             `A server instance had not been fully shut down. Please try running the command again.`
           );
-        } else if (err.message.startsWith('read ECONNRESET')) {
-          error = daemonProcessException(
-            `Unable to connect to the daemon process.`
-          );
         } else {
           error = daemonProcessException(err.toString());
         }
@@ -1298,8 +1345,57 @@ export class DaemonClient {
     );
   }
 
+  /**
+   * The connection to the daemon went away. One loss signals twice — the failed
+   * write, then the close behind it — and a socket a reconnect already replaced
+   * keeps signalling too, so only the current connection does the work. Acting
+   * on a superseded socket would tear down the one that replaced it.
+   */
+  private onConnectionLost(
+    messenger: DaemonSocketMessenger,
+    reason: string
+  ): void {
+    if (this.socketMessenger !== messenger) {
+      return;
+    }
+    this.socketMessenger = null;
+    messenger.close();
+
+    // it's ok for the daemon to terminate if the client doesn't wait on
+    // any messages from the daemon
+    if (this.queue.isEmpty()) {
+      this.reset();
+      return;
+    }
+
+    this._daemonStatus = DaemonStatus.DISCONNECTED;
+    this.handleConnectionError(daemonProcessException(reason)).catch((err) =>
+      this.failPendingRequest(err)
+    );
+  }
+
+  /**
+   * Hand `error` to the request that was in flight and leave the client usable.
+   * The reset matters as much as the rejection: a status left on CONNECTING
+   * makes every later request wait on a ready promise nothing resolves.
+   */
+  private failPendingRequest(error: Error) {
+    const reject = this.currentReject;
+    this.reset();
+    reject?.(error);
+  }
+
   private async handleConnectionError(error: Error) {
     clientLogger.log(`[Reconnect] Connection error detected: ${error.message}`);
+
+    if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      clientLogger.log(
+        `[Reconnect] Gave up after ${this.reconnectAttempts} attempts`
+      );
+      this.failPendingRequest(error);
+      return;
+    }
+    this.reconnectAttempts++;
 
     // Create a new ready promise for new requests to wait on
     this._waitForDaemonReady = new Promise<void>(
@@ -1313,40 +1409,45 @@ export class DaemonClient {
     try {
       ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
+        budget: WAIT_FOR_RESTARTED_SERVER_CONFIG,
       }));
     } catch (err) {
       if (err instanceof VersionMismatchError) {
         // New daemon has different version - reject with error so caller can handle
-        if (this.currentReject) {
-          this.currentReject(err);
-        }
+        this.failPendingRequest(err);
         return;
       }
       throw err;
     }
 
-    if (serverAvailable) {
-      clientLogger.log(
-        `[Reconnect] Reconnection successful, re-establishing connection`
-      );
-      // Server is back up, establish connection and signal ready
-      this.establishConnection();
+    if (!serverAvailable) {
+      // A daemon that shut down because the installed Nx version changed starts
+      // no replacement, so waiting cannot bring one back — only starting one
+      // can. The daemon this client starts runs the version the workspace has
+      // installed, because `enabled()` refuses to start one at all otherwise.
+      clientLogger.log(`[Reconnect] No daemon came back, starting one`);
+      try {
+        await this.startInBackground();
+      } catch (err) {
+        this.failPendingRequest(err);
+        return;
+      }
+    }
 
-      // Resend the pending message if one exists
-      if (this.currentMessage && this.currentResolve && this.currentReject) {
-        // Retry the message directly (not through the queue) to resolve the
-        // pending promise that the original queue entry is waiting on.
-        // This allows the original queue entry to complete naturally.
-        const msg = this.currentMessage;
-        const res = this.currentResolve;
-        const rej = this.currentReject;
-        this.sendMessageToDaemon(msg).then(res, rej);
-      }
-    } else {
-      // Failed to reconnect after all attempts, reject the pending request
-      if (this.currentReject) {
-        this.currentReject(error);
-      }
+    clientLogger.log(
+      `[Reconnect] Reconnection successful, re-establishing connection`
+    );
+    this.establishConnection();
+
+    // Resend the pending message if one exists
+    if (this.currentMessage && this.currentResolve && this.currentReject) {
+      // Retry the message directly (not through the queue) to resolve the
+      // pending promise that the original queue entry is waiting on.
+      // This allows the original queue entry to complete naturally.
+      const msg = this.currentMessage;
+      const res = this.currentResolve;
+      const rej = this.currentReject;
+      this.sendMessageToDaemon(msg).then(res, rej);
     }
   }
 
@@ -1363,9 +1464,12 @@ export class DaemonClient {
    */
   private async waitForServerToBeAvailable(options: {
     ignoreVersionMismatch: boolean;
+    /** Defaults to the full connect budget a cold start is allowed. */
+    budget?: { maxAttempts: number; delayMs: number };
   }): Promise<{ available: boolean; refusal?: ConnectRefusal }> {
+    const { maxAttempts, delayMs } = options.budget ?? WAIT_FOR_SERVER_CONFIG;
     clientLogger.log(
-      `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
+      `[Client] Waiting for server (max: ${maxAttempts} attempts, ${delayMs}ms interval)`
     );
 
     // Poll-scoped, not instance state: reconnect paths have their own flags, so
@@ -1389,8 +1493,8 @@ export class DaemonClient {
         }
       },
       {
-        maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
-        delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
+        maxAttempts,
+        delayMs,
         onConnectError: (error, socketPath) => {
           refusal = { error, socketPath };
           // A refusal is not expected to become an acceptance, so polling the
@@ -1416,7 +1520,7 @@ export class DaemonClient {
     clientLogger.log(
       stoppedOnRefusal
         ? `[Client] Server refused the connection (${refusal?.error.code}), stopped polling`
-        : `[Client] Server not available after ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts`
+        : `[Client] Server not available after ${maxAttempts} attempts`
     );
     return { available: false, refusal };
   }
