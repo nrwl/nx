@@ -242,10 +242,7 @@ export type { LifeCycle, TaskMetadata } from './tasks-runner/life-cycle';
 export { CompositeLifeCycle } from './tasks-runner/life-cycle';
 export { createRunManyDynamicOutputRenderer } from './tasks-runner/life-cycles/dynamic-run-many-terminal-output-life-cycle';
 export type { TaskStatus, TasksRunner } from './tasks-runner/tasks-runner';
-export type {
-  DependsOnEntryLocation,
-  NormalizedTargetDependencyConfig,
-} from './tasks-runner/utils';
+export type { NormalizedTargetDependencyConfig } from './tasks-runner/utils';
 export {
   calculateReverseDeps,
   createTaskId,

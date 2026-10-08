@@ -280,26 +280,24 @@ impl HashPlanner {
         );
         let to_plan = memo.missing(&task_ids);
         let ultracache_tasks = configurations.map(|configurations| {
-            // Continuous dependencies are planned into their dependents, so
-            // their entries are needed too.
-            let mut scope: Vec<&str> = to_plan.clone();
-            for id in &to_plan {
-                scope.extend(
-                    collect_continuous_dependencies(&task_graph, id)
-                        .iter()
-                        .map(|task| task.id.as_str()),
-                );
-            }
-            scope.sort_unstable();
-            scope.dedup();
             ultracache_eligibility::resolve(
                 configurations,
-                scope
+                to_plan
                     .iter()
                     .filter_map(|id| task_graph.tasks.get_key_value(*id))
                     .map(|(id, task)| (id.as_str(), task.ultracache.as_ref())),
                 &EligibilityInputs {
                     custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
+                    continuous: to_plan
+                        .iter()
+                        .filter(|id| {
+                            task_graph
+                                .tasks
+                                .get(**id)
+                                .is_some_and(|task| task.continuous == Some(true))
+                        })
+                        .map(|id| id.to_string())
+                        .collect(),
                 },
             )
             .tasks
@@ -371,20 +369,14 @@ impl HashPlanner {
                 }
 
                 // A continuous dependency serves this task from its own process, so
-                // its inputs and externals are hashed here, and its own servers' in
-                // turn: its observed reads when both it and this task hash from their
-                // configurations, else its declared inputs, so a task hashed natively
-                // (any `ultracache.mode` but `on` included) stays native throughout.
-                // When it reads
+                // its declared inputs and externals are hashed here, and its own
+                // servers' in turn, unless the edge has `inputs: false`.
+                // Continuous tasks never hash from a configuration:
+                // what they read depends on which clients they served. When it reads
                 // its builds' outputs, those land in this plan too, which holds the
                 // task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
-                    let dep_context = context
-                        .as_ref()
-                        .and(ultracache_tasks.as_ref())
-                        .and_then(|tasks| tasks.get(&dep_task.id))
-                        .map(UltracacheContext::new);
                     let mut dep_ids: Vec<u32> = self
                         .target_input(
                             &dep_task.target.project,
@@ -403,16 +395,8 @@ impl HashPlanner {
                         &task_graph,
                         external_deps_mapped,
                         &mut VisitedTracker::new(dep_task.target.project.as_str()),
-                        dep_context.as_ref(),
+                        None,
                     )?);
-                    if let Some(dep_context) = &dep_context {
-                        self.replace_with_configuration(
-                            dep_task,
-                            dep_context,
-                            &mut dep_ids,
-                            always_on_id,
-                        );
-                    }
                     ids.extend(dep_ids);
                 }
 
@@ -1842,6 +1826,7 @@ mod tests {
                         })
                         .collect(),
                     continuous_dependencies: HashMap::new(),
+                    continuous_dependencies_without_inputs: None,
                     tasks,
                 }
             };
@@ -2191,6 +2176,7 @@ mod tests {
             tasks: HashMap::from([(task.id.clone(), task)]),
             dependencies: HashMap::new(),
             continuous_dependencies: HashMap::new(),
+            continuous_dependencies_without_inputs: None,
         };
         let plans = planner
             .get_plans_internal(vec!["app:build"], task_graph, None, &[])
@@ -2305,6 +2291,7 @@ mod tests {
                 ("web:outslash", &["lib:outslash"]),
             ]),
             continuous_dependencies: edges(&[("web:bracket", &["web:serve"])]),
+            continuous_dependencies_without_inputs: None,
         };
 
         let mut deferred: Vec<String> = deferred_tasks(&plans, &pool, &task_graph)
@@ -2481,5 +2468,144 @@ mod plan_memo_tests {
             instruction,
             HashInstruction::TaskOutput(_, outputs) if outputs == &["dist/lib-v2"]
         )));
+    }
+}
+
+#[cfg(test)]
+mod continuous_inputs_tests {
+    use super::*;
+    use crate::native::project_graph::types::{Project, Target};
+    use crate::native::test_utils::task_graph;
+    use crate::native::types::DepsOutputsInput;
+    use napi::bindgen_prelude::Either9;
+
+    fn planner() -> HashPlanner {
+        let project = |root: &str, target: &str, inputs| Project {
+            root: root.into(),
+            targets: HashMap::from([(
+                target.into(),
+                Target {
+                    inputs: Some(inputs),
+                    ..Default::default()
+                },
+            )]),
+            ..Default::default()
+        };
+        let files = || Either9::B("{projectRoot}/**/*".into());
+        let graph = ProjectGraph {
+            nodes: HashMap::from([
+                ("e2e".into(), project("apps/e2e", "e2e", vec![files()])),
+                (
+                    "app".into(),
+                    project(
+                        "apps/app",
+                        "serve",
+                        vec![
+                            files(),
+                            Either9::G(DepsOutputsInput {
+                                dependent_tasks_output_files: "**/*.js".into(),
+                                transitive: None,
+                            }),
+                        ],
+                    ),
+                ),
+                ("api".into(), project("apps/api", "serve", vec![files()])),
+                ("lib".into(), project("libs/lib", "build", vec![files()])),
+            ]),
+            dependencies: ["e2e", "app", "api", "lib"]
+                .into_iter()
+                .map(|project| (project.into(), vec![]))
+                .collect(),
+            external_nodes: HashMap::new(),
+        };
+        HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        )
+    }
+
+    fn graph(continuous: &[(&str, &[&str])], without_inputs: &[(&str, &[&str])]) -> TaskGraph {
+        let edges = |list: &[(&str, &[&str])]| {
+            list.iter()
+                .map(|(id, deps)| (id.to_string(), deps.iter().map(|d| d.to_string()).collect()))
+                .collect::<HashMap<String, Vec<String>>>()
+        };
+        let mut graph = task_graph(
+            &[
+                ("e2e:e2e", &[]),
+                ("app:serve", &[]),
+                ("api:serve", &[]),
+                ("lib:build", &["dist/libs/lib"]),
+            ],
+            &[("app:serve", &["lib:build"])],
+        );
+        graph.continuous_dependencies = edges(continuous);
+        graph.continuous_dependencies_without_inputs =
+            (!without_inputs.is_empty()).then(|| edges(without_inputs));
+        graph
+    }
+
+    /// The projects whose files `e2e:e2e` hashes, and whether it is deferred.
+    fn hashed(graph: TaskGraph) -> (Vec<String>, bool) {
+        let plans = planner()
+            .get_plans_internal(vec!["e2e:e2e"], graph, None, &[])
+            .unwrap();
+        let mut projects: Vec<String> = plans.plans["e2e:e2e"]
+            .iter()
+            .filter_map(|id| match plans.pool.get(*id).value() {
+                HashInstruction::ProjectFileSet(project, _) => Some(project.clone()),
+                _ => None,
+            })
+            .collect();
+        projects.sort();
+        projects.dedup();
+        (projects, plans.deferred.contains("e2e:e2e"))
+    }
+
+    #[test]
+    fn a_continuous_dependency_contributes_its_inputs_and_its_servers() {
+        assert_eq!(
+            hashed(graph(
+                &[("e2e:e2e", &["app:serve"]), ("app:serve", &["api:serve"])],
+                &[],
+            )),
+            (vec!["api".into(), "app".into(), "e2e".into()], true)
+        );
+    }
+
+    #[test]
+    fn an_edge_without_inputs_contributes_nothing_through_it() {
+        assert_eq!(
+            hashed(graph(
+                &[("e2e:e2e", &["app:serve"]), ("app:serve", &["api:serve"])],
+                &[("e2e:e2e", &["app:serve"])],
+            )),
+            (vec!["e2e".into()], false)
+        );
+    }
+
+    #[test]
+    fn a_server_also_reached_with_inputs_still_contributes() {
+        assert_eq!(
+            hashed(graph(
+                &[
+                    ("e2e:e2e", &["app:serve", "api:serve"]),
+                    ("app:serve", &["api:serve"]),
+                ],
+                &[("e2e:e2e", &["app:serve"])],
+            )),
+            (vec!["api".into(), "e2e".into()], false)
+        );
+    }
+
+    #[test]
+    fn a_server_can_opt_out_of_its_own_server() {
+        assert_eq!(
+            hashed(graph(
+                &[("e2e:e2e", &["app:serve"]), ("app:serve", &["api:serve"])],
+                &[("app:serve", &["api:serve"])],
+            )),
+            (vec!["app".into(), "e2e".into()], true)
+        );
     }
 }

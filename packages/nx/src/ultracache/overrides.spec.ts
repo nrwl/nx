@@ -137,4 +137,22 @@ describe('buildUltracacheOverrides', () => {
     ]);
     expect(result.diagnostics[0].glob).toBe('libs/./ui/*.gen');
   });
+
+  it('withholds continuous tasks even when a configuration is stored', () => {
+    const configurations = writeConfigurations({
+      'web:serve': { commit: HEAD, inputs: ['apps/web/src/a.ts'], outputs: [] },
+      'web:build': { commit: HEAD, inputs: ['apps/web/src/a.ts'], outputs: [] },
+    });
+    const taskGraph = graph('web:serve', 'web:build');
+    taskGraph.tasks['web:serve'].continuous = true;
+    const result = buildUltracacheOverrides(
+      projectGraph,
+      taskGraph,
+      configurations
+    );
+    expect(result.used).toEqual(['web:build']);
+    expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
+      ['continuous', 'web:serve'],
+    ]);
+  });
 });

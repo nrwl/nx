@@ -12,7 +12,6 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getPackageManagerCommand,
   joinPathFragments,
   offsetFromRoot,
   runTasksInSerial,
@@ -36,8 +35,7 @@ import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { assertSupportedNuxtVersion } from '../../utils/assert-supported-nuxt-version';
-import { execSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { prepareProject } from './lib/prepare-project';
 import { join } from 'node:path';
 import {
   addProjectToTsSolutionWorkspace,
@@ -250,27 +248,9 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   tasks.push(() => {
     const packageManager = detectPackageManager(workspaceRoot);
-    const pmc = getPackageManagerCommand(packageManager, workspaceRoot);
     const appRoot = join(workspaceRoot, options.appProjectRoot);
-    // npm, yarn, and bun resolve binaries from `node_modules/.bin` searching
-    // upward from the cwd, so running in the app dir picks an app-level `nuxi`
-    // first and falls back to the workspace-root install. pnpm's `pnpm exec`
-    // doesn't search upward: in an integrated workspace the app dir only sees
-    // its own `node_modules/.bin` and can't reach the root-installed `nuxi`. So
-    // for pnpm only run in the app dir when it has its own `nuxi` (package-based
-    // setups, where the app copy should win); otherwise run at the workspace
-    // root, where the generator installs it.
-    const runInAppDir =
-      packageManager !== 'pnpm' ||
-      existsSync(join(appRoot, 'node_modules', '.bin', 'nuxi')) ||
-      existsSync(join(appRoot, 'node_modules', '.bin', 'nuxi.cmd'));
     try {
-      execSync(
-        `${pmc.exec} nuxi prepare${
-          runInAppDir ? '' : ` "${options.appProjectRoot}"`
-        }`,
-        { cwd: runInAppDir ? appRoot : workspaceRoot, windowsHide: true }
-      );
+      prepareProject(appRoot, workspaceRoot, packageManager);
     } catch (e) {
       console.error(
         `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`
