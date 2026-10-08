@@ -760,7 +760,7 @@ async function main() {
   );
   if ((await run('gh', ['auth', 'status'])).code !== 0)
     throw new Error('gh is not authenticated');
-  const doctor = await run(path.join(REPO, '.claude/tools/sandbox'), [
+  const doctor = await run(path.join(REPO, 'tools/review-sandbox/sandbox'), [
     'doctor',
   ]);
   if (doctor.code !== 0) {
@@ -879,7 +879,7 @@ async function main() {
   const held = board.sandboxCount();
   if (PRUNE_AT_END && held === 0) {
     log('no parked children left — pruning leaked sandboxes');
-    await run(path.join(REPO, '.claude/tools/sandbox'), ['prune']);
+    await run(path.join(REPO, 'tools/review-sandbox/sandbox'), ['prune']);
   } else {
     log(
       `skipping prune: ${held} child(ren) still hold a live sandbox for their grill`
