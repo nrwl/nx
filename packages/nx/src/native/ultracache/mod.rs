@@ -1,7 +1,7 @@
 mod configurations;
 pub(crate) mod set;
 #[cfg(not(target_arch = "wasm32"))]
-mod store;
+pub(crate) mod store;
 mod types;
 
 pub use configurations::UltracacheConfigurations;

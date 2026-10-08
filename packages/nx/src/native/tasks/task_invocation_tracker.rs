@@ -1,6 +1,5 @@
-use crate::native::db::connection::NxDbConnection;
+use crate::native::db::connection::{DbValue, NxDbConnection};
 use napi::bindgen_prelude::External;
-use rusqlite::params;
 use std::sync::{Arc, Mutex};
 use tracing::debug;
 
@@ -123,7 +122,12 @@ impl TaskInvocationTracker {
         // error; the primary key includes the pid to keep the rows distinct.
         self.db.lock().unwrap().execute(
             "INSERT OR REPLACE INTO task_invocations (root_pid, pid, task_id, overrides_hash) VALUES (?1, ?2, ?3, ?4)",
-            params![self.root_pid, pid, task_id, overrides_hash],
+            &[
+                DbValue::Integer(self.root_pid as i64),
+                DbValue::Integer(pid as i64),
+                DbValue::from(task_id.as_str()),
+                DbValue::from(overrides_hash),
+            ],
         )?;
         debug!(
             "Registered task invocation: root_pid={}, pid={}, task_id={}",
@@ -139,7 +143,11 @@ impl TaskInvocationTracker {
     pub fn unregister_task(&self, pid: u32, task_id: String) -> anyhow::Result<()> {
         self.db.lock().unwrap().execute(
             "DELETE FROM task_invocations WHERE root_pid = ?1 AND pid = ?2 AND task_id = ?3",
-            params![self.root_pid, pid, task_id],
+            &[
+                DbValue::Integer(self.root_pid as i64),
+                DbValue::Integer(pid as i64),
+                DbValue::from(task_id.as_str()),
+            ],
         )?;
         debug!(
             "Unregistered task invocation: root_pid={}, pid={}, task_id={}",
@@ -153,7 +161,7 @@ impl TaskInvocationTracker {
     pub fn cleanup_stale(&self) -> anyhow::Result<()> {
         let deleted = self.db.lock().unwrap().execute(
             "DELETE FROM task_invocations WHERE created_at < datetime('now', '-1 day')",
-            [],
+            &[],
         )?;
         if deleted > 0 {
             debug!("Cleaned up {} stale invocation records", deleted);
@@ -181,28 +189,29 @@ impl TaskInvocationTracker {
     }
 
     fn invocations_for_root(&self) -> anyhow::Result<Vec<InvocationRow>> {
-        let db = self.db.lock().unwrap();
-        let mut stmt = db.prepare(
-            "SELECT pid, task_id, overrides_hash FROM task_invocations WHERE root_pid = ?1 ORDER BY created_at ASC",
-        )?;
-        let rows = stmt
-            .query_map(params![self.root_pid], |row| {
+        self.db
+            .lock()
+            .unwrap()
+            .query_rows(
+                "SELECT pid, task_id, overrides_hash FROM task_invocations WHERE root_pid = ?1 ORDER BY created_at ASC",
+                &[DbValue::Integer(self.root_pid as i64)],
+            )?
+            .iter()
+            .map(|row| {
                 Ok(InvocationRow {
-                    pid: row.get(0)?,
-                    task_id: row.get(1)?,
-                    overrides_hash: row.get(2)?,
+                    pid: row.get_i64(0)? as u32,
+                    task_id: row.get_str(1)?,
+                    overrides_hash: row.get_str(2)?,
                 })
-            })?
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(rows)
+            })
+            .collect()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::db::connection::NxDbConnection;
-    use rusqlite::Connection;
+    use crate::native::db::initialize::initialize_db;
 
     const ROOT_PID: u32 = 100;
     /// Overrides hash of a task invoked with no overrides. The tracker treats
@@ -217,15 +226,15 @@ mod tests {
         }
     }
 
-    fn in_memory_db() -> Arc<Mutex<NxDbConnection>> {
-        let conn = Connection::open_in_memory().unwrap();
-        conn.execute_batch(SCHEMA).unwrap();
-        Arc::new(Mutex::new(NxDbConnection::new(conn)))
+    fn test_db() -> (tempfile::TempDir, Arc<Mutex<NxDbConnection>>) {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let conn = initialize_db(&temp_dir.path().join("test.db")).unwrap();
+        (temp_dir, Arc::new(Mutex::new(conn)))
     }
 
     #[test]
     fn allows_sibling_processes_to_run_the_same_task() {
-        let db = in_memory_db();
+        let (_temp_dir, db) = test_db();
         // Two children of the root. Neither is an ancestor of the other.
         let sibling_a = tracker(&db, vec![ROOT_PID]);
         let sibling_b = tracker(&db, vec![ROOT_PID]);
@@ -247,7 +256,7 @@ mod tests {
 
     #[test]
     fn reports_a_loop_when_an_ancestor_is_running_the_task() {
-        let db = in_memory_db();
+        let (_temp_dir, db) = test_db();
         let root = tracker(&db, vec![]);
         let child = tracker(&db, vec![ROOT_PID]);
 
@@ -265,7 +274,7 @@ mod tests {
 
     #[test]
     fn reports_a_loop_through_an_intermediate_process() {
-        let db = in_memory_db();
+        let (_temp_dir, db) = test_db();
         let root = tracker(&db, vec![]);
         let middle = tracker(&db, vec![ROOT_PID]);
         let leaf = tracker(&db, vec![ROOT_PID, 200]);
@@ -294,7 +303,7 @@ mod tests {
 
     #[test]
     fn chain_order_follows_ancestry_not_created_at() {
-        let db = in_memory_db();
+        let (_temp_dir, db) = test_db();
         let root = tracker(&db, vec![]);
         let middle = tracker(&db, vec![ROOT_PID]);
         let leaf = tracker(&db, vec![ROOT_PID, 200]);
@@ -310,7 +319,7 @@ mod tests {
             .unwrap()
             .execute(
                 "UPDATE task_invocations SET created_at = datetime('now', '+1 hour') WHERE pid = ?1",
-                params![ROOT_PID],
+                &[DbValue::Integer(ROOT_PID as i64)],
             )
             .unwrap();
 
@@ -325,7 +334,7 @@ mod tests {
 
     #[test]
     fn unregistering_does_not_drop_a_sibling_record() {
-        let db = in_memory_db();
+        let (_temp_dir, db) = test_db();
         let sibling_a = tracker(&db, vec![ROOT_PID]);
         let sibling_b = tracker(&db, vec![ROOT_PID]);
         let child_of_b = tracker(&db, vec![ROOT_PID, 300]);
@@ -351,7 +360,7 @@ mod tests {
 
     #[test]
     fn a_task_can_be_re_registered_after_it_completes() {
-        let db = in_memory_db();
+        let (_temp_dir, db) = test_db();
         let root = tracker(&db, vec![]);
         let child = tracker(&db, vec![ROOT_PID]);
 
@@ -369,7 +378,7 @@ mod tests {
     }
     #[test]
     fn allows_an_ancestor_to_re_invoke_a_task_with_different_overrides() {
-        let db = in_memory_db();
+        let (_temp_dir, db) = test_db();
         let root = tracker(&db, vec![]);
         let child = tracker(&db, vec![ROOT_PID]);
 
@@ -387,7 +396,7 @@ mod tests {
 
     #[test]
     fn reports_a_loop_when_forwarded_arguments_accumulate() {
-        let db = in_memory_db();
+        let (_temp_dir, db) = test_db();
         // `app:build` runs `nx run app:build hello`, and run-commands forwards
         // arguments, so the positional array grows on every hop and no two
         // overrides hashes match.
@@ -416,7 +425,7 @@ mod tests {
 
     #[test]
     fn the_accumulation_bound_counts_ancestors_not_siblings() {
-        let db = in_memory_db();
+        let (_temp_dir, db) = test_db();
         let sibling_a = tracker(&db, vec![ROOT_PID]);
         let sibling_b = tracker(&db, vec![ROOT_PID]);
         let child_of_b = tracker(&db, vec![ROOT_PID, 300]);

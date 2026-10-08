@@ -1,4 +1,4 @@
-use crate::native::db::connection::NxDbConnection;
+use crate::native::db::connection::{DbValue, NxDbConnection};
 use crate::native::utils::Normalize;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
@@ -50,17 +50,16 @@ impl RunningTasksService {
     }
 
     fn is_task_running(&self, task_id: &String) -> anyhow::Result<bool> {
-        if let Some((pid, db_process_command, db_process_cwd)) = self.db.lock().unwrap().query_row(
+        let row = self.db.lock().unwrap().query_row(
             "SELECT pid, command, cwd FROM running_tasks WHERE task_id = ?",
-            [task_id],
-            |row| {
-                let pid: u32 = row.get(0)?;
-                let command: String = row.get(1)?;
-                let cwd: String = row.get(2)?;
+            &[DbValue::from(task_id.as_str())],
+        )?;
 
-                Ok((pid, command, cwd))
-            },
-        )? {
+        if let Some(row) = row {
+            let pid = row.get_i64(0)? as u32;
+            let db_process_command = row.get_str(1)?;
+            let db_process_cwd = row.get_str(2)?;
+
             debug!("Checking if {} exists", pid);
 
             let mut sys = System::new();
@@ -108,8 +107,13 @@ impl RunningTasksService {
             .expect("The current working directory does not exist")
             .to_normalized_string();
         self.db.lock().unwrap().execute(
-            "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?, ?, ?, ?)",
-            [&task_id, &pid.to_string(), &command_str, &cwd],
+            "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?1, ?2, ?3, ?4)",
+            &[
+                DbValue::from(task_id.as_str()),
+                DbValue::from(pid.to_string().as_str()),
+                DbValue::from(command_str.as_str()),
+                DbValue::from(cwd.as_str()),
+            ],
         )?;
         debug!("Added {} to running tasks", &task_id);
         self.added_tasks.insert(task_id);
@@ -122,7 +126,10 @@ impl RunningTasksService {
     pub fn remove_running_task(&self, task_id: String) -> anyhow::Result<()> {
         self.db.lock().unwrap().execute(
             "DELETE FROM running_tasks WHERE task_id = ? AND pid = ?",
-            [&task_id, &std::process::id().to_string()],
+            &[
+                DbValue::from(task_id.as_str()),
+                DbValue::Integer(std::process::id() as i64),
+            ],
         )?;
         debug!("Removed {} from running tasks", task_id);
         Ok(())
@@ -170,43 +177,34 @@ mod tests {
     }
 
     #[test]
-    fn remove_leaves_a_claim_taken_over_by_another_process() {
-        let conn = rusqlite::Connection::open_in_memory().unwrap();
-        conn.execute_batch(SCHEMA).unwrap();
+    fn remove_leaves_a_claim_taken_over_by_another_process() -> anyhow::Result<()> {
+        let temp_dir = tempfile::tempdir()?;
+        let conn = crate::native::db::initialize::initialize_db(&temp_dir.path().join("test.db"))?;
         let mut service = RunningTasksService {
-            db: Arc::new(Mutex::new(NxDbConnection::new(conn))),
+            db: Arc::new(Mutex::new(conn)),
             added_tasks: Default::default(),
         };
-        let claim_owner = |service: &RunningTasksService| {
-            service
-                .db
-                .lock()
-                .unwrap()
-                .query_row(
-                    "SELECT pid FROM running_tasks WHERE task_id = ?",
-                    ["app:serve"],
-                    |row| row.get::<_, u32>(0),
-                )
-                .unwrap()
+        let claim_owner = |service: &RunningTasksService| -> anyhow::Result<Option<i64>> {
+            let row = service.db.lock().unwrap().query_row(
+                "SELECT pid FROM running_tasks WHERE task_id = ?",
+                &[DbValue::from("app:serve")],
+            )?;
+            row.map(|row| row.get_i64(0)).transpose()
         };
 
-        service.add_running_task("app:serve".into()).unwrap();
-        let other_pid = std::process::id() + 1;
-        service
-            .db
-            .lock()
-            .unwrap()
-            .execute(
-                "UPDATE running_tasks SET pid = ? WHERE task_id = ?",
-                [other_pid.to_string().as_str(), "app:serve"],
-            )
-            .unwrap();
+        service.add_running_task("app:serve".into())?;
+        let other_pid = std::process::id() as i64 + 1;
+        service.db.lock().unwrap().execute(
+            "UPDATE running_tasks SET pid = ? WHERE task_id = ?",
+            &[DbValue::Integer(other_pid), DbValue::from("app:serve")],
+        )?;
 
-        service.remove_running_task("app:serve".into()).unwrap();
-        assert_eq!(claim_owner(&service), Some(other_pid));
+        service.remove_running_task("app:serve".into())?;
+        assert_eq!(claim_owner(&service)?, Some(other_pid));
 
-        service.add_running_task("app:serve".into()).unwrap();
-        service.remove_running_task("app:serve".into()).unwrap();
-        assert_eq!(claim_owner(&service), None);
+        service.add_running_task("app:serve".into())?;
+        service.remove_running_task("app:serve".into())?;
+        assert_eq!(claim_owner(&service)?, None);
+        Ok(())
     }
 }
