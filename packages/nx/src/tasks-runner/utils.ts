@@ -528,10 +528,11 @@ function warnCustomHasherDeprecation(executor: string): void {
   }
   customHasherDeprecationWarned.add(executor);
   output.warn({
-    title: `The "${executor}" executor uses a custom hasher. Custom hashers are deprecated and will be removed in Nx 25.`,
+    title: `The "${executor}" executor uses a custom hasher, which is deprecated and will be removed in Nx 25.`,
     bodyLines: [
-      'Declare the files and commands the task depends on as target inputs instead.',
-      'See https://nx.dev/docs/kb/local-executors#using-custom-hashers',
+      'Replace the custom hasher with target inputs, following the migration guide:',
+      'https://nx.dev/docs/kb/local-executors#replace-a-custom-hasher-with-inputs',
+      'If the executor comes from a third-party plugin, report this to its maintainers.',
     ],
   });
 }

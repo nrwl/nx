@@ -9,7 +9,8 @@ import type { PackageJson } from '../../utils/package-json';
 import { joinPathFragments } from '../../utils/path';
 import { posix } from 'node:path';
 
-const DOCS_URL = 'https://nx.dev/docs/kb/local-executors#using-custom-hashers';
+const DOCS_URL =
+  'https://nx.dev/docs/kb/local-executors#replace-a-custom-hasher-with-inputs';
 
 export default async function findCustomHashers(
   tree: Tree

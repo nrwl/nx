@@ -59,5 +59,5 @@ Given a local plugin whose `echo` executor hashes the project, its dependencies,
 
 #### Reference
 
-- [Using custom hashers](https://nx.dev/docs/kb/local-executors#using-custom-hashers)
+- [Replace a custom hasher with inputs](https://nx.dev/docs/kb/local-executors#replace-a-custom-hasher-with-inputs)
 - [Inputs reference](https://nx.dev/docs/reference/inputs)

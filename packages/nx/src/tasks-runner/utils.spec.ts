@@ -1350,9 +1350,11 @@ describe('getCustomHasher', () => {
     const [{ title, bodyLines }] = warn.mock.calls[0];
     expect(title).toContain('@acme/plugin:build');
     expect(title).toContain('Nx 25');
-    expect(bodyLines.join('\n')).toContain('inputs');
     expect(bodyLines.join('\n')).toContain(
-      'https://nx.dev/docs/kb/local-executors#using-custom-hashers'
+      'Replace the custom hasher with target inputs'
+    );
+    expect(bodyLines.join('\n')).toContain(
+      'https://nx.dev/docs/kb/local-executors#replace-a-custom-hasher-with-inputs'
     );
   });
 
