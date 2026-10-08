@@ -187,6 +187,7 @@ export type { JsonInput } from './native';
 export {
   isAiAgent,
   killProcessTreeGraceful,
+  matchGlobPaths,
   readShebangHeaders,
 } from './native';
 export { killChildOnHostExit } from './utils/kill-child-on-host-exit';
