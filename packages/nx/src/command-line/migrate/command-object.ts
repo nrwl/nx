@@ -188,12 +188,12 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('agentic', {
       describe:
-        'Enable the agentic flow for prompt-based migrations and AI-driven review. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, or opencode). Pass `--agentic=false` or `--no-agentic` to disable.',
+        'Use an AI agent to apply prompt-based migrations and review the results. With --run-migrations, one agent session drives the whole run. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, or opencode). Pass `--agentic=false` or `--no-agentic` to disable it, including when nx migrate runs inside an AI agent.',
       coerce: coerceAgenticArg,
     })
     .option('validate', {
       describe:
-        'When `--agentic` resolves to an enabled agent, run agent-driven validation after generator-only migrations that have no `prompt:` field. Defaults to on; pass `--no-validate` to opt out. Has no effect when `--agentic` is disabled, when running inside an outer agent, or when running non-interactively without an explicit agent.',
+        'Have the AI agent driving the run review the changes of generator-only migrations (those with no `prompt:` field). On by default; pass `--no-validate` to opt out. A continued run keeps the setting it started with. Has no effect when no agent drives the run, or with --run-migration inside an AI agent.',
       type: 'boolean',
     })
     .option('finalValidation', {

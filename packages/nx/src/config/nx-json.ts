@@ -823,9 +823,9 @@ export interface NxMigrateConfiguration {
   agentic?: boolean | AgentId;
 
   /**
-   * Whether to run agent-driven validation after generator-only migrations when
-   * the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults
-   * to `true` when the agentic flow is enabled.
+   * Whether the AI agent driving a migrate run reviews the changes of
+   * generator-only migrations. Equivalent to the `--validate` flag. Defaults to
+   * `true`.
    */
   validate?: boolean;
 

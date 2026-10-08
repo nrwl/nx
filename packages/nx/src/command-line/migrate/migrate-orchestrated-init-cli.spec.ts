@@ -694,6 +694,72 @@ describe('migrate() orchestrated init dispatch', () => {
     );
   });
 
+  it.each<[string, string, () => void, string]>([
+    [
+      'a migration id is not shell-safe',
+      'rename files',
+      () =>
+        mockResolveAgentic.mockResolvedValue({
+          kind: 'enabled',
+          selectedAgent: {
+            id: 'claude-code',
+            displayName: 'Claude Code',
+            binary: '/usr/local/bin/claude',
+            source: 'path',
+          },
+        }),
+      'Apply each prompt yourself.',
+    ],
+    [
+      'the run loaded the WASM build',
+      'prompt',
+      () => {
+        wasm.active = true;
+        mockResolveAgentic.mockResolvedValue({
+          kind: 'enabled',
+          selectedAgent: {
+            id: 'claude-code',
+            displayName: 'Claude Code',
+            binary: '/usr/local/bin/claude',
+            source: 'path',
+          },
+        });
+      },
+      'Apply each prompt yourself.',
+    ],
+    [
+      'the agentic flow is off',
+      'prompt',
+      () => {},
+      'Re-run with --agentic to apply them.',
+    ],
+  ])(
+    'points a run of prompt-only migrations that applied none at the way to apply them when %s',
+    async (_label, name, arrange, remediation) => {
+      mockIsInsideAgent.mockReturnValue(false);
+      writeFileSync(
+        join(root, 'migrations.json'),
+        JSON.stringify({
+          migrations: [
+            { package: '@nx/js', name, version: '1.0.0', prompt: './p.md' },
+          ],
+        })
+      );
+      arrange();
+
+      await migrate(root, runMigrationsArgs(), ['--run-migrations']);
+
+      expect(mockRunMasterSession).not.toHaveBeenCalled();
+      expect(output.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining(
+            `every entry is a prompt-only migration. ${remediation}`
+          ),
+        })
+      );
+    }
+  );
+
   describe('classic loop with an active orchestrated run', () => {
     const activeFacts: ExistingRunFacts = {
       runId: 'run-1',

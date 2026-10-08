@@ -459,7 +459,7 @@
         },
         "validate": {
           "type": "boolean",
-          "description": "Whether to run agent-driven validation after generator-only migrations when the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults to `true` when the agentic flow is enabled."
+          "description": "Whether the AI agent driving a migrate run reviews the changes of generator-only migrations. Equivalent to the `--validate` flag. Defaults to `true`."
         },
         "finalValidation": {
           "type": "boolean",

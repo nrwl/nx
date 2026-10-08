@@ -120,17 +120,27 @@ A migration can be **generator-only**, **prompt-only**, or a **hybrid** (a gener
 
 Generator-only migrations run automatically. All the changes are unstaged ready for you to review.
 
-When prompt-only or hybrid migrations are queued and a supported AI agent is installed (Claude Code, OpenAI Codex, or OpenCode), Nx asks whether to continue with an agentic flow. You can answer for this run only, or have Nx remember your choice in `nx.json`. With the agentic flow enabled:
+When prompt-only or hybrid migrations are queued and a supported AI agent is installed (Claude Code, OpenAI Codex, or OpenCode), Nx asks whether to continue with an agentic flow. You can answer for this run only, or have Nx remember your choice in `nx.json`.
+With the agentic flow enabled, Nx starts one agent session in your terminal that drives the whole run:
 
-- Generator-based changes run first, and the agent validates the results.
-- The agent then applies the prompt-based changes as instructed in the prompt.
+- For each migration, Nx runs its generator if it has one, then the agent applies the migration's prompt or reviews what the generator changed.
+- After the last migration, the agent checks that the projects the run touched still lint, build, and pass their unit tests, and fixes what the update broke.
 
 Nx creates a commit for each migration while the agentic flow is enabled, so the agent reviews each migration's changes in isolation.
+On your default branch, Nx asks before it creates them.
+
+Nx records the run's progress under `.nx/migrate-runs`.
+If the agent session ends before the run completes, Nx prints the command that continues the run where it stopped.
+While that run is active, `nx migrate --run-migrations` doesn't start a second one.
+Nx reports the active run, and you can continue it or start fresh.
 
 Without an agent, generator-only migrations and the generator half of hybrid migrations still run. The skipped prompt files are listed in the next-steps output, in order, so you can apply them yourself.
 
 {% aside type="note" title="Running inside an AI agent" %}
-If you run `nx migrate --run-migrations` from within an AI agent's terminal, Nx defers the prompt-based migrations to that agent instead of spawning another one.
+If you run `nx migrate --run-migrations` from within an AI agent's terminal, Nx hands the run to that agent instead of starting another one.
+The agent drives it with the same per-migration commits, reviews, and final check, and continues a stopped run with the command Nx gives it.
+On the default branch, Nx doesn't start the run until you pass `--create-commits` or `--no-create-commits`, set `createCommits` in `nx.json`, or switch branches.
+In CI, or with `--agentic=false`, Nx runs the migrations without this flow and lists the prompt-based migrations for the agent to apply.
 {% /aside %}
 
 {% aside type="tip" title="Migrations are version specific" %}
