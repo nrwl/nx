@@ -51,6 +51,7 @@ export {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from './src/utils/typescript/ts-solution-setup';
+export { ensureTypescriptPluginForTsSolution } from './src/utils/typescript/add-typescript-plugin';
 
 // TypeScript helpers. resolvePathsBaseUrl, extractTsConfigBase,
 // tsConfigBaseOptions, addTsLibDependencies, and resolveModuleByImport ship via
@@ -108,6 +109,11 @@ export {
   addBuildAndWatchDepsTargets,
   isValidPackageJsonBuildConfig,
 } from './src/plugins/typescript/util';
+export {
+  createTypecheckTarget,
+  selectTypecheckTsConfig,
+  type TypecheckTargetOptions,
+} from './src/plugins/typescript/typecheck-target';
 
 // Generator helpers
 export {
