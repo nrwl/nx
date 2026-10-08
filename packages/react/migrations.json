@@ -51,6 +51,12 @@
       "description": "Add `@svgr/webpack` when a webpack config references it.",
       "implementation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used",
       "documentation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used.md"
+    },
+    "update-24-0-0-register-typescript-plugin-for-typecheck": {
+      "version": "24.0.0-beta.0",
+      "description": "Register @nx/js/typescript with its typecheck target in TS solution workspaces that use @nx/react/router-plugin without it, since @nx/react/router-plugin no longer infers typecheck targets in TS solution setups.",
+      "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
+      "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
     }
   },
   "packageJsonUpdates": {
