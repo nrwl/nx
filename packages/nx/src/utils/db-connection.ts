@@ -4,6 +4,8 @@ import {
   workspaceDataDirectoryForWorkspace,
 } from './cache-directory';
 import { workspaceRoot } from './workspace-root';
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import { serverLogger } from '../daemon/logger';
 
 const dbConnectionMap = new Map<string, ExternalObject<any>>();
 
@@ -30,9 +32,16 @@ export function getDbConnection(
 ) {
   opts.directory ??= sharedWorkspaceDataDirectory(workspaceRoot);
   const key = `${opts.directory}:${opts.dbName ?? 'default'}`;
-  const connection = getEntryOrSet(dbConnectionMap, key, () =>
-    connectToNxDb(opts.directory, opts.dbName)
-  );
+  const connection = getEntryOrSet(dbConnectionMap, key, () => {
+    const start = performance.now();
+    const db = connectToNxDb(opts.directory, opts.dbName);
+    if (isOnDaemon()) {
+      serverLogger.log(
+        `[DB] Opened ${key} in ${Math.round(performance.now() - start)}ms`
+      );
+    }
+    return db;
+  });
   return connection;
 }
 
