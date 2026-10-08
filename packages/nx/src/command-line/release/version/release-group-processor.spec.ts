@@ -1485,6 +1485,380 @@ describe('ReleaseGroupProcessor', () => {
     });
   });
 
+  describe('dependentBumpType', () => {
+    let processor: any;
+
+    afterEach(() => {
+      processor = null;
+    });
+
+    it('should default to patch bump for dependents (backward compatible)', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'projectB') return 'major';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // projectA should be bumped by patch (default), not major
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "3.0.0",
+          },
+          "name": "projectA",
+          "version": "1.0.1",
+        }
+      `);
+
+      expect(readJson(tree, 'projectB/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectB",
+          "version": "3.0.0",
+        }
+      `);
+    });
+
+    it('should bump dependents by minor when dependentBumpType is "minor"', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              dependentBumpType: 'minor',
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'projectB') return 'major';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // projectA should be bumped by minor
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "3.0.0",
+          },
+          "name": "projectA",
+          "version": "1.1.0",
+        }
+      `);
+    });
+
+    it('should bump dependents by major when dependentBumpType is "major"', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              dependentBumpType: 'major',
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'projectB') return 'patch';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // projectA should be bumped by major
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "2.0.1",
+          },
+          "name": "projectA",
+          "version": "2.0.0",
+        }
+      `);
+    });
+
+    it('should match the dependency bump type when dependentBumpType is "match"', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              dependentBumpType: 'match',
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'projectB') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // projectA should be bumped by minor (matching projectB's bump type)
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "2.1.0",
+          },
+          "name": "projectA",
+          "version": "1.1.0",
+        }
+      `);
+    });
+
+    it('should apply dependentBumpType across release groups with updateDependents "always"', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          group1 ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+          group2 ({ "projectsRelationship": "independent" }):
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'always',
+              dependentBumpType: 'minor',
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'projectB') return 'major';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // projectA should be bumped by minor (not patch) across groups
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "3.0.0",
+          },
+          "name": "projectA",
+          "version": "1.1.0",
+        }
+      `);
+    });
+
+    it('should apply dependentBumpType with cascading dependencies', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+            - projectB@2.0.0 [js]
+              -> depends on projectC
+            - projectC@3.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              dependentBumpType: 'minor',
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'projectC') return 'major';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // projectC bumped by major
+      expect(readJson(tree, 'projectC/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectC",
+          "version": "4.0.0",
+        }
+      `);
+      // projectB bumped by minor (dependentBumpType)
+      expect(readJson(tree, 'projectB/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectC": "4.0.0",
+          },
+          "name": "projectB",
+          "version": "2.1.0",
+        }
+      `);
+      // projectA bumped by minor (cascading dependentBumpType)
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "2.1.0",
+          },
+          "name": "projectA",
+          "version": "1.1.0",
+        }
+      `);
+    });
+
+    it('should apply dependentBumpType in a fixed release group bumped by cross-group dependency', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          group1 ({ "projectsRelationship": "fixed" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectC
+            - projectB@1.0.0 [js]
+          group2 ({ "projectsRelationship": "independent" }):
+            - projectC@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'always',
+              dependentBumpType: 'minor',
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'projectC') return 'major';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // projectC bumped by major
+      expect(readJson(tree, 'projectC/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectC",
+          "version": "3.0.0",
+        }
+      `);
+      // projectA bumped by minor (dependentBumpType across groups)
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectC": "3.0.0",
+          },
+          "name": "projectA",
+          "version": "1.1.0",
+        }
+      `);
+      // projectB also bumped by minor (fixed group, OTHER_PROJECT_IN_FIXED_GROUP_WAS_BUMPED_DUE_TO_DEPENDENCY)
+      expect(readJson(tree, 'projectB/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectB",
+          "version": "1.1.0",
+        }
+      `);
+    });
+  });
+
   /**
    * NOTE: Fundamental issues with filters, like trying to filter to a single project within a fixed release group,
    * will have already been caught and handled by the release graph construction, so that is not repeated here.
