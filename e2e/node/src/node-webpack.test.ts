@@ -2,19 +2,17 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
+  promisifiedTreeKill,
   readFile,
   runCLI,
   runCLIAsync,
   runCommandUntil,
-  waitUntil,
   tmpProjPath,
   uniq,
   updateFile,
-  updateJson,
-  promisifiedTreeKill,
+  waitUntil,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
-import { join } from 'path';
 
 describe('Node Applications + webpack', () => {
   beforeAll(() =>
@@ -25,15 +23,11 @@ describe('Node Applications + webpack', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should generate an app using webpack', async () => {
+  it('should build an app and rebuild it when a dependency changes', async () => {
     const app = uniq('nodeapp');
 
-    // This fails with Crystal enabled because `--optimization` is not a correct flag to pass to `webpack`.
     runCLI(
-      `generate @nx/node:app apps/${app} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest`,
-      {
-        env: { NX_ADD_PLUGINS: 'false' },
-      }
+      `generate @nx/node:app apps/${app} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest`
     );
 
     checkFilesExist(`apps/${app}/webpack.config.js`);
@@ -44,7 +38,7 @@ describe('Node Applications + webpack', () => {
       function foo(x: string) {
         return "foo " + x;
       };
-      console.log(foo("bar")); 
+      console.log(foo("bar"));
     `
     );
     await runCLIAsync(`build ${app}`);
@@ -59,22 +53,10 @@ describe('Node Applications + webpack', () => {
     }).toString();
     expect(result).toMatch(/foo bar/);
 
-    await runCLIAsync(`build ${app} --optimization`);
-    const optimizedContent = readFile(`dist/apps/${app}/main.js`);
-    expect(optimizedContent).toContain('console.log("foo "+"bar")');
-
-    // Test that serve can re-run dependency builds.
     const lib = uniq('nodelib');
     runCLI(
       `generate @nx/js:lib libs/${lib} --bundler=esbuild --no-interactive`
     );
-
-    updateJson(join('apps', app, 'project.json'), (config) => {
-      // Since we read from lib from dist, we should re-build it when lib changes.
-      config.targets.build.options.buildLibsFromSource = false;
-      config.targets.serve.options.runBuildTargetDependencies = true;
-      return config;
-    });
 
     updateFile(
       `apps/${app}/src/main.ts`,
@@ -86,21 +68,13 @@ describe('Node Applications + webpack', () => {
 
     const serveProcess = await runCommandUntil(
       `serve ${app} --watch --runBuildTargetDependencies`,
-      (output) => {
-        return output.includes(`Hello`);
-      },
-      {
-        env: {
-          NX_DAEMON: 'true',
-        },
-      }
+      (output) => output.includes(`Hello`),
+      { env: { NX_DAEMON: 'true' } }
     );
 
-    // Update library source and check that it triggers rebuild.
     const terminalOutputs: string[] = [];
     serveProcess.stdout.on('data', (chunk) => {
-      const data = chunk.toString();
-      terminalOutputs.push(data);
+      terminalOutputs.push(chunk.toString());
     });
 
     updateFile(
@@ -109,11 +83,8 @@ describe('Node Applications + webpack', () => {
     );
 
     await waitUntil(
-      () => {
-        return terminalOutputs.some((output) =>
-          output.includes(`should rebuild lib`)
-        );
-      },
+      () =>
+        terminalOutputs.some((output) => output.includes(`should rebuild lib`)),
       { timeout: 60_000, ms: 200 }
     );
 

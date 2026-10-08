@@ -100,14 +100,14 @@ The `@nx/expo/plugin` is configured in the `plugins` array in `nx.json`.
 
 | Option                 | Default       | Inferred behavior                                     |
 | ---------------------- | ------------- | ----------------------------------------------------- |
-| `startTargetName`      | `start`       | Runs the `@nx/expo:start` executor continuously.      |
+| `startTargetName`      | `start`       | Runs `expo start` continuously.                       |
 | `serveTargetName`      | `serve`       | Runs `expo start --web` continuously.                 |
 | `runIosTargetName`     | `run-ios`     | Runs `expo run:ios` continuously.                     |
 | `runAndroidTargetName` | `run-android` | Runs `expo run:android` continuously.                 |
 | `exportTargetName`     | `export`      | Runs and caches `expo export`, including its outputs. |
-| `prebuildTargetName`   | `prebuild`    | Runs the `@nx/expo:prebuild` executor.                |
-| `installTargetName`    | `install`     | Runs the `@nx/expo:install` executor.                 |
-| `buildTargetName`      | `build`       | Runs the `@nx/expo:build` executor.                   |
+| `prebuildTargetName`   | `prebuild`    | Runs `expo prebuild`.                                 |
+| `installTargetName`    | `install`     | Runs `expo install`.                                  |
+| `buildTargetName`      | `build`       | Runs `eas build`.                                     |
 | `submitTargetName`     | `submit`      | Runs `eas submit`.                                    |
 | `buildDepsTargetName`  | none          | Name of an optional dependency build task.            |
 | `watchDepsTargetName`  | none          | Name of an optional dependency watch task.            |
@@ -270,20 +270,14 @@ nx prebuild <app-name> --platform=android
 
 ### Install compatible npm packages
 
-To install packages that is compatible with current version of Expo, run:
+To install packages compatible with the current version of Expo, pass the package names after `--`:
 
 ```shell
-nx install <app-name>
+nx install <app-name> -- <package-name>
+nx install <app-name> -- <package-name-1> <package-name-2> <package-name-3>
 ```
 
-Unlike npm's `install` command, this `install` command will install the exact right version for currently installed copy of Expo.
-
-To install a specify NPM package, run:
-
-```shell
-nx install <app-name> --packages=<packpage-name>
-nx install <app-name> --packages=<packpage-name-1>,<packpage-name-2>,<packpage-name-3>
-```
+Unlike npm's `install` command, this `install` command installs the exact version that matches the installed copy of Expo.
 
 To check and fix package versions, run:
 

@@ -2,13 +2,10 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
-  rmDist,
   runCLI,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e-utils';
-import { join } from 'path';
 
 describe('Next.js Webpack', () => {
   let proj: string;
@@ -26,16 +23,11 @@ describe('Next.js Webpack', () => {
     cleanupProject();
   });
 
-  it('should support custom webpack and run-commands using withNx', async () => {
+  it('should support custom webpack using withNx', async () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`,
-      {
-        env: {
-          NX_ADD_PLUGINS: 'false',
-        },
-      }
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
     );
 
     checkFilesExist(`${appName}/next.config.js`);
@@ -83,13 +75,11 @@ describe('Next.js Webpack', () => {
         module.exports = withNx(nextConfig);
       `
     );
-    // deleting `NODE_ENV` value, so that it's `undefined`, and not `"test"`
-    // by the time it reaches the build executor.
-    // this simulates existing behaviour of running a next.js build executor via Nx
+    // Unset so `next build` sets it, rather than inheriting jest's "test".
     delete process.env.NODE_ENV;
     const result = runCLI(`build ${appName} --webpack`);
 
-    checkFilesExist(`dist/${appName}/next.config.js`);
+    checkFilesExist(`${appName}/.next/build-manifest.json`);
     expect(result).toContain('NODE_ENV is production');
 
     updateFile(
@@ -102,24 +92,7 @@ describe('Next.js Webpack', () => {
         module.exports = withNx(nextConfig);
       `
     );
-    rmDist();
-    runCLI(`build ${appName} --webpack`);
-    checkFilesExist(`dist/${appName}/next.config.js`);
-
-    // Make sure withNx works with run-commands.
-    updateJson(join(appName, 'project.json'), (json) => {
-      json.targets.build = {
-        command: 'npx next build',
-        outputs: [`{projectRoot}/.next`],
-        options: {
-          cwd: `${appName}`,
-        },
-      };
-      return json;
-    });
-    expect(() => {
-      runCLI(`build ${appName} --webpack`);
-    }).not.toThrow();
-    checkFilesExist(`dist/${appName}/.next/build-manifest.json`);
+    runCLI(`build ${appName} --webpack --skip-nx-cache`);
+    checkFilesExist(`${appName}/.next/build-manifest.json`);
   }, 300_000);
 });

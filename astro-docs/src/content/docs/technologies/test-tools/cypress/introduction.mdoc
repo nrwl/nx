@@ -215,30 +215,13 @@ terminal. Screenshots and videos will be accessible in `dist/cypress/apps/fronte
 You can also run Cypress in headed mode and watching for changes. This is a great way to enhance the dev workflow. You can build up test files with the application
 running and Cypress will re-run those tests as you enhance and add to the suite.
 
-{% tabs %}
-{% tabitem label="Using inferred tasks" %}
-
 ```shell
 nx open-cypress frontend-e2e
 ```
 
-{% /tabitem %}
-
-{% tabitem label="Using the @nx/cypress:cypress executor" %}
-
-```shell
-nx e2e frontend-e2e --watch
-```
-
-{% /tabitem %}
-{% /tabs %}
-
 ### Specifying a custom url to test
 
 The `baseUrl` property provides you the ability to test an application hosted on a specific domain.
-
-{% tabs %}
-{% tabitem label="Using inferred tasks" %}
 
 ```shell
 nx e2e frontend-e2e --config="baseUrl=https://frontend.com"
@@ -247,21 +230,6 @@ nx e2e frontend-e2e --config="baseUrl=https://frontend.com"
 {% aside type="note" title="Required options" %}
 If `baseUrl` is not provided, Cypress will expect to have the `baseUrl` property in its config file. Otherwise, it will error.
 {% /aside %}
-
-{% /tabitem %}
-
-{% tabitem label="Using the @nx/cypress:cypress executor" %}
-
-```shell
-nx e2e frontend-e2e --baseUrl=https://frontend.com
-```
-
-{% aside type="note" title="Required options" %}
-If no `baseUrl` and no `devServerTarget` are provided, Cypress will expect to have the `baseUrl` property in its config file. Otherwise, it will error.
-{% /aside %}
-
-{% /tabitem %}
-{% /tabs %}
 
 ## Using cypress.config.ts
 
@@ -277,14 +245,11 @@ For adding more dynamic configurations to your Cypress configuration, you can lo
 
 If you need to pass a variable to Cypress that you don't want to commit to your repository (i.e. API keys, dynamic values based on configurations, API URLs), you can use [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables).
 
-There are a handful of ways to pass environment variables to Cypress, but the most common is via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or the command line.
+The most common ways to pass environment variables to Cypress are the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file) and the `-e` Cypress arg, which you can set in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or on the command line.
 
 Create a `cypress.env.json` file in the projects root (i.e. `apps/my-cool-app-e2e/cypress.env.json`). Cypress will automatically pick up this file. This method is helpful for configurations that you don't want to commit. Make sure to add the file to the `.gitignore` and add documentation so people in your repo know what values to populate in their local copy of the `cypress.env.json` file.
 
-Setting the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the project configuration is a good way to add values you want to define that you don't mind committing to the repository, such as a base API URL.
-
-{% tabs %}
-{% tabitem label="Using inferred tasks" %}
+Setting the `-e` Cypress arg in the project configuration is a good way to add values you want to define that you don't mind committing to the repository, such as a base API URL.
 
 ```json
 // project.json
@@ -300,47 +265,11 @@ Setting the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` 
 }
 ```
 
-{% /tabitem %}
-
-{% tabitem label="Using the @nx/cypress:cypress executor" %}
-
-```json
-// project.json
-{
-  ...
-  "targets": {
-    "e2e": {
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "env": "API_URL=https://api.my-nx-website.com"
-      }
-    }
-  }
-}
-```
-
-{% /tabitem %}
-{% /tabs %}
-
-Finally, you can also pass environment variables via the command line with the `-e` Cypress arg or the `--env` option for the `@nx/cypress:cypress` executor.
-
-{% tabs %}
-{% tabitem label="Using inferred tasks" %}
+Finally, you can also pass environment variables via the command line with the `-e` Cypress arg.
 
 ```shell
 nx e2e frontend-e2e -e=API_URL=https://api.my-nx-website.com,API_KEY=abc-123
 ```
-
-{% /tabitem %}
-
-{% tabitem label="Using the @nx/cypress:cypress executor" %}
-
-```shell
-nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY="abc-123"
-```
-
-{% /tabitem %}
-{% /tabs %}
 
 {% aside type="caution" title="Command-line args vs configuration options" %}
 Providing a flag will override any option with the same name set in the project or workspace configuration.
@@ -361,7 +290,7 @@ cy.env(['API_URL']).then(({ API_URL }) => {
 For non-sensitive values that a test needs synchronously, use the Cypress 16 `expose` configuration
 (the `expose` config key, the `--expose` Cypress arg, or the `expose` test configuration) and read
 them with `Cypress.expose('KEY')`.
-The `env` values passed with `--env` or the executor's `env` option are not readable with
+The `env` values passed with `--env` are not readable with
 `Cypress.expose()`.
 
 ## Set up CI

@@ -26,7 +26,9 @@ export function updateModuleFederationProject(
 ) {
   const projectConfig = readProjectConfiguration(host, options.projectName);
   projectConfig.targets ??= {};
-  if (options.bundler !== 'rspack') {
+  // Inferred `@nx/webpack/plugin` workspaces have no explicit build target and
+  // discover `webpack.config.*` themselves, so there is nothing to point at.
+  if (options.bundler !== 'rspack' && projectConfig.targets.build) {
     projectConfig.targets.build.options = {
       ...(projectConfig.targets.build.options ?? {}),
       main: maybeJs(options, `${options.appProjectRoot}/src/main.ts`),
@@ -60,7 +62,7 @@ export function updateModuleFederationProject(
         host.delete(pathToProdWebpackConfig);
       }
 
-      delete projectConfig.targets.build.configurations.production
+      delete projectConfig.targets.build?.configurations?.production
         ?.webpackConfig;
     }
   }

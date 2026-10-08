@@ -155,100 +155,6 @@ export function findExistingTargetsInProject(
   return output;
 }
 
-export function addOrChangeBuildTarget(
-  tree: Tree,
-  options: ConfigurationSchema,
-  target: string
-) {
-  const project = readProjectConfiguration(tree, options.project);
-  const assets = [];
-  if (
-    options.target === 'web' &&
-    tree.exists(joinPathFragments(project.root, 'src/favicon.ico'))
-  ) {
-    assets.push(joinPathFragments(project.root, 'src/favicon.ico'));
-  }
-  if (tree.exists(joinPathFragments(project.root, 'src/assets'))) {
-    assets.push(joinPathFragments(project.root, 'src/assets'));
-  }
-
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-
-  const buildOptions: RspackExecutorSchema = {
-    target: options.target ?? 'web',
-    outputPath: isTsSolutionSetup
-      ? joinPathFragments(project.root, 'dist')
-      : joinPathFragments(
-          'dist',
-          // If standalone project then use the project's name in dist.
-          project.root === '.' ? project.name : project.root
-        ),
-    index: joinPathFragments(project.root, 'src/index.html'),
-    main: determineMain(tree, options),
-    tsConfig: determineTsConfig(tree, options),
-    rspackConfig: joinPathFragments(project.root, 'rspack.config.js'),
-    assets,
-  };
-
-  const existingProjectConfigurations = {};
-  const buildTarget = project.targets.build;
-  if (buildTarget && buildTarget.configurations) {
-    for (const [configurationName, configuration] of Object.entries(
-      buildTarget.configurations
-    )) {
-      existingProjectConfigurations[configurationName] = configuration;
-    }
-  }
-
-  project.targets ??= {};
-
-  project.targets[target] = {
-    executor: '@nx/rspack:rspack',
-    outputs: ['{options.outputPath}'],
-    defaultConfiguration: 'production',
-    options: buildOptions,
-    configurations: {
-      development: {
-        ...(existingProjectConfigurations['development'] ?? {}),
-        mode: 'development',
-      },
-      production: {
-        ...(existingProjectConfigurations['production'] ?? {}),
-        mode: 'production',
-        optimization: options.target === 'web' ? true : undefined,
-        sourceMap: false,
-      },
-    },
-  };
-
-  updateProjectConfiguration(tree, options.project, project);
-}
-
-export function addOrChangeServeTarget(
-  tree: Tree,
-  options: ConfigurationSchema,
-  target: string
-) {
-  const project = readProjectConfiguration(tree, options.project);
-
-  project.targets ??= {};
-
-  project.targets[target] = {
-    executor: '@nx/rspack:dev-server',
-    options: {
-      buildTarget: `${options.project}:build:development`,
-    },
-    configurations: {
-      development: {},
-      production: {
-        buildTarget: `${options.project}:build:production`,
-      },
-    },
-  };
-
-  updateProjectConfiguration(tree, options.project, project);
-}
-
 export function writeRspackConfigFile(
   tree: Tree,
   options: ConfigurationSchema,
@@ -272,7 +178,7 @@ function createConfig(
   const defaultConfig = generateDefaultConfig(project, buildOptions);
 
   if (options.framework === 'react') {
-    return generateReactConfig(options);
+    return generateReactConfig(tree, options, project, buildOptions);
   } else if (isWebFramework(options)) {
     return generateWebConfig(tree, options, defaultConfig);
   } else if (options.framework === 'nest') {
@@ -357,24 +263,47 @@ module.exports = composePlugins(withNx(), withWeb(${
 `;
 }
 
-function generateReactConfig({
-  stylePreprocessorOptions,
-}: ConfigurationWithStylePreprocessorOptions) {
-  return `
-const { composePlugins, withNx, withReact } = require('@nx/rspack');
+function generateReactConfig(
+  tree: Tree,
+  options: ConfigurationWithStylePreprocessorOptions,
+  project: ProjectConfiguration,
+  buildOptions: RspackExecutorSchema
+) {
+  const assets = ['src/favicon.ico', 'src/assets']
+    .map((asset) => joinPathFragments(project.root, asset))
+    .filter((asset) => tree.exists(asset));
 
-module.exports = composePlugins(withNx(), withReact(${
-    stylePreprocessorOptions
-      ? `
-  {
-    stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
-  }
-  `
-      : ''
-  }), (config) => {
-  return config;
-});
-    `;
+  return `
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+      buildOptions.outputPath
+    }'),
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: '${buildOptions.tsConfig}',
+      main: '${buildOptions.main}',
+      index: '${joinPathFragments(project.root, 'src/index.html')}',
+      assets: ${JSON.stringify(assets)},${
+        options.stylePreprocessorOptions
+          ? `
+      stylePreprocessorOptions: ${JSON.stringify(
+        options.stylePreprocessorOptions
+      )},`
+          : ''
+      }
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin(),
+  ],
+};
+`;
 }
 
 function generateNestConfig(

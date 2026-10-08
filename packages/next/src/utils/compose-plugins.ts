@@ -16,9 +16,8 @@ export function composePlugins(
       const {
         PHASE_PRODUCTION_SERVER,
       }: typeof import('next/constants') = require('next/constants');
-      // Copied verbatim into the build output (see create-next-config-file.ts),
-      // so this must load without @nx/next or @nx/devkit installed. Warn only on
-      // the active Nx-task path, resolved from the workspace like with-nx.ts.
+      // Warn only on the active Nx-task path, resolved from the workspace like
+      // with-nx.ts.
       if (
         phase !== PHASE_PRODUCTION_SERVER &&
         !global.NX_GRAPH_CREATION &&

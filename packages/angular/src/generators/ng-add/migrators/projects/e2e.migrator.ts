@@ -8,7 +8,6 @@ import {
   ensurePackage,
   joinPathFragments,
   offsetFromRoot,
-  readNxJson,
   readProjectConfiguration,
   stripIndents,
   updateJson,
@@ -17,7 +16,7 @@ import {
 import { lintProjectGenerator } from '@nx/eslint';
 import { getRootTsConfigPathInTree, insertImport } from '@nx/js';
 import { ensureTypescript } from '@nx/js/internal';
-import { basename, relative } from 'path';
+import { basename, dirname, relative } from 'path';
 import type {
   Node,
   ObjectLiteralExpression,
@@ -316,10 +315,6 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       tags: [],
       implicitDependencies: [this.appName],
     });
-    const nxJson = readNxJson(this.tree) ?? {};
-    const addPlugin =
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false;
     const { configurationGenerator } = <typeof import('@nx/cypress')>(
       require('@nx/cypress')
     );
@@ -330,7 +325,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       // any target would do, we replace it later with the target existing in the project being migrated
       devServerTarget: `${this.appName}:serve`,
       baseUrl: 'http://localhost:4200',
-      addPlugin,
+      addPlugin: true,
     });
 
     const cypressConfigFilePath = this.updateOrCreateCypressConfigFile(
@@ -412,23 +407,26 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     existingTarget: TargetConfiguration,
     cypressConfig: string
   ): TargetConfiguration {
-    const updatedTarget = {
-      ...existingTarget,
-      executor: '@nx/cypress:cypress',
-      options: {
-        ...existingTarget.options,
-        cypressConfig,
-      },
-    };
-    delete updatedTarget.options.configFile;
-    if (updatedTarget.options.tsConfig) {
-      updatedTarget.options.tsConfig = joinPathFragments(
-        this.project.newRoot,
-        'tsconfig.json'
+    // `@nx/cypress:cypress` is gone in v24, so the migrated target runs the
+    // Cypress CLI directly against the rebased config. `watch` selected the
+    // interactive runner, which is `cypress open`.
+    const isInteractive = existingTarget.options?.watch === true;
+    if (existingTarget.options?.devServerTarget) {
+      this.logger.warn(
+        `The "devServerTarget" option is not supported by the Cypress CLI. Start "${existingTarget.options.devServerTarget}" separately, or set "baseUrl" in "${cypressConfig}".`
       );
-    } else {
-      delete updatedTarget.options.tsConfig;
     }
+
+    const updatedTarget: TargetConfiguration = {
+      ...existingTarget,
+      command: `cypress ${
+        isInteractive ? 'open' : 'run'
+      } --e2e --config-file ${basename(cypressConfig)}`,
+      options: { cwd: dirname(cypressConfig) },
+    };
+    delete updatedTarget.executor;
+    delete updatedTarget.configurations;
+    delete updatedTarget.defaultConfiguration;
 
     return updatedTarget;
   }

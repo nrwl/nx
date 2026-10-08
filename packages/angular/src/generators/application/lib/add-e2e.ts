@@ -15,11 +15,7 @@ import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
-  // since e2e are separate projects, default to adding plugins
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    nxJson['useInferencePlugins'] !== false &&
-    process.env.NX_ADD_PLUGINS !== 'false';
+  const addPlugin = true;
 
   const e2eWebServerInfo = getAngularE2EWebServerInfo(
     tree,

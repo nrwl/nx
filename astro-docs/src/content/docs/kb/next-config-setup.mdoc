@@ -66,8 +66,6 @@ Each plugin wraps the next, so you can nest as many as you need: `withA(withB(ne
 
 Replace the wrapped config with a plain object and remove the `@nx/next` import.
 
-This assumes you use the inferred `@nx/next/plugin` (the default for new apps). If your project still uses the legacy `@nx/next:build` executor, run [`nx g @nx/next:convert-to-inferred`](/docs/kb/convert-to-inferred) first, since that executor relies on `withNx` to honor `--outputPath`.
-
 Before:
 
 ```js frame="none"

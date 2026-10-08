@@ -758,27 +758,7 @@ describe('app', () => {
         .read(`${e2eRoot}/playwright.config.mts`, 'utf-8')
         .match(/baseURL = process\.env\['BASE_URL'\] \|\| '([^']+)'/)[1];
 
-    it('should write the port to serve, serve-static and the e2e config on the executor path (webpack)', async () => {
-      await applicationGenerator(tree, {
-        directory: 'my-app',
-        bundler: 'webpack',
-        e2eTestRunner: 'playwright',
-        unitTestRunner: 'none',
-        addPlugin: false,
-        port: 6123,
-        skipFormat: true,
-      });
-
-      const { targets } = readProjectConfiguration(tree, 'my-app');
-      expect(targets.serve.options.port).toBe(6123);
-      expect(targets['serve-static'].options.port).toBe(6123);
-      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
-      const pwConfig = tree.read('my-app-e2e/playwright.config.mts', 'utf-8');
-      expect(pwConfig).toContain(`url: 'http://localhost:6123'`);
-      expect(pwConfig).toContain(`nx run my-app:serve-static`);
-    });
-
-    it('should write the port to the webpack config and the e2e config on the plugin path (webpack)', async () => {
+    it('should write the port to the webpack config and the e2e config (webpack)', async () => {
       await applicationGenerator(tree, {
         directory: 'my-app',
         bundler: 'webpack',
@@ -799,27 +779,7 @@ describe('app', () => {
       expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
     });
 
-    it('should use the port for the dev server, preview server and e2e config (vite, executor path)', async () => {
-      await applicationGenerator(tree, {
-        directory: 'my-app',
-        bundler: 'vite',
-        e2eTestRunner: 'playwright',
-        unitTestRunner: 'none',
-        addPlugin: false,
-        port: 6123,
-        skipFormat: true,
-      });
-
-      const viteConfig = tree.read('my-app/vite.config.mts', 'utf-8');
-      expect(viteConfig).toMatch(/server:\s*\{[^}]*port: 6123/);
-      expect(viteConfig).toMatch(/preview:\s*\{[^}]*port: 6123/);
-      expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:6123');
-      expect(tree.read('my-app-e2e/playwright.config.mts', 'utf-8')).toContain(
-        `nx run my-app:preview`
-      );
-    });
-
-    it('should use the port for the dev server, preview server and e2e config (vite, plugin path)', async () => {
+    it('should use the port for the dev server, preview server and e2e config (vite)', async () => {
       await applicationGenerator(tree, {
         directory: 'my-app',
         bundler: 'vite',
@@ -842,7 +802,6 @@ describe('app', () => {
         bundler: 'webpack',
         e2eTestRunner: 'cypress',
         unitTestRunner: 'none',
-        addPlugin: false,
         port: 6123,
         skipFormat: true,
       });
@@ -862,7 +821,6 @@ describe('app', () => {
         bundler: 'webpack',
         e2eTestRunner: 'playwright',
         unitTestRunner: 'none',
-        addPlugin: false,
         port: 6123,
         skipFormat: true,
       });
@@ -876,13 +834,12 @@ describe('app', () => {
         bundler: 'webpack',
         e2eTestRunner: 'playwright',
         unitTestRunner: 'none',
-        addPlugin: false,
         skipFormat: true,
       });
 
-      const { targets } = readProjectConfiguration(tree, 'my-app');
-      expect(targets.serve.options.port).toBeUndefined();
-      expect(targets['serve-static'].options.port).toBeUndefined();
+      expect(tree.read('my-app/webpack.config.js', 'utf-8')).toContain(
+        'port: 4200'
+      );
       expect(playwrightUrl('my-app-e2e')).toBe('http://localhost:4200');
     });
 
@@ -896,7 +853,6 @@ describe('app', () => {
         bundler: 'webpack',
         e2eTestRunner: 'playwright',
         unitTestRunner: 'none',
-        addPlugin: false,
         skipFormat: true,
       });
 

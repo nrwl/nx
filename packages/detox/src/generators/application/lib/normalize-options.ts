@@ -1,4 +1,4 @@
-import { names, readNxJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import { names, readProjectConfiguration, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
 import { Schema } from '../schema';
 import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
@@ -27,11 +27,7 @@ export async function normalizeOptions(
     projectType: 'application',
     directory: options.e2eDirectory,
   });
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPlugin;
+  options.addPlugin = true;
 
   const { fileName: appFileName, className: appClassName } = names(
     options.appName || options.appProject

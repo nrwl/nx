@@ -2882,12 +2882,6 @@ importers:
 
   packages/jest:
     dependencies:
-      '@jest/reporters':
-        specifier: catalog:jest
-        version: 30.3.0(supports-color@10.2.2)
-      '@jest/test-result':
-        specifier: catalog:jest
-        version: 30.3.0
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -2909,18 +2903,12 @@ importers:
       jest-resolve:
         specifier: catalog:jest
         version: 30.3.0
-      jest-util:
-        specifier: catalog:jest
-        version: 30.3.0
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
-      picocolors:
-        specifier: 'catalog:'
-        version: 1.1.1
       resolve.exports:
         specifier: 2.0.3
         version: 2.0.3

@@ -94,18 +94,12 @@ const pages: Array<{ title: string; path: string }> = [
   },
   { title: '@nx/cypress', path: '/packages/cypress' },
   { title: '@nx/cypress:init', path: '/packages/cypress/generators/init' },
-  {
-    title: '@nx/cypress:cypress',
-    path: '/packages/cypress/executors/cypress',
-  },
   { title: '@nx/detox', path: '/packages/detox' },
   { title: '@nx/detox:init', path: '/packages/detox/generators/init' },
   {
     title: '@nx/detox:application',
     path: '/packages/detox/generators/application',
   },
-  { title: '@nx/detox:build', path: '/packages/detox/executors/build' },
-  { title: '@nx/detox:test', path: '/packages/detox/executors/test' },
   { title: '@nx/devkit', path: '/packages/devkit' },
   { title: '@nx/esbuild', path: '/packages/esbuild' },
   {
@@ -129,10 +123,6 @@ const pages: Array<{ title: string; path: string }> = [
   {
     title: '@nx/expo:component',
     path: '/packages/expo/generators/component',
-  },
-  {
-    title: '@nx/expo:start',
-    path: '/packages/expo/executors/start',
   },
   {
     title: '@nx/expo:sync-deps',
@@ -232,8 +222,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/next/generators/component',
   },
   { title: '@nx/next:library', path: '/packages/next/generators/library' },
-  { title: '@nx/next:build', path: '/packages/next/executors/build' },
-  { title: '@nx/next:server', path: '/packages/next/executors/server' },
 
   { title: '@nx/node', path: '/packages/node' },
   { title: '@nx/node:init', path: '/packages/node/generators/init' },
@@ -334,26 +322,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/react-native/generators/stories',
   },
   {
-    title: '@nx/react-native:run-android',
-    path: '/packages/react-native/executors/run-android',
-  },
-  {
-    title: '@nx/react-native:run-ios',
-    path: '/packages/react-native/executors/run-ios',
-  },
-  {
-    title: '@nx/react-native:bundle',
-    path: '/packages/react-native/executors/bundle',
-  },
-  {
-    title: '@nx/react-native:build-android',
-    path: '/packages/react-native/executors/build-android',
-  },
-  {
-    title: '@nx/react-native:start',
-    path: '/packages/react-native/executors/start',
-  },
-  {
     title: '@nx/react-native:sync-deps',
     path: '/packages/react-native/executors/sync-deps',
   },
@@ -378,28 +346,11 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/storybook:cypress-project',
     path: '/packages/storybook/generators/cypress-project',
   },
-  {
-    title: '@nx/storybook:storybook',
-    path: '/packages/storybook/executors/storybook',
-  },
-  {
-    title: '@nx/storybook:build',
-    path: '/packages/storybook/executors/build',
-  },
   { title: '@nx/web', path: '/packages/web' },
   { title: '@nx/web:init', path: '/packages/web/generators/init' },
   {
     title: '@nx/web:application',
     path: '/packages/web/generators/application',
-  },
-  {
-    title: '@nx/webpack:webpack',
-    path: '/packages/webpack/executors/webpack',
-  },
-  { title: '@nx/rollup:rollup', path: '/packages/rollup/executors/rollup' },
-  {
-    title: '@nx/webpack:dev-server',
-    path: '/packages/webpack/executors/dev-server',
   },
   {
     title: '@nx/web:file-server',

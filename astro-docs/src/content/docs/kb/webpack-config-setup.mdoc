@@ -23,25 +23,6 @@ You can configure Webpack using a [`webpack.config.js`](https://webpack.js.org/c
 ]
 ```
 
-If you are using the [`@nx/webpack:webpack`](/docs/technologies/build-tools/webpack/executors#webpack) executor, the path to your webpack config is set in the `webpackConfig` option in your `project.json` file.
-
-```json5 {% meta="{6}" %}
-// project.json
-"my-app": {
-  "targets": {
-    //...
-    "build": {
-      "executor": "@nx/webpack:webpack",
-      "options": {
-        "webpackConfig": "apps/my-app/webpack.config.js",
-        //...
-      },
-      // ...
-    },
-  }
-}
-```
-
 In the webpack config file, you can add the necessary configuration for Webpack. Read more on how to configure Webpack in the [Webpack documentation](https://webpack.js.org/concepts/configuration/).
 
 ## Basic and Nx-enhanced configuration files
@@ -49,9 +30,9 @@ In the webpack config file, you can add the necessary configuration for Webpack.
 Nx supports two flavors of Webpack configuration files:
 
 1. [_Basic_](#basic-configuration-for-nx) (or standard) Webpack configuration. The file exports a Webpack config object, or one of the [standard configuration types](https://webpack.js.org/configuration/configuration-types).
-2. [_Nx-enhanced_](#nxenhanced-configuration-with-composable-plugins) Webpack configuration. The file exports a function that takes in a Webpack configuration object, plus the [`@nx/webpack:webpack`](/docs/technologies/build-tools/webpack/executors#webpack) options and context, and returns an updated Webpack configuration object.
+2. [_Nx-enhanced_](#nxenhanced-configuration-with-composable-plugins) Webpack configuration. The file exports a function that takes in a Webpack configuration object, plus Nx options and task context, and returns an updated Webpack configuration object.
 
-The basic configuration works with Webpack CLI, whereas the Nx-enhanced configuration requires the use of the `@nx/webpack:webpack` executor.
+The basic configuration works with the Webpack CLI, whereas the Nx-enhanced configuration only works when Nx runs the task (for example, `nx build`).
 
 ### Basic configuration for Nx
 
@@ -93,12 +74,12 @@ For more information, see the [Webpack plugins guide](/docs/kb/webpack-plugins).
 ### Nx-enhanced configuration with composable plugins
 
 {% aside type="caution" title="`composePlugins`, `withNx`, and `withWeb` are deprecated" %}
-The `composePlugins`, [`withNx`](/docs/kb/webpack-plugins#withnx), and `withWeb` helpers are deprecated and will be removed in Nx v24. They produce a non-standard config function that only runs under the `@nx/webpack:webpack` executor, so it does not work with the Webpack CLI. They still work in v23, but using them logs a deprecation warning.
+The `composePlugins`, [`withNx`](/docs/kb/webpack-plugins#withnx), and `withWeb` helpers are deprecated and will be removed in Nx v24. They produce a non-standard config function that only works when Nx runs the task, so it does not work with the Webpack CLI on its own. They still work in v23, but using them logs a deprecation warning.
 
 Use a standard webpack config built around `NxAppWebpackPlugin` (see [Basic configuration for Nx](#basic-configuration-for-nx) above) under the inferred `@nx/webpack/plugin`. Run `nx g @nx/webpack:convert-to-inferred` to migrate existing projects.
 {% /aside %}
 
-Nx supports a function to be returned from the Webpack configuration file. This function is a composable plugin that is understood by the `@nx/webpack:webpack` executor. The enhanced configuration looks something like this:
+Nx supports a function to be returned from the Webpack configuration file. This function is a composable plugin that Nx understands. The enhanced configuration looks something like this:
 
 ```js
 // apps/demo/webpack.config.js
@@ -110,8 +91,8 @@ module.exports = composePlugins(
   // Custom composable plugin
   (config, { options, context }) => {
     // `config` is the Webpack configuration object
-    // `options` is the options passed to the `@nx/webpack:webpack` executor
-    // `context` is the context passed to the `@nx/webpack:webpack` executor
+    // `options` holds Nx build options, such as `projectRoot`
+    // `context` holds the Nx task context, such as `projectName`
     // customize configuration here
     return config;
   }
@@ -121,9 +102,9 @@ module.exports = composePlugins(
 There are two advantages of this approach:
 
 1. You can chain multiple plugins together using the `composePlugins` function. Each plugin can update the webpack configuration as needed.
-2. You gain access to the target options and executor context within the webpack configuration file.
+2. You gain access to Nx build options and the task context within the webpack configuration file.
 
-This gives you the ability to customize the Webpack configuration as needed, and make use of the options and context passed to the executor, as well.
+You can customize the Webpack configuration as needed and use the options and context Nx passes in.
 
 #### Additional composable plugins for Nx
 
@@ -199,7 +180,7 @@ module.exports = composePlugins(
 ### Configure Webpack for Module Federation
 
 {% aside type="tip" title="Non-standard webpack config" %}
-`composePlugins`, `withNx`, and `withModuleFederation` do not work with the Webpack CLI and requires the use of the `@nx/webpack:webpack` executor.
+`composePlugins`, `withNx`, and `withModuleFederation` do not work with the Webpack CLI on its own and only work when Nx runs the task.
 {% /aside %}
 
 If you use the [Module Federation](/docs/kb/faster-builds-with-module-federation) support

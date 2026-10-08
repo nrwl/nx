@@ -64,6 +64,13 @@ describe('NxPlugin Create Package Generator', () => {
     });
   });
 
+  it('should pass jest with no tests since src is removed', async () => {
+    await createPackageGenerator(tree, getSchema());
+    expect(
+      tree.read('packages/create-a-workspace/jest.config.cts', 'utf-8')
+    ).toContain('passWithNoTests: true');
+  });
+
   it('should place the create-package plugin in a directory', async () => {
     await createPackageGenerator(
       tree,

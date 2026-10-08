@@ -74,11 +74,11 @@ You can set up your interaction tests to run as part of your CI. You can read mo
 
 #### Serve
 
-When you are configuring Storybook, Nx [adds a serve and a build target for Storybook](/docs/technologies/test-tools/storybook/introduction#generating-storybook-configuration) in your `project.json`, as we explained above. You can use these targets to [serve](/docs/technologies/test-tools/storybook/executors#storybook) and [build](/docs/technologies/test-tools/storybook/executors#build) storybook locally, and also in production. Cypress will also use these targets when firing up the e2e tests. While developing, you can serve your Storybooks locally to see if your components work and look as expected. This can help you and speed up the development and debugging process (no need to fire up a complex dev stack).
+When you are configuring Storybook, Nx [adds a serve and a build target for Storybook](/docs/technologies/test-tools/storybook/introduction#generating-storybook-configuration) in your `project.json`, as we explained above. You can use these targets to serve and build storybook locally, and also in production. Cypress will also use these targets when firing up the e2e tests. While developing, you can serve your Storybooks locally to see if your components work and look as expected. This can help you and speed up the development and debugging process (no need to fire up a complex dev stack).
 
 #### Build and deploy
 
-The build and deploy step usually comes in handy when you are ready to use Storybook for documentation, and you want to publish it. The [building](/docs/technologies/test-tools/storybook/executors#build) step of Storybook is integrated in the Nx ecosystem, as explained above, and you can trigger your Storybook builds as you would trigger any other build inside your workspace.
+The build and deploy step usually comes in handy when you are ready to use Storybook for documentation, and you want to publish it. The building step of Storybook is integrated in the Nx ecosystem, as explained above, and you can trigger your Storybook builds as you would trigger any other build inside your workspace.
 
 When you publish your organization's Storybook, as a result, ideally, you would want to have one shareable Storybook page/application living under one URL, that you can share. With Nx, you can build your Storybook and it will be ready for deployment. **However**, at this point, you have one Storybook per project in your workspace, and you could end up with far too many Storybooks that are built and ready for deployment. This is not ideal, and does not accomplish the ultimate goal of "one shareable documentation page".
 

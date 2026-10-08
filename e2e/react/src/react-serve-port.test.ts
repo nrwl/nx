@@ -2,7 +2,6 @@ import {
   cleanupProject,
   newProject,
   readFile,
-  readJson,
   reservePorts,
   runCLI,
   uniq,
@@ -43,30 +42,6 @@ describe('React app dev-server port', () => {
     runCLI(
       `generate @nx/react:app apps/${app} --bundler=webpack --e2eTestRunner=cypress --port=${requestedPort} --no-interactive`
     );
-
-    const cypressConfig = readFile(`apps/${app}-e2e/cypress.config.ts`);
-    expect(cypressConfig).toContain(`localhost:${requestedPort}`);
-    expect(cypressConfig).not.toContain(`localhost:${defaultPort}`);
-  });
-
-  // The executor path is the one that writes the port onto the serve target;
-  // with the plugin registered, project.json carries no serve target at all.
-  // NX_ADD_PLUGINS is the only way onto it: `addPlugin` is not on the generator's
-  // schema, so passing it as a flag is silently dropped.
-  it('should write an explicit --port onto the serve target on the executor path', () => {
-    const app = uniq('port-executor');
-
-    process.env.NX_ADD_PLUGINS = 'false';
-    try {
-      runCLI(
-        `generate @nx/react:app apps/${app} --bundler=webpack --e2eTestRunner=cypress --port=${requestedPort} --no-interactive`
-      );
-    } finally {
-      delete process.env.NX_ADD_PLUGINS;
-    }
-
-    const serve = readJson(`apps/${app}/project.json`).targets.serve;
-    expect(serve.options.port).toBe(requestedPort);
 
     const cypressConfig = readFile(`apps/${app}-e2e/cypress.config.ts`);
     expect(cypressConfig).toContain(`localhost:${requestedPort}`);
