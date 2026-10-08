@@ -371,9 +371,10 @@ impl HashPlanner {
                 // A continuous dependency serves this task from its own process, so
                 // its declared inputs and externals are hashed here, and its own
                 // servers' in turn, unless the edge has `inputs: false`.
-                // Continuous tasks never hash from a configuration: what they read
-                // depends on which clients they served. A server's build outputs
-                // also hold the task back from the up-front hashing batch.
+                // Continuous tasks never hash from a configuration:
+                // what they read depends on which clients they served. When it reads
+                // its builds' outputs, those land in this plan too, which holds the
+                // task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
                     let mut dep_ids: Vec<u32> = self
