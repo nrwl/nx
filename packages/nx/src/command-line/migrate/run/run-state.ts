@@ -22,6 +22,15 @@ export const RUN_STATE_FILE_NAME = 'run.json';
  * with fails closed as corrupt instead of being dispensed.
  */
 export const SHELL_SAFE_VALUE = /^[A-Za-z0-9@/:._-]+$/;
+
+/** The ids of `migrations` that no orchestrated run can dispense. */
+export function unsafeMigrationIds(
+  migrations: ReadonlyArray<{ package: string; name: string }>
+): string[] {
+  return migrations
+    .map((m) => `${m.package}:${m.name}`)
+    .filter((id) => !SHELL_SAFE_VALUE.test(id));
+}
 // `new Date().toISOString()`, the only shape Nx writes. Retention and active-run
 // selection compare these lexicographically, and the value is rendered into the
 // stdout the agent scans for blocks, so neither a different notation nor an

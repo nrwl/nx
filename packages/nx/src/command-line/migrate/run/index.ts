@@ -9,6 +9,7 @@ export {
   findActiveRun,
   createRun,
   TERMINAL_STEP_STATUSES,
+  unsafeMigrationIds,
 } from './run-state';
 export type {
   MigrateRunStatus,
