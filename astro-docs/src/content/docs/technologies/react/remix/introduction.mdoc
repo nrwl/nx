@@ -193,17 +193,17 @@ Configure `@nx/remix/plugin` in the `plugins` array in `nx.json`:
 }
 ```
 
-| Option                  | Description                                      | Default        |
-| ----------------------- | ------------------------------------------------ | -------------- |
-| `buildTargetName`       | Name of the cached production build task.        | `build`        |
-| `devTargetName`         | Name of the continuous development server task.  | `dev`          |
-| `startTargetName`       | Name of the continuous production server task.   | `start`        |
-| `typecheckTargetName`   | Name of the cached TypeScript typecheck task.    | `typecheck`    |
-| `serveStaticTargetName` | Name of an alias for the production server task. | `serve-static` |
-| `buildDepsTargetName`   | Name of an optional dependency build task.       | none           |
-| `watchDepsTargetName`   | Name of an optional dependency watch task.       | none           |
+| Option                  | Description                                                          | Default        |
+| ----------------------- | -------------------------------------------------------------------- | -------------- |
+| `buildTargetName`       | Name of the cached production build task.                            | `build`        |
+| `devTargetName`         | Name of the continuous development server task.                      | `dev`          |
+| `startTargetName`       | Name of the continuous production server task.                       | `start`        |
+| `typecheckTargetName`   | Name of the cached TypeScript typecheck task, or `false` to skip it. | `typecheck`    |
+| `serveStaticTargetName` | Name of an alias for the production server task.                     | `serve-static` |
+| `buildDepsTargetName`   | Name of an optional dependency build task.                           | none           |
+| `watchDepsTargetName`   | Name of an optional dependency watch task.                           | none           |
 
-The build and typecheck tasks are cached, with build outputs based on your Remix configuration. The production server tasks depend on the build task.
+The build and typecheck tasks are cached, with build outputs based on your Remix configuration. The typecheck task is created when the project has a `tsconfig*.json` file. In a TypeScript solution setup, [`@nx/js/typescript` creates it](/docs/technologies/typescript/introduction#how-the-typescript-plugin-infers-tasks) instead. The production server tasks depend on the build task.
 
 ### Exclude or include specific projects
 

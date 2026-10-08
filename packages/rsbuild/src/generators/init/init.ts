@@ -9,6 +9,7 @@ import {
   formatFiles,
   runTasksInSerial,
 } from '@nx/devkit';
+import { ensureTypescriptPluginForTsSolution } from '@nx/js/internal';
 import { InitGeneratorSchema } from './schema';
 import { createNodes } from '../../plugins/plugin';
 import { nxVersion } from '../../utils/versions';
@@ -85,6 +86,10 @@ export async function initGeneratorInternal(
         ],
       },
 
+      schema.updatePackageScripts
+    );
+    await ensureTypescriptPluginForTsSolution(
+      tree,
       schema.updatePackageScripts
     );
   }

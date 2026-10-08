@@ -10,6 +10,12 @@
       "version": "23.1.0-beta.0",
       "description": "Remove the unused @remix-run/eslint-config dependency (ESLint v8 only) that earlier Nx versions added but never wired into the generated lint setup.",
       "implementation": "./dist/src/migrations/update-23-1-0/remove-remix-eslint-config"
+    },
+    "update-24-0-0-register-typescript-plugin-for-typecheck": {
+      "version": "24.0.0-beta.0",
+      "description": "Register @nx/js/typescript with its typecheck target in TS solution workspaces that use @nx/remix/plugin without it, since @nx/remix/plugin no longer infers typecheck targets in TS solution setups.",
+      "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
+      "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
     }
   },
   "packageJsonUpdates": {

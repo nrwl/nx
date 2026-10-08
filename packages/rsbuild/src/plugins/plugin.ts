@@ -21,6 +21,8 @@ import {
 import {
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
   addBuildAndWatchDepsTargets,
+  createTypecheckTarget,
+  selectTypecheckTsConfig,
 } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
@@ -32,7 +34,7 @@ export interface RsbuildPluginOptions {
   devTargetName?: string;
   previewTargetName?: string;
   inspectTargetName?: string;
-  typecheckTargetName?: string;
+  typecheckTargetName?: string | false;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
@@ -248,45 +250,18 @@ async function createRsbuildTargets(
     },
   };
 
-  if (tsConfigFiles.length) {
-    const tsConfigToUse =
-      ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
-        tsConfigFiles.includes(t)
-      ) ?? tsConfigFiles[0];
-    targets[options.typecheckTargetName] = {
-      cache: true,
-      inputs: [
-        ...('production' in namedInputs
-          ? ['production', '^production']
-          : ['default', '^default']),
-        { externalDependencies: ['typescript'] },
-      ],
-      command: isUsingTsSolutionSetup
-        ? `tsc --build --emitDeclarationOnly`
-        : `tsc -p ${tsConfigToUse} --noEmit`,
-      options: { cwd: joinPathFragments(projectRoot) },
-      metadata: {
-        description: `Runs type-checking for the project.`,
-        technologies: ['typescript'],
-        help: {
-          command: isUsingTsSolutionSetup
-            ? `${pmc.exec} tsc --build --help`
-            : `${pmc.exec} tsc -p ${tsConfigToUse} --help`,
-          example: isUsingTsSolutionSetup
-            ? { args: ['--force'] }
-            : { options: { noEmit: true } },
-        },
-      },
-    };
-
-    if (isUsingTsSolutionSetup) {
-      targets[options.typecheckTargetName].dependsOn = [
-        `^${options.typecheckTargetName}`,
-      ];
-      targets[options.typecheckTargetName].syncGenerators = [
-        '@nx/js:typescript-sync',
-      ];
-    }
+  if (
+    !isUsingTsSolutionSetup &&
+    options.typecheckTargetName !== false &&
+    tsConfigFiles.length
+  ) {
+    targets[options.typecheckTargetName] = createTypecheckTarget({
+      mode: 'noEmit',
+      projectRoot: joinPathFragments(projectRoot),
+      pmc,
+      tsConfig: selectTypecheckTsConfig(tsConfigFiles),
+      namedInputs,
+    });
   }
 
   addBuildAndWatchDepsTargets(

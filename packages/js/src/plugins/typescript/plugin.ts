@@ -46,6 +46,7 @@ import {
   type ExtendedConfigFile,
   type ParsedTsconfigData,
 } from './util';
+import { createTypecheckTarget, getTsConfigArg } from './typecheck-target';
 
 export interface TscPluginOptions {
   compiler?: 'tsc' | 'tsgo';
@@ -585,26 +586,10 @@ function buildTscTargets(
     const targetName = options.typecheck.targetName;
     const compiler = options.compiler;
     if (!targets[targetName]) {
-      let command = `${compiler} --build ${options.typecheck.configName} --emitDeclarationOnly${
-        options.verboseOutput ? ' --verbose' : ''
-      }`;
-      if (
-        tsConfig.options.noEmit ||
-        Object.values(internalProjectReferences).some(
-          (ref) => ref.options.noEmit
-        ) ||
-        Object.values(externalProjectReferences).some(
-          (ref) => ref.options.noEmit
-        )
-      ) {
-        // `tsc --build` does not work with `noEmit: true`
-        command = `echo "The 'typecheck' target is disabled because one or more project references set 'noEmit: true' in their tsconfig. Remove this property to resolve this issue."`;
-      }
-
-      const dependsOn: string[] = [`^${targetName}`];
+      let buildTargetName: string | undefined;
       if (options.build && targets[options.build.targetName]) {
         // we already processed and have a build target
-        dependsOn.unshift(options.build.targetName);
+        buildTargetName = options.build.targetName;
       } else if (options.build) {
         // check if the project will have a build target
         const buildConfigPath = joinPathFragments(
@@ -624,15 +609,19 @@ function buildTscTargets(
               config.project.root
             ))
         ) {
-          dependsOn.unshift(options.build.targetName);
+          buildTargetName = options.build.targetName;
         }
       }
 
-      targets[targetName] = {
-        dependsOn,
-        command,
-        options: { cwd: config.project.normalized },
-        cache: true,
+      const target = createTypecheckTarget({
+        mode: 'build',
+        projectRoot: config.project.normalized,
+        pmc,
+        tsConfig: options.typecheck.configName,
+        compiler,
+        targetName,
+        buildTargetName,
+        verboseOutput: options.verboseOutput,
         inputs: getInputs(
           namedInputs,
           config,
@@ -648,18 +637,21 @@ function buildTscTargets(
           context.workspaceRoot,
           /* emitDeclarationOnly */ true
         ),
-        syncGenerators: ['@nx/js:typescript-sync'],
-        metadata: {
-          technologies: ['typescript'],
-          description: 'Runs type-checking for the project.',
-          help: {
-            command: `${pmc.exec} ${compiler} --build --help`,
-            example: {
-              args: ['--force'],
-            },
-          },
-        },
-      };
+      });
+      if (
+        tsConfig.options.noEmit ||
+        Object.values(internalProjectReferences).some(
+          (ref) => ref.options.noEmit
+        ) ||
+        Object.values(externalProjectReferences).some(
+          (ref) => ref.options.noEmit
+        )
+      ) {
+        // `tsc --build` does not work with `noEmit: true`
+        target.command = `echo "The 'typecheck' target is disabled because one or more project references set 'noEmit: true' in their tsconfig. Remove this property to resolve this issue."`;
+      }
+
+      targets[targetName] = target;
     }
   }
 
@@ -685,7 +677,7 @@ function buildTscTargets(
 
     targets[targetName] = {
       dependsOn: [`^${targetName}`],
-      command: `${compiler} --build ${options.build.configName}${
+      command: `${compiler} --build${getTsConfigArg(options.build.configName)}${
         options.verboseOutput ? ' --verbose' : ''
       }`,
       options: { cwd: config.project.normalized },
