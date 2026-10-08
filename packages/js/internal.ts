@@ -51,7 +51,10 @@ export {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from './src/utils/typescript/ts-solution-setup';
-export { ensureTypescriptPluginForTsSolution } from './src/utils/typescript/add-typescript-plugin';
+export {
+  ensureTypescriptPluginForTsSolution,
+  registerTypescriptPluginForTypecheck,
+} from './src/utils/typescript/add-typescript-plugin';
 
 // TypeScript helpers. resolvePathsBaseUrl, extractTsConfigBase,
 // tsConfigBaseOptions, addTsLibDependencies, and resolveModuleByImport ship via

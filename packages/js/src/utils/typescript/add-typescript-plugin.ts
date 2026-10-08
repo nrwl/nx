@@ -1,5 +1,11 @@
 import { addPlugin } from '@nx/devkit/internal';
-import { createProjectGraphAsync, readNxJson, type Tree } from '@nx/devkit';
+import {
+  createProjectGraphAsync,
+  readNxJson,
+  updateNxJson,
+  type PluginConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { isUsingTsSolutionSetup } from './ts-solution-setup';
 
@@ -63,4 +69,48 @@ export async function ensureTypescriptPluginForTsSolution(
     return;
   }
   await addTypescriptPlugin(tree, updatePackageScripts);
+}
+
+/**
+ * Registers `@nx/js/typescript`, with only its typecheck target, in a TS
+ * solution workspace where `frameworkPlugin` no longer infers `typecheck`.
+ * Reuses the framework plugin's `typecheckTargetName`, and skips workspaces
+ * that already register `@nx/js/typescript` or set it to `false`. Returns
+ * whether nx.json changed.
+ */
+export function registerTypescriptPluginForTypecheck(
+  tree: Tree,
+  frameworkPlugin: string
+): boolean {
+  const nxJson = readNxJson(tree);
+  if (!nxJson?.plugins?.length || !isUsingTsSolutionSetup(tree)) {
+    return false;
+  }
+  if (nxJson.plugins.some((p) => getPluginName(p) === '@nx/js/typescript')) {
+    return false;
+  }
+
+  const targetName = nxJson.plugins
+    .filter((p) => getPluginName(p) === frameworkPlugin)
+    .map((p) =>
+      typeof p === 'string'
+        ? 'typecheck'
+        : ((p.options as { typecheckTargetName?: string | false } | undefined)
+            ?.typecheckTargetName ?? 'typecheck')
+    )
+    .find((name): name is string => name !== false);
+  if (!targetName) {
+    return false;
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/js/typescript',
+    options: { typecheck: { targetName } },
+  });
+  updateNxJson(tree, nxJson);
+  return true;
+}
+
+function getPluginName(plugin: PluginConfiguration): string {
+  return typeof plugin === 'string' ? plugin : plugin.plugin;
 }
