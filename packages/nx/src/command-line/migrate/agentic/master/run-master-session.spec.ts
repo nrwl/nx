@@ -30,11 +30,13 @@ vi.mock('./spawn-master', () => ({
 const mockRunComplete = vi.fn();
 const mockRunError = vi.fn();
 const mockAbandoned = vi.fn();
+const mockRunStopped = vi.fn();
 vi.mock('../../migrate-analytics', () => ({
   reportMigrateRunComplete: (...args: unknown[]) => mockRunComplete(...args),
   reportMigrateRunError: (...args: unknown[]) => mockRunError(...args),
   reportMigrateOrchestratorAbandoned: (...args: unknown[]) =>
     mockAbandoned(...args),
+  reportMigrateRunStopped: (...args: unknown[]) => mockRunStopped(...args),
 }));
 
 import { join } from 'path';
@@ -136,6 +138,7 @@ describe('runMasterSession', () => {
     mockRunComplete.mockReset();
     mockRunError.mockReset();
     mockAbandoned.mockReset();
+    mockRunStopped.mockReset();
     logSpy = vi.spyOn(output, 'log').mockImplementation(() => {}) as Mock;
     warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {}) as Mock;
     errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {}) as Mock;
@@ -238,6 +241,7 @@ describe('runMasterSession', () => {
       expect(mockChoice).not.toHaveBeenCalled();
       expect(mockSpawnMaster).not.toHaveBeenCalled();
       expect(mockRunError).not.toHaveBeenCalled();
+      expect(mockRunStopped).toHaveBeenCalledWith('existing_run');
     });
 
     it("renders the recorded policy on the continue command, not this invocation's", async () => {
@@ -407,6 +411,7 @@ describe('runMasterSession', () => {
       expect(mockResume).not.toHaveBeenCalled();
       expect(mockSpawnMaster).not.toHaveBeenCalled();
       expect(mockReadRunState).not.toHaveBeenCalled();
+      expect(mockRunStopped).toHaveBeenCalledWith('aborted');
     });
 
     it('exits 1 with the report when another run appeared after the decision', async () => {
@@ -429,14 +434,24 @@ describe('runMasterSession', () => {
     });
   });
 
-  it('spawns nothing when init refuses', async () => {
-    mockInit.mockResolvedValue({ kind: 'refused' });
+  it.each<[string, Partial<RunMasterSessionInput>, string]>([
+    ['init refuses a new run', {}, 'declined_commits'],
+    ['resume refuses the run --run-id names', { runId }, 'runbook_missing'],
+  ])(
+    'spawns nothing and reports the stop when %s',
+    async (_label, overrides, reason) => {
+      mockInit.mockResolvedValue({ kind: 'refused' });
+      mockResume.mockReturnValue({ kind: 'refused' });
 
-    expect(await runMasterSession(input())).toBeUndefined();
+      expect(
+        await runMasterSession({ ...input(), ...overrides })
+      ).toBeUndefined();
 
-    expect(mockSpawnMaster).not.toHaveBeenCalled();
-    expect(mockRunComplete).not.toHaveBeenCalled();
-  });
+      expect(mockSpawnMaster).not.toHaveBeenCalled();
+      expect(mockRunComplete).not.toHaveBeenCalled();
+      expect(mockRunStopped).toHaveBeenCalledWith(reason);
+    }
+  );
 
   it('exits 0 with the tally and the completion event when the run completed', async () => {
     const completed = state('completed', ['succeeded', 'skipped', 'succeeded']);
@@ -467,6 +482,7 @@ describe('runMasterSession', () => {
       appliedCount: 2,
     });
     expect(mockAbandoned).not.toHaveBeenCalled();
+    expect(mockRunStopped).not.toHaveBeenCalled();
     expect(warnSpy).not.toHaveBeenCalled();
   });
 

@@ -7,10 +7,29 @@ const mockRunOrchestratorInit = vi.fn();
 const mockRunOrchestratorResume = vi.fn();
 const mockHoldRunToContinue = vi.fn();
 const mockActiveRunToReplace = vi.fn();
+const mockActiveRunForClassic = vi.fn();
+const mockCheckRunForStartFresh = vi.fn();
+const mockDeleteRunForStartFresh = vi.fn();
 // migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
 // intercept; replace the module in the require channel instead.
 import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
-import { runDir, TERMINAL_STEP_STATUSES } from './run/run-state';
+import {
+  type ExistingRunFacts,
+  renderContinueCommand,
+  renderExistingRunCommands,
+  renderExistingRunReport,
+} from './run/existing-run-report';
+import {
+  activeRunForClassic,
+  checkRunForStartFresh,
+  deleteRunForStartFresh,
+} from './run/orchestrator';
+import {
+  type MigrateRunState,
+  runDir,
+  TERMINAL_STEP_STATUSES,
+  writeRunState,
+} from './run/run-state';
 import { latestRound, stepLabel } from './run/state-machine';
 import { pmInstallCommand } from './run/util';
 mockCjsModule(import.meta.url, './run', {
@@ -21,8 +40,16 @@ mockCjsModule(import.meta.url, './run', {
     mockRunOrchestratorResume(...args),
   holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
   activeRunToReplace: (...args: unknown[]) => mockActiveRunToReplace(...args),
+  activeRunForClassic: (...args: unknown[]) => mockActiveRunForClassic(...args),
+  checkRunForStartFresh: (...args: unknown[]) =>
+    mockCheckRunForStartFresh(...args),
+  deleteRunForStartFresh: (...args: unknown[]) =>
+    mockDeleteRunForStartFresh(...args),
   latestRound,
   pmInstallCommand,
+  renderContinueCommand,
+  renderExistingRunCommands,
+  renderExistingRunReport,
   runDir,
   stepLabel,
   TERMINAL_STEP_STATUSES,
@@ -63,19 +90,24 @@ vi.mock('../../utils/is-ci', async () => ({
 // The classic loop's entry marker, used to prove the dispatch fell through to
 // it rather than merely skipping the orchestrator.
 const mockReportRunStart = vi.fn();
+const mockReportRunStopped = vi.fn();
 vi.mock('./migrate-analytics', async () => ({
   ...(await vi.importActual('./migrate-analytics')),
   reportMigrateRunStart: (...args: unknown[]) => mockReportRunStart(...args),
+  reportMigrateRunStopped: (...args: unknown[]) =>
+    mockReportRunStopped(...args),
 }));
 
 // The default-branch stop never prompts, prompt-capable terminal or not; both
 // are stubbed to prove it.
 const mockCanPrompt = vi.fn();
 const mockMigrateConfirm = vi.fn();
+const mockMigrateChoice = vi.fn();
 vi.mock('./safe-prompt', async () => ({
   ...(await vi.importActual('./safe-prompt')),
   canPrompt: (...args: unknown[]) => mockCanPrompt(...args),
   migrateConfirm: (...args: unknown[]) => mockMigrateConfirm(...args),
+  migrateChoice: (...args: unknown[]) => mockMigrateChoice(...args),
 }));
 
 const mockIsGitRepository = vi.fn();
@@ -125,12 +157,15 @@ vi.mock('../../daemon/client/client', () => ({
 import {
   mkdirSync,
   mkdtempSync,
+  readdirSync,
+  readFileSync,
   realpathSync,
   rmSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { FileLock } from '../../native';
 import { output } from '../../utils/output';
 import { migrate } from './migrate';
 
@@ -168,14 +203,19 @@ describe('migrate() orchestrated init dispatch', () => {
       steps: [],
     });
     mockActiveRunToReplace.mockReset();
+    mockActiveRunForClassic.mockReset().mockReturnValue(null);
+    mockCheckRunForStartFresh.mockReset();
+    mockDeleteRunForStartFresh.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockRunMasterSession.mockReset().mockResolvedValue(undefined);
     mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
     mockReportRunStart.mockReset();
+    mockReportRunStopped.mockReset();
     mockIsInsideAgent.mockReset().mockReturnValue(true);
     mockIsCI.mockReset().mockReturnValue(false);
     mockCanPrompt.mockReset().mockReturnValue(true);
     mockMigrateConfirm.mockReset().mockResolvedValue(true);
+    mockMigrateChoice.mockReset();
     mockIsGitRepository.mockReset().mockReturnValue(true);
     mockGetGitCurrentBranch.mockReset().mockReturnValue('feat/migrate');
     mockGetBaseRef.mockReset().mockReturnValue('main');
@@ -476,50 +516,47 @@ describe('migrate() orchestrated init dispatch', () => {
     );
   });
 
-  const notOrchestrated = (flag: string) =>
-    `'${flag}' acts on an orchestrated migrate run, and this invocation is not orchestrated. Orchestration needs an enabled agent, or an AI agent running nx outside CI; --agentic=false and the WASM build turn it off.`;
+  const continueNeedsOrchestration = `'--run-id' continues an orchestrated migrate run, and this invocation is not orchestrated. Orchestration needs an enabled agent, or an AI agent running nx outside CI; --agentic=false and the WASM build turn it off.`;
 
-  // Both flags act on a run's record; outside the orchestrator they would
-  // silently do nothing, so every route out of it refuses them.
-  it.each<[string, string, () => void]>([
+  // The classic loop records no run, so it cannot continue one; every route
+  // out of the orchestrator refuses the continue instead of ignoring it.
+  it.each<[string, () => void]>([
     [
-      '--start-fresh',
       'the outer agent runs nx in CI',
       () => {
         mockIsCI.mockReturnValue(true);
       },
     ],
     [
-      '--run-id',
-      'no agent is driving the process',
+      'a non-interactive terminal turns the agentic flow off',
       () => {
         mockIsInsideAgent.mockReturnValue(false);
       },
     ],
-  ])(
-    'refuses %s when %s instead of ignoring it',
-    async (flag, _label, arrange) => {
-      arrange();
-      const overrides =
-        flag === '--start-fresh'
-          ? { startFresh: true, runId: 'run-1' }
-          : { runId: 'run-1', agentic: 'claude-code' };
-      const args =
-        flag === '--start-fresh'
-          ? ['--run-migrations', '--start-fresh', '--run-id=run-1']
-          : ['--run-migrations', '--agentic=claude-code', '--run-id=run-1'];
+  ])('refuses --run-id when %s', async (_label, arrange) => {
+    arrange();
 
-      // migrate() reports through handleErrors and returns the exit code.
-      expect(await migrate(root, runMigrationsArgs(overrides), args)).toBe(1);
-      expect(output.error).toHaveBeenCalledWith(
-        expect.objectContaining({ title: notOrchestrated(flag) })
-      );
+    // migrate() reports through handleErrors and returns the exit code.
+    expect(
+      await migrate(
+        root,
+        runMigrationsArgs({ runId: 'run-1', agentic: 'claude-code' }),
+        ['--run-migrations', '--agentic=claude-code', '--run-id=run-1']
+      )
+    ).toBe(1);
+    expect(output.error).toHaveBeenCalledWith(
+      expect.objectContaining({ title: continueNeedsOrchestration })
+    );
 
-      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
-      expect(mockRunOrchestratorResume).not.toHaveBeenCalled();
-      expect(mockRunMasterSession).not.toHaveBeenCalled();
-    }
-  );
+    expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+    expect(mockRunOrchestratorResume).not.toHaveBeenCalled();
+    expect(mockRunMasterSession).not.toHaveBeenCalled();
+    expect(output.log).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining('Running migrations from'),
+      })
+    );
+  });
 
   it('refuses --run-id on the WASM build before the preflight install and the hold', async () => {
     wasm.active = true;
@@ -536,26 +573,328 @@ describe('migrate() orchestrated init dispatch', () => {
     expect(mockHoldRunToContinue).not.toHaveBeenCalled();
   });
 
-  it('refuses --start-fresh when --agentic=false keeps an outside invocation off the orchestrator', async () => {
-    mockIsInsideAgent.mockReturnValue(false);
+  describe('classic loop with an active orchestrated run', () => {
+    const activeFacts: ExistingRunFacts = {
+      runId: 'run-1',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      recordedBranch: 'feat/migrate',
+      currentBranch: 'feat/migrate',
+      progress: {
+        applied: 1,
+        adopted: 0,
+        skipped: 0,
+        unresolved: [],
+        remaining: 2,
+        stalled: 0,
+      },
+      unresolvedIssues: 0,
+      policy: { createCommits: true, skipInstall: false },
+      commits: { recorded: 0, reachable: 0, unchecked: 0, newest: null },
+      liveWorkers: [],
+      otherHolders: [],
+      otherActiveRuns: [],
+      appliedStillPlanned: 1,
+    };
+    const continueCommand =
+      'npx nx migrate --run-migrations --agentic --run-id=run-1 --create-commits';
+    const ranThePlan = expect.objectContaining({
+      title: "Running migrations from 'migrations.json'",
+    });
 
-    expect(
-      await migrate(
-        root,
-        runMigrationsArgs({ startFresh: true, runId: 'run-1', agentic: false }),
-        [
-          '--run-migrations',
-          '--agentic=false',
-          '--start-fresh',
-          '--run-id=run-1',
-        ]
-      )
-    ).toBe(1);
-    expect(output.error).toHaveBeenCalledWith(
-      expect.objectContaining({ title: notOrchestrated('--start-fresh') })
+    beforeEach(() => {
+      mockIsInsideAgent.mockReturnValue(false);
+      mockActiveRunForClassic.mockReturnValue({
+        runId: 'run-1',
+        facts: activeFacts,
+      });
+    });
+
+    it.each<[string, Record<string, unknown>, string[], () => void, string]>([
+      [
+        'an AI agent runs nx with --agentic=false, echoing it on the start-fresh command',
+        { agentic: false },
+        ['--agentic=false'],
+        () => {
+          mockIsInsideAgent.mockReturnValue(true);
+        },
+        'npx nx migrate --run-migrations --agentic=false --start-fresh --run-id=run-1',
+      ],
+      [
+        'the terminal cannot prompt',
+        {},
+        [],
+        () => {
+          mockCanPrompt.mockReturnValue(false);
+        },
+        'npx nx migrate --run-migrations --start-fresh --run-id=run-1',
+      ],
+      [
+        'another process holds the run',
+        {},
+        [],
+        () => {
+          mockActiveRunForClassic.mockReturnValue({
+            runId: 'run-1',
+            facts: { ...activeFacts, otherHolders: [4242] },
+          });
+        },
+        'npx nx migrate --run-migrations --start-fresh --run-id=run-1',
+      ],
+    ])(
+      'reports the run with both commands and exits 1 without asking when %s',
+      async (_label, overrides, flags, arrange, startFreshCommand) => {
+        arrange();
+
+        expect(
+          await migrate(root, runMigrationsArgs(overrides), [
+            '--run-migrations',
+            ...flags,
+          ])
+        ).toBe(1);
+
+        expect(mockActiveRunForClassic).toHaveBeenCalledWith(root, [
+          '@nx/js:gen',
+        ]);
+        expect(output.warn).toHaveBeenCalledWith({
+          title: 'A migrate run is already active: run-1',
+          bodyLines: expect.arrayContaining([
+            `To continue the run: ${continueCommand}`,
+            `To start fresh (deletes the run record, then runs the whole plan again): ${startFreshCommand}`,
+          ]),
+        });
+        expect(mockReportRunStopped).toHaveBeenCalledWith('existing_run');
+        expect(mockMigrateChoice).not.toHaveBeenCalled();
+        expect(mockDeleteRunForStartFresh).not.toHaveBeenCalled();
+        expect(output.log).not.toHaveBeenCalledWith(ranThePlan);
+      }
     );
 
-    expect(mockReportRunStart).not.toHaveBeenCalled();
+    it('shows the report on a terminal and leaves the run alone when the user aborts', async () => {
+      mockMigrateChoice.mockResolvedValue('abort');
+
+      expect(
+        await migrate(root, runMigrationsArgs(), ['--run-migrations'])
+      ).toBe(0);
+
+      expect(output.log).toHaveBeenCalledWith({
+        title: 'A migrate run is already active: run-1',
+        bodyLines: expect.not.arrayContaining([
+          expect.stringContaining('To continue the run'),
+        ]),
+      });
+      expect(mockMigrateChoice).toHaveBeenCalledWith({
+        message: 'What do you want to do with the active migrate run?',
+        choices: [
+          expect.objectContaining({ value: 'start-fresh' }),
+          expect.objectContaining({ value: 'abort' }),
+        ],
+      });
+      expect(output.log).toHaveBeenCalledWith({
+        title: `Leaving migrate run run-1 as it is. To continue it with an agent, run ${continueCommand}.`,
+      });
+      expect(mockReportRunStopped).toHaveBeenCalledWith('aborted');
+      expect(mockDeleteRunForStartFresh).not.toHaveBeenCalled();
+      expect(output.log).not.toHaveBeenCalledWith(ranThePlan);
+    });
+
+    it('deletes the run record and runs the plan when the user starts fresh', async () => {
+      mockMigrateChoice.mockResolvedValue('start-fresh');
+
+      // The classic loop runs real migration execution, which fails on this
+      // fixture; only the dispatch itself is under test.
+      await migrate(root, runMigrationsArgs(), ['--run-migrations']).catch(
+        () => {}
+      );
+
+      expect(mockDeleteRunForStartFresh).toHaveBeenCalledWith(root, 'run-1');
+      expect(output.log).toHaveBeenCalledWith(ranThePlan);
+      expect(mockReportRunStopped).not.toHaveBeenCalled();
+    });
+
+    it.each<[string, Record<string, unknown>, string[], () => void]>([
+      [
+        '--agentic=false keeps a terminal run off the agentic flow',
+        { agentic: false },
+        ['--agentic=false'],
+        () => {},
+      ],
+      [
+        'the outer agent runs nx in CI',
+        {},
+        [],
+        () => {
+          mockIsInsideAgent.mockReturnValue(true);
+          mockIsCI.mockReturnValue(true);
+        },
+      ],
+    ])(
+      'replaces the run --start-fresh --run-id names without asking when %s',
+      async (_label, overrides, flags, arrange) => {
+        arrange();
+
+        await migrate(
+          root,
+          runMigrationsArgs({ ...overrides, startFresh: true, runId: 'run-1' }),
+          ['--run-migrations', ...flags, '--start-fresh', '--run-id=run-1']
+        ).catch(() => {});
+
+        expect(mockDeleteRunForStartFresh).toHaveBeenCalledWith(root, 'run-1');
+        expect(mockMigrateChoice).not.toHaveBeenCalled();
+        expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+        expect(output.log).toHaveBeenCalledWith(ranThePlan);
+      }
+    );
+
+    it('refuses --start-fresh when the run it names completed after the preflight check', async () => {
+      mockActiveRunForClassic.mockReturnValue(null);
+      mockCheckRunForStartFresh.mockImplementation(() => {
+        throw new Error('nothing to replace');
+      });
+
+      expect(
+        await migrate(
+          root,
+          runMigrationsArgs({
+            agentic: false,
+            startFresh: true,
+            runId: 'run-1',
+          }),
+          [
+            '--run-migrations',
+            '--agentic=false',
+            '--start-fresh',
+            '--run-id=run-1',
+          ]
+        )
+      ).toBe(1);
+
+      expect(mockCheckRunForStartFresh).toHaveBeenCalledWith(root, 'run-1');
+      expect(mockDeleteRunForStartFresh).not.toHaveBeenCalled();
+      expect(output.log).not.toHaveBeenCalledWith(ranThePlan);
+    });
+
+    describe('on a run recorded on disk', () => {
+      const runJson = () => join(runDir(root, 'run-1'), 'run.json');
+
+      beforeEach(() => {
+        mockActiveRunForClassic.mockImplementation(activeRunForClassic);
+        mockCheckRunForStartFresh.mockImplementation(checkRunForStartFresh);
+        mockDeleteRunForStartFresh.mockImplementation(deleteRunForStartFresh);
+        writeRunState(runDir(root, 'run-1'), {
+          formatVersion: 1,
+          runId: 'run-1',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          nxVersion: '23.0.0',
+          status: 'active',
+          createCommits: true,
+          commitPrefix: 'chore: [nx migration] ',
+          rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
+          steps: [],
+          commits: [],
+          analytics: { startEmitted: true, completeEmitted: false },
+        } as MigrateRunState);
+        writeFileSync(join(runDir(root, 'run-1'), 'RUNBOOK.md'), '# runbook\n');
+        mockGetGitCurrentBranch.mockReturnValue('main');
+      });
+
+      it.each<[string, Record<string, unknown>, string[], () => void]>([
+        [
+          '--start-fresh --run-id names it',
+          { startFresh: true, runId: 'run-1' },
+          ['--start-fresh', '--run-id=run-1'],
+          () => {},
+        ],
+        [
+          'the user chooses to start fresh',
+          {},
+          [],
+          () => {
+            mockMigrateChoice.mockResolvedValue('start-fresh');
+          },
+        ],
+      ])(
+        'keeps the run when %s and the default-branch commit prompt is declined',
+        async (_label, overrides, flags, arrange) => {
+          arrange();
+          mockMigrateConfirm.mockResolvedValue(false);
+          const before = readFileSync(runJson(), 'utf-8');
+
+          await migrate(
+            root,
+            runMigrationsArgs({ createCommits: true, ...overrides }),
+            ['--run-migrations', '--create-commits', ...flags]
+          );
+
+          expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
+          expect(readFileSync(runJson(), 'utf-8')).toBe(before);
+          expect(readdirSync(runDir(root, 'run-1'))).toEqual(
+            expect.arrayContaining(['RUNBOOK.md', 'plan-0.json'])
+          );
+          expect(mockReportRunStopped).toHaveBeenCalledWith('declined_commits');
+          expect(output.log).not.toHaveBeenCalledWith(
+            expect.objectContaining({
+              title: expect.stringContaining('Running migrations from'),
+            })
+          );
+        }
+      );
+
+      it('refuses --start-fresh over a run another process holds before asking about commits', async () => {
+        mkdirSync(join(runDir(root, 'run-1'), 'activity'));
+        const holder = new FileLock(
+          join(runDir(root, 'run-1'), 'activity', '4242-beef.lock')
+        );
+        holder.lock();
+        try {
+          expect(
+            await migrate(
+              root,
+              runMigrationsArgs({
+                createCommits: true,
+                startFresh: true,
+                runId: 'run-1',
+              }),
+              [
+                '--run-migrations',
+                '--create-commits',
+                '--start-fresh',
+                '--run-id=run-1',
+              ]
+            )
+          ).toBe(1);
+        } finally {
+          holder.unlock();
+        }
+
+        expect(output.error).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: expect.stringContaining(
+              "Not deleting migrate run 'run-1': process 4242 is still working on it"
+            ),
+          })
+        );
+        expect(mockMigrateConfirm).not.toHaveBeenCalled();
+        expect(readFileSync(runJson(), 'utf-8')).toContain('"run-1"');
+      });
+    });
+  });
+
+  it('reports the stop when the default-branch confirmation of the classic loop is declined', async () => {
+    mockIsInsideAgent.mockReturnValue(false);
+    mockGetGitCurrentBranch.mockReturnValue('main');
+    mockMigrateConfirm.mockResolvedValue(false);
+
+    await migrate(root, runMigrationsArgs({ createCommits: true }), [
+      '--run-migrations',
+      '--create-commits',
+    ]);
+
+    expect(mockReportRunStopped).toHaveBeenCalledWith('declined_commits');
+    expect(output.log).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining('Running migrations from'),
+      })
+    );
   });
 
   describe('user-initiated run with the agentic flow enabled', () => {
