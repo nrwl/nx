@@ -1,7 +1,6 @@
-import { addPlugin, detectFormatterInTree } from '@nx/devkit/internal';
+import { detectFormatterInTree } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
-  createProjectGraphAsync,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -12,8 +11,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
-import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
+import { addTypescriptPlugin } from '../../utils/typescript/add-typescript-plugin';
 import { getFormatterSetup } from '../../utils/formatter-setup';
 import { assertNxSupportsFormatters } from '../../utils/nx-formatter-internals';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
@@ -67,40 +66,7 @@ export async function initGeneratorInternal(
   schema.addTsPlugin ??= schema.addPlugin;
 
   if (schema.addTsPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/js/typescript',
-      createNodesV2,
-      {
-        typecheck: [
-          { targetName: 'typecheck' },
-          { targetName: 'tsc:typecheck' },
-          { targetName: 'tsc-typecheck' },
-        ],
-        build: [
-          {
-            targetName: 'build',
-            configName: 'tsconfig.lib.json',
-            buildDepsName: 'build-deps',
-            watchDepsName: 'watch-deps',
-          },
-          {
-            targetName: 'tsc:build',
-            configName: 'tsconfig.lib.json',
-            buildDepsName: 'tsc:build-deps',
-            watchDepsName: 'tsc:watch-deps',
-          },
-          {
-            targetName: 'tsc-build',
-            configName: 'tsconfig.lib.json',
-            buildDepsName: 'tsc-build-deps',
-            watchDepsName: 'tsc-watch-deps',
-          },
-        ],
-      },
-      schema.updatePackageScripts
-    );
+    await addTypescriptPlugin(tree, schema.updatePackageScripts);
   }
 
   if (schema.addTsConfigBase && !getRootTsConfigFileName(tree)) {
