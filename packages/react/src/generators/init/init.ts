@@ -9,6 +9,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { ensureTypescriptPluginForTsSolution } from '@nx/js/internal';
 import { nxVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
 import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils';
@@ -65,6 +66,10 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
           'react-router-build-deps',
         ],
       },
+      schema.updatePackageScripts
+    );
+    await ensureTypescriptPluginForTsSolution(
+      tree,
       schema.updatePackageScripts
     );
   }
