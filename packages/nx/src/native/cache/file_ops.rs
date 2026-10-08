@@ -104,9 +104,15 @@ pub(crate) fn copy_and_list(
     Ok((size as i64, written))
 }
 
-/// `fs::copy`, keeping the source's modified time. macOS clones keep it but
-/// Linux and Windows stamp the copy "now", which makes a restored output look
-/// newer than sources edited since and lets incremental tools skip real work.
+/// `fs::copy`, keeping the source's modified time as macOS already does. Linux
+/// and Windows stamp the copy "now", so a restored output looks newer than
+/// sources edited since and incremental tools skip real work.
+#[cfg(target_os = "macos")]
+fn copy_file(src: &Path, dest: &Path) -> io::Result<u64> {
+    fs::copy(src, dest)
+}
+
+#[cfg(not(target_os = "macos"))]
 fn copy_file(src: &Path, dest: &Path) -> io::Result<u64> {
     let size = fs::copy(src, dest)?;
     let kept = fs::metadata(src)
@@ -125,7 +131,7 @@ fn open_for_times(path: &Path) -> io::Result<fs::File> {
     fs::OpenOptions::new().access_mode(0x100).open(path)
 }
 
-#[cfg(not(windows))]
+#[cfg(all(not(windows), any(not(target_os = "macos"), test)))]
 fn open_for_times(path: &Path) -> io::Result<fs::File> {
     // Setting explicit times needs ownership, not write access.
     fs::File::open(path)
