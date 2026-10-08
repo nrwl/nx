@@ -5,6 +5,7 @@ import {
   createFile,
   killPort,
   newProject,
+  readFile,
   readJson,
   runCLI,
   runCommand,
@@ -60,6 +61,39 @@ describe('Cypress E2E Test runner', () => {
       checkFilesExist(`apps/${myapp}-e2e/src/support/app.po.ts`);
       checkFilesExist(`apps/${myapp}-e2e/src/support/e2e.ts`);
       checkFilesExist(`apps/${myapp}-e2e/src/support/commands.ts`);
+    },
+    TEN_MINS_MS
+  );
+
+  it(
+    'should keep the server inputs out of atomized specs with "@nx-ultracache: imports"',
+    () => {
+      const app = uniq('app');
+      runCLI(
+        `generate @nx/react:app apps/${app} --e2eTestRunner=cypress --linter=eslint --unitTestRunner=none --no-interactive`
+      );
+      createFile(
+        `apps/${app}/src/app/feature.ts`,
+        `export const feature = 'feature';\n`
+      );
+      createFile(
+        `apps/${app}-e2e/src/e2e/feature.cy.ts`,
+        `// @nx-ultracache: imports\nimport '../../../${app}/src/app/feature';\n${readFile(
+          `apps/${app}-e2e/src/e2e/app.cy.ts`
+        )}`
+      );
+
+      const { targets } = JSON.parse(runCLI(`show project ${app}-e2e --json`));
+      expect(targets['e2e-ci--src/e2e/app.cy.ts'].dependsOn).toEqual([
+        { projects: [app], target: 'preview' },
+      ]);
+      expect(targets['e2e-ci--src/e2e/feature.cy.ts'].dependsOn).toEqual([
+        { projects: [app], target: 'preview', inputs: false },
+      ]);
+
+      expect(runCLI(`lint ${app}-e2e`)).toContain(
+        'Successfully ran target lint'
+      );
     },
     TEN_MINS_MS
   );
