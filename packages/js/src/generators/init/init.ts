@@ -145,7 +145,10 @@ export async function initGeneratorInternal(
 
   if (formatterSetup) {
     tasks.push(
-      formatterSetup.setUp(tree, { skipPackageJson: schema.skipPackageJson })
+      formatterSetup.setUp(tree, {
+        skipPackageJson: schema.skipPackageJson,
+        keepExistingVersions: schema.keepExistingVersions,
+      })
     );
   }
 
