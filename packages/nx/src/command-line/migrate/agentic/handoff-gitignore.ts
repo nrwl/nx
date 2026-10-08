@@ -22,11 +22,10 @@ import {
  *
  * Two paths cover the leak, with no overlap:
  *
- *   1. HOIST: `sortMigrations`, which `executeMigrations` applies, sorts the
- *      v23 migration to position 0 when it is in the queue, so it runs first
- *      through the normal runner with its own log line and commit. A
- *      single-migration worker run needs no hoisting: the requested migration
- *      is the entire queue.
+ *   1. HOIST: `sortMigrations`, which orchestrator init applies, sorts the
+ *      v23 migration to position 0 when it is in the queue, so it runs as the
+ *      run's first step, with its own commit. A single-migration worker run
+ *      needs no hoisting: the requested migration is the entire queue.
  *
  *   2. INLINE FALLBACK, this function. When the migration is NOT in the queue
  *      AND the highest target version is < v23 (intra-pre-v23 `--agentic`
