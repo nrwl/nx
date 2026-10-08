@@ -72,7 +72,7 @@ When adding component testing to a project, it's best to use the framework speci
 
 - [React component testing](/nx-api/react/generators/cypress-component-configuration)
 - [Angular component testing](/nx-api/angular/generators/cypress-component-configuration)
-  :::
+:::
 
 ```json
 "targets": {
