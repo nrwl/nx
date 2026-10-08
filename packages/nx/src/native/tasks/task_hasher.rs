@@ -98,7 +98,7 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
-            HashInstruction::IoSnapshot(_)
+            HashInstruction::UltracacheConfiguration(_)
             | HashInstruction::ProjectConfiguration(_)
             | HashInstruction::Cwd(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
@@ -285,7 +285,7 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
-    // Disk-backed filesets (`includeIgnored` and snapshot reads): a path index
+    // Disk-backed filesets (`includeIgnored` and Ultracache reads): a path index
     // over the file map so tracked files skip the disk, built only once a plan
     // carries a disk-backed group. Their content lives in the context's
     // IgnoredIndex.
@@ -599,7 +599,7 @@ impl TaskHasher {
                 | HashInstruction::External(_)
                 | HashInstruction::AllExternalDependencies
                 | HashInstruction::JsonFileSet(_)
-                | HashInstruction::IoSnapshot(_) => Some(OnceCell::new()),
+                | HashInstruction::UltracacheConfiguration(_) => Some(OnceCell::new()),
             })
             .collect();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
@@ -650,12 +650,11 @@ impl TaskHasher {
                             Some(value) => value,
                             None => {
                                 let instruction_ref = pool.get(id);
-                                let label = pool.label(id);
                                 let (hash_value, inputs) = self.hash_instruction(
                                     task_id,
                                     instruction_ref.value(),
                                     HashInstructionArgs {
-                                        label: &label,
+                                        id,
                                         js_env,
                                         ts_config_hash: &ts_config_hash,
                                         project_root_mappings: &project_root_mappings,
@@ -726,7 +725,7 @@ impl TaskHasher {
         task_id: &str,
         instruction: &HashInstruction,
         HashInstructionArgs {
-            label,
+            id,
             js_env,
             ts_config_hash,
             project_root_mappings,
@@ -808,7 +807,8 @@ impl TaskHasher {
                         accept,
                     )
                 };
-                let expansion = expand_cached(label, files_expansion_cache, || {
+                let key = format!("files#{id}");
+                let expansion = expand_cached(&key, files_expansion_cache, || {
                     expand_globs(
                         workspace_root,
                         globs,
@@ -959,7 +959,7 @@ impl TaskHasher {
                 };
                 (hashed_external, inputs)
             }
-            HashInstruction::IoSnapshot(_) => {
+            HashInstruction::UltracacheConfiguration(_) => {
                 let inputs = if collect_inputs {
                     instruction.into()
                 } else {
@@ -1030,9 +1030,9 @@ impl TaskHasher {
 }
 
 struct HashInstructionArgs<'a> {
-    /// `InstructionPool::label` of the instruction: the details key, and the
-    /// key a disk-backed group's expansion is shared under within one call.
-    label: &'a str,
+    /// The instruction's pool id: the key a disk-backed group's expansion is
+    /// shared under within one call. Labels can repeat across tasks.
+    id: u32,
     js_env: &'a HashMap<String, String>,
     ts_config_hash: &'a str,
     project_root_mappings: &'a ProjectRootMappings,

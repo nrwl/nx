@@ -12,10 +12,10 @@ vi.mock('../tasks-runner/utils', async (importOriginal) => ({
 vi.mock('../tasks-runner/task-env', () => ({
   getTaskSpecificEnv: () => ({}),
 }));
-const deferredBySnapshot = vi.hoisted(() => ({ ids: [] as string[] }));
+const deferredByConfiguration = vi.hoisted(() => ({ ids: [] as string[] }));
 vi.mock('../native', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../native')>()),
-  getIoSnapshotDeferredTaskIds: () => deferredBySnapshot.ids,
+  getUltracacheDeferredTaskIds: () => deferredByConfiguration.ids,
 }));
 
 describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
@@ -78,7 +78,7 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
     const hashTasksUpfront = vi.fn(async (tasks: { id: string }[]) => ({
       'app:build': hashOf('app:build'),
     }));
-    await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+    const deferred = await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
       { hashTasksUpfront } as unknown as TaskHasher,
       projectGraph,
       taskGraph,
@@ -97,11 +97,12 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
     expect(taskGraph.tasks['app:e2e'].hash).toBeUndefined();
     expect(taskGraph.tasks['app:test'].hash).toBeUndefined();
     expect(taskGraph.tasks['app:custom'].hash).toBeUndefined();
+    expect([...deferred].sort()).toEqual(['app:custom', 'app:e2e', 'app:test']);
   });
 
-  it('holds back a task whose snapshot reads producer outputs, even when its inputs never said so', async () => {
+  it('holds back a task whose Ultracache configuration reads producer outputs, even when its inputs never said so', async () => {
     const { projectGraph, taskGraph } = graph();
-    deferredBySnapshot.ids = ['app:test'];
+    deferredByConfiguration.ids = ['app:test'];
     const hashTasksUpfront = vi.fn(async () => ({}));
     await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
       { hashTasksUpfront } as unknown as TaskHasher,
@@ -111,7 +112,7 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
       null,
       {} as any
     );
-    deferredBySnapshot.ids = [];
+    deferredByConfiguration.ids = [];
     expect(hashTasksUpfront.mock.calls[0][0].map((t) => t.id)).toEqual([
       'app:build',
     ]);

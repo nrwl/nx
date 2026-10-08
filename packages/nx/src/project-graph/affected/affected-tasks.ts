@@ -4,13 +4,16 @@ import type { ProjectConfiguration } from '../../config/workspace-json-project-j
 import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
+  type AffectedTaskExplanation,
   type FileRevisions,
-  type IoSnapshots,
+  type UltracacheConfigurations,
 } from '../../native';
-import { applyIoSnapshotOutputs } from '../../io-snapshots/outputs';
-import { ioSnapshotEligibilityOptions } from '../../io-snapshots/overrides';
-import { snapshotsOf, type IoSnapshotOutcome } from '../../io-snapshots/store';
-import type { IoSnapshotVersion } from '../../daemon/message-types/io-snapshot-version';
+import { ultracacheEligibilityOptions } from '../../ultracache/overrides';
+import {
+  configurationsOf,
+  type UltracacheConfigurationOutcome,
+} from '../../ultracache/store';
+import type { UltracacheConfigurationVersion } from '../../daemon/message-types/ultracache-configuration-version';
 import {
   createTaskGraph,
   createTaskGraphWithDependencyOverrides,
@@ -34,6 +37,13 @@ import type { NxArgs } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { logger } from '../../utils/logger';
 import { DaemonProjectGraphError, ProjectGraphError } from '../error-types';
+import {
+  hydrateExplanation,
+  type AffectedExplanation,
+  type AffectedReason,
+  type InputsReason,
+  type InternedExplanation,
+} from './affected-reasons';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createTaskPlanningContext,
@@ -46,6 +56,7 @@ import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { getProjectGlobPatterns } from './affected-projects';
 import { lockFileDependencyChanges } from '../../plugins/js/project-graph/affected/lock-file-changes';
 import { packageJsonDependencyChanges } from '../../plugins/js/project-graph/affected/npm-packages';
+import { AUTO_AFFECTED_LOCK_FILES } from '../../plugins/js/lock-file/lock-file';
 
 /**
  * Whether `nx affected` selects the individual tasks whose inputs a change
@@ -68,6 +79,12 @@ export interface AffectedTasksResult {
   taskGraph: TaskGraph;
   /** What the run executes: the affected tasks and what they depend on. */
   taskSelection: TaskSelection;
+  /**
+   * Why each task is affected, plus the tasks outside the selection that
+   * carried the change to it, such as a `prebuild` under `-t build`. Only
+   * when `explain` was asked for.
+   */
+  explanation?: AffectedExplanation;
 }
 
 export interface ComputeAffectedTasksOptions {
@@ -85,9 +102,11 @@ export interface ComputeAffectedTasksOptions {
   /** `--exclude` project patterns. Their tasks leave the selection but still carry a change and run as dependencies. */
   exclude?: string[];
   packageJson?: any;
-  /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
-  ioSnapshotOutcome?: IoSnapshotOutcome | null;
+  /** This command's Ultracache configurations. Selection plans with them, as the run hashes with them. */
+  ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
   selectivelyHashTsConfig?: boolean;
+  /** Whether to say why each task is affected, for `--explain`. */
+  explain?: boolean;
 }
 
 export type FileChangeArgs = Pick<NxArgs, 'base' | 'head' | 'files'>;
@@ -106,9 +125,11 @@ export interface AffectedTasksRequest {
   extraTargetDependencies: TargetDependencies;
   excludeTaskDependencies: boolean;
   exclude: string[];
-  ioSnapshots?: IoSnapshotVersion;
+  ultracacheConfigurationsVersion?: UltracacheConfigurationVersion;
   /** The runner's `selectivelyHashTsConfig`, which decides what the tsconfig hash reads. */
   selectivelyHashTsConfig?: boolean;
+  /** Whether to return why each task is affected. Off, nothing is collected. */
+  explain?: boolean;
 }
 
 /**
@@ -132,12 +153,15 @@ export async function computeAffectedTasks(
     excludeTaskDependencies: opts.excludeTaskDependencies ?? false,
     exclude: opts.exclude ?? [],
     selectivelyHashTsConfig: opts.selectivelyHashTsConfig,
+    explain: opts.explain,
   };
-  const ioSnapshots = snapshotsOf(opts.ioSnapshotOutcome ?? null);
-  if (ioSnapshots) {
-    request.ioSnapshots = {
-      commit: ioSnapshots.commit,
-      fetchedAt: ioSnapshots.resolution.fetchedAt,
+  const ultracacheConfigurations = configurationsOf(
+    opts.ultracacheConfigurationOutcome ?? null
+  );
+  if (ultracacheConfigurations) {
+    request.ultracacheConfigurationsVersion = {
+      commit: ultracacheConfigurations.commit,
+      fetchedAt: ultracacheConfigurations.resolution.fetchedAt,
     };
   }
 
@@ -147,9 +171,11 @@ export async function computeAffectedTasks(
       return {
         ...selection,
         affectedTaskIds: new Set(selection.affectedTaskIds),
+        explanation:
+          selection.explanation && hydrateExplanation(selection.explanation),
         taskSelection: {
           ...selection.taskSelection,
-          ioSnapshotOutcome: opts.ioSnapshotOutcome,
+          ultracacheConfigurationOutcome: opts.ultracacheConfigurationOutcome,
         },
       };
     } catch (e) {
@@ -173,26 +199,29 @@ export async function computeAffectedTasks(
     {
       touchedFiles: opts.touchedFiles,
       packageJson: opts.packageJson,
-      ioSnapshots,
+      ultracacheConfigurations,
     }
   );
   return {
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     taskGraph: selection.taskGraph,
+    explanation:
+      selection.explanation && hydrateExplanation(selection.explanation),
     taskSelection: {
       ...selection.taskSelection,
       // The planner remembers what selection planned, so the run's hashing reuses it.
       planningContext,
-      ioSnapshotOutcome: opts.ioSnapshotOutcome,
+      ultracacheConfigurationOutcome: opts.ultracacheConfigurationOutcome,
     },
   };
 }
 
 /**
  * Plans the targets' full task graph and matches the changed paths against
- * every plan. No project-level prefilter: under an I/O snapshot a task can read
- * files no affected project owns. Shared by the client and the daemon.
+ * every plan. No project-level prefilter: under Ultracache configurations a
+ * task can read files no affected project owns. Shared by the client and the
+ * daemon.
  */
 export async function selectAffectedTasks(
   projectGraph: ProjectGraph,
@@ -205,16 +234,17 @@ export async function selectAffectedTasks(
       request.fileChangeArgs as NxArgs
     ),
     packageJson,
-    ioSnapshots,
+    ultracacheConfigurations,
   }: {
     touchedFiles?: FileChange[];
     packageJson?: any;
-    ioSnapshots?: IoSnapshots;
+    ultracacheConfigurations?: UltracacheConfigurations;
   } = {}
 ): Promise<{
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;
   taskSelection: TaskSelection;
+  explanation?: InternedExplanation;
 }> {
   const { targets } = request;
   // Only projects that have one of the targets: with a single target,
@@ -232,6 +262,15 @@ export async function selectAffectedTasks(
       affectedTaskIds: new Set(),
       taskGraph: empty,
       taskSelection: { taskGraph: empty, initiatingTaskIds: [], taskIds: [] },
+      explanation: request.explain
+        ? {
+            inputs: [],
+            affected: {},
+            upstream: {},
+            touched: [],
+            requested: { targets, total: 0 },
+          }
+        : undefined,
     };
   }
 
@@ -247,16 +286,12 @@ export async function selectAffectedTasks(
       false
     );
   const taskIds = Object.keys(taskGraph.tasks);
-  // As the run hashes: observed outputs carry output reads, observed inputs match changes.
-  if (ioSnapshots) {
-    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
-  }
-  const plans = ioSnapshots
+  const plans = ultracacheConfigurations
     ? planningContext.planner.getPlansReference(
         taskIds,
         taskGraph,
-        ioSnapshots,
-        ioSnapshotEligibilityOptions(projectGraph, taskGraph)
+        ultracacheConfigurations,
+        ultracacheEligibilityOptions(projectGraph, taskGraph)
       )
     : planningContext.planner.getPlansReference(taskIds, taskGraph);
 
@@ -269,30 +304,34 @@ export async function selectAffectedTasks(
   const namedProjects = new Set(dependencies.projects);
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+  const customHashed = new Set(
+    taskIds.filter((id) => hasCustomHasher(taskGraph.tasks[id], projects))
+  );
+  const options = {
+    projectGlobPatterns: await getProjectGlobPatterns(nxJson),
+    workspaceRoot,
+    alwaysTouchedTaskIds: taskIds.filter(
+      (id) =>
+        namedProjects.has(taskGraph.tasks[id].target.project) ||
+        customHashed.has(id)
+    ),
+    changedExternals: dependencies.externals,
+    changedExternalTypes: dependencies.changedExternalTypes,
+    excludedProjects: request.exclude.length
+      ? findMatchingProjects(request.exclude, projectGraph.nodes)
+      : [],
+    targets,
+    revisions: fileRevisions(request.fileChangeArgs),
+    selectivelyHashTsConfig: request.selectivelyHashTsConfig ?? false,
+    explain: request.explain ?? false,
+  };
   const selection = nativeAffectedTasks(
     planningContext.projectGraphRef,
     plans,
     taskGraph,
     request.changedFiles,
-    {
-      projectGlobPatterns: await getProjectGlobPatterns(nxJson),
-      workspaceRoot,
-      alwaysTouchedTaskIds: taskIds.filter(
-        (id) =>
-          namedProjects.has(taskGraph.tasks[id].target.project) ||
-          hasCustomHasher(taskGraph.tasks[id], projects)
-      ),
-      changedExternals: dependencies.externals,
-      changedExternalTypes: dependencies.changedExternalTypes,
-      excludedProjects: request.exclude.length
-        ? findMatchingProjects(request.exclude, projectGraph.nodes)
-        : [],
-      targets,
-      revisions: fileRevisions(request.fileChangeArgs),
-      selectivelyHashTsConfig: request.selectivelyHashTsConfig ?? false,
-    }
+    options
   );
-
   // The run builds from the owning projects, so only their requested tasks
   // take the CLI overrides there; every other task is a dependency.
   const owning = new Set(
@@ -312,6 +351,18 @@ export async function selectAffectedTasks(
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
+    explanation: selection.explanation && {
+      ...explainTasks(
+        selection.affected,
+        selection.explanation,
+        dependencies,
+        request.changedFiles,
+        taskGraph,
+        customHashed,
+        keep
+      ),
+      requested: requestedTasks(taskIds, taskGraph, targets, options),
+    },
     taskSelection: {
       // Edges that disagree on a dependency's overrides leave it to a build
       // from the owning projects, which settles them the way the run always has.
@@ -370,27 +421,235 @@ function hasCustomHasher(
  * A lockfile or package.json change reaches a hash as `External(name)`, a
  * package rather than a path, so it is handed to the plans as package names.
  */
+/** Dependency changes, plus why each named project was named, for `--explain`. */
+type NamedDependencyChanges = DependencyChanges & {
+  named: Map<string, AffectedReason[]>;
+  /** The changed file that moved each external, for naming it in a reason. */
+  movedBy: Map<string, string>;
+  /** The changed files that moved each ecosystem whole, unable to name packages. */
+  ecosystemMovedBy: Map<string, string[]>;
+};
+
 function dependencyChanges(
   projectGraph: ProjectGraph,
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration,
   packageJson: any = readPackageJson()
-): DependencyChanges {
-  const changes = [
-    lockFileDependencyChanges(
-      touchedFiles,
-      projectGraph.nodes,
-      nxJson,
-      packageJson,
-      projectGraph
-    ),
-    packageJsonDependencyChanges(touchedFiles, nxJson, projectGraph),
-  ];
+): NamedDependencyChanges {
+  const lockFile = lockFileDependencyChanges(
+    touchedFiles,
+    projectGraph.nodes,
+    nxJson,
+    packageJson,
+    projectGraph
+  );
+  const packageJsonChanges = packageJsonDependencyChanges(
+    touchedFiles,
+    nxJson,
+    projectGraph
+  );
+  const changes = [lockFile, packageJsonChanges];
+
+  const named = new Map<string, AffectedReason[]>();
+  const name = (project: string, reason: AffectedReason) =>
+    named.set(project, [...(named.get(project) ?? []), reason]);
+  const changedLockFile = touchedFiles.find((f) =>
+    (AUTO_AFFECTED_LOCK_FILES as readonly string[]).includes(f.file)
+  )?.file;
+  for (const project of lockFile.projects) {
+    name(project, { kind: 'lockfile', file: changedLockFile });
+  }
+  for (const project of packageJsonChanges.projects) {
+    name(project, {
+      kind: 'npm-package',
+      // The name package.json uses, which need not be the project's.
+      package:
+        projectGraph.nodes[project]?.data.metadata?.js?.packageName ?? project,
+      file: 'package.json',
+    });
+  }
+
+  const movedBy = new Map<string, string>();
+  for (const external of packageJsonChanges.externals) {
+    movedBy.set(external, 'package.json');
+  }
+  for (const external of lockFile.externals) {
+    movedBy.set(external, changedLockFile);
+  }
+  const ecosystemMovedBy = new Map<string, string[]>();
+  for (const [changes, file] of [
+    [packageJsonChanges, 'package.json'],
+    [lockFile, changedLockFile],
+  ] as const) {
+    for (const ecosystem of changes.changedExternalTypes) {
+      ecosystemMovedBy.set(ecosystem, [
+        ...(ecosystemMovedBy.get(ecosystem) ?? []),
+        file,
+      ]);
+    }
+  }
+
   return {
     externals: [...new Set(changes.flatMap((c) => c.externals))],
     changedExternalTypes: [
       ...new Set(changes.flatMap((c) => c.changedExternalTypes)),
     ],
     projects: [...new Set(changes.flatMap((c) => c.projects))],
+    named,
+    movedBy,
+    ecosystemMovedBy,
+  };
+}
+
+/**
+ * Why each selected task is in the answer, and why each task outside it that
+ * a reason names as a producer is too.
+ *
+ * Every reason that applies is listed: a task can match a changed file, hash a package that
+ * moved, and read an affected producer, all at once.
+ */
+function explainTasks(
+  affected: string[],
+  explanation: AffectedTaskExplanation,
+  dependencies: NamedDependencyChanges,
+  changedPaths: string[],
+  taskGraph: TaskGraph,
+  customHashed: Set<string>,
+  /** What the run keeps: a reached task in it is listed even if nothing reads its outputs. */
+  keep: string[]
+): InternedExplanation {
+  // What a plan hashing every external saw change.
+  const dependencyFiles = changedPaths.filter(
+    (file) =>
+      file === 'package.json' ||
+      (AUTO_AFFECTED_LOCK_FILES as readonly string[]).includes(file)
+  );
+  const named = dependencies.named;
+
+  // Each matching instruction's reasons, built once and shared by every task
+  // whose plan holds it.
+  const inputs = explanation.inputMatches.map((matches) => {
+    const reasons: AffectedReason[] = [];
+    for (const match of matches.files) {
+      reasons.push({
+        kind: 'input-file',
+        file: match.file,
+        pattern: match.pattern,
+      });
+    }
+    for (const pkg of matches.packages) {
+      reasons.push({
+        kind: 'npm-package',
+        package: pkg,
+        file: dependencies.movedBy.get(pkg),
+      });
+    }
+    for (const ecosystem of matches.movedEcosystems) {
+      // Only the files that could not be narrowed: a package.json naming its
+      // packages beside an unreadable lockfile did not move everything.
+      const files = dependencyFiles.filter((file) =>
+        dependencies.ecosystemMovedBy.get(ecosystem)?.includes(file)
+      );
+      for (const file of files.length ? files : [undefined]) {
+        reasons.push({ kind: 'moved-ecosystem', ecosystem, file });
+      }
+    }
+    if (matches.allExternals) {
+      for (const file of dependencyFiles) {
+        reasons.push({ kind: 'external-dependencies', file });
+      }
+    }
+    for (const file of matches.projectConfigs) {
+      reasons.push({ kind: 'project-configuration', file });
+    }
+    return reasons;
+  });
+
+  const reasonsFor = (taskId: string): (AffectedReason | InputsReason)[] => {
+    const forTask: (AffectedReason | InputsReason)[] = [];
+    const matched = (explanation.taskInputMatches[taskId] ?? []).filter(
+      (index) => inputs[index].length
+    );
+    if (matched.length) {
+      forTask.push({ kind: 'inputs', inputs: matched });
+    }
+
+    // Only the reached producers: the walk records the edges it crossed.
+    for (const producer of explanation.producersOf[taskId] ?? []) {
+      forTask.push({ kind: 'dependent-output', producer });
+    }
+
+    const project = taskGraph.tasks[taskId]?.target.project;
+    for (const reason of (project && named.get(project)) ?? []) {
+      forTask.push(reason);
+    }
+    if (customHashed.has(taskId)) {
+      forTask.push({ kind: 'custom-hasher' });
+    }
+
+    // A deleted config seeded every task. Only worth saying when nothing
+    // narrower applies, or it would repeat on every line.
+    if (!forTask.length) {
+      for (const file of explanation.deletedProjectConfigs) {
+        forTask.push({ kind: 'deleted-project-configuration', file });
+      }
+    }
+
+    return forTask;
+  };
+
+  const result: InternedExplanation = {
+    inputs,
+    affected: Object.fromEntries(affected.map((id) => [id, reasonsFor(id)])),
+    upstream: {},
+    touched: [],
+  };
+  // Reached: touched, or carried to through outputs, which leaves an edge.
+  const reached = new Set([
+    ...explanation.touched,
+    ...Object.keys(explanation.producersOf),
+  ]);
+  for (const id of keep) {
+    if (reached.has(id) && !(id in result.affected)) {
+      result.upstream[id] = reasonsFor(id);
+    }
+  }
+  const producers = [
+    ...Object.keys(result.affected),
+    ...Object.keys(result.upstream),
+  ].flatMap((id) => explanation.producersOf[id] ?? []);
+  while (producers.length) {
+    const id = producers.pop();
+    if (id in result.affected || id in result.upstream) continue;
+    result.upstream[id] = reasonsFor(id);
+    producers.push(...(explanation.producersOf[id] ?? []));
+  }
+  result.touched = explanation.touched.filter(
+    (id) => id in result.affected || id in result.upstream
+  );
+  for (const [pkg, file] of dependencies.movedBy) {
+    result.moved ??= {};
+    (result.moved[file] ??= []).push(pkg);
+  }
+  return result;
+}
+
+/**
+ * How many tasks of the requested targets selection chose among. Tasks of
+ * excluded projects are left out, since they were never candidates.
+ */
+function requestedTasks(
+  taskIds: string[],
+  taskGraph: TaskGraph,
+  targets: string[],
+  options: { excludedProjects: string[] }
+): AffectedExplanation['requested'] {
+  const excluded = new Set(options.excludedProjects);
+  return {
+    targets,
+    total: taskIds.filter((id) => {
+      const { project, target } = taskGraph.tasks[id].target;
+      return targets.includes(target) && !excluded.has(project);
+    }).length,
   };
 }

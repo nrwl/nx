@@ -64,7 +64,36 @@ Resolved outputs:
 "
 `;
 
-exports[`Nx Commands show show target human-readable output should render target info 1`] = `
+exports[`Nx Commands show show target human-readable output should render target info: npm-and-yarn 1`] = `
+"Target: <APP>:build
+Command: webpack-cli build
+Parallelism: true
+Continuous: false
+Cache: true
+Inputs:
+  - !{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)
+  - !{projectRoot}/.eslintrc.json
+  - !{projectRoot}/eslint.config.mjs
+  - !{projectRoot}/src/test-setup.[jt]s
+  - !{projectRoot}/tsconfig.spec.json
+  - default
+  - ^production
+  - {"externalDependencies":["webpack-cli"]}
+  - {"json":"{workspaceRoot}/tsconfig.json","fields":["extends","files","include"]}
+Outputs:
+  - {workspaceRoot}/dist/apps/<APP>
+Options:
+  cwd: "apps/<APP>"
+  env:
+    {
+      "NODE_ENV": "production"
+    }
+Configurations: development, production
+
+"
+`;
+
+exports[`Nx Commands show show target human-readable output should render target info: pnpm 1`] = `
 "Target: <APP>:build
 Command: webpack-cli build
 Parallelism: true

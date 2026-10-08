@@ -97,13 +97,13 @@ export declare class HashPlanInspector {
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   /**
-   * `snapshots` is this run's I/O snapshot set; a task with an eligible
-   * entry hashes its observed reads instead of its declared filesets.
+   * `configurations` is this run's Ultracache configurations; a task with an
+   * eligible entry hashes its observed reads instead of its declared filesets.
    * `options` carries the task ids decided in JS, where executors and
    * target configuration are resolved.
    */
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, options?: IoSnapshotEligibilityOptions | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, configurations?: UltracacheConfigurations | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): Record<string, string[]>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, configurations?: UltracacheConfigurations | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -127,43 +127,6 @@ export declare class ImportResult {
   staticImportExpressions: Array<string>
 }
 
-/**
- * One stored version of a commit's snapshot set. Handed to the hash planner as-is.
- * A fresh import holds every entry; a handle reopened from storage reads
- * them per task as they are asked for and remembers them, so it costs the
- * tasks it plans rather than the workspace's whole set.
- */
-export declare class IoSnapshots {
-  get commit(): string
-  get resolution(): IoSnapshotResolution
-}
-
-/**
- * The workspace database's snapshot sets. Each import is its own version,
- * keyed by commit and fetch time, so a run that pinned one keeps reading it
- * while a newer one is imported. Failures throw with a `code` JS maps to a
- * skip reason: `STORE_UNAVAILABLE`, `INVALID_RESPONSE` or `WRITE_FAILED`.
- */
-export declare class IoSnapshotStore {
-  constructor(db: ExternalObject<NxDbConnection>)
-  /**
-   * Stores the set the Nx Cloud client read for `requested_commit` as a new
-   * version, and returns it with every entry in hand.
-   */
-  import(options: IoSnapshotImportOptions): IoSnapshots
-  /**
-   * The newest stored set for `commit`, without touching the network;
-   * `null` when none is stored, its row cannot be read, or it was fetched
-   * more than `max_age_ms` ago. Reads only the version's summary row.
-   */
-  get(commit: string, maxAgeMs?: number | undefined | null): IoSnapshots | null
-  /**
-   * Exactly the version of `commit` fetched at `fetched_at`; `null` when it
-   * is not stored or its row cannot be read.
-   */
-  getVersion(commit: string, fetchedAt: number): IoSnapshots | null
-}
-
 export declare class NxCache {
   cacheDirectory: string
   constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
@@ -173,7 +136,7 @@ export declare class NxCache {
    * SQL query and reads terminal output files in parallel via Rayon.
    */
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
-  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
+  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): CachedOutputs
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
   /**
    * Register terminal outputs that were written without a cache entry —
@@ -196,7 +159,13 @@ export declare class NxCache {
   recordTerminalOutputs(records: Array<TerminalOutputRecord>): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
-  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
+  /**
+   * Restores `outputs`. Returns each file written, stamped as it is now,
+   * when those are all the output files the workspace now holds: every
+   * output a path, and each one that exists replaced from the cache. A
+   * glob or a negation can leave other matching files in place.
+   */
+  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): Array<OutputFile> | null
   removeOldCacheRecords(): void
   checkCacheFsInSync(): boolean
 }
@@ -267,6 +236,10 @@ export declare class RunningTasksService {
   constructor(db: ExternalObject<NxDbConnection>)
   getRunningTasks(ids: Array<string>): Array<string>
   addRunningTask(taskId: string): void
+  /**
+   * Release this process's claim on a task. A row another process has since
+   * taken over is left in place.
+   */
   removeRunningTask(taskId: string): void
 }
 
@@ -313,16 +286,81 @@ export declare class TaskHasher {
   hashPlansFor(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
 }
 
+/**
+ * Tracks which tasks each Nx process in a nested process tree is running, so
+ * that a task which re-invokes itself can be reported instead of looping
+ * forever.
+ *
+ * Every process in the tree shares a `root_pid`, but sharing a root does not
+ * imply a parent/child relationship: sibling Nx processes are common and
+ * legitimate (N atomized e2e specs each spawning the same `serve-static` web
+ * server, or two parallel tasks that each shell out to `nx run lib:build`).
+ * Only an invocation belonging to an actual *ancestor* of this process is a
+ * loop, so the check is scoped to `ancestor_pids` rather than to the whole
+ * tree.
+ */
 export declare class TaskInvocationTracker {
-  constructor(db: ExternalObject<NxDbConnection>, rootPid: number)
-  /** Register a task as invoked. Throws if the task was already registered (loop detected). */
-  registerTask(parentPid: number, taskId: string): void
-  /** Remove a task invocation record after task completes. */
-  unregisterTask(taskId: string): void
-  /** Get all invocations for this root_pid, ordered by creation time. */
-  getInvocationChain(): Array<InvocationRecord>
+  constructor(db: ExternalObject<NxDbConnection>, rootPid: number, ancestorPids: Array<number>)
+  /**
+   * Register a task as invoked by the process identified by `pid`.
+   *
+   * Returns the invocation chain when an ancestor process is already running
+   * this task, which is a genuine loop. The chain lists every task invoked
+   * along the ancestry path, outermost first. Returns `null` when the task
+   * was registered, including when a *sibling* process is already running it.
+   *
+   * An ancestor running this task with the *same* overrides is a loop
+   * immediately. An ancestor running it with different overrides is allowed
+   * up to `MAX_ANCESTOR_INVOCATIONS_PER_TASK`, which lets a terminating
+   * `app:build -> app:build --flag` chain through while still bounding a
+   * recursion whose forwarded arguments grow on every hop.
+   */
+  registerTask(pid: number, taskId: string, overridesHash: string): Array<InvocationRecord> | null
+  /**
+   * Remove a task invocation record after the task completes. Scoped to the
+   * registering process so that a sibling finishing the same task does not
+   * drop this process's record.
+   */
+  unregisterTask(pid: number, taskId: string): void
   /** Clean up stale invocations older than 1 day (handles PID recycling). */
   cleanupStale(): void
+}
+
+/**
+ * One stored version of a commit's Ultracache configurations. Handed to the hash planner as-is.
+ * A fresh import holds every entry; a handle reopened from storage reads
+ * them per task as they are asked for and remembers them, so it costs the
+ * tasks it plans rather than the workspace's whole set.
+ */
+export declare class UltracacheConfigurations {
+  get commit(): string
+  get resolution(): UltracacheConfigurationResolution
+}
+
+/**
+ * The workspace database's Ultracache configurations. Each import is its own version,
+ * keyed by commit and fetch time, so a run that pinned one keeps reading it
+ * while a newer one is imported. Failures throw with a `code` JS maps to a
+ * skip reason: `STORE_UNAVAILABLE`, `INVALID_RESPONSE` or `WRITE_FAILED`.
+ */
+export declare class UltracacheConfigurationStore {
+  constructor(db: ExternalObject<NxDbConnection>)
+  /**
+   * Stores the set the Nx Cloud client read for `requested_commit` as a new
+   * version, and returns it with every entry in hand.
+   */
+  import(options: UltracacheConfigurationImportOptions): UltracacheConfigurations
+  /**
+   * The newest stored set for `commit`, without touching the network;
+   * `null` when none is stored or its row cannot be read. Reads only the
+   * version's summary row.
+   */
+  get(commit: string): UltracacheConfigurations | null
+  /**
+   * Exactly the version of `commit` fetched at `fetched_at`; `null` when it
+   * is not stored or its row cannot be read.
+   */
+  getVersion(commit: string, fetchedAt: number): UltracacheConfigurations | null
 }
 
 export declare class WorkspaceContext {
@@ -391,6 +429,13 @@ export declare class WorkspaceContext {
    * other read of the files does, so a write already reported counts.
    */
   trackedFiles(paths: Array<string>): Array<string>
+  /**
+   * Remembers each task's outputs, as given or else as they are on disk
+   * now, so `outputs_unchanged` can tell whether they still are.
+   */
+  recordOutputs(entries: Array<TaskOutputs>): void
+  /** Whether each task's outputs are still as last recorded for its hash. */
+  outputsUnchanged(entries: Array<TaskOutputs>): Array<boolean>
   getFilesInDirectory(directory: string): Array<string>
   /**
    * Subscribes to the context's changes: the callback is called whenever
@@ -435,6 +480,29 @@ export interface AffectedOptions {
   workspaceRoot: string
 }
 
+/**
+ * Why the change reached each task. Covers every task it reached, not just
+ * the selection, so a reason naming a producer can be looked up too.
+ */
+export interface AffectedTaskExplanation {
+  /**
+   * The reached tasks the change touched directly, sorted: a matched input,
+   * or always touched. Every other reached task was carried through outputs.
+   */
+  touched: Array<string>
+  /** Consumer -> the reached producers whose outputs it reads. */
+  producersOf: Record<string, Array<string>>
+  /** Changed project configs no longer on disk. Every task was seeded for them. */
+  deletedProjectConfigs: Array<string>
+  /**
+   * What each matching plan instruction matched. Shared rather than copied
+   * per task: one lib's fileset can be in the plan of every dependent.
+   */
+  inputMatches: Array<TaskInputMatches>
+  /** Per reached task, the indexes of the matches above that its plan holds. */
+  taskInputMatches: Record<string, Array<number>>
+}
+
 export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph, changedFiles: Array<string>, options: AffectedTasksOptions): AffectedTaskSelection
 
 export interface AffectedTaskSelection {
@@ -442,6 +510,8 @@ export interface AffectedTaskSelection {
   affected: Array<string>
   /** `affected` plus everything it depends on, sorted: what a run keeps. */
   required: Array<string>
+  /** Why the change reached each task. Only when `explain` was asked for. */
+  explanation?: AffectedTaskExplanation
 }
 
 export interface AffectedTasksOptions {
@@ -490,6 +560,8 @@ export interface AffectedTasksOptions {
    * project's tsconfig `paths` entries, rather than none.
    */
   selectivelyHashTsConfig: boolean
+  /** Whether to return why each task was reached, for `--explain`. */
+  explain: boolean
 }
 
 export interface BatchInfo {
@@ -501,6 +573,14 @@ export declare const enum BatchStatus {
   Running = 'Running',
   Success = 'Success',
   Failure = 'Failure'
+}
+
+/** What `put` copied into the cache. */
+export interface CachedOutputs {
+  /** The output entries that exist, as `expand_outputs` finds them. */
+  expandedOutputs: Array<string>
+  /** Each file copied, stamped as it is in the workspace. */
+  files: Array<OutputFile>
 }
 
 export interface CachedPluginCapabilities {
@@ -713,30 +793,25 @@ export declare function getFilesForOutputsBatch(directory: string, entriesBatch:
 export declare function getHardcodedIgnorePatterns(): Array<string>
 
 /**
- * Tasks whose snapshot read another task's outputs: they hash after their
- * producers ran, because those files only exist then. Needs no project graph,
- * so the client can call it before the first hashing wave on the daemon path.
- * Opted-out and custom-hasher tasks are not excluded: deferring a task that
- * ends up hashed natively only delays its hash, it never changes it.
- */
-export declare function getIoSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
-
-/** The eligibility report, for the run summary. */
-export declare function getIoSnapshotReport(snapshots: IoSnapshots, tasks: Record<string, TaskUltracacheConfiguration | null>, options?: IoSnapshotEligibilityOptions | undefined | null): IoSnapshotReport
-
-/**
  * If `workspace_root` is inside a git worktree, returns the main repo root.
  * Returns `None` when already in the main repo (or not in a git repo at all).
  */
 export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
-/**
- * Observed outputs per eligible task, for the runner to union into
- * `task.outputs`.
- */
-export declare function getObservedIoSnapshotOutputs(snapshots: IoSnapshots, tasks: Record<string, TaskUltracacheConfiguration | null>, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, Array<string>>
-
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
+
+/**
+ * Tasks whose Ultracache configuration read another task's outputs: they
+ * hash after their producers ran, because those files only exist then. Needs
+ * no project graph, so the client can call it before the first hashing wave
+ * on the daemon path.
+ * Opted-out and custom-hasher tasks are not excluded: deferring a task that
+ * ends up hashed natively only delays its hash, it never changes it.
+ */
+export declare function getUltracacheDeferredTaskIds(configurations: UltracacheConfigurations, taskGraph: TaskGraph): Array<string>
+
+/** The eligibility report, for the run summary. */
+export declare function getUltracacheReport(configurations: UltracacheConfigurations, tasks: Record<string, TaskUltracacheSettings | null>, options?: UltracacheEligibilityOptions | undefined | null): UltracacheReport
 
 /**
  * Group information - union of different process group types
@@ -815,6 +890,16 @@ export declare function initializeTelemetry(connection: ExternalObject<NxDbConne
  */
 export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
+/** A changed file that reached a task, and the input pattern it reached it by. */
+export interface InputMatch {
+  file: string
+  /**
+   * The fileset that matched. Absent for an instruction with no pattern to
+   * name, such as the root tsconfig.
+   */
+  pattern?: string
+}
+
 export interface InputsInput {
   input: string
   dependencies?: boolean
@@ -826,48 +911,8 @@ export declare function installNxConsole(): Promise<boolean>
 export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
 export interface InvocationRecord {
-  parentPid: number
+  pid: number
   taskId: string
-}
-
-/**
- * Why a task (or the whole run) hashes natively; `reason` is rendered by the
- * run summary.
- */
-export interface IoSnapshotDiagnostic {
-  reason: string
-  taskId?: string
-  glob?: string
-  message?: string
-}
-
-/** What JS knows about a run's tasks that the eligibility walk needs. */
-export interface IoSnapshotEligibilityOptions {
-  /** Tasks whose executor ships a custom hasher. */
-  customHasherTaskIds?: Array<string>
-}
-
-/** The snapshot set the Nx Cloud client read for HEAD, as JS hands it over. */
-export interface IoSnapshotImportOptions {
-  requestedCommit: string
-  /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
-  snapshotsJson: string
-}
-
-export interface IoSnapshotReport {
-  /** Task ids hashed from their snapshot. */
-  used: Array<string>
-  /** Subset of `used` whose snapshot also contributes observed outputs. */
-  tasksWithOutputs: Array<string>
-  diagnostics: Array<IoSnapshotDiagnostic>
-  resolution: IoSnapshotResolution
-}
-
-/** What was resolved for a commit; stored beside its entries. */
-export interface IoSnapshotResolution {
-  requestedCommit: string
-  fetchedAt: number
-  tasks: number
 }
 
 export const IS_WASM: boolean
@@ -990,6 +1035,24 @@ export interface NxWorkspaceFilesExternals {
   globalFiles: ExternalObject<Array<FileData>>
   allWorkspaceFiles: ExternalObject<Array<FileData>>
   ignoredIndex: ExternalObject<IgnoredIndexReader>
+}
+
+/**
+ * Open `url` in the user's default browser. Returns `true` if an opener
+ * process was spawned, `false` if none could be (e.g. no `xdg-open`) or `url`
+ * isn't `http(s)`, so the caller can tell the user instead of failing
+ * silently. Never throws.
+ */
+export declare function openUrl(url: string): boolean
+
+/** A workspace-relative file with the stamp it was left with. */
+export interface OutputFile {
+  path: string
+  /**
+   * `<mtime nanos>:<size>`, a string because the nanoseconds do not fit a
+   * JavaScript number.
+   */
+  stamp: string
 }
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
@@ -1134,8 +1197,8 @@ export interface Task {
   parallelism?: boolean
   /** This denotes if the task runs continuously */
   continuous?: boolean
-  /** The target's ultracache configuration, if declared */
-  ultracache?: TaskUltracacheConfiguration
+  /** The target's Ultracache settings, if declared */
+  ultracache?: TaskUltracacheSettings
 }
 
 /** Graph of Tasks to be executed */
@@ -1147,6 +1210,11 @@ export interface TaskGraph {
   /** Map of Task IDs to IDs of tasks which the task depends on */
   dependencies: Record<string, Array<string>>
   continuousDependencies: Record<string, Array<string>>
+  /**
+   * The subset of `continuous_dependencies` from `dependsOn` entries with
+   * `inputs: false`: still run, but their inputs are not hashed into the task.
+   */
+  continuousDependenciesWithoutInputs?: Record<string, Array<string>>
 }
 
 /** Details about the composition of a task's hash */
@@ -1159,6 +1227,36 @@ export interface TaskHashDetails {
   implicitDeps?: Record<string, string>
   /** Hash of the runtime environment which the task was executed */
   runtime?: Record<string, string>
+}
+
+/**
+ * What reached one task: the files its filesets matched and the packages it
+ * hashes that moved.
+ */
+export interface TaskInputMatches {
+  files: Array<InputMatch>
+  /** External node names the plan hashes one by one that moved. */
+  packages: Array<string>
+  /** The plan hashes every external dependency, and one moved. */
+  allExternals: boolean
+  /** Changed config files of the projects whose configuration the plan hashes. */
+  projectConfigs: Array<string>
+  /**
+   * Ecosystems a change moved whole, without naming packages, that the plan
+   * hashes packages of. Reported once rather than per package.
+   */
+  movedEcosystems: Array<string>
+}
+
+export interface TaskOutputs {
+  outputs: Array<string>
+  hash: string
+  /**
+   * Every output file the cache just wrote or restored, which it passes
+   * only when that is all of them. Recorded as given, without reading the
+   * disk.
+   */
+  files?: Array<OutputFile>
 }
 
 /**
@@ -1204,8 +1302,8 @@ export interface TaskTarget {
   configuration?: string
 }
 
-/** Ultracache configuration of a task's target */
-export interface TaskUltracacheConfiguration {
+/** Ultracache settings of a task's target */
+export interface TaskUltracacheSettings {
   /** How this target's tasks participate. Defaults to `on`. */
   mode?: 'on' | 'warn' | 'error' | 'off'
   /**
@@ -1257,8 +1355,40 @@ export interface TuiConfig {
   suppressHints?: boolean
 }
 
+/** The Ultracache configurations the Nx Cloud client read for HEAD, as JS hands them over. */
+export interface UltracacheConfigurationImportOptions {
+  requestedCommit: string
+  /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
+  configurationsJson: string
+}
+
+/** What was resolved for a commit; stored beside its entries. */
+export interface UltracacheConfigurationResolution {
+  requestedCommit: string
+  fetchedAt: number
+  tasks: number
+}
+
 /**
- * How a target's tasks participate in ultracache. Nx Cloud only: nothing in
+ * Why a task (or the whole run) hashes natively; `reason` is rendered by the
+ * run summary.
+ */
+export interface UltracacheDiagnostic {
+  reason: string
+  taskId?: string
+  glob?: string
+  message?: string
+}
+
+/** What JS knows about a run's tasks that the eligibility walk needs. */
+export interface UltracacheEligibilityOptions {
+  /** Tasks whose executor ships a custom hasher. */
+  customHasherTaskIds?: Array<string>
+  continuousTaskIds?: Array<string>
+}
+
+/**
+ * How a target's tasks participate in Ultracache. Nx Cloud only: nothing in
  * the OSS runner records or applies IO, so every mode behaves as `Off` without
  * it.
  */
@@ -1280,6 +1410,13 @@ export declare const enum UltracacheMode {
   Error = 'error',
   /** Record nothing, so no report is produced and nothing is applied. */
   Off = 'off'
+}
+
+export interface UltracacheReport {
+  /** Task ids hashed from their Ultracache configuration. */
+  used: Array<string>
+  diagnostics: Array<UltracacheDiagnostic>
+  resolution: UltracacheConfigurationResolution
 }
 
 export interface UpdatedWorkspaceFiles {

@@ -154,9 +154,9 @@ import {
 } from './handle-tasks-execution-hooks';
 import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
 import {
-  getOutputsWatcherTerminalError,
-  handleOutputsChanges,
-} from './handle-outputs-changes';
+  getWatchTerminalError,
+  handleWatchEvents,
+} from './handle-watch-events';
 import {
   registerProjectGraphRecomputationListener,
   routeAppliedChanges,
@@ -269,12 +269,12 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       workspaceWatcherError
     );
   }
-  const outputsWatcherTerminalError = getOutputsWatcherTerminalError();
-  if (outputsWatcherTerminalError) {
+  const watchTerminalError = getWatchTerminalError();
+  if (watchTerminalError) {
     await respondWithErrorAndExit(
       socket,
       `File watcher error in the workspace '${workspaceRoot}'.`,
-      outputsWatcherTerminalError
+      watchTerminalError
     );
   }
 
@@ -822,7 +822,7 @@ export async function startServer(): Promise<Server> {
               return;
             }
             if (err || events?.length) {
-              handleOutputsChanges(err, events);
+              handleWatchEvents(err, events);
             }
           });
 

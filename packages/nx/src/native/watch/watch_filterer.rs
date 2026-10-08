@@ -24,7 +24,7 @@ pub struct WatchFilterer {
     /// `create_walker`'s filter_entry so the watcher and the walk agree.
     hardcoded: Gitignore,
     /// nx's own watch-scoping globs (create_filter's `additional_globs`, e.g. the
-    /// outputs watcher's `!.nx/workspace-data/.../server-process.json`). An
+    /// watch's `!.nx/workspace-data/.../server-process.json`). An
     /// internal opt-in, so it outranks even the hardcoded veto — the veto only
     /// stops USER ignore files un-ignoring hardcoded paths, not nx's own scoping.
     additional_globs: Option<Gitignore>,
@@ -52,9 +52,9 @@ impl WatchFilterer {
         }
 
         // nx's own watch globs are an internal opt-in and take precedence over
-        // everything, the hardcoded veto included: the outputs watcher's
+        // everything, the hardcoded veto included: the watch's
         // `!.nx/workspace-data/.../server-process.json` must punch through the
-        // .nx/workspace-data veto, or the outputs watcher loses its prompt
+        // .nx/workspace-data veto, or the watch loses its prompt
         // shutdown signal (server.ts's 20ms poll still terminates the daemon).
         // The veto is only there to stop USER ignore files un-ignoring
         // hardcoded paths.
@@ -219,7 +219,7 @@ pub(crate) fn create_filter(
     }
 
     // nx's own watch-scoping globs, kept OUT of git_ignores and the hardcoded
-    // veto: they are an internal opt-in that must win. The outputs watcher passes
+    // veto: they are an internal opt-in that must win. The watch passes
     // `!.nx/workspace-data/.../server-process.json` to punch through the
     // .nx/workspace-data hardcoded ignore so it keeps its prompt shutdown signal.
     let additional_globs = if additional_globs.is_empty() {

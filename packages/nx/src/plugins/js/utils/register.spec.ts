@@ -5,6 +5,7 @@ import { join } from 'path';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import {
   getTranspiler,
+  loadTsFile,
   getTsNodeCompilerOptions,
   isCjsSyntaxError,
   isNativeTypeStripError,
@@ -740,5 +741,28 @@ describe('registerTsConfigPaths', () => {
     expect(registerPaths).toHaveBeenCalledWith(
       expect.objectContaining({ baseUrl: tempFs.tempDir })
     );
+  });
+});
+
+describe('loadTsFile', () => {
+  it('should resolve NodeNext .js specifiers to .ts sources in an ESM package', () => {
+    const tempFs = new TempFs('nx-load-ts-file', false);
+    try {
+      tempFs.createFilesSync({
+        'package.json': '{ "type": "module" }',
+        'tsconfig.json': '{ "compilerOptions": { "module": "nodenext" } }',
+        'src/entry.ts':
+          "import { value } from './dep.js';\nexport default value;\n",
+        'src/dep.ts': 'export const value: number = 42;\n',
+      });
+
+      const loaded = loadTsFile<{ default: number }>(
+        join(tempFs.tempDir, 'src/entry.ts'),
+        join(tempFs.tempDir, 'tsconfig.json')
+      );
+      expect(loaded.default).toBe(42);
+    } finally {
+      tempFs.cleanup();
+    }
   });
 });

@@ -1245,13 +1245,13 @@ mod tests {
 
     #[test]
     fn nx_own_globs_outrank_the_hardcoded_veto() {
-        // watchOutputFiles passes `!.nx/workspace-data/.../server-process.json`
-        // as an additional glob. `.nx/workspace-data` is a
-        // hardcoded ignore, so if the veto beat nx's own glob the outputs watcher
-        // would never see server-process.json and would lose its prompt shutdown
-        // signal — server.ts's 20ms poll is the backstop, not this. nx's internal
-        // globs are an opt-in and must win; the veto only stops USER ignore files
-        // un-ignoring hardcoded paths.
+        // The workspace context's watch passes
+        // `!.nx/workspace-data/.../server-process.json` as an additional glob.
+        // `.nx/workspace-data` is a hardcoded ignore, so if the veto beat nx's
+        // own glob the watch would never see server-process.json and would
+        // lose its prompt shutdown signal — server.ts's 20ms poll is the
+        // backstop, not this. nx's internal globs are an opt-in and must win;
+        // the veto only stops USER ignore files un-ignoring hardcoded paths.
         use notify::EventKind;
         use notify::event::CreateKind;
 
@@ -1278,7 +1278,7 @@ mod tests {
 
         assert!(
             filterer.check_event(&event(".nx/workspace-data/d/server-process.json")),
-            "nx's own whitelist must punch through the hardcoded veto so the outputs watcher sees server-process.json"
+            "nx's own whitelist must punch through the hardcoded veto so the watch sees server-process.json"
         );
         assert!(
             !filterer.check_event(&event(".nx/workspace-data/d/other.dat")),

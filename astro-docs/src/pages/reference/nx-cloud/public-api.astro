@@ -1,0 +1,95 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import AnchorHeading from '@astrojs/starlight/components/AnchorHeading.astro';
+import { CardGrid, Code, LinkCard } from '@astrojs/starlight/components';
+import { getEntry } from 'astro:content';
+import ApiEndpoint from '../../../components/public-api/ApiEndpoint.astro';
+import ApiTable from '../../../components/public-api/ApiTable.astro';
+import ApiContent from '../../../components/public-api/ApiContent.astro';
+import ApiResponseDetails from '../../../components/public-api/ApiResponseDetails.astro';
+import { referenceHeadings, type OpenApiReference } from '../../../plugins/utils/openapi-reference';
+
+export const prerender = true;
+const entry = await getEntry('nx-cloud-public-api', 'reference');
+if (!entry) throw new Error('The Nx Cloud Public API specification was not loaded.');
+const reference: OpenApiReference = entry.data.reference;
+const { sections } = reference;
+Astro.locals.rawContent = entry.body;
+---
+
+<StarlightPage
+  frontmatter={{ title: entry.data.title, description: entry.data.description, filter: entry.data.filter }}
+  headings={referenceHeadings(reference)}
+>
+  <Fragment set:html={reference.introduction.html} />
+  <Fragment set:html={reference.description.html} />
+  {reference.navigation.map((group) => (
+    <>
+      <AnchorHeading level={2} id={group.heading.slug}>{group.heading.text}</AnchorHeading>
+      <CardGrid>
+        {group.links.map(({ label, href, id }) => <LinkCard title={label} {href} {id} />)}
+      </CardGrid>
+    </>
+  ))}
+  {reference.servers.length > 0 && <><AnchorHeading level={2} id={sections.servers.slug}>{sections.servers.text}</AnchorHeading><ul>{reference.servers.map((server) => <li set:html={server.html} />)}</ul></>}
+
+  <AnchorHeading level={2} id={sections.endpoints.slug}>{sections.endpoints.text}</AnchorHeading>
+  {reference.endpoints.map((endpoint) => <ApiEndpoint {endpoint} />)}
+
+  <AnchorHeading level={2} id={sections.responses.slug}>{sections.responses.text}</AnchorHeading>
+  {reference.responses.map((group) => (
+    <>
+      <AnchorHeading level={3} id={group.heading.slug}>{group.heading.text}</AnchorHeading>
+      {group.definitions.map((definition) => (
+        <>
+          <ul>
+            {definition.descriptions.map(({ ids, description }) => (
+              <li>
+                {ids.map((id) => <span {id} />)}
+                <Fragment set:html={description.html} />
+              </li>
+            ))}
+          </ul>
+          <ApiResponseDetails response={definition.response} description={false} />
+        </>
+      ))}
+    </>
+  ))}
+  {reference.headers.length > 0 && (
+    <>
+      <AnchorHeading level={3} id={sections.headers.slug}>{sections.headers.text}</AnchorHeading>
+      {reference.headers.map((header) => (
+        <>
+          <AnchorHeading level={4} id={header.heading.slug}>{header.heading.text}</AnchorHeading>
+          {header.definitions.map((definition) => (
+            <>
+              <Fragment set:html={definition.schema.html} />
+              <ApiTable table={definition.fields} />
+              <ApiContent content={definition.content} />
+              {definition.descriptions.map(({ id, description, statuses }) => (
+                <div {id}>
+                  <p>Documented with HTTP {statuses.map((status, index) => <>{index > 0 && ', '}<code>{status}</code></>)}.</p>
+                  <Fragment set:html={description.html} />
+                </div>
+              ))}
+            </>
+          ))}
+        </>
+      ))}
+    </>
+  )}
+
+  <AnchorHeading level={2} id={sections.schemas.slug}>{sections.schemas.text}</AnchorHeading>
+  {reference.schemas.map((schema) => (
+    <>
+      <AnchorHeading level={3} id={schema.heading.slug}>{schema.heading.text}</AnchorHeading>
+      <Fragment set:html={schema.description.html} />
+      <Fragment set:html={schema.type.html} />
+      <ApiTable table={schema.fields} />
+      <details>
+        <summary>Schema definition</summary>
+        <Code code={schema.definition} lang="json" />
+      </details>
+    </>
+  ))}
+</StarlightPage>

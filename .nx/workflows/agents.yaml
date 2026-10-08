@@ -20,8 +20,8 @@ common-env-vars: &common-env-vars
   NX_DEV_URL: 'https://canary.nx.dev'
   # Cap gradle workers so co-located e2e tasks don't oversubscribe the agent.
   GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
-  # Record and hash tasks with Nx Cloud I/O snapshots (ultracache).
-  NX_CLOUD_USE_IO_SNAPSHOTS: 'true'
+  NX_CLOUD_TASK_GRAPH_STORAGE_VERSION: '2'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
 
 common-init-steps: &common-init-steps
   - name: Checkout
@@ -88,7 +88,7 @@ common-init-steps: &common-init-steps
 
   - name: Install hyperfine
     script: |
-      cargo install hyperfine
+      cargo install hyperfine --locked
 
   - name: Setup gradle
     script: |

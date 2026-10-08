@@ -119,6 +119,7 @@ export const defaultTasksRunner: TasksRunner<
     taskGraph: TaskGraph;
     hasher: TaskHasher;
     daemon: DaemonClient;
+    deferredTaskIds?: ReadonlySet<string>;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
   const { total: threadCount, discrete } = getThreadPoolSize(
@@ -146,6 +147,7 @@ async function runAllTasks(
     taskGraph: TaskGraph;
     hasher: TaskHasher;
     daemon: DaemonClient;
+    deferredTaskIds?: ReadonlySet<string>;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   const orchestrator = new TaskOrchestrator(
@@ -159,7 +161,9 @@ async function runAllTasks(
     context.nxArgs?.nxBail,
     context.daemon,
     context.nxArgs?.specifiedOutputStyle,
-    context.nxArgs?.resolvedOutputStyle ?? 'static-failures-only'
+    context.nxArgs?.resolvedOutputStyle ?? 'static-failures-only',
+    context.taskGraph,
+    context.deferredTaskIds
   );
 
   return orchestrator.run();

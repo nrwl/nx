@@ -15,10 +15,16 @@ import { readNxJson } from '../../config/configuration';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
-import type { IoSnapshotVersion } from '../message-types/io-snapshot-version';
+import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import {
+  IS_WASM,
+  NxWorkspaceFiles,
+  TaskOutputs,
+  TaskRun,
+  TaskTarget,
+} from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -396,7 +402,7 @@ export class DaemonClient {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshotVersion
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -407,7 +413,7 @@ export class DaemonClient {
       collectInputs,
       // An External cannot cross the socket: the version names the stored set
       // to hash from. Absent means native hashing.
-      ioSnapshots,
+      ultracacheConfigurationsVersion,
     });
   }
 
@@ -418,7 +424,7 @@ export class DaemonClient {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshotVersion
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Record<string, Hash>> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS_UPFRONT',
@@ -427,7 +433,7 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
-      ioSnapshots,
+      ultracacheConfigurationsVersion,
     });
   }
 
@@ -916,9 +922,7 @@ export class DaemonClient {
     );
   }
 
-  recordOutputsHashBatch(
-    entries: { outputs: string[]; hash: string }[]
-  ): Promise<any> {
+  recordOutputsHashBatch(entries: TaskOutputs[]): Promise<any> {
     return this.sendToDaemonViaQueue({
       type: 'RECORD_OUTPUTS_HASH_BATCH',
       data: entries,

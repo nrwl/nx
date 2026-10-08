@@ -9,9 +9,13 @@ on:
     branches:
       - "**"
 
+permissions:
+  contents: read
+
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
+  NX_CLOUD_TASK_GRAPH_STORAGE_VERSION: '2'
   PNPM_HOME: ~/.pnpm
   # See the root Cargo.toml: the release profile is incremental for local dev.
   # CI builds cold, so incremental only inflates the cargo cache.
@@ -21,8 +25,7 @@ env:
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
-  # Record and hash tasks with Nx Cloud I/O snapshots (ultracache).
-  NX_CLOUD_USE_IO_SNAPSHOTS: 'true'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
 
 jobs:
   main-linux:

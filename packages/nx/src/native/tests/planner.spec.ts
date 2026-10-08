@@ -6,9 +6,9 @@ import {
   closeDbConnection,
   connectToNxDb,
   HashPlanner,
-  IoSnapshotStore,
-  getIoSnapshotDeferredTaskIds,
-  getIoSnapshotReport,
+  UltracacheConfigurationStore,
+  getUltracacheDeferredTaskIds,
+  getUltracacheReport,
   TaskHasher,
   testOnlyTransferFileMap,
   transferProjectGraph,
@@ -17,7 +17,7 @@ import { withEnvironmentVariables } from '../../internal-testing-utils/with-envi
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { toRustProjectGraph } from '../transform-objects';
-import { getUltraCacheConfig } from '../../io-snapshots/overrides';
+import { getUltracacheSettings } from '../../ultracache/overrides';
 import { DependencyType } from '../../config/project-graph';
 
 let tempFs = new TempFs('task-planner');
@@ -1831,10 +1831,8 @@ describe('task planner', () => {
       }
     });
   });
-  describe('io snapshots', () => {
-    function fixture(
-      opts: { cyclic?: boolean; extraParentInputs?: unknown[] } = {}
-    ) {
+  describe('ultracache configurations', () => {
+    function fixture(opts: { cyclic?: boolean } = {}) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [
           { file: 'libs/parent/filea.ts', hash: 'a.hash' },
@@ -1857,7 +1855,6 @@ describe('task planner', () => {
                 { runtime: 'echo runtime123' },
                 { json: '{projectRoot}/package.json', fields: ['version'] },
                 { fileset: '{projectRoot}/generated', includeIgnored: true },
-                ...(opts.extraParentInputs ?? []),
               ],
               outputs: ['{workspaceRoot}/dist/libs/parent'],
             },
@@ -1869,7 +1866,6 @@ describe('task planner', () => {
         type: 'lib',
         data: {
           root: 'libs/child',
-          // The child's own negation must scope to the child's reads.
           namedInputs: { prod: ['default', '!{workspaceRoot}/**/*.md'] },
           targets: {
             build: {
@@ -1906,22 +1902,29 @@ describe('task planner', () => {
     function withContinuousDependency(taskGraph: any) {
       return {
         ...taskGraph,
+        tasks: {
+          ...taskGraph.tasks,
+          'child:build': {
+            ...taskGraph.tasks['child:build'],
+            continuous: true,
+          },
+        },
         continuousDependencies: { 'parent:build': ['child:build'] },
       };
     }
 
-    const snapshotDbDir = join(
+    const configurationDbDir = join(
       tmpdir(),
-      `nx-planner-io-snapshots-${process.pid}-${Date.now()}`
+      `nx-planner-ultracache-${process.pid}-${Date.now()}`
     );
-    const snapshotDb = connectToNxDb(snapshotDbDir, 'io-snapshots');
+    const configurationDb = connectToNxDb(configurationDbDir, 'ultracache');
     afterAll(() => {
-      closeDbConnection(snapshotDb);
-      rmSync(snapshotDbDir, { recursive: true, force: true });
+      closeDbConnection(configurationDb);
+      rmSync(configurationDbDir, { recursive: true, force: true });
     });
     let setCount = 0;
     /** Stores a set with the given entries and loads it as the daemon would. */
-    function snapshotsFor(
+    function configurationsFor(
       entries: Record<
         string,
         {
@@ -1931,9 +1934,9 @@ describe('task planner', () => {
       >
     ) {
       const commit = `c${setCount++}`.padEnd(40, 'c');
-      new IoSnapshotStore(snapshotDb).import({
+      new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
-        snapshotsJson: JSON.stringify(
+        configurationsJson: JSON.stringify(
           Object.fromEntries(
             Object.entries(entries).map(([id, e]) => [
               id,
@@ -1946,13 +1949,10 @@ describe('task planner', () => {
           )
         ),
       });
-      return new IoSnapshotStore(snapshotDb).get(commit);
+      return new UltracacheConfigurationStore(configurationDb).get(commit);
     }
 
-    const PARENT_NEG = '!libs/parent/**/*.spec.ts';
-    const CHILD_NEG = '!**/*.md';
-
-    it('leaves plans byte-identical when no task has a snapshot', () => {
+    it('leaves plans byte-identical when no task has an Ultracache configuration', () => {
       const { planner, taskGraph } = fixture();
       const plain = planner.getPlans(['parent:build'], taskGraph);
       expect(plain['parent:build']).toEqual(
@@ -1966,13 +1966,13 @@ describe('task planner', () => {
         ])
       );
       expect(
-        planner.getPlans(['parent:build'], taskGraph, snapshotsFor({}))
+        planner.getPlans(['parent:build'], taskGraph, configurationsFor({}))
       ).toEqual(plain);
       expect(
         planner.getPlans(
           ['parent:build'],
           taskGraph,
-          snapshotsFor({ 'child:build': {} })
+          configurationsFor({ 'child:build': {} })
         )['parent:build']
       ).toEqual(plain['parent:build']);
       expect(plain['parent:build']).not.toContainEqual(
@@ -1980,14 +1980,14 @@ describe('task planner', () => {
       );
     });
 
-    it("marks a task with the digest of its own writes, so another task's snapshot does not move it", () => {
+    it('marks a task by its own ultracache settings, so no configuration moves it', () => {
       const { planner, taskGraph } = fixture();
-      const planFor = (snapshots: ReturnType<typeof snapshotsFor>) =>
-        planner.getPlans(['parent:build'], taskGraph, snapshots)[
+      const planFor = (configurations: ReturnType<typeof configurationsFor>) =>
+        planner.getPlans(['parent:build'], taskGraph, configurations)[
           'parent:build'
         ];
-      const marker = (snapshots: ReturnType<typeof snapshotsFor>) =>
-        planFor(snapshots).find((i) => i.startsWith('io-snapshot:'));
+      const marker = (configurations: ReturnType<typeof configurationsFor>) =>
+        planFor(configurations).find((i) => i.startsWith('io-snapshot:'));
       const base = {
         'parent:build': {
           inputs: ['libs/parent/filea.ts'],
@@ -1995,15 +1995,15 @@ describe('task planner', () => {
         },
         'child:build': { inputs: ['libs/child/fileb.ts'] },
       };
-      const same = marker(snapshotsFor(base));
+      const same = marker(configurationsFor(base));
       const childChanged = marker(
-        snapshotsFor({
+        configurationsFor({
           ...base,
           'child:build': { inputs: ['libs/child/other.ts'] },
         })
       );
       const parentWroteMore = marker(
-        snapshotsFor({
+        configurationsFor({
           ...base,
           'parent:build': {
             ...base['parent:build'],
@@ -2011,7 +2011,7 @@ describe('task planner', () => {
           },
         })
       );
-      const parentReadOther = snapshotsFor({
+      const parentReadOther = configurationsFor({
         ...base,
         'parent:build': {
           ...base['parent:build'],
@@ -2021,31 +2021,30 @@ describe('task planner', () => {
 
       expect(same).toMatch(/^io-snapshot:\d+$/);
       expect(childChanged).toBe(same);
-      expect(parentWroteMore).not.toBe(same);
+      // Outputs come from the declaration, so recorded writes don't count.
+      expect(parentWroteMore).toBe(same);
       // The reads are hashed as the file group they become, so they move the
       // plan without moving the digest — hashing them here too would make a
       // read the plan drops, or one naming a missing file, move the key.
       expect(marker(parentReadOther)).toBe(same);
-      expect(planFor(parentReadOther)).not.toEqual(planFor(snapshotsFor(base)));
+      expect(planFor(parentReadOther)).not.toEqual(
+        planFor(configurationsFor(base))
+      );
     });
 
-    it('keeps a negation only when every visit of the project declares it', () => {
-      const read = snapshotsFor({
-        'parent:build': { inputs: ['libs/child/readme.md'] },
-      });
-      const groupFor = (extraParentInputs?: unknown[]) => {
-        const { planner, taskGraph } = fixture({ extraParentInputs });
-        return planner
-          .getPlans(['parent:build'], taskGraph, read)
-          ['parent:build'].find((entry) => entry.includes('readme.md'));
-      };
-
-      // Only ^prod visits the child, and it excludes markdown.
-      expect(groupFor()).toBe(`files:[libs/child/readme.md,${CHILD_NEG}]`);
-      // A second visit hashes the child's markdown natively, so the read stays.
-      expect(groupFor([{ input: 'default', projects: ['child'] }])).toBe(
-        'files:[libs/child/readme.md]'
-      );
+    it('hashes observed reads that declared negations exclude', () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurationsFor({
+          'parent:build': {
+            inputs: ['libs/child/readme.md', 'libs/parent/a.spec.ts'],
+          },
+        })
+      )['parent:build'];
+      expect(plan).toContain('files:[libs/child/readme.md]');
+      expect(plan).toContain('files:[libs/parent/a.spec.ts]');
     });
 
     it("keeps a continuous dependency's inputs in the task it serves", () => {
@@ -2053,38 +2052,35 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         withContinuousDependency(taskGraph),
-        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
+        configurationsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+        })
       )['parent:build'];
 
-      // The task keeps its own snapshot precision and additionally hashes what
+      // The task keeps its own configuration's precision and additionally hashes what
       // the dependency serving it reads, which no trace of this task can see.
       expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:/));
       expect(plan).toContain('child:libs/child/**/*');
     });
 
-    it('hashes a continuous dependency from its own snapshot when it has one', () => {
+    it('hashes a continuous dependency from its declared inputs even when it has a configuration', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
         ['parent:build'],
         withContinuousDependency(taskGraph),
-        snapshotsFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
-          'child:build': {
-            inputs: ['libs/child/src/index.ts'],
-            outputs: ['dist/libs/child'],
-          },
+          'child:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
 
-      expect(plan).not.toContain('child:libs/child/**/*');
-      expect(plan).toContainEqual(
+      expect(plan).toContain('child:libs/child/**/*');
+      expect(plan).not.toContainEqual(
         expect.stringMatching(/^files:\[libs\/child\/src\/index\.ts[,\]]/)
       );
-      // Its marker joins the task's, so its outputs and exclusions count too
-      // (identical digests would share one).
       expect(
         plan.filter((entry) => entry.startsWith('io-snapshot:'))
-      ).toHaveLength(2);
+      ).toHaveLength(1);
     });
 
     it('keeps the declared inputs of a continuous dependency of a task whose ultracache mode is not on', () => {
@@ -2094,7 +2090,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         graph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
           'child:build': { inputs: ['libs/child/src/index.ts'] },
         })
@@ -2104,12 +2100,12 @@ describe('task planner', () => {
       expect(plan).not.toContainEqual(expect.stringMatching(/^io-snapshot:/));
     });
 
-    it('replaces declared filesets (self and dependency) with one files group per owning project, each with its own negations', () => {
+    it('replaces declared filesets (self and dependency) with one files group per owning project', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': {
             inputs: [
               'docs/readme.md',
@@ -2121,10 +2117,9 @@ describe('task planner', () => {
       )['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
-          `files:[libs/child/src/index.ts,${CHILD_NEG}]`,
-          // Reads under no project root belong to the task's own project, so
-          // the dependency's !**/*.md never suppresses docs/readme.md.
-          `files:[docs/readme.md,libs/parent/src/**/*.ts,${PARENT_NEG}]`,
+          'files:[libs/child/src/index.ts]',
+          // Reads under no project root belong to the task's own project.
+          'files:[docs/readme.md,libs/parent/src/**/*.ts]',
           'parent:ProjectConfiguration',
           'child:ProjectConfiguration',
           'env:TESTENV',
@@ -2150,7 +2145,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': {
             inputs: ['libs/parent/package.json', 'tsconfig.base.json'],
           },
@@ -2163,7 +2158,7 @@ describe('task planner', () => {
           'parent:json:libs/parent/package.json[version]',
           // Both files are hashed whole too: the native instructions cover
           // only selected fields and a stripped tsconfig.
-          `files:[libs/parent/package.json,tsconfig.base.json,${PARENT_NEG}]`,
+          'files:[libs/parent/package.json,tsconfig.base.json]',
         ])
       );
     });
@@ -2173,7 +2168,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': {
             inputs: [
               'node_modules/foo/index.js',
@@ -2186,9 +2181,7 @@ describe('task planner', () => {
       )['parent:build'];
       // Externals hash resolved versions, not package.json scripts or the
       // rest of the lockfile.
-      expect(plan).toContain(
-        `files:[package.json,tools/x.ts,yarn.lock,${PARENT_NEG}]`
-      );
+      expect(plan).toContain('files:[package.json,tools/x.ts,yarn.lock]');
       expect(plan).toContain('AllExternalDependencies');
       expect(plan).not.toContainEqual(expect.stringMatching(/node_modules/));
     });
@@ -2254,7 +2247,7 @@ describe('task planner', () => {
           const plan = planner.getPlans(
             ['tools:audit'],
             taskGraph,
-            snapshotsFor({
+            configurationsFor({
               'tools:audit': {
                 inputs: ['package-lock.json', 'tools/audit-deps.js'],
               },
@@ -2283,7 +2276,9 @@ describe('task planner', () => {
         const plan = planner.getPlans(
           ['tools:audit'],
           taskGraph,
-          snapshotsFor({ 'tools:audit': { inputs: ['tools/audit-deps.js'] } })
+          configurationsFor({
+            'tools:audit': { inputs: ['tools/audit-deps.js'] },
+          })
         )['tools:audit'];
         expect(plan).toContain('files:[tools/audit-deps.js]');
         expect(plan).not.toContainEqual(
@@ -2317,7 +2312,9 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
+        configurationsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+        })
       )['parent:build'];
       expect(plan).toContain('env:MODE');
       expect(plan).not.toContain('child:libs/child/**/*');
@@ -2325,7 +2322,7 @@ describe('task planner', () => {
       expect(plan).not.toContain('**/*.d.ts:dist/libs/child');
     });
 
-    it("keeps a selected project's read that another visit still hashes natively", () => {
+    it("keeps a selected project's read that its declared negation excludes", () => {
       const { taskGraph, projectGraph } = fixture();
       (projectGraph.nodes.parent.data.targets.build as any).inputs.push({
         input: 'selected',
@@ -2344,7 +2341,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': {
             inputs: ['libs/child/a.gen.ts', 'libs/child/fileb.ts'],
           },
@@ -2353,8 +2350,6 @@ describe('task planner', () => {
       const childGroup = plan.find((entry) =>
         entry.includes('libs/child/fileb.ts')
       );
-      // ^prod visits the child too and does not exclude *.gen.ts, so natively
-      // a.gen.ts is hashed and the selected input's negation cannot drop it.
       expect(childGroup).toBe(
         'files:[libs/child/a.gen.ts,libs/child/fileb.ts]'
       );
@@ -2395,7 +2390,7 @@ describe('task planner', () => {
         planner.getPlans(
           ['parent:build'],
           taskGraph,
-          snapshotsFor({ 'parent:build': { inputs } })
+          configurationsFor({ 'parent:build': { inputs } })
         )['parent:build'];
 
       expect(
@@ -2456,7 +2451,7 @@ describe('task planner', () => {
         const plan = planner.getPlans(
           ['parent:build'],
           taskGraph,
-          snapshotsFor({
+          configurationsFor({
             'parent:build': { inputs: ['libs/child/gen/used.json'] },
           })
         )['parent:build'];
@@ -2468,15 +2463,15 @@ describe('task planner', () => {
       }
     );
 
-    it("moves the snapshot marker when the task's ultracache exclusions change, and only then", () => {
+    it("moves the configuration marker when the task's ignoredReads change, and only then", () => {
       const { planner, taskGraph } = fixture();
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
       const markerWith = (ultracache: object | undefined) => {
         taskGraph.tasks['parent:build'].ultracache = ultracache;
         return planner
-          .getPlans(['parent:build'], taskGraph, snapshots)
+          .getPlans(['parent:build'], taskGraph, configurations)
           ['parent:build'].find((entry) => entry.startsWith('io-snapshot:'));
       };
 
@@ -2486,39 +2481,39 @@ describe('task planner', () => {
       // Order means nothing; an empty list is no exclusion.
       expect(markerWith({ ignoredReads: ['cache/**', 'tmp/**'] })).toBe(reads);
       expect(markerWith({ ignoredReads: [] })).toBe(none);
-      // Writes shape the recording too, and are told apart from reads.
-      const writes = markerWith({ ignoredWrites: ['tmp/**', 'cache/**'] });
-      expect(writes).not.toBe(none);
-      expect(writes).not.toBe(reads);
+      // Recorded writes are never used, so their exclusions don't count.
+      expect(markerWith({ ignoredWrites: ['tmp/**', 'cache/**'] })).toBe(none);
     });
 
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
       const { planner, taskGraph } = fixture();
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': {
           inputs: ['dist/libs/child/index.js'],
         },
       });
-      const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
-        'parent:build'
-      ];
-      expect(plan).toContain(`files:[dist/libs/child/index.js,${PARENT_NEG}]`);
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
+      expect(plan).toContain('files:[dist/libs/child/index.js]');
       expect(plan).not.toContainEqual(
         expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
       );
-      expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
+      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual([
         'parent:build',
       ]);
     });
 
     it('reports eligibility the same way it plans', () => {
       const { planner, taskGraph } = fixture();
-      const withheld = snapshotsFor({
+      const withheld = configurationsFor({
         'parent:build': { inputs: ['libs/./parent/*.gen'] },
       });
-      const report = getIoSnapshotReport(
+      const report = getUltracacheReport(
         withheld,
-        getUltraCacheConfig(taskGraph),
+        getUltracacheSettings(taskGraph),
         {
           customHasherTaskIds: ['child:build'],
         }
@@ -2528,15 +2523,15 @@ describe('task planner', () => {
         ['custom-hasher', 'child:build'],
         ['invalid-glob', 'parent:build'],
       ]);
-      expect(getIoSnapshotDeferredTaskIds(withheld, taskGraph)).toEqual([]);
+      expect(getUltracacheDeferredTaskIds(withheld, taskGraph)).toEqual([]);
 
       const plain = planner.getPlans(['parent:build'], taskGraph);
       for (const negation of ['!', '!libs/parent/[']) {
-        const negated = snapshotsFor({
+        const negated = configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts', negation] },
         });
         expect(
-          getIoSnapshotReport(negated, getUltraCacheConfig(taskGraph))
+          getUltracacheReport(negated, getUltracacheSettings(taskGraph))
             .diagnostics
         ).toContainEqual(
           expect.objectContaining({
@@ -2561,20 +2556,20 @@ describe('task planner', () => {
       [{ mode: 'warn' }, 'autofix-disabled'],
       [{ mode: 'error' }, 'autofix-disabled'],
     ])(
-      'withholds the snapshot from a task whose ultracache is %j',
+      'withholds the configuration from a task whose ultracache is %j',
       (ultracache, reason) => {
         const { planner, taskGraph } = fixture();
         // Read off the task, where the task graph resolved target defaults.
         taskGraph.tasks['parent:build'].ultracache = ultracache;
-        const snapshots = snapshotsFor({
+        const configurations = configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
         });
         const plain = planner.getPlans(['parent:build'], taskGraph);
         expect(
-          planner.getPlans(['parent:build'], taskGraph, snapshots)
+          planner.getPlans(['parent:build'], taskGraph, configurations)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(snapshots, getUltraCacheConfig(taskGraph))
+          getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
             .diagnostics
         ).toContainEqual(
           expect.objectContaining({ reason, taskId: 'parent:build' })
@@ -2582,19 +2577,22 @@ describe('task planner', () => {
       }
     );
 
-    it('hashes a snapshot glob that reads from the workspace root', () => {
+    it('hashes a configuration glob that reads from the workspace root', () => {
       const { planner, taskGraph } = fixture();
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['**/*.gen', 'libs/parent/a.ts'] },
       });
-      const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
-        'parent:build'
-      ];
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
       expect(plan).toContainEqual(
         expect.stringMatching(/^files:\[\*\*\/\*\.gen,/)
       );
       expect(
-        getIoSnapshotReport(snapshots, getUltraCacheConfig(taskGraph)).used
+        getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
+          .used
       ).toContain('parent:build');
     });
 
@@ -2603,7 +2601,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({ 'parent:build': {} })
+        configurationsFor({ 'parent:build': {} })
       )['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
@@ -2622,46 +2620,47 @@ describe('task planner', () => {
       expect(plan.filter((i) => i.startsWith('files:'))).toEqual([]);
     });
 
-    it('applies dependency negations on cyclic graphs too (non-memo traversal)', () => {
+    it('replaces dependency filesets on cyclic graphs too (non-memo traversal)', () => {
       const { planner, taskGraph } = fixture({ cyclic: true });
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
-      expect(plan).toContain(`files:[libs/child/src/index.ts,${CHILD_NEG}]`);
+      expect(plan).toContain('files:[libs/child/src/index.ts]');
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
 
     it("defers a task whose reads sit under a producer's declared outputs", () => {
       const { planner, taskGraph } = fixture();
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
       });
-      expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
+      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual([
         'parent:build',
       ]);
       expect(
-        getIoSnapshotReport(snapshots, getUltraCacheConfig(taskGraph)).used
+        getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
+          .used
       ).toEqual(['parent:build']);
     });
 
-    it('refuses snapshot globs that leave the workspace and plans natively', () => {
+    it('refuses configuration globs that leave the workspace and plans natively', () => {
       const { planner, taskGraph } = fixture();
       const plain = planner.getPlans(['parent:build'], taskGraph);
       for (const glob of ['../secret.txt', 'libs/../../x', '/etc/passwd']) {
-        const snapshots = snapshotsFor({
+        const configurations = configurationsFor({
           'parent:build': { inputs: ['libs/parent/a.ts', glob] },
         });
         expect(
-          planner.getPlans(['parent:build'], taskGraph, snapshots)
+          planner.getPlans(['parent:build'], taskGraph, configurations)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(
-            snapshots,
-            getUltraCacheConfig(taskGraph)
+          getUltracacheReport(
+            configurations,
+            getUltracacheSettings(taskGraph)
           ).diagnostics.find((d) => d.taskId === 'parent:build')
         ).toMatchObject({ reason: 'escapes-workspace', glob });
       }
@@ -2692,31 +2691,33 @@ describe('task planner', () => {
         {} as any,
         transferProjectGraph(toRustProjectGraph(projectGraph))
       );
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
-      return { planner, taskGraph, snapshots };
+      return { planner, taskGraph, configurations };
     }
 
-    it('rejects an invalid declared includeIgnored group with snapshots too', () => {
+    it('rejects an invalid declared includeIgnored group with a configuration too', () => {
       // A well-formed negation with nothing to filter: native planning throws,
-      // and a snapshot must not turn it into a plan.
-      const { planner, taskGraph, snapshots } = lonelyParent([
+      // and a configuration must not turn it into a plan.
+      const { planner, taskGraph, configurations } = lonelyParent([
         { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
       ]);
       expect(() =>
-        planner.getPlans(['parent:build'], taskGraph, snapshots)
+        planner.getPlans(['parent:build'], taskGraph, configurations)
       ).toThrow(/no positive includeIgnored fileset/);
     });
 
-    it('keeps the snapshot when a declared includeIgnored negation has a positive fileset to filter', () => {
-      const { planner, taskGraph, snapshots } = lonelyParent([
+    it('keeps the configuration when a declared includeIgnored negation has a positive fileset to filter', () => {
+      const { planner, taskGraph, configurations } = lonelyParent([
         { fileset: '{projectRoot}/dist/**', includeIgnored: true },
         { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
       ]);
-      const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
-        'parent:build'
-      ];
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
       // Validated, then replaced by the reads like any declared fileset.
       expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:\d+$/));
       expect(plan).not.toContain(

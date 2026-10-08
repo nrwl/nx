@@ -18,6 +18,11 @@ const state = vi.hoisted(() => ({
       initiatingTaskIds: ['app:build'],
       taskIds: ['app:build'],
     },
+    explanation: {
+      affected: { 'app:build': [{ kind: 'input-file', file: 'x.ts' }] },
+      upstream: {},
+      touched: ['app:build'],
+    },
   },
 }));
 
@@ -28,9 +33,13 @@ vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
 const planningContext = vi.hoisted(() => ({}));
 const planningContextFor = vi.hoisted(() => vi.fn(() => planningContext));
 vi.mock('./planning-context', () => ({ planningContextFor }));
-const snapshots = vi.hoisted(() => ({}));
-const getIoSnapshotsForVersion = vi.hoisted(() => vi.fn(() => snapshots));
-vi.mock('./io-snapshots-state', () => ({ getIoSnapshotsForVersion }));
+const configurations = vi.hoisted(() => ({}));
+const getUltracacheConfigurationsForVersion = vi.hoisted(() =>
+  vi.fn(() => configurations)
+);
+vi.mock('./ultracache-configuration-state', () => ({
+  getUltracacheConfigurationsForVersion,
+}));
 const selectAffectedTasks = vi.hoisted(() =>
   vi.fn(async () => state.selection)
 );
@@ -60,6 +69,7 @@ describe('handleSelectAffectedTasks', () => {
     expect((response as any).projectGraph).toBe(state.graph.projectGraph);
     expect((response as any).affectedTaskIds).toEqual(['app:build']);
     expect((response as any).taskSelection).toBe(state.selection.taskSelection);
+    expect((response as any).explanation).toBe(state.selection.explanation);
     expect(planningContextFor).toHaveBeenCalledWith(
       state.graph.projectGraph,
       {}
@@ -68,13 +78,16 @@ describe('handleSelectAffectedTasks', () => {
   });
 
   // The run hashes with this version, so selection plans with it too.
-  it('plans with the snapshot version the client sent', async () => {
+  it('plans with the configurations version the client sent', async () => {
     const version = { commit: 'abc', fetchedAt: 7 };
-    await handleSelectAffectedTasks({ ...request, ioSnapshots: version });
+    await handleSelectAffectedTasks({
+      ...request,
+      ultracacheConfigurationsVersion: version,
+    });
 
-    expect(getIoSnapshotsForVersion).toHaveBeenCalledWith(version);
+    expect(getUltracacheConfigurationsForVersion).toHaveBeenCalledWith(version);
     expect(selectAffectedTasks.mock.calls[0][4]).toEqual({
-      ioSnapshots: snapshots,
+      ultracacheConfigurations: configurations,
     });
   });
 

@@ -29,14 +29,13 @@ import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
-import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
-import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
-import { formatIoSnapshotSummary } from '../io-snapshots/report';
+import { buildUltracacheOverrides } from '../ultracache/overrides';
+import { formatUltracacheSummary } from '../ultracache/report';
 import {
-  loadIoSnapshotsForRun,
-  snapshotsOf,
-  type IoSnapshotOutcome,
-} from '../io-snapshots/store';
+  loadUltracacheConfigurationsForRun,
+  configurationsOf,
+  type UltracacheConfigurationOutcome,
+} from '../ultracache/store';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
@@ -75,8 +74,8 @@ export interface TaskSelection {
   taskIds?: string[];
   /** The planner selection used. It remembers those plans, so hashing the run reuses them. */
   planningContext?: TaskPlanningContext;
-  /** The I/O snapshot set selection planned with; the run hashes with the same one. */
-  ioSnapshotOutcome?: IoSnapshotOutcome | null;
+  /** The Ultracache configurations selection planned with; the run hashes with the same ones. */
+  ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
@@ -654,7 +653,8 @@ export async function runTasksForCommand(
       initiatingProject,
       initiatingTasks,
       planningContext: taskSelection.planningContext,
-      ioSnapshotOutcome: taskSelection.ioSnapshotOutcome,
+      ultracacheConfigurationOutcome:
+        taskSelection.ultracacheConfigurationOutcome,
     });
 
     await renderIsDone.finally(() => restoreTerminal?.());
@@ -1045,7 +1045,7 @@ export async function invokeTasksRunner({
   initiatingProject,
   initiatingTasks,
   planningContext,
-  ioSnapshotOutcome: loadedIoSnapshotOutcome,
+  ultracacheConfigurationOutcome: loadedUltracacheConfigurationOutcome,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -1058,7 +1058,7 @@ export async function invokeTasksRunner({
   initiatingTasks: Task[];
   planningContext?: TaskPlanningContext;
   /** Already loaded for this command; `undefined` loads it here. */
-  ioSnapshotOutcome?: IoSnapshotOutcome | null;
+  ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
 }): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
@@ -1067,22 +1067,20 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  // Must precede hashing: the set is the snapshot source for task hashes,
-  // and observed outputs join the task outputs the hasher and cache see.
-  const ioSnapshotOutcome =
-    loadedIoSnapshotOutcome !== undefined
-      ? loadedIoSnapshotOutcome
-      : await loadIoSnapshotsForRun(nxJson, runnerOptions);
-  const ioSnapshots = snapshotsOf(ioSnapshotOutcome);
-  if (ioSnapshots) {
-    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
-  }
+  // Must precede hashing: the Ultracache configurations are a source for task hashes.
+  const ultracacheConfigurationOutcome =
+    loadedUltracacheConfigurationOutcome !== undefined
+      ? loadedUltracacheConfigurationOutcome
+      : await loadUltracacheConfigurationsForRun(nxJson, runnerOptions);
+  const ultracacheConfigurations = configurationsOf(
+    ultracacheConfigurationOutcome
+  );
 
   let hasher = createTaskHasher(
     projectGraph,
     nxJson,
     runnerOptions,
-    ioSnapshots,
+    ultracacheConfigurations,
     planningContext
   );
 
@@ -1090,15 +1088,20 @@ export async function invokeTasksRunner({
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
 
-  await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+  const deferredTaskIds = await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     hasher,
     projectGraph,
     taskGraph,
     nxJson,
     taskDetails,
-    ioSnapshots
+    ultracacheConfigurations
   );
-  reportIoSnapshots(ioSnapshotOutcome, projectGraph, taskGraph, nxArgs);
+  reportUltracacheConfigurations(
+    ultracacheConfigurationOutcome,
+    projectGraph,
+    taskGraph,
+    nxArgs
+  );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
     ...constructLifeCycles(lifeCycle, taskGraph, nxJson, nxArgs.skipNxCache),
@@ -1188,6 +1191,7 @@ export async function invokeTasksRunner({
         },
       },
       daemon: daemonClient,
+      deferredTaskIds,
     }
   );
   if ((promiseOrObservable as any).subscribe) {
@@ -1293,16 +1297,16 @@ function loadTasksRunner(modulePath: string): TasksRunner {
   }
 }
 
-function reportIoSnapshots(
-  outcome: IoSnapshotOutcome | null,
+function reportUltracacheConfigurations(
+  outcome: UltracacheConfigurationOutcome | null,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   nxArgs: NxArgs
 ): void {
   if (!outcome || outcome.status === 'skipped') return;
   if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
-  const summary = formatIoSnapshotSummary(
-    buildIoSnapshotOverrides(projectGraph, taskGraph, outcome.snapshots),
+  const summary = formatUltracacheSummary(
+    buildUltracacheOverrides(projectGraph, taskGraph, outcome.configurations),
     outcome.status
   );
   output.note({ title: summary.line, bodyLines: summary.bodyLines });
@@ -1310,18 +1314,21 @@ function reportIoSnapshots(
 
 /**
  * What affected task selection reads from the runner options, so it plans as
- * the run hashes. The snapshot set is loaded once, for selection and the run.
+ * the run hashes. The Ultracache configurations are loaded once, for selection and the run.
  */
 export async function runnerInputsForSelection(
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration
 ): Promise<{
-  ioSnapshotOutcome: IoSnapshotOutcome | null;
+  ultracacheConfigurationOutcome: UltracacheConfigurationOutcome | null;
   selectivelyHashTsConfig: boolean;
 }> {
   const { runnerOptions } = getRunner(nxArgs, nxJson);
   return {
-    ioSnapshotOutcome: await loadIoSnapshotsForRun(nxJson, runnerOptions),
+    ultracacheConfigurationOutcome: await loadUltracacheConfigurationsForRun(
+      nxJson,
+      runnerOptions
+    ),
     selectivelyHashTsConfig: runnerOptions?.selectivelyHashTsConfig ?? false,
   };
 }

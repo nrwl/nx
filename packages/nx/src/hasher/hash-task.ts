@@ -3,8 +3,8 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import {
   IS_WASM,
-  getIoSnapshotDeferredTaskIds,
-  type IoSnapshots,
+  getUltracacheDeferredTaskIds,
+  type UltracacheConfigurations,
   TaskDetails,
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
@@ -33,16 +33,16 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   tasksDetails: TaskDetails | null,
-  ioSnapshots?: IoSnapshots
-) {
+  ultracacheConfigurations?: UltracacheConfigurations
+): Promise<Set<string>> {
   performance.mark('hashMultipleTasks:start');
 
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-  // A snapshot can make a task depend on producer outputs its declared
+  // An Ultracache configuration can make a task depend on producer outputs its declared
   // inputs never mentioned; those hash after their producers too.
-  const deferredBySnapshot = ioSnapshots
-    ? new Set(getIoSnapshotDeferredTaskIds(ioSnapshots, taskGraph))
+  const deferredByConfiguration = ultracacheConfigurations
+    ? new Set(getUltracacheDeferredTaskIds(ultracacheConfigurations, taskGraph))
     : null;
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(
@@ -60,7 +60,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     .filter(
       ({ task, customHasher }) =>
         !customHasher &&
-        !deferredBySnapshot?.has(task.id) &&
+        !deferredByConfiguration?.has(task.id) &&
         !readsDependencyOutputs(task, taskGraph, projectGraph, nxJson)
     )
     .map((t) => t.task);
@@ -104,6 +104,8 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     'hashMultipleTasks:start',
     'hashMultipleTasks:end'
   );
+
+  return new Set(tasks.filter((t) => !(t.id in hashes)).map((t) => t.id));
 }
 
 function readsDependencyOutputs(

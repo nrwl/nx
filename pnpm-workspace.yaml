@@ -24,19 +24,25 @@ overrides:
   handlebars: '4.7.9'
   minimist: '^1.2.6'
   underscore: '^1.13.8'
-  brace-expansion: '5.0.9'
+  brace-expansion: '^5.0.12'
   axios: '1.18.1'
   minimatch: '^10.2.5'
-  shell-quote: '^1.8.4'
+  shell-quote: '^1.11.0'
   tmp: '~0.2.7'
   form-data: '^4.0.6'
   # form-data@4.0.6 pulls hasown via two paths (direct + es-set-tostringtag);
   # pin to one version so expand-deps can flatten nx's published deps.
   hasown: '2.0.4'
-  '@xhmikosr/decompress': '10.2.1'
+  '@xhmikosr/decompress@>=11.0.0 <11.1.4': '11.1.4'
+  'piscina@>=4.0.0 <4.9.4': '4.9.4'
+  'piscina@>=5.0.0 <5.3.2': '5.3.2'
   websocket-driver: '^0.7.5'
   tar: '^7.5.22'
-  seroval: '^1.5.6'
+  seroval: '^1.6.2'
+  proxy-addr: '^2.0.8'
+  # @nuxt/devtools wants simple-git 3, whose advisories are only fixed in 4. v4
+  # breaks the devtools dev-server module, which nothing in this repo runs.
+  simple-git: '^4.0.2'
   # astro/ipx/next pull their own sharp, all below 0.35. The libheif RCE behind
   # GHSA-26w7-cxv4-gfx2 is only patched from 0.35.4 on.
   'sharp@<0.35.4': '^0.35.4'
