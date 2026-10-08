@@ -89,7 +89,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                  "command": "tsc --build --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -147,7 +147,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                  "command": "tsc --build --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -208,7 +208,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                  "command": "tsc --build --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -271,7 +271,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.json --emitDeclarationOnly --verbose",
+                  "command": "tsc --build --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -332,7 +332,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.json --emitDeclarationOnly --verbose",
+                  "command": "tsc --build --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -396,7 +396,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.json --emitDeclarationOnly --verbose",
+                  "command": "tsc --build --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -458,7 +458,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly",
+                  "command": "tsgo --build --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -521,7 +521,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly --verbose",
+                  "command": "tsgo --build --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -586,7 +586,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "type-check": {
                   "cache": true,
-                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly",
+                  "command": "tsgo --build --emitDeclarationOnly",
                   "dependsOn": [
                     "^type-check",
                   ],
@@ -648,7 +648,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                  "command": "tsc --build --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -756,7 +756,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 },
                 "typecheck": {
                   "cache": true,
-                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly",
+                  "command": "tsgo --build --emitDeclarationOnly",
                   "dependsOn": [
                     "build",
                     "^typecheck",
@@ -1141,7 +1141,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1209,7 +1209,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1277,7 +1277,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1350,7 +1350,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1586,7 +1586,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1666,7 +1666,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1744,7 +1744,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1828,7 +1828,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1907,7 +1907,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2000,7 +2000,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2106,7 +2106,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2166,7 +2166,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2506,7 +2506,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2805,7 +2805,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2881,7 +2881,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2947,7 +2947,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3062,7 +3062,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   },
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "build",
                       "^typecheck",
@@ -3157,7 +3157,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3263,7 +3263,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3323,7 +3323,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3390,7 +3390,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3457,7 +3457,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3535,7 +3535,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3602,7 +3602,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3665,7 +3665,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
