@@ -1581,7 +1581,6 @@ describe('orchestrator', () => {
             '',
             'To continue the run: npx nx migrate --run-migrations --agentic --run-id=run-1 --create-commits',
             'To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations --start-fresh --run-id=run-1',
-            'Run either command with NX_MIGRATE_ORCHESTRATOR=true set in the environment.',
           ],
         },
       ]);

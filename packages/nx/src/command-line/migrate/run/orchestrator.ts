@@ -196,7 +196,7 @@ import {
 } from './existing-run-report';
 import { detectPackageManager } from '../../../utils/package-manager';
 
-// The dark migrate orchestrator: drives a durable run one dispense at a time.
+// The migrate orchestrator: drives a durable run one dispense at a time.
 // An outer AI agent runs each dispensed command and re-invokes `nx migrate
 // --run-id=<id>` to reconcile; there is no long-lived process.
 
@@ -271,7 +271,7 @@ export interface RunOrchestratorReconcileInput {
 }
 
 const INIT_CONTINUE_HINT =
-  're-run the command, or unset NX_MIGRATE_ORCHESTRATOR to use the standard migrate flow.';
+  're-run the command, or re-run it with --agentic=false to use the standard migrate flow.';
 
 function continueRunHint(runId: string): string {
   return `re-run the command to continue run '${runId}'.`;

@@ -54,6 +54,12 @@ vi.mock('./agentic/inception', async () => ({
   isInsideAgent: () => mockIsInsideAgent(),
 }));
 
+const mockIsCI = vi.fn();
+vi.mock('../../utils/is-ci', async () => ({
+  ...(await vi.importActual('../../utils/is-ci')),
+  isCI: () => mockIsCI(),
+}));
+
 // The classic loop's entry marker, used to prove the dispatch fell through to
 // it rather than merely skipping the orchestrator.
 const mockReportRunStart = vi.fn();
@@ -130,7 +136,6 @@ import { migrate } from './migrate';
 
 describe('migrate() orchestrated init dispatch', () => {
   let root: string;
-  const originalGate = process.env.NX_MIGRATE_ORCHESTRATOR;
   const originalCwd = process.cwd();
 
   beforeEach(() => {
@@ -151,7 +156,6 @@ describe('migrate() orchestrated init dispatch', () => {
         ],
       })
     );
-    process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
     mockRunOrchestratorInit.mockReset().mockResolvedValue(undefined);
     mockRunOrchestratorResume.mockReset().mockReturnValue(undefined);
     mkdirSync(runDir(root, 'run-1'), { recursive: true });
@@ -169,6 +173,7 @@ describe('migrate() orchestrated init dispatch', () => {
     mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
     mockReportRunStart.mockReset();
     mockIsInsideAgent.mockReset().mockReturnValue(true);
+    mockIsCI.mockReset().mockReturnValue(false);
     mockCanPrompt.mockReset().mockReturnValue(true);
     mockMigrateConfirm.mockReset().mockResolvedValue(true);
     mockIsGitRepository.mockReset().mockReturnValue(true);
@@ -185,8 +190,6 @@ describe('migrate() orchestrated init dispatch', () => {
     vi.restoreAllMocks();
     process.chdir(originalCwd);
     rmSync(root, { recursive: true, force: true });
-    if (originalGate === undefined) delete process.env.NX_MIGRATE_ORCHESTRATOR;
-    else process.env.NX_MIGRATE_ORCHESTRATOR = originalGate;
   });
 
   function runMigrationsArgs(overrides: Record<string, unknown> = {}) {
@@ -273,32 +276,61 @@ describe('migrate() orchestrated init dispatch', () => {
     expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
 
-  it.each<[string, () => void]>([
+  it.each<[string, Record<string, unknown>, string[], () => void]>([
     [
-      'the gate env var is not set',
+      '--agentic=false is passed',
+      { agentic: false },
+      ['--agentic=false'],
+      () => {},
+    ],
+    [
+      'nx.json sets migrate.agentic to false',
+      {},
+      [],
       () => {
-        delete process.env.NX_MIGRATE_ORCHESTRATOR;
+        mockReadNxJson.mockReturnValue({ migrate: { agentic: false } });
+      },
+    ],
+    [
+      'it runs in CI',
+      {},
+      [],
+      () => {
+        mockIsCI.mockReturnValue(true);
+      },
+    ],
+    [
+      'it runs on the WASM build',
+      {},
+      [],
+      () => {
+        wasm.active = true;
       },
     ],
     [
       'no agent is driving the process',
+      {},
+      [],
       () => {
         mockIsInsideAgent.mockReturnValue(false);
       },
     ],
-  ])('dispatches to the classic loop when %s', async (_label, arrange) => {
-    arrange();
+  ])(
+    'dispatches to the classic loop when %s',
+    async (_label, overrides, flags, arrange) => {
+      arrange();
 
-    // The classic loop runs real migration execution, which fails on this
-    // fixture; only the dispatch itself is under test.
-    await migrate(root, runMigrationsArgs({ agentic: false }), [
-      '--run-migrations',
-      '--agentic=false',
-    ]).catch(() => {});
+      // The classic loop runs real migration execution, which fails on this
+      // fixture; only the dispatch itself is under test.
+      await migrate(root, runMigrationsArgs(overrides), [
+        '--run-migrations',
+        ...flags,
+      ]).catch(() => {});
 
-    expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
-    expect(mockReportRunStart).toHaveBeenCalledTimes(1);
-  });
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(mockReportRunStart).toHaveBeenCalledTimes(1);
+    }
+  );
 
   it.each<[string, boolean, string[]]>([
     ['records --skip-install on the run', true, ['--skip-install']],
@@ -444,14 +476,17 @@ describe('migrate() orchestrated init dispatch', () => {
     );
   });
 
+  const notOrchestrated = (flag: string) =>
+    `'${flag}' acts on an orchestrated migrate run, and this invocation is not orchestrated. Orchestration needs an enabled agent, or an AI agent running nx outside CI; --agentic=false and the WASM build turn it off.`;
+
   // Both flags act on a run's record; outside the orchestrator they would
   // silently do nothing, so every route out of it refuses them.
   it.each<[string, string, () => void]>([
     [
       '--start-fresh',
-      'the gate env var is not set',
+      'the outer agent runs nx in CI',
       () => {
-        delete process.env.NX_MIGRATE_ORCHESTRATOR;
+        mockIsCI.mockReturnValue(true);
       },
     ],
     [
@@ -477,9 +512,7 @@ describe('migrate() orchestrated init dispatch', () => {
       // migrate() reports through handleErrors and returns the exit code.
       expect(await migrate(root, runMigrationsArgs(overrides), args)).toBe(1);
       expect(output.error).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: `'${flag}' acts on an orchestrated migrate run (NX_MIGRATE_ORCHESTRATOR=true with an enabled agent), and this invocation is not orchestrated.`,
-        })
+        expect.objectContaining({ title: notOrchestrated(flag) })
       );
 
       expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
@@ -488,8 +521,8 @@ describe('migrate() orchestrated init dispatch', () => {
     }
   );
 
-  it('refuses --run-id without the gate env var before the preflight install and the hold', async () => {
-    delete process.env.NX_MIGRATE_ORCHESTRATOR;
+  it('refuses --run-id on the WASM build before the preflight install and the hold', async () => {
+    wasm.active = true;
 
     expect(
       await migrate(
@@ -519,10 +552,7 @@ describe('migrate() orchestrated init dispatch', () => {
       )
     ).toBe(1);
     expect(output.error).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title:
-          "'--start-fresh' acts on an orchestrated migrate run (NX_MIGRATE_ORCHESTRATOR=true with an enabled agent), and this invocation is not orchestrated.",
-      })
+      expect.objectContaining({ title: notOrchestrated('--start-fresh') })
     );
 
     expect(mockReportRunStart).not.toHaveBeenCalled();
@@ -544,7 +574,7 @@ describe('migrate() orchestrated init dispatch', () => {
       });
     });
 
-    it('hands the run and the default-branch confirmation to the master session when the gate env var is set', async () => {
+    it('hands the run and the default-branch confirmation to the master session', async () => {
       mockGetGitCurrentBranch.mockReturnValue('main');
 
       await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
@@ -626,8 +656,8 @@ describe('migrate() orchestrated init dispatch', () => {
       );
     });
 
-    it('runs the classic per-step loop without the gate env var', async () => {
-      delete process.env.NX_MIGRATE_ORCHESTRATOR;
+    it('runs the classic loop without the agent under WASM, where the broker cannot tell a dead session from a slow one', async () => {
+      wasm.active = true;
 
       // The classic loop runs real migration execution, which fails on this
       // fixture; only the dispatch itself is under test.
@@ -638,28 +668,15 @@ describe('migrate() orchestrated init dispatch', () => {
 
       expect(mockRunMasterSession).not.toHaveBeenCalled();
       expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
-      expect(output.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: expect.stringContaining('Running migrations from'),
-        })
-      );
-    });
-
-    it('runs the classic per-step loop under WASM, where the broker cannot tell a dead session from a slow one', async () => {
-      wasm.active = true;
-
-      await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
-        '--run-migrations',
-        '--agentic=claude-code',
-      ]).catch(() => {});
-
-      expect(mockRunMasterSession).not.toHaveBeenCalled();
-      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
-      expect(output.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: expect.stringContaining('Running migrations from'),
-        })
-      );
+      expect(output.warn).toHaveBeenCalledWith({
+        title:
+          'Skipping the agentic flow: it needs the native nx binary, and this run loaded the WASM build.',
+        bodyLines: ['Continuing the migration without the agentic flow.'],
+      });
+      // An enabled agent would have turned per-migration commits on.
+      expect(output.log).toHaveBeenCalledWith({
+        title: "Running migrations from 'migrations.json'",
+      });
     });
   });
 
