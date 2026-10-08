@@ -2017,6 +2017,27 @@ describe('TaskOrchestrator', () => {
       }
     );
 
+    it('fails the waiter when the shared producer exits before its first row read', async () => {
+      const { orchestrator, serve, e2e } = createOrchestrator();
+      orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+      orchestrator.preRunSteps = vi.fn(async () => {
+        orchestrator.runningTasksService.getRunningTasks = () => [];
+      });
+      orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
+      orchestrator.runningContinuousTasks = new Map();
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      orchestrator.handleContinuousTaskExit = vi.fn();
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      const runningTask = await orchestrator.startContinuousTask(serve, 1);
+      await expect(waiting).rejects.toThrow(
+        'Task "app:serve" exited before it became ready.'
+      );
+      runningTask.kill();
+    });
+
     it('runs as today when no process owns the producer row', async () => {
       const { orchestrator, e2e, settled } = createOrchestrator({ flat: true });
       await expect(
