@@ -115,7 +115,7 @@ Build tasks are only created when the project is buildable. A project is treated
 
 Dev, preview, and serve-static tasks are created for buildable projects. If you are in library mode (`build.lib`), these tasks are skipped unless you explicitly configure a dev server (e.g. `server.host` or `server.port`).
 
-Typecheck tasks are created when a `tsconfig*.json` file exists in the project.
+Typecheck tasks are created when a `tsconfig*.json` file exists in the project. In a TypeScript solution setup, [`@nx/js/typescript` creates the `typecheck` task](/docs/technologies/typescript/introduction#how-the-typescript-plugin-infers-tasks) instead, except for Vue projects, which keep a `vue-tsc` typecheck task from this plugin.
 
 ### Plugin options
 
@@ -152,7 +152,7 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 | `serveTargetName`       | Name of the deprecated Vite serve task             | `serve`        |
 | `devTargetName`         | Name of the Vite dev server task                   | `dev`          |
 | `serveStaticTargetName` | Name of the static file server task                | `serve-static` |
-| `typecheckTargetName`   | Name of the typecheck task                         | `typecheck`    |
+| `typecheckTargetName`   | Name of the typecheck task, or `false` to skip it  | `typecheck`    |
 | `compiler`              | Typecheck compiler: `tsc`, `tsgo`, or `vue-tsc`    | auto-detected  |
 | `buildDepsTargetName`   | Name of the build-deps task for dependency builds  | none           |
 | `watchDepsTargetName`   | Name of the watch-deps task for dependency watches | none           |
