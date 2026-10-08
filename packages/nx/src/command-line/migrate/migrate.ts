@@ -130,7 +130,6 @@ import {
   validateMigrationEntries,
   writePromptMigrationFiles,
 } from './prompt-files';
-import type { AgenticRunContext } from './agentic/run-step';
 import type { AgenticArg } from './agentic/select';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX, MigrateArgs } from './command-object';
 import {
@@ -152,7 +151,6 @@ import {
   buildTallyBodyLine,
   countLandedCommits,
   countWaivedAgenticSteps,
-  logAgenticSuccessOutcome,
   logFailureRecap,
   logMigrationBoundary,
   logWaivedAgenticStep,
@@ -181,7 +179,6 @@ import {
   NpmPeerDepsInstallError,
   readMigrationCollection,
   readPackageMigrationConfig,
-  resolveDocumentationFileToWorkspacePath,
   runInstall,
   runNxOrAngularMigration,
 } from './execute-migration';
@@ -2791,30 +2788,15 @@ export async function executeMigrations(
   shouldCreateCommits: boolean,
   commitPrefix: string,
   shouldSkipInstall = false,
-  agentic?: ResolvedAgentic,
-  agenticHasDiffContext = false,
-  shouldRunValidation = false
+  // An enabled agent drives the whole run from one session instead.
+  agentic?: Exclude<ResolvedAgentic, { kind: 'enabled' }>
 ) {
   const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
 
   const migrationsWithNoChanges: PlannedMigration[] = [];
   const sortedMigrations = sortMigrations(migrations, {
-    hoistHandoffGitignore: agentic?.kind === 'enabled',
+    hoistHandoffGitignore: false,
   });
-
-  // Lazy-load the agentic chain so non-agentic runs don't pay its startup cost.
-  let agenticRun: AgenticRunContext | undefined;
-  if (agentic?.kind === 'enabled' && sortedMigrations.length > 0) {
-    const { initRunDir, resolveAgenticRunId } =
-      require('./agentic/handoff') as typeof import('./agentic/handoff');
-    const { runAgenticPromptStep } =
-      require('./agentic/run-step') as typeof import('./agentic/run-step');
-    agenticRun = {
-      agentic,
-      runDir: initRunDir(root, resolveAgenticRunId(sortedMigrations)),
-      runStep: runAgenticPromptStep,
-    };
-  }
 
   const printDroppedAgentContext =
     agentic?.kind === 'inside-agent'
@@ -2864,14 +2846,6 @@ export async function executeMigrations(
       .filter((o) => o.commit.kind === 'failed')
       .map((o) => ({ package: o.migration.package, name: o.migration.name }));
 
-  // True while at least one prior migration's commit has failed and its
-  // diff hasn't been absorbed yet. While true, the working tree carries
-  // prior-migration state, so the `hasDiffContext` flag in the hybrid-
-  // agentic and validation-agentic prompt branches is suppressed (the
-  // prompt-only-with-agentic branch doesn't use `hasDiffContext`).
-  const hasPendingCommitDebt = (): boolean =>
-    outcomes.some((o) => o.commit.kind === 'failed');
-
   // Single funnel for per-migration commit attempts. Returns the
   // `CommitState` to record on the migration's outcome. On `committed`,
   // back-annotates any prior failed-commit outcomes to `kind: 'absorbed'`
@@ -2915,8 +2889,7 @@ export async function executeMigrations(
       return { kind: 'landed', sha: result.sha };
     }
     if (result.status === 'failed') {
-      // Diff is still in WT. Subsequent prompts cannot claim git-isolation
-      // until a later commit absorbs the backlog.
+      // The diff stays in the working tree until a later commit absorbs it.
       return { kind: 'failed' };
     }
     // `no-changes` and `disabled` — no commit attempted, nothing to record
@@ -2954,112 +2927,41 @@ export async function executeMigrations(
     // Content-sensitive so a dirty→dirty case (this migration mutating an
     // already-dirty shared file like `package.json`) doesn't collapse.
     const baselineWorkingTreeSnapshot = getUncommittedChangesSnapshot(root);
-    // Tracks whether a failure originated in the agentic step so the error
-    // event classifies it as 'agentic' rather than 'migration_exec'.
-    let inAgenticStep = false;
     try {
-      // Read this migration's collection once and derive everything from it:
-      // the implementation context (passed to runNxOrAngularMigration) and the
-      // documentation path (passed to the agent). Read fresh per iteration so a
-      // prior migration's reinstall is reflected.
-      const { resolvedCollection, documentationPath } = resolveMigrationForRun(
-        root,
-        m,
-        !!agenticRun
-      );
+      // Read fresh per migration so a prior migration's reinstall is reflected.
+      const resolvedCollection = isPromptOnlyMigration(m)
+        ? undefined
+        : readMigrationCollection(m.package, root);
       let outcome: MigrationOutcomeKind;
       let commit: CommitState = { kind: 'none' };
-      // Set when the migration returned `skipAgentic: true` and something was
-      // actually waived, so the end-of-run recaps can report it. A hybrid's
-      // prompt is owed in every agentic mode, so waiving it always counts; a
-      // generator-only migration only counts when validation would have run.
+      // Set when a hybrid returned `skipAgentic: true`, so the end-of-run
+      // recaps can report the waived prompt.
       let waivedAgenticStep = false;
       if (isPromptOnlyMigration(m)) {
-        if (agenticRun) {
-          inAgenticStep = true;
-          const stepResult = await agenticRun.runStep({
-            root,
-            migration: m,
-            agentic: agenticRun.agentic,
-            runDir: agenticRun.runDir,
-            installDepsIfChanged,
-            documentationPath,
-          });
-          inAgenticStep = false;
-          commit = await attemptMigrationCommit(m);
-          logAgenticSuccessOutcome(
-            stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
-            commit.kind === 'landed' ? commit.sha : null,
-            stepResult.summary
-          );
-          outcome = 'applied';
-        } else {
-          logger.info(
-            pc.dim(`↷ Skipped — ${skipReason}. Listed in next steps.`)
-          );
-          skippedPrompts.push(m);
-          notRunMigrationsCount++;
-          outcome = 'deferred';
-        }
+        logger.info(pc.dim(`↷ Skipped — ${skipReason}. Listed in next steps.`));
+        skippedPrompts.push(m);
+        notRunMigrationsCount++;
+        outcome = 'deferred';
       } else if (isHybridMigration(m)) {
-        const {
-          changes,
-          nextSteps,
-          agentContext,
-          skipAgentic,
-          logs,
-          madeChanges,
-        } = await runNxOrAngularMigration(
-          root,
-          m,
-          isVerbose,
-          /* captureGeneratorOutput: */ !!agenticRun,
-          resolvedCollection
-        );
+        const { nextSteps, agentContext, skipAgentic, madeChanges } =
+          await runNxOrAngularMigration(
+            root,
+            m,
+            isVerbose,
+            /* captureGeneratorOutput: */ false,
+            resolvedCollection
+          );
         migrationEmittedNextSteps.push(...nextSteps);
 
         if (skipAgentic) {
           // The generator reported the prompt half unnecessary, so nothing is
-          // owed: no agent run, and no next-steps entry telling the user to
-          // run the prompt themselves. Runs in all three agentic modes.
+          // owed: no next-steps entry telling anyone to run the prompt.
           logWaivedAgenticStep(m, agentContext);
           waivedAgenticStep = true;
           commit = await commitOrRecordNoChanges(m, madeChanges);
           outcome = madeChanges ? 'applied' : 'no-changes';
-        } else if (agenticRun) {
-          // Install any deps the deterministic phase added/bumped before the
-          // agent runs — the prompt half may depend on them being present in
-          // node_modules.
-          await installDepsIfChanged();
-          inAgenticStep = true;
-          const stepResult = await agenticRun.runStep({
-            root,
-            migration: m,
-            agentic: agenticRun.agentic,
-            runDir: agenticRun.runDir,
-            installDepsIfChanged,
-            documentationPath,
-            implContext: {
-              logs,
-              changes,
-              agentContext,
-              // When prior commits failed, the working tree carries their
-              // diff. The git-inspect path of the prompt would mislead the
-              // agent in that case; fall back to embedded `<files_changed>`.
-              hasDiffContext: agenticHasDiffContext && !hasPendingCommitDebt(),
-            },
-          });
-          inAgenticStep = false;
-          commit = await attemptMigrationCommit(m);
-          logAgenticSuccessOutcome(
-            stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
-            commit.kind === 'landed' ? commit.sha : null,
-            stepResult.summary
-          );
-          outcome = 'applied';
         } else {
-          // The inner prompt step doesn't run here (agentic disabled, or
-          // running inside an outer agent). Under `inside-agent`, surface the
+          // The prompt half is deferred. Under `inside-agent`, surface the
           // generator-emitted `agentContext` to stdout so the outer driving
           // agent can ingest it. Under `disabled` the run is human-driven;
           // agent-targeted context would only add noise — drop.
@@ -3076,75 +2978,22 @@ export async function executeMigrations(
           outcome = 'deferred';
         }
       } else {
-        // Defer commit until validation succeeds; failed validation leaves
-        // changes uncommitted in the working tree for the user to review.
-        const validationRun =
-          agenticRun && shouldRunValidation ? agenticRun : undefined;
-        const {
-          changes,
-          nextSteps,
-          agentContext,
-          skipAgentic,
-          logs,
-          madeChanges,
-        } = await runNxOrAngularMigration(
-          root,
-          m,
-          isVerbose,
-          /* captureGeneratorOutput: */ !!validationRun,
-          resolvedCollection
-        );
-        migrationEmittedNextSteps.push(...nextSteps);
-        // Whether a validation step was on the table at all. `skipAgentic`
-        // waives nothing when it wasn't, so the whole waived path hangs off
-        // this, not just the log line.
-        const validationApplies = !!validationRun && changes.length > 0;
-        const canRunValidation = validationApplies && !skipAgentic;
-
-        if (canRunValidation) {
-          // Install any deps the deterministic phase added/bumped before the
-          // validation agent runs — the agent may run tasks that need them.
-          await installDepsIfChanged();
-          inAgenticStep = true;
-          const stepResult = await validationRun.runStep({
+        const { nextSteps, agentContext, madeChanges } =
+          await runNxOrAngularMigration(
             root,
-            migration: m,
-            agentic: validationRun.agentic,
-            runDir: validationRun.runDir,
-            installDepsIfChanged,
-            documentationPath,
-            implContext: {
-              logs,
-              changes,
-              agentContext,
-              // See the hybrid agentic branch above for the rationale on
-              // why pending commit debt gates git-inspect context.
-              hasDiffContext: agenticHasDiffContext && !hasPendingCommitDebt(),
-            },
-            mode: 'generic-validation',
-          });
-          inAgenticStep = false;
-          commit = await attemptMigrationCommit(m);
-          logAgenticSuccessOutcome(
-            stepResult.ambiguous
-              ? 'Marked complete by user'
-              : 'Validation passed',
-            commit.kind === 'landed' ? commit.sha : null,
-            stepResult.summary
+            m,
+            isVerbose,
+            /* captureGeneratorOutput: */ false,
+            resolvedCollection
           );
-          outcome = 'applied';
-        } else {
-          if (skipAgentic && validationApplies) {
-            logWaivedAgenticStep(m, agentContext);
-            waivedAgenticStep = true;
-          } else if (printDroppedAgentContext && agentContext.length > 0) {
-            // Inner validation step didn't run. Surface `agentContext` under
-            // `inside-agent` so the outer driving agent can ingest it.
-            printDroppedAgentContext({ migration: m, agentContext });
-          }
-          commit = await commitOrRecordNoChanges(m, madeChanges);
-          outcome = madeChanges ? 'applied' : 'no-changes';
+        migrationEmittedNextSteps.push(...nextSteps);
+        if (printDroppedAgentContext && agentContext.length > 0) {
+          // Surface `agentContext` under `inside-agent` so the outer driving
+          // agent can ingest it.
+          printDroppedAgentContext({ migration: m, agentContext });
         }
+        commit = await commitOrRecordNoChanges(m, madeChanges);
+        outcome = madeChanges ? 'applied' : 'no-changes';
       }
       outcomes.push({
         migration: { package: m.package, name: m.name },
@@ -3176,9 +3025,7 @@ export async function executeMigrations(
           code:
             e instanceof NpmPeerDepsInstallError
               ? 'npm_install'
-              : inAgenticStep
-                ? 'agentic'
-                : 'migration_exec',
+              : 'migration_exec',
           migrationPackage: m.package,
           migrationName: m.name,
           migrationCount: totalMigrations,
@@ -3603,7 +3450,7 @@ async function runMigrations(
     migrationCount: migrations.length,
   });
 
-  const { resolveAgentic, resolveShouldRunValidation } =
+  const { resolveAgentic } =
     require('./agentic/select') as typeof import('./agentic/select');
   let agentic: ResolvedAgentic;
   try {
@@ -3639,7 +3486,6 @@ async function runMigrations(
 
   const {
     effective: effectiveCreateCommits,
-    agenticHasDiffContext,
     warning: createCommitsWarning,
     error: createCommitsError,
   } = resolveCreateCommits({
@@ -3697,11 +3543,6 @@ async function runMigrations(
     deleteRunForStartFresh(root, classicGate.replaceRunId);
   }
 
-  const shouldRunValidation = resolveShouldRunValidation({
-    validate: opts.validate,
-    agenticKind: agentic.kind,
-  });
-
   output.log({
     title:
       `Running migrations from '${opts.runMigrations}'` +
@@ -3730,9 +3571,7 @@ async function runMigrations(
     effectiveCreateCommits,
     commitPrefix,
     shouldSkipInstall,
-    agentic,
-    agenticHasDiffContext,
-    shouldRunValidation
+    agentic
   );
 
   const ranWithChangesCount =
@@ -4336,68 +4175,6 @@ export async function runMigration() {
 
     return runLocalMigrate();
   });
-}
-
-/**
- * Resolves a migration's collection once and derives everything the run loop
- * needs from that single read: the implementation context (`collection` +
- * `collectionPath`, handed to `runNxOrAngularMigration`) and, for agentic runs,
- * the workspace-relative documentation path handed to the agent.
- *
- * Read fresh per migration (not cached across the loop) so a prior migration's
- * reinstall is reflected, exactly as before. Error handling matches each field's
- * role:
- * - Migrations that run an implementation REQUIRE the collection; an unreadable
- *   collection throws and aborts that migration (caught by the run loop).
- * - Prompt-only migrations don't run an implementation, so the collection is
- *   read only to resolve documentation - a failure there is non-fatal: the
- *   prompt still runs and the supplementary doc is skipped with a warning.
- */
-export function resolveMigrationForRun(
-  root: string,
-  migration: {
-    package: string;
-    name: string;
-    documentation?: string;
-    implementation?: string;
-    factory?: string;
-    prompt?: string;
-  },
-  resolveDocumentation: boolean
-): {
-  resolvedCollection?: { collection: MigrationsJson; collectionPath: string };
-  documentationPath?: string;
-} {
-  let resolvedCollection:
-    | { collection: MigrationsJson; collectionPath: string }
-    | undefined;
-  if (!isPromptOnlyMigration(migration)) {
-    resolvedCollection = readMigrationCollection(migration.package, root);
-  } else if (resolveDocumentation && migration.documentation) {
-    try {
-      resolvedCollection = readMigrationCollection(migration.package, root);
-    } catch {
-      // Non-fatal: documentation is supplementary; the warning below fires.
-    }
-  }
-
-  let documentationPath: string | undefined;
-  if (resolveDocumentation && migration.documentation) {
-    documentationPath = resolvedCollection
-      ? resolveDocumentationFileToWorkspacePath(
-          root,
-          dirname(resolvedCollection.collectionPath),
-          migration.documentation
-        )
-      : undefined;
-    if (!documentationPath) {
-      logger.warn(
-        `Could not resolve the "documentation" file "${migration.documentation}" declared for migration "${migration.package}: ${migration.name}". It will be skipped as additional context for the AI agent.`
-      );
-    }
-  }
-
-  return { resolvedCollection, documentationPath };
 }
 
 export async function nxCliPath(nxWorkspaceRoot?: string) {
