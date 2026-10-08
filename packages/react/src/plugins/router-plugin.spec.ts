@@ -49,6 +49,7 @@ describe('@nx/react/react-router-plugin', () => {
         'acme/react-router.config.js': 'module.exports = {}',
         'acme/vite.config.js': '',
         'acme/project.json': JSON.stringify({ name: 'acme' }),
+        'acme/tsconfig.json': '{}',
       });
     });
 
@@ -89,6 +90,63 @@ describe('@nx/react/react-router-plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+
+    it('should check tsconfig.app.json when present', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+      await tempFs.createFiles({ 'acme/tsconfig.app.json': '{}' });
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+
+      expect(nodes[0][1].projects['acme'].targets.typecheck.command).toEqual(
+        'tsc -p tsconfig.app.json --noEmit'
+      );
+    });
+
+    it('should not create a typecheck target without a tsconfig', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+      tempFs.removeFileSync('acme/tsconfig.json');
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+
+      expect(nodes[0][1].projects['acme'].targets.typecheck).toBeUndefined();
+    });
+
+    it('should not create a typecheck target when typecheckTargetName is false', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        { typecheckTargetName: false },
+        context
+      );
+
+      const targets = nodes[0][1].projects['acme'].targets;
+      expect(targets.typecheck).toBeUndefined();
+      expect(targets['false']).toBeUndefined();
+    });
+
+    it('should not create a typecheck target in a TS solution setup', async () => {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+      mockConfig('acme/react-router.config.js', {}, context);
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+
+      const targets = nodes[0][1].projects['acme'].targets;
+      expect(targets.typecheck).toBeUndefined();
+      expect(targets.build).toBeDefined();
     });
   });
 

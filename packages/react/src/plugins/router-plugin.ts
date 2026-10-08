@@ -20,16 +20,19 @@ import {
 
 import { dirname, join } from 'path';
 import { readdirSync } from 'fs';
+import { minimatch } from 'minimatch';
 import { getLockFileName } from '@nx/js';
 import {
   addBuildAndWatchDepsTargets,
+  createTypecheckTarget,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+  selectTypecheckTsConfig,
 } from '@nx/js/internal';
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
-  typecheckTargetName?: string;
+  typecheckTargetName?: string | false;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
@@ -39,7 +42,6 @@ type ReactRouterTargets = Pick<
   'targets' | 'metadata' | 'projectType'
 >;
 
-const pmCommand = getPackageManagerCommand();
 const reactRouterConfigBlob = '**/react-router.config.{ts,js,cjs,cts,mjs,mts}';
 
 export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
@@ -74,9 +76,9 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
         }
       );
 
-    const lockfile = getLockFileName(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmCommand = getPackageManagerCommand(packageManager);
+    const lockfile = getLockFileName(packageManager);
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       { ...normalizedOptions, isUsingTsSolutionSetup },
@@ -103,7 +105,8 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
                 normalizedOptions,
                 context,
                 siblingFiles,
-                isUsingTsSolutionSetup
+                isUsingTsSolutionSetup,
+                pmCommand
               )
             );
           }
@@ -146,7 +149,8 @@ async function buildReactRouterTargets(
   options: ReactRouterPluginOptions,
   context: CreateNodesContext,
   siblingFiles: string[],
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmCommand: ReturnType<typeof getPackageManagerCommand>
 ): Promise<ReactRouterTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
   const configPath = join(context.workspaceRoot, configFilePath);
@@ -188,13 +192,22 @@ async function buildReactRouterTargets(
     );
   }
 
-  targets[options.typecheckTargetName] = await typecheckTarget(
-    projectRoot,
-    options.typecheckTargetName,
-    namedInputs,
-    siblingFiles,
-    isUsingTsSolutionSetup
+  const tsConfigFiles = siblingFiles.filter((file) =>
+    minimatch(file, 'tsconfig*{.json,.*.json}')
   );
+  if (
+    options.typecheckTargetName &&
+    !isUsingTsSolutionSetup &&
+    tsConfigFiles.length
+  ) {
+    targets[options.typecheckTargetName] = createTypecheckTarget({
+      mode: 'noEmit',
+      projectRoot: joinPathFragments(projectRoot),
+      pmc: pmCommand,
+      tsConfig: selectTypecheckTsConfig(tsConfigFiles),
+      namedInputs,
+    });
+  }
 
   addBuildAndWatchDepsTargets(
     context.workspaceRoot,
@@ -312,51 +325,6 @@ async function startTarget(
     startTarget.syncGenerators = ['@nx/js:typescript-sync'];
   }
   return startTarget;
-}
-
-async function typecheckTarget(
-  projectRoot: string,
-  typecheckTargetName: string,
-  namedInputs: { [inputName: string]: any[] },
-  siblingFiles: string[],
-  isUsingTsSolutionSetup: boolean
-) {
-  const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
-  const typecheckTarget: TargetConfiguration = {
-    cache: true,
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      { externalDependencies: ['typescript'] },
-    ],
-    command: isUsingTsSolutionSetup
-      ? `tsc --build --emitDeclarationOnly`
-      : `tsc${hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``} --noEmit`,
-    options: {
-      cwd: projectRoot,
-    },
-    metadata: {
-      description: `Runs type-checking for the project.`,
-      technologies: ['typescript'],
-      help: {
-        command: isUsingTsSolutionSetup
-          ? `${pmCommand.exec} tsc --build --help`
-          : `${pmCommand.exec} tsc${
-              hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``
-            } --help`,
-        example: isUsingTsSolutionSetup
-          ? { args: ['--force'] }
-          : { options: { noEmit: true } },
-      },
-    },
-  };
-
-  if (isUsingTsSolutionSetup) {
-    typecheckTarget.dependsOn = [`^${typecheckTargetName}`];
-    typecheckTarget.syncGenerators = ['@nx/js:typescript-sync'];
-  }
-  return typecheckTarget;
 }
 
 function normalizeOptions(options: ReactRouterPluginOptions) {

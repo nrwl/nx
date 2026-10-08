@@ -59,7 +59,7 @@ The same directory must also contain:
 - A `vite.config.*` file
 - Either a `package.json` or `project.json` file
 
-Nx creates a cached `build` task with outputs derived from the React Router configuration, continuous `dev` and `start` tasks, and a cached `typecheck` task. The `start` task is omitted when the React Router configuration sets `ssr: false`.
+Nx creates a cached `build` task with outputs derived from the React Router configuration, continuous `dev` and `start` tasks, and a cached `typecheck` task when the project has a `tsconfig*.json` file. In a TypeScript solution setup, [`@nx/js/typescript` creates the `typecheck` task](/docs/technologies/typescript/introduction#how-the-typescript-plugin-infers-tasks) instead. The `start` task is omitted when the React Router configuration sets `ssr: false`.
 
 Configure the plugin in `nx.json`:
 
@@ -82,14 +82,14 @@ Configure the plugin in `nx.json`:
 }
 ```
 
-| Option                | Type   | Default     | Description                                     |
-| --------------------- | ------ | ----------- | ----------------------------------------------- |
-| `buildTargetName`     | string | `build`     | Name of the cached production build task.       |
-| `devTargetName`       | string | `dev`       | Name of the continuous development server task. |
-| `startTargetName`     | string | `start`     | Name of the continuous production server task.  |
-| `typecheckTargetName` | string | `typecheck` | Name of the cached TypeScript typecheck task.   |
-| `buildDepsTargetName` | string | none        | Name of an optional dependency build task.      |
-| `watchDepsTargetName` | string | none        | Name of an optional dependency watch task.      |
+| Option                | Type              | Default     | Description                                                          |
+| --------------------- | ----------------- | ----------- | -------------------------------------------------------------------- |
+| `buildTargetName`     | string            | `build`     | Name of the cached production build task.                            |
+| `devTargetName`       | string            | `dev`       | Name of the continuous development server task.                      |
+| `startTargetName`     | string            | `start`     | Name of the continuous production server task.                       |
+| `typecheckTargetName` | string or `false` | `typecheck` | Name of the cached TypeScript typecheck task, or `false` to skip it. |
+| `buildDepsTargetName` | string            | none        | Name of an optional dependency build task.                           |
+| `watchDepsTargetName` | string            | none        | Name of an optional dependency watch task.                           |
 
 Use `include` and `exclude` glob patterns to scope the plugin. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/react/router-plugin`.
 
