@@ -109,7 +109,9 @@ import { output } from '../../../utils/output';
 import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
 import {
+  activeRunForClassic,
   activeRunToReplace,
+  deleteRunForStartFresh,
   runOrchestratorInit,
   runOrchestratorReconcile,
   runOrchestratorResume,
@@ -1577,7 +1579,7 @@ describe('orchestrator', () => {
             '  activity: no other nx migrate process is working on it',
             '  issues: 1 unresolved',
             '  other active runs on disk: run-2',
-            '  plan overlap: 1 of the applied migrations is still in the plan; a new run applies it again',
+            '  plan overlap: 1 of the applied migrations is still in the plan; running the plan applies it again',
             '',
             'To continue the run: npx nx migrate --run-migrations --agentic --run-id=run-1 --create-commits',
             'To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations --start-fresh --run-id=run-1',
@@ -1615,7 +1617,7 @@ describe('orchestrator', () => {
           '  branch: unknown',
           `  commits: newest recorded commit ${sha(2).slice(0, 10)} is of unknown reachability from HEAD (0 of 1 reachable, 1 could not be checked)`,
           '  worker: none running',
-          '  plan overlap: 0 of the applied migrations are still in the plan; a new run applies them again',
+          '  plan overlap: 0 of the applied migrations are still in the plan; running the plan applies them again',
         ])
       );
       expect(mockGetAncestorStatus).not.toHaveBeenCalled();
@@ -2067,6 +2069,102 @@ describe('orchestrator', () => {
         expect(() => activeRunToReplace(root, 'run-9')).not.toThrow();
         expect(existsSync(join(dir, 'activity'))).toBe(false);
       });
+    });
+
+    describe('classic loop', () => {
+      it('finds no run without creating the runs directory', () => {
+        expect(activeRunForClassic(root, ['@nx/js:a'])).toBeNull();
+        expect(existsSync(migrateRunsDir(root))).toBe(false);
+      });
+
+      it('holds the active run it reports, so a start-fresh elsewhere refuses to delete it', () => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        });
+
+        expect(activeRunForClassic(root, ['@nx/js:a'])).toMatchObject({
+          runId: 'run-1',
+          facts: { otherHolders: [], appliedStillPlanned: 1 },
+        });
+
+        const names = readdirSync(join(dir, 'activity'));
+        expect(names).toEqual([
+          expect.stringMatching(
+            new RegExp(`^${process.pid}-[0-9a-f]{8}\\.lock$`)
+          ),
+        ]);
+      });
+
+      it('deletes the run it holds, directory and all', () => {
+        setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        });
+        activeRunForClassic(root, ['@nx/js:a']);
+
+        deleteRunForStartFresh(root, 'run-1');
+
+        expect(runDirNames()).toEqual([]);
+        expect(logged.map((l) => l.title)).toContain(
+          'Deleted the record of migrate run run-1.'
+        );
+      });
+
+      it.each<[string, () => () => void, string]>([
+        [
+          'another process holds the run',
+          () => {
+            const dir = runDir(root, 'run-1');
+            mkdirSync(join(dir, 'activity'));
+            const holder = new FileLock(
+              join(dir, 'activity', '4242-beef.lock')
+            );
+            holder.lock();
+            return () => holder.unlock();
+          },
+          "Not deleting migrate run 'run-1': process 4242 is still working on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.",
+        ],
+        [
+          'the run completed',
+          () => {
+            const dir = runDir(root, 'run-1');
+            writeRunState(dir, { ...readRunState(dir), status: 'completed' });
+            return () => {};
+          },
+          "Not starting fresh: no migrate run 'run-1' is active, so there is nothing to replace.",
+        ],
+        [
+          'another run became the active one',
+          () => {
+            const dir = runDir(root, 'run-1');
+            writeRunState(dir, { ...readRunState(dir), status: 'completed' });
+            setupRun('run-2', {
+              steps: [migStep('step-1', '@nx/js:a', 'pending')],
+            });
+            return () => {};
+          },
+          "Not starting fresh: migrate run 'run-2' became active while this command was starting. Re-run the command to see it.",
+        ],
+      ])(
+        'refuses to delete, keeping every record, when %s',
+        (_label, arrange, message) => {
+          setupRun('run-1', {
+            steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+          });
+          const release = arrange();
+
+          try {
+            expect(() => deleteRunForStartFresh(root, 'run-1')).toThrow(
+              message
+            );
+          } finally {
+            release();
+          }
+
+          expect(existsSync(join(runDir(root, 'run-1'), 'run.json'))).toBe(
+            true
+          );
+        }
+      );
     });
 
     it('refuses to continue while another process holds the run, and reports that process', async () => {

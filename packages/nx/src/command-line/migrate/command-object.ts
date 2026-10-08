@@ -130,7 +130,7 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('startFresh', {
       describe:
-        'With --run-migrations and --run-id=<id> under the orchestrator: delete the record of the active migrate run the id names and start a new run over the whole plan. Migrations the deleted run applied stay applied.',
+        'With --run-migrations and --run-id=<id>: delete the record of the active migrate run the id names, then run the whole plan again, as a new run when orchestrated. Migrations the deleted run applied stay applied.',
       type: 'boolean',
       hidden: true,
     })

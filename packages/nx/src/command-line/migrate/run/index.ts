@@ -53,8 +53,11 @@ export { runSingleMigrationWorker } from './worker';
 export type { RunSingleMigrationWorkerInput } from './worker';
 
 export {
+  activeRunForClassic,
   activeRunToReplace,
+  checkRunForStartFresh,
   completionWarnings,
+  deleteRunForStartFresh,
   holdRunToContinue,
   releaseRunToHandOff,
   runOrchestratorInit,

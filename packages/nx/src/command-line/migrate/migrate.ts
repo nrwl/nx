@@ -111,6 +111,7 @@ import {
   reportMigrateRunComplete,
   reportMigrateRunError,
   reportMigrateRunStart,
+  reportMigrateRunStopped,
   safeReport,
   setMigrateInclude,
   setMigrateIncludeSource,
@@ -3247,8 +3248,104 @@ export async function executeMigrations(
   };
 }
 
-function orchestratorFlagNeedsOrchestrator(flag: string): string {
-  return `'${flag}' acts on an orchestrated migrate run, and this invocation is not orchestrated. Orchestration needs an enabled agent, or an AI agent running nx outside CI; --agentic=false and the WASM build turn it off.`;
+const CONTINUE_NEEDS_ORCHESTRATION = `'--run-id' continues an orchestrated migrate run, and this invocation is not orchestrated. Orchestration needs an enabled agent, or an AI agent running nx outside CI; --agentic=false and the WASM build turn it off.`;
+
+// The classic loop records no run, so it must not run over an active one. The
+// run is reported or asked about before the default-branch prompt; a start
+// fresh is checked there too, and the caller deletes the run only after it.
+async function settleActiveRunForClassic(
+  root: string,
+  opts: {
+    runMigrations: string;
+    agentic: AgenticArg;
+    interactive?: boolean;
+    runId?: string;
+    startFresh?: boolean;
+  },
+  migrations: PlannedMigration[]
+): Promise<
+  | { kind: 'run'; replaceRunId?: string }
+  | { kind: 'stop'; exitCode: number | undefined }
+> {
+  const {
+    activeRunForClassic,
+    checkRunForStartFresh,
+    renderContinueCommand,
+    renderExistingRunCommands,
+    renderExistingRunReport,
+  } = require('./run') as typeof import('./run');
+  const active = activeRunForClassic(
+    root,
+    migrations.map((m) => `${m.package}:${m.name}`)
+  );
+  // With no active run left, the check refuses as init does: the run
+  // completed after the pre-install check, so its plan already ran.
+  if (
+    opts.startFresh === true &&
+    (active === null || active.runId === opts.runId)
+  ) {
+    checkRunForStartFresh(root, opts.runId);
+    return { kind: 'run', replaceRunId: opts.runId };
+  }
+  if (!active) {
+    return { kind: 'run' };
+  }
+  const { runId, facts } = active;
+  // Start fresh refuses while another process holds the run, so a held run
+  // leaves nothing to ask; an agent cannot answer a prompt.
+  const held =
+    facts.otherHolders === 'unknown' || facts.otherHolders.length > 0;
+  if (
+    opts.startFresh !== true &&
+    !held &&
+    canPrompt(opts.interactive) &&
+    !isInsideAgent()
+  ) {
+    output.log(renderExistingRunReport(facts));
+    const choice = await migrateChoice<'start-fresh' | 'abort'>({
+      message: 'What do you want to do with the active migrate run?',
+      choices: [
+        {
+          value: 'start-fresh',
+          label: 'Start fresh',
+          hint: 'deletes the run record, then runs the whole plan without an agent',
+        },
+        { value: 'abort', label: 'Abort', hint: 'leaves the run as it is' },
+      ],
+    });
+    switch (choice) {
+      case 'start-fresh':
+        checkRunForStartFresh(root, runId);
+        return { kind: 'run', replaceRunId: runId };
+      case 'abort':
+        output.log({
+          title: `Leaving migrate run ${runId} as it is. To continue it with an agent, run ${renderContinueCommand(
+            root,
+            runId,
+            facts.policy
+          )}.`,
+        });
+        reportMigrateRunStopped('aborted');
+        return { kind: 'stop', exitCode: undefined };
+      default: {
+        const unhandled: never = choice;
+        throw new Error(`Unhandled choice: ${unhandled}`);
+      }
+    }
+  }
+  output.warn(
+    renderExistingRunReport(
+      facts,
+      renderExistingRunCommands(
+        root,
+        facts,
+        opts.runMigrations,
+        opts.agentic === false ? false : undefined
+      )
+    )
+  );
+  reportMigrateRunStopped('existing_run');
+  return { kind: 'stop', exitCode: 1 };
 }
 
 // nx is located at spawn time, after the gated pre-install, so the child runs
@@ -3288,24 +3385,19 @@ async function runMigrations(
   // The WASM build lacks the native locks a durable run relies on.
   const outerAgentDrivesRun =
     isInsideAgent() && opts.agentic !== false && !isCI() && !IS_WASM;
-  // Both flags act on an orchestrated run: refuse them before the install, and
-  // before --if-exists could return silently, when neither the outer agent nor
-  // a master session (an agent enabled outside one, off WASM) can drive it.
-  const orchestratorFlag =
-    opts.startFresh === true
-      ? '--start-fresh'
-      : opts.runId !== undefined
-        ? '--run-id'
-        : undefined;
+  const isContinue = opts.runId !== undefined && opts.startFresh !== true;
+  // Refused before the install, and before --if-exists could return silently,
+  // when neither the outer agent nor a master session (an agent enabled
+  // outside one, off WASM) can continue the run. A start fresh may reach the
+  // classic loop, which deletes the run's record and runs the plan.
   if (
-    orchestratorFlag !== undefined &&
+    isContinue &&
     !outerAgentDrivesRun &&
     (isInsideAgent() || opts.agentic === false || IS_WASM)
   ) {
-    throw new Error(orchestratorFlagNeedsOrchestrator(orchestratorFlag));
+    throw new Error(CONTINUE_NEEDS_ORCHESTRATION);
   }
 
-  const isContinue = opts.runId !== undefined && opts.startFresh !== true;
   let continued: MigrateRunState | undefined;
   if (isContinue) {
     // Before the install: a concurrent start-fresh must not delete the run
@@ -3553,12 +3645,24 @@ async function runMigrations(
       confirmStart: confirmNewRunCommits,
     });
   }
-  if (orchestratorFlag !== undefined) {
-    throw new Error(orchestratorFlagNeedsOrchestrator(orchestratorFlag));
+  if (isContinue) {
+    throw new Error(CONTINUE_NEEDS_ORCHESTRATION);
+  }
+
+  const classicGate = await settleActiveRunForClassic(root, opts, migrations);
+  if (classicGate.kind === 'stop') {
+    return classicGate.exitCode;
   }
 
   if (!(await confirmNewRunCommits())) {
+    reportMigrateRunStopped('declined_commits');
     return;
+  }
+  // After the prompt, so declining it keeps the run.
+  if (classicGate.replaceRunId !== undefined) {
+    const { deleteRunForStartFresh } =
+      require('./run') as typeof import('./run');
+    deleteRunForStartFresh(root, classicGate.replaceRunId);
   }
 
   const shouldRunValidation = resolveShouldRunValidation({

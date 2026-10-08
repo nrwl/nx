@@ -1634,6 +1634,45 @@ describe('migrate orchestrator', () => {
     expect(redo.payload.command).toContain(`--run-migration=${PKG}:gen-mig`);
   }, 600000);
 
+  it('should stop the classic loop over an active run and replace the run on --start-fresh', () => {
+    writePlan([genMig, genTwoMig]);
+    const first = reconcileAfterInit(runInit());
+    runDispensed(first.payload.command);
+    const runStateBefore = readFile(`.nx/migrate-runs/${first.runId}/run.json`);
+
+    // --agentic=false keeps the agent's invocation on the classic loop, which
+    // records no run of its own.
+    const stopped = runCLI(
+      'migrate --run-migrations=migrations.json --agentic=false',
+      { env: INIT_ENV, silenceError: true }
+    );
+    expect(runCLI.lastExitCode).toBe(1);
+    expect(stopped).toContain(
+      `A migrate run is already active: ${first.runId}`
+    );
+    expect(stopped).toContain(
+      `To start fresh (deletes the run record, then runs the whole plan again): ${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --agentic=false --start-fresh --run-id=${first.runId}`
+    );
+    expect(stopped).not.toContain('Running migrations from');
+    expect(readFile(`.nx/migrate-runs/${first.runId}/run.json`)).toBe(
+      runStateBefore
+    );
+    expect(existsSync(join(tmpProjPath(), 'gen-two-file'))).toBe(false);
+
+    const fresh = runCLI(
+      `migrate --run-migrations=migrations.json --agentic=false --start-fresh --run-id=${first.runId}`,
+      { env: INIT_ENV }
+    );
+    expect(fresh).toContain(
+      `Deleted the record of migrate run ${first.runId}.`
+    );
+    expect(fresh).toContain("Running migrations from 'migrations.json'");
+    expect(
+      listFiles('.nx/migrate-runs').filter((f) => f !== 'init.lock')
+    ).toEqual([]);
+    expect(readFile('gen-two-file')).toEqual('gen-two-content');
+  }, 600000);
+
   // A `claude` on PATH: as the master it drives the run through its bootstrap
   // reconcile command; per step it writes the handoff. FAKE_AGENT_KILL_PARENT
   // kills the parent once the first step's request reaches it.

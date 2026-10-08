@@ -612,11 +612,81 @@ export function releaseRunToHandOff(root: string, runId: string): void {
   releaseRunActivity(runDir(root, runId));
 }
 
+/**
+ * The active run a classic `--run-migrations` must not run over, held while
+ * the caller reports it or asks what to do; null when no run is active. Run
+ * directories that cannot be read refuse as they do for init.
+ */
+export function activeRunForClassic(
+  root: string,
+  plannedIds: readonly string[]
+): { runId: string; facts: ExistingRunFacts } | null {
+  const active = findActiveRunForInit(root);
+  if (!active) return null;
+  // Held before the facts are read, as init's report does.
+  holdRunActivity(root, active.runId);
+  return {
+    runId: active.runId,
+    facts: collectExistingRunFacts(
+      root,
+      active.runId,
+      active.state,
+      plannedIds
+    ),
+  };
+}
+
+/**
+ * Throws when a classic start fresh could not delete the active run `runId`.
+ * Run before the commit prompt, as init does, so the user is not asked for a
+ * run that is then refused; deleteRunForStartFresh repeats the checks.
+ */
+export function checkRunForStartFresh(root: string, runId: string): void {
+  withRunCreationLock(root, () => {
+    const active = activeRunToDelete(root, runId);
+    refuseUndeletableRun(root, runId, active.state);
+  });
+}
+
+/**
+ * Deletes the record of the active run `runId` for a classic start fresh,
+ * under the refusals init applies before it replaces a run. The classic loop
+ * records no run of its own afterwards.
+ */
+export function deleteRunForStartFresh(root: string, runId: string): void {
+  const deleted = withRunCreationLock(root, () => {
+    activeRunToDelete(root, runId);
+    return deleteRunRecord(root, runId);
+  });
+  if (deleted) {
+    removeDeletedRunDir(root, runId);
+  }
+}
+
+// Call under the creation lock. A run that became active since the user chose
+// is refused, never deleted in place of the one they saw.
+function activeRunToDelete(
+  root: string,
+  runId: string
+): { runId: string; state: MigrateRunState } {
+  refuseLiveReservation(root);
+  const active = findActiveRunForInit(root, true);
+  if (!active) {
+    throw new Error(noActiveRunToReplace(runId));
+  }
+  if (active.runId !== runId) {
+    throw new Error(
+      `Not starting fresh: migrate run '${active.runId}' became active while this command was starting. Re-run the command to see it.`
+    );
+  }
+  return active;
+}
+
 // Reads the newest active run; null when no run is active. Uninterpretable
 // run dirs refuse a fresh start (one of them could be an active run this
-// init would compete with) but only warn when a healthy active run is found,
-// unless `refuseUninterpretable`: a start-fresh would delete that run and
-// then find only the unreadable ones. NewerRunStateFormatError propagates
+// invocation would compete with) but only warn when a healthy active run is
+// found, unless `refuseUninterpretable`: a start-fresh would delete that run
+// and then find only the unreadable ones. NewerRunStateFormatError propagates
 // from the read.
 function findActiveRunForInit(
   root: string,
@@ -638,7 +708,7 @@ function findActiveRunForInit(
     if (!active || refuseUninterpretable) {
       throw new Error(
         [
-          `Whether a migrate run is still active could not be determined; starting a new run could re-apply migrations an unfinished run already applied.`,
+          `Whether a migrate run is still active could not be determined; running the plan could re-apply migrations an unfinished run already applied.`,
           ...details,
           `Fix or remove the listed ${noun}, then re-run the command.`,
         ].join('\n')
