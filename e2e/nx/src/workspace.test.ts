@@ -23,7 +23,13 @@ describe('@nx/workspace:infer-targets', () => {
   beforeEach(() => {
     proj = newProject({
       keepBackup: true,
-      packages: ['@nx/playwright', '@nx/remix', '@nx/eslint', '@nx/jest'],
+      packages: [
+        '@nx/workspace',
+        '@nx/playwright',
+        '@nx/remix',
+        '@nx/eslint',
+        '@nx/jest',
+      ],
       // Remix rejects TypeScript 6, so keep this workspace on the 5.x line
       // that @nx/remix pins (packages/remix/src/utils/versions.ts).
       typescriptVersion: '~5.9.2',
@@ -166,6 +172,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     proj = newProject({
       keepBackup: true,
       packages: [
+        '@nx/workspace',
         '@nx/eslint',
         '@nx/js',
         '@nx/playwright',
@@ -206,6 +213,12 @@ describe('Workspace Tests', () => {
     proj = newProject({
       keepBackup: true,
       packages: ['@nx/workspace', '@nx/js', '@nx/jest'],
+    });
+
+    // Move/remove tests below exercise project.json and tsconfig path mappings,
+    // not the TS solution layout inferred for a bare package-based workspace.
+    runCLI('generate @nx/js:init --addTsConfigBase --skipFormat', {
+      env: { NX_ADD_PLUGINS: 'false' },
     });
   });
 
