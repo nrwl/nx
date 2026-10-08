@@ -1,5 +1,6 @@
 import * as pc from 'picocolors';
-import * as yargs from 'yargs';
+import yargs, { type ParserConfigurationOptions } from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 import { reportCommandRunEvent } from '../analytics';
 import { output } from '../utils/output';
@@ -60,10 +61,7 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsCompletionCommand } from './completion/command-object';
 import { isCompletionRequest } from './completion/trigger';
 
-// Ensure that the output takes up the available width of the terminal.
-yargs.wrap(yargs.terminalWidth());
-
-export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
+export const parserConfiguration: Partial<ParserConfigurationOptions> = {
   'strip-dashed': true,
 };
 
@@ -74,7 +72,11 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  * from the `.argv` call, so the object and it's relative scripts can
  * be executed correctly.
  */
-export const commandsObject = yargs
+const cli = yargs(hideBin(process.argv));
+
+export const commandsObject = cli
+  // Ensure that the output takes up the available width of the terminal.
+  .wrap(cli.terminalWidth())
   .parserConfiguration(parserConfiguration)
   .usage(pc.bold('Smart Monorepos · Fast Builds'))
   .demandCommand(1, '')

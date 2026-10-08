@@ -1,4 +1,4 @@
-import yargs from 'yargs';
+import type { Arguments } from 'yargs';
 import chalk from 'chalk';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
@@ -27,7 +27,7 @@ import {
 } from './prompt-helpers';
 
 export async function determineNxCloud(
-  parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
+  parsedArgs: Arguments<{ nxCloud: NxCloud }>
 ): Promise<NxCloud> {
   if (parsedArgs.nxCloud) {
     return parsedArgs.nxCloud;
@@ -39,7 +39,7 @@ export async function determineNxCloud(
 }
 
 export async function determineNxCloudV2(
-  parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
+  parsedArgs: Arguments<{ nxCloud?: string; interactive?: boolean }>
 ): Promise<'yes' | 'skip'> {
   // Provided via flag
   if (parsedArgs.nxCloud) {
@@ -56,7 +56,7 @@ export async function determineNxCloudV2(
 }
 
 export async function determineIfGitHubWillBeUsed(
-  parsedArgs: yargs.Arguments<{ nxCloud: NxCloud; useGitHub?: boolean }>
+  parsedArgs: Arguments<{ nxCloud: NxCloud; useGitHub?: boolean }>
 ): Promise<boolean> {
   if (parsedArgs.nxCloud === 'yes' || parsedArgs.nxCloud === 'circleci') {
     if (parsedArgs?.useGitHub) return true;
@@ -94,7 +94,7 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
 }
 
 export async function determineTemplate(
-  parsedArgs: yargs.Arguments<{
+  parsedArgs: Arguments<{
     template?: string;
     preset?: string;
     interactive?: boolean;
@@ -136,7 +136,7 @@ export async function determineTemplate(
 }
 
 export async function determineAiAgents(
-  parsedArgs: yargs.Arguments<{
+  parsedArgs: Arguments<{
     aiAgents?: (Agent | 'none')[];
     interactive?: boolean;
   }>
@@ -171,7 +171,7 @@ async function aiAgentsPrompt(): Promise<Agent[]> {
 }
 
 export async function determineAnalytics(
-  parsedArgs: yargs.Arguments<{ analytics?: boolean }>
+  parsedArgs: Arguments<{ analytics?: boolean }>
 ): Promise<'yes' | 'no' | 'unset'> {
   if (typeof parsedArgs.analytics === 'boolean') {
     return parsedArgs.analytics ? 'yes' : 'no';
@@ -194,7 +194,7 @@ export async function determineAnalytics(
 }
 
 export async function determineDefaultBase(
-  parsedArgs: yargs.Arguments<{ defaultBase?: string }>
+  parsedArgs: Arguments<{ defaultBase?: string }>
 ): Promise<string> {
   if (parsedArgs.defaultBase) {
     return parsedArgs.defaultBase;
@@ -262,7 +262,7 @@ export async function confirmThirdPartyPreset(
 }
 
 export async function determinePackageManager(
-  parsedArgs: yargs.Arguments<{ packageManager: string }>
+  parsedArgs: Arguments<{ packageManager: string }>
 ): Promise<PackageManager> {
   const packageManager: string = parsedArgs.packageManager;
 

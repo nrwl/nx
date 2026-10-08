@@ -1,4 +1,4 @@
-import { type Argv, type CommandModule, showHelp } from 'yargs';
+import type { Argv, CommandModule } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 import { logger } from '../../utils/logger';
 import {
@@ -131,6 +131,8 @@ export type FirstReleaseArgs = {
   firstRelease?: boolean;
 };
 
+let releaseArgv: Argv;
+
 export const yargsReleaseCommand: CommandModule<
   Record<string, unknown>,
   NxReleaseArgs
@@ -138,75 +140,79 @@ export const yargsReleaseCommand: CommandModule<
   command: 'release',
   describe:
     'Orchestrate versioning and publishing of applications and libraries.',
-  builder: (yargs) =>
-    withVerbose(yargs)
-      .command(releaseCommand)
-      .command(versionCommand)
-      .command(changelogCommand)
-      .command(publishCommand)
-      .command(planCommand)
-      .command(planCheckCommand)
-      .demandCommand()
-      // Error on typos/mistyped CLI args, there is no reason to support arbitrary unknown args for these commands
-      .strictOptions()
-      .option('groups', {
-        description:
-          'One or more release groups to target with the current command.',
-        type: 'string',
-        coerce: parseCSV,
-        alias: ['group', 'g'],
-      })
-      .option('projects', {
-        type: 'string',
-        alias: 'p',
-        coerce: parseCSV,
-        describe:
-          'Projects to run. (comma/space delimited project names and/or patterns).',
-      })
-      .option('dry-run', {
-        describe:
-          'Preview the changes without updating files/creating releases.',
-        alias: 'd',
-        type: 'boolean',
-        default: false,
-      })
-      // NOTE: The camel case format is required for the coerce() function to be called correctly. It still supports --print-config casing.
-      .option('printConfig', {
-        type: 'string',
-        describe:
-          'Print the resolved nx release configuration that would be used for the current command and then exit.',
-        coerce: (val: string) => {
-          if (val === '') {
-            return true;
+  builder: (yargs) => {
+    releaseArgv = yargs;
+    return (
+      withVerbose(yargs)
+        .command(releaseCommand)
+        .command(versionCommand)
+        .command(changelogCommand)
+        .command(publishCommand)
+        .command(planCommand)
+        .command(planCheckCommand)
+        .demandCommand()
+        // Error on typos/mistyped CLI args, there is no reason to support arbitrary unknown args for these commands
+        .strictOptions()
+        .option('groups', {
+          description:
+            'One or more release groups to target with the current command.',
+          type: 'string',
+          coerce: parseCSV,
+          alias: ['group', 'g'],
+        })
+        .option('projects', {
+          type: 'string',
+          alias: 'p',
+          coerce: parseCSV,
+          describe:
+            'Projects to run. (comma/space delimited project names and/or patterns).',
+        })
+        .option('dry-run', {
+          describe:
+            'Preview the changes without updating files/creating releases.',
+          alias: 'd',
+          type: 'boolean',
+          default: false,
+        })
+        // NOTE: The camel case format is required for the coerce() function to be called correctly. It still supports --print-config casing.
+        .option('printConfig', {
+          type: 'string',
+          describe:
+            'Print the resolved nx release configuration that would be used for the current command and then exit.',
+          coerce: (val: string) => {
+            if (val === '') {
+              return true;
+            }
+            if (val === 'false') {
+              return false;
+            }
+            return val;
+          },
+        })
+        .check(async (argv) => {
+          if (argv.groups && argv.projects) {
+            throw new Error(
+              'The --projects and --groups options are mutually exclusive, please use one or the other.'
+            );
           }
-          if (val === 'false') {
-            return false;
-          }
-          return val;
-        },
-      })
-      .check(async (argv) => {
-        if (argv.groups && argv.projects) {
-          throw new Error(
-            'The --projects and --groups options are mutually exclusive, please use one or the other.'
-          );
-        }
-        const nxJson = (
-          await handleImport('../../config/nx-json.js', __dirname)
-        ).readNxJson();
-        if (argv.groups?.length) {
-          for (const group of argv.groups) {
-            if (!nxJson.release?.groups?.[group]) {
-              throw new Error(
-                `The specified release group "${group}" was not found in nx.json`
-              );
+          const nxJson = (
+            await handleImport('../../config/nx-json.js', __dirname)
+          ).readNxJson();
+          if (argv.groups?.length) {
+            for (const group of argv.groups) {
+              if (!nxJson.release?.groups?.[group]) {
+                throw new Error(
+                  `The specified release group "${group}" was not found in nx.json`
+                );
+              }
             }
           }
-        }
-        return true;
-      }) as any, // the type: 'string' and coerce: parseCSV combo isn't enough to produce the string[] type for projects and groups
+          return true;
+        }) as any
+    ); // the type: 'string' and coerce: parseCSV combo isn't enough to produce the string[] type for projects and groups
+  },
   handler: async () => {
-    showHelp();
+    releaseArgv.showHelp();
     process.exit(1);
   },
 };
