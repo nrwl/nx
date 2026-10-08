@@ -9,6 +9,9 @@ import { loadViteDynamicImport } from '../utils/executor-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { existsSync, readdirSync, rmSync } from 'fs';
+import { join } from 'path';
 
 vi.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: vi.fn().mockResolvedValue({
@@ -28,6 +31,13 @@ describe('@nx/remix/plugin', () => {
 
   beforeEach(() => {
     (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
+    if (existsSync(workspaceDataDirectory)) {
+      for (const file of readdirSync(workspaceDataDirectory)) {
+        if (file.startsWith('remix-')) {
+          rmSync(join(workspaceDataDirectory, file), { force: true });
+        }
+      }
+    }
   });
 
   describe('Remix Classic Compiler', () => {
@@ -89,6 +99,8 @@ module.exports = {
       });
 
       it('should create nodes', async () => {
+        tempFs.createFileSync('tsconfig.json', '{}');
+
         // ACT
         const nodes = await createNodesFunction(
           ['remix.config.cjs'],
@@ -152,6 +164,9 @@ module.exports = {
       });
 
       it('should create nodes', async () => {
+        tempFs.createFileSync('my-app/tsconfig.json', '{}');
+        tempFs.createFileSync('my-app/tsconfig.app.json', '{}');
+
         // ACT
         const nodes = await createNodesFunction(
           ['my-app/remix.config.cjs'],
@@ -193,6 +208,7 @@ module.exports = {
           'my-app/package.json',
           JSON.stringify('{"name": "my-app"}')
         );
+        tempFs.createFileSync('my-app/tsconfig.json', '{}');
 
         const nodes = await createNodesFunction(
           ['my-app/remix.config.cjs'],
@@ -228,12 +244,40 @@ module.exports = {
         ).toBeUndefined();
       });
 
-      it('should infer typecheck with --build flag when using TS solution setup', async () => {
+      it('should not infer typecheck when using TS solution setup', async () => {
         (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
         tempFs.createFileSync(
           'my-app/package.json',
           JSON.stringify('{"name": "my-app", "version": "0.0.0"}')
         );
+        tempFs.createFileSync('my-app/tsconfig.json', '{}');
+
+        const nodes = await createNodesFunction(
+          ['my-app/remix.config.cjs'],
+          { typecheckTargetName: 'typecheck' },
+          context
+        );
+
+        expect(
+          nodes[0][1].projects['my-app'].targets.typecheck
+        ).toBeUndefined();
+      });
+
+      it('should not infer typecheck when the project has no tsconfig', async () => {
+        const nodes = await createNodesFunction(
+          ['my-app/remix.config.cjs'],
+          { typecheckTargetName: 'typecheck' },
+          context
+        );
+
+        expect(
+          nodes[0][1].projects['my-app'].targets.typecheck
+        ).toBeUndefined();
+      });
+
+      it('should check tsconfig.lib.json when there is no tsconfig.app.json', async () => {
+        tempFs.createFileSync('my-app/tsconfig.json', '{}');
+        tempFs.createFileSync('my-app/tsconfig.lib.json', '{}');
 
         const nodes = await createNodesFunction(
           ['my-app/remix.config.cjs'],
@@ -243,30 +287,21 @@ module.exports = {
 
         expect(
           nodes[0][1].projects['my-app'].targets.typecheck.command
-        ).toEqual(`tsc --build --emitDeclarationOnly`);
-        expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-          .toMatchInlineSnapshot(`
-          {
-            "description": "Runs type-checking for the project.",
-            "help": {
-              "command": "npx tsc --build --help",
-              "example": {
-                "args": [
-                  "--force",
-                ],
-              },
-            },
-            "technologies": [
-              "typescript",
-            ],
-          }
-        `);
-        expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.dependsOn
-        ).toEqual([`^typecheck`]);
-        expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-        ).toEqual(['@nx/js:typescript-sync']);
+        ).toEqual('tsc -p tsconfig.lib.json --noEmit');
+      });
+
+      it('should not infer typecheck when typecheckTargetName is false', async () => {
+        tempFs.createFileSync('my-app/tsconfig.json', '{}');
+
+        const nodes = await createNodesFunction(
+          ['my-app/remix.config.cjs'],
+          { typecheckTargetName: false },
+          context
+        );
+
+        const targets = nodes[0][1].projects['my-app'].targets;
+        expect(targets.typecheck).toBeUndefined();
+        expect(targets['false']).toBeUndefined();
       });
     });
   });
@@ -337,6 +372,9 @@ module.exports = {
       });
 
       it('should create nodes', async () => {
+        tempFs.createFileSync('tsconfig.json', '{}');
+        tempFs.createFileSync('tsconfig.app.json', '{}');
+
         // ACT
         const nodes = await createNodesFunction(
           ['vite.config.js'],
@@ -408,6 +446,8 @@ module.exports = {
       });
 
       it('should create nodes', async () => {
+        tempFs.createFileSync('my-app/tsconfig.json', '{}');
+
         // ACT
         const nodes = await createNodesFunction(
           ['my-app/vite.config.js'],
