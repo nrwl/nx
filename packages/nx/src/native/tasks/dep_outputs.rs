@@ -17,20 +17,28 @@ pub(super) fn collect_task_dependencies<'a>(
         &task_graph.dependencies,
         initial_task_id,
         transitive,
+        |_, _| true,
     )
 }
 
-/// Collects every continuous dependency in the chain: the servers of this
-/// task, their servers, and so on. Cycles and the task itself are skipped.
+/// Collects every continuous dependency in the chain whose inputs the task
+/// takes on: the servers of this task, their servers, and so on. An edge from
+/// `inputs: false` is not followed. Cycles and the task itself are skipped.
 pub(super) fn collect_continuous_dependencies<'a>(
     task_graph: &'a TaskGraph,
     initial_task_id: &str,
 ) -> Vec<&'a Task> {
+    let without_inputs = task_graph.continuous_dependencies_without_inputs.as_ref();
     collect_over(
         task_graph,
         &task_graph.continuous_dependencies,
         initial_task_id,
         true,
+        |from, to| {
+            !without_inputs
+                .and_then(|edges| edges.get(from))
+                .is_some_and(|deps| deps.iter().any(|dep| dep == to))
+        },
     )
 }
 
@@ -39,6 +47,7 @@ fn collect_over<'a>(
     edges: &'a HashMap<String, Vec<String>>,
     initial_task_id: &str,
     transitive: bool,
+    follows: impl Fn(&str, &str) -> bool,
 ) -> Vec<&'a Task> {
     let mut result = Vec::new();
     let mut visited = HashSet::from([initial_task_id]);
@@ -54,7 +63,7 @@ fn collect_over<'a>(
             let dep_str = dep.as_str();
 
             // Skip if already seen
-            if !visited.insert(dep_str) {
+            if !follows(task_id, dep_str) || !visited.insert(dep_str) {
                 continue;
             }
 
@@ -172,6 +181,7 @@ mod tests {
             tasks,
             dependencies,
             continuous_dependencies: HashMap::new(),
+            continuous_dependencies_without_inputs: None,
         };
 
         let result = collect_task_dependencies(&task_graph, "task1:build", false);
@@ -198,6 +208,7 @@ mod tests {
             tasks,
             dependencies,
             continuous_dependencies: HashMap::new(),
+            continuous_dependencies_without_inputs: None,
         };
 
         let result = collect_task_dependencies(&task_graph, "task1:build", true);
@@ -215,6 +226,7 @@ mod tests {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
             continuous_dependencies: HashMap::new(),
+            continuous_dependencies_without_inputs: None,
         };
         for project in ["e2e", "web", "api"] {
             let task = create_test_task(project, vec![]);
@@ -264,6 +276,7 @@ mod tests {
             tasks,
             dependencies,
             continuous_dependencies: HashMap::new(),
+            continuous_dependencies_without_inputs: None,
         };
 
         let result = collect_task_dependencies(&task_graph, "task1:build", true);
@@ -337,6 +350,7 @@ mod tests {
             tasks,
             dependencies,
             continuous_dependencies: HashMap::new(),
+            continuous_dependencies_without_inputs: None,
         }
     }
 
