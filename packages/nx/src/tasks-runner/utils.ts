@@ -8,6 +8,7 @@ import {
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
+import { hashObject } from '../hasher/file-hasher';
 import {
   ProjectConfiguration,
   TargetConfiguration,
@@ -697,4 +698,24 @@ export function createTaskId(
     id += `:${configuration}`;
   }
   return id;
+}
+
+/**
+ * Distinguishes two invocations of the same task for the recursive invocation
+ * detector. The task id alone would report `nx run app:build --flag` invoked
+ * from within `app:build` as a loop, so the detector pairs the id with this
+ * hash and only treats an exact repeat as an immediate loop.
+ *
+ * The hash cannot decide recursion on its own. Arguments that accumulate
+ * through forwarding (`app:build` -> `app:build hello` -> `app:build hello
+ * hello`) hash differently on every hop, so the tracker also bounds how many
+ * ancestors may be running one task id.
+ *
+ * `__overrides_unparsed__` is dropped, matching how the task hasher treats it:
+ * it restates the other keys as raw argv, down to flag order and spelling.
+ */
+export function hashTaskOverrides(task: Task): string {
+  const overrides = { ...task.overrides };
+  delete overrides['__overrides_unparsed__'];
+  return hashObject(overrides);
 }

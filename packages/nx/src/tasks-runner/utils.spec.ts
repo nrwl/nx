@@ -4,6 +4,7 @@ import {
   expandWildcardTargetConfiguration,
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
+  hashTaskOverrides,
   interpolate,
   pruneToSelectedTasks,
   transformLegacyOutputs,
@@ -1226,5 +1227,62 @@ describe('pruneToSelectedTasks', () => {
   it('ignores ids the graph does not contain', () => {
     const pruned = pruneToSelectedTasks(graph, ['gone:build', 'lib:build']);
     expect(Object.keys(pruned.tasks)).toEqual(['lib:build']);
+  });
+});
+
+describe('task overrides hash', () => {
+  function task(id: string, overrides: Record<string, unknown>): Task {
+    const [project, target, configuration] = id.split(':');
+    return {
+      id,
+      target: { project, target, configuration },
+      overrides,
+      outputs: [],
+      projectRoot: `libs/${project}`,
+    } as any as Task;
+  }
+
+  it('should separate the same task run with different overrides', () => {
+    expect(hashTaskOverrides(task('app:build', { watch: true }))).not.toBe(
+      hashTaskOverrides(task('app:build', { watch: false }))
+    );
+  });
+
+  it('should not depend on the order the overrides were written in', () => {
+    expect(hashTaskOverrides(task('app:build', { a: 1, b: 2 }))).toBe(
+      hashTaskOverrides(task('app:build', { b: 2, a: 1 }))
+    );
+  });
+
+  it('should ignore the raw argv restatement of the overrides', () => {
+    expect(
+      hashTaskOverrides(
+        task('app:build', { watch: true, __overrides_unparsed__: ['--watch'] })
+      )
+    ).toBe(
+      hashTaskOverrides(
+        task('app:build', {
+          watch: true,
+          __overrides_unparsed__: ['--watch=true'],
+        })
+      )
+    );
+  });
+
+  it('should not depend on the task id, which the tracker stores separately', () => {
+    expect(hashTaskOverrides(task('app:build', { watch: true }))).toBe(
+      hashTaskOverrides(task('other:test:ci', { watch: true }))
+    );
+  });
+
+  it('should grow a different hash on every hop when arguments accumulate', () => {
+    const hashes = [
+      hashTaskOverrides(task('app:build', { _: [] })),
+      hashTaskOverrides(task('app:build', { _: ['hello'] })),
+      hashTaskOverrides(task('app:build', { _: ['hello', 'hello'] })),
+    ];
+
+    // Why the tracker cannot rely on the hash alone to spot this recursion.
+    expect(new Set(hashes).size).toBe(3);
   });
 });
