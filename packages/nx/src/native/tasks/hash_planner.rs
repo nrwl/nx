@@ -1834,7 +1834,6 @@ mod tests {
                         })
                         .collect(),
                     continuous_dependencies: HashMap::new(),
-                    continuous_dependencies_without_inputs: None,
                     tasks,
                 }
             };
@@ -2184,7 +2183,6 @@ mod tests {
             tasks: HashMap::from([(task.id.clone(), task)]),
             dependencies: HashMap::new(),
             continuous_dependencies: HashMap::new(),
-            continuous_dependencies_without_inputs: None,
         };
         let plans = planner
             .get_plans_internal(vec!["app:build"], task_graph, None, &[])
@@ -2299,7 +2297,6 @@ mod tests {
                 ("web:outslash", &["lib:outslash"]),
             ]),
             continuous_dependencies: edges(&[("web:bracket", &["web:serve"])]),
-            continuous_dependencies_without_inputs: None,
         };
 
         let mut deferred: Vec<String> = deferred_tasks(&plans, &pool, &task_graph)
@@ -2601,8 +2598,7 @@ mod plan_memo_tests {
 mod continuous_inputs_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
-    use crate::native::tasks::types::TaskGraphEdge;
-    use crate::native::test_utils::{edges_to, strings, task_graph};
+    use crate::native::test_utils::{edges_to, task_graph};
     use crate::native::types::DepsOutputsInput;
     use napi::bindgen_prelude::Either9;
 
@@ -2652,16 +2648,6 @@ mod continuous_inputs_tests {
     }
 
     fn graph(continuous: &[(&str, &[&str])], without_inputs: &[(&str, &[&str])]) -> TaskGraph {
-        let ids = |list: &[(&str, &[&str])]| {
-            list.iter()
-                .map(|(id, deps)| (id.to_string(), strings(deps)))
-                .collect::<HashMap<String, Vec<String>>>()
-        };
-        let edges = |list: &[(&str, &[&str])]| {
-            list.iter()
-                .map(|(id, deps)| (id.to_string(), edges_to(deps)))
-                .collect::<HashMap<String, Vec<TaskGraphEdge>>>()
-        };
         let mut graph = task_graph(
             &[
                 ("e2e:e2e", &[]),
@@ -2671,9 +2657,17 @@ mod continuous_inputs_tests {
             ],
             &[("app:serve", &["lib:build"])],
         );
-        graph.continuous_dependencies = edges(continuous);
-        graph.continuous_dependencies_without_inputs =
-            (!without_inputs.is_empty()).then(|| ids(without_inputs));
+        graph.continuous_dependencies = continuous
+            .iter()
+            .map(|(id, deps)| (id.to_string(), edges_to(deps)))
+            .collect();
+        for (id, deps) in without_inputs {
+            for edge in graph.continuous_dependencies.get_mut(*id).unwrap() {
+                if deps.contains(&edge.id.as_str()) {
+                    edge.inputs = Some(false);
+                }
+            }
+        }
         graph
     }
 

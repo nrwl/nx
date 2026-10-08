@@ -172,6 +172,9 @@ pub struct TaskGraphEdge {
     /// What the dependent waits for on a continuous dependency. Defaults to `started`.
     #[napi(ts_type = "'started' | 'ready'")]
     pub wait_for: Option<String>,
+    /// `false` on a continuous dependency whose inputs the dependent does not hash
+    #[napi(ts_type = "false")]
+    pub inputs: Option<bool>,
 }
 
 /// Graph of Tasks to be executed
@@ -184,9 +187,6 @@ pub struct TaskGraph {
     /// Map of Task IDs to the edges to tasks which the task depends on
     pub dependencies: HashMap<String, Vec<TaskGraphEdge>>,
     pub continuous_dependencies: HashMap<String, Vec<TaskGraphEdge>>,
-    /// The subset of `continuous_dependencies` from `dependsOn` entries with
-    /// `inputs: false`: still run, but their inputs are not hashed into the task.
-    pub continuous_dependencies_without_inputs: Option<HashMap<String, Vec<String>>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]

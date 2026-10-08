@@ -5060,26 +5060,20 @@ describe('dependsOn with inputs: false', () => {
       { projects: ['app'], target: 'serve', inputs: false },
     ]);
     expect(taskGraph.continuousDependencies).toEqual({
-      'e2e:e2e': [{ id: 'app:serve' }],
+      'e2e:e2e': [{ id: 'app:serve', inputs: false }],
       'app:serve': [{ id: 'api:serve' }],
       'api:serve': [],
     });
-    expect(taskGraph.continuousDependenciesWithoutInputs).toEqual({
-      'e2e:e2e': ['app:serve'],
-    });
   });
 
-  it('leaves the graph unchanged when no edge opts out', () => {
-    const taskGraph = build([{ projects: ['app'], target: 'serve' }]);
-    expect(taskGraph).not.toHaveProperty('continuousDependenciesWithoutInputs');
-  });
-
-  it('does not exclude a dependency another entry reaches with inputs', () => {
+  it('keeps the inputs when another entry reaches the dependency with them', () => {
     const taskGraph = build([
       { projects: ['app'], target: 'serve', inputs: false },
       { projects: ['app'], target: 'serve' },
     ]);
-    expect(taskGraph).not.toHaveProperty('continuousDependenciesWithoutInputs');
+    expect(taskGraph.continuousDependencies['e2e:e2e']).toEqual([
+      { id: 'app:serve' },
+    ]);
   });
 
   it('carries the option through a project without the target', () => {
@@ -5087,11 +5081,8 @@ describe('dependsOn with inputs: false', () => {
       { dependencies: true, target: 'serve', inputs: false },
     ]);
     expect(taskGraph.continuousDependencies['e2e:e2e']).toEqual([
-      { id: 'app:serve' },
+      { id: 'app:serve', inputs: false },
     ]);
-    expect(taskGraph.continuousDependenciesWithoutInputs).toEqual({
-      'e2e:e2e': ['app:serve'],
-    });
   });
 
   it('has no effect on a dependency that is not continuous', () => {
@@ -5099,19 +5090,5 @@ describe('dependsOn with inputs: false', () => {
       { projects: ['app'], target: 'build', inputs: false },
     ]);
     expect(taskGraph.dependencies['e2e:e2e']).toEqual([{ id: 'app:build' }]);
-    expect(taskGraph).not.toHaveProperty('continuousDependenciesWithoutInputs');
-  });
-
-  it('survives pruning, minus the pruned tasks', () => {
-    const taskGraph = build([
-      { projects: ['app'], target: 'serve', inputs: false },
-    ]);
-    expect(
-      pruneToSelectedTasks(taskGraph, ['e2e:e2e', 'app:serve', 'api:serve'])
-        .continuousDependenciesWithoutInputs
-    ).toEqual({ 'e2e:e2e': ['app:serve'] });
-    expect(pruneToSelectedTasks(taskGraph, ['e2e:e2e'])).not.toHaveProperty(
-      'continuousDependenciesWithoutInputs'
-    );
   });
 });

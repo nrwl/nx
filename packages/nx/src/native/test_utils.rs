@@ -49,6 +49,7 @@ pub(crate) fn edges_to(ids: &[&str]) -> Vec<TaskGraphEdge> {
         .map(|id| TaskGraphEdge {
             id: id.to_string(),
             wait_for: None,
+            inputs: None,
         })
         .collect()
 }
@@ -98,7 +99,6 @@ pub(crate) fn task_graph(tasks: &[(&str, &[&str])], deps: &[(&str, &[&str])]) ->
             .map(|(id, d)| (id.to_string(), edges_to(d)))
             .collect(),
         continuous_dependencies: HashMap::new(),
-        continuous_dependencies_without_inputs: None,
         roots: vec![],
     }
 }

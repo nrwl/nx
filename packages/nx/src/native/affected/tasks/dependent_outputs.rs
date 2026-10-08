@@ -537,7 +537,6 @@ mod tests {
                     (ui.id.clone(), vec![]),
                 ]),
                 continuous_dependencies: HashMap::new(),
-                continuous_dependencies_without_inputs: None,
                 tasks: HashMap::from([(app.id.clone(), app), (ui.id.clone(), ui)]),
             }
         };

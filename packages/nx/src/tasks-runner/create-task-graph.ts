@@ -34,11 +34,6 @@ export class ProcessTasks {
   readonly tasks: { [id: string]: Task } = {};
   readonly dependencies: { [k: string]: TaskGraphEdge[] } = {};
   readonly continuousDependencies: { [k: string]: TaskGraphEdge[] } = {};
-  // `from\0to` continuous edges by whether their `dependsOn` entry has
-  // `inputs: false`. Keyed from the creator's target, like `recordEdge`, so
-  // an edge through a dummy task names the real task.
-  private readonly continuousEdgesWithoutInputs = new Set<string>();
-  private readonly continuousEdgesWithInputs = new Set<string>();
   readonly dependencyOverrides: DependencyOverrides = {};
   private readonly allTargetNames: string[];
 
@@ -365,35 +360,6 @@ export class ProcessTasks {
     this.continuousDependencies[task.id].push(
       continuousEdge(dependencyId, dependencyConfig)
     );
-    const { project, target, configuration } = task.target;
-    const edge = `${createTaskId(project, target, configuration)}\0${dependencyId}`;
-    (dependencyConfig.inputs === false
-      ? this.continuousEdgesWithoutInputs
-      : this.continuousEdgesWithInputs
-    ).add(edge);
-  }
-
-  /**
-   * Continuous edges every `dependsOn` path into which has `inputs: false`.
-   * Undefined when there are none, so graphs without the option are unchanged.
-   */
-  continuousDependenciesWithoutInputs(): { [k: string]: string[] } | undefined {
-    let without: { [k: string]: string[] } | undefined;
-    for (const [taskId, deps] of Object.entries(this.continuousDependencies)) {
-      const excluded = deps
-        .map((dep) => dep.id)
-        .filter((dep) => {
-          const edge = `${taskId}\0${dep}`;
-          return (
-            this.continuousEdgesWithoutInputs.has(edge) &&
-            !this.continuousEdgesWithInputs.has(edge)
-          );
-        });
-      if (excluded.length > 0) {
-        (without ??= {})[taskId] = excluded;
-      }
-    }
-    return without;
   }
 
   private recordEdge(
@@ -584,16 +550,11 @@ function buildTaskGraph(
     excludeTaskDependencies
   );
 
-  const continuousDependenciesWithoutInputs =
-    p.continuousDependenciesWithoutInputs();
   return {
     roots,
     tasks: p.tasks,
     dependencies: p.dependencies,
     continuousDependencies: p.continuousDependencies,
-    ...(continuousDependenciesWithoutInputs
-      ? { continuousDependenciesWithoutInputs }
-      : {}),
   };
 }
 
@@ -621,18 +582,34 @@ function continuousEdge(
   id: string,
   dependencyConfig: TargetDependencyConfig
 ): TaskGraphEdge {
-  return dependencyConfig.waitFor === 'ready'
-    ? { id, waitFor: 'ready' }
-    : { id };
+  const edge: TaskGraphEdge = { id };
+  if (dependencyConfig.waitFor === 'ready') {
+    edge.waitFor = 'ready';
+  }
+  if (dependencyConfig.inputs === false) {
+    edge.inputs = false;
+  }
+  return edge;
 }
 
-// A task reached by several edges waits for ready when any of them does
+// A task reached by several edges waits for ready when any of them does, and
+// keeps its inputs unless all of them opt out
 function mergeEdges(edges: TaskGraphEdge[]): TaskGraphEdge[] {
   const byId = new Map<string, TaskGraphEdge>();
   for (const edge of edges) {
-    if (byId.get(edge.id)?.waitFor !== 'ready') {
+    const seen = byId.get(edge.id);
+    if (!seen) {
       byId.set(edge.id, edge);
+      continue;
     }
+    const merged: TaskGraphEdge = { id: edge.id };
+    if (seen.waitFor === 'ready' || edge.waitFor === 'ready') {
+      merged.waitFor = 'ready';
+    }
+    if (seen.inputs === false && edge.inputs === false) {
+      merged.inputs = false;
+    }
+    byId.set(edge.id, merged);
   }
   return [...byId.values()];
 }
