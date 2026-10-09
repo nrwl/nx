@@ -849,12 +849,41 @@ describe('migrate() orchestrated init dispatch', () => {
             `To start fresh (deletes the run record, then runs the whole plan again): ${startFreshCommand}`,
           ]),
         });
+        expect(output.warn).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            bodyLines: expect.arrayContaining([
+              expect.stringContaining('The WASM build'),
+            ]),
+          })
+        );
         expect(mockReportRunStopped).toHaveBeenCalledWith('existing_run');
         expect(mockMigrateChoice).not.toHaveBeenCalled();
         expect(mockDeleteRunForStartFresh).not.toHaveBeenCalled();
         expect(output.log).not.toHaveBeenCalledWith(ranThePlan);
       }
     );
+
+    it('tells a WASM run, which refuses both commands, how to get past the run', async () => {
+      wasm.active = true;
+      mockActiveRunForClassic.mockReturnValue({
+        runId: 'run-1',
+        facts: { ...activeFacts, otherHolders: 'unknown' },
+      });
+
+      expect(
+        await migrate(root, runMigrationsArgs(), ['--run-migrations'])
+      ).toBe(1);
+
+      expect(output.warn).toHaveBeenCalledWith({
+        title: 'A migrate run is already active: run-1',
+        bodyLines: expect.arrayContaining([
+          `To continue the run: ${continueCommand}`,
+          'The WASM build can run neither command. Continue the run with the native nx binary, or make sure no nx migrate process is acting on it, remove .nx/migrate-runs/run-1, then run the plan again.',
+        ]),
+      });
+      expect(mockMigrateChoice).not.toHaveBeenCalled();
+      expect(output.log).not.toHaveBeenCalledWith(ranThePlan);
+    });
 
     it('shows the report on a terminal and leaves the run alone when the user aborts', async () => {
       mockMigrateChoice.mockResolvedValue('abort');

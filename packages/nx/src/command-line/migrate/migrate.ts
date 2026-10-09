@@ -136,6 +136,7 @@ import {
   applyNxJsonMigrateDefaults,
   assertCommitPrefixHasCommits,
 } from './migrate-config';
+import { MIGRATE_RUNS_RELATIVE_DIR } from './agentic/types';
 import type { ResolvedAgentic } from './agentic/types';
 import type { MigrateRunState, RunOrchestratorInitInput } from './run';
 import {
@@ -3180,17 +3181,21 @@ async function settleActiveRunForClassic(
       }
     }
   }
-  output.warn(
-    renderExistingRunReport(
+  const report = renderExistingRunReport(
+    facts,
+    renderExistingRunCommands(
+      root,
       facts,
-      renderExistingRunCommands(
-        root,
-        facts,
-        opts.runMigrations,
-        opts.agentic === false ? false : undefined
-      )
+      opts.runMigrations,
+      opts.agentic === false ? false : undefined
     )
   );
+  if (IS_WASM) {
+    report.bodyLines.push(
+      `The WASM build can run neither command. Continue the run with the native nx binary, or make sure no nx migrate process is acting on it, remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, then run the plan again.`
+    );
+  }
+  output.warn(report);
   reportMigrateRunStopped('existing_run');
   return { kind: 'stop', exitCode: 1 };
 }
