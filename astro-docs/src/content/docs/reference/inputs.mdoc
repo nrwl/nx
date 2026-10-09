@@ -365,6 +365,9 @@ Add `"always": true` to an input to keep the files it resolves to:
 }
 ```
 
+The task's hash covers the files it read plus the files of every `always` input.
+To hash a target from its declared inputs alone, set its [`ultracache` mode](/docs/reference/project-configuration#ultracache) to `warn` or `off` instead.
+
 The `fileset`, `json`, and `input` forms accept `always`, including `{ "input": "production", "dependencies": true, "always": true }`, which keeps every dependency in the chain.
 A task hashed from its declared inputs hashes the same with or without it.
 With `always`, a `projects` pattern that matches no project is a configuration error, so a misspelled name can't drop a project unnoticed.
