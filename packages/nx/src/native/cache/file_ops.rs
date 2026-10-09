@@ -96,12 +96,45 @@ pub(crate) fn copy_and_list(
         copy_dir_all(&src, &dest, boundary).map_err(anyhow::Error::new)?
     } else {
         trace!("Copying file: {:?}", &src);
-        let size = fs::copy(&src, &dest)?;
+        let size = copy_file(&src, &dest)?;
         (size, vec![(src.clone(), dest.clone())])
     };
 
     debug!("Copy completed: {:?} -> {:?} ({} bytes)", &src, &dest, size);
     Ok((size as i64, written))
+}
+
+/// `fs::copy`, keeping the source's modified time as macOS already does. Linux
+/// and Windows stamp the copy "now", so a restored output looks newer than
+/// sources edited since and incremental tools skip real work.
+#[cfg(target_os = "macos")]
+fn copy_file(src: &Path, dest: &Path) -> io::Result<u64> {
+    fs::copy(src, dest)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn copy_file(src: &Path, dest: &Path) -> io::Result<u64> {
+    let size = fs::copy(src, dest)?;
+    let kept = fs::metadata(src)
+        .and_then(|m| m.modified())
+        .and_then(|modified| open_for_times(dest)?.set_modified(modified));
+    if let Err(e) = kept {
+        trace!("Could not keep the modified time of {:?}: {}", dest, e);
+    }
+    Ok(size)
+}
+
+#[cfg(windows)]
+fn open_for_times(path: &Path) -> io::Result<fs::File> {
+    use std::os::windows::fs::OpenOptionsExt;
+    // FILE_WRITE_ATTRIBUTES: a read-only copy cannot be opened for writing.
+    fs::OpenOptions::new().access_mode(0x100).open(path)
+}
+
+#[cfg(all(not(windows), any(not(target_os = "macos"), test)))]
+fn open_for_times(path: &Path) -> io::Result<fs::File> {
+    // Setting explicit times needs ownership, not write access.
+    fs::File::open(path)
 }
 
 /// Create `dir` and missing ancestors without traversing a symlink at or below
@@ -261,7 +294,7 @@ fn copy_dir_all(
                     if boundary.is_some() {
                         remove_existing_symlink(&dest_path)?;
                     }
-                    let file_size = fs::copy(entry.path(), &dest_path)?;
+                    let file_size = copy_file(&entry.path(), &dest_path)?;
                     files_copied.fetch_add(1, Ordering::Relaxed);
                     Ok((file_size, vec![(entry.path(), dest_path)]))
                 }
@@ -327,6 +360,56 @@ mod test {
         copy(src.to_string_lossy().into(), dest.to_string_lossy().into()).unwrap();
 
         assert!(temp.child("new-parent/file.txt").exists());
+    }
+
+    fn backdate(path: &Path) -> std::time::SystemTime {
+        let old = std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(1_577_836_800);
+        open_for_times(path).unwrap().set_modified(old).unwrap();
+        old
+    }
+
+    fn modified(path: &Path) -> std::time::SystemTime {
+        fs::metadata(path).unwrap().modified().unwrap()
+    }
+
+    #[test]
+    fn should_keep_modified_times_when_copying() {
+        let temp = TempDir::new().unwrap();
+        temp.child("out/file.txt").write_str("a").unwrap();
+        temp.child("out/nested/A.class").write_str("b").unwrap();
+        let file = backdate(&temp.join("out/file.txt"));
+        let nested = backdate(&temp.join("out/nested/A.class"));
+
+        copy(
+            temp.join("out/file.txt").to_string_lossy().into(),
+            temp.join("copy/file.txt").to_string_lossy().into(),
+        )
+        .unwrap();
+        copy(
+            temp.join("out").to_string_lossy().into(),
+            temp.join("dir-copy").to_string_lossy().into(),
+        )
+        .unwrap();
+
+        assert_eq!(modified(&temp.join("copy/file.txt")), file);
+        assert_eq!(modified(&temp.join("dir-copy/file.txt")), file);
+        assert_eq!(modified(&temp.join("dir-copy/nested/A.class")), nested);
+    }
+
+    #[test]
+    fn should_keep_the_modified_time_of_a_read_only_file() {
+        let temp = TempDir::new().unwrap();
+        temp.child("ro.txt").write_str("a").unwrap();
+        let src = temp.join("ro.txt");
+        let old = backdate(&src);
+        let mut permissions = fs::metadata(&src).unwrap().permissions();
+        permissions.set_readonly(true);
+        fs::set_permissions(&src, permissions).unwrap();
+
+        let dest = temp.join("copy/ro.txt");
+        copy(src.to_string_lossy().into(), dest.to_string_lossy().into()).unwrap();
+
+        assert_eq!(modified(&dest), old);
     }
 
     #[test]

@@ -11,6 +11,8 @@ import { stripVTControlCharacters } from 'util';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TaskOrchestrator } from './task-orchestrator';
+import { BatchStatus } from '../native';
+import type { TaskResult } from './life-cycle';
 
 performance.mark = vi.fn((name: string) => ({ name }) as PerformanceMark);
 performance.measure = vi.fn();
@@ -98,7 +100,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.projectGraph = createProjectGraph();
       orchestrator.taskGraph = taskGraph;
       orchestrator.fullTaskGraph = taskGraph;
-      orchestrator.deferredTaskIds = deferredTaskIds;
+      orchestrator.hashingDeferredTaskIds = deferredTaskIds;
       orchestrator.nxJson = {};
       orchestrator.taskDetails = null;
       orchestrator.taskInvocationTracker = null;
@@ -232,6 +234,234 @@ describe('TaskOrchestrator', () => {
       // dep (call 1), reader (call 2), reader re-hashed after the batch (call 3)
       expect(hasher.hashTasks).toHaveBeenCalledTimes(3);
       expect(hashesAtCacheTime['reader:build']).toBe('reader:build|call-3');
+    });
+
+    async function runBatch(
+      deps: Record<string, string[]>,
+      opts: {
+        deferred: string[];
+        cached?: string[];
+        uncacheable?: string[];
+        failed?: string[];
+        bail?: boolean;
+      }
+    ) {
+      const tasks = Object.fromEntries(
+        Object.keys(deps).map((id) => {
+          const task = createTask(id);
+          if (opts.uncacheable?.includes(id)) task.cache = false;
+          return [id, task];
+        })
+      );
+      const taskGraph: TaskGraph = {
+        roots: Object.keys(deps).filter((id) => deps[id].length === 0),
+        tasks,
+        dependencies: deps,
+        continuousDependencies: Object.fromEntries(
+          Object.keys(deps).map((id) => [id, []])
+        ),
+      };
+      const { orchestrator, hasher } = createOrchestrator(
+        taskGraph,
+        new Set(opts.deferred)
+      );
+      orchestrator.options.lifeCycle.registerRunningBatch = vi.fn();
+      orchestrator.options.lifeCycle.setBatchStatus = vi.fn();
+      orchestrator.applyCachedResults = vi.fn(async (ts: Task[]) =>
+        ts
+          .filter((t) => opts.cached?.includes(t.id))
+          .map((task) => ({ task, status: 'local-cache', code: 0 }))
+      );
+      orchestrator.runBatch = vi.fn(async (batch: any) =>
+        Object.values(batch.taskGraph.tasks).map((task: Task) =>
+          opts.failed?.includes(task.id)
+            ? { task, status: 'failure', code: 1 }
+            : { task, status: 'success', code: 0 }
+        )
+      );
+      if (opts.bail) {
+        // What completeTasks does under --bail; postRunSteps is mocked here.
+        const postRunSteps = orchestrator.postRunSteps;
+        orchestrator.postRunSteps = vi.fn(
+          async (results: TaskResult[], ...rest) => {
+            await postRunSteps(results, ...rest);
+            if (results.some((r) => r.status === 'failure')) {
+              orchestrator.bailed = true;
+            }
+          }
+        );
+      }
+
+      const results: TaskResult[] = await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      const ids = (calls: any[][]) =>
+        calls.map(([arg]) =>
+          (Array.isArray(arg) ? arg : Object.values(arg.taskGraph.tasks)).map(
+            (t: Task) => t.id
+          )
+        );
+      return {
+        lifeCycle: orchestrator.options.lifeCycle,
+        lookups: ids(orchestrator.applyCachedResults.mock.calls),
+        hashed: ids(hasher.hashTasks.mock.calls),
+        runs: ids(orchestrator.runBatch.mock.calls),
+        resultIds: results.map((r) => r.task.id),
+      };
+    }
+
+    it('should hash and look up a deferred task behind a non-cacheable task in the next wave', async () => {
+      const { lookups, hashed, runs, resultIds } = await runBatch(
+        { 'dep:install': [], 'reader:build': ['dep:install'] },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          cached: ['reader:build'],
+        }
+      );
+
+      // Wave 1 runs only the install; wave 2 hashes reader after it ran and
+      // restores it.
+      expect(lookups).toEqual([['dep:install'], ['reader:build']]);
+      expect(hashed).toEqual([['dep:install'], ['reader:build']]);
+      expect(runs).toEqual([['dep:install']]);
+      expect(resultIds.sort()).toEqual(['dep:install', 'reader:build']);
+    });
+
+    it('should hold back a task downstream of a held-back task, then restore both', async () => {
+      const { lookups, runs, resultIds } = await runBatch(
+        {
+          'dep:install': [],
+          'reader:build': ['dep:install'],
+          'reader:test': ['reader:build'],
+        },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          cached: ['reader:build', 'reader:test'],
+        }
+      );
+
+      // reader:test is not deferred, but cannot run before reader:build.
+      expect(lookups).toEqual([
+        ['dep:install'],
+        ['reader:build'],
+        ['reader:test'],
+      ]);
+      expect(runs).toEqual([['dep:install']]);
+      expect(resultIds.sort()).toEqual([
+        'dep:install',
+        'reader:build',
+        'reader:test',
+      ]);
+    });
+
+    it('should not start a later wave once the run bails', async () => {
+      const { lookups, runs } = await runBatch(
+        { 'dep:install': [], 'reader:build': ['dep:install'] },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          failed: ['dep:install'],
+          bail: true,
+        }
+      );
+
+      expect(lookups).toEqual([['dep:install']]);
+      expect(runs).toEqual([['dep:install']]);
+    });
+
+    it('should run a deferred task behind both a cache miss and a non-cacheable task in the first wave', async () => {
+      const { lookups, hashed, runs } = await runBatch(
+        {
+          'dep:build': [],
+          'dep:install': [],
+          'reader:build': ['dep:build', 'dep:install'],
+        },
+        { deferred: ['reader:build'], uncacheable: ['dep:install'] }
+      );
+
+      expect(lookups).toEqual([['dep:build', 'dep:install']]);
+      expect(runs).toEqual([['dep:build', 'dep:install', 'reader:build']]);
+      // Preliminary hash, then re-hashed once its deps ran.
+      expect(hashed).toEqual([
+        ['dep:build', 'dep:install'],
+        ['reader:build'],
+        ['reader:build'],
+      ]);
+    });
+
+    it('should not start a batch once the run has bailed', async () => {
+      const taskGraph: TaskGraph = {
+        roots: ['dep:build'],
+        tasks: { 'dep:build': createTask('dep:build') },
+        dependencies: { 'dep:build': [] },
+        continuousDependencies: { 'dep:build': [] },
+      };
+      const { orchestrator, hasher } = createOrchestrator(taskGraph);
+      orchestrator.options.lifeCycle.registerRunningBatch = vi.fn();
+      orchestrator.options.lifeCycle.setBatchStatus = vi.fn();
+      orchestrator.bailed = true;
+
+      const results = await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      expect(results).toEqual([]);
+      expect(hasher.hashTasks).not.toHaveBeenCalled();
+      expect(orchestrator.runBatch).not.toHaveBeenCalled();
+      expect(
+        orchestrator.options.lifeCycle.registerRunningBatch
+      ).not.toHaveBeenCalled();
+      expect(
+        orchestrator.options.lifeCycle.setBatchStatus
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should register a batch and report its status once across waves', async () => {
+      const { lifeCycle, runs } = await runBatch(
+        {
+          'dep:install': [],
+          'other:build': [],
+          'reader:build': ['dep:install'],
+        },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          failed: ['other:build'],
+        }
+      );
+
+      expect(runs).toEqual([['dep:install', 'other:build'], ['reader:build']]);
+      expect(lifeCycle.registerRunningBatch).toHaveBeenCalledTimes(1);
+      // A wave-1 failure still fails the batch after wave 2 succeeds.
+      expect(lifeCycle.setBatchStatus.mock.calls).toEqual([
+        ['batch-1', BatchStatus.Failure],
+      ]);
+    });
+
+    it('should run a deferred task in the same wave as a cache miss upstream of it', async () => {
+      const { lookups, runs } = await runBatch(
+        {
+          'dep:build': [],
+          'dep:install': ['dep:build'],
+          'reader:build': ['dep:install'],
+        },
+        {
+          deferred: ['reader:build'],
+          cached: ['dep:install'],
+          uncacheable: [],
+        }
+      );
+
+      // reader is behind dep:build through the cached dep:install.
+      expect(lookups).toEqual([['dep:build'], ['dep:install']]);
+      expect(runs).toEqual([['dep:build', 'reader:build']]);
     });
 
     it('should look up a task the up-front pass did not defer', async () => {
