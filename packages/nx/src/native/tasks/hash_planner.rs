@@ -2894,7 +2894,7 @@ mod always_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
     use crate::native::test_utils::{task_graph, ultracache_configurations};
-    use crate::native::types::{FileSetInput, InputsInput, JsInputs};
+    use crate::native::types::{FileSetInput, InputsInput, JsInputs, JsonInput};
     use napi::Either;
     use napi::bindgen_prelude::Either9;
 
@@ -3135,6 +3135,50 @@ mod always_tests {
                 ]
             )]
         );
+    }
+
+    #[test]
+    fn keeps_every_form_of_always_input() {
+        let own_named = |always| named("default", false, always);
+        let dependency_fileset = |always| {
+            Either9::C(FileSetInput {
+                fileset: "{projectRoot}/**/*".into(),
+                dependencies: Some(true),
+                include_ignored: None,
+                always: Some(always),
+            })
+        };
+        let json = |always| {
+            Either9::I(JsonInput {
+                json: "{projectRoot}/package.json".into(),
+                fields: None,
+                exclude_fields: None,
+                always: Some(always),
+            })
+        };
+        let cases: [(&dyn Fn(bool) -> JsInputs, fn(&HashInstruction) -> bool); 3] = [
+            (
+                &own_named,
+                |instruction| matches!(instruction, HashInstruction::ProjectFileSet(project, _) if project == "e2e"),
+            ),
+            (
+                &dependency_fileset,
+                |instruction| matches!(instruction, HashInstruction::ProjectFileSet(project, _) if project == "app"),
+            ),
+            (&json, |instruction| {
+                matches!(instruction, HashInstruction::JsonFileSet(_))
+            }),
+        ];
+        for (input, kept) in cases {
+            let plan = |always| {
+                recorded_e2e_plan(&planner(
+                    vec![("e2e:e2e", vec![input(always)])],
+                    &[("e2e", &["app"])],
+                ))
+            };
+            assert!(!plan(false).iter().any(kept));
+            assert!(plan(true).iter().any(kept));
+        }
     }
 
     /// The subtree memo is shared across tasks and keyed without `always`.
