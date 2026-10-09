@@ -138,7 +138,11 @@ import {
 } from './migrate-config';
 import { MIGRATE_RUNS_RELATIVE_DIR } from './agentic/types';
 import type { ResolvedAgentic } from './agentic/types';
-import type { MigrateRunState, RunOrchestratorInitInput } from './run';
+import type {
+  MigrateRunState,
+  MigrationIdProblem,
+  RunOrchestratorInitInput,
+} from './run';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
@@ -3098,6 +3102,11 @@ export async function executeMigrations(
 
 const CONTINUE_NEEDS_ORCHESTRATION = `'--run-id' continues an orchestrated migrate run, and this invocation is not orchestrated. Orchestration needs an enabled agent, or an AI agent running nx outside CI; --agentic=false and the WASM build turn it off.`;
 
+const ID_PROBLEM_LABELS: Record<MigrationIdProblem, string> = {
+  'not-shell-safe': 'not shell-safe',
+  duplicate: 'listed more than once',
+};
+
 // The classic loop records no run, so it must not run over an active one. The
 // run is reported or asked about before the default-branch prompt; a start
 // fresh is checked there too, and the caller deletes the run only after it.
@@ -3358,22 +3367,25 @@ async function runMigrations(
     finalValidation: opts.finalValidation,
   });
 
-  // Orchestration refuses ids it cannot dispense verbatim, so a new run with
-  // one falls back to the classic loop. A continue's plan passed that check
-  // at init, and a start fresh still reaches init's refusal.
-  const unsafeIds =
+  // Orchestration refuses ids it cannot dispense verbatim or resolve to one
+  // step, so a new run with one falls back to the classic loop. A continue's
+  // plan passed that check at init, and a start fresh still reaches init's
+  // refusal.
+  const idProblems =
     isContinue || opts.startFresh === true
       ? []
-      : (require('./run') as typeof import('./run')).unsafeMigrationIds(
+      : (require('./run') as typeof import('./run')).migrationIdProblems(
           migrations
         );
-  const unsafeIdLines = unsafeIds.map((id) => `- ${singleLine(id)}`);
+  const idProblemLines = idProblems.map(
+    ({ id, problem }) => `- ${singleLine(id)} (${ID_PROBLEM_LABELS[problem]})`
+  );
 
   // An outer agent drives the loop, so hand off to the orchestrator instead of
   // the classic loop: init starts a fresh run or reports an already-active
   // one; `--run-id` continues that run. Bare `--run-id` reconciles are
   // dispatched separately and never reach here.
-  if (outerAgentDrivesRun && unsafeIds.length === 0) {
+  if (outerAgentDrivesRun && idProblems.length === 0) {
     const { runOrchestratorInit, runOrchestratorResume } =
       require('./run') as typeof import('./run');
     // Orchestrated runs are agent-driven, so commits default on exactly as they
@@ -3442,9 +3454,9 @@ async function runMigrations(
   if (outerAgentDrivesRun) {
     output.warn({
       title:
-        'Running the migrations without an orchestrated run: orchestrated runs need shell-safe migration ids (letters, digits and @/:._-), and these are not:',
+        'Running the migrations without an orchestrated run: orchestrated runs need each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
       bodyLines: [
-        ...unsafeIdLines,
+        ...idProblemLines,
         'No run is recorded, so --run-id cannot continue this one. Prompt work is listed as next steps for the AI agent driving this run, and no validation runs.',
       ],
     });
@@ -3477,12 +3489,12 @@ async function runMigrations(
     });
     agentic = { kind: 'disabled' };
   }
-  if (agentic.kind === 'enabled' && unsafeIds.length > 0) {
+  if (agentic.kind === 'enabled' && idProblems.length > 0) {
     output.warn({
       title:
-        'Skipping the agentic flow: it needs shell-safe migration ids (letters, digits and @/:._-), and these are not:',
+        'Skipping the agentic flow: it needs each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
       bodyLines: [
-        ...unsafeIdLines,
+        ...idProblemLines,
         'Continuing the migration without the agentic flow. Generators still run. Prompt-only migrations and the prompt part of hybrid migrations are skipped and listed as next steps, and no AI validation runs.',
       ],
     });
@@ -3615,10 +3627,11 @@ async function runMigrations(
       : 'Successfully finished running migrations';
 
   if (notRunMigrationsCount === migrations.length && migrations.length > 0) {
-    // Under WASM or with unsafe ids, an --agentic re-run lands here again.
+    // Under WASM or with ids orchestration refuses, an --agentic re-run lands
+    // here again.
     const remediation = insideAgent
       ? 'The AI agent driving this run should apply each prompt — see next steps below.'
-      : IS_WASM || unsafeIds.length > 0
+      : IS_WASM || idProblems.length > 0
         ? 'Apply each prompt yourself. See next steps below.'
         : 'Re-run with --agentic to apply them. See next steps below.';
     output.warn({

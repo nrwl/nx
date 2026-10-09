@@ -1011,24 +1011,56 @@ describe('orchestrator', () => {
       expect(block.payload.next).toBe(`npx nx migrate --run-id=${runId}`);
     });
 
-    it('refuses a migration id that is not shell-safe, naming it and the way to run the plan', async () => {
-      await expect(
-        runOrchestratorInit({
-          root,
-          migrationsJson: {
-            migrations: [genMig('@nx/js', "evil'; rm -rf ~")],
-          },
-          createCommits: false,
-          commitPrefix: 'chore: [nx migration] ',
-          skipInstall: false,
-          installedNxVersion: '23.0.0',
-          validate: undefined,
-          finalValidation: undefined,
-        })
-      ).rejects.toThrow(
-        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids. To run the plan without orchestration, re-run with --agentic=false.`
-      );
-      expect(findActiveRun(root).active).toBeNull();
+    it.each([
+      [
+        'is not shell-safe',
+        [genMig('@nx/js', "evil'; rm -rf ~")],
+        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids. To run the plan without orchestration, re-run with --agentic=false.`,
+      ],
+      [
+        'is listed twice',
+        [genMig('@nx/js', 'a'), genMig('@nx/js', 'b'), genMig('@nx/js', 'a')],
+        `The migration id '@nx/js:a' is listed more than once in the plan. Orchestrated runs require each migration id once. To run the plan without orchestration, re-run with --agentic=false.`,
+      ],
+    ])(
+      'refuses a migration id that %s, naming it and the way to run the plan',
+      async (_label, migrations, message) => {
+        await expect(
+          runOrchestratorInit({
+            root,
+            migrationsJson: { migrations },
+            createCommits: false,
+            commitPrefix: 'chore: [nx migration] ',
+            skipInstall: false,
+            installedNxVersion: '23.0.0',
+            validate: undefined,
+            finalValidation: undefined,
+          })
+        ).rejects.toThrow(message);
+        expect(findActiveRun(root).active).toBeNull();
+      }
+    );
+
+    it('starts a run whose plan has one migration name under two packages', async () => {
+      await runOrchestratorInit({
+        root,
+        migrationsJson: {
+          migrations: [genMig('@nx/js', 'a'), genMig('@nx/react', 'a')],
+        },
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+        finalValidation: undefined,
+      });
+
+      expect(
+        findActiveRun(root)
+          .active.state.steps.filter((s) => s.kind === 'migration')
+          .map((s) => s.migrationId)
+          .sort()
+      ).toEqual(['@nx/js:a', '@nx/react:a']);
     });
 
     it('announces the run it resumed and how far along it is', async () => {
@@ -1128,35 +1160,45 @@ describe('orchestrator', () => {
       );
     });
 
-    it('validates migration ids before deleting the active run for --start-fresh', async () => {
-      const migrationsJson = {
-        migrations: [genMig('@nx/js', "evil'; rm -rf ~")],
-      };
-      // The active run carries a safe id because no init could have created it
-      // otherwise; the unsafe one arrives with this invocation's plan.
-      setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:a', 'pending')],
-        plan: migrationsJson.migrations,
-      });
+    it.each([
+      [
+        'not shell-safe',
+        [genMig('@nx/js', "evil'; rm -rf ~")],
+        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe`,
+      ],
+      [
+        'listed twice',
+        [genMig('@nx/js', 'a'), genMig('@nx/js', 'a')],
+        `The migration id '@nx/js:a' is listed more than once in the plan`,
+      ],
+    ])(
+      'refuses an id that is %s before deleting the active run for --start-fresh',
+      async (_label, migrations, message) => {
+        // The active run carries an id init accepts because no init could have
+        // created it otherwise; the refused one arrives with this invocation's
+        // plan.
+        setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          plan: migrations,
+        });
 
-      await expect(
-        runOrchestratorInit({
-          root,
-          migrationsJson,
-          createCommits: false,
-          commitPrefix: 'chore: [nx migration] ',
-          skipInstall: false,
-          installedNxVersion: '23.0.0',
-          validate: undefined,
-          finalValidation: undefined,
-          onExistingRun: 'start-fresh',
-        })
-      ).rejects.toThrow(
-        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe`
-      );
+        await expect(
+          runOrchestratorInit({
+            root,
+            migrationsJson: { migrations },
+            createCommits: false,
+            commitPrefix: 'chore: [nx migration] ',
+            skipInstall: false,
+            installedNxVersion: '23.0.0',
+            validate: undefined,
+            finalValidation: undefined,
+            onExistingRun: 'start-fresh',
+          })
+        ).rejects.toThrow(message);
 
-      expect(activeRunDirNames()).toEqual(['run-1']);
-    });
+        expect(activeRunDirNames()).toEqual(['run-1']);
+      }
+    );
 
     it('repeats a non-default migrations path in the start-fresh command of the report', async () => {
       const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
@@ -2093,6 +2135,9 @@ describe('orchestrator', () => {
             new RegExp(`^${process.pid}-[0-9a-f]{8}\\.lock$`)
           ),
         ]);
+        expect(new FileLock(join(dir, 'activity', names[0])).check()).toBe(
+          true
+        );
       });
 
       it('deletes the run it holds, directory and all', () => {

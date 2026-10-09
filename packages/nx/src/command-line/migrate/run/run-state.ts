@@ -23,13 +23,28 @@ export const RUN_STATE_FILE_NAME = 'run.json';
  */
 export const SHELL_SAFE_VALUE = /^[A-Za-z0-9@/:._-]+$/;
 
-/** The ids of `migrations` that no orchestrated run can dispense. */
-export function unsafeMigrationIds(
+export type MigrationIdProblem = 'not-shell-safe' | 'duplicate';
+
+/**
+ * The ids of `migrations` that no orchestrated run can take, each once, in the
+ * order found. A worker finds its step by migration id, so an id the plan
+ * lists twice can't name one step.
+ */
+export function migrationIdProblems(
   migrations: ReadonlyArray<{ package: string; name: string }>
-): string[] {
-  return migrations
-    .map((m) => `${m.package}:${m.name}`)
-    .filter((id) => !SHELL_SAFE_VALUE.test(id));
+): { id: string; problem: MigrationIdProblem }[] {
+  const seen = new Set<string>();
+  const problems = new Map<string, MigrationIdProblem>();
+  for (const m of migrations) {
+    const id = `${m.package}:${m.name}`;
+    if (!SHELL_SAFE_VALUE.test(id)) {
+      problems.set(id, 'not-shell-safe');
+    } else if (seen.has(id) && !problems.has(id)) {
+      problems.set(id, 'duplicate');
+    }
+    seen.add(id);
+  }
+  return [...problems].map(([id, problem]) => ({ id, problem }));
 }
 // `new Date().toISOString()`, the only shape Nx writes. Retention and active-run
 // selection compare these lexicographically, and the value is rendered into the
