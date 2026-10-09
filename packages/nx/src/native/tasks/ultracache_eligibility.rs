@@ -14,6 +14,8 @@ use xxhash_rust::xxh3::Xxh3;
 pub(crate) struct EligibilityInputs {
     /// Tasks whose executor ships a custom hasher.
     pub custom_hasher: HashSet<String>,
+    /// Continuous tasks: their reads depend on which clients they served.
+    pub continuous: HashSet<String>,
 }
 
 /// What JS knows about a run's tasks that the eligibility walk needs.
@@ -22,6 +24,7 @@ pub(crate) struct EligibilityInputs {
 pub struct UltracacheEligibilityOptions {
     /// Tasks whose executor ships a custom hasher.
     pub custom_hasher_task_ids: Option<Vec<String>>,
+    pub continuous_task_ids: Option<Vec<String>>,
 }
 
 impl From<UltracacheEligibilityOptions> for EligibilityInputs {
@@ -29,6 +32,11 @@ impl From<UltracacheEligibilityOptions> for EligibilityInputs {
         Self {
             custom_hasher: options
                 .custom_hasher_task_ids
+                .unwrap_or_default()
+                .into_iter()
+                .collect(),
+            continuous: options
+                .continuous_task_ids
                 .unwrap_or_default()
                 .into_iter()
                 .collect(),
@@ -153,6 +161,10 @@ pub(crate) fn resolve<'a>(
         }
         if inputs.custom_hasher.contains(task_id) {
             diagnostics.push(UltracacheDiagnostic::task("custom-hasher", task_id));
+            continue;
+        }
+        if inputs.continuous.contains(task_id) {
+            diagnostics.push(UltracacheDiagnostic::task("continuous", task_id));
             continue;
         }
         let Some(stored) = entries.get(task_id) else {

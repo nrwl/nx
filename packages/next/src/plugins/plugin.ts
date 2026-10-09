@@ -8,7 +8,6 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultArray,
@@ -42,13 +41,6 @@ export interface NextPluginOptions {
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
 type NextTargets = Record<string, TargetConfiguration<NextPluginOptions>>;
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 export const createNodes: CreateNodes<NextPluginOptions> = [
   nextConfigBlob,

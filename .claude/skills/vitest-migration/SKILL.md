@@ -101,7 +101,7 @@ Capture:
    file? If yes you need `pool: 'forks'` and the native shim plugin from
    `packages/nx/vitest.config.mts`.
 5. **Lazy `require()` of TS source** — `grep -rn "require(" packages/<name>/src
---include=*.ts | grep -v "^.*spec"`. Every bare `require()` of a local `.ts`
+   --include=*.ts | grep -v "^.*spec"`. Every bare `require()` of a local `.ts`
    file needs `@swc-node/register` (Step 2) and can only be mocked through
    `mockCjsModule` (Step 4).
 

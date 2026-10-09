@@ -14,4 +14,7 @@ module.exports = {
   // to still fail a suite that has genuinely hung; suites that need longer set
   // their own.
   testTimeout: 120_000,
+  haste: {
+    hasteMapModulePath: require.resolve('./jest-haste-map.e2e.js'),
+  },
 };

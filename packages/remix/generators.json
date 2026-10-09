@@ -2,89 +2,12 @@
   "$schema": "https://json-schema.org/schema",
   "name": "NxRemix",
   "version": "0.0.1",
-  "extends": ["@nx/react"],
   "generators": {
-    "preset": {
-      "implementation": "./dist/src/generators/preset/preset.impl",
-      "schema": "./dist/src/generators/preset/schema.json",
-      "description": "Generate a new Remix workspace",
-      "hidden": true
-    },
-    "setup": {
-      "implementation": "./dist/src/generators/setup/setup.impl",
-      "schema": "./dist/src/generators/setup/schema.json",
-      "description": "Setup a Remix in an existing workspace",
-      "hidden": true
-    },
-    "application": {
-      "implementation": "./dist/src/generators/application/application.impl#remixApplicationGeneratorInternal",
-      "schema": "./dist/src/generators/application/schema.json",
-      "description": "Generate a new Remix application",
-      "aliases": ["app"],
-      "x-type": "application"
-    },
-    "cypress-component-configuration": {
-      "implementation": "./dist/src/generators/cypress-component-configuration/cypress-component-configuration.impl#cypressComponentConfigurationGeneratorInternal",
-      "schema": "./dist/src/generators/cypress-component-configuration/schema.json",
-      "description": "Generate a Cypress Component Testing configuration for a Remix project"
-    },
-    "library": {
-      "implementation": "./dist/src/generators/library/library.impl#remixLibraryGeneratorInternal",
-      "schema": "./dist/src/generators/library/schema.json",
-      "description": "Generate a new library",
-      "aliases": ["lib"],
-      "x-type": "library"
-    },
-    "init": {
-      "implementation": "./dist/src/generators/init/init#remixInitGeneratorInternal",
-      "schema": "./dist/src/generators/init/schema.json",
-      "description": "Initialize the `@nx/remix` plugin.",
-      "hidden": true
-    },
-    "route": {
-      "implementation": "./dist/src/generators/route/route.impl",
-      "schema": "./dist/src/generators/route/schema.json",
-      "description": "Generate a new route"
-    },
-    "resource-route": {
-      "implementation": "./dist/src/generators/resource-route/resource-route.impl",
-      "schema": "./dist/src/generators/resource-route/schema.json",
-      "description": "Generate a new resource route"
-    },
-    "action": {
-      "implementation": "./dist/src/generators/action/action.impl",
-      "schema": "./dist/src/generators/action/schema.json",
-      "description": "Add an action function to an existing route"
-    },
-    "loader": {
-      "implementation": "./dist/src/generators/loader/loader.impl",
-      "schema": "./dist/src/generators/loader/schema.json",
-      "description": "Add a loader function to an existing route"
-    },
-    "style": {
-      "implementation": "./dist/src/generators/style/style.impl",
-      "schema": "./dist/src/generators/style/schema.json",
-      "description": "Generates a new stylesheet and adds it to an existing route"
-    },
-    "storybook-configuration": {
-      "implementation": "./dist/src/generators/storybook-configuration/storybook-configuration.impl#remixStorybookConfiguration",
-      "schema": "./dist/src/generators/storybook-configuration/schema.json",
-      "description": "Generates a Storybook configuration for a Remix application"
-    },
-    "meta": {
-      "implementation": "./dist/src/generators/meta/meta.impl",
-      "schema": "./dist/src/generators/meta/schema.json",
-      "description": "Add a meta function to an existing route"
-    },
-    "error-boundary": {
-      "implementation": "./dist/src/generators/error-boundary/error-boundary.impl",
-      "schema": "./dist/src/generators/error-boundary/schema.json",
-      "description": "Add an ErrorBoundary to an existing route"
-    },
     "convert-to-inferred": {
       "factory": "./dist/src/generators/convert-to-inferred/convert-to-inferred",
       "schema": "./dist/src/generators/convert-to-inferred/schema.json",
-      "description": "Convert existing Remix project(s) using `@nx/remix:*` executors to use `@nx/remix/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
+      "description": "Convert existing Remix project(s) using `@nx/remix:*` executors to use `@nx/remix/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+      "x-deprecated": "@nx/remix will be removed in Nx 25. Migrate to React Router with @nx/react."
     }
   }
 }

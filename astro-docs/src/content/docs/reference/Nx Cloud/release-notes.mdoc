@@ -243,8 +243,7 @@ nxApi:
       - name: VALKEY_USERNAME
         value: 'default'
       - name: NX_CLOUD_CONFORMANCE_RULES_BUCKET
-        value:
-          local-cluster-file-server # use this exact value if you are using the file server, otherwise point it to an S3/Azure/Google bucket
+        value: local-cluster-file-server # use this exact value if you are using the file server, otherwise point it to an S3/Azure/Google bucket
           # it will use the same role-based auth mechanism you already configured for the NxCloud cache
           # you can also use the same bucket name that you use for the cache (rules will just be stored in a sub-folder)
 ```

@@ -30,6 +30,7 @@ struct PlannedTask {
     outputs: Vec<String>,
     dependencies: Vec<String>,
     continuous_dependencies: Vec<String>,
+    continuous_dependencies_without_inputs: Vec<String>,
     ultracache: Option<TaskUltracacheSettings>,
     custom_hasher: bool,
 }
@@ -42,6 +43,11 @@ impl PlannedTask {
             outputs: task.outputs.clone(),
             dependencies: edges(&task_graph.dependencies, id).to_vec(),
             continuous_dependencies: edges(&task_graph.continuous_dependencies, id).to_vec(),
+            continuous_dependencies_without_inputs: task_graph
+                .continuous_dependencies_without_inputs
+                .as_ref()
+                .map_or(&[][..], |without| edges(without, id))
+                .to_vec(),
             ultracache: task.ultracache.clone(),
             custom_hasher: custom_hasher.contains(id),
         })
@@ -243,6 +249,22 @@ mod tests {
             .continuous_dependencies
             .insert("app:test".into(), vec!["other:build".into()]);
         assert_eq!(plan_all(&memo, &changed), ["app:test"]);
+    }
+
+    #[test]
+    fn opting_a_continuous_edge_out_of_inputs_counts() {
+        let memo = PlanMemo::default();
+        let mut served = graph();
+        served
+            .continuous_dependencies
+            .insert("app:test".into(), vec!["other:build".into()]);
+        plan_all(&memo, &served);
+        let mut opted_out = served;
+        opted_out.continuous_dependencies_without_inputs = Some(HashMap::from([(
+            "app:test".into(),
+            vec!["other:build".into()],
+        )]));
+        assert_eq!(plan_all(&memo, &opted_out), ["app:test"]);
     }
 
     /// What a run does after selection: ask again for some tasks of a smaller graph.
