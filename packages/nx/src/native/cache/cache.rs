@@ -254,7 +254,7 @@ impl NxCache {
             "
         };
 
-        self.db.lock().unwrap().execute_batch(query)?;
+        self.db.lock().unwrap().execute(query, &[])?;
         Ok(())
     }
 

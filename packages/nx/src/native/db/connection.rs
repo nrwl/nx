@@ -59,13 +59,20 @@ impl NxDbConnection {
             .ok_or_else(|| anyhow::anyhow!("No database connection available"))
     }
 
-    /// Runs `op` until it stops reporting busy or `BUSY_TIMEOUT` has been spent sleeping.
-    fn retry_while_busy<T>(&self, mut op: impl FnMut() -> Result<T>) -> Result<T> {
+    /// Reruns `operation` while the database is busy, for up to `BUSY_TIMEOUT` of sleeping.
+    /// Inside a transaction it runs once, since only the whole transaction may be retried.
+    fn retry_db_operation_when_busy<T>(
+        &self,
+        mut operation: impl FnMut() -> Result<T>,
+    ) -> Result<T> {
+        if self.in_transaction.get() {
+            return operation();
+        }
         let mut waited = Duration::ZERO;
         let mut busy_attempts = 0;
         let mut schema_retries = 0;
         loop {
-            match op() {
+            match operation() {
                 Err(e)
                     if matches!(limbo_error(&e), Some(LimboError::SchemaUpdated))
                         && schema_retries < MAX_SCHEMA_RETRIES =>
@@ -92,14 +99,6 @@ impl NxDbConnection {
         }
     }
 
-    fn retrying<T>(&self, mut op: impl FnMut() -> Result<T>) -> Result<T> {
-        if self.in_transaction.get() {
-            op()
-        } else {
-            self.retry_while_busy(op)
-        }
-    }
-
     fn prepare(&self, sql: &str, params: &[Value]) -> Result<Statement> {
         let mut stmt = self.conn()?.prepare(sql)?;
         for (i, param) in params.iter().enumerate() {
@@ -110,7 +109,7 @@ impl NxDbConnection {
     }
 
     pub fn execute(&self, sql: &str, params: &[Value]) -> Result<usize> {
-        self.retrying(|| {
+        self.retry_db_operation_when_busy(|| {
             let mut stmt = self.prepare(sql, params)?;
             stmt.run_ignore_rows()?;
             Ok(stmt.n_change() as usize)
@@ -120,12 +119,12 @@ impl NxDbConnection {
 
     pub fn execute_batch(&self, sql: &str) -> Result<()> {
         let conn = self.conn()?;
-        self.retrying(|| Ok(conn.execute(sql)?))
+        self.retry_db_operation_when_busy(|| Ok(conn.execute(sql)?))
             .with_context(|| format!("DB execute batch error: \"{sql}\""))
     }
 
     pub fn query_rows(&self, sql: &str, params: &[Value]) -> Result<Vec<DbRow>> {
-        self.retrying(|| {
+        self.retry_db_operation_when_busy(|| {
             let rows = self.prepare(sql, params)?.run_collect_rows()?;
             Ok(rows.into_iter().map(|values| DbRow { values }).collect())
         })
@@ -135,7 +134,7 @@ impl NxDbConnection {
     /// Runs `sql` once per parameter set, preparing it only once. Use it for bulk
     /// writes and for key lookups that `IN (...)` can't serve from an index.
     pub fn query_rows_each(&self, sql: &str, param_sets: &[Vec<Value>]) -> Result<Vec<DbRow>> {
-        self.retrying(|| {
+        self.retry_db_operation_when_busy(|| {
             let mut stmt = self.conn()?.prepare(sql)?;
             let mut result = Vec::new();
             for params in param_sets {
@@ -163,7 +162,7 @@ impl NxDbConnection {
     /// Takes the write lock up front, so a busy or schema-changed error can only mean
     /// "retry the whole transaction", which this does. `operation` may run more than once.
     pub fn transaction<T>(&self, mut operation: impl FnMut(&Self) -> Result<T>) -> Result<T> {
-        self.retry_while_busy(|| {
+        self.retry_db_operation_when_busy(|| {
             self.in_transaction.set(true);
             if let Err(e) = self.execute("BEGIN IMMEDIATE", &[]) {
                 self.in_transaction.set(false);
