@@ -133,8 +133,8 @@ export default defineConfig({
       customCss: ['./src/styles/global.css'],
       favicon: '/favicon.svg',
       logo: {
-        light: './src/assets/nx/Nx-dark.png',
-        dark: './src/assets/nx/Nx-light.png',
+        light: './src/assets/nx/nx-lockup-light.svg',
+        dark: './src/assets/nx/nx-lockup-dark.svg',
         replacesTitle: true,
       },
       disable404Route: true,

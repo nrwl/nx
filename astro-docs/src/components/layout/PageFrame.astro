@@ -1,11 +1,12 @@
 ---
 // Copied from @astrojs/starlight@0.42.0 components/PageFrame.astro with modifications.
 import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
-import { Footer } from '@nx/nx-dev-ui-common/src/lib/footer';
 import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
 import { WebinarNotifier } from '@nx/nx-dev-ui-common/src/lib/webinar-notifier';
 import { getCollection } from 'astro:content';
 import ConfBanner from './ConfBanner.astro';
+import SiteFooter from './site-nav/SiteFooter.astro';
+import SiteNavLinks from './site-nav/SiteNavLinks.astro';
 import { isConfBannerActive } from './conf-banner';
 
 const { hasSidebar } = Astro.locals.starlightRoute;
@@ -36,29 +37,13 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
         <sl-sidebar-pane popover="" id="starlight__sidebar" class="sidebar-pane">
           <div class="sidebar-content sl-flex">
             <slot name="sidebar" />
-            <!-- CTA Buttons for Mobile Menu - Show when not in header (below xl breakpoint) -->
-            <div class="mobile-cta-buttons xl:hidden mt-auto pt-4 pb-4 border-t border-slate-800 dark:border-slate-700">
-              <div class="flex flex-col gap-2">
-                <GitHubStarWidget starsCount={githubStarsCount} client:load />
-                <div class="flex flex-col mx-2 gap-2">
-                  <a
-                    href={`${import.meta.env.SITE || 'https://nx.dev'}/contact`}
-                    class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition no-underline border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
-                    title="Contact Us"
-                  >
-                    Contact
-                  </a>
-                  <a
-                    href="https://cloud.nx.app?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-login&utm_content=docs-header"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition no-underline bg-blue-500 dark:bg-sky-500 text-white hover:bg-blue-600 dark:hover:bg-sky-600 shadow-sm"
-                    title="Login to Nx Cloud"
-                  >
-                    Login
-                  </a>
-                </div>
-              </div>
+            <!-- GitHub stars, for screens without the table of contents column -->
+            <div class="mt-auto xl:hidden">
+              <GitHubStarWidget starsCount={githubStarsCount} client:load />
+            </div>
+            <!-- Phone menu: the nx.dev nav, which the header only has room for from 50rem -->
+            <div class="nx-chrome nx-sidebar-site-nav flex flex-col gap-4 bg-[#0C0C0D] pt-2 pb-6 min-[50rem]:hidden">
+              <SiteNavLinks mobile />
             </div>
           </div>
         </sl-sidebar-pane>
@@ -66,7 +51,7 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
     )
   }
   <div class="main-frame"><slot /></div>
-  <Footer disableThemeSwitcher={true} useDomainPrefix={true} className="dark:bg-slate-900" />
+  <SiteFooter />
   {showBanner && bannerConfig && (
     <WebinarNotifier
       id={bannerId}
@@ -102,10 +87,22 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       inset-block-start: 0;
       width: 100%;
       height: var(--sl-nav-height);
-      border-bottom: 1px solid var(--sl-color-hairline-shade);
-      padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
-      padding-inline-end: var(--sl-nav-pad-x);
-      background-color: var(--sl-color-bg-nav);
+      padding: 0 var(--sl-nav-pad-x);
+      /* Always dark and translucent, like the nx.dev navbar. The light theme
+         needs it more opaque to keep the nav readable over a white page. */
+      background-color: rgba(12, 12, 13, 0.92);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+    }
+
+    :global([data-theme='dark']) .header {
+      background-color: rgba(12, 12, 13, 0.6);
+    }
+
+    /* The nx.dev nav at the end of the sidebar menu spans its full width. */
+    .nx-sidebar-site-nav {
+      margin-inline: calc(var(--sl-sidebar-pad-x) * -1);
+      padding-inline: 1.25rem;
     }
 
     /* Push the fixed header below the banner. */
