@@ -1,9 +1,10 @@
-use crate::native::db::connection::{DbValue, NxDbConnection};
+use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::types::TaskTarget;
 use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tracing::trace;
+use turso_core::Value;
 
 pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -52,11 +53,11 @@ impl NxTaskHistory {
                     (hash, status, code, start, end)
                     VALUES (?1, ?2, ?3, ?4, ?5)",
                     &[
-                        DbValue::from(task_run.hash.as_str()),
-                        DbValue::from(task_run.status.as_str()),
-                        DbValue::Integer(task_run.code as i64),
-                        DbValue::Integer(task_run.start),
-                        DbValue::Integer(task_run.end),
+                        Value::from_text(task_run.hash.clone()),
+                        Value::from_text(task_run.status.clone()),
+                        Value::from_i64(task_run.code as i64),
+                        Value::from_i64(task_run.start),
+                        Value::from_i64(task_run.end),
                     ],
                 )
                 .inspect_err(|e| trace!("Error trying to insert {:?}: {:?}", &task_run.hash, e))?;
@@ -79,10 +80,10 @@ impl NxTaskHistory {
                 HAVING COUNT(DISTINCT code) > 1",
             placeholders.join(", ")
         );
-        let params: Vec<DbValue> = hashes.into_iter().map(DbValue::from).collect();
+        let params: Vec<Value> = hashes.into_iter().map(Value::from_text).collect();
 
         let rows = self.db.lock().unwrap().query_rows(&sql, &params)?;
-        rows.iter().map(|row| row.get_str(0)).collect()
+        rows.iter().map(|row| row.get::<String>(0)).collect()
     }
 
     #[napi]
@@ -117,13 +118,13 @@ impl NxTaskHistory {
                 GROUP BY target_string",
             placeholders.join(", ")
         );
-        let params: Vec<DbValue> = target_strings.into_iter().map(DbValue::from).collect();
+        let params: Vec<Value> = target_strings.into_iter().map(Value::from_text).collect();
 
         let rows = self.db.lock().unwrap().query_rows(&sql, &params)?;
         let mut result = HashMap::new();
         for row in &rows {
-            let target_string = row.get_str(0)?;
-            let duration = row.get_f64(1)?;
+            let target_string = row.get::<String>(0)?;
+            let duration = row.get::<f64>(1)?;
             result.insert(target_string, duration);
         }
         Ok(result)

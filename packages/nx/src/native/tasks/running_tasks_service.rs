@@ -1,4 +1,4 @@
-use crate::native::db::connection::{DbValue, NxDbConnection};
+use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
@@ -7,6 +7,7 @@ use std::ffi::OsString;
 use std::sync::{Arc, Mutex};
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System};
 use tracing::debug;
+use turso_core::Value;
 
 pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
     task_id TEXT PRIMARY KEY NOT NULL,
@@ -52,13 +53,13 @@ impl RunningTasksService {
     fn is_task_running(&self, task_id: &String) -> anyhow::Result<bool> {
         let row = self.db.lock().unwrap().query_row(
             "SELECT pid, command, cwd FROM running_tasks WHERE task_id = ?",
-            &[DbValue::from(task_id.as_str())],
+            &[Value::from_text(task_id.clone())],
         )?;
 
         if let Some(row) = row {
-            let pid = row.get_i64(0)? as u32;
-            let db_process_command = row.get_str(1)?;
-            let db_process_cwd = row.get_str(2)?;
+            let pid = row.get::<i64>(0)? as u32;
+            let db_process_command = row.get::<String>(1)?;
+            let db_process_cwd = row.get::<String>(2)?;
 
             debug!("Checking if {} exists", pid);
 
@@ -109,10 +110,10 @@ impl RunningTasksService {
         self.db.lock().unwrap().execute(
             "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?1, ?2, ?3, ?4)",
             &[
-                DbValue::from(task_id.as_str()),
-                DbValue::from(pid.to_string().as_str()),
-                DbValue::from(command_str.as_str()),
-                DbValue::from(cwd.as_str()),
+                Value::from_text(task_id.clone()),
+                Value::from_i64(pid as i64),
+                Value::from_text(command_str.clone()),
+                Value::from_text(cwd.clone()),
             ],
         )?;
         debug!("Added {} to running tasks", &task_id);
@@ -127,8 +128,8 @@ impl RunningTasksService {
         self.db.lock().unwrap().execute(
             "DELETE FROM running_tasks WHERE task_id = ? AND pid = ?",
             &[
-                DbValue::from(task_id.as_str()),
-                DbValue::Integer(std::process::id() as i64),
+                Value::from_text(task_id.clone()),
+                Value::from_i64(std::process::id() as i64),
             ],
         )?;
         debug!("Removed {} from running tasks", task_id);
@@ -187,16 +188,16 @@ mod tests {
         let claim_owner = |service: &RunningTasksService| -> anyhow::Result<Option<i64>> {
             let row = service.db.lock().unwrap().query_row(
                 "SELECT pid FROM running_tasks WHERE task_id = ?",
-                &[DbValue::from("app:serve")],
+                &[Value::from_text("app:serve")],
             )?;
-            row.map(|row| row.get_i64(0)).transpose()
+            row.map(|row| row.get::<i64>(0)).transpose()
         };
 
         service.add_running_task("app:serve".into())?;
         let other_pid = std::process::id() as i64 + 1;
         service.db.lock().unwrap().execute(
             "UPDATE running_tasks SET pid = ? WHERE task_id = ?",
-            &[DbValue::Integer(other_pid), DbValue::from("app:serve")],
+            &[Value::from_i64(other_pid), Value::from_text("app:serve")],
         )?;
 
         service.remove_running_task("app:serve".into())?;

@@ -122,8 +122,8 @@ pub fn close_db_connection(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::db::connection::DbValue;
     use std::process::Command;
+    use turso_core::Value;
 
     const WORKER_DB_ENV: &str = "NX_DB_MULTI_PROCESS_TEST_DB";
     const WRITES_PER_WORKER: usize = 50;
@@ -142,8 +142,8 @@ mod tests {
                 c.execute(
                     "INSERT INTO metadata (key, value) VALUES (?1, ?2)",
                     &[
-                        DbValue::from(format!("{pid}-{i}")),
-                        DbValue::from(pid.as_str()),
+                        Value::from_text(format!("{pid}-{i}")),
+                        Value::from_text(pid.clone()),
                     ],
                 )?;
                 Ok(())
@@ -185,7 +185,7 @@ mod tests {
 
         let conn = open_locked(&db_path)?;
         let rows = conn.query_rows("SELECT COUNT(*) FROM metadata", &[])?;
-        assert_eq!(rows[0].get_i64(0)? as usize, WORKERS * WRITES_PER_WORKER);
+        assert_eq!(rows[0].get::<i64>(0)? as usize, WORKERS * WRITES_PER_WORKER);
         Ok(())
     }
 }

@@ -11,11 +11,12 @@ use regex::Regex;
 
 use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
 use crate::native::cache::file_ops::{copy_and_list, copy_outputs_into_workspace};
-use crate::native::db::connection::{DbValue, NxDbConnection};
+use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 use crate::native::workspace::outputs_tracking::OutputFile;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
+use turso_core::Value;
 
 /// What `put` copied into the cache.
 #[napi(object)]
@@ -273,10 +274,10 @@ impl NxCache {
                     SET accessed_at = CURRENT_TIMESTAMP
                     WHERE hash = ?1 AND is_cache_entry
                     RETURNING code, size",
-                &[DbValue::from(hash.as_str())],
+                &[Value::from_text(hash.clone())],
             )
             .and_then(|row| {
-                row.map(|r| Ok((r.get_i64(0)? as i16, r.get_i64(1)?)))
+                row.map(|r| Ok((r.get::<i64>(0)? as i16, r.get::<i64>(1)?)))
                     .transpose()
             })
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
@@ -348,15 +349,15 @@ impl NxCache {
              RETURNING hash, code, size",
             placeholders
         );
-        let params: Vec<DbValue> = hashes.iter().map(|h| DbValue::from(h.as_str())).collect();
+        let params: Vec<Value> = hashes.iter().map(|h| Value::from_text(h.clone())).collect();
 
         let rows = self.db.lock().unwrap().query_rows(&sql, &params)?;
         let map = rows
             .into_iter()
             .filter_map(|row| {
-                let hash = row.get_str(0).ok()?;
-                let code = row.get_i64(1).ok()? as i16;
-                let size = row.get_i64(2).ok()?;
+                let hash = row.get::<String>(0).ok()?;
+                let code = row.get::<i64>(1).ok()? as i16;
+                let size = row.get::<i64>(2).ok()?;
                 Some((hash, (code, size)))
             })
             .collect();
@@ -519,8 +520,8 @@ impl NxCache {
                              accessed_at = CURRENT_TIMESTAMP,
                              size = CASE WHEN NOT is_cache_entry THEN excluded.size ELSE size END",
                         &[
-                            DbValue::from(record.hash.as_str()),
-                            DbValue::Integer(record.size),
+                            Value::from_text(record.hash.clone()),
+                            Value::from_i64(record.size),
                         ],
                     )?;
                 }
@@ -553,9 +554,9 @@ impl NxCache {
             "INSERT INTO cache_outputs (hash, code, size, is_cache_entry) VALUES (?1, ?2, ?3, TRUE)
              ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, is_cache_entry = TRUE, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
             &[
-                DbValue::from(hash.as_str()),
-                DbValue::Integer(code as i64),
-                DbValue::Integer(size),
+                Value::from_text(hash.clone()),
+                Value::from_i64(code as i64),
+                Value::from_i64(size),
             ],
         )?;
         if self.max_cache_size != 0 {
@@ -573,7 +574,7 @@ impl NxCache {
             .query_row("SELECT SUM(size) FROM cache_outputs", &[])?;
         // SUM returns NULL when there are no rows
         match row {
-            Some(r) => r.get_i64(0).or(Ok(0)),
+            Some(r) => r.get::<i64>(0).or(Ok(0)),
             None => Ok(0),
         }
     }
@@ -600,11 +601,11 @@ impl NxCache {
                     break;
                 }
                 for row in &rows {
-                    if let (Ok(hash), Ok(size)) = (row.get_str(0), row.get_i64(1)) {
+                    if let (Ok(hash), Ok(size)) = (row.get::<String>(0), row.get::<i64>(1)) {
                         cache_size -= size;
                         db.execute(
                             "DELETE FROM cache_outputs WHERE hash = ?1",
-                            &[DbValue::from(hash.as_str())],
+                            &[Value::from_text(hash.clone())],
                         )?;
                         // Both paths, matching remove_old_cache_records. Dropping
                         // the row without the terminal output file would strand
@@ -684,7 +685,7 @@ impl NxCache {
         let outdated_cache: Vec<_> = rows
             .iter()
             .filter_map(|row| {
-                let hash = row.get_str(0).ok()?;
+                let hash = row.get::<String>(0).ok()?;
                 Some(vec![
                     self.cache_path.join(&hash),
                     self.get_task_outputs_path_internal(&hash),
@@ -723,8 +724,8 @@ impl NxCache {
                     "UPDATE cache_outputs SET is_cache_entry = FALSE, size = ?2
                      WHERE hash = ?1 AND is_cache_entry",
                     &[
-                        DbValue::from(hash.as_str()),
-                        DbValue::Integer(terminal_output_size),
+                        Value::from_text(hash.clone()),
+                        Value::from_i64(terminal_output_size),
                     ],
                 )?;
             }
@@ -750,7 +751,7 @@ impl NxCache {
                 "SELECT EXISTS (SELECT 1 FROM cache_outputs WHERE is_cache_entry)",
                 &[],
             )?
-            .and_then(|r| r.get_i64(0).ok())
+            .and_then(|r| r.get::<i64>(0).ok())
             .map(|v| v == 1)
             .unwrap_or(false);
 
@@ -1036,7 +1037,7 @@ mod test {
             .unwrap()
             .execute(
                 "INSERT OR IGNORE INTO task_details (hash, project, target) VALUES (?1, 'app', 'build')",
-                &[DbValue::from(hash)],
+                &[Value::from_text(hash.to_string())],
             )
             .unwrap();
     }
@@ -1066,10 +1067,10 @@ mod test {
             .unwrap()
             .query_row(
                 "SELECT is_cache_entry, size FROM cache_outputs WHERE hash = ?1",
-                &[DbValue::from(hash)],
+                &[Value::from_text(hash.to_string())],
             )
             .unwrap()
-            .map(|row| (row.get_i64(0).unwrap() != 0, row.get_i64(1).unwrap()))
+            .map(|row| (row.get::<i64>(0).unwrap() != 0, row.get::<i64>(1).unwrap()))
     }
 
     const LOG_SIZE: i64 = "log".len() as i64;

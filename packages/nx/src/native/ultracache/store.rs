@@ -10,7 +10,8 @@ use super::{
     UltracacheConfigurationImportOptions, UltracacheConfigurationResolution,
     UltracacheConfigurations,
 };
-use crate::native::db::connection::{DbValue, NxDbConnection};
+use crate::native::db::connection::NxDbConnection;
+use turso_core::Value;
 
 /// The workspace database's Ultracache configurations. Each import is its own version,
 /// keyed by commit and fetch time, so a run that pinned one keeps reading it
@@ -147,24 +148,27 @@ impl UltracacheConfigurationStore {
                 "INSERT OR REPLACE INTO io_snapshot_versions (commit_sha, fetched_at, tasks) \
                  VALUES (?1, ?2, ?3)",
                 &[
-                    DbValue::from(commit.as_str()),
-                    DbValue::Integer(fetched_at),
-                    DbValue::Integer(resolution.tasks.into()),
+                    Value::from_text(commit.clone()),
+                    Value::from_i64(fetched_at),
+                    Value::from_i64(resolution.tasks.into()),
                 ],
             )?;
             // A version rewritten at the same instant.
             conn.execute(
                 "DELETE FROM io_snapshot_entries WHERE commit_sha = ?1 AND fetched_at = ?2",
-                &[DbValue::from(commit.as_str()), DbValue::Integer(fetched_at)],
+                &[
+                    Value::from_text(commit.clone()),
+                    Value::from_i64(fetched_at),
+                ],
             )?;
-            let rows: Vec<Vec<DbValue>> = entries
+            let rows: Vec<Vec<Value>> = entries
                 .iter()
                 .map(|(task_id, entry)| {
                     vec![
-                        DbValue::from(commit.as_str()),
-                        DbValue::Integer(fetched_at),
-                        DbValue::from(task_id.as_str()),
-                        DbValue::from(entry.as_str()),
+                        Value::from_text(commit.clone()),
+                        Value::from_i64(fetched_at),
+                        Value::from_text(task_id.to_string()),
+                        Value::from_text(entry.clone()),
                     ]
                 })
                 .collect();
@@ -188,15 +192,15 @@ impl UltracacheConfigurationStore {
              WHERE commit_sha = ?1 AND (?2 IS NULL OR fetched_at = ?2) \
              ORDER BY fetched_at DESC LIMIT 1",
             &[
-                DbValue::from(commit),
-                fetched_at.map_or(DbValue::Null, DbValue::Integer),
+                Value::from_text(commit.to_string()),
+                fetched_at.map_or(Value::Null, Value::from_i64),
             ],
         )?;
         row.map(|row| {
             Ok(UltracacheConfigurationResolution {
                 requested_commit: commit.to_string(),
-                fetched_at: row.get_i64(0)?,
-                tasks: u32::try_from(row.get_i64(1)?)?,
+                fetched_at: row.get::<i64>(0)?,
+                tasks: u32::try_from(row.get::<i64>(1)?)?,
             })
         })
         .transpose()
@@ -212,13 +216,13 @@ impl UltracacheConfigurationStore {
     ) -> Result<Vec<(String, UltracacheConfiguration)>> {
         // One indexed lookup per id: turso serves `task_id IN (...)` from the index's
         // first two columns only, which scans the whole version for every id.
-        let param_sets: Vec<Vec<DbValue>> = task_ids
+        let param_sets: Vec<Vec<Value>> = task_ids
             .iter()
             .map(|id| {
                 vec![
-                    DbValue::from(commit),
-                    DbValue::Integer(fetched_at),
-                    DbValue::from(*id),
+                    Value::from_text(commit.to_string()),
+                    Value::from_i64(fetched_at),
+                    Value::from_text(id.to_string()),
                 ]
             })
             .collect();
@@ -229,8 +233,8 @@ impl UltracacheConfigurationStore {
         )?;
         rows.into_iter()
             .map(|row| {
-                let task_id = row.get_str(0)?;
-                let json = row.get_str(1)?;
+                let task_id = row.get::<String>(0)?;
+                let json = row.get::<String>(1)?;
                 let entry = serde_json::from_str(&json).with_context(|| {
                     format!("parsing the stored Ultracache configuration of {task_id}")
                 })?;

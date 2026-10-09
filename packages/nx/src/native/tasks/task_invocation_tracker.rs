@@ -1,7 +1,8 @@
-use crate::native::db::connection::{DbValue, NxDbConnection};
+use crate::native::db::connection::NxDbConnection;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
 use tracing::debug;
+use turso_core::Value;
 
 pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_invocations (
     root_pid INTEGER NOT NULL,
@@ -123,10 +124,10 @@ impl TaskInvocationTracker {
         self.db.lock().unwrap().execute(
             "INSERT OR REPLACE INTO task_invocations (root_pid, pid, task_id, overrides_hash) VALUES (?1, ?2, ?3, ?4)",
             &[
-                DbValue::Integer(self.root_pid as i64),
-                DbValue::Integer(pid as i64),
-                DbValue::from(task_id.as_str()),
-                DbValue::from(overrides_hash),
+                Value::from_i64(self.root_pid as i64),
+                Value::from_i64(pid as i64),
+                Value::from_text(task_id.clone()),
+                Value::from_text(overrides_hash),
             ],
         )?;
         debug!(
@@ -144,9 +145,9 @@ impl TaskInvocationTracker {
         self.db.lock().unwrap().execute(
             "DELETE FROM task_invocations WHERE root_pid = ?1 AND pid = ?2 AND task_id = ?3",
             &[
-                DbValue::Integer(self.root_pid as i64),
-                DbValue::Integer(pid as i64),
-                DbValue::from(task_id.as_str()),
+                Value::from_i64(self.root_pid as i64),
+                Value::from_i64(pid as i64),
+                Value::from_text(task_id.clone()),
             ],
         )?;
         debug!(
@@ -194,14 +195,14 @@ impl TaskInvocationTracker {
             .unwrap()
             .query_rows(
                 "SELECT pid, task_id, overrides_hash FROM task_invocations WHERE root_pid = ?1 ORDER BY created_at ASC",
-                &[DbValue::Integer(self.root_pid as i64)],
+                &[Value::from_i64(self.root_pid as i64)],
             )?
             .iter()
             .map(|row| {
                 Ok(InvocationRow {
-                    pid: row.get_i64(0)? as u32,
-                    task_id: row.get_str(1)?,
-                    overrides_hash: row.get_str(2)?,
+                    pid: row.get::<i64>(0)? as u32,
+                    task_id: row.get::<String>(1)?,
+                    overrides_hash: row.get::<String>(2)?,
                 })
             })
             .collect()
@@ -319,7 +320,7 @@ mod tests {
             .unwrap()
             .execute(
                 "UPDATE task_invocations SET created_at = datetime('now', '+1 hour') WHERE pid = ?1",
-                &[DbValue::Integer(ROOT_PID as i64)],
+                &[Value::from_i64(ROOT_PID as i64)],
             )
             .unwrap();
 

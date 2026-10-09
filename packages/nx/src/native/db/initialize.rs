@@ -83,11 +83,12 @@ fn create_all_tables(c: &NxDbConnection) -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use turso_core::Value;
 
     fn has_table(conn: &NxDbConnection, table_name: &str) -> bool {
         conn.query_row(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?1",
-            &[table_name.into()],
+            &[Value::from_text(table_name.to_string())],
         )
         .unwrap()
         .is_some()
@@ -137,7 +138,7 @@ mod tests {
             Ok(())
         })?;
         let row = conn.query_row("SELECT value FROM metadata WHERE key='k'", &[])?;
-        assert_eq!(row.expect("committed row").get_str(0)?, "v2");
+        assert_eq!(row.expect("committed row").get::<String>(0)?, "v2");
         Ok(())
     }
 
@@ -161,7 +162,7 @@ mod tests {
         let r = conn1
             .query_row("SELECT value FROM metadata WHERE key='test2'", &[])?
             .expect("conn1 should see conn2's write");
-        assert_eq!(r.get_str(0)?, "from_conn2");
+        assert_eq!(r.get::<String>(0)?, "from_conn2");
 
         Ok(())
     }

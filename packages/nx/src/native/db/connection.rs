@@ -4,93 +4,23 @@ use std::num::NonZero;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::trace;
-use turso_core::{Connection, Database, LimboError, NonNan, Numeric, Statement, Value};
-
-#[derive(Clone, Debug)]
-pub enum DbValue {
-    Text(String),
-    Integer(i64),
-    Real(f64),
-    Null,
-}
-
-impl From<String> for DbValue {
-    fn from(s: String) -> Self {
-        DbValue::Text(s)
-    }
-}
-
-impl From<&str> for DbValue {
-    fn from(s: &str) -> Self {
-        DbValue::Text(s.to_string())
-    }
-}
-
-impl From<bool> for DbValue {
-    fn from(v: bool) -> Self {
-        DbValue::Integer(v as i64)
-    }
-}
-
-fn to_turso_value(v: &DbValue) -> Value {
-    match v {
-        DbValue::Text(s) => Value::from_text(s.clone()),
-        DbValue::Integer(i) => Value::Numeric(Numeric::Integer(*i)),
-        DbValue::Real(f) => {
-            NonNan::new(*f).map_or(Value::Null, |f| Value::Numeric(Numeric::Float(f)))
-        }
-        DbValue::Null => Value::Null,
-    }
-}
-
-fn from_turso_value(v: &Value) -> DbValue {
-    match v {
-        Value::Numeric(Numeric::Integer(i)) => DbValue::Integer(*i),
-        Value::Numeric(Numeric::Float(f)) => DbValue::Real(f64::from(*f)),
-        Value::Text(t) => DbValue::Text(t.as_str().to_string()),
-        Value::Null | Value::Blob(_) => DbValue::Null,
-    }
-}
+use turso_core::types::FromValue;
+use turso_core::{Connection, Database, LimboError, Statement, Value};
 
 /// A row of query results (eagerly collected, fully owned).
 #[derive(Clone, Debug)]
 pub struct DbRow {
-    values: Vec<DbValue>,
+    values: Vec<Value>,
 }
 
 impl DbRow {
-    pub fn get_str(&self, idx: usize) -> Result<String> {
-        match self.values.get(idx) {
-            Some(DbValue::Text(s)) => Ok(s.clone()),
-            Some(other) => anyhow::bail!("Column {} is not text: {:?}", idx, other),
-            None => anyhow::bail!("Column index {} out of range", idx),
-        }
-    }
-
-    pub fn get_i64(&self, idx: usize) -> Result<i64> {
-        match self.values.get(idx) {
-            Some(DbValue::Integer(i)) => Ok(*i),
-            Some(other) => anyhow::bail!("Column {} is not integer: {:?}", idx, other),
-            None => anyhow::bail!("Column index {} out of range", idx),
-        }
-    }
-
-    pub fn get_f64(&self, idx: usize) -> Result<f64> {
-        match self.values.get(idx) {
-            Some(DbValue::Real(f)) => Ok(*f),
-            Some(DbValue::Integer(i)) => Ok(*i as f64),
-            Some(other) => anyhow::bail!("Column {} is not real: {:?}", idx, other),
-            None => anyhow::bail!("Column index {} out of range", idx),
-        }
-    }
-
-    pub fn get_optional_str(&self, idx: usize) -> Result<Option<String>> {
-        match self.values.get(idx) {
-            Some(DbValue::Text(s)) => Ok(Some(s.clone())),
-            Some(DbValue::Null) => Ok(None),
-            Some(other) => anyhow::bail!("Column {} is not text/null: {:?}", idx, other),
-            None => anyhow::bail!("Column index {} out of range", idx),
-        }
+    pub fn get<T: FromValue>(&self, idx: usize) -> Result<T> {
+        let value = self
+            .values
+            .get(idx)
+            .with_context(|| format!("Column index {idx} out of range"))?;
+        T::from_sql(value.clone())
+            .with_context(|| format!("Column {idx} holds an unexpected value: {value:?}"))
     }
 }
 
@@ -170,16 +100,16 @@ impl NxDbConnection {
         }
     }
 
-    fn prepare(&self, sql: &str, params: &[DbValue]) -> Result<Statement> {
+    fn prepare(&self, sql: &str, params: &[Value]) -> Result<Statement> {
         let mut stmt = self.conn()?.prepare(sql)?;
         for (i, param) in params.iter().enumerate() {
             let index = NonZero::new(i + 1).expect("index starts at 1");
-            stmt.bind_at(index, to_turso_value(param))?;
+            stmt.bind_at(index, param.clone())?;
         }
         Ok(stmt)
     }
 
-    pub fn execute(&self, sql: &str, params: &[DbValue]) -> Result<usize> {
+    pub fn execute(&self, sql: &str, params: &[Value]) -> Result<usize> {
         self.retrying(|| {
             let mut stmt = self.prepare(sql, params)?;
             stmt.run_ignore_rows()?;
@@ -194,22 +124,17 @@ impl NxDbConnection {
             .with_context(|| format!("DB execute batch error: \"{sql}\""))
     }
 
-    pub fn query_rows(&self, sql: &str, params: &[DbValue]) -> Result<Vec<DbRow>> {
+    pub fn query_rows(&self, sql: &str, params: &[Value]) -> Result<Vec<DbRow>> {
         self.retrying(|| {
             let rows = self.prepare(sql, params)?.run_collect_rows()?;
-            Ok(rows
-                .iter()
-                .map(|row| DbRow {
-                    values: row.iter().map(from_turso_value).collect(),
-                })
-                .collect())
+            Ok(rows.into_iter().map(|values| DbRow { values }).collect())
         })
         .with_context(|| format!("DB query error: \"{sql}\""))
     }
 
     /// Runs `sql` once per parameter set, preparing it only once. Use it for bulk
     /// writes and for key lookups that `IN (...)` can't serve from an index.
-    pub fn query_rows_each(&self, sql: &str, param_sets: &[Vec<DbValue>]) -> Result<Vec<DbRow>> {
+    pub fn query_rows_each(&self, sql: &str, param_sets: &[Vec<Value>]) -> Result<Vec<DbRow>> {
         self.retrying(|| {
             let mut stmt = self.conn()?.prepare(sql)?;
             let mut result = Vec::new();
@@ -217,18 +142,20 @@ impl NxDbConnection {
                 stmt.reset()?;
                 for (i, param) in params.iter().enumerate() {
                     let index = NonZero::new(i + 1).expect("index starts at 1");
-                    stmt.bind_at(index, to_turso_value(param))?;
+                    stmt.bind_at(index, param.clone())?;
                 }
-                result.extend(stmt.run_collect_rows()?.iter().map(|row| DbRow {
-                    values: row.iter().map(from_turso_value).collect(),
-                }));
+                result.extend(
+                    stmt.run_collect_rows()?
+                        .into_iter()
+                        .map(|values| DbRow { values }),
+                );
             }
             Ok(result)
         })
         .with_context(|| format!("DB query error: \"{sql}\""))
     }
 
-    pub fn query_row(&self, sql: &str, params: &[DbValue]) -> Result<Option<DbRow>> {
+    pub fn query_row(&self, sql: &str, params: &[Value]) -> Result<Option<DbRow>> {
         let rows = self.query_rows(sql, params)?;
         Ok(rows.into_iter().next())
     }

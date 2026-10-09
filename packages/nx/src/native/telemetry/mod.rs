@@ -286,7 +286,7 @@ fn get_or_create_session_id(connection: &External<Arc<Mutex<NxDbConnection>>>) -
 
     let session_id = if let Some(row) = active_session {
         let id = row
-            .get_str(0)
+            .get::<String>(0)
             .map_err(|e| Error::from_reason(format!("Failed to read session ID: {}", e)))?;
         tracing::trace!("Reusing existing analytics session: {}", id);
         id
@@ -354,7 +354,7 @@ mod tests {
             )
             .expect("Session query should succeed");
 
-        let value = row.expect("session row").get_str(0).unwrap();
+        let value = row.expect("session row").get::<String>(0).unwrap();
         assert_eq!(value, session_id);
     }
 }

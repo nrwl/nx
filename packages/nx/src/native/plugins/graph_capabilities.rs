@@ -1,6 +1,7 @@
-use crate::native::db::connection::{DbValue, NxDbConnection};
+use crate::native::db::connection::NxDbConnection;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
+use turso_core::Value;
 
 /// One row per plugin that built the latest graph, stamped with its `computedAt`.
 pub(crate) const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS nx_plugin_capabilities (
@@ -56,16 +57,16 @@ impl NxPluginCapabilities {
                         has_pre_tasks_execution, has_post_tasks_execution
                     ) VALUES (?, ?, ?, ?, ?, ?, ?)",
                     &[
-                        DbValue::Integer(position as i64),
-                        DbValue::Integer(computed_at),
+                        Value::from_i64(position as i64),
+                        Value::from_i64(computed_at),
                         match &plugin.create_nodes_pattern {
-                            Some(pattern) => DbValue::from(pattern.as_str()),
-                            None => DbValue::Null,
+                            Some(pattern) => Value::from_text(pattern.clone()),
+                            None => Value::Null,
                         },
-                        DbValue::from(plugin.has_create_dependencies),
-                        DbValue::from(plugin.has_create_metadata),
-                        DbValue::from(plugin.has_pre_tasks_execution),
-                        DbValue::from(plugin.has_post_tasks_execution),
+                        Value::from_i64(plugin.has_create_dependencies as i64),
+                        Value::from_i64(plugin.has_create_metadata as i64),
+                        Value::from_i64(plugin.has_pre_tasks_execution as i64),
+                        Value::from_i64(plugin.has_post_tasks_execution as i64),
                     ],
                 )?;
             }
@@ -88,15 +89,15 @@ impl NxPluginCapabilities {
 
         let mut capabilities = Vec::new();
         for row in rows {
-            if row.get_i64(0)? != computed_at {
+            if row.get::<i64>(0)? != computed_at {
                 return Ok(None);
             }
             capabilities.push(CachedPluginCapabilities {
-                create_nodes_pattern: row.get_optional_str(1)?,
-                has_create_dependencies: row.get_i64(2)? != 0,
-                has_create_metadata: row.get_i64(3)? != 0,
-                has_pre_tasks_execution: row.get_i64(4)? != 0,
-                has_post_tasks_execution: row.get_i64(5)? != 0,
+                create_nodes_pattern: row.get::<Option<String>>(1)?,
+                has_create_dependencies: row.get::<i64>(2)? != 0,
+                has_create_metadata: row.get::<i64>(3)? != 0,
+                has_pre_tasks_execution: row.get::<i64>(4)? != 0,
+                has_post_tasks_execution: row.get::<i64>(5)? != 0,
             });
         }
         Ok(if capabilities.is_empty() {

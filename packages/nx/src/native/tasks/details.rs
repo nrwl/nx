@@ -1,7 +1,8 @@
-use crate::native::db::connection::{DbValue, NxDbConnection};
+use crate::native::db::connection::NxDbConnection;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
 use tracing::trace;
+use turso_core::Value;
 
 pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_details (
     hash    TEXT PRIMARY KEY NOT NULL,
@@ -43,12 +44,12 @@ impl TaskDetails {
             db.execute(
                 "INSERT OR REPLACE INTO task_details (hash, project, target, configuration) VALUES (?1, ?2, ?3, ?4)",
                 &[
-                    DbValue::from(task.hash.as_str()),
-                    DbValue::from(task.project.as_str()),
-                    DbValue::from(task.target.as_str()),
+                    Value::from_text(task.hash.clone()),
+                    Value::from_text(task.project.clone()),
+                    Value::from_text(task.target.clone()),
                     match &task.configuration {
-                        Some(c) => DbValue::from(c.as_str()),
-                        None => DbValue::Null,
+                        Some(c) => Value::from_text(c.clone()),
+                        None => Value::Null,
                     },
                 ],
             )?;
