@@ -8,6 +8,7 @@ export {
   writeRunState,
   findActiveRun,
   createRun,
+  TERMINAL_STEP_STATUSES,
 } from './run-state';
 export type {
   MigrateRunStatus,
@@ -45,6 +46,8 @@ export type {
 } from './state-machine';
 
 export { createRunId } from './run-id';
+
+export { pmInstallCommand } from './util';
 
 export { runSingleMigrationWorker } from './worker';
 export type { RunSingleMigrationWorkerInput } from './worker';

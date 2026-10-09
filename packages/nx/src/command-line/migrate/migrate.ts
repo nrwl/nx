@@ -186,6 +186,7 @@ import {
 } from './execute-migration';
 import { isStepAction, STEP_ACTIONS, type StepAction } from './step-actions';
 import { sortMigrations } from './sort-migrations';
+import { singleLine } from './text';
 import { isInsideAgent } from './agentic/inception';
 import {
   assertWorkspaceNxSupportsNewMigrateFlags,
@@ -3316,23 +3317,40 @@ async function runMigrations(
     activeRunToReplace(root, opts.runId);
   }
 
-  // The run must resume while the cause of a step's failed install persists.
-  const failedInstallSteps =
-    continued?.steps.filter((s) => s.installFailed === true) ?? [];
-  if (failedInstallSteps.length > 0) {
-    const { stepLabel } = require('./run') as typeof import('./run');
-    output.warn({
-      title: 'Skipping the dependency install',
-      bodyLines: [
-        `The dependency install of ${failedInstallSteps
+  if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
+    // The run must resume while the cause of a step's failed install persists.
+    const failedInstallSteps =
+      continued?.steps.filter((s) => s.installFailed === true) ?? [];
+    if (failedInstallSteps.length > 0) {
+      const { pmInstallCommand, stepLabel, TERMINAL_STEP_STATUSES } =
+        require('./run') as typeof import('./run');
+      // A settled step keeps its mark, but no step action can retry it.
+      const settled = failedInstallSteps.filter((s) =>
+        TERMINAL_STEP_STATUSES.has(s.status)
+      );
+      const retryable = failedInstallSteps.filter((s) => !settled.includes(s));
+      const notCompleted = (steps: typeof failedInstallSteps) =>
+        `The dependency install of ${steps
           .map(stepLabel)
-          .join(
-            ', '
-          )} did not complete earlier in this run. Retrying that step installs again; any other choice leaves the install to you.`,
-      ],
-    });
-  } else if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
-    await runInstall();
+          .join(', ')} did not complete earlier in this run.`;
+      output.warn({
+        title: 'Skipping the dependency install',
+        bodyLines: [
+          ...(retryable.length > 0
+            ? [
+                `${notCompleted(retryable)} Retrying that step installs again; any other choice leaves the install to you.`,
+              ]
+            : []),
+          ...(settled.length > 0
+            ? [
+                `${notCompleted(settled)} Run \`${pmInstallCommand(root)}\` once the cause of the failed install is fixed.`,
+              ]
+            : []),
+        ].map(singleLine),
+      });
+    } else {
+      await runInstall();
+    }
   }
 
   if (!__dirname.startsWith(workspaceRoot)) {
