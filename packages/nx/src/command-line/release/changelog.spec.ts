@@ -140,6 +140,7 @@ describe('releaseChangelog', () => {
 
     releaseGraph = {
       releaseGroups: [releaseGroup],
+      allReleaseGroups: [releaseGroup],
       releaseGroupToFilteredProjects: new Map([
         [releaseGroup, new Set(['pkg-a'])],
       ]),
