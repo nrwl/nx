@@ -2020,9 +2020,6 @@ describe('TaskOrchestrator', () => {
     it('fails the waiter when the shared producer exits before its first row read', async () => {
       const { orchestrator, serve, e2e } = createOrchestrator();
       orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
-      orchestrator.preRunSteps = vi.fn(async () => {
-        orchestrator.runningTasksService.getRunningTasks = () => [];
-      });
       orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
       orchestrator.runningContinuousTasks = new Map();
       orchestrator.continuousTaskExitHandled = new Map();

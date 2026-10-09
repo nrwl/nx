@@ -1957,9 +1957,9 @@ export class TaskOrchestrator {
     }
   }
 
-  // A row absent from the start means there is no readiness status to wait on,
-  // unless the caller saw an owner that is now gone. A row that disappears
-  // mid-wait means the producer exited.
+  // A row absent from the start means no Nx process this one can see owns the
+  // producer, unless the caller already saw the owner: then it exited. A row
+  // that disappears mid-wait means the producer exited.
   private async pollReadinessRow(
     producer: Task,
     readyWhen: NormalizedReadyWhen,
@@ -1978,11 +1978,7 @@ export class TaskOrchestrator {
       const status =
         this.runningTasksService?.getTaskReadiness(producer.id) ?? null;
       if (status === null) {
-        if (
-          lastStatus !== null ||
-          (ownerObserved &&
-            !this.runningTasksService.getRunningTasks([producer.id]).length)
-        ) {
+        if (lastStatus !== null || ownerObserved) {
           throw notReadyError(producer.id, 'exited');
         }
         return;
