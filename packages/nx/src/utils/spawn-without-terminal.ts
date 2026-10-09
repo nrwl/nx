@@ -2,9 +2,9 @@ import { type ChildProcess, spawn, type SpawnOptions } from 'child_process';
 import { fstatSync, statSync } from 'fs';
 import { isatty } from 'tty';
 
-// Pids of the commands spawned below whose output is still open. On POSIX each
+// The commands spawned below whose output is still open, by pid. On POSIX each
 // one leads its own process group.
-const commands = new Set<number>();
+const commands = new Map<number, ChildProcess>();
 
 /**
  * Runs `command` in a shell that cannot reach the terminal nx shares with
@@ -32,7 +32,7 @@ export function spawnWithoutTerminal(
   const pid = child.pid;
   if (pid !== undefined) {
     if (commands.size === 0) process.on('exit', killCommands);
-    commands.add(pid);
+    commands.set(pid, child);
     child.once('close', () => {
       commands.delete(pid);
       if (commands.size === 0) process.removeListener('exit', killCommands);
@@ -43,23 +43,41 @@ export function spawnWithoutTerminal(
 
 /**
  * Sends `signal` to every command started by `spawnWithoutTerminal` whose
- * output is still open: to its process group on POSIX. Windows has no process
- * groups, so there the processes still descending from the command's shell
- * are terminated, whatever the signal.
+ * output is still open: to its process group on POSIX, and on a SIGKILL also to
+ * the processes still descending from its shell, since a parent killed outright
+ * cannot stop the ones it started in groups of their own. Windows has no
+ * process groups, so there those descendants are terminated, whatever the
+ * signal.
  */
 export function signalCommandsWithoutTerminal(signal: NodeJS.Signals): void {
-  for (const pid of commands) {
-    try {
-      if (process.platform === 'win32') {
-        const { killProcessTree } =
-          require('../native') as typeof import('../native');
-        killProcessTree(pid, signal);
-      } else {
-        process.kill(-pid, signal);
-      }
-    } catch {
-      // The command already ended; its `close` is on the way.
+  for (const [pid, child] of commands) {
+    // Tree first: killing the group reparents its members' children.
+    if (process.platform === 'win32' || signal === 'SIGKILL') {
+      killTree(child, pid, signal);
     }
+    if (process.platform !== 'win32') {
+      try {
+        process.kill(-pid, signal);
+      } catch {
+        // The command already ended; its `close` is on the way.
+      }
+    }
+  }
+}
+
+// Only while the shell lives: once it has exited, its pid can be reused.
+function killTree(
+  child: ChildProcess,
+  pid: number,
+  signal: NodeJS.Signals
+): void {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  try {
+    const { killProcessTree } =
+      require('../native') as typeof import('../native');
+    killProcessTree(pid, signal);
+  } catch {
+    // No native killer in this build; on POSIX the group signal still goes out.
   }
 }
 

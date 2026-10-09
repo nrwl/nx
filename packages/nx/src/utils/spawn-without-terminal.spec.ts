@@ -13,12 +13,17 @@ vi.mock('child_process', async (importOriginal) => {
 
 describe('spawnWithoutTerminal', () => {
   it.skipIf(process.platform === 'win32')(
-    'kills each open command when nx exits',
+    'kills each open command when nx exits, with what it started in a group of its own',
     async () => {
       const before = process.listeners('exit');
-      const command = spawnWithoutTerminal('sleep 30', {
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
+      const script = `const c = require('child_process').spawn('sleep', ['30'], { detached: true, stdio: 'ignore' }); console.log(c.pid); setInterval(() => {}, 1000);`;
+      const command = spawnWithoutTerminal(
+        `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`,
+        { stdio: ['ignore', 'pipe', 'pipe'] }
+      );
+      const detachedPid = await new Promise<number>((resolve) =>
+        command.stdout!.once('data', (chunk) => resolve(Number(`${chunk}`)))
+      );
       const closed = new Promise<NodeJS.Signals | null>((resolve) =>
         command.once('close', (_code, signal) => resolve(signal))
       );
@@ -34,23 +39,30 @@ describe('spawnWithoutTerminal', () => {
           ),
         ]);
         expect(signal).toBe('SIGKILL');
+        expect(await exitsWithin(detachedPid, 2_000)).toBe(true);
       } finally {
         command.kill('SIGKILL');
+        try {
+          process.kill(detachedPid, 'SIGKILL');
+        } catch {}
       }
     }
   );
 
   it.skipIf(process.platform === 'win32')(
-    'forwards signals to the Windows tree killer until the command closes',
+    'forwards signals to the Windows tree killer until the shell exits, when its pid can be reused',
     async () => {
       const native = require('../native') as typeof import('../native');
       const killProcessTree = vi
         .spyOn(native, 'killProcessTree')
         .mockImplementation(() => {});
-      // A real process stands in for the Windows shell, so its `close` is real.
+      // A real process stands in for the Windows shell, so its `exit` is real.
+      // Its background job keeps the output open after the shell exits.
       const actual =
         await vi.importActual<typeof import('child_process')>('child_process');
-      const shell = actual.spawn('sleep', ['30']);
+      const shell = actual.spawn('sh', ['-c', 'sleep 30 & exec sleep 30'], {
+        detached: true,
+      });
       vi.mocked(spawn).mockReturnValueOnce(shell);
       const platform = process.platform;
       try {
@@ -63,7 +75,7 @@ describe('spawnWithoutTerminal', () => {
         expect(killProcessTree).toHaveBeenCalledWith(shell.pid, 'SIGINT');
 
         shell.kill();
-        await new Promise((resolve) => shell.once('close', resolve));
+        await new Promise((resolve) => shell.once('exit', resolve));
 
         Object.defineProperty(process, 'platform', { value: 'win32' });
         signalCommandsWithoutTerminal('SIGKILL');
@@ -71,12 +83,27 @@ describe('spawnWithoutTerminal', () => {
         expect(killProcessTree).toHaveBeenCalledTimes(1);
       } finally {
         Object.defineProperty(process, 'platform', { value: platform });
-        shell.kill();
+        try {
+          process.kill(-shell.pid!, 'SIGKILL');
+        } catch {}
         killProcessTree.mockRestore();
       }
     }
   );
 });
+
+async function exitsWithin(pid: number, ms: number): Promise<boolean> {
+  const deadline = Date.now() + ms;
+  while (Date.now() < deadline) {
+    try {
+      process.kill(pid, 0);
+    } catch {
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  return false;
+}
 
 describe('withoutTerminalPaths', () => {
   it.skipIf(process.platform === 'win32')(
