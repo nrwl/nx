@@ -159,6 +159,8 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
     }
 
     .main-frame {
+      /* Fills short pages, so the dark footer always ends at the bottom. */
+      flex-grow: 1;
       padding-top: calc(var(--sl-nav-height) + var(--sl-mobile-toc-height));
       padding-inline-start: var(--sl-content-inline-start);
     }

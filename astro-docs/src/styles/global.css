@@ -245,6 +245,13 @@
   --sl-font-mono: 'Server Mono';
   --sl-line-height: 1.65;
 
+  /* Brand type scale: Heading 2 is 28px and Mono is 13px. Heading 1 reaches
+     its 40px from 50rem. The smaller headings step down from there. */
+  --sl-text-h2: 1.75rem;
+  --sl-text-h3: 1.375rem;
+  --sl-text-h4: 1.125rem;
+  --sl-text-code: 0.8125rem;
+
   /* Header height of the nx.dev navbar: 64px on phones, 80px from 50rem. */
   --sl-nav-height: 4rem;
   --sl-nav-pad-x: 1.25rem;
@@ -252,6 +259,10 @@
 
 @media (min-width: 50rem) {
   :root {
+    --sl-text-h1: 2.5rem;
+    --sl-text-h2: 1.75rem;
+    --sl-text-h3: 1.375rem;
+    --sl-text-h4: 1.125rem;
     --sl-nav-height: 5rem;
     /* Lines the logo up with the sidebar below it. */
     --sl-nav-pad-x: 1.5rem;
@@ -326,9 +337,10 @@
   --sl-color-bg: var(--color-white);
   --sl-color-bg-nav: var(--color-nx-neutral-50);
   --sl-color-bg-sidebar: var(--color-white);
-  --sl-color-hairline-light: var(--color-nx-neutral-200);
-  --sl-color-hairline: var(--color-nx-neutral-200);
-  --sl-color-hairline-shade: var(--color-nx-neutral-200);
+  /* The guidelines put borders at Neutral 300 to 400. */
+  --sl-color-hairline-light: var(--color-nx-neutral-300);
+  --sl-color-hairline: var(--color-nx-neutral-300);
+  --sl-color-hairline-shade: var(--color-nx-neutral-300);
   --sl-color-accent-low: var(--color-nx-primary-100);
   --sl-color-accent: var(--color-nx-primary-600);
   --sl-color-accent-high: var(--color-nx-primary-800);
@@ -410,6 +422,7 @@ pre {
 
 /* Headings are Semibold and tighten as they get bigger. */
 h1 {
+  line-height: 1.1;
   letter-spacing: -0.02em;
 }
 

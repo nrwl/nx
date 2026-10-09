@@ -114,7 +114,7 @@ export function CallToAction({
       <div className={classNames('w-2', colorClasses.accent)}></div>
 
       <div className="z-10 flex flex-grow items-center py-3">
-        <div className={iconClasses.icon}>
+        <div className={classNames('shrink-0', iconClasses.icon)}>
           {icon && frameworkIcons[icon as Framework]?.image}
         </div>
 
