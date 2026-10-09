@@ -127,7 +127,7 @@ export default defineConfig({
 });
 ```
 
-To stop an atomized task from rerunning for every library the app bundles, add an `@nx-depends-on` comment to its spec file.
+To stop an atomized task from rerunning for every library the app bundles, scope it to the projects its test file exercises.
 See [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
 
 {% aside type="note" title="Using setupNodeEvents function" %}
