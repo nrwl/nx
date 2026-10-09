@@ -485,7 +485,7 @@ Learn more about configuring your [CI provider with these workflow examples](/do
 
 ## Scope a test file to its projects
 
-An atomized e2e task depends on the app it tests, so a change to any library the app bundles reruns every test file, and `nx affected` selects all of them.
+An atomized e2e task depends on the app it tests, so a change to any library the app bundles reruns every test file.
 For the Cypress and Playwright atomized tasks, name the projects a test file exercises in a comment at the top of the file:
 
 ```ts
@@ -499,7 +499,12 @@ The `e2e-ci--src/e2e/checkout.cy.ts` task then changes in two ways:
 - Its `^production` input becomes `{ "input": "production", "projects": ["checkout", "checkout-utils"], "always": true }`, which [ultracache keeps in the hash](/docs/reference/inputs#inputs-kept-under-ultracache).
 - Its dependency on the web server task sets [`"inputs": false`](/docs/reference/inputs#inputs-of-continuous-dependencies), so the server's inputs stop counting.
 
-Only the listed projects count, not the projects they depend on, so list every one the test relies on.
+Only the listed projects count as dependency inputs, not the projects they depend on.
+The task keeps its other declared inputs, such as `default` and any shared globs it includes.
+Under ultracache, the files the test read during its recorded run replace the declared file inputs, except the `always` ones.
+A change outside the inputs that remain leaves the task's hash unchanged, so Nx replays its cached result.
+List every project the test relies on.
+With `NX_LEGACY_AFFECTED=false`, `nx affected` selects the task by the same inputs. Without it, `nx affected` selects whole projects.
 Nx reads the directive from the comments that open the file and stops at the first line of code.
 A directive without projects, or a name that matches no project, is an error.
 When Playwright starts the web server itself, there's no server task, and only the inputs change.
