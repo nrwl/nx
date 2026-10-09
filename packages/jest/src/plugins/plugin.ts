@@ -42,6 +42,12 @@ import {
   type RawTsconfigJsonCache,
 } from '@nx/js/internal';
 import { getInstalledJestMajorVersion } from '../utils/versions';
+import { createRequire } from 'node:module';
+
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = createRequire(__filename);
 
 const REPORTER_BUILTINS = new Set(['default', 'github-actions', 'summary']);
 

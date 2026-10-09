@@ -6,6 +6,12 @@ import { readJsonFile } from '../../../utils/fileutils';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
+import { createRequire } from 'node:module';
+
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = createRequire(__filename);
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
