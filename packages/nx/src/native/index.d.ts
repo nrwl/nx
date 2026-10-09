@@ -770,6 +770,13 @@ export declare function formatDuration(ms: number): string
 
 export declare function getBinaryTarget(): string
 
+/**
+ * A tenth of the filesystem that holds `cache_path`, asked of that one
+ * filesystem through its nearest existing ancestor (the cache directory may
+ * not exist yet). Listing every mounted disk instead costs, on macOS, IOKit
+ * and CacheDelete round trips per mount on the thread that is about to run
+ * tasks, and those stall while disk images attach or detach.
+ */
 export declare function getDefaultMaxCacheSize(cachePath: string): number
 
 /** Returns the canonical event dimension names. */
