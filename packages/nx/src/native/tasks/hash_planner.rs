@@ -10,6 +10,7 @@ use crate::native::{
     project_graph::types::ProjectGraph,
     tasks::{inputs::SplitInputs, types::Task},
 };
+use hashbrown::HashMap as HashbrownMap;
 use itertools::Itertools;
 use napi::bindgen_prelude::{ClassInstance, External};
 use rayon::prelude::*;
@@ -427,6 +428,19 @@ impl HashPlanner {
                 task_ids.len()
             );
         }
+
+        crate::native::profiler::record_ms(
+            "hash_planner::setup_external_deps",
+            setup_duration.as_secs_f64() * 1000.0,
+        );
+        crate::native::profiler::record_ms(
+            "hash_planner::parallel_planning",
+            parallel_duration.as_secs_f64() * 1000.0,
+        );
+        crate::native::profiler::record_ms(
+            "hash_planner::total",
+            total_duration.as_secs_f64() * 1000.0,
+        );
 
         let result = result.map(|planned| memo.finish(planned, &task_ids));
         result.map(|plans| {

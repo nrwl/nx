@@ -619,6 +619,7 @@ module.exports.getEventDimensions = nativeBinding.getEventDimensions
 module.exports.getFilesForOutputsBatch = nativeBinding.getFilesForOutputsBatch
 module.exports.getHardcodedIgnorePatterns = nativeBinding.getHardcodedIgnorePatterns
 module.exports.getMainWorktreeRoot = nativeBinding.getMainWorktreeRoot
+module.exports.getNativeTimings = nativeBinding.getNativeTimings
 module.exports.getTransformableOutputs = nativeBinding.getTransformableOutputs
 module.exports.getUltracacheDeferredTaskIds = nativeBinding.getUltracacheDeferredTaskIds
 module.exports.getUltracacheReport = nativeBinding.getUltracacheReport
