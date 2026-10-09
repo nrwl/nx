@@ -109,7 +109,7 @@ export class LoadedNxPlugin {
 
     /**
      * Wraps the plugin-provided createNodes function to provide performance
-     * measurement and error handling.
+     * measurement, error handling and `undefined` normalization of results.
      */
     if (this.createNodes) {
       const inner = this.createNodes[1];
@@ -117,14 +117,32 @@ export class LoadedNxPlugin {
         performance.mark(`${plugin.name}:createNodes - start`);
         let projectCount = 0;
         try {
-          const result = await inner(...args);
+          const result = (await inner(...args)).map(
+            ([pluginName, file, r]) =>
+              [pluginName, file, withoutUndefinedValues(r)] as const
+          );
           for (const [, , r] of result) {
             projectCount += Object.keys(r.projects ?? {}).length;
           }
           return result;
         } catch (e) {
           if (isAggregateCreateNodesError(e)) {
-            throw e;
+            const partialResults = e.partialResults.map(
+              ([file, r]) => [file, withoutUndefinedValues(r)] as const
+            );
+            if (
+              partialResults.every(([, r], i) => r === e.partialResults[i][1])
+            ) {
+              throw e;
+            }
+            // Fresh tuples, as the constructor coerces each error in place.
+            throw new AggregateCreateNodesError(
+              e.errors.map(([file, error]): [string | null, Error] => [
+                file,
+                error,
+              ]),
+              partialResults
+            );
           }
           // The underlying plugin errored out. We can't know any partial results.
           throw new AggregateCreateNodesError([[null, e]], []);
@@ -200,4 +218,48 @@ export class LoadedNxPlugin {
       hasPostTasksExecution: !!this.postTasksExecution,
     };
   }
+}
+
+/**
+ * Drops `undefined` object values and turns `undefined` array entries into
+ * `null`, as the default JSON transport does for isolated plugins. Without this,
+ * results that skip JSON (in-process plugins, the v8 serializer) let an
+ * `undefined` override an earlier plugin's value.
+ * Never writes to the plugin-owned `value`: changed containers and their
+ * ancestors are copied.
+ */
+function withoutUndefinedValues<T>(value: T): T {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    let copy: unknown[] | undefined;
+    for (let i = 0; i < value.length; i++) {
+      const item = value[i];
+      const normalized =
+        item === undefined ? null : withoutUndefinedValues(item);
+      if (!copy && normalized !== item) {
+        copy = value.slice(0, i);
+      }
+      copy?.push(normalized);
+    }
+    return (copy ?? value) as T;
+  }
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record);
+  let entries: Array<[string, unknown]> | undefined;
+  for (let i = 0; i < keys.length; i++) {
+    const item = record[keys[i]];
+    const normalized =
+      item === undefined ? undefined : withoutUndefinedValues(item);
+    if (!entries && (item === undefined || normalized !== item)) {
+      entries = keys.slice(0, i).map((key) => [key, record[key]]);
+    }
+    if (entries && normalized !== undefined) {
+      entries.push([keys[i], normalized]);
+    }
+  }
+  // `Object.fromEntries` defines own properties, so a `__proto__` key stays
+  // a key instead of setting the copy's prototype.
+  return (entries ? Object.fromEntries(entries) : value) as T;
 }
