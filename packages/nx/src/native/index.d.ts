@@ -258,13 +258,13 @@ export declare class RunningTasksService {
   getRunningTasks(ids: Array<string>): Array<string>
   addRunningTask(taskId: string): void
   /**
-   * Release this process's claim on a task. A row another process has since
-   * taken over is left in place.
+   * Release this process's claim on a task and its readiness. A row another
+   * process has since taken over is left in place.
    */
   removeRunningTask(taskId: string): void
   /** No-op once the task's row is gone, so a late probe result cannot outlive the task. */
   setTaskReadiness(taskId: string, status: TaskReadiness): void
-  /** `None` when the task is not running or its owner recorded no readiness. */
+  /** `None` when the task is not running. */
   getTaskReadiness(taskId: string): TaskReadiness | null
 }
 
