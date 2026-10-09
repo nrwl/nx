@@ -278,13 +278,16 @@ fn is_hashable_file(file_type: &std::fs::FileType) -> bool {
     file_type.is_file() || file_type.is_symlink()
 }
 
-/// Files vite and vitest write and remove while they load a config. The
-/// watch never reports them, so a walk that feeds a hash skips them too.
+/// Files tools write and remove moments later. Vite and vitest write them
+/// while loading a config, and pnpm 12 writes `_tmp_<pid>_<hex>` on every
+/// command while it probes where to put its store. The watch never reports
+/// them, so a walk that feeds a hash skips them too.
 pub(crate) const TRANSIENT_FILE_GLOBS: &[&str] = &[
     "vitest.config.ts.timestamp*.mjs",
     "vite.config.ts.timestamp*.mjs",
     "vitest.config.mts.timestamp*.mjs",
     "vite.config.mts.timestamp*.mjs",
+    "_tmp_*_*",
 ];
 
 /// Directories the walker and the watcher never enter.
@@ -808,6 +811,25 @@ nested/child-two/
             "the shallower .nxignore should outrank the deeper .gitignore negation, got: {:?}",
             files
         );
+    }
+
+    #[test]
+    fn skips_transient_tool_files() {
+        let temp = TempDir::new().unwrap();
+        for file in [
+            "keep.ts",
+            "_tmp_notes.txt",
+            "apps/web/vite.config.ts.timestamp-1700000000000-abc.mjs",
+            "_tmp_216074_1a910ab3",
+            "apps/web/_tmp_38717_33967778",
+            "_tmp_38717_3397f260/_tmp_38717_3397f261",
+        ] {
+            temp.child(file).write_str("").unwrap();
+        }
+
+        let mut files = seed_walk(temp.path(), "").unwrap();
+        files.sort();
+        assert_eq!(files, vec!["_tmp_notes.txt", "keep.ts"]);
     }
 
     fn walk_fixture() -> TempDir {
