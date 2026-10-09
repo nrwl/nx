@@ -189,11 +189,10 @@ describe('project-configuration-utils', () => {
       expect(sm['targets.processResources.executor']).toEqual(GRADLE);
     });
 
-    // The target-name cache fallback's whole premise is that an executor key
-    // beats the target name key during the real merge. Its own suite hands
-    // `validateAndNormalizeProjectRootMap` an already-merged target, so this is
-    // the only place that premise is exercised end to end.
-    it('should restore cache from a target name default the executor default shadowed', () => {
+    // `cache` resolves from the key that wins, like every other field. The
+    // normalization suite is handed an already-merged target, so this is the
+    // only place the real merge decides which key wins.
+    it('should not restore cache from a target name default the executor default shadowed', () => {
       const projectJsonResults: CreateNodesResultEntry[] = [
         [
           'nx/core/project-json',
@@ -230,8 +229,8 @@ describe('project-configuration-utils', () => {
       // name key's `dependsOn` did not.
       expect(build.inputs).toEqual(['production']);
       expect(build.dependsOn).toBeUndefined();
-      // ...and `cache` was still read back from the shadowed name key.
-      expect(build.cache).toBe(true);
+      // ...and neither did its `cache`.
+      expect(build.cache).toBeUndefined();
     });
 
     // Regression: when targetDefaults are present, the default layer is
