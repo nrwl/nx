@@ -109,7 +109,9 @@ async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
       if (result && result !== 'undefined' && result !== 'null') {
         return result;
       }
-    } catch {}
+    } catch {
+      continue;
+    }
   }
   return undefined;
 }
