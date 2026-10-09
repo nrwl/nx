@@ -225,7 +225,7 @@ describe('spawnMasterSession', () => {
     );
   });
 
-  it('swallows SIGINT from the moment the child exists and removes the listener on exit', async () => {
+  it('listens for SIGINT from the moment the child exists and removes the listener on exit', async () => {
     const child = fakeChild({ exitAfterSpawn: false });
     mockSpawn.mockImplementation(() => child);
 
