@@ -881,6 +881,9 @@ export interface HashInputs {
   external: Array<string>
 }
 
+/** Whether the cache refuses `outputs` because one is outside the workspace. */
+export declare function hasOutputOutsideWorkspace(workspaceRoot: string, outputs: Array<string>): boolean
+
 /**
  * Initialize telemetry using a DB connection.
  * Gets/creates the session ID from the DB, stores the connection
