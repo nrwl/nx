@@ -239,9 +239,13 @@ export function liveTreeOperation(
   return held;
 }
 
-export function treeBusyMessage(held: MigrateTreeOperation): string {
+export function treeBusyMessage(
+  held: MigrateTreeOperation,
+  stepName?: string
+): string {
   return `The working tree is held by process ${held.pid} for ${treeOperationLabel(
-    held
+    held,
+    stepName
   )}; run the reconcile again once it finishes.`;
 }
 

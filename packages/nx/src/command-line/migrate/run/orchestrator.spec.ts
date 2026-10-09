@@ -9219,7 +9219,7 @@ describe('orchestrator', () => {
           status: 'running',
           action: 'held',
           instructions: [
-            `held by process ${process.pid} for the commit of step 'step-1'`,
+            `held by process ${process.pid} for the commit of @nx/js:gen`,
           ],
           absent: [`pid ${DEAD_PID}`],
           next: 'npx nx migrate --run-id=run-1',
@@ -9274,7 +9274,7 @@ describe('orchestrator', () => {
           treeCleanAtDispense: true,
         },
         { kind: 'reset' },
-        `held by process ${process.pid} for the reset of step 'step-1'`,
+        `held by process ${process.pid} for the reset of @nx/js:gen`,
       ],
       [
         'pending',
@@ -9387,7 +9387,7 @@ describe('orchestrator', () => {
         expect(block.action).toBe('held');
         expect(
           block.payload.instructions.includes(
-            "If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end the commit of step 'step-2', and resume the run afterwards."
+            'If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end the commit of @nx/js:other, and resume the run afterwards.'
           )
         ).toBe(wayOut);
       }
@@ -9413,7 +9413,7 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('held');
       expect(block.payload.instructions).toContain(
-        `held by process ${process.pid} for the commit of step 'step-2'`
+        `held by process ${process.pid} for the commit of @nx/js:other`
       );
     });
 
