@@ -1181,7 +1181,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     async function atomizedTargets() {
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci', waitForWebServer: false },
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
         context
       );
       return results[0][1].projects['.'].targets;
@@ -1209,6 +1209,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       );
       expect(targets['e2e-ci--tests/feature.spec.ts'].dependsOn).toEqual([
         { projects: ['app1'], target: 'serve', inputs: false },
+        { target: 'e2e--wait-for-webserver' },
       ]);
       // Files without the directive keep today's targets exactly.
       expect(targets['e2e-ci--tests/other.spec.ts'].inputs).toEqual(
@@ -1216,6 +1217,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       );
       expect(targets['e2e-ci--tests/other.spec.ts'].dependsOn).toEqual([
         { projects: ['app1'], target: 'serve' },
+        { target: 'e2e--wait-for-webserver' },
       ]);
     });
 
