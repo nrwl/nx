@@ -2,14 +2,12 @@ use std::fs::{
     create_dir_all, metadata, read_dir, read_to_string, remove_file, symlink_metadata, write,
 };
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
 use tracing::{debug, trace};
 
 use fs_extra::remove_items;
 use rayon::prelude::*;
 use regex::Regex;
-use rusqlite::{params, types::Value};
 
 use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
 use crate::native::cache::file_ops::{copy_and_list, copy_outputs_into_workspace};
@@ -18,6 +16,7 @@ use crate::native::utils::Normalize;
 use crate::native::workspace::outputs_tracking::OutputFile;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
+use turso_core::Value;
 
 /// What `put` copied into the cache.
 #[napi(object)]
@@ -255,11 +254,7 @@ impl NxCache {
             "
         };
 
-        self.db
-            .lock()
-            .unwrap()
-            .execute(query, [])
-            .map_err(anyhow::Error::from)?;
+        self.db.lock().unwrap().execute(query, &[])?;
         Ok(())
     }
 
@@ -269,7 +264,7 @@ impl NxCache {
         trace!("GET {}", &hash);
 
         // Direct primary-key lookup — cheaper per call than routing through
-        // fetch_cache_rows() + rarray for a single hash.
+        // fetch_cache_rows() for a single hash.
         let row_data: Option<(i16, i64)> = self
             .db
             .lock()
@@ -279,9 +274,12 @@ impl NxCache {
                     SET accessed_at = CURRENT_TIMESTAMP
                     WHERE hash = ?1 AND is_cache_entry
                     RETURNING code, size",
-                params![hash],
-                |row| Ok((row.get::<_, i16>(0)?, row.get::<_, i64>(1)?)),
+                &[Value::from_text(hash.clone())],
             )
+            .and_then(|row| {
+                row.map(|r| Ok((r.get::<i64>(0)? as i16, r.get::<i64>(1)?)))
+                    .transpose()
+            })
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
 
         // Terminal output file read happens AFTER the lock is released.
@@ -335,45 +333,35 @@ impl NxCache {
     /// Runs one `UPDATE ... RETURNING` across every requested hash and
     /// returns the matching rows keyed by hash.
     ///
-    /// Uses `rarray` to bind the whole Vec as a single parameter so the SQL
-    /// text is constant regardless of batch size — the prepared-statement
-    /// cache hits forever and we sidestep SQLite's per-statement parameter
-    /// cap.
+    /// Builds an `IN (?,?,?,...)` clause sized to the batch — turso has no
+    /// rarray vtable, so the SQL text varies per batch size.
     fn fetch_cache_rows(
         &self,
         hashes: &[String],
     ) -> anyhow::Result<std::collections::HashMap<String, (i16, i64)>> {
-        let values = Rc::new(
-            hashes
-                .iter()
-                .map(|h| Value::from(h.clone()))
-                .collect::<Vec<Value>>(),
+        let placeholders = (1..=hashes.len())
+            .map(|i| format!("?{}", i))
+            .collect::<Vec<_>>()
+            .join(",");
+        let sql = format!(
+            "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP
+             WHERE hash IN ({}) AND is_cache_entry
+             RETURNING hash, code, size",
+            placeholders
         );
+        let params: Vec<Value> = hashes.iter().map(|h| Value::from_text(h.clone())).collect();
 
-        // Route through NxDbConnection::query_map so the whole prepare +
-        // query is wrapped in the busy-retry logic, matching the
-        // single-task cache.get() path. Otherwise a brief SQLite write
-        // lock from another Nx process would surface DatabaseBusy and
-        // fail the whole run.
-        let rows = self
-            .db
-            .lock()
-            .unwrap()
-            .query_map(
-                "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP
-                 WHERE hash IN rarray(?1) AND is_cache_entry
-                 RETURNING hash, code, size",
-                [values],
-                |row| {
-                    let hash: String = row.get(0)?;
-                    let code: i16 = row.get(1)?;
-                    let size: i64 = row.get(2)?;
-                    Ok((hash, (code, size)))
-                },
-            )?
+        let rows = self.db.lock().unwrap().query_rows(&sql, &params)?;
+        let map = rows
             .into_iter()
+            .filter_map(|row| {
+                let hash = row.get::<String>(0).ok()?;
+                let code = row.get::<i64>(1).ok()? as i16;
+                let size = row.get::<i64>(2).ok()?;
+                Some((hash, (code, size)))
+            })
             .collect();
-        Ok(rows)
+        Ok(map)
     }
 
     /// A cache row can outlive its artifact directory. Serving it as a hit
@@ -515,12 +503,12 @@ impl NxCache {
         trace!("RECORD_TERMINAL_OUTPUTS {}", records.len());
 
         {
-            let mut db = self.db.lock().unwrap();
-            db.transaction(|conn| {
+            let db = self.db.lock().unwrap();
+            db.transaction(|db| {
                 for record in records.iter() {
                     // `code` is meaningless for a row that can't be replayed;
                     // the reads all filter it out before it could be read.
-                    conn.execute(
+                    db.execute(
                         // `size` is refreshed only for a row that is still
                         // output-only: a task rerun with a longer log would
                         // otherwise keep its first size forever and undercount
@@ -531,7 +519,10 @@ impl NxCache {
                          ON CONFLICT(hash) DO UPDATE SET
                              accessed_at = CURRENT_TIMESTAMP,
                              size = CASE WHEN NOT is_cache_entry THEN excluded.size ELSE size END",
-                        params![record.hash, record.size],
+                        &[
+                            Value::from_text(record.hash.clone()),
+                            Value::from_i64(record.size),
+                        ],
                     )?;
                 }
                 Ok(())
@@ -562,7 +553,11 @@ impl NxCache {
         self.db.lock().unwrap().execute(
             "INSERT INTO cache_outputs (hash, code, size, is_cache_entry) VALUES (?1, ?2, ?3, TRUE)
              ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, is_cache_entry = TRUE, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
-            params![hash, code, size],
+            &[
+                Value::from_text(hash.clone()),
+                Value::from_i64(code as i64),
+                Value::from_i64(size),
+            ],
         )?;
         if self.max_cache_size != 0 {
             self.ensure_cache_size_within_limit()?
@@ -572,23 +567,16 @@ impl NxCache {
 
     #[napi]
     pub fn get_cache_size(&self) -> anyhow::Result<i64> {
-        self.db
+        let row = self
+            .db
             .lock()
             .unwrap()
-            .query_row("SELECT SUM(size) FROM cache_outputs", [], |row| {
-                row.get::<_, Option<i64>>(0)
-                    // If there are no cache entries, the result is
-                    // a single row with a NULL value. This would look like:
-                    // Ok(None). We need to convert this to Ok(0).
-                    .transpose()
-                    .unwrap_or(Ok(0))
-            })
-            // The query_row returns an Result<Option<T>> to account for
-            // a query that returned no rows. This isn't possible when using
-            // SUM, so we can safely unwrap the Option, but need to transpose
-            // to access it. The result represents a db error or mapping error.
-            .transpose()
-            .unwrap_or(Ok(0))
+            .query_row("SELECT SUM(size) FROM cache_outputs", &[])?;
+        // SUM returns NULL when there are no rows
+        match row {
+            Some(r) => r.get::<i64>(0).or(Ok(0)),
+            None => Ok(0),
+        }
     }
 
     fn ensure_cache_size_within_limit(&self) -> anyhow::Result<()> {
@@ -604,19 +592,21 @@ impl NxCache {
         if user_specified_max_cache_size < full_cache_size {
             let mut cache_size = full_cache_size;
             let db = self.db.lock().unwrap();
-            let mut stmt = db.prepare(
-                "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
-            )?;
             'outer: while cache_size > target_cache_size {
-                let rows = stmt.query_map([], |r| {
-                    let hash: String = r.get(0)?;
-                    let size: i64 = r.get(1)?;
-                    Ok((hash, size))
-                })?;
-                for row in rows {
-                    if let Ok((hash, size)) = row {
+                let rows = db.query_rows(
+                    "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
+                    &[],
+                )?;
+                if rows.is_empty() {
+                    break;
+                }
+                for row in &rows {
+                    if let (Ok(hash), Ok(size)) = (row.get::<String>(0), row.get::<i64>(1)) {
                         cache_size -= size;
-                        db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
+                        db.execute(
+                            "DELETE FROM cache_outputs WHERE hash = ?1",
+                            &[Value::from_text(hash.clone())],
+                        )?;
                         // Both paths, matching remove_old_cache_records. Dropping
                         // the row without the terminal output file would strand
                         // that file with nothing left to point the GC at it.
@@ -687,24 +677,22 @@ impl NxCache {
 
     #[napi]
     pub fn remove_old_cache_records(&self) -> anyhow::Result<()> {
-        let outdated_cache = self
-            .db
-            .lock()
-            .unwrap()
-            .prepare(
-                "DELETE FROM cache_outputs WHERE accessed_at < datetime('now', '-7 days') RETURNING hash",
-            )?
-            .query_map(params![], |row| {
-                let hash: String = row.get(0)?;
+        let rows = self.db.lock().unwrap().query_rows(
+            "DELETE FROM cache_outputs WHERE accessed_at < datetime('now', '-7 days') RETURNING hash",
+            &[],
+        )?;
 
-                Ok(vec![
+        let outdated_cache: Vec<_> = rows
+            .iter()
+            .filter_map(|row| {
+                let hash = row.get::<String>(0).ok()?;
+                Some(vec![
                     self.cache_path.join(&hash),
                     self.get_task_outputs_path_internal(&hash),
                 ])
-            })?
-            .filter_map(anyhow::Result::ok)
+            })
             .flatten()
-            .collect::<Vec<_>>();
+            .collect();
 
         remove_items(&outdated_cache)?;
 
@@ -723,8 +711,8 @@ impl NxCache {
     /// the lookup has already reported the miss.
     fn demote_stale_cache_records(&self, hashes: &[String]) {
         trace!("Demoting {} cache records without artifacts", hashes.len());
-        let mut db = self.db.lock().unwrap();
-        let outcome = db.transaction_immediate(|conn| {
+        let db = self.db.lock().unwrap();
+        let outcome = db.transaction(|conn| {
             for hash in hashes {
                 if self.cache_path.join(hash).is_dir() {
                     continue;
@@ -735,7 +723,10 @@ impl NxCache {
                 conn.execute(
                     "UPDATE cache_outputs SET is_cache_entry = FALSE, size = ?2
                      WHERE hash = ?1 AND is_cache_entry",
-                    params![hash, terminal_output_size],
+                    &[
+                        Value::from_text(hash.clone()),
+                        Value::from_i64(terminal_output_size),
+                    ],
                 )?;
             }
             Ok(())
@@ -758,12 +749,10 @@ impl NxCache {
                 // Only real cache entries own a `<hash>` directory, so only
                 // those can be out of sync with the filesystem.
                 "SELECT EXISTS (SELECT 1 FROM cache_outputs WHERE is_cache_entry)",
-                [],
-                |row| {
-                    let exists: bool = row.get(0)?;
-                    Ok(exists)
-                },
+                &[],
             )?
+            .and_then(|r| r.get::<i64>(0).ok())
+            .map(|v| v == 1)
             .unwrap_or(false);
 
         if !cache_records_exist {
@@ -1048,7 +1037,7 @@ mod test {
             .unwrap()
             .execute(
                 "INSERT OR IGNORE INTO task_details (hash, project, target) VALUES (?1, 'app', 'build')",
-                params![hash],
+                &[Value::from_text(hash.to_string())],
             )
             .unwrap();
     }
@@ -1078,10 +1067,10 @@ mod test {
             .unwrap()
             .query_row(
                 "SELECT is_cache_entry, size FROM cache_outputs WHERE hash = ?1",
-                params![hash],
-                |row| Ok((row.get(0)?, row.get(1)?)),
+                &[Value::from_text(hash.to_string())],
             )
             .unwrap()
+            .map(|row| (row.get::<i64>(0).unwrap() != 0, row.get::<i64>(1).unwrap()))
     }
 
     const LOG_SIZE: i64 = "log".len() as i64;

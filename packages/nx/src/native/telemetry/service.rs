@@ -490,16 +490,16 @@ pub(crate) fn persist_session_to_db(
     conn: &mut crate::native::db::connection::NxDbConnection,
     session_id: &str,
 ) {
-    let sid = session_id.to_string();
-    let _ = conn.transaction(move |tx| {
-        tx.execute(
+    use turso_core::Value;
+    let _ = conn.transaction(|conn| {
+        conn.execute(
             "INSERT OR REPLACE INTO metadata (key, value) VALUES ('SESSION_ID', ?1)",
-            [&sid],
+            &[Value::from_text(session_id.to_string())],
         )?;
-        tx.execute(
+        conn.execute(
             "INSERT OR REPLACE INTO metadata (key, value) \
              VALUES ('SESSION_LAST_ACTIVITY', datetime('now'))",
-            [],
+            &[],
         )?;
         Ok(())
     });
