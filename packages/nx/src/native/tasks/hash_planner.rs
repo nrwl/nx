@@ -48,6 +48,10 @@ impl AlwaysIds {
         }
     }
 
+    fn is_collecting(&self) -> bool {
+        self.0.is_some()
+    }
+
     fn contains(&self, id: u32) -> bool {
         self.0.as_ref().is_some_and(|set| set.contains(id))
     }
@@ -505,7 +509,8 @@ impl HashPlanner {
     }
 
     /// `configurations` is this run's Ultracache configurations; a task with an
-    /// eligible entry hashes its observed reads instead of its declared filesets.
+    /// eligible entry hashes its observed reads instead of its declared
+    /// filesets, except `always` ones.
     /// `options` carries the task ids decided in JS, where executors and
     /// target configuration are resolved.
     #[napi(ts_return_type = "Record<string, string[]>")]
@@ -799,7 +804,16 @@ impl HashPlanner {
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
-        always.extend(self.gather_always_self_inputs(project_name, &inputs.self_inputs)?);
+        // With a recording, the task's own TsConfiguration counts only if the
+        // root tsconfig was read, `always` inputs or not.
+        always.extend(
+            self.gather_always_self_inputs(project_name, &inputs.self_inputs)?
+                .into_iter()
+                .filter(|id| {
+                    context.is_none()
+                        || !matches!(&*pool.get(*id), HashInstruction::TsConfiguration(_))
+                }),
+        );
         // With a configuration, reads of other tasks' outputs are observed reads.
         if context.is_none() {
             ids.extend(
@@ -837,35 +851,12 @@ impl HashPlanner {
         project_name: &str,
         self_inputs: &[Input],
     ) -> anyhow::Result<Vec<u32>> {
-        if !self_inputs.iter().any(Input::always) {
+        let retained = retained_inputs(self_inputs);
+        if retained.is_empty() {
             return Ok(vec![]);
         }
-        // Natively a negation trims every positive of its store, so it joins
-        // a store with an `always` positive. Alone it would select the rest.
-        let always_stores: Vec<FileSetStore> = self_inputs
-            .iter()
-            .filter_map(|input| match input {
-                Input::FileSet {
-                    fileset,
-                    include_ignored,
-                    always: true,
-                    ..
-                } if !fileset.starts_with('!') => Some(FileSetStore::of(fileset, *include_ignored)),
-                _ => None,
-            })
-            .collect();
-        let always: Vec<Input> = self_inputs
-            .iter()
-            .filter(|input| {
-                input.always()
-                    || matches!(input, Input::FileSet { fileset, include_ignored, .. }
-                        if fileset.starts_with('!')
-                            && always_stores.contains(&FileSetStore::of(fileset, *include_ignored)))
-            })
-            .cloned()
-            .collect();
         Ok(self
-            .gather_self_inputs(project_name, &always, None)?
+            .gather_self_inputs(project_name, &retained, None)?
             .into_iter()
             .map(|instruction| self.instruction_pool.intern(instruction))
             .collect())
@@ -1119,8 +1110,24 @@ impl HashPlanner {
                 always,
             )?;
             visited.rollback_to(scope);
-            if ignored_group.iter().any(Input::always) {
+            // The group hashes as one instruction per dependency, so a part
+            // of it is kept through a traversal of its own.
+            let retained = retained_inputs(&ignored_group);
+            if retained.len() == ignored_group.len() {
                 always.extend(ids.iter().copied());
+            } else if !retained.is_empty() && always.is_collecting() {
+                let scope = visited.scope_start();
+                let retained_ids = self.gather_dependency_input(
+                    task,
+                    &retained,
+                    task_graph,
+                    project_deps,
+                    external_deps_mapped,
+                    visited,
+                    always,
+                )?;
+                visited.rollback_to(scope);
+                always.extend(retained_ids);
             }
             deps_inputs.extend(ids);
         }
@@ -1350,7 +1357,7 @@ impl HashPlanner {
     }
 
     /// With a configuration, a declared `{json}` file counts only if the task
-    /// read it: the observed reads are the file inputs now.
+    /// read it or it is `always`: the observed reads are the file inputs now.
     fn runtime_env_cwd_json_inputs(
         &self,
         project_name: &str,
@@ -1625,6 +1632,51 @@ impl FileSetStore {
             FileSetStore::Workspace
         }
     }
+}
+
+/// The inputs `always` keeps, as they hash without a recording. A negation
+/// trims its store's positives, so it goes with a marked one; a store with no
+/// positive selects every other file and goes whole once any entry is marked.
+fn retained_inputs<'a>(inputs: &[Input<'a>]) -> Vec<Input<'a>> {
+    let file_sets = || {
+        inputs.iter().filter_map(|input| match input {
+            Input::FileSet {
+                fileset,
+                include_ignored,
+                always,
+                ..
+            } => Some((
+                FileSetStore::of(fileset, *include_ignored),
+                fileset.starts_with('!'),
+                *always,
+            )),
+            _ => None,
+        })
+    };
+    let positive_stores: Vec<FileSetStore> = file_sets()
+        .filter(|(_, negation, _)| !negation)
+        .map(|(store, ..)| store)
+        .collect();
+    let stores_keeping_negations: Vec<FileSetStore> = file_sets()
+        .filter(|(store, negation, always)| {
+            *always && (!negation || !positive_stores.contains(store))
+        })
+        .map(|(store, ..)| store)
+        .collect();
+    inputs
+        .iter()
+        .filter(|input| match input {
+            Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            } if fileset.starts_with('!') => {
+                stores_keeping_negations.contains(&FileSetStore::of(fileset, *include_ignored))
+            }
+            input => input.always(),
+        })
+        .cloned()
+        .collect()
 }
 
 /// The cache-key character for a fileset: `f` reads the file map, `d` reads
@@ -2925,6 +2977,15 @@ mod always_tests {
         })
     }
 
+    fn ignored_fileset(fileset: &str, dependencies: bool, always: bool) -> JsInputs {
+        Either9::C(FileSetInput {
+            fileset: fileset.into(),
+            dependencies: Some(dependencies),
+            include_ignored: Some(true),
+            always: Some(always),
+        })
+    }
+
     /// `targets` maps a task id to its inputs; every project lives at
     /// `libs/<name>`.
     fn planner(targets: Vec<(&str, Vec<JsInputs>)>, edges: &[(&str, &[&str])]) -> HashPlanner {
@@ -3011,8 +3072,11 @@ mod always_tests {
 
     /// `e2e:e2e`'s plan, hashed from a recording that read only its spec.
     fn recorded_e2e_plan(planner: &HashPlanner) -> Vec<HashInstruction> {
-        let (_dir, configurations) =
-            ultracache_configurations(&[("e2e:e2e", &["libs/e2e/src/app.spec.ts"][..])]);
+        recorded_e2e_plan_reading(planner, &["libs/e2e/src/app.spec.ts"])
+    }
+
+    fn recorded_e2e_plan_reading(planner: &HashPlanner, reads: &[&str]) -> Vec<HashInstruction> {
+        let (_dir, configurations) = ultracache_configurations(&[("e2e:e2e", reads)]);
         let plans = planner
             .get_plans_internal(
                 vec!["e2e:e2e"],
@@ -3049,6 +3113,8 @@ mod always_tests {
                         fileset("{projectRoot}/**/*", always),
                         named("default", true, always),
                         selected(&["feature2"], always),
+                        ignored_fileset("{projectRoot}/dist/**", false, false),
+                        ignored_fileset("!{projectRoot}/dist/**/*.map", false, always),
                     ],
                 )],
                 &[("e2e", &["feature"])],
@@ -3134,6 +3200,99 @@ mod always_tests {
                     "!libs/e2e/fixtures/large/**".into()
                 ]
             )]
+        );
+    }
+
+    #[test]
+    fn keeps_a_marked_negation_only_where_it_selects_files() {
+        let declared = |inputs: Vec<JsInputs>| -> Vec<HashInstruction> {
+            recorded_e2e_plan(&planner(vec![("e2e:e2e", inputs)], &[]))
+                .into_iter()
+                .filter(|instruction| matches!(instruction, HashInstruction::ProjectFileSet(..)))
+                .collect()
+        };
+        // Next to a positive, a negation only trims it.
+        assert_eq!(
+            declared(vec![
+                fileset("{projectRoot}/**/*", false),
+                fileset("!{projectRoot}/**/*.map", true),
+            ]),
+            vec![]
+        );
+        // Without one, its store selects every other file.
+        assert_eq!(
+            declared(vec![
+                fileset("!{projectRoot}/**/*.map", true),
+                fileset("!{projectRoot}/tmp/**", false),
+            ]),
+            vec![HashInstruction::ProjectFileSet(
+                "e2e".into(),
+                vec!["!libs/e2e/**/*.map".into(), "!libs/e2e/tmp/**".into()]
+            )]
+        );
+    }
+
+    #[test]
+    fn keeps_only_the_marked_part_of_a_dependency_include_ignored_group() {
+        let retained = |fixtures: bool, exclusion: bool| -> Vec<HashInstruction> {
+            recorded_e2e_plan(&planner(
+                vec![(
+                    "e2e:e2e",
+                    vec![
+                        ignored_fileset("{projectRoot}/fixtures/**", true, fixtures),
+                        ignored_fileset("{projectRoot}/generated/**", true, false),
+                        ignored_fileset("!{projectRoot}/fixtures/large/**", true, exclusion),
+                    ],
+                )],
+                &[("e2e", &["app"])],
+            ))
+            .into_iter()
+            .filter(|instruction| {
+                matches!(instruction, HashInstruction::IgnoredFileSet(globs)
+                    if globs.iter().any(|glob| glob.contains("libs/app/")))
+            })
+            .collect()
+        };
+        assert_eq!(
+            retained(true, false),
+            vec![HashInstruction::IgnoredFileSet(vec![
+                "libs/app/fixtures/**".into(),
+                "!libs/app/fixtures/large/**".into()
+            ])]
+        );
+        assert_eq!(retained(false, true), vec![]);
+    }
+
+    #[test]
+    fn the_recording_decides_the_tasks_own_tsconfig() {
+        let planner = planner(
+            vec![(
+                "e2e:e2e",
+                vec![
+                    fileset("{projectRoot}/fixtures/**", true),
+                    selected(&["feature"], true),
+                ],
+            )],
+            &[],
+        );
+        let tsconfigs = |reads: &[&str]| -> Vec<HashInstruction> {
+            let mut tsconfigs: Vec<HashInstruction> = recorded_e2e_plan_reading(&planner, reads)
+                .into_iter()
+                .filter(|instruction| matches!(instruction, HashInstruction::TsConfiguration(_)))
+                .collect();
+            tsconfigs.sort();
+            tsconfigs
+        };
+        assert_eq!(
+            tsconfigs(&["libs/e2e/src/app.spec.ts"]),
+            vec![HashInstruction::TsConfiguration("feature".into())]
+        );
+        assert_eq!(
+            tsconfigs(&["libs/e2e/src/app.spec.ts", "tsconfig.base.json"]),
+            vec![
+                HashInstruction::TsConfiguration("e2e".into()),
+                HashInstruction::TsConfiguration("feature".into())
+            ]
         );
     }
 

@@ -98,7 +98,8 @@ export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   /**
    * `configurations` is this run's Ultracache configurations; a task with an
-   * eligible entry hashes its observed reads instead of its declared filesets.
+   * eligible entry hashes its observed reads instead of its declared
+   * filesets, except `always` ones.
    * `options` carries the task ids decided in JS, where executors and
    * target configuration are resolved.
    */
