@@ -31,7 +31,9 @@ The next step in the process involves using the `migrate` command to apply the m
 nx migrate --run-migrations
 ```
 
-All changes to your source code will be unstaged and ready for you to review and commit yourself.
+Without the agentic flow, Nx leaves all changes to your source code unstaged by default, so you can review and commit them yourself.
+With it, Nx commits each migration separately by default.
+For more information, see [using an AI agent to apply migrations](#using-an-ai-agent-to-apply-migrations).
 
 ### Step 3: Cleaning up
 

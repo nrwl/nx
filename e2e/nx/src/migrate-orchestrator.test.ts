@@ -2026,7 +2026,7 @@ process.exit(status ?? 1);
 
       expect(exitCode).toBe(0);
       expect(output).toContain(
-        'Skipping the agentic flow: it needs shell-safe migration ids'
+        'Skipping the agentic flow: it needs each migration id to be shell-safe'
       );
       expect(output).toContain(`- ${PKG}:rename files`);
       expect(readFile('gen-file')).toEqual('gen-content');

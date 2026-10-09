@@ -98,8 +98,9 @@ import {
   type MigrateStep,
   type MigrateStepPromptOutcome,
   type MigrateTreeOperation,
+  type MigrationIdProblem,
   TERMINAL_STEP_STATUSES,
-  unsafeMigrationIds,
+  migrationIdProblems,
 } from './run-state';
 import {
   hasAnyLiveRunActivity,
@@ -273,6 +274,13 @@ export interface RunOrchestratorReconcileInput {
 const INIT_CONTINUE_HINT =
   're-run the command, or re-run it with --agentic=false to use the standard migrate flow.';
 
+const ID_PROBLEM_REFUSALS: Record<MigrationIdProblem, string> = {
+  'not-shell-safe':
+    'contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids.',
+  duplicate:
+    'is listed more than once in the plan. Orchestrated runs require each migration id once.',
+};
+
 function continueRunHint(runId: string): string {
   return `re-run the command to continue run '${runId}'.`;
 }
@@ -385,13 +393,14 @@ export async function runOrchestratorInit(
     });
   }
 
-  // Dispensed commands interpolate migration ids verbatim, so every init
-  // validates the incoming plan's ids. Before the delete below: a run must
-  // not be thrown away for a plan that cannot start.
-  const [unsafeId] = unsafeMigrationIds(sorted);
-  if (unsafeId !== undefined) {
+  // Dispensed commands interpolate migration ids verbatim and a worker finds
+  // its step by id, so every init validates the incoming plan's ids. Before
+  // the delete below: a run must not be thrown away for a plan that cannot
+  // start.
+  const [idProblem] = migrationIdProblems(sorted);
+  if (idProblem !== undefined) {
     throw new Error(
-      `The migration id '${unsafeId}' contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids. To run the plan without orchestration, re-run with --agentic=false.`
+      `The migration id '${idProblem.id}' ${ID_PROBLEM_REFUSALS[idProblem.problem]} To run the plan without orchestration, re-run with --agentic=false.`
     );
   }
 

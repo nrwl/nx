@@ -60,11 +60,10 @@ export async function applyAgenticHandoffGitignoreFallback({
   root: string;
   /**
    * Apply the entry even when the hoisted migration is in the plan. The
-   * classic loop can defer to that migration because its run scratch appears
-   * only after migration 1 has run; the orchestrator creates its run dir at
-   * init, before any migration, so it needs the entry immediately. A planned
-   * migration also means the missing entry is not a conscious removal, so the
-   * v23 cutoff does not apply.
+   * orchestrator creates its run dir at init, before any migration runs, so
+   * it can't defer to that migration. A planned migration also means the
+   * missing entry is not a conscious removal, so the v23 cutoff does not
+   * apply.
    */
   applyWhenPlanned?: boolean;
   /**
@@ -79,8 +78,8 @@ export async function applyAgenticHandoffGitignoreFallback({
 }): Promise<void> {
   if (migrations.some(isHandoffGitignoreMigration)) {
     if (!applyWhenPlanned) {
-      // The queue runs it itself: hoisted to the front by the sort comparator
-      // in a full run, or as the single requested migration in a worker run.
+      // The single-migration worker run is that migration, and it adds the
+      // entry itself.
       return;
     }
   } else if (major(installedNxVersion) >= 23) {

@@ -26,9 +26,9 @@ import {
 } from './run/orchestrator';
 import {
   type MigrateRunState,
+  migrationIdProblems,
   runDir,
   TERMINAL_STEP_STATUSES,
-  unsafeMigrationIds,
   writeRunState,
 } from './run/run-state';
 import { latestRound, stepLabel } from './run/state-machine';
@@ -47,6 +47,7 @@ mockCjsModule(import.meta.url, './run', {
   deleteRunForStartFresh: (...args: unknown[]) =>
     mockDeleteRunForStartFresh(...args),
   latestRound,
+  migrationIdProblems,
   pmInstallCommand,
   renderContinueCommand,
   renderExistingRunCommands,
@@ -54,7 +55,6 @@ mockCjsModule(import.meta.url, './run', {
   runDir,
   stepLabel,
   TERMINAL_STEP_STATUSES,
-  unsafeMigrationIds,
 });
 const mockRunMasterSession = vi.fn();
 mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
@@ -606,24 +606,49 @@ describe('migrate() orchestrated init dispatch', () => {
       );
     });
 
-    it.each<[string, () => void, Record<string, unknown>, string[], string]>([
+    const listTwice = () =>
+      writeFileSync(
+        join(root, 'migrations.json'),
+        JSON.stringify({
+          migrations: ['a', 'b', 'a'].map((name) => ({
+            package: '@nx/js',
+            name,
+            version: '1.0.0',
+            implementation: './gen.js',
+          })),
+        })
+      );
+
+    it.each<
+      [string, () => void, Record<string, unknown>, string[], string, string]
+    >([
       [
         'an outer agent drives the run',
         () => {},
         {},
         [],
-        'Running the migrations without an orchestrated run: orchestrated runs need shell-safe migration ids (letters, digits and @/:._-), and these are not:',
+        'Running the migrations without an orchestrated run: orchestrated runs need each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
+        '- @nx/js:rename files (not shell-safe)',
       ],
       [
         'the user enabled the agentic flow',
         asUser,
         { agentic: 'claude-code' },
         ['--agentic=claude-code'],
-        'Skipping the agentic flow: it needs shell-safe migration ids (letters, digits and @/:._-), and these are not:',
+        'Skipping the agentic flow: it needs each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
+        '- @nx/js:rename files (not shell-safe)',
+      ],
+      [
+        'an outer agent drives a run whose plan lists an id twice',
+        listTwice,
+        {},
+        [],
+        'Running the migrations without an orchestrated run: orchestrated runs need each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
+        '- @nx/js:a (listed more than once)',
       ],
     ])(
       'runs it on the classic loop, naming the id, when %s',
-      async (_label, arrange, overrides, flags, title) => {
+      async (_label, arrange, overrides, flags, title, idLine) => {
         arrange();
 
         // The classic loop runs real migration execution, which fails on this
@@ -637,7 +662,7 @@ describe('migrate() orchestrated init dispatch', () => {
         expect(mockRunMasterSession).not.toHaveBeenCalled();
         expect(output.warn).toHaveBeenCalledWith({
           title,
-          bodyLines: ['- @nx/js:rename files', expect.any(String)],
+          bodyLines: [idLine, expect.any(String)],
         });
         expect(output.log).toHaveBeenCalledWith(
           expect.objectContaining({

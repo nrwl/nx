@@ -424,7 +424,7 @@
       "properties": {
         "createCommits": {
           "type": "boolean",
-          "description": "Whether to automatically create a git commit after each migration runs. Equivalent to the `--create-commits` flag. Defaults to `false`."
+          "description": "Whether to automatically create a git commit after each migration runs. Equivalent to the `--create-commits` flag. Defaults to `true` when the agentic flow runs the migrations in a Git repository, and `false` otherwise."
         },
         "commitPrefix": {
           "type": "string",

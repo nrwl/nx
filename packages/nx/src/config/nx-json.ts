@@ -775,7 +775,9 @@ export interface NxSyncConfiguration {
 export interface NxMigrateConfiguration {
   /**
    * Whether to automatically create a git commit after each migration runs.
-   * Equivalent to the `--create-commits` flag. Defaults to `false`.
+   * Equivalent to the `--create-commits` flag. Defaults to `true` when the
+   * agentic flow runs the migrations in a Git repository, and `false`
+   * otherwise.
    */
   createCommits?: boolean;
 
