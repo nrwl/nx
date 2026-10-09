@@ -840,9 +840,28 @@ impl HashPlanner {
         if !self_inputs.iter().any(Input::always) {
             return Ok(vec![]);
         }
+        // Natively a negation trims every positive of its store, so it joins
+        // a store with an `always` positive. Alone it would select the rest.
+        let always_stores: Vec<FileSetStore> = self_inputs
+            .iter()
+            .filter_map(|input| match input {
+                Input::FileSet {
+                    fileset,
+                    include_ignored,
+                    always: true,
+                    ..
+                } if !fileset.starts_with('!') => Some(FileSetStore::of(fileset, *include_ignored)),
+                _ => None,
+            })
+            .collect();
         let always: Vec<Input> = self_inputs
             .iter()
-            .filter(|input| input.always())
+            .filter(|input| {
+                input.always()
+                    || matches!(input, Input::FileSet { fileset, include_ignored, .. }
+                        if fileset.starts_with('!')
+                            && always_stores.contains(&FileSetStore::of(fileset, *include_ignored)))
+            })
             .cloned()
             .collect();
         Ok(self
@@ -2990,6 +3009,24 @@ mod always_tests {
         hashed_projects(&planner, &["e2e:e2e"], with_configurations).unwrap()["e2e:e2e"].clone()
     }
 
+    /// `e2e:e2e`'s plan, hashed from a recording that read only its spec.
+    fn recorded_e2e_plan(planner: &HashPlanner) -> Vec<HashInstruction> {
+        let (_dir, configurations) =
+            ultracache_configurations(&[("e2e:e2e", &["libs/e2e/src/app.spec.ts"][..])]);
+        let plans = planner
+            .get_plans_internal(
+                vec!["e2e:e2e"],
+                task_graph(&[("e2e:e2e", &[])], &[]),
+                Some(&configurations),
+                &[],
+            )
+            .unwrap();
+        plans.plans["e2e:e2e"]
+            .iter()
+            .map(|id| plans.pool.get(*id).value().clone())
+            .collect()
+    }
+
     #[test]
     fn a_recording_replaces_declared_project_selections_unless_always() {
         let plan = |always| {
@@ -3064,6 +3101,40 @@ mod always_tests {
         };
         assert_eq!(plan(false), Vec::<String>::new());
         assert_eq!(plan(true), vec!["e2e".to_string()]);
+    }
+
+    #[test]
+    fn keeps_the_negations_that_trim_an_always_fileset() {
+        let planner = planner(
+            vec![(
+                "e2e:e2e",
+                vec![
+                    fileset("{projectRoot}/**/*", false),
+                    fileset("{projectRoot}/fixtures/**", true),
+                    fileset("!{projectRoot}/fixtures/large/**", false),
+                    fileset("!{workspaceRoot}/docs/**", false),
+                ],
+            )],
+            &[],
+        );
+        let declared: Vec<HashInstruction> = recorded_e2e_plan(&planner)
+            .into_iter()
+            .filter(|instruction| {
+                matches!(instruction, HashInstruction::ProjectFileSet(..))
+                    || matches!(instruction, HashInstruction::WorkspaceFileSet(globs)
+                        if globs.iter().any(|glob| glob.contains("docs")))
+            })
+            .collect();
+        assert_eq!(
+            declared,
+            vec![HashInstruction::ProjectFileSet(
+                "e2e".into(),
+                vec![
+                    "libs/e2e/fixtures/**".into(),
+                    "!libs/e2e/fixtures/large/**".into()
+                ]
+            )]
+        );
     }
 
     /// The subtree memo is shared across tasks and keyed without `always`.
