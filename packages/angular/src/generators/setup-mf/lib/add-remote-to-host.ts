@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { insertImport } from '@nx/js';
 import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
@@ -56,7 +57,43 @@ export function addRemoteToHost(tree: Tree, options: AddRemoteOptions) {
     }
 
     addLazyLoadedRouteToHostAppModule(tree, options, hostFederationType);
+    addRemoteToHostServeStatic(tree, options.host, options.appName);
   }
+}
+
+/**
+ * The host's build resolves each remote to `localhost:<the remote's serve port>`,
+ * which is the port the remote's own `serve-static` binds. Serving the host
+ * statically therefore only works while its remotes are served too.
+ */
+function addRemoteToHostServeStatic(
+  tree: Tree,
+  host: string,
+  remote: string
+): void {
+  const hostProject = readProjectConfiguration(tree, host);
+  const serveStatic = hostProject.targets?.['serve-static'];
+  if (!serveStatic) {
+    return;
+  }
+
+  serveStatic.dependsOn ??= [];
+  const remoteServers = serveStatic.dependsOn.find(
+    (dependency): dependency is { target: string; projects: string[] } =>
+      typeof dependency !== 'string' &&
+      dependency.target === 'serve-static' &&
+      Array.isArray(dependency.projects)
+  );
+
+  if (!remoteServers) {
+    serveStatic.dependsOn.push({ target: 'serve-static', projects: [remote] });
+  } else if (!remoteServers.projects.includes(remote)) {
+    remoteServers.projects.push(remote);
+  } else {
+    return;
+  }
+
+  updateProjectConfiguration(tree, host, hostProject);
 }
 
 function getDynamicManifestFile(
