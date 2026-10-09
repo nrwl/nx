@@ -20,7 +20,7 @@ describe('parseNxDirectives', () => {
   it('skips blank lines, a shebang and other comments before a directive', () => {
     expect(
       parseNxDirectives(
-        '#!/usr/bin/env node\n\n/// <reference types="x" />\n// Copyright\n\n// @nx-a: one\n'
+        '#!/usr/bin/env node\n\n/// <reference types="x" />\n/**\n * Copyright\n */\n\n// @nx-a: one\n'
       )
     ).toEqual(new Map([['a', ['one']]]));
   });

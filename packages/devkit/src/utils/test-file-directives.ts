@@ -4,11 +4,14 @@ import type { TargetConfiguration } from 'nx/src/devkit-exports';
 import {
   parseNxDependsOnDirective,
   scopeTestTargetToProjects,
+  withoutServerInputs,
 } from './test-file-depends-on';
+import { parseUltracacheImportsDirective } from './ultracache-directive';
 
 /**
  * `target` with the `@nx-*` directives of a workspace-relative test file
- * applied. Throws when `@nx-depends-on` lists no projects.
+ * applied. Throws when `@nx-depends-on` lists no projects or an
+ * `@nx-ultracache` value is unsupported.
  */
 export function applyTestFileDirectives(
   target: TargetConfiguration,
@@ -22,5 +25,11 @@ export function applyTestFileDirectives(
       `${file}: "@nx-depends-on:" must list the projects the test depends on, separated by commas.`
     );
   }
-  return projects ? scopeTestTargetToProjects(target, projects) : target;
+  const hashesFromImports = parseUltracacheImportsDirective(content, file);
+  const scoped = projects
+    ? scopeTestTargetToProjects(target, projects)
+    : target;
+  return hashesFromImports && scoped.dependsOn
+    ? { ...scoped, dependsOn: withoutServerInputs(scoped.dependsOn) }
+    : scoped;
 }
