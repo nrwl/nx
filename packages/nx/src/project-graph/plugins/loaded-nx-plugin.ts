@@ -107,10 +107,6 @@ export class LoadedNxPlugin {
       ];
     }
 
-    /**
-     * Wraps the plugin-provided createNodes function to provide performance
-     * measurement, error handling and `undefined` normalization of results.
-     */
     if (this.createNodes) {
       const inner = this.createNodes[1];
       this.createNodes[1] = async (...args) => {
