@@ -9,7 +9,6 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  type CreateDependencies,
   type CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultArray,
@@ -41,13 +40,6 @@ export interface RemixPluginOptions {
 }
 
 type RemixTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
 
