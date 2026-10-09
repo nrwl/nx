@@ -10,6 +10,7 @@ import {
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
+// TODO(v25): remove custom hasher support.
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
 import { getInputs, TaskHasher } from './task-hasher';
@@ -45,6 +46,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     ? new Set(getUltracacheDeferredTaskIds(ultracacheConfigurations, taskGraph))
     : null;
   const tasks = Object.values(taskGraph.tasks);
+  // TODO(v25): remove custom hasher support.
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
       const customHasher = getCustomHasher(task, projects);
@@ -132,6 +134,7 @@ export async function hashTask(
 
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
+  // TODO(v25): remove custom hasher support.
   const customHasher = getCustomHasher(task, projectsConfigurations.projects);
 
   const { value, details, inputs } = await (customHasher
@@ -199,6 +202,7 @@ export async function hashTasks(
     (task) => !task.hash
   );
 
+  // TODO(v25): remove custom hasher support.
   // Separate tasks with custom hashers from those without
   const tasksWithCustomHashers: Task[] = [];
   const tasksWithoutCustomHashers: Task[] = [];

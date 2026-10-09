@@ -46,6 +46,10 @@ jobs:
       NX_FIX_CI_EXPERIMENTAL: 'true'
       NX_FIX_CI_TRACING: 'true'
       NX_FIX_CI_STABLE_OUTPUT_SCHEMA: 'true'
+      NX_CLOUD_VERBOSE_LOGGING: 'true'
+      NX_CLOUD_AGENT_TASK_QUEUE: 'true'
+      NX_CLOUD_AUTO_TASK_PACKING: 'true'
+      NX_CLOUD_BUFFER_TASK_COMPLETIONS: 'true'
 
     steps:
       - name: Checkout

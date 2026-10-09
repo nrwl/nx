@@ -6,7 +6,6 @@ import {
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodes,
@@ -42,10 +41,6 @@ export interface RspackPluginOptions {
 }
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
-
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const rspackConfigGlob = '**/rspack.config.{js,ts,mjs,mts,cjs,cts}';
 

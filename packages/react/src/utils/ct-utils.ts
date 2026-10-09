@@ -27,7 +27,6 @@ export async function resolveCypressCTTarget(
 ): Promise<{ found: FoundTarget; bundler: 'vite' | 'webpack' }> {
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
-  // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
   if (options.buildTarget === undefined) {
     const {
       findBuildConfig,
@@ -139,7 +138,6 @@ export async function getActualBundler(
   options: { buildTarget?: string; bundler?: 'vite' | 'webpack' },
   found: FoundTarget
 ) {
-  // Specifically undefined to allow Remix workaround of passing an empty string
   const actualBundler =
     options.buildTarget !== undefined && options.bundler
       ? options.bundler

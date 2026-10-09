@@ -2,16 +2,30 @@ import {
   expandDependencyConfigSyntaxSugar,
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
+  getCustomHasher,
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
+  hashTaskOverrides,
   interpolate,
   pruneToSelectedTasks,
+  resetCustomHasherDeprecationWarnings,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
+import { getExecutorInformation } from '../command-line/run/executor-utils';
+import { output } from '../utils/output';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
+
+vi.mock('../command-line/run/executor-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../command-line/run/executor-utils')>();
+  return {
+    ...actual,
+    getExecutorInformation: vi.fn(actual.getExecutorInformation),
+  };
+});
 
 describe('utils', () => {
   function getNode(build): ProjectGraphProjectNode {
@@ -1226,5 +1240,127 @@ describe('pruneToSelectedTasks', () => {
   it('ignores ids the graph does not contain', () => {
     const pruned = pruneToSelectedTasks(graph, ['gone:build', 'lib:build']);
     expect(Object.keys(pruned.tasks)).toEqual(['lib:build']);
+  });
+});
+
+describe('task overrides hash', () => {
+  function task(id: string, overrides: Record<string, unknown>): Task {
+    const [project, target, configuration] = id.split(':');
+    return {
+      id,
+      target: { project, target, configuration },
+      overrides,
+      outputs: [],
+      projectRoot: `libs/${project}`,
+    } as any as Task;
+  }
+
+  it('should separate the same task run with different overrides', () => {
+    expect(hashTaskOverrides(task('app:build', { watch: true }))).not.toBe(
+      hashTaskOverrides(task('app:build', { watch: false }))
+    );
+  });
+
+  it('should not depend on the order the overrides were written in', () => {
+    expect(hashTaskOverrides(task('app:build', { a: 1, b: 2 }))).toBe(
+      hashTaskOverrides(task('app:build', { b: 2, a: 1 }))
+    );
+  });
+
+  it('should ignore the raw argv restatement of the overrides', () => {
+    expect(
+      hashTaskOverrides(
+        task('app:build', { watch: true, __overrides_unparsed__: ['--watch'] })
+      )
+    ).toBe(
+      hashTaskOverrides(
+        task('app:build', {
+          watch: true,
+          __overrides_unparsed__: ['--watch=true'],
+        })
+      )
+    );
+  });
+
+  it('should not depend on the task id, which the tracker stores separately', () => {
+    expect(hashTaskOverrides(task('app:build', { watch: true }))).toBe(
+      hashTaskOverrides(task('other:test:ci', { watch: true }))
+    );
+  });
+
+  it('should grow a different hash on every hop when arguments accumulate', () => {
+    const hashes = [
+      hashTaskOverrides(task('app:build', { _: [] })),
+      hashTaskOverrides(task('app:build', { _: ['hello'] })),
+      hashTaskOverrides(task('app:build', { _: ['hello', 'hello'] })),
+    ];
+
+    // Why the tracker cannot rely on the hash alone to spot this recursion.
+    expect(new Set(hashes).size).toBe(3);
+  });
+});
+
+describe('getCustomHasher', () => {
+  const hasher = vi.fn();
+  const projects: Record<string, ProjectConfiguration> = {
+    a: {
+      root: 'a',
+      targets: {
+        build: { executor: '@acme/plugin:build' },
+        test: { executor: '@acme/plugin:build' },
+        lint: { executor: '@acme/plugin:lint' },
+      },
+    },
+  };
+
+  function task(target: string): Task {
+    return {
+      id: `a:${target}`,
+      target: { project: 'a', target },
+      overrides: {},
+      outputs: [],
+      parallelism: true,
+    } as Task;
+  }
+
+  let warn: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    resetCustomHasherDeprecationWarnings();
+    warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.mocked(getExecutorInformation).mockImplementation(
+      (_nodeModule, executor) =>
+        ({
+          hasherFactory: executor === 'build' ? () => hasher : undefined,
+        }) as any
+    );
+  });
+
+  afterEach(() => {
+    warn.mockRestore();
+    vi.mocked(getExecutorInformation).mockReset();
+  });
+
+  it('warns once per executor that declares a custom hasher', () => {
+    expect(getCustomHasher(task('build'), projects)).toBe(hasher);
+    expect(getCustomHasher(task('build'), projects)).toBe(hasher);
+    expect(getCustomHasher(task('test'), projects)).toBe(hasher);
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    const [{ title, bodyLines }] = warn.mock.calls[0];
+    expect(title).toContain('@acme/plugin:build');
+    expect(title).toContain('Nx 25');
+    expect(bodyLines.join('\n')).toContain(
+      'Replace the custom hasher with target inputs'
+    );
+    expect(bodyLines.join('\n')).toContain(
+      'https://nx.dev/docs/kb/local-executors#replace-a-custom-hasher-with-inputs'
+    );
+  });
+
+  it('does not warn for executors without a custom hasher', () => {
+    expect(getCustomHasher(task('lint'), projects)).toBeNull();
+
+    expect(warn).not.toHaveBeenCalled();
   });
 });

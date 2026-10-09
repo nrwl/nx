@@ -1451,6 +1451,137 @@ describe('TaskOrchestrator', () => {
     });
   });
 
+  describe('task invocation tracking', () => {
+    const task = {
+      id: 'app:build',
+      target: { project: 'app', target: 'build' },
+      overrides: {},
+    } as Task;
+
+    function createOrchestrator(tracker: {
+      registerTask: () => unknown;
+      unregisterTask: () => void;
+    }) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.taskInvocationTracker = tracker;
+      orchestrator.registeredInvocations = new Set();
+      return orchestrator;
+    }
+
+    it('should not unregister an invocation whose registration failed', () => {
+      const tracker = {
+        registerTask: vi.fn(() => {
+          throw new Error('database is locked');
+        }),
+        unregisterTask: vi.fn(() => {
+          throw new Error('database is locked');
+        }),
+      };
+      const orchestrator = createOrchestrator(tracker);
+
+      orchestrator.detectTaskInvocationLoop(task);
+      expect(() => orchestrator.releaseTaskInvocation(task)).not.toThrow();
+      expect(tracker.unregisterTask).not.toHaveBeenCalled();
+    });
+
+    it('should not fail the task when unregistering throws', () => {
+      const tracker = {
+        registerTask: vi.fn(() => null),
+        unregisterTask: vi.fn(() => {
+          throw new Error('database is locked');
+        }),
+      };
+      const orchestrator = createOrchestrator(tracker);
+
+      orchestrator.detectTaskInvocationLoop(task);
+      expect(() => orchestrator.releaseTaskInvocation(task)).not.toThrow();
+      expect(tracker.unregisterTask).toHaveBeenCalledTimes(1);
+      expect(orchestrator.registeredInvocations.size).toBe(0);
+    });
+
+    it('should complete a task whose database is unavailable from registration through completion', async () => {
+      const unavailable = () => {
+        throw new Error('database is locked');
+      };
+      const tracker = {
+        registerTask: vi.fn(unavailable),
+        unregisterTask: vi.fn(unavailable),
+      };
+      const orchestrator = createOrchestrator(tracker);
+      orchestrator.completedTasks = new Map();
+      orchestrator.tuiEnabled = false;
+      orchestrator.tasksSchedule = { complete: vi.fn() };
+      orchestrator.options = { lifeCycle: { endTasks: vi.fn(async () => {}) } };
+
+      orchestrator.detectTaskInvocationLoop(task);
+      await expect(
+        orchestrator.completeTasks([{ task, status: 'success' }], 0)
+      ).resolves.toBeUndefined();
+
+      expect(orchestrator.completedTasks.get(task.id)).toBe('success');
+      expect(tracker.unregisterTask).not.toHaveBeenCalled();
+    });
+
+    it('should complete a task that re-invokes itself with different overrides', async () => {
+      // `app:build` running `nx run app:build --flag` terminates, so it has to
+      // get through. The fake stands in for the native tracker's ancestor rows
+      // and only rejects an exact repeat of (task id, overrides hash), which is
+      // what the orchestrator must give it. Keyed on the task id alone, the
+      // nested invocation would be rejected as a loop.
+      const registered: { taskId: string; overridesHash: string }[] = [];
+      const tracker = {
+        registerTask: vi.fn(
+          (_pid: number, taskId: string, overridesHash: string) => {
+            const repeat = registered.some(
+              (r) => r.taskId === taskId && r.overridesHash === overridesHash
+            );
+            if (repeat) {
+              return [{ pid: 1, taskId }];
+            }
+            registered.push({ taskId, overridesHash });
+            return null;
+          }
+        ),
+        unregisterTask: vi.fn(),
+      };
+      const withFlag = { ...task, overrides: { flag: true } } as Task;
+
+      const exit = vi
+        .spyOn(process, 'exit')
+        .mockImplementation((() => {}) as never);
+      try {
+        for (const invocation of [task, withFlag]) {
+          const orchestrator = createOrchestrator(tracker);
+          orchestrator.completedTasks = new Map();
+          orchestrator.tuiEnabled = false;
+          orchestrator.tasksSchedule = { complete: vi.fn() };
+          orchestrator.options = {
+            lifeCycle: { endTasks: vi.fn(async () => {}) },
+          };
+
+          orchestrator.detectTaskInvocationLoop(invocation);
+          await orchestrator.completeTasks(
+            [{ task: invocation, status: 'success' }],
+            0
+          );
+
+          expect(orchestrator.completedTasks.get(invocation.id)).toBe(
+            'success'
+          );
+        }
+
+        expect(exit).not.toHaveBeenCalled();
+      } finally {
+        exit.mockRestore();
+      }
+
+      // Two invocations of one task id, told apart by their overrides.
+      expect(
+        new Set(tracker.registerTask.mock.calls.map((call) => call[2])).size
+      ).toBe(2);
+    });
+  });
+
   describe('process listener lifecycle', () => {
     it('should remove on dispose() every process listener registered by setupSignalHandlers', async () => {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);

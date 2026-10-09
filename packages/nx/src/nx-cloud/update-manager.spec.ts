@@ -67,8 +67,9 @@ const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
 
-const [installDir, version, holdMs, mode, layout] = process.argv.slice(3);
-const lockPath = path.join(installDir, '.state', 'download.lock');
+const [installDir, stateDir, version, holdMs, mode, layout] =
+  process.argv.slice(3);
+const lockPath = path.join(stateDir, 'download.lock');
 
 function install() {
   const dirName = layout === 'unique' ? version + '-' + randomUUID() : version;
@@ -77,7 +78,7 @@ function install() {
   fs.writeFileSync(path.join(dir, 'index.js'), 'peer bundle', 'utf-8');
   // Recorded only on completion, exactly as the code under test does.
   fs.writeFileSync(
-    path.join(installDir, '.state', 'download.record'),
+    path.join(stateDir, 'download.record'),
     version + ' ' + dirName,
     'utf-8'
   );
@@ -172,6 +173,7 @@ function removeFixtureDir(dir: string, workspace: string): void {
 describe('update-manager bundle download', () => {
   let workspace: string;
   let installDir: string;
+  let stateDir: string;
   let updateManager: UpdateManager;
   let consoleError: ReturnType<typeof vi.spyOn>;
 
@@ -191,13 +193,15 @@ describe('update-manager bundle download', () => {
     vi.resetModules();
     const { setWorkspaceRoot } = await import('../utils/workspace-root');
     setWorkspaceRoot(workspace);
-    const { resetSharedRootCacheForTesting } =
+    const { resetSharedRootCacheForTesting, workspaceDataDirectory } =
       await import('../utils/cache-directory');
     resetSharedRootCacheForTesting();
 
     updateManager = await import('./update-manager');
     installDir = updateManager.getBundleInstallDefaultLocation();
     assertContainedInFixture(installDir, workspace);
+    stateDir = join(workspaceDataDirectory, 'nx-cloud');
+    assertContainedInFixture(stateDir, workspace);
     mkdirSync(installDir, { recursive: true });
 
     consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -262,10 +266,7 @@ describe('update-manager bundle download', () => {
       'https://example.com/bundle.tar.gz'
     );
 
-    const record = readFileSync(
-      join(installDir, '.state', 'download.record'),
-      'utf-8'
-    );
+    const record = readFileSync(join(stateDir, 'download.record'), 'utf-8');
     // Two fields, because the directory is not derivable from the version:
     // several directories can carry the same one.
     expect(record.trim().split(' ')).toEqual([
@@ -283,15 +284,9 @@ describe('update-manager bundle download', () => {
       );
 
     await download();
-    const first = readFileSync(
-      join(installDir, '.state', 'download.record'),
-      'utf-8'
-    );
+    const first = readFileSync(join(stateDir, 'download.record'), 'utf-8');
     await download();
-    const second = readFileSync(
-      join(installDir, '.state', 'download.record'),
-      'utf-8'
-    );
+    const second = readFileSync(join(stateDir, 'download.record'), 'utf-8');
 
     expect(second).not.toBe(first);
     expect(second.split(' ')[0]).toBe(first.split(' ')[0]);
@@ -307,7 +302,7 @@ describe('update-manager bundle download', () => {
         'https://example.com/bundle.tar.gz'
       );
       expect(installed.version).toBe(name);
-      expect(statSync(join(installDir, '.state', name)).isFile()).toBe(true);
+      expect(statSync(join(stateDir, name)).isFile()).toBe(true);
     }
   });
 
@@ -367,10 +362,26 @@ describe('update-manager bundle download', () => {
     }
   });
 
-  it('keeps the state directory when cleaning up old bundles', async () => {
+  it('leaves only bundle directories in the install directory', async () => {
+    // A released nx loads any directory here as a bundle, so a control
+    // directory inside it fails with "Cannot find module .../.state".
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(readdirSync(installDir)).toEqual([basename(installed.fullPath)]);
+    expect(existsSync(join(stateDir, 'download.record'))).toBe(true);
+  });
+
+  it('reclaims leftover dot directories when cleaning up old bundles', async () => {
     mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
     // A crashed extract leaves this behind and nothing else reclaims it.
     mkdirSync(join(installDir, '.tmp-2608.29.0001-999'), { recursive: true });
+    // An nx that kept its control files in the install directory left this.
+    mkdirSync(join(installDir, '.state'), { recursive: true });
+    writeFileSync(join(installDir, '.state', 'verify.lock'), '123');
 
     const installed = await updateManager.downloadAndExtractClientBundle(
       httpClientServing(bundleTarball({ 'index.js': '' })),
@@ -378,9 +389,7 @@ describe('update-manager bundle download', () => {
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(bundleDirs()).toEqual([basename(installed.fullPath)]);
-    expect(statSync(join(installDir, '.state')).isDirectory()).toBe(true);
-    expect(existsSync(join(installDir, '.tmp-2608.29.0001-999'))).toBe(false);
+    expect(readdirSync(installDir)).toEqual([basename(installed.fullPath)]);
   });
 
   it('rejects a server version that would escape the install directory', async () => {
@@ -410,12 +419,10 @@ describe('update-manager bundle download', () => {
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(
-      readFileSync(join(installDir, '.state', 'download.lock'), 'utf-8')
-    ).toBe('');
-    expect(
-      readFileSync(join(installDir, '.state', 'download.record'), 'utf-8')
-    ).not.toBe('');
+    expect(readFileSync(join(stateDir, 'download.lock'), 'utf-8')).toBe('');
+    expect(readFileSync(join(stateDir, 'download.record'), 'utf-8')).not.toBe(
+      ''
+    );
   });
 
   it('removes bundles left by earlier versions', async () => {
@@ -448,14 +455,8 @@ describe('update-manager bundle download', () => {
     expect(bundleDirs()).toEqual([basename(second.fullPath)]);
   });
 
-  it('keeps the lock files when cleaning up old bundles', async () => {
-    // A lock on a deleted file no longer excludes processes that reopen the
-    // path, so cleanup must never unlink these.
-    mkdirSync(join(installDir, '.state'), { recursive: true });
-    writeFileSync(join(installDir, '.state', 'verify.lock'), '123');
-    // A pre-upgrade orphan at the root: an older nx may still hold its flock,
-    // and this is what gates production's isDirectory() check. The .state
-    // assertions below cannot gate it, since cleanup skips .state by name.
+  it('keeps files in the install directory when cleaning up old bundles', async () => {
+    // A released nx writes its verify.lock here and may still be using it.
     writeFileSync(join(installDir, 'verify.lock'), '123');
     mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
 
@@ -466,11 +467,8 @@ describe('update-manager bundle download', () => {
     );
 
     expect(existsSync(join(installDir, 'verify.lock'))).toBe(true);
-    expect(existsSync(join(installDir, '.state', 'verify.lock'))).toBe(true);
-    expect(existsSync(join(installDir, '.state', 'download.lock'))).toBe(true);
-    expect(existsSync(join(installDir, '.state', 'download.record'))).toBe(
-      true
-    );
+    expect(existsSync(join(stateDir, 'download.lock'))).toBe(true);
+    expect(existsSync(join(stateDir, 'download.record'))).toBe(true);
   });
 
   it('survives an entry it cannot stat while cleaning up old bundles', async () => {
@@ -535,7 +533,7 @@ describe('update-manager bundle download', () => {
       )
     ).rejects.toThrow('Unsupported symlink entry');
 
-    expect(readdirSync(installDir).filter((f) => f !== '.state')).toEqual([]);
+    expect(readdirSync(installDir)).toEqual([]);
   });
 
   it('rejects rather than hanging when the response body is not a valid archive', async () => {
@@ -572,6 +570,7 @@ describe('update-manager bundle download', () => {
 describe('update-manager download lock', () => {
   let workspace: string;
   let installDir: string;
+  let stateDir: string;
   let updateManager: UpdateManager;
   let peers: ChildProcess[];
 
@@ -589,13 +588,15 @@ describe('update-manager download lock', () => {
     vi.resetModules();
     const { setWorkspaceRoot } = await import('../utils/workspace-root');
     setWorkspaceRoot(workspace);
-    const { resetSharedRootCacheForTesting } =
+    const { resetSharedRootCacheForTesting, workspaceDataDirectory } =
       await import('../utils/cache-directory');
     resetSharedRootCacheForTesting();
 
     updateManager = await import('./update-manager');
     installDir = updateManager.getBundleInstallDefaultLocation();
     assertContainedInFixture(installDir, workspace);
+    stateDir = join(workspaceDataDirectory, 'nx-cloud');
+    assertContainedInFixture(stateDir, workspace);
     mkdirSync(installDir, { recursive: true });
     peers = [];
   });
@@ -650,6 +651,7 @@ describe('update-manager download lock', () => {
           script,
           nativeBindings,
           installDir,
+          stateDir,
           options.version,
           String(options.holdMs),
           options.mode,

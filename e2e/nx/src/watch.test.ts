@@ -244,15 +244,17 @@ describe('Nx Watch', () => {
 
   it('should reconnect after daemon restart', async () => {
     const getOutput = await runWatchWithReconnect(
-      `--projects=${proj1} -- echo \\$NX_PROJECT_NAME`
+      `--projects=${proj1} -- echo \\$NX_FILE_CHANGES`
     );
 
     // Write file before daemon restart
     await writeFileForWatcher(`libs/${proj1}/before-restart.txt`);
     await wait(1000);
 
-    // Kill the daemon
+    // The watch client waits for a replacement daemon; stopping it alone does
+    // not restart it.
     runCLI('daemon --stop', { env: daemonEnv });
+    runCLI('daemon --start', { env: daemonStartEnv });
 
     // Wait for reconnection to happen (exponential backoff)
     await wait(3000);
@@ -260,8 +262,10 @@ describe('Nx Watch', () => {
     // Write file after daemon restart - watch should reconnect and receive this
     await writeFileForWatcher(`libs/${proj1}/after-restart.txt`);
 
-    const output = await getOutput(ranFor([proj1]));
-    expect(output).toContain(proj1);
+    // The notification before shutdown must not satisfy this assertion.
+    const afterRestartFile = `libs/${proj1}/after-restart.txt`;
+    const output = await getOutput(receivedAll([afterRestartFile]));
+    expect(reportedFiles(output)).toContain(afterRestartFile);
   }, 60000);
 });
 
