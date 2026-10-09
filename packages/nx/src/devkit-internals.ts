@@ -195,6 +195,10 @@ export {
   findProjectsNpmDependencies,
 } from './plugins/js/package-json/create-package-json';
 export {
+  applyNpmOverridesToDependencies,
+  resolveNpmOverrideReferences,
+} from './plugins/js/package-json/npm-overrides';
+export {
   TargetProjectLocator,
   isBuiltinModuleImport,
 } from './plugins/js/project-graph/build-dependencies/target-project-locator';

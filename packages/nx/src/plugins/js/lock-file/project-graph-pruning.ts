@@ -1,4 +1,4 @@
-import { gte, satisfies } from 'semver';
+import { gte, satisfies, valid } from 'semver';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -15,6 +15,7 @@ import {
   normalizeLocalPathSpec,
   uncontainLocalPathSpec,
 } from './pruned-output';
+import { parseNpmAlias } from './utils/package-json';
 
 /**
  * Prune project graph's external nodes and their dependencies
@@ -227,8 +228,13 @@ export function findNodeMatchingVersion(
   if (versionExpr === '*') {
     return graph.externalNodes[`npm:${packageName}`];
   }
+  const alias = parseNpmAlias(versionExpr);
+  if (alias) {
+    return findAliasNode(graph, packageName, alias);
+  }
+  // an aliased, git or local-path version is not semver, and would throw here
   const nodes = Object.values(graph.externalNodes)
-    .filter((n) => n.data.packageName === packageName)
+    .filter((n) => n.data.packageName === packageName && valid(n.data.version))
     .sort((a, b) => (gte(b.data.version, a.data.version) ? 1 : -1));
 
   if (versionExpr === 'latest') {
@@ -244,6 +250,31 @@ export function findNodeMatchingVersion(
     return graph.externalNodes[`npm:${packageName}`];
   }
   return nodes.find((n) => satisfies(n.data.version, versionExpr));
+}
+
+// The npm lock file parser records an aliased dependency's version as
+// npm:<name>@<version>, so match the aliased package and its version range
+// against that, preferring the hoisted node as the other lookups do.
+function findAliasNode(
+  graph: ProjectGraph,
+  packageName: string,
+  alias: { name: string; range: string }
+): ProjectGraphExternalNode | undefined {
+  const hoisted = graph.externalNodes[`npm:${packageName}`];
+  const candidates = [
+    hoisted,
+    ...Object.values(graph.externalNodes).filter(
+      (n) => n !== hoisted && n.data.packageName === packageName
+    ),
+  ];
+  return candidates.find((node) => {
+    const target = node && parseNpmAlias(node.data.version);
+    return (
+      target?.name === alias.name &&
+      valid(target.range) &&
+      satisfies(target.range, alias.range)
+    );
+  });
 }
 
 export function addNodesAndDependencies(
