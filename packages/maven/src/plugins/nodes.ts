@@ -1,4 +1,9 @@
-import { CreateNodesResultArray, CreateNodes, hashArray } from '@nx/devkit';
+import {
+  CreateNodesResultArray,
+  CreateNodes,
+  hashArray,
+  normalizePath,
+} from '@nx/devkit';
 import { calculateHashesForCreateNodes, hashObject } from '@nx/devkit/internal';
 import { dirname, relative } from 'path';
 import { DEFAULT_OPTIONS, MavenPluginOptions } from './types';
@@ -83,7 +88,8 @@ export const createNodes: CreateNodes<MavenPluginOptions> = [
       return mavenData.createNodesResults.map(
         ([configFile, createNodesResult]) => {
           return [
-            relative(context.workspaceRoot, configFile),
+            // `relative` yields OS separators; Nx addresses config files with `/`.
+            normalizePath(relative(context.workspaceRoot, configFile)),
             createNodesResult,
           ];
         }
