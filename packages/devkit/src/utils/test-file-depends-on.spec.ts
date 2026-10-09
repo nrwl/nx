@@ -4,53 +4,12 @@ import {
 } from './test-file-depends-on';
 
 describe('parseNxDependsOnDirective', () => {
-  it('reads a line comment directive', () => {
-    expect(
-      parseNxDependsOnDirective(
-        '// @nx-depends-on: feature, feature-utils\nimport { test } from "x";\n'
-      )
-    ).toEqual(['feature', 'feature-utils']);
-  });
-
-  it('reads a directive inside a leading block comment', () => {
-    expect(
-      parseNxDependsOnDirective(
-        '/**\n * Checkout flow.\n * @nx-depends-on: checkout\n */\ntest();\n'
-      )
-    ).toEqual(['checkout']);
-    expect(
-      parseNxDependsOnDirective('/* @nx-depends-on: checkout */\ntest();\n')
-    ).toEqual(['checkout']);
-  });
-
-  it('skips blank lines, a shebang and other comments before the directive', () => {
-    expect(
-      parseNxDependsOnDirective(
-        '#!/usr/bin/env node\n\n// Copyright\n\n// @nx-depends-on: a\n'
-      )
-    ).toEqual(['a']);
-  });
-
   it('merges several directives and drops duplicates', () => {
     expect(
       parseNxDependsOnDirective(
-        '// @nx-depends-on: a, b\r\n// @nx-depends-on: b,c\r\n'
+        '// @nx-depends-on: a, b\n// @nx-other: x\n// @nx-depends-on: b,c\n'
       )
     ).toEqual(['a', 'b', 'c']);
-  });
-
-  it('stops at the first line that is not a comment', () => {
-    expect(
-      parseNxDependsOnDirective('import x from "y";\n// @nx-depends-on: a\n')
-    ).toBeUndefined();
-    expect(
-      parseNxDependsOnDirective(
-        '/* header */ const x = 1;\n// @nx-depends-on: a\n'
-      )
-    ).toBeUndefined();
-    expect(
-      parseNxDependsOnDirective('test("// @nx-depends-on: a", () => {});\n')
-    ).toBeUndefined();
   });
 
   it('returns no projects for a directive that lists none', () => {

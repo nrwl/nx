@@ -4,8 +4,7 @@ import type {
   TargetConfiguration,
   TargetDependencyConfig,
 } from 'nx/src/devkit-exports';
-
-const DIRECTIVE = /^@nx-depends-on:(.*)$/;
+import { parseNxDirectives } from './nx-directives';
 
 /**
  * The projects a leading `// @nx-depends-on: a, b` comment names, or
@@ -14,46 +13,20 @@ const DIRECTIVE = /^@nx-depends-on:(.*)$/;
 export function parseNxDependsOnDirective(
   content: string
 ): string[] | undefined {
-  let projects: string[] | undefined;
-  let inBlock = false;
-  for (const rawLine of content.split(/\r?\n/)) {
-    let line = rawLine.trim();
-    if (!inBlock) {
-      if (line === '' || line.startsWith('#!')) {
-        continue;
-      }
-      if (line.startsWith('//')) {
-        line = line.slice(2);
-      } else if (line.startsWith('/*')) {
-        inBlock = true;
-        line = line.slice(2);
-      } else {
-        break;
-      }
-    }
-    if (inBlock) {
-      const end = line.indexOf('*/');
-      if (end !== -1) {
-        inBlock = false;
-        if (line.slice(end + 2).trim() !== '') {
-          break;
-        }
-        line = line.slice(0, end);
-      }
-      line = line.replace(/^\s*\*+/, '');
-    }
-    const match = line.trim().match(DIRECTIVE);
-    if (match) {
-      projects ??= [];
-      for (const project of match[1].split(',')) {
-        const name = project.trim();
-        if (name && !projects.includes(name)) {
-          projects.push(name);
-        }
+  const values = parseNxDirectives(content).get('depends-on');
+  if (values === undefined) {
+    return undefined;
+  }
+  const projects = new Set<string>();
+  for (const value of values) {
+    for (const project of value.split(',')) {
+      const name = project.trim();
+      if (name) {
+        projects.add(name);
       }
     }
   }
-  return projects;
+  return [...projects];
 }
 
 /**
