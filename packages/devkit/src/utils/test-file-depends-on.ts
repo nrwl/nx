@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type {
   TargetConfiguration,
   TargetDependencyConfig,
@@ -27,25 +25,6 @@ export function parseNxDependsOnDirective(
     }
   }
   return [...projects];
-}
-
-/**
- * The `@nx-depends-on` projects of a workspace-relative test file. Throws when
- * the directive lists none.
- */
-export function readTestFileDependsOn(
-  workspaceRoot: string,
-  file: string
-): string[] | undefined {
-  const projects = parseNxDependsOnDirective(
-    readFileSync(join(workspaceRoot, file), 'utf-8')
-  );
-  if (projects?.length === 0) {
-    throw new Error(
-      `${file}: "@nx-depends-on:" must list the projects the test depends on, separated by commas.`
-    );
-  }
-  return projects;
 }
 
 /**

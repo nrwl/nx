@@ -6,8 +6,7 @@ import {
   workspaceDataDirectory,
   PluginCache,
   globWithWorkspaceContext,
-  readTestFileDependsOn,
-  scopeTestTargetToProjects,
+  applyTestFileDirectives,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -502,16 +501,11 @@ async function buildCypressTargets(
           targets[targetName].parallelism = false;
         }
 
-        const dependsOnProjects = readTestFileDependsOn(
+        targets[targetName] = applyTestFileDirectives(
+          targets[targetName],
           context.workspaceRoot,
           file
         );
-        if (dependsOnProjects) {
-          targets[targetName] = scopeTestTargetToProjects(
-            targets[targetName],
-            dependsOnProjects
-          );
-        }
       }
 
       targets[options.ciTargetName] = {
