@@ -1,0 +1,14 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                        "
+" NX    Test Tasks               Duration"
+" │                                      "
+">│⠋    api:serve (not ready)  Continuous"
+" │⠋    db:up (ready)          Continuous"
+" │⠋    shop:serve (failed)    Continuous"
+" │⠋    éééééé:serve (ready)   Continuous"
+" └                                      "
+"  ·    shop-e2e:e2e (waiting)        ..."
+"                                        "

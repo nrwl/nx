@@ -14,6 +14,7 @@ use std::{io, sync::Arc, time::Instant};
 use tracing::debug;
 use tui_term::widget::PseudoTerminal;
 
+use crate::native::tui::components::dependency_view::ReadinessLabel;
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::components::search_filter::{SessionEvent, interpret_session_key};
 use crate::native::tui::components::tasks_list::TaskStatus;
@@ -675,6 +676,7 @@ pub struct TerminalPaneState {
     pub estimated_duration: Option<i64>,
     pub start_time: Option<i64>,
     pub end_time: Option<i64>,
+    pub readiness: Option<ReadinessLabel>,
 }
 
 impl TerminalPaneState {
@@ -704,6 +706,7 @@ impl TerminalPaneState {
             estimated_duration,
             start_time,
             end_time,
+            readiness: None,
         }
     }
 }
@@ -900,12 +903,24 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
             },
         ));
 
+        let readiness_len = if let Some(label) = state.readiness {
+            let style = if state.is_focused {
+                label.style()
+            } else {
+                label.style().add_modifier(Modifier::DIM)
+            };
+            title.push(Span::styled(format!("{}  ", label.text()), style));
+            label.text().len() + 2
+        } else {
+            0
+        };
+
         // Calculate all layout values once to avoid redundant calculations
         let task_name_display_len = if state.task_name.len() <= Self::CONFIG.task_name_max_length {
             state.task_name.len() + Self::CONFIG.task_name_separator_padding
         } else {
             Self::CONFIG.task_name_max_length + Self::CONFIG.task_name_separator_padding
-        };
+        } + readiness_len;
 
         let show_duration = self.should_show_duration_display(state, safe_area);
         let (duration_width, duration_formatted) = if show_duration {
@@ -2064,5 +2079,36 @@ mod tests {
             None,
         );
         assert!(terminal_pane.should_show_duration_display(&state, above_min_area));
+    }
+
+    #[test]
+    fn title_carries_the_readiness_word_before_the_tab_hint() {
+        let area = Rect::new(0, 0, 70, 6);
+        let mut data = TerminalPaneData::new();
+        let mut state = TerminalPaneState::new(
+            "shop:serve".to_string(),
+            TaskStatus::InProgress,
+            true,
+            false,
+            false,
+            true,
+            false,
+            None,
+            None,
+            None,
+        );
+        state.readiness = Some(ReadinessLabel::Failed);
+        let mut buf = Buffer::empty(area);
+        StatefulWidget::render(
+            TerminalPane::new().pty_data(&mut data),
+            area,
+            &mut buf,
+            &mut state,
+        );
+        let title: String = (0..area.width).map(|x| buf[(x, 0)].symbol()).collect();
+        assert!(
+            title.contains("shop:serve  (readiness failed)  Press <tab> to focus output"),
+            "{title}"
+        );
     }
 }

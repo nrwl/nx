@@ -225,6 +225,76 @@ impl DependencyViewState {
     }
 }
 
+/// The readiness word shown after a task name. One vocabulary for the task
+/// list, the pane title and the dependency view rows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadinessLabel {
+    NotReady,
+    Ready,
+    Failed,
+    Waiting,
+}
+
+impl ReadinessLabel {
+    /// A producer's own verdict. `None` for a task without a probe.
+    pub fn for_producer(status: TaskStatus, readiness: Option<TaskReadiness>) -> Option<Self> {
+        let readiness = readiness?;
+        match status {
+            TaskStatus::InProgress | TaskStatus::Shared => Some(match readiness {
+                TaskReadiness::Pending => Self::NotReady,
+                TaskReadiness::Ready => Self::Ready,
+                TaskReadiness::Failed => Self::Failed,
+            }),
+            // A stopped server keeps the verdict that failed its waiters
+            TaskStatus::Stopped => (readiness == TaskReadiness::Failed).then_some(Self::Failed),
+            TaskStatus::NotStarted
+            | TaskStatus::Success
+            | TaskStatus::Failure
+            | TaskStatus::Skipped
+            | TaskStatus::LocalCacheKeptExisting
+            | TaskStatus::LocalCache
+            | TaskStatus::RemoteCache => None,
+        }
+    }
+
+    pub fn text(self) -> &'static str {
+        match self {
+            Self::NotReady => "(not ready)",
+            Self::Ready => "(ready)",
+            Self::Failed => "(readiness failed)",
+            Self::Waiting => "(waiting)",
+        }
+    }
+
+    pub fn short_text(self) -> &'static str {
+        match self {
+            Self::Failed => "(failed)",
+            Self::NotReady | Self::Ready | Self::Waiting => self.text(),
+        }
+    }
+
+    pub fn style(self) -> Style {
+        match self {
+            Self::Failed => Style::default().fg(THEME.error),
+            Self::NotReady | Self::Ready | Self::Waiting => Style::default().fg(THEME.secondary_fg),
+        }
+    }
+}
+
+/// How many of a task's incomplete dependencies are readiness waits.
+pub struct ReadinessWait<'b> {
+    pub incomplete: usize,
+    pub awaiting: usize,
+    pub awaited: Option<&'b str>,
+}
+
+impl ReadinessWait<'_> {
+    /// Every incomplete dependency is a probe still running
+    pub fn is_held(&self) -> bool {
+        self.incomplete > 0 && self.awaiting == self.incomplete
+    }
+}
+
 pub struct DependencyView<'a> {
     status_map: &'a HashMap<String, TaskStatus>,
     task_graph: &'a TaskGraph,
@@ -297,16 +367,56 @@ impl<'a> DependencyView<'a> {
             && self.readiness_of(dep) == TaskReadiness::Pending
     }
 
-    fn readiness_suffix(&self, task: &str, dep: &str) -> Option<(&'static str, Style)> {
+    fn readiness_suffix(&self, task: &str, dep: &str) -> Option<ReadinessLabel> {
         if self.is_awaiting_readiness(task, dep) {
-            Some((" (not ready)", Style::default().fg(THEME.secondary_fg)))
+            Some(ReadinessLabel::NotReady)
         } else if self.is_ready_dependency(task, dep)
             && self.readiness_of(dep) == TaskReadiness::Failed
         {
-            Some((" (readiness failed)", Style::default().fg(THEME.error)))
+            Some(ReadinessLabel::Failed)
         } else {
             None
         }
+    }
+
+    pub fn readiness_wait<'b>(
+        &self,
+        task: &str,
+        dependencies: impl IntoIterator<Item = &'b String>,
+    ) -> ReadinessWait<'b> {
+        let mut wait = ReadinessWait {
+            incomplete: 0,
+            awaiting: 0,
+            awaited: None,
+        };
+        for dep in dependencies {
+            if !self.is_task_incomplete(task, dep) {
+                continue;
+            }
+            wait.incomplete += 1;
+            if self.is_awaiting_readiness(task, dep) {
+                wait.awaiting += 1;
+                wait.awaited = Some(dep);
+            }
+        }
+        wait
+    }
+
+    /// A not-started task whose direct dependencies are all probes still running
+    pub fn is_held_by_readiness(&self, task: &str) -> bool {
+        let status = self.status_map.get(task).unwrap_or(&TaskStatus::NotStarted);
+        if *status != TaskStatus::NotStarted {
+            return false;
+        }
+        let direct = self
+            .task_graph
+            .dependencies
+            .get(task)
+            .into_iter()
+            .chain(self.task_graph.continuous_dependencies.get(task))
+            .flatten()
+            .map(|edge| &edge.id);
+        self.readiness_wait(task, direct).is_held()
     }
 
     /// Apply focus styling to a base style - dims the style when not focused
@@ -418,32 +528,20 @@ impl<'a> DependencyView<'a> {
         match state.task_status {
             TaskStatus::NotStarted => {
                 let total_count = state.dependencies.len();
-                let mut incomplete_count = 0;
-                let mut awaiting_readiness = 0;
-                let mut awaited: Option<&String> = None;
-                for dep in &state.dependencies {
-                    if !self.is_task_incomplete(&state.current_task, dep) {
-                        continue;
-                    }
-                    incomplete_count += 1;
-                    if self.is_awaiting_readiness(&state.current_task, dep) {
-                        awaiting_readiness += 1;
-                        awaited = Some(dep);
-                    }
-                }
+                let wait = self.readiness_wait(&state.current_task, &state.dependencies);
 
-                if incomplete_count == 0 && total_count > 0 {
+                if wait.incomplete == 0 && total_count > 0 {
                     "All dependencies satisfied, waiting for an available thread...".to_string()
-                } else if incomplete_count > 0 && awaiting_readiness == incomplete_count {
-                    if let (1, Some(dep)) = (incomplete_count, awaited) {
+                } else if wait.is_held() {
+                    if let (1, Some(dep)) = (wait.incomplete, wait.awaited) {
                         format!("Waiting for {} to be ready...", dep)
                     } else {
-                        format!("Waiting for {} tasks to be ready...", incomplete_count)
+                        format!("Waiting for {} tasks to be ready...", wait.incomplete)
                     }
                 } else {
                     format!(
                         "Not started yet, waiting for {} / {} tasks to complete...",
-                        incomplete_count, total_count
+                        wait.incomplete, total_count
                     )
                 }
             }
@@ -531,10 +629,10 @@ impl<'a> DependencyView<'a> {
             let mut spans = Vec::with_capacity(3);
             spans.push(status_icon);
             spans.push(Span::styled(dep.clone(), dep_style));
-            if let Some((suffix, style)) = self.readiness_suffix(&state.current_task, dep) {
+            if let Some(label) = self.readiness_suffix(&state.current_task, dep) {
                 spans.push(Span::styled(
-                    suffix,
-                    Self::apply_focus_styling(style, state.is_focused),
+                    format!(" {}", label.text()),
+                    Self::apply_focus_styling(label.style(), state.is_focused),
                 ));
             }
             lines.push(Line::from(spans));
@@ -1270,5 +1368,21 @@ mod tests {
         assert_eq!(rows[2], "Waiting for 2 tasks to be ready...");
         assert!(rows[4].ends_with("api:serve (not ready)"), "{}", rows[4]);
         assert!(rows[5].ends_with("srv:serve (not ready)"), "{}", rows[5]);
+    }
+
+    #[test]
+    fn a_stopped_producer_keeps_only_a_failed_verdict() {
+        assert_eq!(
+            ReadinessLabel::for_producer(TaskStatus::Stopped, Some(TaskReadiness::Failed)),
+            Some(ReadinessLabel::Failed)
+        );
+        assert_eq!(
+            ReadinessLabel::for_producer(TaskStatus::Stopped, Some(TaskReadiness::Ready)),
+            None
+        );
+        assert_eq!(
+            ReadinessLabel::for_producer(TaskStatus::InProgress, None),
+            None
+        );
     }
 }
