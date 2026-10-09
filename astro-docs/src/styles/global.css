@@ -253,7 +253,8 @@
 @media (min-width: 50rem) {
   :root {
     --sl-nav-height: 5rem;
-    --sl-nav-pad-x: 2rem;
+    /* Lines the logo up with the sidebar below it. */
+    --sl-nav-pad-x: 1.5rem;
   }
 }
 

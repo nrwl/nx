@@ -1,16 +1,16 @@
 ---
 import config from 'virtual:starlight/user-config';
 import Search from 'virtual:starlight/components/Search';
-import SocialIcons from 'virtual:starlight/components/SocialIcons';
 import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
 import NxLogo from './site-nav/NxLogo.astro';
 import SiteNavLinks from './site-nav/SiteNavLinks.astro';
 
 // This header carries the nx.dev (Framer) navbar's look into the docs: same
 // logo, entries, type, colors and menus, as ported for the blog in
-// nrwl/nx-blog. The arrangement is the docs' own: logo, version and nav on
-// the left, search, contact, socials and theme on the right. When the Framer
-// navbar changes, update this file too.
+// nrwl/nx-blog. The arrangement is the docs' own: logo, version and the whole
+// nav on the left, in line with the sidebar below, and search, GitHub stars
+// and the theme toggle on the right. When the Framer navbar changes, update
+// this file too.
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -32,13 +32,20 @@ const currentVersion = versions.find((v) => v.current);
 
 const themes = [
   { value: 'light', label: 'Switch to light theme' },
-  { value: 'dark', label: 'Switch to dark theme' },
   { value: 'auto', label: 'Use system theme' },
+  { value: 'dark', label: 'Switch to dark theme' },
 ];
+
+// Same wording as the star count on the nx.dev homepage: "+29k stars".
+const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
+const githubStarsLabel =
+  githubStarsCount >= 1000
+    ? `+${Math.floor(githubStarsCount / 1000)}k stars`
+    : 'Star on GitHub';
 ---
 
-<div class="nx-chrome nx-header flex h-full items-center justify-center">
-  <div class="flex w-full max-w-[1340px] items-center justify-between gap-3">
+<div class="nx-chrome nx-header flex h-full items-center">
+  <div class="flex w-full items-center justify-between gap-3">
     <div class="flex flex-none items-center gap-3">
       <a href="https://nx.dev" class="flex no-underline">
         <NxLogo class="block h-6 w-[45px]" />
@@ -92,60 +99,66 @@ const themes = [
       <div class="nx-header-controls flex items-center gap-3 print:hidden">
         {shouldRenderSearch && <Search />}
         <a
-          id="header-contact-btn"
-          href="https://nx.dev/contact"
-          class="nx-header-contact hidden items-center justify-center rounded-full px-4 py-2 text-[14px] leading-[1.2] font-medium text-[#D5D5D7] no-underline"
+          id="header-github-stars"
+          href="https://github.com/nrwl/nx"
+          target="_blank"
+          rel="noreferrer noopener"
+          class="nx-header-stars hidden items-center gap-2 text-[14px] leading-[1.2] font-medium whitespace-nowrap text-[#A3A3A8] no-underline transition-colors duration-200 hover:text-[#FAFAFA]"
         >
-          Contact
+          <svg
+            class="h-4 w-4 text-[#FAFAFA]"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.49c-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8a8 8 0 0 0-8-8z" />
+          </svg>
+          <span>{githubStarsLabel}</span>
+          <span class="sr-only">on GitHub</span>
         </a>
-        <div class="nx-header-socials hidden items-center gap-4">
-          <SocialIcons />
-        </div>
-        <div
-          class="nx-theme-toggle flex items-center gap-1"
-          role="group"
-          aria-label="Theme"
-        >
-          {
-            themes.map((theme) => (
-              <button
-                type="button"
-                data-theme-value={theme.value}
-                aria-label={theme.label}
-                aria-pressed="false"
-                class="flex rounded bg-transparent p-[2px] text-[#73737B] transition-colors duration-200 hover:text-[#D5D5D7] aria-pressed:text-[#FAFAFA]"
-              >
-                <svg
-                  class="h-4 w-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
+        <!-- At rest only the active theme's icon shows. Hovering or focusing
+             the group expands the other two. -->
+        <div class="nx-theme-slot">
+          <div class="nx-theme-toggle" role="group" aria-label="Theme">
+            {
+              themes.map((theme) => (
+                <button
+                  type="button"
+                  data-theme-value={theme.value}
+                  aria-label={theme.label}
+                  aria-pressed="false"
                 >
-                  {theme.value === 'light' && (
-                    <>
-                      <circle cx="12" cy="12" r="5" />
-                      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                    </>
-                  )}
-                  {theme.value === 'dark' && (
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                  )}
-                  {theme.value === 'auto' && (
-                    <>
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                      <path d="M8 21h8M12 17v4" />
-                    </>
-                  )}
-                </svg>
-              </button>
-            ))
-          }
-          <!-- Starlight's own picker keeps owning the theme state. -->
-          <div hidden><ThemeSelect /></div>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    {theme.value === 'light' && (
+                      <>
+                        <circle cx="12" cy="12" r="5" />
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                      </>
+                    )}
+                    {theme.value === 'dark' && (
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    )}
+                    {theme.value === 'auto' && (
+                      <>
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                        <path d="M8 21h8M12 17v4" />
+                      </>
+                    )}
+                  </svg>
+                </button>
+              ))
+            }
+            <!-- Starlight's own picker keeps owning the theme state. -->
+            <div hidden><ThemeSelect /></div>
+          </div>
         </div>
       </div>
     </div>
@@ -156,8 +169,7 @@ const themes = [
   /* The site nav needs 50rem, the same width at which Starlight shows the
      sidebar next to the content. Below that it lives in the sidebar menu. */
   @media (min-width: 50rem) {
-    .nx-header-nav,
-    .nx-header-contact {
+    .nx-header-nav {
       display: flex;
     }
   }
@@ -167,27 +179,83 @@ const themes = [
     .nx-header-version {
       display: none;
     }
-
-    .nx-header-controls {
-      gap: 0.5rem;
-    }
   }
 
-  /* Social icons need the room that opens up from 75rem. They sit on the
-     always-dark header, so they do not follow the page theme. */
-  @media (min-width: 75rem) {
-    .nx-header-socials {
+  /* The star count needs the room that opens up from 62rem. */
+  @media (min-width: 62rem) {
+    .nx-header-stars {
       display: flex;
     }
   }
 
-  .nx-header-socials :global(a) {
-    color: #a3a3a8;
-    transition: color 0.2s;
+  .nx-theme-slot {
+    display: flex;
+    flex: none;
   }
 
-  .nx-header-socials :global(a:hover) {
+  .nx-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    border-radius: 999px;
+    padding: 2px;
+    box-shadow: inset 0 0 0 1px transparent;
+    transition:
+      box-shadow 0.15s ease-out,
+      background-color 0.15s ease-out;
+  }
+
+  .nx-theme-toggle:hover,
+  .nx-theme-toggle:focus-within {
+    background-color: #19191a;
+    box-shadow: inset 0 0 0 1px #28282a;
+  }
+
+  .nx-theme-toggle button {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    padding: 0;
+    background: transparent;
+    color: #a3a3a8;
+    cursor: pointer;
+    transition:
+      width 0.15s ease-out,
+      opacity 0.15s ease-out,
+      color 0.15s ease-out;
+  }
+
+  .nx-theme-toggle button svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+
+  .nx-theme-toggle button:hover,
+  .nx-theme-toggle button[aria-pressed='true'] {
     color: #fafafa;
+  }
+
+  /* Inactive options collapse away unless the group is hovered or focused. */
+  .nx-theme-toggle button:not([aria-pressed='true']) {
+    width: 0;
+    margin-inline: -1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .nx-theme-toggle:hover button:not([aria-pressed='true']),
+  .nx-theme-toggle:focus-within button:not([aria-pressed='true']) {
+    width: 24px;
+    margin-inline: 0;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   /* Starlight's search button, fitted into the nx.dev chrome: an icon on
@@ -262,7 +330,8 @@ const themes = [
     track('header-docs-home-link', 'documentation-click', 'header-navigation');
     track('header-nx-cloud-link', 'nx-cloud-click', 'header-navigation');
     track('header-pricing-link', 'pricing-click', 'header-navigation');
-    track('header-contact-btn', 'contact-click', 'header-cta');
+    track('header-contact-btn', 'contact-click', 'header-navigation');
+    track('header-github-stars', 'githubstars_buttonclick', 'header-navigation');
   }
 
   function setupThemeToggle() {

@@ -33,8 +33,11 @@ test('should switch to between light and dark theme', async ({ page }) => {
   });
   const darkTheme = page.getByRole('button', { name: 'Switch to dark theme' });
   const systemTheme = page.getByRole('button', { name: 'Use system theme' });
+  // Only the active theme's icon shows until the group is hovered or focused.
+  const themeToggle = page.getByRole('group', { name: 'Theme' });
 
   await test.step('light theme renders', async () => {
+    await themeToggle.hover();
     await expect(lightTheme).toBeVisible();
 
     await lightTheme.click();
@@ -48,6 +51,7 @@ test('should switch to between light and dark theme', async ({ page }) => {
   });
 
   await test.step('dark theme renders', async () => {
+    await themeToggle.hover();
     await darkTheme.click();
 
     await expect(darkTheme).toHaveAttribute('aria-pressed', 'true');
@@ -60,6 +64,7 @@ test('should switch to between light and dark theme', async ({ page }) => {
   });
 
   await test.step('switch back to auto', async () => {
+    await themeToggle.hover();
     await systemTheme.click();
 
     await expect(systemTheme).toHaveAttribute('aria-pressed', 'true');
