@@ -12,6 +12,219 @@
 @source not "../../**/eslint.config.*";
 @source not "../../node_modules/@nx/nx-dev-ui-markdoc/src/**/*.{spec,test}.*";
 
+/* Nx brand guidelines v1.0: color ramps, type and the Starlight tokens built on
+   them. Tailwind's own palettes are pointed at the brand ramps below, so the
+   utility classes used across the docs and the shared nx-dev libraries pick up
+   the brand colors without touching every component. */
+@theme {
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    'Server Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+
+  --color-nx-neutral-50: #fafafa;
+  --color-nx-neutral-100: #f4f4f5;
+  --color-nx-neutral-200: #e5e5e6;
+  --color-nx-neutral-300: #d5d5d7;
+  --color-nx-neutral-400: #a3a3a8;
+  --color-nx-neutral-500: #73737b;
+  --color-nx-neutral-600: #545459;
+  --color-nx-neutral-700: #404044;
+  --color-nx-neutral-800: #28282a;
+  --color-nx-neutral-900: #19191a;
+  --color-nx-neutral-950: #0c0c0d;
+
+  --color-nx-primary-50: #f0f5ff;
+  --color-nx-primary-100: #dbe7ff;
+  --color-nx-primary-200: #bdd3ff;
+  --color-nx-primary-300: #8fb8ff;
+  --color-nx-primary-400: #5d93fd;
+  --color-nx-primary-500: #376bfb;
+  --color-nx-primary-600: #1c47f2;
+  --color-nx-primary-700: #1432e1;
+  --color-nx-primary-800: #152bb7;
+  --color-nx-primary-900: #152893;
+  --color-nx-primary-950: #111a5a;
+
+  --color-nx-cloud-50: #eaf7ff;
+  --color-nx-cloud-100: #dcf1fe;
+  --color-nx-cloud-200: #b4e4fd;
+  --color-nx-cloud-300: #77d3fd;
+  --color-nx-cloud-400: #3abff8;
+  --color-nx-cloud-500: #0da2e7;
+  --color-nx-cloud-600: #0284c5;
+  --color-nx-cloud-700: #0369a0;
+  --color-nx-cloud-800: #075783;
+  --color-nx-cloud-900: #0c4a6e;
+  --color-nx-cloud-950: #082f49;
+
+  --color-nx-success-50: #f1fde8;
+  --color-nx-success-100: #e0facd;
+  --color-nx-success-200: #c3f4a2;
+  --color-nx-success-300: #9ceb6b;
+  --color-nx-success-400: #81d808;
+  --color-nx-success-500: #5ac11e;
+  --color-nx-success-600: #429c14;
+  --color-nx-success-700: #347714;
+  --color-nx-success-800: #2d5e16;
+  --color-nx-success-900: #285d17;
+  --color-nx-success-950: #112c07;
+
+  --color-nx-warning-50: #fefaec;
+  --color-nx-warning-100: #fbf1ca;
+  --color-nx-warning-200: #f7e390;
+  --color-nx-warning-300: #f2ce57;
+  --color-nx-warning-400: #efba30;
+  --color-nx-warning-500: #e89b17;
+  --color-nx-warning-600: #cc7712;
+  --color-nx-warning-700: #a85512;
+  --color-nx-warning-800: #8b4215;
+  --color-nx-warning-900: #723715;
+  --color-nx-warning-950: #411b07;
+
+  --color-nx-danger-50: #fff3f1;
+  --color-nx-danger-100: #ffe3df;
+  --color-nx-danger-200: #ffccc5;
+  --color-nx-danger-300: #ffa89c;
+  --color-nx-danger-400: #ff7b63;
+  --color-nx-danger-500: #ff4b32;
+  --color-nx-danger-600: #ef2810;
+  --color-nx-danger-700: #ca220b;
+  --color-nx-danger-800: #a6200e;
+  --color-nx-danger-900: #892113;
+  --color-nx-danger-950: #490d04;
+
+  /* slate -> neutral */
+  --color-slate-50: var(--color-nx-neutral-50);
+  --color-slate-100: var(--color-nx-neutral-100);
+  --color-slate-200: var(--color-nx-neutral-200);
+  --color-slate-300: var(--color-nx-neutral-300);
+  --color-slate-400: var(--color-nx-neutral-400);
+  --color-slate-500: var(--color-nx-neutral-500);
+  --color-slate-600: var(--color-nx-neutral-600);
+  --color-slate-700: var(--color-nx-neutral-700);
+  --color-slate-800: var(--color-nx-neutral-800);
+  --color-slate-900: var(--color-nx-neutral-900);
+  --color-slate-950: var(--color-nx-neutral-950);
+
+  /* gray -> neutral */
+  --color-gray-50: var(--color-nx-neutral-50);
+  --color-gray-100: var(--color-nx-neutral-100);
+  --color-gray-200: var(--color-nx-neutral-200);
+  --color-gray-300: var(--color-nx-neutral-300);
+  --color-gray-400: var(--color-nx-neutral-400);
+  --color-gray-500: var(--color-nx-neutral-500);
+  --color-gray-600: var(--color-nx-neutral-600);
+  --color-gray-700: var(--color-nx-neutral-700);
+  --color-gray-800: var(--color-nx-neutral-800);
+  --color-gray-900: var(--color-nx-neutral-900);
+  --color-gray-950: var(--color-nx-neutral-950);
+
+  /* zinc -> neutral */
+  --color-zinc-50: var(--color-nx-neutral-50);
+  --color-zinc-100: var(--color-nx-neutral-100);
+  --color-zinc-200: var(--color-nx-neutral-200);
+  --color-zinc-300: var(--color-nx-neutral-300);
+  --color-zinc-400: var(--color-nx-neutral-400);
+  --color-zinc-500: var(--color-nx-neutral-500);
+  --color-zinc-600: var(--color-nx-neutral-600);
+  --color-zinc-700: var(--color-nx-neutral-700);
+  --color-zinc-800: var(--color-nx-neutral-800);
+  --color-zinc-900: var(--color-nx-neutral-900);
+  --color-zinc-950: var(--color-nx-neutral-950);
+
+  /* neutral -> neutral */
+  --color-neutral-50: var(--color-nx-neutral-50);
+  --color-neutral-100: var(--color-nx-neutral-100);
+  --color-neutral-200: var(--color-nx-neutral-200);
+  --color-neutral-300: var(--color-nx-neutral-300);
+  --color-neutral-400: var(--color-nx-neutral-400);
+  --color-neutral-500: var(--color-nx-neutral-500);
+  --color-neutral-600: var(--color-nx-neutral-600);
+  --color-neutral-700: var(--color-nx-neutral-700);
+  --color-neutral-800: var(--color-nx-neutral-800);
+  --color-neutral-900: var(--color-nx-neutral-900);
+  --color-neutral-950: var(--color-nx-neutral-950);
+
+  /* blue -> primary */
+  --color-blue-50: var(--color-nx-primary-50);
+  --color-blue-100: var(--color-nx-primary-100);
+  --color-blue-200: var(--color-nx-primary-200);
+  --color-blue-300: var(--color-nx-primary-300);
+  --color-blue-400: var(--color-nx-primary-400);
+  --color-blue-500: var(--color-nx-primary-500);
+  --color-blue-600: var(--color-nx-primary-600);
+  --color-blue-700: var(--color-nx-primary-700);
+  --color-blue-800: var(--color-nx-primary-800);
+  --color-blue-900: var(--color-nx-primary-900);
+  --color-blue-950: var(--color-nx-primary-950);
+
+  /* sky -> primary */
+  --color-sky-50: var(--color-nx-primary-50);
+  --color-sky-100: var(--color-nx-primary-100);
+  --color-sky-200: var(--color-nx-primary-200);
+  --color-sky-300: var(--color-nx-primary-300);
+  --color-sky-400: var(--color-nx-primary-400);
+  --color-sky-500: var(--color-nx-primary-500);
+  --color-sky-600: var(--color-nx-primary-600);
+  --color-sky-700: var(--color-nx-primary-700);
+  --color-sky-800: var(--color-nx-primary-800);
+  --color-sky-900: var(--color-nx-primary-900);
+  --color-sky-950: var(--color-nx-primary-950);
+
+  /* green -> success */
+  --color-green-50: var(--color-nx-success-50);
+  --color-green-100: var(--color-nx-success-100);
+  --color-green-200: var(--color-nx-success-200);
+  --color-green-300: var(--color-nx-success-300);
+  --color-green-400: var(--color-nx-success-400);
+  --color-green-500: var(--color-nx-success-500);
+  --color-green-600: var(--color-nx-success-600);
+  --color-green-700: var(--color-nx-success-700);
+  --color-green-800: var(--color-nx-success-800);
+  --color-green-900: var(--color-nx-success-900);
+  --color-green-950: var(--color-nx-success-950);
+
+  /* yellow -> warning */
+  --color-yellow-50: var(--color-nx-warning-50);
+  --color-yellow-100: var(--color-nx-warning-100);
+  --color-yellow-200: var(--color-nx-warning-200);
+  --color-yellow-300: var(--color-nx-warning-300);
+  --color-yellow-400: var(--color-nx-warning-400);
+  --color-yellow-500: var(--color-nx-warning-500);
+  --color-yellow-600: var(--color-nx-warning-600);
+  --color-yellow-700: var(--color-nx-warning-700);
+  --color-yellow-800: var(--color-nx-warning-800);
+  --color-yellow-900: var(--color-nx-warning-900);
+  --color-yellow-950: var(--color-nx-warning-950);
+
+  /* amber -> warning */
+  --color-amber-50: var(--color-nx-warning-50);
+  --color-amber-100: var(--color-nx-warning-100);
+  --color-amber-200: var(--color-nx-warning-200);
+  --color-amber-300: var(--color-nx-warning-300);
+  --color-amber-400: var(--color-nx-warning-400);
+  --color-amber-500: var(--color-nx-warning-500);
+  --color-amber-600: var(--color-nx-warning-600);
+  --color-amber-700: var(--color-nx-warning-700);
+  --color-amber-800: var(--color-nx-warning-800);
+  --color-amber-900: var(--color-nx-warning-900);
+  --color-amber-950: var(--color-nx-warning-950);
+
+  /* red -> danger */
+  --color-red-50: var(--color-nx-danger-50);
+  --color-red-100: var(--color-nx-danger-100);
+  --color-red-200: var(--color-nx-danger-200);
+  --color-red-300: var(--color-nx-danger-300);
+  --color-red-400: var(--color-nx-danger-400);
+  --color-red-500: var(--color-nx-danger-500);
+  --color-red-600: var(--color-nx-danger-600);
+  --color-red-700: var(--color-nx-danger-700);
+  --color-red-800: var(--color-nx-danger-800);
+  --color-red-900: var(--color-nx-danger-900);
+  --color-red-950: var(--color-nx-danger-950);
+}
+
 /* Custom styles for Nx documentation */
 
 :root {
@@ -27,67 +240,129 @@
     --sl-content-inline-start: var(--container-2xs);
   }
 }
+:root {
+  --sl-font: 'Instrument Sans';
+  --sl-font-mono: 'Server Mono';
+  --sl-line-height: 1.65;
+
+  /* Brand type scale: Heading 2 is 28px and Mono is 13px. Heading 1 reaches
+     its 40px from 50rem. The smaller headings step down from there. */
+  --sl-text-h2: 1.75rem;
+  --sl-text-h3: 1.375rem;
+  --sl-text-h4: 1.125rem;
+  --sl-text-code: 0.8125rem;
+
+  /* Header height of the nx.dev navbar: 64px on phones, 80px from 50rem. */
+  --sl-nav-height: 4rem;
+  --sl-nav-pad-x: 1.25rem;
+}
+
+@media (min-width: 50rem) {
+  :root {
+    --sl-text-h1: 2.5rem;
+    --sl-text-h2: 1.75rem;
+    --sl-text-h3: 1.375rem;
+    --sl-text-h4: 1.125rem;
+    --sl-nav-height: 5rem;
+    /* Lines the logo up with the sidebar below it. */
+    --sl-nav-pad-x: 1.5rem;
+  }
+}
+
+/* No rubber-band scrolling past the page edges with a mouse or trackpad, so
+   the fixed header and sidebar stay put. Touch devices keep it. */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+}
+
 /* Dark mode colors. */
 
 :root[data-theme='dark'] {
-  --sl-color-bg: var(--color-slate-900);
-  --sl-color-bg-nav: var(--color-slate-800);
-  --sl-color-bg-sidebar: var(--color-slate-900);
-  --sl-color-hairline: var(--color-slate-700);
-  --sl-color-hairline-shade: var(--color-slate-700);
-  --sl-color-accent-low: var(--color-sky-800);
-  --sl-color-accent: var(--color-sky-400);
-  --sl-color-accent-high: var(--color-sky-300);
-  --sl-color-text-accent: var(--color-sky-400);
-  --sl-color-gray-1: var(--color-slate-100);
-  --sl-color-gray-2: var(--color-slate-200);
-  --sl-color-gray-3: var(--color-slate-300);
-  --sl-color-gray-4: var(--color-slate-500);
-  --sl-color-gray-5: var(--color-slate-700);
-  --sl-color-gray-6: var(--color-slate-800);
+  --sl-color-white: var(--color-nx-neutral-50);
+  --sl-color-gray-1: var(--color-nx-neutral-100);
+  --sl-color-gray-2: var(--color-nx-neutral-300);
+  --sl-color-gray-3: var(--color-nx-neutral-400);
+  --sl-color-gray-4: var(--color-nx-neutral-500);
+  --sl-color-gray-5: var(--color-nx-neutral-700);
+  --sl-color-gray-6: var(--color-nx-neutral-800);
+  --sl-color-gray-7: var(--color-nx-neutral-900);
+  --sl-color-black: var(--color-nx-neutral-950);
+  --sl-color-bg: var(--color-nx-neutral-950);
+  --sl-color-bg-nav: var(--color-nx-neutral-900);
+  --sl-color-bg-sidebar: var(--color-nx-neutral-950);
+  --sl-color-hairline-light: var(--color-nx-neutral-800);
+  --sl-color-hairline: var(--color-nx-neutral-800);
+  --sl-color-hairline-shade: var(--color-nx-neutral-800);
+  --sl-color-accent-low: var(--color-nx-primary-950);
+  --sl-color-accent: var(--color-nx-primary-400);
+  --sl-color-accent-high: var(--color-nx-primary-300);
+  --sl-color-text-accent: var(--color-nx-primary-400);
+  /* One step darker than Starlight's default, so links inside inline code
+     keep a 4.5:1 contrast. */
+  --sl-color-bg-inline-code: var(--color-nx-neutral-800);
   --sl-badge-success-bg: var(--color-green-950);
   --sl-badge-success-border: var(--color-green-600);
   --sl-badge-success-text: var(--color-green-200);
-  --sl-badge-tip-bg: var(--color-indigo-900);
-  --sl-badge-tip-border: var(--color-indigo-600);
-  --sl-badge-tip-text: var(--color-indigo-200);
+  --sl-badge-tip-bg: var(--color-nx-primary-950);
+  --sl-badge-tip-border: var(--color-nx-primary-600);
+  --sl-badge-tip-text: var(--color-nx-primary-200);
   --sl-badge-note-bg: var(--color-blue-950);
   --sl-badge-note-border: var(--color-blue-600);
   --sl-badge-note-text: var(--color-blue-200);
-  --sl-badge-caution-bg: var(--color-yellow-800);
+  --sl-badge-caution-bg: var(--color-yellow-950);
   --sl-badge-caution-border: var(--color-yellow-600);
   --sl-badge-caution-text: var(--color-yellow-100);
+  --sl-badge-danger-bg: var(--color-red-950);
+  --sl-badge-danger-border: var(--color-red-600);
+  --sl-badge-danger-text: var(--color-red-200);
+  --sl-badge-default-bg: var(--color-nx-neutral-900);
+  --sl-badge-default-border: var(--color-nx-neutral-700);
+  --sl-badge-default-text: var(--color-nx-neutral-100);
 }
 
 /* Light mode colors. */
 :root[data-theme='light'] {
+  --sl-color-white: var(--color-nx-neutral-950);
+  --sl-color-gray-1: var(--color-nx-neutral-900);
+  --sl-color-gray-2: var(--color-nx-neutral-800);
+  --sl-color-gray-3: var(--color-nx-neutral-600);
+  --sl-color-gray-4: var(--color-nx-neutral-500);
+  --sl-color-gray-5: var(--color-nx-neutral-300);
+  --sl-color-gray-6: var(--color-nx-neutral-200);
+  --sl-color-gray-7: var(--color-nx-neutral-100);
+  --sl-color-black: var(--color-white);
   --sl-color-bg: var(--color-white);
-  --sl-color-bg-nav: var(--color-slate-50);
+  --sl-color-bg-nav: var(--color-nx-neutral-50);
   --sl-color-bg-sidebar: var(--color-white);
-  --sl-color-hairline: var(--color-slate-300);
-  --sl-color-hairline-shade: var(--color-slate-300);
-  --sl-color-accent-low: var(--color-sky-100);
-  --sl-color-accent: var(--color-sky-600);
-  --sl-color-accent-high: var(--color-sky-700);
-  --sl-color-text-accent: var(--color-sky-600);
-  --sl-color-gray-1: var(--color-slate-900);
-  --sl-color-gray-2: var(--color-slate-800);
-  --sl-color-gray-3: var(--color-slate-600);
-  --sl-color-gray-4: var(--color-slate-500);
-  --sl-color-gray-5: var(--color-slate-300);
-  --sl-color-gray-6: var(--color-slate-200);
+  /* The guidelines put borders at Neutral 300 to 400. */
+  --sl-color-hairline-light: var(--color-nx-neutral-300);
+  --sl-color-hairline: var(--color-nx-neutral-300);
+  --sl-color-hairline-shade: var(--color-nx-neutral-300);
+  --sl-color-accent-low: var(--color-nx-primary-100);
+  --sl-color-accent: var(--color-nx-primary-600);
+  --sl-color-accent-high: var(--color-nx-primary-800);
+  --sl-color-text-accent: var(--color-nx-primary-600);
   --sl-badge-success-bg: var(--color-green-50);
   --sl-badge-success-border: var(--color-green-300);
-  --sl-badge-success-text: var(--color-green-600);
-  --sl-badge-tip-bg: var(--color-indigo-50);
-  --sl-badge-tip-border: var(--color-indigo-300);
-  --sl-badge-tip-text: var(--color-blue-600);
+  --sl-badge-success-text: var(--color-green-700);
+  --sl-badge-tip-bg: var(--color-nx-primary-50);
+  --sl-badge-tip-border: var(--color-nx-primary-300);
+  --sl-badge-tip-text: var(--color-nx-primary-600);
   --sl-badge-note-bg: var(--color-blue-50);
   --sl-badge-note-border: var(--color-blue-300);
   --sl-badge-note-text: var(--color-blue-600);
   --sl-badge-caution-bg: var(--color-yellow-50);
   --sl-badge-caution-border: var(--color-yellow-300);
-  --sl-badge-caution-text: var(--color-yellow-600);
+  --sl-badge-caution-text: var(--color-yellow-700);
+  --sl-badge-danger-bg: var(--color-red-50);
+  --sl-badge-danger-border: var(--color-red-300);
+  --sl-badge-danger-text: var(--color-red-700);
+  --sl-badge-default-bg: var(--color-nx-neutral-100);
+  --sl-badge-default-border: var(--color-nx-neutral-300);
+  --sl-badge-default-text: var(--color-nx-neutral-900);
 }
 
 /* Adaptive icons, like GitHub logo, etc. */
@@ -99,21 +374,129 @@
   fill: black;
 }
 
-/* Custom font for code blocks */
+/* Brand fonts: Instrument Sans for text, Server Mono for code. */
 @font-face {
-  font-family: 'Input Mono';
-  src:
-    url('/docs/fonts/InputMono-Regular.woff2') format('woff2'),
-    url('/docs/fonts/InputMono-Regular.woff') format('woff');
-  font-weight: normal;
+  font-family: 'Instrument Sans';
   font-style: normal;
+  font-weight: 400;
   font-display: swap;
+  src: url('/docs/fonts/instrument-sans-400.woff2') format('woff2');
 }
 
-/* Apply custom font to code elements */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/docs/fonts/instrument-sans-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 600 700;
+  font-display: swap;
+  src: url('/docs/fonts/instrument-sans-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Server Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/docs/fonts/server-mono-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Server Mono';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/docs/fonts/server-mono-400-oblique.woff2') format('woff2');
+}
+
 code,
 pre {
-  font-family: 'Input Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-family: var(--__sl-font-mono);
+}
+
+/* Headings are Semibold and tighten as they get bigger. */
+h1 {
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  letter-spacing: -0.015em;
+}
+
+/* Header and footer mirror the nx.dev (Framer) site, which sets its chrome in
+   Instrument Sans with the ss05 stylistic set. */
+.nx-chrome {
+  font-family: 'Instrument Sans', sans-serif;
+  font-feature-settings: 'ss05';
+}
+
+/* Glare sweep on the "Nx Cloud" nav entry: a 1.3s sweep, then a 2.2s pause. */
+@keyframes nx-glare {
+  0% {
+    background-position: 100% 0;
+  }
+  37.142857% {
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: 0% 0;
+  }
+}
+
+.nx-glare,
+.nx-glare-glow {
+  white-space: nowrap;
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: nx-glare 3.5s linear infinite;
+}
+
+.nx-glare {
+  position: relative;
+  display: block;
+  background-image: linear-gradient(
+    90deg,
+    #fafafa 0%,
+    #fafafa 42%,
+    #33e0ff 48%,
+    #527aff 52%,
+    #fafafa 58%,
+    #fafafa 100%
+  );
+}
+
+.nx-glare-glow {
+  position: absolute;
+  inset: 0;
+  filter: blur(4px);
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 42%,
+    #33e0ff 48%,
+    #527aff 52%,
+    rgba(255, 255, 255, 0) 58%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-glare,
+  .nx-glare-glow {
+    animation: none;
+    background-position: 50% 0;
+  }
 }
 
 /* Rounded corners for code blocks and UI elements using CSS layers */
@@ -241,141 +624,60 @@ pre {
     font-weight: var(--font-weight-semibold);
   }
 
-  /* Override Starlight Aside component colors to match Nx design system */
-  /* Note type - Slate/gray theme */
-  :global([data-aside-type='note']) {
-    --sl-color-aside-bg: theme('colors.slate.50');
-    --sl-color-aside-border: theme('colors.slate.200');
-    --sl-color-aside-text: theme('colors.slate.700');
-    --sl-color-aside-title: theme('colors.slate.600');
+  /* Asides: a tinted wash with a full hairline border, instead of Starlight's
+     accent stripe. Notes are neutral. Success, warning and danger colors carry
+     meaning, so only tips, cautions and dangers use them. */
+  .starlight-aside {
+    border: 1px solid var(--sl-color-asides-border);
   }
 
-  :global([data-theme='dark'] [data-aside-type='note']) {
-    --sl-color-aside-bg: rgb(30 41 59 / 0.4); /* slate-800/40 */
-    --sl-color-aside-border: theme('colors.slate.700');
-    --sl-color-aside-text: theme('colors.slate.400');
-    --sl-color-aside-title: theme('colors.slate.300');
+  .starlight-aside--note {
+    --sl-color-asides-text-accent: var(--sl-color-white);
+    --sl-color-asides-border: var(--sl-color-gray-5);
+    background-color: var(--sl-color-gray-7);
   }
 
-  /* Tip type - Green theme (check) */
-  :global([data-aside-type='tip']) {
-    --sl-color-aside-bg: theme('colors.green.50');
-    --sl-color-aside-border: theme('colors.green.200');
-    --sl-color-aside-text: theme('colors.green.700');
-    --sl-color-aside-title: theme('colors.green.600');
+  .starlight-aside--tip {
+    --sl-color-asides-text-accent: var(--color-nx-success-700);
+    --sl-color-asides-border: var(--color-nx-success-300);
+    background-color: var(--color-nx-success-50);
   }
 
-  :global([data-theme='dark'] [data-aside-type='tip']) {
-    --sl-color-aside-bg: rgb(20 83 45 / 0.3); /* green-900/30 */
-    --sl-color-aside-border: theme('colors.green.800');
-    --sl-color-aside-text: theme('colors.green.400');
-    --sl-color-aside-title: theme('colors.green.400');
+  .starlight-aside--caution {
+    --sl-color-asides-text-accent: var(--color-nx-warning-700);
+    --sl-color-asides-border: var(--color-nx-warning-300);
+    background-color: var(--color-nx-warning-50);
   }
 
-  /* Caution type - Yellow theme (warning) */
-  :global([data-aside-type='caution']) {
-    --sl-color-aside-bg: theme('colors.yellow.50');
-    --sl-color-aside-border: theme('colors.yellow.200');
-    --sl-color-aside-text: theme('colors.yellow.700');
-    --sl-color-aside-title: theme('colors.yellow.600');
+  .starlight-aside--danger {
+    --sl-color-asides-text-accent: var(--color-nx-danger-700);
+    --sl-color-asides-border: var(--color-nx-danger-300);
+    background-color: var(--color-nx-danger-50);
   }
 
-  :global([data-theme='dark'] [data-aside-type='caution']) {
-    --sl-color-aside-bg: rgb(113 63 18 / 0.3); /* yellow-900/30 */
-    --sl-color-aside-border: theme('colors.yellow.800');
-    --sl-color-aside-text: theme('colors.yellow.400');
-    --sl-color-aside-title: theme('colors.yellow.400');
+  [data-theme='dark'] .starlight-aside--tip {
+    --sl-color-asides-text-accent: var(--color-nx-success-400);
+    --sl-color-asides-border: var(--color-nx-success-800);
+    background-color: var(--color-nx-success-950);
   }
 
-  /* Danger type - Red theme */
-  :global([data-aside-type='danger']) {
-    --sl-color-aside-bg: theme('colors.red.50');
-    --sl-color-aside-border: theme('colors.red.200');
-    --sl-color-aside-text: theme('colors.red.700');
-    --sl-color-aside-title: theme('colors.red.600');
+  [data-theme='dark'] .starlight-aside--caution {
+    --sl-color-asides-text-accent: var(--color-nx-warning-400);
+    --sl-color-asides-border: var(--color-nx-warning-800);
+    background-color: var(--color-nx-warning-950);
   }
 
-  :global([data-theme='dark'] [data-aside-type='danger']) {
-    --sl-color-aside-bg: rgb(127 29 29 / 0.3); /* red-900/30 */
-    --sl-color-aside-border: theme('colors.red.800');
-    --sl-color-aside-text: theme('colors.red.400');
-    --sl-color-aside-title: theme('colors.red.400');
+  [data-theme='dark'] .starlight-aside--danger {
+    --sl-color-asides-text-accent: var(--color-nx-danger-400);
+    --sl-color-asides-border: var(--color-nx-danger-800);
+    background-color: var(--color-nx-danger-950);
   }
 
-  /* Override Starlight Badge component colors */
-  /* Success/Tip variant - Green theme */
-  :global(.sl-badge.success),
-  :global(.sl-badge.tip) {
-    --sl-color-bg-badge: theme('colors.green.50');
-    --sl-color-border-badge: theme('colors.green.200');
-    --sl-color-text-badge: theme('colors.green.700');
-  }
-
-  :global([data-theme='dark'] .sl-badge.success),
-  :global([data-theme='dark'] .sl-badge.tip) {
-    --sl-color-bg-badge: rgb(20 83 45 / 0.3); /* green-900/30 */
-    --sl-color-border-badge: theme('colors.green.800');
-    --sl-color-text-badge: theme('colors.green.400');
-  }
-
-  /* Caution variant - Yellow theme */
-  :global(.sl-badge.caution) {
-    --sl-color-bg-badge: theme('colors.yellow.50');
-    --sl-color-border-badge: theme('colors.yellow.200');
-    --sl-color-text-badge: theme('colors.yellow.700');
-  }
-
-  :global([data-theme='dark'] .sl-badge.caution) {
-    --sl-color-bg-badge: rgb(113 63 18 / 0.3); /* yellow-900/30 */
-    --sl-color-border-badge: theme('colors.yellow.800');
-    --sl-color-text-badge: theme('colors.yellow.400');
-  }
-
-  /* Danger variant - Red theme */
-  :global(.sl-badge.danger) {
-    --sl-color-bg-badge: theme('colors.red.50');
-    --sl-color-border-badge: theme('colors.red.200');
-    --sl-color-text-badge: theme('colors.red.700');
-  }
-
-  :global([data-theme='dark'] .sl-badge.danger) {
-    --sl-color-bg-badge: rgb(127 29 29 / 0.3); /* red-900/30 */
-    --sl-color-border-badge: theme('colors.red.800');
-    --sl-color-text-badge: theme('colors.red.400');
-  }
-
-  /* Note variant - Slate/gray theme */
-  :global(.sl-badge.note) {
-    --sl-color-bg-badge: theme('colors.slate.50');
-    --sl-color-border-badge: theme('colors.slate.200');
-    --sl-color-text-badge: theme('colors.slate.700');
-  }
-
-  :global([data-theme='dark'] .sl-badge.note) {
-    --sl-color-bg-badge: rgb(30 41 59 / 0.4); /* slate-800/40 */
-    --sl-color-border-badge: theme('colors.slate.700');
-    --sl-color-text-badge: theme('colors.slate.400');
-  }
-
-  .sl-menu-button {
-    color: theme('colors.slate.600');
-    background-color: transparent;
-    box-shadow: none;
-  }
-
-  [data-theme='dark'] .sl-menu-button {
-    color: theme('colors.slate.200');
-    background-color: transparent;
-    box-shadow: none;
-  }
-
+  /* The sidebar toggle sits on the always-dark header. */
+  .sl-menu-button,
   .sl-menu-button:has(~ :popover-open) {
-    background-color: theme('colors.white');
-    box-shadow: none;
-  }
-
-  [data-theme='dark'] .sl-menu-button:has(~ :popover-open) {
-    background-color: theme('colors.slate.900');
+    color: var(--color-nx-neutral-50);
+    background-color: transparent;
     box-shadow: none;
   }
   /* Sidebar tabbed layout */

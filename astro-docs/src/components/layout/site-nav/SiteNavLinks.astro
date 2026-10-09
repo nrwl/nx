@@ -1,0 +1,63 @@
+---
+import { DesktopNavMenu, MobileNavMenu } from './NavMenu';
+
+// The nx.dev (Framer) nav entries, in the same order. `mobile` renders the
+// stacked list of the phone menu, which sits at the end of the docs sidebar.
+// There is no "Get Started" pill: the reader is already in the docs.
+interface Props {
+  mobile?: boolean;
+}
+
+const { mobile = false } = Astro.props;
+
+const DOCS_URL = '/docs/getting-started/intro';
+
+const linkClass = mobile
+  ? 'flex items-center py-3 text-[16px] font-medium leading-[1.2] text-[#D5D5D7] no-underline'
+  : 'flex items-center justify-center rounded-full px-4 py-2 text-[14px] font-medium leading-[1.2] text-[#D5D5D7] no-underline';
+const id = (value: string) => (mobile ? undefined : value);
+---
+
+<div class:list={mobile ? 'flex flex-col' : 'flex items-center gap-2'}>
+  <a
+    id={id('header-docs-home-link')}
+    href={DOCS_URL}
+    class:list={[linkClass, 'text-[#FAFAFA]']}
+  >
+    Docs
+  </a>
+  {
+    mobile ? (
+      <>
+        <MobileNavMenu menu="solutions" />
+        <MobileNavMenu menu="resources" />
+      </>
+    ) : (
+      <DesktopNavMenu client:load />
+    )
+  }
+  <a
+    id={id('header-nx-cloud-link')}
+    href="https://nx.dev/#nx-cloud"
+    class={linkClass}
+  >
+    <span class="relative inline-block font-medium">
+      <span aria-hidden="true" class="nx-glare-glow">Nx Cloud</span>
+      <span class="nx-glare">Nx Cloud</span>
+    </span>
+  </a>
+  <a
+    id={id('header-pricing-link')}
+    href="https://nx.dev/pricing"
+    class={linkClass}
+  >
+    Pricing
+  </a>
+  <a
+    id={id('header-contact-btn')}
+    href="https://nx.dev/contact"
+    class={linkClass}
+  >
+    Contact
+  </a>
+</div>

@@ -278,6 +278,16 @@ export const sidebar = [
 - Component-specific styles use Tailwind utilities
 - Dark/light mode support built into Starlight and customized in `global.css`
 
+### Nx brand
+
+The docs follow the Nx brand guidelines, so `nx.dev/docs` reads as one site with `nx.dev` and the blog.
+
+- **Colors**: the brand ramps (`--color-nx-neutral-*`, `--color-nx-primary-*`, plus `cloud`, `success`, `warning` and `danger`) are defined in the `@theme` block of `global.css`. Tailwind's `slate`, `gray`, `zinc`, `blue`, `sky`, `green`, `yellow`, `amber` and `red` palettes point at them, so existing utility classes pick up the brand colors. The Starlight tokens (`--sl-color-*`) are set from the same ramps.
+- **Fonts**: Instrument Sans for text and Server Mono for code, served from `public/fonts`.
+- **Code blocks**: themes and surfaces are set in `ec.config.mjs`.
+- **Header and footer**: `src/components/layout/Header.astro` and `src/components/layout/site-nav/` are hand-built copies of the nx.dev (Framer) navbar and footer, shared with the blog (`nrwl/nx-blog`). They are always dark, like nx.dev. The header keeps the docs' own arrangement: logo, version switcher and the whole nav on the left (in line with the sidebar), search, the GitHub star count and the theme toggle on the right, with no "Get Started" pill. The theme toggle shows the active theme's icon and expands on hover or focus. The footer leaves out nx.dev's animated rays. When the Framer navbar or footer changes, update these and the blog together.
+- The header is 80px tall (64px below `50rem`), set through `--sl-nav-height`. Below `50rem` the nx.dev nav moves to the end of the sidebar menu.
+
 ## Configuration Files
 
 ### `astro.config.mjs`

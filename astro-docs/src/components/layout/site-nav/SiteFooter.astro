@@ -1,0 +1,187 @@
+---
+// This footer mirrors the nx.dev (Framer) footer: same content, measurements
+// and colors, as ported for the blog in nrwl/nx-blog, minus the animated rays
+// at the bottom, which are too much under a docs page. When the Framer footer
+// changes, update this file too.
+
+interface FooterLink {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
+interface FooterColumn {
+  title: string;
+  links: FooterLink[];
+}
+
+const columns: FooterColumn[] = [
+  {
+    title: 'Quick Links',
+    links: [
+      { label: 'Nx Cloud', href: 'https://nx.dev/#nx-cloud' },
+      { label: 'Pricing', href: 'https://nx.dev/pricing' },
+      { label: 'Docs', href: '/docs/getting-started/intro' },
+      { label: 'Blog', href: 'https://nx.dev/blog' },
+    ],
+  },
+  {
+    title: 'Solutions',
+    links: [
+      { label: 'Enterprise', href: 'https://nx.dev/enterprise' },
+      { label: 'Developers', href: 'https://nx.dev/solutions/engineering' },
+      { label: 'Platform & Devops', href: 'https://nx.dev/solutions/platform' },
+      { label: 'Eng. Managers', href: 'https://nx.dev/solutions/management' },
+      { label: 'CTO & VPs Eng', href: 'https://nx.dev/solutions/leadership' },
+      { label: 'Security', href: 'https://nx.dev/enterprise/security' },
+    ],
+  },
+  {
+    title: 'Products',
+    links: [
+      { label: 'Nx', href: 'https://nx.dev' },
+      { label: 'Nx Cloud', href: 'https://nx.dev/#nx-cloud' },
+      { label: 'Nx Labs', href: 'https://nx.dev/contact/labs' },
+      { label: 'Status', href: 'https://status.nx.app/', external: true },
+    ],
+  },
+  {
+    title: 'Resources',
+    links: [
+      { label: 'Tutorials', href: '/docs/getting-started/tutorials' },
+      { label: 'Webinars', href: 'https://nx.dev/webinars' },
+      { label: 'Customers', href: 'https://nx.dev/customers' },
+      { label: 'Case Studies', href: 'https://nx.dev/customer-stories' },
+      {
+        label: 'Monorepo 101',
+        href: 'https://monorepo.tools/',
+        external: true,
+      },
+      {
+        label: 'Metaharness 101',
+        href: 'https://metaharness.tools/',
+        external: true,
+      },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About us', href: 'https://nx.dev/company' },
+      { label: 'Careers', href: 'https://nx.dev/careers' },
+      { label: 'Contact us', href: 'https://nx.dev/contact' },
+    ],
+  },
+];
+
+const socialLinks = [
+  {
+    label: 'X',
+    href: 'https://x.com/NxDevTools?utm_source=nx.dev',
+    path: 'M17.56 3.25H20.53L14.05 10.66L21.67 20.75H15.70L11.02 14.63L5.67 20.75H2.71L9.64 12.82L2.32 3.25H8.44L12.67 8.84L17.56 3.25ZM16.52 18.97H18.16L7.55 4.93H5.79L16.52 18.97Z',
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/company/nxdevtools',
+    path: 'M19.65 3H4.35C3.99 3 3.64 3.14 3.39 3.39C3.14 3.64 3 3.99 3 4.35V19.65C3 20 3.14 20.35 3.39 20.60C3.64 20.85 3.99 21 4.35 21H19.65C20 21 20.35 20.85 20.60 20.60C20.85 20.35 21 20 21 19.65V4.35C21 3.99 20.85 3.64 20.60 3.39C20.35 3.14 20 3 19.65 3ZM8.4 18.3H5.7V10.2H8.4V18.3ZM7.05 8.62C6.74 8.61 6.44 8.51 6.18 8.33C5.93 8.15 5.73 7.91 5.62 7.62C5.51 7.33 5.49 7.01 5.55 6.71C5.62 6.41 5.77 6.13 5.99 5.92C6.21 5.70 6.49 5.55 6.80 5.50C7.10 5.44 7.42 5.47 7.70 5.59C7.99 5.72 8.23 5.92 8.40 6.17C8.57 6.43 8.66 6.74 8.67 7.05C8.66 7.47 8.48 7.87 8.18 8.17C7.88 8.46 7.47 8.62 7.05 8.62ZM18.3 18.3H15.6V14.03C15.6 12.75 15.06 12.29 14.35 12.29C14.15 12.31 13.95 12.36 13.76 12.45C13.58 12.54 13.41 12.67 13.28 12.83C13.14 12.98 13.04 13.16 12.97 13.36C12.91 13.55 12.88 13.76 12.9 13.97C12.89 14.01 12.89 14.05 12.9 14.09V18.3H10.2V10.2H12.81V11.37C13.07 10.96 13.43 10.64 13.86 10.42C14.28 10.20 14.76 10.09 15.24 10.11C16.63 10.11 18.26 10.88 18.26 13.40L18.3 18.3Z',
+  },
+  {
+    label: 'GitHub',
+    href: 'https://github.com/nrwl/nx?utm_source=nx.dev',
+    path: 'M12 1.95C17.52 1.95 22 6.42 22 11.95C21.99 14.04 21.34 16.08 20.11 17.79C18.89 19.49 17.17 20.76 15.18 21.43C14.68 21.53 14.5 21.22 14.5 20.96C14.5 20.62 14.51 19.55 14.51 18.21C14.51 17.27 14.2 16.67 13.83 16.36C16.06 16.11 18.4 15.26 18.4 11.42C18.4 10.32 18.01 9.43 17.37 8.73C17.47 8.48 17.82 7.46 17.27 6.08C17.27 6.08 16.43 5.81 14.52 7.11C13.72 6.88 12.87 6.77 12.02 6.77C11.17 6.77 10.32 6.88 9.52 7.11C7.61 5.82 6.77 6.08 6.77 6.08C6.22 7.46 6.57 8.48 6.67 8.73C6.03 9.43 5.65 10.33 5.65 11.42C5.65 15.25 7.97 16.11 10.2 16.36C9.91 16.61 9.65 17.05 9.56 17.70C8.98 17.96 7.55 18.38 6.65 16.87C6.46 16.57 5.9 15.83 5.11 15.85C4.27 15.86 4.77 16.32 5.12 16.51C5.55 16.75 6.03 17.63 6.15 17.92C6.35 18.48 7 19.56 9.51 19.10C9.51 19.93 9.52 20.72 9.52 20.96C9.52 21.22 9.33 21.52 8.83 21.43C6.84 20.77 5.11 19.50 3.88 17.79C2.65 16.09 1.99 14.04 2 11.95C2 6.42 6.47 1.95 12 1.95Z',
+  },
+];
+---
+
+<footer class="nx-chrome flex flex-col overflow-hidden bg-[#0C0C0D]">
+  <div
+    class="flex flex-col items-center bg-[#19191A] px-5 pt-12 pb-8 min-[810px]:px-8 min-[810px]:pt-14 min-[810px]:pb-10 min-[1200px]:pt-16 min-[1200px]:pb-12"
+  >
+    <div class="flex w-full max-w-[1340px] flex-col gap-16">
+      <div
+        class="flex flex-col gap-12 min-[1200px]:flex-row min-[1200px]:gap-16"
+      >
+        <div
+          class="flex flex-col gap-6 min-[810px]:w-[400px] min-[1200px]:w-[320px] min-[1200px]:flex-none"
+        >
+          <a href="https://nx.dev" class="block w-fit">
+            <svg
+              class="block h-7 w-[52px]"
+              viewBox="0 0 51.899 28"
+              role="img"
+              aria-label="Nx"
+            >
+              <path
+                fill="#FAFAFA"
+                d="M27.05 0h6.158a.77.77 0 0 1 .754.923l-4.463 21.89a6.482 6.482 0 0 1-12.276 1.334L12.418 13.32c-.3-.678-1.293-.58-1.454.144L7.852 27.399A.77.77 0 0 1 7.1 28H.943a.77.77 0 0 1-.754-.923L4.636 5.2A6.492 6.492 0 0 1 16.93 3.858l4.816 10.845c.3.678 1.293.579 1.454-.146L26.3.603A.77.77 0 0 1 27.05 0m13.354 13.991h-3.788a.77.77 0 0 1-.599-1.252l4.204-5.216a.77.77 0 0 0 .004-.961L36 1.248A.77.77 0 0 1 36.602 0h3.65a.77.77 0 0 1 .6.288l1.996 2.488a.77.77 0 0 0 1.2.001l2.007-2.49a.77.77 0 0 1 .6-.287h3.65a.77.77 0 0 1 .602 1.248l-4.224 5.314a.77.77 0 0 0 .003.961l4.204 5.216a.77.77 0 0 1-.599 1.252h-3.788a.77.77 0 0 1-.602-.29l-1.845-2.32a.77.77 0 0 0-1.205 0l-1.844 2.32a.77.77 0 0 1-.603.29"
+              ></path>
+            </svg>
+          </a>
+          <p class="text-[16px] leading-[24px] text-[#D5D5D7]">
+            The Monorepo Platform that amplifies both developers and AI agents.
+          </p>
+        </div>
+
+        <div
+          class="grid grid-cols-2 gap-8 min-[810px]:grid-cols-3 min-[1200px]:flex min-[1200px]:flex-1"
+        >
+          {
+            columns.map((column) => (
+              <div class="flex flex-col gap-4 min-[1200px]:flex-1">
+                <p class="text-[14px] leading-[20px] text-[#73737B]">
+                  {column.title}
+                </p>
+                <ul class="m-0 flex list-none flex-col gap-3 p-0">
+                  {column.links.map((link) => (
+                    <li class="text-[14px] leading-[20px] font-medium whitespace-nowrap">
+                      <a
+                        href={link.href}
+                        {...(link.external
+                          ? { target: '_blank', rel: 'noopener noreferrer' }
+                          : {})}
+                        class="text-[#D5D5D7] no-underline transition-colors duration-200 ease-[cubic-bezier(0.44,0,0.56,1)] hover:text-[#F4F4F5]"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <div
+        class="flex flex-col items-start gap-4 pt-8 shadow-[inset_0_1px_0_#28282A] min-[810px]:flex-row min-[810px]:items-center min-[810px]:justify-between"
+      >
+        <p class="text-[14px] leading-[20px] text-[#545459]">
+          &copy; {new Date().getFullYear()} Nrwl. All rights reserved.
+        </p>
+        <div class="flex items-center gap-4">
+          {
+            socialLinks.map((social) => (
+              <a
+                href={social.href}
+                aria-label={social.label}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex h-5 w-5 items-center justify-center text-[#D5D5D7]"
+              >
+                <svg
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path d={social.path} fill="currentColor" />
+                </svg>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+</footer>
