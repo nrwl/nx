@@ -1,8 +1,7 @@
 ---
-import { NxFanRays } from './NxFanRays';
-
 // This footer mirrors the nx.dev (Framer) footer: same content, measurements
-// and colors, as ported for the blog in nrwl/nx-blog. When the Framer footer
+// and colors, as ported for the blog in nrwl/nx-blog, minus the animated rays
+// at the bottom, which are too much under a docs page. When the Framer footer
 // changes, update this file too.
 
 interface FooterLink {
@@ -185,8 +184,4 @@ const socialLinks = [
     </div>
   </div>
 
-  <NxFanRays
-    client:visible
-    className="h-[180px] min-[810px]:h-[260px] min-[1200px]:h-[355px]"
-  />
 </footer>

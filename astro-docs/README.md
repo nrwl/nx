@@ -285,7 +285,7 @@ The docs follow the Nx brand guidelines, so `nx.dev/docs` reads as one site with
 - **Colors**: the brand ramps (`--color-nx-neutral-*`, `--color-nx-primary-*`, plus `cloud`, `success`, `warning` and `danger`) are defined in the `@theme` block of `global.css`. Tailwind's `slate`, `gray`, `zinc`, `blue`, `sky`, `green`, `yellow`, `amber` and `red` palettes point at them, so existing utility classes pick up the brand colors. The Starlight tokens (`--sl-color-*`) are set from the same ramps.
 - **Fonts**: Instrument Sans for text and Server Mono for code, served from `public/fonts`.
 - **Code blocks**: themes and surfaces are set in `ec.config.mjs`.
-- **Header and footer**: `src/components/layout/Header.astro` and `src/components/layout/site-nav/` are hand-built copies of the nx.dev (Framer) navbar and footer, shared with the blog (`nrwl/nx-blog`). They are always dark, like nx.dev. Search, the version switcher and the theme switcher are the docs-only additions. When the Framer navbar or footer changes, update these and the blog together.
+- **Header and footer**: `src/components/layout/Header.astro` and `src/components/layout/site-nav/` are hand-built copies of the nx.dev (Framer) navbar and footer, shared with the blog (`nrwl/nx-blog`). They are always dark, like nx.dev. The header keeps the docs' own arrangement: logo, version switcher and nav on the left, search, contact, social icons and theme switcher on the right, with no "Get Started" pill. The footer leaves out nx.dev's animated rays. When the Framer navbar or footer changes, update these and the blog together.
 - The header is 80px tall (64px below `50rem`), set through `--sl-nav-height`. Below `50rem` the nx.dev nav moves to the end of the sidebar menu.
 
 ## Configuration Files

@@ -9,7 +9,9 @@ import {
 
 // The Solutions and Resources menus of the nx.dev (Framer) navbar: same
 // content, measurements, colors and motion. Ported from the blog header
-// (nrwl/nx-blog, blog/src/components/Header.tsx). Keep them in sync.
+// (nrwl/nx-blog, blog/src/components/Header.tsx). Keep them in sync. In the
+// docs the nav sits on the left, so the panel opens from the "Docs" link
+// rightwards, and the "Complex setup?" card only shows from 80rem.
 
 const EASE_MENU = 'ease-[cubic-bezier(0.32,0.72,0,1)]';
 const EASE_DEFAULT = 'ease-[cubic-bezier(0.25,0.1,0.25,1)]';
@@ -133,7 +135,7 @@ function ComplexSetupCard({ active }: { active: boolean }) {
       href="https://nx.dev/contact/labs"
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
-      className="group/card relative flex h-[231px] w-[318px] flex-none flex-col justify-end gap-1 overflow-hidden rounded-[8px] bg-[#28282A] p-5 no-underline transition-colors duration-200 ease-[cubic-bezier(0,0,0.58,1)] hover:bg-[#2E2E30]"
+      className="group/card relative hidden h-[231px] w-[318px] flex-none flex-col justify-end gap-1 overflow-hidden rounded-[8px] bg-[#28282A] p-5 no-underline transition-colors duration-200 ease-[cubic-bezier(0,0,0.58,1)] hover:bg-[#2E2E30] min-[80rem]:flex"
     >
       <div className="absolute inset-0">
         <ComplexSetupIllustration organized={hovered} active={active} />
@@ -236,7 +238,7 @@ export function DesktopNavMenu() {
 
       <div
         {...inert(!open)}
-        className={`absolute top-[26.4px] right-[-200px] flex flex-col items-end transition-[opacity,translate] duration-[320ms] ${EASE_MENU} ${
+        className={`absolute top-[26.4px] left-[-73px] flex flex-col items-start transition-[opacity,translate] duration-[320ms] max-[61.999rem]:left-[-89px] ${EASE_MENU} ${
           open
             ? 'translate-y-[6px] opacity-100'
             : 'pointer-events-none opacity-0'
@@ -248,7 +250,7 @@ export function DesktopNavMenu() {
           <div
             className={`relative overflow-hidden rounded-[12px] bg-[#19191A] transition-[width,height] duration-[320ms] ${EASE_MENU} after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:border after:border-[#28282A] ${
               shown === 'solutions'
-                ? 'h-[277px] w-[1068px]'
+                ? 'h-[277px] w-[726px] min-[80rem]:w-[1068px]'
                 : 'h-[269px] w-[726px]'
             }`}
           >
@@ -281,8 +283,10 @@ export function DesktopNavMenu() {
             </div>
           </div>
           <PanelCaret
-            className={`absolute top-[-5px] h-2 w-[13px] transition-[right] duration-[320ms] ${EASE_MENU} ${
-              shown === 'solutions' ? 'right-[348px]' : 'right-[244px]'
+            className={`absolute top-[-5px] h-2 w-[13px] transition-[left] duration-[320ms] ${EASE_MENU} ${
+              shown === 'solutions'
+                ? 'left-[113px] max-[61.999rem]:left-[129px]'
+                : 'left-[217px] max-[61.999rem]:left-[233px]'
             }`}
           />
         </div>

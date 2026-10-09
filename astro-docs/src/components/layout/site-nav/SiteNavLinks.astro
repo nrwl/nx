@@ -3,6 +3,8 @@ import { DesktopNavMenu, MobileNavMenu } from './NavMenu';
 
 // The nx.dev (Framer) nav entries, in the same order. `mobile` renders the
 // stacked list of the phone menu, which sits at the end of the docs sidebar.
+// On desktop "Contact" sits on the right of the header instead, and there is
+// no "Get Started" pill: the reader is already in the docs.
 interface Props {
   mobile?: boolean;
 }
@@ -52,18 +54,11 @@ const id = (value: string) => (mobile ? undefined : value);
   >
     Pricing
   </a>
-  <a
-    id={id('header-contact-btn')}
-    href="https://nx.dev/contact"
-    class={linkClass}
-  >
-    Contact
-  </a>
+  {
+    mobile && (
+      <a href="https://nx.dev/contact" class={linkClass}>
+        Contact
+      </a>
+    )
+  }
 </div>
-<a
-  id={id('header-get-started-btn')}
-  href={DOCS_URL}
-  class="relative flex w-fit items-center justify-center overflow-hidden rounded-[46px] bg-[#28282A] px-4 py-[9px] text-[14px] leading-[1.2] font-medium whitespace-nowrap text-[#E5E5E6] no-underline transition-colors duration-[250ms] ease-out select-none after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:border after:border-[#535352] hover:bg-[#404044]"
->
-  Get Started
-</a>

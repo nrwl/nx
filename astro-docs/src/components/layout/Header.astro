@@ -1,15 +1,16 @@
 ---
 import config from 'virtual:starlight/user-config';
 import Search from 'virtual:starlight/components/Search';
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
 import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
 import NxLogo from './site-nav/NxLogo.astro';
 import SiteNavLinks from './site-nav/SiteNavLinks.astro';
 
-// This header mirrors the nx.dev (Framer) navbar: same content, measurements,
-// colors and motion, as ported for the blog in nrwl/nx-blog. The docs are
-// served under nx.dev/docs, so the two have to look like one site. The search,
-// version switcher and theme switcher are the docs-only additions. When the
-// Framer navbar changes, update this file too.
+// This header carries the nx.dev (Framer) navbar's look into the docs: same
+// logo, entries, type, colors and menus, as ported for the blog in
+// nrwl/nx-blog. The arrangement is the docs' own: logo, version and nav on
+// the left, search, contact, socials and theme on the right. When the Framer
+// navbar changes, update this file too.
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -79,11 +80,27 @@ const themes = [
           }
         </div>
       </div>
+      <nav
+        class="nx-header-nav hidden flex-none items-center print:hidden"
+        aria-label="Nx"
+      >
+        <SiteNavLinks />
+      </nav>
     </div>
 
     <div class="flex min-w-0 items-center gap-3">
       <div class="nx-header-controls flex items-center gap-3 print:hidden">
         {shouldRenderSearch && <Search />}
+        <a
+          id="header-contact-btn"
+          href="https://nx.dev/contact"
+          class="nx-header-contact hidden items-center justify-center rounded-full px-4 py-2 text-[14px] leading-[1.2] font-medium text-[#D5D5D7] no-underline"
+        >
+          Contact
+        </a>
+        <div class="nx-header-socials hidden items-center gap-4">
+          <SocialIcons />
+        </div>
         <div
           class="nx-theme-toggle flex items-center gap-1"
           role="group"
@@ -131,12 +148,6 @@ const themes = [
           <div hidden><ThemeSelect /></div>
         </div>
       </div>
-      <nav
-        class="nx-header-nav hidden flex-none items-center gap-3 print:hidden"
-        aria-label="Nx"
-      >
-        <SiteNavLinks />
-      </nav>
     </div>
   </div>
 </div>
@@ -145,23 +156,38 @@ const themes = [
   /* The site nav needs 50rem, the same width at which Starlight shows the
      sidebar next to the content. Below that it lives in the sidebar menu. */
   @media (min-width: 50rem) {
-    .nx-header-nav {
+    .nx-header-nav,
+    .nx-header-contact {
       display: flex;
     }
   }
 
-  /* nx.dev keeps its full nav down to 50rem, where the docs controls no longer
-     fit next to it. In that band the version switcher and the "Get Started"
-     pill (the same link as "Docs") step aside. */
+  /* Just above 50rem the nav leaves no room for the version switcher. */
   @media (min-width: 50rem) and (max-width: 61.999rem) {
-    .nx-header-version,
-    .nx-header-nav :global(#header-get-started-btn) {
+    .nx-header-version {
       display: none;
     }
 
     .nx-header-controls {
       gap: 0.5rem;
     }
+  }
+
+  /* Social icons need the room that opens up from 75rem. They sit on the
+     always-dark header, so they do not follow the page theme. */
+  @media (min-width: 75rem) {
+    .nx-header-socials {
+      display: flex;
+    }
+  }
+
+  .nx-header-socials :global(a) {
+    color: #a3a3a8;
+    transition: color 0.2s;
+  }
+
+  .nx-header-socials :global(a:hover) {
+    color: #fafafa;
   }
 
   /* Starlight's search button, fitted into the nx.dev chrome: an icon on
@@ -237,7 +263,6 @@ const themes = [
     track('header-nx-cloud-link', 'nx-cloud-click', 'header-navigation');
     track('header-pricing-link', 'pricing-click', 'header-navigation');
     track('header-contact-btn', 'contact-click', 'header-cta');
-    track('header-get-started-btn', 'get-started-click', 'header-cta');
   }
 
   function setupThemeToggle() {
