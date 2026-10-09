@@ -258,6 +258,15 @@
   }
 }
 
+/* No rubber-band scrolling past the page edges with a mouse or trackpad, so
+   the fixed header and sidebar stay put. Touch devices keep it. */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+}
+
 /* Dark mode colors. */
 
 :root[data-theme='dark'] {

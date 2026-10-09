@@ -37,8 +37,8 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
         <sl-sidebar-pane popover="" id="starlight__sidebar" class="sidebar-pane">
           <div class="sidebar-content sl-flex">
             <slot name="sidebar" />
-            <!-- GitHub stars, for screens without the table of contents column -->
-            <div class="mt-auto xl:hidden">
+            <!-- GitHub stars, for screens too narrow for the count in the header -->
+            <div class="mt-auto min-[62rem]:hidden">
               <GitHubStarWidget starsCount={githubStarsCount} client:load />
             </div>
             <!-- Phone menu: the nx.dev nav, which the header only has room for from 50rem -->
