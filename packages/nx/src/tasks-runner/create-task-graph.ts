@@ -34,6 +34,11 @@ export class ProcessTasks {
   readonly tasks: { [id: string]: Task } = {};
   readonly dependencies: { [k: string]: string[] } = {};
   readonly continuousDependencies: { [k: string]: string[] } = {};
+  // `from\0to` continuous edges by whether their `dependsOn` entry has
+  // `inputs: false`. Keyed from the creator's target, like `recordEdge`, so
+  // an edge through a dummy task names the real task.
+  private readonly continuousEdgesWithoutInputs = new Set<string>();
+  private readonly continuousEdgesWithInputs = new Set<string>();
   readonly dependencyOverrides: DependencyOverrides = {};
   private readonly allTargetNames: string[];
 
@@ -272,7 +277,7 @@ export class ProcessTasks {
       if (task.id !== selfTaskId) {
         this.recordEdge(task, selfTaskId, taskOverrides);
         if (this.tasks[selfTaskId].continuous) {
-          this.continuousDependencies[task.id].push(selfTaskId);
+          this.addContinuousEdge(task, selfTaskId, dependencyConfig);
         } else {
           this.dependencies[task.id].push(selfTaskId);
         }
@@ -328,7 +333,7 @@ export class ProcessTasks {
         if (task.id !== depTargetId) {
           this.recordEdge(task, depTargetId, taskOverrides);
           if (depTargetConfiguration.continuous) {
-            this.continuousDependencies[task.id].push(depTargetId);
+            this.addContinuousEdge(task, depTargetId, dependencyConfig);
           } else {
             this.dependencies[task.id].push(depTargetId);
           }
@@ -371,6 +376,41 @@ export class ProcessTasks {
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
     }
+  }
+
+  private addContinuousEdge(
+    task: Task,
+    dependencyId: string,
+    dependencyConfig: TargetDependencyConfig
+  ) {
+    this.continuousDependencies[task.id].push(dependencyId);
+    const { project, target, configuration } = task.target;
+    const edge = `${createTaskId(project, target, configuration)}\0${dependencyId}`;
+    (dependencyConfig.inputs === false
+      ? this.continuousEdgesWithoutInputs
+      : this.continuousEdgesWithInputs
+    ).add(edge);
+  }
+
+  /**
+   * Continuous edges every `dependsOn` path into which has `inputs: false`.
+   * Undefined when there are none, so graphs without the option are unchanged.
+   */
+  continuousDependenciesWithoutInputs(): { [k: string]: string[] } | undefined {
+    let without: { [k: string]: string[] } | undefined;
+    for (const [taskId, deps] of Object.entries(this.continuousDependencies)) {
+      const excluded = deps.filter((dep) => {
+        const edge = `${taskId}\0${dep}`;
+        return (
+          this.continuousEdgesWithoutInputs.has(edge) &&
+          !this.continuousEdgesWithInputs.has(edge)
+        );
+      });
+      if (excluded.length > 0) {
+        (without ??= {})[taskId] = excluded;
+      }
+    }
+    return without;
   }
 
   private recordEdge(
@@ -561,11 +601,16 @@ function buildTaskGraph(
     excludeTaskDependencies
   );
 
+  const continuousDependenciesWithoutInputs =
+    p.continuousDependenciesWithoutInputs();
   return {
     roots,
     tasks: p.tasks,
     dependencies: p.dependencies,
     continuousDependencies: p.continuousDependencies,
+    ...(continuousDependenciesWithoutInputs
+      ? { continuousDependenciesWithoutInputs }
+      : {}),
   };
 }
 

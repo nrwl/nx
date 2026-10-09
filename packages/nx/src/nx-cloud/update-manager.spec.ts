@@ -1,76 +1,904 @@
-import { join } from 'path';
+import type { HttpClient } from '../utils/http-client';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
-import { existsSync } from 'fs';
-import type { MockedFunction } from 'vitest';
+import { basename, dirname, join } from 'path';
+import { type ChildProcess, spawn } from 'child_process';
+import { Readable } from 'stream';
+import * as tar from 'tar-stream';
+import { createGzip } from 'zlib';
 
-vi.mock('fs', async () => {
-  const actual = await vi.importActual<typeof import('fs')>('fs');
-  return { ...actual, existsSync: vi.fn() };
-});
+type UpdateManager = typeof import('./update-manager');
 
-vi.mock('../utils/workspace-root', () => ({
-  workspaceRoot: '/workspace',
-  workspaceRootInner: vi.fn(),
-}));
-
-vi.mock('../utils/cache-directory', () => ({
-  cacheDir: join('/shared', 'cache'),
-  cacheDirectoryForWorkspace: vi.fn(() => join('/workspace', '.nx', 'cache')),
-}));
-
-// `isCI` reads ~18 environment variables that the runner sets, so left unmocked
-// these rows answer differently in CI than on a laptop.
-vi.mock('../utils/is-ci', () => ({ isCI: vi.fn(() => false) }));
-
-import { getBundleInstallDefaultLocation } from './update-manager';
-import { isCI } from '../utils/is-ci';
-
-const mockExistsSync = existsSync as MockedFunction<typeof existsSync>;
-const mockIsCI = isCI as MockedFunction<typeof isCI>;
-
-/** Paths this suite treats as present on disk. */
-function stagePresent(paths: string[]) {
-  mockExistsSync.mockImplementation((p) => paths.includes(p as string));
+/** A gzipped tarball shaped like a real client bundle. */
+function bundleTarball(files: Record<string, string>): Readable {
+  const pack = tar.pack();
+  const dirs = new Set<string>();
+  for (const name of Object.keys(files)) {
+    const slash = name.lastIndexOf('/');
+    if (slash > -1) dirs.add(name.slice(0, slash));
+  }
+  // Entries are extracted in order and nested files are written with plain
+  // createWriteStream, so parent directories have to arrive first.
+  for (const dir of dirs) pack.entry({ name: dir, type: 'directory' });
+  for (const [name, content] of Object.entries(files)) {
+    pack.entry({ name }, content);
+  }
+  pack.finalize();
+  return pack.pipe(createGzip());
 }
 
-const NX_JSON = join('/workspace', 'nx.json');
+function httpClientServing(data: Readable | (() => Readable)): HttpClient {
+  return {
+    get: vi.fn(async () => ({
+      data: typeof data === 'function' ? data() : data,
+    })),
+  } as unknown as HttpClient;
+}
 
-describe('getBundleInstallDefaultLocation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockIsCI.mockReturnValue(false);
-    stagePresent([NX_JSON]);
+function httpClientFailing(error: Error): HttpClient {
+  return {
+    get: vi.fn(async () => Promise.reject(error)),
+  } as unknown as HttpClient;
+}
+
+// A stand-in for a second nx process contending for the download lock. It
+// takes the real native flock on the real lockfile and writes the same
+// "<version> <directory>" record, so the code under test is exercised against
+// a genuine cross-process holder rather than a stub.
+//
+// The 'version' layout publishes under the server version itself, which is
+// where a released nx puts its bundle and the path a publish step that rewrote
+// <installDir>/<version> would delete - so the same-version tests below fail
+// if the production fix is removed. The 'unique' layout is what this code now
+// does, and it is the only layout under which the record's two fields differ.
+const PEER_SOURCE = `
+const { FileLock } = require(process.argv[2]);
+const fs = require('fs');
+const path = require('path');
+const { randomUUID } = require('crypto');
+
+const [installDir, stateDir, version, holdMs, mode, layout] =
+  process.argv.slice(3);
+const lockPath = path.join(stateDir, 'download.lock');
+
+function install() {
+  const dirName = layout === 'unique' ? version + '-' + randomUUID() : version;
+  const dir = path.join(installDir, dirName);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'index.js'), 'peer bundle', 'utf-8');
+  // Recorded only on completion, exactly as the code under test does.
+  fs.writeFileSync(
+    path.join(stateDir, 'download.record'),
+    version + ' ' + dirName,
+    'utf-8'
+  );
+}
+
+const lock = new FileLock(lockPath);
+lock.lock();
+if (mode === 'installed') install();
+fs.writeFileSync(path.join(installDir, 'peer-holds.flag'), '', 'utf-8');
+
+setTimeout(() => {
+  if (mode === 'install') install();
+  lock.unlock();
+}, Number(holdMs));
+`;
+
+// import.meta is unavailable under the CommonJS spec build, so walk up from
+// the cwd instead - it differs between a direct vitest run and an nx one.
+function findNativeBindings(): string {
+  let dir = process.cwd();
+  while (true) {
+    for (const rel of [
+      'src/native/native-bindings.js',
+      'packages/nx/src/native/native-bindings.js',
+    ]) {
+      const candidate = join(dir, rel);
+      if (existsSync(candidate)) return candidate;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) throw new Error('could not locate native bindings');
+    dir = parent;
+  }
+}
+
+const nativeBindings = findNativeBindings();
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// getBundleInstallDefaultLocation() resolves in three steps: no nx.json at the
+// workspace root gives a tmpdir path, an existing node_modules/.cache/nx/cloud
+// gives that legacy path, and only otherwise does it use cacheDir. This
+// fixture writes nx.json and has no node_modules, so it reaches the third
+// step, where NX_CACHE_DIRECTORY is honoured -- which is why pinning that
+// variable works here. It is not a general precedence: the two earlier steps
+// never consult it, and neither does sharedUserDataDir on the shared-root
+// branch of cacheDir. Scrubbing instead of pinning was not enough because the
+// root cacheDir falls back to is derived from git identity, which GIT_DIR
+// redirects onto a real workspace. assertContainedInFixture is what catches
+// resolution landing anywhere unexpected regardless.
+const CACHE_DIR_ENV = 'NX_CACHE_DIRECTORY';
+let originalCacheDirEnv: string | undefined;
+
+function pinCacheDirTo(workspace: string): void {
+  process.env[CACHE_DIR_ENV] = join(workspace, '.nx', 'cache');
+}
+
+function restoreCacheDirEnv(): void {
+  if (originalCacheDirEnv === undefined) delete process.env[CACHE_DIR_ENV];
+  else process.env[CACHE_DIR_ENV] = originalCacheDirEnv;
+}
+
+/**
+ * Fails the run before any test operates on a path outside the fixture. First
+ * of two layers: this one stops the tests, removeFixtureDir stops the delete.
+ */
+function assertContainedInFixture(installDir: string, workspace: string): void {
+  if (!installDir.startsWith(workspace)) {
+    throw new Error(
+      `Refusing to run: install directory resolved outside the fixture.\n` +
+        `  fixture:   ${workspace}\n` +
+        `  resolved:  ${installDir}`
+    );
+  }
+}
+
+/**
+ * The only rmSync in this file, refusing anything outside the fixture. Both
+ * afterEach bodies are defensive, so this is always reached and the check is
+ * live rather than a fallback. Three things fail it: a path
+ * assertContainedInFixture already threw on, a stale installDir from an
+ * earlier test measured against a newer workspace, and an unassigned value
+ * when beforeEach threw before mkdtemp returned. The fixture root passes
+ * trivially, since a path always startsWith itself.
+ */
+function removeFixtureDir(dir: string, workspace: string): void {
+  if (!dir || !dir.startsWith(workspace)) {
+    return;
+  }
+  rmSync(dir, { recursive: true, force: true });
+}
+
+describe('update-manager bundle download', () => {
+  let workspace: string;
+  let installDir: string;
+  let stateDir: string;
+  let updateManager: UpdateManager;
+  let consoleError: ReturnType<typeof vi.spyOn>;
+
+  beforeAll(() => {
+    originalCacheDirEnv = process.env[CACHE_DIR_ENV];
   });
 
-  it('shares the per-user root off CI', () => {
-    expect(getBundleInstallDefaultLocation()).toBe(
-      join('/shared', 'cache', 'cloud')
+  beforeEach(async () => {
+    workspace = mkdtempSync(join(tmpdir(), 'nx-update-manager-'));
+    // getBundleInstallDefaultLocation() only reaches the cacheDir branch when
+    // the root looks like a workspace.
+    writeFileSync(join(workspace, 'nx.json'), '{}');
+
+    // Before resetModules: the module graph reads this at import time.
+    pinCacheDirTo(workspace);
+
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../utils/workspace-root');
+    setWorkspaceRoot(workspace);
+    const { resetSharedRootCacheForTesting, workspaceDataDirectory } =
+      await import('../utils/cache-directory');
+    resetSharedRootCacheForTesting();
+
+    updateManager = await import('./update-manager');
+    installDir = updateManager.getBundleInstallDefaultLocation();
+    assertContainedInFixture(installDir, workspace);
+    stateDir = join(workspaceDataDirectory, 'nx-cloud');
+    assertContainedInFixture(stateDir, workspace);
+    mkdirSync(installDir, { recursive: true });
+
+    consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // Every dereference here is defensive: beforeEach can throw before
+    // assigning these, and an afterEach that aborts never reaches the
+    // cleanup below it.
+    consoleError?.mockRestore();
+    removeFixtureDir(workspace, workspace);
+    removeFixtureDir(installDir, workspace);
+  });
+
+  afterAll(restoreCacheDirEnv);
+
+  const bundleDirs = () =>
+    readdirSync(installDir)
+      .filter((f) => !f.startsWith('.'))
+      .filter((f) => statSync(join(installDir, f)).isDirectory())
+      .sort();
+
+  it('extracts the downloaded tarball into its own directory under the install root', async () => {
+    const httpClient = httpClientServing(
+      bundleTarball({
+        'index.js': 'module.exports = { commands: {} };',
+        'lib/inner.js': 'module.exports = 1;',
+      })
+    );
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+    expect(dirname(installed.fullPath)).toBe(installDir);
+    // Named for the version so the directory is still readable on disk, plus a
+    // per-install suffix so no two installs publish over each other.
+    expect(basename(installed.fullPath)).toMatch(
+      /^2608\.30\.0002-[0-9a-f-]{36}$/
+    );
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'module.exports = { commands: {} };'
+    );
+    expect(
+      readFileSync(join(installed.fullPath, 'lib/inner.js'), 'utf-8')
+    ).toBe('module.exports = 1;');
+    expect(httpClient.get).toHaveBeenCalledWith(
+      'https://example.com/bundle.tar.gz',
+      {
+        responseType: 'stream',
+      }
     );
   });
 
-  // The bundle resolves a bare `nx` by walking up into node_modules, which the
-  // shared root cannot reach.
-  it('keeps the bundle in the checkout on CI', () => {
-    mockIsCI.mockReturnValue(true);
+  it('records the server version and the directory it installed into', async () => {
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
 
-    expect(getBundleInstallDefaultLocation()).toBe(
-      join('/workspace', '.nx', 'cache', 'cloud')
+    const record = readFileSync(join(stateDir, 'download.record'), 'utf-8');
+    // Two fields, because the directory is not derivable from the version:
+    // several directories can carry the same one.
+    expect(record.trim().split(' ')).toEqual([
+      '2608.30.0002',
+      basename(installed.fullPath),
+    ]);
+  });
+
+  it('writes a distinct record per install so a repeat of the same version is distinguishable', async () => {
+    const download = () =>
+      updateManager.downloadAndExtractClientBundle(
+        httpClientServing(bundleTarball({ 'index.js': '' })),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      );
+
+    await download();
+    const first = readFileSync(join(stateDir, 'download.record'), 'utf-8');
+    await download();
+    const second = readFileSync(join(stateDir, 'download.record'), 'utf-8');
+
+    expect(second).not.toBe(first);
+    expect(second.split(' ')[0]).toBe(first.split(' ')[0]);
+  });
+
+  it('cannot brick the workspace with a version named after a control file', async () => {
+    // A bundle published over a control file would leave a directory where
+    // every later nx invocation expects a file, aborting with a raw EISDIR.
+    for (const name of ['verify.lock', 'download.lock', 'download.record']) {
+      const installed = await updateManager.downloadAndExtractClientBundle(
+        httpClientServing(bundleTarball({ 'index.js': '' })),
+        name,
+        'https://example.com/bundle.tar.gz'
+      );
+      expect(installed.version).toBe(name);
+      expect(statSync(join(stateDir, name)).isFile()).toBe(true);
+    }
+  });
+
+  it('leaves temp directories alone when there is no lock to make reclaiming them safe', async () => {
+    // Under WASM downloads run unserialized, so a '.tmp-*' may belong to an
+    // extract happening right now rather than to a dead process.
+    vi.resetModules();
+    // Unmocked in the finally below: if this test fails before unmocking, the
+    // stub FileLock leaks into every later lock test and they all fail with it.
+    vi.doMock('../native', () => ({
+      IS_WASM: true,
+      FileLock: class {
+        locked = false;
+        lock() {}
+        unlock() {}
+        check() {
+          return false;
+        }
+        wait() {
+          return Promise.resolve();
+        }
+      },
+    }));
+    try {
+      // resetModules discards the fixture root too: workspaceRoot is a
+      // module-level binding re-derived from process.cwd(). Without
+      // re-applying both steps the install directory resolves to the REAL
+      // ~/.nx/<id>/cache/cloud, and this test's rmSync/renameSync then
+      // destroy the developer's actual Nx Cloud bundle.
+      const { setWorkspaceRoot } = await import('../utils/workspace-root');
+      setWorkspaceRoot(workspace);
+      const { resetSharedRootCacheForTesting } =
+        await import('../utils/cache-directory');
+      resetSharedRootCacheForTesting();
+
+      const wasmManager: UpdateManager = await import('./update-manager');
+      const wasmInstallDir = wasmManager.getBundleInstallDefaultLocation();
+      // Belt and braces: never let a destructive test touch a path outside
+      // its own fixture, whatever the module state says.
+      expect(wasmInstallDir.startsWith(workspace)).toBe(true);
+      mkdirSync(join(wasmInstallDir, '.tmp-2608.29.0001-999'), {
+        recursive: true,
+      });
+
+      await wasmManager.downloadAndExtractClientBundle(
+        httpClientServing(bundleTarball({ 'index.js': '' })),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      );
+
+      expect(existsSync(join(wasmInstallDir, '.tmp-2608.29.0001-999'))).toBe(
+        true
+      );
+    } finally {
+      vi.doUnmock('../native');
+      vi.resetModules();
+    }
+  });
+
+  it('leaves only bundle directories in the install directory', async () => {
+    // A released nx loads any directory here as a bundle, so a control
+    // directory inside it fails with "Cannot find module .../.state".
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(readdirSync(installDir)).toEqual([basename(installed.fullPath)]);
+    expect(existsSync(join(stateDir, 'download.record'))).toBe(true);
+  });
+
+  it('reclaims leftover dot directories when cleaning up old bundles', async () => {
+    mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
+    // A crashed extract leaves this behind and nothing else reclaims it.
+    mkdirSync(join(installDir, '.tmp-2608.29.0001-999'), { recursive: true });
+    // An nx that kept its control files in the install directory left this.
+    mkdirSync(join(installDir, '.state'), { recursive: true });
+    writeFileSync(join(installDir, '.state', 'verify.lock'), '123');
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(readdirSync(installDir)).toEqual([basename(installed.fullPath)]);
+  });
+
+  it('rejects a server version that would escape the install directory', async () => {
+    const outside = join(workspace, 'precious');
+    writeFileSync(outside, 'do not delete');
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': '' }));
+
+    await expect(
+      updateManager.downloadAndExtractClientBundle(
+        httpClient,
+        '../../../../precious',
+        'https://example.com/bundle.tar.gz'
+      )
+    ).rejects.toThrow(/Invalid Nx Cloud client bundle version/);
+
+    expect(existsSync(outside)).toBe(true);
+    expect(httpClient.get).not.toHaveBeenCalled();
+  });
+
+  it('never writes into the file it holds the lock on', async () => {
+    // Windows byte-range locks are mandatory and handle-scoped, so writing to
+    // the locked file would fail with ERROR_LOCK_VIOLATION. POSIX flock is
+    // advisory, so only this assertion catches a regression here.
+    await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(readFileSync(join(stateDir, 'download.lock'), 'utf-8')).toBe('');
+    expect(readFileSync(join(stateDir, 'download.record'), 'utf-8')).not.toBe(
+      ''
     );
   });
 
-  it('reuses the legacy path when the nx-cloud package is installed', () => {
-    const legacy = join('/workspace', 'node_modules', '.cache', 'nx', 'cloud');
-    stagePresent([NX_JSON, legacy]);
-    mockIsCI.mockReturnValue(true);
+  it('removes bundles left by earlier versions', async () => {
+    mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
 
-    expect(getBundleInstallDefaultLocation()).toBe(legacy);
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(bundleDirs()).toEqual([basename(installed.fullPath)]);
   });
 
-  it('falls back to a per-api temp directory outside a workspace', () => {
-    stagePresent([]);
+  it('removes an earlier install of the same version on an uncontended install', async () => {
+    const download = () =>
+      updateManager.downloadAndExtractClientBundle(
+        httpClientServing(bundleTarball({ 'index.js': '' })),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      );
 
-    expect(getBundleInstallDefaultLocation()).toMatch(
-      new RegExp(`^${join(tmpdir(), 'nx-cloud-client')}.`)
+    const first = await download();
+    const second = await download();
+
+    // Publishing into its own directory must not turn repeat installs of one
+    // version into an unbounded pile. Nothing contended either install, so
+    // cleanup runs and the earlier directory goes.
+    expect(second.fullPath).not.toBe(first.fullPath);
+    expect(bundleDirs()).toEqual([basename(second.fullPath)]);
+  });
+
+  it('keeps files in the install directory when cleaning up old bundles', async () => {
+    // A released nx writes its verify.lock here and may still be using it.
+    writeFileSync(join(installDir, 'verify.lock'), '123');
+    mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
+
+    await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
     );
+
+    expect(existsSync(join(installDir, 'verify.lock'))).toBe(true);
+    expect(existsSync(join(stateDir, 'download.lock'))).toBe(true);
+    expect(existsSync(join(stateDir, 'download.record'))).toBe(true);
+  });
+
+  it('survives an entry it cannot stat while cleaning up old bundles', async () => {
+    // A concurrent cleanup can unlink an entry between the readdir and the
+    // stat. A broken symlink reproduces that failure deterministically.
+    symlinkSync(join(installDir, 'gone'), join(installDir, '2608.29.0001'));
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+  });
+
+  it('leaves no bundle behind when the download request fails', async () => {
+    await expect(
+      updateManager.downloadAndExtractClientBundle(
+        httpClientFailing(new Error('connection reset')),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      )
+    ).rejects.toThrow('connection reset');
+
+    expect(bundleDirs()).toEqual([]);
+  });
+
+  it('does not clobber an installed bundle when a later download fails', async () => {
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': 'good' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    await expect(
+      updateManager.downloadAndExtractClientBundle(
+        httpClientFailing(new Error('connection reset')),
+        '2608.31.0001',
+        'https://example.com/bundle.tar.gz'
+      )
+    ).rejects.toThrow('connection reset');
+
+    expect(bundleDirs()).toEqual([basename(installed.fullPath)]);
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'good'
+    );
+  });
+
+  it('rejects a tar entry that is neither a file nor a directory', async () => {
+    const pack = tar.pack();
+    pack.entry({ name: 'index.js' }, 'module.exports = {};');
+    pack.entry({ name: 'link', type: 'symlink', linkname: 'index.js' });
+    pack.entry({ name: 'after.js' }, 'module.exports = 1;');
+    pack.finalize();
+
+    await expect(
+      updateManager.downloadAndExtractClientBundle(
+        httpClientServing(pack.pipe(createGzip())),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      )
+    ).rejects.toThrow('Unsupported symlink entry');
+
+    expect(readdirSync(installDir)).toEqual([]);
+  });
+
+  it('rejects rather than hanging when the response body is not a valid archive', async () => {
+    await expect(
+      updateManager.downloadAndExtractClientBundle(
+        httpClientServing(() =>
+          Readable.from([Buffer.from('not a gzip stream')])
+        ),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      )
+    ).rejects.toThrow();
+
+    expect(bundleDirs()).toEqual([]);
+  });
+
+  it('rejects rather than hanging when the download is truncated mid-stream', async () => {
+    await expect(
+      updateManager.downloadAndExtractClientBundle(
+        httpClientServing(() => {
+          const stream = new Readable({ read() {} });
+          process.nextTick(() => stream.destroy(new Error('socket hang up')));
+          return stream;
+        }),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      )
+    ).rejects.toThrow();
+
+    expect(bundleDirs()).toEqual([]);
+  });
+});
+
+describe('update-manager download lock', () => {
+  let workspace: string;
+  let installDir: string;
+  let stateDir: string;
+  let updateManager: UpdateManager;
+  let peers: ChildProcess[];
+
+  beforeAll(() => {
+    originalCacheDirEnv = process.env[CACHE_DIR_ENV];
+  });
+
+  beforeEach(async () => {
+    workspace = mkdtempSync(join(tmpdir(), 'nx-update-manager-lock-'));
+    writeFileSync(join(workspace, 'nx.json'), '{}');
+
+    // Before resetModules: the module graph reads this at import time.
+    pinCacheDirTo(workspace);
+
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../utils/workspace-root');
+    setWorkspaceRoot(workspace);
+    const { resetSharedRootCacheForTesting, workspaceDataDirectory } =
+      await import('../utils/cache-directory');
+    resetSharedRootCacheForTesting();
+
+    updateManager = await import('./update-manager');
+    installDir = updateManager.getBundleInstallDefaultLocation();
+    assertContainedInFixture(installDir, workspace);
+    stateDir = join(workspaceDataDirectory, 'nx-cloud');
+    assertContainedInFixture(stateDir, workspace);
+    mkdirSync(installDir, { recursive: true });
+    peers = [];
+  });
+
+  afterEach(async () => {
+    // Waited on rather than fired and forgotten: a peer still holding the
+    // native flock outlives the file, and vitest kills a worker that is slow
+    // to exit, which loses this file's results rather than failing a test.
+    await Promise.all(
+      (peers ?? []).map(
+        (peer) =>
+          new Promise<void>((resolve) => {
+            if (peer.exitCode !== null || peer.signalCode !== null) {
+              resolve();
+              return;
+            }
+            peer.once('exit', () => resolve());
+            peer.kill();
+          })
+      )
+    );
+    removeFixtureDir(workspace, workspace);
+    removeFixtureDir(installDir, workspace);
+  });
+
+  afterAll(restoreCacheDirEnv);
+
+  const bundleDirs = () =>
+    readdirSync(installDir)
+      .filter((f) => !f.startsWith('.'))
+      .filter((f) => statSync(join(installDir, f)).isDirectory())
+      .sort();
+
+  /** Starts a peer holding the lock and resolves once it actually holds it. */
+  async function startPeer(options: {
+    version: string;
+    holdMs: number;
+    /**
+     * `install` installs just before releasing the lock, `installed` installs
+     * before the caller starts waiting, and `fail` never installs.
+     */
+    mode: 'install' | 'installed' | 'fail';
+    /** Where the peer publishes. Defaults to the version itself. */
+    layout?: 'version' | 'unique';
+  }): Promise<void> {
+    const script = join(workspace, 'peer.js');
+    writeFileSync(script, PEER_SOURCE, 'utf-8');
+    peers.push(
+      spawn(
+        process.execPath,
+        [
+          script,
+          nativeBindings,
+          installDir,
+          stateDir,
+          options.version,
+          String(options.holdMs),
+          options.mode,
+          options.layout ?? 'version',
+        ],
+        { stdio: 'ignore' }
+      )
+    );
+
+    const flag = join(installDir, 'peer-holds.flag');
+    for (let i = 0; i < 400 && !existsSync(flag); i++) await sleep(25);
+    if (!existsSync(flag)) throw new Error('peer never took the lock');
+  }
+
+  it('adopts the bundle a peer installed at the version it was asked for', async () => {
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({ version: '2608.30.0002', holdMs: 300, mode: 'install' });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+    expect(httpClient.get).not.toHaveBeenCalled();
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'peer bundle'
+    );
+  });
+
+  it('adopts the directory the record names rather than one named for the version', async () => {
+    // The peer installed under its own directory, so the record's two fields
+    // differ and only the second one locates the bundle. A decoy sits at the
+    // version itself: resolving selection by version would load that.
+    mkdirSync(join(installDir, '2608.30.0002'), { recursive: true });
+    writeFileSync(join(installDir, '2608.30.0002', 'index.js'), 'DECOY');
+
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({
+      version: '2608.30.0002',
+      holdMs: 300,
+      mode: 'install',
+      layout: 'unique',
+    });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(httpClient.get).not.toHaveBeenCalled();
+    expect(installed.version).toBe('2608.30.0002');
+    expect(installed.fullPath).not.toBe(join(installDir, '2608.30.0002'));
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'peer bundle'
+    );
+  });
+
+  it('downloads its own bundle when the peer installed a different version', async () => {
+    // Including when the peer's is HIGHER: the server asked this process for
+    // 2608.30.0002, and a rollback is exactly that case.
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({ version: '2608.31.0001', holdMs: 300, mode: 'install' });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+    expect(httpClient.get).toHaveBeenCalledOnce();
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.31.0001'].sort()
+    );
+  });
+
+  it('leaves the peer bundle in place on a contended install', async () => {
+    // The peer is still running from 2608.29.0001; deleting it would break
+    // that process's lazy requires. This is the original defect.
+    await startPeer({ version: '2608.29.0001', holdMs: 300, mode: 'install' });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': 'mine' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.29.0001'].sort()
+    );
+    expect(
+      readFileSync(join(installDir, '2608.29.0001', 'index.js'), 'utf-8')
+    ).toBe('peer bundle');
+  });
+
+  it('leaves the peer bundle in place when its record predates the wait', async () => {
+    // The peer has recorded its install but still holds the lock, so the
+    // record this process reads before waiting never changes.
+    await startPeer({
+      version: '2608.29.0001',
+      holdMs: 300,
+      mode: 'installed',
+    });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': 'mine' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.29.0001'].sort()
+    );
+  });
+
+  it('keeps the peer install loadable when the predated record is for the same version', async () => {
+    // The peer completed 2608.30.0002 and recorded it, then kept the lock. The
+    // record never changes during the wait, so this process cannot prove the
+    // install finished while it waited and must not adopt a directory that
+    // could hold a corrupt bundle - it downloads 2608.30.0002 again.
+    //
+    // Publishing that download over the peer's directory is the defect. The
+    // peer sits between its own install and its first `require`, so any window
+    // in which its directory is absent is a MODULE_NOT_FOUND it cannot recover
+    // from. Both installs stay on disk instead.
+    await startPeer({
+      version: '2608.30.0002',
+      holdMs: 300,
+      mode: 'installed',
+    });
+    const peerPath = join(installDir, '2608.30.0002');
+
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(httpClient.get).toHaveBeenCalledOnce();
+
+    // The holder's installation is still there and still its own.
+    expect(readFileSync(join(peerPath, 'index.js'), 'utf-8')).toBe(
+      'peer bundle'
+    );
+
+    // The replacement is a separate directory, reported at the version the
+    // server asked for, and loads the bundle this process downloaded.
+    expect(installed.version).toBe('2608.30.0002');
+    expect(installed.fullPath).not.toBe(peerPath);
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'mine'
+    );
+
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.30.0002'].sort()
+    );
+  });
+
+  it('collects what contended installs left once an install is uncontended', async () => {
+    // A contended install cannot show any bundle to be unused, so it deletes
+    // nothing and repeat contention at one version piles directories up. The
+    // next uncontended install collects them, and that is the bound on the
+    // growth.
+    await startPeer({
+      version: '2608.30.0002',
+      holdMs: 300,
+      mode: 'installed',
+    });
+
+    const contended = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': 'mine' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(bundleDirs()).toHaveLength(2);
+
+    const uncontended = await updateManager.downloadAndExtractClientBundle(
+      httpClientServing(bundleTarball({ 'index.js': 'newer' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(uncontended.fullPath).not.toBe(contended.fullPath);
+    expect(bundleDirs()).toEqual([basename(uncontended.fullPath)]);
+  });
+
+  it('does not adopt a pre-existing directory the peer never installed', async () => {
+    // recordedBundle() proves the directory the record names exists, not that
+    // the holder created it; bundleInstalledSince() is what requires the
+    // record to have changed during the wait. An interrupted install on a
+    // released nx leaves exactly such a directory, and the server asks for
+    // that same version again because the content hash no longer matches.
+    mkdirSync(join(installDir, '2608.30.0002'), { recursive: true });
+    writeFileSync(join(installDir, '2608.30.0002', 'index.js'), 'CORRUPT');
+
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'good' }));
+    await startPeer({ version: '2608.30.0002', holdMs: 300, mode: 'fail' });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(httpClient.get).toHaveBeenCalledOnce();
+    expect(installed.fullPath).not.toBe(join(installDir, '2608.30.0002'));
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'good'
+    );
+  });
+
+  it('takes over the download when the peer released the lock without installing', async () => {
+    mkdirSync(join(installDir, '2608.28.0001'), { recursive: true });
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({ version: '2608.31.0001', holdMs: 300, mode: 'fail' });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+    expect(httpClient.get).toHaveBeenCalledOnce();
+    // The peer may still be running from the old bundle, so it stays.
+    expect(bundleDirs()).toEqual(
+      [basename(installed.fullPath), '2608.28.0001'].sort()
+    );
+  });
+
+  it('waits for the peer rather than racing it', async () => {
+    const httpClient = httpClientServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({ version: '2608.31.0001', holdMs: 600, mode: 'install' });
+
+    const start = Date.now();
+    await updateManager.downloadAndExtractClientBundle(
+      httpClient,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(Date.now() - start).toBeGreaterThanOrEqual(400);
   });
 });

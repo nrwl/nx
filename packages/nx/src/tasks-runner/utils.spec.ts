@@ -4,6 +4,7 @@ import {
   expandWildcardTargetConfiguration,
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
+  hashTaskOverrides,
   interpolate,
   pruneToSelectedTasks,
   transformLegacyOutputs,
@@ -705,6 +706,58 @@ describe('utils', () => {
     });
   });
 
+  describe('legacy dependsOn projects strings', () => {
+    function graphWith(
+      dependsOn: ProjectConfiguration['targets'][string]['dependsOn'],
+      extraProjects: string[] = []
+    ): ProjectGraph {
+      const nodes: ProjectGraph['nodes'] = {
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'apps/app',
+            targets: { test: { dependsOn }, build: {} },
+          },
+        },
+      };
+      for (const name of extraProjects) {
+        nodes[name] = {
+          name,
+          type: 'lib',
+          data: { root: `libs/${name}`, targets: { build: {} } },
+        };
+      }
+      return { nodes, dependencies: {} };
+    }
+
+    it.each(['self', 'dependencies'])(
+      "should reject projects: '%s' and point at nx repair",
+      (value) => {
+        const graph = graphWith([{ projects: value, target: 'build' }]);
+        expect(() =>
+          getDependencyConfigs({ project: 'app', target: 'test' }, {}, graph, [
+            'test',
+            'build',
+          ])
+        ).toThrow(new RegExp(`projects: '${value}'[\\s\\S]*nx repair`));
+      }
+    );
+
+    it("should resolve projects: 'self' to a project named self", () => {
+      const graph = graphWith(
+        [{ projects: 'self', target: 'build' }],
+        ['self']
+      );
+      expect(
+        getDependencyConfigs({ project: 'app', target: 'test' }, {}, graph, [
+          'test',
+          'build',
+        ])
+      ).toEqual([{ projects: ['self'], target: 'build' }]);
+    });
+  });
+
   describe('expandWildcardDependencies', () => {
     it('should expand wildcard dependencies', () => {
       const allTargets = ['build', 'build:test', 'build:prod', 'build:dev'];
@@ -1174,5 +1227,62 @@ describe('pruneToSelectedTasks', () => {
   it('ignores ids the graph does not contain', () => {
     const pruned = pruneToSelectedTasks(graph, ['gone:build', 'lib:build']);
     expect(Object.keys(pruned.tasks)).toEqual(['lib:build']);
+  });
+});
+
+describe('task overrides hash', () => {
+  function task(id: string, overrides: Record<string, unknown>): Task {
+    const [project, target, configuration] = id.split(':');
+    return {
+      id,
+      target: { project, target, configuration },
+      overrides,
+      outputs: [],
+      projectRoot: `libs/${project}`,
+    } as any as Task;
+  }
+
+  it('should separate the same task run with different overrides', () => {
+    expect(hashTaskOverrides(task('app:build', { watch: true }))).not.toBe(
+      hashTaskOverrides(task('app:build', { watch: false }))
+    );
+  });
+
+  it('should not depend on the order the overrides were written in', () => {
+    expect(hashTaskOverrides(task('app:build', { a: 1, b: 2 }))).toBe(
+      hashTaskOverrides(task('app:build', { b: 2, a: 1 }))
+    );
+  });
+
+  it('should ignore the raw argv restatement of the overrides', () => {
+    expect(
+      hashTaskOverrides(
+        task('app:build', { watch: true, __overrides_unparsed__: ['--watch'] })
+      )
+    ).toBe(
+      hashTaskOverrides(
+        task('app:build', {
+          watch: true,
+          __overrides_unparsed__: ['--watch=true'],
+        })
+      )
+    );
+  });
+
+  it('should not depend on the task id, which the tracker stores separately', () => {
+    expect(hashTaskOverrides(task('app:build', { watch: true }))).toBe(
+      hashTaskOverrides(task('other:test:ci', { watch: true }))
+    );
+  });
+
+  it('should grow a different hash on every hop when arguments accumulate', () => {
+    const hashes = [
+      hashTaskOverrides(task('app:build', { _: [] })),
+      hashTaskOverrides(task('app:build', { _: ['hello'] })),
+      hashTaskOverrides(task('app:build', { _: ['hello', 'hello'] })),
+    ];
+
+    // Why the tracker cannot rely on the hash alone to spot this recursion.
+    expect(new Set(hashes).size).toBe(3);
   });
 });

@@ -65,6 +65,9 @@ export function ultracacheEligibilityOptions(
 ): UltracacheEligibilityOptions {
   return {
     customHasherTaskIds: customHasherTaskIds(projectGraph, taskGraph),
+    continuousTaskIds: Object.values(taskGraph.tasks)
+      .filter((task) => task.continuous)
+      .map((task) => task.id),
   };
 }
 

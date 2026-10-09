@@ -16,79 +16,77 @@ vi.mock('@nx/devkit', async () => {
       dependencies: {},
       nodes: {},
     }),
-    readCachedProjectGraph: vi.fn().mockImplementation(
-      (): ProjectGraph => ({
-        dependencies: {},
-        nodes: {
-          test: {
-            name: 'test',
-            type: 'app',
-            data: {
-              root: 'test',
-              sourceRoot: 'test/src',
-              targets: {
-                build: {
-                  executor: '@nx/rspack:rspack',
-                  outputs: ['{options.outputPath}'],
-                  defaultConfiguration: 'production',
-                  options: {
-                    compiler: 'babel',
-                    outputPath: 'dist/test',
-                    index: 'test/src/index.html',
-                    baseHref: '/',
-                    main: `test/src/main.tsx`,
-                    tsConfig: 'test/tsconfig.app.json',
-                    assets: ['test/src/favicon.ico', 'src/assets'],
-                    styles: [`test/src/styles.css`],
-                    scripts: [],
-                    rspackConfig: 'test/rspack.config.js',
+    readCachedProjectGraph: vi.fn().mockImplementation((): ProjectGraph => ({
+      dependencies: {},
+      nodes: {
+        test: {
+          name: 'test',
+          type: 'app',
+          data: {
+            root: 'test',
+            sourceRoot: 'test/src',
+            targets: {
+              build: {
+                executor: '@nx/rspack:rspack',
+                outputs: ['{options.outputPath}'],
+                defaultConfiguration: 'production',
+                options: {
+                  compiler: 'babel',
+                  outputPath: 'dist/test',
+                  index: 'test/src/index.html',
+                  baseHref: '/',
+                  main: `test/src/main.tsx`,
+                  tsConfig: 'test/tsconfig.app.json',
+                  assets: ['test/src/favicon.ico', 'src/assets'],
+                  styles: [`test/src/styles.css`],
+                  scripts: [],
+                  rspackConfig: 'test/rspack.config.js',
+                },
+                configurations: {
+                  development: {
+                    extractLicenses: false,
+                    optimization: false,
+                    sourceMap: true,
+                    vendorChunk: true,
                   },
-                  configurations: {
-                    development: {
-                      extractLicenses: false,
-                      optimization: false,
-                      sourceMap: true,
-                      vendorChunk: true,
-                    },
-                    production: {
-                      fileReplacements: [
-                        {
-                          replace: `test/src/environments/environment.ts`,
-                          with: `test/src/environments/environment.prod.ts`,
-                        },
-                      ],
-                      optimization: true,
-                      outputHashing: 'all',
-                      sourceMap: false,
-                      namedChunks: false,
-                      extractLicenses: true,
-                      vendorChunk: false,
-                    },
+                  production: {
+                    fileReplacements: [
+                      {
+                        replace: `test/src/environments/environment.ts`,
+                        with: `test/src/environments/environment.prod.ts`,
+                      },
+                    ],
+                    optimization: true,
+                    outputHashing: 'all',
+                    sourceMap: false,
+                    namedChunks: false,
+                    extractLicenses: true,
+                    vendorChunk: false,
                   },
                 },
-                serve: {
-                  executor: '@nx/rspack:dev-server',
-                  defaultConfiguration: 'development',
-                  options: {
-                    buildTarget: `test:build`,
-                    hmr: true,
+              },
+              serve: {
+                executor: '@nx/rspack:dev-server',
+                defaultConfiguration: 'development',
+                options: {
+                  buildTarget: `test:build`,
+                  hmr: true,
+                },
+                configurations: {
+                  development: {
+                    buildTarget: `test:build:development`,
                   },
-                  configurations: {
-                    development: {
-                      buildTarget: `test:build:development`,
-                    },
-                    production: {
-                      buildTarget: `test:build:production`,
-                      hmr: false,
-                    },
+                  production: {
+                    buildTarget: `test:build:production`,
+                    hmr: false,
                   },
                 },
               },
             },
           },
         },
-      })
-    ),
+      },
+    })),
   };
 });
 

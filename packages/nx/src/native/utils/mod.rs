@@ -20,5 +20,6 @@ pub mod ci;
 pub mod command;
 pub mod file_lock;
 pub mod git;
+pub mod open_url;
 
 pub use atomics::*;

@@ -94,21 +94,6 @@ export async function configureAiAgentsHandler(
 export async function configureAiAgentsHandlerImpl(
   options: ConfigureAiAgentsOptions
 ): Promise<void> {
-  // Node 24's stricter readline throws ERR_USE_AFTER_CLOSE when a prompt
-  // library operates on a closed interface. Added for enquirer, which nx no
-  // longer uses; verify against Node 24 before removing.
-  // TODO(v24): drop if @clack/prompts proves not to need it.
-  process.on('uncaughtException', (error) => {
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error['code'] === 'ERR_USE_AFTER_CLOSE'
-    )
-      return;
-    throw error;
-  });
-
   const normalizedOptions = normalizeOptions(options);
 
   const {

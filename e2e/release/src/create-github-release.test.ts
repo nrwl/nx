@@ -1,9 +1,12 @@
 import { NxJsonConfiguration } from '@nx/devkit';
+import { createServer, Server } from 'node:http';
+import { AddressInfo } from 'node:net';
 import {
   normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
+  runCLIAsync,
   runCommandAsync,
   uniq,
   updateJson,
@@ -44,6 +47,35 @@ describe('nx release create github release', () => {
   let pkg1: string;
   let pkg2: string;
   let pkg3: string;
+  let githubApi: Server;
+  let apiBaseUrl: string;
+  let requests: string[];
+
+  beforeEach(async () => {
+    requests = [];
+    // These dry runs need a missing release, not a live GitHub repository.
+    githubApi = createServer((request, response) => {
+      requests.push(`${request.method} ${request.url}`);
+      response.setHeader('Content-Type', 'application/json');
+      response.writeHead(
+        request.method === 'GET' &&
+          request.url.startsWith('/repos/nrwl/fake-repo/releases/tags/')
+          ? 404
+          : 500
+      );
+      response.end(JSON.stringify({ message: 'Not Found' }));
+    });
+    await new Promise<void>((resolve) =>
+      githubApi.listen(0, '127.0.0.1', resolve)
+    );
+    apiBaseUrl = `http://127.0.0.1:${(githubApi.address() as AddressInfo).port}`;
+  });
+
+  afterEach(async () => {
+    await new Promise<void>((resolve, reject) =>
+      githubApi.close((error) => (error ? reject(error) : resolve()))
+    );
+  });
 
   beforeAll(async () => {
     newProject({
@@ -106,13 +138,22 @@ describe('nx release create github release', () => {
       nxJson.release = {
         changelog: {
           workspaceChangelog: {
-            createRelease: 'github',
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.com',
+              apiBaseUrl,
+            },
           },
         },
       };
       return nxJson;
     });
-    const result = runCLI('release patch -d --first-release --verbose');
+    const { stdout: result } = await runCLIAsync(
+      'release patch -d --first-release --verbose'
+    );
+    expect(requests).toEqual([
+      'GET /repos/nrwl/fake-repo/releases/tags/v0.0.1',
+    ]);
 
     expect(
       result.match(new RegExp(`NX   Pushing to git remote "origin"`, 'g'))
@@ -140,14 +181,26 @@ describe('nx release create github release', () => {
         changelog: {
           projectChangelogs: {
             file: false,
-            createRelease: 'github',
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.com',
+              apiBaseUrl,
+            },
           },
         },
       };
       return nxJson;
     });
 
-    const result = runCLI('release -d --first-release --verbose');
+    const { stdout: result } = await runCLIAsync(
+      'release -d --first-release --verbose'
+    );
+    expect(requests).toHaveLength(3);
+    expect(
+      requests.every((request) =>
+        request.startsWith('GET /repos/nrwl/fake-repo/releases/tags/')
+      )
+    ).toBe(true);
 
     expect(
       result.match(new RegExp(`NX   Pushing to git remote "origin"`, 'g'))

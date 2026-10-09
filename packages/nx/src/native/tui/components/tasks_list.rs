@@ -2698,6 +2698,7 @@ mod tests {
                 tasks: StdHashMap::new(),
                 dependencies: StdHashMap::new(),
                 continuous_dependencies: StdHashMap::new(),
+                continuous_dependencies_without_inputs: None,
                 roots: vec![],
             },
             StdHashMap::new(),
