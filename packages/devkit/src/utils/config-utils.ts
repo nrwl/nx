@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from 'fs';
+import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { types } from 'node:util';
 import { workspaceRoot } from 'nx/src/devkit-exports';
@@ -10,6 +11,10 @@ import {
   registerTsProject,
 } from 'nx/src/devkit-internals';
 import { dirname, extname, join, sep } from 'path';
+
+// require.cache is undefined when the ESM loader runs this module with
+// hook-supplied source, as Yarn PnP does on some Node versions.
+const requireCache = createRequire(__filename).cache;
 
 export let dynamicImport = new Function(
   'modulePath',
@@ -190,7 +195,7 @@ function isTsEsmNamedExportLinkageErrorReplica(
 // Module objects in the parent's children array.
 export function clearConfigFromRequireCache(
   rootId: string,
-  cache: NodeJS.Dict<NodeModule> = require.cache
+  cache: NodeJS.Dict<NodeModule> = requireCache
 ): void {
   const root = cache[rootId];
   if (!root) {
@@ -308,7 +313,7 @@ async function loadTsFileViaImport(
 export function unwrapCjsInterop(
   path: string,
   module: unknown,
-  cache: NodeJS.Dict<NodeModule> = require.cache
+  cache: NodeJS.Dict<NodeModule> = requireCache
 ): unknown {
   const entry = cache[resolveModulePath(path)];
   const cjsExports = (module as { default?: unknown } | null | undefined)
@@ -375,9 +380,9 @@ const packageInstallationDirectories = [
 ];
 
 export function clearRequireCache(): void {
-  for (const k of Object.keys(require.cache)) {
+  for (const k of Object.keys(requireCache)) {
     if (!packageInstallationDirectories.some((dir) => k.includes(dir))) {
-      delete require.cache[k];
+      delete requireCache[k];
     }
   }
 }
@@ -403,7 +408,7 @@ async function load(path: string): Promise<any> {
  */
 async function loadCommonJS(path: string): Promise<any> {
   // Clear cache if the path is in the cache
-  if (require.cache[path]) {
+  if (requireCache[path]) {
     clearRequireCache();
   }
   return require(path);

@@ -1,4 +1,6 @@
+import { runWithHookSuppliedSource } from 'nx/src/internal-testing-utils/hook-supplied-source';
 import { join } from 'path';
+import { pathToFileURL } from 'url';
 import {
   clearConfigFromRequireCache,
   isTranspilerRecoverableError,
@@ -231,5 +233,18 @@ describe('unwrapCjsInterop', () => {
     };
 
     expect(unwrapCjsInterop(path, module, cache)).toBe(module);
+  });
+});
+
+describe('clearRequireCache', () => {
+  it('clears when a loader hook supplies its CommonJS source', () => {
+    const configUtils = pathToFileURL(join(__dirname, 'config-utils.ts')).href;
+
+    const result = runWithHookSuppliedSource(
+      `const { clearRequireCache } = await import(${JSON.stringify(configUtils)}); clearRequireCache(); console.log('cleared');`
+    );
+
+    expect(result.stderr).not.toContain('TypeError');
+    expect(result.stdout.trim()).toBe('cleared');
   });
 });
