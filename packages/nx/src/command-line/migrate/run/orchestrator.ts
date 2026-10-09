@@ -2747,6 +2747,8 @@ function emitHeld(
   held: MigrateTreeOperation,
   noProgress: MigrateRunNoProgress | null
 ): void {
+  const heldStep = state.steps.find((s) => s.id === held.stepId);
+  const heldStepName = heldStep && stepLabel(heldStep);
   emit(
     root,
     runId,
@@ -2756,12 +2758,12 @@ function emitHeld(
     {
       next: reconcileCommand(root, runId),
       instructionLines: [
-        treeBusyMessage(held),
+        treeBusyMessage(held, heldStepName),
         // Quitting this session frees the terminal only for its own parent.
         ...(held.owner === process.env[BROKER_ENV_VAR]
           ? [
               `If it seems stuck, the user can ${sessionOperationWayOut(
-                treeOperationLabel(held)
+                treeOperationLabel(held, heldStepName)
               )}.`,
             ]
           : []),
