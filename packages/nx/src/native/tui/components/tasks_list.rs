@@ -13,6 +13,7 @@ use std::any::Any;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
+use super::dependency_view::{DependencyView, ReadinessLabel};
 use super::search_filter::FilterProps;
 use super::task_selection_manager::{
     ScrollMetrics, SelectionEntry, SelectionMode, TaskSection, TaskSelectionManager,
@@ -2003,11 +2004,14 @@ impl TasksList {
         column_visibility: &ColumnVisibility,
         needs_scrollbar: bool,
         scroll_metrics: &ScrollMetrics,
+        name_column_width: u16,
     ) {
         // Record the table rect for mouse hit-testing. Rows start
         // TABLE_HEADER_OVERHEAD_ROWS below the top and are one viewport entry tall.
         self.rows_hit_area = Some(table_area);
         let visible_entries = self.selection_manager.lock().get_viewport_entries();
+        let readiness_labels =
+            self.readiness_labels(visible_entries.iter().flatten().map(|entry| entry.id()));
         let selected_style = Style::default()
             .fg(THEME.primary_fg)
             .add_modifier(Modifier::BOLD);
@@ -2104,6 +2108,8 @@ impl TasksList {
                         column_visibility,
                         selected_style,
                         normal_style,
+                        readiness_labels.get(entry_id).copied(),
+                        name_column_width,
                     )
                 } else {
                     // Unknown entry type
@@ -2403,7 +2409,14 @@ impl TasksList {
     }
 
     /// Renders a name cell with optional indentation and output indicators.
-    fn render_name_cell(&self, name: String, item_id: &str, indent: bool) -> Cell<'static> {
+    fn render_name_cell(
+        &self,
+        name: String,
+        item_id: &str,
+        indent: bool,
+        readiness: Option<ReadinessLabel>,
+        column_width: u16,
+    ) -> Cell<'static> {
         let output_indicators = self.get_output_indicators(item_id);
 
         let mut spans = Vec::new();
@@ -2415,7 +2428,62 @@ impl TasksList {
             spans.push(Span::raw(" "));
             spans.push(Span::styled(output_indicators, Style::default().dim()));
         }
+        // The readiness word is never counted toward the column width, so it
+        // takes only the room left on the row: full text, short text, nothing
+        if let Some(label) = readiness {
+            let used: usize = spans.iter().map(Span::width).sum();
+            let room = (column_width as usize).saturating_sub(used + 1);
+            let text = [label.text(), label.short_text()]
+                .into_iter()
+                .find(|text| text.len() <= room);
+            if let Some(text) = text {
+                spans.push(Span::raw(" "));
+                spans.push(Span::styled(text, label.style()));
+            }
+        }
         Cell::from(Line::from(spans))
+    }
+
+    /// Width of the task name column once the other visible columns and the
+    /// table's one-cell column spacing are taken out
+    fn name_column_width(available_width: u16, column_visibility: &ColumnVisibility) -> u16 {
+        let mut width = available_width.saturating_sub(STATUS_ICON_WIDTH + COLUMN_SEPARATOR_WIDTH);
+        if column_visibility.show_cache_status {
+            width = width.saturating_sub(CACHE_STATUS_COLUMN_WIDTH + COLUMN_SEPARATOR_WIDTH);
+        }
+        if column_visibility.show_duration {
+            width = width.saturating_sub(DURATION_COLUMN_WIDTH + COLUMN_SEPARATOR_WIDTH);
+        }
+        width
+    }
+
+    /// The readiness word for each of the given rows that has one: a running
+    /// producer's own verdict, or "(waiting)" for a task held by a readiness wait
+    fn readiness_labels<'b>(
+        &self,
+        task_ids: impl Iterator<Item = &'b str>,
+    ) -> HashMap<String, ReadinessLabel> {
+        let state = self.tui_state.lock();
+        let view = DependencyView::new(
+            state.get_task_status_map(),
+            state.task_graph(),
+            state.get_task_readiness_map(),
+            state.ready_dependencies(),
+        );
+        task_ids
+            .filter(|task_id| self.task_lookup.contains_key(*task_id))
+            .filter_map(|task_id| {
+                let status = state
+                    .get_task_status(task_id)
+                    .unwrap_or(TaskStatus::NotStarted);
+                let readiness = state.get_task_readiness_map().get(task_id).copied();
+                let label = ReadinessLabel::for_producer(status, readiness).or_else(|| {
+                    view.is_held_by_readiness(task_id)
+                        .then_some(ReadinessLabel::Waiting)
+                })?;
+                Some((task_id.to_owned(), label))
+            })
+            .collect()
     }
 
     /// Renders a batch group row with expand/collapse indicator
@@ -2455,7 +2523,7 @@ impl TasksList {
             batch_group.batch_id,
             batch_group.nested_tasks.len()
         );
-        let name = self.render_name_cell(batch_name, &batch_group.batch_id, false);
+        let name = self.render_name_cell(batch_name, &batch_group.batch_id, false, None, 0);
 
         let mut row_cells = vec![status_cell, name];
 
@@ -2488,10 +2556,18 @@ impl TasksList {
         column_visibility: &ColumnVisibility,
         selected_style: Style,
         normal_style: Style,
+        readiness: Option<ReadinessLabel>,
+        name_column_width: u16,
     ) -> Row<'_> {
         let status_cell =
             self.render_task_status_cell(task, is_selected, show_vertical_line, trailing_spaces);
-        let name = self.render_name_cell(task_name.clone(), &task_name, indent_name);
+        let name = self.render_name_cell(
+            task_name.clone(),
+            &task_name,
+            indent_name,
+            readiness,
+            name_column_width,
+        );
 
         let mut row_cells = vec![status_cell, name];
         if column_visibility.show_cache_status {
@@ -2563,6 +2639,7 @@ impl Component for TasksList {
             &column_visibility,
             needs_scrollbar,
             &scroll_metrics,
+            Self::name_column_width(effective_width, &column_visibility),
         );
 
         Ok(())
@@ -6227,5 +6304,96 @@ mod tests {
                 "Selected item should be within visible viewport"
             );
         }
+    }
+
+    /// A running producer's verdict and a held task's "(waiting)" go after the
+    /// name when the row has room, measured in cells, not bytes; the failed
+    /// verdict shortens before it drops.
+    #[test]
+    fn readiness_words_follow_the_row_width() {
+        use crate::native::tasks::running_tasks_service::TaskReadiness;
+        use crate::native::tasks::types::{TaskGraph, TaskGraphEdge};
+        use crate::native::tui::config::{TuiCliArgs, TuiConfig};
+        use std::collections::HashMap as StdHashMap;
+
+        let tasks = vec![
+            Task::new("db", "up")
+                .with_project_root("")
+                .with_continuous(true),
+            Task::new("api", "serve")
+                .with_project_root("")
+                .with_continuous(true),
+            Task::new("shop", "serve")
+                .with_project_root("")
+                .with_continuous(true),
+            Task::new("shop-e2e", "e2e")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("éééééé", "serve")
+                .with_project_root("")
+                .with_continuous(true),
+        ];
+        let task_graph = TaskGraph {
+            tasks: tasks.iter().map(|t| (t.id.clone(), t.clone())).collect(),
+            dependencies: StdHashMap::new(),
+            continuous_dependencies: StdHashMap::from([(
+                "shop-e2e:e2e".to_string(),
+                vec![TaskGraphEdge {
+                    id: "api:serve".to_string(),
+                    wait_for: Some("ready".to_string()),
+                    inputs: None,
+                }],
+            )]),
+            roots: vec![],
+        };
+        let cli_args = TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+        let state = Arc::new(Mutex::new(TuiState::new(
+            tasks.clone(),
+            HashSet::new(),
+            RunMode::RunMany,
+            Vec::new(),
+            TuiConfig::new(None, None, &cli_args),
+            String::from("Test Tasks"),
+            task_graph,
+            StdHashMap::new(),
+            None,
+        )));
+        {
+            let mut state = state.lock();
+            for id in ["db:up", "api:serve", "shop:serve", "éééééé:serve"] {
+                state.update_task_status(id, TaskStatus::InProgress);
+            }
+            state.update_task_readiness("db:up", TaskReadiness::Ready);
+            state.update_task_readiness("éééééé:serve", TaskReadiness::Ready);
+            state.update_task_readiness("api:serve", TaskReadiness::Pending);
+            state.update_task_readiness("shop:serve", TaskReadiness::Failed);
+            state.set_ready_dependencies(StdHashMap::from([(
+                "shop-e2e:e2e".to_string(),
+                vec!["api:serve".to_string()],
+            )]));
+        }
+        let mut tasks_list = TasksList::new(
+            tasks.clone(),
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            Arc::new(Mutex::new(TaskSelectionManager::new(10))),
+            state,
+        );
+        tasks_list.update(Action::StartCommand(Some(4))).unwrap();
+        tasks_list
+            .update(Action::StartTasks([&tasks[..3], &tasks[4..]].concat()))
+            .unwrap();
+
+        let mut terminal = create_test_terminal(80, 10);
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!("readiness_words_full_width", terminal.backend());
+
+        let mut terminal = create_test_terminal(40, 10);
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!("readiness_words_narrow", terminal.backend());
     }
 }

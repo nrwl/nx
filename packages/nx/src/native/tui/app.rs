@@ -32,7 +32,7 @@ use crate::native::{
 use super::action::Action;
 use super::clipboard::copy_to_clipboard;
 use super::components::countdown_popup::CountdownPopup;
-use super::components::dependency_view::{DependencyView, DependencyViewState};
+use super::components::dependency_view::{DependencyView, DependencyViewState, ReadinessLabel};
 use super::components::help_popup::HelpPopup;
 use super::components::hint_popup::HintPopup;
 use super::components::layout_manager::{
@@ -3523,6 +3523,15 @@ impl App {
             ctx.estimated_duration,
             ctx.start_time,
             ctx.end_time,
+        );
+        state.readiness = ReadinessLabel::for_producer(
+            ctx.status,
+            self.core
+                .state()
+                .lock()
+                .get_task_readiness_map()
+                .get(&state.task_name)
+                .copied(),
         );
 
         let terminal_pane = TerminalPane::new()
