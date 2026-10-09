@@ -40,7 +40,7 @@ public class TargetBuilderRestoreOutputsTests
             workspaceRoot: WorkspaceRoot,
             options: new PluginOptions(),
             nxJson: null,
-            directoryBuildInputs: new List<string>());
+            directoryBuildInputs: new List<string>()).Targets;
 
     [Theory]
     [InlineData("build", false)]
