@@ -42,6 +42,12 @@ vi.mock('child_process', async () => {
             case 'pnpm config get @pnpm-scope:registry':
               callback(null, 'https://pnpm-scoped-registry.com/', null);
               break;
+            case 'pnpm config get @empty:registry':
+              callback(null, '', null);
+              break;
+            case 'pnpm config get @nullish:registry':
+              callback(null, 'null', null);
+              break;
             case 'pnpm config get @missing:registry':
               callback(null, 'undefined', null);
               break;
@@ -102,6 +108,14 @@ describe('npm-config', () => {
       const registry = await getNpmRegistry(tempFs.tempDir, '@missing');
       expect(registry).toEqual('https://pnpm-registry.com/');
     });
+
+    it.each(['@empty', '@nullish'])(
+      'should treat an empty or null pnpm value for %s as unset',
+      async (scope) => {
+        const registry = await getNpmRegistry(tempFs.tempDir, scope);
+        expect(registry).toEqual('https://pnpm-registry.com/');
+      }
+    );
 
     it('should fall back to npm config if pnpm config fails', async () => {
       const registry = await getNpmRegistry(tempFs.tempDir, '@scope');

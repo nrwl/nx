@@ -106,7 +106,7 @@ async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
   for (const command of commands) {
     try {
       const result = await execAsync(command, cwd);
-      if (result !== 'undefined') {
+      if (result && result !== 'undefined' && result !== 'null') {
         return result;
       }
     } catch {}
