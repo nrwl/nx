@@ -201,6 +201,12 @@ pub(crate) fn normalize_outputs(
         .collect()
 }
 
+#[napi]
+/// Whether the cache refuses `outputs` because one is outside the workspace.
+pub fn has_output_outside_workspace(workspace_root: String, outputs: Vec<String>) -> bool {
+    normalize_outputs(Path::new(&workspace_root), outputs).is_err()
+}
+
 /// Whether every entry names a path rather than a pattern or a negation.
 pub(crate) fn all_literal(entries: &[String]) -> bool {
     entries
@@ -543,6 +549,21 @@ mod test {
         )
         .unwrap();
         assert_eq!(result, vec!["inside.txt"]);
+    }
+
+    #[test]
+    fn an_output_outside_the_workspace_is_found() {
+        let workspace = if cfg!(windows) {
+            r"C:\ws\root"
+        } else {
+            "/ws/root"
+        };
+        let found = |entries: &[&str]| {
+            let outputs = entries.iter().map(|entry| entry.to_string()).collect();
+            has_output_outside_workspace(workspace.to_string(), outputs)
+        };
+        assert!(found(&["dist", "../build/angular2"]));
+        assert!(!found(&["dist", "build/angular2", "!dist/cache/**"]));
     }
 
     #[test]

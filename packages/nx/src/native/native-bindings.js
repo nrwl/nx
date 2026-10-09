@@ -625,6 +625,7 @@ module.exports.getUltracacheReport = nativeBinding.getUltracacheReport
 module.exports.GroupType = nativeBinding.GroupType
 module.exports.hashArray = nativeBinding.hashArray
 module.exports.hashFile = nativeBinding.hashFile
+module.exports.hasOutputOutsideWorkspace = nativeBinding.hasOutputOutsideWorkspace
 module.exports.initializeTelemetry = nativeBinding.initializeTelemetry
 module.exports.initializeTelemetryWithSessionId = nativeBinding.initializeTelemetryWithSessionId
 module.exports.installNxConsole = nativeBinding.installNxConsole

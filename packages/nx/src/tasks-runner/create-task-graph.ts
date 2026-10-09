@@ -13,8 +13,13 @@ import {
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import {
+  TargetConfiguration,
+  TargetDependencyConfig,
+} from '../config/workspace-json-project-json';
 import { findCycles } from './task-graph-utils';
+import { hasOutputOutsideWorkspace } from '../native';
+import { workspaceRoot } from '../utils/workspace-root';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
@@ -468,17 +473,19 @@ export class ProcessTasks {
       project.data
     );
 
+    const outputs = getOutputs(
+      this.projectGraph.nodes,
+      qualifiedTarget,
+      interpolatedOverrides
+    );
+
     return {
       id,
       target: qualifiedTarget,
       projectRoot: project.data.root,
       overrides: interpolatedOverrides,
-      outputs: getOutputs(
-        this.projectGraph.nodes,
-        qualifiedTarget,
-        interpolatedOverrides
-      ),
-      cache: project.data.targets[target].cache ?? false,
+      outputs,
+      cache: isCacheable(project.data.targets[target], outputs),
       parallelism: project.data.targets[target].parallelism ?? true,
       continuous: project.data.targets[target].continuous ?? false,
       ultracache: project.data.targets[target].ultracache,
@@ -515,6 +522,14 @@ export function createTaskGraph(
     configuration,
     overrides,
     excludeTaskDependencies
+  );
+}
+
+// The cache cannot store or restore an output outside the workspace.
+function isCacheable(target: TargetConfiguration, outputs: string[]) {
+  return (
+    (target.cache ?? false) &&
+    !hasOutputOutsideWorkspace(workspaceRoot, outputs)
   );
 }
 
@@ -572,10 +587,12 @@ export function filterTaskGraphToSelection(
       project.name,
       project.data
     );
+    const outputs = getOutputs(projectGraph.nodes, task.target, overrides);
     tasks[id] = {
       ...task,
       overrides,
-      outputs: getOutputs(projectGraph.nodes, task.target, overrides),
+      outputs,
+      cache: isCacheable(project.data.targets[task.target.target], outputs),
     };
   }
   const pruned = removeTasksFromTaskGraph(

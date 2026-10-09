@@ -246,6 +246,44 @@ describe('createTaskGraph', () => {
     expect(taskGraph.tasks['app1:test'].outputs).toEqual(['dist/app1-root']);
   });
 
+  it('should not cache a task with an output outside the workspace', () => {
+    Object.assign(projectGraph.nodes.app1.data.targets.test, {
+      executor: '@angular-devkit/build-angular:browser',
+      cache: true,
+      outputs: ['{options.outputPath}'],
+      options: { outputPath: '../build/angular2' },
+    });
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['test'],
+      undefined,
+      {}
+    );
+
+    expect(taskGraph.tasks['app1:test'].outputs).toEqual(['../build/angular2']);
+    expect(taskGraph.tasks['app1:test'].cache).toBe(false);
+  });
+
+  it('should cache a task with outputs inside the workspace', () => {
+    Object.assign(projectGraph.nodes.app1.data.targets.test, {
+      cache: true,
+      outputs: ['{options.outputPath}'],
+      options: { outputPath: 'build/angular2' },
+    });
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['test'],
+      undefined,
+      {}
+    );
+
+    expect(taskGraph.tasks['app1:test'].cache).toBe(true);
+  });
+
   it('should correctly set default configuration', () => {
     const projectGraph = {
       nodes: {
@@ -4726,6 +4764,61 @@ describe('filterTaskGraphToSelection', () => {
       expected.continuousDependencies
     );
     expect([...result.roots].sort()).toEqual([...expected.roots].sort());
+  });
+
+  it('caches a dependency whose outputs are inside the workspace', () => {
+    const projectGraph = graph({ dependsOn: ['^build'] });
+    projectGraph.nodes.lib.data.targets.build.cache = true;
+    const outside = { outputPath: '../build/angular2' };
+    const { taskGraph, dependencyOverrides } =
+      createTaskGraphWithDependencyOverrides(
+        projectGraph,
+        {},
+        ['app', 'lib'],
+        ['build'],
+        undefined,
+        outside
+      );
+    expect(taskGraph.tasks['lib:build'].cache).toBe(false);
+
+    const result = filterTaskGraphToSelection(
+      projectGraph,
+      taskGraph,
+      dependencyOverrides,
+      new Set(['app:build']),
+      new Set(['app:build', 'lib:build'])
+    );
+
+    expect(result.tasks['lib:build'].cache).toBe(true);
+  });
+
+  it('does not cache a dependency that takes outputs outside the workspace', () => {
+    const projectGraph = graph({
+      options: { outputPath: '../build/angular2' },
+      dependsOn: [{ dependencies: true, target: 'build', options: 'forward' }],
+    });
+    projectGraph.nodes.lib.data.targets.build.cache = true;
+    const { taskGraph, dependencyOverrides } =
+      createTaskGraphWithDependencyOverrides(
+        projectGraph,
+        {},
+        ['app', 'lib'],
+        ['build'],
+        undefined,
+        cli
+      );
+    expect(taskGraph.tasks['lib:build'].cache).toBe(true);
+
+    const result = filterTaskGraphToSelection(
+      projectGraph,
+      taskGraph,
+      dependencyOverrides,
+      new Set(['app:build']),
+      new Set(['app:build', 'lib:build'])
+    );
+
+    expect(result.tasks['lib:build'].outputs).toEqual(['../build/angular2']);
+    expect(result.tasks['lib:build'].cache).toBe(false);
   });
 
   // Which edge creates lib:build depends on the order createTaskGraph visits
