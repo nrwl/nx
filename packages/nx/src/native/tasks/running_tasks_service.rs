@@ -15,9 +15,7 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
     cwd TEXT NOT NULL
 );";
 
-// Created lazily by the service instead of at DB init so existing DBs pick it up
-// without a DB_VERSION bump.
-const READINESS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_task_readiness (
+pub const READINESS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_task_readiness (
     task_id TEXT PRIMARY KEY NOT NULL,
     status INTEGER NOT NULL
 );";
@@ -55,7 +53,6 @@ impl RunningTasksService {
             Arc<Mutex<NxDbConnection>>,
         >,
     ) -> anyhow::Result<Self> {
-        db.lock().unwrap().execute_batch(READINESS_SCHEMA)?;
         Ok(Self {
             db: Arc::clone(db),
             added_tasks: Default::default(),
@@ -183,7 +180,7 @@ impl RunningTasksService {
         Ok(())
     }
 
-    /// `None` when the task is not running or its owner recorded no readiness.
+    /// `None` when the task is not running.
     #[napi]
     pub fn get_task_readiness(&self, task_id: String) -> anyhow::Result<Option<TaskReadiness>> {
         if !self.is_task_running(&task_id)? {
