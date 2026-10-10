@@ -99,7 +99,7 @@
     "bundler": {
       "description": "Bundler which is used to package the application",
       "type": "string",
-      "enum": ["esbuild", "webpack"],
+      "enum": ["esbuild", "webpack", "rspack"],
       "default": "esbuild",
       "x-priority": "important"
     },
