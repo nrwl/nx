@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
+import { detectPackageManager } from '@nx/devkit';
 import { PackageJson } from '@nx/devkit/internal';
 
 export async function parseRegistryOptions(
@@ -97,12 +98,22 @@ export async function getNpmTag(cwd: string): Promise<string> {
 }
 
 async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
-  try {
-    const result = await execAsync(`npm config get ${key}`, cwd);
-    return result === 'undefined' ? undefined : result;
-  } catch (e) {
-    return Promise.resolve(undefined);
+  const commands =
+    detectPackageManager(cwd) === 'pnpm'
+      ? [`pnpm config get ${key}`, `npm config get ${key}`]
+      : [`npm config get ${key}`];
+
+  for (const command of commands) {
+    try {
+      const result = await execAsync(command, cwd);
+      if (result && result !== 'undefined' && result !== 'null') {
+        return result;
+      }
+    } catch {
+      continue;
+    }
   }
+  return undefined;
 }
 
 async function execAsync(command: string, cwd: string): Promise<string> {
