@@ -4,6 +4,7 @@ import {
   retrieveProjectConfigurations,
 } from './retrieve-workspace-files';
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import { ProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
 import { dirname, join } from 'path';
 import { readFile } from 'fs/promises';
 import {
@@ -132,6 +133,41 @@ describe('retrieve-workspace-files', () => {
       expect(Object.keys(result.projects)).toHaveLength(2);
       expect(result.projects['project1']).toBeDefined();
       expect(result.projects['project2']).toBeDefined();
+    });
+  });
+
+  describe('retrieveProjectConfigurations with an unnamed project.json', () => {
+    let fs: TempFs;
+    beforeAll(() => {
+      fs = new TempFs('retrieveProjectConfigurationsUnnamedProjectJson');
+    });
+    afterAll(() => {
+      fs.cleanup();
+    });
+
+    it('should keep the name inferred by an earlier plugin', async () => {
+      await fs.createFile(
+        'libs/a/package.json',
+        JSON.stringify({ name: '@scope/a' })
+      );
+      await fs.createFile('libs/a/project.json', JSON.stringify({}));
+
+      const result = await retrieveProjectConfigurations(
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            createTestPlugin('test-package-json-plugin', '**/package.json'),
+            new LoadedNxPlugin(
+              ProjectJsonProjectsPlugin,
+              'nx/core/project-json'
+            ),
+          ],
+        },
+        fs.tempDir,
+        {}
+      );
+
+      expect(result.projects['libs/a'].name).toEqual('@scope/a');
     });
   });
 });
