@@ -111,7 +111,7 @@ class GitIgnoreClassifier(
 
       // Get path relative to this directory's .gitignore
       val relativePath = try {
-        path.relativeTo(directory).path
+        path.relativeTo(directory).invariantSeparatorsPath
       } catch (e: IllegalArgumentException) {
         continue
       }
