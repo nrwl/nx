@@ -98,13 +98,13 @@ oxfmt skips `.mdoc` files, so format edited docs content with `pnpm nx run astro
 ### Pre-push Validation
 
 ```bash
-# Full validation suite - run before committing
+# Pre-push checks (format, native lint, commit message, lock files) - run before committing
 nx prepush
 ```
 
-If the prepush validation suite fails, please fix the issues before proceeding with your work. This ensures that all
-code adheres to the project's standards and passes all tests. DO NOT make a new commit to fix these issues. Instead,
-amend the current commit.
+If the prepush validation suite fails, please fix the issues before proceeding with your work. It checks formatting,
+native lint, commit messages, and lock files only; it does not run tests, so also run the commands under "Testing
+Changes" below. DO NOT make a new commit to fix these issues. Instead, amend the current commit.
 
 ### Testing Changes
 
