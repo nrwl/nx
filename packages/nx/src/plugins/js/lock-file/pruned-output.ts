@@ -125,7 +125,9 @@ type PrunedPnpmConfig = {
  * pnpm 9, 10 and 11.
  *
  * On pnpm 11+, this file carries declared `minimumReleaseAge`,
- * `minimumReleaseAgeExclude`, `minimumReleaseAgeStrict`, build approvals,
+ * `minimumReleaseAgeExclude`, `minimumReleaseAgeStrict`,
+ * `minimumReleaseAgeIgnoreMissingTime`, `trustPolicy`, `trustPolicyExclude`,
+ * `trustPolicyIgnoreAfter`, `trustLockfile`, build approvals,
  * `supportedArchitectures`, and applicable `patchedDependencies` from the
  * workspace root. Approvals and patches are scoped to the pruned lockfile.
  *
@@ -163,6 +165,11 @@ type PnpmRootWorkspaceSettings = {
   minimumReleaseAge?: number;
   minimumReleaseAgeExclude?: string[];
   minimumReleaseAgeStrict?: boolean;
+  minimumReleaseAgeIgnoreMissingTime?: boolean;
+  trustPolicy?: 'no-downgrade' | 'off';
+  trustPolicyExclude?: string[];
+  trustPolicyIgnoreAfter?: number;
+  trustLockfile?: boolean;
 };
 
 /**
@@ -181,6 +188,22 @@ type PnpmRootWorkspaceSettings = {
  *   silently re-enable strict mode in the pruned output and make its
  *   install reject an immature exact dependency the source workspace
  *   accepted.
+ * - `minimumReleaseAgeIgnoreMissingTime`: also governs `trustPolicy` (both
+ *   read the same publish dates), so it must travel with the settings above.
+ * - `trustPolicy`/`trustPolicyExclude`/`trustPolicyIgnoreAfter`: like
+ *   `minimumReleaseAge`, these re-verify every entry already in the loaded
+ *   lockfile on install (not just on a fresh resolution), so a pruned output
+ *   needs them to reject (or accept) the same entries the source workspace
+ *   would.
+ * - `trustLockfile`: turns that same per-entry `minimumReleaseAge`/
+ *   `trustPolicy` re-verification off; dropping it would force a pruned
+ *   output to redo a check the source workspace opted out of.
+ *
+ * `trustPolicyExcludePrune`, `minimumReleaseAgeExcludePrune`, and
+ * `blockExoticSubdeps` are deliberately not copied: they only affect
+ * resolving or rewriting a fresh lockfile (pruning stale exclude entries,
+ * restricting exotic sources for newly resolved transitive deps), which a
+ * pruned output's `--frozen-lockfile` install never does.
  */
 const STRAIGHT_COPY_WORKSPACE_SETTINGS: readonly Exclude<
   keyof PnpmRootWorkspaceSettings,
@@ -190,6 +213,11 @@ const STRAIGHT_COPY_WORKSPACE_SETTINGS: readonly Exclude<
   'minimumReleaseAge',
   'minimumReleaseAgeExclude',
   'minimumReleaseAgeStrict',
+  'minimumReleaseAgeIgnoreMissingTime',
+  'trustPolicy',
+  'trustPolicyExclude',
+  'trustPolicyIgnoreAfter',
+  'trustLockfile',
 ];
 
 /**
@@ -222,7 +250,7 @@ function getPrunedPnpmWorkspaceSettings(
   } catch {
     // Unreadable or malformed pnpm-workspace.yaml: skip rather than guess.
     logger.warn(
-      'Could not read the workspace root pnpm-workspace.yaml; the pruned output will not declare pnpm install settings (build-script approvals, supportedArchitectures, minimumReleaseAge, patchedDependencies).'
+      'Could not read the workspace root pnpm-workspace.yaml; the pruned output will not declare pnpm install settings (build-script approvals, supportedArchitectures, minimumReleaseAge, trustPolicy, trustLockfile, patchedDependencies).'
     );
     return null;
   }
@@ -294,7 +322,7 @@ function getPnpmMajorOrWarn(workspaceRootPath: string): number | null {
   const pnpmMajor = getPnpmMajor(workspaceRootPath);
   if (pnpmMajor === null) {
     logger.warn(
-      'Could not determine the pnpm version. The pruned output will not carry pnpm build-script approvals, supportedArchitectures, minimumReleaseAge, or patchedDependencies declarations; patch files still ship.'
+      'Could not determine the pnpm version. The pruned output will not carry pnpm build-script approvals, supportedArchitectures, minimumReleaseAge, trustPolicy, trustLockfile, or patchedDependencies declarations; patch files still ship.'
     );
   }
   return pnpmMajor;
