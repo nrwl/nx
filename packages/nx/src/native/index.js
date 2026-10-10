@@ -209,7 +209,9 @@ Module._load = function (request, parent, isMain) {
 };
 
 const indexModulePath = require.resolve('./native-bindings.js');
-delete require.cache[indexModulePath];
+// require.cache is undefined when the ESM loader runs this file with
+// hook-supplied source, as Yarn PnP does on some Node versions.
+delete Module._cache[indexModulePath];
 // A direct re-export: node's CommonJS export lexer follows this form, so ESM
 // importers see the named exports. Assigning via a variable hides them.
 module.exports = require('./native-bindings.js');
