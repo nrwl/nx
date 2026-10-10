@@ -3,6 +3,17 @@ export const getSelectProjectsMessage = () =>
 export const getSelectTasksMessage = () =>
   cy.contains('Please select a task in the sidebar');
 export const getGraph = () => cy.get('#graph-container');
+
+export function waitForGraphLoad() {
+  cy.get('#cytoscape-graph', { timeout: 15000 }).should('exist');
+}
+
+export function selectProjectInSidebar(projectName: string) {
+  cy.contains('span.font-mono', projectName)
+    .scrollIntoView()
+    .should('be.visible')
+    .click({ force: true });
+}
 export const getSelectAllButton = () => cy.get('[data-cy=selectAllButton]');
 export const getDeselectAllButton = () => cy.get('[data-cy=deselectAllButton]');
 export const getSelectAffectedButton = () => cy.get('[data-cy=affectedButton]');
@@ -54,3 +65,14 @@ export const openTooltipForNode = (nodeId: string) =>
       .renderedPosition();
     cy.get('#cytoscape-graph').click(pos.x, pos.y);
   });
+
+export function waitForGraphWheelTestApi() {
+  cy.window().should((window) => {
+    expect(window.__NX_GRAPH_TEST__).to.exist;
+    expect(window.__NX_GRAPH_TEST__?.getWheelSensitivity()).to.be.a('number');
+  });
+}
+
+export function getGraphWheelSensitivityTestApi() {
+  return cy.window().its('__NX_GRAPH_TEST__');
+}
