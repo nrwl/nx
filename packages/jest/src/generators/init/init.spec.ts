@@ -6,7 +6,9 @@ import {
   type Tree,
   updateJson,
 } from '@nx/devkit';
+import { filterUsingGlobPatterns } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { jestConfigExtensions } from '../../utils/config/config-file';
 import { jestInitGenerator } from './init';
 import { JestInitSchema } from './schema';
 
@@ -41,8 +43,33 @@ describe('jest', () => {
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
     );
     expect(productionFileSet).toContain('!{projectRoot}/tsconfig.spec.json');
-    expect(productionFileSet).toContain('!{projectRoot}/jest.config.[jt]s');
+    expect(productionFileSet).toContain(
+      '!{projectRoot}/jest.config.{cjs,mjs,js,cts,mts,ts}'
+    );
     expect(productionFileSet).toContain('!{projectRoot}/src/test-setup.[jt]s');
+  });
+
+  it('should exclude every jest config extension from the production fileset', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.namedInputs ??= {};
+      // filterUsingGlobPatterns takes raw globs, so use the project fileset
+      // `default` expands to rather than the named input itself.
+      json.namedInputs.production = ['{projectRoot}/**/*'];
+      return json;
+    });
+
+    await jestInitGenerator(tree, { ...options, addPlugin: false });
+
+    const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
+      .namedInputs.production as string[];
+    const jestConfigs = jestConfigExtensions.map((ext) => ({
+      file: `libs/my-lib/jest.config.${ext}`,
+      hash: '',
+    }));
+
+    expect(
+      filterUsingGlobPatterns('libs/my-lib', jestConfigs, productionFileSet)
+    ).toEqual([]);
   });
 
   it('should not alter target defaults if jest.preset.js already exists', async () => {
