@@ -8,7 +8,7 @@ use crate::native::glob::{normalize_glob, partition_glob};
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::{HashInstruction, HashPlans},
+    tasks::types::{HashInstruction, HashPlans, InstructionPool},
     types::{NapiDashMap, SharedStr, SharedStrMap},
 };
 use crate::native::{
@@ -161,81 +161,131 @@ impl ToNapiValue for TaskHashes {
     }
 }
 
-/// Each pooled key's position in the existing UTF-8 hash order, so per-task
-/// ordering compares integers instead of strings. Equal display keys share a
-/// rank, even when their instruction ids differ.
-struct KeyRanks {
-    by_id: Vec<u32>,
-    has_duplicate_keys: bool,
+/// How a pool's instructions are ordered in a hash and named in its details.
+struct InstructionKeys {
+    /// Each id's label, then a `digest`-suffixed one for each id whose label
+    /// another id shares.
+    labels: Arc<[SharedStr]>,
+    /// Each id's position in hash order: by label in UTF-8 order, then by value,
+    /// so distinct instructions never tie.
+    ranks: Vec<u32>,
+    /// Where in `labels` each shared-label id's suffixed label sits.
+    suffixed: HashMap<u32, u32>,
 }
 
-impl KeyRanks {
-    fn of(&self, id: u32) -> u32 {
-        self.by_id[id as usize]
-    }
-}
-
-fn instruction_key_ranks(keys: &[SharedStr]) -> KeyRanks {
-    let mut ids: Vec<u32> = (0..keys.len() as u32).collect();
-    ids.sort_unstable_by(|&left, &right| keys[left as usize].cmp(&keys[right as usize]));
-    let mut by_id = vec![0; keys.len()];
-    let mut has_duplicate_keys = false;
-    let mut rank = 0;
-    for (index, &id) in ids.iter().enumerate() {
-        if index > 0 {
-            if keys[id as usize] == keys[ids[index - 1] as usize] {
-                has_duplicate_keys = true;
-            } else {
-                rank += 1;
+impl InstructionKeys {
+    fn of(pool: &InstructionPool) -> Self {
+        let count = pool.len() as u32;
+        let mut labels: Vec<SharedStr> = (0..count)
+            .map(|id| SharedStr::from(pool.label(id)))
+            .collect();
+        let mut ids: Vec<u32> = (0..count).collect();
+        ids.sort_unstable_by(|&left, &right| {
+            labels[left as usize]
+                .cmp(&labels[right as usize])
+                .then_with(|| {
+                    let left = pool.get(left).value().clone();
+                    left.cmp(pool.get(right).value())
+                })
+        });
+        let mut ranks = vec![0; ids.len()];
+        for (rank, &id) in ids.iter().enumerate() {
+            ranks[id as usize] = rank as u32;
+        }
+        let mut suffixed = HashMap::new();
+        let mut suffixed_labels = Vec::new();
+        for run in ids.chunk_by(|&left, &right| labels[left as usize] == labels[right as usize]) {
+            if run.len() < 2 {
+                continue;
+            }
+            for &id in run {
+                suffixed.insert(id, (labels.len() + suffixed_labels.len()) as u32);
+                let label = format!("{} #{}", &*labels[id as usize], pool.get(id).digest());
+                suffixed_labels.push(SharedStr::from(label));
             }
         }
-        by_id[id as usize] = rank;
-    }
-    KeyRanks {
-        by_id,
-        has_duplicate_keys,
-    }
-}
-
-/// Collapses equal-ranked entries onto the LAST of each run, matching the
-/// last-value-wins behavior of the HashMap insertion this replaced. `dedup_by`
-/// drops the first argument and keeps the second, so the later value is moved
-/// backwards into the entry that survives.
-fn keep_last_per_rank(entries: &mut Vec<(u32, SharedStr)>, ranks: &KeyRanks) {
-    // Stable, so equal display keys keep their incoming order before deduping.
-    entries.sort_by_key(|(id, _)| ranks.of(*id));
-    entries.dedup_by(|later, earlier| {
-        if ranks.of(later.0) == ranks.of(earlier.0) {
-            std::mem::swap(&mut later.1, &mut earlier.1);
-            true
-        } else {
-            false
+        labels.extend(suffixed_labels);
+        Self {
+            labels: labels.into(),
+            ranks,
+            suffixed,
         }
-    });
+    }
+
+    /// Points the entries whose label another of the task's entries shares at
+    /// their suffixed label. `entries` must be in rank order.
+    fn name_shared_labels_apart(&self, entries: &mut [(u32, SharedStr)]) {
+        let shared: Vec<bool> = (0..entries.len())
+            .map(|index| {
+                let id = entries[index].0;
+                let shares_with = |other: Option<&(u32, SharedStr)>| {
+                    other.is_some_and(|(other, _)| {
+                        self.labels[*other as usize] == self.labels[id as usize]
+                    })
+                };
+                self.suffixed.contains_key(&id)
+                    && (shares_with(index.checked_sub(1).map(|i| &entries[i]))
+                        || shares_with(entries.get(index + 1)))
+            })
+            .collect();
+        for (entry, shared) in entries.iter_mut().zip(shared) {
+            if shared {
+                entry.0 = self.suffixed[&entry.0];
+            }
+        }
+    }
+
+    /// Names `entries` by their labels. When labels still clash, as when a
+    /// suffixed label equals another entry's label or two digests match, each
+    /// later holder takes the lowest ` #N` that no entry's label uses.
+    /// `entries` must be in rank order.
+    fn name_details(&self, entries: Vec<(u32, SharedStr)>) -> SharedStrMap {
+        let label = |id: u32| &self.labels[id as usize];
+        let labels: HashSet<&str> = entries.iter().map(|(id, _)| &**label(*id)).collect();
+        if labels.len() == entries.len() {
+            return SharedStrMap::from_indexed_entries(Arc::clone(&self.labels), entries);
+        }
+        let mut named: HashSet<String> = HashSet::with_capacity(entries.len());
+        let entries = entries
+            .into_iter()
+            .map(|(id, value)| {
+                let base = label(id);
+                if named.insert(base.to_string()) {
+                    return (base.clone(), value);
+                }
+                let name = (2..)
+                    .map(|n| format!("{} #{n}", &**base))
+                    .find(|name| !labels.contains(name.as_str()) && !named.contains(name))
+                    .expect("a free name");
+                named.insert(name.clone());
+                (SharedStr::from(name), value)
+            })
+            .collect();
+        SharedStrMap::from_entries(entries)
+    }
 }
 
 fn assemble_ranked_hash(
     mut entries: Vec<(u32, SharedStr)>,
-    keys: &Arc<[SharedStr]>,
-    ranks: &KeyRanks,
+    keys: &InstructionKeys,
     inputs: HashInputsBuilder,
 ) -> HashDetails {
-    if ranks.has_duplicate_keys {
-        keep_last_per_rank(&mut entries, ranks);
-        // The result now keeps this buffer. Do not retain slots discarded by
-        // duplicate display-key resolution (the old materialization shrank it).
-        entries.shrink_to_fit();
-    } else {
-        entries.sort_unstable_by_key(|(id, _)| ranks.of(*id));
-    }
+    entries.sort_unstable_by_key(|(id, _)| keys.ranks[*id as usize]);
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     for (id, value) in &entries {
-        trace!("Adding {} ({}) to hash", value, keys[*id as usize]);
+        trace!("Adding {} ({}) to hash", value, keys.labels[*id as usize]);
         hasher.update(value.as_bytes());
     }
+    let details = match keys.suffixed.is_empty() {
+        true => SharedStrMap::from_indexed_entries(Arc::clone(&keys.labels), entries),
+        false => {
+            keys.name_shared_labels_apart(&mut entries);
+            keys.name_details(entries)
+        }
+    };
     HashDetails {
         value: hasher.digest().to_string(),
-        details: SharedStrMap::from_indexed_entries(Arc::clone(keys), entries),
+        details,
         inputs: inputs.into(),
     }
 }
@@ -579,10 +629,7 @@ impl TaskHasher {
         // invocation, so its value lives in a per-id slot: a filled OnceCell
         // is an atomic load, and it lets the loop skip hash_instruction
         // entirely when inputs are not collected.
-        let instruction_keys: Arc<[SharedStr]> = (0..pool.len() as u32)
-            .map(|id| SharedStr::from(pool.label(id)))
-            .collect();
-        let key_ranks = instruction_key_ranks(&instruction_keys);
+        let instruction_keys = InstructionKeys::of(pool);
         // Classify once per instruction, so cache hits do not need the pool's
         // shard lock. The exhaustive match keeps env-dependent inputs out of
         // the shared slots even when new instruction variants are introduced.
@@ -699,9 +746,8 @@ impl TaskHasher {
             entries.extend(computed);
             hashes.insert(
                 task_id.clone(),
-                trace_span!("Assembling hash", hash_id = task_id).in_scope(|| {
-                    assemble_ranked_hash(entries, &instruction_keys, &key_ranks, inputs)
-                }),
+                trace_span!("Assembling hash", hash_id = task_id)
+                    .in_scope(|| assemble_ranked_hash(entries, &instruction_keys, inputs)),
             );
             Ok::<_, anyhow::Error>(())
         })?;
@@ -1051,65 +1097,182 @@ struct HashInstructionArgs<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::test_utils::{hash_plans, strings};
+
+    fn entries(ids: &[u32]) -> Vec<(u32, SharedStr)> {
+        ids.iter()
+            .map(|id| (*id, format!("value-{id}").into()))
+            .collect()
+    }
 
     #[test]
-    fn ranked_assembly_matches_map_order_and_duplicate_resolution() {
-        for names in [
-            vec!["z", "a", "\u{e000}", "🤖"],
-            vec!["z", "a", "\u{e000}", "🤖", "a", "z"],
-        ] {
-            let keys: Arc<[SharedStr]> = names.into_iter().map(|s| s.to_string().into()).collect();
-            let ranks = instruction_key_ranks(&keys);
-            for offset in 0..keys.len() {
-                for reverse in [false, true] {
-                    let mut entries: Vec<(u32, SharedStr)> = (0..keys.len())
-                        .map(|id| (id as u32, format!("value-{id}").into()))
-                        .collect();
-                    entries.rotate_left(offset);
-                    if reverse {
-                        entries.reverse();
-                    }
-                    let expected: HashMap<SharedStr, SharedStr> = entries
-                        .iter()
-                        .map(|(id, value)| (keys[*id as usize].clone(), value.clone()))
-                        .collect();
-                    let mut expected_entries: Vec<_> = expected.iter().collect();
-                    expected_entries.sort_unstable_by(|(left, _), (right, _)| left.cmp(right));
-                    let mut expected_hash = xxhash_rust::xxh3::Xxh3::new();
-                    for (_, value) in expected_entries {
-                        expected_hash.update(value.as_bytes());
-                    }
-                    let actual =
-                        assemble_ranked_hash(entries, &keys, &ranks, HashInputsBuilder::default());
-                    assert_eq!(actual.value, expected_hash.digest().to_string());
+    fn ranked_assembly_hashes_in_label_order_whatever_the_entry_order() {
+        let pool = InstructionPool::new();
+        let names = ["z", "a", "\u{e000}", "🤖"];
+        for name in names {
+            pool.intern(HashInstruction::External(name.into()));
+        }
+        let keys = InstructionKeys::of(&pool);
+        let mut sorted: Vec<u32> = (0..names.len() as u32).collect();
+        sorted.sort_by_key(|id| names[*id as usize]);
+        let mut expected = xxhash_rust::xxh3::Xxh3::new();
+        for (_, value) in entries(&sorted) {
+            expected.update(value.as_bytes());
+        }
+        let expected = expected.digest().to_string();
+        for offset in 0..names.len() {
+            for reverse in [false, true] {
+                let mut ids: Vec<u32> = (0..names.len() as u32).collect();
+                ids.rotate_left(offset);
+                if reverse {
+                    ids.reverse();
                 }
+                let actual =
+                    assemble_ranked_hash(entries(&ids), &keys, HashInputsBuilder::default());
+                assert_eq!(actual.value, expected);
+                assert_eq!(actual.details.keys(), ["a", "z", "\u{e000}", "🤖"]);
             }
         }
         let empty = assemble_ranked_hash(
             vec![],
-            &Arc::from([]),
-            &instruction_key_ranks(&[]),
+            &InstructionKeys::of(&InstructionPool::new()),
             HashInputsBuilder::default(),
         );
         assert_eq!(empty.value, hash(b""));
     }
 
     #[test]
-    fn duplicate_detail_keys_do_not_retain_discarded_entry_capacity() {
-        let key: SharedStr = "duplicate".to_string().into();
-        let value: SharedStr = "shared-value".to_string().into();
-        let keys: Arc<[SharedStr]> = vec![key; 10_000].into();
-        let ranks = instruction_key_ranks(&keys);
-        let entries = (0..keys.len() as u32)
-            .map(|id| (id, value.clone()))
-            .collect();
-        let result = assemble_ranked_hash(entries, &keys, &ranks, HashInputsBuilder::default());
-        assert_eq!(result.value, hash(value.as_bytes()));
-        assert!(
-            result.details.entry_capacity() <= 2,
-            "One detail retained {} entry slots",
-            result.details.entry_capacity()
+    fn instructions_sharing_a_label_are_both_hashed_and_named_apart_only_together() {
+        let pool = InstructionPool::new();
+        let left = HashInstruction::IgnoredFileSet(strings(&["a,b", "c"]));
+        let right = HashInstruction::IgnoredFileSet(strings(&["a", "b,c"]));
+        let left_id = pool.intern(left.clone());
+        let right_id = pool.intern(right.clone());
+        let keys = InstructionKeys::of(&pool);
+
+        let both = assemble_ranked_hash(
+            entries(&[left_id, right_id]),
+            &keys,
+            HashInputsBuilder::default(),
         );
+        let mut names = both.details.keys();
+        names.sort();
+        let mut expected = vec![
+            format!("files:[a,b,c] #{}", left.digest()),
+            format!("files:[a,b,c] #{}", right.digest()),
+        ];
+        expected.sort();
+        assert_eq!(names, expected);
+        let reversed = assemble_ranked_hash(
+            entries(&[right_id, left_id]),
+            &keys,
+            HashInputsBuilder::default(),
+        );
+        assert_eq!(reversed.value, both.value);
+        let one = assemble_ranked_hash(entries(&[left_id]), &keys, HashInputsBuilder::default());
+        assert_ne!(one.value, both.value);
+        assert_eq!(one.details.keys(), ["files:[a,b,c]"]);
+    }
+
+    #[test]
+    fn a_suffixed_label_never_takes_another_instructions_label() {
+        let project_files =
+            |globs: &[&str]| HashInstruction::ProjectFileSet("p".into(), strings(globs));
+        let left = project_files(&["a,b", "c"]);
+        let right = project_files(&["a", "b,c"]);
+        let taken = format!("a,b,c #{}", left.digest());
+        let lookalike = project_files(&[&taken]);
+        let next = project_files(&[&format!("{taken} #2")]);
+        let pool = InstructionPool::new();
+        let ids: Vec<u32> = [left, right, lookalike, next]
+            .into_iter()
+            .map(|instruction| pool.intern(instruction))
+            .collect();
+        let keys = InstructionKeys::of(&pool);
+
+        for task in [&ids[..3], &ids[..]] {
+            let hashed = assemble_ranked_hash(entries(task), &keys, HashInputsBuilder::default());
+            let names = hashed.details.keys();
+            let distinct: HashSet<&String> = names.iter().collect();
+            assert_eq!(names.len(), task.len());
+            assert_eq!(distinct.len(), task.len(), "{names:?}");
+            assert!(names.contains(&format!("p:{taken}")));
+            assert!(names.contains(&format!("p:{taken} #2")));
+        }
+        let mut reversed = ids.clone();
+        reversed.reverse();
+        assert_eq!(
+            assemble_ranked_hash(entries(&reversed), &keys, HashInputsBuilder::default())
+                .details
+                .keys(),
+            assemble_ranked_hash(entries(&ids), &keys, HashInputsBuilder::default())
+                .details
+                .keys(),
+        );
+    }
+
+    #[test]
+    fn a_task_hashes_every_file_of_two_groups_whose_labels_collide() {
+        let workspace = tempfile::tempdir().unwrap();
+        let write = |name: &str, content: &str| {
+            std::fs::write(workspace.path().join(name), content).unwrap();
+        };
+        for name in ["a,b", "c", "a", "b,c"] {
+            write(name, name);
+        }
+        let plans = hash_plans(&[(
+            "p:build",
+            vec![
+                HashInstruction::IgnoredFileSet(strings(&["a,b", "c"])),
+                HashInstruction::IgnoredFileSet(strings(&["a", "b,c"])),
+            ],
+        )]);
+        // Built field by field: `new` takes a napi Buffer, which needs a JS runtime.
+        let all_workspace_files = Arc::new(Vec::new());
+        let hasher = TaskHasher {
+            ignored_index: Arc::new(IgnoredIndexReader::unwatched()),
+            workspace_root: workspace.path().to_string_lossy().into_owned(),
+            project_graph: Arc::new(ProjectGraph {
+                nodes: HashMap::new(),
+                dependencies: HashMap::new(),
+                external_nodes: HashMap::new(),
+            }),
+            project_file_map: Arc::new(HashMap::new()),
+            all_workspace_files: Arc::clone(&all_workspace_files),
+            ts_config: Vec::new(),
+            ts_config_paths: HashMap::new(),
+            root_tsconfig_path: None,
+            options: None,
+            external_cache: Arc::new(DashMap::new()),
+            workspace_file_set_cache: WorkspaceFileSetCache::new(),
+            project_file_set_cache: ProjectFileSetCache::new(),
+            workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
+            project_file_indices_cache: ProjectFileIndicesCache::new(),
+            all_externals_hash: OnceCell::new(),
+            workspace_file_index: WorkspaceFileIndex::new(all_workspace_files),
+        };
+        let env = HashMap::new();
+        let hash = || {
+            let hashes = hasher
+                .hash_plans_impl(
+                    &plans,
+                    workspace.path().to_string_lossy().into_owned(),
+                    None,
+                    RunStage::ATaskMayHaveWritten,
+                    |_| &env,
+                )
+                .unwrap();
+            let details = hashes.0.get("p:build").unwrap();
+            (details.value.clone(), details.details.keys().len())
+        };
+
+        let (original, detail_count) = hash();
+        assert_eq!(detail_count, 2);
+        write("a,b", "changed");
+        let (left_changed, _) = hash();
+        assert_ne!(left_changed, original);
+        write("a", "changed");
+        assert_ne!(hash().0, left_changed);
     }
 
     #[test]
