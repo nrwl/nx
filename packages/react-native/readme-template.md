@@ -13,6 +13,6 @@
 
 Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
 
-This package is a [React Native plugin for Nx](https://nx.dev/nx-api/react-native).
+This package is a [React Native plugin for Nx](https://nx.dev/docs/technologies/react/react-native/introduction).
 
 {{content}}
