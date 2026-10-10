@@ -235,7 +235,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
     inMemoryAnalyses.forEach { analysis ->
       val resultTuple = JsonArray()
-      resultTuple.add(analysis.pomFile.canonicalFile.relativeTo(workspaceRoot).path) // Root path (workspace root)
+      resultTuple.add(analysis.pomFile.canonicalFile.relativeTo(workspaceRoot).invariantSeparatorsPath) // Root path (workspace root)
 
       val projects = JsonObject()
 

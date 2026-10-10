@@ -16,7 +16,7 @@ object PathUtils {
         return try {
             val absPath = File(absolutePath).canonicalPath
             val rootPath = projectRoot.canonicalPath
-            Paths.get(rootPath).relativize(Paths.get(absPath)).toString()
+            Paths.get(rootPath).relativize(Paths.get(absPath)).toString().replace('\\', '/')
         } catch (_: Exception) {
             logger?.warn("Failed to convert absolute path to relative: $absolutePath, using absolute path")
             absolutePath
