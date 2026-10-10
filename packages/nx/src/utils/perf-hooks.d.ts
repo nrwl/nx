@@ -1,3 +1,4 @@
+// tsc doesn't emit hand-written .d.ts files; assets.json copies this one into dist.
 import type { EventParameters } from '../analytics/analytics';
 
 export interface TrackedDetail extends EventParameters {
