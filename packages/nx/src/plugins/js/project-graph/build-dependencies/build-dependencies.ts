@@ -1,6 +1,7 @@
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
+import { resolveFromWorkspace } from '../../../../utils/installation-directory';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { TargetProjectLocator } from './target-project-locator';
@@ -38,7 +39,7 @@ export function buildExplicitDependencies(
   ) {
     let tsExists = false;
     try {
-      require.resolve('typescript');
+      resolveFromWorkspace('typescript');
       tsExists = true;
     } catch {}
     if (tsExists) {
