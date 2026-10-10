@@ -32,7 +32,7 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, isCloudEnabled?: boolean | undefined | null)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, readyDependencies: Record<string, Array<string>>, isCloudEnabled?: boolean | undefined | null)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
@@ -44,6 +44,7 @@ export declare class AppLifeCycle {
   registerRunningTaskWithEmptyParser(taskId: string): void
   appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
+  setTaskReadiness(taskId: string, readiness: TaskReadiness): void
   setTaskTiming(taskId: string, startTime: number, endTime: number): void
   registerForcedShutdownCallback(forcedShutdownCallback: (() => unknown)): void
   __setCloudMessage(message: string): Promise<void>
@@ -125,6 +126,15 @@ export declare class ImportResult {
   sourceProject: string
   dynamicImportExpressions: Array<string>
   staticImportExpressions: Array<string>
+}
+
+/**
+ * Done once every pattern has appeared in the fed output, in any order, even
+ * split across chunks or interleaved with terminal control sequences.
+ */
+export declare class LogMatcher {
+  constructor(patterns: Array<string>)
+  feed(chunk: string): boolean
 }
 
 export declare class NxCache {
@@ -232,15 +242,30 @@ export declare class ProcessMetricsCollector {
   subscribe(callback: (err: Error | null, event: MetricsUpdate) => void): void
 }
 
+/**
+ * Retries a probe until it passes, the timeout elapses or `cancel` is called.
+ * A failing attempt is never an error.
+ */
+export declare class ReadinessProbe {
+  constructor(config: ReadinessProbeConfig, cwd: string)
+  /** False once the timeout elapses or `cancel` is called. */
+  wait(): Promise<boolean>
+  cancel(): void
+}
+
 export declare class RunningTasksService {
   constructor(db: ExternalObject<NxDbConnection>)
   getRunningTasks(ids: Array<string>): Array<string>
   addRunningTask(taskId: string): void
   /**
-   * Release this process's claim on a task. A row another process has since
-   * taken over is left in place.
+   * Release this process's claim on a task and its readiness. A row another
+   * process has since taken over is left in place.
    */
   removeRunningTask(taskId: string): void
+  /** No-op once the task's row is gone, so a late probe result cannot outlive the task. */
+  setTaskReadiness(taskId: string, status: TaskReadiness): void
+  /** `None` when the task is not running. */
+  getTaskReadiness(taskId: string): TaskReadiness | null
 }
 
 export declare class RustPseudoTerminal {
@@ -1116,6 +1141,16 @@ export interface ProjectGraph {
   externalNodes: Record<string, ExternalNode>
 }
 
+/** Exactly one of `url`, `port` or `command` is set. `interval` absent means backoff. */
+export interface ReadinessProbeConfig {
+  url?: string
+  port?: number
+  host?: string
+  command?: string
+  timeout: number
+  interval?: number
+}
+
 export declare function remove(src: string): void
 
 /**
@@ -1287,14 +1322,19 @@ export interface TaskGraph {
   roots: Array<string>
   /** Map of Task IDs to Tasks */
   tasks: Record<string, Task>
-  /** Map of Task IDs to IDs of tasks which the task depends on */
-  dependencies: Record<string, Array<string>>
-  continuousDependencies: Record<string, Array<string>>
-  /**
-   * The subset of `continuous_dependencies` from `dependsOn` entries with
-   * `inputs: false`: still run, but their inputs are not hashed into the task.
-   */
-  continuousDependenciesWithoutInputs?: Record<string, Array<string>>
+  /** Map of Task IDs to the edges to tasks which the task depends on */
+  dependencies: Record<string, Array<TaskGraphEdge>>
+  continuousDependencies: Record<string, Array<TaskGraphEdge>>
+}
+
+/** An edge from a task to one of the tasks it depends on */
+export interface TaskGraphEdge {
+  /** ID of the task depended on */
+  id: string
+  /** What the dependent waits for on a continuous dependency. Defaults to `started`. */
+  waitFor?: 'started' | 'ready'
+  /** `false` on a continuous dependency whose inputs the dependent does not hash */
+  inputs?: false
 }
 
 /** Details about the composition of a task's hash */
@@ -1337,6 +1377,12 @@ export interface TaskOutputs {
    * disk.
    */
   files?: Array<OutputFile>
+}
+
+export declare const enum TaskReadiness {
+  Pending = 0,
+  Ready = 1,
+  Failed = 2
 }
 
 /**

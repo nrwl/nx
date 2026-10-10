@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import type { NxJsonConfiguration } from '../../config/nx-json';
-import { Task, TaskGraph } from '../../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../../config/task-graph';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import * as nxCloudUtils from '../../utils/nx-cloud-utils';
 import { TaskResult } from '../life-cycle';
@@ -22,7 +22,7 @@ import {
   preDispatchHashTime,
   TimedTask,
 } from './performance-analysis';
-import { formatDuration } from '../../native';
+import { formatDuration, TaskReadiness } from '../../native';
 import {
   buildExitSummaryPayload,
   buildRecommendations,
@@ -56,7 +56,7 @@ function makeTask(
 function makeGraph(
   tasks: Task[],
   deps: Record<string, string[]> = {},
-  continuousDeps: Record<string, string[]> = {}
+  continuousDeps: Record<string, Array<string | TaskGraphEdge>> = {}
 ): TaskGraph {
   return {
     roots: tasks
@@ -64,10 +64,15 @@ function makeGraph(
       .map((t) => t.id),
     tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
     dependencies: Object.fromEntries(
-      tasks.map((t) => [t.id, deps[t.id] ?? []])
+      tasks.map((t) => [t.id, (deps[t.id] ?? []).map((id) => ({ id }))])
     ),
     continuousDependencies: Object.fromEntries(
-      tasks.map((t) => [t.id, continuousDeps[t.id] ?? []])
+      tasks.map((t) => [
+        t.id,
+        (continuousDeps[t.id] ?? []).map((edge) =>
+          typeof edge === 'string' ? { id: edge } : edge
+        ),
+      ])
     ),
   } as unknown as TaskGraph;
 }
@@ -164,6 +169,8 @@ function run(
     isCI?: boolean;
     distributing?: boolean;
     neverConnectToCloud?: boolean;
+    /** taskId -> when the orchestrator reported it ready. */
+    ready?: Record<string, number>;
   } = {}
 ) {
   const env: TestEnv = {
@@ -179,6 +186,10 @@ function run(
     lc.startCommand(total, parallelFromTotal(graph, total));
     for (const taskIds of opts.batches ?? []) {
       lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
+    }
+    for (const [taskId, at] of Object.entries(opts.ready ?? {})) {
+      vi.spyOn(Date, 'now').mockReturnValueOnce(at);
+      lc.setTaskReadiness?.(taskId, TaskReadiness.Ready);
     }
     const results = Object.values(graph.tasks).map(
       (task) =>
@@ -497,6 +508,34 @@ describe('PerformanceLifeCycle', () => {
     expect(s.recoverableByParallel).toBe(0);
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(3000);
+  });
+
+  it('treats a wait for a continuous dependency to be ready as eligibility, not contention', () => {
+    const cores =
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length;
+    // parallel=1. `serve` starts at 0 and is ready at 50000; `a` holds the only
+    // slot 0-25000; `e2e` waits for serve to be ready, so it is eligible at
+    // 50000, after the slot has been free for 25000. More slots would not help.
+    const serve = makeTask('serve', { start: 0, continuous: true });
+    const a = makeTask('a', { start: 0, end: 25000 });
+    const e2e = makeTask('e2e', { start: 50000, end: 65000 });
+    const graph = makeGraph(
+      [serve, a, e2e],
+      {},
+      {
+        e2e: [{ id: 'serve', waitFor: 'ready' }],
+      }
+    );
+    const s = run(graph, 1, { ready: { serve: 50000 } })!;
+
+    expect(s.recoverableByParallel).toBe(0);
+    expect(s.recoverableByMachines).toBe(0);
+    expect(s.coordinatorOverhead).toBe(40000);
+    if (cores >= 2) {
+      expect(recStrings(s).join('\n')).not.toContain('Increase parallelism');
+    }
   });
 
   it('folds batch sequencing into the floor, not coordinator overhead', () => {

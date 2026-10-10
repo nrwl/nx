@@ -226,7 +226,7 @@ pub(super) fn is_path_prefix(prefix: &str, path: &str) -> bool {
 mod tests {
     use super::*;
     use crate::native::tasks::types::Task;
-    use crate::native::test_utils::{hash_plans, strings, task_graph};
+    use crate::native::test_utils::{edges_to, hash_plans, strings, task_graph};
     use std::sync::Arc;
 
     fn edges(
@@ -389,7 +389,7 @@ mod tests {
     fn a_read_reaches_across_a_continuous_dependency() {
         let mut tg = task_graph(&[("web:serve", &["dist/apps/web"]), ("e2e:e2e", &[])], &[]);
         tg.continuous_dependencies
-            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+            .insert("e2e:e2e".into(), edges_to(&["web:serve"]));
         let p = hash_plans(&[
             ("e2e:e2e", vec![include_ignored(&["dist/apps/web/**"])]),
             ("e2e:declared", vec![task_output(&["dist/apps/web"])]),
@@ -402,7 +402,7 @@ mod tests {
             },
         );
         tg.continuous_dependencies
-            .insert("e2e:declared".into(), strings(&["web:serve"]));
+            .insert("e2e:declared".into(), edges_to(&["web:serve"]));
         let e = compute_dependent_output_edges(&p, &tg);
         assert_eq!(e["e2e:e2e"], strings(&["web:serve"]));
         assert_eq!(e["e2e:declared"], strings(&["web:serve"]));
@@ -422,7 +422,7 @@ mod tests {
             &[("web:serve", &["ui:build"])],
         );
         tg.continuous_dependencies
-            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+            .insert("e2e:e2e".into(), edges_to(&["web:serve"]));
         let p = hash_plans(&[("e2e:e2e", vec![task_output(&["dist/libs/ui"])])]);
         let e = compute_dependent_output_edges(&p, &tg);
         assert_eq!(e["e2e:e2e"], strings(&["ui:build"]));
@@ -533,11 +533,10 @@ mod tests {
             TaskGraph {
                 roots: vec![app.id.clone()],
                 dependencies: HashMap::from([
-                    (app.id.clone(), vec![ui.id.clone()]),
+                    (app.id.clone(), edges_to(&[&ui.id])),
                     (ui.id.clone(), vec![]),
                 ]),
                 continuous_dependencies: HashMap::new(),
-                continuous_dependencies_without_inputs: None,
                 tasks: HashMap::from([(app.id.clone(), app), (ui.id.clone(), ui)]),
             }
         };

@@ -219,9 +219,10 @@ function taskGraphFingerprint(
       task.target.target,
       task.target.configuration ?? '',
       (task.outputs ?? []).join(','),
-      (taskGraph.dependencies[id] ?? []).join(','),
-      (taskGraph.continuousDependencies[id] ?? []).join(','),
-      (taskGraph.continuousDependenciesWithoutInputs?.[id] ?? []).join(',')
+      (taskGraph.dependencies[id] ?? []).map((edge) => edge.id).join(','),
+      (taskGraph.continuousDependencies[id] ?? [])
+        .map((edge) => JSON.stringify([edge.id, edge.inputs === false]))
+        .join(',')
     );
   }
   return hashArray(parts);

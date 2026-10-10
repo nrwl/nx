@@ -1,5 +1,5 @@
 use crate::native::tasks::types::HashInstruction;
-use crate::native::tasks::types::{Task, TaskGraph};
+use crate::native::tasks::types::{Task, TaskGraph, TaskGraphEdge};
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 use tracing::{debug, trace};
@@ -17,7 +17,7 @@ pub(super) fn collect_task_dependencies<'a>(
         &task_graph.dependencies,
         initial_task_id,
         transitive,
-        |_, _| true,
+        |_| true,
     )
 }
 
@@ -28,26 +28,21 @@ pub(super) fn collect_continuous_dependencies<'a>(
     task_graph: &'a TaskGraph,
     initial_task_id: &str,
 ) -> Vec<&'a Task> {
-    let without_inputs = task_graph.continuous_dependencies_without_inputs.as_ref();
     collect_over(
         task_graph,
         &task_graph.continuous_dependencies,
         initial_task_id,
         true,
-        |from, to| {
-            !without_inputs
-                .and_then(|edges| edges.get(from))
-                .is_some_and(|deps| deps.iter().any(|dep| dep == to))
-        },
+        |edge| edge.inputs != Some(false),
     )
 }
 
 fn collect_over<'a>(
     task_graph: &'a TaskGraph,
-    edges: &'a HashMap<String, Vec<String>>,
+    edges: &'a HashMap<String, Vec<TaskGraphEdge>>,
     initial_task_id: &str,
     transitive: bool,
-    follows: impl Fn(&str, &str) -> bool,
+    follows: impl Fn(&TaskGraphEdge) -> bool,
 ) -> Vec<&'a Task> {
     let mut result = Vec::new();
     let mut visited = HashSet::from([initial_task_id]);
@@ -60,10 +55,10 @@ fn collect_over<'a>(
         };
 
         for dep in deps {
-            let dep_str = dep.as_str();
+            let dep_str = dep.id.as_str();
 
             // Skip if already seen
-            if !follows(task_id, dep_str) || !visited.insert(dep_str) {
+            if !follows(dep) || !visited.insert(dep_str) {
                 continue;
             }
 
@@ -155,6 +150,7 @@ pub(super) fn get_dep_output(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::test_utils::edges_to;
     use std::collections::HashMap;
 
     pub(super) fn create_test_task(project: &str, outputs: Vec<String>) -> Task {
@@ -173,7 +169,7 @@ mod tests {
         let mut dependencies = HashMap::new();
         dependencies.insert(
             "task1:build".to_string(),
-            vec!["task2:build".to_string(), "task3:build".to_string()],
+            edges_to(&["task2:build", "task3:build"]),
         );
 
         let task_graph = TaskGraph {
@@ -181,7 +177,6 @@ mod tests {
             tasks,
             dependencies,
             continuous_dependencies: HashMap::new(),
-            continuous_dependencies_without_inputs: None,
         };
 
         let result = collect_task_dependencies(&task_graph, "task1:build", false);
@@ -200,15 +195,14 @@ mod tests {
         tasks.insert("task3:build".to_string(), create_test_task("task3", vec![]));
 
         let mut dependencies = HashMap::new();
-        dependencies.insert("task1:build".to_string(), vec!["task2:build".to_string()]);
-        dependencies.insert("task2:build".to_string(), vec!["task3:build".to_string()]);
+        dependencies.insert("task1:build".to_string(), edges_to(&["task2:build"]));
+        dependencies.insert("task2:build".to_string(), edges_to(&["task3:build"]));
 
         let task_graph = TaskGraph {
             roots: vec![],
             tasks,
             dependencies,
             continuous_dependencies: HashMap::new(),
-            continuous_dependencies_without_inputs: None,
         };
 
         let result = collect_task_dependencies(&task_graph, "task1:build", true);
@@ -226,7 +220,6 @@ mod tests {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
             continuous_dependencies: HashMap::new(),
-            continuous_dependencies_without_inputs: None,
         };
         for project in ["e2e", "web", "api"] {
             let task = create_test_task(project, vec![]);
@@ -236,13 +229,13 @@ mod tests {
         // e2e -> web -> api -> e2e closes a loop back to the served task.
         task_graph
             .continuous_dependencies
-            .insert("e2e:build".into(), vec!["web:build".into()]);
+            .insert("e2e:build".into(), edges_to(&["web:build"]));
         task_graph
             .continuous_dependencies
-            .insert("web:build".into(), vec!["api:build".into()]);
+            .insert("web:build".into(), edges_to(&["api:build"]));
         task_graph
             .continuous_dependencies
-            .insert("api:build".into(), vec!["e2e:build".into()]);
+            .insert("api:build".into(), edges_to(&["e2e:build"]));
 
         let mut ids: Vec<&str> = collect_continuous_dependencies(&task_graph, "e2e:build")
             .iter()
@@ -266,17 +259,16 @@ mod tests {
         let mut dependencies = HashMap::new();
         dependencies.insert(
             "task1:build".to_string(),
-            vec!["task2:build".to_string(), "task3:build".to_string()],
+            edges_to(&["task2:build", "task3:build"]),
         );
-        dependencies.insert("task2:build".to_string(), vec!["task4:build".to_string()]);
-        dependencies.insert("task3:build".to_string(), vec!["task4:build".to_string()]);
+        dependencies.insert("task2:build".to_string(), edges_to(&["task4:build"]));
+        dependencies.insert("task3:build".to_string(), edges_to(&["task4:build"]));
 
         let task_graph = TaskGraph {
             roots: vec![],
             tasks,
             dependencies,
             continuous_dependencies: HashMap::new(),
-            continuous_dependencies_without_inputs: None,
         };
 
         let result = collect_task_dependencies(&task_graph, "task1:build", true);
@@ -335,14 +327,14 @@ mod tests {
             );
 
             if level == 0 {
-                dependencies.insert("root:build".to_string(), vec![left.clone(), right.clone()]);
+                dependencies.insert("root:build".to_string(), edges_to(&[&left, &right]));
             } else {
                 let prev_bottom = format!("bottom{}", level - 1);
-                dependencies.insert(prev_bottom, vec![left.clone(), right.clone()]);
+                dependencies.insert(prev_bottom, edges_to(&[&left, &right]));
             }
 
-            dependencies.insert(left, vec![bottom.clone()]);
-            dependencies.insert(right, vec![bottom]);
+            dependencies.insert(left, edges_to(&[&bottom]));
+            dependencies.insert(right, edges_to(&[&bottom]));
         }
 
         TaskGraph {
@@ -350,7 +342,6 @@ mod tests {
             tasks,
             dependencies,
             continuous_dependencies: HashMap::new(),
-            continuous_dependencies_without_inputs: None,
         }
     }
 

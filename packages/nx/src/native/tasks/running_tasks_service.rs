@@ -15,6 +15,30 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
     cwd TEXT NOT NULL
 );";
 
+pub const READINESS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_task_readiness (
+    task_id TEXT PRIMARY KEY NOT NULL,
+    status INTEGER NOT NULL
+);";
+
+#[napi]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TaskReadiness {
+    Pending,
+    Ready,
+    Failed,
+}
+
+impl TaskReadiness {
+    fn from_db(value: i64) -> anyhow::Result<Self> {
+        match value {
+            0 => Ok(Self::Pending),
+            1 => Ok(Self::Ready),
+            2 => Ok(Self::Failed),
+            other => anyhow::bail!("Unknown task readiness status {}", other),
+        }
+    }
+}
+
 #[napi]
 struct RunningTasksService {
     db: Arc<Mutex<NxDbConnection>>,
@@ -107,25 +131,67 @@ impl RunningTasksService {
         let cwd = std::env::current_dir()
             .expect("The current working directory does not exist")
             .to_normalized_string();
-        self.db.lock().unwrap().execute(
-            "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?, ?, ?, ?)",
-            [&task_id, &pid.to_string(), &command_str, &cwd],
-        )?;
+        // Same transaction so a reader never sees a live row with stale readiness
+        self.db.lock().unwrap().transaction(|conn| {
+            conn.execute(
+                "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?, ?, ?, ?)",
+                [&task_id, &pid.to_string(), &command_str, &cwd],
+            )?;
+            conn.execute(
+                "INSERT OR REPLACE INTO running_task_readiness (task_id, status) VALUES (?, ?)",
+                (&task_id, TaskReadiness::Pending as i64),
+            )?;
+            Ok(())
+        })?;
         debug!("Added {} to running tasks", &task_id);
         self.added_tasks.insert(task_id);
         Ok(())
     }
 
-    /// Release this process's claim on a task. A row another process has since
-    /// taken over is left in place.
+    /// Release this process's claim on a task and its readiness. A row another
+    /// process has since taken over is left in place.
     #[napi]
     pub fn remove_running_task(&self, task_id: String) -> anyhow::Result<()> {
-        self.db.lock().unwrap().execute(
-            "DELETE FROM running_tasks WHERE task_id = ? AND pid = ?",
-            [&task_id, &std::process::id().to_string()],
-        )?;
+        self.db.lock().unwrap().transaction(|conn| {
+            let released = conn.execute(
+                "DELETE FROM running_tasks WHERE task_id = ? AND pid = ?",
+                [&task_id, &std::process::id().to_string()],
+            )?;
+            if released > 0 {
+                conn.execute(
+                    "DELETE FROM running_task_readiness WHERE task_id = ?",
+                    [&task_id],
+                )?;
+            }
+            Ok(())
+        })?;
         debug!("Removed {} from running tasks", task_id);
         Ok(())
+    }
+
+    /// No-op once the task's row is gone, so a late probe result cannot outlive the task.
+    #[napi]
+    pub fn set_task_readiness(&self, task_id: String, status: TaskReadiness) -> anyhow::Result<()> {
+        self.db.lock().unwrap().execute(
+            "UPDATE running_task_readiness SET status = ? WHERE task_id = ?",
+            (status as i64, &task_id),
+        )?;
+        debug!("Set readiness of {} to {:?}", task_id, status);
+        Ok(())
+    }
+
+    /// `None` when the task is not running.
+    #[napi]
+    pub fn get_task_readiness(&self, task_id: String) -> anyhow::Result<Option<TaskReadiness>> {
+        if !self.is_task_running(&task_id)? {
+            return Ok(None);
+        }
+        let status = self.db.lock().unwrap().query_row(
+            "SELECT status FROM running_task_readiness WHERE task_id = ?",
+            [&task_id],
+            |row| row.get::<_, i64>(0),
+        )?;
+        status.map(TaskReadiness::from_db).transpose()
     }
 }
 
@@ -143,8 +209,46 @@ impl Drop for RunningTasksService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::db::initialize::initialize_db;
     use std::env::args_os;
     use std::ffi::OsString;
+
+    #[test]
+    fn readiness_is_visible_through_another_connection() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let path = temp_dir.path().join("test.db");
+        let mut owner = RunningTasksService::new(&External::new(Arc::new(Mutex::new(
+            initialize_db(&path).unwrap(),
+        ))))
+        .unwrap();
+        let reader = RunningTasksService::new(&External::new(Arc::new(Mutex::new(
+            initialize_db(&path).unwrap(),
+        ))))
+        .unwrap();
+        let id = "app:serve".to_string();
+
+        assert_eq!(reader.get_task_readiness(id.clone()).unwrap(), None);
+        owner.add_running_task(id.clone()).unwrap();
+        assert_eq!(
+            reader.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Pending)
+        );
+        owner
+            .set_task_readiness(id.clone(), TaskReadiness::Ready)
+            .unwrap();
+        assert_eq!(
+            reader.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Ready)
+        );
+        // restart resets what the other connection sees
+        owner.add_running_task(id.clone()).unwrap();
+        assert_eq!(
+            reader.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Pending)
+        );
+        owner.remove_running_task(id.clone()).unwrap();
+        assert_eq!(reader.get_task_readiness(id.clone()).unwrap(), None);
+    }
 
     #[test]
     fn test_add_task() {
@@ -173,6 +277,7 @@ mod tests {
     fn remove_leaves_a_claim_taken_over_by_another_process() {
         let conn = rusqlite::Connection::open_in_memory().unwrap();
         conn.execute_batch(SCHEMA).unwrap();
+        conn.execute_batch(READINESS_SCHEMA).unwrap();
         let mut service = RunningTasksService {
             db: Arc::new(Mutex::new(NxDbConnection::new(conn))),
             added_tasks: Default::default(),
@@ -186,6 +291,19 @@ mod tests {
                     "SELECT pid FROM running_tasks WHERE task_id = ?",
                     ["app:serve"],
                     |row| row.get::<_, u32>(0),
+                )
+                .unwrap()
+        };
+
+        let readiness_row = |service: &RunningTasksService| {
+            service
+                .db
+                .lock()
+                .unwrap()
+                .query_row(
+                    "SELECT status FROM running_task_readiness WHERE task_id = ?",
+                    ["app:serve"],
+                    |row| row.get::<_, i64>(0),
                 )
                 .unwrap()
         };
@@ -204,6 +322,7 @@ mod tests {
 
         service.remove_running_task("app:serve".into()).unwrap();
         assert_eq!(claim_owner(&service), Some(other_pid));
+        assert_eq!(readiness_row(&service), Some(TaskReadiness::Pending as i64));
 
         service.add_running_task("app:serve".into()).unwrap();
         service.remove_running_task("app:serve".into()).unwrap();
