@@ -69,6 +69,7 @@ pub(super) fn get_inputs_for_dependency_group<'a>(
             fileset,
             dependencies: true,
             include_ignored,
+            ..
         } = named_input
         else {
             return Ok(None);
@@ -77,11 +78,13 @@ pub(super) fn get_inputs_for_dependency_group<'a>(
             fileset: *fileset,
             dependencies: false,
             include_ignored: *include_ignored,
+            always: false,
         });
         deps_inputs.push(Input::FileSet {
             fileset: *fileset,
             dependencies: true,
             include_ignored: *include_ignored,
+            always: false,
         });
     }
 
@@ -108,6 +111,7 @@ pub(super) fn get_inputs_for_dependency<'a>(
             let deps_inputs = vec![Input::Inputs {
                 input: *input,
                 dependencies: true,
+                always: false,
             }];
 
             Ok(Some(SplitInputs {
@@ -121,6 +125,7 @@ pub(super) fn get_inputs_for_dependency<'a>(
             fileset,
             dependencies: true,
             include_ignored,
+            ..
         } => {
             // For dependency filesets, we apply the same fileset to the dependency
             // and continue recursively with the same pattern
@@ -128,11 +133,13 @@ pub(super) fn get_inputs_for_dependency<'a>(
                 fileset: *fileset,
                 dependencies: false,
                 include_ignored: *include_ignored,
+                always: false,
             }];
             let deps_inputs = vec![Input::FileSet {
                 fileset: *fileset,
                 dependencies: true,
                 include_ignored: *include_ignored,
+                always: false,
             }];
 
             Ok(Some(SplitInputs {
@@ -156,10 +163,12 @@ fn split_inputs_into_self_and_deps<'a>(
                 fileset: "{projectRoot}/**/*",
                 dependencies: false,
                 include_ignored: false,
+                always: false,
             },
             Input::Inputs {
                 input: "default",
                 dependencies: true,
+                always: false,
             },
         ]
     });
@@ -242,23 +251,34 @@ pub(super) fn expand_single_project_inputs<'a>(
                         fileset: s,
                         dependencies: false,
                         include_ignored: false,
+                        always: false,
                     });
                 }
             }
             Input::Inputs {
                 input,
                 dependencies: false,
-            } => expanded.extend(expand_named_input(input, named_inputs)?),
+                always,
+            } => {
+                let inputs = expand_named_input(input, named_inputs)?;
+                if always {
+                    expanded.extend(inputs.into_iter().map(Input::into_always));
+                } else {
+                    expanded.extend(inputs);
+                }
+            }
             Input::FileSet {
                 fileset,
                 dependencies: false,
                 include_ignored,
+                always,
             } => {
                 validate_file_set(fileset)?;
                 expanded.push(Input::FileSet {
                     fileset,
                     dependencies: false,
                     include_ignored,
+                    always,
                 });
             }
             Input::Runtime(runtime) => expanded.push(Input::Runtime(runtime)),
@@ -278,12 +298,14 @@ pub(super) fn expand_single_project_inputs<'a>(
                 json,
                 fields,
                 exclude_fields,
+                always,
             } => {
                 validate_file_set(json)?;
                 expanded.push(Input::Json {
                     json,
                     fields,
                     exclude_fields,
+                    always,
                 });
             }
             Input::Projects { .. }
@@ -336,6 +358,7 @@ pub(super) fn expand_named_input<'a>(
             fileset: "{projectRoot}/**/*",
             dependencies: false,
             include_ignored: false,
+            always: false,
         }]),
         None => anyhow::bail!("Input '{}' is not defined", input),
     }
@@ -443,6 +466,7 @@ mod tests {
                 fileset: "{projectRoot}/**/*",
                 dependencies: false,
                 include_ignored: false,
+                always: false,
             }]
         ));
         nx_json.named_inputs = Some(HashMap::from([("default".into(), vec![])]));

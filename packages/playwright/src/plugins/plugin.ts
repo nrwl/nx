@@ -12,6 +12,7 @@ import {
   workspaceDataDirectory,
   PluginCache,
   getFilesInDirectoryUsingContext,
+  applyTestFileDirectives,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -547,7 +548,11 @@ async function buildPlaywrightTargets(
       const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
       ciTargetGroup.push(targetName);
       targets[targetName] = {
-        ...ciBaseTargetConfig,
+        ...applyTestFileDirectives(
+          ciBaseTargetConfig,
+          context.workspaceRoot,
+          testFile
+        ),
         options: {
           ...ciBaseTargetConfig.options,
           env: getAtomizedTaskEnvVars(reporterOutputs, outputSubfolder),

@@ -6,6 +6,7 @@ import {
   workspaceDataDirectory,
   PluginCache,
   globWithWorkspaceContext,
+  applyTestFileDirectives,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -499,6 +500,12 @@ async function buildCypressTargets(
         } else {
           targets[targetName].parallelism = false;
         }
+
+        targets[targetName] = applyTestFileDirectives(
+          targets[targetName],
+          context.workspaceRoot,
+          file
+        );
       }
 
       targets[options.ciTargetName] = {

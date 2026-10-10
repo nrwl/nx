@@ -260,6 +260,10 @@
               "includeIgnored": {
                 "type": "boolean",
                 "description": "Hash the glob straight from disk instead of the workspace file map, so gitignored or generated files can be inputs. A missing exact path still takes part in the hash. A ! negation only filters includeIgnored matches when it also sets includeIgnored: true."
+              },
+              "always": {
+                "type": "boolean",
+                "description": "Keep the files this input resolves to in the hash even when the task is hashed from its ultracache recording."
               }
             },
             "required": ["fileset"],
@@ -290,6 +294,10 @@
               "input": {
                 "type": "string",
                 "description": "The name of the input."
+              },
+              "always": {
+                "type": "boolean",
+                "description": "Keep the files this input resolves to in the hash even when the task is hashed from its ultracache recording."
               }
             },
             "oneOf": [
@@ -383,6 +391,10 @@
                   "type": "string"
                 },
                 "description": "Denylist of fields to exclude from the hash. Supports dot notation for nested paths."
+              },
+              "always": {
+                "type": "boolean",
+                "description": "Keep the file in the hash even when the task is hashed from its ultracache recording."
               }
             },
             "required": ["json"],

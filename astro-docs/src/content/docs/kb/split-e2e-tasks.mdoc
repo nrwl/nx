@@ -482,3 +482,72 @@ jobs:
 ```
 
 Learn more about configuring your [CI provider with these workflow examples](/docs/kb/ci-workflow-examples).
+
+## Scope a test file to its projects
+
+An atomized e2e task depends on the app it tests, so a change to any library the app bundles reruns every test file.
+To rerun a test file only when the projects it exercises change, scope its task in project configuration or with a comment in the test file.
+
+### Scope a task in project configuration
+
+Add the test file's task to `project.json` under its name, with two changes to the configuration the plugin infers:
+
+```jsonc
+// apps/shop-e2e/project.json
+{
+  "targets": {
+    "e2e-ci--src/e2e/checkout.cy.ts": {
+      "inputs": [
+        "default",
+        {
+          "input": "production",
+          "projects": ["checkout", "checkout-utils"],
+          "always": true,
+        },
+        { "externalDependencies": ["cypress"] },
+      ],
+      "dependsOn": [
+        { "projects": ["shop"], "target": "serve-static", "inputs": false },
+      ],
+    },
+  },
+}
+```
+
+- `^production` becomes an input that selects only the listed projects. With `"always": true`, [ultracache keeps their files in the hash](/docs/reference/inputs#inputs-kept-under-ultracache).
+- The dependency on the web server task sets [`"inputs": false`](/docs/reference/inputs#inputs-of-continuous-dependencies), so the server's inputs stop counting.
+
+`inputs` and `dependsOn` in `project.json` replace the arrays the plugin infers, so list every entry you keep.
+Run `nx show project shop-e2e --json` to see the inferred entries.
+Don't add `"..."` to `inputs`, because it restores `^production`.
+The task name comes from the test file's path. When you move or rename the file, the entry no longer matches its task, and each new test file needs its own entry.
+
+### Scope a task with a comment in the test file
+
+For Cypress and Playwright atomized tasks, you can name the projects in an `@nx-depends-on` comment at the top of the test file instead:
+
+```ts
+// apps/shop-e2e/src/e2e/checkout.cy.ts
+// @nx-depends-on: checkout, checkout-utils
+import { getSubmitButton } from '../support/app.po';
+```
+
+The plugin then infers the configuration above for the `e2e-ci--src/e2e/checkout.cy.ts` task.
+It keeps the rest of the inferred configuration, so you don't restate any of it.
+The scope moves with the test file, and a new test file opts in with its own comment.
+
+Nx reads the comment from the comment block at the top of the file and stops at the first line of code.
+A comment without projects is an error.
+When Playwright starts the web server itself, there's no server task, so only the inputs change.
+Test files without the comment keep the inferred configuration.
+
+### What counts after scoping
+
+These rules apply to both ways of scoping:
+
+- Only the listed projects count as dependency inputs, not the projects they depend on.
+- The task keeps its other declared inputs, such as `default` and any shared globs it includes.
+- Under ultracache, the files the test read during its recorded run replace the declared file inputs, except the `always` ones.
+- A change outside the remaining inputs leaves the task's hash unchanged, so Nx replays the cached result.
+- A listed name that matches no project is an error, but a missing project goes unnoticed, so list every project the test relies on.
+- With `NX_LEGACY_AFFECTED=false`, `nx affected` selects the task by these inputs. Without it, `nx affected` selects whole projects.

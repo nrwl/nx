@@ -1832,7 +1832,12 @@ describe('task planner', () => {
     });
   });
   describe('ultracache configurations', () => {
-    function fixture(opts: { cyclic?: boolean } = {}) {
+    function fixture(
+      opts: {
+        cyclic?: boolean;
+        extraParentInputs?: unknown[];
+      } = {}
+    ) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [
           { file: 'libs/parent/filea.ts', hash: 'a.hash' },
@@ -1855,6 +1860,7 @@ describe('task planner', () => {
                 { runtime: 'echo runtime123' },
                 { json: '{projectRoot}/package.json', fields: ['version'] },
                 { fileset: '{projectRoot}/generated', includeIgnored: true },
+                ...(opts.extraParentInputs ?? []),
               ],
               outputs: ['{workspaceRoot}/dist/libs/parent'],
             },
@@ -2045,6 +2051,23 @@ describe('task planner', () => {
       )['parent:build'];
       expect(plan).toContain('files:[libs/child/readme.md]');
       expect(plan).toContain('files:[libs/parent/a.spec.ts]');
+    });
+
+    it("keeps an always input's declared files", () => {
+      const read = configurationsFor({
+        'parent:build': { inputs: ['libs/parent/filea.ts'] },
+      });
+      const planWith = (always: boolean) => {
+        const { planner, taskGraph } = fixture({
+          extraParentInputs: [{ input: 'prod', projects: ['child'], always }],
+        });
+        return planner.getPlans(['parent:build'], taskGraph, read)[
+          'parent:build'
+        ];
+      };
+
+      expect(planWith(false)).not.toContain('child:libs/child/**/*');
+      expect(planWith(true)).toContain('child:libs/child/**/*');
     });
 
     it("keeps a continuous dependency's inputs in the task it serves", () => {
