@@ -85,4 +85,38 @@ describe('scam-to-standalone', () => {
       "
     `);
   });
+
+  it('should remove the component from the spec declarations when the TestBed already has imports', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await generateTestApplication(tree, { directory: 'foo', skipFormat: true });
+    await scamGenerator(tree, {
+      name: 'bar',
+      path: 'foo/src/app/bar/bar',
+      skipFormat: true,
+    });
+    tree.write(
+      'foo/src/app/bar/bar.spec.ts',
+      `import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Bar } from './bar';
+
+describe('Bar', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SharedModule],
+      declarations: [Bar],
+    }).compileComponents();
+  });
+});
+`
+    );
+
+    await scamToStandalone(tree, {
+      component: 'src/app/bar/bar.ts',
+      project: 'foo',
+    });
+
+    const spec = tree.read('foo/src/app/bar/bar.spec.ts', 'utf-8');
+    expect(spec).toContain('imports: [Bar, SharedModule]');
+    expect(spec).not.toContain('declarations');
+  });
 });
