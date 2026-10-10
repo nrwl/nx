@@ -480,7 +480,9 @@ jobs:
           run: |
             env
             whoami
-            sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
+            # openjdk21 lets mvnw build the @nx/maven project graph
+            sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss openjdk21
+            export JAVA_HOME=/usr/local/openjdk21
             sudo npm install --location=global --ignore-scripts pnpm@${PNPM_VERSION}
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
