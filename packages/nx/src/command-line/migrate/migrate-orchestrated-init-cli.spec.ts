@@ -10,8 +10,9 @@ const mockActiveRunToReplace = vi.fn();
 // migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
 // intercept; replace the module in the require channel instead.
 import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
-import { runDir } from './run/run-state';
-import { latestRound } from './run/state-machine';
+import { runDir, TERMINAL_STEP_STATUSES } from './run/run-state';
+import { latestRound, stepLabel } from './run/state-machine';
+import { pmInstallCommand } from './run/util';
 mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: vi.fn(),
   runOrchestratorInit: (...args: unknown[]) => mockRunOrchestratorInit(...args),
@@ -21,7 +22,10 @@ mockCjsModule(import.meta.url, './run', {
   holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
   activeRunToReplace: (...args: unknown[]) => mockActiveRunToReplace(...args),
   latestRound,
+  pmInstallCommand,
   runDir,
+  stepLabel,
+  TERMINAL_STEP_STATUSES,
 });
 const mockRunMasterSession = vi.fn();
 mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
@@ -155,9 +159,10 @@ describe('migrate() orchestrated init dispatch', () => {
       join(runDir(root, 'run-1'), 'plan-0.json'),
       JSON.stringify({ migrations: [] })
     );
-    mockHoldRunToContinue
-      .mockReset()
-      .mockReturnValue({ rounds: [{ index: 0, planSnapshot: 'plan-0.json' }] });
+    mockHoldRunToContinue.mockReset().mockReturnValue({
+      rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
+      steps: [],
+    });
     mockActiveRunToReplace.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockRunMasterSession.mockReset().mockResolvedValue(undefined);
@@ -328,7 +333,79 @@ describe('migrate() orchestrated init dispatch', () => {
       policy: { createCommits: true, skipInstall: false },
     });
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+    expect(mockRunInstall).toHaveBeenCalled();
   });
+
+  it.each([
+    [
+      'says which install a retry runs again and which is left to the user',
+      false,
+    ],
+    ['says nothing of it under --skip-install, which skips it anyway', true],
+  ])(
+    'continues a run whose step install failed without the preflight install, which would fail on the same cause, and %s',
+    async (_, skipInstall) => {
+      mockHoldRunToContinue.mockReturnValue({
+        rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
+        steps: [
+          {
+            kind: 'migration',
+            id: 'step-1',
+            migrationId: '@nx/js:gen',
+            status: 'failed',
+            installFailed: true,
+          },
+          {
+            kind: 'migration',
+            id: 'step-2',
+            // Migration ids are not checked for line breaks.
+            migrationId: '@nx/js:other\nnext',
+            status: 'skipped',
+            installFailed: true,
+          },
+        ],
+      });
+
+      await migrate(
+        root,
+        runMigrationsArgs({
+          runId: 'run-1',
+          agentic: 'claude-code',
+          skipInstall,
+        }),
+        [
+          '--run-migrations',
+          '--agentic=claude-code',
+          '--run-id=run-1',
+          ...(skipInstall ? ['--skip-install'] : []),
+        ]
+      );
+
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      expect(
+        vi
+          .mocked(output.warn)
+          .mock.calls.filter(
+            ([message]) => message.title === 'Skipping the dependency install'
+          )
+      ).toEqual(
+        skipInstall
+          ? []
+          : [
+              [
+                {
+                  title: 'Skipping the dependency install',
+                  bodyLines: [
+                    'The dependency install of @nx/js:gen did not complete earlier in this run. Retrying that step installs again; any other choice leaves the install to you.',
+                    `The dependency install of @nx/js:other next did not complete earlier in this run. Run \`${pmInstallCommand(root)}\` once the cause of the failed install is fixed.`,
+                  ],
+                },
+              ],
+            ]
+      );
+      expect(mockRunOrchestratorResume).toHaveBeenCalled();
+    }
+  );
 
   it('refuses a start-fresh naming no active run before the preflight install', async () => {
     mockActiveRunToReplace.mockImplementation(() => {

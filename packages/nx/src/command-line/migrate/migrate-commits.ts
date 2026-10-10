@@ -20,6 +20,11 @@ import { terminalOutput, type MigrateOutputSink } from './deferred-output';
 // .gitignore edit, or the migration's own changes).
 const MIGRATE_COMMIT_EXCLUDES = [MIGRATE_RUNS_RELATIVE_DIR];
 
+// Without it the agent continues as the absorb guidance says, and a cause that
+// fails every commit leaves the whole run uncommitted.
+const AGENT_SESSION_COMMIT_FAILURE =
+  "Commits in this session cannot ask for input, such as a signing passphrase or a hook's prompt, so later commits may fail the same way until the cause is fixed. Before the next step, tell the user what failed and ask whether to fix the cause first or to continue as is. Either way nx tries every later commit, and the first one that lands includes these changes.";
+
 /**
  * Discriminated result for `commitMigrationIfRequested`. Distinguishes the
  * shapes the executor needs to react to:
@@ -46,6 +51,9 @@ export type CommitResult =
  * The default `failureGuidance` describes the classic loop's absorb-and-recap
  * behavior; a caller with no later commit or recap to absorb the diff (the
  * standalone single-migration worker) passes its own.
+ *
+ * A `sink` collects the output for a caller sharing the terminal with an
+ * agent, and the commit then runs without the terminal.
  */
 export async function commitMigrationIfRequested(
   root: string,
@@ -55,9 +63,10 @@ export async function commitMigrationIfRequested(
   installDepsIfChanged: () => Promise<void>,
   pendingMigrations: ReadonlyArray<{ package: string; name: string }> = [],
   failureGuidance = 'Any uncommitted changes will be included in the next successful commit, which will reference this migration; if they remain uncommitted, the end-of-run output will list this migration so you can commit or revert them manually.',
-  out: MigrateOutputSink = terminalOutput
+  sink?: MigrateOutputSink
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
+  const out = sink ?? terminalOutput;
   await installDepsIfChanged();
   // Generator may have only touched gitignored paths or the excluded scratch
   // dir, or the prompt half made no change: log neutrally, not as an error.
@@ -74,7 +83,8 @@ export async function commitMigrationIfRequested(
     const sha = await tryCommitChangesAsync(
       commitMessage,
       root,
-      MIGRATE_COMMIT_EXCLUDES
+      MIGRATE_COMMIT_EXCLUDES,
+      { withoutTerminal: sink !== undefined }
     );
     if (sha) return { status: 'committed', sha };
     // null = commit landed but `git rev-parse HEAD` failed (see
@@ -88,7 +98,9 @@ export async function commitMigrationIfRequested(
     const reason = err instanceof Error ? err.message : String(err);
     out.line(
       'red',
-      `The commit for ${migration.name} failed:\n${reason}\nCheck \`git status\` and \`git log\`; the commit may have landed despite this error. ${failureGuidance}`
+      `The commit for ${migration.name} failed:\n${reason}\nCheck \`git status\` and \`git log\`; the commit may have landed despite this error. ${failureGuidance}${
+        sink ? ` ${AGENT_SESSION_COMMIT_FAILURE}` : ''
+      }`
     );
     return { status: 'failed', reason };
   }

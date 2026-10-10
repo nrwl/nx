@@ -1,11 +1,17 @@
 import { type ChildProcess, spawn } from 'child_process';
+import { EventEmitter } from 'events';
 import { existsSync, rmSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
+import { signalToCode } from '../../../../utils/exit-codes';
 import { logger } from '../../../../utils/logger';
 import { output } from '../../../../utils/output';
+import { signalCommandsWithoutTerminal } from '../../../../utils/spawn-without-terminal';
 import { resetSgrAfterAgent } from '../../migrate-output';
 import {
   BROKER_ENV_VAR,
+  commitsStep,
+  COMMIT_INSTALLS_FIRST,
+  formatElapsed,
   MigrateCommitBroker,
   type MigrateRunPolicy,
   runDir,
@@ -49,6 +55,13 @@ export type SpawnMasterSessionResult =
   | { kind: 'spawn-failed'; error: Error }
   // The session was closed because a request it made could not be answered.
   | { kind: 'broker-failed'; error: Error };
+
+// How long a second Ctrl+C waits for the killed operation to settle before nx
+// stops waiting on it: only a process that left its group can hold it open.
+const OPERATION_KILL_WAIT_MS = 2_000;
+// SIGINTs this close together are one Ctrl+C: `npx` and the package managers
+// pass on to nx the SIGINT the terminal already sent it.
+const SAME_PRESS_MS = 500;
 
 // The wrapper's local re-exec sets the first two for its own hop and the user
 // sets the third to reach this path; inherited, they would change install or
@@ -149,9 +162,25 @@ export async function spawnMasterSession(
     return { kind: 'spawn-failed', error: toError(error) };
   }
 
-  // Ctrl+C belongs to the agent from the moment it exists.
-  const swallowSigint = () => {};
-  process.on('SIGINT', swallowSigint);
+  // Ctrl+C belongs to the agent from the moment it exists. The operations the
+  // broker runs have no terminal, so nx passes on what would have reached them
+  // through it, and ends them when it goes away itself.
+  const ctrlC = new EventEmitter();
+  let lastPressAt = -Infinity;
+  const forwardSigint = () => {
+    const now = Date.now();
+    if (now - lastPressAt < SAME_PRESS_MS) return;
+    lastPressAt = now;
+    signalCommandsWithoutTerminal('SIGINT');
+    ctrlC.emit('press');
+  };
+  const exitOnSignal = (signal: NodeJS.Signals) => {
+    signalCommandsWithoutTerminal(signal);
+    process.exit(signalToCode(signal));
+  };
+  process.on('SIGINT', forwardSigint);
+  process.on('SIGHUP', exitOnSignal);
+  process.on('SIGTERM', exitOnSignal);
   const sentinelWatch = new AbortController();
   let brokerFailure: Error | undefined;
   // Settles when the poll aborts and the request in flight is answered, or
@@ -219,17 +248,35 @@ export async function spawnMasterSession(
   } finally {
     sentinelWatch.abort();
     // With the agent gone, the terminal is restored before the wait: an
-    // agent that left it raw would keep a Ctrl+C from reaching the operation
-    // in flight as a signal.
+    // agent that left it raw would keep a Ctrl+C from reaching nx as a signal.
     const exited = child.exitCode !== null || child.signalCode !== null;
+    let stoppedWaiting = false;
     if (started && exited) {
       restoreTerminal();
-      warnOperationInFlight(broker);
+      const inFlight = warnOperationInFlight(broker);
+      if (inFlight && (await interruptedTwice(brokerDone, ctrlC))) {
+        signalCommandsWithoutTerminal('SIGKILL');
+        if (!(await raceWithTimeout(brokerDone, OPERATION_KILL_WAIT_MS))) {
+          stoppedWaiting = true;
+          output.warn({
+            title: `Stopped waiting for ${treeOperationLabel(
+              inFlight.request,
+              inFlight.stepName
+            )}.`,
+            bodyLines: [
+              'A process it started may still be running. Resume the run once it has exited.',
+            ],
+          });
+        }
+      }
     }
-    // The request in flight settles before the lock is released.
-    await brokerDone;
+    // The request in flight settles before the lock is released, unless nx
+    // stopped waiting on it above.
+    if (!stoppedWaiting) await brokerDone;
     broker.close();
-    process.removeListener('SIGINT', swallowSigint);
+    process.removeListener('SIGINT', forwardSigint);
+    process.removeListener('SIGHUP', exitOnSignal);
+    process.removeListener('SIGTERM', exitOnSignal);
     if (started && !exited) restoreTerminal();
   }
   return brokerFailure
@@ -242,16 +289,44 @@ function restoreTerminal(): void {
   resetSgrAfterAgent();
 }
 
-// With the agent gone a Ctrl+C reaches the operation's child process, and
-// nothing else tells the user one is still running.
-function warnOperationInFlight(broker: MigrateCommitBroker): void {
-  const request = broker.requestInFlight;
-  if (!request) return;
+// With the agent gone nothing else tells the user an operation still runs.
+function warnOperationInFlight(
+  broker: MigrateCommitBroker
+): MigrateCommitBroker['requestInFlight'] {
+  const inFlight = broker.requestInFlight;
+  if (!inFlight) return null;
   output.warn({
     title: `Still running ${treeOperationLabel(
-      request
-    )} for this migrate run. Press Ctrl+C to end it; the run can be resumed afterwards.`,
+      inFlight.request,
+      inFlight.stepName
+    )} for this migrate run (${formatElapsed(
+      Date.now() - inFlight.startedAt
+    )} so far).${
+      commitsStep(inFlight.request.kind) ? ` ${COMMIT_INSTALLS_FIRST}` : ''
+    } Press Ctrl+C to end it, and again to stop everything it started. The run can be resumed afterwards.`,
   });
+  return inFlight;
+}
+
+// The first Ctrl+C reaches the operation as usual; the second ends whatever
+// outlived it.
+async function interruptedTwice(
+  done: Promise<void>,
+  ctrlC: EventEmitter
+): Promise<boolean> {
+  let countPress: () => void;
+  const secondPress = new Promise<true>((resolve) => {
+    let presses = 0;
+    countPress = () => {
+      if (++presses === 2) resolve(true);
+    };
+  });
+  ctrlC.on('press', countPress);
+  try {
+    return await Promise.race([done.then(() => false), secondPress]);
+  } finally {
+    ctrlC.removeListener('press', countPress);
+  }
 }
 
 async function serviceBrokerUntilAborted(
