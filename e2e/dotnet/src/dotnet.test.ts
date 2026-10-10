@@ -6,12 +6,14 @@ import {
   runCLI,
   tmpProjPath,
   readJson,
+  updateFile,
 } from '@nx/e2e-utils';
 
 import {
   createSimpleDotNetWorkspace,
   createWebApiWorkspace,
   addProjectReference,
+  setDotNetPluginOptions,
 } from './utils/create-dotnet-project';
 
 describe('.NET Plugin', () => {
@@ -41,7 +43,9 @@ describe('.NET Plugin', () => {
 
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('clean');
-      expect(details.targets).toHaveProperty('restore');
+
+      // restore is opt-in, so it is absent unless nx.json asks for it
+      expect(details.targets).not.toHaveProperty('restore');
 
       // Should not have pack target for console app
       expect(details.targets).not.toHaveProperty('pack');
@@ -56,7 +60,7 @@ describe('.NET Plugin', () => {
 
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('clean');
-      expect(details.targets).toHaveProperty('restore');
+      expect(details.targets).not.toHaveProperty('restore');
       expect(details.targets).toHaveProperty('pack'); // Libraries should have pack
       expect(details.targets).not.toHaveProperty('publish'); // Libraries shouldn't have publish
     });
@@ -76,9 +80,17 @@ describe('.NET Plugin', () => {
       addProjectReference('MyApp.Tests', 'MyApp');
     });
 
-    it('should restore dependencies', () => {
-      const output = runCLI('restore MyApp', { verbose: true });
-      expect(output).toContain('Determining projects to restore');
+    it('should restore dependencies once the target is opted into', () => {
+      const revert = setDotNetPluginOptions({ restore: true });
+      runCLI('reset');
+
+      try {
+        const output = runCLI('restore MyApp', { verbose: true });
+        expect(output).toContain('Determining projects to restore');
+      } finally {
+        revert();
+        runCLI('reset');
+      }
     });
 
     it('should build a console application', () => {
