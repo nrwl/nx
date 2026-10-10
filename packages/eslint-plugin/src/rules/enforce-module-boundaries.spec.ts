@@ -2037,6 +2037,155 @@ Violation detected in:
     expect(failures[1].message).toEqual(message);
   });
 
+  describe('atomized e2e specs with "@nx-ultracache: imports"', () => {
+    const projectGraph: ProjectGraph = {
+      nodes: {
+        shopE2eName: {
+          name: 'shopE2eName',
+          type: 'e2e',
+          data: {
+            root: 'apps/shop-e2e',
+            tags: ['scope:e2e'],
+            implicitDependencies: [],
+            targets: { 'e2e-ci--src/checkout.spec.ts': {} },
+          },
+        },
+        myappName: {
+          name: 'myappName',
+          type: 'app',
+          data: {
+            root: 'apps/myapp',
+            tags: [],
+            implicitDependencies: [],
+            targets: {},
+          },
+        },
+        otherName: {
+          name: 'otherName',
+          type: 'lib',
+          data: {
+            root: 'libs/other',
+            tags: [],
+            implicitDependencies: [],
+            targets: {},
+          },
+        },
+        implName: {
+          name: 'implName',
+          type: 'lib',
+          data: {
+            root: 'libs/impl',
+            tags: [],
+            implicitDependencies: [],
+            targets: {},
+          },
+        },
+        myappE2eName: {
+          name: 'myappE2eName',
+          type: 'e2e',
+          data: {
+            root: 'apps/myapp-e2e',
+            tags: [],
+            implicitDependencies: [],
+            targets: {},
+          },
+        },
+      },
+      externalNodes: {
+        'npm:npm-package': {
+          name: 'npm:npm-package',
+          type: 'npm',
+          data: { packageName: 'npm-package', version: '2.3.4' },
+        },
+      },
+      dependencies: {
+        shopE2eName: [
+          {
+            source: 'shopE2eName',
+            target: 'otherName',
+            type: DependencyType.dynamic,
+          },
+          {
+            source: 'shopE2eName',
+            target: 'otherName',
+            type: DependencyType.static,
+          },
+        ],
+      },
+    };
+    const fileMap: ProjectFileMap = {
+      shopE2eName: [
+        createFile('apps/shop-e2e/src/checkout.spec.ts', [
+          ['otherName', DependencyType.static],
+          ['otherName', DependencyType.dynamic],
+        ]),
+        createFile('apps/shop-e2e/src/support.ts', [
+          ['otherName', DependencyType.static],
+          ['otherName', DependencyType.dynamic],
+        ]),
+      ],
+      myappName: [createFile('apps/myapp/src/index.ts')],
+      otherName: [createFile('libs/other/src/index.ts')],
+      implName: [createFile('libs/impl/src/index.ts')],
+      myappE2eName: [createFile('apps/myapp-e2e/src/index.ts')],
+    };
+    const imports = `
+      import '../../myapp/src/index';
+      import '@mycompany/myapp';
+      import { someValue } from '@mycompany/other';
+      import '@mycompany/impl';
+      import '@mycompany/myapp-e2e';
+      import 'npm-package';
+    `;
+    const allChecks = [
+      'noRelativeOrAbsoluteImportsAcrossLibraries',
+      'noImportsOfApps',
+      'noImportsOfLazyLoadedLibraries',
+      'onlyTagsConstraintViolation',
+      'noImportsOfE2e',
+      'bannedExternalImportsViolation',
+    ];
+
+    it.each([
+      [
+        'skips the path, app, lazy-loaded and tag checks in a spec with the directive',
+        'src/checkout.spec.ts',
+        `// @nx-ultracache: imports\n${imports}`,
+        ['noImportsOfE2e', 'bannedExternalImportsViolation'],
+      ],
+      [
+        'checks a spec without the directive',
+        'src/checkout.spec.ts',
+        imports,
+        allChecks,
+      ],
+      [
+        'checks a file with the directive that no atomized target runs',
+        'src/support.ts',
+        `// @nx-ultracache: imports\n${imports}`,
+        allChecks,
+      ],
+    ])('%s', (_, file, content, messageIds) => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            {
+              sourceTag: 'scope:e2e',
+              onlyDependOnLibsWithTags: ['scope:e2e'],
+              bannedExternalImports: ['npm-package'],
+            },
+          ],
+        },
+        `${process.cwd()}/proj/apps/shop-e2e/${file}`,
+        content,
+        projectGraph,
+        fileMap
+      );
+
+      expect(failures.map((failure) => failure.messageId)).toEqual(messageIds);
+    });
+  });
+
   it('should error when absolute path within project detected', () => {
     const failures = runRule(
       {},

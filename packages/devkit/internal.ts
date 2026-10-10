@@ -114,6 +114,7 @@ export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file
 export { getNamedInputs } from './src/utils/get-named-inputs';
 export { parseNxDependsOnDirective } from './src/utils/test-file-depends-on';
 export { applyTestFileDirectives } from './src/utils/test-file-directives';
+export { hasUltracacheImportsDirective } from './src/utils/ultracache-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';
 export { checkAndCleanWithSemver } from './src/utils/semver';

@@ -42,14 +42,23 @@ export function scopeTestTargetToProjects(
     ...target,
     inputs: scopeDependencyInputs(target.inputs, projects),
     ...(target.dependsOn && {
-      dependsOn: target.dependsOn.map(
-        (dependency): string | TargetDependencyConfig =>
-          typeof dependency !== 'string' && dependency.projects
-            ? { ...dependency, inputs: false }
-            : dependency
-      ),
+      dependsOn: withoutServerInputs(target.dependsOn),
     }),
   };
+}
+
+/**
+ * `dependsOn` with `inputs: false` on the entries that name projects: the
+ * servers a test talks to, not its readiness gate.
+ */
+export function withoutServerInputs(
+  dependsOn: (string | TargetDependencyConfig)[]
+): (string | TargetDependencyConfig)[] {
+  return dependsOn.map((dependency) =>
+    typeof dependency !== 'string' && dependency.projects
+      ? { ...dependency, inputs: false }
+      : dependency
+  );
 }
 
 function scopeDependencyInputs(

@@ -760,6 +760,37 @@ describe('@nx/cypress/plugin', () => {
     });
   });
 
+  it('should keep the server inputs out of atomized e2e-ci targets for specs with "@nx-ultracache: imports"', async () => {
+    await tempFs.createFiles({
+      'src/opted-in.cy.ts':
+        '// @nx-ultracache: imports\nimport "../../my-app/src/feature";\n',
+    });
+    mockCypressConfig(
+      defineConfig({
+        e2e: {
+          ...nxE2EPreset(join(tempFs.tempDir, 'cypress.config.js'), {
+            ciWebServerCommand: 'npx nx run my-app:serve-static',
+          }),
+          specPattern: '**/*.cy.ts',
+        },
+      })
+    );
+
+    const nodes = await createNodesFunction(
+      ['cypress.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const { targets } = nodes[0][1].projects['.'];
+
+    expect(targets['e2e-ci--src/opted-in.cy.ts'].dependsOn).toEqual([
+      { projects: ['my-app'], target: 'serve-static', inputs: false },
+    ]);
+    expect(targets['e2e-ci--src/test.cy.ts'].dependsOn).toEqual([
+      { projects: ['my-app'], target: 'serve-static' },
+    ]);
+  });
+
   it('should set parallelism to false and not infer commands in dependsOn if reuseExistingServer is false', async () => {
     mockCypressConfig(
       defineConfig({

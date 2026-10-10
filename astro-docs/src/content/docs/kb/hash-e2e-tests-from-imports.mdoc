@@ -1,0 +1,151 @@
+---
+title: Hash e2e tests from the app code they import
+description: Add the @nx-ultracache imports directive to an atomized Playwright or Cypress test file so its task hashes from the app code the file imports, and a change to one feature reruns only the tests that import it.
+sidebar:
+  label: Hash e2e tests from their imports
+filter: 'type:Guides'
+topics:
+  - 'Playwright'
+  - 'Cypress'
+  - 'Tasks & caching'
+---
+
+When Nx runs the app's server for your end-to-end (e2e) tests, each
+[atomized](/docs/kb/split-e2e-tasks) e2e task, such as `e2e-ci--src/checkout.spec.ts`, depends on
+that continuous task.
+Nx adds the [inputs of continuous dependencies](/docs/reference/inputs#inputs-of-continuous-dependencies)
+to the hash of the tasks they serve, so each of these tasks hashes the whole app, and a change to
+any feature reruns every e2e test:
+
+![Without the directive, checkout.spec.ts and search.spec.ts both hash checkout/, search/, cart/, and shared/, so an edit in search/ reruns both tests.](../../../assets/guides/running-tasks/e2e-hash-whole-app.svg)
+
+With [Ultracache](/docs/reference/project-configuration#ultracache), Nx hashes a task from the files
+it read on a recorded run instead of its declared file inputs.
+A test file that imports the app code it exercises makes the test runner read that code, so the
+recording covers it.
+Add `// @nx-ultracache: imports` to the top of the test file, and the servers' inputs stay out of
+the hash of its atomized task.
+The task's hash then covers the app code that the test file imports directly or through other
+imports:
+
+![With the directive, checkout.spec.ts hashes checkout/ and shared/, and search.spec.ts hashes search/ and shared/, so an edit in search/ reruns only search.spec.ts.](../../../assets/guides/running-tasks/e2e-hash-imports.svg)
+
+## Opt a test file in
+
+Add the directive at the top of the test file and import the app code the test exercises:
+
+```ts
+// apps/shop-e2e/src/checkout.spec.ts
+// @nx-ultracache: imports
+// This test's task hashes from the app code imported below, not from the whole app.
+// Keep importing the code the test exercises: https://nx.dev/docs/kb/hash-e2e-tests-from-imports
+import '../../shop/src/app/checkout/checkout-page';
+import { expect, test } from '@playwright/test';
+
+test('shows the order summary', async ({ page }) => {
+  await page.goto('/checkout');
+  await expect(
+    page.getByRole('heading', { name: 'Order summary' })
+  ).toBeVisible();
+});
+```
+
+Keep the two comment lines after the directive.
+Nothing in the test uses the imports, so without the comment they read as dead code.
+
+The [Playwright](/docs/technologies/test-tools/playwright/introduction) and
+[Cypress](/docs/technologies/test-tools/cypress/introduction) plugins read the directive and set
+`"inputs": false` on the `dependsOn` entries of the test file's atomized task that point at
+servers.
+Test files without the directive keep hashing the servers' inputs.
+The task that runs the whole suite, `e2e` by default, and the `e2e-ci` task that groups the atomized
+tasks don't change.
+
+## Choose what to import
+
+The task hashes what the test process reads, so the imports decide which changes rerun the test:
+
+- Import the module of the feature the test drives, such as its page or component, rather than a
+  route table or the app entry point.
+  Playwright doesn't load modules the app only loads through a dynamic `import()`, such as
+  lazy-loaded routes, so importing the router doesn't reach them.
+- Use a bare import, `import '<path>'`, unless the test uses an imported value.
+  The TypeScript transform of the test runner removes an import whose names the file doesn't use,
+  and then the runner never reads that module.
+- Import the feature's own files, since a barrel file that re-exports many features can make the
+  task hash all of them.
+- Playwright runs the imported code in Node, where a module that reads `window` or `document` when
+  it loads fails the test file.
+
+## What the hash leaves out
+
+Without the servers' inputs, a change to app code the test process never reads doesn't rerun the
+test.
+The task's hash leaves out:
+
+- Files the app references by path instead of importing, such as Angular `templateUrl` and
+  `styleUrl` files, static assets, and data files the app fetches at runtime.
+- App code the test exercises but doesn't import, such as the app shell, layouts, and shared
+  providers.
+- Other servers the task depends on, such as an API the app calls.
+  Import the API code the test relies on as well.
+- The servers' own configuration files, environment variables, runtime inputs, and external
+  dependencies.
+
+Don't add the directive to a test file whose results depend on any of these.
+
+## Use the directive with Ultracache
+
+The directive is for tasks that Nx hashes from an Ultracache recording.
+The plugins apply it either way, so without a recording, such as on your machine, the task hashes
+only its own declared inputs, without the servers' inputs.
+
+## Check that the directive applies
+
+Run `nx show project` for the e2e project:
+
+```shell
+nx show project shop-e2e --json
+```
+
+In the atomized target of an opted-in test file, the `dependsOn` entries that point at servers
+have `"inputs": false`:
+
+```json
+{
+  "e2e-ci--src/checkout.spec.ts": {
+    "dependsOn": [
+      { "projects": ["shop"], "target": "serve", "inputs": false },
+      { "target": "e2e--wait-for-webserver" }
+    ]
+  }
+}
+```
+
+A `dependsOn` you configure for the atomized targets, in `nx.json` or in the project configuration,
+replaces the inferred entries and their `"inputs": false`.
+Add `"..."` to each `dependsOn` you configure for them to keep the inferred entries.
+
+## Lint and type-check the imports
+
+The [`@nx/enforce-module-boundaries` rule](/docs/kb/enforce-module-boundaries) reports imports of
+app code from another project.
+It doesn't report them in an atomized test file with the directive.
+
+When a test file imports `.tsx` files, set `jsx` in the `compilerOptions` of the e2e project's
+TypeScript configuration, such as `"jsx": "react-jsx"`, so TypeScript can check them.
+
+## Directive syntax
+
+- The directive goes in the comment block at the top of the file.
+  It can be a line comment or sit inside a block comment, and blank lines, a `#!` line, and other
+  comments can come before it.
+- Nx stops reading at the first line of code, so a directive after it has no effect.
+- `imports` is the only value.
+  With any other value in a test file that has an atomized task, Nx fails to create the project
+  graph and the error names the test file.
+- The directive only applies to atomized e2e tasks that depend on a server Nx runs.
+  In Playwright, that's a `webServer` that sets `reuseExistingServer` to `true` and whose
+  `command` runs an Nx task.
+  In Cypress, it's a `ciWebServerCommand` that runs an Nx task, unless the preset sets
+  `reuseExistingServer` to `false`.
