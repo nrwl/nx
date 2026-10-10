@@ -22,11 +22,10 @@ import {
  *
  * Two paths cover the leak, with no overlap:
  *
- *   1. HOIST: `sortMigrations`, which `executeMigrations` applies, sorts the
- *      v23 migration to position 0 when it is in the queue, so it runs first
- *      through the normal runner with its own log line and commit. A
- *      single-migration worker run needs no hoisting: the requested migration
- *      is the entire queue.
+ *   1. HOIST: `sortMigrations`, which orchestrator init applies, sorts the
+ *      v23 migration to position 0 when it is in the queue, so it runs as the
+ *      run's first step, with its own commit. A single-migration worker run
+ *      needs no hoisting: the requested migration is the entire queue.
  *
  *   2. INLINE FALLBACK, this function. When the migration is NOT in the queue
  *      AND the highest target version is < v23 (intra-pre-v23 `--agentic`
@@ -61,11 +60,10 @@ export async function applyAgenticHandoffGitignoreFallback({
   root: string;
   /**
    * Apply the entry even when the hoisted migration is in the plan. The
-   * classic loop can defer to that migration because its run scratch appears
-   * only after migration 1 has run; the orchestrator creates its run dir at
-   * init, before any migration, so it needs the entry immediately. A planned
-   * migration also means the missing entry is not a conscious removal, so the
-   * v23 cutoff does not apply.
+   * orchestrator creates its run dir at init, before any migration runs, so
+   * it can't defer to that migration. A planned migration also means the
+   * missing entry is not a conscious removal, so the v23 cutoff does not
+   * apply.
    */
   applyWhenPlanned?: boolean;
   /**
@@ -80,8 +78,8 @@ export async function applyAgenticHandoffGitignoreFallback({
 }): Promise<void> {
   if (migrations.some(isHandoffGitignoreMigration)) {
     if (!applyWhenPlanned) {
-      // The queue runs it itself: hoisted to the front by the sort comparator
-      // in a full run, or as the single requested migration in a worker run.
+      // The single-migration worker run is that migration, and it adds the
+      // entry itself.
       return;
     }
   } else if (major(installedNxVersion) >= 23) {
