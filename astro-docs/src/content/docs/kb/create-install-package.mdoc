@@ -54,10 +54,71 @@ Let's take a look at the code that was scaffolded out for your `create-my-plugin
 // packages/create-my-plugin/bin/index.ts
 #!/usr/bin/env node
 
+import { sep } from 'node:path';
 import { createWorkspace } from 'create-nx-workspace';
 
+const packageManagers = ['pnpm', 'yarn', 'npm', 'bun'] as const;
+type PackageManager = (typeof packageManagers)[number];
+
+/**
+ * Mirrors `create-nx-workspace`: an explicit `--packageManager` wins, otherwise
+ * the manager that invoked this CLI, otherwise npm. Choosing at run time keeps
+ * the published CLI usable under whichever manager the consumer actually has
+ * installed, rather than the one the plugin author generated it from.
+ */
+function determinePackageManager(explicit: string | undefined): PackageManager {
+  if (explicit) {
+    if (!(packageManagers as readonly string[]).includes(explicit)) {
+      throw new Error(
+        `Package manager must be one of ${packageManagers.join(', ')}`
+      );
+    }
+    return explicit as PackageManager;
+  }
+
+  const userAgent = process.env.npm_config_user_agent;
+  if (userAgent) {
+    const invoked = packageManagers.find((pm) => userAgent.startsWith(`${pm}/`));
+    if (invoked) {
+      return invoked;
+    }
+  }
+
+  const execPath = process.env.npm_execpath;
+  if (execPath) {
+    const segments = execPath.split(sep);
+    const invoked = packageManagers.find((pm) => segments.includes(pm));
+    if (invoked) {
+      return invoked;
+    }
+  }
+
+  return 'npm';
+}
+
+/** Reads the workspace name and `--packageManager`/`--pm` out of the argv tail. */
+function parseArgs(argv: string[]): {
+  name: string | undefined;
+  packageManager: string | undefined;
+} {
+  let name: string | undefined;
+  let packageManager: string | undefined;
+
+  for (let i = 0; i < argv.length; i++) {
+    const match = /^--(?:packageManager|pm)(?:=(.*))?$/.exec(argv[i]);
+    if (match) {
+      packageManager = match[1] ?? argv[++i];
+    } else if (name === undefined && !argv[i].startsWith('-')) {
+      name = argv[i];
+    }
+  }
+
+  return { name, packageManager };
+}
+
 async function main() {
-  const name = process.argv[2]; // TODO: use libraries like yargs, @clack/prompts, or another prompting library to set your workspace name
+  // TODO: use libraries like yargs, @clack/prompts, or another prompting library to set your workspace name
+  const { name, packageManager } = parseArgs(process.argv.slice(2));
   if (!name) {
     throw new Error('Please provide a name for the workspace');
   }
@@ -72,7 +133,7 @@ async function main() {
   const { directory } = await createWorkspace(`my-plugin@${presetVersion}`, {
     name,
     nxCloud: 'skip',
-    packageManager: 'npm',
+    packageManager: determinePackageManager(packageManager),
   });
 
   console.log(`Successfully created the workspace: ${directory}.`);
@@ -89,11 +150,27 @@ Note the following code snippet:
 const { directory } = await createWorkspace(`my-plugin@${presetVersion}`, {
   name,
   nxCloud: 'skip',
-  packageManager: 'npm',
+  packageManager: determinePackageManager(packageManager),
 });
 ```
 
 This will invoke the `my-plugin` package's `preset` generator, which will contain the logic for setting up the workspace. This preset generator will be invoked when running either `npx create-nx-workspace --preset my-plugin` or `npx create-my-plugin`. For more information about customizing your preset, see: [Creating a Preset](/docs/kb/create-preset).
+
+### Choosing a package manager
+
+`createWorkspace` needs a package manager, and your CLI picks one when a consumer runs it rather than when you scaffold it. An explicit `--packageManager` (or `--pm`) wins, otherwise the CLI uses the manager that invoked it, and otherwise it falls back to npm. This is the same order `create-nx-workspace` itself uses.
+
+Resolving at run time matters because your CLI is published. Someone who only has npm installed can run `npx create-my-plugin my-workspace` and get an npm workspace, and someone running `pnpm create my-plugin my-workspace` gets a pnpm one. Hardcoding a manager instead would make the published CLI fail for every consumer who does not already have that manager on their PATH, because `create-nx-workspace` checks the manager's version before it creates anything.
+
+npm remains a perfectly good choice if your plugin only supports one manager. Replace the call with a literal and the scaffolded helpers become dead code you can delete:
+
+```typescript
+const { directory } = await createWorkspace(`my-plugin@${presetVersion}`, {
+  name,
+  nxCloud: 'skip',
+  packageManager: 'npm',
+});
+```
 
 ## Testing your create package
 
