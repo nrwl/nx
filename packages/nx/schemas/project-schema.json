@@ -289,7 +289,7 @@
               },
               "dependencies": {
                 "type": "boolean",
-                "description": "Include files belonging to the input for all the project dependencies of this target."
+                "description": "Include files belonging to the input for all the project dependencies of this target. With projects, include them for the dependencies of the selected projects instead of the projects themselves."
               },
               "input": {
                 "type": "string",
@@ -305,7 +305,10 @@
                 "required": ["projects", "input"]
               },
               {
-                "required": ["dependencies", "input"]
+                "required": ["dependencies", "input"],
+                "not": {
+                  "required": ["projects"]
+                }
               },
               {
                 "required": ["input"],

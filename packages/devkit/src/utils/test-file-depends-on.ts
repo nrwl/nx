@@ -29,10 +29,10 @@ export function parseNxDependsOnDirective(
 
 /**
  * `target` narrowed to the projects a test file names: its dependency inputs
- * (`^…`, `dependencies: true`) become one input selecting `projects`, by the
- * first named input among them (else `default`) and kept under ultracache
- * (`always: true`). Its `dependsOn` entries naming projects, the servers the
- * test talks to, get `inputs: false`.
+ * (`^…`, `dependencies: true`) become two inputs selecting `projects` and their
+ * dependencies, by the first named input among them (else `default`) and kept
+ * under ultracache (`always: true`). Its `dependsOn` entries naming projects,
+ * the servers the test talks to, get `inputs: false`.
  */
 export function scopeTestTargetToProjects(
   target: TargetConfiguration,
@@ -77,10 +77,12 @@ function scopeDependencyInputs(
       }
     }
   }
-  own.splice(position ?? own.length, 0, {
-    input: namedInput ?? 'default',
-    projects,
-    always: true,
-  });
+  const input = namedInput ?? 'default';
+  own.splice(
+    position ?? own.length,
+    0,
+    { input, projects, always: true },
+    { input, projects, dependencies: true, always: true }
+  );
   return own;
 }

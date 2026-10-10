@@ -825,11 +825,13 @@ impl HashPlanner {
         // Always gathered: a selected input can carry env, runtime or externals
         // too. Its filesets are dropped with the rest of the replaced set unless
         // it is `always`.
-        ids.extend(
-            self.gather_project_inputs(&inputs.project_inputs, always)?
-                .into_iter()
-                .map(|instruction| pool.intern(instruction)),
-        );
+        ids.extend(self.gather_project_inputs(
+            task,
+            &inputs.project_inputs,
+            task_graph,
+            external_deps_mapped,
+            always,
+        )?);
 
         ids.extend(self.gather_dependency_inputs(
             task,
@@ -1431,16 +1433,21 @@ impl HashPlanner {
         Ok(result)
     }
 
-    fn gather_project_inputs(
-        &self,
+    fn gather_project_inputs<'a>(
+        &'a self,
+        task: &Task,
         project_inputs: &[Input],
+        task_graph: &TaskGraph,
+        external_deps_mapped: &'a HashMap<String, Vec<String>>,
         always: &mut AlwaysIds,
-    ) -> anyhow::Result<Vec<HashInstruction>> {
-        let mut result: Vec<HashInstruction> = vec![];
+    ) -> anyhow::Result<Vec<u32>> {
+        let pool = &self.instruction_pool;
+        let mut result: Vec<u32> = vec![];
         for project in project_inputs {
             let Input::Projects {
                 input,
                 projects,
+                dependencies,
                 always: always_input,
             } = project
             else {
@@ -1451,6 +1458,28 @@ impl HashPlanner {
             }
             let projects = find_matching_projects(projects, &self.project_graph)?;
             for project in projects {
+                if *dependencies {
+                    // Resolved as the project's own `^input`. The propagated input never
+                    // carries `always`: memo entries are shared (see `SubtreeResult`).
+                    let ids = self.gather_dependency_inputs(
+                        task,
+                        &[Input::Inputs {
+                            input,
+                            dependencies: true,
+                            always: false,
+                        }],
+                        task_graph,
+                        &self.project_graph.dependencies[project],
+                        external_deps_mapped,
+                        &mut VisitedTracker::new(project),
+                        always,
+                    )?;
+                    if *always_input {
+                        always.extend(ids.iter().copied());
+                    }
+                    result.extend(ids);
+                    continue;
+                }
                 let named_inputs =
                     get_named_inputs(&self.nx_json, &self.project_graph.nodes[project]);
                 let expanded_input = expand_single_project_inputs(
@@ -1462,7 +1491,11 @@ impl HashPlanner {
                     &named_inputs,
                 )?;
                 always.extend(self.gather_always_self_inputs(project, &expanded_input)?);
-                result.extend(self.gather_self_inputs(project, &expanded_input, None)?)
+                result.extend(
+                    self.gather_self_inputs(project, &expanded_input, None)?
+                        .into_iter()
+                        .map(|instruction| pool.intern(instruction)),
+                );
             }
         }
         Ok(result)
@@ -2968,6 +3001,15 @@ mod always_tests {
         })
     }
 
+    fn selected_dependencies(projects: &[&str], always: bool) -> JsInputs {
+        Either9::A(InputsInput {
+            input: "default".into(),
+            dependencies: Some(true),
+            projects: Some(Either::B(projects.iter().map(|p| p.to_string()).collect())),
+            always: Some(always),
+        })
+    }
+
     fn fileset(fileset: &str, always: bool) -> JsInputs {
         Either9::C(FileSetInput {
             fileset: fileset.into(),
@@ -3379,5 +3421,104 @@ mod always_tests {
         assert!(plan(false).is_ok());
         let error = plan(true).unwrap_err().to_string();
         assert!(error.contains("\"featrue\""), "{error}");
+    }
+
+    #[test]
+    fn a_dependencies_selection_hashes_what_the_projects_own_dependency_input_does() {
+        let planner = planner(
+            vec![
+                ("e2e:e2e", vec![selected_dependencies(&["app"], false)]),
+                ("app:build", vec![Either9::B("^default".into())]),
+            ],
+            &[("app", &["feature"]), ("feature", &["feature2"])],
+        );
+        let plans = hashed_projects(&planner, &["e2e:e2e", "app:build"], false).unwrap();
+        assert_eq!(plans["e2e:e2e"], vec!["feature", "feature2"]);
+        assert_eq!(plans["e2e:e2e"], plans["app:build"]);
+    }
+
+    #[test]
+    fn a_selection_and_its_dependencies_cover_the_projects_and_their_closure() {
+        let projects = e2e_projects(
+            planner(
+                vec![(
+                    "e2e:e2e",
+                    vec![
+                        selected(&["app"], false),
+                        selected_dependencies(&["app"], false),
+                    ],
+                )],
+                &[("app", &["feature"]), ("feature", &["feature2"])],
+            ),
+            false,
+        );
+        assert_eq!(projects, vec!["app", "feature", "feature2"]);
+    }
+
+    #[test]
+    fn a_recording_replaces_a_dependencies_selection_unless_always() {
+        let plan = |always| {
+            e2e_projects(
+                planner(
+                    vec![("e2e:e2e", vec![selected_dependencies(&["app"], always)])],
+                    &[("app", &["feature"]), ("feature", &["feature2"])],
+                ),
+                true,
+            )
+        };
+        assert_eq!(plan(false), Vec::<String>::new());
+        assert_eq!(plan(true), vec!["feature", "feature2"]);
+    }
+
+    /// The selection reuses the subtree memo another task fills without `always`.
+    #[test]
+    fn a_dependencies_selection_keeps_its_always_when_sharing_the_memo() {
+        for order in [["e2e:e2e", "e2e-plain:e2e"], ["e2e-plain:e2e", "e2e:e2e"]] {
+            let planner = planner(
+                vec![
+                    ("e2e:e2e", vec![selected_dependencies(&["app"], true)]),
+                    ("e2e-plain:e2e", vec![named("default", true, false)]),
+                ],
+                &[
+                    ("e2e-plain", &["feature"]),
+                    ("app", &["feature"]),
+                    ("feature", &["feature2"]),
+                ],
+            );
+            for id in order {
+                hashed_projects(&planner, &[id], true).unwrap();
+            }
+            let plans = hashed_projects(&planner, &order, true).unwrap();
+            assert_eq!(plans["e2e:e2e"], vec!["feature", "feature2"]);
+            assert!(plans["e2e-plain:e2e"].is_empty());
+        }
+    }
+
+    /// A cycle takes the visited-set traversal, rooted at the selected project.
+    #[test]
+    fn a_dependencies_selection_in_a_cycle_leaves_out_the_selected_project() {
+        let projects = e2e_projects(
+            planner(
+                vec![("e2e:e2e", vec![selected_dependencies(&["app"], false)])],
+                &[("app", &["feature"]), ("feature", &["app", "feature2"])],
+            ),
+            false,
+        );
+        assert_eq!(projects, vec!["feature", "feature2"]);
+    }
+
+    #[test]
+    fn an_always_dependencies_selection_must_match_a_project() {
+        let error = hashed_projects(
+            &planner(
+                vec![("e2e:e2e", vec![selected_dependencies(&["app", "ap"], true)])],
+                &[],
+            ),
+            &["e2e:e2e"],
+            false,
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(error.contains("\"ap\""), "{error}");
     }
 }
