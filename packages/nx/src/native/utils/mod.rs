@@ -3,8 +3,8 @@ mod get_mod_time;
 pub mod json;
 pub mod json_diff;
 mod normalize_trait;
+pub mod owned_dir;
 pub mod path;
-#[cfg(not(target_arch = "wasm32"))]
 pub mod socket_path;
 pub mod time;
 
