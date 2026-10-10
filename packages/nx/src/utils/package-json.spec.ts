@@ -17,6 +17,7 @@ import { readJsonFile } from './fileutils';
 import {
   buildTargetFromScript,
   getDependencyVersionFromPackageJson,
+  getMetadataFromPackageJson,
   installPackageToTmp,
   PackageJson,
   readModulePackageJson,
@@ -1095,5 +1096,103 @@ describe('readNxMigrateConfig', () => {
     });
 
     expect(config.supportsOptionalMigrations).toBeUndefined();
+  });
+});
+
+describe('getMetadataFromPackageJson', () => {
+  it('should derive description and targetGroups from the package.json', () => {
+    const result = getMetadataFromPackageJson(
+      {
+        name: 'my-app',
+        version: '0.0.0',
+        description: 'Hello',
+        scripts: { build: 'echo 1' },
+      },
+      false
+    );
+    expect(result).toMatchObject({
+      description: 'Hello',
+      targetGroups: { 'NPM Scripts': ['build'] },
+    });
+  });
+
+  it('should preserve user-supplied keys on nx.metadata', () => {
+    const result = getMetadataFromPackageJson(
+      {
+        name: 'my-app',
+        version: '0.0.0',
+        scripts: { build: 'echo 1' },
+        nx: {
+          metadata: {
+            // arbitrary user-defined key consumed by external tooling
+            foo: 'bar',
+          } as any,
+        },
+      },
+      false
+    );
+    expect(result).toMatchObject({
+      targetGroups: { 'NPM Scripts': ['build'] },
+      foo: 'bar',
+    });
+  });
+
+  it('should let user-supplied metadata override auto-generated keys', () => {
+    const result = getMetadataFromPackageJson(
+      {
+        name: 'my-app',
+        version: '0.0.0',
+        description: 'Auto description',
+        nx: {
+          metadata: {
+            description: 'User description',
+          },
+        },
+      },
+      false
+    );
+    expect(result.description).toEqual('User description');
+  });
+
+  it('should deeply merge nested objects in user-supplied metadata with auto-generated metadata', () => {
+    const result = getMetadataFromPackageJson(
+      {
+        name: 'my-app',
+        version: '0.0.0',
+        scripts: { build: 'echo 1' },
+        nx: {
+          metadata: {
+            targetGroups: {
+              Custom: ['lint'],
+            },
+          } as any,
+        },
+      },
+      false
+    );
+    expect(result.targetGroups).toEqual({
+      'NPM Scripts': ['build'],
+      Custom: ['lint'],
+    });
+  });
+
+  it('should not mutate includedScripts when merging target groups', () => {
+    const packageJson: PackageJson = {
+      name: 'my-app',
+      scripts: { build: 'echo 1', lint: 'echo 2' },
+      nx: {
+        includedScripts: ['build'],
+        metadata: {
+          targetGroups: { 'NPM Scripts': ['lint'] },
+        },
+      },
+    };
+
+    const result = getMetadataFromPackageJson(packageJson, false);
+
+    expect(result.targetGroups).toEqual({
+      'NPM Scripts': ['build', 'lint'],
+    });
+    expect(packageJson.nx.includedScripts).toEqual(['build']);
   });
 });
