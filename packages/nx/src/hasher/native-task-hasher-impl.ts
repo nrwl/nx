@@ -220,7 +220,8 @@ function taskGraphFingerprint(
       task.target.configuration ?? '',
       (task.outputs ?? []).join(','),
       (taskGraph.dependencies[id] ?? []).join(','),
-      (taskGraph.continuousDependencies[id] ?? []).join(',')
+      (taskGraph.continuousDependencies[id] ?? []).join(','),
+      (taskGraph.continuousDependenciesWithoutInputs?.[id] ?? []).join(',')
     );
   }
   return hashArray(parts);

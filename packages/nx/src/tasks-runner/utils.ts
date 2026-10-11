@@ -8,6 +8,7 @@ import {
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
+import { hashObject } from '../hasher/file-hasher';
 import {
   ProjectConfiguration,
   TargetConfiguration,
@@ -19,14 +20,9 @@ import {
 } from '../native';
 import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
-import {
-  LegacyDependsOnLocation,
-  LegacyDependsOnViolation,
-  flushLegacyDependsOnViolations,
-  warnLegacyDependsOnMagicString,
-} from './legacy-depends-on-warning';
 import { isGlobPattern } from '../utils/globs';
 import { isLongRunningTargetName } from '../utils/long-running-target';
+import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitTargetFromNodes } from '../utils/split-target';
@@ -43,47 +39,32 @@ export function getDependencyConfigs(
   projectGraph: ProjectGraph,
   allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] | undefined {
-  const legacyViolations: LegacyDependsOnViolation[] = [];
-  const dependencyConfigs = (
+  return (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
     []
-  ).flatMap((config, index) =>
+  ).flatMap((config) =>
     normalizeDependencyConfigDefinition(
       config,
       project,
       projectGraph,
-      allTargetNames,
-      { ownerTarget: target, index, legacyViolations }
+      allTargetNames
     )
   );
-  if (legacyViolations.length) {
-    flushLegacyDependsOnViolations(
-      project,
-      target,
-      legacyViolations,
-      projectGraph.nodes[project]?.data?.root
-    );
-  }
-  return dependencyConfigs;
 }
-
-export type DependsOnEntryLocation = LegacyDependsOnLocation;
 
 export function normalizeDependencyConfigDefinition(
   definition: string | TargetDependencyConfig,
   currentProject: string,
   graph: ProjectGraph,
-  allTargetNames: string[],
-  location?: DependsOnEntryLocation
+  allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] {
   return expandWildcardTargetConfiguration(
     normalizeDependencyConfigProjects(
       expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
       currentProject,
-      graph,
-      location
+      graph
     ),
     allTargetNames
   );
@@ -92,14 +73,11 @@ export function normalizeDependencyConfigDefinition(
 export function normalizeDependencyConfigProjects(
   dependencyConfig: TargetDependencyConfig,
   currentProject: string,
-  graph: ProjectGraph,
-  location?: DependsOnEntryLocation
+  graph: ProjectGraph
 ): NormalizedTargetDependencyConfig {
-  const noStringConfig = normalizeTargetDependencyWithStringProjects(
-    dependencyConfig,
-    currentProject,
-    location
-  );
+  assertNotLegacyProjectsString(dependencyConfig, currentProject, graph);
+  const noStringConfig =
+    normalizeTargetDependencyWithStringProjects(dependencyConfig);
 
   if (noStringConfig.projects) {
     dependencyConfig.projects = findMatchingProjects(
@@ -110,6 +88,22 @@ export function normalizeDependencyConfigProjects(
     dependencyConfig.projects = [currentProject];
   }
   return dependencyConfig as NormalizedTargetDependencyConfig;
+}
+
+function assertNotLegacyProjectsString(
+  dependencyConfig: TargetDependencyConfig,
+  currentProject: string,
+  graph: ProjectGraph
+) {
+  const projects = dependencyConfig.projects;
+  if (
+    (projects === 'self' || projects === 'dependencies') &&
+    !graph.nodes[projects]
+  ) {
+    throw new Error(
+      `${currentProject} has a dependsOn entry using projects: '${projects}', which is no longer supported: ${JSON.stringify(dependencyConfig)}\nPlease run "nx repair" to repair your configuration`
+    );
+  }
 }
 
 export function expandDependencyConfigSyntaxSugar(
@@ -227,32 +221,10 @@ export function getOutputs(
 }
 
 export function normalizeTargetDependencyWithStringProjects(
-  dependencyConfig: TargetDependencyConfig,
-  currentProject?: string,
-  location?: DependsOnEntryLocation
+  dependencyConfig: TargetDependencyConfig
 ): Omit<TargetDependencyConfig, 'projects'> & { projects?: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
-    // TODO(v24): Remove the `self` / `dependencies` magic-string shim.
-    // The v16 `update-depends-on-to-tokens` migration already rewrites
-    // these to the modern shape, and `nx repair` will re-run it on demand.
-    if (dependencyConfig.projects === 'self') {
-      warnLegacyDependsOnMagicString(
-        currentProject,
-        dependencyConfig,
-        location
-      );
-      delete dependencyConfig.projects;
-    } else if (dependencyConfig.projects === 'dependencies') {
-      warnLegacyDependsOnMagicString(
-        currentProject,
-        dependencyConfig,
-        location
-      );
-      dependencyConfig.dependencies = true;
-      delete dependencyConfig.projects;
-    } else {
-      dependencyConfig.projects = [dependencyConfig.projects];
-    }
+    dependencyConfig.projects = [dependencyConfig.projects];
   }
   return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
     projects?: string[];
@@ -533,12 +505,41 @@ export function getExecutorForTask(
   );
 }
 
+// TODO(v25): remove custom hasher support.
 export function getCustomHasher(
   task: Task,
   projects: Record<string, ProjectConfiguration>
 ): CustomHasher | null {
   const factory = getExecutorForTask(task, projects).hasherFactory;
-  return factory ? factory() : null;
+  if (!factory) {
+    return null;
+  }
+  warnCustomHasherDeprecation(
+    projects[task.target.project].targets[task.target.target].executor
+  );
+  return factory();
+}
+
+const customHasherDeprecationWarned = new Set<string>();
+
+function warnCustomHasherDeprecation(executor: string): void {
+  if (customHasherDeprecationWarned.has(executor)) {
+    return;
+  }
+  customHasherDeprecationWarned.add(executor);
+  output.warn({
+    title: `The "${executor}" executor uses a custom hasher, which is deprecated and will be removed in Nx 25.`,
+    bodyLines: [
+      'Replace the custom hasher with target inputs, following the migration guide:',
+      'https://nx.dev/docs/kb/local-executors#replace-a-custom-hasher-with-inputs',
+      'If the executor comes from a third-party plugin, report this to its maintainers.',
+    ],
+  });
+}
+
+/** Test-only: forget which executors have been warned about. */
+export function resetCustomHasherDeprecationWarnings(): void {
+  customHasherDeprecationWarned.clear();
 }
 
 /**
@@ -561,12 +562,34 @@ export function removeTasksFromTaskGraph(
   ids: string[]
 ): TaskGraph {
   const newGraph = removeIdsFromTaskGraph<Task>(graph, ids, graph.tasks);
+  const continuousDependenciesWithoutInputs = pruneEdges(
+    graph.continuousDependenciesWithoutInputs,
+    newGraph.mapWithIds
+  );
   return {
     dependencies: newGraph.dependencies,
     continuousDependencies: newGraph.continuousDependencies,
+    ...(continuousDependenciesWithoutInputs
+      ? { continuousDependenciesWithoutInputs }
+      : {}),
     roots: newGraph.roots,
     tasks: newGraph.mapWithIds,
   };
+}
+
+function pruneEdges(
+  edges: Record<string, string[]> | undefined,
+  kept: Record<string, unknown>
+): Record<string, string[]> | undefined {
+  let pruned: Record<string, string[]> | undefined;
+  for (const [id, deps] of Object.entries(edges ?? {})) {
+    if (!(id in kept)) continue;
+    const keptDeps = deps.filter((dep) => dep in kept);
+    if (keptDeps.length > 0) {
+      (pruned ??= {})[id] = keptDeps;
+    }
+  }
+  return pruned;
 }
 
 function removeIdsFromTaskGraph<T>(
@@ -705,4 +728,24 @@ export function createTaskId(
     id += `:${configuration}`;
   }
   return id;
+}
+
+/**
+ * Distinguishes two invocations of the same task for the recursive invocation
+ * detector. The task id alone would report `nx run app:build --flag` invoked
+ * from within `app:build` as a loop, so the detector pairs the id with this
+ * hash and only treats an exact repeat as an immediate loop.
+ *
+ * The hash cannot decide recursion on its own. Arguments that accumulate
+ * through forwarding (`app:build` -> `app:build hello` -> `app:build hello
+ * hello`) hash differently on every hop, so the tracker also bounds how many
+ * ancestors may be running one task id.
+ *
+ * `__overrides_unparsed__` is dropped, matching how the task hasher treats it:
+ * it restates the other keys as raw argv, down to flag order and spelling.
+ */
+export function hashTaskOverrides(task: Task): string {
+  const overrides = { ...task.overrides };
+  delete overrides['__overrides_unparsed__'];
+  return hashObject(overrides);
 }

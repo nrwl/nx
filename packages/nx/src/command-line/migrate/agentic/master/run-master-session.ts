@@ -173,6 +173,7 @@ export async function runMasterSession(
       return 1;
     case 'completed': {
       const tally = tallySteps(state);
+      const migrations = state.steps.filter((s) => s.kind === 'migration');
       output.log({
         title: `Migrate run ${runId} is complete.`,
         bodyLines: completionSummaryLines(state),
@@ -183,8 +184,9 @@ export async function runMasterSession(
       reportMigrateRunComplete({
         agenticOutcome: 'enabled',
         agentUsed: agent.id,
-        migrationCount: state.steps.length,
-        appliedCount: tally.applied + tally.adopted,
+        migrationCount: migrations.length,
+        // The printed tally counts the pass; this metric counts migrations.
+        appliedCount: migrations.filter((s) => s.status === 'succeeded').length,
       });
       if (tally.unresolved.length > 0 || hasUnresolvedIssues(state)) {
         output.warn({

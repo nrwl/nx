@@ -204,7 +204,7 @@ export function newProject({
   packageManager = getSelectedPackageManager(),
   packages,
   preset = 'apps',
-  typescriptVersion = defaultTypescriptVersion,
+  typescriptVersion,
   keepBackup = false,
 }: {
   name?: string;
@@ -310,13 +310,8 @@ export function newProject({
         // Installing typescript directly reclaims that slot. pnpm/yarn resolve
         // peers per dependent, so they are unaffected.
         // TODO: remove once tsquery bounds its peer or nx stops depending on it.
-        // The `apps` preset pins typescript ~6.0.3, so any suite that needs an
-        // older line (Remix) re-pins regardless of package manager.
-        if (
-          packageManager === 'npm' ||
-          typescriptVersion !== defaultTypescriptVersion
-        ) {
-          packageInstall('typescript', projScope, typescriptVersion);
+        if (packageManager === 'npm') {
+          packageInstall('typescript', projScope, defaultTypescriptVersion);
         }
         const packageInstallEnd = performance.mark('packageInstall:end');
         packageInstallMeasure = performance.measure(
@@ -382,6 +377,16 @@ export function newProject({
         console.error('Full error:', e);
         throw e;
       }
+    }
+
+    // Apply suite-specific versions after copying the shared package-manager
+    // backup so they work for every package manager without changing the backup.
+    if (
+      typescriptVersion &&
+      readJsonFile(`${projectDirectory}/package.json`).devDependencies
+        ?.typescript !== typescriptVersion
+    ) {
+      packageInstall('typescript', projName, typescriptVersion);
     }
 
     const newProjectEnd = performance.mark('new-project:end');

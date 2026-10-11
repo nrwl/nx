@@ -339,6 +339,17 @@ fn negated_glob(input: &str) -> (&str, bool) {
 /// a pattern: `a\*b` names `a*b`. An escape never resolves to `.` or `..`, so
 /// `\.\.` cannot slip past the checks callers run on the raw text.
 pub fn literal_segment(segment: &str) -> Option<String> {
+    // Most segments are plain names; skip the parser for those.
+    if !segment.is_empty() && !segment.contains(GLOB_SYNTAX) {
+        return Some(segment.to_string());
+    }
+    parsed_literal_segment(segment)
+}
+
+/// Characters that can start glob syntax somewhere in a segment.
+const GLOB_SYNTAX: [char; 12] = ['*', '?', '[', ']', '{', '}', '(', ')', '!', '+', '@', '\\'];
+
+fn parsed_literal_segment(segment: &str) -> Option<String> {
     let ("", parts) = parse_segment(segment).finish().ok()? else {
         return None;
     };
@@ -482,6 +493,15 @@ mod test {
         );
         assert_eq!(super::literal_segment("c++").as_deref(), Some("c++"));
         assert_eq!(super::literal_segment("paren("), None);
+        for segment in [
+            "packages", "a.b-c_d", ".", "..", "a,b", "~x", "#y", "$z", "%20", " sp ", "日本",
+        ] {
+            assert_eq!(
+                super::literal_segment(segment),
+                super::parsed_literal_segment(segment),
+                "{segment}"
+            );
+        }
         for unclosed in ["dist/paren(/x.js", "?(", "a/@(b/c)"] {
             assert!(parse_glob(unclosed).is_err(), "{unclosed}");
         }

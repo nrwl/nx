@@ -32,12 +32,6 @@ use crate::native::ultracache::UltracacheConfigurations;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
 
-/// One entry per visit of a project whose inputs include its files: the
-/// workspace-relative negated patterns that visit declares. Natively each
-/// visit is its own fileset, so an Ultracache group keeps only the negations
-/// every visit shares; removing one re-admits the observed reads it excluded.
-type Negations = Vec<(String, Vec<String>)>;
-
 const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
 const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
@@ -136,7 +130,6 @@ pub struct HashPlanner {
 /// Instruction ids contributed by one (project, propagated input) dependency subtree.
 struct SubtreeResult {
     ids: Vec<u32>,
-    negations: Negations,
     /// True when the subtree cannot be spliced from the memo: it contains
     /// deps-outputs inputs (whose resolution depends on the root task) or an
     /// unexpected propagation shape. Callers must use the per-task traversal.
@@ -145,7 +138,6 @@ struct SubtreeResult {
 
 struct LocalDependencyInputs {
     ids: Vec<u32>,
-    negations: Negations,
     needs_legacy: bool,
 }
 
@@ -288,26 +280,24 @@ impl HashPlanner {
         );
         let to_plan = memo.missing(&task_ids);
         let ultracache_tasks = configurations.map(|configurations| {
-            // Continuous dependencies are planned into their dependents, so
-            // their entries are needed too.
-            let mut scope: Vec<&str> = to_plan.clone();
-            for id in &to_plan {
-                scope.extend(
-                    collect_continuous_dependencies(&task_graph, id)
-                        .iter()
-                        .map(|task| task.id.as_str()),
-                );
-            }
-            scope.sort_unstable();
-            scope.dedup();
             ultracache_eligibility::resolve(
                 configurations,
-                scope
+                to_plan
                     .iter()
                     .filter_map(|id| task_graph.tasks.get_key_value(*id))
                     .map(|(id, task)| (id.as_str(), task.ultracache.as_ref())),
                 &EligibilityInputs {
                     custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
+                    continuous: to_plan
+                        .iter()
+                        .filter(|id| {
+                            task_graph
+                                .tasks
+                                .get(**id)
+                                .is_some_and(|task| task.continuous == Some(true))
+                        })
+                        .map(|id| id.to_string())
+                        .collect(),
                 },
             )
             .tasks
@@ -364,7 +354,6 @@ impl HashPlanner {
                     .as_ref()
                     .and_then(|tasks| tasks.get(*id))
                     .map(UltracacheContext::new);
-                let mut negations: Negations = Vec::new();
                 ids.extend(self.self_and_deps_inputs(
                     &task.target.project,
                     task,
@@ -373,35 +362,21 @@ impl HashPlanner {
                     external_deps_mapped,
                     &mut VisitedTracker::new(task.target.project.as_str()),
                     context.as_ref(),
-                    context.as_ref().map(|_| &mut negations),
                 )?);
 
                 if let Some(context) = &context {
-                    self.replace_with_configuration(
-                        task,
-                        context,
-                        &negations,
-                        &mut ids,
-                        always_on_id,
-                    );
+                    self.replace_with_configuration(task, context, &mut ids, always_on_id);
                 }
 
                 // A continuous dependency serves this task from its own process, so
-                // its inputs and externals are hashed here, and its own servers' in
-                // turn: its observed reads when both it and this task hash from their
-                // configurations, else its declared inputs, so a task hashed natively
-                // (any `ultracache.mode` but `on` included) stays native throughout.
-                // When it reads
+                // its declared inputs and externals are hashed here, and its own
+                // servers' in turn, unless the edge has `inputs: false`.
+                // Continuous tasks never hash from a configuration:
+                // what they read depends on which clients they served. When it reads
                 // its builds' outputs, those land in this plan too, which holds the
                 // task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
-                    let dep_context = context
-                        .as_ref()
-                        .and(ultracache_tasks.as_ref())
-                        .and_then(|tasks| tasks.get(&dep_task.id))
-                        .map(UltracacheContext::new);
-                    let mut dep_negations: Negations = Vec::new();
                     let mut dep_ids: Vec<u32> = self
                         .target_input(
                             &dep_task.target.project,
@@ -420,18 +395,8 @@ impl HashPlanner {
                         &task_graph,
                         external_deps_mapped,
                         &mut VisitedTracker::new(dep_task.target.project.as_str()),
-                        dep_context.as_ref(),
-                        dep_context.as_ref().map(|_| &mut dep_negations),
+                        None,
                     )?);
-                    if let Some(dep_context) = &dep_context {
-                        self.replace_with_configuration(
-                            dep_task,
-                            dep_context,
-                            &dep_negations,
-                            &mut dep_ids,
-                            always_on_id,
-                        );
-                    }
                     ids.extend(dep_ids);
                 }
 
@@ -541,8 +506,8 @@ impl HashPlanner {
     }
 
     /// Observed reads minus natively covered files, one disk-backed group per
-    /// owning project (else the `.` project, else the task's), each with only
-    /// that project's declared negations; plus the entry digest.
+    /// owning project (else the `.` project, else the task's), plus the entry
+    /// digest. Declared filesets, negations included, never shape the groups.
     /// Replaces the declared filesets in `ids` (self, deps, `{input, projects}`)
     /// with `task`'s observed reads; TsConfiguration and JSON inputs survive
     /// only if read.
@@ -550,14 +515,13 @@ impl HashPlanner {
         &self,
         task: &Task,
         context: &UltracacheContext,
-        negations: &Negations,
         ids: &mut Vec<u32>,
         always_on_id: u32,
     ) {
         let pool = &self.instruction_pool;
         let keep_tsconfig = context.root_tsconfig_read();
         let own: hashbrown::HashSet<u32> = self
-            .configuration_file_instructions(task, context, negations)
+            .configuration_file_instructions(task, context)
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -573,7 +537,6 @@ impl HashPlanner {
         &self,
         task: &Task,
         context: &UltracacheContext,
-        negations: &Negations,
     ) -> Vec<HashInstruction> {
         let entry = context.entry;
         let self_project = task.target.project.as_str();
@@ -599,38 +562,60 @@ impl HashPlanner {
             unowned
         };
 
-        // Nx Cloud collapses sibling files into brace groups; class mapping needs
-        // the individual names, so observed groups of literals are expanded.
+        // A recorded glob stays whole unless its brace alternatives belong to
+        // different projects or name a file the always-on set hashes.
         let mut buckets: BTreeMap<&str, Vec<String>> = BTreeMap::new();
-        for glob in entry
-            .files
-            .iter()
-            .flat_map(|glob| expand_literal_braces(glob))
-            .filter(|glob| !covered_by_native_instruction(glob))
-        {
-            buckets.entry(owner(&glob)).or_default().push(glob);
+        let mut exclusions: Vec<String> = Vec::new();
+        for glob in &entry.files {
+            let expanded = expand_literal_braces(glob);
+            let kept: Vec<String> = expanded
+                .iter()
+                .filter(|glob| !covered_by_native_instruction(glob))
+                .cloned()
+                .collect();
+            let whole = kept.len() == expanded.len();
+            if glob.starts_with('!') {
+                match whole {
+                    true => exclusions.push(glob.clone()),
+                    false => exclusions.extend(kept),
+                }
+            } else {
+                let owners: Vec<&str> = kept.iter().map(|g| owner(g)).collect();
+                if whole && owners.iter().all(|o| *o == owners[0]) {
+                    buckets.entry(owners[0]).or_default().push(glob.clone());
+                } else {
+                    for (glob, project) in kept.into_iter().zip(owners) {
+                        buckets.entry(project).or_default().push(glob);
+                    }
+                }
+            }
         }
+        let exclusion_roots: Vec<String> = exclusions
+            .iter()
+            .map(|exclusion| walk_root(&exclusion[1..]))
+            .collect();
 
         let mut instructions = Vec::new();
-        for (project, mut group) in buckets {
+        for mut group in buckets.into_values() {
             group.sort();
             group.dedup();
-            let visits: Vec<&Vec<String>> = negations
-                .iter()
-                .filter(|(p, _)| p == project)
-                .map(|(_, patterns)| patterns)
-                .collect();
-            let mut declared_negations: Vec<String> = match visits.split_first() {
-                None => Vec::new(),
-                Some((first, rest)) => first
-                    .iter()
-                    .filter(|pattern| rest.iter().all(|visit| visit.contains(pattern)))
-                    .cloned()
-                    .collect(),
-            };
-            declared_negations.sort();
-            declared_negations.dedup();
-            group.extend(declared_negations);
+            // Exclusions apply to every recorded positive, so each group takes
+            // the ones that could remove its files.
+            let mut group_exclusions: Vec<String> = Vec::new();
+            if !exclusions.is_empty() {
+                let mut roots: Vec<String> = group.iter().map(|glob| walk_root(glob)).collect();
+                roots.sort_unstable();
+                group_exclusions.extend(
+                    exclusions
+                        .iter()
+                        .zip(&exclusion_roots)
+                        .filter(|(_, root)| overlaps_any(&roots, root))
+                        .map(|(exclusion, _)| exclusion.clone()),
+                );
+            }
+            group_exclusions.sort();
+            group_exclusions.dedup();
+            group.extend(group_exclusions);
             instructions.push(HashInstruction::IgnoredFileSet(group));
         }
         instructions.push(HashInstruction::UltracacheConfiguration(
@@ -665,24 +650,26 @@ impl HashPlanner {
                 .split(':')
                 .next()
                 .expect("Executors should always have a ':'");
-            let Some(existing_package) =
-                find_external_dependency_node_name(executor_package, &self.project_graph)
-            else {
+            let existing_packages =
+                find_external_dependency_node_names(executor_package, &self.project_graph);
+            if existing_packages.is_empty() {
                 // this usually happens because the executor was a local plugin.
                 // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
                 return Ok(None);
-            };
+            }
             let mut external_deps = hashbrown::HashSet::new();
-            trace!(
-                "Add External Instruction for executor {existing_package}: {}",
-                target.executor.as_ref().unwrap()
-            );
-            trace!(
-                "Add External Instructions for dependencies of executor {existing_package}: {:?}",
-                &external_deps_map[existing_package]
-            );
-            external_deps.insert(existing_package);
-            external_deps.extend(&external_deps_map[existing_package]);
+            for existing_package in existing_packages {
+                trace!(
+                    "Add External Instruction for executor {existing_package}: {}",
+                    target.executor.as_ref().unwrap()
+                );
+                trace!(
+                    "Add External Instructions for dependencies of executor {existing_package}: {:?}",
+                    &external_deps_map[existing_package]
+                );
+                external_deps.insert(existing_package);
+                external_deps.extend(&external_deps_map[existing_package]);
+            }
             Ok(Some(
                 external_deps
                     .iter()
@@ -697,9 +684,9 @@ impl HashPlanner {
                     Input::ExternalDependency(deps) => {
                         has_external_deps = true;
                         for dep in deps.iter() {
-                            let external_node_name =
-                                find_external_dependency_node_name(dep, &self.project_graph);
-                            let Some(external_node_name) = external_node_name else {
+                            let external_node_names =
+                                find_external_dependency_node_names(dep, &self.project_graph);
+                            if external_node_names.is_empty() {
                                 if self.project_graph.nodes.contains_key(dep) {
                                     let deps = self.project_graph.dependencies.get(project_name);
                                     if deps.is_some_and(|deps| deps.contains(dep)) {
@@ -716,17 +703,19 @@ impl HashPlanner {
                                         "The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found"
                                     )
                                 }
-                            };
-                            trace!(
-                                "Add External Instruction for External Input {external_node_name}: {}",
-                                target.executor.as_ref().unwrap()
-                            );
-                            trace!(
-                                "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
-                                &external_deps_map[external_node_name]
-                            );
-                            external_deps.insert(external_node_name);
-                            external_deps.extend(&external_deps_map[external_node_name]);
+                            }
+                            for external_node_name in external_node_names {
+                                trace!(
+                                    "Add External Instruction for External Input {external_node_name}: {}",
+                                    target.executor.as_ref().unwrap()
+                                );
+                                trace!(
+                                    "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
+                                    &external_deps_map[external_node_name]
+                                );
+                                external_deps.insert(external_node_name);
+                                external_deps.extend(&external_deps_map[external_node_name]);
+                            }
                         }
                     }
                     _ => continue,
@@ -756,19 +745,9 @@ impl HashPlanner {
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
         context: Option<&UltracacheContext>,
-        mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<u32>> {
         let pool = &self.instruction_pool;
         let project_deps = &self.project_graph.dependencies[project_name];
-
-        if let Some(negations) = negations.as_deref_mut() {
-            collect_negations(
-                project_name,
-                &self.project_graph,
-                &inputs.self_inputs,
-                negations,
-            );
-        }
 
         let mut ids: Vec<u32> = self
             .gather_self_inputs(project_name, &inputs.self_inputs, context)?
@@ -784,10 +763,9 @@ impl HashPlanner {
             );
         }
         // Always gathered: a selected input can carry env, runtime or externals
-        // too. Its filesets are dropped with the rest of the replaced set, and
-        // their negations scope the selected project's observed reads.
+        // too. Its filesets are dropped with the rest of the replaced set.
         ids.extend(
-            self.gather_project_inputs(&inputs.project_inputs, negations.as_deref_mut())?
+            self.gather_project_inputs(&inputs.project_inputs)?
                 .into_iter()
                 .map(|instruction| pool.intern(instruction)),
         );
@@ -799,7 +777,6 @@ impl HashPlanner {
             project_deps,
             external_deps_mapped,
             visited,
-            negations,
         )?);
 
         Ok(ids)
@@ -898,7 +875,6 @@ impl HashPlanner {
         else {
             return Ok(SubtreeResult {
                 ids: vec![],
-                negations: vec![],
                 needs_legacy: false,
             });
         };
@@ -908,13 +884,6 @@ impl HashPlanner {
         let mut needs_legacy =
             !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != inputs.len();
         let pool = &self.instruction_pool;
-        let mut negations: Negations = Vec::new();
-        collect_negations(
-            dep,
-            &self.project_graph,
-            &dep_inputs.self_inputs,
-            &mut negations,
-        );
         let mut ids: InstructionIdSet = self
             .gather_self_inputs(dep, &dep_inputs.self_inputs, None)?
             .into_iter()
@@ -934,7 +903,6 @@ impl HashPlanner {
                     )?;
                     needs_legacy |= sub.needs_legacy;
                     ids.extend(sub.ids.iter().copied());
-                    negations.extend_from_slice(&sub.negations);
                 } else if let Some(external_deps) = external_deps_mapped.get(child) {
                     external_inputs.insert(child);
                     external_inputs.extend(external_deps);
@@ -947,13 +915,8 @@ impl HashPlanner {
                 .into_iter()
                 .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
         );
-        let ids = ids.into_sorted_vec();
-        negations.sort();
-        negations.dedup();
-
         Ok(SubtreeResult {
-            ids,
-            negations,
+            ids: ids.into_sorted_vec(),
             needs_legacy,
         })
     }
@@ -977,7 +940,6 @@ impl HashPlanner {
                 else {
                     return Ok(LocalDependencyInputs {
                         ids: vec![],
-                        negations: vec![],
                         needs_legacy: true,
                     });
                 };
@@ -993,26 +955,15 @@ impl HashPlanner {
                 let needs_legacy = !same_propagation
                     || !inputs.deps_outputs.is_empty()
                     || !inputs.project_inputs.is_empty();
-                let mut negations: Negations = Vec::new();
                 let ids = if needs_legacy {
                     vec![]
                 } else {
-                    collect_negations(
-                        dep,
-                        &self.project_graph,
-                        &inputs.self_inputs,
-                        &mut negations,
-                    );
                     self.gather_self_inputs(dep, &inputs.self_inputs, None)?
                         .into_iter()
                         .map(|instruction| self.instruction_pool.intern(instruction))
                         .collect()
                 };
-                Ok(LocalDependencyInputs {
-                    ids,
-                    negations,
-                    needs_legacy,
-                })
+                Ok(LocalDependencyInputs { ids, needs_legacy })
             })
             .map(Some)
     }
@@ -1026,7 +977,6 @@ impl HashPlanner {
         project_deps: &'a [String],
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
-        mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<u32>> {
         if inputs.len() == 1 {
             return self.gather_dependency_input(
@@ -1036,7 +986,6 @@ impl HashPlanner {
                 project_deps,
                 external_deps_mapped,
                 visited,
-                negations,
             );
         }
 
@@ -1057,7 +1006,6 @@ impl HashPlanner {
                 project_deps,
                 external_deps_mapped,
                 visited,
-                negations.as_deref_mut(),
             )?);
             visited.rollback_to(scope);
         }
@@ -1074,7 +1022,6 @@ impl HashPlanner {
                 project_deps,
                 external_deps_mapped,
                 visited,
-                negations.as_deref_mut(),
             )?);
             visited.rollback_to(scope);
         }
@@ -1090,7 +1037,6 @@ impl HashPlanner {
         project_deps: &'a [String],
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
-        mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<u32>> {
         let pool = &self.instruction_pool;
         let mut deps_inputs = InstructionIdSet::default();
@@ -1123,18 +1069,12 @@ impl HashPlanner {
                         // Shared closures are unioned by id before allocation,
                         // without changing the per-input visitation rules.
                         deps_inputs.extend(sub.ids.iter().copied());
-                        if let Some(negations) = negations.as_deref_mut() {
-                            negations.extend_from_slice(&sub.negations);
-                        }
                         continue;
                     }
                 }
                 if let Some(local) = self.local_dependency_inputs(dep, inputs)? {
                     if !local.needs_legacy {
                         deps_inputs.extend(local.ids.iter().copied());
-                        if let Some(negations) = negations.as_deref_mut() {
-                            negations.extend_from_slice(&local.negations);
-                        }
                         parents.push(children);
                         children = self.project_graph.dependencies[dep].iter();
                         continue;
@@ -1156,7 +1096,6 @@ impl HashPlanner {
                     external_deps_mapped,
                     visited,
                     None,
-                    negations.as_deref_mut(),
                 )?);
             } else {
                 // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
@@ -1363,7 +1302,6 @@ impl HashPlanner {
     fn gather_project_inputs(
         &self,
         project_inputs: &[Input],
-        mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let mut result: Vec<HashInstruction> = vec![];
         for project in project_inputs {
@@ -1381,9 +1319,6 @@ impl HashPlanner {
                     }],
                     &named_inputs,
                 )?;
-                if let Some(negations) = negations.as_deref_mut() {
-                    collect_negations(project, &self.project_graph, &expanded_input, negations);
-                }
                 result.extend(self.gather_self_inputs(project, &expanded_input, None)?)
             }
         }
@@ -1483,6 +1418,31 @@ fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
         stack.extend(dependencies_of(id));
     }
     roots
+}
+
+/// `paths_overlap` against each of `sorted_roots`, by lookup instead of a scan.
+fn overlaps_any(sorted_roots: &[String], root: &str) -> bool {
+    if root.is_empty() || sorted_roots.first().is_some_and(|r| r.is_empty()) {
+        return !sorted_roots.is_empty();
+    }
+    let mut ancestor = root;
+    loop {
+        if sorted_roots
+            .binary_search_by(|r| r.as_str().cmp(ancestor))
+            .is_ok()
+        {
+            return true;
+        }
+        match ancestor.rfind('/') {
+            Some(cut) => ancestor = &ancestor[..cut],
+            None => break,
+        }
+    }
+    let below = format!("{root}/");
+    let start = sorted_roots.partition_point(|r| r.as_str() < below.as_str());
+    sorted_roots
+        .get(start)
+        .is_some_and(|r| r.starts_with(&below))
 }
 
 /// Whether one path is the other or lies inside it. The workspace root, the
@@ -1658,37 +1618,6 @@ fn propagates_unchanged(before: &Input, after: &Input) -> bool {
     }
 }
 
-fn collect_negations(
-    project_name: &str,
-    project_graph: &ProjectGraph,
-    self_inputs: &[Input],
-    negations: &mut Negations,
-) {
-    // A visit that hashes none of the project's files cannot keep one hashed.
-    let includes_files = self_inputs
-        .iter()
-        .any(|input| matches!(input, Input::FileSet { fileset, .. } if !fileset.starts_with('!')));
-    if !includes_files {
-        return;
-    }
-    let project_root = &project_graph.nodes[project_name].root;
-    let mut patterns = Vec::new();
-    for input in self_inputs {
-        if let Input::FileSet {
-            fileset,
-            include_ignored: false,
-            ..
-        } = input
-            && fileset.starts_with('!')
-        {
-            patterns.push(resolve_files_glob(fileset, project_root, project_name));
-        }
-    }
-    patterns.sort();
-    patterns.dedup();
-    negations.push((project_name.to_string(), patterns));
-}
-
 /// Reads left out of the configuration's file groups: node_modules (never hashed as
 /// files) and nx.json/.gitignore/.nxignore (the always-on set hashes them whole).
 /// Lockfiles stay: externals may cover only a few packages, not the whole file.
@@ -1730,25 +1659,28 @@ fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> Str
     }
 }
 
-fn find_external_dependency_node_name<'a>(
+/// Without an exact `<pkg>`/`npm:<pkg>` node, every installed version of the
+/// package matches: picking one from the `HashMap` scan would change per process,
+/// and a bump to any of them can change what the task does.
+fn find_external_dependency_node_names<'a>(
     package_name: &str,
     project_graph: &'a ProjectGraph,
-) -> Option<&'a String> {
+) -> Vec<&'a String> {
     let npm_name = format!("npm:{}", &package_name);
     if let Some((key, _)) = project_graph.external_nodes.get_key_value(package_name) {
-        Some(key)
-    } else if let Some((key, _)) = project_graph.external_nodes.get_key_value(&npm_name) {
-        Some(key)
-    } else {
-        for (node_name, node) in project_graph.external_nodes.iter() {
-            if let Some(pkg_name) = &node.package_name {
-                if pkg_name.as_str() == package_name {
-                    return Some(node_name);
-                }
-            }
-        }
-        None
+        return vec![key];
     }
+    if let Some((key, _)) = project_graph.external_nodes.get_key_value(&npm_name) {
+        return vec![key];
+    }
+    let mut matches: Vec<&String> = project_graph
+        .external_nodes
+        .iter()
+        .filter(|(_, node)| node.package_name.as_deref() == Some(package_name))
+        .map(|(node_name, _)| node_name)
+        .collect();
+    matches.sort();
+    matches
 }
 
 #[cfg(test)]
@@ -1866,7 +1798,6 @@ mod tests {
                             local_input_cache_key(name, std::slice::from_ref(&input)).unwrap(),
                             || {
                                 Ok::<_, ()>(LocalDependencyInputs {
-                                    negations: vec![],
                                     ids: vec![],
                                     needs_legacy: true,
                                 })
@@ -1902,6 +1833,7 @@ mod tests {
                         })
                         .collect(),
                     continuous_dependencies: HashMap::new(),
+                    continuous_dependencies_without_inputs: None,
                     tasks,
                 }
             };
@@ -2251,6 +2183,7 @@ mod tests {
             tasks: HashMap::from([(task.id.clone(), task)]),
             dependencies: HashMap::new(),
             continuous_dependencies: HashMap::new(),
+            continuous_dependencies_without_inputs: None,
         };
         let plans = planner
             .get_plans_internal(vec!["app:build"], task_graph, None, &[])
@@ -2365,6 +2298,7 @@ mod tests {
                 ("web:outslash", &["lib:outslash"]),
             ]),
             continuous_dependencies: edges(&[("web:bracket", &["web:serve"])]),
+            continuous_dependencies_without_inputs: None,
         };
 
         let mut deferred: Vec<String> = deferred_tasks(&plans, &pool, &task_graph)
@@ -2396,6 +2330,39 @@ mod tests {
     }
 
     #[test]
+    fn overlaps_any_matches_paths_overlap() {
+        let roots = ["", "apps/web", "dist", "dist/libs/lib", "libs/a/b"];
+        let probes = [
+            "dist",
+            "dist/libs",
+            "distribution",
+            "apps/webapp",
+            "apps",
+            "libs/a",
+            "x",
+            "",
+        ];
+        for count in 0..=roots.len() {
+            for skip in 0..roots.len() {
+                let mut sorted: Vec<String> = roots
+                    .iter()
+                    .skip(skip)
+                    .take(count)
+                    .map(|r| r.to_string())
+                    .collect();
+                sorted.sort();
+                for probe in probes {
+                    assert_eq!(
+                        overlaps_any(&sorted, probe),
+                        sorted.iter().any(|r| paths_overlap(r, probe)),
+                        "{sorted:?} {probe}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn paths_overlap_when_one_holds_the_other() {
         assert!(paths_overlap("dist", "dist/libs/lib"));
         assert!(paths_overlap("dist/libs/lib", "dist"));
@@ -2403,6 +2370,124 @@ mod tests {
         assert!(paths_overlap("", "anything"));
         assert!(!paths_overlap("dist", "distribution"));
         assert!(!paths_overlap("apps/web/dist", "apps/webapp"));
+    }
+
+    fn graph_with_external_nodes(nodes: &[(&str, &str)]) -> ProjectGraph {
+        ProjectGraph {
+            nodes: HashMap::new(),
+            dependencies: HashMap::new(),
+            external_nodes: nodes
+                .iter()
+                .map(|(node_name, package_name)| {
+                    (
+                        node_name.to_string(),
+                        ExternalNode {
+                            r#type: Some("npm".into()),
+                            package_name: Some(package_name.to_string()),
+                            version: "0.0.0".into(),
+                            hash: None,
+                        },
+                    )
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn external_dependency_prefers_the_exact_node() {
+        let graph = graph_with_external_nodes(&[
+            ("npm:is-number@6.0.0", "is-number"),
+            ("npm:is-number", "is-number"),
+            ("npm:is-number@7.0.0", "is-number"),
+            ("is-odd", "is-odd"),
+            ("npm:is-odd@1.0.0", "is-odd"),
+        ]);
+        assert_eq!(
+            find_external_dependency_node_names("is-number", &graph),
+            vec!["npm:is-number"]
+        );
+        assert_eq!(
+            find_external_dependency_node_names("is-odd", &graph),
+            vec!["is-odd"]
+        );
+    }
+
+    #[test]
+    fn external_dependency_without_an_exact_node_matches_every_version_in_order() {
+        let nodes = [
+            ("npm:is-number@7.0.0", "is-number"),
+            ("npm:is-number@6.0.0", "is-number"),
+            ("npm:is-odd@1.0.0", "is-odd"),
+        ];
+        let reversed: Vec<_> = nodes.iter().rev().copied().collect();
+        for graph in [
+            graph_with_external_nodes(&nodes),
+            graph_with_external_nodes(&reversed),
+        ] {
+            assert_eq!(
+                find_external_dependency_node_names("is-number", &graph),
+                vec!["npm:is-number@6.0.0", "npm:is-number@7.0.0"]
+            );
+        }
+    }
+
+    #[test]
+    fn external_dependency_without_a_match_is_empty() {
+        let graph = graph_with_external_nodes(&[("npm:is-number@7.0.0", "is-number")]);
+        assert!(find_external_dependency_node_names("is-odd", &graph).is_empty());
+    }
+
+    #[test]
+    fn external_dependencies_input_hashes_every_installed_version() {
+        use crate::native::test_utils::task_graph;
+        use crate::native::types::ExternalDependenciesInput;
+        use napi::bindgen_prelude::Either9;
+
+        let mut graph = graph_with_external_nodes(&[
+            ("npm:is-number@6.0.0", "is-number"),
+            ("npm:is-number@7.0.0", "is-number"),
+        ]);
+        graph.dependencies.insert("c".into(), vec![]);
+        graph.nodes.insert(
+            "c".into(),
+            Project {
+                root: "packages/c".into(),
+                targets: HashMap::from([(
+                    "check".into(),
+                    Target {
+                        executor: Some("nx:run-commands".into()),
+                        inputs: Some(vec![Either9::F(ExternalDependenciesInput {
+                            external_dependencies: vec!["is-number".into()],
+                        })]),
+                        ..Default::default()
+                    },
+                )]),
+                ..Default::default()
+            },
+        );
+        let planner = HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        );
+        let plans = planner
+            .get_plans_materialized(
+                vec!["c:check"],
+                task_graph(&[("c:check", &[])], &[]),
+                None,
+                &[],
+            )
+            .unwrap();
+        let externals: Vec<_> = plans["c:check"]
+            .iter()
+            .filter_map(|instruction| match instruction {
+                HashInstruction::External(name) => Some(name.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            externals,
+            vec!["npm:is-number@6.0.0", "npm:is-number@7.0.0"]
+        );
     }
 }
 
@@ -2508,5 +2593,144 @@ mod plan_memo_tests {
             instruction,
             HashInstruction::TaskOutput(_, outputs) if outputs == &["dist/lib-v2"]
         )));
+    }
+}
+
+#[cfg(test)]
+mod continuous_inputs_tests {
+    use super::*;
+    use crate::native::project_graph::types::{Project, Target};
+    use crate::native::test_utils::task_graph;
+    use crate::native::types::DepsOutputsInput;
+    use napi::bindgen_prelude::Either9;
+
+    fn planner() -> HashPlanner {
+        let project = |root: &str, target: &str, inputs| Project {
+            root: root.into(),
+            targets: HashMap::from([(
+                target.into(),
+                Target {
+                    inputs: Some(inputs),
+                    ..Default::default()
+                },
+            )]),
+            ..Default::default()
+        };
+        let files = || Either9::B("{projectRoot}/**/*".into());
+        let graph = ProjectGraph {
+            nodes: HashMap::from([
+                ("e2e".into(), project("apps/e2e", "e2e", vec![files()])),
+                (
+                    "app".into(),
+                    project(
+                        "apps/app",
+                        "serve",
+                        vec![
+                            files(),
+                            Either9::G(DepsOutputsInput {
+                                dependent_tasks_output_files: "**/*.js".into(),
+                                transitive: None,
+                            }),
+                        ],
+                    ),
+                ),
+                ("api".into(), project("apps/api", "serve", vec![files()])),
+                ("lib".into(), project("libs/lib", "build", vec![files()])),
+            ]),
+            dependencies: ["e2e", "app", "api", "lib"]
+                .into_iter()
+                .map(|project| (project.into(), vec![]))
+                .collect(),
+            external_nodes: HashMap::new(),
+        };
+        HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        )
+    }
+
+    fn graph(continuous: &[(&str, &[&str])], without_inputs: &[(&str, &[&str])]) -> TaskGraph {
+        let edges = |list: &[(&str, &[&str])]| {
+            list.iter()
+                .map(|(id, deps)| (id.to_string(), deps.iter().map(|d| d.to_string()).collect()))
+                .collect::<HashMap<String, Vec<String>>>()
+        };
+        let mut graph = task_graph(
+            &[
+                ("e2e:e2e", &[]),
+                ("app:serve", &[]),
+                ("api:serve", &[]),
+                ("lib:build", &["dist/libs/lib"]),
+            ],
+            &[("app:serve", &["lib:build"])],
+        );
+        graph.continuous_dependencies = edges(continuous);
+        graph.continuous_dependencies_without_inputs =
+            (!without_inputs.is_empty()).then(|| edges(without_inputs));
+        graph
+    }
+
+    /// The projects whose files `e2e:e2e` hashes, and whether it is deferred.
+    fn hashed(graph: TaskGraph) -> (Vec<String>, bool) {
+        let plans = planner()
+            .get_plans_internal(vec!["e2e:e2e"], graph, None, &[])
+            .unwrap();
+        let mut projects: Vec<String> = plans.plans["e2e:e2e"]
+            .iter()
+            .filter_map(|id| match plans.pool.get(*id).value() {
+                HashInstruction::ProjectFileSet(project, _) => Some(project.clone()),
+                _ => None,
+            })
+            .collect();
+        projects.sort();
+        projects.dedup();
+        (projects, plans.deferred.contains("e2e:e2e"))
+    }
+
+    #[test]
+    fn a_continuous_dependency_contributes_its_inputs_and_its_servers() {
+        assert_eq!(
+            hashed(graph(
+                &[("e2e:e2e", &["app:serve"]), ("app:serve", &["api:serve"])],
+                &[],
+            )),
+            (vec!["api".into(), "app".into(), "e2e".into()], true)
+        );
+    }
+
+    #[test]
+    fn an_edge_without_inputs_contributes_nothing_through_it() {
+        assert_eq!(
+            hashed(graph(
+                &[("e2e:e2e", &["app:serve"]), ("app:serve", &["api:serve"])],
+                &[("e2e:e2e", &["app:serve"])],
+            )),
+            (vec!["e2e".into()], false)
+        );
+    }
+
+    #[test]
+    fn a_server_also_reached_with_inputs_still_contributes() {
+        assert_eq!(
+            hashed(graph(
+                &[
+                    ("e2e:e2e", &["app:serve", "api:serve"]),
+                    ("app:serve", &["api:serve"]),
+                ],
+                &[("e2e:e2e", &["app:serve"])],
+            )),
+            (vec!["api".into(), "e2e".into()], false)
+        );
+    }
+
+    #[test]
+    fn a_server_can_opt_out_of_its_own_server() {
+        assert_eq!(
+            hashed(graph(
+                &[("e2e:e2e", &["app:serve"]), ("app:serve", &["api:serve"])],
+                &[("app:serve", &["api:serve"])],
+            )),
+            (vec!["app".into(), "e2e".into()], true)
+        );
     }
 }

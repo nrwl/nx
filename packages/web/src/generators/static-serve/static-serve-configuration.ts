@@ -17,6 +17,7 @@ interface WebStaticServeSchema {
   outputPath?: string;
   targetName?: string;
   spa?: boolean;
+  port?: number;
 }
 
 interface NormalizedWebStaticServeSchema extends WebStaticServeSchema {
@@ -116,6 +117,8 @@ function addStaticConfig(tree: Tree, opts: NormalizedWebStaticServeSchema) {
       buildTarget: opts.buildTarget,
       staticFilePath: opts.outputPath,
       spa: opts.spa,
+      // Only when asked: @nx/web:file-server already defaults to 4200.
+      ...(opts.port != null ? { port: opts.port } : {}),
     },
   };
 

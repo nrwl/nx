@@ -650,12 +650,11 @@ impl TaskHasher {
                             Some(value) => value,
                             None => {
                                 let instruction_ref = pool.get(id);
-                                let label = pool.label(id);
                                 let (hash_value, inputs) = self.hash_instruction(
                                     task_id,
                                     instruction_ref.value(),
                                     HashInstructionArgs {
-                                        label: &label,
+                                        id,
                                         js_env,
                                         ts_config_hash: &ts_config_hash,
                                         project_root_mappings: &project_root_mappings,
@@ -726,7 +725,7 @@ impl TaskHasher {
         task_id: &str,
         instruction: &HashInstruction,
         HashInstructionArgs {
-            label,
+            id,
             js_env,
             ts_config_hash,
             project_root_mappings,
@@ -808,7 +807,8 @@ impl TaskHasher {
                         accept,
                     )
                 };
-                let expansion = expand_cached(label, files_expansion_cache, || {
+                let key = format!("files#{id}");
+                let expansion = expand_cached(&key, files_expansion_cache, || {
                     expand_globs(
                         workspace_root,
                         globs,
@@ -1030,9 +1030,9 @@ impl TaskHasher {
 }
 
 struct HashInstructionArgs<'a> {
-    /// `InstructionPool::label` of the instruction: the details key, and the
-    /// key a disk-backed group's expansion is shared under within one call.
-    label: &'a str,
+    /// The instruction's pool id: the key a disk-backed group's expansion is
+    /// shared under within one call. Labels can repeat across tasks.
+    id: u32,
     js_env: &'a HashMap<String, String>,
     ts_config_hash: &'a str,
     project_root_mappings: &'a ProjectRootMappings,

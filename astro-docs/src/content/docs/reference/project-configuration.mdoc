@@ -513,7 +513,7 @@ With the expanded syntax, you also have a third option available to configure ho
 }
 ```
 
-This also works when defining a relation for the target of the project itself using `"projects": "self"`:
+This also works for a target of the same project. Leave out `projects`:
 
 ```json
 {
@@ -594,6 +594,8 @@ And the E2E project's `e2e` task has a dependency on the `serve` task, which ens
   }
 }
 ```
+
+The `e2e` task also hashes the inputs of the `serve` task it depends on. Set `"inputs": false` on the `dependsOn` entry to hash only the `e2e` task's own inputs. See [inputs of continuous dependencies](/docs/reference/inputs#inputs-of-continuous-dependencies).
 
 ### Ultracache
 

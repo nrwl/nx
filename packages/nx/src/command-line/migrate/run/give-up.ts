@@ -31,6 +31,7 @@ import {
   markCommitStarted,
   markInstallFailed,
   stepsToPendingMigrations,
+  stepLabel,
   uncoveredFailedStepIds,
   unresolvedCommitName,
 } from './state-machine';
@@ -206,11 +207,11 @@ export function recordUnresolvedIssue(
 }
 
 export function warnUnresolvedNotArchived(
-  migrationId: string,
+  label: string,
   archiveError: string
 ): void {
   warnToAgent({
-    title: `The issue recording that ${migrationId} was left unresolved could not be archived (${archiveError}).`,
+    title: `The issue recording that ${label} was left unresolved could not be archived (${archiveError}).`,
     bodyLines: [
       `run.json stays authoritative: the step is unresolved and the issue is in its ledger; only the archived file under the run's issues directory is missing.`,
     ],
@@ -240,6 +241,6 @@ export function warnAboutGiveUp(
     }
   }
   if (outcome.archiveError !== undefined) {
-    warnUnresolvedNotArchived(step.migrationId, outcome.archiveError);
+    warnUnresolvedNotArchived(stepLabel(step), outcome.archiveError);
   }
 }

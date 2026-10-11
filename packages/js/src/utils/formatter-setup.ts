@@ -7,7 +7,7 @@ import { oxfmtVersion, prettierVersion } from './versions';
 type FormatterSetup = {
   setUp: (
     tree: Tree,
-    options: { skipPackageJson?: boolean }
+    options: { skipPackageJson?: boolean; keepExistingVersions?: boolean }
   ) => GeneratorCallback;
   version: string;
 };
@@ -51,7 +51,7 @@ export function getFormatterSetup(
 export function setUpFormatter(
   tree: Tree,
   formatter: string | undefined,
-  options: { skipPackageJson?: boolean } = {}
+  options: { skipPackageJson?: boolean; keepExistingVersions?: boolean } = {}
 ): GeneratorCallback {
   const setup = getFormatterSetup(formatter);
   return setup ? setup.setUp(tree, options) : () => {};

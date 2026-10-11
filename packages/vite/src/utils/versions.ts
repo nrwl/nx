@@ -1,7 +1,6 @@
 import { join } from 'path';
 
 export const nxVersion = require(join('@nx/vite', 'package.json')).version;
-// Also update @nx/remix/utils/versions when changing vite version
 export const viteVersion = '^8.0.0';
 export const viteV7Version = '^7.0.0';
 export const viteV6Version = '^6.0.0';

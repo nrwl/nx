@@ -4,6 +4,7 @@
 
 import {
   renderAuthorScopeRuleLines,
+  renderFinalValidationScopeRuleLines,
   renderHandoffShapeLines,
   renderNxInvocationNote,
   renderValidationScopeRuleLines,
@@ -28,6 +29,7 @@ export interface RunbookContext {
   reconcileCommand: string;
   createCommits: boolean;
   validate: boolean;
+  finalValidation: boolean;
 }
 
 /**
@@ -120,6 +122,16 @@ export function renderRunbook(ctx: RunbookContext): string {
       NX_JSON_MIGRATE_RULE
     );
   }
+  if (ctx.finalValidation) {
+    lines.push(
+      `- The run's last step is a validation pass over the whole workspace,`,
+      `  dispensed once every migration step is done. Its \`nx_migrate_prompt\``,
+      `  block points at an instructions file; that file names the base ref its`,
+      `  \`nx affected\` runs use. Scope rules for that work:`,
+      ...renderFinalValidationScopeRuleLines().map((line) => `  ${line}`),
+      NX_JSON_MIGRATE_RULE
+    );
+  }
   lines.push(
     ``,
     `If a step's \`nx_migrate_prompt\` block is no longer in your context`,
@@ -191,8 +203,9 @@ export function renderRunbook(ctx: RunbookContext): string {
     `Report through the handoff file: problems you observed go in an`,
     `\`issues\` array, whether you fixed them in this same piece of work`,
     `(mark those \`"resolved"\`) or left them for later; progress on an issue`,
-    `the digest marks assigned to the current step goes in an \`issueUpdates\``,
-    `array. Both are optional and sit next to \`status\` and \`summary\`:`,
+    `the digest marks assigned or deferred to the current step goes in an`,
+    `\`issueUpdates\` array. Both are optional and sit next to \`status\` and`,
+    `\`summary\`:`,
     ``,
     `{`,
     `  "issues": [{`,
@@ -216,10 +229,18 @@ export function renderRunbook(ctx: RunbookContext): string {
     `- Omit \`disposition\` to record the issue for a later applicable step to`,
     `  pick up. Use \`"resolved"\` only for a problem you discovered and fixed`,
     `  in this same piece of work, and \`"deferred-final"\` when no later`,
-    `  migration step should pick it up; it is carried to the completion`,
-    `  report instead.`,
-    `- \`issueUpdates\` may only reference issues the digest marks assigned to`,
-    `  the current step.`,
+    ...(ctx.finalValidation
+      ? [
+          `  migration step should pick it up; it is carried to the final`,
+          `  validation pass, and the completion report lists what that pass`,
+          `  leaves unresolved.`,
+        ]
+      : [
+          `  migration step should pick it up; it is carried to the completion`,
+          `  report instead.`,
+        ]),
+    `- \`issueUpdates\` may only reference issues the digest marks assigned or`,
+    `  deferred to the current step.`,
     `- Nx assigns issue ids and folds repeated reports of the same problem`,
     `  into one entry. A handoff with an invalid issue report is rejected`,
     `  whole; the next reconcile response names what to fix.`,

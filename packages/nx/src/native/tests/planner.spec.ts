@@ -1832,9 +1832,7 @@ describe('task planner', () => {
     });
   });
   describe('ultracache configurations', () => {
-    function fixture(
-      opts: { cyclic?: boolean; extraParentInputs?: unknown[] } = {}
-    ) {
+    function fixture(opts: { cyclic?: boolean } = {}) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [
           { file: 'libs/parent/filea.ts', hash: 'a.hash' },
@@ -1857,7 +1855,6 @@ describe('task planner', () => {
                 { runtime: 'echo runtime123' },
                 { json: '{projectRoot}/package.json', fields: ['version'] },
                 { fileset: '{projectRoot}/generated', includeIgnored: true },
-                ...(opts.extraParentInputs ?? []),
               ],
               outputs: ['{workspaceRoot}/dist/libs/parent'],
             },
@@ -1869,7 +1866,6 @@ describe('task planner', () => {
         type: 'lib',
         data: {
           root: 'libs/child',
-          // The child's own negation must scope to the child's reads.
           namedInputs: { prod: ['default', '!{workspaceRoot}/**/*.md'] },
           targets: {
             build: {
@@ -1906,6 +1902,13 @@ describe('task planner', () => {
     function withContinuousDependency(taskGraph: any) {
       return {
         ...taskGraph,
+        tasks: {
+          ...taskGraph.tasks,
+          'child:build': {
+            ...taskGraph.tasks['child:build'],
+            continuous: true,
+          },
+        },
         continuousDependencies: { 'parent:build': ['child:build'] },
       };
     }
@@ -1948,9 +1951,6 @@ describe('task planner', () => {
       });
       return new UltracacheConfigurationStore(configurationDb).get(commit);
     }
-
-    const PARENT_NEG = '!libs/parent/**/*.spec.ts';
-    const CHILD_NEG = '!**/*.md';
 
     it('leaves plans byte-identical when no task has an Ultracache configuration', () => {
       const { planner, taskGraph } = fixture();
@@ -2032,23 +2032,19 @@ describe('task planner', () => {
       );
     });
 
-    it('keeps a negation only when every visit of the project declares it', () => {
-      const read = configurationsFor({
-        'parent:build': { inputs: ['libs/child/readme.md'] },
-      });
-      const groupFor = (extraParentInputs?: unknown[]) => {
-        const { planner, taskGraph } = fixture({ extraParentInputs });
-        return planner
-          .getPlans(['parent:build'], taskGraph, read)
-          ['parent:build'].find((entry) => entry.includes('readme.md'));
-      };
-
-      // Only ^prod visits the child, and it excludes markdown.
-      expect(groupFor()).toBe(`files:[libs/child/readme.md,${CHILD_NEG}]`);
-      // A second visit hashes the child's markdown natively, so the read stays.
-      expect(groupFor([{ input: 'default', projects: ['child'] }])).toBe(
-        'files:[libs/child/readme.md]'
-      );
+    it('hashes observed reads that declared negations exclude', () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurationsFor({
+          'parent:build': {
+            inputs: ['libs/child/readme.md', 'libs/parent/a.spec.ts'],
+          },
+        })
+      )['parent:build'];
+      expect(plan).toContain('files:[libs/child/readme.md]');
+      expect(plan).toContain('files:[libs/parent/a.spec.ts]');
     });
 
     it("keeps a continuous dependency's inputs in the task it serves", () => {
@@ -2067,28 +2063,24 @@ describe('task planner', () => {
       expect(plan).toContain('child:libs/child/**/*');
     });
 
-    it('hashes a continuous dependency from its own configuration when it has one', () => {
+    it('hashes a continuous dependency from its declared inputs even when it has a configuration', () => {
       const { planner, taskGraph } = fixture();
-      const graph = withContinuousDependency(taskGraph);
-      graph.tasks['child:build'].ultracache = { ignoredReads: ['tmp/**'] };
       const plan = planner.getPlans(
         ['parent:build'],
-        graph,
+        withContinuousDependency(taskGraph),
         configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
           'child:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
 
-      expect(plan).not.toContain('child:libs/child/**/*');
-      expect(plan).toContainEqual(
+      expect(plan).toContain('child:libs/child/**/*');
+      expect(plan).not.toContainEqual(
         expect.stringMatching(/^files:\[libs\/child\/src\/index\.ts[,\]]/)
       );
-      // Its marker joins the task's, so its exclusions count too (identical
-      // digests would share one).
       expect(
         plan.filter((entry) => entry.startsWith('io-snapshot:'))
-      ).toHaveLength(2);
+      ).toHaveLength(1);
     });
 
     it('keeps the declared inputs of a continuous dependency of a task whose ultracache mode is not on', () => {
@@ -2108,7 +2100,7 @@ describe('task planner', () => {
       expect(plan).not.toContainEqual(expect.stringMatching(/^io-snapshot:/));
     });
 
-    it('replaces declared filesets (self and dependency) with one files group per owning project, each with its own negations', () => {
+    it('replaces declared filesets (self and dependency) with one files group per owning project', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
         ['parent:build'],
@@ -2125,10 +2117,9 @@ describe('task planner', () => {
       )['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
-          `files:[libs/child/src/index.ts,${CHILD_NEG}]`,
-          // Reads under no project root belong to the task's own project, so
-          // the dependency's !**/*.md never suppresses docs/readme.md.
-          `files:[docs/readme.md,libs/parent/src/**/*.ts,${PARENT_NEG}]`,
+          'files:[libs/child/src/index.ts]',
+          // Reads under no project root belong to the task's own project.
+          'files:[docs/readme.md,libs/parent/src/**/*.ts]',
           'parent:ProjectConfiguration',
           'child:ProjectConfiguration',
           'env:TESTENV',
@@ -2167,7 +2158,7 @@ describe('task planner', () => {
           'parent:json:libs/parent/package.json[version]',
           // Both files are hashed whole too: the native instructions cover
           // only selected fields and a stripped tsconfig.
-          `files:[libs/parent/package.json,tsconfig.base.json,${PARENT_NEG}]`,
+          'files:[libs/parent/package.json,tsconfig.base.json]',
         ])
       );
     });
@@ -2190,9 +2181,7 @@ describe('task planner', () => {
       )['parent:build'];
       // Externals hash resolved versions, not package.json scripts or the
       // rest of the lockfile.
-      expect(plan).toContain(
-        `files:[package.json,tools/x.ts,yarn.lock,${PARENT_NEG}]`
-      );
+      expect(plan).toContain('files:[package.json,tools/x.ts,yarn.lock]');
       expect(plan).toContain('AllExternalDependencies');
       expect(plan).not.toContainEqual(expect.stringMatching(/node_modules/));
     });
@@ -2333,7 +2322,7 @@ describe('task planner', () => {
       expect(plan).not.toContain('**/*.d.ts:dist/libs/child');
     });
 
-    it("keeps a selected project's read that another visit still hashes natively", () => {
+    it("keeps a selected project's read that its declared negation excludes", () => {
       const { taskGraph, projectGraph } = fixture();
       (projectGraph.nodes.parent.data.targets.build as any).inputs.push({
         input: 'selected',
@@ -2361,8 +2350,6 @@ describe('task planner', () => {
       const childGroup = plan.find((entry) =>
         entry.includes('libs/child/fileb.ts')
       );
-      // ^prod visits the child too and does not exclude *.gen.ts, so natively
-      // a.gen.ts is hashed and the selected input's negation cannot drop it.
       expect(childGroup).toBe(
         'files:[libs/child/a.gen.ts,libs/child/fileb.ts]'
       );
@@ -2510,7 +2497,7 @@ describe('task planner', () => {
         taskGraph,
         configurations
       )['parent:build'];
-      expect(plan).toContain(`files:[dist/libs/child/index.js,${PARENT_NEG}]`);
+      expect(plan).toContain('files:[dist/libs/child/index.js]');
       expect(plan).not.toContainEqual(
         expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
       );
@@ -2633,7 +2620,7 @@ describe('task planner', () => {
       expect(plan.filter((i) => i.startsWith('files:'))).toEqual([]);
     });
 
-    it('applies dependency negations on cyclic graphs too (non-memo traversal)', () => {
+    it('replaces dependency filesets on cyclic graphs too (non-memo traversal)', () => {
       const { planner, taskGraph } = fixture({ cyclic: true });
       const plan = planner.getPlans(
         ['parent:build'],
@@ -2642,7 +2629,7 @@ describe('task planner', () => {
           'parent:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
-      expect(plan).toContain(`files:[libs/child/src/index.ts,${CHILD_NEG}]`);
+      expect(plan).toContain('files:[libs/child/src/index.ts]');
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
 

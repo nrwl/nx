@@ -1279,6 +1279,7 @@ type RunMigrations = {
   ifExists: boolean;
   agentic: AgenticArg;
   validate?: boolean;
+  finalValidation?: boolean;
   interactive?: boolean;
   // The orchestrated run to continue, or the one --start-fresh replaces.
   runId?: string;
@@ -1457,6 +1458,7 @@ export async function parseMigrationsOptions(
       ifExists: options.ifExists,
       agentic: options.agentic,
       validate: options.validate,
+      finalValidation: options.finalValidation,
       interactive: options.interactive,
       ...(options.runId !== undefined ? { runId: options.runId } : {}),
       ...(options.startFresh === true ? { startFresh: true } : {}),
@@ -3271,6 +3273,7 @@ async function runMigrations(
     ifExists: boolean;
     agentic: AgenticArg;
     validate?: boolean;
+    finalValidation?: boolean;
     interactive?: boolean;
     runId?: string;
     startFresh?: boolean;
@@ -3372,6 +3375,7 @@ async function runMigrations(
     installedNxVersion: readModulePackageJson('nx', getNxRequirePaths(root))
       .packageJson.version,
     validate: opts.validate,
+    finalValidation: opts.finalValidation,
   });
 
   // An outer agent drives the loop, so hand off to the orchestrator instead of

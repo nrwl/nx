@@ -317,10 +317,33 @@ Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d
 
 A [continuous task](/docs/kb/defining-task-pipeline#continuous-task-dependencies), such as the `serve` task an `e2e` task depends on, runs in its own process, yet what it reads still decides what the task it serves observes.
 A task therefore also hashes the declared inputs of every continuous dependency it has, and of the servers those depend on in turn: files, environment variables, runtime commands and external dependencies alike.
-In CI with [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) set, when the task hashes from its [Ultracache configuration](/docs/reference/project-configuration#ultracache), a server that has one contributes the files it read instead of its declared filesets.
+This holds even when the task hashes from its [Ultracache configuration](/docs/reference/project-configuration#ultracache): continuous tasks never get one, because what a server reads depends on which of its clients ran.
 There's nothing to declare, and only continuous dependencies count.
 A server that declares no inputs contributes its whole project, so declare inputs on servers that live at the workspace root, such as a local registry.
 When a server reads the outputs of its own build dependencies, Nx hashes the task it serves once the server is running, so those outputs count too.
+
+Set `"inputs": false` on a `dependsOn` entry when the task needs the server running but doesn't depend on what it serves.
+For example, an `e2e` task that tests one feature of an app shouldn't rerun whenever another library bundled into the app changes:
+
+```jsonc
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        { "projects": "myapp", "target": "serve", "inputs": false },
+      ],
+    },
+  },
+}
+```
+
+The task still depends on the server, but this entry doesn't include the server's inputs in the hash.
+Nx also leaves out the servers that entry reaches, unless another entry with inputs reaches them.
+The option has no effect on dependencies that aren't continuous.
+
+Set `NX_LEGACY_AFFECTED=false` to make `nx affected` select tasks by their inputs.
+Without it, `nx affected` selects whole projects, regardless of `"inputs": false`.
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 

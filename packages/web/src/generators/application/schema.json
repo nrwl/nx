@@ -114,6 +114,10 @@
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+    },
+    "port": {
+      "type": "number",
+      "description": "The port to use for the development server. Defaults to 4200."
     }
   },
   "required": ["directory"],

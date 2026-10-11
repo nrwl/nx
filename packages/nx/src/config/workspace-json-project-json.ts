@@ -218,6 +218,12 @@ export interface TargetDependencyConfig {
    * Whether to forward task options to the dependency target.
    */
   options?: 'ignore' | 'forward';
+
+  /**
+   * Set to `false` to keep a continuous dependency's inputs out of this
+   * target's hash. It still runs first. Has no effect on other dependencies.
+   */
+  inputs?: boolean;
 }
 
 // TODO: import the remaining variants from '../native' so the TS types stay

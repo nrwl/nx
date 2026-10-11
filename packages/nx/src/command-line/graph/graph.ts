@@ -54,7 +54,7 @@ import type { NxArgs } from '../../utils/command-line-utils';
 import { runnableForTarget } from '../../utils/project-graph-utils';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { expandFilesInput, HashPlanner } from '../../native';
+import { expandFilesInput, HashPlanner, openUrl } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -604,15 +604,9 @@ export async function generateGraph(
     });
 
     if (args.open) {
-      (
-        new Function('return import("open")')() as Promise<
-          typeof import('open')
-        >
-      )
-        .then((m) => m.default(url.toString()))
-        .catch(() => {
-          // Ignore errors when opening browser (e.g. no browser available)
-        });
+      // Best-effort: openUrl never throws, returning false if no opener could be
+      // spawned. The URL is printed above, so a failure is silent.
+      openUrl(url.toString());
     }
 
     return new Promise((res) => {

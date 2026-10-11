@@ -27,7 +27,6 @@ export async function addFiles(
   }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
   const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 
-  // Specifically undefined to allow Remix workaround of passing an empty string
   const actualBundler = await getActualBundler(tree, options, found);
 
   if (options.bundler && options.bundler !== actualBundler) {

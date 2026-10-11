@@ -525,6 +525,10 @@ const referenceGroups: SidebarItems = [
       { label: 'Nx Console settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
       {
+        label: 'Nx Cloud Public API',
+        link: 'reference/nx-cloud/public-api',
+      },
+      {
         label: 'CI configuration file',
         link: 'reference/nx-cloud/ci-config',
       },

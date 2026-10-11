@@ -180,6 +180,10 @@ class MojoAnalyzer(
         val formattedPath = pathResolver.formatOutputPath(pathFile, project.basedir)
 
         outputs.add(formattedPath)
+
+        paramConfig.excludeGlob?.let {
+          outputs.add("!" + pathResolver.formatOutputPath(File("$path/$it"), project.basedir))
+        }
       }
     }
 

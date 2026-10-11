@@ -136,7 +136,7 @@ export declare class NxCache {
    * SQL query and reads terminal output files in parallel via Rayon.
    */
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
-  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
+  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): CachedOutputs
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
   /**
    * Register terminal outputs that were written without a cache entry —
@@ -159,7 +159,13 @@ export declare class NxCache {
   recordTerminalOutputs(records: Array<TerminalOutputRecord>): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
-  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
+  /**
+   * Restores `outputs`. Returns each file written, stamped as it is now,
+   * when those are all the output files the workspace now holds: every
+   * output a path, and each one that exists replaced from the cache. A
+   * glob or a negation can leave other matching files in place.
+   */
+  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): Array<OutputFile> | null
   removeOldCacheRecords(): void
   checkCacheFsInSync(): boolean
 }
@@ -230,6 +236,10 @@ export declare class RunningTasksService {
   constructor(db: ExternalObject<NxDbConnection>)
   getRunningTasks(ids: Array<string>): Array<string>
   addRunningTask(taskId: string): void
+  /**
+   * Release this process's claim on a task. A row another process has since
+   * taken over is left in place.
+   */
   removeRunningTask(taskId: string): void
 }
 
@@ -276,14 +286,42 @@ export declare class TaskHasher {
   hashPlansFor(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
 }
 
+/**
+ * Tracks which tasks each Nx process in a nested process tree is running, so
+ * that a task which re-invokes itself can be reported instead of looping
+ * forever.
+ *
+ * Every process in the tree shares a `root_pid`, but sharing a root does not
+ * imply a parent/child relationship: sibling Nx processes are common and
+ * legitimate (N atomized e2e specs each spawning the same `serve-static` web
+ * server, or two parallel tasks that each shell out to `nx run lib:build`).
+ * Only an invocation belonging to an actual *ancestor* of this process is a
+ * loop, so the check is scoped to `ancestor_pids` rather than to the whole
+ * tree.
+ */
 export declare class TaskInvocationTracker {
-  constructor(db: ExternalObject<NxDbConnection>, rootPid: number)
-  /** Register a task as invoked. Throws if the task was already registered (loop detected). */
-  registerTask(parentPid: number, taskId: string): void
-  /** Remove a task invocation record after task completes. */
-  unregisterTask(taskId: string): void
-  /** Get all invocations for this root_pid, ordered by creation time. */
-  getInvocationChain(): Array<InvocationRecord>
+  constructor(db: ExternalObject<NxDbConnection>, rootPid: number, ancestorPids: Array<number>)
+  /**
+   * Register a task as invoked by the process identified by `pid`.
+   *
+   * Returns the invocation chain when an ancestor process is already running
+   * this task, which is a genuine loop. The chain lists every task invoked
+   * along the ancestry path, outermost first. Returns `null` when the task
+   * was registered, including when a *sibling* process is already running it.
+   *
+   * An ancestor running this task with the *same* overrides is a loop
+   * immediately. An ancestor running it with different overrides is allowed
+   * up to `MAX_ANCESTOR_INVOCATIONS_PER_TASK`, which lets a terminating
+   * `app:build -> app:build --flag` chain through while still bounding a
+   * recursion whose forwarded arguments grow on every hop.
+   */
+  registerTask(pid: number, taskId: string, overridesHash: string): Array<InvocationRecord> | null
+  /**
+   * Remove a task invocation record after the task completes. Scoped to the
+   * registering process so that a sibling finishing the same task does not
+   * drop this process's record.
+   */
+  unregisterTask(pid: number, taskId: string): void
   /** Clean up stale invocations older than 1 day (handles PID recycling). */
   cleanupStale(): void
 }
@@ -314,10 +352,10 @@ export declare class UltracacheConfigurationStore {
   import(options: UltracacheConfigurationImportOptions): UltracacheConfigurations
   /**
    * The newest stored set for `commit`, without touching the network;
-   * `null` when none is stored, its row cannot be read, or it was fetched
-   * more than `max_age_ms` ago. Reads only the version's summary row.
+   * `null` when none is stored or its row cannot be read. Reads only the
+   * version's summary row.
    */
-  get(commit: string, maxAgeMs?: number | undefined | null): UltracacheConfigurations | null
+  get(commit: string): UltracacheConfigurations | null
   /**
    * Exactly the version of `commit` fetched at `fetched_at`; `null` when it
    * is not stored or its row cannot be read.
@@ -391,6 +429,13 @@ export declare class WorkspaceContext {
    * other read of the files does, so a write already reported counts.
    */
   trackedFiles(paths: Array<string>): Array<string>
+  /**
+   * Remembers each task's outputs, as given or else as they are on disk
+   * now, so `outputs_unchanged` can tell whether they still are.
+   */
+  recordOutputs(entries: Array<TaskOutputs>): void
+  /** Whether each task's outputs are still as last recorded for its hash. */
+  outputsUnchanged(entries: Array<TaskOutputs>): Array<boolean>
   getFilesInDirectory(directory: string): Array<string>
   /**
    * Subscribes to the context's changes: the callback is called whenever
@@ -528,6 +573,14 @@ export declare const enum BatchStatus {
   Running = 'Running',
   Success = 'Success',
   Failure = 'Failure'
+}
+
+/** What `put` copied into the cache. */
+export interface CachedOutputs {
+  /** The output entries that exist, as `expand_outputs` finds them. */
+  expandedOutputs: Array<string>
+  /** Each file copied, stamped as it is in the workspace. */
+  files: Array<OutputFile>
 }
 
 export interface CachedPluginCapabilities {
@@ -717,6 +770,13 @@ export declare function formatDuration(ms: number): string
 
 export declare function getBinaryTarget(): string
 
+/**
+ * A tenth of the filesystem that holds `cache_path`, asked of that one
+ * filesystem through its nearest existing ancestor (the cache directory may
+ * not exist yet). Listing every mounted disk instead costs, on macOS, IOKit
+ * and CacheDelete round trips per mount on the thread that is about to run
+ * tasks, and those stall while disk images attach or detach.
+ */
 export declare function getDefaultMaxCacheSize(cachePath: string): number
 
 /** Returns the canonical event dimension names. */
@@ -858,7 +918,7 @@ export declare function installNxConsole(): Promise<boolean>
 export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
 export interface InvocationRecord {
-  parentPid: number
+  pid: number
   taskId: string
 }
 
@@ -984,6 +1044,24 @@ export interface NxWorkspaceFilesExternals {
   ignoredIndex: ExternalObject<IgnoredIndexReader>
 }
 
+/**
+ * Open `url` in the user's default browser. Returns `true` if an opener
+ * process was spawned, `false` if none could be (e.g. no `xdg-open`) or `url`
+ * isn't `http(s)`, so the caller can tell the user instead of failing
+ * silently. Never throws.
+ */
+export declare function openUrl(url: string): boolean
+
+/** A workspace-relative file with the stamp it was left with. */
+export interface OutputFile {
+  path: string
+  /**
+   * `<mtime nanos>:<size>`, a string because the nanoseconds do not fit a
+   * JavaScript number.
+   */
+  stamp: string
+}
+
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
 
 /**
@@ -1040,6 +1118,32 @@ export interface ProjectGraph {
 
 export declare function remove(src: string): void
 
+/**
+ * The daemon's own socket. Per run — the directory name hashes the pid, and
+ * clients read the daemon's path back out of the process cache rather than
+ * deriving it.
+ */
+export declare function resolveDaemonSocketPath(workspaceRoot: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+
+/** A forked task process's socket, in the daemon's per-run directory. */
+export declare function resolveForkedProcessSocketPath(workspaceRoot: string, id: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+
+/**
+ * Where the Nx Console socket lives, for whoever binds or connects to it.
+ *
+ * `env` is for callers that load a workspace `.env` into a copy rather than
+ * into their own environment, and `workspaceRoot` for callers that do not run
+ * inside the workspace — Nx Console is both, since it runs in the editor's
+ * extension host.
+ */
+export declare function resolveNxConsoleSocketPath(workspaceRoot: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+
+/**
+ * Plugin worker sockets get their own workspace-scoped directory rather than
+ * sitting in the shared system temp dir, which cannot be locked down.
+ */
+export declare function resolvePluginSocketPath(workspaceRoot: string, id: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+
 export declare function restoreTerminal(): void
 
 export declare const enum RunMode {
@@ -1049,6 +1153,53 @@ export declare const enum RunMode {
 
 export interface RuntimeInput {
   runtime: string
+}
+
+/**
+ * One resolved socket location, and everything `daemon/tmp-dir.ts` needs to
+ * explain it. Every user-facing sentence is rendered on the TypeScript side,
+ * so this carries facts rather than prose.
+ */
+export interface SocketDirDetails {
+  /** The socket itself, which on Windows is a named pipe rather than a path. */
+  path: string
+  /** The directory holding it, for the caller that deletes it on shutdown. */
+  dir: string
+  /**
+   * Whether `path` exceeds what the platform will bind. Reported rather than
+   * thrown because which advice is correct depends on the other fields.
+   */
+  tooLong: boolean
+  /**
+   * Set when `path` is a directory Nx refuses to *be* the socket directory:
+   * `shared-with-other-users`, `nx-managed`, or `os-temp-root`. The caller
+   * throws on it rather than using `path`.
+   */
+  invalidReason?: string
+  /** The preferred root that was skipped, when a later tier was used. */
+  demotedFrom?: string
+  /**
+   * The default-root directory Nx tried before falling back, when there was
+   * one.
+   */
+  attemptedDir?: string
+  /**
+   * The `NX_SOCKET_DIR` that was refused, when that is why this is a
+   * fallback. Tracked apart from the other reasons so a later length error
+   * stops telling someone to shorten a directory refused for another one.
+   */
+  refusedConfiguredDir?: string
+  /** Why that configured directory was refused. */
+  refusalError?: string
+  /**
+   * Whether this landed in the workspace data dir, which the caller warns
+   * about once per process.
+   */
+  usedWorkspaceFallback: boolean
+  /** Deduplicated advice for the refusals collected along the way. */
+  remedies: Array<string>
+  /** Every refusal as one sentence, for `--verbose`. */
+  refusalDetails?: string
 }
 
 export declare const enum SupportedEditor {
@@ -1139,6 +1290,11 @@ export interface TaskGraph {
   /** Map of Task IDs to IDs of tasks which the task depends on */
   dependencies: Record<string, Array<string>>
   continuousDependencies: Record<string, Array<string>>
+  /**
+   * The subset of `continuous_dependencies` from `dependsOn` entries with
+   * `inputs: false`: still run, but their inputs are not hashed into the task.
+   */
+  continuousDependenciesWithoutInputs?: Record<string, Array<string>>
 }
 
 /** Details about the composition of a task's hash */
@@ -1170,6 +1326,17 @@ export interface TaskInputMatches {
    * hashes packages of. Reported once rather than per package.
    */
   movedEcosystems: Array<string>
+}
+
+export interface TaskOutputs {
+  outputs: Array<string>
+  hash: string
+  /**
+   * Every output file the cache just wrote or restored, which it passes
+   * only when that is all of them. Recorded as given, without reading the
+   * disk.
+   */
+  files?: Array<OutputFile>
 }
 
 /**
@@ -1297,6 +1464,7 @@ export interface UltracacheDiagnostic {
 export interface UltracacheEligibilityOptions {
   /** Tasks whose executor ships a custom hasher. */
   customHasherTaskIds?: Array<string>
+  continuousTaskIds?: Array<string>
 }
 
 /**

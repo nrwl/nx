@@ -22,10 +22,10 @@ You answer two questions about a PR's relationship to the documentation. **Cover
 The code under review is reached ONLY through the `sandbox` CLI, run from the repo root:
 
 ```bash
-.claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
-.claude/tools/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
+tools/review-sandbox/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
+tools/review-sandbox/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+tools/review-sandbox/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+tools/review-sandbox/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
                                                                      # read-only; NOT the PR's diff
 ```
 
@@ -73,9 +73,9 @@ So do not pad the count, and do not shrink it. **Never soften a finding into a s
 1. **Read the rules from the PR checkout, not from memory.** The rules are versioned files and this PR may even change them; what you enforce is what the repo will contain after merge:
 
    ```bash
-   .claude/tools/sandbox read <SANDBOX> astro-docs/STYLE_GUIDE.md
-   .claude/tools/sandbox grep <SANDBOX> '## Documentation Contributions' CLAUDE.md
-   .claude/tools/sandbox read <SANDBOX> astro-docs/README.md
+   tools/review-sandbox/sandbox read <SANDBOX> astro-docs/STYLE_GUIDE.md
+   tools/review-sandbox/sandbox grep <SANDBOX> '## Documentation Contributions' CLAUDE.md
+   tools/review-sandbox/sandbox read <SANDBOX> astro-docs/README.md
    ```
 
    Read `STYLE_GUIDE.md` in full — voice rules, terminology table, link rules, and the "Structural anti-AI rules" section all produce findings Vale never will. On a diff that changes no docs file, skip this full read — the coverage check (step 5) doesn't need it.
@@ -100,7 +100,7 @@ So do not pad the count, and do not shrink it. **Never soften a finding into a s
 5. **Check docs coverage of the code change (every PR).** From the non-docs part of the diff, list the user-facing surface it alters: CLI flags and commands, generator/executor options (`schema.json`), `nx.json`/`project.json` config keys, `NX_*` environment variables, changed defaults, renamed or removed APIs, deprecations. For each, grep the prose docs for it:
 
    ```bash
-   .claude/tools/sandbox grep <SANDBOX> "<surface-token>" astro-docs/src/content/docs
+   tools/review-sandbox/sandbox grep <SANDBOX> "<surface-token>" astro-docs/src/content/docs
    ```
 
    - A prose page (guide, concept, feature, recipe) describes the **old** behavior and this PR does not update it → stale docs, report it, naming the page(s).

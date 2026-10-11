@@ -116,12 +116,14 @@ impl RunningTasksService {
         Ok(())
     }
 
+    /// Release this process's claim on a task. A row another process has since
+    /// taken over is left in place.
     #[napi]
     pub fn remove_running_task(&self, task_id: String) -> anyhow::Result<()> {
-        self.db
-            .lock()
-            .unwrap()
-            .execute("DELETE FROM running_tasks WHERE task_id = ?", [&task_id])?;
+        self.db.lock().unwrap().execute(
+            "DELETE FROM running_tasks WHERE task_id = ? AND pid = ?",
+            [&task_id, &std::process::id().to_string()],
+        )?;
         debug!("Removed {} from running tasks", task_id);
         Ok(())
     }
@@ -129,7 +131,9 @@ impl RunningTasksService {
 
 impl Drop for RunningTasksService {
     fn drop(&mut self) {
-        // Remove tasks added by this service. This might happen if process exits because of SIGKILL
+        // Release this service's claims on a normal teardown. A SIGKILL runs no
+        // destructor, so those rows are left for `is_task_running` to reject and
+        // the stale sweep to clear.
         for task_id in self.added_tasks.iter() {
             self.remove_running_task(task_id.clone()).ok();
         }
@@ -163,5 +167,46 @@ mod tests {
         } else {
             dbg!("Process {} is not running", pid);
         }
+    }
+
+    #[test]
+    fn remove_leaves_a_claim_taken_over_by_another_process() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA).unwrap();
+        let mut service = RunningTasksService {
+            db: Arc::new(Mutex::new(NxDbConnection::new(conn))),
+            added_tasks: Default::default(),
+        };
+        let claim_owner = |service: &RunningTasksService| {
+            service
+                .db
+                .lock()
+                .unwrap()
+                .query_row(
+                    "SELECT pid FROM running_tasks WHERE task_id = ?",
+                    ["app:serve"],
+                    |row| row.get::<_, u32>(0),
+                )
+                .unwrap()
+        };
+
+        service.add_running_task("app:serve".into()).unwrap();
+        let other_pid = std::process::id() + 1;
+        service
+            .db
+            .lock()
+            .unwrap()
+            .execute(
+                "UPDATE running_tasks SET pid = ? WHERE task_id = ?",
+                [other_pid.to_string().as_str(), "app:serve"],
+            )
+            .unwrap();
+
+        service.remove_running_task("app:serve".into()).unwrap();
+        assert_eq!(claim_owner(&service), Some(other_pid));
+
+        service.add_running_task("app:serve".into()).unwrap();
+        service.remove_running_task("app:serve".into()).unwrap();
+        assert_eq!(claim_owner(&service), None);
     }
 }

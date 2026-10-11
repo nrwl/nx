@@ -10,6 +10,7 @@ import {
   isNotWindows,
   killProcessAndPorts,
   newProject,
+  packageInstall,
   readFile,
   readJson,
   removeFile,
@@ -28,6 +29,7 @@ import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
 import { join } from 'path';
+import { angularDevkitVersion } from '@nx/angular/src/utils/versions';
 
 describe('Nx Commands', () => {
   beforeAll(() =>
@@ -48,6 +50,23 @@ describe('Nx Commands', () => {
   );
 
   afterAll(() => cleanupProject());
+
+  it('should isolate async commands from the parent Nx invocation', async () => {
+    const original = process.env.NX_CLI_SET;
+    process.env.NX_CLI_SET = 'true';
+    try {
+      const { stdout } = await runCommandAsync(
+        `node -e "console.log(process.env.NX_CLI_SET || 'unset')"`
+      );
+      expect(stdout.trim()).toBe('unset');
+    } finally {
+      if (original === undefined) {
+        delete process.env.NX_CLI_SET;
+      } else {
+        process.env.NX_CLI_SET = original;
+      }
+    }
+  });
 
   describe('show', () => {
     it('should show the list of projects', async () => {
@@ -254,10 +273,18 @@ describe('Nx Commands', () => {
           runCLI(`build ${app}`);
         });
 
-        it('should render target info', () => {
-          const output = normalizeOutput(runCLI(`show target ${app}:build`));
-          expect(output).toMatchSnapshot();
-        });
+        for (const variant of ['pnpm', 'npm-and-yarn']) {
+          const selectedVariant =
+            getSelectedPackageManager() === 'pnpm' ? 'pnpm' : 'npm-and-yarn';
+          // Register the other variant as skipped so Jest retains its snapshot.
+          const test = variant === selectedVariant ? it : it.skip;
+          test(`should render target info: ${variant}`, () => {
+            const output = normalizeOutput(
+              runCLI(`show target ${app}:build`, { verbose: false })
+            );
+            expect(output).toMatchSnapshot();
+          });
+        }
 
         it('should render output paths', () => {
           const output = normalizeOutput(
@@ -774,6 +801,14 @@ describe('migrate', () => {
       keepBackup: true,
       packages: [],
     });
+
+    // Synthetic migrations use Angular schematics and workspace utilities.
+    // Install before patching Nx below, since installs can replace that patch.
+    packageInstall(
+      '@angular-devkit/core @angular-devkit/schematics @schematics/angular',
+      undefined,
+      angularDevkitVersion
+    );
 
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,

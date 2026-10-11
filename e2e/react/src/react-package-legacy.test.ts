@@ -3,7 +3,6 @@ import {
   checkFilesExist,
   cleanupProject,
   getSize,
-  killPorts,
   newProject,
   readFile,
   readJson,
@@ -111,7 +110,6 @@ describe('Build React libraries and apps', () => {
   });
 
   afterEach(() => {
-    killPorts();
     cleanupProject();
     delete process.env.NX_ADD_PLUGINS;
   });
