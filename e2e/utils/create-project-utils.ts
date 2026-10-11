@@ -326,6 +326,7 @@ export function newProject({
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: stagingDirectory,
         stdio: isVerbose() ? 'inherit' : 'pipe',
+        env: getStrippedEnvironmentVariables(stagingDirectory),
       });
 
       if (keepBackup || builtOnce.has(packageManager)) {
