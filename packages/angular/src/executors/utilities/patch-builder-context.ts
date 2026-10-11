@@ -15,11 +15,21 @@ const executorToBuilderMap = new Map<string, string>([
 export function patchBuilderContext(
   context: BuilderContext,
   isUsingEsbuildBuilder: boolean,
-  buildTarget: Target
+  buildTarget: Target,
+  delegatePackage:
+    | '@angular-devkit/build-angular'
+    | '@angular/build' = '@angular-devkit/build-angular'
 ): void {
   const originalGetBuilderNameForTarget = context.getBuilderNameForTarget;
   context.getBuilderNameForTarget = async (target) => {
     const builderName = await originalGetBuilderNameForTarget(target);
+
+    if (
+      delegatePackage === '@angular/build' &&
+      builderName === '@nx/angular:application'
+    ) {
+      return '@angular/build:application';
+    }
 
     if (executorToBuilderMap.has(builderName)) {
       return executorToBuilderMap.get(builderName)!;

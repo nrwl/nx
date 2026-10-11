@@ -1,5 +1,6 @@
 import type { BuilderContext } from '@angular-devkit/architect';
 import type { DevServerBuilderOptions } from '@angular-devkit/build-angular';
+import type { DevServerBuilderOptions as AngularBuildDevServerBuilderOptions } from '@angular/build';
 import {
   joinPathFragments,
   normalizePath,
@@ -7,6 +8,7 @@ import {
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
   workspaceRoot,
+  type Target,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
@@ -157,6 +159,24 @@ export function executeDevServerBuilder(
     '@nx/angular:application',
     '@nx/angular:browser-esbuild',
   ].includes(buildTarget.executor);
+  const isUsingApplicationBuilder = [
+    '@angular/build:application',
+    '@nx/angular:application',
+  ].includes(buildTarget.executor);
+
+  if (isUsingApplicationBuilder) {
+    // The application builder doesn't need Webpack, so delegate to the
+    // `@angular/build` dev-server instead of the deprecated
+    // `@angular-devkit/build-angular` one.
+    return executeApplicationDevServer(
+      delegateBuilderOptions,
+      context,
+      parsedBuildTarget,
+      buildTargetOptions,
+      options.esbuildMiddleware,
+      pathToIndexFileTransformer
+    );
+  }
 
   /**
    * The Angular CLI dev-server builder make some decisions based on the build
@@ -265,6 +285,60 @@ export function executeDevServerBuilder(
 export default require('@angular-devkit/architect').createBuilder(
   executeDevServerBuilder
 ) as any;
+
+function executeApplicationDevServer(
+  delegateBuilderOptions: DevServerBuilderOptions,
+  context: BuilderContext,
+  parsedBuildTarget: Target,
+  buildTargetOptions: BuildTargetOptions,
+  esbuildMiddleware: string[] | undefined,
+  pathToIndexFileTransformer: string | undefined
+) {
+  patchBuilderContext(context, true, parsedBuildTarget, '@angular/build');
+  assertPackageIsInstalled('@angular/build', '@nx/angular:dev-server');
+
+  // Options the `@angular/build` dev-server doesn't support. Mirror how the
+  // `@angular-devkit/build-angular` dev-server handled them for esbuild builds.
+  const { publicHost, disableHostCheck, ...rest } = delegateBuilderOptions;
+  if (publicHost) {
+    context.logger.warn(
+      `The "publicHost" option will not be used because it is not supported by the "@angular/build:application" builder.`
+    );
+  }
+  const options: AngularBuildDevServerBuilderOptions = {
+    ...rest,
+    // `@angular/build` uses Vite's convention: `true` disables host checks.
+    ...(disableHostCheck ? { allowedHosts: true } : {}),
+  };
+
+  return combineLatest([
+    from(import('@angular/build')),
+    from(loadPlugins(buildTargetOptions.plugins, buildTargetOptions.tsConfig)),
+    from(loadMiddleware(esbuildMiddleware, buildTargetOptions.tsConfig)),
+    from(
+      loadIndexHtmlFileTransformer(
+        pathToIndexFileTransformer,
+        buildTargetOptions.tsConfig,
+        context,
+        false
+      )
+    ),
+  ]).pipe(
+    switchMap(
+      ([
+        { executeDevServerBuilder },
+        plugins,
+        middleware,
+        indexHtmlTransformer,
+      ]) =>
+        executeDevServerBuilder(options, context, {
+          buildPlugins: plugins,
+          middleware,
+          indexHtmlTransformer,
+        })
+    )
+  );
+}
 
 function getDelegateBuilderOptions(
   options: NormalizedSchema
