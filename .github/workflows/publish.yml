@@ -474,19 +474,18 @@ jobs:
           NODE_VERSION: 26.7.0
           NX_GRADLE_DISABLE: 'true'
           NX_DOTNET_DISABLE: 'true'
+          NX_MAVEN_DISABLE: 'true'
           NODE_OPTIONS: '--max-old-space-size=4096'
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS PNPM_VERSION
+          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NX_MAVEN_DISABLE NODE_OPTIONS PNPM_VERSION
           shell: bash
           run: |
             env
             whoami
-            # openjdk21 lets mvnw build the @nx/maven project graph
-            sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss openjdk21
-            export JAVA_HOME=/usr/local/openjdk21
+            sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
             sudo npm install --location=global --ignore-scripts pnpm@${PNPM_VERSION}
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
