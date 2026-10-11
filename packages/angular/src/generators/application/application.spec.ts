@@ -960,6 +960,27 @@ describe('app', () => {
         ).toBeTruthy();
       });
 
+      it('should not override tsconfig.spec.json with legacy commonjs/node10 module settings', async () => {
+        await generateApp(appTree);
+
+        const { compilerOptions: appCompilerOptions } = readJson(
+          appTree,
+          'my-app/tsconfig.json'
+        );
+        expect(appCompilerOptions.module).toEqual('preserve');
+        expect(appCompilerOptions.moduleResolution).toEqual('bundler');
+
+        // tsconfig.spec.json extends tsconfig.json, so it should not repeat
+        // matching values, and it should never fall back to the legacy
+        // commonjs/node10 pair (https://github.com/nrwl/nx/issues/34653)
+        const { compilerOptions: specCompilerOptions } = readJson(
+          appTree,
+          'my-app/tsconfig.spec.json'
+        );
+        expect(specCompilerOptions.module).toBeUndefined();
+        expect(specCompilerOptions.moduleResolution).toBeUndefined();
+      });
+
       it('should exclude src/test-setup.ts in tsconfig.app.json', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Jest,

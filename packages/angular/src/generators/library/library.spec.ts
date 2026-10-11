@@ -438,6 +438,29 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
+    it('should not override tsconfig.spec.json with legacy commonjs/node10 module settings', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      const { compilerOptions: libCompilerOptions } = readJson(
+        tree,
+        'my-lib/tsconfig.json'
+      );
+      expect(libCompilerOptions.module).toEqual('preserve');
+      expect(libCompilerOptions.moduleResolution).toEqual('bundler');
+
+      // tsconfig.spec.json extends tsconfig.json, so it should not repeat
+      // matching values, and it should never fall back to the legacy
+      // commonjs/node10 pair (https://github.com/nrwl/nx/issues/34653)
+      const { compilerOptions: specCompilerOptions } = readJson(
+        tree,
+        'my-lib/tsconfig.spec.json'
+      );
+      expect(specCompilerOptions.module).toBeUndefined();
+      expect(specCompilerOptions.moduleResolution).toBeUndefined();
+    });
+
     describe('when creating the tsconfig.lib.json', () => {
       it('should extend the local tsconfig.json', async () => {
         // ACT
