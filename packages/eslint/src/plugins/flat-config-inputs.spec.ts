@@ -1,4 +1,5 @@
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { minimatch } from 'minimatch';
 import { collectFlatConfigInputs } from './flat-config-inputs';
 
 describe('collectFlatConfigInputs', () => {
@@ -300,5 +301,74 @@ describe('collectFlatConfigInputs', () => {
       externalDependencies: ['@nx/eslint-plugin', 'eslint-plugin-vue'],
       files: ['eslint.config.mjs'],
     });
+  });
+
+  it('should track an extensionless require that resolves to a JSON file', () => {
+    tempFs.createFilesSync({
+      'eslint.config.cjs': `
+        const rules = require('./tools/eslint/rules');
+        module.exports = [];
+      `,
+      'tools/eslint/rules.json': `{ "no-console": "error" }`,
+    });
+
+    const result = collect('eslint.config.cjs');
+
+    expect(result.files).toEqual(['tools/eslint/rules.json']);
+  });
+
+  it('should track packages that a linked workspace config imports', () => {
+    installPackage('eslint-plugin-shared');
+    tempFs.createFilesSync({
+      'libs/eslint-config/package.json': JSON.stringify({
+        name: '@org/eslint-config',
+        main: 'src/index.js',
+      }),
+      'libs/eslint-config/src/index.js': `
+        const shared = require('eslint-plugin-shared');
+        const base = require('./base');
+        module.exports = [];
+      `,
+      'libs/eslint-config/src/base.js': `module.exports = [];`,
+      'eslint.config.cjs': `
+        const shared = require('@org/eslint-config');
+        module.exports = [...shared];
+      `,
+    });
+    tempFs.createSymlinkSync(
+      'libs/eslint-config',
+      'node_modules/@org/eslint-config',
+      'dir'
+    );
+
+    const result = collect('eslint.config.cjs');
+
+    expect(result.externalDependencies).toEqual(['eslint-plugin-shared']);
+    expect(result.files).toEqual(['libs/eslint-config/**/*']);
+  });
+
+  it('should escape glob metacharacters in a linked workspace path', () => {
+    tempFs.createFilesSync({
+      'libs/eslint-config[legacy]/package.json': JSON.stringify({
+        name: '@org/eslint-config-legacy',
+      }),
+      'libs/eslint-config[legacy]/index.js': `module.exports = [];`,
+      'eslint.config.cjs': `
+        const legacy = require('@org/eslint-config-legacy');
+        module.exports = [...legacy];
+      `,
+    });
+    tempFs.createSymlinkSync(
+      'libs/eslint-config[legacy]',
+      'node_modules/@org/eslint-config-legacy',
+      'dir'
+    );
+
+    const result = collect('eslint.config.cjs');
+
+    expect(result.files).toEqual(['libs/eslint-config[[]legacy[]]/**/*']);
+    expect(
+      minimatch('libs/eslint-config[legacy]/index.js', result.files[0])
+    ).toBe(true);
   });
 });

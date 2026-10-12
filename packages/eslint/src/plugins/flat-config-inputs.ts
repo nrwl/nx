@@ -1,4 +1,4 @@
-import { existsSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import {
   dirname,
@@ -16,26 +16,41 @@ export interface FlatConfigInputs {
   files: string[];
 }
 
-const RESOLVE_EXTENSIONS = ['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts'];
-const SCANNABLE_EXTENSIONS = new Set([...RESOLVE_EXTENSIONS, '.jsx', '.tsx']);
+const SCANNABLE_EXTENSIONS = new Set([
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.jsx',
+  '.ts',
+  '.mts',
+  '.cts',
+  '.tsx',
+]);
+const RESOLVE_EXTENSIONS = [
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.ts',
+  '.mts',
+  '.cts',
+  '.json',
+];
 
 type BareImport =
   | { kind: 'external'; packageName: string }
-  | { kind: 'fileset'; glob: string }
+  | { kind: 'linked'; dir: string; glob: string; entry: string | null }
   | null;
 
 /**
- * Walks the import graphs of flat configs, scanning each level of files in
- * one native call. Installed packages become external dependencies, relative
- * imports become file inputs (walked in turn), and packages linked into
- * `node_modules` from the workspace become filesets.
+ * Walks flat config import graphs one native scan per level. Installed packages
+ * become external dependencies, relative imports become file inputs, and linked
+ * workspace packages become filesets; relative files and linked entries are walked.
  */
 export function collectFlatConfigInputs(
   configFiles: string[],
   workspaceRoot: string
 ): Map<string, FlatConfigInputs> {
   const realWorkspaceRoot = safeRealpath(workspaceRoot);
-  const specifiersByFile = scanImportGraph(configFiles, workspaceRoot);
   const bareImportCache = new Map<string, BareImport>();
   const classify = (specifier: string, fromDir: string): BareImport => {
     const key = `${fromDir}\0${specifier}`;
@@ -47,12 +62,18 @@ export function collectFlatConfigInputs(
     }
     return bareImportCache.get(key);
   };
+  const specifiersByFile = scanImportGraph(
+    configFiles,
+    workspaceRoot,
+    classify
+  );
 
   const results = new Map<string, FlatConfigInputs>();
   for (const configFile of configFiles) {
     const entry = resolve(workspaceRoot, configFile);
     const externalDependencies = new Set<string>();
     const files = new Set<string>();
+    const linkedDirs: string[] = [];
     const visited = new Set<string>();
 
     const visit = (file: string): void => {
@@ -64,15 +85,19 @@ export function collectFlatConfigInputs(
           const workspaceRelative =
             resolved && toWorkspaceRelative(workspaceRoot, resolved);
           if (!workspaceRelative) continue;
-          files.add(workspaceRelative);
+          if (!linkedDirs.some((dir) => workspaceRelative.startsWith(dir))) {
+            files.add(workspaceRelative);
+          }
           visit(resolved);
           continue;
         }
         const bare = classify(specifier, dirname(file));
         if (bare?.kind === 'external') {
           externalDependencies.add(bare.packageName);
-        } else if (bare?.kind === 'fileset') {
+        } else if (bare?.kind === 'linked') {
           files.add(bare.glob);
+          linkedDirs.push(`${bare.dir}/`);
+          if (bare.entry) visit(bare.entry);
         }
       }
     };
@@ -89,7 +114,8 @@ export function collectFlatConfigInputs(
 
 function scanImportGraph(
   configFiles: string[],
-  workspaceRoot: string
+  workspaceRoot: string,
+  classify: (specifier: string, fromDir: string) => BareImport
 ): Map<string, string[]> {
   const specifiersByFile = new Map<string, string[]>();
   let pending = Array.from(
@@ -105,19 +131,25 @@ function scanImportGraph(
       ]);
     }
     const next = new Set<string>();
+    const enqueue = (file: string | null) => {
+      if (
+        file &&
+        isScannable(file) &&
+        !specifiersByFile.has(file) &&
+        toWorkspaceRelative(workspaceRoot, file)
+      ) {
+        next.add(file);
+      }
+    };
     for (const file of pending) {
       const specifiers = scanned.get(file) ?? [];
       specifiersByFile.set(file, specifiers);
       for (const specifier of specifiers) {
-        if (!isRelative(specifier)) continue;
-        const resolved = resolveLocalFile(resolve(dirname(file), specifier));
-        if (
-          resolved &&
-          isScannable(resolved) &&
-          !specifiersByFile.has(resolved) &&
-          toWorkspaceRelative(workspaceRoot, resolved)
-        ) {
-          next.add(resolved);
+        if (isRelative(specifier)) {
+          enqueue(resolveLocalFile(resolve(dirname(file), specifier)));
+        } else {
+          const bare = classify(specifier, dirname(file));
+          if (bare?.kind === 'linked') enqueue(bare.entry);
         }
       }
     }
@@ -136,14 +168,51 @@ function classifyBareImport(
   if (!packageName) return null;
   const packageDir = findPackageDir(packageName, fromDir, workspaceRoot);
   if (!packageDir) return null;
+  const realPackageDir = safeRealpath(packageDir);
   const workspaceRelative = toWorkspaceRelative(
     realWorkspaceRoot,
-    safeRealpath(packageDir)
+    realPackageDir
   );
   if (workspaceRelative && !isInNodeModules(workspaceRelative)) {
-    return { kind: 'fileset', glob: `${workspaceRelative}/**/*` };
+    const dir = resolve(workspaceRoot, workspaceRelative);
+    return {
+      kind: 'linked',
+      dir: workspaceRelative,
+      glob: `${escapeGlob(workspaceRelative)}/**/*`,
+      entry: resolvePackageEntry(dir),
+    };
   }
   return { kind: 'external', packageName };
+}
+
+function resolvePackageEntry(packageDir: string): string | null {
+  let manifest: { main?: unknown; exports?: unknown };
+  try {
+    manifest = JSON.parse(
+      readFileSync(join(packageDir, 'package.json'), 'utf-8')
+    );
+  } catch {
+    return null;
+  }
+  const entry =
+    pickExportTarget(manifest.exports) ??
+    (typeof manifest.main === 'string' ? manifest.main : 'index');
+  return resolveLocalFile(resolve(packageDir, entry));
+}
+
+function pickExportTarget(exports: unknown): string | null {
+  if (typeof exports === 'string') return exports;
+  if (!exports || typeof exports !== 'object') return null;
+  const record = exports as Record<string, unknown>;
+  if ('.' in record) return pickExportTarget(record['.']);
+  for (const condition of ['require', 'node', 'default', 'import']) {
+    if (condition in record) return pickExportTarget(record[condition]);
+  }
+  return null;
+}
+
+function escapeGlob(path: string): string {
+  return path.replace(/[[\]*?{}()]/g, (char) => `[${char}]`);
 }
 
 function isRelative(specifier: string): boolean {
