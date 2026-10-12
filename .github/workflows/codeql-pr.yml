@@ -63,10 +63,12 @@ jobs:
         # your codebase is analyzed, see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
     steps:
     - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      uses: actions/checkout@v5.0.0
+      with:
+        persist-credentials: false
 
     - name: Setup Language Tooling
-      uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+      uses: jdx/mise-action@v3.5.1
 
     - name: Enable corepack and install pnpm
       run: |

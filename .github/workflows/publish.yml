@@ -69,10 +69,12 @@ jobs:
       pr_author: ${{ steps.script.outputs.pr_author }}
     steps:
       # Default checkout on the triggering branch so that the latest publish-resolve-data.js script is available
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@v5.0.0
+        with:
+          persist-credentials: false
 
       - name: Setup node
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        uses: actions/setup-node@v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
@@ -81,7 +83,7 @@ jobs:
 
       - name: Resolve and set checkout and version data to use for release
         id: script
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@v8.0.0
         env:
           PR_NUMBER: ${{ github.event.inputs.pr }}
         with:
@@ -92,8 +94,9 @@ jobs:
 
       - name: (PR Release Only) Check out latest master
         if: ${{ steps.script.outputs.ref != '' }}
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@v5.0.0
         with:
+          persist-credentials: false
           # Check out the latest master branch to get its copy of nx-release.ts
           repository: nrwl/nx
           ref: master
@@ -101,8 +104,9 @@ jobs:
 
       - name: (PR Release Only) Check out PR branch
         if: ${{ steps.script.outputs.ref != '' }}
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@v5.0.0
         with:
+          persist-credentials: false
           # Check out the PR branch to get its copy of nx-release.ts
           repository: ${{ steps.script.outputs.repo }}
           ref: ${{ steps.script.outputs.ref }}
@@ -341,8 +345,9 @@ jobs:
     name: stable - ${{ matrix.settings.target }} - node@26.12.1
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@v5.0.0
         with:
+          persist-credentials: false
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
@@ -351,7 +356,7 @@ jobs:
         run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
 
       - name: Setup dev tools with mise
-        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+        uses: jdx/mise-action@v3.5.1
         if: ${{ !matrix.settings.docker }}
 
       - name: Enable corepack and install pnpm
@@ -365,7 +370,7 @@ jobs:
       # repo-wide 10GB budget and evicts the master entries these builds depend on.
       - name: Restore cargo cache
         id: cargo-cache
-        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache/restore@v4.2.4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -394,7 +399,7 @@ jobs:
         timeout-minutes: 30
 
       - name: Setup node x86
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        uses: actions/setup-node@v5.0.0
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -432,7 +437,7 @@ jobs:
 
       - name: Save cargo cache
         if: github.ref == 'refs/heads/master' && steps.cargo-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache/save@v4.2.4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -443,7 +448,7 @@ jobs:
           key: ${{ matrix.settings.target }}-cargo-registry
 
       - name: Upload artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: bindings-${{ matrix.settings.target }}
           path: |
@@ -458,14 +463,15 @@ jobs:
     name: Build FreeBSD
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@v5.0.0
         with:
+          persist-credentials: false
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
       - name: Build
         id: build
-        uses: cross-platform-actions/action@462ed697694d2ac9aa49e1225f395f7bb6dd49fe # v0.29.0
+        uses: cross-platform-actions/action@v0.29.0
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
@@ -591,7 +597,7 @@ jobs:
             echo "COMPLETE"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: bindings-freebsd
           path: |
@@ -615,8 +621,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@v5.0.0
         with:
+          persist-credentials: false
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
@@ -645,7 +652,7 @@ jobs:
         id: notify-approved
         if: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
         continue-on-error: true
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        uses: slackapi/slack-github-action@v2.1.1
         with:
           method: reactions.add
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -657,7 +664,7 @@ jobs:
         run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
 
       - name: Setup dev tools with mise
-        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+        uses: jdx/mise-action@v3.5.1
 
       - name: Enable corepack and install pnpm
         run: |
@@ -674,7 +681,7 @@ jobs:
         run: dotnet restore nx.sln
 
       - name: Download all artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@v5.0.0
         with:
           path: artifacts
 
@@ -711,7 +718,7 @@ jobs:
 
       - name: (PR Release Only) Create comment for successful PR release
         if: success() && github.event.inputs.pr
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@v8.0.0
         env:
           SUCCESS_COMMENT: ${{ needs.resolve-required-data.outputs.success_comment }}
         with:
@@ -814,7 +821,7 @@ jobs:
       # is continue-on-error - fails harmlessly without blocking the publish.
       - name: Send Slack notification
         id: notify
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        uses: slackapi/slack-github-action@v2.1.1
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -906,7 +913,7 @@ jobs:
 
       - name: Send Slack notification
         if: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        uses: slackapi/slack-github-action@v2.1.1
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -923,7 +930,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Create comment for failed PR release
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@v8.0.0
         with:
           # This script is intentionally kept inline (and e.g. not generated in publish-resolve-data.js)
           # to ensure that an error within the data generation itself is not missed.
