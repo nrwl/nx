@@ -613,6 +613,55 @@ describe('isAngularSecondaryEntrypoint', () => {
   });
 });
 
+describe('belongsToDifferentEntryPoint with package.json exports (non-Angular)', () => {
+  const tsConfig = {
+    compilerOptions: {
+      baseUrl: '.',
+      resolveJsonModule: true,
+      paths: {
+        '@project/exports-secondary': ['libs/exports-secondary/src/index.ts'],
+      },
+    },
+  };
+
+  beforeEach(() => {
+    const fsJson = {
+      'tsconfig.base.json': JSON.stringify(tsConfig),
+      'libs/exports-secondary/package.json': JSON.stringify({
+        version: '0.0.0',
+        exports: {
+          '.': './src/index.ts',
+          './secondary': './secondary/index.ts',
+        },
+      }),
+      'libs/exports-secondary/src/index.ts': 'const bla = "foo"',
+      'libs/exports-secondary/secondary/index.ts': 'const bla = "foo"',
+      'libs/exports-secondary/secondary/nested/util.ts': 'const bla = "foo"',
+    };
+    vol.fromJSON(fsJson, '/root');
+  });
+
+  it('should return false for a file within the main entry point', () => {
+    expect(
+      belongsToDifferentEntryPoint(
+        '@project/exports-secondary',
+        'libs/exports-secondary/src/nested/other.ts',
+        'libs/exports-secondary'
+      )
+    ).toBe(false);
+  });
+
+  it('should return true for a file that only matches the secondary entry point by directory, with no ng-package.json present', () => {
+    expect(
+      belongsToDifferentEntryPoint(
+        '@project/exports-secondary',
+        'libs/exports-secondary/secondary/nested/util.ts',
+        'libs/exports-secondary'
+      )
+    ).toBe(true);
+  });
+});
+
 describe('hasNoneOfTheseTags', () => {
   const source: ProjectGraphProjectNode = {
     type: 'lib',
