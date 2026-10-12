@@ -28,6 +28,15 @@ class MojoAnalyzer(
     CacheConfig.DEFAULT
   }
 
+  private fun addInput(inputs: MutableCollection<String>, path: File, project: MavenProject, glob: String? = null) {
+    val input = pathResolver.formatInputPath(path, projectRoot = project.basedir, workspaceRoot = workspaceRoot, glob = glob)
+    if (input == null) {
+      log.warn("Input path is outside the workspace and is skipped: ${path.path}")
+    } else {
+      inputs.add(input)
+    }
+  }
+
   /**
    * Aggregates cacheability and input/output metadata for a mojo.
    */
@@ -91,10 +100,7 @@ class MojoAnalyzer(
           val globPattern = paramConfig.glob ?: "**/*"
           dependentTaskOutputInputs.add(DependentTaskOutputs(globPattern, transitive = true))
         } else {
-          val pathWithGlob = paramConfig.glob?.let { "$path/$it" } ?: path
-          val input = pathResolver.formatInputPath(File(pathWithGlob), projectRoot = project.basedir)
-
-          inputs.add(input)
+          addInput(inputs, File(path), project, glob = paramConfig.glob)
         }
       }
     }
@@ -110,9 +116,7 @@ class MojoAnalyzer(
           // For properties, always use **/* pattern
           dependentTaskOutputInputs.add(DependentTaskOutputs("**/*", transitive = true))
         } else {
-          val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
-
-          inputs.add(input)
+          addInput(inputs, pathFile, project)
         }
       }
     }
@@ -126,29 +130,19 @@ class MojoAnalyzer(
           // For default inputs, always use **/* pattern
           dependentTaskOutputInputs.add(DependentTaskOutputs("**/*", transitive = true))
         } else {
-          val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
-
-          inputs.add(input)
+          addInput(inputs, pathFile, project)
         }
       }
     }
 
     // Always include pom.xml and in-workspace ancestor pom.xml files as inputs
     val canonicalWorkspaceRoot = workspaceRoot.canonicalPath
-    val canonicalProjectRoot = project.basedir.canonicalPath
     var currentProject: MavenProject? = project
     while (currentProject != null) {
       val pomFile = File(currentProject.basedir, "pom.xml")
       val canonicalPomPath = pomFile.canonicalPath
       if (pomFile.exists() && canonicalPomPath.startsWith(canonicalWorkspaceRoot)) {
-        val pomInput = if (canonicalPomPath.startsWith(canonicalProjectRoot)) {
-          // Within project directory - use {projectRoot}
-          pathResolver.formatInputPath(pomFile, projectRoot = project.basedir)
-        } else {
-          // Outside project directory - use {workspaceRoot}
-          pathResolver.toWorkspacePath(pomFile, workspaceRoot)
-        }
-        inputs.add(pomInput)
+        addInput(inputs, pomFile, project)
       }
       currentProject = currentProject.parent
     }

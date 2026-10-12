@@ -37,7 +37,8 @@ class NxTargetFactory(
   private val mojoAnalyzer: MojoAnalyzer,
   private val pathFormatter: PathFormatter,
   private val gitIgnoreClassifier: GitIgnoreClassifier,
-  private val targetNamePrefix: String
+  private val targetNamePrefix: String,
+  private val workspaceRoot: File
 ) {
   private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
 
@@ -684,9 +685,13 @@ class NxTargetFactory(
       obj.addProperty("transitive", true)
       target.inputs?.add(obj)
     } else {
-      val input = pathFormatter.formatInputPath(buildJsonFile, projectRoot = project.basedir)
-
-      target.inputs?.add(input)
+      val input =
+        pathFormatter.formatInputPath(buildJsonFile, projectRoot = project.basedir, workspaceRoot = workspaceRoot)
+      if (input == null) {
+        log.warn("Input path is outside the workspace and is skipped: ${buildJsonFile.path}")
+      } else {
+        target.inputs?.add(input)
+      }
     }
     target.outputs?.add(pathFormatter.formatOutputPath(buildJsonFile, project.basedir))
   }
