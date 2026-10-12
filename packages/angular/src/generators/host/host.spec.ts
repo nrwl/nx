@@ -69,6 +69,53 @@ describe('Host App Generator', () => {
     expect(tree.read('remote/webpack.config.js', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
+  it('should serve the remotes alongside a statically served host', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    // ACT
+    await generateTestHostApplication(tree, {
+      directory: 'test',
+      remotes: ['remote1', 'remote2'],
+      typescriptConfiguration: false,
+      standalone: false,
+      skipFormat: true,
+    });
+
+    // ASSERT
+    const { targets } = readProjectConfiguration(tree, 'test');
+    expect(targets['serve-static'].dependsOn).toEqual([
+      { target: 'serve-static', projects: ['remote1', 'remote2'] },
+    ]);
+  });
+
+  it('should add a remote generated later to the host serve-static dependencies', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestHostApplication(tree, {
+      directory: 'test',
+      remotes: ['remote1'],
+      typescriptConfiguration: false,
+      standalone: false,
+      skipFormat: true,
+    });
+
+    // ACT
+    await generateTestRemoteApplication(tree, {
+      directory: 'remote2',
+      host: 'test',
+      typescriptConfiguration: false,
+      standalone: false,
+      skipFormat: true,
+    });
+
+    // ASSERT
+    const { targets } = readProjectConfiguration(tree, 'test');
+    expect(targets['serve-static'].dependsOn).toEqual([
+      { target: 'serve-static', projects: ['remote1', 'remote2'] },
+    ]);
+  });
+
   it('should generate a host app with a remote when --typesscript=true', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
