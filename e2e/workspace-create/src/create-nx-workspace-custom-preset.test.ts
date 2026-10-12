@@ -1,7 +1,6 @@
 import {
   cleanupProject,
   e2eCwd,
-  getPnpmVersion,
   getSelectedPackageManager,
   readFile,
   runCreateWorkspace,
@@ -14,7 +13,7 @@ import { join } from 'path';
 describe('create-nx-workspace --preset=<third-party package>', () => {
   // pnpm 11 is the first version that fails installs on unreviewed build
   // scripts; older versions warn and skip, so there is nothing to record.
-  const pnpmMajor = +(getPnpmVersion()?.split('.')[0] ?? 0);
+  const pnpmMajor = +(pnpmVersion()?.split('.')[0] ?? 0);
   const itOnPnpm11 =
     getSelectedPackageManager() === 'pnpm' && pnpmMajor >= 11 ? it : it.skip;
 
@@ -40,6 +39,15 @@ describe('create-nx-workspace --preset=<third-party package>', () => {
     }
   );
 });
+
+/** Probed outside the repo so the repo's packageManager pin does not apply. */
+function pnpmVersion(): string | undefined {
+  try {
+    return execSync('pnpm -v', { cwd: e2eCwd, encoding: 'utf-8' }).trim();
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Publishes a minimal preset package to the e2e registry: a `preset`
