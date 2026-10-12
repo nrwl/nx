@@ -1,3 +1,5 @@
+import type { ProjectGraphEvent } from '@nx/graph/projects';
+
 let externalApiService: ExternalApiService | null = null;
 
 export function getExternalApiService() {
@@ -9,6 +11,8 @@ export function getExternalApiService() {
 }
 
 export class ExternalApiService {
+  sendProjectGraphEvent?: (event: ProjectGraphEvent) => void;
+
   private subscribers: Set<(event: { type: string; payload?: any }) => void> =
     new Set();
 
