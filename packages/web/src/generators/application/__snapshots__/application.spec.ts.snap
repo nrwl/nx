@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`app not nested should generate files if bundler is vite 1`] = `
+exports[`app > not nested > should generate files if bundler is vite 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
@@ -79,7 +79,7 @@ export default defineConfig({
 "
 `;
 
-exports[`app not nested should setup playwright e2e project correctly for webpack 1`] = `
+exports[`app > not nested > should setup playwright e2e project correctly for webpack 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
@@ -158,7 +158,7 @@ export default defineConfig({
 "
 `;
 
-exports[`app not nested should use serve target and port if bundler=vite, e2eTestRunner=playwright, addPlugin=false 1`] = `
+exports[`app > not nested > should use serve target and port if bundler=vite, e2eTestRunner=playwright, addPlugin=false 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
@@ -237,9 +237,9 @@ export default defineConfig({
 "
 `;
 
-exports[`app setup web app with --bundler=vite should setup vite configuration 1`] = `null`;
+exports[`app > setup web app with --bundler=vite > should setup vite configuration 1`] = `null`;
 
-exports[`app should setup eslint (eslintrc) 1`] = `
+exports[`app > should setup eslint (eslintrc) 1`] = `
 "{
   "extends": ["../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
@@ -261,7 +261,7 @@ exports[`app should setup eslint (eslintrc) 1`] = `
 "
 `;
 
-exports[`app should setup the web build builder 1`] = `
+exports[`app > should setup the web build builder 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
@@ -290,7 +290,7 @@ module.exports = {
 "
 `;
 
-exports[`app should setup the web dev server 1`] = `
+exports[`app > should setup the web dev server 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 

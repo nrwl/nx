@@ -9,6 +9,7 @@ import {
   listFiles,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   runCLIAsync,
   tmpProjPath,
@@ -39,8 +40,9 @@ describe('Web Components Applications', () => {
 
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
+    const port = await reservePort();
     runCLI(
-      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive --unitTestRunner=vitest --linter=eslint`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive --unitTestRunner=vitest --linter=eslint --port=${port}`
     );
 
     const lintResults = runCLI(`lint ${appName}`);
@@ -58,7 +60,7 @@ describe('Web Components Applications', () => {
     if (isNotWindows() && (await shouldRunPlaywrightTests())) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      await killPorts();
+      await killPorts(port);
     }
 
     copyFileSync(

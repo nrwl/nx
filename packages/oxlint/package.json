@@ -7,7 +7,8 @@
     "dist",
     "!dist/tsconfig.tsbuildinfo",
     "migrations.json",
-    "generators.json"
+    "generators.json",
+    "executors.json"
   ],
   "publishConfig": {
     "access": "public"
@@ -51,6 +52,7 @@
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
     "./generators": {
       "@nx/nx-source": "./generators.ts",
       "types": "./dist/generators.d.ts",
@@ -67,11 +69,13 @@
     "supportsOptionalMigrations": true
   },
   "generators": "./generators.json",
+  "executors": "./executors.json",
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/eslint-plugin": "workspace:*",
     "@nx/js": "workspace:*",
-    "tslib": "catalog:typescript"
+    "tslib": "catalog:typescript",
+    "picocolors": "catalog:"
   },
   "peerDependencies": {
     "oxlint": "^1.43.0"

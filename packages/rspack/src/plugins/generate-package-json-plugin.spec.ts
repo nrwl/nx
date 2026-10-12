@@ -1,19 +1,20 @@
+import type { Mock } from 'vitest';
 import type { ExecutorContext, ProjectGraph } from '@nx/devkit';
 import { detectPackageManager } from '@nx/devkit';
 import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
 import { GeneratePackageJsonPlugin } from './generate-package-json-plugin';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  detectPackageManager: jest.fn(),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn(),
 }));
 
-jest.mock('@nx/js', () => ({
-  ...jest.requireActual('@nx/js'),
-  createPackageJson: jest.fn(),
-  generatePrunedDeployOutput: jest.fn(),
-  getHelperDependenciesFromProjectGraph: jest.fn(() => []),
-  readTsConfig: jest.fn(() => ({ options: {} })),
+vi.mock('@nx/js', async () => ({
+  ...(await vi.importActual<any>('@nx/js')),
+  createPackageJson: vi.fn(),
+  generatePrunedDeployOutput: vi.fn(),
+  getHelperDependenciesFromProjectGraph: vi.fn(() => []),
+  readTsConfig: vi.fn(() => ({ options: {} })),
 }));
 
 // Fake source wrapper so the plugin's `new sources.RawSource(...)` calls have
@@ -49,14 +50,14 @@ describe('GeneratePackageJsonPlugin', () => {
   let packageJson: { name: string; version: string };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     packageJson = { name: 'my-app', version: '1.0.0' };
-    (createPackageJson as jest.Mock).mockReturnValue(packageJson);
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    (createPackageJson as Mock).mockReturnValue(packageJson);
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
   });
 
-  async function runPlugin(): Promise<jest.Mock> {
-    const emitAsset = jest.fn();
+  async function runPlugin(): Promise<Mock> {
+    const emitAsset = vi.fn();
     let processAssetsResult: Promise<void> | undefined;
     const compilation = {
       hooks: {
@@ -67,7 +68,7 @@ describe('GeneratePackageJsonPlugin', () => {
         },
       },
       emitAsset,
-      getLogger: () => ({ warn: jest.fn() }),
+      getLogger: () => ({ warn: vi.fn() }),
     };
     const compiler = {
       webpack: {
@@ -105,7 +106,7 @@ describe('GeneratePackageJsonPlugin', () => {
         workspaceRoot: '/root',
       }
     );
-    const { emit } = (generatePrunedDeployOutput as jest.Mock).mock.calls[0][3];
+    const { emit } = (generatePrunedDeployOutput as Mock).mock.calls[0][3];
     emit('pnpm-lock.yaml', 'pruned-lock');
     const lockfileEmit = emitAsset.mock.calls.find(
       ([name]) => name === 'pnpm-lock.yaml'
@@ -120,12 +121,12 @@ describe('GeneratePackageJsonPlugin', () => {
       ([name]) => name === 'package.json'
     );
     expect(
-      (generatePrunedDeployOutput as jest.Mock).mock.invocationCallOrder[0]
+      (generatePrunedDeployOutput as Mock).mock.invocationCallOrder[0]
     ).toBeLessThan(emitAsset.mock.invocationCallOrder[packageJsonEmitIndex]);
   });
 
   it('leaves the bun decision to the deploy output', async () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('bun');
+    (detectPackageManager as Mock).mockReturnValue('bun');
 
     const emitAsset = await runPlugin();
 

@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  killPorts,
   newProject,
   readFile,
   rmDist,
@@ -117,7 +116,6 @@ module.exports = withNx(
   });
 
   afterEach(() => {
-    killPorts();
     cleanupProject();
   });
 

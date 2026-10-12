@@ -2,9 +2,9 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readJson, writeJson, type Tree } from '@nx/devkit';
 import JsVersionActions from './version-actions';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  detectPackageManager: jest.fn(() => 'pnpm'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn(() => 'pnpm'),
 }));
 
 describe('JsVersionActions', () => {
@@ -205,7 +205,7 @@ describe('JsVersionActions', () => {
       optionalDependencies: { dependency: 'workspace:*' },
     });
     const versionActions = await createVersionActions(tree);
-    const resolveVersion = jest.fn();
+    const resolveVersion = vi.fn();
 
     await versionActions.updateProjectDependencies(
       tree,
@@ -226,6 +226,11 @@ describe('JsVersionActions', () => {
   });
 
   describe('local dependencies outside the release set', () => {
+    const notConfiguredForReleaseError = () =>
+      Object.assign(new Error('not configured for Nx Release'), {
+        code: 'NX_RELEASE_PROJECT_NOT_CONFIGURED',
+      });
+
     it('handles protocol preservation independently for each manifest', async () => {
       const tree = createTreeWithEmptyWorkspace();
       writeJson(tree, 'packages/my-lib/package.json', {
@@ -246,7 +251,7 @@ describe('JsVersionActions', () => {
           },
         ],
       });
-      const resolveCurrentVersion = jest.fn().mockResolvedValue('2.5.0');
+      const resolveCurrentVersion = vi.fn().mockResolvedValue('2.5.0');
 
       const logs = await versionActions.updateProjectDependencies(
         tree,
@@ -274,7 +279,7 @@ describe('JsVersionActions', () => {
         peerDependencies: { dependency: 'workspace:~' },
       });
       const versionActions = await createVersionActions(tree);
-      const resolveCurrentVersion = jest.fn().mockResolvedValue('2.5.0');
+      const resolveCurrentVersion = vi.fn().mockResolvedValue('2.5.0');
 
       await versionActions.updateProjectDependencies(
         tree,
@@ -321,7 +326,7 @@ describe('JsVersionActions', () => {
         },
       });
       const versionActions = await createVersionActions(tree);
-      const resolveCurrentVersion = jest.fn();
+      const resolveCurrentVersion = vi.fn();
 
       await versionActions.updateProjectDependencies(
         tree,
@@ -379,7 +384,7 @@ describe('JsVersionActions', () => {
               }
             : undefined
         );
-        const resolveCurrentVersion = jest.fn().mockResolvedValue('2.5.0');
+        const resolveCurrentVersion = vi.fn().mockResolvedValue('2.5.0');
 
         await versionActions.updateProjectDependencies(
           tree,
@@ -402,7 +407,7 @@ describe('JsVersionActions', () => {
       };
       writeJson(tree, 'packages/my-lib/package.json', manifest);
       const versionActions = await createVersionActions(tree);
-      const resolveCurrentVersion = jest.fn();
+      const resolveCurrentVersion = vi.fn();
 
       await versionActions.updateProjectDependencies(
         tree,
@@ -413,6 +418,172 @@ describe('JsVersionActions', () => {
 
       expect(readJson(tree, 'packages/my-lib/package.json')).toEqual(manifest);
       expect(resolveCurrentVersion).not.toHaveBeenCalled();
+    });
+
+    it.each(['workspace:^', 'file:../dependency'])(
+      'preserves an unconfigured private development dependency using %s',
+      async (specifier) => {
+        const tree = createTreeWithEmptyWorkspace();
+        writeJson(tree, 'packages/my-lib/package.json', {
+          devDependencies: { dependency: specifier },
+        });
+        writeJson(tree, 'packages/dependency/package.json', {
+          name: 'dependency',
+          private: true,
+        });
+        const versionActions = await createVersionActions(tree);
+
+        await versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          async () => {
+            throw notConfiguredForReleaseError();
+          }
+        );
+
+        expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+          devDependencies: { dependency: specifier },
+        });
+      }
+    );
+
+    it.each(['dependencies', 'peerDependencies', 'optionalDependencies'])(
+      'rejects an unconfigured private dependency also used in %s',
+      async (dependencyType) => {
+        const tree = createTreeWithEmptyWorkspace();
+        writeJson(tree, 'packages/my-lib/package.json', {
+          [dependencyType]: { dependency: '^1.0.0' },
+          devDependencies: { dependency: 'workspace:^' },
+        });
+        writeJson(tree, 'packages/dependency/package.json', {
+          name: 'dependency',
+          private: true,
+        });
+        const versionActions = await createVersionActions(tree);
+
+        await expect(
+          versionActions.updateProjectDependencies(
+            tree,
+            createProjectGraph(),
+            {},
+            async () => {
+              throw notConfiguredForReleaseError();
+            }
+          )
+        ).rejects.toThrow('not configured for Nx Release');
+      }
+    );
+
+    it.each([undefined, false, 'true'])(
+      'rejects an unconfigured development dependency with private set to %s',
+      async (isPrivate) => {
+        const tree = createTreeWithEmptyWorkspace();
+        writeJson(tree, 'packages/my-lib/package.json', {
+          devDependencies: { dependency: 'workspace:^' },
+        });
+        writeJson(tree, 'packages/dependency/package.json', {
+          name: 'dependency',
+          private: isPrivate,
+        });
+        const versionActions = await createVersionActions(tree);
+
+        await expect(
+          versionActions.updateProjectDependencies(
+            tree,
+            createProjectGraph(),
+            {},
+            async () => {
+              throw notConfiguredForReleaseError();
+            }
+          )
+        ).rejects.toThrow('not configured for Nx Release');
+      }
+    );
+
+    it('rejects an unconfigured development dependency with no manifest', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      const versionActions = await createVersionActions(tree);
+
+      await expect(
+        versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          async () => {
+            throw notConfiguredForReleaseError();
+          }
+        )
+      ).rejects.toThrow('not configured for Nx Release');
+    });
+
+    it('rejects an unconfigured development dependency with a malformed manifest', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      tree.write('packages/dependency/package.json', '{');
+      const versionActions = await createVersionActions(tree);
+
+      await expect(
+        versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          async () => {
+            throw notConfiguredForReleaseError();
+          }
+        )
+      ).rejects.toThrow('not configured for Nx Release');
+    });
+
+    it('resolves a configured private development dependency', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      writeJson(tree, 'packages/dependency/package.json', {
+        name: 'dependency',
+        private: true,
+      });
+      const versionActions = await createVersionActions(tree);
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        {},
+        async () => '2.5.0'
+      );
+
+      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+        devDependencies: { dependency: '^2.5.0' },
+      });
+    });
+
+    it('rejects other resolver errors for private development dependencies', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      writeJson(tree, 'packages/dependency/package.json', {
+        name: 'dependency',
+        private: true,
+      });
+      const versionActions = await createVersionActions(tree);
+
+      await expect(
+        versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          async () => {
+            throw new Error('registry lookup failed');
+          }
+        )
+      ).rejects.toThrow('registry lookup failed');
     });
 
     it('does not modify any manifest when version resolution fails', async () => {
@@ -437,7 +608,7 @@ describe('JsVersionActions', () => {
           },
         ],
       });
-      const resolveCurrentVersion = jest.fn(async (projectName: string) => {
+      const resolveCurrentVersion = vi.fn(async (projectName: string) => {
         if (projectName === 'other-dependency') {
           throw new Error('no current version is available');
         }

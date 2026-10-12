@@ -1,20 +1,26 @@
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
 } from 'fs';
+import { execFileSync } from 'child_process';
 import { createHash } from 'crypto';
 import { tmpdir } from 'os';
 import { basename, dirname, join } from 'path';
 import {
+  FileReplacedDuringReadError,
   initRunDir,
   handoffsDirState,
   mkdirSafely,
+  readAtomicallyPublishedFile,
   readHandoff,
   readHandoffWithReason,
+  readInspectedFile,
   runStepHandoffPath,
   stepHandoffPath,
   stepPromptsDir,
@@ -516,5 +522,52 @@ describe('handoff', () => {
         })
       ).rejects.toThrow('already-cancelled');
     });
+  });
+
+  describe('readInspectedFile', () => {
+    it('reports a replacement when the inode changed after the caller lstatted it', () => {
+      const path = join(workspace, 'state.json');
+      writeFileSync(path, 'first');
+      const stat = lstatSync(path, { bigint: true });
+      const replacement = join(workspace, 'replacement.json');
+      writeFileSync(replacement, 'second');
+      renameSync(replacement, path); // same name, new inode
+
+      expect(() => readInspectedFile(path, stat, 'replaced')).toThrow(
+        FileReplacedDuringReadError
+      );
+    });
+  });
+
+  describe('readAtomicallyPublishedFile', () => {
+    it('reads a regular file', () => {
+      const path = join(workspace, 'state.json');
+      writeFileSync(path, 'contents');
+
+      expect(readAtomicallyPublishedFile(path, 'not regular')).toBe('contents');
+    });
+
+    it('refuses a symlink instead of following it', () => {
+      const target = join(workspace, 'target.json');
+      writeFileSync(target, 'secret');
+      const link = join(workspace, 'link.json');
+      symlinkSync(target, link);
+
+      expect(() => readAtomicallyPublishedFile(link, 'not regular')).toThrow(
+        'not regular'
+      );
+    });
+
+    it.skipIf(process.platform === 'win32')(
+      'refuses a FIFO instead of blocking on it',
+      () => {
+        const fifo = join(workspace, 'fifo.json');
+        execFileSync('mkfifo', [fifo]);
+
+        expect(() => readAtomicallyPublishedFile(fifo, 'not regular')).toThrow(
+          'not regular'
+        );
+      }
+    );
   });
 });

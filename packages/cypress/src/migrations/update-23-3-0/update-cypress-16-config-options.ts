@@ -11,16 +11,14 @@ import type {
   Node,
   ObjectLiteralExpression,
   PropertyAssignment,
-  PropertyName,
   ShorthandPropertyAssignment,
   SpreadAssignment,
-  StringLiteralLike,
 } from 'typescript';
 import {
   resolveCypressConfigObject,
   resolveObjectLiteral,
 } from '../../utils/config';
-import { cypressProjectConfigs } from '../../utils/migrations';
+import { cypressProjectConfigs, getPropertyName } from '../../utils/migrations';
 
 // Cypress 16 breakingOptions (packages/config/src/options.ts).
 const REMOVED_OPTIONS = [
@@ -243,21 +241,6 @@ function isConfigProperty(node: Node): node is ConfigProperty {
   return (
     ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node)
   );
-}
-
-// A computed identifier (`[key]: value`) resolves at runtime, so it is skipped.
-function getPropertyName(name: PropertyName): string | null {
-  if (ts.isIdentifier(name) || isStringLiteralName(name)) {
-    return name.text;
-  }
-  if (ts.isComputedPropertyName(name) && isStringLiteralName(name.expression)) {
-    return name.expression.text;
-  }
-  return null;
-}
-
-function isStringLiteralName(node: Node): node is StringLiteralLike {
-  return ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
 }
 
 function getValueText(property: ConfigProperty): string {

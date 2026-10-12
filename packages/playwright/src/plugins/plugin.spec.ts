@@ -28,8 +28,8 @@ import {
 // import-time readers of the export (nx's daemon tmp-dir) see the hoisted
 // empty value and fall back to the actual path instead of hitting the TDZ.
 var mockWorkspaceDataDir = '';
-jest.mock('nx/src/utils/cache-directory', () => {
-  const actual = jest.requireActual('nx/src/utils/cache-directory');
+vi.mock('nx/src/utils/cache-directory', async () => {
+  const actual = await vi.importActual<any>('nx/src/utils/cache-directory');
   return {
     ...actual,
     get workspaceDataDirectory() {
@@ -96,7 +96,7 @@ describe('@nx/playwright/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.chdir(cwd);
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
   });
@@ -1518,7 +1518,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     process.env.HTTP_PROXY = 'http://proxy.example:8080';
     setWorkspaceRoot(tempFs.tempDir);
     installFreshConfigEval();
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
 
@@ -1586,7 +1586,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     process.env.HTTP_PROXY = 'http://proxy.example:8080';
     setWorkspaceRoot(tempFs.tempDir);
     installFreshConfigEval();
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
 
@@ -1703,7 +1703,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     const originalWorkspaceRoot = workspaceRoot;
     setWorkspaceRoot(tempFs.tempDir);
     installFreshConfigEval();
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
 
@@ -1800,7 +1800,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     const originalWorkspaceRoot = workspaceRoot;
     setWorkspaceRoot(tempFs.tempDir);
     installFreshConfigEval();
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
 
@@ -1913,7 +1913,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     delete process.env.NO_PROXY;
     delete process.env.no_proxy;
     setWorkspaceRoot(tempFs.tempDir);
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
 
@@ -2071,7 +2071,7 @@ module.exports = {
     delete process.env.PROXY_HOST;
     setWorkspaceRoot(tempFs.tempDir);
     installFreshConfigEval();
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
 
@@ -2320,7 +2320,7 @@ module.exports = {
     // runs and the gate's address comes from the in-process config load, which
     // jest's module registry pins to its first evaluation. Observe the rebuild
     // through the test-file listing instead, which only a cache miss reaches.
-    const listTestFiles = jest.spyOn(
+    const listTestFiles = vi.spyOn(
       devkitInternal,
       'getFilesInDirectoryUsingContext'
     );
@@ -2393,7 +2393,7 @@ module.exports = {
     // The cache hit/miss is not observable through the returned targets (the
     // in-process config load is pinned to its first evaluation), so observe it
     // through the test-file listing, which only a cache miss reaches.
-    const listTestFiles = jest.spyOn(
+    const listTestFiles = vi.spyOn(
       devkitInternal,
       'getFilesInDirectoryUsingContext'
     );
@@ -2441,7 +2441,7 @@ module.exports = {
     delete process.env.ITERM_PROFILE;
     setWorkspaceRoot(tempFs.tempDir);
     process.env.NX_CACHE_PROJECT_GRAPH = 'true';
-    const listTestFiles = jest.spyOn(
+    const listTestFiles = vi.spyOn(
       devkitInternal,
       'getFilesInDirectoryUsingContext'
     );
@@ -2483,7 +2483,7 @@ module.exports = {
     delete process.env.BOOT_FLAG;
     setWorkspaceRoot(tempFs.tempDir);
     process.env.NX_CACHE_PROJECT_GRAPH = 'true';
-    const listTestFiles = jest.spyOn(
+    const listTestFiles = vi.spyOn(
       devkitInternal,
       'getFilesInDirectoryUsingContext'
     );
@@ -2527,7 +2527,7 @@ module.exports = {};`,
     const originalWorkspaceRoot = workspaceRoot;
     setWorkspaceRoot(tempFs.tempDir);
     process.env.NX_CACHE_PROJECT_GRAPH = 'true';
-    const listTestFiles = jest.spyOn(
+    const listTestFiles = vi.spyOn(
       devkitInternal,
       'getFilesInDirectoryUsingContext'
     );
@@ -2536,7 +2536,7 @@ module.exports = {};`,
     // application count can reveal that entries were built under the interim
     // env. Simulated through the count alone: it moves between the pass-start
     // read and the write-guard read.
-    const envGeneration = jest.spyOn(
+    const envGeneration = vi.spyOn(
       devkitInternal,
       'getDaemonClientEnvGeneration'
     );
@@ -2674,7 +2674,7 @@ module.exports = {};`,
     });
     // The plugin warns through emitPluginWorkerLog so the message survives the
     // daemon, where `logger.warn` routes to the daemon log file.
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
 
@@ -2743,7 +2743,7 @@ module.exports = {};`,
         throw new Error('boom');
       }
     });
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
 
@@ -2810,7 +2810,7 @@ module.exports = {};`,
         throw new Error('ci-chain boom');
       }
     });
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
 
@@ -3137,7 +3137,7 @@ module.exports = {};`,
   });
 
   it('warns when a reuseExistingServer webServer command cannot be inferred', async () => {
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
     try {
@@ -3173,7 +3173,7 @@ module.exports = {};`,
   });
 
   it('warns for a versioned nx invocation that cannot be inferred', async () => {
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
     try {
@@ -3205,7 +3205,7 @@ module.exports = {};`,
   });
 
   it('does not warn for a webServer command that is not an Nx invocation', async () => {
-    const warn = jest
+    const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
       .mockImplementation(() => {});
     try {
@@ -3657,13 +3657,13 @@ module.exports = {};`,
     };
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should add tsconfig files from the project tsconfig extends chain that live outside the project root', async () => {
-      jest
-        .spyOn(jsUtils, 'getRootTsConfigFileName')
-        .mockReturnValue('tsconfig.base.json');
+      vi.spyOn(jsUtils, 'getRootTsConfigFileName').mockReturnValue(
+        'tsconfig.base.json'
+      );
       await tempFs.createFiles({
         'tsconfig.base.json': JSON.stringify({}),
         'tsconfig.shared.json': JSON.stringify({
@@ -3696,9 +3696,9 @@ module.exports = {};`,
     });
 
     it('should add the workspace root tsconfig.json when tsconfig.base.json exists (handled by nxE2EPreset at runtime)', async () => {
-      jest
-        .spyOn(jsUtils, 'getRootTsConfigFileName')
-        .mockReturnValue('tsconfig.base.json');
+      vi.spyOn(jsUtils, 'getRootTsConfigFileName').mockReturnValue(
+        'tsconfig.base.json'
+      );
       await tempFs.createFiles({
         'tsconfig.base.json': JSON.stringify({}),
         'tsconfig.json': JSON.stringify({
@@ -3732,9 +3732,9 @@ module.exports = {};`,
     });
 
     it('should not add the workspace root tsconfig.json when it is the native hasher file (no tsconfig.base.json)', async () => {
-      jest
-        .spyOn(jsUtils, 'getRootTsConfigFileName')
-        .mockReturnValue('tsconfig.json');
+      vi.spyOn(jsUtils, 'getRootTsConfigFileName').mockReturnValue(
+        'tsconfig.json'
+      );
       await tempFs.createFiles({
         'tsconfig.json': JSON.stringify({}),
         'apps/my-app/package.json': '{}',
@@ -3759,9 +3759,9 @@ module.exports = {};`,
     });
 
     it('should not add tsconfig files inside the project root', async () => {
-      jest
-        .spyOn(jsUtils, 'getRootTsConfigFileName')
-        .mockReturnValue('tsconfig.base.json');
+      vi.spyOn(jsUtils, 'getRootTsConfigFileName').mockReturnValue(
+        'tsconfig.base.json'
+      );
       await tempFs.createFiles({
         'tsconfig.base.json': JSON.stringify({}),
         'apps/my-app/package.json': '{}',
@@ -3789,9 +3789,9 @@ module.exports = {};`,
     });
 
     it('should add the same tsconfig inputs to the ciTargetName target', async () => {
-      jest
-        .spyOn(jsUtils, 'getRootTsConfigFileName')
-        .mockReturnValue('tsconfig.base.json');
+      vi.spyOn(jsUtils, 'getRootTsConfigFileName').mockReturnValue(
+        'tsconfig.base.json'
+      );
       await tempFs.createFiles({
         'tsconfig.base.json': JSON.stringify({}),
         'tsconfig.json': JSON.stringify({

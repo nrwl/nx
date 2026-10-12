@@ -9,10 +9,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './update-jest-preset-angular-setup';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
-  formatFiles: jest.fn(),
+  formatFiles: vi.fn(),
 }));
 
 describe('update-jest-preset-angular-setup migration', () => {

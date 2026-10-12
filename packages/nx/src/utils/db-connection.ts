@@ -17,7 +17,7 @@ const dbConnectionMap = new Map<string, ExternalObject<any>>();
  * cache hit resolves to artifacts that were never written here.
  */
 let _sharedDir: string | undefined;
-function sharedWorkspaceDataDirectory(root: string): string {
+export function sharedWorkspaceDataDirectory(root: string): string {
   _sharedDir ??= sharedDataDirectory(root, 'workspace-data');
   return _sharedDir;
 }
@@ -55,7 +55,7 @@ export function getLocalDbConnection(
   return connection;
 }
 
-function removeDbConnections() {
+export function removeDbConnections() {
   for (const connection of dbConnectionMap.values()) {
     closeDbConnection(connection);
   }

@@ -3,15 +3,15 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 // An older nx - `@nx/devkit`'s peer allows one a major back - exports none of
 // the formatter helpers, so the assert throws. Simulated rather than installed.
-jest.mock('../../utils/nx-formatter-internals', () => ({
-  assertNxSupportsFormatters: jest.fn(() => {
+vi.mock('../../utils/nx-formatter-internals', () => ({
+  assertNxSupportsFormatters: vi.fn(() => {
     throw new Error('OLDER_NX');
   }),
 }));
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  ensurePackage: jest.fn(),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  ensurePackage: vi.fn(),
 }));
 
 import init from './init';

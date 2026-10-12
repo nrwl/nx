@@ -1,4 +1,4 @@
-import type { JsonInput } from '../native';
+import type { JsonInput, TaskUltracacheSettings } from '../native';
 import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
@@ -174,6 +174,22 @@ export interface TargetMetadata {
   };
 }
 
+/**
+ * Authoring form of a property merged key-by-key: permits the `'...'` spread
+ * token alongside the resolved keys. Merging resolves the token, so it never
+ * appears on the resolved shape.
+ */
+export type Spreadable<T> = T & { '...'?: true };
+
+/**
+ * Ultracache settings for a target's tasks.
+ *
+ * The resolved shape rides on each Task instance (`Task['ultracache']`), which
+ * is why it is shared with the native task definition. Authoring additionally
+ * permits `'...'`, which target merging resolves away.
+ */
+export type TargetUltracacheSettings = Spreadable<TaskUltracacheSettings>;
+
 export interface TargetDependencyConfig {
   /**
    * A list of projects that have `target`.
@@ -202,6 +218,12 @@ export interface TargetDependencyConfig {
    * Whether to forward task options to the dependency target.
    */
   options?: 'ignore' | 'forward';
+
+  /**
+   * Set to `false` to keep a continuous dependency's inputs out of this
+   * target's hash. It still runs first. Has no effect on other dependencies.
+   */
+  inputs?: boolean;
 }
 
 // TODO: import the remaining variants from '../native' so the TS types stay
@@ -272,6 +294,11 @@ export interface TargetConfiguration<T = any> {
    * Determines if Nx is able to cache a given target.
    */
   cache?: boolean;
+
+  /**
+   * Configures ultracache for tasks of this target. Nx Cloud only.
+   */
+  ultracache?: TargetUltracacheSettings;
 
   /**
    * Metadata about the target

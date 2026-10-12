@@ -1,12 +1,10 @@
-use std::borrow::Cow;
-use std::ops::Bound;
 use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
-use crate::native::glob::build_glob_set;
-use crate::native::utils::Normalize;
+use crate::native::glob::{build_glob_set, literal_segment};
+use crate::native::utils::{Normalize, path::get_child_files};
 use crate::native::workspace::context::Files;
 
 /// Globs that resolve without a scan: `<dir>/**/*` is a contiguous range of
@@ -16,20 +14,20 @@ enum Lookup {
     Literal(String),
 }
 
-const GLOB_SPECIAL: &[char] = &['*', '?', '[', ']', '{', '}', '(', ')', '!', '|', '\\'];
-
 fn classify(glob: &str) -> Option<Lookup> {
-    // globset reads `\` as `/` on Windows, where node's `join` produces it.
-    let glob: Cow<str> = if cfg!(windows) {
-        Cow::Owned(glob.replace('\\', "/"))
-    } else {
-        Cow::Borrowed(glob)
-    };
-    let plain = |s: &str| {
-        !s.is_empty()
-            && !s.contains(GLOB_SPECIAL)
-            && s.split('/')
-                .all(|part| !part.is_empty() && part != "." && part != "..")
+    // A leading `!` is a negation, which only a scan can apply.
+    if glob.starts_with('!') {
+        return None;
+    }
+    // The path a glob names, escapes resolved, when every segment is literal.
+    let plain = |s: &str| -> Option<String> {
+        let names = s
+            .split('/')
+            .map(|part| {
+                literal_segment(part).filter(|name| !matches!(name.as_str(), "" | "." | ".."))
+            })
+            .collect::<Option<Vec<_>>>()?;
+        Some(names.join("/"))
     };
     if glob == "**" || glob == "**/*" {
         return Some(Lookup::Prefix(String::new()));
@@ -39,9 +37,9 @@ fn classify(glob: &str) -> Option<Lookup> {
         .or_else(|| glob.strip_suffix("/**"))
         .or_else(|| glob.strip_suffix('/'))
     {
-        return plain(dir).then(|| Lookup::Prefix(dir.to_owned()));
+        return plain(dir).map(Lookup::Prefix);
     }
-    plain(&glob).then(|| Lookup::Literal(glob.into_owned()))
+    plain(&glob).map(Lookup::Literal)
 }
 
 /// Whether the group must scan the table: it is empty, or a glob in it is
@@ -58,8 +56,7 @@ fn prefix_entries<'a>(files: &'a Files, dir: &str, into: &mut Vec<Entry<'a>>) {
         return;
     }
     let dir = Path::new(dir);
-    let below = files.range::<Path, _>((Bound::Excluded(dir), Bound::Unbounded));
-    into.extend(below.take_while(|(path, _)| path.starts_with(dir)));
+    into.extend(get_child_files(dir, files).skip_while(|(path, _)| path.as_path() == dir));
 }
 
 /// The union of the group's matches in table order, or `None` when the group
@@ -206,7 +203,16 @@ mod tests {
             literal("apps/@scope/pkg/tsconfig.json").as_deref(),
             Some("apps/@scope/pkg/tsconfig.json")
         );
+        // Characters globset reads as text stay literal lookups.
+        for name in ["libs/a!b", "libs/pi|pe", "libs/x)", "libs/y]", "libs/co,ma"] {
+            assert_eq!(prefix(&format!("{name}/**")).as_deref(), Some(name));
+            assert_eq!(literal(name).as_deref(), Some(name));
+        }
         for scanned in [
+            "libs/(a)/**",
+            "libs/brace}/**",
+            "libs/+(a|b)/**",
+            "libs/?/**",
             "libs/**/*.spec.ts",
             "libs/{a,b}/**/*",
             "!libs/a/**/*",
@@ -225,23 +231,17 @@ mod tests {
         }
     }
 
-    #[cfg(windows)]
     #[test]
-    fn classifies_backslash_globs_on_windows() {
-        assert!(matches!(
-            classify(r"libs\a\**\*"),
-            Some(Lookup::Prefix(dir)) if dir == "libs/a"
-        ));
-        assert!(matches!(
-            classify(r"libs\a\.eslintignore"),
-            Some(Lookup::Literal(file)) if file == "libs/a/.eslintignore"
-        ));
-    }
-
-    #[cfg(not(windows))]
-    #[test]
-    fn backslash_is_an_escape_off_windows() {
+    fn backslash_is_an_escape() {
         assert!(classify(r"libs\a\**\*").is_none());
+        // An escape names its character: a directory literally called `*`.
+        assert!(matches!(
+            classify(r"libs/\*/**"),
+            Some(Lookup::Prefix(dir)) if dir == "libs/*"
+        ));
+        let files = table(&["libs/*/x.ts", "libs/a/x.ts"]);
+        assert_same_as_scan(&files, &[r"libs/\*/**"]);
+        assert_same_as_scan(&files, &[r"libs/\*/x.ts"]);
     }
 
     #[test]
@@ -331,6 +331,20 @@ mod tests {
         assert_same_as_scan(&files, &["libs/missing/**/*", "missing.json"]);
         assert_same_as_scan(&files, &["libs/a/"]);
         assert_same_as_scan(&files, &["**/*", "pnpm-lock.yaml"]);
+        let named = table(&[
+            "libs/a!b/x.ts",
+            "libs/pi|pe/x.ts",
+            "libs/x)/y.ts",
+            "libs/y]/z.ts",
+        ]);
+        for glob in [
+            "libs/a!b/**",
+            "libs/pi|pe/x.ts",
+            "libs/x)/**/*",
+            "libs/y]/z.ts",
+        ] {
+            assert_same_as_scan(&named, &[glob]);
+        }
         assert_same_as_scan(&files, &["libs/a.ts/**/*"]);
         assert_same_as_scan(&files, &["libs/a.ts/"]);
         assert_same_as_scan(&files, &["libs//a/**/*"]);

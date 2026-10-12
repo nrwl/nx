@@ -160,6 +160,9 @@ describe('installPackageToTmp', () => {
     expect(execSyncSpy.mock.calls[0][0]).toBe(
       'pnpm add -Dw --config.frozen-lockfile=false @nx/cypress@1.0.0 --config.auto-install-peers=false --ignore-scripts'
     );
+    expect(execSyncSpy.mock.calls[0][1].env).toEqual(
+      expect.objectContaining({ PNPM_CONFIG_AUTO_INSTALL_PEERS: 'false' })
+    );
 
     // yarn: Berry does not auto-install peers, so no flag is added
     execSyncSpy.mockClear();

@@ -3,7 +3,8 @@ import { getRemotes } from './get-remotes';
 import * as _config_1 from '../../utils';
 import * as fs from 'fs';
 
-jest.mock('../../utils');
+vi.mock('../../utils');
+vi.mock('fs', { spy: true });
 
 describe('getRemotes', () => {
   const mfConfig = {
@@ -81,7 +82,7 @@ describe('getRemotes', () => {
 
   it('should return remotes', () => {
     // ARRANGE
-    const mfConfigSpy = jest
+    const mfConfigSpy = vi
       .spyOn(_config_1, 'getModuleFederationConfig')
       .mockImplementation((tsConfig, workspaceRoot, projectRoot) => {
         if (projectRoot === 'my-app') {
@@ -92,7 +93,7 @@ describe('getRemotes', () => {
           return remote2Config;
         }
       });
-    const fsSpy = jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    const fsSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
     // ACT
     const remotes = getRemotes(mfConfig, projectGraph);

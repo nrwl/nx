@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/vite/plugin Library mode should exclude serve and preview targets when vite.config.ts is in library mode 1`] = `
+exports[`@nx/vite/plugin > Library mode > should exclude serve and preview targets when vite.config.ts is in library mode 1`] = `
 [
   [
     "my-lib/vite.config.ts",
@@ -68,7 +68,7 @@ exports[`@nx/vite/plugin Library mode should exclude serve and preview targets w
 ]
 `;
 
-exports[`@nx/vite/plugin not root project should create nodes 1`] = `
+exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
 [
   [
     "my-app/vite.config.ts",
@@ -247,7 +247,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
 ]
 `;
 
-exports[`@nx/vite/plugin root project should create nodes 1`] = `
+exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
 [
   [
     "vite.config.ts",

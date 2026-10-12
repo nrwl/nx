@@ -5,7 +5,12 @@ import {
   isTheFileAStory,
   getStorybookVersionToInstall,
 } from './utilities';
-import * as targetVariations from './test-configs/different-target-variations.json';
+import * as _targetVariations from './test-configs/different-target-variations.json';
+// Vite only exposes identifier-safe JSON keys (not `react-swc`) as named exports.
+const targetVariations =
+  'default' in _targetVariations
+    ? _targetVariations.default
+    : _targetVariations;
 
 describe('testing utilities', () => {
   describe('Test functions that need workspace tree', () => {

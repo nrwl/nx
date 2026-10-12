@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`lib --bundler none, unit test runner vitest should configure vite 1`] = `
+exports[`lib > --bundler none, unit test runner vitest > should configure vite 1`] = `
 "
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -29,7 +29,7 @@ export default defineConfig(() => ({
 }));"
 `;
 
-exports[`lib --style none should not use styles when style none 1`] = `
+exports[`lib > --style none > should not use styles when style none 1`] = `
 "
 
 export function MyLib() {
@@ -47,7 +47,7 @@ export default MyLib;
 "
 `;
 
-exports[`lib --style scss should use scss for styles 1`] = `
+exports[`lib > --style scss > should use scss for styles 1`] = `
 "
 import styles from './my-lib.module.scss';
 
@@ -66,7 +66,7 @@ export default MyLib;
 "
 `;
 
-exports[`lib should add vite types to tsconfigs 1`] = `
+exports[`lib > should add vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';

@@ -30,6 +30,9 @@
   "types": "./dist/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "executors": [
+        "dist/executors.d.ts"
+      ],
       "babel": [
         "dist/babel.d.ts"
       ],
@@ -78,6 +81,11 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
+    "./executors": {
+      "@nx/nx-source": "./executors.ts",
+      "types": "./dist/executors.d.ts",
+      "default": "./dist/executors.js"
+    },
     "./babel": {
       "@nx/nx-source": "./babel.ts",
       "types": "./dist/babel.d.ts",

@@ -3,10 +3,9 @@ import type { Mock } from 'vitest';
 import { output } from '../../../../utils/output';
 import { GithubRemoteReleaseClient } from './github';
 
-vi.mock('axios', () => {
-  const get = vi.fn();
-  return { get, default: { get } };
-});
+vi.mock('../../../../utils/http-client', () => ({
+  httpRequest: vi.fn(),
+}));
 
 vi.mock('node:child_process', async () => ({
   ...require('node:child_process'),
@@ -21,7 +20,8 @@ vi.mock('../../../../utils/prompt-helpers', () => ({
 import { execFileSync } from 'node:child_process';
 import { selectPrompt } from '../../../../utils/prompt-helpers';
 
-const axiosGetMock = (await import('axios')).default.get as Mock;
+const httpRequestMock = (await import('../../../../utils/http-client'))
+  .httpRequest as Mock;
 const execFileSyncMock = execFileSync as Mock;
 const selectPromptMock = selectPrompt as Mock;
 
@@ -41,7 +41,7 @@ describe('GithubRemoteReleaseClient', () => {
   });
 
   it('should prefer the username returned by ungh', async () => {
-    axiosGetMock.mockResolvedValue({
+    httpRequestMock.mockResolvedValue({
       data: {
         user: {
           username: 'from-ungh',
@@ -59,7 +59,7 @@ describe('GithubRemoteReleaseClient', () => {
   });
 
   it('should fall back to gh api when ungh does not return a username', async () => {
-    axiosGetMock.mockResolvedValue({
+    httpRequestMock.mockResolvedValue({
       data: {
         user: null,
       },
@@ -97,7 +97,7 @@ describe('GithubRemoteReleaseClient', () => {
   });
 
   it('should fall back to gh api when ungh fails', async () => {
-    axiosGetMock.mockRejectedValue(new Error('ungh unavailable'));
+    httpRequestMock.mockRejectedValue(new Error('ungh unavailable'));
     execFileSyncMock.mockReturnValue(
       JSON.stringify({
         items: [{ login: 'from-gh' }],
@@ -123,7 +123,7 @@ describe('GithubRemoteReleaseClient', () => {
     await client.applyUsernameToAuthors(authors);
 
     expect(authors.get('Test User')?.username).toBeUndefined();
-    expect(axiosGetMock).not.toHaveBeenCalled();
+    expect(httpRequestMock).not.toHaveBeenCalled();
     expect(execFileSyncMock).not.toHaveBeenCalled();
   });
 
@@ -135,14 +135,14 @@ describe('GithubRemoteReleaseClient', () => {
     await client.applyUsernameToAuthors(authors);
 
     expect(authors.get('Test User')?.username).toBeUndefined();
-    expect(axiosGetMock).not.toHaveBeenCalled();
+    expect(httpRequestMock).not.toHaveBeenCalled();
     expect(execFileSyncMock).not.toHaveBeenCalled();
   });
 
   it('should skip a bad email but still resolve a valid one in the same set', async () => {
     // The guard must `continue` past the empty email, not `break` out of the
     // loop, so a valid email later in the set is still looked up.
-    axiosGetMock.mockResolvedValue({
+    httpRequestMock.mockResolvedValue({
       data: {
         user: {
           username: 'from-ungh',
@@ -156,14 +156,14 @@ describe('GithubRemoteReleaseClient', () => {
     await client.applyUsernameToAuthors(authors);
 
     expect(authors.get('Test User')?.username).toBe('from-ungh');
-    expect(axiosGetMock).toHaveBeenCalledTimes(1);
-    expect(axiosGetMock).toHaveBeenCalledWith(
+    expect(httpRequestMock).toHaveBeenCalledTimes(1);
+    expect(httpRequestMock).toHaveBeenCalledWith(
       'https://ungh.cc/users/find/test@example.com'
     );
   });
 
   it('should leave the username unset when both lookups fail', async () => {
-    axiosGetMock.mockRejectedValue(new Error('ungh unavailable'));
+    httpRequestMock.mockRejectedValue(new Error('ungh unavailable'));
     execFileSyncMock.mockImplementation(() => {
       throw new Error('gh unavailable');
     });
@@ -270,7 +270,7 @@ describe('GithubRemoteReleaseClient', () => {
 
     it('should redact the token when it has trailing whitespace', async () => {
       const token = 'ghp_secret';
-      // Axios trims header values, so the dump holds the trimmed token while
+      // fetch trims header values, so the dump holds the trimmed token while
       // tokenData still carries the untrimmed value read from the environment.
       const clientWithToken = new GithubRemoteReleaseClient(repoData, false, {
         token: `${token}\n`,
@@ -306,8 +306,8 @@ describe('GithubRemoteReleaseClient', () => {
 
     it('should redact the token when it contains a line break', async () => {
       const token = 'ghp_secret';
-      // Defensive: node rejects a CR/LF header outright, so axios cannot produce
-      // this pairing. Pins the needle that would cover it if it ever could.
+      // Defensive: fetch rejects a CR/LF header outright, so a request cannot
+      // produce this pairing. Pins the needle that would cover it if it ever could.
       const clientWithToken = new GithubRemoteReleaseClient(repoData, false, {
         token: `${token.slice(0, 4)}\r\n${token.slice(4)}`,
         headerName: 'Authorization',

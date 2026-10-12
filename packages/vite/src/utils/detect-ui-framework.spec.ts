@@ -1,9 +1,10 @@
+import type { MockedFunction } from 'vitest';
 import { createProjectGraphAsync, ProjectGraph } from '@nx/devkit';
 import { detectUiFramework } from './detect-ui-framework';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(() => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(() => {
     throw new Error('createProjectGraphAsync stub is not configured');
   }),
 }));
@@ -32,7 +33,7 @@ describe(detectUiFramework.name, () => {
 function setUp() {
   const projectGraphFake = new ProjectGraphFake();
   (
-    createProjectGraphAsync as jest.MockedFn<typeof createProjectGraphAsync>
+    createProjectGraphAsync as MockedFunction<typeof createProjectGraphAsync>
   ).mockImplementation(async (options) =>
     projectGraphFake.createProjectGraphAsync(options)
   );

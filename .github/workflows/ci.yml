@@ -9,9 +9,13 @@ on:
     branches:
       - "**"
 
+permissions:
+  contents: read
+
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
+  NX_CLOUD_TASK_GRAPH_STORAGE_VERSION: '2'
   PNPM_HOME: ~/.pnpm
   # See the root Cargo.toml: the release profile is incremental for local dev.
   # CI builds cold, so incremental only inflates the cargo cache.
@@ -21,6 +25,7 @@ env:
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
 
 jobs:
   main-linux:
@@ -41,6 +46,10 @@ jobs:
       NX_FIX_CI_EXPERIMENTAL: 'true'
       NX_FIX_CI_TRACING: 'true'
       NX_FIX_CI_STABLE_OUTPUT_SCHEMA: 'true'
+      NX_CLOUD_VERBOSE_LOGGING: 'true'
+      NX_CLOUD_AGENT_TASK_QUEUE: 'true'
+      NX_CLOUD_AUTO_TASK_PACKING: 'true'
+      NX_CLOUD_BUFFER_TASK_COMPLETIONS: 'true'
 
     steps:
       - name: Checkout

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`update gitignore should add entries to .gitignore if they do not exist 1`] = `
+exports[`update gitignore > should add entries to .gitignore if they do not exist 1`] = `
 "
 # See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
@@ -30,7 +30,7 @@ node_modules
 .cache"
 `;
 
-exports[`update gitignore should not add duplicate entries to .gitignore if they already exist 1`] = `
+exports[`update gitignore > should not add duplicate entries to .gitignore if they already exist 1`] = `
 "
 # See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 

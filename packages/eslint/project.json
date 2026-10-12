@@ -10,6 +10,13 @@
       "command": "node ./scripts/copy-readme.js eslint packages/eslint/readme-template.md packages/eslint/README.md",
       "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-base"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   }
 }

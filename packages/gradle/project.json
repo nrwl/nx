@@ -20,6 +20,13 @@
         "copy-assets",
         ":gradle-batch-runner:gradle:assemble"
       ]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "tags": [],

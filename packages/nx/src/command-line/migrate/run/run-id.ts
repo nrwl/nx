@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 
 // Orchestrator-generated run ids always match; anything else could smuggle
 // shell metacharacters into dispensed commands or a path out of the runs dir
@@ -22,41 +22,4 @@ function compactUtcTimestamp(date: Date): string {
     .toISOString()
     .replace(/[-:]/g, '')
     .replace(/\.\d+Z$/, '');
-}
-
-/**
- * Hashes a migrations.json plan so a resumed run can detect whether the plan
- * changed since a round was recorded. `nx-console` is stripped first since
- * editors write to it without changing the plan; object keys are sorted
- * recursively (arrays keep their order) so key reordering from a different
- * JSON serializer doesn't change the hash.
- */
-export function computePlanHash(
-  migrationsJsonContent: string | object
-): string {
-  const parsed = (
-    typeof migrationsJsonContent === 'string'
-      ? JSON.parse(migrationsJsonContent)
-      : migrationsJsonContent
-  ) as Record<string, unknown>;
-  const withoutNxConsole = Object.fromEntries(
-    Object.entries(parsed).filter(([key]) => key !== 'nx-console')
-  );
-  return createHash('sha256')
-    .update(JSON.stringify(canonicalize(withoutNxConsole)))
-    .digest('hex');
-}
-
-function canonicalize(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(canonicalize);
-  }
-  if (value !== null && typeof value === 'object') {
-    const sorted: Record<string, unknown> = {};
-    for (const key of Object.keys(value as Record<string, unknown>).sort()) {
-      sorted[key] = canonicalize((value as Record<string, unknown>)[key]);
-    }
-    return sorted;
-  }
-  return value;
 }

@@ -15,7 +15,7 @@ describe('determineProjectNameAndRootOptions', () => {
 
     setCwd('');
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should return the last part of the directory as name', async () => {

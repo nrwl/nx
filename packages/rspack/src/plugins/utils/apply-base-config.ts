@@ -115,7 +115,10 @@ function applyNxIndependentConfig(
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;
 
-  const existingOutputConfig = config.output as Output;
+  // v1 configs may still carry libraryTarget, which v2's Output type dropped.
+  const existingOutputConfig = config.output as Output & {
+    libraryTarget?: string;
+  };
   const existingLibraryTarget = existingOutputConfig?.libraryTarget;
   const existingLibraryType =
     typeof existingOutputConfig?.library === 'object' &&
@@ -181,7 +184,7 @@ function applyNxIndependentConfig(
   // TODO(v24): drop once @rspack/core v1 is out of the support window.
   // v2 removed top-level `profile`; Rsdoctor replaces it.
   if (options.statsJson && installedRspackMajor < 2) {
-    config.profile = true;
+    (config as { profile?: boolean }).profile = true;
   }
 
   config.performance = {
@@ -213,6 +216,10 @@ function applyNxIndependentConfig(
                 // this needs to be false to allow toplevel variables to be used in the global scope
                 // important especially for module-federation which operates as such
                 module: false,
+                // Keeps SWC from hoisting a callback passed in a class field
+                // initializer into one binding shared by all instances:
+                // https://github.com/swc-project/swc/issues/12380
+                compress: { inline: 0, reduce_funcs: false },
                 mangle: {
                   keep_classnames: true,
                 },

@@ -103,6 +103,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     process.env.YARN_CACHE_FOLDER = join(e2eCacheDir, 'yarn');
     // yarnv2
     process.env.YARN_ENABLE_GLOBAL_CACHE = 'false';
+    // Yarn keeps registry metadata in its global folder even with a local
+    // package cache. Do not reuse metadata from an earlier local registry.
+    process.env.YARN_GLOBAL_FOLDER = join(e2eCacheDir, 'yarn-global');
 
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
@@ -126,7 +129,10 @@ export default async function (globalConfig: Config.ConfigGlobals) {
      * verdaccio storage.
      */
     if (!requiresLocalRelease) {
-      let publishedVersion = await getPublishedVersion();
+      // An explicit version identifies the packages under test. Registry
+      // `latest` can resolve to an upstream release instead of our local build.
+      const publishedVersion =
+        process.env.PUBLISHED_VERSION ?? (await getPublishedVersion());
       console.log(`Testing Published version: Nx ${publishedVersion}`);
       if (publishedVersion) {
         process.env.PUBLISHED_VERSION = publishedVersion;

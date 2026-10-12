@@ -1,6 +1,7 @@
 // Internal to run/: deliberately not re-exported from ./index.
 
 import { createHash } from 'crypto';
+import { needsShellQuoting, quoteShellArg } from '../../../utils/shell-quoting';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -10,9 +11,11 @@ import {
   readPackageJsonDeps,
   runInstall,
 } from '../execute-migration';
+import type { MigrateOutputSink } from '../deferred-output';
 import type { MigrateStep } from './run-state';
 import { updateRunState } from './state-lock';
 import { warnToAgent } from './agent-output';
+import { hasLineBreak } from '../text';
 
 export function nowIso(): string {
   return new Date().toISOString();
@@ -55,15 +58,16 @@ export async function installDepsChangedSinceDispense(
   dir: string,
   step: MigrateStep,
   skipInstall: boolean,
-  rerunCommand?: string
+  rerunCommand?: string,
+  sink?: MigrateOutputSink
 ): Promise<void> {
   const current = depsHash(root);
   if (current !== null && current === step.depsHashAtDispense) return;
   if (skipInstall) {
-    logSkippedPostMigrationInstall(root);
+    logSkippedPostMigrationInstall(root, sink);
     return;
   }
-  await runInstall(root, 'post-migration', rerunCommand);
+  await runInstall(root, 'post-migration', rerunCommand, sink);
   recordInstallLanded(root, dir, step.id);
 }
 
@@ -164,6 +168,26 @@ function pmCommands(root: string): ReturnType<typeof getPackageManagerCommand> {
 
 export function pmExecPrefix(root: string): string {
   return pmCommands(root).exec;
+}
+
+const DEFAULT_MIGRATIONS_FILE = 'migrations.json';
+
+// The --run-migrations flag a rendered command repeats; null when the path
+// cannot go out as a one-line command for this shell. On Windows the paste
+// target may be cmd.exe or PowerShell, whose quoting and expansion conflict
+// (`%VAR%` expands in cmd, `$(...)` runs in PowerShell).
+export function runMigrationsFlag(migrationsPath: string): string | null {
+  if (migrationsPath === DEFAULT_MIGRATIONS_FILE) {
+    return '--run-migrations';
+  }
+  if (hasLineBreak(migrationsPath)) {
+    return null;
+  }
+  const arg = `--run-migrations=${migrationsPath}`;
+  if (process.platform !== 'win32') {
+    return quoteShellArg(arg);
+  }
+  return !needsShellQuoting(arg) && !/[%^]/.test(arg) ? arg : null;
 }
 
 export function pmInstallCommand(root: string): string {

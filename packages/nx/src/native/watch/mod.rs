@@ -1,4 +1,3 @@
-mod git_utils;
 pub(crate) mod types;
 mod utils;
 mod watch_filterer;

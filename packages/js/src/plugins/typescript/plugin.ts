@@ -14,7 +14,6 @@ import {
   normalizePath,
   readJsonFile,
   writeJsonFile,
-  type CreateDependencies,
   type CreateNodesContext,
   type CreateNodes,
   type NxJsonConfiguration,
@@ -240,10 +239,9 @@ function getConfigContext(
   workspaceRoot: string,
   cache: InvocationCache
 ): ConfigContext {
-  const absolutePath =
-    configPath.startsWith('/') || configPath.startsWith(workspaceRoot)
-      ? normalize(configPath)
-      : join(workspaceRoot, configPath);
+  const absolutePath = isAbsolute(configPath)
+    ? normalize(configPath)
+    : join(workspaceRoot, configPath);
 
   let context = cache.configContexts.get(absolutePath);
   if (context) {
@@ -270,13 +268,6 @@ function getConfigContext(
   cache.configContexts.set(absolutePath, newContext);
   return newContext;
 }
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 export const PLUGIN_NAME = '@nx/js/typescript';
 

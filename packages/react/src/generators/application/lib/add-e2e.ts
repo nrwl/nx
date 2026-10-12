@@ -120,6 +120,8 @@ export async function addE2e(
       buildTarget: `${options.projectName}:build`,
       targetName: 'serve-static',
       spa: true,
+      // The e2e config waits on options.port; serve-static has to listen there.
+      port: options.port,
     });
   }
   switch (options.e2eTestRunner) {

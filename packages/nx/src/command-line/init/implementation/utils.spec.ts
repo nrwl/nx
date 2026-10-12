@@ -1,10 +1,13 @@
 vi.mock('./deduce-default-base', () => ({
   deduceDefaultBase: vi.fn(() => 'main'),
 }));
+vi.mock('child_process');
 
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import * as childProcess from 'child_process';
+import * as packageManager from '../../../utils/package-manager';
 import { NxJsonConfiguration, TargetDefaults } from '../../../config/nx-json';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import {
@@ -12,11 +15,52 @@ import {
   createNxJsonFromTurboJson,
   extractErrorName,
   readErrorStderr,
+  runInstall,
   toErrorString,
   upsertTargetDefaultEntry,
 } from './utils';
 
 describe('utils', () => {
+  describe('runInstall', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it.each(['11.0.0', '12.4.2'])(
+      'disables strict build approvals for pnpm %s during init',
+      (version) => {
+        vi.spyOn(packageManager, 'getPackageManagerVersion').mockReturnValue(
+          version
+        );
+        const install = vi.spyOn(childProcess, 'execSync').mockReturnValue('');
+
+        runInstall('/workspace', 'pnpm', { install: 'pnpm install' } as any);
+
+        expect(install).toHaveBeenCalledWith(
+          'pnpm install --config.strictDepBuilds=false',
+          expect.objectContaining({
+            cwd: '/workspace',
+            env: expect.objectContaining({
+              PNPM_CONFIG_STRICT_DEP_BUILDS: 'false',
+            }),
+          })
+        );
+      }
+    );
+
+    it('preserves the environment for pnpm 10', () => {
+      vi.spyOn(packageManager, 'getPackageManagerVersion').mockReturnValue(
+        '10.34.5'
+      );
+      const install = vi.spyOn(childProcess, 'execSync').mockReturnValue('');
+
+      runInstall('/workspace', 'pnpm', { install: 'pnpm install' } as any);
+
+      expect(install).toHaveBeenCalledWith(
+        'pnpm install',
+        expect.objectContaining({ env: process.env })
+      );
+    });
+  });
+
   describe('createNxJsonFile', () => {
     it('reuses the same unfiltered target entry across topological and cacheable passes', () => {
       const repoRoot = mkdtempSync(join(tmpdir(), 'nx-init-utils-'));

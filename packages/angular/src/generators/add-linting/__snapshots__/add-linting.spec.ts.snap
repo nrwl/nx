@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`addLinting generator should correctly generate the .eslintrc.json file 1`] = `
+exports[`addLinting generator > should correctly generate the .eslintrc.json file 1`] = `
 {
   "extends": [
     "../../.eslintrc.json",

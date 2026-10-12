@@ -1,3 +1,4 @@
+import type { MockedFunction } from 'vitest';
 import gradleBatch, { getGradlewTasksToRun } from './gradle-batch.impl';
 import {
   ExecutorContext,
@@ -9,16 +10,16 @@ import { EventEmitter } from 'events';
 import { Readable } from 'stream';
 import { GradleExecutorSchema } from './schema';
 
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
-  spawn: jest.fn(),
+vi.mock('child_process', async () => ({
+  ...(await vi.importActual<any>('child_process')),
+  spawn: vi.fn(),
 }));
-jest.mock('../../utils/exec-gradle', () => ({
-  findGradlewFile: jest.fn(() => 'gradlew'),
-  getCustomGradleExecutableDirectoryFromPlugin: jest.fn(() => undefined),
+vi.mock('../../utils/exec-gradle', () => ({
+  findGradlewFile: vi.fn(() => 'gradlew'),
+  getCustomGradleExecutableDirectoryFromPlugin: vi.fn(() => undefined),
 }));
 
-const spawnMock = spawn as jest.MockedFunction<typeof spawn>;
+const spawnMock = spawn as MockedFunction<typeof spawn>;
 
 interface FakeChildOptions {
   stdoutLines: string[];

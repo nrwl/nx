@@ -1909,7 +1909,7 @@ module.exports = [
     });
 
     it('warns and leaves the config untouched when it is not a plain array export', () => {
-      const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
       const original = `export default tseslint.config({ files: ['**/*.ts'], rules: {} });\n`;
       tree.write('libs/test/eslint.config.mjs', original);
 
@@ -1925,7 +1925,7 @@ module.exports = [
     it('warns and leaves the config untouched when a local parserOptions cannot be read', () => {
       // Appending would risk converting an unread `project` setup to the project
       // service, so the config is left for the user to complete.
-      const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
       const original = `export default [{ languageOptions: { parserOptions: makeOptions() } }];\n`;
       tree.write('libs/test/eslint.config.mjs', original);
 

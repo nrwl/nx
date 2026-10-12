@@ -37,22 +37,22 @@ const getMockedConfig = (
   });
 };
 
-jest.mock('vite', () => ({
-  resolveConfig: jest.fn().mockImplementation(getMockedConfig),
+vi.mock('vite', () => ({
+  resolveConfig: vi.fn().mockImplementation(getMockedConfig),
 }));
 
-jest.mock('../../utils/executor-utils', () => ({
-  loadViteDynamicImport: jest.fn().mockImplementation(() => ({
-    resolveConfig: jest.fn().mockImplementation(getMockedConfig),
+vi.mock('../../utils/executor-utils', () => ({
+  loadViteDynamicImport: vi.fn().mockImplementation(() => ({
+    resolveConfig: vi.fn().mockImplementation(getMockedConfig),
   })),
 }));
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -257,7 +257,7 @@ export default defineConfig({
     },
   };
 
-  jest.doMock(
+  vi.doMock(
     join(fs.tempDir, `${projectOpts.appRoot}/vite.config.ts`),
     () => ({
       default: mockedConfigs[`${projectOpts.appRoot}/vite.config.ts`],

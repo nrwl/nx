@@ -19,8 +19,8 @@ const mockGeneratorImpls: Record<
   (tree: Tree, options: unknown) => Promise<unknown>
 > = {};
 
-jest.mock('@nx/devkit/internal', () => {
-  const actual = jest.requireActual('@nx/devkit/internal');
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
   return {
     ...actual,
     findInstalledPlugins: () => [
@@ -66,8 +66,8 @@ jest.mock('@nx/devkit/internal', () => {
   };
 });
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   createProjectGraphAsync: async () => ({ nodes: {}, dependencies: {} }),
 }));
 
@@ -78,7 +78,7 @@ describe('convertToInferredGenerator', () => {
     collection: string,
     impl?: (tree: Tree, options: unknown) => Promise<unknown>
   ) => {
-    mockGeneratorImpls[collection] = jest.fn(async (t, options) => {
+    mockGeneratorImpls[collection] = vi.fn(async (t, options) => {
       events.push(`child:${collection}`);
       if (impl) {
         return impl(t, options);
@@ -249,7 +249,7 @@ describe('convertToInferredGenerator', () => {
     registerConversion('@nx/b', async () => () => {
       throw new Error('boom');
     });
-    const error = jest.spyOn(output, 'error').mockImplementation(() => {});
+    const error = vi.spyOn(output, 'error').mockImplementation(() => {});
 
     try {
       const runTasks = await convertToInferredGenerator(tree, {

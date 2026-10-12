@@ -9,7 +9,6 @@ import { existsSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { gte } from 'semver';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   ensureCypressInstallation,
@@ -19,7 +18,6 @@ import { fileExists, readJson, updateJson } from './file-utils';
 import {
   detectPackageManager,
   getNpmMajorVersion,
-  getPnpmVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
   getYarnMajorVersion,
@@ -129,7 +127,6 @@ export function getPackageManagerCommand({
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const yarnMajorVersion = getYarnMajorVersion(path);
-  const pnpmVersion = getPnpmVersion();
   const publishedVersion = getPublishedVersion();
   const isYarnWorkspace = fileExists(join(path, 'package.json'))
     ? readJson('package.json').workspaces
@@ -158,11 +155,16 @@ export function getPackageManagerCommand({
         npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
       } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
-      runNx: `yarn nx`,
+      // Yarn Classic's script runner consumes the first `--`, including the
+      // delimiter required by `nx exec`. Its exec command preserves argv.
+      runNx:
+        yarnMajorVersion && +yarnMajorVersion >= 2
+          ? 'yarn nx'
+          : 'yarn exec -- nx',
       runNxSilent:
         yarnMajorVersion && +yarnMajorVersion >= 2
           ? 'yarn nx'
-          : `yarn --silent nx`,
+          : 'yarn --silent exec -- nx',
       runUninstalledPackage: 'npx --yes',
       install: 'yarn',
       ciInstall: 'yarn --frozen-lockfile',
@@ -173,7 +175,10 @@ export function getPackageManagerCommand({
         yarnMajorVersion && +yarnMajorVersion >= 2
           ? 'yarn lerna'
           : `yarn --silent lerna`,
-      exec: 'yarn',
+      exec:
+        yarnMajorVersion && +yarnMajorVersion >= 2
+          ? 'yarn'
+          : 'yarn --silent exec --',
     },
     pnpm: {
       createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
@@ -188,7 +193,7 @@ export function getPackageManagerCommand({
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
       list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
-      exec: pnpmVersion && gte(pnpmVersion, '6.13.0') ? 'pnpm exec' : 'pnpx',
+      exec: 'pnpm exec',
     },
     bun: {
       // See note in runCreateWorkspace in create-project-utils.ts for why we don't set @{version} for `bunx create-nx-workspace` right now
@@ -256,7 +261,6 @@ export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process['env'],
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {

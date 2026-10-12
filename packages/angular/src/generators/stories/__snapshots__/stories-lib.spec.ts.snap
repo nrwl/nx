@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 1`] = `
+exports[`angularStories generator: libraries > Stories for non-empty Angular library > should generate stories file for standalone components 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { Standalone } from './standalone';
 import { expect } from 'storybook/test';
@@ -26,7 +26,7 @@ export const Heading: Story = {
 "
 `;
 
-exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 2`] = `
+exports[`angularStories generator: libraries > Stories for non-empty Angular library > should generate stories file for standalone components 2`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { SecondaryStandalone } from './secondary-standalone';
 import { expect } from 'storybook/test';
@@ -52,7 +52,7 @@ export const Heading: Story = {
 "
 `;
 
-exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories.ts files 1`] = `
+exports[`angularStories generator: libraries > Stories for non-empty Angular library > should generate stories.ts files 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestButton } from './test-button';
 import { expect } from 'storybook/test';
@@ -88,7 +88,7 @@ export const Heading: Story = {
 "
 `;
 
-exports[`angularStories generator: libraries Stories for non-empty Angular library should ignore paths 1`] = `
+exports[`angularStories generator: libraries > Stories for non-empty Angular library > should ignore paths 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestButton } from './test-button';
 import { expect } from 'storybook/test';

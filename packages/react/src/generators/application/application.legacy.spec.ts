@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
@@ -7,9 +8,9 @@ import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 describe('react app generator (legacy)', () => {
   let appTree: Tree;
@@ -23,7 +24,7 @@ describe('react app generator (legacy)', () => {
     strict: true,
     addPlugin: false,
   };
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 
@@ -158,6 +159,31 @@ describe('react app generator (legacy)', () => {
     expect(
       readProjectConfiguration(appTree, 'pinned-app').targets.serve.options.port
     ).toBe(4321);
+  });
+
+  it('should serve serve-static on the requested port, where the e2e runner waits', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'pinned-e2e-app',
+      bundler: 'webpack',
+      e2eTestRunner: 'playwright',
+      port: 6123,
+      skipFormat: true,
+    });
+
+    // Playwright starts serve-static and waits on the configured URL. A
+    // serve-static left on @nx/web:file-server's 4200 is never reached.
+    expect(
+      readProjectConfiguration(appTree, 'pinned-e2e-app').targets[
+        'serve-static'
+      ].options.port
+    ).toBe(6123);
+    const pwConfig = appTree.read(
+      'pinned-e2e-app-e2e/playwright.config.mts',
+      'utf-8'
+    );
+    expect(pwConfig).toContain('nx run pinned-e2e-app:serve-static');
+    expect(pwConfig).toContain(`url: 'http://localhost:6123'`);
   });
 
   it('should write port 0, which asks the dev server for a free port', async () => {

@@ -26,11 +26,11 @@ import {
   buildMinimalSystemContext,
   buildSystemPrompt,
 } from './prompts/system-prompt';
+import type { AgentDefinition, InvocationContext } from './types';
 import {
   adaptSpawnForWindowsShim,
   WINDOWS_COMMAND_LINE_BUDGET,
-} from './runner';
-import { AgentDefinition, InvocationContext } from './types';
+} from './windows-cmd';
 
 /**
  * cmd.exe runs a command line of at most 8191 characters, and nx reaches

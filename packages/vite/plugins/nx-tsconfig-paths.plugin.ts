@@ -70,6 +70,7 @@ export interface nxViteTsPathsOptions {
 export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   warnNxViteTsPathsDeprecation();
   let foundTsConfigPath: string;
+  let tsConfigPathsLoaded = false;
   let matchTsPathEsm: MatchPath;
   let matchTsPathEsmExact: MatchPath;
   let matchTsPathFallback: MatchPath | undefined;
@@ -106,6 +107,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     async configResolved(config: any) {
       projectRoot = config.root;
       projectRootFromWorkspaceRoot = relative(workspaceRoot, projectRoot);
+      tsConfigPathsLoaded = false;
       foundTsConfigPath = getTsConfig(
         process.env.NX_TSCONFIG_PATH ??
           join(
@@ -170,55 +172,9 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
         }
       }
 
-      const parsed = loadConfig(foundTsConfigPath);
-
-      logIt('first parsed tsconfig: ', parsed);
-      if (parsed.resultType === 'failed') {
-        throw new Error(`Failed loading tsconfig at ${foundTsConfigPath}`);
-      }
-      // `loadConfig` derives `absoluteBaseUrl` from the leaf tsconfig, but
-      // `paths` resolve against the config that declared them.
-      const pathsBaseUrl = resolvePathsBaseUrl(foundTsConfigPath);
-      tsConfigPathsEsm = { ...parsed, absoluteBaseUrl: pathsBaseUrl };
-
-      matchTsPathEsm = createMatchPath(
-        pathsBaseUrl,
-        parsed.paths,
-        options.mainFields
-      );
-      matchTsPathEsmExact = createExactMatchPath(
-        pathsBaseUrl,
-        parsed.paths,
-        options.mainFields
-      );
-
-      const rootLevelTsConfig = getTsConfig(
-        join(workspaceRoot, 'tsconfig.base.json')
-      );
-      // A workspace may have no root-level tsconfig at all. Passing no path to
-      // `loadConfig` makes it search upwards from the cwd instead, which finds
-      // an unrelated tsconfig whose directory is not this workspace.
-      if (rootLevelTsConfig) {
-        const rootLevelParsed = loadConfig(rootLevelTsConfig);
-        logIt('fallback parsed tsconfig: ', rootLevelParsed);
-        if (rootLevelParsed.resultType === 'success') {
-          const rootLevelPathsBaseUrl = resolvePathsBaseUrl(rootLevelTsConfig);
-          tsConfigPathsFallback = {
-            ...rootLevelParsed,
-            absoluteBaseUrl: rootLevelPathsBaseUrl,
-          };
-          matchTsPathFallback = createMatchPath(
-            rootLevelPathsBaseUrl,
-            rootLevelParsed.paths,
-            ['main', 'module']
-          );
-          matchTsPathFallbackExact = createExactMatchPath(
-            rootLevelPathsBaseUrl,
-            rootLevelParsed.paths,
-            ['main', 'module']
-          );
-        }
-      }
+      // Graph construction resolves every config and never a module, so the
+      // parsing waits for the first `resolveId` there.
+      if (!global.NX_GRAPH_CREATION) loadTsConfigPaths();
     },
     resolveId(importPath: string) {
       // Let other resolvers handle this path.
@@ -229,6 +185,8 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       // relative URL and must be resolved by Vite's built-in resolver, not
       // by tsconfig path mapping (which would incorrectly use baseUrl).
       if (importPath.startsWith('/')) return null;
+
+      if (!tsConfigPathsLoaded) loadTsConfigPaths();
 
       let resolvedFile: string;
       try {
@@ -280,6 +238,60 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       }
     },
   } as Plugin;
+
+  function loadTsConfigPaths() {
+    const parsed = loadConfig(foundTsConfigPath);
+
+    logIt('first parsed tsconfig: ', parsed);
+    if (parsed.resultType === 'failed') {
+      throw new Error(`Failed loading tsconfig at ${foundTsConfigPath}`);
+    }
+    // `loadConfig` derives `absoluteBaseUrl` from the leaf tsconfig, but
+    // `paths` resolve against the config that declared them.
+    const pathsBaseUrl = resolvePathsBaseUrl(foundTsConfigPath);
+    tsConfigPathsEsm = { ...parsed, absoluteBaseUrl: pathsBaseUrl };
+
+    matchTsPathEsm = createMatchPath(
+      pathsBaseUrl,
+      parsed.paths,
+      options.mainFields
+    );
+    matchTsPathEsmExact = createExactMatchPath(
+      pathsBaseUrl,
+      parsed.paths,
+      options.mainFields
+    );
+
+    const rootLevelTsConfig = getTsConfig(
+      join(workspaceRoot, 'tsconfig.base.json')
+    );
+    // A workspace may have no root-level tsconfig at all. Passing no path to
+    // `loadConfig` makes it search upwards from the cwd instead, which finds
+    // an unrelated tsconfig whose directory is not this workspace.
+    if (rootLevelTsConfig) {
+      const rootLevelParsed = loadConfig(rootLevelTsConfig);
+      logIt('fallback parsed tsconfig: ', rootLevelParsed);
+      if (rootLevelParsed.resultType === 'success') {
+        const rootLevelPathsBaseUrl = resolvePathsBaseUrl(rootLevelTsConfig);
+        tsConfigPathsFallback = {
+          ...rootLevelParsed,
+          absoluteBaseUrl: rootLevelPathsBaseUrl,
+        };
+        matchTsPathFallback = createMatchPath(
+          rootLevelPathsBaseUrl,
+          rootLevelParsed.paths,
+          ['main', 'module']
+        );
+        matchTsPathFallbackExact = createExactMatchPath(
+          rootLevelPathsBaseUrl,
+          rootLevelParsed.paths,
+          ['main', 'module']
+        );
+      }
+    }
+
+    tsConfigPathsLoaded = true;
+  }
 
   function getTsConfig(preferredTsConfigPath: string): string {
     const projectTsConfigPath = getProjectTsConfigPath(

@@ -7,7 +7,17 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as linter from '@nx/eslint';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createRequire } from 'module';
+
+// `addLintingToProject` loads @nx/eslint through ensurePackage (`require`), so
+// the spy must live on the CJS channel.
+const cjsLinter = createRequire(import.meta.url)('@nx/eslint');
+const lintProjectGenerator = vi.fn(cjsLinter.lintProjectGenerator);
+mockCjsModule(import.meta.url, '@nx/eslint', {
+  ...cjsLinter,
+  lintProjectGenerator,
+});
 import { addLintingGenerator } from './add-linting';
 
 describe('addLinting generator', () => {
@@ -38,7 +48,7 @@ describe('addLinting generator', () => {
   });
 
   it('should invoke the lintProjectGenerator', async () => {
-    jest.spyOn(linter, 'lintProjectGenerator');
+    lintProjectGenerator.mockClear();
 
     await addLintingGenerator(tree, {
       linter: 'eslint',
@@ -52,7 +62,7 @@ describe('addLinting generator', () => {
     // the `addLintingToProject` hop, and `addExplicitTargets` in particular
     // decides whether the project gets an explicit `lint` target or relies on
     // inference — it can be dropped in the hop with every suite still green.
-    expect(linter.lintProjectGenerator).toHaveBeenCalledWith(
+    expect(lintProjectGenerator).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         project: appProjectName,
@@ -68,7 +78,7 @@ describe('addLinting generator', () => {
     // `mockClear`: this suite has no `restoreMocks`, and `spyOn` on an
     // already-spied property hands back the same mock — so without it the
     // previous test's call is still recorded and this one fails on it.
-    jest.spyOn(linter, 'lintProjectGenerator').mockClear();
+    lintProjectGenerator.mockClear();
 
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
@@ -78,7 +88,7 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    expect(linter.lintProjectGenerator).not.toHaveBeenCalled();
+    expect(lintProjectGenerator).not.toHaveBeenCalled();
     // The angular-eslint install is the visible half — without the early return
     // it lands on top of an Oxlint project. Both spellings: the flat-config
     // path installs `angular-eslint`, the legacy path the scoped trio.
@@ -98,7 +108,7 @@ describe('addLinting generator', () => {
 
   // `linter` has no schema default, so leaving it unset follows the workspace.
   it('should set up oxlint when the workspace already uses it', async () => {
-    jest.spyOn(linter, 'lintProjectGenerator').mockClear();
+    lintProjectGenerator.mockClear();
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies = { ...json.devDependencies, oxlint: '^1.70.0' };
       return json;
@@ -111,7 +121,7 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    expect(linter.lintProjectGenerator).not.toHaveBeenCalled();
+    expect(lintProjectGenerator).not.toHaveBeenCalled();
     expect(tree.exists('.oxlintrc.json')).toBe(true);
     const plugins = (readJson(tree, 'nx.json').plugins ?? []).map((p) =>
       typeof p === 'string' ? p : p.plugin

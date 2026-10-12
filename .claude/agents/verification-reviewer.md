@@ -28,13 +28,13 @@ Verify the PR's evidence in one pass:
 Run from the repo root:
 
 ```bash
-.claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
-.claude/tools/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
+tools/review-sandbox/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
+tools/review-sandbox/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+tools/review-sandbox/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+tools/review-sandbox/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
                                                                      # read-only; NOT the PR's diff
-.claude/tools/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
-.claude/tools/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
+tools/review-sandbox/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
+tools/review-sandbox/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
 ```
 
 Output is root-relative and identical whether the checkout is isolated or local. You cannot tell which, and must not try to find out. Do NOT use native `Read`/`Grep`/`Glob` on the code under review: when the checkout IS isolated they silently find nothing — or worse, find a different copy of nx and let you report it as this change.
@@ -52,7 +52,7 @@ If `exec` is refused, the sandbox has no isolation boundary. That is a legitimat
 The checkout is shared — other agents are reading it while you work. Never edit it, apply a patch, switch refs, reset, or stash. Proving a test actually fails without the fix means mutating source, so get your own tree first:
 
 ```bash
-.claude/tools/sandbox worktree <SANDBOX> verification-reviewer head
+tools/review-sandbox/sandbox worktree <SANDBOX> verification-reviewer head
 ```
 
 It returns a new sandbox id, already installed, that you may mutate freely. Pass `base` instead of `head` for a baseline mutation. A refusal means your id may not execute (you were handed a read-only view, or the sandbox has no usable isolation). Fall back to static mapping and say the test-effectiveness check was unavailable.

@@ -236,7 +236,7 @@ export class ForkedProcessTaskRunner {
     // Register forked process for metrics collection
     const pid = p.getPid();
     if (pid) {
-      registerTaskProcessStart(task.id, pid);
+      registerTaskProcessStart(task, pid);
     }
 
     p.send({
@@ -296,7 +296,7 @@ export class ForkedProcessTaskRunner {
 
       // Register forked process for metrics collection
       if (p.pid) {
-        registerTaskProcessStart(task.id, p.pid);
+        registerTaskProcessStart(task, p.pid);
       }
 
       // Send message to run the executor
@@ -362,7 +362,7 @@ export class ForkedProcessTaskRunner {
 
       // Register forked process for metrics collection
       if (p.pid) {
-        registerTaskProcessStart(task.id, p.pid);
+        registerTaskProcessStart(task, p.pid);
       }
 
       const cp = new NodeChildProcessWithDirectOutput(p, temporaryOutputPath);

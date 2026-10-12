@@ -119,6 +119,185 @@ describe('validateAndNormalizeProjectRootMap', () => {
     expect(projectRootMap['libs/a/ui'].name).toEqual('ui');
   });
 
+  describe('ultracache validation through the real merge pipeline', () => {
+    // The root-map tests below construct shapes the pipeline cannot produce.
+    // This one goes through mergeCreateNodesResults so a falsy ultracache is
+    // proven to reach validation the way an authored project.json would.
+    const resultsFor = (ultracache: unknown) => [
+      [
+        [
+          'nx/core/project-json',
+          'libs/a/ui/project.json',
+          {
+            projects: {
+              'libs/a/ui': {
+                name: 'a-ui',
+                root: 'libs/a/ui',
+                targets: { build: { executor: 'nx:run-commands', ultracache } },
+              },
+            },
+          },
+        ],
+      ],
+    ];
+
+    // Escaping this call is what takes the daemon down: only the three
+    // classifiable errors are collected, and `shutdown-utils` exits the
+    // process for anything else.
+    it('collects ultracache: false authored on a project instead of throwing', async () => {
+      const { mergeCreateNodesResults } =
+        await import('../project-configuration-utils');
+      const errors: Error[] = [];
+
+      expect(() =>
+        mergeCreateNodesResults(
+          resultsFor(false) as any,
+          [],
+          {} as any,
+          tempFs.tempDir,
+          errors
+        )
+      ).not.toThrow();
+
+      expect(errors.map((e) => e.message)).toEqual([
+        expect.stringMatching(/"ultracache" configuration for target "build"/),
+      ]);
+    });
+
+    it('accepts a well-formed ultracache authored on a project', async () => {
+      const { mergeCreateNodesResults } =
+        await import('../project-configuration-utils');
+      const errors: Error[] = [];
+
+      expect(() =>
+        mergeCreateNodesResults(
+          resultsFor({ mode: 'off', ignoredReads: ['tmp/**'] }) as any,
+          [],
+          {} as any,
+          tempFs.tempDir,
+          errors
+        )
+      ).not.toThrow();
+
+      expect(errors).toEqual([]);
+    });
+  });
+
+  describe('ultracache validation', () => {
+    const projectRootMapWithUltracache = (ultracache: unknown) => ({
+      'libs/a/ui': {
+        root: 'libs/a/ui',
+        name: 'a-ui',
+        targets: { build: { executor: 'nx:run-commands', ultracache } },
+      },
+    });
+
+    // Aggregated as a WorkspaceValidityError so `mergeCreateNodesResults` can
+    // classify it; a bespoke class escapes to the daemon.
+    const ultracacheErrors = (ultracache: unknown): string[] => {
+      try {
+        validateAndNormalizeProjectRootMap(
+          tempFs.tempDir,
+          projectRootMapWithUltracache(ultracache) as any,
+          {}
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(AggregateError);
+        for (const inner of (e as AggregateError).errors) {
+          expect(inner.name).toEqual('WorkspaceValidityError');
+        }
+        return (e as AggregateError).errors.map((inner) => inner.message);
+      }
+      return [];
+    };
+
+    it('should reject a non-object ultracache', () => {
+      expect(ultracacheErrors(false)).toEqual([
+        expect.stringMatching(
+          /"ultracache" configuration for target "build" in project "a-ui"/
+        ),
+      ]);
+    });
+
+    it('should reject a string where a glob array is required', () => {
+      expect(ultracacheErrors({ ignoredReads: 'tmp/**' })).toEqual([
+        expect.stringMatching(
+          /"ultracache.ignoredReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
+        ),
+      ]);
+    });
+
+    it('should reject a non-string element inside a glob array', () => {
+      expect(ultracacheErrors({ ignoredWrites: ['ok/**', 7] })).toEqual([
+        expect.stringMatching(
+          /"ultracache.ignoredWrites\[1\]".*must be a glob pattern string/
+        ),
+      ]);
+    });
+
+    it('should reject a mode that is not one of the four', () => {
+      expect(ultracacheErrors({ mode: 'enabled' })).toEqual([
+        expect.stringMatching(
+          /"ultracache.mode" for target "build" in project "a-ui" must be one of "on", "warn", "error", "off", but it is "enabled"/
+        ),
+      ]);
+    });
+
+    it('should reject a mode that is not a string', () => {
+      expect(ultracacheErrors({ mode: false })).toEqual([
+        expect.stringMatching(/"ultracache.mode".*but it is a boolean/),
+      ]);
+    });
+
+    it.each(['on', 'warn', 'error', 'off'])('should accept mode %s', (mode) => {
+      expect(ultracacheErrors({ mode })).toEqual([]);
+    });
+
+    it('should reject a key that is not an ultracache option', () => {
+      expect(ultracacheErrors({ ignoreReads: ['tmp/**'] })).toEqual([
+        expect.stringMatching(
+          /"ultracache.ignoreReads" for target "build" in project "a-ui" is not an ultracache option/
+        ),
+      ]);
+    });
+
+    // A spread with no base to resolve against survives merging, so rejecting
+    // it here would fail a config the merge deliberately let through.
+    it('should accept the spread token as a key', () => {
+      expect(ultracacheErrors({ '...': true, mode: 'warn' })).toEqual([]);
+    });
+
+    it('should report every malformed key in one error', () => {
+      const [message] = ultracacheErrors({
+        mode: 'enabled',
+        ignoreReads: ['tmp/**'],
+        ignoredReads: 'tmp/**',
+        ignoredWrites: ['ok/**', 7],
+      });
+
+      expect(message).toMatch(
+        /"ultracache.ignoreReads" .* is not an ultracache option/
+      );
+      expect(message).toMatch(/"ultracache.mode"/);
+      expect(message).toMatch(/"ultracache.ignoredReads"/);
+      expect(message).toMatch(/"ultracache.ignoredWrites\[1\]"/);
+    });
+
+    it('should accept a well-formed ultracache', () => {
+      expect(
+        ultracacheErrors({
+          mode: 'warn',
+          ignoredReads: ['tmp/**'],
+          ignoredWrites: ['scratch/**'],
+        })
+      ).toEqual([]);
+    });
+
+    it('should accept a target with no ultracache', () => {
+      expect(ultracacheErrors(undefined)).toEqual([]);
+    });
+  });
+
   it('should fall back to the folder name when project.json cannot be parsed', () => {
     tempFs.createFilesSync({
       'libs/a/ui/project.json': 'not json',

@@ -186,7 +186,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:executor --name ${executor} --path=${plugin}/src/executors/${executor}/executor --includeHasher`
+      `generate @nx/plugin:executor --name ${executor} --path=${plugin}/src/executors/${executor}/executor`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -200,19 +200,16 @@ describe('Nx Plugin', () => {
       `${plugin}/src/executors/${executor}/schema.d.ts`,
       `${plugin}/src/executors/${executor}/schema.json`,
       `${plugin}/src/executors/${executor}/executor.ts`,
-      `${plugin}/src/executors/${executor}/hasher.ts`,
       `${plugin}/src/executors/${executor}/executor.spec.ts`,
       `dist/${plugin}/src/executors/${executor}/schema.d.ts`,
       `dist/${plugin}/src/executors/${executor}/schema.json`,
-      `dist/${plugin}/src/executors/${executor}/executor.js`,
-      `dist/${plugin}/src/executors/${executor}/hasher.js`
+      `dist/${plugin}/src/executors/${executor}/executor.js`
     );
     const executorsJson = readJson(`${plugin}/executors.json`);
     expect(executorsJson).toMatchObject({
       executors: expect.objectContaining({
         [executor]: {
           implementation: `./src/executors/${executor}/executor`,
-          hasher: `./src/executors/${executor}/hasher`,
           schema: `./src/executors/${executor}/schema.json`,
           description: `${executor} executor`,
         },

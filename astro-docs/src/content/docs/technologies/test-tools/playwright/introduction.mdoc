@@ -105,7 +105,7 @@ address, see [Playwright web server readiness](/docs/kb/playwright-web-server-re
 
 The `targetName` task runs the complete Playwright suite and caches the configured test and reporter
 outputs.
-The `ciTargetName` task uses the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+The `ciTargetName` task uses the [Atomizer](/docs/kb/split-e2e-tasks).
 
 Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
 
@@ -156,6 +156,8 @@ nx e2e frontend-e2e --grepInvert="feat-a"
 
 By default, Playwright will run in headless mode. You will have the result of all the tests and errors (if any) in your
 terminal. Test output such as reports, screenshots, and videos will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
+
+If a test passes and fails without a code change, use the [flaky Playwright test guide](/docs/technologies/test-tools/playwright/guides/flaky-tests) to reproduce the failure, inspect its trace, and fix its cause.
 
 {% aside type="note" title="Output Caching" %}
 If changing the output directory or report output, make sure to update the [target outputs](/docs/concepts/how-caching-works#what-is-cached) so the artifacts are correctly cached

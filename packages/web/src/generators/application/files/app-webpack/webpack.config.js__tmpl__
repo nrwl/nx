@@ -8,7 +8,7 @@ module.exports = {
     clean: true,
   },
   devServer: {
-    port: 4200
+    port: <%= devServerPort %>
   },
   plugins: [
     new NxAppWebpackPlugin({

@@ -92,6 +92,15 @@ export async function collectDocs(): Promise<CollectedDocs> {
     });
   }
 
+  const publicApi = await getCollection('nx-cloud-public-api');
+  for (const doc of publicApi) {
+    entries.push({
+      slug: doc.data.slug,
+      title: doc.data.title,
+      description: doc.data.description,
+    });
+  }
+
   try {
     const pluginDocs = await getCollection('plugin-docs');
     for (const doc of pluginDocs) {

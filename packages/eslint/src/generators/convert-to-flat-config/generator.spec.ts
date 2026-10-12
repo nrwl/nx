@@ -775,7 +775,7 @@ describe('convert-to-flat-config generator', () => {
         eslintConfigFormat: 'cjs',
       });
 
-      const warnSpy = jest.spyOn(logger, 'warn');
+      const warnSpy = vi.spyOn(logger, 'warn');
       await convertToFlatConfigGenerator(tree, options);
 
       expect(tree.exists('libs/no-lint-lib/.eslintrc.json')).toBeTruthy();
@@ -1626,7 +1626,7 @@ describe('convert-to-flat-config generator', () => {
         tree.delete('libs/test-lib/.eslintrc.json');
         tree.write(`libs/test-lib/${jsConfig}`, 'module.exports = {};');
 
-        const warnSpy = jest.spyOn(logger, 'warn');
+        const warnSpy = vi.spyOn(logger, 'warn');
         await convertToFlatConfigGenerator(tree, options);
 
         expect(warnSpy).toHaveBeenCalledWith(
@@ -1651,7 +1651,7 @@ describe('convert-to-flat-config generator', () => {
       tree.delete('libs/test-lib/.eslintrc.json');
       tree.write('libs/test-lib/eslint.config.js', 'module.exports = [];');
 
-      const warnSpy = jest.spyOn(logger, 'warn');
+      const warnSpy = vi.spyOn(logger, 'warn');
       await convertToFlatConfigGenerator(tree, options);
 
       expect(warnSpy).not.toHaveBeenCalledWith(

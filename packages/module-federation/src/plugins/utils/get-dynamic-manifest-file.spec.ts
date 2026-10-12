@@ -1,18 +1,20 @@
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn((...args: any[]) =>
-    (jest.requireActual('fs') as any).existsSync(...args)
-  ),
-}));
-const fs = require('fs');
+import type { Mock } from 'vitest';
+vi.mock('fs', async () => {
+  const actual = await vi.importActual<any>('fs');
+  return {
+    ...actual,
+    existsSync: vi.fn((...args: any[]) => actual.existsSync(...args)),
+  };
+});
+import * as fs from 'fs';
 
 import { getDynamicMfManifestFile } from './get-dynamic-manifest-file';
 
 describe('getDynamicMfManifestFile', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it('should return the correct manifest file', () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
+    (fs.existsSync as Mock).mockReturnValue(true);
 
     const manifestFile = getDynamicMfManifestFile(
       { root: 'myapp', sourceRoot: 'myapp/src' },
@@ -25,7 +27,7 @@ describe('getDynamicMfManifestFile', () => {
   });
 
   it('should return undefined if the manifest file does not exist', () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(false);
+    (fs.existsSync as Mock).mockReturnValue(false);
 
     const manifestFile = getDynamicMfManifestFile(
       { root: 'myapp', sourceRoot: 'myapp/src' },

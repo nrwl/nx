@@ -27,9 +27,6 @@
   "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
-      "plugin-v1": [
-        "dist/plugin-v1.d.ts"
-      ],
       "src/*": [
         "dist/src/*.d.ts"
       ],
@@ -50,11 +47,6 @@
       "@nx/nx-source": "./index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./plugin-v1": {
-      "@nx/nx-source": "./plugin-v1.ts",
-      "types": "./dist/plugin-v1.d.ts",
-      "default": "./dist/plugin-v1.js"
     },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",

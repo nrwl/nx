@@ -1,5 +1,7 @@
-use crate::native::{types::FileData, utils::normalize_trait::Normalize};
-use std::path::{Path, PathBuf};
+use crate::native::utils::normalize_trait::Normalize;
+use std::collections::BTreeMap;
+use std::ops::Bound;
+use std::path::{Component, Path, PathBuf};
 
 impl Normalize for Path {
     fn to_normalized_string(&self) -> String {
@@ -29,12 +31,46 @@ where
     }
 }
 
-pub fn get_child_files<P: AsRef<Path>>(directory: P, files: Vec<FileData>) -> Vec<String> {
+/// A path as a person or JS wrote it, for any OS: a Windows drive letter
+/// stripped, then `\` swapped for `/`. Mirrors `normalizePath` in
+/// `packages/nx/src/utils/path.ts`. Paths read from disk use `Normalize`.
+pub fn normalize_js_path(path: &str) -> String {
+    let without_drive = match path.as_bytes() {
+        [drive, b':', ..] if drive.is_ascii_alphabetic() => &path[2..],
+        _ => path,
+    };
+    without_drive.replace('\\', "/")
+}
+
+pub fn get_child_files<'a, T>(
+    directory: &Path,
+    files: &'a BTreeMap<PathBuf, T>,
+) -> impl Iterator<Item = (&'a PathBuf, &'a T)> {
+    // Path order keeps a directory and its descendants contiguous.
     files
-        .into_iter()
-        .filter(|file_data| Path::new(&file_data.file).starts_with(directory.as_ref()))
-        .map(|file_data| file_data.file)
-        .collect()
+        .range::<Path, _>((Bound::Included(directory), Bound::Unbounded))
+        .take_while(move |(path, _)| path.starts_with(directory))
+}
+
+/// Whether a relative path climbs above its base via `..`, or has a root or
+/// drive prefix (`/x`, and on Windows `\x` or `C:x`) that `join` would follow.
+pub(crate) fn escapes_workspace(path: &Path) -> bool {
+    let mut depth: i32 = 0;
+    for component in path.components() {
+        match component {
+            Component::ParentDir => {
+                depth -= 1;
+                if depth < 0 {
+                    return true;
+                }
+            }
+            Component::Normal(_) => depth += 1,
+            Component::CurDir => {}
+            // A relative path shouldn't contain a root/prefix; treat as escaping.
+            Component::RootDir | Component::Prefix(_) => return true,
+        }
+    }
+    false
 }
 
 #[cfg(test)]
@@ -43,31 +79,41 @@ mod test {
     use std::path::PathBuf;
 
     #[test]
+    fn a_path_escapes_the_workspace_by_climbing_or_by_a_root() {
+        for inside in ["dist/app", "libs/a/../b", "./dist", "!x"] {
+            assert!(!escapes_workspace(Path::new(inside)), "{inside}");
+        }
+        for outside in ["../x", "libs/../../x", "/etc/passwd"] {
+            assert!(escapes_workspace(Path::new(outside)), "{outside}");
+        }
+        // `\` roots a path only where it is a separator.
+        assert_eq!(escapes_workspace(Path::new(r"\!Backup")), cfg!(windows));
+        assert_eq!(escapes_workspace(Path::new("C:x")), cfg!(windows));
+    }
+
+    #[test]
+    fn normalizes_a_js_path_on_any_os() {
+        assert_eq!(normalize_js_path("libs\\a\\index.ts"), "libs/a/index.ts");
+        // Stripping the drive leaves a leading slash, as `normalizePath` does.
+        assert_eq!(normalize_js_path("C:\\libs\\a"), "/libs/a");
+        assert_eq!(normalize_js_path("libs/a/index.ts"), "libs/a/index.ts");
+    }
+
+    #[test]
     fn should_get_child_files() {
-        let directory = PathBuf::from("foo");
-        let files = vec![
-            FileData {
-                file: "foo/bar".into(),
-                hash: "123".into(),
-            },
-            FileData {
-                file: "foo/baz".into(),
-                hash: "123".into(),
-            },
-            FileData {
-                file: "foo/child/bar".into(),
-                hash: "123".into(),
-            },
-            FileData {
-                file: "bar/baz".into(),
-                hash: "123".into(),
-            },
-            FileData {
-                file: "foo-other/not-child".into(),
-                hash: "123".into(),
-            },
-        ];
-        let child_files = get_child_files(&directory, files);
-        assert_eq!(child_files, ["foo/bar", "foo/baz", "foo/child/bar",]);
+        let files: BTreeMap<_, _> = [
+            "foo/bar",
+            "foo/baz",
+            "foo/child/bar",
+            "bar/baz",
+            "foo-other/not-child",
+        ]
+        .into_iter()
+        .map(|path| (PathBuf::from(path), "123"))
+        .collect();
+        let child_files: Vec<_> = get_child_files(Path::new("foo"), &files)
+            .map(|(path, _)| path.to_normalized_string())
+            .collect();
+        assert_eq!(child_files, ["foo/bar", "foo/baz", "foo/child/bar"]);
     }
 }

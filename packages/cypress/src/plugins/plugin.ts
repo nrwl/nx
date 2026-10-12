@@ -24,6 +24,7 @@ import {
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { dirname, join, relative, resolve } from 'path';
+import * as posix from 'node:path/posix';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 
 export interface CypressPluginOptions {
@@ -152,7 +153,7 @@ async function createNodesInternal(
 
 function getTargetOutputs(outputs: string[], subfolder?: string): string[] {
   return outputs.map((output) =>
-    subfolder ? join(output, subfolder) : output
+    subfolder ? posix.join(output, subfolder) : output
   );
 }
 
@@ -744,15 +745,15 @@ async function getSpecFilesAndPatternsForTestType(
     cypressConfig[testType].specPattern ??
     defaultPatterns[testType].specPattern;
   const specPatterns = Array.isArray(specPattern)
-    ? specPattern.map((p) => join(projectRoot, p))
-    : [join(projectRoot, specPattern)];
+    ? specPattern.map((p) => posix.join(projectRoot, p))
+    : [posix.join(projectRoot, specPattern)];
 
   const excludeSpecPattern =
     cypressConfig[testType].excludeSpecPattern ??
     defaultPatterns[testType].excludeSpecPattern;
   const excludeSpecPatterns: string[] = Array.isArray(excludeSpecPattern)
-    ? excludeSpecPattern.map((p) => join(projectRoot, p))
-    : [join(projectRoot, excludeSpecPattern)];
+    ? excludeSpecPattern.map((p) => posix.join(projectRoot, p))
+    : [posix.join(projectRoot, excludeSpecPattern)];
   const specFiles = await globWithWorkspaceContext(
     workspaceRoot,
     specPatterns,

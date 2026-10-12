@@ -190,6 +190,13 @@
       "description": "Sets \"cache\" on some executor-based target defaults whose caching was previously enabled by a target name default, maintaining compatibility with how cacheability resolved before Nx 23. Keys the migration cannot decide are left alone and keep working through a deprecated runtime fallback.",
       "implementation": "./dist/src/migrations/update-23-2-0/set-cache-on-executor-target-defaults",
       "documentation": "./dist/src/migrations/update-23-2-0/set-cache-on-executor-target-defaults.md"
+    },
+    "24-0-0-move-custom-hashers-to-inputs": {
+      "version": "24.0.0-beta.0",
+      "description": "Finds local executors that declare a custom hasher, which is deprecated and will be removed in Nx 25. Rewriting a hasher as target inputs means reading what its code hashes, so the rewrite is driven by an AI prompt; the generator only reports each hasher.",
+      "implementation": "./dist/src/migrations/update-24-0-0/find-custom-hashers",
+      "prompt": "./dist/src/migrations/update-24-0-0/move-custom-hashers-to-inputs.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/find-custom-hashers.md"
     }
   }
 }

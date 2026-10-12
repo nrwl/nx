@@ -42,13 +42,15 @@ const RULE_SAFE_RUN_DIR_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
  * handoffs decide how its steps settle. `Edit` is the only tool name file
  * rules are matched against, and it covers creating the file as well as
  * correcting one already written. Prefix-less patterns resolve against the
- * session cwd, pinned to the workspace root below.
+ * session cwd, which every caller pins to the workspace root.
  *
  * Returns null for a name it cannot express, which costs the approval prompt
  * this exists to avoid. That beats widening the rule, and nothing narrower is
  * available: Claude Code has no escape for a literal path.
  */
-function claudeCodeHandoffAllowedTools(runDirName: string): string | null {
+export function claudeCodeHandoffAllowedTools(
+  runDirName: string
+): string | null {
   if (!RULE_SAFE_RUN_DIR_NAME.test(runDirName)) {
     return null;
   }
@@ -86,7 +88,8 @@ function codexWellKnownPaths(): string[] {
 }
 
 // No handoff permission flag: codex's default sandbox already allows writes
-// inside the cwd tree, and a user-hardened read-only config is theirs to keep.
+// inside the cwd tree (`.git` excepted), and a user-hardened read-only config
+// is theirs to keep.
 //
 // `-c model_instructions_file` replaces codex's built-in instructions rather
 // than adding this context to them, so the context stays on the command line,
@@ -107,7 +110,7 @@ function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
  * failure as literal text instead of reporting it, so the result is parsed
  * back before it reaches the command line.
  */
-function encodeTomlString(value: string): string {
+export function encodeTomlString(value: string): string {
   // JSON escapes every control TOML rejects except DEL, which it leaves raw.
   const encoded = JSON.stringify(value).replace(/\x7f/g, '\\u007F');
   let decoded: unknown;

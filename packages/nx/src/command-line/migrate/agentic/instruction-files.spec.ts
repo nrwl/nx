@@ -127,9 +127,7 @@ describe('writeStepInstructionFiles', () => {
       });
 
       expect(() => write()).toThrow(
-        new RegExp(
-          `Could not write the migration step's ${purpose} to .*${file}`
-        )
+        new RegExp(`Could not write the step's ${purpose} to .*${file}`)
       );
     }
   );

@@ -9,6 +9,13 @@
       "command": "node ./scripts/copy-readme.js cypress packages/cypress/readme-template.md packages/cypress/README.md",
       "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-base"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   }
 }

@@ -1,7 +1,7 @@
 import { normalizeOptions } from './normalize-options';
 
-jest.mock('@nx/js', () => ({
-  ...jest.requireActual('@nx/js'),
+vi.mock('@nx/js', async () => ({
+  ...(await vi.importActual<any>('@nx/js')),
   createEntryPoints: (x: string) => x,
 }));
 
@@ -9,18 +9,18 @@ jest.mock('@nx/js', () => ({
 // (where tsconfig.base.json doesn't exist). The global mock in
 // `scripts/unit-test-setup.js` short-circuits `isUsingTsSolutionSetup()` before
 // any fs read, so we override it here to explicitly express the intent.
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(() => false),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(() => false),
 }));
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/tmp',
 }));
 
-jest.mock('node:fs', () => ({
-  ...jest.requireActual('node:fs'),
+vi.mock('node:fs', async () => ({
+  ...(await vi.importActual<any>('node:fs')),
   statSync: () => ({ isDirectory: () => true, isFile: () => false }),
 }));
 

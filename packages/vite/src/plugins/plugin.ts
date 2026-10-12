@@ -7,7 +7,6 @@ import {
   retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodes,
@@ -16,6 +15,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
@@ -55,13 +55,6 @@ type ViteTargets = Pick<
   ProjectConfiguration,
   'targets' | 'metadata' | 'projectType'
 >;
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const viteConfigGlob = '**/vite.config.{js,ts,mjs,mts,cjs,cts}';
 
@@ -543,7 +536,7 @@ function normalizeOutputPath(
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      return `{workspaceRoot}/${normalizePath(relative(workspaceRoot, outputPath))}`;
     } else {
       if (outputPath.startsWith('..')) {
         return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
