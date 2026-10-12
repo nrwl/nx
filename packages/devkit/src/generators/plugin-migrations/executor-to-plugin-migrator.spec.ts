@@ -48,7 +48,7 @@ import {
 // probe) -- all outside `devkit:test`'s declared inputs, which the Nx Cloud
 // task-isolation sandbox flags. `has-nx-js-plugin` lives in its own module so
 // tests can mock it; returning false keeps resolution honest to the temp workspace.
-jest.mock('nx/src/utils/has-nx-js-plugin', () => ({
+vi.mock('nx/src/utils/has-nx-js-plugin', () => ({
   hasNxJsPlugin: () => false,
 }));
 
@@ -323,7 +323,7 @@ describe('collectMigrationScope (Phase 0)', () => {
     });
     addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
     addSecondExecutorTarget(ctx, 'app1', 'skiptest');
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     const scope = collectMigrationScope(
       ctx.tree,
@@ -368,7 +368,7 @@ describe('collectMigrationScope (Phase 0)', () => {
     ctx = setupFixture('collect-scope-option-overwrite');
     addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
     addSecondExecutorTarget(ctx, 'app1', 'skiptest');
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     const scope = collectMigrationScope(
       ctx.tree,
@@ -886,7 +886,7 @@ describe('Phase 3: strict-common hoist', () => {
       target.inputs = ['default', { externalDependencies: [`dep-${root}`] }];
       return target;
     });
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -926,7 +926,7 @@ describe('Phase 3: strict-common hoist', () => {
     nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { dependsOn: ['^build'] };
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -1447,7 +1447,7 @@ describe('Phase 3: strict-common hoist', () => {
     nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -1506,7 +1506,7 @@ describe('Phase 3: strict-common hoist', () => {
     };
     ctx.fs.createFileSync(`libs/pkg1/${SYNTHETIC_CONFIG_FILE}`, '{}');
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -1577,7 +1577,7 @@ describe('Phase 3: strict-common hoist', () => {
       ctx.fs.createFileSync(`libs/${name}/${SYNTHETIC_CONFIG_FILE}`, '{}');
     }
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -1654,7 +1654,7 @@ describe('Phase 3: strict-common hoist', () => {
       ctx.fs.createFileSync(`libs/${name}/${SYNTHETIC_CONFIG_FILE}`, '{}');
     }
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -1725,7 +1725,7 @@ describe('Phase 3: strict-common hoist', () => {
     };
     ctx.fs.createFileSync(`libs/pkg1/${SYNTHETIC_CONFIG_FILE}`, '{}');
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -1770,7 +1770,7 @@ describe('Phase 3: strict-common hoist', () => {
     const app1Target = readJson(ctx.tree, 'apps/app1/project.json').targets
       .build;
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -1835,7 +1835,7 @@ describe('Phase 3: strict-common hoist', () => {
       (root) => ({ command: 'other-build', options: { cwd: root } }),
       OTHER_PLUGIN_PATH
     );
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -1896,7 +1896,7 @@ describe('Phase 3: strict-common hoist', () => {
       (root) => ({ command: 'other-build', options: { cwd: root } }),
       OTHER_PLUGIN_PATH
     );
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2094,7 +2094,7 @@ describe('Phase 3: strict-common hoist', () => {
       JSON.stringify({ name: 'scripted', scripts: { build: 'tsc -b' } })
     );
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2137,7 +2137,7 @@ describe('Phase 3: strict-common hoist', () => {
     nxJson.targetDefaults.build = { cache: true, options: { verbose: true } };
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2190,7 +2190,7 @@ describe('Phase 3: strict-common hoist', () => {
     };
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2399,7 +2399,7 @@ describe('Phase 3: strict-common hoist', () => {
     nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { cache: true };
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2444,7 +2444,7 @@ describe('Phase 3: strict-common hoist', () => {
     (nxJson.targetDefaults as any).build = [{ cache: true }];
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2484,7 +2484,7 @@ describe('Phase 3: strict-common hoist', () => {
       target: uniformExecutorTarget(),
     });
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2653,7 +2653,7 @@ describe('Phase 3: strict-common hoist', () => {
     (migrations[0] as any).skipProjectFilter = (project: any) =>
       project.root === 'app3' ? 'skipped for this test' : false;
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2706,7 +2706,7 @@ describe('Phase 3: strict-common hoist', () => {
     nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2798,7 +2798,7 @@ describe('Phase 3: strict-common hoist', () => {
         return results;
       },
     ];
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2877,7 +2877,7 @@ describe('Phase 3: strict-common hoist', () => {
         });
       },
     ];
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -2965,7 +2965,7 @@ describe('Phase 3: strict-common hoist', () => {
         return results;
       },
     ];
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -3055,7 +3055,7 @@ describe('Phase 3: strict-common hoist', () => {
         return results;
       },
     ];
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -3485,7 +3485,7 @@ describe('Phase 3: target-default preflight', () => {
     };
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -3588,7 +3588,7 @@ describe('Phase 3: target-default preflight', () => {
       }
       return target;
     };
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -3721,7 +3721,7 @@ describe('Phase 3: target-default preflight', () => {
       }
       return target;
     };
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -3802,7 +3802,7 @@ describe('Phase 3: target-default preflight', () => {
     };
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -3873,7 +3873,7 @@ describe('batch conversion session: deferred staging', () => {
     nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { cache: true };
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     const session = openBatchConversionSession(ctx.tree);
     try {
@@ -4185,7 +4185,7 @@ describe('Phase 4: verify + equivalence oracle + fallback', () => {
         return target;
       }
     );
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -4258,7 +4258,7 @@ describe('Phase 4: verify + equivalence oracle + fallback', () => {
         return target;
       }
     );
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -4317,7 +4317,7 @@ describe('Phase 4: verify + equivalence oracle + fallback', () => {
         });
       },
     ];
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -4369,7 +4369,7 @@ describe('Phase 4: verify + equivalence oracle + fallback', () => {
         return defaultInferredTarget(root, targetName);
       }
     );
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -4451,7 +4451,7 @@ describe('Phase 4: verify + equivalence oracle + fallback', () => {
         return results;
       },
     ];
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await migrateProjectExecutorsToPlugin(
       ctx.tree,

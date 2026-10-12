@@ -4,11 +4,11 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { type Tree } from '@nx/devkit';
 import configurationGenerator from './configuration';
 
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    createProjectGraphAsync: jest.fn().mockResolvedValue({
+    createProjectGraphAsync: vi.fn().mockResolvedValue({
       dependencies: {},
       nodes: {
         myapp: {

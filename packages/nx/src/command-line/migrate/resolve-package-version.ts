@@ -17,6 +17,7 @@ import {
 import { appendMinimumReleaseAgeExcludes } from '../../utils/min-release-age/pnpm-exclude-writer';
 import { resolveCompliantVersion } from '../../utils/min-release-age/resolve';
 import { migrateConfirm } from './safe-prompt';
+import { formatAge } from './text';
 
 /**
  * Whether nx migrate should resolve versions via the npm registry (fast) rather
@@ -262,7 +263,7 @@ async function handleViolation(
   // sorted newest-first, so the resolver's pick is the last entry. Mirror the
   // loose path: prompt for, exclude, and return that one version.
   const resolved = error.blocked[error.blocked.length - 1];
-  const blockedLine = `  ${packageName}@${resolved.version} (published ${formatPublishAge(
+  const blockedLine = `  ${packageName}@${resolved.version} (published ${formatAge(
     resolved.publishedAt
   )})`;
 
@@ -297,23 +298,4 @@ async function handleViolation(
   ]);
 
   return resolved.version;
-}
-
-// Renders a registry ISO publish timestamp as a human age for the strict prompt
-// (e.g. "6 hours ago"), falling back to the raw value when it is not parseable.
-function formatPublishAge(publishedAt: string): string {
-  const elapsedMs = Date.now() - Date.parse(publishedAt);
-  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
-    return publishedAt;
-  }
-  const minutes = Math.floor(elapsedMs / 60_000);
-  if (minutes < 60) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-  }
-  const hours = Math.floor(elapsedMs / 3_600_000);
-  if (hours < 48) {
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-  }
-  const days = Math.floor(elapsedMs / 86_400_000);
-  return `${days} day${days === 1 ? '' : 's'} ago`;
 }

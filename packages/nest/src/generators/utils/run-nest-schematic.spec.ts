@@ -1,3 +1,5 @@
+import * as devkit from '@nx/devkit';
+import type { MockInstance } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { runNestSchematic } from './run-nest-schematic';
 import { createTreeWithNestApplication } from './testing';
@@ -14,7 +16,7 @@ describe('runNestSchematic utility', () => {
 
   beforeEach(() => {
     tree = createTreeWithNestApplication(directory);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const testTypes: NestSchematic[] = [
@@ -39,17 +41,16 @@ describe('runNestSchematic utility', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
-        .spyOn(devkitModule, 'formatFiles')
+      formatFilesSpy = vi
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files by default', async () => {

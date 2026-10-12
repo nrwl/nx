@@ -9,7 +9,7 @@ describe('setupDockerGenerator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
 
-    jest.resetModules();
+    vi.resetModules();
   });
 
   describe('integrated', () => {

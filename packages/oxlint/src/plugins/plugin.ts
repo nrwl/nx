@@ -8,7 +8,6 @@ import {
   PluginCache,
   TargetProjectLocator,
   workspaceDataDirectory,
-  quoteShellArg,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -32,15 +31,10 @@ import {
 } from '@nx/js/internal';
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import {
-  dirname as nativeDirname,
-  join as nativeJoin,
-  relative as nativeRelative,
-  sep as nativeSep,
-} from 'node:path';
+import { relative as nativeRelative, sep as nativeSep } from 'node:path';
 import { basename, dirname, join, normalize, sep } from 'node:path/posix';
 import { OXLINT_CONFIG_FILENAMES } from '../utils/config-file.js';
+import { resolveOxlintBin } from '../utils/oxlint-bin.js';
 
 export interface OxlintPluginOptions {
   targetName?: string;
@@ -108,9 +102,8 @@ const internalCreateNodes = async (
       }
 
       // Require something lintable, so docs-only projects get no target even
-      // when they own a config — a target there fails with "No files found to
-      // lint". This spans the whole workspace, so it stays behind the cache
-      // check and is memoized across configs.
+      // when they own a config. This spans the whole workspace, so it stays
+      // behind the cache check and is memoized across configs.
       const shouldInferTarget =
         ((await getLintableFilesPerProjectRoot()).get(projectRoot) ?? 0) > 0;
 
@@ -670,8 +663,6 @@ function collectTsconfigChainsByProjectRoot(
   return result;
 }
 
-const localRequire = createRequire(import.meta.url);
-
 /**
  * Asks Oxlint itself which files it would lint. A glob cannot answer this:
  * Oxlint honours `ignorePatterns`, `.eslintignore` and `.gitignore`, including
@@ -685,19 +676,8 @@ const localRequire = createRequire(import.meta.url);
 function enumerateLintableFilesWithOxlint(
   workspaceRoot: string
 ): string[] | null {
-  let bin: string;
-  try {
-    bin = nativeJoin(
-      nativeDirname(
-        localRequire.resolve('oxlint/package.json', { paths: [workspaceRoot] })
-      ),
-      'bin',
-      'oxlint'
-    );
-  } catch {
-    return null;
-  }
-  if (!existsSync(bin)) {
+  const bin = resolveOxlintBin(workspaceRoot);
+  if (!bin) {
     return null;
   }
 
@@ -789,23 +769,10 @@ function ancestorIgnorePaths(projectRoot: string): string[] {
 }
 
 /**
- * Escape the gitignore metacharacters in a path so `--ignore-pattern` matches it
- * literally. The value crosses two languages and `quoteShellArg` only covers the
- * shell: to Oxlint's matcher `\`, `[`, `]`, `*` and `?` are pattern syntax, and a
- * trailing space is stripped unless escaped — so `/a[b]` excludes `ab` while
- * leaving `a[b]` walked, which is both a miss and a silent over-exclusion.
- */
-function escapeIgnorePattern(pattern: string): string {
-  return pattern
-    .replace(/([\\[\]*?])/g, '\\$1')
-    .replace(/ +$/, (spaces) => spaces.replace(/ /g, '\\ '));
-}
-
-/**
  * Direct child project roots for each project root, keyed by the parent. A root
  * belongs to its NEAREST enclosing root, so a grandchild lands under the child
  * rather than the grandparent — which is what keeps an outer project from
- * emitting an exclusion that a shallower one already covers.
+ * carrying an exclusion that a shallower one already covers.
  *
  * Built once per run: resolving each root's parent by walking up is linear in
  * the workspace, where asking every project which roots sit below it is not.
@@ -837,31 +804,6 @@ function nestedRootsByParentRoot(
   return byParent;
 }
 
-/**
- * The project roots nested directly below `projectRoot`, relative to it and
- * limited to `lintDir` when the lint walk starts there. An excluded root either
- * has its own inferred target or owns nothing lintable, so pruning it drops no
- * lint coverage.
- *
- * Callers must emit each one anchored (`/dir`) and never as `dir/**`. A gitignore
- * pattern is anchored only when it contains a slash, so a bare single-segment
- * root would also match a same-named directory the outer project owns; and
- * `dir/**` matches only entries inside `dir`, leaving Oxlint free to descend and
- * read that directory's ignore files.
- */
-function nestedProjectRoots(
-  projectRoot: string,
-  nestedRootsByParent: Map<string, string[]>,
-  lintDir: string
-): string[] {
-  const prefix = projectRoot === '.' ? '' : `${projectRoot}/`;
-  return (nestedRootsByParent.get(projectRoot) ?? [])
-    .map((root) => root.slice(prefix.length))
-    .filter(
-      (rel) => !lintDir || rel === lintDir || rel.startsWith(`${lintDir}/`)
-    );
-}
-
 // Only the keys are read, so the value type is left open for all callers.
 function getRootForDirectory(
   directory: string,
@@ -891,16 +833,21 @@ function getProjectUsingOxlintConfig(
   tsconfigChainOutsideProjectRoot: string[],
   rootConfig: string | undefined
 ): CreateNodesResult['projects'][string] | null {
+  // Linter-agnostic on purpose: a nested ESLint project's files are still
+  // its own.
+  const nestedProjectRoots = nestedRootsByParent.get(projectRoot) ?? [];
+
   let standaloneSrcPath: string | undefined;
   if (
     projectRoot === '.' &&
     existsSync(join(context.workspaceRoot, projectRoot, 'package.json'))
   ) {
-    if (existsSync(join(context.workspaceRoot, projectRoot, 'src'))) {
-      standaloneSrcPath = 'src';
-    } else if (existsSync(join(context.workspaceRoot, projectRoot, 'lib'))) {
-      standaloneSrcPath = 'lib';
-    }
+    // A directory that is itself a project belongs to that project.
+    standaloneSrcPath = ['src', 'lib'].find(
+      (dir) =>
+        existsSync(join(context.workspaceRoot, projectRoot, dir)) &&
+        !nestedProjectRoots.includes(dir)
+    );
   }
 
   if (projectRoot === '.' && !standaloneSrcPath) {
@@ -922,26 +869,6 @@ function getProjectUsingOxlintConfig(
     ),
   ];
 
-  const isRootProject = projectRoot === '.';
-  const lintPath =
-    isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.';
-  const nestedIgnoreArgs = nestedProjectRoots(
-    projectRoot,
-    nestedRootsByParent,
-    isRootProject && standaloneSrcPath ? standaloneSrcPath : ''
-  )
-    // `quoteShellArg` documents that it cannot keep `%` literal through cmd.exe,
-    // so on Windows such a root is left unexcluded rather than excluded wrongly:
-    // it gets linted twice, which is what happened before this exclusion existed.
-    .filter(
-      (relativeRoot) =>
-        process.platform !== 'win32' || !relativeRoot.includes('%')
-    )
-    .map(
-      (relativeRoot) =>
-        `--ignore-pattern ${quoteShellArg(escapeIgnorePattern(`/${relativeRoot}`))}`
-    );
-
   const jsPluginFiles = new Set(
     configInputs.flatMap((config) =>
       localJsPluginFiles(config, jsPluginSpecifiersByConfig.get(config) ?? [])
@@ -956,8 +883,14 @@ function getProjectUsingOxlintConfig(
   );
 
   const targetConfig: TargetConfiguration = {
-    command: `oxlint ${[lintPath, ...nestedIgnoreArgs].join(' ')}`,
-    options: { cwd: projectRoot },
+    executor: '@nx/oxlint:lint',
+    ...((standaloneSrcPath || nestedProjectRoots.length > 0) && {
+      options: {
+        // Every other project lints its root, the executor's default.
+        ...(standaloneSrcPath && { lintFilePatterns: [standaloneSrcPath] }),
+        ...(nestedProjectRoots.length > 0 && { nestedProjectRoots }),
+      },
+    }),
     cache: true,
     inputs: [
       // Only what Oxlint can lint, so a README or JSON edit is not a re-lint.

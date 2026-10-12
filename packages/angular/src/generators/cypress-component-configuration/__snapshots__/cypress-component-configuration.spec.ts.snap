@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Cypress Component Testing Configuration should setup angular specific configs: component.ts 1`] = `
+exports[`Cypress Component Testing Configuration > should setup angular specific configs > component.ts 1`] = `
 "import { mount } from 'cypress/angular';
 // ***********************************************************
 // This example support/component.ts is processed and
@@ -31,7 +31,7 @@ declare global {
 Cypress.Commands.add('mount', mount);"
 `;
 
-exports[`Cypress Component Testing Configuration should work with complex component 1`] = `
+exports[`Cypress Component Testing Configuration > should work with complex component 1`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingOne } from './something-one';
 
@@ -52,7 +52,7 @@ describe(SomethingOne.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with complex component 2`] = `
+exports[`Cypress Component Testing Configuration > should work with complex component 2`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingTwo } from './something-two';
 
@@ -73,7 +73,7 @@ describe(SomethingTwo.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with complex component 3`] = `
+exports[`Cypress Component Testing Configuration > should work with complex component 3`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingThree } from './something-three';
 
@@ -94,7 +94,7 @@ describe(SomethingThree.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with complex standalone component 1`] = `
+exports[`Cypress Component Testing Configuration > should work with complex standalone component 1`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingOne } from './something-one';
 
@@ -115,7 +115,7 @@ describe(SomethingOne.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with complex standalone component 2`] = `
+exports[`Cypress Component Testing Configuration > should work with complex standalone component 2`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingTwo } from './something-two';
 
@@ -136,7 +136,7 @@ describe(SomethingTwo.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with complex standalone component 3`] = `
+exports[`Cypress Component Testing Configuration > should work with complex standalone component 3`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingThree } from './something-three';
 
@@ -157,7 +157,7 @@ describe(SomethingThree.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with secondary entry point libs 1`] = `
+exports[`Cypress Component Testing Configuration > should work with secondary entry point libs 1`] = `
 "import { TestBed } from '@angular/core/testing';
 import { FancyButton } from './fancy-button';
 
@@ -178,7 +178,7 @@ describe(FancyButton.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with secondary entry point libs 2`] = `
+exports[`Cypress Component Testing Configuration > should work with secondary entry point libs 2`] = `
 "import { TestBed } from '@angular/core/testing';
 import { StandaloneFancyButton } from './standalone-fancy-button';
 
@@ -199,7 +199,7 @@ describe(StandaloneFancyButton.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with simple components 1`] = `
+exports[`Cypress Component Testing Configuration > should work with simple components 1`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingOne } from './something-one';
 
@@ -220,7 +220,7 @@ describe(SomethingOne.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with simple components 2`] = `
+exports[`Cypress Component Testing Configuration > should work with simple components 2`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingTwo } from './something-two';
 
@@ -241,7 +241,7 @@ describe(SomethingTwo.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with simple components 3`] = `
+exports[`Cypress Component Testing Configuration > should work with simple components 3`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingThree } from './something-three';
 
@@ -262,7 +262,7 @@ describe(SomethingThree.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with standalone component 1`] = `
+exports[`Cypress Component Testing Configuration > should work with standalone component 1`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingOne } from './something-one';
 
@@ -283,7 +283,7 @@ describe(SomethingOne.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with standalone component 2`] = `
+exports[`Cypress Component Testing Configuration > should work with standalone component 2`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingTwo } from './something-two';
 
@@ -304,7 +304,7 @@ describe(SomethingTwo.name, () => {
 "
 `;
 
-exports[`Cypress Component Testing Configuration should work with standalone component 3`] = `
+exports[`Cypress Component Testing Configuration > should work with standalone component 3`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingThree } from './something-three';
 

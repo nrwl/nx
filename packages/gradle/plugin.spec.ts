@@ -5,11 +5,11 @@ import { type ProjectGraphReport } from './src/plugin/utils/get-project-graph-fr
 import { join } from 'path';
 
 let gradleReport: ProjectGraphReport;
-jest.mock('./src/plugin/utils/get-project-graph-from-gradle-plugin', () => {
+vi.mock('./src/plugin/utils/get-project-graph-from-gradle-plugin', () => {
   return {
     GRADLE_BUILD_FILES: new Set(['build.gradle', 'build.gradle.kts']),
-    populateProjectGraph: jest.fn().mockImplementation(() => void 0),
-    getCurrentProjectGraphReport: jest
+    populateProjectGraph: vi.fn().mockImplementation(() => void 0),
+    getCurrentProjectGraphReport: vi
       .fn()
       .mockImplementation(() => gradleReport),
   };
@@ -42,7 +42,7 @@ describe('@nx/gradle/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
     tempFs = null;
   });

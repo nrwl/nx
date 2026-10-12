@@ -16,9 +16,10 @@ independent deployment is a hard requirement, not when you want faster builds.
 
 ## The supported path: Native Federation
 
-As of Nx v23, the `@nx/angular` `host` and `remote` generators are deprecated, and Angular Module
-Federation in Nx is no longer supported going forward.
-The supported path for Angular micro frontends is
+As of Nx v23, the `@nx/angular` `host` and `remote` generators are deprecated, and Nx v24 will
+remove them along with the Nx-specific Module Federation wrappers and executors. Module Federation
+itself keeps working through the official plugin on webpack and Rspack.
+The recommended path for new Angular micro frontends is
 [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation),
 which implements the same runtime composition model on top of the Angular CLI build using web
 standards (ES modules and import maps) instead of bundler-specific machinery.
@@ -48,8 +49,9 @@ which is what keeps a multi-team Angular workspace manageable:
 
 Workspaces built on `@nx/angular:host` and `@nx/angular:remote` keep working in Nx v23 on the
 deprecated executors, which will be removed in v24.
-Plan a migration to Native Federation, or evaluate whether your setup needs runtime composition
-at all: if every team deploys together anyway, regular applications with
+[Migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation) covers both ways
+off them: keeping your bundler on the official plugin, or moving to Native Federation. Also
+evaluate whether your setup needs runtime composition at all: if every team deploys together anyway, regular applications with
 [buildable libraries](/docs/kb/buildable-and-publishable-libraries) remove the runtime failure
 modes entirely.
 The [deprecation details](/docs/kb/consumer-and-provider#what-changed-in-v23) list the exact

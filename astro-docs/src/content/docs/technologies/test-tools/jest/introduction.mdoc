@@ -9,7 +9,7 @@ filter: 'type:References'
 
 [Jest](https://jestjs.io) is a JavaScript testing framework.
 
-The `@nx/jest` plugin adds [inferred Jest targets](#configuration), a [Jest configuration generator](#add-jest-to-a-project), and CI-ready [test splitting](#unit-and-e2e-configurations).
+The `@nx/jest` plugin adds [inferred Jest targets](#configuration), a [Jest configuration generator](#add-jest-to-a-project), and CI-ready [test splitting](#plugin-options).
 
 You can use Jest with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
@@ -179,7 +179,7 @@ Configure the plugin in `nx.json`:
 `disableJestRuntime` defaults to `true` because the plugin treats it as enabled only when `options.disableJestRuntime !== false`. This reduces computation time for inferred tasks; set it to `false` if you need Jest runtime inference.
 
 The test task is cached, with inputs and outputs based on your Jest configuration.
-Set `ciTargetName` to enable the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+Set `ciTargetName` to enable [task splitting (Atomizer)](/docs/kb/split-e2e-tasks).
 
 ### Unit and e2e configurations
 
@@ -232,7 +232,7 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 {% cardgrid %}
 {% linkcard title="Jest Configuration" description="Explore all Jest configuration options." href="https://jestjs.io/docs/configuration" /%}
 {% linkcard title="Snapshot Testing" description="Learn how Jest snapshot testing works and when to use it." href="https://jestjs.io/docs/snapshot-testing" /%}
-{% linkcard title="Split E2E Tasks" description="Distribute E2E tests across CI for better caching and retries." href="/docs/features/ci-features/split-e2e-tasks" /%}
+{% linkcard title="Split E2E Tasks" description="Distribute E2E tests across CI for better caching and retries." href="/docs/kb/split-e2e-tasks" /%}
 {% linkcard title="Feature-Based Testing" description="Organize tests by feature for better caching and targeted CI." href="/docs/kb/feature-based-testing" /%}
 {% linkcard title="Jest Generators Reference" description="Full API reference for @nx/jest generators." href="/docs/technologies/test-tools/jest/generators" /%}
 {% linkcard title="Jest Executors Reference" description="Full API reference for @nx/jest executors." href="/docs/technologies/test-tools/jest/executors" /%}

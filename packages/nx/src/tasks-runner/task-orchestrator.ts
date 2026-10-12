@@ -12,10 +12,13 @@ import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
-import { getInputs, TaskHasher } from '../hasher/task-hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
+  InvocationRecord,
   IS_WASM,
+  OutputFile,
+  TaskOutputs,
   TaskStatus as NativeTaskStatus,
   parseTaskStatus,
   RunningTasksService,
@@ -60,6 +63,8 @@ import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
   getForceColorForChild,
+  getInvocationAncestorPids,
+  getInvocationRootPid,
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
@@ -70,6 +75,7 @@ import {
   getExecutorForTask,
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
+  hashTaskOverrides,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
@@ -120,12 +126,14 @@ export class TaskOrchestrator {
   private taskInvocationTracker = !IS_WASM
     ? new TaskInvocationTracker(
         getLocalDbConnection(),
-        Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid)
+        getInvocationRootPid(),
+        getInvocationAncestorPids()
       )
     : null;
-  // Tracks tasks registered by THIS process so that recursive code paths
-  // (e.g. applyFromCacheOrRunBatch looping on incomplete batches) don't
-  // re-register and trip the DB uniqueness constraint.
+  // Task ids this process has already registered. Recursive code paths (e.g.
+  // applyFromCacheOrRunBatch looping on incomplete batches) re-enter the
+  // detector for the same task; skipping them saves a DB round trip. A task id
+  // is unique within one process, so it is enough to identify the row.
   private registeredInvocations = new Set<string>();
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
@@ -160,6 +168,10 @@ export class TaskOrchestrator {
   // miss waiting for a worker slot is re-queried (including the remote
   // retrieval) on every coordinator cycle.
   private cacheMissedHashes = new Set<string>();
+
+  // The files the cache just wrote or restored, by task id, for postRunSteps
+  // to hand the daemon instead of it walking the outputs again.
+  private copiedOutputFiles = new Map<string, OutputFile[]>();
 
   private completedTasks = new Map<string, TaskStatus>();
   private waitingForTasks: Function[] = [];
@@ -219,7 +231,9 @@ export class TaskOrchestrator {
     private readonly specifiedOutputStyle: OutputStyle | undefined,
     /** What this run renders with, after defaults. */
     private readonly resolvedOutputStyle: OutputStyle,
-    private readonly fullTaskGraph: TaskGraph = taskGraph
+    private readonly fullTaskGraph: TaskGraph = taskGraph,
+    /** Tasks the up-front pass left to hash once the tasks they read from have run. */
+    private readonly deferredTaskIds?: ReadonlySet<string>
   ) {}
 
   async init() {
@@ -472,37 +486,62 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Registers a task invocation and checks for loops across nested Nx processes.
-   * Uses the task_invocations DB table keyed by root PID. registerTask() throws
-   * on unique constraint violation when a parent Nx process already registered
-   * this task — indicating an infinite loop.
+   * Registers a task invocation and checks for loops across nested Nx
+   * processes. registerTask() returns the invocation chain only when an
+   * *ancestor* Nx process is already running this task — a genuine loop.
+   * Sibling processes running the same task are legitimate and register
+   * without complaint.
+   *
+   * The overrides hash rides along with the task id so the tracker can tell an
+   * ancestor re-invoking a task with different arguments from one repeating
+   * the same invocation.
    */
   private detectTaskInvocationLoop(task: Task): void {
     if (!this.taskInvocationTracker) return;
     if (this.registeredInvocations.has(task.id)) return;
-    try {
-      this.taskInvocationTracker.registerTask(process.pid, task.id);
-      this.registeredInvocations.add(task.id);
-    } catch {
-      // Unique constraint violation — task already invoked by an ancestor Nx process
-      const chain = this.taskInvocationTracker.getInvocationChain();
-      const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
 
-      output.error({
-        title: 'Recursive task invocation detected',
-        bodyLines: [
-          `Nx detected a recursive loop of task invocations:`,
-          ``,
-          `  ${chainDisplay} -> ${task.id}`,
-          ``,
-          `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
-          `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
-          `triggers a chain of tasks that eventually re-invokes itself.`,
-          ``,
-          `To fix this, review the command configuration for the tasks in the chain above.`,
-        ],
-      });
-      process.exit(1);
+    let chain: InvocationRecord[] | null;
+    try {
+      chain = this.taskInvocationTracker.registerTask(
+        process.pid,
+        task.id,
+        hashTaskOverrides(task)
+      );
+    } catch {
+      // Loop detection is diagnostic only; a DB failure must not fail the run
+      // or be mistaken for a loop.
+      return;
+    }
+
+    if (!chain) {
+      this.registeredInvocations.add(task.id);
+      return;
+    }
+
+    const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
+    output.error({
+      title: 'Recursive task invocation detected',
+      bodyLines: [
+        `Nx detected a recursive loop of task invocations:`,
+        ``,
+        `  ${chainDisplay} -> ${task.id}`,
+        ``,
+        `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
+        `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
+        `triggers a chain of tasks that eventually re-invokes itself.`,
+        ``,
+        `To fix this, review the command configuration for the tasks in the chain above.`,
+      ],
+    });
+    process.exit(1);
+  }
+
+  private releaseTaskInvocation(task: Task): void {
+    if (!this.registeredInvocations.delete(task.id)) return;
+    try {
+      this.taskInvocationTracker?.unregisterTask(process.pid, task.id);
+    } catch {
+      // Diagnostic only, like registration. A leftover row is swept as stale.
     }
   }
 
@@ -576,11 +615,12 @@ export class TaskOrchestrator {
     await Promise.all(
       cacheHits.map(async ({ task, cachedResult }) => {
         if (shouldCopyMap.get(task.hash)) {
-          await this.cache.copyFilesFromCache(
+          const files = await this.cache.copyFilesFromCache(
             task.hash,
             cachedResult,
             task.outputs
           );
+          if (files) this.copiedOutputFiles.set(task.id, files);
         }
       })
     );
@@ -670,8 +710,8 @@ export class TaskOrchestrator {
    * Hash all batch tasks and resolve cache hits topologically.
    *
    * Walks the task graph level by level. Every task gets a preliminary hash
-   * (so startTasks always has a valid hash for Cloud). Tasks with depsOutputs
-   * whose deps weren't cached are ineligible for cache lookup but still
+   * (so startTasks always has a valid hash for Cloud). Tasks the up-front
+   * pass deferred, whose deps weren't cached, are ineligible for cache lookup but still
    * receive a preliminary hash — they'll be re-hashed after execution.
    */
   private async applyBatchCachedResults(
@@ -704,10 +744,7 @@ export class TaskOrchestrator {
         const depIds = batch.taskGraph.dependencies[task.id];
         const hasNonCachedDep = depIds.some((id) => nonCachedTaskIds.has(id));
 
-        if (
-          hasNonCachedDep &&
-          getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length > 0
-        ) {
+        if (hasNonCachedDep && this.deferredTaskIds?.has(task.id)) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
         } else {
@@ -790,7 +827,7 @@ export class TaskOrchestrator {
       await this.preRunSteps(nonCachedTasks, { groupId });
     }
 
-    // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
+    // Phase 2: Run non-cached tasks, then re-hash tasks that read their outputs
     const taskIdsToSkip = cachedResults.map((r) => r.task.id);
     let batchResults: TaskResult[] = [];
 
@@ -811,7 +848,7 @@ export class TaskOrchestrator {
         groupId
       );
 
-      // Re-hash depsOutputs tasks — their dep outputs are now on disk
+      // Re-hash tasks that read dep outputs — those outputs are now on disk
       const tasksToRehash = batchResults
         .filter(
           (r) =>
@@ -1680,55 +1717,70 @@ export class TaskOrchestrator {
       return runningTask;
     }
 
-    const taskSpecificEnv = await this.processedTasks.get(task.id);
-    await this.preRunSteps([task], { groupId });
-
-    const pipeOutput = await this.pipeOutputCapture(task);
-    // obtain metadata
-    const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    // Deliberately not gated on `printsTaskOutput`, unlike `runTaskDirectly`.
-    // `SummaryTerminalOutputLifeCycle.printTaskTerminalOutput` is a no-op and it
-    // only reports at `endCommand`, which never runs for a task that does not
-    // end - so suppressing here would leave a `nx serve` under `summary` with a
-    // permanently silent terminal and no file to read yet. Streaming is the only
-    // channel a continuous task has.
-    const streamOutput = isStaticOutputStyle(this.specifiedOutputStyle)
-      ? false
-      : shouldStreamOutput(task, this.initiatingProject);
-
-    let env = pipeOutput
-      ? getEnvVariablesForTask(
-          task,
-          taskSpecificEnv,
-          getForceColorForChild(),
-          this.options.skipNxCache,
-          this.options.captureStderr,
-          null,
-          null
-        )
-      : getEnvVariablesForTask(
-          task,
-          taskSpecificEnv,
-          undefined,
-          this.options.skipNxCache,
-          this.options.captureStderr,
-          temporaryOutputPath,
-          streamOutput
-        );
-    this.detectTaskInvocationLoop(task);
-    const childProcess = await this.runTask(
-      task,
-      streamOutput,
-      env,
-      temporaryOutputPath,
-      pipeOutput
-    );
+    // Claim the task before doing any of the work below. getRunningTasks()
+    // above is a check-then-act: until this row exists, a sibling Nx process
+    // asking the same question is told the task is not running and starts a
+    // duplicate of it.
     this.runningTasksService?.addRunningTask(task.id);
-    this.runningContinuousTasks.set(task.id, {
-      runningTask: childProcess,
-      groupId,
-      ownsRunningTasksService: true,
-    });
+
+    let childProcess: RunningTask;
+    try {
+      const taskSpecificEnv = await this.processedTasks.get(task.id);
+      await this.preRunSteps([task], { groupId });
+
+      const pipeOutput = await this.pipeOutputCapture(task);
+      // obtain metadata
+      const temporaryOutputPath = this.cache.temporaryOutputPath(task);
+      // Deliberately not gated on `printsTaskOutput`, unlike `runTaskDirectly`.
+      // `SummaryTerminalOutputLifeCycle.printTaskTerminalOutput` is a no-op and it
+      // only reports at `endCommand`, which never runs for a task that does not
+      // end - so suppressing here would leave a `nx serve` under `summary` with a
+      // permanently silent terminal and no file to read yet. Streaming is the only
+      // channel a continuous task has.
+      const streamOutput = isStaticOutputStyle(this.specifiedOutputStyle)
+        ? false
+        : shouldStreamOutput(task, this.initiatingProject);
+
+      let env = pipeOutput
+        ? getEnvVariablesForTask(
+            task,
+            taskSpecificEnv,
+            getForceColorForChild(),
+            this.options.skipNxCache,
+            this.options.captureStderr,
+            null,
+            null
+          )
+        : getEnvVariablesForTask(
+            task,
+            taskSpecificEnv,
+            undefined,
+            this.options.skipNxCache,
+            this.options.captureStderr,
+            temporaryOutputPath,
+            streamOutput
+          );
+      this.detectTaskInvocationLoop(task);
+      childProcess = await this.runTask(
+        task,
+        streamOutput,
+        env,
+        temporaryOutputPath,
+        pipeOutput
+      );
+      this.runningContinuousTasks.set(task.id, {
+        runningTask: childProcess,
+        groupId,
+        ownsRunningTasksService: true,
+      });
+    } catch (e) {
+      // Nothing owns the claim until runningContinuousTasks holds it — the
+      // release paths (completeContinuousTask, the signal handler) both iterate
+      // that map. Drop it here or siblings wait on a task no one is running.
+      this.runningTasksService?.removeRunningTask(task.id);
+      throw e;
+    }
+
     this.continuousTaskExitHandled.set(
       task.id,
       new Promise<void>((resolve) => {
@@ -1767,22 +1819,9 @@ export class TaskOrchestrator {
     groupId: number
   ) {
     const now = Date.now();
-    const tasksToRecord: { outputs: string[]; hash: string }[] = [];
-    for (const { task, status } of results) {
+    for (const { task } of results) {
       // Only set endTime as fallback (batch provides timing via result.task)
       task.endTime ??= now;
-      // Skip recording for tasks whose outputs already match the cache —
-      // the daemon already has the correct hash recorded.
-      if (
-        !this.stopRequested &&
-        task.outputs.length > 0 &&
-        status !== 'local-cache-kept-existing'
-      ) {
-        tasksToRecord.push({ outputs: task.outputs, hash: task.hash });
-      }
-    }
-    if (tasksToRecord.length > 0) {
-      await this.recordOutputsHashBatch(tasksToRecord);
     }
 
     // Caller decides whether these results should be written to the cache.
@@ -1798,9 +1837,15 @@ export class TaskOrchestrator {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(
-        resultsToCache.map(async ({ task, code, terminalOutput, outputs }) =>
-          this.cache.put(task, terminalOutput, outputs, code)
-        )
+        resultsToCache.map(async ({ task, code, terminalOutput, outputs }) => {
+          const files = await this.cache.put(
+            task,
+            terminalOutput,
+            outputs,
+            code
+          );
+          if (files) this.copiedOutputFiles.set(task.id, files);
+        })
       );
       performance.mark('cache-results-end');
       performance.measure(
@@ -1808,6 +1853,24 @@ export class TaskOrchestrator {
         'cache-results-start',
         'cache-results-end'
       );
+    }
+
+    const tasksToRecord: TaskOutputs[] = [];
+    for (const { task, status } of results) {
+      const files = this.copiedOutputFiles.get(task.id);
+      this.copiedOutputFiles.delete(task.id);
+      // Skip recording for tasks whose outputs already match the cache —
+      // the daemon already has the correct hash recorded.
+      if (
+        !this.stopRequested &&
+        task.outputs.length > 0 &&
+        status !== 'local-cache-kept-existing'
+      ) {
+        tasksToRecord.push({ outputs: task.outputs, hash: task.hash, files });
+      }
+    }
+    if (tasksToRecord.length > 0) {
+      await this.recordOutputsHashBatch(tasksToRecord);
     }
 
     await this.complete(results, groupId);
@@ -2011,8 +2074,7 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
-      this.taskInvocationTracker?.unregisterTask(task.id);
-      this.registeredInvocations.delete(task.id);
+      this.releaseTaskInvocation(task);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(
@@ -2123,9 +2185,7 @@ export class TaskOrchestrator {
     return resultMap;
   }
 
-  private async recordOutputsHashBatch(
-    entries: { outputs: string[]; hash: string }[]
-  ) {
+  private async recordOutputsHashBatch(entries: TaskOutputs[]) {
     if (this.daemon?.enabled()) {
       return this.daemon.recordOutputsHashBatch(entries);
     }

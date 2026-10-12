@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ExecutorContext, workspaceRoot } from '@nx/devkit';
 import { isAbsolute, join } from 'path';
 import { getOptions, resolveReportsDirectory } from './utils';
@@ -8,19 +9,19 @@ import {
 } from '../../../utils/executor-utils';
 import { isCI } from '@nx/devkit/internal';
 
-jest.mock('../../../utils/options-utils', () => ({
-  normalizeViteConfigFilePath: jest.fn(),
+vi.mock('../../../utils/options-utils', () => ({
+  normalizeViteConfigFilePath: vi.fn(),
 }));
-jest.mock('../../../utils/executor-utils', () => ({
-  loadViteDynamicImport: jest.fn(),
-  loadVitestDynamicImport: jest.fn(),
+vi.mock('../../../utils/executor-utils', () => ({
+  loadViteDynamicImport: vi.fn(),
+  loadVitestDynamicImport: vi.fn(),
 }));
 // Spread the actual module: `@nx/devkit/internal` re-exports ~170 names from
 // this module, so a total-replacement factory would resolve every one of them
 // to `undefined` for anything the code under test happens to touch.
-jest.mock('nx/src/devkit-internals', () => ({
-  ...jest.requireActual('nx/src/devkit-internals'),
-  isCI: jest.fn(),
+vi.mock('nx/src/devkit-internals', async () => ({
+  ...(await vi.importActual<any>('nx/src/devkit-internals')),
+  isCI: vi.fn(),
 }));
 
 describe('getOptions', () => {
@@ -29,26 +30,26 @@ describe('getOptions', () => {
     cwd: '/root',
     projectName: 'my-lib',
   } as unknown as ExecutorContext;
-  let loadConfigFromFile: jest.Mock;
+  let loadConfigFromFile: Mock;
 
   beforeEach(() => {
-    (normalizeViteConfigFilePath as jest.Mock).mockReturnValue(
+    (normalizeViteConfigFilePath as Mock).mockReturnValue(
       '/root/libs/my-lib/vitest.config.ts'
     );
-    loadConfigFromFile = jest.fn(async () => ({
+    loadConfigFromFile = vi.fn(async () => ({
       path: '/root/libs/my-lib/vitest.config.ts',
       config: { test: { reporters: ['default'] } },
     }));
-    (loadViteDynamicImport as jest.Mock).mockResolvedValue({
+    (loadViteDynamicImport as Mock).mockResolvedValue({
       loadConfigFromFile,
     });
-    (loadVitestDynamicImport as jest.Mock).mockResolvedValue({
-      parseCLI: jest.fn(() => ({ filter: [], options: {} })),
+    (loadVitestDynamicImport as Mock).mockResolvedValue({
+      parseCLI: vi.fn(() => ({ filter: [], options: {} })),
     });
-    (isCI as jest.Mock).mockReturnValue(false);
+    (isCI as Mock).mockReturnValue(false);
   });
 
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it('should forward the configured mode so vitest reloads the config with it', async () => {
     const result = await getOptions(
@@ -110,8 +111,8 @@ describe('getOptions', () => {
 
   describe('watch resolution', () => {
     const mockParsedWatch = (watch: boolean | undefined) => {
-      (loadVitestDynamicImport as jest.Mock).mockResolvedValue({
-        parseCLI: jest.fn(() => ({
+      (loadVitestDynamicImport as Mock).mockResolvedValue({
+        parseCLI: vi.fn(() => ({
           filter: [],
           options: watch === undefined ? {} : { watch },
         })),
@@ -129,8 +130,8 @@ describe('getOptions', () => {
       });
     };
     const mockParsedUi = () => {
-      (loadVitestDynamicImport as jest.Mock).mockResolvedValue({
-        parseCLI: jest.fn(() => ({ filter: [], options: { ui: true } })),
+      (loadVitestDynamicImport as Mock).mockResolvedValue({
+        parseCLI: vi.fn(() => ({ filter: [], options: { ui: true } })),
       });
     };
     const withEnv = async (
@@ -138,7 +139,7 @@ describe('getOptions', () => {
       tty: boolean,
       fn: () => Promise<void>
     ) => {
-      (isCI as jest.Mock).mockReturnValue(ci);
+      (isCI as Mock).mockReturnValue(ci);
       const prevTty = process.stdin.isTTY;
       Object.defineProperty(process.stdin, 'isTTY', {
         value: tty,

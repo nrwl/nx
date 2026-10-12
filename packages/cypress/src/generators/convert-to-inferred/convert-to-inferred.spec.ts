@@ -13,19 +13,23 @@ import {
   writeJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
 let fs: TempFs;
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -143,17 +147,16 @@ export default defineConfig({
     `${projectOpts.appRoot}/cypress.config.ts`,
     cypressConfigContents
   );
-  jest.doMock(
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
     join(fs.tempDir, `${projectOpts.appRoot}/cypress.config.ts`),
-    () => ({
+    {
       default: {
         e2e: {
           baseUrl: 'http://localhost:4200',
         },
       },
-    }),
-    {
-      virtual: true,
     }
   );
 
@@ -182,6 +185,7 @@ describe('Cypress - Convert Executors To Plugin', () => {
 
   afterEach(() => {
     fs.reset();
+    resetCjsMocks();
   });
 
   describe('--project', () => {

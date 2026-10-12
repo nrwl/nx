@@ -14,12 +14,12 @@ describe('component', () => {
     appTree = createTreeWithEmptyWorkspace();
     await createLib(appTree, libName);
     await createApp(appTree, appName);
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should generate files with vitest', async () => {

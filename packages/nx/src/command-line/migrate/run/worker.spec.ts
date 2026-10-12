@@ -164,12 +164,14 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   renameSync,
   rmSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
+import { FileLock } from '../../../native';
 import { join } from 'path';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
@@ -187,6 +189,7 @@ import {
   type MigrateRunIssue,
   type MigrateRunState,
   type MigrateStep,
+  type MigrateStepBase,
   type MigrateStepStatus,
   type MigrateTreeOperation,
 } from './run-state';
@@ -226,6 +229,7 @@ const migStep = (
 ): MigrateStep => ({
   id,
   roundIndex,
+  kind: 'migration',
   migrationId,
   status,
   attempt: 1,
@@ -383,7 +387,6 @@ describe('runSingleMigrationWorker', () => {
       ...(opts.skipInstall ? { skipInstall: true } : {}),
       rounds: rounds.map((r) => ({
         index: r.index,
-        planHash: 'h',
         planSnapshot: `plan-${r.index}.json`,
       })),
       steps: opts.steps,
@@ -1068,6 +1071,22 @@ describe('runSingleMigrationWorker', () => {
   });
 
   describe('recorded execution (--run-id)', () => {
+    it('holds the run before it reads the plan', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+      });
+      rmSync(join(dir, 'plan-0.json'));
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow("The plan snapshot 'plan-0.json' for migrate run");
+
+      const names = readdirSync(join(dir, 'activity'));
+      expect(names).toHaveLength(1);
+      expect(new FileLock(join(dir, 'activity', names[0])).check()).toBe(true);
+    });
+
     it('records a generator migration: dispensed -> running -> succeeded with an outcome', async () => {
       mockRunMigration.mockResolvedValue({
         changes: changeList(),
@@ -2595,7 +2614,7 @@ describe('runSingleMigrationWorker', () => {
       });
     }
 
-    function validatingRun(step: Partial<MigrateStep> = {}): string {
+    function validatingRun(step: Partial<MigrateStepBase> = {}): string {
       return setupRun('run-1', {
         steps: [{ ...migStep('step-1', '@nx/js:gen', 'dispensed'), ...step }],
         migrations: [genMig('@nx/js', 'gen')],

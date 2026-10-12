@@ -1,0 +1,17 @@
+---
+import { Code } from '@astrojs/starlight/components';
+import ApiContent from './ApiContent.astro';
+import type { ReferenceResponse } from '../../plugins/utils/openapi-reference';
+interface Props {
+  response: ReferenceResponse;
+  description?: boolean;
+}
+const { response, description = true } = Astro.props;
+---
+
+{description && <Fragment set:html={response.description.html} />}
+<ApiContent content={response.content} />
+{response.headers.length > 0 && (
+  <p>Response headers: {response.headers.map(({ name, target }, index) => <>{index > 0 && ', '}<a href={`#${target}`}><code>{name}</code></a></>)}.</p>
+)}
+{response.links && <><p>Response links:</p><Code code={response.links} lang="json" /></>}

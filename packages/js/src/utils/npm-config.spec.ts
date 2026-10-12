@@ -4,11 +4,11 @@ import { getNpmRegistry, getNpmTag, parseRegistryOptions } from './npm-config';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { PackageJson } from '@nx/devkit/internal';
 
-jest.mock('child_process', () => {
-  const original = jest.requireActual('child_process');
+vi.mock('child_process', async () => {
+  const original = await vi.importActual<any>('child_process');
   return {
     ...original,
-    exec: jest
+    exec: vi
       .fn()
       .mockImplementation(
         (

@@ -25,13 +25,13 @@ defineProps<{
 describe('nuxt:storybook-configuration', () => {
   let appTree;
   beforeEach(async () => {
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
-    jest.resetModules();
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.resetModules();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should configure with vue3 framework and styles import', async () => {

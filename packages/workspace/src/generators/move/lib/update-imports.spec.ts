@@ -534,7 +534,7 @@ export MyExtendedClass extends MyClass {};`
 
   describe('TypeScript project references', () => {
     beforeEach(() => {
-      jest.spyOn(tsSolution, 'isUsingTsSolutionSetup').mockReturnValue(true);
+      vi.spyOn(tsSolution, 'isUsingTsSolutionSetup').mockReturnValue(true);
       const tsconfigContent = {
         extends: './tsconfig.base.json',
         ...readJson(tree, 'tsconfig.base.json'),

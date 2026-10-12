@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Helper functions for the Storybook 8 migration generator getAllStorybookInfo and onlyShowGuide should return all info for all projects with Storybook 1`] = `
+exports[`Helper functions for the Storybook 8 migration generator > getAllStorybookInfo and onlyShowGuide > should return all info for all projects with Storybook 1`] = `
 {
   "nextapp": {
     "configDir": "apps/nextapp/.storybook",
@@ -35,7 +35,7 @@ exports[`Helper functions for the Storybook 8 migration generator getAllStoryboo
 }
 `;
 
-exports[`Helper functions for the Storybook 8 migration generator logResult should create the summary file with the correct content 1`] = `
+exports[`Helper functions for the Storybook 8 migration generator > logResult > should create the summary file with the correct content 1`] = `
 "# Storybook 8 Migration Summary
 
 ## Upgrade Storybook packages

@@ -15,9 +15,16 @@ import { readNxJson } from '../../config/configuration';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
+import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import {
+  IS_WASM,
+  NxWorkspaceFiles,
+  TaskOutputs,
+  TaskRun,
+  TaskTarget,
+} from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -80,6 +87,12 @@ import {
   GET_PLUGIN_CAPABILITIES,
   type HandleGetPluginCapabilitiesMessage,
 } from '../message-types/get-plugin-capabilities';
+import {
+  SELECT_AFFECTED_TASKS,
+  type HandleSelectAffectedTasksMessage,
+  type SelectAffectedTasksResponse,
+} from '../message-types/select-affected-tasks';
+import type { AffectedTasksRequest } from '../../project-graph/affected/affected-tasks';
 import type { NxPluginCapabilities } from '../../project-graph/plugins/nx-plugin-capabilities';
 import {
   GET_SYNC_GENERATOR_CHANGES,
@@ -153,7 +166,7 @@ export type ChangedFile = {
   type: 'create' | 'update' | 'delete';
 };
 
-enum DaemonStatus {
+export enum DaemonStatus {
   CONNECTING,
   DISCONNECTED,
   CONNECTED,
@@ -221,7 +234,10 @@ export class DaemonClient {
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
   private _waitForDaemonReady: Promise<void> | null = null;
-  private _daemonReady: () => void | null = null;
+  private _daemonReady: (() => void) | null = null;
+  private _daemonReadyFailed: ((err: Error) => void) | null = null;
+  // Terminal once set — see `handleConnectionError`.
+  private _pluginWorkerConnectionLost: Error | null = null;
 
   // Shared file watcher connection state
   private fileWatcherMessenger: DaemonSocketMessenger | undefined;
@@ -326,9 +342,28 @@ export class DaemonClient {
     this.projectGraphListenerMessenger = undefined;
 
     this._daemonStatus = DaemonStatus.DISCONNECTED;
-    this._waitForDaemonReady = new Promise<void>(
-      (resolve) => (this._daemonReady = resolve)
-    );
+    this._pluginWorkerConnectionLost = null;
+    this._waitForDaemonReady = this.createReadyPromise();
+  }
+
+  private createReadyPromise(): Promise<void> {
+    const promise = new Promise<void>((resolve, reject) => {
+      this._daemonReady = resolve;
+      this._daemonReadyFailed = reject;
+    });
+    // Callers don't always await — swallow the unhandled-rejection warning
+    // so a rejected ready promise that no one observes doesn't crash the
+    // process. Real awaiters still see the rejection.
+    promise.catch(() => {});
+    return promise;
+  }
+
+  // Move out of CONNECTING and surface an error to every caller parked on
+  // `_waitForDaemonReady`. Without this, a failure while CONNECTING leaves
+  // concurrent callers waiting on a promise that will never settle.
+  private failDaemonReady(err: Error) {
+    this._daemonStatus = DaemonStatus.DISCONNECTED;
+    this._daemonReadyFailed?.(err);
   }
 
   private getSocketPath(): string {
@@ -388,7 +423,8 @@ export class DaemonClient {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -397,6 +433,9 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
+      // An External cannot cross the socket: the version names the stored set
+      // to hash from. Absent means native hashing.
+      ultracacheConfigurationsVersion,
     });
   }
 
@@ -406,7 +445,8 @@ export class DaemonClient {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Record<string, Hash>> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS_UPFRONT',
@@ -415,6 +455,7 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
+      ultracacheConfigurationsVersion,
     });
   }
 
@@ -903,9 +944,7 @@ export class DaemonClient {
     );
   }
 
-  recordOutputsHashBatch(
-    entries: { outputs: string[]; hash: string }[]
-  ): Promise<any> {
+  recordOutputsHashBatch(entries: TaskOutputs[]): Promise<any> {
     return this.sendToDaemonViaQueue({
       type: 'RECORD_OUTPUTS_HASH_BATCH',
       data: entries,
@@ -1046,6 +1085,17 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  /** Selection runs where hashing does, so the plans it builds are reused. */
+  selectAffectedTasks(
+    request: AffectedTasksRequest
+  ): Promise<SelectAffectedTasksResponse> {
+    const message: HandleSelectAffectedTasksMessage = {
+      type: SELECT_AFFECTED_TASKS,
+      request,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   updateWorkspaceContext(
     createdFiles: string[],
     updatedFiles: string[],
@@ -1150,33 +1200,49 @@ export class DaemonClient {
   }
 
   private async startDaemonIfNecessary() {
+    if (this._pluginWorkerConnectionLost) {
+      throw this._pluginWorkerConnectionLost;
+    }
     if (this._daemonStatus == DaemonStatus.CONNECTED) {
       return;
     }
     // Ensure daemon is running and socket path is available
     if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
+      // Create a fresh ready promise for any concurrent caller that hits
+      // the CONNECTING branch below before this attempt resolves.
+      this._waitForDaemonReady = this.createReadyPromise();
       this._daemonStatus = DaemonStatus.CONNECTING;
 
       let daemonPid: number | null = null;
-      let probe: { available: boolean; refusal?: ConnectRefusal };
       try {
-        probe = await this.probeServer();
-      } catch (err) {
-        // Version mismatch - treat as server not available, start new one
-        if (err instanceof VersionMismatchError) {
-          probe = { available: false };
-        } else {
-          throw err;
+        let probe: { available: boolean; refusal?: ConnectRefusal };
+        try {
+          probe = await this.probeServer();
+        } catch (err) {
+          // Version mismatch - treat as server not available, start new one
+          if (err instanceof VersionMismatchError) {
+            probe = { available: false };
+          } else {
+            throw err;
+          }
         }
+        if (!probe.available) {
+          // Carried as a value so no other caller's probe can substitute for it.
+          daemonPid = await this.startInBackground(probe.refusal);
+        }
+        this.setUpConnection();
+        this._daemonStatus = DaemonStatus.CONNECTED;
+        this._daemonReady();
+      } catch (err) {
+        // Reset to DISCONNECTED and reject the ready promise so every
+        // concurrent caller parked on the CONNECTING branch gets the
+        // error instead of hanging forever.
+        this.failDaemonReady(err);
+        throw err;
       }
-      if (!probe.available) {
-        // Carried as a value so no other caller's probe can substitute for it.
-        daemonPid = await this.startInBackground(probe.refusal);
-      }
-      this.setUpConnection();
-      this._daemonStatus = DaemonStatus.CONNECTED;
-      this._daemonReady();
 
+      // Outside the try: the connection is established by now, and a throw
+      // from here must not undo it.
       daemonPid ??= getDaemonProcessIdSync();
       // Fire-and-forget - don't block daemon connection by waiting for metrics registration
       this.registerDaemonProcessWithMetricsService(daemonPid);
@@ -1273,31 +1339,38 @@ export class DaemonClient {
   private async handleConnectionError(error: Error) {
     clientLogger.log(`[Reconnect] Connection error detected: ${error.message}`);
 
+    // A plugin worker cannot bring a daemon back — `startInBackground` throws
+    // in one — and it is usually hosted by the daemon that just died, so the
+    // 60s reconnect poll almost always ends in the same failure. Make the loss
+    // terminal instead: the in-flight message and every later one fail fast
+    // with a clear error. The cost is that a CLI-hosted worker no longer
+    // survives a daemon restart, and that command fails.
+    if (global.NX_PLUGIN_WORKER) {
+      const pluginWorkerError = daemonProcessException(
+        `Plugin worker lost its daemon connection and cannot reconnect: ${error.message}`
+      );
+      this._pluginWorkerConnectionLost = pluginWorkerError;
+      if (this.currentReject) {
+        this.currentReject(pluginWorkerError);
+      }
+      this.failDaemonReady(pluginWorkerError);
+      return;
+    }
+
     // Create a new ready promise for new requests to wait on
-    this._waitForDaemonReady = new Promise<void>(
-      (resolve) => (this._daemonReady = resolve)
-    );
+    this._waitForDaemonReady = this.createReadyPromise();
 
     // Set status to CONNECTING so new requests will wait for reconnection
     this._daemonStatus = DaemonStatus.CONNECTING;
 
-    let serverAvailable: boolean;
     try {
-      ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
+      const { available } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
-      }));
-    } catch (err) {
-      if (err instanceof VersionMismatchError) {
-        // New daemon has different version - reject with error so caller can handle
-        if (this.currentReject) {
-          this.currentReject(err);
-        }
-        return;
+      });
+      if (!available) {
+        // Out of reconnect attempts, so the error that started this stands.
+        throw error;
       }
-      throw err;
-    }
-
-    if (serverAvailable) {
       clientLogger.log(
         `[Reconnect] Reconnection successful, re-establishing connection`
       );
@@ -1314,11 +1387,18 @@ export class DaemonClient {
         const rej = this.currentReject;
         this.sendMessageToDaemon(msg).then(res, rej);
       }
-    } else {
-      // Failed to reconnect after all attempts, reject the pending request
-      if (this.currentReject) {
-        this.currentReject(error);
+    } catch (err) {
+      this.failDaemonReady(err);
+      // A new daemon on a different version and an exhausted reconnect are
+      // both answers for the in-flight caller; anything else is unexpected
+      // and propagates.
+      if (err instanceof VersionMismatchError || err === error) {
+        if (this.currentReject) {
+          this.currentReject(err);
+        }
+        return;
       }
+      throw err;
     }
   }
 

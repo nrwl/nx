@@ -1,17 +1,17 @@
 import { validateTypes } from './executor-utils';
 import { runTypeCheck } from '@nx/js';
 
-jest.mock('@nx/js', () => ({
-  runTypeCheck: jest.fn().mockResolvedValue({ errors: [], warnings: [] }),
-  printDiagnostics: jest.fn().mockResolvedValue(undefined),
+vi.mock('@nx/js', () => ({
+  runTypeCheck: vi.fn().mockResolvedValue({ errors: [], warnings: [] }),
+  printDiagnostics: vi.fn().mockResolvedValue(undefined),
 }));
-jest.mock('@nx/js/internal', () => ({
-  calculateProjectBuildableDependencies: jest.fn(),
-  createTmpTsConfig: jest.fn(),
+vi.mock('@nx/js/internal', () => ({
+  calculateProjectBuildableDependencies: vi.fn(),
+  createTmpTsConfig: vi.fn(),
 }));
 
 describe('validateTypes', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   // TS 6 defaults rootDir to the tsconfig dir, so a workspace lib resolved from
   // source (outside the project) fails the type-check with TS6059. The check

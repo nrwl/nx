@@ -6,12 +6,18 @@ import {
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
+import type { UltracacheConfigurationVersion } from '../daemon/message-types/ultracache-configuration-version';
 import { hashArray } from './file-hasher';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
+import type { TaskPlanningContext } from './task-planning-context';
 import { workspaceRoot } from '../utils/workspace-root';
-import { HashInputs, NxWorkspaceFilesExternals } from '../native';
+import {
+  HashInputs,
+  UltracacheConfigurations,
+  NxWorkspaceFilesExternals,
+} from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 
 // Re-export HashInputs from native module for public API
@@ -113,7 +119,8 @@ export interface TaskHasherImpl {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<PartialHash[]>;
 
   hashTask(
@@ -121,7 +128,8 @@ export interface TaskHasherImpl {
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<PartialHash>;
 
   hashTasksUpfront(
@@ -129,7 +137,8 @@ export interface TaskHasherImpl {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Record<string, PartialHash>>;
 }
 
@@ -167,7 +176,8 @@ function normalizePerTaskEnvs(
 export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
     private readonly daemonClient: DaemonClient,
-    private readonly runnerOptions: any
+    private readonly runnerOptions: any,
+    private readonly ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ) {}
 
   async hashTasks(
@@ -182,7 +192,8 @@ export class DaemonBasedTaskHasher implements TaskHasher {
       taskGraph,
       normalizePerTaskEnvs(tasks, envOrPerTaskEnvs),
       process.cwd(),
-      collectInputs
+      collectInputs,
+      this.ultracacheConfigurationsVersion
     );
   }
 
@@ -198,7 +209,8 @@ export class DaemonBasedTaskHasher implements TaskHasher {
       taskGraph,
       perTaskEnvs,
       process.cwd(),
-      collectInputs
+      collectInputs,
+      this.ultracacheConfigurationsVersion
     );
   }
 
@@ -222,7 +234,10 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly projectGraph: ProjectGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly externalRustReferences: NxWorkspaceFilesExternals | null,
-    private readonly options: any
+    private readonly options: any,
+    private readonly planningContext?: TaskPlanningContext,
+    /** This run's Ultracache configurations; the daemon passes them per request instead. */
+    private readonly ultracacheConfigurations?: UltracacheConfigurations
   ) {
     this.taskHasher = new NativeTaskHasherImpl(
       workspaceRoot,
@@ -231,7 +246,8 @@ export class InProcessTaskHasher implements TaskHasher {
       this.externalRustReferences,
       {
         selectivelyHashTsConfig: this.options?.selectivelyHashTsConfig ?? false,
-      }
+      },
+      this.planningContext
     );
   }
 
@@ -240,14 +256,16 @@ export class InProcessTaskHasher implements TaskHasher {
     taskGraph: TaskGraph,
     envOrPerTaskEnvs: NodeJS.ProcessEnv | Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Hash[]> {
     const hashes = await this.taskHasher.hashTasks(
       tasks,
       taskGraph,
       normalizePerTaskEnvs(tasks, envOrPerTaskEnvs),
       cwd ?? process.cwd(),
-      collectInputs
+      collectInputs,
+      ultracacheConfigurations ?? this.ultracacheConfigurations
     );
     return tasks.map((task, index) =>
       this.createHashDetails(task, hashes[index])
@@ -259,14 +277,16 @@ export class InProcessTaskHasher implements TaskHasher {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Record<string, Hash>> {
     const hashes = await this.taskHasher.hashTasksUpfront(
       tasks,
       taskGraph,
       perTaskEnvs,
       cwd ?? process.cwd(),
-      collectInputs
+      collectInputs,
+      ultracacheConfigurations ?? this.ultracacheConfigurations
     );
     const result: Record<string, Hash> = {};
     for (const task of tasks) {
@@ -282,14 +302,16 @@ export class InProcessTaskHasher implements TaskHasher {
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Hash> {
     const res = await this.taskHasher.hashTask(
       task,
       taskGraph!,
       env ?? process.env,
       cwd ?? process.cwd(),
-      collectInputs
+      collectInputs,
+      ultracacheConfigurations ?? this.ultracacheConfigurations
     );
     return this.createHashDetails(task, res);
   }

@@ -3,11 +3,11 @@ import { createAllowlistFromExports } from './get-non-buildable-libs';
 
 describe('createAllowlistFromExports', () => {
   beforeEach(() => {
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should handle undefined exports', () => {

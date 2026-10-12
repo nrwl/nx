@@ -52,6 +52,33 @@ export default defineConfig({
   compressHTML: true,
   trailingSlash: 'never',
   redirects: {
+    '/features/ci-features/flaky-tasks': '/docs/kb/flaky-tasks',
+    '/features/ci-features/split-e2e-tasks': '/docs/kb/split-e2e-tasks',
+    '/features/ci-features/resource-usage': '/docs/kb/resource-usage',
+    '/features/ci-features/github-integration': '/docs/kb/github-integration',
+    '/features/ci-features/sandboxing': '/docs/kb/sandboxing',
+    '/features/ci-features/dedicated-compute-cluster':
+      '/docs/kb/dedicated-compute-cluster',
+    '/features/ci-features/docker-layer-caching':
+      '/docs/kb/docker-layer-caching',
+    '/features/ci-features/docker-read-through-cache':
+      '/docs/kb/docker-read-through-cache',
+    '/features/ci-features/npm-read-through-cache':
+      '/docs/kb/npm-read-through-cache',
+    '/guides/nx-cloud/optimize-your-ttg': '/docs/kb/optimize-your-ttg',
+    '/guides/nx-cloud/record-commands': '/docs/kb/record-commands',
+    '/guides/nx-cloud/cipe-affected-project-graph':
+      '/docs/kb/cipe-affected-project-graph',
+    '/guides/nx-cloud/encryption': '/docs/kb/encryption',
+    '/guides/nx-cloud/google-auth': '/docs/kb/google-auth',
+    '/features/ci-features/dynamic-agents':
+      '/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size',
+    '/getting-started/nx-cloud': '/docs/features/ci-features',
+    '/concepts/ci-concepts/parallelization-distribution':
+      '/docs/concepts/ci-concepts/building-blocks-fast-ci',
+    '/platform-features/orchestration-ci':
+      '/docs/platform-features/continuous-integration-ci',
+    '/kb/setup-ci': '/docs/getting-started/setup-ci',
     '/concepts/inferred-tasks': '/docs/concepts/mental-model',
     '/concepts/executors-and-configurations':
       '/docs/kb/executors-and-configurations',
@@ -68,13 +95,12 @@ export default defineConfig({
     '/kb/intro': '/docs/kb/add-language-support',
     '/kb/tooling-plugin': '/docs/kb/add-language-support',
     '/guides/nx-cloud/source-control-integration/github':
-      '/docs/features/ci-features/github-integration',
+      '/docs/kb/github-integration',
     '/concepts/decisions/overview': '/docs/kb/monorepo-vs-polyrepo',
     '/concepts/decisions/why-monorepos': '/docs/kb/what-is-a-monorepo',
     '/features/maintain-typescript-monorepos':
       '/docs/technologies/typescript/introduction',
-    '/guides/nx-cloud/ci-resource-usage':
-      '/docs/features/ci-features/resource-usage',
+    '/guides/nx-cloud/ci-resource-usage': '/docs/kb/resource-usage',
     '/guides/nx-cloud/enable-ai-features': '/docs/kb/enable-ai-features',
     '/reference/remote-cache-plugins':
       '/docs/reference/deprecated/self-hosted-cache-packages',

@@ -1,0 +1,772 @@
+---
+title: Migrate from Nx Module Federation to the official plugins
+description: Move React Rspack and webpack apps off @nx/module-federation onto @module-federation/enhanced without changing bundler.
+sidebar:
+  label: Migrate off @nx/module-federation
+filter: 'type:Guides'
+topics:
+  - 'Module Federation'
+---
+
+{% llm_copy_prompt title="Migrate Nx Module Federation to the official plugins" %}
+Migrate this workspace off the Nx Module Federation APIs that Nx v24 removes, keeping each app's current bundler. Follow every step at {pageUrl} in order. Scope is React on Rspack and webpack. Stop and report if you find Angular apps.
+
+Rules that override any shortcut you are tempted to take:
+
+1. Before editing, run production builds and keep every `dist/apps/<app>/mf-stats.json`. Its `shared` array, `exposes`, and container name are what you reproduce. Do not derive sharing from package.json. If a host build fails with `Cannot find remote "<kebab-name>"`, rename the generated remote entries to the project names first. If webpack production builds fail with `Path variable [contenthash:20] not implemented`, pin webpack to 5.110 or earlier.
+2. Replace `withModuleFederation` and `NxModuleFederationPlugin` with `ModuleFederationPlugin` from `@module-federation/enhanced/rspack` or `/webpack`, and drop `NxModuleFederationDevServerPlugin`. Keep `NxAppRspackPlugin`, `NxAppWebpackPlugin`, `NxReactRspackPlugin`, `NxReactWebpackPlugin`. Do not switch bundlers or regenerate apps.
+3. Set `name` to the project name with every character outside `[a-zA-Z0-9_$]` replaced by `_`, plus `filename: 'remoteEntry.js'`, `dts: false`, and `remoteType: 'script'` on webpack. Drop any `library` entry.
+4. Write the `shared` map from the baseline `mf-stats.json`, copying `singleton`, `strictVersion`, `requiredVersion`, and `eager` per entry. Secondary entry points are separate keys. Give a source-only workspace library an explicit `version`, the stats value if it has no `package.json`. A workspace library imported by more than one app but missing from the stats was never shared. Sharing it now changes behavior. Report it.
+5. Move a static host to a runtime manifest: `registerRemotes` with `type: 'global'` and full `remoteEntry.js` URLs, `loadRemote('<container-name>/<exposed>')` at the call sites (map a named export to `default`), and `implicitDependencies` on the host. A host that already calls `registerRemotes` is done as it is, including `mf-manifest.json` entries with no `type`. Keep static `remotes` entries only if the user asks to stay static.
+6. Restore the bundler settings the wrapper used to set: `output.uniqueName`, `output.publicPath: 'auto'`, `output.clean: true`, app-plugin `commonChunk: false`, `devServer.hot: true` with an `Access-Control-Allow-Origin` header, `lazyCompilation: false` on Rspack, and `output.scriptType: 'text/javascript'` on webpack. `optimization.runtimeChunk` and the app-plugin `runtimeChunk` are `false` on remotes and on host production builds, and `'single'` (app-plugin `true`) on host development builds. Keep `extractLicenses` on for production only. Delete the old `module-federation.config.ts`, `rspack.config.ts` or `webpack.config.ts`, and `*.config.prod.*` in the same step you write the `.js` replacements.
+7. Move `build` and `serve` to `nx:run-commands` running the Rspack or webpack CLI, with `NODE_ENV` per configuration. Add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `spa: true`, `watch: false`, never `buildTarget`. Point e2e web servers at `nx run-many -t serve-static -p <host> <remotes>`. For `@nx/cypress:cypress`, point `devServerTarget` at a continuous `nx:run-commands` target on the e2e project that runs that command with a `readyWhen` per app, and remove the e2e target's `port` option.
+8. Remove `@nx/module-federation` only after the new setup builds and runs. On v23, `@nx/rspack` depends on it, so on Rspack rebuild uncached with the `node_modules` copy renamed aside, then put it back.
+9. Do not claim hot-update parity, shared-state parity, or deployment-path correctness from a green build. Run the development flow with at least one remote served statically, and edit a host file and a live remote file to check hot updates. Report what you verified and what you did not.
+10. For apps with a server build (a `server` target or a `*.server.config.*` file), also follow https://nx.dev/docs/kb/migrate-react-module-federation-ssr.
+
+Reference: {pageUrl}
+{% /llm_copy_prompt %}
+
+Nx v23 deprecates the Module Federation wrappers, runtime helpers, dev-server executors, and
+generators that `@nx/module-federation`, `@nx/react`, `@nx/rspack`, and `@nx/angular` ship today.
+These APIs wrap the official [Module Federation](https://module-federation.io) plugins. Nx v24
+removes the wrappers, so migrate your apps to the official plugins directly and keep each app on
+its current bundler.
+
+Migrate before you upgrade to v24, while the old setup still builds and you can compare against
+it. Nx will also ship migrations for this later.
+
+{% aside type="note" title="Scope" %}
+React apps on Rspack or webpack, keeping the same bundler. Server-side rendered apps follow these
+steps for the browser build, then
+[migrate server-side rendered apps](/docs/kb/migrate-react-module-federation-ssr). For Angular, see
+[migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation).
+{% /aside %}
+
+## What replaces what
+
+| Going away in v24                                                                     | Replacement                                                         |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `withModuleFederation` from `@nx/module-federation/rspack`                            | `ModuleFederationPlugin` from `@module-federation/enhanced/rspack`  |
+| `withModuleFederation` from `@nx/module-federation/webpack`                           | `ModuleFederationPlugin` from `@module-federation/enhanced/webpack` |
+| `NxModuleFederationPlugin` from `@nx/module-federation/rspack`                        | `ModuleFederationPlugin` from `@module-federation/enhanced/rspack`  |
+| `setRemoteDefinitions`, `setRemoteDefinition` from `@nx/react/mf`                     | `registerRemotes` from `@module-federation/enhanced/runtime`        |
+| `loadRemoteModule` from `@nx/react/mf`                                                | `loadRemote` from `@module-federation/enhanced/runtime`             |
+| `@nx/react:module-federation-dev-server` and the Rspack equivalent                    | `nx:run-commands` running your bundler dev server                   |
+| `NxModuleFederationDevServerPlugin`                                                   | Not supported                                                       |
+| `@nx/react:module-federation-static-server` and the Rspack equivalent                 | Not supported                                                       |
+| `@nx/react/module-federation` and `@nx/rspack/module-federation` re-exports           | Same as the `@nx/module-federation` entry they re-export            |
+| `sharePackages`, `shareWorkspaceLibraries`, `mapRemotes` from `@nx/module-federation` | Not supported. Write the resolved values out, Step 4                |
+
+The two unsupported entries ran processes, not builds. `NxModuleFederationDevServerPlugin` is the
+Rspack form of the dev-server executor, which started the host and every remote from one
+`nx serve`. `@nx/react:module-federation-static-server` served the remotes you weren't working on
+from a single port. Now you start the processes you want, and the runtime manifest from Step 5
+lets the host boot without them.
+
+Keep `NxAppRspackPlugin`, `NxAppWebpackPlugin`, `NxReactRspackPlugin`, and
+`NxReactWebpackPlugin`. They are general bundler plugins and are not part of this removal.
+
+{% aside type="note" title="The other route" %}
+The `@nx/react:consumer` and `@nx/react:provider` generators create a new setup on Vite, Rsbuild,
+or Rspack, covered in [consumer and provider](/docs/kb/consumer-and-provider). They generate
+new apps. Use them for a greenfield app or as a reference. For a workspace you already ship,
+update the configs in place with the steps below.
+{% /aside %}
+
+## Capture a baseline first
+
+A remote can render correctly while the host and the remote hold separate copies of a shared
+library. Write down what works now:
+
+- Serve the host and its remotes, and visit the routes that load each remote.
+- Edit a file in the host and in a remote. Both should refresh the app.
+- Run a production build and note the artifacts you depend on, such as each remote's
+  `remoteEntry.js`. Chunk names and order will change, so reproduce the federation config rather
+  than the exact output.
+- Copy each `dist/apps/<app>/mf-stats.json` out of `dist` before you rebuild. Steps 3 and 4
+  reproduce its `shared` map, `exposes`, and container name.
+- Note each app's `serve` port for the remote URLs in Step 5.
+
+## Step 1: inventory the workspace
+
+Search for every consumer before you edit one:
+
+```shell
+grep -rE "@nx/module-federation|@nx/react/module-federation|@nx/rspack/module-federation|@nx/react/mf|module-federation-dev-server|module-federation-static-server|ssr-dev-server|withModuleFederationForSSR|NxModuleFederationSSRDevServerPlugin|NX_MF_DEV_REMOTES" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.json" --exclude-dir=node_modules --exclude-dir=.nx --exclude-dir=dist .
+```
+
+On Windows:
+
+```powershell
+Get-ChildItem -Recurse -File -Include *.ts,*.tsx,*.js,*.json |
+  Where-Object FullName -notmatch 'node_modules|dist|\.nx' |
+  Select-String -Pattern '@nx/module-federation|@nx/react/module-federation|@nx/rspack/module-federation|@nx/react/mf|module-federation-dev-server|module-federation-static-server|ssr-dev-server|withModuleFederationForSSR|NxModuleFederationSSRDevServerPlugin|NX_MF_DEV_REMOTES'
+```
+
+Record, per app, whether it exposes modules, consumes them, or does both, along with its
+production remote URLs, custom upstream options, and any runtime plugins.
+
+Apps with a `server` target or a `*.server.config.*` file are server-side rendered. Migrate their
+browser build here, then their server build with
+[migrate server-side rendered apps](/docs/kb/migrate-react-module-federation-ssr). Angular apps
+follow [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation) instead.
+
+## Step 2: install the official packages
+
+Workspaces created by the `host` generator already list `@module-federation/enhanced`. Application
+code imports its runtime, so move it to `dependencies` if it sits in `devDependencies`, then
+reinstall to update the lockfile. If it's missing, install it:
+
+```shell
+npm add --save-prod @module-federation/enhanced
+```
+
+Step 7 calls the bundler CLI. Rspack workspaces already declare `@rspack/cli`, but webpack
+workspaces that only built through the Nx executor usually lack `webpack-cli`:
+
+```shell
+npm add -D webpack-cli
+```
+
+Use `pnpm add`, `yarn add`, or `bun add` in place of `npm add` throughout. On pnpm, pass `-P`
+to move an existing devDependency to `dependencies`.
+
+## Step 3: translate the federation config
+
+Nx resolved each remote project name to a URL from the project graph. The official plugin needs
+explicit values.
+
+Rspack apps from the Nx 23 `host` and `remote` generators use a plain `rspack.config.ts` with
+`NxModuleFederationPlugin` and `NxModuleFederationDevServerPlugin` on the inferred
+`@nx/rspack/plugin` targets. Translate the `config` passed to `NxModuleFederationPlugin` and drop
+the dev-server plugin. These apps have no build-target options to move in Step 6. Ignore the
+generated `rspack.config.prod.ts`, which the inferred build never loads.
+
+### Container name and import alias
+
+The container name is normalized: every character outside `[a-zA-Z0-9_$]` becomes `_`, as does
+a leading character that can't start an identifier, so `webpack-host` publishes as
+`webpack_host`. Use that form for `name`.
+
+The import alias stays the original project name. The key in `remotes` is the alias, and
+`webpackRemoteA/Module` keeps working.
+
+### Options Nx passed for you
+
+Nx set `filename` to `remoteEntry.js`, set `remoteType` to `script` on webpack, and passed
+through the `dts: false` override from your `withModuleFederation` call. Set all three yourself.
+Without `dts: false`, every remote build logs a type-generation error.
+
+Drop any `library` entry from the browser config. Nx never passed it to the plugin, and the
+generated `{ type: 'var', name: '<project-name>' }` publishes an un-normalized global. On Rspack,
+a `var` or `window` library type also turned on `remoteType: 'script'` and
+`output.scriptType: 'text/javascript'`. Set both by hand if your Rspack config had one.
+
+### Remote URLs
+
+List only direct remotes. A remote that also consumes remotes keeps its `exposes` and gets a
+`remotes` map too.
+
+Generated apps also carry a `webpack.config.prod.*` file wired through
+`build.configurations.production.webpackConfig`, holding tuples such as
+`['webpackRemoteA', 'http://localhost:4701/']`. Nx appended `remoteEntry.js` to any tuple URL
+without a filename, with or without a trailing slash. Fold both sets into one config keyed on
+`NODE_ENV`, with exactly one slash before `remoteEntry.js`.
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```ts
+// apps/webpack-host/module-federation.config.ts
+import type { ModuleFederationConfig } from '@nx/module-federation';
+
+const config: ModuleFederationConfig = {
+  name: 'webpack-host',
+  remotes: ['webpackRemoteA', 'webpackRemoteB'],
+};
+
+export default config;
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
+
+```js
+// apps/webpack-host/module-federation.config.js
+const isProd = process.env.NODE_ENV === 'production';
+
+module.exports = {
+  name: 'webpack_host', // normalized
+  filename: 'remoteEntry.js',
+  dts: false,
+  remoteType: 'script', // webpack only, Rspack defaults to script
+  remotes: {
+    webpackRemoteA: isProd
+      ? 'webpackRemoteA@https://remote-a.example.com/remoteEntry.js'
+      : 'webpackRemoteA@http://localhost:4701/remoteEntry.js',
+    webpackRemoteB: isProd
+      ? 'webpackRemoteB@https://remote-b.example.com/remoteEntry.js'
+      : 'webpackRemoteB@http://localhost:4702/remoteEntry.js',
+  },
+  shared: {
+    // ... see Step 4
+  },
+};
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Remote configs keep their `exposes` map unchanged. A top-level host needs these URLs only until
+Step 5 moves them to a runtime manifest. A remote that consumes other remotes keeps its map.
+
+{% aside type="note" title="JavaScript config files" %}
+The samples use CommonJS `.js`, which both CLIs load without a TypeScript loader. Recent Node
+versions run TypeScript configs directly, so you can rename them back to `.ts` once the migration
+works.
+{% /aside %}
+
+## Step 4: write the shared map
+
+Nx built `shared` from the project graph. It covered framework packages, their secondary entry
+points, every workspace library the app imports, and those libraries' npm dependencies. The
+official plugin shares only what you list.
+
+Copy the values from the baseline `mf-stats.json`, including `singleton`, `strictVersion`,
+`requiredVersion`, and `eager` per entry:
+
+```js
+// apps/webpack-host/module-federation.config.js
+module.exports = {
+  // ... name, filename, dts, remotes
+  shared: {
+    '@myorg/state': {
+      singleton: true,
+      requiredVersion: false,
+      version: '1.0.0',
+    },
+    react: {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '^19.0.0',
+      eager: true,
+    },
+    'react-dom': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '^19.0.0',
+      eager: true,
+    },
+    'react-dom/client': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '^19.0.0',
+    },
+    'react/jsx-runtime': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '^19.0.0',
+    },
+  },
+};
+```
+
+Check these against the stats.
+
+- **Secondary entry points are separate keys.** `pkg` does not cover `pkg/subpath`. List the
+  subpaths the stats show.
+- **`additionalShared` entries set their own values.** The same package can appear with a
+  different range and no `strictVersion`, so copy each entry as it is and drop any the stats don't
+  list.
+- **The stats rewrite one field.** A callback that set `requiredVersion: false` shows up as
+  `requiredVersion: '^<version>'`. For a workspace library, keep the `false` and your callback's
+  `version`.
+- **A source-only workspace library needs an explicit `version`.** `singleton: true` alone did not
+  give host and remotes one copy in testing. Use the library's declared version or one your team
+  agrees on, and never give two implementations the same version. A library with no
+  `package.json` shows `0.0.0` in the stats. Copy that.
+
+Nx found workspace libraries only through `tsconfig.base.json` paths. In a workspace linked
+through package manager workspaces, it never shared them, and each app bundled its own copy. If a
+library that several apps import is missing from the stats, sharing it now changes behavior. Give
+it an explicit `version` and note the change.
+
+{% aside type="note" title="Imports have to use the library's package name" %}
+A `shared` key matches the request string. A library imported by a relative path into its
+source resolves to a separate copy. Nx rewrote those requests, and the official plugin does not.
+{% /aside %}
+
+Replace each call to `sharePackages`, `shareWorkspaceLibraries`, or `mapRemotes` with the values
+it returned. The stats list them.
+
+```js
+// before: shared: sharePackages(['react', 'react-dom'])
+// after:
+const sharedNpm = (names, version) =>
+  Object.fromEntries(
+    names.map((name) => [
+      name,
+      { singleton: true, strictVersion: true, requiredVersion: version },
+    ])
+  );
+
+module.exports = {
+  // ...
+  shared: sharedNpm(['react', 'react-dom'], '^19.0.0'),
+};
+```
+
+## Step 5: move remotes to a runtime manifest
+
+A runtime manifest holds the remote URLs in a file the host fetches at startup. You can change
+a URL without rebuilding, and the host boots even when a remote is down. It's the upstream
+default, described in the [manifest reference](https://module-federation.io/configure/manifest),
+and it replaces the static server this migration removes.
+
+Register the remotes before the async boundary that imports your bootstrap, and translate
+`loadRemoteModule(name, './Module')` into `loadRemote(name + '/Module')`.
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```tsx
+// apps/webpack-host/src/app/app.tsx
+const RemoteA = React.lazy(() => import('webpackRemoteA/Module'));
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
+
+```ts
+// apps/webpack-host/src/main.ts
+import { registerRemotes } from '@module-federation/enhanced/runtime';
+
+fetch('/assets/module-federation.manifest.json')
+  .then((res) => res.json())
+  .then((remotes: Record<string, string>) =>
+    registerRemotes(
+      Object.entries(remotes).map(([name, entry]) => ({
+        name,
+        entry,
+        type: 'global' as const,
+      }))
+    )
+  )
+  .then(() => import('./bootstrap'));
+```
+
+```tsx
+// apps/webpack-host/src/app/app.tsx
+import { loadRemote } from '@module-federation/enhanced/runtime';
+
+const RemoteA = React.lazy(
+  () =>
+    loadRemote<{ default: React.ComponentType }>(
+      'webpackRemoteA/Module'
+    ) as Promise<{ default: React.ComponentType }>
+);
+
+// a module with a named export, such as one added by federate-module
+const Greeting = React.lazy(() =>
+  loadRemote<{ Greeting: React.ComponentType }>('webpackRemoteD/Greeting').then(
+    (m) => ({ default: m!.Greeting })
+  )
+);
+```
+
+```json
+// apps/webpack-host/src/assets/module-federation.manifest.json
+{
+  "webpackRemoteA": "http://localhost:4701/remoteEntry.js",
+  "webpackRemoteB": "http://localhost:4702/remoteEntry.js"
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+- **Every value is a full entry URL.** `loadRemoteModule` appended `/remoteEntry.mjs` to a bare
+  origin such as `http://localhost:4701`. `registerRemotes` uses the string as given. With
+  `output.publicPath: 'auto'`, each remote's chunks load from wherever its entry came from. Put a
+  deployment path prefix in the manifest you ship, not your local one.
+- **Each key is the remote's normalized container name.** `type: 'global'` makes the runtime read
+  the container from `globalThis[name]`, which matches how Nx built these remotes. The key must
+  match `name` from Step 3, and it's also the prefix `loadRemote` takes. A project named
+  `my-remote` is `my_remote` in the manifest and in `loadRemote('my_remote/Module')`.
+- **The host loses its project-graph edge.** Static `import('<remote>/Module')` calls gave Nx
+  that edge. Add `implicitDependencies` on the host so remotes still build first and
+  `nx affected` still includes the host. In a package manager workspace, a `workspace:*`
+  dependency on each remote gives the same edge. Drop the host's `<remote>/Module` entries from
+  `tsconfig.base.json` and any `remotes.d.ts`.
+- **Per-environment URLs move into the manifest.** The `NODE_ENV` ternary from Step 3 has no
+  equivalent. Ship the right manifest for each environment, with a `fileReplacements` pair or by
+  writing the file at deploy time.
+
+Only a top-level host converts. A remote that consumes other remotes keeps its static `remotes`
+map. Hosts load its exposed module, not its `main.ts`, and a registration there never runs.
+
+{% aside type="note" title="Staying with static remotes" %}
+Keep the `remotes` map from Step 3 and the `tsconfig.base.json` paths, and skip this step.
+Every remote then has to be running before the host boots, so serve them together:
+`nx run-many -t serve -p webpack-host webpackRemoteA webpackRemoteB`.
+{% /aside %}
+
+A host that already calls `init` or `registerRemotes` from the upstream runtime is done. That
+includes the Nx 23 `--dynamic` host, which registers `mf-manifest.json` entries without a `type`.
+The official plugin still emits `mf-manifest.json`. That host never had a graph edge to its
+remotes. Add `implicitDependencies` for them.
+
+A host that passes a fetched manifest to `setRemoteDefinitions` still needs the conversion above.
+A host that used `setRemoteUrlResolver` from `@nx/react/mf` keeps its URL logic and passes each
+resolved URL as the `entry` in `registerRemotes`.
+
+## Step 6: swap the wrapper in the bundler config
+
+`composePlugins(withNx(), withReact(), withModuleFederation(config))` returns an Nx-specific
+config function that the Rspack and webpack CLIs can't run. Replace it with a standard config
+object that adds `ModuleFederationPlugin`, then move `build` and `serve` to the CLI in Step 7.
+
+The options on your old `build` target become `NxAppRspackPlugin` or `NxAppWebpackPlugin`
+options. When you move them:
+
+- Paths such as `main`, `index`, `tsConfig`, `assets`, and `styles` resolve from the project
+  root. `apps/webpack-host/src/main.ts` becomes `./src/main.ts`.
+- `fileReplacements` paths resolve from the workspace root. Drop a pair whose files do not exist.
+- Values that differed per named configuration become
+  `process.env.NODE_ENV === 'production'` ternaries. Step 7 sets `NODE_ENV` per configuration.
+- Drop the generator's per-configuration `optimization`, `outputHashing`, `sourceMap`,
+  `namedChunks`, and `vendorChunk` values. The plugin derives them from `NODE_ENV`. It doesn't
+  derive `extractLicenses`, so keep that on for production only.
+- Leave no build options on the target. The plugin merges in the running target's `project.json`
+  options, and they win.
+
+The wrapper also changed these bundler settings, which you now set yourself.
+
+| Setting                     | Value                                                                                                                                                                                              |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `output.uniqueName`         | The project name, not the normalized container name                                                                                                                                                |
+| `output.publicPath`         | `'auto'`                                                                                                                                                                                           |
+| `output.clean`              | `true`. The Rspack app plugin defaults it, the webpack one does not, and without it a development build lands on top of production files                                                           |
+| `output.scriptType`         | `'text/javascript'` on webpack                                                                                                                                                                     |
+| `resolve.modules`           | `node_modules` plus the workspace root, as the wrapper set. `exposes` paths written from the workspace root need it                                                                                |
+| `optimization.runtimeChunk` | `false` on remotes and host production builds. `'single'` on host development builds, or host edits never re-render. Set the app-plugin `runtimeChunk` to match. It overwrites the top-level value |
+| `commonChunk`               | `false` in the app-plugin options. `NxAppWebpackPlugin` defaults it to `true` and adds a `common.<hash>.js` per remote                                                                             |
+| `splitChunks.cacheGroups`   | `default` and `common` set to `false`, only if the old config used `NxModuleFederationPlugin`. `withModuleFederation` did not set them                                                             |
+| `lazyCompilation` (Rspack)  | `false`. rspack-cli turns it on in dev mode, and federation breaks                                                                                                                                 |
+| `devServer.hot`             | `true` on every app, remotes included. Remote edits then update the host without resetting its state                                                                                               |
+| `devServer.headers`         | `Access-Control-Allow-Origin`, so a host on one port can fetch `remoteEntry.js` from another                                                                                                       |
+
+{% tabs syncKey="mf-bundler" %}
+{% tabitem label="Rspack" %}
+
+```js
+// apps/rspack-host/rspack.config.js
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const {
+  ModuleFederationPlugin,
+} = require('@module-federation/enhanced/rspack');
+const { join } = require('node:path');
+const mf = require('./module-federation.config');
+
+const isProd = process.env.NODE_ENV === 'production';
+
+module.exports = {
+  lazyCompilation: false,
+  output: {
+    path: join(__dirname, '../../dist/apps/rspack-host'),
+    publicPath: 'auto',
+    uniqueName: 'rspack-host',
+    clean: true,
+  },
+  resolve: { modules: ['node_modules', join(__dirname, '../..')] },
+  optimization: {
+    runtimeChunk: isProd ? false : 'single', // host only, remotes use false
+    // only if the old config used NxModuleFederationPlugin
+    splitChunks: { cacheGroups: { default: false, common: false } },
+  },
+  devServer: {
+    port: 4703,
+    hot: true,
+    static: false,
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    historyApiFallback: { index: '/index.html', disableDotRule: true },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      // ... your existing options, minus outputPath
+      runtimeChunk: !isProd, // host only, remotes use false
+      commonChunk: false,
+      extractLicenses: isProd,
+    }),
+    new NxReactRspackPlugin(),
+    new ModuleFederationPlugin(mf),
+  ],
+};
+```
+
+{% /tabitem %}
+{% tabitem label="webpack" %}
+
+```js
+// apps/webpack-host/webpack.config.js
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+const {
+  ModuleFederationPlugin,
+} = require('@module-federation/enhanced/webpack');
+const { join } = require('node:path');
+const mf = require('./module-federation.config');
+
+const isProd = process.env.NODE_ENV === 'production';
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../../dist/apps/webpack-host'),
+    publicPath: 'auto',
+    uniqueName: 'webpack-host',
+    scriptType: 'text/javascript',
+    clean: true,
+  },
+  resolve: { modules: ['node_modules', join(__dirname, '../..')] },
+  optimization: { runtimeChunk: isProd ? false : 'single' }, // host only, remotes use false
+  devServer: {
+    port: 4700,
+    hot: true,
+    static: false,
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    historyApiFallback: { index: '/index.html', disableDotRule: true },
+  },
+  plugins: [
+    new NxAppWebpackPlugin({
+      // ... your existing options, minus outputPath
+      runtimeChunk: !isProd, // host only, remotes use false
+      commonChunk: false,
+      extractLicenses: isProd,
+    }),
+    new NxReactWebpackPlugin(),
+    new ModuleFederationPlugin(mf),
+  ],
+};
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+{% aside type="note" title="These configs still run through Nx" %}
+The app plugins read `NX_TASK_TARGET_PROJECT` and related variables to find the project. The
+config works under `nx run` and fails under a bare `npx webpack serve` from the app folder.
+{% /aside %}
+
+The Nx dev server also derived `devMiddleware.publicPath` from `baseHref`, mapped `publicHost` to
+`client.webSocketURL`, and passed through `proxyConfig`, `allowedHosts`, and the `ssl` options.
+If you served under a sub-path, behind a proxy, or over HTTPS, add those to `devServer` yourself.
+
+Delete the replaced files in this same step: `module-federation.config.ts`, `rspack.config.ts` or
+`webpack.config.ts`, and any `*.config.prod.*`. While the old `.ts` config exists, an inferred
+build still loads it, and its `./module-federation.config` import now picks up your new `.js`
+file.
+
+## Step 7: update the targets
+
+The official plugin only covers the build. The host's `serve` no longer starts its remotes, so
+you start the ones you need.
+
+Point `build` and `serve` at the bundler CLI, with `NODE_ENV` in place of the named
+configurations the executor passed:
+
+```jsonc
+// apps/rspack-host/project.json
+{
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/rspack-host"],
+      "defaultConfiguration": "production",
+      "options": {
+        "command": "rspack build --config rspack.config.js",
+        "cwd": "apps/rspack-host",
+      },
+      "configurations": {
+        "production": { "env": { "NODE_ENV": "production" } },
+        "development": { "env": { "NODE_ENV": "development" } },
+      },
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "defaultConfiguration": "development",
+      "options": {
+        "command": "rspack serve --config rspack.config.js",
+        "cwd": "apps/rspack-host",
+      },
+      "configurations": {
+        "development": { "env": { "NODE_ENV": "development" } },
+        "production": { "env": { "NODE_ENV": "production" } },
+      },
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "continuous": true,
+      "dependsOn": ["build"],
+      "options": {
+        "staticFilePath": "dist/apps/rspack-host",
+        "port": 4703,
+        "spa": true,
+        "watch": false,
+      },
+    },
+  },
+}
+```
+
+On webpack, the commands are `webpack build --config webpack.config.js` and
+`webpack serve --config webpack.config.js`.
+
+With a runtime manifest from Step 5, serve the host alone and add remotes as you need them, live
+or from their last build:
+
+```shell
+nx serve rspack-host
+nx run-many -t serve-static -p rspackRemoteA rspackRemoteB
+```
+
+`nx serve rspack-host --devRemotes=rspackRemoteA` becomes one command for the apps you edit and
+one for the rest:
+
+```shell
+nx run-many -t serve -p rspackRemoteA rspack-host
+nx run-many -t serve-static -p rspackRemoteB
+```
+
+When the host runs in development, build the remotes you serve statically with the development
+configuration too, or serve them live. A development host with production-built remotes can render
+a blank page.
+
+```shell
+nx run-many -t build -p rspackRemoteB -c development
+nx run-many -t serve-static -p rspackRemoteB --excludeTaskDependencies
+```
+
+{% llm_only %}
+The blank page shows `dispatcher.getOwner is not a function`. The runtime picked the remote's
+production `react` while the host's `react/jsx-dev-runtime` stayed development.
+`shareStrategy: 'loaded-first'` avoids it but stops remote edits from updating the host. Do not
+use it.
+{% /llm_only %}
+
+{% aside type="note" title="Inferred targets" %}
+If `nx.json` lists `@nx/rspack/plugin` or `@nx/webpack/plugin`, the inferred `build` and `serve`
+targets work as they are. Only `serve-static` needs the shape above. Nx merges your `project.json`
+options over the inferred ones key by key, and the inferred `buildTarget` comes along with your
+`staticFilePath`. Add `"buildTarget": ""` to clear it.
+{% /aside %}
+
+Leave `buildTarget` unset on `serve-static`. With it set, the file server rebuilds the app and
+duplicates the `dependsOn` build, which fails inside an e2e run. Keep `spa: true` on every app, or
+a refresh on a deep route returns a 404.
+
+Point an e2e project's web server command at `nx run-many -t serve-static -p <host> <remotes>`,
+with its URL on the host's `serve-static` port.
+
+An e2e target on the `@nx/cypress:cypress` executor names a `devServerTarget` instead. The app's
+own `serve` starts only the host, and inside the e2e task the app plugin resolves paths against the
+e2e project. Add a continuous target to the e2e project that starts every app, with one `readyWhen`
+line per app, and point `devServerTarget` at it:
+
+```jsonc
+// apps/webpack-host-e2e/project.json
+{
+  "targets": {
+    "serve-mf": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "nx run-many -t serve-static -p webpack-host webpackRemoteA webpackRemoteB",
+        "readyWhen": [
+          "Unhandled requests will be served from: http://localhost:4700",
+          "Unhandled requests will be served from: http://localhost:4701",
+          "Unhandled requests will be served from: http://localhost:4702",
+        ],
+      },
+    },
+    "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/webpack-host-e2e/cypress.config.ts",
+        "devServerTarget": "webpack-host-e2e:serve-mf",
+        "testingType": "e2e",
+      },
+    },
+  },
+}
+```
+
+Remove the e2e target's `port` option, which Cypress passes on to the command. Remove the
+`production` and `ci` configurations that pointed at the old targets too.
+
+Last, remove the `targetDefaults` entries in `nx.json` keyed on `@nx/rspack:rspack` or
+`@nx/webpack:webpack`. Their `NX_MF_DEV_REMOTES` input no longer does anything. Move their other
+settings, such as `cache`, `inputs`, and `dependsOn`, to the generic `build` default. A `filter`
+scopes them to a set of projects:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": [
+      {
+        "filter": { "projects": ["apps/*", "!apps/legacy"] },
+        "cache": true,
+        "inputs": ["production", "^production"],
+      },
+    ],
+  },
+}
+```
+
+See the [task pipeline reference](/docs/reference/nx-json#task-pipelines) for the full syntax.
+
+## Step 8: validate the result
+
+A green build isn't enough. Everything you recorded in the baseline has to work again, along
+with these checks.
+
+- Production and development configurations both build with `--skipNxCache`. Build production
+  last, since both write the same `mf-stats.json`.
+- `tsc -p apps/<app>/tsconfig.app.json --noEmit` passes for each app. The app plugin type-checks
+  asynchronously, and a build exits 0 on type errors.
+- Each app's production `mf-stats.json` lists the same container name, exposes, and `shared`
+  entries as the baseline. A host on a runtime manifest has an empty build-time `remotes` by
+  design. Check its manifest against the baseline URLs.
+- The e2e suite passes against the replacement web server.
+- In development, with at least one remote served statically, an edit to a host file and an edit
+  to a live remote both update the page without a reload.
+
+Record baseline failures separately instead of weakening an assertion to get a pass.
+
+## Step 9: remove the package
+
+Once nothing references the removed APIs and the new setup builds and runs, remove the package:
+
+```shell
+npm remove @nx/module-federation
+```
+
+Keep `@module-federation/enhanced` as a direct dependency and commit the lockfile.
+
+## What the official plugins do not do
+
+- **`--devRemotes` selection.** The targets you start decide which remotes run live and which
+  serve from a build.
+- **Runtime library control.** `withModuleFederation` attached a runtime plugin when the
+  dev-server executor set `NX_MF_DEV_REMOTES`. It let a live remote's copy of a shared library win
+  over a static one. Nothing sets that variable now.
+- **Automatic remote fallback.** A host fails the request when a remote is unavailable. Add your
+  own error boundary if you need one.
+
+For anything beyond this migration, such as runtime plugins, promise-based remotes, or
+cross-version deployments, use the official
+[configuration reference](https://module-federation.io/configure/) and
+[runtime documentation](https://module-federation.io/guide/basic/runtime).

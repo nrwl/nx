@@ -5,7 +5,7 @@
     "customConditions": ["@nx/nx-source"],
     "composite": true,
     "isolatedModules": true,
-    "types": ["jest", "node"],
+    "types": ["vitest/globals", "node"],
     "rootDir": "."
   },
   "include": [
@@ -20,7 +20,7 @@
     "**/*.spec.jsx",
     "**/*.test.jsx",
     "**/*.d.ts",
-    "jest.config.ts",
+    "vitest.config.mts",
     "*.json"
   ],
   "references": [

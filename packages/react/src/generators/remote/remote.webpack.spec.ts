@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -11,88 +12,86 @@ import remote from './remote';
 import { getRootTsConfigPathInTree } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    readCachedProjectGraph: jest.fn().mockImplementation(
-      (): ProjectGraph => ({
-        dependencies: {},
-        nodes: {
-          test: {
-            name: 'test',
-            type: 'app',
-            data: {
-              root: 'test',
-              sourceRoot: 'test/src',
-              targets: {
-                build: {
-                  executor: '@nx/webpack:webpack',
-                  outputs: ['{options.outputPath}'],
-                  defaultConfiguration: 'production',
-                  options: {
-                    compiler: 'babel',
-                    outputPath: 'dist/test',
-                    index: 'test/src/index.html',
-                    baseHref: '/',
-                    main: `test/src/main.tsx`,
-                    tsConfig: 'test/tsconfig.app.json',
-                    assets: ['test/src/favicon.ico', 'src/assets'],
-                    styles: [`test/src/styles.css`],
-                    scripts: [],
-                    webpackConfig: 'test/webpack.config.js',
+    readCachedProjectGraph: vi.fn().mockImplementation((): ProjectGraph => ({
+      dependencies: {},
+      nodes: {
+        test: {
+          name: 'test',
+          type: 'app',
+          data: {
+            root: 'test',
+            sourceRoot: 'test/src',
+            targets: {
+              build: {
+                executor: '@nx/webpack:webpack',
+                outputs: ['{options.outputPath}'],
+                defaultConfiguration: 'production',
+                options: {
+                  compiler: 'babel',
+                  outputPath: 'dist/test',
+                  index: 'test/src/index.html',
+                  baseHref: '/',
+                  main: `test/src/main.tsx`,
+                  tsConfig: 'test/tsconfig.app.json',
+                  assets: ['test/src/favicon.ico', 'src/assets'],
+                  styles: [`test/src/styles.css`],
+                  scripts: [],
+                  webpackConfig: 'test/webpack.config.js',
+                },
+                configurations: {
+                  development: {
+                    extractLicenses: false,
+                    optimization: false,
+                    sourceMap: true,
+                    vendorChunk: true,
                   },
-                  configurations: {
-                    development: {
-                      extractLicenses: false,
-                      optimization: false,
-                      sourceMap: true,
-                      vendorChunk: true,
-                    },
-                    production: {
-                      fileReplacements: [
-                        {
-                          replace: `test/src/environments/environment.ts`,
-                          with: `test/src/environments/environment.prod.ts`,
-                        },
-                      ],
-                      optimization: true,
-                      outputHashing: 'all',
-                      sourceMap: false,
-                      namedChunks: false,
-                      extractLicenses: true,
-                      vendorChunk: false,
-                    },
+                  production: {
+                    fileReplacements: [
+                      {
+                        replace: `test/src/environments/environment.ts`,
+                        with: `test/src/environments/environment.prod.ts`,
+                      },
+                    ],
+                    optimization: true,
+                    outputHashing: 'all',
+                    sourceMap: false,
+                    namedChunks: false,
+                    extractLicenses: true,
+                    vendorChunk: false,
                   },
                 },
-                serve: {
-                  executor: '@nx/webpack:dev-server',
-                  defaultConfiguration: 'development',
-                  options: {
-                    buildTarget: `test:build`,
-                    hmr: true,
+              },
+              serve: {
+                executor: '@nx/webpack:dev-server',
+                defaultConfiguration: 'development',
+                options: {
+                  buildTarget: `test:build`,
+                  hmr: true,
+                },
+                configurations: {
+                  development: {
+                    buildTarget: `test:build:development`,
                   },
-                  configurations: {
-                    development: {
-                      buildTarget: `test:build:development`,
-                    },
-                    production: {
-                      buildTarget: `test:build:production`,
-                      hmr: false,
-                    },
+                  production: {
+                    buildTarget: `test:build:production`,
+                    hmr: false,
                   },
                 },
               },
             },
           },
         },
-      })
-    ),
+      },
+    })),
   };
 });
 
@@ -111,7 +110,7 @@ describe('remote generator', () => {
 
   describe('bundler=webpack', () => {
     beforeEach(() => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
     });
 
     it('should create the remote with the correct config files', async () => {
@@ -375,7 +374,7 @@ describe('remote generator', () => {
     });
 
     it('should not set production webpack config when using TS Solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {
@@ -399,7 +398,7 @@ describe('remote generator', () => {
     });
 
     it('should set production webpack config when not using TS Solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {

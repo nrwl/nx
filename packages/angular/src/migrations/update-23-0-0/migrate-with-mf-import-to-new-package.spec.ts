@@ -8,8 +8,8 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migrateWithMfImport from './migrate-with-mf-import-to-new-package';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
 }));
 

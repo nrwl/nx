@@ -162,19 +162,20 @@ export function getTaskIOService(): TaskIOService {
  * Register a task process start with both IO and metrics services.
  * This is the standard way to notify the system that a task process has started.
  *
- * A target that opted out of sandboxing (`sandbox: { enabled: false }`) reports
- * no PID, which suppresses IO tracing and therefore its sandbox report. Metrics
- * are registered either way: the opt-out covers reporting, not the process
+ * A target on `ultracache: { mode: 'off' }` reports no PID, which suppresses IO
+ * tracing and therefore its report. Every other mode records — they differ in
+ * what is done with the recording, not in whether it is taken. Metrics are
+ * registered either way: the opt-out covers reporting, not the process
  * management that cleanup and orphan reaping depend on.
  *
  * Narrower than a whole `Task` because `run-commands` can synthesize an id for
  * a task that is not in any graph.
  */
 export function registerTaskProcessStart(
-  task: Pick<Task, 'id' | 'sandbox'>,
+  task: Pick<Task, 'id' | 'ultracache'>,
   pid: number
 ): void {
-  if (task.sandbox?.enabled !== false) {
+  if (task.ultracache?.mode !== 'off') {
     getTaskIOService().notifyPidUpdate({ taskId: task.id, pid });
   }
   getProcessMetricsService().registerTaskProcess(task.id, pid);

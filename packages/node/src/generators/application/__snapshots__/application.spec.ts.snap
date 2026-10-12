@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`app debug support should generate a debug config for vscode by default 1`] = `
+exports[`app > debug support > should generate a debug config for vscode by default 1`] = `
 [
   {
     "console": "integratedTerminal",
@@ -29,7 +29,7 @@ exports[`app debug support should generate a debug config for vscode by default 
 ]
 `;
 
-exports[`app debug support should generate a debug config for vscode by default 2`] = `
+exports[`app > debug support > should generate a debug config for vscode by default 2`] = `
 [
   {
     "console": "integratedTerminal",
@@ -58,7 +58,7 @@ exports[`app debug support should generate a debug config for vscode by default 
 ]
 `;
 
-exports[`app debug support should generate a debug config for vscode by default 3`] = `
+exports[`app > debug support > should generate a debug config for vscode by default 3`] = `
 [
   {
     "console": "integratedTerminal",
@@ -87,7 +87,7 @@ exports[`app debug support should generate a debug config for vscode by default 
 ]
 `;
 
-exports[`app debug support should generate a debug config for vscode by default 4`] = `
+exports[`app > debug support > should generate a debug config for vscode by default 4`] = `
 [
   {
     "console": "integratedTerminal",

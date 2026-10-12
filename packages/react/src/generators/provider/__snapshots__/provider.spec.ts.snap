@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/react:provider generates a provider for the rsbuild bundler: project.json 1`] = `
+exports[`@nx/react:provider > generates a provider for the rsbuild bundler > project.json 1`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-provider",
@@ -27,7 +27,7 @@ exports[`@nx/react:provider generates a provider for the rsbuild bundler: projec
 }
 `;
 
-exports[`@nx/react:provider generates a provider for the rsbuild bundler: rsbuild tree 1`] = `
+exports[`@nx/react:provider > generates a provider for the rsbuild bundler > rsbuild tree 1`] = `
 {
   "apps/my-provider/index.html": "<!doctype html>
 <html lang="en">
@@ -173,7 +173,7 @@ export {};
 }
 `;
 
-exports[`@nx/react:provider generates a provider for the rspack bundler: project.json 1`] = `
+exports[`@nx/react:provider > generates a provider for the rspack bundler > project.json 1`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-provider",
@@ -200,7 +200,7 @@ exports[`@nx/react:provider generates a provider for the rspack bundler: project
 }
 `;
 
-exports[`@nx/react:provider generates a provider for the rspack bundler: rspack tree 1`] = `
+exports[`@nx/react:provider > generates a provider for the rspack bundler > rspack tree 1`] = `
 {
   "apps/my-provider/index.html": "<!doctype html>
 <html lang="en">
@@ -390,7 +390,7 @@ export {};
 }
 `;
 
-exports[`@nx/react:provider generates a provider for the vite bundler: project.json 1`] = `
+exports[`@nx/react:provider > generates a provider for the vite bundler > project.json 1`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-provider",
@@ -417,7 +417,7 @@ exports[`@nx/react:provider generates a provider for the vite bundler: project.j
 }
 `;
 
-exports[`@nx/react:provider generates a provider for the vite bundler: vite tree 1`] = `
+exports[`@nx/react:provider > generates a provider for the vite bundler > vite tree 1`] = `
 {
   "apps/my-provider/index.html": "<!doctype html>
 <html lang="en">

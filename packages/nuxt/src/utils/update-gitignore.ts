@@ -17,7 +17,7 @@ export function updateGitIgnore(tree: Tree) {
   for (const entry of nuxtEntries) {
     const regex = new RegExp(`^${entry}$`, 'm');
     if (!regex.test(newContents)) {
-      newContents += `\n${entry}`;
+      newContents += `${newContents ? '\n' : ''}${entry}`;
     }
   }
 

@@ -262,22 +262,23 @@ function warnAboutLegacyCachedTargets(
  * place a misspelled option can be reported at all. `'...'` is listed because a
  * spread with no base to resolve against survives merging.
  */
-const KNOWN_SANDBOX_KEYS = new Set<string>([
-  'enabled',
-  'backfill',
+const KNOWN_ULTRACACHE_KEYS = new Set<string>([
+  'mode',
   'ignoredReads',
   'ignoredWrites',
   NX_SPREAD_TOKEN,
 ]);
 
-function describeSandboxValue(value: unknown): string {
+const ULTRACACHE_MODES = ['on', 'warn', 'error', 'off'] as const;
+
+function describeUltracacheValue(value: unknown): string {
   if (Array.isArray(value)) return 'an array';
   if (value === null) return 'null';
   return `a ${typeof value}`;
 }
 
 /**
- * Describes every way a `sandbox` violates the shape the schema forbids.
+ * Describes every way an `ultracache` violates the shape the schema forbids.
  *
  * The schema is editor-only, and everything downstream — the Rust task hasher,
  * the cloud runner's Go and Kotlin deserializers — is strict. A bad value that
@@ -289,20 +290,20 @@ function describeSandboxValue(value: unknown): string {
  * collected by `validateAndNormalizeProjectRootMap`, and anything else escapes
  * as far as the daemon, which exits on an error it cannot classify.
  */
-function validateTargetSandbox(
-  sandbox: unknown,
+function validateTargetUltracache(
+  ultracache: unknown,
   projectName: string,
   projectRoot: string,
   targetName: string,
   sourceMaps: ConfigurationSourceMaps
 ): string[] {
-  if (sandbox === undefined) {
+  if (ultracache === undefined) {
     return [];
   }
 
   const targetSourceMaps = sourceMaps?.[projectRoot];
   const [file, plugin] =
-    targetSourceMaps?.[`targets.${targetName}.sandbox`] ??
+    targetSourceMaps?.[`targets.${targetName}.ultracache`] ??
     targetSourceMaps?.[`targets.${targetName}`] ??
     [];
   const origin = file
@@ -312,46 +313,44 @@ function validateTargetSandbox(
       : '';
   const where = `"${targetName}" in project "${projectName}"${origin}`;
 
-  if (!isObject(sandbox)) {
+  if (!isObject(ultracache)) {
     return [
-      `The "sandbox" configuration for target ${where} must be an object, but it is ${describeSandboxValue(
-        sandbox
+      `The "ultracache" configuration for target ${where} must be an object, but it is ${describeUltracacheValue(
+        ultracache
       )}.`,
     ];
   }
 
   const errors: string[] = [];
 
-  for (const key of Object.keys(sandbox)) {
-    if (!KNOWN_SANDBOX_KEYS.has(key)) {
+  for (const key of Object.keys(ultracache)) {
+    if (!KNOWN_ULTRACACHE_KEYS.has(key)) {
       errors.push(
-        `"sandbox.${key}" for target ${where} is not a sandbox option. Supported options are "enabled", "backfill", "ignoredReads" and "ignoredWrites".`
+        `"ultracache.${key}" for target ${where} is not an ultracache option. Supported options are "mode", "ignoredReads" and "ignoredWrites".`
       );
     }
   }
 
-  if (sandbox.enabled !== undefined && typeof sandbox.enabled !== 'boolean') {
+  if (
+    ultracache.mode !== undefined &&
+    !ULTRACACHE_MODES.includes(ultracache.mode as any)
+  ) {
+    const supported = ULTRACACHE_MODES.map((mode) => `"${mode}"`).join(', ');
     errors.push(
-      `"sandbox.enabled" for target ${where} must be a boolean, but it is ${describeSandboxValue(
-        sandbox.enabled
-      )}. Use \`false\` to opt the target out of observed-IO tracking.`
-    );
-  }
-
-  if (sandbox.backfill !== undefined && typeof sandbox.backfill !== 'boolean') {
-    errors.push(
-      `"sandbox.backfill" for target ${where} must be a boolean, but it is ${describeSandboxValue(
-        sandbox.backfill
-      )}. Use \`false\` to hash the target from its declared inputs and outputs instead of a recorded snapshot.`
+      `"ultracache.mode" for target ${where} must be one of ${supported}, but it is ${
+        typeof ultracache.mode === 'string'
+          ? `"${ultracache.mode}"`
+          : describeUltracacheValue(ultracache.mode)
+      }.`
     );
   }
 
   for (const key of ['ignoredReads', 'ignoredWrites'] as const) {
-    const value = sandbox[key];
+    const value = ultracache[key];
     if (value === undefined) continue;
     if (!Array.isArray(value)) {
       errors.push(
-        `"sandbox.${key}" for target ${where} must be an array of glob patterns, but it is ${describeSandboxValue(
+        `"ultracache.${key}" for target ${where} must be an array of glob patterns, but it is ${describeUltracacheValue(
           value
         )}.`
       );
@@ -360,7 +359,7 @@ function validateTargetSandbox(
     const badIndex = value.findIndex((glob) => typeof glob !== 'string');
     if (badIndex !== -1) {
       errors.push(
-        `"sandbox.${key}[${badIndex}]" for target ${where} must be a glob pattern string, but it is ${describeSandboxValue(
+        `"ultracache.${key}[${badIndex}]" for target ${where} must be a glob pattern string, but it is ${describeUltracacheValue(
           value[badIndex]
         )}.`
       );
@@ -399,8 +398,8 @@ function normalizeTargets(
     const target = project.targets[targetName];
 
     targetErrorMessage.push(
-      ...validateTargetSandbox(
-        target.sandbox,
+      ...validateTargetUltracache(
+        target.ultracache,
         project.name ?? project.root,
         project.root,
         targetName,

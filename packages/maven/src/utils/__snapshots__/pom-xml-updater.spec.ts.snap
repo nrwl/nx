@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pom-xml-updater updateNxMavenPluginVersion should correctly identify nx-maven-plugin with whitespace 1`] = `
+exports[`pom-xml-updater > updateNxMavenPluginVersion > should correctly identify nx-maven-plugin with whitespace 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <build>
@@ -19,7 +19,7 @@ exports[`pom-xml-updater updateNxMavenPluginVersion should correctly identify nx
 </project>"
 `;
 
-exports[`pom-xml-updater updateNxMavenPluginVersion should handle pom.xml with dependencies and other version elements 1`] = `
+exports[`pom-xml-updater > updateNxMavenPluginVersion > should handle pom.xml with dependencies and other version elements 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <version>1.0.0</version>
@@ -42,7 +42,7 @@ exports[`pom-xml-updater updateNxMavenPluginVersion should handle pom.xml with d
 </project>"
 `;
 
-exports[`pom-xml-updater updateNxMavenPluginVersion should not update other plugin versions 1`] = `
+exports[`pom-xml-updater > updateNxMavenPluginVersion > should not update other plugin versions 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <build>
@@ -62,7 +62,7 @@ exports[`pom-xml-updater updateNxMavenPluginVersion should not update other plug
 </project>"
 `;
 
-exports[`pom-xml-updater updateNxMavenPluginVersion should only update plugins, not parent version 1`] = `
+exports[`pom-xml-updater > updateNxMavenPluginVersion > should only update plugins, not parent version 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <parent>
@@ -82,7 +82,7 @@ exports[`pom-xml-updater updateNxMavenPluginVersion should only update plugins, 
 </project>"
 `;
 
-exports[`pom-xml-updater updateNxMavenPluginVersion should preserve XML formatting and structure 1`] = `
+exports[`pom-xml-updater > updateNxMavenPluginVersion > should preserve XML formatting and structure 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <build>
@@ -97,7 +97,7 @@ exports[`pom-xml-updater updateNxMavenPluginVersion should preserve XML formatti
 </project>"
 `;
 
-exports[`pom-xml-updater updateNxMavenPluginVersion should update the nx-maven-plugin version only 1`] = `
+exports[`pom-xml-updater > updateNxMavenPluginVersion > should update the nx-maven-plugin version only 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <build>

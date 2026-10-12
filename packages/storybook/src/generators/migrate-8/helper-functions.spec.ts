@@ -33,7 +33,7 @@ describe('Helper functions for the Storybook 8 migration generator', () => {
     });
 
     it('should onlyShowGuide and the correct instructions', () => {
-      const outputSpy = jest.spyOn(output, 'log').mockImplementation();
+      const outputSpy = vi.spyOn(output, 'log').mockImplementation();
       onlyShowGuide(allStorybookInfo);
       const pm = getPackageManagerCommand();
       expect(outputSpy).toHaveBeenCalledWith(

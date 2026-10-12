@@ -4,6 +4,7 @@
 
 import {
   renderAuthorScopeRuleLines,
+  renderFinalValidationScopeRuleLines,
   renderHandoffShapeLines,
   renderNxInvocationNote,
   renderValidationScopeRuleLines,
@@ -11,8 +12,9 @@ import {
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
 
-// A resume without a commit flag takes its policy from nx.json and refuses
-// the run when it differs from the recorded one.
+// A run's reconciles and workers skip the nx.json overlay and a continue takes
+// only `agentic` from it, but the next init reads the whole section: an edit
+// mid-run changes what a start-fresh or a later run does.
 const NX_JSON_MIGRATE_RULE = `  - Do not edit the \`migrate\` section of nx.json.`;
 
 export const RUNBOOK_FILE_NAME = 'RUNBOOK.md';
@@ -27,6 +29,7 @@ export interface RunbookContext {
   reconcileCommand: string;
   createCommits: boolean;
   validate: boolean;
+  finalValidation: boolean;
 }
 
 /**
@@ -91,6 +94,10 @@ export function renderRunbook(ctx: RunbookContext): string {
     `repeated instructions or report the blocker to the user; re-running the`,
     `reconcile command alone changes nothing.`,
     ``,
+    `An \`existing-run\` action means no run was started because one is`,
+    `already active. Show its report to the user and let them choose between`,
+    `the two commands it lists; do not choose for them.`,
+    ``,
     `## Agent work`,
     ``,
     `Some steps hand work back to you:`,
@@ -112,6 +119,16 @@ export function renderRunbook(ctx: RunbookContext): string {
       `  a validation pass over the generator's changes. Scope rules for that`,
       `  work:`,
       ...renderValidationScopeRuleLines().map((line) => `  ${line}`),
+      NX_JSON_MIGRATE_RULE
+    );
+  }
+  if (ctx.finalValidation) {
+    lines.push(
+      `- The run's last step is a validation pass over the whole workspace,`,
+      `  dispensed once every migration step is done. Its \`nx_migrate_prompt\``,
+      `  block points at an instructions file; that file names the base ref its`,
+      `  \`nx affected\` runs use. Scope rules for that work:`,
+      ...renderFinalValidationScopeRuleLines().map((line) => `  ${line}`),
       NX_JSON_MIGRATE_RULE
     );
   }
@@ -158,7 +175,12 @@ export function renderRunbook(ctx: RunbookContext): string {
     `   Report what you found and what you tried, then ask the user how to`,
     `   proceed. Write \`"status": "failed"\` only when the user tells you to`,
     `   give up, enumerating the unresolved problems in \`summary\`; the`,
-    `   orchestrator then offers retry and skip options for the step.`,
+    `   orchestrator then offers the step's options (see "Failed and died`,
+    `   steps").`,
+    `   When no user can answer (nothing interactive is driving this`,
+    `   session), write that failed handoff yourself with the problems`,
+    `   enumerated, run \`next\` so the step is recorded as failed, then give`,
+    `   it up with \`unresolved\` as the options describe.`,
     ``,
     `- Write it with your file-write tool, not shell commands. Whether the`,
     `  write needs approval depends on your permission configuration; the`,
@@ -181,8 +203,9 @@ export function renderRunbook(ctx: RunbookContext): string {
     `Report through the handoff file: problems you observed go in an`,
     `\`issues\` array, whether you fixed them in this same piece of work`,
     `(mark those \`"resolved"\`) or left them for later; progress on an issue`,
-    `the digest marks assigned to the current step goes in an \`issueUpdates\``,
-    `array. Both are optional and sit next to \`status\` and \`summary\`:`,
+    `the digest marks assigned or deferred to the current step goes in an`,
+    `\`issueUpdates\` array. Both are optional and sit next to \`status\` and`,
+    `\`summary\`:`,
     ``,
     `{`,
     `  "issues": [{`,
@@ -206,13 +229,52 @@ export function renderRunbook(ctx: RunbookContext): string {
     `- Omit \`disposition\` to record the issue for a later applicable step to`,
     `  pick up. Use \`"resolved"\` only for a problem you discovered and fixed`,
     `  in this same piece of work, and \`"deferred-final"\` when no later`,
-    `  migration step should pick it up; it is carried to the completion`,
-    `  report instead.`,
-    `- \`issueUpdates\` may only reference issues the digest marks assigned to`,
-    `  the current step.`,
+    ...(ctx.finalValidation
+      ? [
+          `  migration step should pick it up; it is carried to the final`,
+          `  validation pass, and the completion report lists what that pass`,
+          `  leaves unresolved.`,
+        ]
+      : [
+          `  migration step should pick it up; it is carried to the completion`,
+          `  report instead.`,
+        ]),
+    `- \`issueUpdates\` may only reference issues the digest marks assigned or`,
+    `  deferred to the current step.`,
     `- Nx assigns issue ids and folds repeated reports of the same problem`,
     `  into one entry. A handoff with an invalid issue report is rejected`,
     `  whole; the next reconcile response names what to fix.`,
+    ``,
+    `## Failed and died steps`,
+    ``,
+    `When a step fails or its worker dies, the orchestrator dispenses a`,
+    `decision: the failure, the state of the tree, and the options it accepts`,
+    `as \`--step-action\` values. Diagnose the failure before choosing.`,
+    ``,
+    `- \`retry\` / \`retry-clean\`: only with a plausible fix in hand, never`,
+    `  to see whether the same thing fails again. A step allows two retries;`,
+    `  ask the user before using the last one. Past that, no retry is`,
+    `  accepted.`,
+    `- \`adopt\`: the migration's result is already in the working tree (you`,
+    `  or the user applied it by hand, or a died worker's changes landed);`,
+    `  record it as applied.`,
+    `- \`skip\`: the migration does not apply to this workspace.`,
+    `- \`unresolved\`: give the migration up. Nx records the failure as a run`,
+    `  issue, settles the tree as the option describes, and moves on. The`,
+    `  completion report lists it, and a session Nx started for this run`,
+    `  exits non-zero; when you drive the loop yourself, the completion`,
+    `  block's unresolved tally and warnings are what say work remains.`,
+    `  Withheld, with \`skip\`, when a commit of this migration's changes`,
+    `  landed, or was started and never recorded; the dispense then offers`,
+    `  \`adopt\` in their place.`,
+    ``,
+    `Present the options to the user unless the choice is clearly yours to`,
+    `make. When no user can answer (nothing interactive is driving this`,
+    `session), give the step up with \`unresolved\` and continue the run`,
+    `rather than stalling on it. Where the dispense withholds it, a commit of`,
+    `the migration may already be in history: \`adopt\` only once you have`,
+    `inspected the tree and finished the migration; otherwise stop and`,
+    `report.`,
     ``,
     `## Commits`,
     ``
@@ -234,10 +296,9 @@ export function renderRunbook(ctx: RunbookContext): string {
     `## Reporting`,
     ``,
     `Keep the user briefly informed as steps complete: which migration ran and`,
-    `its outcome. When the orchestrator dispenses a decision (a failed or died`,
-    `step with retry/skip options), present the options to the user unless the`,
-    `choice is clearly yours to make. When the run is reported complete,`,
-    `summarize the outcome for the user.`,
+    `its outcome. When the run is reported complete, summarize the outcome for`,
+    `the user: what was applied, adopted, skipped, or left unresolved, and any`,
+    `warnings the completion carries.`,
     ``
   );
   return lines.join('\n');

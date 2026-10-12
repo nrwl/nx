@@ -41,7 +41,7 @@ describe('Convert Nx Executor', () => {
     testArchitectHost.addBuilder('nx:test', convertedExecutor);
     testArchitectHost.addBuilder('ng:test', realBuilder);
 
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy = vi.spyOn(console, 'log');
 
     // ACT
     const convertedRun = await architect.scheduleBuilder('nx:test', {

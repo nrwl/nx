@@ -1,27 +1,23 @@
 import { type CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { mockCjsModule, TempFs } from '@nx/devkit/internal-testing-utils';
 
-// Jest 29 does not support dynamic import() unless --experimental-vm-modules is set.
-// For now, we will mock the loadConfigFile function. We should remove this once we upgrade to Jest 30.
-jest.mock('rollup/loadConfigFile', () => {
-  return {
-    loadConfigFile: jest.fn(),
-  };
-});
+// The plugin `require`s rollup/loadConfigFile, which `vi.mock` cannot reach.
+const loadConfigFile = vi.fn();
+mockCjsModule(import.meta.url, 'rollup/loadConfigFile', { loadConfigFile });
 
 // Mock getPackageManagerCommand to ensure consistent test environment
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  getPackageManagerCommand: jest.fn(() => ({
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  getPackageManagerCommand: vi.fn(() => ({
     exec: 'npx',
   })),
 }));
 
 // Mock isUsingTsSolutionSetup to ensure consistent test environment
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(() => false),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(() => false),
 }));
 
 describe('@nx/rollup/plugin', () => {
@@ -89,14 +85,13 @@ describe('@nx/rollup/plugin', () => {
       }`
       );
 
-      const { loadConfigFile } = require('rollup/loadConfigFile');
       loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
       process.chdir(cwd);
     });
@@ -167,14 +162,13 @@ describe('@nx/rollup/plugin', () => {
       }`
       );
 
-      const { loadConfigFile } = require('rollup/loadConfigFile');
       loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
       process.chdir(cwd);
     });

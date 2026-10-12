@@ -15,24 +15,24 @@ describe('@nx/gradle/plugin/dependencies', () => {
     tempFs = new TempFs('gradle-dependencies');
     reportDependencies = [];
 
-    jest.resetModules();
-    jest.doMock('./utils/get-project-graph-from-gradle-plugin', () => ({
-      populateProjectGraph: jest.fn().mockResolvedValue(undefined),
+    vi.resetModules();
+    vi.doMock('./utils/get-project-graph-from-gradle-plugin', () => ({
+      populateProjectGraph: vi.fn().mockResolvedValue(undefined),
       getCurrentProjectGraphReport: () => ({
         nodes: {},
         dependencies: reportDependencies,
       }),
     }));
-    jest.doMock('@nx/devkit/internal', () => ({
-      ...jest.requireActual('@nx/devkit/internal'),
-      globWithWorkspaceContext: jest.fn().mockResolvedValue(['gradlew']),
+    vi.doMock('@nx/devkit/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/devkit/internal')),
+      globWithWorkspaceContext: vi.fn().mockResolvedValue(['gradlew']),
     }));
-    jest.doMock('@nx/devkit', () => {
-      const actual = jest.requireActual('@nx/devkit');
+    vi.doMock('@nx/devkit', async () => {
+      const actual = await vi.importActual<any>('@nx/devkit');
       return {
         ...actual,
         workspaceRoot: tempFs.tempDir,
-        validateDependency: jest.fn(),
+        validateDependency: vi.fn(),
       };
     });
 
@@ -40,7 +40,7 @@ describe('@nx/gradle/plugin/dependencies', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
   });
 

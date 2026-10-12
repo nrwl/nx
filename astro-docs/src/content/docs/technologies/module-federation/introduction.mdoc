@@ -47,7 +47,7 @@ Because the remote's `dev` task depends on the host's continuous `dev` task, `nx
 
 When you change a shared library, Module Federation forces every app that consumes it to redeploy. Because each host and remote is its own project, [`nx affected`](/docs/features/ci-features/affected) computes that exact set from the graph and rebuilds and retests only those apps, while Nx [caches](/docs/features/cache-task-results) the rest. Each app has its own test and e2e targets, so affected verification runs only for the apps a change touches.
 
-With [remote caching](/docs/features/ci-features/remote-cache) on [Nx Cloud](/docs/getting-started/nx-cloud), a remote already built by a teammate or in CI is restored instead of rebuilt.
+With [remote caching](/docs/features/ci-features/remote-cache) on [Nx Cloud](/docs/features/ci-features), a remote already built by a teammate or in CI is restored instead of rebuilt.
 
 ### Scale builds and tests across machines
 
@@ -67,5 +67,7 @@ nx g @nx/react:provider apps/shop --consumer=shell
 ```
 
 The `--consumer` option makes the new remote's `dev` task depend on the host.
+
+If your workspace was set up with the `withModuleFederation` helper or the Module Federation dev-server executors, those surfaces will be removed in Nx v24. See [migrating off `@nx/module-federation`](/docs/kb/migrate-from-nx-module-federation) for the in-place path that keeps your current bundler.
 
 With another framework, add the official Module Federation plugin to each app's bundler config, then give each app the same `continuous` and `dependsOn` tasks. Nx orchestrates the host and remotes the same way, whatever the framework. For the architecture and task-graph details, see [What is Micro Frontend Architecture?](/docs/kb/micro-frontend-architecture).

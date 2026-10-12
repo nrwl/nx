@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execFileSync, execSync } from 'node:child_process';
+import { openUrl } from '../../../../native';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
 import { orange, output } from '../../../../utils/output';
@@ -17,8 +18,7 @@ import {
   RemoteRepoData,
 } from './remote-release-client';
 
-// Use default import with esModuleInterop
-import axios from 'axios';
+import { httpRequest } from '../../../../utils/http-client';
 
 export interface GithubRepoData extends RemoteRepoData {}
 
@@ -184,11 +184,9 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
               break;
             }
           }
-          const { data } = await axios
-            .get<any, { data?: UnghUserLookupResponse }>(
-              `https://ungh.cc/users/find/${email}`
-            )
-            .catch(() => ({ data: { user: null } }));
+          const { data } = await httpRequest<UnghUserLookupResponse>(
+            `https://ungh.cc/users/find/${email}`
+          ).catch(() => ({ data: { user: null } }));
           if (data?.user?.username) {
             meta.username = data.user.username;
             break;
@@ -358,24 +356,19 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       return;
     }
 
-    const { default: open } = await (new Function(
-      'return import("open")'
-    )() as Promise<typeof import('open')>);
-    await open(result.url)
-      .then(() => {
-        console.info(
-          `\nFollow up in the browser to manually create the release:\n\n` +
-            pc.underline(pc.cyan(result.url)) +
-            `\n`
-        );
-      })
-      .catch(() => {
-        console.info(
-          `Open this link to manually create a release: \n` +
-            pc.underline(pc.cyan(result.url)) +
-            '\n'
-        );
-      });
+    if (openUrl(result.url)) {
+      console.info(
+        `\nFollow up in the browser to manually create the release:\n\n` +
+          pc.underline(pc.cyan(result.url)) +
+          `\n`
+      );
+    } else {
+      console.info(
+        `Open this link to manually create a release: \n` +
+          pc.underline(pc.cyan(result.url)) +
+          '\n'
+      );
+    }
   }
 
   private async promptForContinueInGitHub(): Promise<boolean> {

@@ -1,0 +1,6 @@
+interface:
+  display_name: 'Review Nx PR'
+  short_description: 'Run the Codex Nx PR review workflow'
+  default_prompt: 'Use $review-pr to review an nrwl/nx pull request or its associated Linear task.'
+policy:
+  allow_implicit_invocation: false

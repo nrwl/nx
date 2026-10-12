@@ -5,7 +5,7 @@ data class PathPattern(
     val recursive: Boolean = false
 )
 
-data class Parameter(val name: String, val glob: String?)
+data class Parameter(val name: String, val glob: String?, val excludeGlob: String? = null)
 
 data class MojoConfig(
     val inputProperties: Set<String>? = null,
@@ -76,7 +76,7 @@ data class CacheConfig(
                         Parameter("buildDirectory", "generated-sources/**/*.java"),
                     ),
                     outputParameters = setOf(
-                        Parameter("outputDirectory", null),
+                        Parameter("outputDirectory", "**/*.class"),
                     )
                 ),
                 "maven-compiler-plugin:testCompile" to MojoConfig(
@@ -84,13 +84,13 @@ data class CacheConfig(
                         Parameter("compileSourceRoots", "**/*.java"),
                     ),
                     outputParameters = setOf(
-                        Parameter("outputDirectory", null),
+                        Parameter("outputDirectory", "**/*.class"),
                     )
                 ),
                 "maven-resources-plugin:resources" to MojoConfig(
                     inputProperties = setOf("project.build.resources"),
                     outputParameters = setOf(
-                        Parameter("outputDirectory", null),
+                        Parameter("outputDirectory", null, excludeGlob = "**/*.class"),
                     )
                 ),
                 "maven-resources-plugin:testResources" to MojoConfig(
@@ -98,7 +98,7 @@ data class CacheConfig(
                         Parameter("resources", null),
                     ),
                     outputParameters = setOf(
-                        Parameter("outputDirectory", null),
+                        Parameter("outputDirectory", null, excludeGlob = "**/*.class"),
                     )
                 ),
                 "maven-surefire-plugin:test" to MojoConfig(

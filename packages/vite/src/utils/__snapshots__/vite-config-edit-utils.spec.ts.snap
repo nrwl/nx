@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ensureViteConfigIsCorrect should add build options if it is using conditional config - do nothing for test 1`] = `
+exports[`ensureViteConfigIsCorrect > should add build options if it is using conditional config - do nothing for test 1`] = `
 "
     /// <reference types="vitest" />
     import { defineConfig } from 'vite';
@@ -23,4 +23,4 @@ exports[`ensureViteConfigIsCorrect should add build options if it is using condi
     "
 `;
 
-exports[`ensureViteConfigIsCorrect should not do anything if cannot understand syntax of vite config 1`] = `"console.log('Unknown syntax')"`;
+exports[`ensureViteConfigIsCorrect > should not do anything if cannot understand syntax of vite config 1`] = `"console.log('Unknown syntax')"`;

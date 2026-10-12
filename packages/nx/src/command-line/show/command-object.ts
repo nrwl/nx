@@ -5,6 +5,7 @@ import { handleErrors } from '../../utils/handle-errors';
 import {
   parseCSV,
   withAffectedOptions,
+  withExplainOption,
   withVerbose,
 } from '../yargs-utils/shared-options';
 import { handleImport } from '../../utils/handle-import';
@@ -107,7 +108,7 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
   command: 'projects',
   describe: 'Show a list of projects in the workspace.',
   builder: (yargs) =>
-    withVerbose(withAffectedOptions(yargs))
+    withVerbose(withExplainOption(withAffectedOptions(yargs)))
       .option('affected', {
         type: 'boolean',
         description: 'Show only affected projects.',

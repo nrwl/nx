@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/storybook:init should not add storybook-static to .gitignore if it already exists 1`] = `
+exports[`@nx/storybook:init > should not add storybook-static to .gitignore if it already exists 1`] = `
 "
     storybook-static
     dist

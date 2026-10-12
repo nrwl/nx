@@ -21,12 +21,12 @@ import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 let fs: TempFs;
 let projectGraph: ProjectGraph;
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -108,7 +108,7 @@ export default config;`;
   fs.createFileSync(`${projectRoot}/remix.config.js`, remixConfigContents);
   tree.write(`${projectRoot}/package.json`, `{"type":"module"}`);
   fs.createFileSync(`${projectRoot}/package.json`, `{"type":"module"}`);
-  jest.doMock(
+  vi.doMock(
     join(fs.tempDir, projectRoot, 'remix.config.js'),
     () => remixConfig,
     { virtual: true }
@@ -178,7 +178,7 @@ describe('Remix - Convert To Inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   describe('--project', () => {

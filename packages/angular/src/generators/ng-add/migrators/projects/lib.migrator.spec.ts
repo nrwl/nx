@@ -21,7 +21,7 @@ type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {
   };
 };
 
-const mockedLogger = { warn: jest.fn() };
+const mockedLogger = { warn: vi.fn() };
 
 describe('lib migrator', () => {
   let tree: Tree;
@@ -47,7 +47,7 @@ describe('lib migrator', () => {
     // already been run, so we make some adjustments to match that state
     writeJson(tree, 'angular.json', { version: 2, projects: {} });
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should not migrate project when validation fails', async () => {

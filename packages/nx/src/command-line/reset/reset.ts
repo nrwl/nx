@@ -16,6 +16,7 @@ import { getCloudClient } from '../../nx-cloud/utilities/client';
 import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { readNxJson } from '../../config/configuration';
+import { removeDbConnections } from '../../utils/db-connection';
 import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
 
 // Wait at max 5 seconds before giving up on a failing operation.
@@ -95,6 +96,10 @@ export async function resetHandler(args: ResetCommandOptions) {
   if ((cloudEnabled && all) || args.onlyCloud) {
     try {
       await resetCloudClient();
+    } catch (e) {
+      errors.push('Failed to clean up the Nx Cloud client.', e.toString());
+    }
+    try {
       await removeInstalledNxCloudClient();
     } catch (e) {
       errors.push('Failed to reset the Nx Cloud client.', e.toString());
@@ -135,9 +140,8 @@ function cleanupDaemonWorkspaceData() {
 async function resetCloudClient() {
   // Remove nx cloud marker files. This helps if the use happens to run `nx-cloud start-ci-run` or
   // similar commands on their local machine.
-  try {
-    (await getCloudClient(getCloudOptions())).invoke('cleanup');
-  } catch {}
+  // `exit` would end the process here, before reset reports its result.
+  await (await getCloudClient(getCloudOptions())).invoke('cleanup', false);
 }
 
 function removeInstalledNxCloudClient() {
@@ -192,6 +196,8 @@ function cleanupWorkspaceData() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
+      // Analytics opened the DB at startup; Windows cannot delete an open file.
+      removeDbConnections();
       rmSync(workspaceDataDirectory, { recursive: true, force: true });
 
       // Also clean wherever the DB actually lives, which is outside this

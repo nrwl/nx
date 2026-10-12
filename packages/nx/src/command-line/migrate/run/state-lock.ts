@@ -12,18 +12,22 @@
 // lock(), the holder's continuation could never run to release it. Git and
 // child-process side effects belong outside the lock for the same reason.
 
-import { mkdirSync } from 'fs';
+import { randomBytes } from 'crypto';
+import { mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
 import {
+  hasRunState,
   migrateRunsDir,
   readRunState,
+  runDir,
   writeRunState,
   type MigrateRunState,
 } from './run-state';
 
 const STATE_LOCK_FILE_NAME = 'run.json.lock';
 const CREATION_LOCK_FILE_NAME = 'init.lock';
+const ACTIVITY_DIR_NAME = 'activity';
 
 function withFileLock<T>(lockPath: string, fn: () => T): T {
   if (IS_WASM) {
@@ -80,4 +84,137 @@ export function updateRunState(
     writeRunState(runDirPath, next);
     return next;
   });
+}
+
+// The activity locks this process holds, one per run dir. Each is held until
+// the process exits (the kernel releases it) or until this process releases
+// it: deleting the run, or handing a continue off to the workspace-local nx.
+const heldActivity = new Map<string, { lock: FileLock; name: string }>();
+
+/**
+ * Marks this process as acting on the run until it exits or releases the
+ * hold, so a `--start-fresh` elsewhere refuses to delete it. One lock file per
+ * process and run, taken under the creation lock that deletion probes under.
+ * `exclusive` refuses while another process holds the run, even when this one
+ * already does. No-op under WASM, which has no native lock.
+ */
+export function holdRunActivity(
+  root: string,
+  runId: string,
+  exclusive = false
+): void {
+  if (IS_WASM) return;
+  const dir = runDir(root, runId);
+  if (heldActivity.has(dir) && !exclusive) return;
+  withRunCreationLock(root, () => {
+    if (!hasRunState(dir)) {
+      throw new Error(
+        `Migrate run '${runId}' was deleted while this command was starting.`
+      );
+    }
+    if (exclusive) {
+      const others = liveRunActivityPids(dir);
+      if (others === 'unknown' || others.length > 0) {
+        throw heldRunError('continuing', runId, others);
+      }
+    }
+    registerRunActivity(dir);
+  });
+}
+
+// 'unknown' is the fail-closed case: the activity folder could not be read or
+// a lock could not be probed.
+export function heldRunError(
+  action: 'continuing' | 'deleting',
+  runId: string,
+  holders: number[] | 'unknown'
+): Error {
+  const refusal = `Not ${action} migrate run '${runId}'`;
+  return new Error(
+    holders === 'unknown'
+      ? `${refusal}: nx cannot tell whether another nx migrate process is still working on it.`
+      : `${refusal}: ${describeHolders(
+          holders
+        )} (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
+  );
+}
+
+export function describeHolders(holders: number[]): string {
+  return holders.length === 1
+    ? `process ${holders[0]} is still working on it`
+    : `processes ${holders.join(', ')} are still working on it`;
+}
+
+/**
+ * The hold without the creation lock: for the init that creates the run
+ * inside its own creation-lock section, so the run is never discoverable
+ * without a holder. Every other caller goes through holdRunActivity.
+ */
+export function registerRunActivity(dir: string): void {
+  if (IS_WASM || heldActivity.has(dir)) return;
+  const name = `${process.pid}-${randomBytes(4).toString('hex')}.lock`;
+  const lock = new FileLock(join(dir, ACTIVITY_DIR_NAME, name));
+  lock.lock();
+  heldActivity.set(dir, { lock, name });
+}
+
+export function releaseRunActivity(dir: string): void {
+  const held = heldActivity.get(dir);
+  if (held === undefined) return;
+  held.lock.unlock();
+  heldActivity.delete(dir);
+}
+
+/**
+ * The pids of the other live processes holding the run, from their lock
+ * names. This process's own hold is skipped: a deleting init may hold the run
+ * from its report or preflight, which is not competing work. Locks left by
+ * dead holders are free. 'unknown' under WASM, and when the folder cannot be
+ * listed, a lock cannot be probed, or a held lock's name carries no pid.
+ */
+export function liveRunActivityPids(dir: string): number[] | 'unknown' {
+  if (IS_WASM) return 'unknown';
+  const names = liveActivityNames(dir, heldActivity.get(dir)?.name);
+  if (names === 'unknown') return 'unknown';
+  const pids = names.map((name) => Number(name.split('-', 1)[0]));
+  return pids.every((pid) => Number.isInteger(pid) && pid > 0)
+    ? pids
+    : 'unknown';
+}
+
+/**
+ * Whether any live process, this one included, holds an activity lock on the
+ * run: for the init discovery that treats a held directory without run.json
+ * as a run being started, whichever process is starting it. Fails closed.
+ */
+export function hasAnyLiveRunActivity(dir: string): boolean {
+  const names = liveActivityNames(dir, undefined);
+  return names === 'unknown' || names.length > 0;
+}
+
+// The names of the held lock files other than `skip`; 'unknown' when the
+// folder cannot be listed or a lock cannot be probed.
+function liveActivityNames(
+  dir: string,
+  skip: string | undefined
+): string[] | 'unknown' {
+  let names: string[];
+  try {
+    names = readdirSync(join(dir, ACTIVITY_DIR_NAME));
+  } catch (e) {
+    if (e?.code === 'ENOENT') return [];
+    return 'unknown';
+  }
+  const held: string[] = [];
+  for (const name of names) {
+    if (name === skip) continue;
+    try {
+      if (new FileLock(join(dir, ACTIVITY_DIR_NAME, name)).check()) {
+        held.push(name);
+      }
+    } catch {
+      return 'unknown';
+    }
+  }
+  return held;
 }

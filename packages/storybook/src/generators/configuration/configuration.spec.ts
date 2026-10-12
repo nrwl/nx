@@ -20,9 +20,9 @@ const variousProjects =
   'default' in _variousProjects ? _variousProjects.default : _variousProjects;
 
 // nested code imports graph from the repo, which might have inaccurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
+vi.mock('nx/src/project-graph/project-graph', async () => ({
+  ...(await vi.importActual<any>('nx/src/project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
@@ -30,9 +30,9 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
 // Mock storybookMajorVersion to simulate behavior when parsing version ranges
 // When version is a range like '^10.1.0', semver.major() throws, causing the function
 // to return undefined. This mock preserves the original test behavior.
-const mockStorybookMajorVersion = jest.fn();
-jest.mock('../../utils/utilities', () => ({
-  ...jest.requireActual('../../utils/utilities'),
+const mockStorybookMajorVersion = vi.fn();
+vi.mock('../../utils/utilities', async () => ({
+  ...(await vi.importActual<any>('../../utils/utilities')),
   storybookMajorVersion: (...args: any[]) => mockStorybookMajorVersion(...args),
 }));
 
@@ -922,7 +922,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       test.each(testCases)(
-        'should contain the correct configuration in %p',
+        'should contain the correct configuration in %j',
         (storybookConfigPath) => {
           if (tree.exists(storybookConfigPath)) {
             if (tree.exists(`${storybookConfigPath}main.ts`)) {
@@ -1895,7 +1895,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       test.each(testCases)(
-        'should contain the correct configuration in %p',
+        'should contain the correct configuration in %j',
         (storybookConfigPath) => {
           if (tree.exists(storybookConfigPath)) {
             if (tree.exists(`${storybookConfigPath}main.ts`)) {

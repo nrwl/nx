@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -107,7 +108,7 @@ describe('initGenerator', () => {
 
     it('should step aside when another linter already owns lint', async () => {
       const tree = new FsTree(tempFs.tempDir, false);
-      (createProjectGraphAsync as jest.Mock).mockResolvedValueOnce({
+      (createProjectGraphAsync as Mock).mockResolvedValueOnce({
         nodes: {
           'lib-a': {
             name: 'lib-a',

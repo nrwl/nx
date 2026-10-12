@@ -3,7 +3,7 @@
 //! normalization, and the conversion the engine needs.
 
 use crate::native::glob::glob_group::GlobGroup;
-use crate::native::glob::glob_parser::parse_glob;
+use crate::native::glob::glob_parser::{literal_segment, parse_glob};
 use itertools::Itertools;
 use std::collections::HashSet;
 
@@ -44,31 +44,33 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
 }
 
 /// A glob split into the directory it is read from and the pattern under it.
-/// The directory is literal text, so `dist/@scope` is a directory like any
-/// other. The remainder comes back untouched, with a negation marker
+/// The directory is the literal segments before the first pattern, escapes
+/// resolved (`libs/\*` is `libs/*`), so `dist/@scope` is a directory like any
+/// other; `normalize_glob` first when `dist//gen/` and `dist/gen` should read
+/// the same. The remainder comes back untouched, with a negation marker
 /// re-attached, and is `None` when the glob is literal to its end: it then
 /// names that path rather than matching under it.
 ///
-/// A segment counts as a pattern on the characters this dialect treats as
-/// syntax, which over-reads a directory literally named `paren(`: the walk
-/// starts shallower and still matches, only slower. See NXC-5001.
+/// A segment is literal when the glob parser reads it as nothing but text. One
+/// it rejects, like an unclosed `paren(`, counts as a pattern, so the error
+/// surfaces where the pattern is matched.
 pub(crate) fn partition_glob(glob: &str) -> (String, Option<String>) {
     let (negated, body) = match glob.strip_prefix('!') {
         Some(body) => (true, body),
         None => (false, glob),
     };
-    let mut literal: Vec<&str> = Vec::new();
+    let mut literal: Vec<String> = Vec::new();
     let mut consumed = 0;
     let mut remainder = None;
     for segment in body.split('/') {
-        if segment.contains(['*', '?', '{', '[', '(']) {
+        let Some(name) = literal_segment(segment) else {
             remainder = Some(&body[consumed..]);
             break;
-        }
-        literal.push(segment);
+        };
+        literal.push(name);
         consumed += segment.len() + 1;
     }
-    let directory = literal.join("/").trim_end_matches('/').to_string();
+    let directory = literal.join("/");
     let remainder = remainder.map(|rest| match negated {
         true => format!("!{rest}"),
         false => rest.to_string(),
@@ -232,8 +234,14 @@ fn build_segment(
             }
             GlobGroup::OneOrMore(_)
             | GlobGroup::ExactOne(_)
-            | GlobGroup::NonSpecial(_)
-            | GlobGroup::NonSpecialGroup(_) => {
+            | GlobGroup::NonSpecialGroup(_)
+            | GlobGroup::Literal(_)
+            | GlobGroup::Recursive
+            | GlobGroup::Wildcard(_)
+            | GlobGroup::Any
+            | GlobGroup::Class(_)
+            | GlobGroup::Alternates(_)
+            | GlobGroup::Escaped(_) => {
                 build_segment(&built_glob, &group[1..], is_last_segment, is_negative)
             }
         }
@@ -292,6 +300,13 @@ mod test {
     }
 
     use super::convert_glob;
+
+    #[test]
+    fn convert_glob_keeps_a_lone_special_character() {
+        assert_eq!(convert_glob("a/?/b").unwrap(), ["a/?/b"]);
+        assert_eq!(convert_glob("?").unwrap(), ["?"]);
+        assert!(convert_glob("dist/paren(/x.js").is_err());
+    }
 
     #[test]
     fn convert_globs_full_convert() {
@@ -443,9 +458,16 @@ mod test {
 
     #[test]
     fn should_partition_glob_with_leading_dirs_and_no_patterns() {
-        let (leading_dirs, rest) = super::partition_glob("dist/app/");
-        assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(rest, None);
+        assert_eq!(super::partition_glob("dist/app"), ("dist/app".into(), None));
+        // The split does not clean the glob; that is normalize_glob's job.
+        assert_eq!(
+            super::partition_glob("dist//app/"),
+            ("dist//app/".into(), None)
+        );
+        assert_eq!(
+            super::partition_glob(&super::normalize_glob("dist//app/")),
+            ("dist/app".into(), None)
+        );
     }
 
     /// A negation keeps its marker on the remainder, so the exclusion still

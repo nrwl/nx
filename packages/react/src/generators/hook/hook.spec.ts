@@ -14,12 +14,12 @@ describe('hook', () => {
     appTree = createTreeWithEmptyWorkspace();
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should generate files', async () => {

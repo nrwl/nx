@@ -17,7 +17,7 @@ describe('Playwright e2e configuration', () => {
   });
 
   afterAll(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('legacy .eslintrc stack', () => {

@@ -2,18 +2,18 @@ import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  loadConfigFile: jest.fn().mockImplementation(() => {
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  loadConfigFile: vi.fn().mockImplementation(() => {
     return Promise.resolve({
       buildDir: '../dist/my-app/.nuxt',
     });
   }),
 }));
 
-jest.mock('../utils/executor-utils', () => ({
-  loadNuxtKitDynamicImport: jest.fn().mockResolvedValue({
-    loadNuxtConfig: jest.fn().mockResolvedValue({
+vi.mock('../utils/executor-utils', () => ({
+  loadNuxtKitDynamicImport: vi.fn().mockResolvedValue({
+    loadNuxtConfig: vi.fn().mockResolvedValue({
       buildDir: '../dist/my-app/.nuxt',
     }),
   }),
@@ -48,7 +48,7 @@ describe('@nx/nuxt/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
     });
 
@@ -90,7 +90,7 @@ describe('@nx/nuxt/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
     });
 
     it('should create nodes', async () => {

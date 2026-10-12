@@ -7,9 +7,13 @@ import type {
   MigrateRunState,
   MigrateStep,
   MigrateStepAwaitingKind,
+  MigrateStepBase,
+  MigrateStepKindFields,
   MigrateStepOutcome,
   MigrateStepPromptOutcome,
 } from './run-state';
+import { singleLine } from '../text';
+import type { MigrateOrchestratorTallies } from '../migrate-analytics';
 import type { StepAction } from '../step-actions';
 
 export type { StepAction };
@@ -35,6 +39,9 @@ export type StepEvent =
       finishedAt: string;
       awaitingKind: MigrateStepAwaitingKind;
     }
+  // A final-validation step has no worker: it is handed to the agent straight
+  // from 'pending', so the dispense and the park are one transition.
+  | { type: 'parkForFinalValidation'; stepId: string; finishedAt: string }
   // `foldPromptOutcome` and `markDied` carry the attempt they were observed
   // on. Both are written after an unlocked read, and both source statuses
   // recur across attempts, so the status alone cannot say which attempt the
@@ -136,6 +143,22 @@ export function applyStepEvent(
         awaitingKind: event.awaitingKind,
       });
 
+    case 'parkForFinalValidation':
+      if (step.kind !== 'final-validation') {
+        return {
+          kind: 'error',
+          reason: `Cannot apply '${event.type}' to step '${step.id}': it is a ${step.kind} step.`,
+        };
+      }
+      if (step.status !== 'pending') return illegal(step, event.type);
+      return commit(state, index, {
+        ...step,
+        status: 'awaiting-prompt-outcome',
+        dispenseCount: step.dispenseCount + 1,
+        finishedAt: event.finishedAt,
+        awaitingKind: 'final-validation',
+      });
+
     case 'markGeneratorCompleted':
       if (step.status !== 'running') return illegal(step, event.type);
       return commit(state, index, {
@@ -198,14 +221,20 @@ function applyStepAction(
         // exec side effect, or a crash mid-flush), so a reset-backed retry is
         // offered under the same guard as for a death.
         return commit(state, index, cleanRearm(state, step));
+      case 'adopt':
+        return commit(state, index, adopt(step));
       case 'skip':
+      case 'unresolved':
         if (commitMayBeInHistory(state, step)) {
           return {
             kind: 'error',
-            reason: `Cannot apply action 'skip' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'retry' to finish it.`,
+            reason: `Cannot apply action '${action}' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the ${stepNoun(step)} may be committed. Use 'adopt' to record it as applied once the ${stepNoun(step)} is finished.`,
           };
         }
-        return commit(state, index, { ...step, status: 'skipped' });
+        return commit(state, index, {
+          ...step,
+          status: action === 'skip' ? 'skipped' : 'unresolved',
+        });
     }
   }
   if (step.status === 'died') {
@@ -224,17 +253,13 @@ function applyStepAction(
           reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use ${
             commitMayBeInHistory(state, step)
               ? `'retry-clean' where offered, or 'adopt'`
-              : `'retry-clean', 'adopt' or 'skip'`
+              : `'retry-clean', 'adopt', 'skip' or 'unresolved'`
           } instead.`,
         };
       case 'retry-clean':
         return commit(state, index, cleanRearm(state, step));
       case 'adopt':
-        return commit(state, index, {
-          ...step,
-          status: 'succeeded',
-          outcome: { ...step.outcome, summary: adoptedSummary(step) },
-        });
+        return commit(state, index, adopt(step));
       case 'skip': {
         if (coveringLandedEntries(state, step.id).length > 0) {
           return {
@@ -251,12 +276,32 @@ function applyStepAction(
         // Same as skipping a failure: the tree stays as the worker left it.
         return commit(state, index, { ...step, status: 'skipped' });
       }
+      case 'unresolved':
+        if (commitMayBeInHistory(state, step)) {
+          return {
+            kind: 'error',
+            reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied once the migration is finished.`,
+          };
+        }
+        // A death records no outcome, so the failure given up on is the death
+        // itself.
+        return commit(state, index, {
+          ...step,
+          status: 'unresolved',
+          outcome: { summary: workerDiedSummary(step) },
+        });
     }
   }
   return {
     kind: 'error',
     reason: `Cannot apply action '${action}' to step '${step.id}' in status '${step.status}'.`,
   };
+}
+
+function workerDiedSummary(step: MigrateStep): string {
+  return `the worker process${
+    step.pid === undefined ? '' : ` (pid ${step.pid})`
+  } died before recording an outcome`;
 }
 
 // Re-arms for a retry that resets the tree first. The reset target predates
@@ -267,9 +312,21 @@ function cleanRearm(state: MigrateRunState, step: MigrateStep): MigrateStep {
   return rearm(step, coveringLandedEntries(state, step.id).length > 0);
 }
 
-// An adopted death records how far the worker got, since 'succeeded' alone
-// says the migration was applied and cannot say by what.
+function adopt(step: MigrateStep): MigrateStep {
+  return {
+    ...step,
+    status: 'succeeded',
+    adopted: true,
+    outcome: { ...step.outcome, summary: adoptedSummary(step) },
+  };
+}
+
 function adoptedSummary(step: MigrateStep): string {
+  if (step.status === 'failed') {
+    return `Adopted after the attempt failed: the working tree as it stood was taken as this ${stepNoun(
+      step
+    )}'s result.`;
+  }
   return step.generatorCompleted === true
     ? "Adopted after the worker died: its generator had run, and the working tree it left was taken as this migration's result."
     : "Adopted after the worker died before recording that its generator had run; the working tree it left was taken as this migration's result.";
@@ -282,10 +339,11 @@ function adoptedSummary(step: MigrateStep): string {
 // already contains the commit that landed them; re-running the generator there
 // would apply them twice. They do not when the reset discards them, and
 // keeping the marker then would skip the generator and record a success for a
-// migration that never ran. The step kind is a plan fact, not an attempt's,
-// and always survives. So does the dependency baseline: it tracks
-// the last dependencies that were installed, so dropping it here would leave
-// the retry with nothing to detect the previous attempt's package.json edits.
+// migration that never ran. The step kind and generator flag are plan facts,
+// not an attempt's, and always survive. So does the dependency baseline: it
+// tracks the last dependencies that were installed, so dropping it here would
+// leave the retry with nothing to detect the previous attempt's package.json
+// edits.
 function rearm(
   step: MigrateStep,
   keepGeneratorCompleted: boolean
@@ -293,7 +351,7 @@ function rearm(
   return {
     id: step.id,
     roundIndex: step.roundIndex,
-    migrationId: step.migrationId,
+    ...stepKindFields(step),
     status: 'pending',
     attempt: step.attempt + 1,
     dispenseCount: step.dispenseCount,
@@ -309,7 +367,7 @@ function rearm(
   };
 }
 
-function generatorRunFields(step: MigrateStep): Partial<MigrateStep> {
+function generatorRunFields(step: MigrateStep): Partial<MigrateStepBase> {
   if (!step.generatorCompleted) return {};
   return {
     generatorCompleted: true,
@@ -348,6 +406,112 @@ export function discardGeneratorRun(
       return rest;
     }),
   };
+}
+
+// Applied and adopted partition the succeeded steps; stalled steps are included
+// in remaining.
+export interface StepTally {
+  applied: number;
+  adopted: number;
+  skipped: number;
+  unresolved: MigrateStep[];
+  remaining: number;
+  stalled: number;
+}
+
+export function tallySteps(state: MigrateRunState): StepTally {
+  const tally: StepTally = {
+    applied: 0,
+    adopted: 0,
+    skipped: 0,
+    unresolved: [],
+    remaining: 0,
+    stalled: 0,
+  };
+  for (const step of state.steps) {
+    switch (step.status) {
+      case 'succeeded':
+        if (step.adopted) tally.adopted++;
+        else tally.applied++;
+        break;
+      case 'skipped':
+        tally.skipped++;
+        break;
+      case 'unresolved':
+        tally.unresolved.push(step);
+        break;
+      case 'failed':
+      case 'died':
+        tally.stalled++;
+        tally.remaining++;
+        break;
+      case 'pending':
+      case 'dispensed':
+      case 'running':
+      case 'awaiting-prompt-outcome':
+        tally.remaining++;
+        break;
+      default: {
+        const exhaustive: never = step.status;
+        throw new Error(`Unhandled step status '${exhaustive}'.`);
+      }
+    }
+  }
+  return tally;
+}
+
+export function runTallies(state: MigrateRunState): MigrateOrchestratorTallies {
+  const tally = tallySteps(state);
+  return {
+    completed: tally.applied + tally.adopted,
+    skipped: tally.skipped,
+    unresolved: tally.unresolved.length,
+    dispenseCount: state.steps.reduce((n, s) => n + s.dispenseCount, 0),
+  };
+}
+
+// The failure a given-up step is reported with, in the issue ledger and the
+// completion report alike. Agent text is collapsed to one line so a break
+// inside it cannot open a block at a line start; an accepted handoff may carry
+// an empty summary, which gets the fallback.
+export function unresolvedFailureDetail(step: MigrateStep): string {
+  const failure = singleLine(
+    step.outcome?.summary ?? step.promptOutcome?.summary ?? ''
+  ).trim();
+  return failure.length === 0 ? 'no failure detail was recorded' : failure;
+}
+
+export function completionSummaryLines(state: MigrateRunState): string[] {
+  const tally = tallySteps(state);
+  return [
+    `  applied: ${tally.applied}`,
+    `  adopted: ${tally.adopted}`,
+    `  skipped: ${tally.skipped}`,
+    `  unresolved: ${tally.unresolved.length}`,
+    ...tally.unresolved.map(
+      (step) => `    - ${stepLabel(step)}: ${unresolvedFailureDetail(step)}`
+    ),
+  ];
+}
+
+// Suffixed so history does not read the partial result as the migration
+// applied.
+export function unresolvedCommitName(step: MigrateStep): string {
+  return `${commitNameForStep(step)} (unresolved)`;
+}
+
+// Takes the place after the commit prefix in a step's commits.
+export function commitNameForStep(step: MigrateStep): string {
+  switch (step.kind) {
+    case 'migration':
+      return splitMigrationId(step.migrationId).name;
+    case 'final-validation':
+      return 'final validation';
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
+    }
+  }
 }
 
 // A guarded transition whose observation was made against an earlier attempt
@@ -526,6 +690,45 @@ export function latestRound(
   );
 }
 
+function stepKindFields(step: MigrateStep): MigrateStepKindFields {
+  switch (step.kind) {
+    case 'migration':
+      return { kind: 'migration', migrationId: step.migrationId };
+    case 'final-validation':
+      return { kind: 'final-validation' };
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
+    }
+  }
+}
+
+export function stepNoun(step: MigrateStep): string {
+  switch (step.kind) {
+    case 'migration':
+      return 'migration';
+    case 'final-validation':
+      return 'validation pass';
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
+    }
+  }
+}
+
+export function stepLabel(step: MigrateStep): string {
+  switch (step.kind) {
+    case 'migration':
+      return step.migrationId;
+    case 'final-validation':
+      return 'the final validation pass';
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
+    }
+  }
+}
+
 // '<package>:<name>' splits on the first ':', leaving names that contain a ':'
 // intact; a bare id has no package.
 export function splitMigrationId(id: string): {
@@ -539,21 +742,40 @@ export function splitMigrationId(id: string): {
 }
 
 // Maps absorbed step ids to `{package, name}` for the commit body; an id with
-// no matching step, or one whose migration id carries no package, can't be
-// attributed there.
+// no matching step, a step that ran no migration, or one whose migration id
+// carries no package, can't be attributed there.
 export function stepsToPendingMigrations(
   state: MigrateRunState,
   stepIds: string[]
 ): { package: string; name: string }[] {
   const pending: { package: string; name: string }[] = [];
   for (const id of stepIds) {
-    const migrationId = state.steps.find((s) => s.id === id)?.migrationId;
-    if (!migrationId) continue;
-    const { package: pkg, name } = splitMigrationId(migrationId);
+    const step = state.steps.find((s) => s.id === id);
+    if (step?.kind !== 'migration') continue;
+    const { package: pkg, name } = splitMigrationId(step.migrationId);
     if (!pkg) continue;
     pending.push({ package: pkg, name });
   }
   return pending;
+}
+
+// Whether git may have written history for this result. A landed commit's
+// mark is the ledger entry's to clear, and a failure reported once git ran
+// (a hook's output overflowing the subprocess buffer after the commit) cannot
+// vouch that nothing landed, so only the other results release the mark.
+export function gitRan(result: CommitResult): boolean {
+  switch (result.status) {
+    case 'committed':
+    case 'failed':
+      return true;
+    case 'no-changes':
+    case 'disabled':
+      return false;
+    default: {
+      const exhaustive: never = result;
+      throw new Error(`Unhandled commit result: ${JSON.stringify(exhaustive)}`);
+    }
+  }
 }
 
 /**

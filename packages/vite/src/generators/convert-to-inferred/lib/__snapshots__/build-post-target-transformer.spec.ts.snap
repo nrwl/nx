@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildPostTargetTransformer moveBuildLibsFromSourceToViteConfig should add buildLibsFromSource to existing nxViteTsPaths plugin with existing options 1`] = `
+exports[`buildPostTargetTransformer > moveBuildLibsFromSourceToViteConfig > should add buildLibsFromSource to existing nxViteTsPaths plugin with existing options 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -52,7 +52,7 @@ export default defineConfig({
 });"
 `;
 
-exports[`buildPostTargetTransformer moveBuildLibsFromSourceToViteConfig should add buildLibsFromSource to existing nxViteTsPaths plugin with no existing options 1`] = `
+exports[`buildPostTargetTransformer > moveBuildLibsFromSourceToViteConfig > should add buildLibsFromSource to existing nxViteTsPaths plugin with no existing options 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -104,7 +104,7 @@ export default defineConfig({
 });"
 `;
 
-exports[`buildPostTargetTransformer moveBuildLibsFromSourceToViteConfig should add buildLibsFromSource to new nxViteTsPaths plugin when the plugin is not added 1`] = `
+exports[`buildPostTargetTransformer > moveBuildLibsFromSourceToViteConfig > should add buildLibsFromSource to new nxViteTsPaths plugin when the plugin is not added 1`] = `
 "import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
@@ -156,7 +156,7 @@ export default defineConfig({
 });"
 `;
 
-exports[`buildPostTargetTransformer moveBuildLibsFromSourceToViteConfig should add buildLibsFromSource to new nxViteTsPaths plugin when the plugins property does not exist 1`] = `
+exports[`buildPostTargetTransformer > moveBuildLibsFromSourceToViteConfig > should add buildLibsFromSource to new nxViteTsPaths plugin when the plugins property does not exist 1`] = `
 "import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
@@ -206,7 +206,7 @@ export default defineConfig({plugins: [nxViteTsPaths({ buildLibsFromSource: opti
 });"
 `;
 
-exports[`buildPostTargetTransformer should move the AST options to each vite config file correctly for configurations 1`] = `
+exports[`buildPostTargetTransformer > should move the AST options to each vite config file correctly for configurations 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -270,7 +270,7 @@ export default defineConfig({
 });"
 `;
 
-exports[`buildPostTargetTransformer should move the AST options to each vite config file correctly for configurations 2`] = `
+exports[`buildPostTargetTransformer > should move the AST options to each vite config file correctly for configurations 2`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -334,7 +334,7 @@ export default defineConfig({
 });"
 `;
 
-exports[`buildPostTargetTransformer should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred 1`] = `
+exports[`buildPostTargetTransformer > should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';

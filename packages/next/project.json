@@ -8,6 +8,13 @@
       "command": "node ./scripts/copy-readme.js next packages/next/readme-template.md packages/next/README.md",
       "inputs": ["copyReadme"],
       "outputs": ["{projectRoot}/README.md"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "implicitDependencies": ["jest"]

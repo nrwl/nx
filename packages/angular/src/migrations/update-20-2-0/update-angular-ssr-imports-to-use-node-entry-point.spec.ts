@@ -8,10 +8,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './update-angular-ssr-imports-to-use-node-entry-point';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
-  formatFiles: jest.fn(),
+  formatFiles: vi.fn(),
 }));
 
 describe('update-angular-ssr-imports-to-use-node-entry-point migration', () => {

@@ -62,7 +62,7 @@ Buildkite parallelism is declared per job (`parallelism: N`) and maintained by h
 
 Buildkite Test Engine is a mature test observability product: per-framework collectors feed timing data to the `bktec` CLI for splitting, and flaky management can auto-label, quarantine (mute or skip a single test), notify, and auto-restore tests. Its per-test granularity goes further than Nx in one respect: you can quarantine one test case. It requires instrumenting each runner with a collector SDK, and split plans live in pipeline YAML.
 
-Nx works at the task level with no runner SDKs. [Atomizer](/docs/features/ci-features/split-e2e-tasks) turns an e2e suite into per-file tasks through the plugin-configured task graph, and each split task is independently cacheable and distributable. [Flaky task detection](/docs/features/ci-features/flaky-tasks) spots nondeterministic tasks from history and retries them on a different agent automatically.
+Nx works at the task level with no runner SDKs. [Atomizer](/docs/kb/split-e2e-tasks) turns an e2e suite into per-file tasks through the plugin-configured task graph, and each split task is independently cacheable and distributable. [Flaky task detection](/docs/kb/flaky-tasks) spots nondeterministic tasks from history and retries them on a different agent automatically.
 
 ## AI integration
 
