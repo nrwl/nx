@@ -516,7 +516,7 @@ catalogs:
       version: 4.1.2
 
 overrides:
-  handlebars: 4.7.9
+  handlebars@<4.7.10: ^4.7.10
   minimist: ^1.2.6
   underscore: ^1.13.8
   brace-expansion: ^5.0.12
@@ -1773,12 +1773,6 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
-
-  e2e/remix:
-    dependencies:
-      '@nx/e2e-utils':
-        specifier: workspace:*
-        version: link:../utils
 
   e2e/rollup:
     dependencies:
@@ -3715,21 +3709,9 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/playwright':
-        specifier: workspace:*
-        version: link:../playwright
-      '@nx/react':
-        specifier: workspace:*
-        version: link:../react
-      '@nx/web':
-        specifier: workspace:*
-        version: link:../web
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       '@remix-run/dev':
         specifier: ^2.0.0
-        version: 2.17.3(@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3))(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(bluebird@3.7.2)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(supports-color@10.2.2)(terser@5.49.0)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3))(tsx@4.20.5)(typescript@6.0.3)(vite@5.4.19(@types/node@24.12.2)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.49.0))(yaml@2.8.0)
+        version: 2.17.3(@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(bluebird@3.7.2)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(supports-color@10.2.2)(terser@5.49.0)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@5.9.3))(tsx@4.20.5)(typescript@5.9.3)(vite@5.4.19(@types/node@24.12.2)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.49.0))(yaml@2.8.0)
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3737,9 +3719,6 @@ importers:
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
-      '@nx/vitest':
-        specifier: workspace:*
-        version: link:../vitest
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -18328,8 +18307,8 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
-  handlebars@4.7.9:
-    resolution: {integrity: sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==}
+  handlebars@4.7.10:
+    resolution: {integrity: sha512-P5VJMVM7qgBn6vjXMw8WG9uVI+ncf2pi72j4de4yz5ZULLj2RGqLYaKOYGsgyrViQ0tePOVlN1tDCCXXtFqXKg==}
     engines: {node: '>=0.4.7'}
     hasBin: true
 
@@ -38283,7 +38262,7 @@ snapshots:
       react: 18.3.1
       react-redux: 8.0.5(@types/react-dom@18.3.1)(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@18.3.1)(react@18.3.1)(supports-color@8.1.1))(react@18.3.1)(redux@4.2.1)
 
-  '@remix-run/dev@2.17.3(@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3))(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(bluebird@3.7.2)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(supports-color@10.2.2)(terser@5.49.0)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3))(tsx@4.20.5)(typescript@6.0.3)(vite@5.4.19(@types/node@24.12.2)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.49.0))(yaml@2.8.0)':
+  '@remix-run/dev@2.17.3(@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(bluebird@3.7.2)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(supports-color@10.2.2)(terser@5.49.0)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@5.9.3))(tsx@4.20.5)(typescript@5.9.3)(vite@5.4.19(@types/node@24.12.2)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.49.0))(yaml@2.8.0)':
     dependencies:
       '@babel/core': 7.29.7(supports-color@10.2.2)
       '@babel/generator': 7.28.5
@@ -38295,10 +38274,10 @@ snapshots:
       '@babel/types': 7.28.5
       '@mdx-js/mdx': 2.3.0(supports-color@10.2.2)
       '@npmcli/package-json': 4.0.1(bluebird@3.7.2)
-      '@remix-run/node': 2.17.3(typescript@6.0.3)
-      '@remix-run/react': 2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)
+      '@remix-run/node': 2.17.3(typescript@5.9.3)
+      '@remix-run/react': 2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
       '@remix-run/router': 1.23.0
-      '@remix-run/server-runtime': 2.17.3(typescript@6.0.3)
+      '@remix-run/server-runtime': 2.17.3(typescript@5.9.3)
       '@types/mdx': 2.0.13
       '@vanilla-extract/integration': 6.5.0(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(supports-color@10.2.2)(terser@5.49.0)
       arg: 5.0.2
@@ -38328,7 +38307,7 @@ snapshots:
       pidtree: 0.6.0
       postcss: 8.5.25
       postcss-discard-duplicates: 5.1.0(postcss@8.5.25)
-      postcss-load-config: 4.0.2(postcss@8.5.25)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3))
+      postcss-load-config: 4.0.2(postcss@8.5.25)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@5.9.3))
       postcss-modules: 6.0.1(postcss@8.5.25)
       prettier: 2.8.8
       pretty-ms: 7.0.1
@@ -38339,11 +38318,11 @@ snapshots:
       set-cookie-parser: 2.7.1
       tar-fs: 2.1.3
       tsconfig-paths: 4.2.0
-      valibot: 1.2.0(typescript@6.0.3)
+      valibot: 1.2.0(typescript@5.9.3)
       vite-node: 3.2.4(@types/node@24.12.2)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(supports-color@10.2.2)(terser@5.49.0)(tsx@4.20.5)(yaml@2.8.0)
       ws: 7.5.10
     optionalDependencies:
-      typescript: 6.0.3
+      typescript: 5.9.3
       vite: 5.4.19(@types/node@24.12.2)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.49.0)
     transitivePeerDependencies:
       - '@types/node'
@@ -38445,6 +38424,18 @@ snapshots:
       - utf-8-validate
       - yaml
 
+  '@remix-run/node@2.17.3(typescript@5.9.3)':
+    dependencies:
+      '@remix-run/server-runtime': 2.17.3(typescript@5.9.3)
+      '@remix-run/web-fetch': 4.4.2
+      '@web3-storage/multipart-parser': 1.0.0
+      cookie-signature: 1.2.2
+      source-map-support: 0.5.21
+      stream-slice: 0.1.2
+      undici: 6.21.3
+    optionalDependencies:
+      typescript: 5.9.3
+
   '@remix-run/node@2.17.3(typescript@6.0.3)':
     dependencies:
       '@remix-run/server-runtime': 2.17.3(typescript@6.0.3)
@@ -38456,6 +38447,18 @@ snapshots:
       undici: 6.21.3
     optionalDependencies:
       typescript: 6.0.3
+
+  '@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)':
+    dependencies:
+      '@remix-run/router': 1.23.3
+      '@remix-run/server-runtime': 2.17.5(typescript@5.9.3)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-router: 6.30.4(react@18.3.1)
+      react-router-dom: 6.30.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      turbo-stream: 2.4.1
+    optionalDependencies:
+      typescript: 5.9.3
 
   '@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)':
     dependencies:
@@ -38473,6 +38476,18 @@ snapshots:
 
   '@remix-run/router@1.23.3': {}
 
+  '@remix-run/server-runtime@2.17.3(typescript@5.9.3)':
+    dependencies:
+      '@remix-run/router': 1.23.0
+      '@types/cookie': 0.6.0
+      '@web3-storage/multipart-parser': 1.0.0
+      cookie: 0.7.2
+      set-cookie-parser: 2.7.1
+      source-map: 0.7.6
+      turbo-stream: 2.4.1
+    optionalDependencies:
+      typescript: 5.9.3
+
   '@remix-run/server-runtime@2.17.3(typescript@6.0.3)':
     dependencies:
       '@remix-run/router': 1.23.0
@@ -38484,6 +38499,18 @@ snapshots:
       turbo-stream: 2.4.1
     optionalDependencies:
       typescript: 6.0.3
+
+  '@remix-run/server-runtime@2.17.5(typescript@5.9.3)':
+    dependencies:
+      '@remix-run/router': 1.23.3
+      '@types/cookie': 0.6.0
+      '@web3-storage/multipart-parser': 1.0.0
+      cookie: 0.7.2
+      set-cookie-parser: 2.7.2
+      source-map: 0.7.6
+      turbo-stream: 2.4.1
+    optionalDependencies:
+      typescript: 5.9.3
 
   '@remix-run/server-runtime@2.17.5(typescript@6.0.3)':
     dependencies:
@@ -40801,7 +40828,7 @@ snapshots:
       '@verdaccio/logger': 8.0.0-next-8.33(supports-color@10.2.2)
       debug: 4.4.3(supports-color@10.2.2)
       got-cjs: 12.5.4
-      handlebars: 4.7.9
+      handlebars: 4.7.10
     transitivePeerDependencies:
       - supports-color
 
@@ -40811,7 +40838,7 @@ snapshots:
       '@verdaccio/logger': 8.0.0-next-8.33(supports-color@7.2.0)
       debug: 4.4.3(supports-color@7.2.0)
       got-cjs: 12.5.4
-      handlebars: 4.7.9
+      handlebars: 4.7.10
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -40822,7 +40849,7 @@ snapshots:
       '@verdaccio/logger': 8.0.0-next-8.33(supports-color@8.1.1)
       debug: 4.4.3(supports-color@8.1.1)
       got-cjs: 12.5.4
-      handlebars: 4.7.9
+      handlebars: 4.7.10
     transitivePeerDependencies:
       - supports-color
 
@@ -46845,7 +46872,7 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
-  handlebars@4.7.9:
+  handlebars@4.7.10:
     dependencies:
       minimist: 1.2.8
       neo-async: 2.6.2
@@ -53967,6 +53994,14 @@ snapshots:
       read-cache: 1.0.0
       resolve: 1.22.10
 
+  postcss-load-config@4.0.2(postcss@8.5.25)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@5.9.3)):
+    dependencies:
+      lilconfig: 3.1.3
+      yaml: 2.9.0
+    optionalDependencies:
+      postcss: 8.5.25
+      ts-node: 10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@5.9.3)
+
   postcss-load-config@4.0.2(postcss@8.5.25)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3)):
     dependencies:
       lilconfig: 3.1.3
@@ -57218,7 +57253,7 @@ snapshots:
     dependencies:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
-      handlebars: 4.7.9
+      handlebars: 4.7.10
       jest: 30.3.0(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.0)(supports-color@10.2.2))(supports-color@10.2.2)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3))
       json5: 2.2.3
       lodash.memoize: 4.1.2
@@ -57239,7 +57274,7 @@ snapshots:
     dependencies:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
-      handlebars: 4.7.9
+      handlebars: 4.7.10
       jest: 30.3.0(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.0)(supports-color@8.1.1))(supports-color@8.1.1)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3))
       json5: 2.2.3
       lodash.memoize: 4.1.2
@@ -57265,6 +57300,26 @@ snapshots:
       webpack: 5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(clean-css@5.3.3)(cssnano@7.1.9(postcss@8.5.25))(csso@5.0.5)(esbuild@0.25.0)(html-minifier-terser@6.1.0)(lightningcss@1.32.0)(postcss@8.5.25)(uglify-js@3.19.3)(webpack-cli@7.0.3)
     optionalDependencies:
       loader-utils: 2.0.4
+
+  ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@5.9.3):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.11
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 24.12.2
+      acorn: 8.16.0
+      acorn-walk: 8.3.4
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 5.9.3
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    optionalDependencies:
+      '@swc/core': 1.15.10(@swc/helpers@0.5.18)
 
   ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3):
     dependencies:
@@ -57412,7 +57467,7 @@ snapshots:
 
   typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@6.0.3)):
     dependencies:
-      handlebars: 4.7.9
+      handlebars: 4.7.10
       typedoc: 0.25.12(typescript@6.0.3)
 
   typedoc@0.25.12(typescript@6.0.3):
@@ -58027,6 +58082,10 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
+
+  valibot@1.2.0(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   valibot@1.2.0(typescript@6.0.3):
     optionalDependencies:

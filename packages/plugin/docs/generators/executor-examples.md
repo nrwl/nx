@@ -26,8 +26,4 @@ nx g @nx/plugin:executor tools/my-plugin/src/executors/build.ts --name=custom
 
 ##### With custom hashing
 
-Create a new executor called `build` at `tools/my-plugin/src/executors/build.ts`, that uses a custom hashing function:
-
-```bash
-nx g @nx/plugin:executor tools/my-plugin/src/executors/build --includeHasher
-```
+The generator no longer creates custom hashers, and passing `--includeHasher` throws. Custom hashers are deprecated and will be removed in Nx 25. Declare what the executor depends on as target `inputs` instead. See [Replace a custom hasher with inputs](/docs/kb/local-executors#replace-a-custom-hasher-with-inputs).

@@ -22,7 +22,11 @@ import type {
   ReadUltracacheConfigurationsResult,
 } from '../ultracache/fetch';
 import * as tar from 'tar-stream';
-import { cacheDir, cacheDirectoryForWorkspace } from '../utils/cache-directory';
+import {
+  cacheDir,
+  cacheDirectoryForWorkspace,
+  workspaceDataDirectory,
+} from '../utils/cache-directory';
 import { isCI } from '../utils/is-ci';
 import { createHash, randomUUID } from 'crypto';
 import { FileLock, IS_WASM } from '../native';
@@ -207,11 +211,12 @@ export function getBundleInstallDefaultLocation() {
 
 const runnerBundleInstallDirectory = getBundleInstallDefaultLocation();
 
-// Control files live in their own subdirectory so that no bundle can ever
-// collide with one. A version has to start alphanumeric (see
-// VALID_BUNDLE_VERSION), so it can never name '.state', and a control file
-// replaced by a directory would brick the workspace with no in-band recovery.
-const stateDirectory = join(runnerBundleInstallDirectory, '.state');
+// Control files live outside the install directory. Released nx versions load
+// any directory there as a bundle, so they would `require` a state directory
+// placed inside it.
+const stateDirectory = existsSync(join(workspaceRoot, 'nx.json'))
+  ? join(workspaceDataDirectory, 'nx-cloud')
+  : `${runnerBundleInstallDirectory}-state`;
 
 function ensureStateDirectory(): void {
   mkdirSync(stateDirectory, { recursive: true });
@@ -613,15 +618,13 @@ function removeOldClientBundles(currentInstallDirectoryName: string) {
   const filesAndFolders = readdirSync(runnerBundleInstallDirectory);
 
   for (let fileOrFolder of filesAndFolders) {
-    // '.state' holds the control files. A '.tmp-*' left by a crashed extract
-    // is reclaimed here, which is safe only because this runs after our own
-    // was renamed away and the download lock means no other process is
-    // extracting. Under WASM there is no lock, so a concurrent extract may
-    // still own that directory: leaving it costs disk, deleting it would
-    // fail that process's install.
+    // A '.tmp-*' left by a crashed extract is reclaimed here, which is safe
+    // only because this runs after our own was renamed away and the download
+    // lock means no other process is extracting. Under WASM there is no lock,
+    // so a concurrent extract may still own that directory: leaving it costs
+    // disk, deleting it would fail that process's install.
     if (
       fileOrFolder === currentInstallDirectoryName ||
-      fileOrFolder === '.state' ||
       (IS_WASM && fileOrFolder.startsWith('.tmp-'))
     ) {
       continue;
@@ -632,8 +635,8 @@ function removeOldClientBundles(currentInstallDirectoryName: string) {
     // and these calls, so both tolerate it already being gone.
     let isBundle: boolean;
     try {
-      // Only directories are bundles. The lock files must survive: a lock on
-      // a deleted file no longer excludes processes that reopen the path.
+      // Only directories are bundles. Files here, like the verify.lock a
+      // released nx writes, are left alone.
       isBundle = statSync(fileOrFolderPath).isDirectory();
     } catch {
       continue;

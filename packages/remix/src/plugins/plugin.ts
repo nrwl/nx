@@ -1,3 +1,4 @@
+import { warnRemixDeprecation } from '../utils/deprecation';
 import {
   calculateHashesForCreateNodes,
   getNamedInputs,
@@ -8,7 +9,6 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  type CreateDependencies,
   type CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultArray,
@@ -41,18 +41,15 @@ export interface RemixPluginOptions {
 
 type RemixTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
-
 const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
 
+/**
+ * @deprecated Migrate to React Router with `@nx/react`. This will be removed in Nx 25.
+ */
 export const createNodes: CreateNodes<RemixPluginOptions> = [
   remixConfigGlob,
   async (configFilePaths, options, context) => {
+    warnRemixDeprecation();
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `remix-${optionsHash}.hash`);
     const targetsCache = new PluginCache<RemixTargets>(cachePath);
@@ -115,6 +112,9 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
   },
 ];
 
+/**
+ * @deprecated Migrate to React Router with `@nx/react`. This will be removed in Nx 25.
+ */
 export const createNodesV2 = createNodes;
 
 async function createNodesInternal(

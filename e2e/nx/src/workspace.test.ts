@@ -26,13 +26,11 @@ describe('@nx/workspace:infer-targets', () => {
       packages: [
         '@nx/workspace',
         '@nx/playwright',
-        '@nx/remix',
+        '@nx/react',
+        '@nx/vite',
         '@nx/eslint',
         '@nx/jest',
       ],
-      // Remix rejects TypeScript 6, so keep this workspace on the 5.x line
-      // that @nx/remix pins (packages/remix/src/utils/versions.ts).
-      typescriptVersion: '~5.9.2',
     });
   });
 
@@ -40,14 +38,14 @@ describe('@nx/workspace:infer-targets', () => {
 
   it('should run or skip conversions depending on whether executors are present', async () => {
     // default case, everything is generated with crystal, everything should be skipped
-    const remixApp = uniq('remix');
+    const reactApp = uniq('react');
     runCLI(
-      `generate @nx/remix:app apps/${remixApp} --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/react:app apps/${reactApp} --bundler=vite --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     const output = runCLI(`generate infer-targets --no-interactive --verbose`);
 
-    expect(output).toContain('@nx/remix:convert-to-inferred - Skipped');
+    expect(output).toContain('@nx/vite:convert-to-inferred - Skipped');
     expect(output).toContain('@nx/playwright:convert-to-inferred - Skipped');
     expect(output).toContain('@nx/eslint:convert-to-inferred - Skipped');
     expect(output).toContain('@nx/jest:convert-to-inferred - Skipped');
@@ -58,10 +56,10 @@ describe('@nx/workspace:infer-targets', () => {
       return json;
     });
 
-    updateJson(join('apps', remixApp, 'project.json'), (json) => {
+    updateJson(join('apps', reactApp, 'project.json'), (json) => {
       json.targets = {
         build: {
-          executor: '@nx/remix:build',
+          executor: '@nx/vite:build',
         },
         lint: {
           executor: '@nx/eslint:lint',
@@ -72,15 +70,15 @@ describe('@nx/workspace:infer-targets', () => {
 
     const output2 = runCLI(`generate infer-targets --no-interactive --verbose`);
 
-    expect(output2).toContain('@nx/remix:convert-to-inferred - Success');
+    expect(output2).toContain('@nx/vite:convert-to-inferred - Success');
     expect(output2).toContain('@nx/eslint:convert-to-inferred - Success');
   });
 
   it('should run or skip only specific conversions if --plugins is passed', async () => {
     // default case, everything is generated with crystal, relevant plugins should be skipped
-    const remixApp = uniq('remix');
+    const reactApp = uniq('react');
     runCLI(
-      `generate @nx/remix:app apps/${remixApp} --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/react:app apps/${reactApp} --bundler=vite --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     const output = runCLI(
@@ -90,7 +88,7 @@ describe('@nx/workspace:infer-targets', () => {
     expect(output).toContain('@nx/eslint:convert-to-inferred - Skipped');
     expect(output).toContain('@nx/jest:convert-to-inferred - Skipped');
 
-    expect(output).not.toContain('@nx/remix');
+    expect(output).not.toContain('@nx/vite');
     expect(output).not.toContain('@nx/playwright');
 
     // if we make sure there are executors to convert, relevant conversions will run
@@ -99,10 +97,10 @@ describe('@nx/workspace:infer-targets', () => {
       return json;
     });
 
-    updateJson(join('apps', remixApp, 'project.json'), (json) => {
+    updateJson(join('apps', reactApp, 'project.json'), (json) => {
       json.targets = {
         build: {
-          executor: '@nx/remix:build',
+          executor: '@nx/vite:build',
         },
         lint: {
           executor: '@nx/eslint:lint',
@@ -112,10 +110,10 @@ describe('@nx/workspace:infer-targets', () => {
     });
 
     const output2 = runCLI(
-      `generate infer-targets --plugins=@nx/remix,@nx/eslint --no-interactive`
+      `generate infer-targets --plugins=@nx/vite,@nx/eslint --no-interactive`
     );
 
-    expect(output2).toContain('@nx/remix:convert-to-inferred - Success');
+    expect(output2).toContain('@nx/vite:convert-to-inferred - Success');
     expect(output2).toContain('@nx/eslint:convert-to-inferred - Success');
 
     expect(output2).not.toContain('@nx/jest');
@@ -123,10 +121,10 @@ describe('@nx/workspace:infer-targets', () => {
   });
 
   it('should run only specific conversions for a specific project if --project is passed', async () => {
-    // even if we make sure there are executors for remix & remix-e2e, only remix conversions will run with --project option
-    const remixApp = uniq('remix');
+    // even if we make sure there are executors for react & react-e2e, only react conversions will run with --project option
+    const reactApp = uniq('react');
     runCLI(
-      `generate @nx/remix:app apps/${remixApp} --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/react:app apps/${reactApp} --bundler=vite --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     updateJson('nx.json', (json) => {
@@ -134,10 +132,10 @@ describe('@nx/workspace:infer-targets', () => {
       return json;
     });
 
-    updateJson(join('apps', remixApp, 'project.json'), (json) => {
+    updateJson(join('apps', reactApp, 'project.json'), (json) => {
       json.targets = {
         build: {
-          executor: '@nx/remix:build',
+          executor: '@nx/vite:build',
         },
         lint: {
           executor: '@nx/eslint:lint',
@@ -146,7 +144,7 @@ describe('@nx/workspace:infer-targets', () => {
       return json;
     });
 
-    updateJson(join('apps', `${remixApp}-e2e`, 'project.json'), (json) => {
+    updateJson(join('apps', `${reactApp}-e2e`, 'project.json'), (json) => {
       json.targets = {
         e2e: {
           executor: '@nx/playwright:playwright',
@@ -156,10 +154,10 @@ describe('@nx/workspace:infer-targets', () => {
     });
 
     const output2 = runCLI(
-      `generate infer-targets --project ${remixApp}  --no-interactive`
+      `generate infer-targets --project ${reactApp}  --no-interactive`
     );
 
-    expect(output2).toContain('@nx/remix:convert-to-inferred - Success');
+    expect(output2).toContain('@nx/vite:convert-to-inferred - Success');
     expect(output2).toContain('@nx/eslint:convert-to-inferred - Success');
 
     expect(output2).toContain('@nx/jest:convert-to-inferred - Skipped');

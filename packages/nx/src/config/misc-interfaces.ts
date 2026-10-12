@@ -44,6 +44,10 @@ export interface ExecutorJsonEntryConfig {
   batchImplementation?: string;
   preferBatch?: boolean;
   description?: string;
+  // TODO(v25): remove custom hasher support.
+  /**
+   * @deprecated Use target inputs instead. This will be removed in Nx 25.
+   */
   hasher?: string;
 }
 export type ExecutorsJsonEntry = string | ExecutorJsonEntryConfig;
@@ -168,6 +172,10 @@ export interface ExecutorConfig {
     outputCapture?: OutputCaptureMethod;
     continuous?: boolean;
   } & Schema;
+  // TODO(v25): remove custom hasher support.
+  /**
+   * @deprecated Use target inputs instead. This will be removed in Nx 25.
+   */
   hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;
   batchImplementationFactory?: () => TaskGraphExecutor;
@@ -201,6 +209,10 @@ export type AsyncIteratorExecutor<T = any> = (
  */
 export type Executor<T = any> = PromiseExecutor<T> | AsyncIteratorExecutor<T>;
 
+// TODO(v25): remove custom hasher support.
+/**
+ * @deprecated Use target inputs instead. This will be removed in Nx 25.
+ */
 export interface HasherContext {
   hasher: TaskHasher;
   projectGraph: ProjectGraph;
@@ -209,6 +221,9 @@ export interface HasherContext {
   nxJsonConfiguration: NxJsonConfiguration;
 }
 
+/**
+ * @deprecated Use target inputs instead. This will be removed in Nx 25.
+ */
 export type CustomHasher = (
   task: Task,
   context: HasherContext

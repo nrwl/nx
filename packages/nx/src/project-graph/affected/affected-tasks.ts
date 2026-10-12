@@ -304,6 +304,7 @@ export async function selectAffectedTasks(
   const namedProjects = new Set(dependencies.projects);
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+  // TODO(v25): remove custom hasher support.
   const customHashed = new Set(
     taskIds.filter((id) => hasCustomHasher(taskGraph.tasks[id], projects))
   );

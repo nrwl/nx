@@ -650,24 +650,26 @@ impl HashPlanner {
                 .split(':')
                 .next()
                 .expect("Executors should always have a ':'");
-            let Some(existing_package) =
-                find_external_dependency_node_name(executor_package, &self.project_graph)
-            else {
+            let existing_packages =
+                find_external_dependency_node_names(executor_package, &self.project_graph);
+            if existing_packages.is_empty() {
                 // this usually happens because the executor was a local plugin.
                 // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
                 return Ok(None);
-            };
+            }
             let mut external_deps = hashbrown::HashSet::new();
-            trace!(
-                "Add External Instruction for executor {existing_package}: {}",
-                target.executor.as_ref().unwrap()
-            );
-            trace!(
-                "Add External Instructions for dependencies of executor {existing_package}: {:?}",
-                &external_deps_map[existing_package]
-            );
-            external_deps.insert(existing_package);
-            external_deps.extend(&external_deps_map[existing_package]);
+            for existing_package in existing_packages {
+                trace!(
+                    "Add External Instruction for executor {existing_package}: {}",
+                    target.executor.as_ref().unwrap()
+                );
+                trace!(
+                    "Add External Instructions for dependencies of executor {existing_package}: {:?}",
+                    &external_deps_map[existing_package]
+                );
+                external_deps.insert(existing_package);
+                external_deps.extend(&external_deps_map[existing_package]);
+            }
             Ok(Some(
                 external_deps
                     .iter()
@@ -682,9 +684,9 @@ impl HashPlanner {
                     Input::ExternalDependency(deps) => {
                         has_external_deps = true;
                         for dep in deps.iter() {
-                            let external_node_name =
-                                find_external_dependency_node_name(dep, &self.project_graph);
-                            let Some(external_node_name) = external_node_name else {
+                            let external_node_names =
+                                find_external_dependency_node_names(dep, &self.project_graph);
+                            if external_node_names.is_empty() {
                                 if self.project_graph.nodes.contains_key(dep) {
                                     let deps = self.project_graph.dependencies.get(project_name);
                                     if deps.is_some_and(|deps| deps.contains(dep)) {
@@ -701,17 +703,19 @@ impl HashPlanner {
                                         "The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found"
                                     )
                                 }
-                            };
-                            trace!(
-                                "Add External Instruction for External Input {external_node_name}: {}",
-                                target.executor.as_ref().unwrap()
-                            );
-                            trace!(
-                                "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
-                                &external_deps_map[external_node_name]
-                            );
-                            external_deps.insert(external_node_name);
-                            external_deps.extend(&external_deps_map[external_node_name]);
+                            }
+                            for external_node_name in external_node_names {
+                                trace!(
+                                    "Add External Instruction for External Input {external_node_name}: {}",
+                                    target.executor.as_ref().unwrap()
+                                );
+                                trace!(
+                                    "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
+                                    &external_deps_map[external_node_name]
+                                );
+                                external_deps.insert(external_node_name);
+                                external_deps.extend(&external_deps_map[external_node_name]);
+                            }
                         }
                     }
                     _ => continue,
@@ -1655,25 +1659,28 @@ fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> Str
     }
 }
 
-fn find_external_dependency_node_name<'a>(
+/// Without an exact `<pkg>`/`npm:<pkg>` node, every installed version of the
+/// package matches: picking one from the `HashMap` scan would change per process,
+/// and a bump to any of them can change what the task does.
+fn find_external_dependency_node_names<'a>(
     package_name: &str,
     project_graph: &'a ProjectGraph,
-) -> Option<&'a String> {
+) -> Vec<&'a String> {
     let npm_name = format!("npm:{}", &package_name);
     if let Some((key, _)) = project_graph.external_nodes.get_key_value(package_name) {
-        Some(key)
-    } else if let Some((key, _)) = project_graph.external_nodes.get_key_value(&npm_name) {
-        Some(key)
-    } else {
-        for (node_name, node) in project_graph.external_nodes.iter() {
-            if let Some(pkg_name) = &node.package_name {
-                if pkg_name.as_str() == package_name {
-                    return Some(node_name);
-                }
-            }
-        }
-        None
+        return vec![key];
     }
+    if let Some((key, _)) = project_graph.external_nodes.get_key_value(&npm_name) {
+        return vec![key];
+    }
+    let mut matches: Vec<&String> = project_graph
+        .external_nodes
+        .iter()
+        .filter(|(_, node)| node.package_name.as_deref() == Some(package_name))
+        .map(|(node_name, _)| node_name)
+        .collect();
+    matches.sort();
+    matches
 }
 
 #[cfg(test)]
@@ -2363,6 +2370,124 @@ mod tests {
         assert!(paths_overlap("", "anything"));
         assert!(!paths_overlap("dist", "distribution"));
         assert!(!paths_overlap("apps/web/dist", "apps/webapp"));
+    }
+
+    fn graph_with_external_nodes(nodes: &[(&str, &str)]) -> ProjectGraph {
+        ProjectGraph {
+            nodes: HashMap::new(),
+            dependencies: HashMap::new(),
+            external_nodes: nodes
+                .iter()
+                .map(|(node_name, package_name)| {
+                    (
+                        node_name.to_string(),
+                        ExternalNode {
+                            r#type: Some("npm".into()),
+                            package_name: Some(package_name.to_string()),
+                            version: "0.0.0".into(),
+                            hash: None,
+                        },
+                    )
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn external_dependency_prefers_the_exact_node() {
+        let graph = graph_with_external_nodes(&[
+            ("npm:is-number@6.0.0", "is-number"),
+            ("npm:is-number", "is-number"),
+            ("npm:is-number@7.0.0", "is-number"),
+            ("is-odd", "is-odd"),
+            ("npm:is-odd@1.0.0", "is-odd"),
+        ]);
+        assert_eq!(
+            find_external_dependency_node_names("is-number", &graph),
+            vec!["npm:is-number"]
+        );
+        assert_eq!(
+            find_external_dependency_node_names("is-odd", &graph),
+            vec!["is-odd"]
+        );
+    }
+
+    #[test]
+    fn external_dependency_without_an_exact_node_matches_every_version_in_order() {
+        let nodes = [
+            ("npm:is-number@7.0.0", "is-number"),
+            ("npm:is-number@6.0.0", "is-number"),
+            ("npm:is-odd@1.0.0", "is-odd"),
+        ];
+        let reversed: Vec<_> = nodes.iter().rev().copied().collect();
+        for graph in [
+            graph_with_external_nodes(&nodes),
+            graph_with_external_nodes(&reversed),
+        ] {
+            assert_eq!(
+                find_external_dependency_node_names("is-number", &graph),
+                vec!["npm:is-number@6.0.0", "npm:is-number@7.0.0"]
+            );
+        }
+    }
+
+    #[test]
+    fn external_dependency_without_a_match_is_empty() {
+        let graph = graph_with_external_nodes(&[("npm:is-number@7.0.0", "is-number")]);
+        assert!(find_external_dependency_node_names("is-odd", &graph).is_empty());
+    }
+
+    #[test]
+    fn external_dependencies_input_hashes_every_installed_version() {
+        use crate::native::test_utils::task_graph;
+        use crate::native::types::ExternalDependenciesInput;
+        use napi::bindgen_prelude::Either9;
+
+        let mut graph = graph_with_external_nodes(&[
+            ("npm:is-number@6.0.0", "is-number"),
+            ("npm:is-number@7.0.0", "is-number"),
+        ]);
+        graph.dependencies.insert("c".into(), vec![]);
+        graph.nodes.insert(
+            "c".into(),
+            Project {
+                root: "packages/c".into(),
+                targets: HashMap::from([(
+                    "check".into(),
+                    Target {
+                        executor: Some("nx:run-commands".into()),
+                        inputs: Some(vec![Either9::F(ExternalDependenciesInput {
+                            external_dependencies: vec!["is-number".into()],
+                        })]),
+                        ..Default::default()
+                    },
+                )]),
+                ..Default::default()
+            },
+        );
+        let planner = HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        );
+        let plans = planner
+            .get_plans_materialized(
+                vec!["c:check"],
+                task_graph(&[("c:check", &[])], &[]),
+                None,
+                &[],
+            )
+            .unwrap();
+        let externals: Vec<_> = plans["c:check"]
+            .iter()
+            .filter_map(|instruction| match instruction {
+                HashInstruction::External(name) => Some(name.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            externals,
+            vec!["npm:is-number@6.0.0", "npm:is-number@7.0.0"]
+        );
     }
 }
 

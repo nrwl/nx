@@ -19,4 +19,4 @@ os = ["linux", "macos"]
 
 [env]
 # Second Java version above, for Gradle toolchain discovery.
-JAVA17_HOME = { value = "{% if tools.java[1] is defined %}{{ tools.java[1].path }}{% endif %}", tools = true }
+JAVA17_HOME = { value = "{% if tools.java is defined and tools.java[1] is defined %}{{ tools.java[1].path }}{% endif %}", tools = true }
