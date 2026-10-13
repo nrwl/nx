@@ -805,6 +805,42 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.3.1-chromatic-storybook-3": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "@chromatic-com/storybook": ">=3.0.0 <3.2.8"
+      },
+      "packages": {
+        "@chromatic-com/storybook": {
+          "version": "^3.2.8",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.1-chromatic-storybook-4": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "@chromatic-com/storybook": ">=4.0.0 <4.1.4"
+      },
+      "packages": {
+        "@chromatic-com/storybook": {
+          "version": "^4.1.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.1-chromatic-storybook-5": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "@chromatic-com/storybook": ">=5.0.0 <5.5.1"
+      },
+      "packages": {
+        "@chromatic-com/storybook": {
+          "version": "^5.5.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
