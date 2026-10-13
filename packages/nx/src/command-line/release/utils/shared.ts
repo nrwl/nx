@@ -494,7 +494,10 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
 
     let scopedProjects: Set<string> | null = null;
 
-    if (scopePatterns.length > 0) {
+    if (
+      scopePatterns.length > 0 &&
+      nxReleaseConfig.conventionalCommits.useCommitScope
+    ) {
       const matches = findMatchingProjects(scopePatterns, projectGraph.nodes);
 
       // Detect ambiguity, but only within the active release group's
@@ -534,7 +537,9 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
         }
 
         const isProjectScopedCommit =
-          scopedProjects === null || scopedProjects.has(projectName);
+          scopedProjects === null
+            ? nxReleaseConfig.conventionalCommits.useCommitScope
+            : scopedProjects.has(projectName);
 
         relevantCommits
           .get(projectName)
