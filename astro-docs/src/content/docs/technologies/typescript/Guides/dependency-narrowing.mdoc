@@ -1,0 +1,101 @@
+---
+title: Narrow project graph dependencies
+description: Use @nx/js dependency narrowing to remove safe project graph edges and reduce the number of projects marked as affected by a change.
+sidebar:
+  label: Narrow project graph dependencies
+filter: 'type:Guides'
+---
+
+If you use `@nx/js` to analyze source imports, you can ask Nx to remove project graph edges that are not needed at runtime.
+
+This is useful when a project imports a symbol from another project but never uses that symbol in emitted code. In that case, keeping the edge makes the project graph denser than the runtime dependency graph, which can also make `nx affected` less precise.
+
+## Enable dependency narrowing
+
+Add `dependencyNarrowing` under `pluginsConfig["@nx/js"]` in `nx.json`:
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "dependencyNarrowing": {}
+    }
+  }
+}
+```
+
+An empty object enables the feature with the default settings.
+
+If you want to be explicit about the main behavior switches, start with this shape:
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "dependencyNarrowing": {
+        "respectSideEffects": true,
+        "removeTypeOnlyEdges": true,
+        "fallbackToStaticGraph": true,
+        "affectedNarrowing": true
+      }
+    }
+  }
+}
+```
+
+## What changes when you enable it
+
+Dependency narrowing changes the computed project graph for JavaScript and TypeScript imports discovered by `@nx/js` source analysis.
+
+- `nx graph` shows the narrowed graph because it renders the computed project graph.
+- `nx affected` can mark fewer downstream projects as affected when a change only touches exports that consumers do not use.
+- Task pipelines that depend on the project graph use the narrowed edges too.
+
+That is the intended behavior. Nx is not hiding edges in the UI. It is building a more precise graph.
+
+## When Nx keeps an edge
+
+Nx only removes an edge when it can do so conservatively.
+
+It keeps edges for cases such as:
+
+- side-effect imports
+- dynamic imports
+- namespace imports unless you opt into resolving accessed properties
+- re-export cases that still matter to downstream consumers
+- targets that may have side effects when `respectSideEffects` is enabled
+
+If Nx cannot prove that removing an edge is safe, it keeps the edge.
+
+## Common options
+
+These are the settings you are most likely to tune first:
+
+| Property                                  | Default | What it changes                                                                                   |
+| ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------- |
+| `concurrency`                             | `50`    | Number of files Nx analyzes in parallel.                                                          |
+| `respectSideEffects`                      | `true`  | Keeps edges for projects that may have side effects.                                              |
+| `removeTypeOnlyEdges`                     | `true`  | Allows type-only imports to be removed from the project graph.                                    |
+| `treatMissingPackageJsonAsSideEffectFree` | `false` | Treats projects without a `package.json` as side-effect-free when side effects are being checked. |
+| `resolveNamespaceImports`                 | `false` | Tracks accessed properties on namespace imports instead of keeping the whole edge by default.     |
+| `fallbackToStaticGraph`                   | `true`  | Falls back to the normal static graph when aggressive narrowing cannot use bundler signals.       |
+| `affectedNarrowing`                       | `true`  | Reduces affected fan-out when a change only touches exports that consumers do not use.            |
+
+The `dependencyNarrowing` object also includes advanced fields such as `mode`, `bundlerAdapters`, and `debug`. Leave those at their defaults unless you are testing a specific narrowing workflow.
+
+## Compare it with disabling source analysis
+
+Dependency narrowing is different from disabling source analysis.
+
+- If you set `analyzeSourceFiles` to `false`, Nx stops creating source-based edges from JavaScript and TypeScript imports.
+- If you enable dependency narrowing, Nx still analyzes source imports but removes only the edges it can prove are unnecessary.
+
+Use dependency narrowing when you still want the project graph to reflect real source relationships, but you want that graph to be closer to runtime behavior.
+
+## Use it with affected
+
+Dependency narrowing is especially useful on CI because it can reduce the number of downstream projects that `nx affected` needs to run.
+
+See [Run Only Tasks Affected by a PR](/docs/features/ci-features/affected) for the `affected` workflow, and see [nx.json Reference](/docs/reference/nx-json#plugin-specific-configuration-with-pluginsconfig) for the configuration shape.
