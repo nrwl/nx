@@ -33,6 +33,16 @@
       "description": "Rename imports of `createNodesV2` from `@nx/storybook/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-23-3-1-add-highlight-ids": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "storybook": ">=9.1.21 <10.0.0 || >=10.6.2"
+      },
+      "description": "Adds an `id` to Storybook `HIGHLIGHT` payloads, which Storybook 9.1.21 and 10.6.2 ignore without one. An AI prompt then replaces `clickEvent` in Highlight menu items with `clickable` and a `HIGHLIGHT_MENU_CLICK` listener, which can live in any file, and finishes the Highlight usage the migration can't rewrite.",
+      "implementation": "./dist/src/migrations/update-23-3-1/add-highlight-ids",
+      "prompt": "./dist/src/migrations/update-23-3-1/adapt-highlight-usage.md",
+      "documentation": "./dist/src/migrations/update-23-3-1/add-highlight-ids.md"
     }
   },
   "packageJsonUpdates": {
