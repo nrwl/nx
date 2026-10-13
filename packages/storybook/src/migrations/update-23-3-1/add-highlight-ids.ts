@@ -14,6 +14,8 @@ import type {
   Node,
   ObjectLiteralExpression,
   SourceFile,
+  Symbol as TsSymbol,
+  TypeChecker,
 } from 'typescript';
 
 const HIGHLIGHT_MODULE = 'storybook/highlight';
@@ -34,11 +36,13 @@ const LISTENER_METHODS = new Set([
 ]);
 const CHANGED_TYPES = new Set(['HighlightOptions', 'ClickEventDetails']);
 const LEADING_NEWLINE = /[ \t]*(\r?\n[ \t]*)/y;
+const HASHBANG = /^#![^\n]*\n/;
 
 type HighlightImports = {
   events: Set<string>;
   namespaces: Set<string>;
   types: Set<string>;
+  bindings: Identifier[];
 };
 
 type FileResult = { content: string; rewrites: number; notes: string[] };
@@ -117,6 +121,10 @@ function migrateFile(
   }
 
   const imports = readHighlightImports(sourceFile);
+  const isImportBinding = createImportBindingCheck(
+    sourceFile,
+    imports.bindings
+  );
   const identifiers = new Set<string>();
   const emitters = new Set<string>();
   const eventCalls: CallExpression[] = [];
@@ -134,11 +142,11 @@ function migrateFile(
     if (
       ts.isCallExpression(node) &&
       node.arguments.length > 0 &&
-      isHighlightEvent(node.arguments[0], imports)
+      isHighlightEvent(node.arguments[0], imports, isImportBinding)
     ) {
       eventCalls.push(node);
     } else if (
-      isHighlightEvent(node, imports) &&
+      isHighlightEvent(node, imports, isImportBinding) &&
       !isEventArgument(node) &&
       // `useChannel({ [HIGHLIGHT]: ... })` listens to the event.
       !ts.isComputedPropertyName(node.parent)
@@ -258,7 +266,7 @@ function migrateFile(
   if (rewrites === 0) {
     return { content, rewrites, notes };
   }
-  changes.push(declareCounter(sourceFile, counter));
+  changes.push(declareCounter(sourceFile, content, counter));
 
   return {
     content: applyChangesToString(content, changes),
@@ -272,6 +280,7 @@ function readHighlightImports(sourceFile: SourceFile): HighlightImports {
     events: new Set(),
     namespaces: new Set(),
     types: new Set(),
+    bindings: [],
   };
   for (const statement of sourceFile.statements) {
     if (
@@ -287,12 +296,14 @@ function readHighlightImports(sourceFile: SourceFile): HighlightImports {
     }
     if (ts.isNamespaceImport(bindings)) {
       imports.namespaces.add(bindings.name.text);
+      imports.bindings.push(bindings.name);
       continue;
     }
     for (const element of bindings.elements) {
       const imported = (element.propertyName ?? element.name).text;
       if (imported === 'HIGHLIGHT') {
         imports.events.add(element.name.text);
+        imports.bindings.push(element.name);
       } else if (CHANGED_TYPES.has(imported)) {
         imports.types.add(imported);
       }
@@ -301,9 +312,17 @@ function readHighlightImports(sourceFile: SourceFile): HighlightImports {
   return imports;
 }
 
-function isHighlightEvent(node: Node, imports: HighlightImports): boolean {
+function isHighlightEvent(
+  node: Node,
+  imports: HighlightImports,
+  isImportBinding: (identifier: Identifier) => boolean
+): boolean {
   if (ts.isIdentifier(node)) {
-    return imports.events.has(node.text) && !isNamePosition(node);
+    return (
+      imports.events.has(node.text) &&
+      !isNamePosition(node) &&
+      isImportBinding(node)
+    );
   }
   if (ts.isStringLiteralLike(node)) {
     return node.text === HIGHLIGHT_EVENT;
@@ -315,10 +334,51 @@ function isHighlightEvent(node: Node, imports: HighlightImports): boolean {
     return (
       ts.isIdentifier(node.expression) &&
       imports.namespaces.has(node.expression.text) &&
-      getStaticName(node) === 'HIGHLIGHT'
+      getStaticName(node) === 'HIGHLIGHT' &&
+      isImportBinding(node.expression)
     );
   }
   return false;
+}
+
+// A local variable can reuse an imported name, so names are compared by the
+// symbol the checker binds them to.
+function createImportBindingCheck(
+  sourceFile: SourceFile,
+  bindings: Identifier[]
+): (identifier: Identifier) => boolean {
+  let checker: TypeChecker | undefined;
+  let importSymbols: Set<TsSymbol | undefined>;
+  return (identifier) => {
+    if (!checker) {
+      const fileName = sourceFile.fileName;
+      checker = ts
+        .createProgram(
+          [fileName],
+          { noLib: true, noResolve: true, allowJs: true, types: [] },
+          {
+            getSourceFile: (name) =>
+              name === fileName ? sourceFile : undefined,
+            getDefaultLibFileName: () => 'lib.d.ts',
+            writeFile: () => {},
+            getCurrentDirectory: () => '',
+            getCanonicalFileName: (name) => name,
+            useCaseSensitiveFileNames: () => true,
+            getNewLine: () => '\n',
+            fileExists: (name) => name === fileName,
+            readFile: () => undefined,
+          }
+        )
+        .getTypeChecker();
+      importSymbols = new Set(
+        bindings.map((binding) => checker.getSymbolAtLocation(binding))
+      );
+    }
+    const symbol = ts.isShorthandPropertyAssignment(identifier.parent)
+      ? checker.getShorthandAssignmentValueSymbol(identifier.parent)
+      : checker.getSymbolAtLocation(identifier);
+    return symbol !== undefined && importSymbols.has(symbol);
+  };
 }
 
 function isNamePosition(node: Identifier): boolean {
@@ -391,7 +451,11 @@ function insertIdProperty(
   return { type: ChangeType.Insert, index, text };
 }
 
-function declareCounter(sourceFile: SourceFile, counter: string): StringChange {
+function declareCounter(
+  sourceFile: SourceFile,
+  content: string,
+  counter: string
+): StringChange {
   // Before the first statement that isn't an import or directive, so no code
   // runs before the counter is declared.
   let anchor: Node | undefined;
@@ -415,7 +479,12 @@ function declareCounter(sourceFile: SourceFile, counter: string): StringChange {
         index: anchor.getEnd(),
         text: `\n\n${declaration}`,
       }
-    : { type: ChangeType.Insert, index: 0, text: `${declaration}\n\n` };
+    : {
+        type: ChangeType.Insert,
+        // A hashbang is only valid as the first line.
+        index: HASHBANG.exec(content)?.[0].length ?? 0,
+        text: `${declaration}\n\n`,
+      };
 }
 
 function uniqueName(base: string, taken: Set<string>): string {

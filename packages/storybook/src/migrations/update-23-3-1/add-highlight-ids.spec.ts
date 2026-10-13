@@ -41,7 +41,8 @@ describe('add-highlight-ids migration', () => {
     tree.write('apps/app/.storybook/preview.ts', PREVIEW);
     tree.write(
       'libs/ui/src/highlight.js',
-      `export function show(channel) {
+      `#!/usr/bin/env node
+export function show(channel) {
   channel.emit('storybook/highlight/add', { selectors: ['p'] });
 }
 `
@@ -94,7 +95,8 @@ describe('add-highlight-ids migration', () => {
     `);
     expect(tree.read('libs/ui/src/highlight.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "let highlightCount = 0;
+      "#!/usr/bin/env node
+      let highlightCount = 0;
 
       export function show(channel) {
         channel.emit('storybook/highlight/add', {
@@ -123,6 +125,13 @@ export const decorators = [
 ];
 `;
     tree.write('apps/app/.storybook/preview.ts', content);
+    const relay = `import { HIGHLIGHT as event } from 'storybook/highlight';
+
+export function relay(channel, event, payload) {
+  channel.emit(event, payload);
+}
+`;
+    tree.write('libs/ui/src/relay.ts', relay);
     tree.write(
       'libs/other/src/config.ts',
       `export const tracking = { clickEvent: 'open' };\n`
@@ -131,6 +140,7 @@ export const decorators = [
     const result = await addHighlightIds(tree);
 
     expect(tree.read('apps/app/.storybook/preview.ts', 'utf-8')).toBe(content);
+    expect(tree.read('libs/ui/src/relay.ts', 'utf-8')).toBe(relay);
     expect(result).toEqual({ skipAgentic: true });
   });
 
