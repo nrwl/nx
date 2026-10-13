@@ -348,9 +348,7 @@ export async function runOrchestratorInit(
     confirmStart,
   } = input;
   const migrations = (migrationsJson.migrations ?? []) as PlannedMigration[];
-  const sorted = sortMigrations(migrations.slice(), {
-    hoistHandoffGitignore: true,
-  });
+  const sorted = sortMigrations(migrations.slice());
   const plannedIds = sorted.map((m) => `${m.package}:${m.name}`);
 
   // An active run means a prior init already happened (e.g. it crashed before
@@ -425,9 +423,8 @@ export async function runOrchestratorInit(
   // Applied before the checkpoint so the entry (when it can be added) already
   // covers older scratch by the time the checkpoint's `git add -A` runs; the
   // fallback's standalone commit is suppressed because that checkpoint
-  // carries the edit. Unlike the classic loop, a planned ignore migration
-  // can't be deferred to: the run dir is created below, before that
-  // migration runs.
+  // carries the edit. A planned ignore migration can't be deferred to: the
+  // run dir is created below, before that migration runs.
   await applyAgenticHandoffGitignoreFallback({
     migrations: sorted,
     installedNxVersion,

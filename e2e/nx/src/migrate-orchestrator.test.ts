@@ -1482,18 +1482,17 @@ describe('migrate orchestrator', () => {
     expect(readFile('.gitignore')).toContain('.nx/migrate-runs');
     const first = reconcileAfterInit(initOutput);
     expect(first.action).toBe('next-step');
-    // The gitignore migration is hoisted first despite its highest version.
-    expect(first.payload.command).toContain(
-      '--run-migration=nx:23-0-0-add-migrate-runs-to-git-ignore'
-    );
+    expect(first.payload.command).toContain(`--run-migration=${PKG}:gen-mig`);
     runDispensed(first.payload.command);
     const second = parseLastDispense(runDispensed(first.payload.next));
     expect(second.action).toBe('next-step');
-    expect(second.payload.command).toContain(`--run-migration=${PKG}:gen-mig`);
+    expect(second.payload.command).toContain(`--run-migration=${PKG}:gen-two`);
     runDispensed(second.payload.command);
     const third = parseLastDispense(runDispensed(second.payload.next));
     expect(third.action).toBe('next-step');
-    expect(third.payload.command).toContain(`--run-migration=${PKG}:gen-two`);
+    expect(third.payload.command).toContain(
+      '--run-migration=nx:23-0-0-add-migrate-runs-to-git-ignore'
+    );
 
     // A different plan must not fork, and the report precedes any git or
     // state side effect: the entry is stripped and the mismatched plan carries
@@ -1572,7 +1571,7 @@ describe('migrate orchestrator', () => {
     expect(state.status).toBe('completed');
     expect(readFile('gen-file')).toEqual('gen-content');
     expect(readFile('gen-two-file')).toEqual('gen-two-content');
-    // The fallback already added the entry, so the hoisted migration is a
+    // The fallback already added the entry, so the planned migration is a
     // no-op.
     const gitignoreStep = state.steps.find(
       (s) => s.migrationId === 'nx:23-0-0-add-migrate-runs-to-git-ignore'

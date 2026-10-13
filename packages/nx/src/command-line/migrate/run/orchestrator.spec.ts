@@ -709,7 +709,7 @@ describe('orchestrator', () => {
       expect(state.checkpointFailed).toBe(true);
     });
 
-    it('adds the .gitignore entry at init when the hoisted ignore migration is planned but has not run yet', async () => {
+    it('adds the .gitignore entry at init when the ignore migration is planned but has not run yet', async () => {
       // The run dir is created before any migration executes; without the
       // entry, a retry-clean's `git clean` or a checkpoint retry could eat the
       // run's own scratch.

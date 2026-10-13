@@ -2799,9 +2799,7 @@ export async function executeMigrations(
   const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
 
   const migrationsWithNoChanges: PlannedMigration[] = [];
-  const sortedMigrations = sortMigrations(migrations, {
-    hoistHandoffGitignore: false,
-  });
+  const sortedMigrations = sortMigrations(migrations);
 
   const printDroppedAgentContext =
     agentic?.kind === 'inside-agent'
