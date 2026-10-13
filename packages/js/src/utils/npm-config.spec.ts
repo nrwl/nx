@@ -1,8 +1,14 @@
 import { ExecException } from 'child_process';
 import { join } from 'path';
+import { detectPackageManager } from '@nx/devkit';
 import { getNpmRegistry, getNpmTag, parseRegistryOptions } from './npm-config';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { PackageJson } from '@nx/devkit/internal';
+
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn(() => 'npm'),
+}));
 
 vi.mock('child_process', async () => {
   const original = await vi.importActual<any>('child_process');
@@ -33,6 +39,24 @@ vi.mock('child_process', async () => {
             case 'npm config get tag':
               callback(null, 'next', null);
               break;
+            case 'pnpm config get @pnpm-scope:registry':
+              callback(null, 'https://pnpm-scoped-registry.com/', null);
+              break;
+            case 'pnpm config get @empty:registry':
+              callback(null, '', null);
+              break;
+            case 'pnpm config get @nullish:registry':
+              callback(null, 'null', null);
+              break;
+            case 'pnpm config get @missing:registry':
+              callback(null, 'undefined', null);
+              break;
+            case 'pnpm config get registry':
+              callback(null, 'https://pnpm-registry.com/', null);
+              break;
+            case 'pnpm config get tag':
+              callback(null, 'undefined', null);
+              break;
             default:
               callback(
                 new Error(`unexpected command: ${command}`),
@@ -50,6 +74,7 @@ describe('npm-config', () => {
 
   beforeEach(() => {
     tempFs = new TempFs('npm-config');
+    vi.mocked(detectPackageManager).mockReturnValue('npm');
   });
 
   describe('getNpmRegistry', () => {
@@ -69,8 +94,45 @@ describe('npm-config', () => {
     });
   });
 
+  describe('getNpmRegistry with pnpm', () => {
+    beforeEach(() => {
+      vi.mocked(detectPackageManager).mockReturnValue('pnpm');
+    });
+
+    it('should read the scoped registry from pnpm config', async () => {
+      const registry = await getNpmRegistry(tempFs.tempDir, '@pnpm-scope');
+      expect(registry).toEqual('https://pnpm-scoped-registry.com/');
+    });
+
+    it('should use the pnpm registry if the scoped registry does not exist', async () => {
+      const registry = await getNpmRegistry(tempFs.tempDir, '@missing');
+      expect(registry).toEqual('https://pnpm-registry.com/');
+    });
+
+    it.each(['@empty', '@nullish'])(
+      'should treat an empty or null pnpm value for %s as unset',
+      async (scope) => {
+        const registry = await getNpmRegistry(tempFs.tempDir, scope);
+        expect(registry).toEqual('https://pnpm-registry.com/');
+      }
+    );
+
+    it('should fall back to npm config if pnpm config fails', async () => {
+      const registry = await getNpmRegistry(tempFs.tempDir, '@scope');
+      expect(registry).toEqual('https://scoped-registry.com');
+    });
+  });
+
   describe('getNpmTag', () => {
     it('should return tag from npm config', async () => {
+      const tag = await getNpmTag(tempFs.tempDir);
+      expect(tag).toEqual('next');
+    });
+  });
+
+  describe('getNpmTag with pnpm', () => {
+    it('should fall back to npm config when pnpm has no tag set', async () => {
+      vi.mocked(detectPackageManager).mockReturnValue('pnpm');
       const tag = await getNpmTag(tempFs.tempDir);
       expect(tag).toEqual('next');
     });
