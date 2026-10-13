@@ -2224,6 +2224,83 @@ describe('native task hasher', () => {
     ].value;
     expect(again).toEqual(upfront);
   });
+
+  it('hashes both disk-backed groups when a large group lists the same first globs as another', async () => {
+    const dirs = 'abcdefgh'.split('');
+    await tempFs.createFiles({
+      '.gitignore': 'gen/\n',
+      'libs/app/project.json': JSON.stringify({ name: 'app' }),
+      'libs/app/gen/a/output.map': 'map',
+      'libs/app/gen/a/output.snap': 'snap',
+      ...Object.fromEntries(
+        dirs.slice(1).map((dir) => [`libs/app/gen/${dir}/file.txt`, dir])
+      ),
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/app': 'app',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    // Eight shared globs plus a negation are too many entries for a label to list in full.
+    const shared = dirs.map((dir) => ({
+      fileset: `{projectRoot}/gen/${dir}/**/*`,
+      includeIgnored: true,
+    }));
+    builder.addNode({
+      name: 'app',
+      type: 'app',
+      data: {
+        root: 'libs/app',
+        targets: {
+          serve: {
+            executor: 'nx:run-commands',
+            continuous: true,
+            inputs: [
+              ...shared,
+              { fileset: '!{projectRoot}/gen/**/*.map', includeIgnored: true },
+            ],
+          },
+          e2e: {
+            executor: 'nx:run-commands',
+            dependsOn: ['serve'],
+            inputs: [
+              ...shared,
+              { fileset: '!{projectRoot}/gen/**/*.snap', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app'],
+      ['e2e'],
+      undefined,
+      {}
+    );
+    const impl = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const hashE2e = async () =>
+      (await impl.hashTask(taskGraph.tasks['app:e2e'], taskGraph, {})).value;
+
+    const initial = await hashE2e();
+    tempFs.writeFile('libs/app/gen/a/output.map', 'map-changed');
+    const afterMapChange = await hashE2e();
+    tempFs.writeFile('libs/app/gen/a/output.snap', 'snap-changed');
+    const afterSnapChange = await hashE2e();
+
+    expect(afterMapChange).not.toEqual(initial);
+    expect(afterSnapChange).not.toEqual(afterMapChange);
+  });
 });
 
 describe('native task hasher with a shared planner', () => {

@@ -9,6 +9,8 @@ use napi::{
     sys,
 };
 
+use crate::native::hasher::hash;
+
 /// A representation of the invocation of an Executor
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -362,8 +364,9 @@ impl HashInstruction {
     }
 
     /// What hash details name this instruction: its Display, except that a
-    /// large disk-backed group lists its first positives and counts the rest.
-    /// Unique within a task only: a task's groups never share a positive.
+    /// large disk-backed group lists its first positives, counts the rest and
+    /// ends with a digest of all its entries. A task's hash keeps one value
+    /// per label, so two instructions must not share one.
     pub fn label(&self) -> String {
         match self {
             HashInstruction::IgnoredFileSet { globs, .. }
@@ -380,10 +383,12 @@ impl HashInstruction {
                     counts.push(format!("+{} excluded", negations.len()));
                 }
                 let listed: Vec<&str> = positives[..shown].iter().map(|g| g.as_str()).collect();
-                match counts.is_empty() {
+                let summary = match counts.is_empty() {
                     true => format!("files:[{}]", listed.join(",")),
                     false => format!("files:[{} ({})]", listed.join(","), counts.join(", ")),
-                }
+                };
+                // After the bracket, so labels that already differ keep their order in task hashes.
+                format!("{summary} {}", hash(globs.join("\0").as_bytes()))
             }
             _ => self.to_string(),
         }
@@ -488,14 +493,15 @@ mod tests {
         assert_eq!(small.label(), small.to_string());
         let mut globs: Vec<String> = (0..3).map(|i| format!("libs/p/f{i}.ts")).collect();
         globs.extend((0..7).map(|i| format!("!libs/p/n{i}.ts")));
-        assert_eq!(
-            HashInstruction::ignored_files(globs).label(),
-            "files:[libs/p/f0.ts,libs/p/f1.ts,libs/p/f2.ts (+7 excluded)]"
+        let label = HashInstruction::ignored_files(globs).label();
+        assert!(
+            label.starts_with("files:[libs/p/f0.ts,libs/p/f1.ts,libs/p/f2.ts (+7 excluded)] "),
+            "{label}"
         );
         let globs: Vec<String> = (0..20).map(|i| format!("libs/p/f{i}.ts")).collect();
         let big = HashInstruction::ignored_files(globs.clone());
         let label = big.label();
-        assert!(label.ends_with("libs/p/f7.ts (+12 more)]"), "{label}");
+        assert!(label.contains("libs/p/f7.ts (+12 more)] "), "{label}");
         let tracked = HashInstruction::ProjectFileSet("p".into(), globs);
         assert_eq!(tracked.label(), tracked.to_string());
         let pool = InstructionPool::new();
