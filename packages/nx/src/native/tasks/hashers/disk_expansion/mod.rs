@@ -1,15 +1,18 @@
-//! Expands an `includeIgnored` fileset group, or a dependency's declared
-//! outputs, into the files on disk.
+//! Expands a fileset into the files it names: an `includeIgnored` group or a
+//! dependency's declared outputs from disk, a regular fileset from the file
+//! map.
 //!
 //! - `entries` holds one parsed positive or negation. The glob text rules
 //!   themselves live in `crate::native::glob::glob_transform`.
 //! - `expansion` resolves the entries into files, leaning on the workspace
 //!   context or an index wherever it can, and walking where it cannot.
+//! - `file_map` is the source a regular fileset expands from.
 
 mod entries;
 mod expansion;
+mod file_map;
 
-pub(crate) use entries::{Negation, Positive};
+pub(crate) use entries::{FileSet, Negation, Positive};
 pub use expansion::FilesExpansion;
 #[cfg(test)]
 use expansion::NOTHING_TRACKED;
@@ -17,6 +20,7 @@ pub(crate) use expansion::{
     FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
 };
 pub(crate) use expansion::{parse_group, validate_files_glob, validate_files_globs};
+pub(crate) use file_map::{PathIndex, fold_files, match_file_map};
 
 #[cfg(test)]
 pub(crate) mod tests {
@@ -29,11 +33,7 @@ pub(crate) mod tests {
 
     /// The disk-backed source, which is what most of these tests expand from.
     pub(crate) fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpansion> {
-        expand_globs(
-            workspace_root,
-            globs,
-            &Source::fileset_from_disk(workspace_root),
-        )
+        expand_globs(globs, &Source::fileset_from_disk(workspace_root))
     }
 
     /// `expand_files` with a workspace context to lean on.
@@ -43,7 +43,6 @@ pub(crate) mod tests {
         tracked_file: PathPredicate,
     ) -> Result<FilesExpansion> {
         expand_globs(
-            workspace_root,
             globs,
             &Source::fileset_reading_disk(tracked_file, workspace_root),
         )
@@ -90,10 +89,9 @@ pub(crate) mod tests {
         let group = globs(&["dist/gen/**/*.js"]);
         let (positives, negations) = parse_group(&group).unwrap();
         let expansion = expand_entries(
-            temp.path(),
             &positives,
             &negations,
-            &Source::fileset(NOTHING_TRACKED, &everything),
+            &Source::fileset(temp.path(), NOTHING_TRACKED, &everything),
         )
         .unwrap();
         assert_eq!(expansion.files, vec!["dist/gen/a.js"]);
@@ -119,10 +117,9 @@ pub(crate) mod tests {
         let group = globs(&["dist/gen/**/*.js", "!dist/gen/nested/**"]);
         let (positives, negations) = parse_group(&group).unwrap();
         let expansion = expand_entries(
-            temp.path(),
             &positives,
             &negations,
-            &Source::fileset(NOTHING_TRACKED, &listed),
+            &Source::fileset(temp.path(), NOTHING_TRACKED, &listed),
         )
         .unwrap();
         // The pattern and the negation apply to what the source returned.
@@ -132,10 +129,9 @@ pub(crate) mod tests {
         );
         // A directory the source has nothing for contributes nothing.
         let expansion = expand_entries(
-            temp.path(),
             &parse_group(&globs(&["dist/other/**"])).unwrap().0,
             &[],
-            &Source::fileset(NOTHING_TRACKED, &listed),
+            &Source::fileset(temp.path(), NOTHING_TRACKED, &listed),
         )
         .unwrap();
         assert!(expansion.files.is_empty());

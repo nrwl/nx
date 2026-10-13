@@ -1,21 +1,17 @@
 use std::sync::Arc;
 
-use rayon::prelude::*;
-
+use super::disk_expansion::{fold_files, match_file_map};
+use super::hash_ignored_files::WorkspaceFileIndex;
 use super::once_cache::OnceCache;
-use crate::native::glob::glob_files::glob_files;
-use crate::native::glob::{build_glob_set, fileset_patterns};
-use crate::native::hasher::hash;
-use crate::native::types::FileData;
 use anyhow::*;
-use tracing::{debug, debug_span, trace, warn};
+use tracing::{trace, warn};
 
 /// Compute-once cache for workspace fileset hashes. Holds only the hash, so
 /// retaining it for the TaskHasher lifetime stays O(filesets), not O(files).
 pub(crate) type WorkspaceFileSetCache = OnceCache<String>;
 
 /// Compute-once cache for the matched file *indices* of a workspace fileset,
-/// into `all_workspace_files`. Persistable: 4 bytes/file and references the
+/// into the workspace files. Persistable: 4 bytes/file and references the
 /// immutable FileData snapshot, so it never goes stale (the same guarantee
 /// `WorkspaceFileSetCache` relies on). Paths are expanded from it per call and
 /// freed once handed to the input subscriber.
@@ -59,105 +55,61 @@ pub fn globs_from_workspace_globs(workspace_file_sets: &[String]) -> Vec<String>
         .collect()
 }
 
-pub fn get_workspace_files<'a, 'b>(
-    workspace_file_sets: &'a [String],
-    all_workspace_files: &'b [FileData],
-) -> napi::Result<impl ParallelIterator<Item = &'b FileData>> {
+/// The matched file indices of a workspace fileset, into the workspace files,
+/// in path order. A fileset with no `{workspaceRoot}/` entry matches nothing.
+fn collect_workspace_file_indices(
+    workspace_file_sets: &[String],
+    workspace_files: &WorkspaceFileIndex,
+) -> Result<Vec<u32>> {
     let globs = globs_from_workspace_globs(workspace_file_sets);
-    glob_files(all_workspace_files, build_glob_set(&globs)?, None)
+    if globs.is_empty() {
+        return Ok(vec![]);
+    }
+    match_file_map(&globs, workspace_files.files(), workspace_files.by_path())
 }
 
-/// Hashes workspace files without materializing the matched file list.
-pub fn hash_workspace_files(
+/// Hashes the files a workspace fileset matches, in path order.
+pub(crate) fn hash_workspace_files(
     workspace_file_sets: &[String],
-    all_workspace_files: &[FileData],
+    workspace_files: &WorkspaceFileIndex,
 ) -> Result<String> {
-    let globs = globs_from_workspace_globs(workspace_file_sets);
-
-    if globs.is_empty() {
-        return Ok(hash(b""));
-    }
-
-    let glob = build_glob_set(&fileset_patterns(&globs))?;
-
-    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-
-    debug_span!("Hashing workspace fileset").in_scope(|| {
-        for file in all_workspace_files
-            .iter()
-            .filter(|file| glob.is_match(&file.file))
-        {
-            debug!("Adding {:?} ({:?}) to hash", file.hash, file.file);
-            hasher.update(file.file.as_bytes());
-            hasher.update(file.hash.as_bytes());
-        }
-        let hashed_value = hasher.digest().to_string();
-        debug!("Hash Value: {:?}", hashed_value);
-
-        Ok(hashed_value)
-    })
+    let indices = collect_workspace_file_indices(workspace_file_sets, workspace_files)?;
+    let files = workspace_files.files();
+    Ok(fold_files(indices.iter().map(|&i| &files[i as usize])))
 }
 
 pub(crate) fn hash_workspace_files_cached(
     workspace_file_sets: &[String],
-    all_workspace_files: &[FileData],
+    workspace_files: &WorkspaceFileIndex,
     cache: &WorkspaceFileSetCache,
 ) -> Result<Arc<String>> {
     cache.get_or_try_init(workspace_file_set_cache_key(workspace_file_sets), || {
-        hash_workspace_files(workspace_file_sets, all_workspace_files)
+        hash_workspace_files(workspace_file_sets, workspace_files)
     })
 }
 
-/// The matched file paths of a workspace fileset, in workspace-file order
-/// (the same order hashing folds them).
-pub fn collect_workspace_file_paths(
+/// The matched file paths of a workspace fileset, in path order (the same
+/// order hashing folds them).
+pub(crate) fn collect_workspace_file_paths(
     workspace_file_sets: &[String],
-    all_workspace_files: &[FileData],
+    workspace_files: &WorkspaceFileIndex,
 ) -> Result<Vec<String>> {
-    let globs = globs_from_workspace_globs(workspace_file_sets);
-
-    if globs.is_empty() {
-        return Ok(vec![]);
-    }
-
-    let glob = build_glob_set(&fileset_patterns(&globs))?;
-
-    Ok(all_workspace_files
-        .iter()
-        .filter(|file| glob.is_match(&file.file))
-        .map(|file| file.file.clone())
-        .collect())
-}
-
-/// The matched file indices of a workspace fileset, into `all_workspace_files`,
-/// in the same workspace-file order `collect_workspace_file_paths` yields.
-fn collect_workspace_file_indices(
-    workspace_file_sets: &[String],
-    all_workspace_files: &[FileData],
-) -> Result<Vec<u32>> {
-    let globs = globs_from_workspace_globs(workspace_file_sets);
-
-    if globs.is_empty() {
-        return Ok(vec![]);
-    }
-
-    let glob = build_glob_set(&fileset_patterns(&globs))?;
-
-    Ok(all_workspace_files
-        .iter()
-        .enumerate()
-        .filter(|(_, file)| glob.is_match(&file.file))
-        .map(|(i, _)| i as u32)
-        .collect())
+    let files = workspace_files.files();
+    Ok(
+        collect_workspace_file_indices(workspace_file_sets, workspace_files)?
+            .into_iter()
+            .map(|i| files[i as usize].file.clone())
+            .collect(),
+    )
 }
 
 fn collect_workspace_file_indices_cached(
     workspace_file_sets: &[String],
-    all_workspace_files: &[FileData],
+    workspace_files: &WorkspaceFileIndex,
     cache: &WorkspaceFileIndicesCache,
 ) -> Result<Arc<Vec<u32>>> {
     cache.get_or_try_init(workspace_file_set_cache_key(workspace_file_sets), || {
-        collect_workspace_file_indices(workspace_file_sets, all_workspace_files)
+        collect_workspace_file_indices(workspace_file_sets, workspace_files)
     })
 }
 
@@ -166,14 +118,15 @@ fn collect_workspace_file_indices_cached(
 /// the caller once handed to the input subscriber.
 pub(crate) fn collect_workspace_file_paths_cached(
     workspace_file_sets: &[String],
-    all_workspace_files: &[FileData],
+    workspace_files: &WorkspaceFileIndex,
     cache: &WorkspaceFileIndicesCache,
 ) -> Result<Vec<String>> {
     let indices =
-        collect_workspace_file_indices_cached(workspace_file_sets, all_workspace_files, cache)?;
+        collect_workspace_file_indices_cached(workspace_file_sets, workspace_files, cache)?;
+    let files = workspace_files.files();
     Ok(indices
         .iter()
-        .map(|&i| all_workspace_files[i as usize].file.clone())
+        .map(|&i| files[i as usize].file.clone())
         .collect())
 }
 
@@ -182,10 +135,16 @@ mod test {
     use crate::native::hasher::hash;
 
     use super::*;
+    use crate::native::types::FileData;
+
+    fn index(files: &[FileData]) -> WorkspaceFileIndex {
+        WorkspaceFileIndex::new(Arc::new(files.to_vec()))
+    }
 
     #[test]
     fn invalid_workspace_input_is_just_empty_hash() {
-        let result = hash_workspace_files(&["packages/{package}".to_string()], &[]).unwrap();
+        let result =
+            hash_workspace_files(&["packages/{package}".to_string()], &index(&[])).unwrap();
         assert_eq!(result, hash(b""));
     }
 
@@ -209,12 +168,12 @@ mod test {
         };
         let result = hash_workspace_files(
             &["{workspaceRoot}/.gitignore".to_string()],
-            &[
+            &index(&[
                 gitignore_file.clone(),
                 nxignore_file.clone(),
                 package_json_file.clone(),
                 project_file.clone(),
-            ],
+            ]),
         )
         .unwrap();
         assert_eq!(result, "15841935230129999746");
@@ -241,12 +200,12 @@ mod test {
         for _ in 0..1000 {
             let result = hash_workspace_files(
                 &["{workspaceRoot}/**/*".to_string()],
-                &[
+                &index(&[
                     gitignore_file.clone(),
                     nxignore_file.clone(),
                     package_json_file.clone(),
                     project_file.clone(),
-                ],
+                ]),
             )
             .unwrap();
             assert_eq!(result, "13759877301064854697");
@@ -255,7 +214,7 @@ mod test {
 
     #[test]
     fn should_collect_file_paths_in_workspace_file_order() {
-        let all_workspace_files = vec![
+        let all_workspace_files = index(&[
             FileData {
                 file: ".gitignore".into(),
                 hash: "123".into(),
@@ -268,7 +227,7 @@ mod test {
                 file: "packages/project/project.json".into(),
                 hash: "abc".into(),
             },
-        ];
+        ]);
 
         let paths = collect_workspace_file_paths(
             &["{workspaceRoot}/**/*.json".to_string()],
@@ -284,8 +243,34 @@ mod test {
     }
 
     #[test]
+    fn excludes_a_workspace_root_name_starting_with_an_exclamation_mark() {
+        let all_workspace_files =
+            index(
+                &["foo", "!foo", "!dir/x.ts", "dir/x.ts"].map(|file| FileData {
+                    file: file.into(),
+                    hash: String::new(),
+                }),
+            );
+        let collect = |excluded: &str| {
+            collect_workspace_file_paths(
+                &["{workspaceRoot}/**/*".to_string(), excluded.to_string()],
+                &all_workspace_files,
+            )
+            .unwrap()
+        };
+        assert_eq!(
+            collect("!{workspaceRoot}/!foo"),
+            vec!["!dir/x.ts", "dir/x.ts", "foo"]
+        );
+        assert_eq!(
+            collect("!{workspaceRoot}/!dir"),
+            vec!["!foo", "dir/x.ts", "foo"]
+        );
+    }
+
+    #[test]
     fn indices_expand_to_the_same_paths_as_direct_collection() {
-        let all_workspace_files = vec![
+        let all_workspace_files = index(&[
             FileData {
                 file: ".gitignore".into(),
                 hash: "123".into(),
@@ -298,7 +283,7 @@ mod test {
                 file: "packages/project/project.json".into(),
                 hash: "abc".into(),
             },
-        ];
+        ]);
         let file_sets = &["{workspaceRoot}/**/*.json".to_string()];
 
         let indices = collect_workspace_file_indices(file_sets, &all_workspace_files).unwrap();
@@ -307,7 +292,7 @@ mod test {
 
         let expanded: Vec<String> = indices
             .iter()
-            .map(|&i| all_workspace_files[i as usize].file.clone())
+            .map(|&i| all_workspace_files.files()[i as usize].file.clone())
             .collect();
         let direct = collect_workspace_file_paths(file_sets, &all_workspace_files).unwrap();
         assert_eq!(expanded, direct);
@@ -331,7 +316,7 @@ mod test {
             "!{workspaceRoot}/**/*.spec.ts".to_string(),
             "{workspaceRoot}/**/*".to_string(),
         ];
-        let all_workspace_files = vec![
+        let all_workspace_files = index(&[
             FileData {
                 file: "test1.ts".into(),
                 hash: "file_data1".into(),
@@ -340,7 +325,7 @@ mod test {
                 file: "test.spec.ts".into(),
                 hash: "file_data2".into(),
             },
-        ];
+        ]);
 
         let cache = WorkspaceFileSetCache::new();
         let first =
