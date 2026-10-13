@@ -258,6 +258,7 @@ export class TaskOrchestrator {
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
   // Keyed by producer id: a producer this process started or shares
   private readiness = new Map<string, ReadinessState>();
+  private readinessSettled = false;
   private waitingLogged = new Set<string>();
   private cleanupPromise: Promise<void> | null = null;
   private signalHandlers: Array<[NodeJS.Signals, () => void]> = [];
@@ -397,6 +398,8 @@ export class TaskOrchestrator {
     while (true) {
       if (this.bailed || this.stopRequested) break;
 
+      await this.scheduleAfterReadiness();
+
       // 1. Hash BEFORE processAll so processTask sees hashes set, and so
       //    resolveCachedTasksBulk can look them up in the cache. Each task
       //    is hashed with its own task-specific env (project/target .env
@@ -435,6 +438,10 @@ export class TaskOrchestrator {
       if (doNotSkipCache) {
         const resolved = await this.resolveCachedTasksBulk();
         if (resolved) continue;
+        // A pass from a continuous loop during the waits above may have
+        // admitted tasks this iteration never looked up; they must not reach
+        // step 5 without a confirmed miss
+        if (this.hasUnresolvedCacheableTask()) continue;
       }
 
       // 3. Process remaining scheduled tasks (cache misses + non-cacheable).
@@ -466,6 +473,9 @@ export class TaskOrchestrator {
       }
 
       // 7. Wait for a worker to finish (woken by scheduleNextTasksAndReleaseThreads)
+      // A verdict that landed during this iteration found nothing parked,
+      // so run its pass instead of parking
+      if (this.readinessSettled) continue;
       await new Promise((res) => this.waitingForTasks.push(res));
     }
   }
@@ -477,6 +487,7 @@ export class TaskOrchestrator {
         return null;
       }
 
+      await this.scheduleAfterReadiness();
       this.processAllScheduledTasks();
 
       const task = this.tasksSchedule.nextTask((t) => t.continuous);
@@ -503,7 +514,30 @@ export class TaskOrchestrator {
       }
 
       // block until some other task completes, then try again
+      if (this.readinessSettled) continue;
       await new Promise((res) => this.waitingForTasks.push(res));
+    }
+  }
+
+  private hasUnresolvedCacheableTask(): boolean {
+    return this.tasksSchedule
+      .getAllScheduledTasks()
+      .scheduledTasks.some((id) => {
+        const task = this.taskGraph.tasks[id];
+        return (
+          !task.continuous &&
+          task.cache &&
+          (!task.hash || !this.cacheMissedHashes.has(task.hash))
+        );
+      });
+  }
+
+  // A verdict releases tasks the schedule has not admitted yet. Whichever
+  // loop wakes first runs the pass; the coordinator may be inside a batch.
+  private async scheduleAfterReadiness() {
+    if (this.readinessSettled) {
+      this.readinessSettled = false;
+      await this.scheduleNextTasksAndReleaseThreads();
     }
   }
 
@@ -2061,6 +2095,7 @@ export class TaskOrchestrator {
         } else {
           this.tasksSchedule.markReadinessFailed(taskId);
         }
+        this.readinessSettled = true;
         this.releaseThreads();
       });
       this.readiness.set(taskId, state);

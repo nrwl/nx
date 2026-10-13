@@ -1723,21 +1723,23 @@ describe('TasksSchedule', () => {
       expect(taskSchedule.nextTask((t) => t.continuous)?.id).toBe('app1:serve');
     }
 
-    it('keeps such a task out of batches and holds it while the producer is not ready', async () => {
+    it('does not schedule such a task while the producer is not ready', async () => {
       await scheduleUntilProducerRuns();
 
       await taskSchedule.scheduleNextTasks();
       expect(taskSchedule.nextBatch()).toBeNull();
-      expect(taskSchedule.nextTask((t) => !t.continuous)).toBeNull();
+      expect(taskSchedule.getAllScheduledTasks().scheduledTasks).toEqual([]);
 
       taskSchedule.markReady('app1:serve');
       taskSchedule.markReadinessPending('app1:serve');
-      expect(taskSchedule.nextTask((t) => !t.continuous)).toBeNull();
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.getAllScheduledTasks().scheduledTasks).toEqual([]);
 
       taskSchedule.markReady('app1:serve');
-      expect(taskSchedule.nextTask((t) => !t.continuous)?.id).toBe(
-        'app1:build'
-      );
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextBatch()).toMatchObject({
+        taskGraph: { tasks: { 'app1:build': expect.anything() } },
+      });
     });
 
     it('batches such a task once the producer is ready', async () => {
@@ -1761,13 +1763,9 @@ describe('TasksSchedule', () => {
       );
     });
 
-    it('skips a held task in place and reports the producer it waits on', async () => {
+    it('schedules other tasks while such a task waits and reports the producer it waits on', async () => {
       process.env['NX_BATCH_MODE'] = 'false';
       const onReadinessHold = vi.fn();
-      // A known timing sorts lib1:build behind app1:build
-      taskHistory.getEstimatedTaskTimings.mockReturnValue({
-        'lib1:build': 10,
-      });
       taskSchedule = new TasksSchedule(
         projectGraph,
         projects,
@@ -1784,9 +1782,11 @@ describe('TasksSchedule', () => {
       expect(taskSchedule.nextTask((t) => !t.continuous)?.id).toBe(
         'lib1:build'
       );
+      expect(taskSchedule.nextTask((t) => !t.continuous)).toBeNull();
       expect(onReadinessHold).toHaveBeenCalledWith('app1:serve');
 
       taskSchedule.markReady('app1:serve');
+      await taskSchedule.scheduleNextTasks();
       expect(taskSchedule.nextTask((t) => !t.continuous)?.id).toBe(
         'app1:build'
       );

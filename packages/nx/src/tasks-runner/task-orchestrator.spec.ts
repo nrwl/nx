@@ -2187,6 +2187,43 @@ describe('TaskOrchestrator', () => {
         expect(markReadinessFailed).not.toHaveBeenCalled();
       });
 
+      it('schedules the dependents of a verdict from the continuous loop while the coordinator is busy', async () => {
+        const { orchestrator, serve, runningTask, emit } = createOrchestrator();
+        const api = createTask('api:serve', true);
+        let admitted = false;
+        Object.assign(orchestrator.tasksSchedule, {
+          hasTasks: () => true,
+          nextTask: () => (admitted ? api : null),
+          scheduleNextTasks: async () => {
+            admitted = true;
+          },
+        });
+        orchestrator.options.parallel = 1;
+        orchestrator.continuousTasksStarted = 0;
+        orchestrator.initializingTaskIds = new Set();
+        orchestrator.processAllScheduledTasks = vi.fn();
+        orchestrator.startContinuousTask = vi.fn(async () => runningTask);
+
+        // Parks: nothing is admitted until a pass runs
+        const loop = orchestrator.executeContinuousTaskLoop(1);
+        await new Promise((r) => setTimeout(r, 0));
+        expect(orchestrator.startContinuousTask).not.toHaveBeenCalled();
+
+        orchestrator.startReadinessProbe(
+          serve,
+          orchestrator.getReadyWhen(serve),
+          runningTask
+        );
+        emit('listening');
+        await Promise.race([
+          loop,
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('loop stayed parked')), 200)
+          ),
+        ]);
+        expect(orchestrator.startContinuousTask).toHaveBeenCalledWith(api, 1);
+      });
+
       it('keeps holding the dependents of an exited producer while its completion is pending', async () => {
         const { orchestrator, serve, e2e, runningTask, emit } =
           createOrchestrator();
@@ -2291,5 +2328,173 @@ describe('TaskOrchestrator', () => {
         }
       });
     });
+  });
+
+  describe('tasks admitted while the coordinator resolves the cache', () => {
+    function createTask(id: string, hash?: string): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: true,
+        parallelism: true,
+        continuous: false,
+        hash,
+      } as Task;
+    }
+
+    // A continuous loop admits tasks through its own scheduling pass while
+    // the coordinator awaits the cache; the schedule is a queue the test feeds
+    function createCoordinator(
+      tasks: Task[],
+      queued: string[],
+      hits: string[]
+    ) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      const queue = [...queued];
+      const notAdmitted = new Set(
+        tasks.map((t) => t.id).filter((id) => !queued.includes(id))
+      );
+      orchestrator.taskGraph = {
+        tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
+        dependencies: Object.fromEntries(tasks.map((t) => [t.id, []])),
+        continuousDependencies: Object.fromEntries(
+          tasks.map((t) => [t.id, []])
+        ),
+        roots: tasks.map((t) => t.id),
+      };
+      orchestrator.fullTaskGraph = orchestrator.taskGraph;
+      orchestrator.tasksSchedule = {
+        getAllScheduledTasks: () => ({
+          scheduledTasks: [...queue],
+          scheduledBatches: [],
+        }),
+        nextBatch: () => null,
+        nextTask: (filter: (t: Task) => boolean) => {
+          const idx = queue.findIndex((id) =>
+            filter(orchestrator.taskGraph.tasks[id])
+          );
+          if (idx === -1) return null;
+          const [id] = queue.splice(idx, 1);
+          return orchestrator.taskGraph.tasks[id];
+        },
+        hasTasks: () => queue.length + notAdmitted.size > 0,
+        complete: (ids: string[]) => {
+          for (const id of ids) {
+            const idx = queue.indexOf(id);
+            if (idx !== -1) queue.splice(idx, 1);
+            notAdmitted.delete(id);
+          }
+        },
+        scheduleNextTasks: async () => {},
+      };
+      orchestrator.completedTasks = new Map();
+      orchestrator.cacheMissedHashes = new Set();
+      orchestrator.processedTasks = new Map();
+      orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.waitingForTasks = [];
+      orchestrator.groups = [];
+      orchestrator.bailed = false;
+      orchestrator.stopRequested = false;
+      orchestrator.readinessSettled = false;
+      orchestrator.options = {
+        parallel: 2,
+        lifeCycle: { scheduleTask: vi.fn() },
+      };
+
+      let openGate: () => void;
+      const gate = new Promise<void>((r) => (openGate = r));
+      const queries: string[][] = [];
+      orchestrator.cache = {
+        getBatch: async (queried: Task[]) => {
+          queries.push(queried.map((t) => t.id));
+          if (queries.length === 1) await gate;
+          return new Map(
+            queried
+              .filter((t) => hits.includes(t.hash))
+              .map((t) => [
+                t.hash,
+                { code: 0, terminalOutput: '', remote: false },
+              ])
+          );
+        },
+      };
+      // What processTask does to an unhashed task
+      orchestrator.processTask = vi.fn(async (id: string) => {
+        const task = orchestrator.taskGraph.tasks[id];
+        task.hash ??= `${id}-hash`;
+        return process.env;
+      });
+      orchestrator.preRunSteps = vi.fn();
+      orchestrator.finalizeCacheHits = vi.fn(async (cacheHits: any[]) =>
+        cacheHits.map(({ task }) => ({ task, code: 0, status: 'local-cache' }))
+      );
+      const resolved: string[] = [];
+      orchestrator.postRunSteps = vi.fn(async (results: any[]) => {
+        const ids = results.map((r) => r.task.id);
+        resolved.push(...ids);
+        orchestrator.tasksSchedule.complete(ids);
+      });
+      const executed: string[] = [];
+      orchestrator.runTaskDirectly = vi.fn(async (_: boolean, task: Task) => {
+        executed.push(task.id);
+        orchestrator.tasksSchedule.complete([task.id]);
+      });
+      orchestrator.handleDiscreteWorkerFailure = vi.fn((...args: unknown[]) => {
+        throw args[3];
+      });
+
+      return {
+        orchestrator,
+        queries,
+        resolved,
+        executed,
+        admit: (id: string) => {
+          notAdmitted.delete(id);
+          queue.push(id);
+        },
+        openGate: () => openGate(),
+        queryOpened: async () => {
+          for (let i = 0; i < 50 && queries.length === 0; i++) {
+            await new Promise((r) => setTimeout(r, 1));
+          }
+          expect(queries).toHaveLength(1);
+        },
+      };
+    }
+
+    it.each([
+      ['hashed by the up-front pass', 'e2e:test-hash'],
+      ['not hashed yet', undefined],
+    ])(
+      'looks up a task admitted during a query before dispatching it (%s)',
+      async (_, hash) => {
+        const other = createTask('other:build', 'other:build-hash');
+        const e2e = createTask('e2e:test', hash);
+        const {
+          orchestrator,
+          queries,
+          resolved,
+          executed,
+          admit,
+          openGate,
+          queryOpened,
+        } = createCoordinator([other, e2e], ['other:build'], ['e2e:test-hash']);
+
+        const loop = orchestrator.executeCoordinatorLoop(true, 2);
+        await queryOpened();
+        admit('e2e:test');
+        orchestrator.processAllScheduledTasks();
+        openGate();
+        await loop;
+
+        expect(queries).toEqual([['other:build'], ['e2e:test']]);
+        expect(resolved).toEqual(['e2e:test']);
+        expect(executed).toEqual(['other:build']);
+      }
+    );
   });
 });

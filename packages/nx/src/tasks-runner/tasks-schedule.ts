@@ -139,25 +139,21 @@ export class TasksSchedule {
     };
   }
 
-  // A task whose local producer is not ready is skipped in place, keeping its
-  // position. A producer outside this task graph is polled by the task itself.
   public nextTask(filter?: (task: Task) => boolean) {
-    for (let i = 0; i < this.scheduledTasks.length; i++) {
-      const task = this.taskGraph.tasks[this.scheduledTasks[i]];
-      if (filter && !filter(task)) {
-        continue;
-      }
-      const pendingProducer = this.readyProducersOf(task).probed.find(
-        (id) => this.taskGraph.tasks[id] && !this.readiness.has(id)
-      );
-      if (pendingProducer) {
-        this.hooks.onReadinessHold?.(pendingProducer);
-        continue;
-      }
-      this.scheduledTasks.splice(i, 1);
-      return task;
+    if (this.scheduledTasks.length === 0) {
+      return null;
     }
-    return null;
+    if (!filter) {
+      return this.taskGraph.tasks[this.scheduledTasks.shift()];
+    }
+    const idx = this.scheduledTasks.findIndex((id) =>
+      filter(this.taskGraph.tasks[id])
+    );
+    if (idx === -1) {
+      return null;
+    }
+    const [taskId] = this.scheduledTasks.splice(idx, 1);
+    return this.taskGraph.tasks[taskId];
   }
 
   public nextBatch(): Batch {
@@ -395,31 +391,43 @@ export class TasksSchedule {
   ): boolean {
     // task self needs to support parallelism (undefined defaults to parallel)
     // all deps have either completed or belong to the same batch, and every
-    // continuous dep has started
+    // continuous dep has started, and is ready where the edge asks for it
     return (
       task.parallelism !== false &&
       this.taskGraph.dependencies[task.id].every(
         ({ id }) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
       ) &&
-      this.hasContinuousDependenciesStarted(task.id)
+      this.areContinuousDependenciesReady(task.id)
     );
   }
 
-  private hasContinuousDependenciesStarted(taskId: string): boolean {
-    return this.taskGraph.continuousDependencies[taskId].every(
+  // A producer outside this task graph is polled by the task itself
+  private areContinuousDependenciesReady(taskId: string): boolean {
+    const started = this.taskGraph.continuousDependencies[taskId].every(
       ({ id }) => this.runningTasks.has(id) && !this.pendingStart.has(id)
     );
+    if (!started) {
+      return false;
+    }
+    const pendingProducer = this.readyProducersOf(
+      this.taskGraph.tasks[taskId]
+    ).probed.find((id) => this.taskGraph.tasks[id] && !this.readiness.has(id));
+    if (pendingProducer) {
+      this.hooks.onReadinessHold?.(pendingProducer);
+      return false;
+    }
+    return true;
   }
 
   private canBeScheduled(taskId: string): boolean {
     const hasDependenciesCompleted = this.taskGraph.dependencies[taskId].every(
       ({ id }) => this.completedTasks.has(id)
     );
-    const hasContinuousDependenciesStarted =
-      this.hasContinuousDependenciesStarted(taskId);
+    const continuousDependenciesReady =
+      this.areContinuousDependenciesReady(taskId);
 
     // if dependencies have not completed, cannot schedule
-    if (!hasDependenciesCompleted || !hasContinuousDependenciesStarted) {
+    if (!hasDependenciesCompleted || !continuousDependenciesReady) {
       return false;
     }
 
