@@ -24,7 +24,7 @@ describe('Node Applications + webpack', () => {
   // TODO(nicholas): Look into how this can work with npm instead of forcing pnpm.
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/node', '@nx/nest', '@nx/webpack'],
+      packages: ['@nx/node', '@nx/nest', '@nx/webpack', '@nx/vitest'],
       // npm has resolution for ajv some packages require ajv6 and some require ajv8 and npm resolves it to ajv6 (Error: Cannot find module 'ajv/dist/compile/codegen')
       // - ajv@6 (fork-ts-checker-webpack-plugin, terser-webpack-plugin, webpack)
       // - ajv@8 (babel-loader)
@@ -96,7 +96,7 @@ describe('Node Applications + webpack', () => {
         `generate @nx/node:app apps/${expressApp} --framework=express --port=${expressPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=${fastifyPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=${fastifyPort} --no-interactive --linter=eslint --unitTestRunner=vitest --e2eTestRunner=jest`
       );
       runCLI(
         `generate @nx/node:app apps/${koaApp} --framework=koa --port=${koaPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
