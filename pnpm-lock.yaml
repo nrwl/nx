@@ -2623,9 +2623,6 @@ importers:
       cypress:
         specifier: '>= 13 < 17'
         version: 16.0.0
-      detect-port:
-        specifier: ^2.1.0
-        version: 2.1.0
       semver:
         specifier: 'catalog:'
         version: 7.8.5

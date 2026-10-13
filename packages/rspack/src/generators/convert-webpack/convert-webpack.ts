@@ -156,27 +156,6 @@ function transformConfigFileWithPlugins(tree: Tree, configPath: string) {
   transformPluginConfig(tree, configPath);
 }
 
-function replaceOfRequireOfLocalWebpackConfig(tree: Tree, configPath: string) {
-  const requireOfLocalWebpackConfig =
-    /(?<=require\s*\(\s*['"][^'"]*)(webpack)(?!.*webpack)(?=[^'"]*['"]\s*\))/g;
-  const configContents = tree.read(configPath, 'utf-8');
-  const newContents = configContents.replace(
-    requireOfLocalWebpackConfig,
-    'rspack'
-  );
-  tree.write(configPath, newContents);
-}
-
-function cleanupEmptyImports(tree: Tree, configPath: string) {
-  const emptyImportRegex = /import\s*\{\s*\}\s*from\s*['"][^'"]+['"];/g;
-  const emptyConstRequires =
-    /(const|let)\s*\{\s*\}\s*=\s*require\s*\(\s*['"][^'"]+['"]\s*\);/g;
-  const configContents = tree.read(configPath, 'utf-8');
-  let newContents = configContents.replace(emptyImportRegex, '');
-  newContents = newContents.replace(emptyConstRequires, '');
-  tree.write(configPath, newContents);
-}
-
 function findWebpackConfigPath(tree: Tree, projectRoot: string) {
   const possibleConfigPaths = [
     'webpack.config.js',

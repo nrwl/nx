@@ -9,7 +9,6 @@ import {
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';

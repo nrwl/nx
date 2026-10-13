@@ -1,7 +1,4 @@
-import {
-  addBuildTargetDefaults,
-  confirmationPrompt,
-} from '@nx/devkit/internal';
+import { confirmationPrompt } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
@@ -11,12 +8,9 @@ import {
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { ViteBuildExecutorOptions } from '../executors/build/schema';
-import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 import { getInstalledViteMajorVersion } from './version-utils';

@@ -23,10 +23,7 @@ import {
 import { join } from 'node:path/posix';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedViteVersion } from '../../utils/assert-supported-vite-version';
-import {
-  createOrEditViteConfig,
-  TargetFlags,
-} from '../../utils/generator-utils';
+import { createOrEditViteConfig } from '../../utils/generator-utils';
 import { nxVersion } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { convertNonVite } from './lib/convert-non-vite';
@@ -65,12 +62,6 @@ export async function viteConfigurationGeneratorInternal(
   // Setting default to jsdom since it is the most common use case (React, Web).
   // The @nx/js:lib generator specifically sets this to node to be more generic.
   schema.testEnvironment ??= 'jsdom';
-
-  /**
-   * This is for when we are converting an existing project
-   * to use the vite executors.
-   */
-  let projectAlreadyHasViteTargets: TargetFlags = {};
 
   if (!schema.newProject) {
     await convertNonVite(tree, schema, projectRoot, projectType, targets);
@@ -136,12 +127,7 @@ export async function viteConfigurationGeneratorInternal(
         undefined
       );
     } else {
-      createOrEditViteConfig(
-        tree,
-        { ...schema, useEsmExtension: true },
-        false,
-        projectAlreadyHasViteTargets
-      );
+      createOrEditViteConfig(tree, { ...schema, useEsmExtension: true }, false);
     }
   }
 

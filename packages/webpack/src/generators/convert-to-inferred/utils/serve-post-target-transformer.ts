@@ -32,7 +32,6 @@ export function servePostTargetTransformerFactory(
     };
 
     const { devServerOptions, webpackConfigPath } = await processOptions(
-      tree,
       target,
       context
     );
@@ -57,7 +56,6 @@ type ExtractedOptions = {
 };
 
 async function processOptions(
-  tree: Tree,
   target: TargetConfiguration<DevServerExecutorOptions>,
   context: TransformerContext
 ): Promise<{

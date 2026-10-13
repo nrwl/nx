@@ -88,7 +88,6 @@
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "detect-port": "^2.1.0",
     "semver": "catalog:",
     "tree-kill": "catalog:",
     "tslib": "catalog:typescript"
