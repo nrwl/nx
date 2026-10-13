@@ -806,14 +806,16 @@ impl HashPlanner {
             .collect();
         // With a recording, the task's own TsConfiguration counts only if the
         // root tsconfig was read, `always` inputs or not.
-        always.extend(
-            self.gather_always_self_inputs(project_name, &inputs.self_inputs)?
-                .into_iter()
-                .filter(|id| {
-                    context.is_none()
-                        || !matches!(&*pool.get(*id), HashInstruction::TsConfiguration(_))
-                }),
-        );
+        if always.is_collecting() {
+            always.extend(
+                self.gather_always_self_inputs(project_name, &inputs.self_inputs)?
+                    .into_iter()
+                    .filter(|id| {
+                        context.is_none()
+                            || !matches!(&*pool.get(*id), HashInstruction::TsConfiguration(_))
+                    }),
+            );
+        }
         // With a configuration, reads of other tasks' outputs are observed reads.
         if context.is_none() {
             ids.extend(
@@ -1461,7 +1463,9 @@ impl HashPlanner {
                     }],
                     &named_inputs,
                 )?;
-                always.extend(self.gather_always_self_inputs(project, &expanded_input)?);
+                if always.is_collecting() {
+                    always.extend(self.gather_always_self_inputs(project, &expanded_input)?);
+                }
                 result.extend(self.gather_self_inputs(project, &expanded_input, None)?)
             }
         }
