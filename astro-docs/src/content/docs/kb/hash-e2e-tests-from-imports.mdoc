@@ -61,6 +61,11 @@ Test files without the directive keep hashing the servers' inputs.
 The task that runs the whole suite, `e2e` by default, and the `e2e-ci` task that groups the atomized
 tasks don't change.
 
+An [`@nx-depends-on`](/docs/kb/split-e2e-tasks#scope-a-task-with-a-comment-in-the-test-file)
+comment in the same file also leaves out the servers' inputs.
+The task keeps hashing the projects that comment lists, even under Ultracache, so listing the app
+there puts the whole app back in the hash.
+
 ## Choose what to import
 
 The task hashes what the test process reads, so the imports decide which changes rerun the test:

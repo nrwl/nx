@@ -537,7 +537,7 @@ It keeps the rest of the inferred configuration, so you don't restate any of it.
 The scope moves with the test file, and a new test file opts in with its own comment.
 
 Nx reads the comment from the comment block at the top of the file and stops at the first line of code.
-A comment without projects is an error.
+Nx ignores a comment without projects and logs a warning that names the test file.
 When Playwright starts the web server itself, there's no server task, so only the inputs change.
 Test files without the comment keep the inferred configuration.
 
