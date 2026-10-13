@@ -10,12 +10,14 @@ import {
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import {
+  applyNpmOverridesToDependencies,
   dropEmptyPeerDependencySections,
   generatePrunedDeployOutput,
   getCatalogManager,
   getWorkspacePackagesFromGraph,
   interpolate,
   movePeerDependencyToDependencies,
+  resolveNpmOverrideReferences,
   type PackageJson,
   type PackageJsonDependencySection,
 } from '@nx/devkit/internal';
@@ -32,6 +34,9 @@ export default async function pruneLockfileExecutor(
   const packageJson = resolveCatalogReferences(getPackageJson(schema, context));
   mergeAllowScripts(packageJson);
   const packageManager = detectPackageManager(workspaceRoot);
+  if (packageManager === 'npm') {
+    applyRootOverrides(packageJson);
+  }
 
   const { project } = parseTargetString(schema.buildTarget, context);
   const projectRoot = context.projectGraph.nodes[project].data.root;
@@ -104,6 +109,28 @@ function mergeAllowScripts(packageJson: PackageJson) {
     ...rootPackageJson.allowScripts,
     ...packageJson.allowScripts,
   };
+}
+
+/**
+ * npm, like `allowScripts`, applies only the install root's `overrides`, so the
+ * pruned output takes the workspace root's rather than the project's own.
+ */
+function applyRootOverrides(packageJson: PackageJson) {
+  const rootPackageJson: PackageJson = readJsonFile(
+    join(workspaceRoot, 'package.json')
+  );
+  delete packageJson.overrides;
+  if (
+    !rootPackageJson.overrides ||
+    !Object.keys(rootPackageJson.overrides).length
+  ) {
+    return;
+  }
+  packageJson.overrides = resolveNpmOverrideReferences(
+    rootPackageJson.overrides,
+    rootPackageJson
+  );
+  applyNpmOverridesToDependencies(packageJson, packageJson.overrides);
 }
 
 export function resolveCatalogReferences(

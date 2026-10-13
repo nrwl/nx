@@ -1086,6 +1086,76 @@ describe('createPackageJson', () => {
       expect(result).not.toHaveProperty('overrides');
     });
 
+    it("should keep npm overrides for a direct dependency's own dependencies", () => {
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              overrides: {
+                // constrain the direct dependency's dependencies, not its own
+                // version, so npm accepts them
+                random: { foo: '1.0.0' },
+                typescript: { '.': '5.0.0', bar: '1.0.0' },
+              },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        }).overrides
+      ).toEqual({
+        random: { foo: '1.0.0' },
+        typescript: { bar: '1.0.0' },
+      });
+    });
+
+    it('should resolve npm override references the dist cannot resolve', () => {
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              devDependencies: { 'ms-pin': 'npm:ms@2.1.3' },
+              overrides: { random: { ms: '$ms-pin' } },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
+      );
+
+      // the dist has no ms-pin, so npm there fails to resolve `$ms-pin`
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        }).overrides
+      ).toEqual({ random: { ms: 'npm:ms@2.1.3' } });
+    });
+
     it('should add resolutions (yarn)', () => {
       spies.push(
         vi
