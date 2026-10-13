@@ -23,6 +23,11 @@ const columns: FooterColumn[] = [
       { label: 'Pricing', href: 'https://nx.dev/pricing' },
       { label: 'Docs', href: '/docs/getting-started/intro' },
       { label: 'Blog', href: 'https://nx.dev/blog' },
+      {
+        label: 'YouTube',
+        href: 'https://youtube.com/@nxdevtools',
+        external: true,
+      },
     ],
   },
   {
@@ -75,6 +80,12 @@ const columns: FooterColumn[] = [
 ];
 
 const socialLinks = [
+  {
+    label: 'YouTube',
+    href: 'https://www.youtube.com/@nxdevtools',
+    path: 'M20.20 4C21.10 4.28 21.81 5.10 22.06 6.15C22.49 8.04 22.5 12 22.5 12C22.5 12 22.5 15.95 22.06 17.84C21.81 18.89 21.10 19.71 20.20 19.99C18.56 20.5 12 20.5 12 20.5C12 20.5 5.43 20.5 3.79 19.99C2.89 19.71 2.18 18.89 1.93 17.84C1.5 15.95 1.5 12 1.5 12C1.5 12 1.5 8.04 1.93 6.15C2.18 5.10 2.89 4.28 3.79 4C5.43 3.5 12 3.5 12 3.5C12 3.5 18.56 3.5 20.20 4ZM15.51 12L9.79 15.29V8.70L15.51 12Z',
+    evenodd: true,
+  },
   {
     label: 'X',
     href: 'https://x.com/NxDevTools?utm_source=nx.dev',
@@ -174,7 +185,12 @@ const socialLinks = [
                   fill="none"
                   aria-hidden="true"
                 >
-                  <path d={social.path} fill="currentColor" />
+                  <path
+                    d={social.path}
+                    fill="currentColor"
+                    fill-rule={social.evenodd ? 'evenodd' : undefined}
+                    clip-rule={social.evenodd ? 'evenodd' : undefined}
+                  />
                 </svg>
               </a>
             ))

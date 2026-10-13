@@ -182,23 +182,18 @@ export const resourcesGroups: NavMenuGroup[] = [
     label: 'Learn',
     items: [
       {
-        title: 'Blog',
-        description: 'Set up Nx step by step',
-        href: 'https://nx.dev/blog',
+        title: 'YouTube',
+        description: 'Videos and walkthroughs from the Nx team',
+        href: 'https://youtube.com/@nxdevtools',
+        external: true,
         icon: (
           <>
             <path
-              d="M3.75 6.75C3.75 5.64 4.64 4.75 5.75 4.75H6.25C7.35 4.75 8.25 5.64 8.25 6.75V7.25C8.25 8.35 7.35 9.25 6.25 9.25H5.75C4.64 9.25 3.75 8.35 3.75 7.25V6.75Z"
-              stroke="currentColor"
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M20.20 4C21.10 4.28 21.81 5.10 22.06 6.15C22.49 8.04 22.5 12 22.5 12C22.5 12 22.5 15.95 22.06 17.84C21.81 18.89 21.10 19.71 20.20 19.99C18.56 20.5 12 20.5 12 20.5C12 20.5 5.43 20.5 3.79 19.99C2.89 19.71 2.18 18.89 1.93 17.84C1.5 15.95 1.5 12 1.5 12C1.5 12 1.5 8.04 1.93 6.15C2.18 5.10 2.89 4.28 3.79 4C5.43 3.5 12 3.5 12 3.5C12 3.5 18.56 3.5 20.20 4ZM15.51 12L9.79 15.29V8.70L15.51 12Z"
+              fill="currentColor"
             />
-            <path
-              d="M3.75 16.75C3.75 15.64 4.64 14.75 5.75 14.75H6.25C7.35 14.75 8.25 15.64 8.25 16.75V17.25C8.25 18.35 7.35 19.25 6.25 19.25H5.75C4.64 19.25 3.75 18.35 3.75 17.25V16.75Z"
-              stroke="currentColor"
-            />
-            <path d="M12.75 5.25H20.25" stroke="currentColor" />
-            <path d="M12.75 8.75H17.25" stroke="currentColor" />
-            <path d="M12.75 15.25H20.25" stroke="currentColor" />
-            <path d="M12.75 18.75H17.25" stroke="currentColor" />
           </>
         ),
       },

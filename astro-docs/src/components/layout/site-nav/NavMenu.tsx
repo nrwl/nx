@@ -238,7 +238,7 @@ export function DesktopNavMenu() {
 
       <div
         {...inert(!open)}
-        className={`absolute top-[26.4px] left-[-73px] flex flex-col items-start transition-[opacity,translate] duration-[320ms] max-[61.999rem]:left-[-89px] ${EASE_MENU} ${
+        className={`absolute top-[26.4px] left-[-142px] flex flex-col items-start transition-[opacity,translate] duration-[320ms] max-[61.999rem]:left-[-158px] ${EASE_MENU} ${
           open
             ? 'translate-y-[6px] opacity-100'
             : 'pointer-events-none opacity-0'
@@ -285,8 +285,8 @@ export function DesktopNavMenu() {
           <PanelCaret
             className={`absolute top-[-5px] h-2 w-[13px] transition-[left] duration-[320ms] ${EASE_MENU} ${
               shown === 'solutions'
-                ? 'left-[113px] max-[61.999rem]:left-[129px]'
-                : 'left-[217px] max-[61.999rem]:left-[233px]'
+                ? 'left-[182px] max-[61.999rem]:left-[198px]'
+                : 'left-[286px] max-[61.999rem]:left-[302px]'
             }`}
           />
         </div>
