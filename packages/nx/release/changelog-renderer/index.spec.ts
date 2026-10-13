@@ -790,6 +790,56 @@ describe('ChangelogRenderer', () => {
 
         expect(markdown).toMatchInlineSnapshot(`""`);
       });
+
+      it('should strip every commit and its revert when consecutive reverts are included in the current range of commits', async () => {
+        const createChange = (
+          shortHash: string,
+          overrides: Partial<ChangelogChange>
+        ): ChangelogChange => ({
+          shortHash,
+          authors: [{ name: 'James Henry', email: 'jh@example.com' }],
+          body: '',
+          description: '',
+          type: 'fix',
+          scope: '',
+          githubReferences: [{ value: shortHash, type: 'hash' }],
+          isBreaking: false,
+          revertedHashes: [],
+          affectedProjects: ['js'],
+          ...overrides,
+        });
+
+        // Newest first, as git log returns them: A and B were committed, then A was reverted, then B
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [
+            createChange('bbbb222', {
+              type: 'revert',
+              description: 'Revert "fix: change b"',
+              body: 'This reverts commit 2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb.\n',
+              revertedHashes: ['2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb'],
+            }),
+            createChange('aaaa111', {
+              type: 'revert',
+              description: 'Revert "fix: change a"',
+              body: 'This reverts commit 1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa.\n',
+              revertedHashes: ['1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa'],
+            }),
+            createChange('2222bbb', { description: 'change b' }),
+            createChange('1111aaa', { description: 'change a' }),
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toBe('');
+      });
     });
 
     describe('breaking changes', () => {
