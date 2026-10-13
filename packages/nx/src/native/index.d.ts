@@ -262,7 +262,10 @@ export declare class RunningTasksService {
    * process has since taken over is left in place.
    */
   removeRunningTask(taskId: string): void
-  /** No-op once the task's row is gone, so a late probe result cannot outlive the task. */
+  /**
+   * No-op unless this process holds the task's claim, so a late or displaced
+   * probe result cannot overwrite the current owner's verdict.
+   */
   setTaskReadiness(taskId: string, status: TaskReadiness): void
   /** `None` when the task is not running. */
   getTaskReadiness(taskId: string): TaskReadiness | null
