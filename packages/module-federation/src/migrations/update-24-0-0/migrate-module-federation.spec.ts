@@ -1,9 +1,8 @@
 import { readJson, writeJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import migrateAngularModuleFederation from './migrate-angular-module-federation';
-import migrateReactModuleFederation from './migrate-react-module-federation';
+import migrateModuleFederation from './migrate-module-federation';
 
-describe('update-24-0-0 Module Federation migrations', () => {
+describe('update-24-0-0 Module Federation migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -31,9 +30,7 @@ describe('update-24-0-0 Module Federation migrations', () => {
       'webpack.server.config.ts': `import { withModuleFederationForSSR } from '@nx/module-federation/webpack';`,
     });
 
-    const result = await migrateReactModuleFederation(tree);
-
-    expect(result).toMatchInlineSnapshot(`
+    expect(await migrateModuleFederation(tree)).toMatchInlineSnapshot(`
       {
         "agentContext": [
           "React projects that use Nx Module Federation, with the files that reference it:",
@@ -45,9 +42,6 @@ describe('update-24-0-0 Module Federation migrations', () => {
         ],
       }
     `);
-    expect(await migrateAngularModuleFederation(tree)).toEqual({
-      skipAgentic: true,
-    });
     expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
       '@nx/module-federation'
     );
@@ -68,9 +62,7 @@ describe('update-24-0-0 Module Federation migrations', () => {
       },
     });
 
-    const result = await migrateAngularModuleFederation(tree);
-
-    expect(result).toMatchInlineSnapshot(`
+    expect(await migrateModuleFederation(tree)).toMatchInlineSnapshot(`
       {
         "agentContext": [
           "Angular projects that use Nx Module Federation, with the files that reference it:",
@@ -83,22 +75,38 @@ describe('update-24-0-0 Module Federation migrations', () => {
         ],
       }
     `);
-    expect(await migrateReactModuleFederation(tree)).toEqual({
-      skipAgentic: true,
-    });
   });
 
-  it('lists a project with only shared-entry imports for both prompts', async () => {
+  it('hands both frameworks to one prompt and keeps the package', async () => {
+    addProject('apps/react-shell', {
+      'webpack.config.ts': `import { withModuleFederation } from '@nx/module-federation/webpack';`,
+    });
+    addProject('apps/ng-shell', {
+      'webpack.config.ts': `import { withModuleFederation } from '@nx/module-federation/angular';`,
+    });
     addProject('libs/mf-types', {
       'index.ts': `export type { ModuleFederationConfig } from '@nx/module-federation';`,
     });
 
-    expect(
-      (await migrateReactModuleFederation(tree)).agentContext
-    ).toContainEqual('libs/mf-types: libs/mf-types/index.ts');
-    expect(
-      (await migrateAngularModuleFederation(tree)).agentContext
-    ).toContainEqual('libs/mf-types: libs/mf-types/index.ts');
+    expect(await migrateModuleFederation(tree)).toMatchInlineSnapshot(`
+      {
+        "agentContext": [
+          "React projects that use Nx Module Federation, with the files that reference it:",
+          "apps/react-shell: apps/react-shell/webpack.config.ts",
+          "libs/mf-types: libs/mf-types/index.ts",
+          "Angular projects that use Nx Module Federation, with the files that reference it:",
+          "apps/ng-shell: apps/ng-shell/webpack.config.ts",
+          "libs/mf-types: libs/mf-types/index.ts",
+        ],
+        "nextSteps": [
+          "Migrate 2 React project(s) off Nx Module Federation. See https://nx.dev/docs/kb/migrate-from-nx-module-federation",
+          "Migrate 2 Angular project(s) off Nx Module Federation. See https://nx.dev/docs/kb/migrate-angular-module-federation",
+        ],
+      }
+    `);
+    expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+      '@nx/module-federation'
+    );
   });
 
   it('removes the unused dependency without an agent', async () => {
@@ -111,7 +119,7 @@ describe('update-24-0-0 Module Federation migrations', () => {
       })
     );
 
-    expect(await migrateReactModuleFederation(tree)).toEqual({
+    expect(await migrateModuleFederation(tree)).toEqual({
       skipAgentic: true,
     });
     expect(readJson(tree, 'package.json').devDependencies).toEqual({

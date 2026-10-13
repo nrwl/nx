@@ -1,20 +1,10 @@
-import { formatFiles, type Tree } from '@nx/devkit';
-import {
-  describeUsage,
-  inventoryModuleFederation,
-  removeUnusedModuleFederationPackage,
-} from './inventory';
+import { describeUsage, type ModuleFederationInventory } from './inventory';
 
-export default async function migrateReactModuleFederation(tree: Tree) {
-  const inventory = inventoryModuleFederation(tree);
+export function reactModuleFederationSteps(
+  inventory: ModuleFederationInventory
+) {
   const usages = inventory.react;
-
-  if (usages.length === 0) {
-    if (removeUnusedModuleFederationPackage(tree, inventory)) {
-      await formatFiles(tree);
-    }
-    return { skipAgentic: true };
-  }
+  if (usages.length === 0) return null;
 
   return {
     nextSteps: [
