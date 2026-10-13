@@ -34,7 +34,11 @@ describe('create-nx-workspace --preset=<third-party package>', () => {
 
       expect(readFile('pnpm-workspace.yaml')).toContain('esbuild: false');
       expect(
-        JSON.parse(readFile('node_modules/esbuild/package.json')).version
+        JSON.parse(
+          readFile(
+            'node_modules/.pnpm/esbuild@0.25.0/node_modules/esbuild/package.json'
+          )
+        ).version
       ).toBe('0.25.0');
     }
   );
