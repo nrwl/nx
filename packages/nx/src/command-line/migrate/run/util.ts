@@ -1,5 +1,3 @@
-// Internal to run/: deliberately not re-exported from ./index.
-
 import { createHash } from 'crypto';
 import { needsShellQuoting, quoteShellArg } from '../../../utils/shell-quoting';
 import {
