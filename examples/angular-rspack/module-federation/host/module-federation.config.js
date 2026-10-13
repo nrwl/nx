@@ -1,25 +1,31 @@
 module.exports = {
-  name: 'examples-angular-rspack-mf-host',
-  /**
-   * To use a remote that does not exist in your current Nx Workspace
-   * You can use the tuple-syntax to define your remote
-   *
-   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
-   *
-   * You _may_ need to add a `remotes.d.ts` file to your `src/` folder declaring the external remote for tsc, with the
-   * following content:
-   *
-   * declare module 'my-external-remote';
-   *
-   */
-  remotes: ['examples-angular-rspack-mf-remote'],
-  shared: (libraryName) => {
-    // This is specific to Nx Repo, otherwise dependencies that are irrelevant are considered and shared
-    if (
-      !libraryName.startsWith('@angular') &&
-      !libraryName.startsWith('zone.js')
-    ) {
-      return false;
-    }
+  name: 'examples_angular_rspack_mf_host',
+  filename: 'remoteEntry.js',
+  library: { type: 'module' },
+  dts: false,
+  remotes: {
+    'examples-angular-rspack-mf-remote': 'http://localhost:4201/remoteEntry.js',
+  },
+  shared: {
+    '@angular/common': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '~22.0.0',
+    },
+    '@angular/core': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '~22.0.0',
+    },
+    '@angular/platform-browser': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '~22.0.0',
+    },
+    '@angular/router': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '~22.0.0',
+    },
   },
 };
