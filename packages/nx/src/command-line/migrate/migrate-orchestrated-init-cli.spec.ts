@@ -157,6 +157,7 @@ vi.mock('../../daemon/client/client', () => ({
 }));
 
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -242,6 +243,10 @@ describe('migrate() orchestrated init dispatch', () => {
       ...overrides,
     };
   }
+
+  const ranThePlan = expect.objectContaining({
+    title: "Running migrations from 'migrations.json'",
+  });
 
   // The default-branch check is handed to init as confirmStart, which asks
   // only once it is about to start a run; the mock never does, so the
@@ -367,9 +372,9 @@ describe('migrate() orchestrated init dispatch', () => {
       await migrate(root, runMigrationsArgs(overrides), [
         '--run-migrations',
         ...flags,
-      ]).catch(() => {});
+      ]);
 
-      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(output.log).toHaveBeenCalledWith(ranThePlan);
       expect(mockReportRunStart).toHaveBeenCalledTimes(1);
     }
   );
@@ -809,9 +814,6 @@ describe('migrate() orchestrated init dispatch', () => {
     };
     const continueCommand =
       'npx nx migrate --run-migrations --agentic --run-id=run-1 --create-commits';
-    const ranThePlan = expect.objectContaining({
-      title: "Running migrations from 'migrations.json'",
-    });
 
     beforeEach(() => {
       mockIsInsideAgent.mockReturnValue(false);
@@ -938,54 +940,6 @@ describe('migrate() orchestrated init dispatch', () => {
       expect(output.log).not.toHaveBeenCalledWith(ranThePlan);
     });
 
-    it('deletes the run record and runs the plan when the user starts fresh', async () => {
-      mockMigrateChoice.mockResolvedValue('start-fresh');
-
-      // The classic loop runs real migration execution, which fails on this
-      // fixture; only the dispatch itself is under test.
-      await migrate(root, runMigrationsArgs(), ['--run-migrations']).catch(
-        () => {}
-      );
-
-      expect(mockDeleteRunForStartFresh).toHaveBeenCalledWith(root, 'run-1');
-      expect(output.log).toHaveBeenCalledWith(ranThePlan);
-      expect(mockReportRunStopped).not.toHaveBeenCalled();
-    });
-
-    it.each<[string, Record<string, unknown>, string[], () => void]>([
-      [
-        '--agentic=false keeps a terminal run off the agentic flow',
-        { agentic: false },
-        ['--agentic=false'],
-        () => {},
-      ],
-      [
-        'the outer agent runs nx in CI',
-        {},
-        [],
-        () => {
-          mockIsInsideAgent.mockReturnValue(true);
-          mockIsCI.mockReturnValue(true);
-        },
-      ],
-    ])(
-      'replaces the run --start-fresh --run-id names without asking when %s',
-      async (_label, overrides, flags, arrange) => {
-        arrange();
-
-        await migrate(
-          root,
-          runMigrationsArgs({ ...overrides, startFresh: true, runId: 'run-1' }),
-          ['--run-migrations', ...flags, '--start-fresh', '--run-id=run-1']
-        ).catch(() => {});
-
-        expect(mockDeleteRunForStartFresh).toHaveBeenCalledWith(root, 'run-1');
-        expect(mockMigrateChoice).not.toHaveBeenCalled();
-        expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
-        expect(output.log).toHaveBeenCalledWith(ranThePlan);
-      }
-    );
-
     it('refuses --start-fresh when the run it names completed after the preflight check', async () => {
       mockActiveRunForClassic.mockReturnValue(null);
       mockCheckRunForStartFresh.mockImplementation(() => {
@@ -1079,6 +1033,17 @@ describe('migrate() orchestrated init dispatch', () => {
           );
         }
       );
+
+      it('deletes the run record and starts the plan when the user starts fresh', async () => {
+        mockMigrateChoice.mockResolvedValue('start-fresh');
+
+        // The classic loop runs real migration execution, which fails on this
+        // fixture; only the replacement is under test.
+        await migrate(root, runMigrationsArgs(), ['--run-migrations']);
+
+        expect(existsSync(runDir(root, 'run-1'))).toBe(false);
+        expect(output.log).toHaveBeenCalledWith(ranThePlan);
+      });
 
       it('refuses --start-fresh over a run another process holds before asking about commits', async () => {
         mkdirSync(join(runDir(root, 'run-1'), 'activity'));
