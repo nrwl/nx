@@ -169,12 +169,19 @@ impl RunningTasksService {
         Ok(())
     }
 
-    /// No-op once the task's row is gone, so a late probe result cannot outlive the task.
+    /// No-op unless this process holds the task's claim, so a late or displaced
+    /// probe result cannot overwrite the current owner's verdict.
     #[napi]
     pub fn set_task_readiness(&self, task_id: String, status: TaskReadiness) -> anyhow::Result<()> {
         self.db.lock().unwrap().execute(
-            "UPDATE running_task_readiness SET status = ? WHERE task_id = ?",
-            (status as i64, &task_id),
+            "UPDATE running_task_readiness SET status = ? WHERE task_id = ? AND task_id IN \
+             (SELECT task_id FROM running_tasks WHERE task_id = ? AND pid = ?)",
+            (
+                status as i64,
+                &task_id,
+                &task_id,
+                std::process::id().to_string(),
+            ),
         )?;
         debug!("Set readiness of {} to {:?}", task_id, status);
         Ok(())
@@ -239,6 +246,13 @@ mod tests {
         assert_eq!(
             reader.get_task_readiness(id.clone()).unwrap(),
             Some(TaskReadiness::Ready)
+        );
+        owner
+            .set_task_readiness(id.clone(), TaskReadiness::Failed)
+            .unwrap();
+        assert_eq!(
+            reader.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Failed)
         );
         // restart resets what the other connection sees
         owner.add_running_task(id.clone()).unwrap();
@@ -319,6 +333,11 @@ mod tests {
                 [other_pid.to_string().as_str(), "app:serve"],
             )
             .unwrap();
+
+        service
+            .set_task_readiness("app:serve".into(), TaskReadiness::Ready)
+            .unwrap();
+        assert_eq!(readiness_row(&service), Some(TaskReadiness::Pending as i64));
 
         service.remove_running_task("app:serve".into()).unwrap();
         assert_eq!(claim_owner(&service), Some(other_pid));

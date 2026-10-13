@@ -1843,7 +1843,7 @@ describe('TaskOrchestrator', () => {
           appendTaskOutput: vi.fn(),
         },
       };
-      // Completion without the skip propagation; that part is master's
+      // Completion without the skip propagation
       orchestrator.complete = vi.fn(async (results: any[]) => {
         for (const { task, status } of results) {
           orchestrator.completedTasks.set(task.id, status);
