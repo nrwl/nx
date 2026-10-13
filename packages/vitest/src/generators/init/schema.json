@@ -8,7 +8,7 @@
     "addPlugin": {
       "type": "boolean",
       "x-priority": "internal",
-      "description": "Add plugin to nx.json. Defaults to true for new workspaces."
+      "description": "Ignored. The generator always adds the `@nx/vitest` plugin to nx.json."
     },
     "rootProject": {
       "type": "boolean",

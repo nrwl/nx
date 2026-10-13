@@ -996,7 +996,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useDaemonProcess?: boolean;
 
   /**
-   * Set this to false to disable adding inference plugins when generating new projects
+   * Set this to false to disable adding inference plugins when generating new projects.
+   * Some plugins, such as `@nx/vite` and `@nx/jest`, always add theirs.
    */
   useInferencePlugins?: boolean;
 

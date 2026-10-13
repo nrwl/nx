@@ -10,7 +10,7 @@
     "executors.json",
     "generators.json"
   ],
-  "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
+  "description": "The Nx Plugin for Cypress infers tasks and provides generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",

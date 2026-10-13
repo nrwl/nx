@@ -155,7 +155,7 @@
     },
     "useInferencePlugins": {
       "type": "boolean",
-      "description": "Specifies whether to add inference plugins when generating new projects."
+      "description": "Specifies whether to add inference plugins when generating new projects. Some plugins, such as @nx/vite and @nx/jest, always add their inference plugin."
     },
     "analytics": {
       "type": "boolean",

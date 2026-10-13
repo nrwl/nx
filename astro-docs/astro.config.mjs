@@ -86,6 +86,8 @@ export default defineConfig({
       '/docs/technologies/test-tools/detox/introduction',
     '/technologies/test-tools/jest/executors':
       '/docs/technologies/test-tools/jest/introduction',
+    '/technologies/test-tools/playwright/executors':
+      '/docs/technologies/test-tools/playwright/introduction',
     '/technologies/test-tools/storybook/executors':
       '/docs/technologies/test-tools/storybook/introduction',
     '/technologies/test-tools/vitest/executors':

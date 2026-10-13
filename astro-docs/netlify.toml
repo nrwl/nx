@@ -1219,6 +1219,10 @@ from = "/docs/technologies/test-tools/jest/executors"
 to = "/docs/technologies/test-tools/jest/introduction"
 
 [[redirects]]
+from = "/docs/technologies/test-tools/playwright/executors"
+to = "/docs/technologies/test-tools/playwright/introduction"
+
+[[redirects]]
 from = "/docs/technologies/test-tools/storybook/executors"
 to = "/docs/technologies/test-tools/storybook/introduction"
 
