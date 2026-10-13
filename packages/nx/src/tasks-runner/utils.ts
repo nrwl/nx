@@ -7,7 +7,7 @@ import {
 } from '../command-line/run/executor-utils';
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import { hashObject } from '../hasher/file-hasher';
 import {
   ProjectConfiguration,
@@ -476,10 +476,10 @@ export function expandInitiatingTasksThroughNoop(
 
     if (getExecutorNameForTask(task, projectGraph) === 'nx:noop') {
       for (const dep of taskGraph.dependencies[taskId] ?? []) {
-        queue.push(dep);
+        queue.push(dep.id);
       }
       for (const dep of taskGraph.continuousDependencies[taskId] ?? []) {
-        queue.push(dep);
+        queue.push(dep.id);
       }
     } else {
       expanded.add(taskId);
@@ -562,49 +562,27 @@ export function removeTasksFromTaskGraph(
   ids: string[]
 ): TaskGraph {
   const newGraph = removeIdsFromTaskGraph<Task>(graph, ids, graph.tasks);
-  const continuousDependenciesWithoutInputs = pruneEdges(
-    graph.continuousDependenciesWithoutInputs,
-    newGraph.mapWithIds
-  );
   return {
     dependencies: newGraph.dependencies,
     continuousDependencies: newGraph.continuousDependencies,
-    ...(continuousDependenciesWithoutInputs
-      ? { continuousDependenciesWithoutInputs }
-      : {}),
     roots: newGraph.roots,
     tasks: newGraph.mapWithIds,
   };
 }
 
-function pruneEdges(
-  edges: Record<string, string[]> | undefined,
-  kept: Record<string, unknown>
-): Record<string, string[]> | undefined {
-  let pruned: Record<string, string[]> | undefined;
-  for (const [id, deps] of Object.entries(edges ?? {})) {
-    if (!(id in kept)) continue;
-    const keptDeps = deps.filter((dep) => dep in kept);
-    if (keptDeps.length > 0) {
-      (pruned ??= {})[id] = keptDeps;
-    }
-  }
-  return pruned;
-}
-
 function removeIdsFromTaskGraph<T>(
   graph: {
     roots: string[];
-    dependencies: Record<string, string[]>;
-    continuousDependencies: Record<string, string[]>;
+    dependencies: Record<string, TaskGraphEdge[]>;
+    continuousDependencies: Record<string, TaskGraphEdge[]>;
   },
   ids: string[],
   mapWithIds: Record<string, T>
 ): {
   mapWithIds: Record<string, T>;
   roots: string[];
-  dependencies: Record<string, string[]>;
-  continuousDependencies: Record<string, string[]>;
+  dependencies: Record<string, TaskGraphEdge[]>;
+  continuousDependencies: Record<string, TaskGraphEdge[]>;
 } {
   const filteredMapWithIds = {};
   const dependencies = {};
@@ -614,10 +592,10 @@ function removeIdsFromTaskGraph<T>(
     if (!removedSet.has(id)) {
       filteredMapWithIds[id] = mapWithIds[id];
       dependencies[id] = graph.dependencies[id].filter(
-        (depId) => !removedSet.has(depId)
+        (dep) => !removedSet.has(dep.id)
       );
       continuousDependencies[id] = graph.continuousDependencies[id].filter(
-        (depId) => !removedSet.has(depId)
+        (dep) => !removedSet.has(dep.id)
       );
     }
   }
@@ -642,13 +620,13 @@ export function calculateReverseDeps(
 
   Object.keys(taskGraph.dependencies).forEach((taskId) => {
     taskGraph.dependencies[taskId].forEach((d) => {
-      reverseTaskDeps[d].push(taskId);
+      reverseTaskDeps[d.id].push(taskId);
     });
   });
 
   Object.keys(taskGraph.continuousDependencies).forEach((taskId) => {
     taskGraph.continuousDependencies[taskId].forEach((d) => {
-      reverseTaskDeps[d].push(taskId);
+      reverseTaskDeps[d.id].push(taskId);
     });
   });
 

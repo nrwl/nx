@@ -101,6 +101,7 @@ import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
+import { getReadyDependencies } from './readiness/ready-when';
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
@@ -146,6 +147,7 @@ async function getTerminalOutputLifeCycle(
   projectNames: string[],
   tasks: Task[],
   taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
   overrides: Record<string, unknown>
@@ -225,7 +227,7 @@ async function getTerminalOutputLifeCycle(
       const mainContinuousDependencies =
         taskGraph.continuousDependencies[mainTaskId];
       if (mainContinuousDependencies.length > 0) {
-        pinnedTasks.push(mainContinuousDependencies[0]);
+        pinnedTasks.push(mainContinuousDependencies[0].id);
       }
       const [, target] = mainTaskId.split(':');
       titleText = `1 ${target} task`;
@@ -289,6 +291,7 @@ async function getTerminalOutputLifeCycle(
         titleText,
         workspaceRoot,
         taskGraph,
+        getReadyDependencies(taskGraph, projectGraph),
         isNxCloudUsed(nxJson)
       );
       // The native endCommand renders the perf report in the exit popup; the runner
@@ -636,6 +639,7 @@ export async function runTasksForCommand(
       projectNames,
       tasks,
       taskGraph,
+      projectGraph,
       nxArgs,
       nxJson,
       overrides

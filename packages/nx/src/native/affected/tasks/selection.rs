@@ -357,7 +357,9 @@ fn affected_through_output_reads(
 mod tests {
     use super::*;
     use crate::native::tasks::types::HashInstruction;
-    use crate::native::test_utils::{graph_of_roots as graph, hash_plans, strings, task_graph};
+    use crate::native::test_utils::{
+        edges_to, graph_of_roots as graph, hash_plans, strings, task_graph,
+    };
 
     /// Builds a one-task plan from the given instructions.
     fn plans(task: &str, instructions: Vec<HashInstruction>) -> HashPlans {
@@ -583,7 +585,7 @@ mod tests {
             &[("web:serve", &["lib:build"])],
         );
         tg.continuous_dependencies
-            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+            .insert("e2e:e2e".into(), edges_to(&["web:serve"]));
 
         let s = compute_affected_task_selection(
             &g,
@@ -640,7 +642,7 @@ mod tests {
             &[("web:serve", &["ui:build"])],
         );
         tg.continuous_dependencies
-            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+            .insert("e2e:e2e".into(), edges_to(&["web:serve"]));
 
         let s = compute_affected_task_selection(
             &g,
@@ -706,11 +708,11 @@ mod tests {
             &[("a:serve", &["lib:build"])],
         );
         tg.continuous_dependencies
-            .insert("a:serve".into(), strings(&["b:serve"]));
+            .insert("a:serve".into(), edges_to(&["b:serve"]));
         tg.continuous_dependencies
-            .insert("b:serve".into(), strings(&["a:serve"]));
+            .insert("b:serve".into(), edges_to(&["a:serve"]));
         tg.continuous_dependencies
-            .insert("c:e2e".into(), strings(&["b:serve"]));
+            .insert("c:e2e".into(), edges_to(&["b:serve"]));
 
         let s = compute_affected_task_selection(
             &g,
@@ -824,7 +826,7 @@ mod tests {
             ],
         );
         tg.continuous_dependencies
-            .insert("app:build".into(), strings(&["api:serve"]));
+            .insert("app:build".into(), edges_to(&["api:serve"]));
 
         let s = select(&tg, &p, &options(&[]));
 
