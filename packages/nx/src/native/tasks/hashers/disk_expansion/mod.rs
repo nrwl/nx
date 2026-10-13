@@ -5,9 +5,11 @@
 //!   themselves live in `crate::native::glob::glob_transform`.
 //! - `expansion` resolves the entries into files, leaning on the workspace
 //!   context or an index wherever it can, and walking where it cannot.
+//! - `scope` keeps an entry to its project's files, out of nested projects.
 
 mod entries;
 mod expansion;
+mod scope;
 
 pub(crate) use entries::{Negation, Positive};
 pub use expansion::FilesExpansion;
@@ -17,6 +19,7 @@ pub(crate) use expansion::{
     FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
 };
 pub(crate) use expansion::{parse_group, validate_files_glob, validate_files_globs};
+pub(crate) use scope::{ProjectScope, ScopedMatcher, scope_roots};
 
 #[cfg(test)]
 pub(crate) mod tests {
@@ -32,6 +35,7 @@ pub(crate) mod tests {
         expand_globs(
             workspace_root,
             globs,
+            &[],
             &Source::fileset_from_disk(workspace_root),
         )
     }
@@ -45,6 +49,7 @@ pub(crate) mod tests {
         expand_globs(
             workspace_root,
             globs,
+            &[],
             &Source::fileset_reading_disk(tracked_file, workspace_root),
         )
     }
@@ -93,6 +98,7 @@ pub(crate) mod tests {
             temp.path(),
             &positives,
             &negations,
+            &ProjectScope::default(),
             &Source::fileset(NOTHING_TRACKED, &everything),
         )
         .unwrap();
@@ -122,6 +128,7 @@ pub(crate) mod tests {
             temp.path(),
             &positives,
             &negations,
+            &ProjectScope::default(),
             &Source::fileset(NOTHING_TRACKED, &listed),
         )
         .unwrap();
@@ -135,6 +142,7 @@ pub(crate) mod tests {
             temp.path(),
             &parse_group(&globs(&["dist/other/**"])).unwrap().0,
             &[],
+            &ProjectScope::default(),
             &Source::fileset(NOTHING_TRACKED, &listed),
         )
         .unwrap();
@@ -317,6 +325,39 @@ pub(crate) mod tests {
         assert_eq!(
             expansion.files,
             vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
+        );
+    }
+
+    #[test]
+    fn a_walk_skips_projects_nested_below_the_one_it_reads_from() {
+        let temp = TempDir::new().unwrap();
+        for path in [
+            "packages/gradle/src/a.ts",
+            "packages/gradle/build/out.json",
+            "packages/gradle/batch-runner/build.gradle.kts",
+            "packages/gradle/batch-runner/build/runner.jar",
+        ] {
+            temp.child(path).write_str("x").unwrap();
+        }
+        let roots = globs(&["packages/gradle", "packages/gradle/batch-runner"]);
+        let expand = |group: &[&str]| {
+            expand_globs(
+                temp.path(),
+                &globs(group),
+                &roots,
+                &Source::fileset_from_disk(temp.path()),
+            )
+            .unwrap()
+            .files
+        };
+        assert_eq!(
+            expand(&["packages/gradle/**/*"]),
+            vec!["packages/gradle/build/out.json", "packages/gradle/src/a.ts"]
+        );
+        // Read from inside the nested project, the glob is that project's.
+        assert_eq!(
+            expand(&["packages/gradle/batch-runner/build/**"]),
+            vec!["packages/gradle/batch-runner/build/runner.jar"]
         );
     }
 

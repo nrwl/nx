@@ -12,7 +12,7 @@ use super::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::ProjectRoots;
 use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob, partition_glob};
 use crate::native::project_graph::types::{ExternalNode, ProjectGraph};
-use crate::native::tasks::hashers::globs_from_workspace_globs;
+use crate::native::tasks::hashers::{ScopedMatcher, globs_from_workspace_globs};
 use crate::native::tasks::types::{HashInstruction, HashPlans, JsonFileSetInput};
 use crate::native::utils::path::normalize_js_path;
 
@@ -407,9 +407,17 @@ fn instruction_matches_detail(
         HashInstruction::ProjectFileSet(project, file_sets) => {
             collect(file_sets, Some(project)).map(of_files)
         }
-        HashInstruction::IgnoredFileSet(globs) => {
+        HashInstruction::IgnoredFileSet {
+            globs,
+            project_roots,
+        } => {
             let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
-            collect(&globs, None).map(of_files)
+            let mut files = collect(&globs, None)?;
+            // A changed file in a nested project is not one the globs read.
+            if let Some(scoped) = ScopedMatcher::new(&globs, project_roots)? {
+                files.retain(|m| scoped.admits(&normalize_js_path(&m.file)));
+            }
+            Ok(of_files(files))
         }
         HashInstruction::JsonFileSet(json)
             if json.fields.is_some() || json.exclude_fields.is_some() =>
@@ -841,7 +849,7 @@ mod tests {
         assert_eq!(
             touched_for(
                 &g,
-                vec![HashInstruction::IgnoredFileSet(strings(&[
+                vec![HashInstruction::ignored_files(strings(&[
                     "libs/a/generated/**/*.ts"
                 ]))],
                 &["libs/a/generated/api.ts"]
@@ -853,7 +861,7 @@ mod tests {
     #[test]
     fn a_disk_backed_fileset_with_repeated_slashes_matches_the_normalized_path() {
         let g = graph(&[("a", "apps/app")]);
-        let instruction = HashInstruction::IgnoredFileSet(strings(&[
+        let instruction = HashInstruction::ignored_files(strings(&[
             "apps//app/src/**",
             "!apps//app/src//**/*.map",
         ]));
@@ -873,13 +881,27 @@ mod tests {
         assert_eq!(
             touched_for(
                 &g,
-                vec![HashInstruction::IgnoredFileSet(strings(&[
+                vec![HashInstruction::ignored_files(strings(&[
                     "libs/b/generated/**/*.ts"
                 ]))],
                 &["libs/b/generated/api.ts"]
             ),
             vec!["a:build"]
         );
+    }
+
+    #[test]
+    fn a_disk_backed_fileset_skips_a_project_nested_below_where_it_reads() {
+        let g = graph(&[("a", "libs/a")]);
+        let instruction = HashInstruction::IgnoredFileSet {
+            globs: strings(&["libs/a/**/*"]),
+            project_roots: strings(&["libs/a", "libs/a/nested"]),
+        };
+        assert_eq!(
+            touched_for(&g, vec![instruction.clone()], &["libs/a/build/out.js"]),
+            vec!["a:build"]
+        );
+        assert!(touched_for(&g, vec![instruction], &["libs/a/nested/src/x.ts"]).is_empty());
     }
 
     #[test]

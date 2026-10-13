@@ -13,13 +13,13 @@ use crate::native::{
 use itertools::Itertools;
 use napi::bindgen_prelude::{ClassInstance, External};
 use rayon::prelude::*;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use tracing::trace;
 
 use crate::native::glob::{
     NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
 };
-use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
+use crate::native::tasks::hashers::{OnceCache, parse_group, scope_roots, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
 };
@@ -151,6 +151,8 @@ pub struct HashPlanner {
     acyclic_dependency_projects: OnceLock<hashbrown::HashSet<String>>,
     /// Project name by root, for attributing observed reads to their owner.
     project_by_root: OnceLock<HashMap<String, String>>,
+    /// `project_by_root`'s keys, sorted.
+    project_roots: OnceLock<BTreeSet<String>>,
     /// Interner backing every plan this planner produces.
     instruction_pool: Arc<InstructionPool>,
     /// Whole-task plans from earlier calls, reused while the task graph
@@ -285,6 +287,7 @@ impl HashPlanner {
             local_inputs_memo: OnceLock::new(),
             acyclic_dependency_projects: OnceLock::new(),
             project_by_root: OnceLock::new(),
+            project_roots: OnceLock::new(),
             instruction_pool: Arc::new(InstructionPool::new()),
             plan_memo: PlanMemo::default(),
         }
@@ -301,6 +304,25 @@ impl HashPlanner {
                 })
                 .collect()
         })
+    }
+
+    /// Every project root except the workspace root's own, sorted.
+    fn project_roots(&self) -> &BTreeSet<String> {
+        self.project_roots
+            .get_or_init(|| self.project_by_root().keys().cloned().collect())
+    }
+
+    /// A disk-backed group whose globs stay out of nested projects. A group
+    /// that does not parse is left unscoped: expanding it reports the error.
+    fn ignored_file_set(&self, globs: Vec<String>) -> HashInstruction {
+        let project_roots = match parse_group(&globs) {
+            Ok((positives, _)) => scope_roots(&positives, self.project_roots()),
+            Err(_) => Vec::new(),
+        };
+        HashInstruction::IgnoredFileSet {
+            globs,
+            project_roots,
+        }
     }
 
     pub fn get_plans_internal(
@@ -665,7 +687,7 @@ impl HashPlanner {
             group_exclusions.sort();
             group_exclusions.dedup();
             group.extend(group_exclusions);
-            instructions.push(HashInstruction::IgnoredFileSet(group));
+            instructions.push(self.ignored_file_set(group));
         }
         instructions.push(HashInstruction::UltracacheConfiguration(
             entry.digest.clone(),
@@ -1314,7 +1336,7 @@ impl HashPlanner {
                 .map(|f| resolve_files_glob(f, project_root, project_name))
                 .collect();
             validate_files_globs(project_name, &resolved)?;
-            vec![HashInstruction::IgnoredFileSet(resolved)]
+            vec![self.ignored_file_set(resolved)]
         };
         let runtime_and_env_inputs = self.runtime_env_cwd_json_inputs(project_name, self_inputs);
 
@@ -1510,7 +1532,7 @@ fn deferred_tasks(
             for id in ids.iter() {
                 match &*pool.get(*id) {
                     HashInstruction::TaskOutput(_, _) => return true,
-                    HashInstruction::IgnoredFileSet(globs) => disk_roots.extend(
+                    HashInstruction::IgnoredFileSet { globs, .. } => disk_roots.extend(
                         globs
                             .iter()
                             .filter(|glob| !glob.starts_with('!'))
@@ -2418,14 +2440,14 @@ mod tests {
     fn defers_a_task_that_reads_an_upstream_output() {
         let pool = InstructionPool::new();
         let disk = |_project: &str, glob: &str| {
-            pool.intern(HashInstruction::IgnoredFileSet(vec![glob.into()]))
+            pool.intern(HashInstruction::ignored_files(vec![glob.into()]))
         };
         let tracked = pool.intern(HashInstruction::ProjectFileSet(
             "lib".into(),
             vec!["libs/lib/src/**".into()],
         ));
         let group = |_project: &str, globs: &[&str]| {
-            pool.intern(HashInstruction::IgnoredFileSet(
+            pool.intern(HashInstruction::ignored_files(
                 globs.iter().map(|g| g.to_string()).collect(),
             ))
         };
@@ -3253,17 +3275,20 @@ mod always_tests {
             ))
             .into_iter()
             .filter(|instruction| {
-                matches!(instruction, HashInstruction::IgnoredFileSet(globs)
+                matches!(instruction, HashInstruction::IgnoredFileSet { globs, .. }
                     if globs.iter().any(|glob| glob.contains("libs/app/")))
             })
             .collect()
         };
         assert_eq!(
             retained(true, false),
-            vec![HashInstruction::IgnoredFileSet(vec![
-                "libs/app/fixtures/**".into(),
-                "!libs/app/fixtures/large/**".into()
-            ])]
+            vec![HashInstruction::IgnoredFileSet {
+                globs: vec![
+                    "libs/app/fixtures/**".into(),
+                    "!libs/app/fixtures/large/**".into()
+                ],
+                project_roots: vec!["libs/app".into()],
+            }]
         );
         assert_eq!(retained(false, true), vec![]);
     }
@@ -3384,5 +3409,115 @@ mod always_tests {
         assert!(plan(false).is_ok());
         let error = plan(true).unwrap_err().to_string();
         assert!(error.contains("\"featrue\""), "{error}");
+    }
+}
+
+#[cfg(test)]
+mod nested_project_tests {
+    use super::*;
+    use crate::native::project_graph::types::{Project, Target};
+    use crate::native::test_utils::task_graph;
+    use crate::native::types::FileSetInput;
+    use napi::bindgen_prelude::Either9;
+
+    /// `gradle` holds `batch-runner`; only `gradle:build` declares inputs.
+    fn planner() -> HashPlanner {
+        let project = |root: &str, inputs: Option<Vec<_>>| Project {
+            root: root.into(),
+            targets: HashMap::from([(
+                "build".into(),
+                Target {
+                    inputs,
+                    ..Default::default()
+                },
+            )]),
+            ..Default::default()
+        };
+        let ignored = |fileset: &str| {
+            Either9::C(FileSetInput {
+                fileset: fileset.into(),
+                dependencies: None,
+                include_ignored: Some(true),
+                always: None,
+            })
+        };
+        let graph = ProjectGraph {
+            nodes: HashMap::from([
+                (
+                    "gradle".into(),
+                    project(
+                        "packages/gradle",
+                        Some(vec![
+                            ignored("{projectRoot}/**/*"),
+                            ignored("{workspaceRoot}/dist/**"),
+                        ]),
+                    ),
+                ),
+                (
+                    "batch-runner".into(),
+                    project("packages/gradle/batch-runner", None),
+                ),
+                ("root".into(), project(".", None)),
+            ]),
+            dependencies: ["gradle", "batch-runner", "root"]
+                .into_iter()
+                .map(|name| (name.into(), vec![]))
+                .collect(),
+            external_nodes: HashMap::new(),
+        };
+        HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        )
+    }
+
+    fn roots_of(instruction: &HashInstruction) -> Option<Vec<&str>> {
+        match instruction {
+            HashInstruction::IgnoredFileSet { project_roots, .. } => {
+                Some(project_roots.iter().map(String::as_str).collect())
+            }
+            _ => None,
+        }
+    }
+
+    #[test]
+    fn an_include_ignored_group_carries_the_roots_that_scope_it() {
+        let plans = planner()
+            .get_plans_materialized(
+                vec!["gradle:build"],
+                task_graph(&[("gradle:build", &[])], &[]),
+                None,
+                &[],
+            )
+            .unwrap();
+        let roots: Vec<Vec<&str>> = plans["gradle:build"].iter().filter_map(roots_of).collect();
+        // `dist` belongs to no project but the workspace root's, so it adds nothing.
+        assert_eq!(
+            roots,
+            vec![vec!["packages/gradle", "packages/gradle/batch-runner"]]
+        );
+    }
+
+    #[test]
+    fn a_configuration_group_is_scoped_by_where_each_glob_reads_from() {
+        let planner = planner();
+        let group = |globs: &[&str]| {
+            planner.ignored_file_set(globs.iter().map(|g| g.to_string()).collect())
+        };
+        assert_eq!(
+            roots_of(&group(&[
+                "packages/gradle/**/*",
+                "!packages/gradle/**/*.spec.ts"
+            ])),
+            Some(vec!["packages/gradle", "packages/gradle/batch-runner"])
+        );
+        assert_eq!(
+            roots_of(&group(&["packages/gradle/batch-runner/src/**/*.kt"])),
+            Some(vec!["packages/gradle/batch-runner"])
+        );
+        assert_eq!(
+            roots_of(&group(&["packages/**/*.json", "dist/**"])),
+            Some(vec![])
+        );
     }
 }

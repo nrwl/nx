@@ -10,6 +10,7 @@ use anyhow::{Result, bail};
 use dashmap::DashMap;
 
 use super::entries::{Negation, Positive};
+use super::scope::ProjectScope;
 use crate::native::glob::{build_glob_set, expand_literal_braces, normalize_glob};
 use crate::native::walker::{PathPredicate, read_directory};
 
@@ -91,14 +92,16 @@ pub struct FilesExpansion {
 /// Expands a group of globs into the files it names. `source` says what the
 /// expansion may lean on instead of the disk, see `expand_entries`. Every
 /// positive glob is resolved from its literal prefix, then the negations
-/// filter the result.
+/// filter the result. `project_roots` are the group's, see `scope_roots`.
 pub(crate) fn expand_globs(
     workspace_root: &Path,
     globs: &[String],
+    project_roots: &[String],
     source: &Source,
 ) -> Result<FilesExpansion> {
     let (positives, negations) = parse_group(globs)?;
-    expand_entries(workspace_root, &positives, &negations, source)
+    let scope = ProjectScope::new(project_roots);
+    expand_entries(workspace_root, &positives, &negations, &scope, source)
 }
 
 /// A group's entries split at their literal prefixes, positives then
@@ -128,11 +131,12 @@ pub(crate) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negati
 /// skips the stat on an exact path, and `list_directory` may answer from a
 /// listing instead of walking. Walks skip the same directories the
 /// workspace walker never enters, but an exact path or a prefix inside one of
-/// them is read as-is.
+/// them is read as-is. A walk keeps only the files `scope` admits.
 pub(crate) fn expand_entries(
     workspace_root: &Path,
     positives: &[Positive],
     negations: &[Negation],
+    scope: &ProjectScope,
     source: &Source,
 ) -> Result<FilesExpansion> {
     let Source {
@@ -174,10 +178,13 @@ pub(crate) fn expand_entries(
             let prefix_len = if root.is_empty() { 0 } else { root.len() + 1 };
             let set = build_glob_set(&[pattern])?;
             Box::new(move |path: &str| {
-                path.len() > prefix_len && set.is_match(&path[prefix_len..]) && !excluded(path)
+                path.len() > prefix_len
+                    && set.is_match(&path[prefix_len..])
+                    && !excluded(path)
+                    && scope.admits(entry, path)
             })
         } else {
-            Box::new(move |path: &str| !excluded(path))
+            Box::new(move |path: &str| !excluded(path) && scope.admits(entry, path))
         };
         if let Some(under) = list_directory(root, &*accept) {
             // Filtered again: a source is asked to apply `accept` so it can

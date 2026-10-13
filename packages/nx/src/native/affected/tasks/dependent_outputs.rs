@@ -98,7 +98,9 @@ impl OutputReads {
                 HashInstruction::TaskOutput(_, outputs) => {
                     declared.insert(id, outputs.clone());
                 }
-                HashInstruction::IgnoredFileSet(patterns) => {
+                HashInstruction::IgnoredFileSet {
+                    globs: patterns, ..
+                } => {
                     // Negated patterns are exclusions, not things read.
                     let reads = patterns
                         .iter()
@@ -243,7 +245,7 @@ mod tests {
 
     /// A disk-backed fileset: workspace-relative globs with no project.
     fn include_ignored(globs: &[&str]) -> HashInstruction {
-        HashInstruction::IgnoredFileSet(strings(globs))
+        HashInstruction::ignored_files(strings(globs))
     }
 
     #[test]

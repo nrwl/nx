@@ -343,7 +343,7 @@ impl TaskHasher {
         let mut output_roots: Vec<String> = Vec::new();
         for id in 0..pool.len() as u32 {
             match pool.get(id).value() {
-                HashInstruction::IgnoredFileSet(globs) => prefixes.extend(
+                HashInstruction::IgnoredFileSet { globs, .. } => prefixes.extend(
                     globs
                         .iter()
                         .filter(|g| !g.starts_with('!'))
@@ -592,7 +592,7 @@ impl TaskHasher {
                 HashInstruction::WorkspaceFileSet(_)
                 | HashInstruction::Cwd(_)
                 | HashInstruction::ProjectFileSet(_, _)
-                | HashInstruction::IgnoredFileSet(_)
+                | HashInstruction::IgnoredFileSet { .. }
                 | HashInstruction::ProjectConfiguration(_)
                 | HashInstruction::TsConfiguration(_)
                 | HashInstruction::TaskOutput(_, _)
@@ -794,7 +794,10 @@ impl TaskHasher {
                 trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
                 (hashed_cwd, empty)
             }
-            HashInstruction::IgnoredFileSet(globs) => {
+            HashInstruction::IgnoredFileSet {
+                globs,
+                project_roots,
+            } => {
                 let workspace_root = Path::new(&self.workspace_root);
                 // The index answers from a listing it keeps only while
                 // nothing has run, like the file map; afterwards it reads the
@@ -812,6 +815,7 @@ impl TaskHasher {
                     expand_globs(
                         workspace_root,
                         globs,
+                        project_roots,
                         &Source::fileset(
                             &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
                             &list_directory,
