@@ -29,6 +29,7 @@ import { output } from '../../utils/output';
 import { existsSync } from 'fs';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { needsShellQuoting } from '../../utils/shell-quoting';
+import { spawnWithoutTerminal } from '../../utils/spawn-without-terminal';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -82,8 +83,8 @@ export function readPackageMigrationConfig(
 
 /**
  * With a `sink`, stdin is ignored and stdout and stderr are collected for a
- * caller sharing the terminal. On POSIX the child stays in nx's process
- * group. Without a sink, the install owns the terminal.
+ * caller sharing the terminal, and the install runs without the terminal (see
+ * `spawnWithoutTerminal`). Without a sink, the install owns the terminal.
  */
 export function runInstall(
   nxWorkspaceRoot?: string,
@@ -108,14 +109,21 @@ export function runInstall(
     // Without a sink it is mirrored live and other package managers inherit
     // stderr directly, since their output is not inspected.
     const shouldCaptureStderr = packageManager === 'npm';
-    const child = spawn(installCommand, {
-      shell: true,
-      stdio: sink
-        ? ['ignore', 'pipe', 'pipe']
-        : ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
-      windowsHide: true,
-      cwd,
-    });
+    const child = sink
+      ? spawnWithoutTerminal(installCommand, {
+          stdio: ['ignore', 'pipe', 'pipe'],
+          cwd,
+        })
+      : spawn(installCommand, {
+          shell: true,
+          stdio: [
+            'inherit',
+            'inherit',
+            shouldCaptureStderr ? 'pipe' : 'inherit',
+          ],
+          windowsHide: true,
+          cwd,
+        });
 
     // Decoded per stream: a chunk boundary can split a multi-byte character,
     // and a sequence still incomplete at the end is what `end()` returns.

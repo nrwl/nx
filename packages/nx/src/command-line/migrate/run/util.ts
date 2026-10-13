@@ -1,5 +1,3 @@
-// Internal to run/: deliberately not re-exported from ./index.
-
 import { createHash } from 'crypto';
 import { needsShellQuoting, quoteShellArg } from '../../../utils/shell-quoting';
 import {
@@ -52,6 +50,9 @@ export function depsHash(root: string): string | null {
  * dispense-time probe failed has no baseline, which says the dependencies it
  * started from are unknown rather than unchanged, and skipping there would
  * strand the change with nothing left to detect it.
+ *
+ * A failed or died step whose install already failed settles without it, so
+ * the settle cannot hang on that install again. A retry's rearm drops the mark.
  */
 export async function installDepsChangedSinceDispense(
   root: string,
@@ -61,6 +62,12 @@ export async function installDepsChangedSinceDispense(
   rerunCommand?: string,
   sink?: MigrateOutputSink
 ): Promise<void> {
+  if (
+    step.installFailed === true &&
+    (step.status === 'failed' || step.status === 'died')
+  ) {
+    return;
+  }
   const current = depsHash(root);
   if (current !== null && current === step.depsHashAtDispense) return;
   if (skipInstall) {

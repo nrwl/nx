@@ -64,6 +64,7 @@ import {
   resolvePackageVersionRespectingMinReleaseAge,
 } from './resolve-package-version';
 import { handleErrors } from '../../utils/handle-errors';
+import { exitAsInterrupted } from '../../utils/exit-codes';
 import {
   connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
@@ -185,6 +186,7 @@ import {
 } from './execute-migration';
 import { isStepAction, STEP_ACTIONS, type StepAction } from './step-actions';
 import { sortMigrations } from './sort-migrations';
+import { singleLine } from './text';
 import { isInsideAgent } from './agentic/inception';
 import {
   assertWorkspaceNxSupportsNewMigrateFlags,
@@ -240,20 +242,21 @@ export function formatCommandFailure(
   );
 }
 
+// Ctrl+C is left to the child. Killed by it, this process would hand the
+// terminal back to the shell while the child still runs.
 function runOrReturnExitCode(run: () => void): number {
+  const leaveSigintToChild = () => {};
+  process.on('SIGINT', leaveSigintToChild);
   try {
     run();
     return 0;
   } catch (e) {
-    if (
-      typeof e === 'object' &&
-      e !== null &&
-      'status' in e &&
-      typeof e.status === 'number'
-    ) {
-      return e.status;
-    }
+    if (typeof e !== 'object' || e === null) throw e;
+    if ('signal' in e && e.signal === 'SIGINT') exitAsInterrupted();
+    if ('status' in e && typeof e.status === 'number') return e.status;
     throw e;
+  } finally {
+    process.removeListener('SIGINT', leaveSigintToChild);
   }
 }
 
@@ -3315,7 +3318,39 @@ async function runMigrations(
   }
 
   if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
-    await runInstall();
+    // The run must resume while the cause of a step's failed install persists.
+    const failedInstallSteps =
+      continued?.steps.filter((s) => s.installFailed === true) ?? [];
+    if (failedInstallSteps.length > 0) {
+      const { pmInstallCommand, stepLabel, TERMINAL_STEP_STATUSES } =
+        require('./run') as typeof import('./run');
+      // A settled step keeps its mark, but no step action can retry it.
+      const settled = failedInstallSteps.filter((s) =>
+        TERMINAL_STEP_STATUSES.has(s.status)
+      );
+      const retryable = failedInstallSteps.filter((s) => !settled.includes(s));
+      const notCompleted = (steps: typeof failedInstallSteps) =>
+        `The dependency install of ${steps
+          .map(stepLabel)
+          .join(', ')} did not complete earlier in this run.`;
+      output.warn({
+        title: 'Skipping the dependency install',
+        bodyLines: [
+          ...(retryable.length > 0
+            ? [
+                `${notCompleted(retryable)} Retrying that step installs again; any other choice leaves the install to you.`,
+              ]
+            : []),
+          ...(settled.length > 0
+            ? [
+                `${notCompleted(settled)} Run \`${pmInstallCommand(root)}\` once the cause of the failed install is fixed.`,
+              ]
+            : []),
+        ].map(singleLine),
+      });
+    } else {
+      await runInstall();
+    }
   }
 
   if (!__dirname.startsWith(workspaceRoot)) {
