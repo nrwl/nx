@@ -1,9 +1,11 @@
 import {
   cleanupProject,
+  createFile,
   ensurePlaywrightBrowsersInstallation,
   getPackageManagerCommand,
   getSelectedPackageManager,
   newProject,
+  readFile,
   readJson,
   reservePort,
   runCLI,
@@ -68,6 +70,41 @@ describe('Playwright E2E Test runner', () => {
 
       const lintResults = runCLI(`lint demo-e2e`);
       expect(lintResults).toContain('Successfully ran target lint');
+    },
+    TEN_MINS_MS
+  );
+
+  it(
+    'should keep the server inputs out of atomized specs with "@nx-ultracache: imports"',
+    () => {
+      const app = uniq('app');
+      runCLI(
+        `g @nx/web:app apps/${app} --unitTestRunner=none --bundler=vite --e2eTestRunner=playwright --linter=eslint --style=css --no-interactive`
+      );
+      createFile(
+        `apps/${app}/src/app/feature.ts`,
+        `export const feature = 'feature';\n`
+      );
+      createFile(
+        `apps/${app}-e2e/src/feature.spec.ts`,
+        `// @nx-ultracache: imports\nimport '../../${app}/src/app/feature';\n${readFile(
+          `apps/${app}-e2e/src/example.spec.ts`
+        )}`
+      );
+
+      const { targets } = JSON.parse(runCLI(`show project ${app}-e2e --json`));
+      expect(targets['e2e-ci--src/example.spec.ts'].dependsOn).toEqual([
+        { projects: [app], target: 'preview' },
+        { target: 'e2e--wait-for-webserver' },
+      ]);
+      expect(targets['e2e-ci--src/feature.spec.ts'].dependsOn).toEqual([
+        { projects: [app], target: 'preview', inputs: false },
+        { target: 'e2e--wait-for-webserver' },
+      ]);
+
+      expect(runCLI(`lint ${app}-e2e`)).toContain(
+        'Successfully ran target lint'
+      );
     },
     TEN_MINS_MS
   );
