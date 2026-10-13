@@ -1055,7 +1055,7 @@ describe('Nx Running Tests', () => {
           60000
         );
 
-        it('should fail the waiting task when the probe times out', () => {
+        it('should fail the continuous task and skip the waiting task when the probe times out', () => {
           removeFile(`libs/${mylib1}/ready.txt`);
           updateJson(`libs/${mylib1}/project.json`, (config) => {
             // idle.js never listens, so the url probe cannot pass
@@ -1073,7 +1073,14 @@ describe('Nx Running Tests', () => {
           expect(output).toContain(
             `Task "${mylib1}:serve" did not become ready within 2000ms (readyWhen: url http://localhost:${port}).`
           );
-          expect(output).toContain('Failed tasks:');
+          expect(output).toMatch(
+            new RegExp(`Failed tasks:\\s+- ${mylib1}:serve`)
+          );
+          expect(output).toMatch(
+            new RegExp(
+              `Tasks not run because their dependencies failed or --nx-bail=true:\\s+- ${mylib1}:check`
+            )
+          );
         }, 60000);
       });
     });

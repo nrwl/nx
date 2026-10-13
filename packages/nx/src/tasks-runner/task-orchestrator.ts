@@ -1,6 +1,6 @@
 import { defaultMaxListeners } from 'events';
 import type { OutputStyle } from '../command-line/yargs-utils/shared-options';
-import { statSync, writeFileSync } from 'fs';
+import { appendFileSync, statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import * as pc from 'picocolors';
@@ -60,7 +60,9 @@ import {
   getReadyProducerIds,
   getReadyWhenConfig,
   normalizeReadyWhen,
+  NotReadyError,
   notReadyError,
+  ProducerFailedError,
   readinessTimeoutError,
   type NormalizedReadyWhen,
 } from './readiness/ready-when';
@@ -258,6 +260,10 @@ export class TaskOrchestrator {
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
   // Keyed by producer id: a producer this process started or shares
   private readiness = new Map<string, ReadinessState>();
+  // Producers that failed their check while still running: the exit must not
+  // report them again, and the saved log gets the reason after the transcript
+  private readinessFailures = new Map<string, Promise<void>>();
+  private readinessFailureReasons = new Map<string, string>();
   private readinessSettled = false;
   private waitingLogged = new Set<string>();
   private cleanupPromise: Promise<void> | null = null;
@@ -1491,6 +1497,10 @@ export class TaskOrchestrator {
         terminalOutput: '',
       };
     }
+    if (waitError instanceof ProducerFailedError) {
+      await this.skipWaiter(task, groupId);
+      return { task, code: 1, status: 'skipped', terminalOutput: '' };
+    }
     if (waitError) {
       await this.failTaskBeforeStart(task, groupId, waitError, doNotSkipCache);
       return {
@@ -1822,7 +1832,7 @@ export class TaskOrchestrator {
             if (!state.abort.signal.aborted) state.resolve();
           },
           (e) => {
-            if (!state.abort.signal.aborted) state.reject(e);
+            if (!state.abort.signal.aborted) this.failReadiness(task, state, e);
           }
         );
       }
@@ -1862,6 +1872,10 @@ export class TaskOrchestrator {
       await this.waitForReadyDependencies(task);
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
+      if (e instanceof ProducerFailedError) {
+        await this.skipWaiter(task, groupId);
+        return new NoopChildProcess({ code: 1, terminalOutput: '' });
+      }
       return this.failTaskBeforeStart(task, groupId, e);
     }
     // Skipped by a failed dependency's propagation while waiting
@@ -2025,11 +2039,7 @@ export class TaskOrchestrator {
         return;
       }
       if (status === TaskReadiness.Failed) {
-        // The row carries only the status; the owner prints the reason under
-        // NX_VERBOSE_LOGGING
-        throw new Error(
-          `Task "${producer.id}" failed its readiness check in the process that started it.`
-        );
+        throw new ProducerFailedError(producer.id);
       }
       if (Date.now() >= deadline) {
         throw readinessTimeoutError(producer.id, readyWhen);
@@ -2059,12 +2069,60 @@ export class TaskOrchestrator {
       (e) => {
         if (state.abort.signal.aborted) return;
         this.recordReadiness(task, TaskReadiness.Failed);
-        if (process.env.NX_VERBOSE_LOGGING === 'true') {
-          console.error(e?.message ?? e);
-        }
-        state.reject(e);
+        this.failReadiness(task, state, e);
       }
     );
+  }
+
+  // A verdict against a producer something in this run waits for fails the
+  // producer, and the skip propagation covers the waiters. Without a waiter
+  // the producer is left alone, as a plain `nx serve` with a probe would be.
+  private async failReadiness(task: Task, state: ReadinessState, e: any) {
+    const message = e?.message ?? String(e);
+    const entry = this.runningContinuousTasks.get(task.id);
+    if (
+      entry &&
+      !(e instanceof NotReadyError) &&
+      this.hasReadyWaiter(task.id)
+    ) {
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.appendTaskOutput(
+          task.id,
+          `\r\n${message}\r\n`,
+          false
+        );
+      } else {
+        console.error(message);
+      }
+      this.readinessFailureReasons.set(task.id, message);
+      const completion = this.complete(
+        [{ task, status: 'failure', terminalOutput: message }],
+        entry.groupId
+      );
+      this.readinessFailures.set(task.id, completion);
+      try {
+        await completion;
+      } finally {
+        this.readinessFailures.delete(task.id);
+      }
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(message);
+    }
+    state.reject(e);
+  }
+
+  // On an agent the waiter runs in another process with its own flat graph
+  private hasReadyWaiter(producerId: string): boolean {
+    return Object.values(this.fullTaskGraph.tasks).some((task) =>
+      getReadyProducerIds(task, this.fullTaskGraph).includes(producerId)
+    );
+  }
+
+  // The producer is not in this task graph, so no skip propagates to the waiter
+  private async skipWaiter(task: Task, groupId: number) {
+    if (!this.completedTasks.has(task.id)) {
+      await this.complete([{ task, status: 'skipped' }], groupId);
+    }
   }
 
   // The probe's verdict stands for local waiters even when the row for
@@ -2324,7 +2382,13 @@ export class TaskOrchestrator {
   private recordContinuousTerminalOutput(task: Task) {
     if (!task.hash) return;
     try {
-      const { size } = statSync(this.cache.temporaryOutputPath(task));
+      const outputPath = this.cache.temporaryOutputPath(task);
+      // The runner's exit handler wrote the child's transcript alone
+      const reason = this.readinessFailureReasons.get(task.id);
+      if (reason) {
+        appendFileSync(outputPath, `\n${reason}\n`);
+      }
+      const { size } = statSync(outputPath);
       this.cache.recordTerminalOutputs([{ hash: task.hash, size }]);
     } catch {
       // Exit handler: a throw here would be an unhandled rejection.
@@ -2542,8 +2606,15 @@ export class TaskOrchestrator {
     groupId: number,
     ownsRunningTasksService: boolean
   ) {
-    // If cleanup already completed this task, nothing left to do
+    await this.readinessFailures.get(task.id);
+    // Completed by cleanup, or failed its readiness check while still running
     if (this.completedTasks.has(task.id)) {
+      if (
+        this.runningContinuousTasks.delete(task.id) &&
+        ownsRunningTasksService
+      ) {
+        this.runningTasksService?.removeRunningTask(task.id);
+      }
       return;
     }
 
@@ -2597,8 +2668,7 @@ export class TaskOrchestrator {
     ownsRunningTasksService: boolean,
     reason: 'fulfilled' | 'interrupted' | 'crashed'
   ) {
-    if (this.completedTasks.has(task.id)) return;
-
+    await this.readinessFailures.get(task.id);
     this.runningContinuousTasks.delete(task.id);
     if (ownsRunningTasksService) {
       this.runningTasksService?.removeRunningTask(task.id);
@@ -2606,6 +2676,8 @@ export class TaskOrchestrator {
     // A probe that does not need the child (url, port, command) could still
     // pass during completion and release dependents of an exited producer
     this.readiness.get(task.id)?.abort.abort();
+    // Failed its readiness check while still running
+    if (this.completedTasks.has(task.id)) return;
 
     task.endTime = Date.now();
     if (reason === 'fulfilled') {

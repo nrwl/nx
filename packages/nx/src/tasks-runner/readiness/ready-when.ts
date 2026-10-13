@@ -103,11 +103,25 @@ export function readinessTimeoutError(
   );
 }
 
+// The row carries only the status; the owner reports the reason
+export class ProducerFailedError extends Error {
+  constructor(taskId: string) {
+    super(
+      `Task "${taskId}" failed its readiness check in the process that started it.`
+    );
+  }
+}
+
+// An exit or a stop is completed by its own handler, not as a verdict
+export class NotReadyError extends Error {}
+
 export function notReadyError(
   taskId: string,
   reason: 'exited' | 'was stopped' | 'failed'
 ): Error {
-  return new Error(`Task "${taskId}" ${reason} before it became ready.`);
+  return new NotReadyError(
+    `Task "${taskId}" ${reason} before it became ready.`
+  );
 }
 
 function describeReadyWhen(readyWhen: NormalizedReadyWhen): string {

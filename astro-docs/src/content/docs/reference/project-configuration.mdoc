@@ -657,13 +657,14 @@ It defaults to `60000`.
 The optional `interval` key is the time between attempts, in milliseconds.
 Without it, attempts back off from 100 to 1000 milliseconds.
 
-If the target isn't ready within `timeout`, the tasks waiting for it fail.
-The readiness failure doesn't stop the continuous task.
+If the target isn't ready within `timeout`, its task fails and the tasks waiting for it are skipped, as with any failed dependency.
+The continuous task keeps running until nothing in the run needs it.
+When no task in the run waits for the target, the failed check logs its reason only with `NX_VERBOSE_LOGGING=true`.
 Tasks whose `dependsOn` entry doesn't set `waitFor` to `ready` start as before.
 When one entry asks for `ready` and another entry reaches the same continuous target without it, the task waits for `ready`.
 A continuous target without `readyWhen` counts as ready once it has started.
 On such a dependency, `waitFor: "ready"` changes nothing.
-The WASM build of Nx doesn't support `readyWhen`, so tasks waiting for such a target fail there.
+The WASM build of Nx doesn't support `readyWhen`, so a target that declares it fails there when a task waits for it.
 
 `readyWhen` is unrelated to the option of the same name on the `nx:run-commands` executor.
 That option marks the run-commands task itself as done.

@@ -1753,9 +1753,12 @@ describe('TaskOrchestrator', () => {
     function createOrchestrator({
       readyWhen = { logMatches: 'listening' },
       flat = false,
+      waitFor = 'ready',
     }: {
       readyWhen?: unknown;
-      flat?: boolean;
+      /** An agent's flat graph: the waiter alone, or the producer alone */
+      flat?: boolean | 'producer';
+      waitFor?: 'started' | 'ready';
     } = {}) {
       const serve = createTask('app:serve', true);
       const e2e = createTask('e2e:e2e');
@@ -1764,19 +1767,27 @@ describe('TaskOrchestrator', () => {
         dependencies: { 'app:serve': [], 'e2e:e2e': [] },
         continuousDependencies: {
           'app:serve': [],
-          'e2e:e2e': [{ id: 'app:serve', waitFor: 'ready' }],
+          'e2e:e2e': [{ id: 'app:serve', waitFor }],
         },
         roots: ['app:serve', 'e2e:e2e'],
       };
       // An Nx Cloud agent worker runs one discrete task with a flat graph
-      const taskGraph: TaskGraph = flat
-        ? {
-            tasks: { 'e2e:e2e': e2e },
-            dependencies: { 'e2e:e2e': [] },
-            continuousDependencies: { 'e2e:e2e': [] },
-            roots: ['e2e:e2e'],
-          }
-        : fullTaskGraph;
+      const taskGraph: TaskGraph =
+        flat === 'producer'
+          ? {
+              tasks: { 'app:serve': serve },
+              dependencies: { 'app:serve': [] },
+              continuousDependencies: { 'app:serve': [] },
+              roots: ['app:serve'],
+            }
+          : flat
+            ? {
+                tasks: { 'e2e:e2e': e2e },
+                dependencies: { 'e2e:e2e': [] },
+                continuousDependencies: { 'e2e:e2e': [] },
+                roots: ['e2e:e2e'],
+              }
+            : fullTaskGraph;
 
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       orchestrator.projectGraph = {
@@ -1799,7 +1810,14 @@ describe('TaskOrchestrator', () => {
       orchestrator.taskGraph = taskGraph;
       orchestrator.fullTaskGraph = fullTaskGraph;
       orchestrator.readiness = new Map();
+      orchestrator.readinessFailures = new Map();
+      orchestrator.readinessFailureReasons = new Map();
       orchestrator.waitingLogged = new Set();
+      const outputPath = join(mkdtempSync(join(tmpdir(), 'readiness-')), 'out');
+      orchestrator.cache = {
+        temporaryOutputPath: () => outputPath,
+        recordTerminalOutputs: vi.fn(),
+      };
       orchestrator.tasksSchedule = {
         markReady: vi.fn(),
         markReadinessFailed: vi.fn(),
@@ -1810,6 +1828,9 @@ describe('TaskOrchestrator', () => {
       orchestrator.stopRequested = false;
       orchestrator.bailed = false;
       orchestrator.completedTasks = new Map();
+      orchestrator.runningContinuousTasks = new Map([
+        ['app:serve', { groupId: 1 }],
+      ]);
       orchestrator.runningTasksService = {
         getTaskReadiness: vi.fn(() => null),
         setTaskReadiness: vi.fn(),
@@ -1819,8 +1840,15 @@ describe('TaskOrchestrator', () => {
       orchestrator.options = {
         lifeCycle: {
           setTaskReadiness: vi.fn(),
+          appendTaskOutput: vi.fn(),
         },
       };
+      // Completion without the skip propagation; that part is master's
+      orchestrator.complete = vi.fn(async (results: any[]) => {
+        for (const { task, status } of results) {
+          orchestrator.completedTasks.set(task.id, status);
+        }
+      });
       orchestrator.handleDiscreteWorkerFailure = vi.fn();
       orchestrator.preRunSteps = vi.fn();
       orchestrator.processedTasks = new Map([
@@ -1843,7 +1871,15 @@ describe('TaskOrchestrator', () => {
           new Promise((r) => setTimeout(() => r('pending'), 20)),
         ]);
 
-      return { orchestrator, serve, e2e, runningTask, emit, settled };
+      return {
+        orchestrator,
+        serve,
+        e2e,
+        runningTask,
+        emit,
+        settled,
+        outputPath,
+      };
     }
 
     it('does not wait when the producer declares no readyWhen', async () => {
@@ -1880,10 +1916,11 @@ describe('TaskOrchestrator', () => {
       ]);
     });
 
-    it('fails the waiter when the probe times out and leaves the producer running', async () => {
-      const { orchestrator, serve, e2e, runningTask } = createOrchestrator({
-        readyWhen: { logMatches: 'never', timeout: 20 },
-      });
+    it('fails the producer when its probe times out and leaves it running', async () => {
+      const { orchestrator, serve, e2e, runningTask, outputPath } =
+        createOrchestrator({
+          readyWhen: { logMatches: 'never', timeout: 20 },
+        });
       const waiting = orchestrator.waitForReadyDependencies(e2e);
       orchestrator.startReadinessProbe(
         serve,
@@ -1891,10 +1928,92 @@ describe('TaskOrchestrator', () => {
         runningTask
       );
       await expect(waiting).rejects.toThrow('did not become ready within 20ms');
+      const message =
+        'Task "app:serve" did not become ready within 20ms (readyWhen: logMatches "never").';
+      expect(orchestrator.complete).toHaveBeenCalledWith(
+        [{ task: serve, status: 'failure', terminalOutput: message }],
+        1
+      );
+      expect(
+        orchestrator.options.lifeCycle.appendTaskOutput
+      ).toHaveBeenCalledWith('app:serve', `\r\n${message}\r\n`, false);
       expect(
         orchestrator.runningTasksService.setTaskReadiness
       ).toHaveBeenCalledWith('app:serve', 2);
       expect(runningTask.kill).not.toHaveBeenCalled();
+
+      // The runner's exit handler writes the transcript, then the reason goes in
+      writeFileSync(outputPath, 'transcript\n');
+      serve.hash = 'serve-hash';
+      orchestrator.recordContinuousTerminalOutput(serve);
+      expect(readFileSync(outputPath, 'utf8')).toBe(
+        `transcript\n\n${message}\n`
+      );
+    });
+
+    it('fails a producer alone on an agent when the full graph has a waiter', async () => {
+      const { orchestrator, serve, runningTask, settled } = createOrchestrator({
+        readyWhen: { logMatches: 'never', timeout: 20 },
+        flat: 'producer',
+      });
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve),
+        runningTask
+      );
+      await expect(
+        settled(orchestrator.readinessOf('app:serve').promise)
+      ).resolves.toBe('rejected');
+      expect(orchestrator.complete).toHaveBeenCalledWith(
+        [expect.objectContaining({ task: serve, status: 'failure' })],
+        1
+      );
+    });
+
+    it('does not report the producer again when it exits during its readiness completion', async () => {
+      const { orchestrator, serve, runningTask, settled } = createOrchestrator({
+        readyWhen: { logMatches: 'never', timeout: 20 },
+      });
+      let finishCompletion: () => void;
+      orchestrator.complete = vi.fn(async ([{ task, status }]) => {
+        await new Promise<void>((r) => (finishCompletion = r));
+        orchestrator.completedTasks.set(task.id, status);
+      });
+      orchestrator.completeContinuousTask = vi.fn();
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve),
+        runningTask
+      );
+      await vi.waitFor(() => expect(orchestrator.complete).toHaveBeenCalled());
+      const exited = orchestrator.handleContinuousTaskExit(1, serve, 1, true);
+      await expect(settled(exited)).resolves.toBe('pending');
+
+      finishCompletion();
+      await exited;
+      expect(orchestrator.completeContinuousTask).not.toHaveBeenCalled();
+      expect(
+        orchestrator.runningTasksService.removeRunningTask
+      ).toHaveBeenCalledWith('app:serve');
+    });
+
+    it('leaves a producer nothing waits for alone when its probe times out', async () => {
+      const { orchestrator, serve, runningTask, settled } = createOrchestrator({
+        readyWhen: { logMatches: 'never', timeout: 20 },
+        waitFor: 'started',
+      });
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve),
+        runningTask
+      );
+      await expect(
+        settled(orchestrator.readinessOf('app:serve').promise)
+      ).resolves.toBe('rejected');
+      expect(orchestrator.complete).not.toHaveBeenCalled();
+      expect(
+        orchestrator.runningTasksService.setTaskReadiness
+      ).toHaveBeenCalledWith('app:serve', 2);
     });
 
     it('fails the waiter when the producer fails before it starts', async () => {
@@ -1987,11 +2106,26 @@ describe('TaskOrchestrator', () => {
     });
 
     it.each([
-      ['ready', 1, 'resolved'],
-      ['failed', 2, 'rejected'],
+      ['ready', 1, 'resolved', []],
+      [
+        'failed',
+        2,
+        'rejected',
+        [
+          [
+            {
+              task: expect.objectContaining({ id: 'app:serve' }),
+              status: 'failure',
+              terminalOutput:
+                'Task "app:serve" failed its readiness check in the process that started it.',
+            },
+          ],
+          1,
+        ],
+      ],
     ])(
       'settles waiters from the row when another process runs the producer and its probe is %s',
-      async (_, status, outcome) => {
+      async (_, status, outcome, completion) => {
         const { orchestrator, serve, e2e, settled } = createOrchestrator();
         orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
         orchestrator.runningTasksService.getTaskReadiness
@@ -2013,6 +2147,9 @@ describe('TaskOrchestrator', () => {
             () => 'rejected'
           )
         ).resolves.toBe(outcome);
+        expect(orchestrator.complete.mock.calls).toEqual(
+          completion.length ? [completion] : []
+        );
         runningTask.kill();
       }
     );
@@ -2032,6 +2169,8 @@ describe('TaskOrchestrator', () => {
       await expect(waiting).rejects.toThrow(
         'Task "app:serve" exited before it became ready.'
       );
+      // Its exit handler completes it
+      expect(orchestrator.complete).not.toHaveBeenCalled();
       runningTask.kill();
     });
 
@@ -2126,26 +2265,20 @@ describe('TaskOrchestrator', () => {
       await expect(waiting).resolves.toBeUndefined();
     });
 
-    it('reports a failed wait as a failed task from runTaskDirectly', async () => {
+    it('skips a task from runTaskDirectly when the row says the producer failed elsewhere', async () => {
       const { orchestrator, e2e } = createOrchestrator({
         flat: true,
         readyWhen: { port: 4200 },
       });
       orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(2);
       const result = await orchestrator.runTaskDirectly(true, e2e, 1);
-      expect(result).toMatchObject({ task: e2e, code: 1, status: 'failure' });
-      expect(orchestrator.preRunSteps).toHaveBeenCalledWith([e2e], {
-        groupId: 1,
-      });
-      expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
-        true,
-        e2e,
-        1,
-        expect.objectContaining({
-          message:
-            'Task "app:serve" failed its readiness check in the process that started it.',
-        })
+      expect(result).toMatchObject({ task: e2e, code: 1, status: 'skipped' });
+      expect(orchestrator.complete).toHaveBeenCalledWith(
+        [{ task: e2e, status: 'skipped' }],
+        1
       );
+      expect(orchestrator.preRunSteps).not.toHaveBeenCalled();
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
     });
 
     describe('dispatch', () => {
@@ -2235,6 +2368,8 @@ describe('TaskOrchestrator', () => {
         orchestrator.registeredInvocations = new Set();
         orchestrator.runningDiscreteTasks = new Map();
         orchestrator.runningContinuousTasks = new Map();
+        // The real completion, whose endTasks is where the hold is observed
+        delete orchestrator.complete;
         Object.assign(orchestrator.tasksSchedule, {
           complete: vi.fn(),
           getIncompleteTasks: vi.fn(() => []),
