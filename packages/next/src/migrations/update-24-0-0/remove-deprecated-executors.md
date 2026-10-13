@@ -1,10 +1,89 @@
-# Replace removed @nx/next executors with inferred tasks
+#### Convert `@nx/next` build and server targets to inferred tasks
 
-Nx 24 removed `@nx/next:build`, `@nx/next:server` (including old `@nrwl` aliases). Complete the deterministic `convert-to-inferred` step using the recorded pre-migration projects, target defaults, errors and file diff.
+Nx 24 removes the `@nx/next:build` and `@nx/next:server` executors and their `@nrwl` aliases. The migration registers `@nx/next/plugin` in `nx.json` and converts the targets that use those executors to inferred tasks. It moves build options into `next.config.*`. A target with nothing left to override is removed from project configuration. When several projects share the same remaining options, those options move to a `targetDefaults` entry scoped to the plugin. `targetDefaults` entries keyed by a removed executor are removed once no target uses that executor.
 
-1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Reuse `@nx/next:convert-to-inferred` for unfinished projects where possible; it may retain unsupported targets, so inspect its results. Do not restore executor registrations or install older Nx packages.
-2. Move executor options into next.config and Next CLI flags. Preserve webpack callbacks, transpilePackages, workspace libraries, assets, output directory, environment settings and the intended Webpack/Turbopack mode. Build every migrated Next application unless expensive validation was explicitly skipped.
-3. Register `@nx/next/plugin` with options/includes that preserve custom target names and mixed inferred/explicit projects. Replace remaining removed-executor targets, including those in package.json and filtered targetDefaults. Transfer their behavior before removing obsolete defaults. Preserve configurations, dependencies, cache inputs/outputs and environment behavior. Do not silently delete unsupported options or unrelated targets. Migrate old @nrwl aliases too.
-4. Run project graph creation with the daemon and graph cache disabled (`NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false`), using the workspace package manager. Inspect resolved project targets and verify each migrated entrypoint exists and is inferred (a thin alias to an inferred target is acceptable). Resolve graph errors before completing this migration, even if task validation was skipped. Configs must load for subsequent migrations.
-5. By default run relevant real builds/tests with task cache disabled, including alternate configurations. Honor an existing preference to skip expensive task validation; otherwise offer that option when validation is slow. Skipping expensive tasks never skips conversion or the graph check. Report each skipped task as unverified. Never weaken assertions or change application behavior to make checks pass.
-6. Report converted projects, graph validation, task results and any skipped checks. Unconverted targets or a broken graph mean the migration is incomplete. Investigate task failures and distinguish missing environment prerequisites from conversion regressions; do not claim a working workspace with unresolved regressions.
+The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
+
+#### Sample code changes
+
+##### Before
+
+```json title="apps/my-app/project.json"
+{
+  "name": "my-app",
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/my-app"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/my-app"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "dev": true,
+        "port": 4200
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "my-app:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "my-app:build:production",
+          "dev": false
+        }
+      }
+    }
+  }
+}
+```
+
+##### After
+
+```json title="apps/my-app/project.json"
+{
+  "name": "my-app",
+  "targets": {
+    "build": {
+      "configurations": {
+        "development": {}
+      }
+    },
+    "serve": {
+      "configurations": {
+        "development": {},
+        "production": {}
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "port": 4200
+      }
+    }
+  }
+}
+```
+
+```json title="nx.json"
+{
+  "plugins": [
+    {
+      "plugin": "@nx/next/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "serve",
+        "serveStaticTargetName": "serve-static",
+        "startTargetName": "start"
+      }
+    }
+  ]
+}
+```

@@ -364,7 +364,6 @@ describe('remove-deprecated-executors', () => {
     await update(tree);
 
     expect(convertVitestToInferred).toHaveBeenCalledWith(tree, {
-      project: 'lib',
       skipFormat: true,
     });
   });

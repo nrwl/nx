@@ -1,10 +1,90 @@
-# Replace removed @nx/rspack executors with inferred tasks
+#### Convert `@nx/rspack` build and dev-server targets to inferred tasks
 
-Nx 24 removed `@nx/rspack:rspack`, `@nx/rspack:dev-server` (including old `@nrwl` aliases). Complete the deterministic `convert-to-inferred` step using the recorded pre-migration projects, target defaults, errors and file diff.
+Nx 24 removes the `@nx/rspack:rspack` and `@nx/rspack:dev-server` executors and their `@nrwl` aliases. The migration registers `@nx/rspack/plugin` in `nx.json` and converts the targets that use those executors to inferred tasks. It moves the executor options into `rspack.config.*`. A target with nothing left to override is removed from project configuration. When several projects share the same remaining options, those options move to a `targetDefaults` entry scoped to the plugin. `targetDefaults` entries keyed by a removed executor are removed once no target uses that executor.
 
-1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Reuse `@nx/rspack:convert-to-inferred` for unfinished projects where possible; it may retain unsupported targets, so inspect its results. Do not restore executor registrations or install older Nx packages.
-2. Convert composePlugins/withNx/withReact callbacks to standard Rspack configuration and NxAppRspackPlugin/NxReactRspackPlugin where appropriate. Preserve callback effects explicitly; do not wrap an inert compatibility helper. Preserve aliases, assets, output paths, environment defines and Node externals.
-3. Register `@nx/rspack/plugin` with options/includes that preserve custom target names and mixed inferred/explicit projects. Replace remaining removed-executor targets, including those in package.json and filtered targetDefaults. Transfer their behavior before removing obsolete defaults. Preserve configurations, dependencies, cache inputs/outputs and environment behavior. Do not silently delete unsupported options or unrelated targets. Migrate old @nrwl aliases too.
-4. Run project graph creation with the daemon and graph cache disabled (`NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false`), using the workspace package manager. Inspect resolved project targets and verify each migrated entrypoint exists and is inferred (a thin alias to an inferred target is acceptable). Resolve graph errors before completing this migration, even if task validation was skipped. Configs must load for subsequent migrations.
-5. By default run relevant real builds/tests with task cache disabled, including alternate configurations. Honor an existing preference to skip expensive task validation; otherwise offer that option when validation is slow. Skipping expensive tasks never skips conversion or the graph check. Report each skipped task as unverified. Never weaken assertions or change application behavior to make checks pass.
-6. Report converted projects, graph validation, task results and any skipped checks. Unconverted targets or a broken graph mean the migration is incomplete. Investigate task failures and distinguish missing environment prerequisites from conversion regressions; do not claim a working workspace with unresolved regressions.
+The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
+
+The `@nx/rspack:ssr-dev-server` executor and the Module Federation executors stay.
+
+#### Sample code changes
+
+The example shows the `build` target. Its options move into `rspack.config.*`, so only the configuration names stay on the target.
+
+##### Before
+
+```json title="apps/app1/project.json"
+{
+  "name": "app1",
+  "targets": {
+    "build": {
+      "executor": "@nx/rspack:rspack",
+      "options": {
+        "rspackConfig": "apps/app1/rspack.config.js",
+        "outputPath": "dist/apps/app1",
+        "index": "apps/app1/src/index.html",
+        "main": "apps/app1/src/main.tsx",
+        "tsConfig": "apps/app1/tsconfig.app.json",
+        "assets": ["apps/app1/src/favicon.ico", "apps/app1/src/assets"],
+        "styles": ["apps/app1/src/styles.scss"],
+        "scripts": []
+      },
+      "configurations": {
+        "development": {
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true
+        },
+        "production": {
+          "fileReplacements": [
+            {
+              "replace": "apps/app1/src/environments/environment.ts",
+              "with": "apps/app1/src/environments/environment.prod.ts"
+            }
+          ],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      },
+      "defaultConfiguration": "production"
+    }
+  }
+}
+```
+
+##### After
+
+```json title="apps/app1/project.json"
+{
+  "name": "app1",
+  "targets": {
+    "build": {
+      "configurations": {
+        "development": {},
+        "production": {}
+      },
+      "defaultConfiguration": "production"
+    }
+  }
+}
+```
+
+```json title="nx.json"
+{
+  "plugins": [
+    {
+      "plugin": "@nx/rspack/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "serveTargetName": "serve"
+      }
+    }
+  ]
+}
+```

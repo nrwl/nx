@@ -1,10 +1,68 @@
-# Replace removed @nx/react-native executors with inferred tasks
+#### Convert `@nx/react-native` targets to inferred tasks
 
-Nx 24 removed `@nx/react-native:build-android`, `@nx/react-native:build-ios`, `@nx/react-native:bundle`, `@nx/react-native:pod-install`, `@nx/react-native:run-android`, `@nx/react-native:run-ios`, `@nx/react-native:start`, `@nx/react-native:upgrade` (including old `@nrwl` aliases). Complete the deterministic `convert-to-inferred` step using the recorded pre-migration projects, target defaults, errors and file diff.
+Nx 24 removes the `@nx/react-native:build-android`, `@nx/react-native:build-ios`, `@nx/react-native:bundle`, `@nx/react-native:pod-install`, `@nx/react-native:run-android`, `@nx/react-native:run-ios`, `@nx/react-native:start` and `@nx/react-native:upgrade` executors and their `@nrwl` aliases. The migration registers `@nx/react-native/plugin` in `nx.json` and converts the targets that use those executors to inferred tasks. Executor options become command-line arguments of the inferred tasks. The converter does not handle `bundle` targets, so they are left for manual conversion. A target with nothing left to override is removed from project configuration. When several projects share the same remaining options, those options move to a `targetDefaults` entry scoped to the plugin. `targetDefaults` entries keyed by a removed executor are removed once no target uses that executor.
 
-1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Reuse `@nx/react-native:convert-to-inferred` for unfinished projects where possible; it may retain unsupported targets, so inspect its results. Do not restore executor registrations or install older Nx packages.
-2. Preserve platform variants, bundle output paths, Metro config and native setup. Keep storybook, sync-deps and ensure-symlink executors. Device validation may be skipped explicitly; graph creation may not.
-3. Register `@nx/react-native/plugin` with options/includes that preserve custom target names and mixed inferred/explicit projects. Replace remaining removed-executor targets, including those in package.json and filtered targetDefaults. Transfer their behavior before removing obsolete defaults. Preserve configurations, dependencies, cache inputs/outputs and environment behavior. Do not silently delete unsupported options or unrelated targets. Migrate old @nrwl aliases too.
-4. Run project graph creation with the daemon and graph cache disabled (`NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false`), using the workspace package manager. Inspect resolved project targets and verify each migrated entrypoint exists and is inferred (a thin alias to an inferred target is acceptable). Resolve graph errors before completing this migration, even if task validation was skipped. Configs must load for subsequent migrations.
-5. By default run relevant real builds/tests with task cache disabled, including alternate configurations. Honor an existing preference to skip expensive task validation; otherwise offer that option when validation is slow. Skipping expensive tasks never skips conversion or the graph check. Report each skipped task as unverified. Never weaken assertions or change application behavior to make checks pass.
-6. Report converted projects, graph validation, task results and any skipped checks. Unconverted targets or a broken graph mean the migration is incomplete. Investigate task failures and distinguish missing environment prerequisites from conversion regressions; do not claim a working workspace with unresolved regressions.
+The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
+
+The `@nx/react-native:storybook`, `@nx/react-native:sync-deps` and `@nx/react-native:ensure-symlink` executors stay.
+
+#### Sample code changes
+
+The `build-android` target is removed because it matches the inferred target. The `bundle-android` target keeps its executor.
+
+##### Before
+
+```json title="apps/demo/project.json"
+{
+  "name": "demo",
+  "targets": {
+    "build-android": {
+      "executor": "@nx/react-native:build-android",
+      "options": {}
+    },
+    "bundle-android": {
+      "executor": "@nx/react-native:bundle",
+      "options": {
+        "platform": "android"
+      }
+    }
+  }
+}
+```
+
+##### After
+
+```json title="apps/demo/project.json"
+{
+  "name": "demo",
+  "targets": {
+    "bundle-android": {
+      "executor": "@nx/react-native:bundle",
+      "options": {
+        "platform": "android"
+      }
+    }
+  }
+}
+```
+
+```json title="nx.json"
+{
+  "plugins": [
+    {
+      "plugin": "@nx/react-native/plugin",
+      "options": {
+        "buildAndroidTargetName": "build-android",
+        "buildIosTargetName": "build-ios",
+        "bundleTargetName": "bundle",
+        "podInstallTargetName": "pod-install",
+        "runAndroidTargetName": "run-android",
+        "runIosTargetName": "run-ios",
+        "startTargetName": "start",
+        "syncDepsTargetName": "sync-deps",
+        "upgradeTargetName": "upgrade"
+      }
+    }
+  ]
+}
+```

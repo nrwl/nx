@@ -1,10 +1,45 @@
-# Replace removed @nx/rollup executors with inferred tasks
+#### Convert `@nx/rollup:rollup` targets to inferred tasks
 
-Nx 24 removed `@nx/rollup:rollup` (including old `@nrwl` aliases). Complete the deterministic `convert-to-inferred` step using the recorded pre-migration projects, target defaults, errors and file diff.
+Nx 24 removes the `@nx/rollup:rollup` executor and its `@nrwl/rollup:rollup` alias. The migration registers `@nx/rollup/plugin` in `nx.json` and converts the targets that use those executors to inferred tasks. It writes the executor options into a Rollup config file in the project root. A target with nothing left to override is removed from project configuration. When several projects share the same remaining options, those options move to a `targetDefaults` entry scoped to the plugin. `targetDefaults` entries keyed by a removed executor are removed once no target uses that executor.
 
-1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Reuse `@nx/rollup:convert-to-inferred` for unfinished projects where possible; it may retain unsupported targets, so inspect its results. Do not restore executor registrations or install older Nx packages.
-2. Generate native Rollup configuration preserving library formats, declaration generation, externals, assets and package metadata. Check every configuration and custom build target.
-3. Register `@nx/rollup/plugin` with options/includes that preserve custom target names and mixed inferred/explicit projects. Replace remaining removed-executor targets, including those in package.json and filtered targetDefaults. Transfer their behavior before removing obsolete defaults. Preserve configurations, dependencies, cache inputs/outputs and environment behavior. Do not silently delete unsupported options or unrelated targets. Migrate old @nrwl aliases too.
-4. Run project graph creation with the daemon and graph cache disabled (`NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false`), using the workspace package manager. Inspect resolved project targets and verify each migrated entrypoint exists and is inferred (a thin alias to an inferred target is acceptable). Resolve graph errors before completing this migration, even if task validation was skipped. Configs must load for subsequent migrations.
-5. By default run relevant real builds/tests with task cache disabled, including alternate configurations. Honor an existing preference to skip expensive task validation; otherwise offer that option when validation is slow. Skipping expensive tasks never skips conversion or the graph check. Report each skipped task as unverified. Never weaken assertions or change application behavior to make checks pass.
-6. Report converted projects, graph validation, task results and any skipped checks. Unconverted targets or a broken graph mean the migration is incomplete. Investigate task failures and distinguish missing environment prerequisites from conversion regressions; do not claim a working workspace with unresolved regressions.
+The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
+
+#### Sample code changes
+
+##### Before
+
+```json title="mypkg/project.json"
+{
+  "name": "mypkg",
+  "targets": {
+    "build": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "main": "mypkg/src/index.ts",
+        "outputPath": "dist/mypkg",
+        "tsConfig": "mypkg/tsconfig.lib.json",
+        "compiler": "babel",
+        "format": ["esm"],
+        "external": [],
+        "assets": []
+      }
+    }
+  }
+}
+```
+
+##### After
+
+```json title="nx.json"
+{
+  "plugins": [
+    {
+      "plugin": "@nx/rollup/plugin",
+      "options": {
+        "buildTargetName": "build"
+      }
+    }
+  ]
+}
+```

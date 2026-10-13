@@ -1,4 +1,4 @@
-import { readProjectConfiguration, type Tree } from '@nx/devkit';
+import { getProjects, type Tree } from '@nx/devkit';
 import {
   migrateRemovedExecutors,
   NoTargetsToMigrateError,
@@ -21,9 +21,9 @@ export default function update(tree: Tree) {
     tree,
     [...viteExecutors, ...vitestExecutors],
     async (tree, options) => {
-      const executors = Object.values(
-        readProjectConfiguration(tree, options.project).targets ?? {}
-      ).map((target) => target.executor);
+      const executors = [...getProjects(tree).values()].flatMap((project) =>
+        Object.values(project.targets ?? {}).map((target) => target.executor)
+      );
 
       if (executors.some((executor) => viteExecutors.includes(executor))) {
         const { convertToInferred } =
@@ -44,7 +44,7 @@ export default function update(tree: Tree) {
   );
 }
 
-// A converter that skips the project must not stop the other one; the
+// A converter that skips every target must not stop the other one; the
 // leftover re-scan in migrateRemovedExecutors still names what it left.
 async function skipUnmigrated(convert: () => Promise<unknown>) {
   try {

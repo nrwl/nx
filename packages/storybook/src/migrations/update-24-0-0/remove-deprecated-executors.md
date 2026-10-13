@@ -1,10 +1,88 @@
-# Replace removed @nx/storybook executors with inferred tasks
+#### Convert `@nx/storybook` build and serve targets to inferred tasks
 
-Nx 24 removed `@nx/storybook:storybook`, `@nx/storybook:build` (including old `@nrwl` aliases). Complete the deterministic `convert-to-inferred` step using the recorded pre-migration projects, target defaults, errors and file diff.
+Nx 24 removes the `@nx/storybook:storybook` and `@nx/storybook:build` executors and their `@nrwl` aliases. The migration registers `@nx/storybook/plugin` in `nx.json` and converts the targets that use those executors to inferred tasks. It moves settings such as `docsMode` and `staticDir` into `.storybook/main.*`. A target with nothing left to override is removed from project configuration. When several projects share the same remaining options, those options move to a `targetDefaults` entry scoped to the plugin. `targetDefaults` entries keyed by a removed executor are removed once no target uses that executor.
 
-1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Reuse `@nx/storybook:convert-to-inferred` for unfinished projects where possible; it may retain unsupported targets, so inspect its results. Do not restore executor registrations or install older Nx packages.
-2. Preserve framework/builder selection, configDir, ports, static assets, output directory and build/dev target names.
-3. Register `@nx/storybook/plugin` with options/includes that preserve custom target names and mixed inferred/explicit projects. Replace remaining removed-executor targets, including those in package.json and filtered targetDefaults. Transfer their behavior before removing obsolete defaults. Preserve configurations, dependencies, cache inputs/outputs and environment behavior. Do not silently delete unsupported options or unrelated targets. Migrate old @nrwl aliases too.
-4. Run project graph creation with the daemon and graph cache disabled (`NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false`), using the workspace package manager. Inspect resolved project targets and verify each migrated entrypoint exists and is inferred (a thin alias to an inferred target is acceptable). Resolve graph errors before completing this migration, even if task validation was skipped. Configs must load for subsequent migrations.
-5. By default run relevant real builds/tests with task cache disabled, including alternate configurations. Honor an existing preference to skip expensive task validation; otherwise offer that option when validation is slow. Skipping expensive tasks never skips conversion or the graph check. Report each skipped task as unverified. Never weaken assertions or change application behavior to make checks pass.
-6. Report converted projects, graph validation, task results and any skipped checks. Unconverted targets or a broken graph mean the migration is incomplete. Investigate task failures and distinguish missing environment prerequisites from conversion regressions; do not claim a working workspace with unresolved regressions.
+The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
+
+#### Sample code changes
+
+##### Before
+
+```json title="apps/app1/project.json"
+{
+  "name": "app1",
+  "targets": {
+    "build-storybook": {
+      "executor": "@nx/storybook:build",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "configDir": "apps/app1/.storybook",
+        "outputDir": "dist/storybook/apps/app1"
+      },
+      "configurations": {}
+    },
+    "storybook": {
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "apps/app1/.storybook"
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    }
+  }
+}
+```
+
+##### After
+
+```json title="apps/app1/project.json"
+{
+  "name": "app1",
+  "targets": {
+    "build-storybook": {
+      "options": {
+        "config-dir": ".storybook",
+        "output-dir": "../../dist/storybook/apps/app1"
+      },
+      "outputs": [
+        "{projectRoot}/{options.output-dir}",
+        "{projectRoot}/storybook-static",
+        "{options.output-dir}",
+        "{options.outputDir}",
+        "{options.o}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "args": ["--quiet"]
+        }
+      },
+      "options": {
+        "config-dir": ".storybook",
+        "port": 4400
+      }
+    }
+  }
+}
+```
+
+```json title="nx.json"
+{
+  "plugins": [
+    {
+      "plugin": "@nx/storybook/plugin",
+      "options": {
+        "buildStorybookTargetName": "build-storybook",
+        "serveStorybookTargetName": "storybook",
+        "staticStorybookTargetName": "static-storybook",
+        "testStorybookTargetName": "test-storybook"
+      }
+    }
+  ]
+}
+```

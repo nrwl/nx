@@ -20,9 +20,10 @@
     },
     "remove-deprecated-executors": {
       "version": "24.0.0-beta.0",
-      "description": "Convert removed @nx/rollup executors to inferred tasks.",
+      "description": "Converts targets using the removed `@nx/rollup` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
       "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
-      "prompt": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {
