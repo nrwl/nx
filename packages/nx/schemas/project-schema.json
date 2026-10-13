@@ -249,7 +249,7 @@
   },
   "definitions": {
     "readyWhen": {
-      "description": "How Nx detects that this continuous target is ready. Dependents opt in with \"waitFor\": \"ready\" on their dependsOn entry.",
+      "description": "How Nx detects that this continuous target is ready. Dependents opt in with \"waitFor\": \"ready\" on their dependsOn entry. Strings may use the {workspaceRoot}, {projectRoot}, {projectName} and {options.*} placeholders, resolved against the options the task runs with.",
       "type": "object",
       "properties": {
         "url": {
@@ -257,10 +257,10 @@
           "description": "Ready when an HTTP or HTTPS GET gets a status from 200 to 403. A redirect counts as ready and is not followed"
         },
         "port": {
-          "type": "integer",
+          "type": ["integer", "string"],
           "minimum": 1,
           "maximum": 65535,
-          "description": "Ready when a TCP connection to this port succeeds"
+          "description": "Ready when a TCP connection to this port succeeds. A string must resolve to a port number through a placeholder such as {options.port}"
         },
         "host": {
           "type": "string",

@@ -206,7 +206,9 @@ export interface ReadyWhenOptions {
 
 /**
  * Readiness probe of a continuous target. Exactly one of `url`, `port`,
- * `command` or `logMatches` must be set.
+ * `command` or `logMatches` must be set. Strings may use the `{workspaceRoot}`,
+ * `{projectRoot}`, `{projectName}` and `{options.*}` placeholders, resolved
+ * against the options the task runs with.
  */
 export type ReadyWhen =
   | ({
@@ -218,9 +220,11 @@ export type ReadyWhen =
     } & ReadyWhenOptions)
   | ({
       /**
-       * Ready when a TCP connection to the port succeeds.
+       * Ready when a TCP connection to the port succeeds. A string must
+       * resolve to a port number through a placeholder such as
+       * `{options.port}`.
        */
-      port: number;
+      port: number | string;
 
       /**
        * Host to connect to. By default 127.0.0.1 and ::1 are both tried.

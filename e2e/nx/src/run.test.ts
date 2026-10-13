@@ -861,10 +861,14 @@ describe('Nx Running Tests', () => {
         checkFilesExist(`one.txt`);
       }, 10000);
 
-      function continuousServe(file: string, readyWhen: object) {
+      function continuousServe(
+        file: string,
+        readyWhen: object,
+        options: object = {}
+      ) {
         return {
           command: `node ${file}`,
-          options: { cwd: `libs/${mylib1}` },
+          options: { cwd: `libs/${mylib1}`, ...options },
           continuous: true,
           readyWhen,
         };
@@ -1015,14 +1019,16 @@ describe('Nx Running Tests', () => {
         beforeEach(async () => {
           port = await reservePort();
           // The marker exists only once the server listens, so the check
-          // passes only if Nx waited for the probe.
+          // passes only if Nx waited for the probe. A `port` target option
+          // reaches the server as `--port=<n>`.
           updateFile(
             `libs/${mylib1}/server.js`,
             `
             const { createServer } = require('http');
             const { writeFileSync } = require('fs');
+            const port = Number(process.argv.find((a) => a.startsWith('--port='))?.slice(7) ?? ${port});
             setTimeout(() => {
-              createServer((req, res) => res.end('ok')).listen(${port}, '127.0.0.1');
+              createServer((req, res) => res.end('ok')).listen(port, '127.0.0.1');
               writeFileSync('ready.txt', '');
             }, 2000);
           `
@@ -1030,7 +1036,11 @@ describe('Nx Running Tests', () => {
         });
 
         it.each([
-          ['url', () => ({ url: `http://localhost:${port}` })],
+          [
+            'url',
+            () => ({ url: 'http://localhost:{options.port}' }),
+            () => ({ port }),
+          ],
           ['port', () => ({ port })],
           [
             'command',
@@ -1040,10 +1050,14 @@ describe('Nx Running Tests', () => {
           ],
         ])(
           'should wait for the %s probe',
-          (_, readyWhen) => {
+          (_, readyWhen, options?: () => object) => {
             removeFile(`libs/${mylib1}/ready.txt`);
             updateJson(`libs/${mylib1}/project.json`, (config) => {
-              config.targets.serve = continuousServe('server.js', readyWhen());
+              config.targets.serve = continuousServe(
+                'server.js',
+                readyWhen(),
+                options?.()
+              );
               config.targets.check = readyMarkerCheck();
               return config;
             });

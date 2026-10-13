@@ -58,8 +58,7 @@ import { PseudoTtyProcess } from './pseudo-terminal';
 import { waitForReadiness } from './readiness/probes';
 import {
   getReadyProducerIds,
-  getReadyWhenConfig,
-  normalizeReadyWhen,
+  getReadyWhen,
   NotReadyError,
   notReadyError,
   ProducerFailedError,
@@ -1967,8 +1966,7 @@ export class TaskOrchestrator {
 
   // region Readiness
   private getReadyWhen(task: Task): NormalizedReadyWhen | null {
-    const readyWhen = getReadyWhenConfig(task, this.projectGraph);
-    return readyWhen == null ? null : normalizeReadyWhen(readyWhen, task.id);
+    return getReadyWhen(task, this.projectGraph, this.projects, workspaceRoot);
   }
 
   private async waitForReadyDependencies(task: Task): Promise<void> {

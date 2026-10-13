@@ -19,6 +19,13 @@ vi.mock('../../native', async () => ({
   },
 }));
 
+const data = {
+  workspaceRoot: '/workspace',
+  projectRoot: 'app',
+  projectName: 'app',
+  options: {},
+};
+
 describe('waitForReadiness', () => {
   let outputListeners: ((chunk: string) => void)[];
   let runningTask: RunningTask;
@@ -33,7 +40,7 @@ describe('waitForReadiness', () => {
   });
 
   function wait(readyWhen: Parameters<typeof normalizeReadyWhen>[0]) {
-    return waitForReadiness(normalizeReadyWhen(readyWhen, 'app:serve'), {
+    return waitForReadiness(normalizeReadyWhen(readyWhen, 'app:serve', data), {
       taskId: 'app:serve',
       runningTask,
       cwd: process.cwd(),
@@ -220,7 +227,8 @@ describe('waitForReadiness', () => {
       const ready = waitForReadiness(
         normalizeReadyWhen(
           { command: 'test -f marker', interval: 10 },
-          'db:up'
+          'db:up',
+          data
         ),
         {
           taskId: 'db:up',
@@ -237,7 +245,8 @@ describe('waitForReadiness', () => {
       const ready = waitForReadiness(
         normalizeReadyWhen(
           { command: 'sh -c "sleep 0.3; touch marker"; exit 1', timeout: 100 },
-          'db:up'
+          'db:up',
+          data
         ),
         { taskId: 'db:up', runningTask, cwd: dir, signal: controller.signal }
       );

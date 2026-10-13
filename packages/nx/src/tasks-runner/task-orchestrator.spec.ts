@@ -24,6 +24,7 @@ vi.mock('./task-env', async () => ({
 vi.mock('./utils', async () => ({
   ...(await vi.importActual('./utils')),
   getCustomHasher: vi.fn(() => null),
+  getExecutorForTask: vi.fn(() => ({ schema: { properties: {} } })),
 }));
 
 describe('TaskOrchestrator', () => {

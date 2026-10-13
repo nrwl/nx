@@ -1,6 +1,12 @@
+import { relative } from 'path';
 import type { ProjectGraph } from '../../config/project-graph';
 import type { Task, TaskGraph } from '../../config/task-graph';
-import type { ReadyWhen } from '../../config/workspace-json-project-json';
+import type {
+  ProjectConfiguration,
+  ReadyWhen,
+} from '../../config/workspace-json-project-json';
+import { combineOptionsForExecutor, type Options } from '../../utils/params';
+import { getExecutorForTask } from '../utils';
 
 const DEFAULT_READY_TIMEOUT = 60_000;
 // Node timers take at most a signed 32-bit count of milliseconds
@@ -16,9 +22,21 @@ export type NormalizedReadyWhen = { timeout: number; interval?: number } & (
 
 const PROBE_KEYS = ['url', 'port', 'command', 'logMatches'] as const;
 
+// The placeholders `outputs` resolve, matched by name so that braces a shell
+// command needs (`{{.State.Health.Status}}`, `${VAR}`, `{a,b}`) stay literal
+const PLACEHOLDER = /{(workspaceRoot|projectRoot|projectName|options\.[^}]+)}/g;
+
+export interface ReadyWhenData {
+  workspaceRoot: string;
+  projectRoot: string;
+  projectName: string;
+  options: Record<string, unknown>;
+}
+
 export function normalizeReadyWhen(
   readyWhen: ReadyWhen,
-  taskId: string
+  taskId: string,
+  data: ReadyWhenData
 ): NormalizedReadyWhen {
   const invalid = (reason: string) =>
     new Error(`Task "${taskId}" has an invalid "readyWhen": ${reason}.`);
@@ -28,6 +46,31 @@ export function normalizeReadyWhen(
   }
 
   const config = readyWhen as unknown as Record<string, unknown>;
+  const resolve = (value: unknown): unknown =>
+    typeof value === 'string'
+      ? value.replace(PLACEHOLDER, (match, name: string) => {
+          let resolved: unknown = data;
+          for (const key of name.split('.')) {
+            resolved = resolved?.[key];
+          }
+          if (resolved == null) {
+            throw invalid(`"${match}" has no value`);
+          }
+          if (!['string', 'number', 'boolean'].includes(typeof resolved)) {
+            throw invalid(`"${match}" is not a string or a number`);
+          }
+          return String(resolved);
+        })
+      : value;
+  // Braces are never valid in a host or port once resolved, so a leftover is
+  // a typo. A url keeps them: they are legal in its path and query.
+  const resolveWithoutBraces = (key: string): unknown => {
+    const value = resolve(config[key]);
+    if (typeof value === 'string' && /[{}]/.test(value)) {
+      throw invalid(`"${key}" contains an unknown placeholder`);
+    }
+    return value;
+  };
   const present = PROBE_KEYS.filter((key) => config[key] != null);
   if (present.length !== 1) {
     throw invalid(
@@ -48,18 +91,21 @@ export function normalizeReadyWhen(
 
   switch (present[0]) {
     case 'url': {
-      const url = config.url;
+      const url = resolve(config.url);
       if (typeof url !== 'string' || !isHttpUrl(url)) {
         throw invalid('"url" must be an http or https URL');
       }
       return { kind: 'url', url, ...shared };
     }
     case 'port': {
-      const port = config.port;
+      let port = resolveWithoutBraces('port');
+      if (typeof port === 'string' && /^\d+$/.test(port)) {
+        port = Number(port);
+      }
       if (!isPositiveInteger(port) || port > 65535) {
         throw invalid('"port" must be an integer from 1 to 65535');
       }
-      const host = config.host;
+      const host = resolveWithoutBraces('host');
       if (host == null) {
         return { kind: 'port', port, ...shared };
       }
@@ -69,19 +115,21 @@ export function normalizeReadyWhen(
       return { kind: 'port', port, host, ...shared };
     }
     case 'command': {
-      const command = config.command;
+      const command = resolve(config.command);
       if (typeof command !== 'string' || !command) {
         throw invalid('"command" must be a non-empty string');
       }
       return { kind: 'command', command, ...shared };
     }
     case 'logMatches': {
-      const logMatches = Array.isArray(config.logMatches)
-        ? config.logMatches
-        : [config.logMatches];
+      const logMatches = (
+        Array.isArray(config.logMatches)
+          ? config.logMatches
+          : [config.logMatches]
+      ).map(resolve);
       if (
         logMatches.length === 0 ||
-        logMatches.some((m) => typeof m !== 'string' || !m)
+        !logMatches.every((m): m is string => typeof m === 'string' && !!m)
       ) {
         throw invalid(
           '"logMatches" must be a non-empty string or an array of them'
@@ -151,6 +199,37 @@ export function getReadyWhenConfig(
   return projectGraph.nodes[task.target.project]?.data?.targets?.[
     task.target.target
   ]?.readyWhen;
+}
+
+// Placeholders resolve against the options the executor receives: aliases,
+// schema defaults and the spelling of command-line overrides applied
+export function getReadyWhen(
+  task: Task,
+  projectGraph: ProjectGraph,
+  projects: Record<string, ProjectConfiguration>,
+  workspaceRoot: string
+): NormalizedReadyWhen | null {
+  const readyWhen = getReadyWhenConfig(task, projectGraph);
+  if (readyWhen == null) {
+    return null;
+  }
+  const node = projectGraph.nodes[task.target.project];
+  const target = node.data.targets[task.target.target];
+  const { schema } = getExecutorForTask(task, projects);
+  return normalizeReadyWhen(readyWhen, task.id, {
+    workspaceRoot,
+    projectRoot: node.data.root,
+    projectName: node.name,
+    options: combineOptionsForExecutor(
+      task.overrides as Options,
+      task.target.configuration ?? target.defaultConfiguration,
+      target,
+      schema,
+      task.target.project,
+      relative(task.projectRoot ?? workspaceRoot, process.cwd()),
+      process.env.NX_VERBOSE_LOGGING === 'true'
+    ),
+  });
 }
 
 export function getReadyProducerIds(
