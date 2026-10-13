@@ -673,7 +673,8 @@ export function stringifyPnpmLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
   packageJson: NormalizedPackageJson,
-  workspaceRoot: string
+  workspaceRoot: string,
+  sourceProjectRoot?: string
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, importers } = data;
@@ -736,7 +737,8 @@ export function stringifyPnpmLockfile(
       graph,
       workspaceModules,
       +lockfileVersion,
-      workspaceRoot
+      workspaceRoot,
+      sourceProjectRoot
     );
   const snapshots = mapSnapshots(
     packages,
@@ -1228,6 +1230,51 @@ function versionIsAlias(
     : key.startsWith(`${packageName}@${version}`);
 }
 
+/** Canonicalize full alias refs without changing their emitted syntax. */
+function normalizeDependencyReference(
+  reference: string,
+  packageName: string
+): string {
+  const withoutLeadingSlash = reference.replace(/^\//, '');
+  if (
+    withoutLeadingSlash.startsWith(`${packageName}/`) ||
+    withoutLeadingSlash.startsWith(`${packageName}@`)
+  ) {
+    return `${packageName}@${getVersion(withoutLeadingSlash, packageName)}`;
+  }
+  return reference;
+}
+
+/** Look only at the known source importer, then the workspace root. */
+function getImporterDependencyReference(
+  importers: Record<string, ProjectSnapshot>,
+  sourceProjectRoot: string | undefined,
+  packageName: string,
+  section: string
+): string | undefined {
+  const sections = [
+    ...new Set([
+      section,
+      'dependencies',
+      'optionalDependencies',
+      'devDependencies',
+    ]),
+  ];
+  const sourceImporter = sourceProjectRoot
+    ? posix.normalize(sourceProjectRoot.replace(/\\/g, '/'))
+    : '.';
+  for (const importerPath of [...new Set([sourceImporter, '.'])]) {
+    const importer = importers[importerPath];
+    for (const depSection of sections) {
+      const reference = importer?.[depSection]?.[packageName];
+      if (reference !== undefined) {
+        return reference;
+      }
+    }
+  }
+  return undefined;
+}
+
 function mapRootSnapshot(
   packageJson: NormalizedPackageJson,
   rootImporters: Record<string, ProjectSnapshot>,
@@ -1236,7 +1283,8 @@ function mapRootSnapshot(
   graph: ProjectGraph,
   workspaceModules: ReturnType<typeof getWorkspacePackagesFromGraph>,
   lockfileVersion: number,
-  workspaceRoot: string
+  workspaceRoot: string,
+  sourceProjectRoot?: string
 ) {
   const catalogManager = getCatalogManager(workspaceRoot);
   const snapshot: ProjectSnapshot = { specifiers: {} };
@@ -1351,13 +1399,46 @@ function mapRootSnapshot(
           // leave the ref pointing at no entry in the packages section.
           const aliased =
             lockfileVersion >= 9 && node.data.packageName !== packageName;
-          snapshot[section][packageName] = findOriginalKeys(
+          const candidates = findOriginalKeys(
             packages,
             packageIndex,
             node,
             lockfileVersion,
             { returnFullKey: aliased }
-          )[0][0];
+          );
+          // The graph identifies the base version but cannot distinguish peer
+          // contexts. Preserve the source importer ref only when it names an
+          // available snapshot of that selected version.
+          const preferred = getImporterDependencyReference(
+            rootImporters,
+            sourceProjectRoot,
+            packageName,
+            section
+          );
+          const realName = node.data.version.startsWith('npm:')
+            ? aliasTargetName(node.data.version)
+            : node.data.packageName;
+          const selectedVersion = node.data.version.startsWith('npm:')
+            ? getVersion(node.data.version.slice('npm:'.length), realName)
+            : node.data.version;
+          const barePreferred = preferred?.replace(/^\//, '');
+          const preferredVersion =
+            barePreferred?.startsWith(`${realName}@`) ||
+            barePreferred?.startsWith(`${realName}/`)
+              ? getVersion(barePreferred, realName)
+              : preferred;
+          const compatible =
+            preferredVersion !== undefined &&
+            parseBaseVersion(preferredVersion, lockfileVersion < 6) ===
+              parseBaseVersion(selectedVersion, lockfileVersion < 6);
+          snapshot[section][packageName] =
+            (compatible &&
+              candidates.find(
+                ([key]) =>
+                  normalizeDependencyReference(key, realName) ===
+                  normalizeDependencyReference(preferred, realName)
+              )?.[0]) ||
+            candidates[0][0];
         }
       });
     }
