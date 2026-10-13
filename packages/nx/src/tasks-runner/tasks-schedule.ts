@@ -14,7 +14,6 @@ import { TaskHistory, getTaskHistory } from '../utils/task-history';
 import { TaskReadiness } from '../native';
 import {
   getReadyDependencies,
-  getReadyProducerIds,
   getReadyWhenConfig,
 } from './readiness/ready-when';
 
@@ -202,7 +201,7 @@ export class TasksSchedule {
       this.scheduledTasks.push(taskId);
       this.runningTasks.add(taskId);
       const task = this.taskGraph.tasks[taskId];
-      if (task.continuous && this.readyProducersOf(task).all.length > 0) {
+      if (task.continuous && this.probedProducersOf(task).length > 0) {
         this.pendingStart.add(taskId);
       }
     }
@@ -309,7 +308,7 @@ export class TasksSchedule {
       (task.continuous &&
         (this.reverseTaskDeps[task.id].length > 0 ||
           getReadyWhenConfig(task, this.projectGraph) != null)) ||
-      this.readyProducersOf(task).probed.some((id) => !this.isProducerReady(id))
+      this.probedProducersOf(task).some((id) => !this.isProducerReady(id))
     ) {
       return;
     }
@@ -371,11 +370,8 @@ export class TasksSchedule {
     }
   }
 
-  private readyProducersOf(task: Task) {
-    return {
-      all: getReadyProducerIds(task, this.fullTaskGraph),
-      probed: this.probedProducers[task.id] ?? [],
-    };
+  private probedProducersOf(task: Task): string[] {
+    return this.probedProducers[task.id] ?? [];
   }
 
   private isProducerReady(producerId: string): boolean {
@@ -409,9 +405,9 @@ export class TasksSchedule {
     if (!started) {
       return false;
     }
-    const pendingProducer = this.readyProducersOf(
+    const pendingProducer = this.probedProducersOf(
       this.taskGraph.tasks[taskId]
-    ).probed.find((id) => this.taskGraph.tasks[id] && !this.readiness.has(id));
+    ).find((id) => this.taskGraph.tasks[id] && !this.readiness.has(id));
     if (pendingProducer) {
       this.hooks.onReadinessHold?.(pendingProducer);
       return false;

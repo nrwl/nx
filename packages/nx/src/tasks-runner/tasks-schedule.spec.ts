@@ -1792,7 +1792,7 @@ describe('TasksSchedule', () => {
       );
     });
 
-    it('starts a continuous task waiting on a producer without a probe on its own', async () => {
+    it('treats a ready edge to a producer without a probe as a plain edge', async () => {
       const { taskSchedule } = await createChainSchedule({
         probe: false,
         apiExecutor: 'awesome-executors:build',
@@ -1804,10 +1804,8 @@ describe('TasksSchedule', () => {
       expect(taskSchedule.nextBatch()).toBeNull();
       expect(taskSchedule.nextTask()?.id).toBe('api:serve');
 
-      // Its dependents are released once it has started, not before
-      await taskSchedule.scheduleNextTasks();
-      expect(taskSchedule.nextBatch()).toBeNull();
-      taskSchedule.markContinuousTaskStarted('api:serve');
+      // Nothing to wait for, so its dependents are released as soon as it is
+      // scheduled, not held until it spawns
       await taskSchedule.scheduleNextTasks();
       expect(taskSchedule.nextBatch()).toMatchObject({
         taskGraph: { tasks: { 'e2e:e2e': expect.anything() } },
