@@ -1007,9 +1007,13 @@ describe('Nx Running Tests', () => {
       describe('readyWhen probes', () => {
         let port: number;
 
-        beforeAll(async () => {
-          port = await reservePort();
+        beforeAll(() => {
           updateFile(`libs/${mylib1}/idle.js`, 'setInterval(() => {}, 1000);');
+        });
+
+        // A port per case: the previous case's server is being torn down
+        beforeEach(async () => {
+          port = await reservePort();
           // The marker exists only once the server listens, so the check
           // passes only if Nx waited for the probe.
           updateFile(
