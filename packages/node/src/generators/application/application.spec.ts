@@ -1528,6 +1528,22 @@ describe('app', () => {
       ).toBe('rolldown:build');
     });
 
+    it('should let the tsc build compile a --js app', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        js: true,
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const tsconfigApp = readJson(tree, 'apps/api/tsconfig.app.json');
+      expect(tsconfigApp.include).toEqual(
+        expect.arrayContaining([expect.stringMatching(/\.js$/)])
+      );
+      expect(tsconfigApp.compilerOptions.allowJs).toBe(true);
+    });
+
     it('should keep tsx serve for fastify', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/api',

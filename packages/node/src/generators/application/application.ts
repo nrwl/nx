@@ -339,6 +339,8 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         moduleResolution: 'nodenext',
         // The TS solution base only emits declarations; the tsc build runs the app.
         ...(options.bundler === 'tsc' && { emitDeclarationOnly: false }),
+        // tsconfig.app.json extends the base, not the tsconfig.json that has it.
+        ...(options.js && { allowJs: true }),
         // Node runs the sources, so relative imports name `.ts` files.
         ...(options.serveRuntime === 'node' && {
           rewriteRelativeImportExtensions: true,
