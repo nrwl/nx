@@ -1047,6 +1047,92 @@ describe('@nx/playwright/plugin', () => {
     );
   });
 
+  it('keeps the server inputs out of atomized tasks for specs with "@nx-ultracache: imports"', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({
+      'tests/opted-in.spec.ts':
+        '// @nx-ultracache: imports\nimport "../../app1/src/feature";\n',
+      'tests/other.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e-ci--tests/opted-in.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve', inputs: false },
+      { target: 'e2e--wait-for-webserver' },
+    ]);
+    expect(targets['e2e-ci--tests/other.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+      { target: 'e2e--wait-for-webserver' },
+    ]);
+  });
+
+  it('accepts "@nx-ultracache: imports" in a spec whose atomized task has no server', async () => {
+    await mockPlaywrightConfig(tempFs, { testDir: 'tests' });
+    await tempFs.createFiles({
+      'tests/opted-in.spec.ts': '// @nx-ultracache: imports\n',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+
+    expect(
+      results[0][1].projects['.'].targets['e2e-ci--tests/opted-in.spec.ts']
+        .dependsOn
+    ).toBeUndefined();
+  });
+
+  it('ignores an unsupported "@nx-ultracache" value with a warning naming the spec', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({
+      'tests/typo.spec.ts': '// @nx-ultracache: import\n',
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+
+      expect(
+        results[0][1].projects['.'].targets['e2e-ci--tests/typo.spec.ts']
+          .dependsOn
+      ).toEqual([
+        { projects: ['app1'], target: 'serve' },
+        { target: 'e2e--wait-for-webserver' },
+      ]);
+      expect(warn).toHaveBeenCalledWith(
+        'tests/typo.spec.ts: "@nx-ultracache: import" is not supported, so Nx ignores "@nx-ultracache" in this file. Use "@nx-ultracache: imports".'
+      );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it("runs the wait-for-webserver task under its own env files, not the atomized target group's", async () => {
     // A task in the CI target group loads the group's `nonAtomizedTarget`
     // dotenv files at run time; the gate's probe env is checked at graph time
