@@ -163,6 +163,7 @@ pub struct TaskResult {
     pub terminal_output: Option<String>,
 }
 
+// Nx Cloud decodes this shape by `TASK_GRAPH_FORMAT` in `nx-cloud-internals.ts`; bump it when the shape changes.
 /// An edge from a task to one of the tasks it depends on
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
@@ -177,6 +178,7 @@ pub struct TaskGraphEdge {
     pub inputs: Option<bool>,
 }
 
+// Nx Cloud decodes this shape by `TASK_GRAPH_FORMAT` in `nx-cloud-internals.ts`; bump it when the shape changes.
 /// Graph of Tasks to be executed
 #[napi(object)]
 pub struct TaskGraph {
