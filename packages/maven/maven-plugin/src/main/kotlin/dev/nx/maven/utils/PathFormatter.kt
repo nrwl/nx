@@ -32,7 +32,7 @@ class PathFormatter {
     return "{workspaceRoot}/${relativePath.invariantSeparatorsPath}"
   }
 
-  fun normalizeRelativePath(path: String): String = path.replace('\\', '/').takeIf { it.isNotEmpty() } ?: "."
+  fun relativePath(file: File, base: File): String = file.relativeTo(base).invariantSeparatorsPath.ifEmpty { "." }
 }
 
 data class DependentTaskOutputs(val path: String, val transitive: Boolean = true)

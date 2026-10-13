@@ -212,9 +212,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         dependency.addProperty("type", "static")
         dependency.addProperty("source", sourceRoot)
         dependency.addProperty("target", "maven:${extDep.groupId}:${extDep.artifactId}")
-        dependency.addProperty("sourceFile", pathFormatter.normalizeRelativePath(
-          analysis.pomFile.canonicalFile.relativeTo(canonicalWorkspaceRoot).path
-        ))
+        dependency.addProperty("sourceFile", pathFormatter.relativePath(analysis.pomFile.canonicalFile, canonicalWorkspaceRoot))
         result.add(dependency)
       }
     }
@@ -269,7 +267,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     projects: List<MavenProject>
   ): Map<String, String> =
     projects.associate { project ->
-      "${project.groupId}:${project.artifactId}" to pathFormatter.normalizeRelativePath(project.basedir.canonicalFile.relativeTo(workspaceRoot).path)
+      "${project.groupId}:${project.artifactId}" to pathFormatter.relativePath(project.basedir.canonicalFile, workspaceRoot)
     }
 }
 
