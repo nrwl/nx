@@ -305,6 +305,37 @@ describe('migrate commit broker', () => {
       ]);
     });
 
+    it('names what can hold a commit while it waits', async () => {
+      vi.useFakeTimers();
+      try {
+        const broker = new MigrateCommitBroker(
+          root,
+          dir,
+          'npx nx migrate',
+          POLICY
+        );
+        process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+        const pending = commitStepTree(dir, step(), [], vi.fn(), {});
+        await vi.advanceTimersByTimeAsync(15_000);
+        writeFileSync(
+          join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.result.json`),
+          JSON.stringify(ANSWER)
+        );
+        await vi.advanceTimersByTimeAsync(250);
+        await pending;
+        broker.close();
+
+        expect(vi.mocked(logger.info).mock.calls).toEqual([
+          [
+            '[nx] Waiting for the nx process that started this session to finish the commit of @nx/js:gen (15s so far). A commit first installs any dependency changes. A signing popup or a security key can also hold a commit until the user answers it. If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end it, and resume the run afterwards.',
+          ],
+        ]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('lands the commit after a succeeded install, keeping the install output out of the step', async () => {
       parentCommits();
       const broker = new MigrateCommitBroker(
@@ -549,6 +580,49 @@ describe('migrate commit broker', () => {
 
       expect(inProcess).toHaveBeenCalledTimes(1);
       expect(existsSync(brokerDir(dir))).toBe(false);
+    });
+
+    it('prints what it waits on after 15 seconds, then every minute, with the way out', async () => {
+      vi.useFakeTimers();
+      try {
+        const broker = new MigrateCommitBroker(
+          root,
+          dir,
+          'npx nx migrate',
+          POLICY
+        );
+        process.env.NX_MIGRATE_BROKER = broker.nonce;
+        const wayOut =
+          'If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end it, and resume the run afterwards.';
+
+        const pending = installStepTree(dir, step(), 'install', vi.fn(), {});
+        await vi.advanceTimersByTimeAsync(14_900);
+        const beforeFirst = vi.mocked(logger.info).mock.calls.length;
+        await vi.advanceTimersByTimeAsync(100);
+        await vi.advanceTimersByTimeAsync(59_900);
+        const beforeSecond = vi.mocked(logger.info).mock.calls.length;
+        await vi.advanceTimersByTimeAsync(100);
+        writeFileSync(
+          join(brokerDir(dir), `${broker.nonce}-step-1-1-install.result.json`),
+          JSON.stringify({ kind: 'installed', output: [] })
+        );
+        await vi.advanceTimersByTimeAsync(250);
+        await pending;
+        broker.close();
+
+        expect(beforeFirst).toBe(0);
+        expect(beforeSecond).toBe(1);
+        expect(vi.mocked(logger.info).mock.calls).toEqual([
+          [
+            `[nx] Waiting for the nx process that started this session to finish the install of @nx/js:gen (15s so far). ${wayOut}`,
+          ],
+          [
+            `[nx] Waiting for the nx process that started this session to finish the install of @nx/js:gen (1m 15s so far). ${wayOut}`,
+          ],
+        ]);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('hands the install to the advertised session, which moves the baseline it recorded', async () => {

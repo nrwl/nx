@@ -1560,9 +1560,9 @@ describe('task planner', () => {
 
       // The dependency serving this task runs in its own process, so only its
       // declared inputs can stand in for what it reads.
-      expect(taskGraph.continuousDependencies['parent:test']).toContain(
-        'child:serve'
-      );
+      expect(taskGraph.continuousDependencies['parent:test']).toContainEqual({
+        id: 'child:serve',
+      });
       expect(
         planner.getPlans(['parent:test'], taskGraph)['parent:test']
       ).toContain('child:libs/child/**/*');
@@ -1628,9 +1628,9 @@ describe('task planner', () => {
         transferProjectGraph(toRustProjectGraph(projectGraph))
       );
 
-      expect(taskGraph.continuousDependencies['child:serve']).toContain(
-        'grandchild:serve'
-      );
+      expect(taskGraph.continuousDependencies['child:serve']).toContainEqual({
+        id: 'grandchild:serve',
+      });
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
       expect(plan).toContain('child:libs/child/**/*');
       expect(plan).toContain('grandchild:libs/grandchild/**/*');
@@ -1752,7 +1752,7 @@ describe('task planner', () => {
     it('terminates on a cycle of continuous dependencies and hashes each server once', () => {
       const { planner, taskGraph } = servedBy({});
       // child:serve is (nonsensically) served by parent:test, closing a loop.
-      taskGraph.continuousDependencies['child:serve'] = ['parent:test'];
+      taskGraph.continuousDependencies['child:serve'] = [{ id: 'parent:test' }];
 
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
       expect(
@@ -1909,7 +1909,7 @@ describe('task planner', () => {
             continuous: true,
           },
         },
-        continuousDependencies: { 'parent:build': ['child:build'] },
+        continuousDependencies: { 'parent:build': [{ id: 'child:build' }] },
       };
     }
 

@@ -749,6 +749,7 @@ describe('runInstall with an output sink', () => {
 
     expect(mockSpawn.mock.calls[0][1]).toMatchObject({
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: process.platform !== 'win32',
     });
     expect(out.calls).toEqual([
       [
@@ -907,6 +908,7 @@ describe('runInstall with an output sink', () => {
     expect(mockSpawn.mock.calls[0][1]).toMatchObject({
       stdio: ['inherit', 'inherit', 'pipe'],
     });
+    expect(mockSpawn.mock.calls[0][1].detached).toBeUndefined();
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(stderrSpy).toHaveBeenCalledWith(Buffer.from('npm warn old\n'));
   });

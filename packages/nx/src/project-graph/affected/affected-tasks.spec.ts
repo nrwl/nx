@@ -667,13 +667,10 @@ describe('a continuous dependency with inputs: false', () => {
   it('still selects the dependent through its own inputs and runs the server', async () => {
     const result = await select(false, 'packages/workspace/src/index.ts');
     expect([...result.affectedTaskIds]).toEqual(['e2e:e2e']);
-    expect(result.taskGraph.continuousDependencies['e2e:e2e']).toEqual([
-      'app:serve',
-    ]);
     // The run hashes from this graph, so it must keep the opt-out.
-    expect(result.taskGraph.continuousDependenciesWithoutInputs).toEqual({
-      'e2e:e2e': ['app:serve'],
-    });
+    expect(result.taskGraph.continuousDependencies['e2e:e2e']).toEqual([
+      { id: 'app:serve', inputs: false },
+    ]);
   });
 });
 
