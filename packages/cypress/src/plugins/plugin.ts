@@ -505,7 +505,7 @@ async function buildCypressTargets(
           targets[targetName],
           context.workspaceRoot,
           file,
-          ['ultracache']
+          ['depends-on', 'ultracache']
         );
       }
 

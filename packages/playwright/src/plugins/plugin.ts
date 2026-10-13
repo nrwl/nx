@@ -552,7 +552,7 @@ async function buildPlaywrightTargets(
           ciBaseTargetConfig,
           context.workspaceRoot,
           testFile,
-          ['ultracache']
+          ['depends-on', 'ultracache']
         ),
         options: {
           ...ciBaseTargetConfig.options,
