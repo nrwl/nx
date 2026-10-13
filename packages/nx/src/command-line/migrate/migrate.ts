@@ -3366,9 +3366,9 @@ async function runMigrations(
   });
 
   // Orchestration refuses ids it cannot dispense verbatim or resolve to one
-  // step, so a new run with one falls back to the classic loop. A continue's
-  // plan passed that check at init, and a start fresh still reaches init's
-  // refusal.
+  // step, so a new run with one falls back to the classic loop. A continue
+  // has no classic fallback, since it runs the plan its run recorded, and a
+  // start fresh still reaches init's refusal.
   const idProblems =
     isContinue || opts.startFresh === true
       ? []
