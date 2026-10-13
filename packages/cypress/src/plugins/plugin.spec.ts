@@ -690,6 +690,115 @@ describe('@nx/cypress/plugin', () => {
     `);
   });
 
+  describe('a spec file with an @nx-depends-on directive', () => {
+    async function atomizedTargets() {
+      mockCypressConfig(
+        defineConfig({
+          e2e: {
+            ...nxE2EPreset(join(tempFs.tempDir, 'cypress.config.js'), {
+              webServerCommands: { default: 'npx nx run my-app:serve' },
+              ciWebServerCommand: 'npx nx run my-app:serve-static',
+            }),
+            specPattern: '**/*.cy.ts',
+          },
+        })
+      );
+      const nodes = await createNodesFunction(
+        ['cypress.config.js'],
+        { targetName: 'e2e' },
+        context
+      );
+      return nodes[0][1].projects['.'].targets;
+    }
+
+    it("scopes its atomized target's dependency inputs and server edge", async () => {
+      await tempFs.createFiles({
+        'src/feature.cy.ts':
+          '/*\n * @nx-depends-on: feature, feature-utils\n */\ndescribe("feature", () => {});\n',
+      });
+
+      const targets = await atomizedTargets();
+
+      expect(targets['e2e-ci--src/feature.cy.ts'].inputs).toEqual([
+        'default',
+        {
+          input: 'production',
+          projects: ['feature', 'feature-utils'],
+          always: true,
+        },
+        { externalDependencies: ['cypress'] },
+      ]);
+      expect(targets['e2e-ci--src/feature.cy.ts'].dependsOn).toEqual([
+        { target: 'serve-static', projects: ['my-app'], inputs: false },
+      ]);
+      // Files without the directive keep today's targets exactly.
+      expect(targets['e2e-ci--src/test.cy.ts'].inputs).toEqual([
+        'default',
+        '^production',
+        { externalDependencies: ['cypress'] },
+      ]);
+      expect(targets['e2e-ci--src/test.cy.ts'].dependsOn).toEqual([
+        { target: 'serve-static', projects: ['my-app'] },
+      ]);
+    });
+
+    it('ignores a directive that lists no projects, with a warning naming the spec', async () => {
+      await tempFs.createFiles({
+        'src/feature.cy.ts': '// @nx-depends-on: ,\n',
+      });
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const targets = await atomizedTargets();
+
+        expect(targets['e2e-ci--src/feature.cy.ts'].inputs).toEqual([
+          'default',
+          '^production',
+          { externalDependencies: ['cypress'] },
+        ]);
+        expect(targets['e2e-ci--src/feature.cy.ts'].dependsOn).toEqual([
+          { target: 'serve-static', projects: ['my-app'] },
+        ]);
+        expect(warn).toHaveBeenCalledWith(
+          'src/feature.cy.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.'
+        );
+      } finally {
+        warn.mockRestore();
+      }
+    });
+  });
+
+  it('should keep the server inputs out of atomized e2e-ci targets for specs with "@nx-ultracache: imports"', async () => {
+    await tempFs.createFiles({
+      'src/opted-in.cy.ts':
+        '// @nx-ultracache: imports\nimport "../../my-app/src/feature";\n',
+    });
+    mockCypressConfig(
+      defineConfig({
+        e2e: {
+          ...nxE2EPreset(join(tempFs.tempDir, 'cypress.config.js'), {
+            ciWebServerCommand: 'npx nx run my-app:serve-static',
+          }),
+          specPattern: '**/*.cy.ts',
+        },
+      })
+    );
+
+    const nodes = await createNodesFunction(
+      ['cypress.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const { targets } = nodes[0][1].projects['.'];
+
+    expect(targets['e2e-ci--src/opted-in.cy.ts'].dependsOn).toEqual([
+      { projects: ['my-app'], target: 'serve-static', inputs: false },
+    ]);
+    expect(targets['e2e-ci--src/test.cy.ts'].dependsOn).toEqual([
+      { projects: ['my-app'], target: 'serve-static' },
+    ]);
+  });
+
   it('should set parallelism to false and not infer commands in dependsOn if reuseExistingServer is false', async () => {
     mockCypressConfig(
       defineConfig({
