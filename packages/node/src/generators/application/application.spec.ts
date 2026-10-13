@@ -1678,6 +1678,7 @@ describe('app', () => {
                 dependencies.some((dep) => id === dep || id.startsWith(\`\${dep}/\`)),
               output: {
                 dir: 'dist',
+                cleanDir: true,
                 format: 'esm',
                 sourcemap: true,
               },

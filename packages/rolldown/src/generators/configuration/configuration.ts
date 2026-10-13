@@ -66,7 +66,11 @@ export async function configurationGenerator(
     `import { defineConfig } from 'rolldown';${
       externalDependencies
         ? `
-import packageJson from '${packageJsonPath}' with { type: 'json' };
+${
+  packageJsonPath === './package.json'
+    ? ''
+    : '// eslint-disable-next-line @nx/enforce-module-boundaries\n'
+}import packageJson from '${packageJsonPath}' with { type: 'json' };
 
 // Installed at runtime instead of bundled (native addons, dynamic requires).
 const dependencies = Object.keys({
@@ -90,6 +94,7 @@ export default defineConfig([
     }
     output: {
       dir: '${fromRoot(outputPath)}',
+      cleanDir: true,
       format: '${options.format ?? 'esm'}',
       sourcemap: true,
     },

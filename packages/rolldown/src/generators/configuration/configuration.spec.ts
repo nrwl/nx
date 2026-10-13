@@ -31,6 +31,7 @@ describe('configurationGenerator', () => {
     expect(tree.read('apps/api/rolldown.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
         "import { defineConfig } from 'rolldown';
+        // eslint-disable-next-line @nx/enforce-module-boundaries
         import packageJson from '../../package.json' with { type: 'json' };
 
         // Installed at runtime instead of bundled (native addons, dynamic requires).
@@ -47,6 +48,7 @@ describe('configurationGenerator', () => {
             external: (id) => dependencies.some((dep) => id === dep || id.startsWith(\`\${dep}/\`)),
             output: {
               dir: '../../dist/apps/api',
+              cleanDir: true,
               format: 'esm',
               sourcemap: true,
             },

@@ -1,5 +1,7 @@
 import { type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { mkdirSync, symlinkSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { createNodesV2 } from './plugin';
 
 describe('@nx/rolldown/plugin', () => {
@@ -21,6 +23,13 @@ describe('@nx/rolldown/plugin', () => {
       workspaceRoot: tempFs.tempDir,
     };
     tempFs.createFileSync('package-lock.json', '{}');
+    // The bundled TS config imports 'rolldown', which must resolve from the temp workspace.
+    mkdirSync(join(tempFs.tempDir, 'node_modules'));
+    symlinkSync(
+      dirname(require.resolve('rolldown/package.json')),
+      join(tempFs.tempDir, 'node_modules', 'rolldown'),
+      'dir'
+    );
   });
 
   afterEach(() => {
