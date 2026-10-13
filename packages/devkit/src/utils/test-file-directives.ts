@@ -3,10 +3,14 @@ import { join } from 'node:path';
 import type { TargetConfiguration } from 'nx/src/devkit-exports';
 import { emitPluginWorkerLog } from 'nx/src/devkit-internals';
 import { parseNxDirectives } from './nx-directives';
+import {
+  dependsOnProjects,
+  scopeTestTargetToProjects,
+} from './test-file-depends-on';
 import { findUnsupportedUltracacheValue } from './ultracache-directive';
 import { withoutServerInputs } from './without-server-inputs';
 
-const TEST_FILE_DIRECTIVES = ['ultracache'] as const;
+const TEST_FILE_DIRECTIVES = ['depends-on', 'ultracache'] as const;
 
 /** An `@nx-<name>` directive a plugin can apply to a test file's target. */
 type TestFileDirective = (typeof TEST_FILE_DIRECTIVES)[number];
@@ -14,7 +18,8 @@ type TestFileDirective = (typeof TEST_FILE_DIRECTIVES)[number];
 /**
  * `target` with the `@nx-*` directives of a workspace-relative test file
  * applied, for the directives in `supported`. A directive that is not
- * supported or has an unsupported value is skipped with a warning.
+ * supported, has an unsupported value or lists no projects is skipped with a
+ * warning.
  */
 export function applyTestFileDirectives(
   target: TargetConfiguration,
@@ -50,6 +55,17 @@ function applyDirective(
   file: string
 ): TargetConfiguration {
   switch (directive) {
+    case 'depends-on': {
+      const projects = dependsOnProjects(values);
+      if (projects.length === 0) {
+        emitPluginWorkerLog(
+          'warn',
+          `${file}: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.`
+        );
+        return target;
+      }
+      return scopeTestTargetToProjects(target, projects);
+    }
     case 'ultracache': {
       const unsupported = findUnsupportedUltracacheValue(values);
       if (unsupported !== undefined) {
