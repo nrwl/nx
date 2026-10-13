@@ -638,7 +638,7 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
 - `url`: ready when an HTTP or HTTPS `GET` request gets a status from 200 to 403.
   A redirect counts as ready and isn't followed.
   A 404 at the root path is retried at `/index.html`.
-  Certificates are verified, except for a loopback host such as `localhost`,
+  Certificates are verified, except for a loopback address such as `127.0.0.1`, and for `localhost` or a `*.localhost` name whose every address is loopback,
   where a self-signed development certificate works.
   Proxy environment variables such as `HTTP_PROXY` and `NO_PROXY` apply to other hosts.
   A loopback request is never proxied.

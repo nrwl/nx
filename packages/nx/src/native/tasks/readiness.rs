@@ -1,5 +1,5 @@
 use once_cell::sync::OnceCell;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::process::Stdio;
 use std::time::{Duration, Instant};
 
@@ -29,9 +29,19 @@ pub struct ReadinessProbeConfig {
 }
 
 enum Probe {
-    Url(Url),
-    Port { port: u16, host: PortHost },
-    Command { command: String, cwd: String },
+    Url {
+        url: Url,
+        // Chosen on the first attempt, within the probe's deadline
+        client: OnceCell<Client>,
+    },
+    Port {
+        port: u16,
+        host: PortHost,
+    },
+    Command {
+        command: String,
+        cwd: String,
+    },
 }
 
 enum PortHost {
@@ -47,20 +57,25 @@ impl PortHost {
             None => Self::Loopback,
             Some(host) => match host.parse::<IpAddr>() {
                 Ok(ip) => Self::Ip(ip),
-                Err(_) => {
-                    let mut builder = TokioResolver::builder_tokio()?;
-                    builder.options_mut().ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
-                    Self::Name(host.to_string(), Box::new(builder.build()))
-                }
+                Err(_) => Self::Name(host.to_string(), Box::new(system_resolver()?)),
             },
         })
     }
 }
 
+fn system_resolver() -> anyhow::Result<TokioResolver> {
+    let mut builder = TokioResolver::builder_tokio()?;
+    builder.options_mut().ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
+    Ok(builder.build())
+}
+
 impl Probe {
     fn from_config(config: &ReadinessProbeConfig, cwd: String) -> anyhow::Result<Self> {
         match (&config.url, config.port, &config.command) {
-            (Some(url), None, None) => Ok(Self::Url(Url::parse(url)?)),
+            (Some(url), None, None) => Ok(Self::Url {
+                url: Url::parse(url)?,
+                client: OnceCell::new(),
+            }),
             (None, Some(port), None) => Ok(Self::Port {
                 port: u16::try_from(port)?,
                 host: PortHost::parse(config.host.as_deref())?,
@@ -77,13 +92,20 @@ impl Probe {
     // its process tree running
     async fn run(&self, deadline: Instant, token: &CancellationToken) -> anyhow::Result<bool> {
         Ok(match self {
-            Self::Url(url) => {
-                let client = http_client(url)?;
-                token
-                    .run_until_cancelled(probe_url(client, url, deadline))
-                    .await
-                    .unwrap_or(false)
-            }
+            Self::Url { url, client } => token
+                .run_until_cancelled(async {
+                    let client = match client.get() {
+                        Some(client) => client,
+                        None => {
+                            let built = http_client(url, deadline).await?;
+                            client.get_or_init(|| built)
+                        }
+                    };
+                    anyhow::Ok(probe_url(client, url, deadline).await)
+                })
+                .await
+                .transpose()?
+                .unwrap_or(false),
             Self::Port { port, host } => token
                 .run_until_cancelled(probe_port(*port, host, deadline))
                 .await
@@ -93,35 +115,51 @@ impl Probe {
     }
 }
 
-// Built once per process: loading the system certificate store takes about
-// 100 ms. Only a loopback server may present a self-signed certificate, and
-// that client skips proxies so the request cannot leave the machine
-fn http_client(url: &Url) -> anyhow::Result<&'static Client> {
+// The verifying client is built once per process: loading the system
+// certificate store takes about 100 ms. A loopback client never verifies, so
+// it loads no store and is built per probe, pinned to the checked addresses
+// so the request cannot go where a later resolution points. It skips proxies
+// too, so the request cannot leave the machine
+async fn http_client(url: &Url, deadline: Instant) -> anyhow::Result<Client> {
     static VERIFYING: OnceCell<Client> = OnceCell::new();
-    static LOOPBACK: OnceCell<Client> = OnceCell::new();
-    Ok(if is_loopback(url) {
-        LOOPBACK.get_or_try_init(|| build_http_client(true))?
-    } else {
-        VERIFYING.get_or_try_init(|| build_http_client(false))?
+    Ok(match loopback_addrs(url, deadline).await {
+        Some(addrs) => build_http_client(Some((url.host_str().unwrap_or_default(), &addrs)))?,
+        None => VERIFYING
+            .get_or_try_init(|| build_http_client(None))?
+            .clone(),
     })
 }
 
-fn is_loopback(url: &Url) -> bool {
-    let Some(host) = url.host_str() else {
-        return false;
-    };
-    match host
-        .trim_start_matches('[')
-        .trim_end_matches(']')
-        .parse::<IpAddr>()
-    {
-        Ok(IpAddr::V4(ip)) => ip.is_loopback(),
-        Ok(IpAddr::V6(ip)) => {
+// An IP literal is loopback by its value. Only `localhost` and `*.localhost`
+// names are resolved, in-process and without a DNS query (RFC 6761), and count
+// when every address is loopback: a hosts file can point such a name
+// anywhere. Any other name gets the verifying client without a lookup or a
+// resolver, so a proxied request never waits on local DNS and a literal needs
+// no DNS configuration at all.
+async fn loopback_addrs(url: &Url, deadline: Instant) -> Option<Vec<IpAddr>> {
+    let host = url.host_str()?;
+    let host = host.trim_start_matches('[').trim_end_matches(']');
+    if let Ok(ip) = host.parse::<IpAddr>() {
+        return ip_is_loopback(ip).then(|| vec![ip]);
+    }
+    let name = host.trim_end_matches('.');
+    if name != "localhost" && !name.ends_with(".localhost") {
+        return None;
+    }
+    let resolver = system_resolver().ok()?;
+    let lookup = tokio::time::timeout_at(deadline.into(), resolver.lookup_ip(host))
+        .await
+        .ok()?
+        .ok()?;
+    let addrs: Vec<IpAddr> = lookup.iter().collect();
+    (!addrs.is_empty() && addrs.iter().all(|ip| ip_is_loopback(*ip))).then_some(addrs)
+}
+
+fn ip_is_loopback(ip: IpAddr) -> bool {
+    match ip {
+        IpAddr::V4(ip) => ip.is_loopback(),
+        IpAddr::V6(ip) => {
             ip.is_loopback() || ip.to_ipv4_mapped().is_some_and(|v4| v4.is_loopback())
-        }
-        Err(_) => {
-            let name = host.trim_end_matches('.');
-            name == "localhost" || name.ends_with(".localhost")
         }
     }
 }
@@ -129,7 +167,7 @@ fn is_loopback(url: &Url) -> bool {
 #[cfg(test)]
 static SETUP_DELAY_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-fn build_http_client(loopback: bool) -> reqwest::Result<Client> {
+fn build_http_client(loopback: Option<(&str, &[IpAddr])>) -> reqwest::Result<Client> {
     #[cfg(test)]
     std::thread::sleep(Duration::from_millis(
         SETUP_DELAY_MS.load(std::sync::atomic::Ordering::Relaxed),
@@ -138,10 +176,17 @@ fn build_http_client(loopback: bool) -> reqwest::Result<Client> {
         // A redirect already proves the server is up, and following it would
         // let the server pick the next request's destination
         .redirect(reqwest::redirect::Policy::none());
-    if loopback {
-        builder.danger_accept_invalid_certs(true).no_proxy()
-    } else {
-        builder
+    match loopback {
+        Some((host, addrs)) => {
+            // Port 0: the url's own port applies
+            let pinned: Vec<SocketAddr> = addrs.iter().map(|ip| SocketAddr::new(*ip, 0)).collect();
+            builder
+                .danger_accept_invalid_certs(true)
+                .tls_built_in_root_certs(false)
+                .no_proxy()
+                .resolve_to_addrs(host, &pinned)
+        }
+        None => builder,
     }
     .build()
 }
@@ -426,8 +471,9 @@ mod tests {
         }
     }
 
-    #[test]
-    fn only_localhost_and_loopback_addresses_are_loopback() {
+    #[tokio::test]
+    async fn only_loopback_literals_and_localhost_names_on_loopback_are_loopback() {
+        let deadline = Instant::now() + Duration::from_secs(10);
         for url in [
             "https://localhost:4200/",
             "https://localhost./",
@@ -437,17 +483,68 @@ mod tests {
             "https://[::1]:4200/",
             "https://[::ffff:127.0.0.1]/",
         ] {
-            assert!(is_loopback(&Url::parse(url).unwrap()), "{url}");
+            let found = loopback_addrs(&Url::parse(url).unwrap(), deadline).await;
+            assert!(
+                found
+                    .as_ref()
+                    .is_some_and(|a| !a.is_empty() && a.iter().all(|ip| ip_is_loopback(*ip))),
+                "{url}: {found:?}"
+            );
         }
         for url in [
             "https://health.example.com/status",
-            "https://app.localhost.example/",
+            "https://app.localhost.invalid/",
             "https://127.0.0.1.nip.io/",
             "https://10.0.0.1/",
             "https://[::ffff:10.0.0.1]/",
         ] {
-            assert!(!is_loopback(&Url::parse(url).unwrap()), "{url}");
+            assert!(
+                loopback_addrs(&Url::parse(url).unwrap(), deadline)
+                    .await
+                    .is_none(),
+                "{url}"
+            );
         }
+    }
+
+    #[tokio::test]
+    async fn url_localhost_name_connects_to_the_pinned_loopback_address() {
+        // Nothing resolves `app.localhost` for the connection: the client is
+        // pinned to the checked loopback address under the url's own port
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            for mut stream in listener.incoming().flatten() {
+                // Read the request head before answering
+                let mut request = Vec::new();
+                let mut byte = [0u8; 1];
+                while std::io::Read::read(&mut stream, &mut byte).is_ok_and(|n| n == 1) {
+                    request.push(byte[0]);
+                    if request.ends_with(b"\r\n\r\n") {
+                        break;
+                    }
+                }
+                let _ = std::io::Write::write_all(
+                    &mut stream,
+                    b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n",
+                );
+            }
+        });
+        let config = ReadinessProbeConfig {
+            url: Some(format!("http://app.localhost:{port}/")),
+            port: None,
+            host: None,
+            command: None,
+            timeout: 2000,
+            interval: None,
+        };
+        let started = Instant::now();
+        assert!(probe(config).wait().await.unwrap());
+        assert!(
+            started.elapsed() < Duration::from_millis(1500),
+            "{:?}",
+            started.elapsed()
+        );
     }
 
     #[test]
