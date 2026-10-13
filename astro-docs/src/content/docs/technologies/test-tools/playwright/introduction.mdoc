@@ -106,6 +106,8 @@ address, see [Playwright web server readiness](/docs/kb/playwright-web-server-re
 The `targetName` task runs the complete Playwright suite and caches the configured test and reporter
 outputs.
 The `ciTargetName` task uses the [Atomizer](/docs/kb/split-e2e-tasks).
+To have an atomized task hash from the app code its test file imports instead of the whole app,
+see [hash e2e tests from their imports](/docs/kb/hash-e2e-tests-from-imports).
 
 Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
 
