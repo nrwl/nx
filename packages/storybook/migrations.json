@@ -816,6 +816,78 @@
         }
       }
     },
+    "23.3.1-storybook-core-8": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "@storybook/core": ">=8.0.0 <8.6.19"
+      },
+      "packages": {
+        "@storybook/core": {
+          "version": "^8.6.19",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.1-storybook-core-server-8": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "@storybook/core-server": ">=8.0.0 <8.6.19"
+      },
+      "packages": {
+        "@storybook/core-server": {
+          "version": "^8.6.19",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.1-storybook-experimental-addon-test-8": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "@storybook/experimental-addon-test": ">=8.0.0 <8.6.19"
+      },
+      "packages": {
+        "@storybook/experimental-addon-test": {
+          "version": "^8.6.19",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.1-storybook-addon-vitest-9": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "@storybook/addon-vitest": ">=9.0.0 <9.1.21"
+      },
+      "packages": {
+        "@storybook/addon-vitest": {
+          "version": "^9.1.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.1-storybook-addon-vitest-10": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "@storybook/addon-vitest": ">=10.0.0 <10.6.2"
+      },
+      "packages": {
+        "@storybook/addon-vitest": {
+          "version": "^10.6.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.1-storybook-addon-mcp-10": {
+      "version": "23.3.1-beta.0",
+      "requires": {
+        "@storybook/addon-mcp": ">=10.6.0 <10.6.2"
+      },
+      "packages": {
+        "@storybook/addon-mcp": {
+          "version": "^10.6.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "23.3.1-chromatic-storybook-3": {
       "version": "23.3.1-beta.0",
       "requires": {
