@@ -144,7 +144,6 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/jest:configuration',
     path: '/packages/jest/generators/configuration',
   },
-  { title: '@nx/jest', path: '/packages/jest/executors/jest' },
   { title: '@nx/js', path: '/packages/js' },
   { title: '@nx/js:library', path: '/packages/js/generators/library' },
   { title: '@nx/js:init', path: '/packages/js/generators/init' },
@@ -163,7 +162,6 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/eslint',
     path: '/packages/eslint/generators/workspace-rule',
   },
-  { title: '@nx/eslint', path: '/packages/eslint/executors/lint' },
   { title: '@nx/nest', path: '/packages/nest' },
   {
     title: '@nx/nest:application',
