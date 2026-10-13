@@ -4,7 +4,6 @@ import {
   joinPathFragments,
   readProjectConfiguration,
   Tree,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { findPluginForConfigFile } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
@@ -29,32 +28,28 @@ export async function resolveCypressCTTarget(
 ): Promise<{ found: FoundTarget; bundler: 'vite' | 'webpack' }> {
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
-  if (options.buildTarget !== '') {
-    const graph = await createProjectGraphAsync();
-    const parsed = options.buildTarget
-      ? parseTargetString(options.buildTarget, graph)
-      : undefined;
-    const candidates = parsed
-      ? [parsed.project]
-      : [
-          options.project,
-          ...Object.keys(graph.dependencies).filter((name) =>
-            graph.dependencies[name].some(
-              (dep) => dep.target === options.project
-            )
-          ),
-        ];
-    for (const project of candidates) {
-      const native = await findNativeBuild(tree, project, parsed?.target);
-      if (native) {
-        return {
-          found: {
-            target: options.buildTarget ?? native.target,
-            config: { command: `${native.bundler} build` },
-          },
-          bundler: options.bundler ?? native.bundler,
-        };
-      }
+  const graph = await createProjectGraphAsync();
+  const parsed = options.buildTarget
+    ? parseTargetString(options.buildTarget, graph)
+    : undefined;
+  const candidates = parsed
+    ? [parsed.project]
+    : [
+        options.project,
+        ...Object.keys(graph.dependencies).filter((name) =>
+          graph.dependencies[name].some((dep) => dep.target === options.project)
+        ),
+      ];
+  for (const project of candidates) {
+    const native = await findNativeBuild(tree, project, parsed?.target);
+    if (native) {
+      return {
+        found: {
+          target: options.buildTarget ?? native.target,
+          config: { command: `${native.bundler} build` },
+        },
+        bundler: options.bundler ?? native.bundler,
+      };
     }
   }
 
@@ -111,20 +106,8 @@ export async function configureCypressCT(
 
   const ctConfigOptions: NxComponentTestingOptions = {
     bundler: options.bundler,
+    buildTarget: found.target,
   };
-  if (
-    projectConfig.targets?.['component-test']?.executor ===
-    '@nx/cypress:cypress'
-  ) {
-    projectConfig.targets['component-test'].options = {
-      ...projectConfig.targets['component-test'].options,
-      devServerTarget: found.target,
-      skipServe: true,
-    };
-    updateProjectConfiguration(tree, options.project, projectConfig);
-  } else {
-    ctConfigOptions.buildTarget = found.target;
-  }
 
   const cypressConfigFilePath = getProjectCypressConfigPath(
     tree,

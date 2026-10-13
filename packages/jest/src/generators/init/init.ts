@@ -75,9 +75,6 @@ export async function jestInitGeneratorInternal(
 ): Promise<GeneratorCallback> {
   assertSupportedJestVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  options.addPlugin = true;
-
   const presetExt = getPresetExt(tree);
 
   if (!tree.exists(`jest.preset.${presetExt}`)) {

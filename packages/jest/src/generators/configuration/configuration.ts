@@ -42,9 +42,7 @@ function normalizeOptions(
     options.testEnvironment = 'jsdom';
   }
 
-  const nxJson = readNxJson(tree);
-  const addPlugin = true;
-
+  // `options` is the caller's `schema`, which the js init call also reads.
   options.addPlugin = true;
 
   options.targetName ??= 'test';

@@ -11,12 +11,12 @@ import * as path from 'path';
 import next from 'next';
 
 // Next.js server options:
-// - The environment variable is set by `@nx/next:server` when running the dev server.
-// - The fallback `__dirname` is for production builds.
+// - `NX_NEXT_DIR` overrides the Next.js app directory.
+// - The fallback resolves the app directory from the built server's location.
 // - Feel free to change this to suit your needs.
 
 const dev = process.env.NODE_ENV === 'development';
-const dir = process.env.NX_NEXT_DIR || <%- hasPlugin ? `path.join(__dirname, '${projectPathFromDist}')` : `path.join(__dirname, dev ? '..' : '', '${projectPathFromDist}')`; %> 
+const dir = process.env.NX_NEXT_DIR || path.join(__dirname, '<%- projectPathFromDist %>');
 
 // HTTP Server options:
 // - Feel free to change this to suit your needs.

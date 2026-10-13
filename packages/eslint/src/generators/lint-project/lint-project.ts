@@ -7,7 +7,6 @@ import {
   offsetFromRoot,
   ProjectConfiguration,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -76,13 +75,10 @@ export async function lintProjectGeneratorInternal(
   tree: Tree,
   options: LintProjectOptions
 ) {
-  const nxJson = readNxJson(tree);
   options.eslintConfigFormat ??= 'mjs';
-  options.addPlugin = true;
   const tasks: GeneratorCallback[] = [];
   const initTask = await lintInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
-    addPlugin: options.addPlugin,
     eslintConfigFormat: options.eslintConfigFormat,
   });
   tasks.push(initTask);

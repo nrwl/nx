@@ -14,10 +14,8 @@ import { createTsConfig } from '../../../utils/create-ts-config';
 import { getInSourceVitestTestsTemplate } from '../../../utils/get-in-source-vitest-tests-template';
 import { maybeJs } from '../../../utils/maybe-js';
 import { WithReactOptions } from '../../../../plugins/with-react';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from '../schema';
 import { getAppTests } from './get-app-tests';
-import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
   reactDomVersion,
@@ -136,13 +134,10 @@ export async function createApplicationFiles(
       options.appProjectRoot,
       {
         ...templateVariables,
-        webpackPluginOptions:
-          hasWebpackPlugin(host) && options.addPlugin
-            ? createNxWebpackPluginOptions(
-                options,
-                templateVariables.offsetFromRoot
-              )
-            : null,
+        webpackPluginOptions: createNxWebpackPluginOptions(
+          options,
+          templateVariables.offsetFromRoot
+        ),
       }
     );
     if (options.compiler === 'babel') {
@@ -171,13 +166,10 @@ export async function createApplicationFiles(
       options.appProjectRoot,
       {
         ...templateVariables,
-        rspackPluginOptions:
-          hasRspackPlugin(host) && options.addPlugin
-            ? createNxRspackPluginOptions(
-                options,
-                templateVariables.offsetFromRoot
-              )
-            : null,
+        rspackPluginOptions: createNxRspackPluginOptions(
+          options,
+          templateVariables.offsetFromRoot
+        ),
       }
     );
   } else if (options.bundler === 'rsbuild') {

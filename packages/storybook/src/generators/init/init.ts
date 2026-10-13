@@ -1,8 +1,4 @@
-import {
-  acknowledgeBuildScripts,
-  addPlugin,
-  upsertTargetDefault,
-} from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -10,11 +6,9 @@ import {
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
-  readNxJson,
   runTasksInSerial,
   Tree,
   updateJson,
-  updateNxJson,
 } from '@nx/devkit';
 import { gte } from 'semver';
 import { createNodesV2 } from '../../plugins/plugin';
@@ -51,21 +45,6 @@ function checkDependenciesInstalled(
   );
 }
 
-function addCacheableOperation(tree: Tree) {
-  const nxJson = readNxJson(tree) ?? {};
-  const cacheableOperations: string[] | null =
-    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
-
-  if (cacheableOperations && !cacheableOperations.includes('build-storybook')) {
-    nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
-      'build-storybook'
-    );
-  }
-
-  upsertTargetDefault(tree, nxJson, { target: 'build-storybook', cache: true });
-  updateNxJson(tree, nxJson);
-}
-
 function moveToDevDependencies(tree: Tree): GeneratorCallback {
   let updated = false;
 
@@ -87,61 +66,54 @@ function moveToDevDependencies(tree: Tree): GeneratorCallback {
 }
 
 export function initGenerator(tree: Tree, schema: Schema) {
-  return initGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return initGeneratorInternal(tree, schema);
 }
 
 export async function initGeneratorInternal(tree: Tree, schema: Schema) {
   assertSupportedStorybookVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  schema.addPlugin = true;
-
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/storybook/plugin',
-      createNodesV2,
-      {
-        serveStorybookTargetName: [
-          'storybook',
-          'serve:storybook',
-          'serve-storybook',
-          'storybook:serve',
-          'storybook-serve',
-        ],
-        buildStorybookTargetName: [
-          'build-storybook',
-          'build:storybook',
-          'storybook:build',
-        ],
-        testStorybookTargetName: [
-          'test-storybook',
-          'test:storybook',
-          'storybook:test',
-        ],
-        staticStorybookTargetName: [
-          'static-storybook',
-          'static:storybook',
-          'storybook:static',
-        ],
-        buildDepsTargetName: [
-          'build-deps',
-          'storybook:build-deps',
-          'storybook-build-deps',
-        ],
-        watchDepsTargetName: [
-          'watch-deps',
-          'storybook:watch-deps',
-          'storybook-watch-deps',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-    updateGitignore(tree);
-  } else {
-    addCacheableOperation(tree);
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/storybook/plugin',
+    createNodesV2,
+    {
+      serveStorybookTargetName: [
+        'storybook',
+        'serve:storybook',
+        'serve-storybook',
+        'storybook:serve',
+        'storybook-serve',
+      ],
+      buildStorybookTargetName: [
+        'build-storybook',
+        'build:storybook',
+        'storybook:build',
+      ],
+      testStorybookTargetName: [
+        'test-storybook',
+        'test:storybook',
+        'storybook:test',
+      ],
+      staticStorybookTargetName: [
+        'static-storybook',
+        'static:storybook',
+        'storybook:static',
+      ],
+      buildDepsTargetName: [
+        'build-deps',
+        'storybook:build-deps',
+        'storybook-build-deps',
+      ],
+      watchDepsTargetName: [
+        'watch-deps',
+        'storybook:watch-deps',
+        'storybook-watch-deps',
+      ],
+    },
+    schema.updatePackageScripts
+  );
+  updateGitignore(tree);
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {

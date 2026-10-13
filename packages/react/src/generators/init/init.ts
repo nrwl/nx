@@ -38,10 +38,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
     );
   }
 
-  // React Router has no executors, so its tasks only exist through the plugin.
-  schema.addPlugin = true;
-
-  if (schema.useReactRouterPlugin && schema.addPlugin) {
+  if (schema.useReactRouterPlugin) {
     await addPlugin(
       tree,
       await createProjectGraphAsync(),

@@ -21,10 +21,7 @@ import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
 export function reactNativeInitGenerator(host: Tree, schema: Schema) {
-  return reactNativeInitGeneratorInternal(host, {
-    addPlugin: false,
-    ...schema,
-  });
+  return reactNativeInitGeneratorInternal(host, schema);
 }
 
 export async function reactNativeInitGeneratorInternal(
@@ -35,61 +32,57 @@ export async function reactNativeInitGeneratorInternal(
 
   addGitIgnoreEntry(host);
 
-  schema.addPlugin = true;
+  await addPlugin(
+    host,
+    await createProjectGraphAsync(),
+    '@nx/react-native/plugin',
+    createNodesV2,
+    {
+      startTargetName: ['start', 'react-native:start', 'react-native-start'],
+      upgradeTargetName: [
+        'update',
+        'react-native:update',
+        'react-native-update',
+      ],
+      bundleTargetName: [
+        'bundle',
+        'react-native:bundle',
+        'react-native-bundle',
+      ],
 
-  if (schema.addPlugin) {
-    await addPlugin(
-      host,
-      await createProjectGraphAsync(),
-      '@nx/react-native/plugin',
-      createNodesV2,
-      {
-        startTargetName: ['start', 'react-native:start', 'react-native-start'],
-        upgradeTargetName: [
-          'update',
-          'react-native:update',
-          'react-native-update',
-        ],
-        bundleTargetName: [
-          'bundle',
-          'react-native:bundle',
-          'react-native-bundle',
-        ],
-
-        podInstallTargetName: [
-          'pod-install',
-          'react-native:pod-install',
-          'react-native-pod-install',
-        ],
-        runIosTargetName: [
-          'run-ios',
-          'react-native:run-ios',
-          'react-native-run-ios',
-        ],
-        runAndroidTargetName: [
-          'run-android',
-          'react-native:run-android',
-          'react-native-run-android',
-        ],
-        buildIosTargetName: [
-          'build-ios',
-          'react-native:build-ios',
-          'react-native-build-ios',
-        ],
-        buildAndroidTargetName: [
-          'build-android',
-          'react-native:build-android',
-          'react-native-build-android',
-        ],
-        syncDepsTargetName: [
-          'sync-deps',
-          'react-native:sync-deps',
-          'react-native-sync-deps',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-  }
+      podInstallTargetName: [
+        'pod-install',
+        'react-native:pod-install',
+        'react-native-pod-install',
+      ],
+      runIosTargetName: [
+        'run-ios',
+        'react-native:run-ios',
+        'react-native-run-ios',
+      ],
+      runAndroidTargetName: [
+        'run-android',
+        'react-native:run-android',
+        'react-native-run-android',
+      ],
+      buildIosTargetName: [
+        'build-ios',
+        'react-native:build-ios',
+        'react-native-build-ios',
+      ],
+      buildAndroidTargetName: [
+        'build-android',
+        'react-native:build-android',
+        'react-native-build-android',
+      ],
+      syncDepsTargetName: [
+        'sync-deps',
+        'react-native:sync-deps',
+        'react-native-sync-deps',
+      ],
+    },
+    schema.updatePackageScripts
+  );
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {

@@ -39,8 +39,6 @@ export async function cypressComponentConfigGeneratorInternal(
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
 
-  options.addPlugin = true;
-
   const projectConfig = readProjectConfiguration(tree, options.project);
   const { found, bundler } = await resolveCypressCTTarget(tree, {
     project: options.project,
@@ -56,7 +54,6 @@ export async function cypressComponentConfigGeneratorInternal(
     project: options.project,
     skipFormat: true,
     jsx: true,
-    addPlugin: options.addPlugin,
     bundler,
   });
 

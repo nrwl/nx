@@ -344,11 +344,9 @@ describe('app', () => {
     );
   });
 
-  it('should generate native Next configuration', async () => {
+  it('should generate native Next configuration when addPlugin is false', async () => {
     const name = uniq();
 
-    // addPlugin: false -> legacy @nx/next:build executor, which relies on
-    // withNx to redirect the build output to --outputPath.
     await applicationGenerator(tree, {
       directory: name,
       style: 'css',

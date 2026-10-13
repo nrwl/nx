@@ -1,7 +1,6 @@
 import {
   acknowledgeBuildScripts,
   addPlugin as _addPlugin,
-  upsertTargetDefault,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -13,8 +12,6 @@ import {
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
-  type TargetConfiguration,
-  type TargetDefaults,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
@@ -26,42 +23,6 @@ import {
   nxVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
-
-function setupE2ETargetDefaults(tree: Tree) {
-  const nxJson = readNxJson(tree);
-
-  if (!nxJson.namedInputs) {
-    return;
-  }
-
-  // E2e targets depend on all their project's sources + production sources of dependencies
-  const productionFileSet = !!nxJson.namedInputs?.production;
-  const existing = findExistingE2eDefault(nxJson.targetDefaults);
-  const patch: Partial<TargetConfiguration> = {};
-  if (existing?.cache === undefined) patch.cache = true;
-  if (existing?.inputs === undefined) {
-    patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
-  }
-  if (Object.keys(patch).length > 0) {
-    upsertTargetDefault(tree, nxJson, { target: 'e2e', ...patch });
-    updateNxJson(tree, nxJson);
-  }
-}
-
-function findExistingE2eDefault(
-  td: TargetDefaults | undefined
-): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  const value = td['e2e'];
-  if (value === undefined) return undefined;
-  if (Array.isArray(value)) {
-    const found = value.find((e) => e.filter === undefined);
-    if (!found) return undefined;
-    const { filter: _f, ...rest } = found;
-    return rest;
-  }
-  return value;
-}
 
 function updateDependencies(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -146,19 +107,11 @@ export async function cypressInitGeneratorInternal(
 
   updateProductionFileset(tree);
 
-  const nxJson = readNxJson(tree);
-
-  options.addPlugin = true;
-
-  if (options.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      options.updatePackageScripts
-    );
-  } else {
-    setupE2ETargetDefaults(tree);
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    options.updatePackageScripts
+  );
 
   let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {

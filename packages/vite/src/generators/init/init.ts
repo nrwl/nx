@@ -43,40 +43,27 @@ export async function initGeneratorInternal(
 ) {
   assertSupportedViteVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  schema.addPlugin = true;
-
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/vite/plugin',
-      createNodesV2,
-      {
-        buildTargetName: ['build', 'vite:build', 'vite-build'],
-        serveTargetName: ['serve', 'vite:serve', 'vite-serve'],
-        devTargetName: ['dev', 'vite:dev', 'vite-dev'],
-        previewTargetName: ['preview', 'vite:preview', 'vite-preview'],
-        serveStaticTargetName: [
-          'serve-static',
-          'vite:serve-static',
-          'vite-serve-static',
-        ],
-        typecheckTargetName: ['typecheck', 'vite:typecheck', 'vite-typecheck'],
-        buildDepsTargetName: [
-          'build-deps',
-          'vite:build-deps',
-          'vite-build-deps',
-        ],
-        watchDepsTargetName: [
-          'watch-deps',
-          'vite:watch-deps',
-          'vite-watch-deps',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/vite/plugin',
+    createNodesV2,
+    {
+      buildTargetName: ['build', 'vite:build', 'vite-build'],
+      serveTargetName: ['serve', 'vite:serve', 'vite-serve'],
+      devTargetName: ['dev', 'vite:dev', 'vite-dev'],
+      previewTargetName: ['preview', 'vite:preview', 'vite-preview'],
+      serveStaticTargetName: [
+        'serve-static',
+        'vite:serve-static',
+        'vite-serve-static',
+      ],
+      typecheckTargetName: ['typecheck', 'vite:typecheck', 'vite-typecheck'],
+      buildDepsTargetName: ['build-deps', 'vite:build-deps', 'vite-build-deps'],
+      watchDepsTargetName: ['watch-deps', 'vite:watch-deps', 'vite-watch-deps'],
+    },
+    schema.updatePackageScripts
+  );
 
   updateNxJsonSettings(tree);
   await ignoreViteTempFiles(tree, schema.projectRoot);

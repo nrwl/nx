@@ -7,7 +7,6 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateProjectConfiguration,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
@@ -67,17 +66,6 @@ export async function cypressComponentConfigurationInternal(
   );
 
   const projectConfig = readProjectConfiguration(tree, options.project);
-  if (
-    projectConfig.targets?.['component-test']?.executor ===
-    '@nx/cypress:cypress'
-  ) {
-    projectConfig.targets['component-test'].options = {
-      ...projectConfig.targets['component-test'].options,
-      skipServe: true,
-    };
-    updateProjectConfiguration(tree, options.project, projectConfig);
-  }
-
   await addFiles(tree, projectConfig, options);
 
   if (!options.skipFormat) {

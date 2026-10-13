@@ -1,9 +1,7 @@
 import {
-  findTargetDefault,
   resolveImportPath,
   isInteractive,
   textPrompt,
-  upsertTargetDefault,
   PackageJson,
 } from '@nx/devkit/internal';
 import {
@@ -16,15 +14,11 @@ import {
   logger,
   offsetFromRoot,
   output,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
-  type TargetConfiguration,
   toJS,
   Tree,
   updateJson,
-  updateNxJson,
-  updateProjectConfiguration,
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
@@ -71,7 +65,6 @@ export async function configurationGeneratorInternal(
     await initGenerator(tree, {
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
-      addPlugin: options.addPlugin,
     })
   );
 
@@ -275,7 +268,6 @@ async function normalizeOptions(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ): Promise<NormalizedGeneratorOptions> {
-  const nxJson = readNxJson(tree);
   const addPlugin = true;
 
   const linter = await normalizeLinterOption(tree, options.linter);

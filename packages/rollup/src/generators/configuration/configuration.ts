@@ -1,20 +1,14 @@
-import {
-  readTargetDefaultsForTarget,
-  mergeTargetConfigurations,
-  type PackageJson,
-} from '@nx/devkit/internal';
+import type { PackageJson } from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateJson,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
@@ -24,10 +18,8 @@ import {
   ensureTypescript,
   getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
-  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/internal';
 import { dirname, join, relative } from 'node:path/posix';
-import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedRollupVersion } from '../../utils/versions';
@@ -43,8 +35,6 @@ export async function configurationGenerator(
   assertSupportedRollupVersion(tree);
 
   const tasks: GeneratorCallback[] = [];
-  const nxJson = readNxJson(tree);
-  options.addPlugin = true;
 
   tasks.push(await rollupInitGenerator(tree, { ...options, skipFormat: true }));
 
@@ -53,11 +43,7 @@ export async function configurationGenerator(
   }
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-  const outputConfig: OutputConfig | undefined = createRollupConfig(
-    tree,
-    options,
-    isTsSolutionSetup
-  );
+  const outputConfig = createRollupConfig(tree, options, isTsSolutionSetup);
 
   updatePackageJson(tree, options, outputConfig, isTsSolutionSetup);
   if (isTsSolutionSetup) {
@@ -136,7 +122,7 @@ module.exports = withNx(
 function updatePackageJson(
   tree: Tree,
   options: RollupProjectSchema,
-  outputConfig: OutputConfig | undefined,
+  outputConfig: OutputConfig,
   isTsSolutionSetup: boolean
 ) {
   const project = readProjectConfiguration(tree, options.project);
@@ -157,24 +143,7 @@ function updatePackageJson(
   }
 
   if (isTsSolutionSetup) {
-    let main: string;
-    let outputPath: string;
-    if (outputConfig) {
-      ({ main, outputPath } = outputConfig);
-    } else {
-      // target must exist if we don't receive an outputConfig
-      const projectTarget = project.targets[options.buildTarget];
-      const nxJson = readNxJson(tree);
-      const mergedTarget = mergeTargetConfigurations(
-        projectTarget,
-        readTargetDefaultsForTarget(
-          options.buildTarget,
-          nxJson.targetDefaults,
-          projectTarget.executor
-        )
-      );
-      ({ main, outputPath } = mergedTarget.options);
-    }
+    const { main, outputPath } = outputConfig;
 
     packageJson = getUpdatedPackageJsonContent(packageJson, {
       main,

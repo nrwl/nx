@@ -18,11 +18,9 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   assertSupportedRollupVersion(tree);
 
   let task: GeneratorCallback = () => {};
-  schema.addPlugin = true;
 
   if (!schema.skipPackageJson) {
-    // Rollup is a peer dependency, so ensure it is installed for both the
-    // inferred-plugin (CLI) path and the executor (programmatic) path.
+    // Rollup is a peer dependency, so ensure it is installed.
     const devDependencies = {
       '@nx/rollup': nxVersion,
       rollup: rollupVersion,
@@ -36,28 +34,26 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
     );
   }
 
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/rollup/plugin',
-      createNodesV2,
-      {
-        buildTargetName: ['build', 'rollup:build', 'rollup-build'],
-        buildDepsTargetName: [
-          'build-deps',
-          'rollup:build-deps',
-          'rollup-build-deps',
-        ],
-        watchDepsTargetName: [
-          'watch-deps',
-          'rollup:watch-deps',
-          'rollup-watch-deps',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/rollup/plugin',
+    createNodesV2,
+    {
+      buildTargetName: ['build', 'rollup:build', 'rollup-build'],
+      buildDepsTargetName: [
+        'build-deps',
+        'rollup:build-deps',
+        'rollup-build-deps',
+      ],
+      watchDepsTargetName: [
+        'watch-deps',
+        'rollup:watch-deps',
+        'rollup-watch-deps',
+      ],
+    },
+    schema.updatePackageScripts
+  );
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

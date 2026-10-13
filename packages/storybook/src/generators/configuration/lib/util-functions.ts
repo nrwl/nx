@@ -27,7 +27,6 @@ import { StorybookConfigureSchema } from '../schema';
 import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 import { findEslintFile, useFlatConfig } from '@nx/eslint/internal';
-import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import {
   findRuntimeTsConfigName,
   getProjectType,
@@ -470,49 +469,6 @@ export function addStorybookToNamedInputs(
   }
 }
 
-export function addStorybookToTargetDefaults(
-  tree: Tree,
-  schema: StorybookConfigureSchema,
-  setCache = true
-) {
-  const nxJson = readNxJson(tree) ?? {};
-
-  const existing = findTargetDefault(nxJson.targetDefaults, {
-    target: 'build-storybook',
-  });
-
-  const inputs = existing?.inputs
-    ? [...existing.inputs]
-    : [
-        'default',
-        nxJson.namedInputs && 'production' in nxJson.namedInputs
-          ? '^production'
-          : '^default',
-      ];
-
-  if (!inputs.includes('{projectRoot}/.storybook/**/*')) {
-    inputs.push('{projectRoot}/.storybook/**/*');
-  }
-
-  // Drop the negation glob so Storybook rebuilds when .storybook changes.
-  const negatedIndex = inputs.indexOf('!{projectRoot}/.storybook/**/*');
-  if (negatedIndex !== -1) inputs.splice(negatedIndex, 1);
-
-  if (
-    schema.uiFramework !== '@storybook/angular' &&
-    !inputs.includes('{projectRoot}/tsconfig.storybook.json')
-  ) {
-    inputs.push('{projectRoot}/tsconfig.storybook.json');
-  }
-
-  upsertTargetDefault(tree, nxJson, {
-    target: 'build-storybook',
-    ...(setCache && existing?.cache === undefined ? { cache: true } : {}),
-    inputs,
-  });
-  updateNxJson(tree, nxJson);
-}
-
 export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
@@ -528,7 +484,6 @@ export function createProjectStorybookDir(
   usesSwc?: boolean,
   usesVite?: boolean,
   viteConfigFilePath?: string,
-  hasPlugin?: boolean,
   viteConfigFileName?: string,
   usesReactNative?: boolean,
   useNativeTsconfigPaths = true
@@ -580,7 +535,6 @@ export function createProjectStorybookDir(
     usesVite,
     isRootProject: projectIsRootProjectInStandaloneWorkspace,
     viteConfigFilePath,
-    hasPlugin,
     viteConfigFileName,
     usesReactNative,
     useNativeTsconfigPaths,

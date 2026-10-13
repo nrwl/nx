@@ -24,8 +24,6 @@ export async function initGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  options.addPlugin = true;
-
   if (!options.skipPackageJson) {
     tasks.push(
       addDependenciesToPackageJson(
@@ -41,16 +39,14 @@ export async function initGeneratorInternal(
     );
   }
 
-  if (options.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/playwright/plugin',
-      createNodesV2,
-      { targetName: ['e2e', 'playwright:e2e', 'playwright-e2e'] },
-      options.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/playwright/plugin',
+    createNodesV2,
+    { targetName: ['e2e', 'playwright:e2e', 'playwright-e2e'] },
+    options.updatePackageScripts
+  );
 
   if (!options.skipFormat) {
     await formatFiles(tree);

@@ -63,8 +63,6 @@ export async function initEsLint(
 ): Promise<GeneratorCallback> {
   assertSupportedEslintVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  options.addPlugin = true;
   options.eslintConfigFormat ??= 'mjs';
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
@@ -91,7 +89,7 @@ export async function initEsLint(
     '_eslint-lint',
   ];
 
-  if (rootEslintFile && options.addPlugin && !hasPlugin) {
+  if (rootEslintFile && !hasPlugin) {
     await addPlugin(
       tree,
       graph,

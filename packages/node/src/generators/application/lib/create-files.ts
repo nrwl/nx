@@ -7,7 +7,6 @@ import {
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { addVSCodeDebugConfiguration } from '../../../utils/vscode-debug-config';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -26,21 +25,19 @@ export function addAppFiles(tree: Tree, options: NormalizedSchema) {
         tree,
         options.appProjectRoot
       ),
-      webpackPluginOptions: hasWebpackPlugin(tree)
-        ? {
-            outputPath: options.isUsingTsSolutionConfig
-              ? 'dist'
-              : joinPathFragments(
-                  offsetFromRoot(options.appProjectRoot),
-                  'dist',
-                  options.rootProject ? options.name : options.appProjectRoot
-                ),
-            main: './src/main' + (options.js ? '.js' : '.ts'),
-            tsConfig: './tsconfig.app.json',
-            assets: ['./src/assets'],
-            generatePackageJson: !options.isUsingTsSolutionConfig,
-          }
-        : null,
+      webpackPluginOptions: {
+        outputPath: options.isUsingTsSolutionConfig
+          ? 'dist'
+          : joinPathFragments(
+              offsetFromRoot(options.appProjectRoot),
+              'dist',
+              options.rootProject ? options.name : options.appProjectRoot
+            ),
+        main: './src/main' + (options.js ? '.js' : '.ts'),
+        tsConfig: './tsconfig.app.json',
+        assets: ['./src/assets'],
+        generatePackageJson: !options.isUsingTsSolutionConfig,
+      },
     }
   );
 

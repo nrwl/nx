@@ -26,37 +26,33 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  schema.addPlugin = true;
-
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
     tasks.push(updateDependencies(host, schema));
   }
 
-  if (schema.addPlugin) {
-    await addPlugin(
-      host,
-      await createProjectGraphAsync(),
-      '@nx/detox/plugin',
-      createNodesV2,
-      {
-        buildTargetName: ['build', 'detox:build', 'detox-build'],
-        startTargetName: ['start', 'detox:start', 'detox-start'],
-        testTargetName: ['test', 'detox:test', 'detox-test'],
-        buildDepsTargetName: [
-          'build-deps',
-          'detox:build-deps',
-          'detox-build-deps',
-        ],
-        watchDepsTargetName: [
-          'watch-deps',
-          'detox:watch-deps',
-          'detox-watch-deps',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    host,
+    await createProjectGraphAsync(),
+    '@nx/detox/plugin',
+    createNodesV2,
+    {
+      buildTargetName: ['build', 'detox:build', 'detox-build'],
+      startTargetName: ['start', 'detox:start', 'detox-start'],
+      testTargetName: ['test', 'detox:test', 'detox-test'],
+      buildDepsTargetName: [
+        'build-deps',
+        'detox:build-deps',
+        'detox-build-deps',
+      ],
+      watchDepsTargetName: [
+        'watch-deps',
+        'detox:watch-deps',
+        'detox-watch-deps',
+      ],
+    },
+    schema.updatePackageScripts
+  );
 
   if (!schema.skipFormat) {
     await formatFiles(host);

@@ -14,7 +14,6 @@ import {
   findExistingTargetsInProject,
   handleUnknownExecutors,
   handleUnsupportedUserProvidedTargets,
-  TargetFlags,
   UserProvidedTargetName,
   writeRspackConfigFile,
 } from '../../utils/generator-utils';
@@ -95,12 +94,6 @@ export async function configurationGenerator(
   let buildTargetName = 'build';
   let serveTargetName = 'serve';
 
-  /**
-   * This is for when we are converting an existing project
-   * to use the vite executors.
-   */
-  let projectAlreadyHasRspackTargets: TargetFlags = {};
-
   if (!options.newProject) {
     const userProvidedTargetName: UserProvidedTargetName = {
       build: options.buildTarget,
@@ -113,7 +106,6 @@ export async function configurationGenerator(
       userProvidedTargetIsUnsupported,
       alreadyHasNxRspackTargets,
     } = findExistingTargetsInProject(targets, userProvidedTargetName);
-    projectAlreadyHasRspackTargets = alreadyHasNxRspackTargets;
 
     if (
       alreadyHasNxRspackTargets.build &&
@@ -122,7 +114,7 @@ export async function configurationGenerator(
         options.framework === 'nest')
     ) {
       throw new Error(
-        `The project ${options.project} is already configured to use the @nx/rspack executors.
+        `The project ${options.project} has targets using the removed @nx/rspack executors.
         Please try a different project, or remove the existing targets
         and re-run this generator to reset the existing Rspack Configuration.
         `
@@ -131,7 +123,7 @@ export async function configurationGenerator(
 
     if (!validFoundTargetName.build && projectContainsUnsupportedExecutor) {
       throw new Error(
-        `The project ${options.project} cannot be converted to use the @nx/rspack executors.`
+        `The project ${options.project} cannot be converted to use Rspack.`
       );
     }
 

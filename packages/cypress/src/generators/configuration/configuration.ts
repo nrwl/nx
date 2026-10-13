@@ -16,13 +16,11 @@ import {
   parseTargetString,
   ProjectConfiguration,
   ProjectGraph,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
   Tree,
   updateJson,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import {
@@ -104,18 +102,11 @@ export async function configurationGeneratorInternal(
         skipFormat: true,
       })
     );
-  } else if (opts.addPlugin) {
+  } else {
     await addPlugin(tree, projectGraph, false);
   }
 
-  const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/cypress/plugin'
-      : p.plugin === '@nx/cypress/plugin'
-  );
-
-  await addFiles(tree, opts, projectGraph, hasPlugin);
+  await addFiles(tree, opts, projectGraph);
 
   const projectTsConfigPath = joinPathFragments(
     opts.projectRoot,
@@ -247,7 +238,6 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
     throw new Error('Either baseUrl or devServerTarget must be provided');
   }
 
-  const nxJson = readNxJson(tree);
   options.addPlugin = true;
 
   return {
@@ -293,8 +283,7 @@ async function promptForMissingServeData(projectName: string) {
 async function addFiles(
   tree: Tree,
   options: NormalizedSchema,
-  projectGraph: ProjectGraph,
-  hasPlugin: boolean
+  projectGraph: ProjectGraph
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
@@ -335,11 +324,11 @@ async function addFiles(
   let ciWebServerCommand: string;
   let ciBaseUrl: string;
 
-  if (hasPlugin && options.webServerCommands && options.ciWebServerCommand) {
+  if (options.webServerCommands && options.ciWebServerCommand) {
     webServerCommands = options.webServerCommands;
     ciWebServerCommand = options.ciWebServerCommand;
     ciBaseUrl = options.ciBaseUrl;
-  } else if (hasPlugin && options.devServerTarget) {
+  } else if (options.devServerTarget) {
     webServerCommands = {};
 
     webServerCommands.default = 'nx run ' + options.devServerTarget;

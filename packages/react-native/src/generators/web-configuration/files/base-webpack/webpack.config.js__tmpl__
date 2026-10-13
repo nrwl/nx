@@ -1,4 +1,4 @@
-<% if (webpackPluginOptions) { %>
+
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 
@@ -30,31 +30,4 @@ module.exports = {
     new NxReactWebpackPlugin(),
   ],
 };
-<% } else { %>
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 
-module.exports = {
-  output: { clean: true },
-  resolve: {
-    alias: {
-      'react-native$': 'react-native-web',
-      'react-native-svg': 'react-native-svg-web',
-      '@react-native/assets-registry/registry': 'react-native-web/dist/modules/AssetRegistry/index',
-    },
-    extensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js'],
-  },
-  module: { rules: [{
-    test: /\.(js|jsx)$/,
-    include: /react-native-vector-icons/,
-    loader: 'babel-loader',
-    options: {
-      presets: [
-        '@babel/preset-env',
-        ['@babel/preset-react', { runtime: 'automatic' }],
-      ],
-    },
-  }] },
-  plugins: [new NxAppWebpackPlugin(), new NxReactWebpackPlugin()],
-};
-<% } %>

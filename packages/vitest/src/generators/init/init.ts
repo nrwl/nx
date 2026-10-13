@@ -84,22 +84,17 @@ export function updateNxJsonSettings(tree: Tree) {
 export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   assertSupportedVitestVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  schema.addPlugin = true;
-
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/vitest',
-      createNodesV2,
-      {
-        testTargetName: ['test', 'vitest:test', 'vitest-test'],
-        ciTargetName: ['test-ci', 'vitest:test-ci', 'vitest-test-ci'],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/vitest',
+    createNodesV2,
+    {
+      testTargetName: ['test', 'vitest:test', 'vitest-test'],
+      ciTargetName: ['test-ci', 'vitest:test-ci', 'vitest-test-ci'],
+    },
+    schema.updatePackageScripts
+  );
 
   updateNxJsonSettings(tree);
   await ignoreVitestTempFiles(tree, schema.projectRoot);

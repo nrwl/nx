@@ -2,20 +2,15 @@ import {
   logShowProjectCommand,
   confirmationPrompt,
   isInteractive,
-  upsertTargetDefault,
 } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
-  readNxJson,
   runTasksInSerial,
-  type TargetConfiguration,
-  type TargetDefaults,
   Tree,
   updateJson,
-  updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
@@ -99,25 +94,6 @@ export async function applicationGeneratorInternal(
     useReactRouterPlugin: options.useReactRouter,
   });
   tasks.push(initTask);
-
-  if (!options.addPlugin) {
-    const nxJson = readNxJson(tree) ?? {};
-    const existing = findBuildDefault(nxJson.targetDefaults);
-    if (!existing) {
-      upsertTargetDefault(tree, nxJson, {
-        target: 'build',
-        cache: true,
-        dependsOn: ['^build'],
-      });
-      updateNxJson(tree, nxJson);
-    } else if (!existing.dependsOn) {
-      upsertTargetDefault(tree, nxJson, {
-        target: 'build',
-        dependsOn: ['^build'],
-      });
-      updateNxJson(tree, nxJson);
-    }
-  }
 
   if (options.bundler === 'webpack') {
     await initWebpack(tree, options, tasks);
@@ -231,21 +207,6 @@ export async function applicationGeneratorInternal(
   });
 
   return runTasksInSerial(...tasks);
-}
-
-function findBuildDefault(
-  td: TargetDefaults | undefined
-): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  const value = td['build'];
-  if (value === undefined) return undefined;
-  if (Array.isArray(value)) {
-    const found = value.find((e) => e.filter === undefined);
-    if (!found) return undefined;
-    const { filter: _f, ...rest } = found;
-    return rest;
-  }
-  return value;
 }
 
 export default applicationGenerator;

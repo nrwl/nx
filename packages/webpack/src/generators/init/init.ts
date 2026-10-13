@@ -18,80 +18,72 @@ import {
 import { Schema } from './schema';
 
 export function webpackInitGenerator(tree: Tree, schema: Schema) {
-  return webpackInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return webpackInitGeneratorInternal(tree, schema);
 }
 
 export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
   assertSupportedWebpackVersion(tree);
 
-  schema.addPlugin = true;
-
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/webpack/plugin',
-      createNodesV2,
-      {
-        buildTargetName: [
-          'build',
-          'webpack:build',
-          'build:webpack',
-          'webpack-build',
-          'build-webpack',
-        ],
-        serveTargetName: [
-          'serve',
-          'webpack:serve',
-          'serve:webpack',
-          'webpack-serve',
-          'serve-webpack',
-        ],
-        previewTargetName: [
-          'preview',
-          'webpack:preview',
-          'preview:webpack',
-          'webpack-preview',
-          'preview-webpack',
-        ],
-        buildDepsTargetName: [
-          'build-deps',
-          'webpack:build-deps',
-          'webpack-build-deps',
-        ],
-        watchDepsTargetName: [
-          'watch-deps',
-          'webpack:watch-deps',
-          'webpack-watch-deps',
-        ],
-        serveStaticTargetName: [
-          'serve-static',
-          'webpack:serve-static',
-          'serve-static:webpack',
-          'webpack-serve-static',
-          'serve-static-webpack',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/webpack/plugin',
+    createNodesV2,
+    {
+      buildTargetName: [
+        'build',
+        'webpack:build',
+        'build:webpack',
+        'webpack-build',
+        'build-webpack',
+      ],
+      serveTargetName: [
+        'serve',
+        'webpack:serve',
+        'serve:webpack',
+        'webpack-serve',
+        'serve-webpack',
+      ],
+      previewTargetName: [
+        'preview',
+        'webpack:preview',
+        'preview:webpack',
+        'webpack-preview',
+        'preview-webpack',
+      ],
+      buildDepsTargetName: [
+        'build-deps',
+        'webpack:build-deps',
+        'webpack-build-deps',
+      ],
+      watchDepsTargetName: [
+        'watch-deps',
+        'webpack:watch-deps',
+        'webpack-watch-deps',
+      ],
+      serveStaticTargetName: [
+        'serve-static',
+        'webpack:serve-static',
+        'serve-static:webpack',
+        'webpack-serve-static',
+        'serve-static-webpack',
+      ],
+    },
+    schema.updatePackageScripts
+  );
 
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
-    // webpack and webpack-dev-server are peer dependencies, so ensure they are
-    // installed (both the executor and inferred-plugin paths need them at the
-    // user's runtime).
+    // webpack and webpack-dev-server are peer dependencies needed at the
+    // user's runtime.
     const devDependencies = {
       '@nx/webpack': nxVersion,
       '@nx/web': nxVersion,
       webpack: webpackVersion,
       'webpack-dev-server': webpackDevServerVersion,
-    };
-
-    if (schema.addPlugin) {
       // The inferred plugin runs the `webpack-cli` binary.
-      devDependencies['webpack-cli'] = webpackCliVersion;
-    }
+      'webpack-cli': webpackCliVersion,
+    };
 
     // @nx/webpack depends on sass, which pulls in @parcel/watcher. Its install
     // script only builds from source when npm_config_build_from_source is set,

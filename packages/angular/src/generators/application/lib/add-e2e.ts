@@ -15,8 +15,6 @@ import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
-  const addPlugin = true;
-
   const e2eWebServerInfo = getAngularE2EWebServerInfo(
     tree,
     options.name,
@@ -51,7 +49,6 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
       rootProject: options.rootProject,
-      addPlugin,
     });
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
@@ -75,7 +72,6 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
       rootProject: options.rootProject,
-      addPlugin,
     });
   }
 

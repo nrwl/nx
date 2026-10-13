@@ -12,7 +12,6 @@ import {
 import { webpackInitGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
-import { hasPlugin } from '../../utils/has-plugin';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedWebpackVersion } from '../../utils/versions';
 
@@ -20,7 +19,7 @@ export function configurationGenerator(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
-  return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
+  return configurationGeneratorInternal(tree, options);
 }
 
 export async function configurationGeneratorInternal(
@@ -30,7 +29,6 @@ export async function configurationGeneratorInternal(
   assertSupportedWebpackVersion(tree);
 
   const tasks: GeneratorCallback[] = [];
-  options.addPlugin = true;
 
   const initTask = await webpackInitGenerator(tree, {
     ...options,
@@ -99,11 +97,9 @@ function createWebpackConfig(
     });
   }
 
-  if (options.target === 'web') {
-    tree.write(
-      joinPathFragments(project.root, 'webpack.config.js'),
-      hasPlugin(tree)
-        ? `
+  tree.write(
+    joinPathFragments(project.root, 'webpack.config.js'),
+    `
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
@@ -129,57 +125,7 @@ module.exports = {
   ],
 }
 `
-        : `
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-
-module.exports = {
-  output: { clean: true },
-  plugins: [new NxAppWebpackPlugin()],
-};
-
-`
-    );
-  } else {
-    tree.write(
-      joinPathFragments(project.root, 'webpack.config.js'),
-      hasPlugin(tree)
-        ? `
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-const { join } = require('path');
-
-module.exports = {
-  output: {
-    path: join(__dirname, '${offsetFromRoot(project.root)}${
-      buildOptions.outputPath
-    }'),
-  },
-  plugins: [
-    new NxAppWebpackPlugin({
-      target: '${buildOptions.target}',
-      tsConfig: '${buildOptions.tsConfig}',
-      compiler: '${buildOptions.compiler}',${
-        buildOptions.babelConfig
-          ? `
-      babelConfig: '${buildOptions.babelConfig}',`
-          : ''
-      }
-      main: '${buildOptions.main}',
-      outputHashing: '${buildOptions.target !== 'web' ? 'none' : 'all'}',
-    })
-  ],
-}
-`
-        : `
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-
-module.exports = {
-  output: { clean: true },
-  plugins: [new NxAppWebpackPlugin()],
-};
-
-`
-    );
-  }
+  );
 }
 
 export default configurationGenerator;

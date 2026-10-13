@@ -285,8 +285,8 @@ function buildTargetWebpack(
       '@nx/rspack:rspack'
   ) {
     throw new InvalidExecutorError(
-      `The '${parsed.target}' target of the '${parsed.project}' project is not using the '@nx/webpack:webpack' or '@nx/rspack:rspack' executor. ` +
-        `Please make sure to use '@nx/webpack:webpack' or '@nx/rspack:rspack' executor in that target to use Cypress Component Testing.`
+      `The '${parsed.target}' target of the '${parsed.project}' project is not a Webpack build target. ` +
+        `Cypress Component Testing needs a build target inferred by '@nx/webpack/plugin'.`
     );
   }
 

@@ -1,9 +1,4 @@
-import {
-  TargetConfiguration,
-  Tree,
-  joinPathFragments,
-  readProjectConfiguration,
-} from '@nx/devkit';
+import { Tree, joinPathFragments, readProjectConfiguration } from '@nx/devkit';
 import type { WithReactOptions } from '@nx/react';
 import type { WithNxOptions } from '@nx/webpack';
 
