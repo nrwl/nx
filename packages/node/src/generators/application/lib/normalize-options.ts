@@ -24,7 +24,6 @@ export async function normalizeOptions(
   });
   options.rootProject = appProjectRoot === '.';
 
-  options.bundler = options.bundler ?? 'esbuild';
   options.e2eTestRunner = options.e2eTestRunner ?? 'jest';
 
   const parsedTags = options.tags
@@ -38,6 +37,26 @@ export async function normalizeOptions(
       nxJson.useInferencePlugins !== false);
 
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  // Legacy workspaces resolve imports through tsconfig paths, which tsc does not
+  // rewrite in emitted JS; rolldown bundles them instead. Fastify autoloads
+  // plugins/ and routes/ from disk, so it needs unbundled output.
+  options.bundler ??= isUsingTsSolutionConfig
+    ? 'tsc'
+    : options.framework === 'fastify'
+      ? 'esbuild'
+      : 'rolldown';
+  if (options.bundler === 'tsc' && !isUsingTsSolutionConfig) {
+    throw new Error(
+      `The "tsc" bundler requires a TypeScript solution workspace (project references). This workspace uses tsconfig path aliases, which tsc does not rewrite in emitted JavaScript. Use "--bundler=rolldown" or "--bundler=esbuild" instead.`
+    );
+  }
+  if (options.bundler === 'rolldown' && options.framework === 'fastify') {
+    // The fastify template autoloads plugins/ and routes/ from disk at runtime,
+    // which a single-file bundle does not emit.
+    throw new Error(
+      `The "rolldown" bundler does not support the "fastify" framework. Use "--bundler=tsc" or "--bundler=esbuild" instead.`
+    );
+  }
   const swcJest = options.swcJest ?? isUsingTsSolutionConfig;
 
   const appProjectName =
@@ -58,6 +77,8 @@ export async function normalizeOptions(
     unitTestRunner: options.unitTestRunner ?? 'jest',
     rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,
+    buildTargetName: 'build',
+    serveRuntime: getServeRuntime(options, addPlugin, isUsingTsSolutionConfig),
     outputPath: isUsingTsSolutionConfig
       ? joinPathFragments(appProjectRoot, 'dist')
       : joinPathFragments(
@@ -68,4 +89,25 @@ export async function normalizeOptions(
     swcJest,
     useProjectJson,
   };
+}
+
+function getServeRuntime(
+  options: Schema,
+  addPlugin: boolean,
+  isUsingTsSolutionConfig: boolean
+): NormalizedSchema['serveRuntime'] {
+  // Webpack apps keep the explicit @nx/js:node serve.
+  if (!addPlugin || options.bundler === 'webpack') {
+    return undefined;
+  }
+  // Node runs TypeScript natively but resolves neither tsconfig path aliases nor
+  // the extensionless relative imports and `__dirname` the fastify template uses.
+  // Its ESM sources import `./x.ts`, which only tsc and rolldown rewrite on build,
+  // and `--js` apps would make jest load CommonJS configs as ESM.
+  return isUsingTsSolutionConfig &&
+    (options.bundler === 'tsc' || options.bundler === 'rolldown') &&
+    options.framework !== 'fastify' &&
+    !options.js
+    ? 'node'
+    : 'tsx';
 }

@@ -1371,6 +1371,9 @@ importers:
       resolve.exports:
         specifier: 2.0.3
         version: 2.0.3
+      rolldown:
+        specifier: ^1.2.0
+        version: 1.2.0
       rollup:
         specifier: ^4.62.4
         version: 4.62.4
@@ -3266,6 +3269,9 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
+      '@nx/rolldown':
+        specifier: workspace:*
+        version: link:../rolldown
       '@nx/vitest':
         specifier: workspace:*
         version: link:../vitest
@@ -3719,6 +3725,25 @@ importers:
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
+      nx:
+        specifier: workspace:*
+        version: link:../nx
+
+  packages/rolldown:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../devkit
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../js
+      rolldown:
+        specifier: ^1.0.0
+        version: 1.2.0
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
+    devDependencies:
       nx:
         specifier: workspace:*
         version: link:../nx

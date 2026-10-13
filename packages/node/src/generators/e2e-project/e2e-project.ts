@@ -86,7 +86,10 @@ export async function e2eProjectGeneratorInternal(
             jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
             passWithNoTests: true,
           },
-          dependsOn: [`${options.project}:build`, `${options.project}:serve`],
+          dependsOn: [
+            `${options.project}:${options.buildTarget ?? 'build'}`,
+            `${options.project}:serve`,
+          ],
         },
       },
     };
@@ -103,7 +106,10 @@ export async function e2eProjectGeneratorInternal(
             jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
             passWithNoTests: true,
           },
-          dependsOn: [`${options.project}:build`, `${options.project}:serve`],
+          dependsOn: [
+            `${options.project}:${options.buildTarget ?? 'build'}`,
+            `${options.project}:serve`,
+          ],
         },
       },
     });
@@ -185,7 +191,19 @@ export async function e2eProjectGeneratorInternal(
       );
     }
   } else if (options.projectType === 'cli') {
-    const mainFile = appProject.targets.build?.options?.outputPath;
+    // Inferred builds (tsc, rolldown) have no outputPath option; use the
+    // output dir the app generator configures.
+    const mainFile =
+      appProject.targets.build?.options?.outputPath ??
+      joinPathFragments(
+        options.isUsingTsSolutionConfig
+          ? joinPathFragments(appProject.root, 'dist')
+          : joinPathFragments(
+              'dist',
+              appProject.root === '.' ? options.project : appProject.root
+            ),
+        'main.js'
+      );
     generateFiles(
       host,
       path.join(__dirname, 'files/cli'),

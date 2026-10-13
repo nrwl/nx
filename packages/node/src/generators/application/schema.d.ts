@@ -20,7 +20,7 @@ export interface Schema {
    * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
    */
   setParserOptionsProject?: boolean;
-  bundler?: 'esbuild' | 'webpack';
+  bundler?: 'tsc' | 'rolldown' | 'esbuild' | 'webpack';
   framework?: NodeJsFrameWorks;
   port?: number;
   rootProject?: boolean;

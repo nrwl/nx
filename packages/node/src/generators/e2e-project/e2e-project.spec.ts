@@ -1,6 +1,12 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { readJson, Tree, updateJson, writeJson } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { e2eProjectGenerator } from './e2e-project';
@@ -83,6 +89,45 @@ describe('e2eProjectGenerator', () => {
     expect(tree.exists('api-e2e/.spec.swcrc')).toBeFalsy();
   });
 
+  it('should run the root app build output in a cli project', async () => {
+    await applicationGenerator(tree, {
+      directory: '.',
+      name: 'my-cli',
+      framework: 'none',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+    await e2eProjectGenerator(tree, {
+      projectType: 'cli',
+      project: 'my-cli',
+      rootProject: true,
+      addPlugin: true,
+    });
+
+    expect(tree.read('e2e/src/cli/cli.spec.ts', 'utf-8')).toContain(
+      'dist/my-cli/main.js'
+    );
+  });
+
+  it('should depend on the given build target', async () => {
+    await applicationGenerator(tree, {
+      directory: 'api',
+      framework: 'express',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+    await e2eProjectGenerator(tree, {
+      projectType: 'server',
+      project: 'api',
+      buildTarget: 'bundle',
+      addPlugin: true,
+    });
+
+    expect(
+      readProjectConfiguration(tree, 'api-e2e').targets.e2e.dependsOn
+    ).toEqual(['api:bundle', 'api:serve']);
+  });
+
   it('should generate cli project', async () => {
     await applicationGenerator(tree, {
       directory: 'api',
@@ -102,7 +147,7 @@ describe('e2eProjectGenerator', () => {
 
       describe('CLI tests', () => {
         it('should print a message', () => {
-          const cliPath = join(process.cwd(), 'dist/api');
+          const cliPath = join(process.cwd(), 'dist/api/main.js');
 
           const output = execSync(\`node \${cliPath}\`).toString();
 

@@ -9,6 +9,7 @@ import { join } from 'path';
 export const nxVersion = require(join('@nx/node', 'package.json')).version;
 
 export const tslibVersion = '^2.3.0';
+export const tsxVersion = '^4.20.5';
 
 // `@types/node` — supported window covers the active LTS majors (currently v22
 // and v24). Fresh installs default to the active LTS (v22).

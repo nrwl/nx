@@ -334,6 +334,32 @@ describe('preset', () => {
     expect(tree.exists(`apps/${name}/eslint.config.mjs`)).toBe(true);
   });
 
+  it('should pass the node bundler through (preset = node-monorepo)', async () => {
+    const name = 'node-preset';
+    await presetGenerator(tree, {
+      name,
+      preset: Preset.NodeMonorepo,
+      bundler: 'rolldown',
+      linter: 'none',
+      framework: 'none',
+    });
+
+    expect(tree.exists(`apps/${name}/rolldown.config.ts`)).toBe(true);
+  });
+
+  it('should pass the tsc bundler through instead of falling back (preset = node-monorepo)', async () => {
+    // tsc needs a TS solution workspace, so a forwarded value fails loudly.
+    await expect(
+      presetGenerator(tree, {
+        name: 'node-preset',
+        preset: Preset.NodeMonorepo,
+        bundler: 'tsc',
+        linter: 'none',
+        framework: 'none',
+      })
+    ).rejects.toThrow(/requires a TypeScript solution workspace/);
+  });
+
   it('should create files (preset = react-native)', async () => {
     const name = `react-native-preset`;
     await presetGenerator(tree, {

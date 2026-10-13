@@ -1,9 +1,13 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  findMatchingConfigFiles,
+  logShowProjectCommand,
+} from '@nx/devkit/internal';
 import {
   ensurePackage,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -28,6 +32,7 @@ import { setupDockerGenerator } from '../setup-docker/setup-docker';
 import { Schema } from './schema';
 import {
   addAppFiles,
+  addScriptServe,
   addLintingToApplication,
   addProject,
   addProjectDependencies,
@@ -35,6 +40,22 @@ import {
   normalizeOptions,
   NormalizedSchema,
 } from './lib';
+
+function getRolldownBuildTargetName(tree: Tree, projectRoot: string): string {
+  const configFile = joinPathFragments(projectRoot, 'rolldown.config.ts');
+  const registration = readNxJson(tree)?.plugins?.find((p) =>
+    typeof p === 'string'
+      ? p === '@nx/rolldown/plugin'
+      : p.plugin === '@nx/rolldown/plugin' &&
+        findMatchingConfigFiles([configFile], p.include, p.exclude).length > 0
+  );
+  return (
+    (typeof registration === 'object' &&
+      (registration.options as { buildTargetName?: string })
+        ?.buildTargetName) ||
+    'build'
+  );
+}
 
 function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
   if (options.isUsingTsSolutionConfig) {
@@ -159,8 +180,55 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     }
   }
 
+  if (options.bundler === 'rolldown') {
+    ensurePackage('@nx/rolldown', nxVersion);
+    // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
+    // exposes the temp install via `Module._initPaths`, which ESM ignores.
+    const {
+      rolldownInitGenerator,
+    }: typeof import('@nx/rolldown') = require('@nx/rolldown');
+    tasks.push(
+      await rolldownInitGenerator(tree, {
+        addPlugin: options.addPlugin,
+        skipPackageJson: options.skipPackageJson,
+        skipFormat: true,
+      })
+    );
+    // The registration may infer `bundle`/`rolldown:build` instead of `build`.
+    if (options.addPlugin) {
+      options.buildTargetName = getRolldownBuildTargetName(
+        tree,
+        options.appProjectRoot
+      );
+    }
+  }
+
   addAppFiles(tree, options);
+  if (options.serveRuntime) {
+    addScriptServe(tree, options);
+  }
   addProject(tree, options, frameworkDependencies);
+
+  if (options.bundler === 'rolldown') {
+    const {
+      configurationGenerator: rolldownConfigurationGenerator,
+    }: typeof import('@nx/rolldown') = require('@nx/rolldown');
+    await rolldownConfigurationGenerator(tree, {
+      project: options.name,
+      main: joinPathFragments(
+        options.appProjectRoot,
+        'src',
+        options.js ? 'main.js' : 'main.ts'
+      ),
+      outputPath: options.outputPath,
+      // Matches the app's module type (see create-project).
+      format: options.serveRuntime === 'node' ? 'esm' : 'cjs',
+      platform: 'node',
+      addPlugin: options.addPlugin,
+      skipPackageJson: true,
+      skipFormat: true,
+    });
+  }
 
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
@@ -233,6 +301,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       name: options.rootProject ? 'e2e' : `${options.name}-e2e`,
       directory: options.rootProject ? 'e2e' : `${options.appProjectRoot}-e2e`,
       project: options.name,
+      buildTarget: options.buildTargetName,
       port: options.port,
       isNest: options.isNest,
       skipFormat: true,
@@ -252,6 +321,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     const dockerTask = await setupDockerGenerator(tree, {
       ...options,
       project: options.name,
+      buildTarget: options.buildTargetName,
       skipFormat: true,
       skipDockerPlugin: options.skipDockerPlugin ?? false,
     });
@@ -267,6 +337,12 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       {
         module: 'nodenext',
         moduleResolution: 'nodenext',
+        // The TS solution base only emits declarations; the tsc build runs the app.
+        ...(options.bundler === 'tsc' && { emitDeclarationOnly: false }),
+        // Node runs the sources, so relative imports name `.ts` files.
+        ...(options.serveRuntime === 'node' && {
+          rewriteRelativeImportExtensions: true,
+        }),
       },
       options.linter === 'eslint'
         ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']

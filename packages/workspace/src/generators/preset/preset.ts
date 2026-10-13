@@ -9,6 +9,8 @@ import { Schema } from './schema';
 import { Preset } from '../utils/presets';
 import { join } from 'path';
 
+const nodeBundlers = ['tsc', 'rolldown', 'esbuild', 'webpack'];
+
 export async function presetGenerator(tree: Tree, options: Schema) {
   const presetTask = await createPreset(tree, options);
   return async () => {
@@ -374,7 +376,9 @@ async function createPreset(tree: Tree, options: Schema) {
     const { applicationGenerator: nodeApplicationGenerator } = require(
       '@nx' + '/node'
     );
-    const bundler = options.bundler === 'webpack' ? 'webpack' : 'esbuild';
+    const bundler = nodeBundlers.includes(options.bundler)
+      ? options.bundler
+      : undefined;
     return nodeApplicationGenerator(tree, {
       bundler,
       name: options.workspaces ? undefined : options.name,
@@ -392,7 +396,9 @@ async function createPreset(tree: Tree, options: Schema) {
     const { applicationGenerator: nodeApplicationGenerator } = require(
       '@nx' + '/node'
     );
-    const bundler = options.bundler === 'webpack' ? 'webpack' : 'esbuild';
+    const bundler = nodeBundlers.includes(options.bundler)
+      ? options.bundler
+      : undefined;
     return nodeApplicationGenerator(tree, {
       bundler,
       name: options.workspaces ? undefined : options.name,
