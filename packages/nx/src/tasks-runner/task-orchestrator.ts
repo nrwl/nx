@@ -1865,9 +1865,10 @@ export class TaskOrchestrator {
     // duplicate of it.
     this.runningTasksService?.addRunningTask(task.id);
 
-    const taskSpecificEnv = await this.processedTasks.get(task.id);
+    let taskSpecificEnv: NodeJS.ProcessEnv;
     let readyWhen: NormalizedReadyWhen | null;
     try {
+      taskSpecificEnv = await this.processedTasks.get(task.id);
       readyWhen = this.getReadyWhen(task);
       await this.waitForReadyDependencies(task);
     } catch (e) {

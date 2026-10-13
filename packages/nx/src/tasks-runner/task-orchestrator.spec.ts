@@ -2154,6 +2154,37 @@ describe('TaskOrchestrator', () => {
       }
     );
 
+    it('releases the running-task claim when the continuous task cannot be hashed', async () => {
+      const { orchestrator, serve } = createOrchestrator();
+      // The rows another Nx process would read
+      const claims = new Set<string>();
+      orchestrator.runningTasksService = {
+        getRunningTasks: (ids: string[]) => ids.filter((id) => claims.has(id)),
+        addRunningTask: (id: string) => claims.add(id),
+        removeRunningTask: (id: string) => claims.delete(id),
+        getTaskReadiness: () => null,
+        setTaskReadiness: vi.fn(),
+      };
+      let rejectHashing: (e: Error) => void;
+      orchestrator.processedTasks.set(
+        'app:serve',
+        new Promise((_, reject) => (rejectHashing = reject))
+      );
+
+      const starting = orchestrator.startContinuousTask(serve, 1);
+      await vi.waitFor(() => expect(claims.has('app:serve')).toBe(true));
+      rejectHashing(new Error('hash failed'));
+      const handle = await starting.catch((e: Error) => e);
+
+      expect(
+        orchestrator.runningTasksService.getRunningTasks(['app:serve'])
+      ).toEqual([]);
+      await expect(handle.getResults()).resolves.toMatchObject({
+        code: 1,
+        terminalOutput: 'hash failed',
+      });
+    });
+
     it('fails the waiter when the shared producer exits before its first row read', async () => {
       const { orchestrator, serve, e2e } = createOrchestrator();
       orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
