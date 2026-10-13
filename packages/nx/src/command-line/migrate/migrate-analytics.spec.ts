@@ -171,6 +171,7 @@ describe('migrate-analytics events', () => {
         migrationCount: 3,
         appliedCount: 3,
       });
+      a.reportMigrateRunStopped('aborted');
       a.reportMigrateGenerateError('fetch_migrations', new Error('x'));
       a.reportMigrateRunError({ code: 'other', error: new Error('x') });
       expect(mockReportEvent).not.toHaveBeenCalled();
@@ -400,6 +401,12 @@ describe('migrate-analytics events', () => {
         migrationCount: 5,
         appliedCount: 4,
       });
+    });
+
+    it('encodes the stop reason in the event name', async () => {
+      const a = await load();
+      a.reportMigrateRunStopped('existing_run');
+      expect(countOf('migrate_run_stopped_existing_run')).toBe(1);
     });
   });
 

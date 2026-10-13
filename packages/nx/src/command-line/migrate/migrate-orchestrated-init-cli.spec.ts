@@ -1082,6 +1082,42 @@ describe('migrate() orchestrated init dispatch', () => {
         expect(mockMigrateConfirm).not.toHaveBeenCalled();
         expect(readFileSync(runJson(), 'utf-8')).toContain('"run-1"');
       });
+
+      it.each<[string, (json: string) => string, string]>([
+        [
+          'is not valid JSON',
+          () => 'nope',
+          'Whether a migrate run is still active could not be determined',
+        ],
+        [
+          'has a newer run-state format',
+          (json) =>
+            JSON.stringify({
+              ...JSON.parse(json),
+              formatVersion: 2,
+              nxVersion: '99.0.0',
+            }),
+          'This migrate run was created with Nx 99.0.0 (run state format v2), which is newer than the Nx version currently running',
+        ],
+      ])(
+        'stops without running the plan when the run record %s',
+        async (_label, rewrite, diagnostic) => {
+          writeFileSync(runJson(), rewrite(readFileSync(runJson(), 'utf-8')));
+          const before = readFileSync(runJson(), 'utf-8');
+
+          expect(
+            await migrate(root, runMigrationsArgs(), ['--run-migrations'])
+          ).toBe(1);
+
+          expect(output.error).toHaveBeenCalledWith(
+            expect.objectContaining({
+              title: expect.stringContaining(diagnostic),
+            })
+          );
+          expect(readFileSync(runJson(), 'utf-8')).toBe(before);
+          expect(output.log).not.toHaveBeenCalledWith(ranThePlan);
+        }
+      );
     });
   });
 
