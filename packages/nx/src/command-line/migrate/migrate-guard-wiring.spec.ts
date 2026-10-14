@@ -71,6 +71,7 @@ mockCjsModule(import.meta.url, './run', {
   runOrchestratorReconcile: vi.fn(),
   holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
   activeRunToReplace: vi.fn(),
+  checkRunsForSingleMigration: vi.fn(),
   releaseRunToHandOff: (...args: unknown[]) => mockReleaseRunToHandOff(...args),
 });
 

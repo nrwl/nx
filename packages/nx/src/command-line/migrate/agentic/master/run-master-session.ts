@@ -130,49 +130,36 @@ export async function runMasterSession(
     reportMigrateRunStopped(refusal);
     return;
   }
-  const { runId, runRoot, runbookPath, reconcileCommand } = ready;
+  const { runId, runRoot } = ready;
   const resumeHint = continueHint(init.root, agent.id, runId, policy);
 
   output.log({
     title: `Starting ${agent.displayName} to drive migrate run ${runId}.`,
   });
-  const session = await spawnMasterSession({
+  const end = await driveMasterSession({
     agent,
-    runRoot,
-    runId,
-    runbookPath,
-    reconcileCommand,
+    ready,
     policy,
+    reportAgentError: (error) =>
+      reportMigrateRunError({ code: 'agentic', error }),
   });
-  if (session.kind === 'spawn-failed') {
+  if (end.kind === 'spawn-failed') {
     output.error({
-      title: `Could not start ${agent.displayName}: ${session.error.message}`,
+      title: `Could not start ${agent.displayName}: ${end.error.message}`,
       bodyLines: [`Migrate run ${runId} is still active. ${resumeHint}`],
     });
-    reportMigrateRunError({ code: 'agentic', error: session.error });
     return 1;
   }
-  if (session.kind === 'broker-failed') {
-    // The broker itself reads run.json, so its failure can mean the state is
-    // unreadable; the read below decides whether a resume is safe to offer.
-    output.error({
-      title: `Closed the ${agent.displayName} session: a step's request could not be answered (${session.error.message}).`,
-    });
-    reportMigrateRunError({ code: 'agentic', error: session.error });
-  }
-
-  let state: MigrateRunState;
-  try {
-    state = readRunState(runDir(runRoot, runId));
-  } catch (error) {
+  if (end.kind === 'unreadable') {
     // No resume hint: run discovery skips a directory whose run.json is
     // missing, so a rerun could start a second run over the same plan.
     output.error({
       title: `Nx could not determine whether migrate run ${runId} completed.`,
-      bodyLines: [error instanceof Error ? error.message : String(error)],
+      bodyLines: [end.message],
     });
     return 1;
   }
+  const { state } = end;
   switch (state.status) {
     case 'active':
       reportMigrateOrchestratorAbandoned({
@@ -212,6 +199,57 @@ export async function runMasterSession(
       const unhandled: never = state.status;
       throw new Error(`Unhandled migrate run status: ${unhandled}`);
     }
+  }
+}
+
+export type MasterSessionEnd =
+  | { kind: 'spawn-failed'; error: Error }
+  // The run's state could not be read once the session ended.
+  | { kind: 'unreadable'; message: string }
+  | { kind: 'ended'; state: MigrateRunState };
+
+/**
+ * Hands a ready run to one agent session and reads the run's state once the
+ * session ends. Reports a session that could not start or answer a step
+ * through `reportAgentError`; the caller words every outcome.
+ */
+export async function driveMasterSession(input: {
+  agent: DetectedInstalledAgent;
+  ready: Extract<OrchestratorInitResult, { kind: 'ready' }>;
+  policy: MigrateRunPolicy;
+  singleMigration?: boolean;
+  reportAgentError: (error: Error) => void;
+}): Promise<MasterSessionEnd> {
+  const { agent, ready, policy, singleMigration, reportAgentError } = input;
+  const { runId, runRoot, runbookPath, reconcileCommand } = ready;
+  const session = await spawnMasterSession({
+    agent,
+    runRoot,
+    runId,
+    runbookPath,
+    reconcileCommand,
+    policy,
+    singleMigration,
+  });
+  if (session.kind === 'spawn-failed') {
+    reportAgentError(session.error);
+    return { kind: 'spawn-failed', error: session.error };
+  }
+  if (session.kind === 'broker-failed') {
+    // The broker itself reads run.json, so its failure can mean the state is
+    // unreadable; the read below decides what the caller can offer.
+    output.error({
+      title: `Closed the ${agent.displayName} session: a step's request could not be answered (${session.error.message}).`,
+    });
+    reportAgentError(session.error);
+  }
+  try {
+    return { kind: 'ended', state: readRunState(runDir(runRoot, runId)) };
+  } catch (error) {
+    return {
+      kind: 'unreadable',
+      message: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 

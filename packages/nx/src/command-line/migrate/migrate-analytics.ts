@@ -446,6 +446,34 @@ export function reportMigrateSingleMigrationInvocation(opts: {
   });
 }
 
+/**
+ * Closes a `--run-migration` run that had an agent selected. `agentUsed` is
+ * set only when the agent started: a migration that left it no work
+ * completes without one.
+ */
+export function reportMigrateSingleMigrationComplete(opts: {
+  agentUsed?: string;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_single_migration_complete', {
+      [customDimensions.agentUsed]: opts.agentUsed,
+    });
+  });
+}
+
+/** The agent session of a `--run-migration` run ended with the migration unfinished. */
+export function reportMigrateSingleMigrationAbandoned(opts: {
+  agentUsed: string;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_single_migration_abandoned', {
+      [customDimensions.agentUsed]: opts.agentUsed,
+    });
+  });
+}
+
 // `_migrate` runs either from a temp install of the latest CLI or from the
 // workspace-local installation; same signal as the run-phase re-dispatch
 // check in migrate.ts.

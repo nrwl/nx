@@ -138,11 +138,7 @@ import {
 } from './migrate-config';
 import { MIGRATE_RUNS_RELATIVE_DIR } from './agentic/types';
 import type { ResolvedAgentic } from './agentic/types';
-import type {
-  MigrateRunState,
-  MigrationIdProblem,
-  RunOrchestratorInitInput,
-} from './run';
+import type { MigrateRunState, RunOrchestratorInitInput } from './run';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
@@ -3100,11 +3096,6 @@ export async function executeMigrations(
 
 const CONTINUE_NEEDS_ORCHESTRATION = `'--run-id' continues an orchestrated migrate run, and this invocation is not orchestrated. Orchestration needs an enabled agent, or an AI agent running nx outside CI; --agentic=false and the WASM build turn it off.`;
 
-const ID_PROBLEM_LABELS: Record<MigrationIdProblem, string> = {
-  'not-shell-safe': 'not shell-safe',
-  duplicate: 'listed more than once',
-};
-
 // The classic loop records no run, so it must not run over an active one. The
 // run is reported or asked about before the default-branch prompt; a start
 // fresh is checked there too, and the caller deletes the run only after it.
@@ -3267,6 +3258,12 @@ async function runMigrations(
     // Before the install too: with no active run there is nothing to replace.
     const { activeRunToReplace } = require('./run') as typeof import('./run');
     activeRunToReplace(root, opts.runId);
+  } else {
+    // Before the install as well: it would act on the in-progress edits of a
+    // live run that init wouldn't report.
+    const { refuseNewRunAlongsideLiveRun } =
+      require('./run') as typeof import('./run');
+    refuseNewRunAlongsideLiveRun(root);
   }
 
   if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
@@ -3375,9 +3372,8 @@ async function runMigrations(
       : (require('./run') as typeof import('./run')).migrationIdProblems(
           migrations
         );
-  const idProblemLines = idProblems.map(
-    ({ id, problem }) => `- ${singleLine(id)} (${ID_PROBLEM_LABELS[problem]})`
-  );
+  const { dropUnsupportedAgent, idProblemLines, resolveAgentic } =
+    require('./agentic/select') as typeof import('./agentic/select');
 
   // An outer agent drives the loop, so hand off to the orchestrator instead of
   // the classic loop: init starts a fresh run or reports an already-active
@@ -3454,7 +3450,7 @@ async function runMigrations(
       title:
         'Running the migrations without an orchestrated run: orchestrated runs need each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
       bodyLines: [
-        ...idProblemLines,
+        ...idProblemLines(idProblems),
         'No run is recorded, so --run-id cannot continue this one. Prompt work is listed as next steps for the AI agent driving this run, and no validation runs.',
       ],
     });
@@ -3465,8 +3461,6 @@ async function runMigrations(
     migrationCount: migrations.length,
   });
 
-  const { resolveAgentic } =
-    require('./agentic/select') as typeof import('./agentic/select');
   let agentic: ResolvedAgentic;
   try {
     agentic = await resolveAgentic({
@@ -3479,25 +3473,7 @@ async function runMigrations(
     throw e;
   }
   // Resolved before the commit policy, which defaults on only for an agent.
-  if (agentic.kind === 'enabled' && IS_WASM) {
-    output.warn({
-      title:
-        'Skipping the agentic flow: it needs the native nx binary, and this run loaded the WASM build.',
-      bodyLines: ['Continuing the migration without the agentic flow.'],
-    });
-    agentic = { kind: 'disabled' };
-  }
-  if (agentic.kind === 'enabled' && idProblems.length > 0) {
-    output.warn({
-      title:
-        'Skipping the agentic flow: it needs each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
-      bodyLines: [
-        ...idProblemLines,
-        'Continuing the migration without the agentic flow. Generators still run. Prompt-only migrations and the prompt part of hybrid migrations are skipped and listed as next steps, and no AI validation runs.',
-      ],
-    });
-    agentic = { kind: 'disabled' };
-  }
+  agentic = dropUnsupportedAgent(agentic, idProblems);
 
   const {
     effective: effectiveCreateCommits,
@@ -4060,6 +4036,11 @@ async function runSingleMigrationFromCli(
     !shouldSkipInstall &&
     !process.env.NX_MIGRATE_SKIP_INSTALL
   ) {
+    // The worker's refusals come after the install, which would act on the
+    // in-progress edits of a run another process works on.
+    const { checkRunsForSingleMigration } =
+      require('./run') as typeof import('./run');
+    checkRunsForSingleMigration(root);
     await runInstall(
       undefined,
       'pre-migration',
@@ -4089,7 +4070,7 @@ async function runSingleMigrationFromCli(
   // selection chain its barrel pulls in eagerly.
   const { runSingleMigrationWorker } =
     require('./run') as typeof import('./run');
-  await runSingleMigrationWorker({
+  return await runSingleMigrationWorker({
     root,
     runMigration: opts.runMigration,
     runId: opts.runId,

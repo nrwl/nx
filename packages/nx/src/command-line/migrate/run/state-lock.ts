@@ -13,9 +13,11 @@
 // child-process side effects belong outside the lock for the same reason.
 
 import { randomBytes } from 'crypto';
-import { mkdirSync, readdirSync } from 'fs';
+import { type Dirent, mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
+import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
+import { singleLine } from '../text';
 import {
   hasRunState,
   migrateRunsDir,
@@ -95,8 +97,9 @@ const heldActivity = new Map<string, { lock: FileLock; name: string }>();
  * Marks this process as acting on the run until it exits or releases the
  * hold, so a `--start-fresh` elsewhere refuses to delete it. One lock file per
  * process and run, taken under the creation lock that deletion probes under.
- * `exclusive` refuses while another process holds the run, even when this one
- * already does. No-op under WASM, which has no native lock.
+ * Refuses while another process works on a different run, which shares the
+ * workspace. `exclusive` also refuses while another process holds this run,
+ * even when this one already does. No-op under WASM, which has no native lock.
  */
 export function holdRunActivity(
   root: string,
@@ -118,8 +121,101 @@ export function holdRunActivity(
         throw heldRunError('continuing', runId, others);
       }
     }
+    const [otherRun] = findOtherLiveRuns(root, runId);
+    if (otherRun) {
+      throw liveRunRefusal(`Not continuing migrate run '${runId}'`, otherRun);
+    }
     registerRunActivity(dir);
   });
+}
+
+export interface LiveRun {
+  dirName: string;
+  // Reserved by an init that hasn't written run.json yet.
+  starting: boolean;
+  state: MigrateRunState | null;
+  holders: number[] | 'unknown';
+}
+
+/**
+ * The runs other than `ownRunId` that another live process works on: runs
+ * being started, active runs, `--run-migration` runs, and runs whose run.json
+ * can't be read. A finished `--run-migrations` run doesn't count. Every run
+ * changes the same workspace, so two live runs would install and commit over
+ * each other.
+ */
+export function findOtherLiveRuns(root: string, ownRunId?: string): LiveRun[] {
+  let entries: Dirent[];
+  try {
+    entries = readdirSync(migrateRunsDir(root), { withFileTypes: true });
+  } catch (e) {
+    if (e?.code === 'ENOENT') return [];
+    throw e;
+  }
+  const live: LiveRun[] = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name === ownRunId) continue;
+    const dir = join(migrateRunsDir(root), entry.name);
+    const starting = !hasRunState(dir);
+    // A directory without run.json that no process holds is an older nx's
+    // agentic scratch, or what a dead init or an unfinished removal left.
+    if (starting && !hasAnyLiveRunActivity(dir)) continue;
+    let state: MigrateRunState | null = null;
+    if (!starting) {
+      try {
+        state = readRunState(dir);
+      } catch {
+        // Still a run another process may be working on.
+      }
+      if (state?.status === 'completed' && state.singleMigration !== true) {
+        continue;
+      }
+    }
+    const holders = liveRunActivityPids(dir);
+    if (holders === 'unknown' || holders.length > 0) {
+      live.push({ dirName: entry.name, starting, state, holders });
+    }
+  }
+  return live;
+}
+
+// Refused at once, never waited for: this process may be a git hook of the
+// init's checkpoint commit, which the init waits on.
+function startingRunRefusal(dirName: string): Error {
+  return new Error(
+    `Another nx migrate process is starting a run (${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(
+      dirName
+    )}). Wait for it to finish, then re-run the command.`
+  );
+}
+
+/**
+ * The refusal of a command that would change the workspace while another
+ * process works on `run`. `refusal` opens it, as in "Not running the
+ * migration".
+ */
+export function liveRunRefusal(refusal: string, run: LiveRun): Error {
+  if (run.starting && run.holders !== 'unknown') {
+    return startingRunRefusal(run.dirName);
+  }
+  const path = `${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(run.dirName)}`;
+  const described = run.starting
+    ? `the run being started in ${path}`
+    : run.state?.singleMigration === true
+      ? `an nx migrate --run-migration run (${path})`
+      : `migrate run '${singleLine(run.dirName)}'`;
+  if (run.holders !== 'unknown') {
+    return new Error(
+      `${refusal} while ${described} is in use: ${describeHolders(
+        run.holders
+      )}. Wait for it to end, then re-run the command.`
+    );
+  }
+  return new Error(
+    IS_WASM
+      ? `${refusal}: the WASM build cannot tell whether another nx migrate process is working on ${described}. Re-run the command with the native nx binary, or make sure no nx migrate process is acting on it, remove ${path}, then re-run the command.`
+      : `${refusal}: nx cannot tell whether another nx migrate process is working on ${described}. Make sure none is, remove ${path}, then re-run the command.`
+  );
 }
 
 // 'unknown' is the fail-closed case: the activity folder could not be read or
@@ -184,8 +280,9 @@ export function liveRunActivityPids(dir: string): number[] | 'unknown' {
 
 /**
  * Whether any live process, this one included, holds an activity lock on the
- * run: for the init discovery that treats a held directory without run.json
- * as a run being started, whichever process is starting it. Fails closed.
+ * run: for the discovery that treats a held directory without run.json as a
+ * run being started, whichever process is starting it. Fails closed, so under
+ * WASM any lock file counts.
  */
 export function hasAnyLiveRunActivity(dir: string): boolean {
   const names = liveActivityNames(dir, undefined);
@@ -193,7 +290,7 @@ export function hasAnyLiveRunActivity(dir: string): boolean {
 }
 
 // The names of the held lock files other than `skip`; 'unknown' when the
-// folder cannot be listed or a lock cannot be probed.
+// folder cannot be listed or a lock cannot be probed, as under WASM.
 function liveActivityNames(
   dir: string,
   skip: string | undefined
@@ -208,6 +305,7 @@ function liveActivityNames(
   const held: string[] = [];
   for (const name of names) {
     if (name === skip) continue;
+    if (IS_WASM) return 'unknown';
     try {
       if (new FileLock(join(dir, ACTIVITY_DIR_NAME, name)).check()) {
         held.push(name);

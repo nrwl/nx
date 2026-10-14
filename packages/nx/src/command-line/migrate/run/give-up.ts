@@ -173,7 +173,8 @@ export async function giveUpWithCommit(
 
 /**
  * Mints the issue that carries a given-up step's failure and points the step
- * at it, on state where the step is already unresolved. The archive file is
+ * at it, on state where the step is already unresolved. A single run keeps no
+ * issue ledger, so its state comes back unchanged. The archive file is
  * best-effort: run.json is authoritative, and undoing the transition for a
  * lost detail file would make the agent re-issue an action the run already
  * took.
@@ -183,6 +184,7 @@ export function recordUnresolvedIssue(
   state: MigrateRunState,
   stepId: string
 ): { state: MigrateRunState; archiveError?: string } {
+  if (state.singleMigration === true) return { state };
   // Minted from the transitioned step: a died one only gains its failure in
   // the transition.
   const minted = mintUnresolvedIssue(

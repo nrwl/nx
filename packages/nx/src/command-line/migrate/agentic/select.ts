@@ -2,13 +2,16 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { applyEdits, modify } from 'jsonc-parser';
 import { join } from 'path';
 import * as pc from 'picocolors';
+import { IS_WASM } from '../../../native';
 import { output } from '../../../utils/output';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import {
   type MigratePromptChoices,
   reportMigratePrompt,
 } from '../migrate-analytics';
+import type { MigrationIdProblem } from '../run/run-state';
 import { migrateChoice } from '../safe-prompt';
+import { singleLine } from '../text';
 import { detectInstalledAgents } from './detect-installed';
 import { isInsideAgent } from './inception';
 import { AGENT_DEFINITIONS } from './definitions';
@@ -93,6 +96,51 @@ export function resolveShouldRunValidation(args: {
   agenticKind: ResolvedAgentic['kind'];
 }): boolean {
   return args.validate !== false && args.agenticKind === 'enabled';
+}
+
+const ID_PROBLEM_LABELS: Record<MigrationIdProblem, string> = {
+  'not-shell-safe': 'not shell-safe',
+  duplicate: 'listed more than once',
+};
+
+export function idProblemLines(
+  problems: ReadonlyArray<{ id: string; problem: MigrationIdProblem }>
+): string[] {
+  return problems.map(
+    ({ id, problem }) => `- ${singleLine(id)} (${ID_PROBLEM_LABELS[problem]})`
+  );
+}
+
+/**
+ * Drops an enabled agent, with a warning, where the orchestrator that drives
+ * it cannot run: under the WASM build, and for migration ids an orchestrated
+ * run cannot take.
+ */
+export function dropUnsupportedAgent(
+  agentic: ResolvedAgentic,
+  idProblems: ReadonlyArray<{ id: string; problem: MigrationIdProblem }>
+): ResolvedAgentic {
+  if (agentic.kind !== 'enabled') return agentic;
+  if (IS_WASM) {
+    output.warn({
+      title:
+        'Skipping the agentic flow: it needs the native nx binary, and this run loaded the WASM build.',
+      bodyLines: ['Continuing the migration without the agentic flow.'],
+    });
+    return { kind: 'disabled' };
+  }
+  if (idProblems.length > 0) {
+    output.warn({
+      title:
+        'Skipping the agentic flow: it needs each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
+      bodyLines: [
+        ...idProblemLines(idProblems),
+        'Continuing the migration without the agentic flow. Generators still run. Prompt-only migrations and the prompt part of hybrid migrations are skipped and listed as next steps, and no AI validation runs.',
+      ],
+    });
+    return { kind: 'disabled' };
+  }
+  return agentic;
 }
 
 /**

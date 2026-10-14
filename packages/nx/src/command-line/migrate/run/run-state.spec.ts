@@ -230,6 +230,12 @@ describe('run-state', () => {
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ singleMigration: 'yes' as never }))
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
       // promptOutcome.status is a closed set too.
       writeFileSync(
         join(dir, 'run.json'),
@@ -1290,6 +1296,17 @@ describe('run-state', () => {
           runId: 'done',
           status: 'completed',
           createdAt: '2026-01-03T00:00:00.000Z',
+        })
+      );
+      // a --run-migration run's record: never an active run
+      writeRun(
+        root,
+        'single',
+        buildState({
+          runId: 'single',
+          status: 'active',
+          createdAt: '2026-01-04T00:00:00.000Z',
+          singleMigration: true,
         })
       );
       // legacy per-version runner dir: no run.json, must be ignored

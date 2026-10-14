@@ -104,6 +104,8 @@ describe('GA4 event name length cap', () => {
       'migrate_orchestrator_existing_run',
       'migrate_single_migration_recorded',
       'migrate_single_migration_invocation',
+      'migrate_single_migration_complete',
+      'migrate_single_migration_abandoned',
       ...Object.keys(PROMPT_NAMES).map((p) => `migrate_prompt_${p}`),
       ...Object.keys(GENERATE_ERROR_CODES).map(
         (c) => `migrate_generate_error_${c}`
@@ -568,6 +570,18 @@ describe('migrate-analytics events', () => {
       expect(paramsFor('migrate_single_migration_invocation')).toEqual({
         promptChoice: 'prompt',
       });
+    });
+
+    it('reports how an agent-enabled single migration ended', async () => {
+      const a = await load();
+      a.reportMigrateSingleMigrationComplete({});
+      a.reportMigrateSingleMigrationComplete({ agentUsed: 'claude-code' });
+      a.reportMigrateSingleMigrationAbandoned({ agentUsed: 'codex' });
+      expect(mockReportEvent.mock.calls).toEqual([
+        ['migrate_single_migration_complete', { agentUsed: undefined }],
+        ['migrate_single_migration_complete', { agentUsed: 'claude-code' }],
+        ['migrate_single_migration_abandoned', { agentUsed: 'codex' }],
+      ]);
     });
   });
 });

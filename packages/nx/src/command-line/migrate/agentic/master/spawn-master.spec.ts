@@ -365,7 +365,8 @@ describe('spawnMasterSession', () => {
 
       async function agentExitsWhileRunning(
         request: InFlightOperation['request'],
-        startedAt = Date.now()
+        startedAt = Date.now(),
+        overrides: Partial<SpawnMasterSessionInput> = {}
       ) {
         const child = fakeChild({ exitAfterSpawn: false });
         mockSpawn.mockImplementation(() => child);
@@ -373,7 +374,7 @@ describe('spawnMasterSession', () => {
         const inFlight = new Promise<void>((resolve) => {
           finishInFlight = resolve;
         });
-        const pending = spawnMasterSession(input());
+        const pending = spawnMasterSession(input(overrides));
         await pollsElapsed(2);
         mockBrokerService.mockReturnValue(inFlight);
         mockBrokerInFlight = { request, startedAt, stepName: '@nx/js:gen' };
@@ -409,20 +410,29 @@ describe('spawnMasterSession', () => {
       it.each([
         [
           'install',
+          false,
           'Still running the install of @nx/js:gen for this migrate run (1m 15s so far). Press Ctrl+C to end it, and again to stop everything it started. The run can be resumed afterwards.',
         ],
         [
           'commit',
+          false,
           'Still running the commit of @nx/js:gen for this migrate run (1m 15s so far). A commit first installs any dependency changes. Press Ctrl+C to end it, and again to stop everything it started. The run can be resumed afterwards.',
         ],
+        // The record is removed when the run ends, so there is no run to resume.
+        [
+          'install',
+          true,
+          'Still running the install of @nx/js:gen (1m 15s so far). Press Ctrl+C to end it, and again to stop everything it started. Re-run the same command afterwards to run the migration again.',
+        ],
       ] as const)(
-        'names the %s still running once the agent exited, for how long, and says Ctrl+C ends it',
-        async (kind, title) => {
+        'names the %s still running once the agent exited, for how long, and says Ctrl+C ends it (single migration: %s)',
+        async (kind, singleMigration, title) => {
           const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
 
           const { pending, finishInFlight } = await agentExitsWhileRunning(
             { kind, stepId: 'step-1', attempt: 1 },
-            Date.now() - 75_000
+            Date.now() - 75_000,
+            { singleMigration }
           );
           await pollsElapsed(2);
           const warnedWhileWaiting = warn.mock.calls.length;
