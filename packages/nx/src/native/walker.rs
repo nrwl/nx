@@ -318,9 +318,9 @@ where
 }
 
 /// `create_walker` with `extra` and the `skip` directories (absolute) vetoed
-/// on top of the hardcoded ignores. The
-/// ignore crate keeps one filter predicate, so a caller that needs more has
-/// to have them composed here rather than add its own.
+/// on top of the hardcoded ignores. The ignore crate keeps one filter
+/// predicate, so a caller that needs more has to have them composed here
+/// rather than add its own.
 pub(crate) fn create_walker_vetoing<P>(
     directory: P,
     use_ignores: bool,
