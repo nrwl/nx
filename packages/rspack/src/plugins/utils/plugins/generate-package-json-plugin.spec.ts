@@ -1,4 +1,14 @@
 import type { Mock } from 'vitest';
+import Module from 'module';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import type { ProjectGraph } from '@nx/devkit';
 import { detectPackageManager } from '@nx/devkit';
 import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
@@ -49,7 +59,7 @@ describe('GeneratePackageJsonPlugin', () => {
     (detectPackageManager as Mock).mockReturnValue('pnpm');
   });
 
-  async function runPlugin(): Promise<Mock> {
+  async function runPlugin(runtimeDependencies?: string[]): Promise<Mock> {
     const emitAsset = vi.fn();
     let processAssetsResult: Promise<void> | undefined;
     const compilation = {
@@ -82,6 +92,7 @@ describe('GeneratePackageJsonPlugin', () => {
       projectName: 'my-app',
       targetName: 'build',
       projectGraph,
+      runtimeDependencies,
     }).apply(compiler as any);
     await processAssetsResult;
     return emitAsset;
@@ -133,5 +144,44 @@ describe('GeneratePackageJsonPlugin', () => {
     expect(emitAsset.mock.calls.map(([name]) => name)).toEqual([
       'package.json',
     ]);
+  });
+
+  it('adds a runtime dependency whose exports map hides package.json', async () => {
+    const originalNodePath = process.env.NODE_PATH;
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'runtime-deps-')));
+    try {
+      const pkgDir = join(dir, 'node_modules', 'fixture-runtime-dependency');
+      mkdirSync(pkgDir, { recursive: true });
+      writeFileSync(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({
+          name: 'fixture-runtime-dependency',
+          version: '2.0.0',
+          exports: { '.': './index.js', './*': './*.js' },
+        })
+      );
+      writeFileSync(join(pkgDir, 'index.js'), '');
+      // Makes the fixture resolvable from the plugin's own location, as
+      // packages installed next to it are.
+      process.env.NODE_PATH = join(dir, 'node_modules');
+      (Module as any)._initPaths();
+
+      const emitAsset = await runPlugin(['fixture-runtime-dependency']);
+
+      const [, manifest] = emitAsset.mock.calls.find(
+        ([name]) => name === 'package.json'
+      );
+      expect(JSON.parse(manifest.source()).dependencies).toEqual({
+        'fixture-runtime-dependency': '2.0.0',
+      });
+    } finally {
+      if (originalNodePath === undefined) {
+        delete process.env.NODE_PATH;
+      } else {
+        process.env.NODE_PATH = originalNodePath;
+      }
+      (Module as any)._initPaths();
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
