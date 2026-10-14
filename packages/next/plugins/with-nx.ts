@@ -12,7 +12,6 @@ import {
   type Target,
 } from '@nx/devkit';
 import type { AssetGlobPattern } from '@nx/webpack';
-import { satisfies } from 'semver';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
@@ -252,13 +251,12 @@ export function getNextConfig(
     ...validNextConfig,
   };
 
-  const nextJsVersion = require('next/package.json')?.version ?? '16.0.1';
-  if (satisfies(nextJsVersion, '<16.0.0', { includePrerelease: true })) {
+  forNextVersion('<16.0.0', () => {
     baseConfig.eslint = {
       ignoreDuringBuilds: true,
       ...(validNextConfig.eslint ?? {}),
     };
-  }
+  });
 
   return {
     ...baseConfig,
