@@ -39,6 +39,12 @@ Outputs use the same [glob syntax](/docs/reference/inputs#glob-syntax) as inputs
 Outputs can also be determined from the `options` of running a task via the `{options.[propertyName]}` syntax.
 This is useful when an option for the task determines the output location and could be modified when the task is run.
 This path is resolved from the root of the workspace.
+An output whose option isn't set, or is empty, is left out.
+To cache another location in that case, list fallbacks after `??`.
+Nx uses the first one that is set and not empty, and the last one can be a path.
+For a project at `apps/myapp`, `{options.outputPath ?? {workspaceRoot}/dist/{projectRoot}}` caches `dist/apps/myapp` when `outputPath` isn't set.
+Outputs can't read environment variables.
+Nx resolves them once, when it creates the task graph, and the task can run on a machine with a different environment.
 
 If an output file or directory does not exist, it will be ignored.
 

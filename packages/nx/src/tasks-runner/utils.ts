@@ -28,6 +28,13 @@ import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-
 import { splitTargetFromNodes } from '../utils/split-target';
 import { workspaceRoot } from '../utils/workspace-root';
 import { isTuiEnabled } from './is-tui-enabled';
+import {
+  parseTokens,
+  readPath,
+  resolveToken,
+  type TokenNode,
+  type TokenScope,
+} from './tokens';
 
 export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
   projects: string[];
@@ -347,23 +354,14 @@ export function getOutputsForTargetAndConfiguration(
 
     const result = new Set<string>();
     for (const output of targetConfiguration.outputs) {
-      // A leading `!` is negation, not part of the path: strip it so
-      // `{workspaceRoot}` still sits where interpolate requires it.
-      const isNegated = output.startsWith('!');
-      const interpolatedOutput = interpolate(
-        isNegated ? output.substring(1) : output,
-        {
-          projectRoot: node.data.root,
-          projectName: node.name,
-          project: { ...node.data, name: node.name }, // this is legacy
-          options,
-        }
-      );
+      const interpolatedOutput = interpolateOutput(output, node, options);
       if (
         !!interpolatedOutput &&
         !interpolatedOutput.match(/{(projectRoot|workspaceRoot|(options.*))}/)
       ) {
-        result.add(isNegated ? `!${interpolatedOutput}` : interpolatedOutput);
+        result.add(
+          output.startsWith('!') ? `!${interpolatedOutput}` : interpolatedOutput
+        );
       }
     }
     return Array.from(result);
@@ -387,46 +385,103 @@ export function getOutputsForTargetAndConfiguration(
 }
 
 /**
- * Matches portions of a string which need to be interpolated.
- * Matches anything within curly braces, excluding the braces.
+ * Resolves the tokens in a configured output, without its leading `!`. A token
+ * with no value stays as written.
  */
-const replacementRegex = /{([\s\S]+?)}/g;
+export function interpolateOutput(
+  output: string,
+  node: ProjectGraphProjectNode,
+  options: Record<string, unknown>
+): string {
+  // A leading `!` is negation, not part of the path: strip it so
+  // `{workspaceRoot}` still sits where interpolate requires it.
+  return interpolate(
+    output.startsWith('!') ? output.substring(1) : output,
+    {
+      projectRoot: node.data.root,
+      projectName: node.name,
+      project: { ...node.data, name: node.name }, // this is legacy
+      options,
+    },
+    {
+      envNotAllowed: (template) =>
+        `Output '${template}' is invalid. Outputs can't read environment variables, because they are resolved once with the task graph, and the task can run on a machine with a different environment.`,
+    }
+  );
+}
 
-export function interpolate(template: string, data: any): string {
+/**
+ * Resolves the Nx tokens in a path, where each token names a key of `data`
+ * (`{projectRoot}/dist`, `{options.outputPath ?? dist/{projectRoot}}`). A
+ * token with no value stays as written. An `env.` token stays as written too,
+ * unless `envNotAllowed` is given: then it throws with that message.
+ */
+export function interpolate(
+  template: string,
+  data: any,
+  options?: { envNotAllowed?: (template: string) => string }
+): string {
   // Path is absolute or doesn't need interpolation
-  if (template.startsWith('/') || !replacementRegex.test(template)) {
+  if (template.startsWith('/') || !/{[\s\S]+?}/.test(template)) {
     return template;
   }
 
-  if (template.includes('{workspaceRoot}', 1)) {
+  const scope: TokenScope = {
+    isToken: (name) => name === 'env' || Object.hasOwn(data, name),
+    read: (name, path) => readPath(data[name], path),
+    env: options?.envNotAllowed
+      ? { reject: () => new Error(options.envNotAllowed(template)) }
+      : undefined,
+    noValue: (token) => token,
+  };
+  const nodes = parseTokens(template, scope);
+  if (!isWorkspaceRootOnlyAtStart(nodes, true)) {
     throw new Error(
       `Output '${template}' is invalid. {workspaceRoot} can only be used at the beginning of the expression.`
     );
   }
 
-  const parts = template.split('/').map((s) => _interpolate(s, data));
-
-  return join(...parts).replace('{workspaceRoot}/', '');
+  return joinSegments(nodes, data, scope).replace('{workspaceRoot}/', '');
 }
 
-function _interpolate(template: string, data: any): string {
-  let res = template;
-
-  if (data.projectRoot == '.') {
-    res = res.replace('{projectRoot}', '');
-  }
-
-  return res.replace(replacementRegex, (match: string) => {
-    let value = data;
-    let path = match.slice(1, -1).trim().split('.');
-    for (let idx = 0; idx < path.length; idx++) {
-      if (!value[path[idx]]) {
-        return match;
-      }
-      value = value[path[idx]];
+// A fallback's literal only ever replaces its whole token, so a token at the
+// start can fall back to `{workspaceRoot}/...`
+function isWorkspaceRootOnlyAtStart(
+  nodes: TokenNode[],
+  atStart: boolean
+): boolean {
+  return nodes.every((node, i) => {
+    const nodeAtStart = atStart && i === 0;
+    if (node.kind === 'text') {
+      return !node.text.includes('{workspaceRoot}', nodeAtStart ? 1 : 0);
     }
-    return value;
+    return node.parts.every((part) =>
+      part.kind === 'literal'
+        ? isWorkspaceRootOnlyAtStart(part.nodes, nodeAtStart)
+        : part.name !== 'workspaceRoot' || nodeAtStart
+    );
   });
+}
+
+// Joining the `/`-separated segments normalizes a root project's
+// `{projectRoot}` away, wherever it sits
+function joinSegments(nodes: TokenNode[], data: any, scope: TokenScope) {
+  const segments = [''];
+  for (const node of nodes) {
+    if (node.kind === 'text') {
+      const [first, ...rest] = node.text.split('/');
+      segments[segments.length - 1] += first;
+      segments.push(...rest);
+    } else {
+      segments[segments.length - 1] +=
+        data.projectRoot == '.' && node.raw === '{projectRoot}'
+          ? ''
+          : resolveToken(node, scope, (literal) =>
+              joinSegments(literal, data, scope)
+            );
+    }
+  }
+  return join(...segments);
 }
 
 export function getTargetConfigurationForTask(

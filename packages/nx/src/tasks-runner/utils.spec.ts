@@ -47,6 +47,15 @@ describe('utils', () => {
         'https://npm-registry.example.com/'
       );
     });
+
+    it('should leave env tokens as written', () => {
+      expect(
+        interpolate('{projectRoot}/{options.out ?? env.OUT}', {
+          projectRoot: 'a',
+          options: {},
+        })
+      ).toEqual('a/{options.out ?? env.OUT}');
+    });
   });
 
   describe('getOutputsForTargetAndConfiguration', () => {
@@ -258,6 +267,54 @@ describe('utils', () => {
           })
         )
       ).toEqual([]);
+    });
+
+    it.each([
+      [{}, ['dist/myapp']],
+      [{ outputPath: 'build/myapp' }, ['build/myapp']],
+    ])(
+      'should resolve ?? fallbacks with overrides %j',
+      (overrides, outputs) => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task.target,
+            overrides,
+            getNode({
+              outputs: [
+                '{options.outputPath ?? {workspaceRoot}/dist/{projectRoot}}',
+              ],
+            })
+          )
+        ).toEqual(outputs);
+      }
+    );
+
+    it('should interpolate options set to 0 or false', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: ['{projectRoot}/shard-{options.shard}-{options.cache}'],
+            options: { shard: 0, cache: false },
+          })
+        )
+      ).toEqual(['myapp/shard-0-false']);
+    });
+
+    it('should throw when an output reads an environment variable', () => {
+      expect(() =>
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: ['{options.outputPath ?? {workspaceRoot}/{env.OUT}}'],
+            options: { outputPath: 'dist' },
+          })
+        )
+      ).toThrow(
+        "Output '{options.outputPath ?? {workspaceRoot}/{env.OUT}}' is invalid. Outputs can't read environment variables"
+      );
     });
 
     it('should support interpolation based on configuration-specific options', () => {
