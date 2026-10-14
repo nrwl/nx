@@ -4,6 +4,8 @@ use napi::bindgen_prelude::Either9;
 #[napi(object)]
 pub struct InputsInput {
     pub input: String,
+    /// With `projects`: the selected projects' dependencies' `input`, as `^input`
+    /// resolves for each, instead of the projects' own files.
     pub dependencies: Option<bool>,
     pub projects: Option<Either<String, Vec<String>>>,
     /// Keep the files this input resolves to in the hash even when the task
@@ -82,6 +84,7 @@ impl<'a> From<&'a JsInputs> for Input<'a> {
                             Either::A(string) => vec![string.as_ref()],
                             Either::B(vec) => vec.iter().map(|v| v.as_ref()).collect(),
                         },
+                        dependencies: inputs.dependencies.unwrap_or(false),
                         always: inputs.always.unwrap_or(false),
                     }
                 } else {
@@ -167,6 +170,7 @@ pub(crate) enum Input<'a> {
     Projects {
         projects: Vec<&'a str>,
         input: &'a str,
+        dependencies: bool,
         always: bool,
     },
     WorkingDirectory(&'a str),
@@ -214,10 +218,14 @@ impl Input<'_> {
                 always: true,
             },
             Input::Projects {
-                projects, input, ..
+                projects,
+                input,
+                dependencies,
+                ..
             } => Input::Projects {
                 projects,
                 input,
+                dependencies,
                 always: true,
             },
             Input::Json {
