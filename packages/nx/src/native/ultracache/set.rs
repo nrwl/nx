@@ -42,4 +42,9 @@ pub struct UltracacheConfiguration {
     pub commit: String,
     /// Workspace-relative globs the task read.
     pub inputs: Vec<String>,
+    /// The successful-stat collection policy actually used by the recording
+    /// daemon, not merely requested by the task. Legacy recordings omit it;
+    /// those may overtrack and are compatible only with the default `false`.
+    #[serde(default)]
+    pub collect_stats: Option<bool>,
 }

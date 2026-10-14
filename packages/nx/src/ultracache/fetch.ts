@@ -18,7 +18,10 @@ export interface ReadUltracacheConfigurationsOptions {
 export interface ReadUltracacheConfiguration {
   commit: string;
   inputs: readonly string[];
-  outputs: readonly string[];
+  /** The successful-stat policy actually used by the recording daemon. */
+  collectStats?: boolean;
+  /** Legacy payload field; Nx caches the target's declared outputs. */
+  outputs?: readonly string[];
 }
 
 export interface ReadUltracacheConfigurationsResult {

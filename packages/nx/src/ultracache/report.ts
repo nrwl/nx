@@ -51,6 +51,8 @@ function describeDiagnostic(d: UltracacheDiagnostic): string {
       return `${d.taskId}: uses a custom hasher`;
     case 'missing':
       return `${d.taskId}: no Ultracache configuration for this task`;
+    case 'stat-policy-mismatch':
+      return `${d.taskId}: recording does not match ultracache.collectStats`;
     case 'invalid-glob':
       return `${d.taskId}: configuration glob "${d.glob}" is not a valid files glob`;
     case 'escapes-workspace':

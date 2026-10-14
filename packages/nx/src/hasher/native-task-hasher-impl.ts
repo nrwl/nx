@@ -195,8 +195,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 }
 
 /**
- * Everything the planner reads from a task graph: each task's target and
- * outputs, and the graph's edges, plus the Ultracache configurations the plans were
+ * Each task's target, stat collection policy and outputs, and the graph's
+ * edges, plus the Ultracache configurations the plans were
  * built against. The project graph and nx.json are fixed for the life of a
  * hasher, so equal fingerprints mean equal plans. A run's
  * results (hash, timings) are left out so hashing one task does not
@@ -218,6 +218,7 @@ function taskGraphFingerprint(
       task.target.project,
       task.target.target,
       task.target.configuration ?? '',
+      String(task.ultracache?.collectStats ?? false),
       (task.outputs ?? []).join(','),
       (taskGraph.dependencies[id] ?? []).map((edge) => edge.id).join(','),
       (taskGraph.continuousDependencies[id] ?? [])

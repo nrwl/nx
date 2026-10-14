@@ -704,6 +704,22 @@ Set `mode` to choose how a target participates:
 }
 ```
 
+Set `collectStats: true` to include successful stat metadata accesses in the recorded inputs. It defaults to `false` when omitted; missing-path probes are tracked independently and are unaffected by this setting. No feature flag or environment variable is needed to enable `collectStats`.
+
+```json
+{
+  "targets": {
+    "build": {
+      "ultracache": {
+        "collectStats": true
+      }
+    }
+  }
+}
+```
+
+Changing `collectStats` changes the task's recording policy and hash. Nx applies a recording only when its recorded policy matches the target's effective setting; otherwise it hashes the declared inputs. Legacy recordings without policy metadata remain usable for `false` or omitted settings, but `true` requires a recording explicitly collected with successful stats enabled.
+
 Use `ignoredReads` and `ignoredWrites` to keep recording the target while excluding paths from its report. The patterns are globs relative to the workspace root.
 
 ```json
@@ -730,6 +746,8 @@ Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` w
 {% /aside %}
 
 A target that defines `ultracache` replaces the inherited settings rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoredReads` and `ignoredWrites` to keep inherited patterns.
+
+For example, `"ultracache": { "...": true, "collectStats": false }` preserves the other inherited settings and explicitly turns off successful stat collection, even if the inherited `collectStats` is `true`.
 
 ```json
 {

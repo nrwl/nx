@@ -253,6 +253,24 @@ describe('validateAndNormalizeProjectRootMap', () => {
       expect(ultracacheErrors({ mode })).toEqual([]);
     });
 
+    it.each([true, false, undefined])(
+      'should accept collectStats %s',
+      (collectStats) => {
+        expect(ultracacheErrors({ collectStats })).toEqual([]);
+      }
+    );
+
+    it.each(['true', 'false', 0, 1, null, [], {}])(
+      'should reject collectStats %j',
+      (collectStats) => {
+        expect(ultracacheErrors({ collectStats })).toEqual([
+          expect.stringMatching(
+            /"ultracache.collectStats" for target "build" in project "a-ui" must be a boolean/
+          ),
+        ]);
+      }
+    );
+
     it('should reject a key that is not an ultracache option', () => {
       expect(ultracacheErrors({ ignoreReads: ['tmp/**'] })).toEqual([
         expect.stringMatching(

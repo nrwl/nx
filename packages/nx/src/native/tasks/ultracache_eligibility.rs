@@ -172,6 +172,13 @@ pub(crate) fn resolve<'a>(
             continue;
         };
         let entry = stored.as_ref();
+        let collect_stats = ultracache.and_then(|s| s.collect_stats).unwrap_or(false);
+        // A legacy recording can conservatively overtrack the default policy,
+        // but cannot prove that a request to collect successful stats was honored.
+        if entry.collect_stats.unwrap_or(false) != collect_stats {
+            diagnostics.push(UltracacheDiagnostic::task("stat-policy-mismatch", task_id));
+            continue;
+        }
 
         let mut files = entry.inputs.clone();
         files.sort();
@@ -236,31 +243,31 @@ pub fn get_ultracache_report(
     .report()
 }
 
-/// The marker's digest: the task's `ignoredReads`, which shape the reads its
-/// recording holds, so editing them re-runs the task and records it afresh.
+/// The marker's digest: the task's `ignoredReads` and effective `collectStats`,
+/// which shape the reads its recording holds, so editing them re-runs the task.
 /// Sorted, since their order means nothing.
 fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
     // used, so `ignoredWrites` can't change what the task caches.
-    let mut reads = match ultracache {
+    let (mut reads, collect_stats) = match ultracache {
         Some(TaskUltracacheSettings {
             ignored_reads,
             ignored_writes: _,
             mode: _,
-        }) => ignored_reads.clone().unwrap_or_default(),
-        None => Vec::new(),
+            collect_stats,
+        }) => (
+            ignored_reads.clone().unwrap_or_default(),
+            collect_stats.unwrap_or(false),
+        ),
+        None => (Vec::new(), false),
     };
     reads.sort();
     reads.dedup();
-    // Equals the old marker of a task with no exclusions that recorded no writes.
-    let base = Xxh3::new().digest().to_string();
-    if reads.is_empty() {
-        return base;
-    }
     let mut hasher = Xxh3::new();
-    hasher.update(base.as_bytes());
+    hasher.update(b"collectStats:");
+    hasher.update(&[u8::from(collect_stats)]);
     // NUL after each glob, so adjacent globs cannot run together.
     for glob in reads {
         hasher.update(glob.as_bytes());
@@ -388,6 +395,31 @@ pub fn get_ultracache_deferred_task_ids(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stat_policy_changes_the_digest_but_omission_means_false() {
+        let omitted = TaskUltracacheSettings::default();
+        let disabled = TaskUltracacheSettings {
+            collect_stats: Some(false),
+            ..Default::default()
+        };
+        let enabled = TaskUltracacheSettings {
+            collect_stats: Some(true),
+            ..Default::default()
+        };
+        assert_eq!(
+            configuration_digest(None),
+            configuration_digest(Some(&omitted))
+        );
+        assert_eq!(
+            configuration_digest(None),
+            configuration_digest(Some(&disabled))
+        );
+        assert_ne!(
+            configuration_digest(Some(&disabled)),
+            configuration_digest(Some(&enabled))
+        );
+    }
 
     #[test]
     fn candidates_under_a_root_ignores_siblings_that_share_its_prefix() {

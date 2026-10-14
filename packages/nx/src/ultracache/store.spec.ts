@@ -239,18 +239,23 @@ describe('loadUltracacheConfigurationsForRun', () => {
 });
 
 describe('importUltracacheConfigurations', () => {
-  it('stores what the Nx Cloud client read and returns the handle', () => {
-    const handle = { commit: 'head' };
-    store.import.mockReturnValue(handle);
-    const configurations = {
-      'web:build': { commit: 'head', inputs: ['apps/web/**'], outputs: [] },
-    };
-    expect(importUltracacheConfigurations('head', configurations)).toBe(handle);
-    expect(store.import).toHaveBeenCalledWith({
-      requestedCommit: 'head',
-      configurationsJson: JSON.stringify(configurations),
-    });
-  });
+  it.each([true, false, undefined])(
+    'stores the actual recorded stat policy %s and returns the handle',
+    (collectStats) => {
+      const handle = { commit: 'head' };
+      store.import.mockReturnValue(handle);
+      const configurations = {
+        'web:build': { commit: 'head', inputs: ['apps/web/**'], collectStats },
+      };
+      expect(importUltracacheConfigurations('head', configurations)).toBe(
+        handle
+      );
+      expect(store.import).toHaveBeenCalledWith({
+        requestedCommit: 'head',
+        configurationsJson: JSON.stringify(configurations),
+      });
+    }
+  );
 });
 
 describe('openUltracacheConfigurations', () => {

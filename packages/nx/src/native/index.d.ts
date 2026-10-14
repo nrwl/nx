@@ -1456,6 +1456,11 @@ export interface TaskUltracacheSettings {
   /** How this target's tasks participate. Defaults to `on`. */
   mode?: 'on' | 'warn' | 'error' | 'off'
   /**
+   * Collect successful stat metadata accesses as inputs. Defaults to `false`.
+   * Missing-path probes are tracked independently of this setting.
+   */
+  collectStats?: boolean
+  /**
    * Workspace-relative glob patterns for reads that should be excluded
    * from ultracache reports. The first path segment cannot contain `*`,
    * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
@@ -1507,7 +1512,11 @@ export interface TuiConfig {
 /** The Ultracache configurations the Nx Cloud client read for HEAD, as JS hands them over. */
 export interface UltracacheConfigurationImportOptions {
   requestedCommit: string
-  /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
+  /**
+   * `Record<taskId, { commit, inputs, collectStats? }>` as JSON. `collectStats`
+   * is the policy actually used by the recording daemon. A legacy entry
+   * without it is compatible only with a task whose policy is `false`.
+   */
   configurationsJson: string
 }
 

@@ -49,4 +49,19 @@ describe('formatUltracacheSummary', () => {
       ).line
     ).toBe('Ultracache: none used (unreadable configurations: bad)');
   });
+
+  it('explains a recording collected with a different stat policy', () => {
+    expect(
+      formatUltracacheSummary(
+        {
+          used: [],
+          diagnostics: [
+            { reason: 'stat-policy-mismatch', taskId: 'app:build' },
+          ],
+          resolution,
+        },
+        'cached'
+      ).bodyLines
+    ).toContain('app:build: recording does not match ultracache.collectStats');
+  });
 });
