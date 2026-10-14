@@ -35,6 +35,7 @@ class NxTargetFactory(
   private val session: MavenSession,
   private val mojoAnalyzer: MojoAnalyzer,
   private val pathFormatter: PathFormatter,
+  private val workspaceRoot: File,
   private val targetNamePrefix: String
 ) {
   private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
@@ -681,14 +682,18 @@ class NxTargetFactory(
     target.outputs?.add(pathFormatter.formatOutputPath(buildJsonFile, project.basedir))
   }
 
-  // Upstream modules' classes or jar end up on this module's classpath; resolved per dependency.
+  // Upstream modules' classes or main artifact end up on this module's classpath. Each one's
+  // own layout and file name is used, so stale jars from older versions aren't hashed.
   private fun addUpstreamOutputInputs(project: MavenProject, target: NxTarget) {
-    listOf(
-      File(project.build.outputDirectory),
-      File(project.build.directory, "*.jar"),
-    ).forEach {
-      target.inputs?.add(ignoredFileset(pathFormatter.formatInputPath(it, project.basedir), dependencies = true))
-    }
+    session.projectDependencyGraph.getUpstreamProjects(project, true)
+      .filter { it.packaging != "pom" }
+      .forEach { upstream ->
+        val extension = upstream.artifact?.artifactHandler?.extension ?: "jar"
+        listOf(
+          File(upstream.build.outputDirectory),
+          File(upstream.build.directory, "${upstream.build.finalName}.$extension"),
+        ).forEach { target.inputs?.add(ignoredFileset(pathFormatter.toWorkspacePath(it, workspaceRoot))) }
+      }
   }
 
   private fun ignoredFileset(fileset: String, dependencies: Boolean = false): JsonObject {

@@ -105,6 +105,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
       session,
       mojoAnalyzer,
       pathFormatter,
+      workspaceRoot,
       targetNamePrefix ?: ""
     )
 
