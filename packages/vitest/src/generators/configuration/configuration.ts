@@ -305,13 +305,13 @@ getTestBed().initTestEnvironment(
     updateNxJson(tree, nxJson);
   }
 
-  const devDependencies = await getCoverageProviderDependency(
-    tree,
-    schema.coverageProvider
-  );
-  devDependencies['@types/node'] = typesNodeVersion;
-
   if (!schema.skipPackageJson) {
+    const devDependencies = await getCoverageProviderDependency(
+      tree,
+      schema.coverageProvider
+    );
+    devDependencies['@types/node'] = typesNodeVersion;
+
     const installDependenciesTask = addDependenciesToPackageJson(
       tree,
       {},
