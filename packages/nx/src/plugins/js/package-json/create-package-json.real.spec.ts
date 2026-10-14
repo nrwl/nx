@@ -140,6 +140,9 @@ describe('createPackageJson peer dependency collection', () => {
       peerDependenciesMeta: { 'fixture-optional': { optional: true } },
     });
     writePackage(workspace, 'fixture-optional', {});
+    writePackage(workspace, 'fixture-required-host', {
+      peerDependencies: { 'fixture-optional': '*' },
+    });
 
     // Makes the fixtures resolvable from nx's own location, as packages
     // installed next to nx are.
@@ -196,6 +199,21 @@ describe('createPackageJson peer dependency collection', () => {
       'fixture-optional': { optional: true },
     });
   });
+
+  it.each([
+    ['after', ['fixture-optional-host', 'fixture-required-host']],
+    ['before', ['fixture-required-host', 'fixture-optional-host']],
+  ])(
+    'keeps a peer required when a host requiring it is visited %s the host marking it optional',
+    (_, directDependencies) => {
+      const packageJson = createAppPackageJson(directDependencies);
+
+      expect(packageJson.peerDependencies).toEqual({
+        'fixture-optional': '1.0.0',
+      });
+      expect(packageJson.peerDependenciesMeta).toBeUndefined();
+    }
+  );
 
   it('skips a package that is not installed and reports it in verbose mode', () => {
     vi.stubEnv('NX_VERBOSE_LOGGING', 'true');

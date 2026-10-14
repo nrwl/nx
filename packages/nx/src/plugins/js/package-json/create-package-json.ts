@@ -527,14 +527,12 @@ function recursivelyCollectPeerDependencies(
       .map((dependency) => graph.externalNodes[dependency])
       .filter(Boolean)
       .forEach((node) => {
+        const isOptional =
+          packageJson.peerDependenciesMeta?.[node.data.packageName]?.optional;
         if (!seen.has(node.name)) {
           seen.add(node.name);
           npmDeps.peerDependencies[node.data.packageName] = node.data.version;
-          if (
-            packageJson.peerDependenciesMeta &&
-            packageJson.peerDependenciesMeta[node.data.packageName] &&
-            packageJson.peerDependenciesMeta[node.data.packageName].optional
-          ) {
+          if (isOptional) {
             npmDeps.peerDependenciesMeta[node.data.packageName] = {
               optional: true,
             };
@@ -546,6 +544,9 @@ function recursivelyCollectPeerDependencies(
             seen,
             root
           );
+        } else if (!isOptional) {
+          // A peer stays optional only while every host declaring it says so.
+          delete npmDeps.peerDependenciesMeta[node.data.packageName];
         }
       });
     return npmDeps;
