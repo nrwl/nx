@@ -99,7 +99,12 @@ export function addProject(
     addProjectConfiguration(tree, options.name, project);
   }
 
-  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+  // The prune targets read the project package.json for the deps to deploy.
+  if (
+    !options.useProjectJson ||
+    options.isUsingTsSolutionConfig ||
+    !options.rootProject
+  ) {
     writeJson(
       tree,
       joinPathFragments(options.appProjectRoot, 'package.json'),

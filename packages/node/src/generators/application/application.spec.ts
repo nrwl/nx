@@ -947,6 +947,27 @@ describe('app', () => {
       ).toBeUndefined();
     });
 
+    it('should write a project package.json for the prune targets', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        framework: 'express',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'myapp/package.json')).toEqual(
+        expect.objectContaining({
+          private: true,
+          dependencies: expect.objectContaining({
+            express: expect.any(String),
+          }),
+        })
+      );
+      expect(tree.read('myapp/rolldown.config.ts', 'utf-8')).toContain(
+        `import packageJson from './package.json' with { type: 'json' };`
+      );
+    });
+
     it('should default to esbuild for fastify', async () => {
       await applicationGenerator(tree, {
         directory: 'myapp',
