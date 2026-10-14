@@ -2,9 +2,9 @@ package dev.nx.maven.targets
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import dev.nx.maven.GitIgnoreClassifier
 import dev.nx.maven.utils.MojoAnalyzer
 import dev.nx.maven.utils.PathFormatter
+import dev.nx.maven.utils.isUnder
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.model.Plugin
@@ -36,7 +36,7 @@ class NxTargetFactory(
   private val session: MavenSession,
   private val mojoAnalyzer: MojoAnalyzer,
   private val pathFormatter: PathFormatter,
-  private val gitIgnoreClassifier: GitIgnoreClassifier,
+  private val workspaceRoot: File,
   private val targetNamePrefix: String
 ) {
   private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
@@ -189,12 +189,7 @@ class NxTargetFactory(
 
       analysis.inputs.forEach { input -> inputs.add(input) }
       analysis.outputs.forEach { output -> outputs.add(output) }
-      analysis.dependentTaskOutputInputs.forEach { input ->
-        val obj = JsonObject()
-        obj.addProperty("dependentTasksOutputFiles", input.path)
-        if (input.transitive) obj.addProperty("transitive", true)
-        inputs.add(obj)
-      }
+      analysis.ignoredInputs.forEach { input -> inputs.add(ignoredFileset(input)) }
     }
 
     log.info("Phase $phase batch analysis: cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
@@ -229,6 +224,7 @@ class NxTargetFactory(
       outputs.forEach { output -> outputsArray.add(output) }
       target.outputs = outputsArray
       addBuildStateJsonInputsAndOutputs(project, target)
+      addUpstreamOutputInputs(project, target)
       addExternalDependenciesInput(target, externalDependencies)
     }
 
@@ -319,6 +315,7 @@ class NxTargetFactory(
       dependsOnNode.addProperty("target", applyPrefix(previousPhase))
       dependsOnNode.addProperty("params", "forward")
       target.dependsOn?.add(dependsOnNode)
+      addOwnBuildStateInput(project, target)
     }
 
     phaseTargets[applyPrefix(phase)] = target
@@ -377,6 +374,7 @@ class NxTargetFactory(
       dependsOnNode.addProperty("target", "${applyPrefix(previousCiPhase)}-ci")
       dependsOnNode.addProperty("params", "forward")
       ciTarget.dependsOn?.add(dependsOnNode)
+      addOwnBuildStateInput(project, ciTarget)
     }
 
     if (hasInstall) {
@@ -580,12 +578,7 @@ class NxTargetFactory(
       // Convert inputs to JsonArray
       val inputsArray = JsonArray()
       analysis.inputs.forEach { input -> inputsArray.add(input) }
-      analysis.dependentTaskOutputInputs.forEach { input ->
-        val obj = JsonObject()
-        obj.addProperty("dependentTasksOutputFiles", input.path)
-        if (input.transitive) obj.addProperty("transitive", true)
-        inputsArray.add(obj)
-      }
+      analysis.ignoredInputs.forEach { input -> inputsArray.add(ignoredFileset(input)) }
       target.inputs = inputsArray
 
       // Convert outputs to JsonArray
@@ -596,6 +589,7 @@ class NxTargetFactory(
     }
 
     addBuildStateJsonInputsAndOutputs(project, target)
+    addUpstreamOutputInputs(project, target)
     return target
   }
 
@@ -651,13 +645,12 @@ class NxTargetFactory(
 
       analysis.inputs.forEach { input -> target.inputs?.add(input) }
       analysis.outputs.forEach { output -> target.outputs?.add(output) }
-      analysis.dependentTaskOutputInputs.forEach { input ->
-        val obj = JsonObject()
-        obj.addProperty("dependentTasksOutputFiles", input.path)
-        if (input.transitive) obj.addProperty("transitive", true)
-        target.inputs?.add(obj)
-      }
+      analysis.ignoredInputs.forEach { input -> target.inputs?.add(ignoredFileset(input)) }
       addExternalDependenciesInput(target, externalDependencies)
+      val dependsOnOwnModule = target.dependsOn?.any {
+        it.asJsonObject.get("dependencies")?.asBoolean != true
+      } == true
+      if (dependsOnOwnModule) addOwnBuildStateInput(project, target)
 
       targets[targetName] = target
       testCiTargetGroup.add(targetName)
@@ -667,30 +660,58 @@ class NxTargetFactory(
       dependsOnNode.addProperty("params", "forward")
       testCiTarget.dependsOn!!.add(dependsOnNode)
       addBuildStateJsonInputsAndOutputs(project, target)
+      addUpstreamOutputInputs(project, target)
     }
 
     return targets
   }
 
-  private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
-    val buildJsonFile = File("${project.build.directory}/nx-build-state.json")
+  private fun buildStateFile(project: MavenProject) =
+    File("${project.build.directory}/nx-build-state.json")
 
-    val isIgnored = gitIgnoreClassifier.isIgnored(buildJsonFile)
-    if (isIgnored) {
-      log.warn("Input path is gitignored: ${buildJsonFile.path}")
-      // Match the specific build state file in dependency outputs
-      val obj = JsonObject()
-      obj.addProperty("dependentTasksOutputFiles", "nx-build-state.json")
-      obj.addProperty("transitive", true)
-      target.inputs?.add(obj)
-    } else {
-      val input = pathFormatter.formatInputPath(buildJsonFile, projectRoot = project.basedir)
-
-      target.inputs?.add(input)
-    }
-    target.outputs?.add(pathFormatter.formatOutputPath(buildJsonFile, project.basedir))
+  // Only for a target after another one in its module: every target writes this
+  // file, so one without an upstream would hash its own previous output.
+  private fun addOwnBuildStateInput(project: MavenProject, target: NxTarget) {
+    target.inputs?.add(ignoredFileset(modulePath(buildStateFile(project), project)))
   }
 
+  private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
+    session.projectDependencyGraph.getUpstreamProjects(project, true).forEach { upstream ->
+      // A pom module (parent, aggregator, BOM) only contributes its pom, not build output.
+      if (upstream.packaging == "pom") {
+        target.inputs?.add(pathFormatter.toWorkspacePath(upstream.file, workspaceRoot))
+      } else {
+        target.inputs?.add(ignoredFileset(pathFormatter.toWorkspacePath(buildStateFile(upstream), workspaceRoot)))
+      }
+    }
+    target.outputs?.add(modulePath(buildStateFile(project), project))
+  }
+
+  // A build directory outside the module (e.g. set in a parent pom) can't use {projectRoot}/..
+  private fun modulePath(file: File, project: MavenProject): String =
+    if (file.isUnder(project.basedir)) pathFormatter.formatInputPath(file, project.basedir)
+    else pathFormatter.toWorkspacePath(file, workspaceRoot)
+
+  // Upstream modules' classes or main artifact end up on this module's classpath. Each one's
+  // own layout and file name is used, so stale jars from older versions aren't hashed.
+  private fun addUpstreamOutputInputs(project: MavenProject, target: NxTarget) {
+    session.projectDependencyGraph.getUpstreamProjects(project, true)
+      .filter { it.packaging != "pom" }
+      .forEach { upstream ->
+        val extension = upstream.artifact?.artifactHandler?.extension ?: "jar"
+        listOf(
+          File(upstream.build.outputDirectory),
+          File(upstream.build.directory, "${upstream.build.finalName}.$extension"),
+        ).forEach { target.inputs?.add(ignoredFileset(pathFormatter.toWorkspacePath(it, workspaceRoot))) }
+      }
+  }
+
+  private fun ignoredFileset(fileset: String): JsonObject {
+    val obj = JsonObject()
+    obj.addProperty("fileset", fileset)
+    obj.addProperty("includeIgnored", true)
+    return obj
+  }
 
   private fun addExternalDependenciesInput(target: NxTarget, externalDependencies: List<String>) {
     if (externalDependencies.isNotEmpty() && target.inputs != null) {
