@@ -307,6 +307,25 @@ describe('@nx/rspack', () => {
     }
   );
 
+  it.each([
+    ['a port string', `'3000'`, 3000],
+    ['an auto port', `'auto'`, undefined],
+  ])('infers the serve-static port for %s', async (_, port, expected) => {
+    tempFs.createFileSync(
+      'my-app/rspack.config.ts',
+      `export default { devServer: { port: ${port} } };`
+    );
+
+    const nodes = await createNodesFunction(
+      ['my-app/rspack.config.ts'],
+      {},
+      context
+    );
+
+    const { targets } = nodes[0][1].projects['my-app'];
+    expect(targets['serve-static'].options.port).toBe(expected);
+  });
+
   it('reads the build outputs with the build env and the dev server port with the serve env', async () => {
     tempFs.createFileSync(
       'my-app/rspack.config.ts',
