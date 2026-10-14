@@ -80,12 +80,9 @@ class MojoAnalyzer(
       return path.canonicalPath.let { it == dirPath || it.startsWith(dirPath + File.separator) }
     }
 
+    // Maven reads these paths whether git tracks them or not, so they're hashed from disk.
     fun addInput(path: String, paramConfig: Parameter) {
       val pathWithGlob = File(paramConfig.glob?.let { "$path/$it" } ?: path)
-      if (!paramConfig.includeIgnored) {
-        inputs.add(pathResolver.formatInputPath(pathWithGlob, projectRoot = project.basedir))
-        return
-      }
       // includeIgnored filesets reject `..`
       fun format(file: File) = if (isUnder(File(path), project.basedir)) {
         pathResolver.formatInputPath(file, projectRoot = project.basedir)
@@ -109,7 +106,7 @@ class MojoAnalyzer(
 
     if (mojoConfig?.inputParameters == null && mojoConfig?.inputProperties == null) {
       cacheConfig.defaultInputs.forEach { input ->
-        inputs.add(pathResolver.formatInputPath(File(input.path), projectRoot = project.basedir))
+        ignoredInputs.add(pathResolver.formatInputPath(File(input.path), projectRoot = project.basedir))
       }
     }
 

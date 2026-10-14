@@ -57,7 +57,7 @@ class MojoAnalyzerTest {
   }
 
   @Test
-  fun `build output inputs are includeIgnored wherever Maven puts them`() {
+  fun `build output inputs are includeIgnored outside the build directory`() {
     val analysis = analyze(
       "maven-jar-plugin", "jar", "bin/classes",
       fileParameter("classesDirectory", "\${project.build.outputDirectory}"),
@@ -67,13 +67,13 @@ class MojoAnalyzerTest {
   }
 
   @Test
-  fun `source inputs are not includeIgnored`() {
+  fun `source inputs are includeIgnored too`() {
     val analysis = analyze(
       "maven-war-plugin", "war", "target/classes",
       fileParameter("warSourceDirectory", "\${basedir}/src/main/webapp"),
     )
-    assertEquals(setOf("{projectRoot}/src/main/webapp"), analysis.inputs)
-    assertEquals(emptySet(), analysis.ignoredInputs)
+    assertEquals(emptySet(), analysis.inputs)
+    assertEquals(setOf("{projectRoot}/src/main/webapp"), analysis.ignoredInputs)
   }
 
   @Test
