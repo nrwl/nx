@@ -236,32 +236,39 @@ pub fn get_ultracache_report(
     .report()
 }
 
-/// The marker's digest: the task's `ignoredReads`, which shape the reads its
-/// recording holds, so editing them re-runs the task and records it afresh.
-/// Sorted, since their order means nothing.
+/// The marker's digest: the task's `ignoredReads` and `collectStats`, which
+/// shape the reads its recording holds, so editing them re-runs the task and
+/// records it afresh. Sorted, since glob order means nothing.
 fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
     // used, so `ignoredWrites` can't change what the task caches.
-    let mut reads = match ultracache {
+    let (mut reads, collect_stats) = match ultracache {
         Some(TaskUltracacheSettings {
             ignored_reads,
             ignored_writes: _,
             mode: _,
-            collect_stats: _,
-        }) => ignored_reads.clone().unwrap_or_default(),
-        None => Vec::new(),
+            collect_stats,
+        }) => (
+            ignored_reads.clone().unwrap_or_default(),
+            collect_stats.unwrap_or(false),
+        ),
+        None => (Vec::new(), false),
     };
     reads.sort();
     reads.dedup();
     // Equals the old marker of a task with no exclusions that recorded no writes.
     let base = Xxh3::new().digest().to_string();
-    if reads.is_empty() {
+    if reads.is_empty() && !collect_stats {
         return base;
     }
     let mut hasher = Xxh3::new();
     hasher.update(base.as_bytes());
+    // Only `true` is hashed, so unset and `false` keep their existing markers.
+    if collect_stats {
+        hasher.update(b"\x01collectStats\0");
+    }
     // NUL after each glob, so adjacent globs cannot run together.
     for glob in reads {
         hasher.update(glob.as_bytes());
@@ -459,5 +466,30 @@ mod tests {
         ] {
             assert!(!escapes_workspace(glob), "{glob}");
         }
+    }
+
+    #[test]
+    fn only_collect_stats_true_changes_the_configuration_digest() {
+        let digest = |collect_stats, ignored_reads: Option<Vec<String>>| {
+            configuration_digest(Some(&TaskUltracacheSettings {
+                collect_stats,
+                ignored_reads,
+                ..Default::default()
+            }))
+        };
+        let reads = Some(vec!["tmp/**".to_string()]);
+
+        assert_eq!(digest(None, None), configuration_digest(None));
+        assert_eq!(digest(Some(false), None), digest(None, None));
+        assert_ne!(digest(Some(true), None), digest(None, None));
+        assert_eq!(
+            digest(Some(false), reads.clone()),
+            digest(None, reads.clone())
+        );
+        assert_ne!(
+            digest(Some(true), reads.clone()),
+            digest(None, reads.clone())
+        );
+        assert_ne!(digest(Some(true), reads.clone()), digest(Some(true), None));
     }
 }
