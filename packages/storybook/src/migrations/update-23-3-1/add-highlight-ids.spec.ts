@@ -160,8 +160,14 @@ export function show(channel) {
       export function highlight(selectors, id, options) {
         const emit = useChannel({});
         emit(HIGHLIGHT, { id: id || \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
-        emit(HIGHLIGHT, { id: \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
-        emit(HIGHLIGHT, { id: \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
+        emit(
+          HIGHLIGHT,
+          withHighlightId2({ id: undefined, selectors }, \`libs/ui/src/highlight.js:\${++highlightCount}\`),
+        );
+        emit(
+          HIGHLIGHT,
+          withHighlightId2({ id: '', selectors }, \`libs/ui/src/highlight.js:\${++highlightCount}\`),
+        );
         emit(HIGHLIGHT, { id: options.id || \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
         emit(HIGHLIGHT, {
           id: (options.id ?? id) || \`libs/ui/src/highlight.js:\${++highlightCount}\`,
