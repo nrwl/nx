@@ -19,7 +19,7 @@ Confirm both conditions before changing anything. If either fails, make no chang
 
 ## Step 1: Verify the pre-pass
 
-Open each file in `<files_changed>`. The pre-pass declared a counter such as `let highlightCount = 0;` after the imports, numbered when the name is taken, and gave each payload an id like `` `apps/app/.storybook/preview.ts:${++highlightCount}` ``. A payload that wasn't an object literal became `{ id: ..., ...payload }`. Do not re-apply these edits. Keep the counter in the ids: it makes each emit add its own highlight, as Storybook did before the upgrade. Step 2 is the only reason to change a generated id.
+Open each file in `<files_changed>`. The pre-pass declared a counter such as `let highlightCount = 0;` after the imports, numbered when the name is taken, and gave each payload an id like `` `apps/app/.storybook/preview.ts:${++highlightCount}` ``. A payload whose own `id` can be missing or empty got the generated id as a fallback, such as `` id: options.id || `...` ``. A payload that wasn't an object literal, or that spread another object after its `id`, was wrapped in a `withHighlightId(payload, id)` function declared after the counter. The wrapper keeps the payload's own `id` unless it is missing or empty. Do not re-apply these edits. Keep the counter in the ids: it makes each emit add its own highlight, as Storybook did before the upgrade. Step 2 is the only reason to change a generated id.
 
 ## Step 2: Replace `clickEvent` in menu items
 
@@ -78,7 +78,7 @@ For each file listed with the `ClickEventDetails` type, and for each listener yo
 
 `HighlightOptions.id` is now required. For each object of that type without an `id` in a listed file:
 
-- If the object reaches a payload the pre-pass wrapped (`{ id: ..., ...options }`), type it as `Omit<HighlightOptions, 'id'>`.
+- If the object reaches a payload the pre-pass wrapped in `withHighlightId`, type it as `Omit<HighlightOptions, 'id'>`.
 - Otherwise, give it a unique string `id`. If the object is emitted several times between story renders, add the id where it is emitted instead, with a module-level counter like the pre-pass.
 
 ## Step 5: Give the remaining payloads an id

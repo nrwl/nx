@@ -7,7 +7,16 @@ This migration adds an `id` to each `HIGHLIGHT` payload without one. It finds th
 - Calls to `emit`, to an `emit` method such as `channel.emit`, or to an emitter returned by `useChannel`.
 - The event passed as `HIGHLIGHT` imported from `storybook/highlight` under any name, through a namespace import, or as its string value `storybook/highlight/add`.
 
-The id combines the file path with a counter that increases on every emit. Repeated emits still add separate highlights until Storybook clears them for the next story render. A payload that isn't an object literal becomes `{ id: ..., ...payload }`, so an `id` it already carries still wins. Payloads that have an `id`, and legacy payloads that use `elements`, stay unchanged.
+The id combines the file path with a counter that increases on every emit. Repeated emits still add separate highlights until Storybook clears them for the next story render.
+
+When a payload already sets an `id`, the generated id is only a fallback:
+
+- An `id` that is always a non-empty string, such as `'headings'` or `` `row-${index}` ``, stays unchanged.
+- An `id` set to `undefined`, `null` or an empty string is replaced.
+- Any other `id` becomes `id: <value> || <generated id>`.
+- A payload that isn't an object literal, or that spreads another object after its `id`, is wrapped in a `withHighlightId(payload, id)` function declared in the file. It keeps the payload's own `id` unless that id is missing or empty.
+
+Legacy payloads that use `elements` stay unchanged.
 
 The migration lists the Highlight usage it can't change, and in agentic runs an AI agent finishes it:
 

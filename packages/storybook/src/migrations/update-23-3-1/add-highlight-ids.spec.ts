@@ -30,6 +30,21 @@ export async function highlightAll() {
 }
 `;
 
+const FALLBACKS = `import { useChannel } from 'storybook/preview-api';
+import { HIGHLIGHT } from 'storybook/highlight';
+
+export function highlight(selectors, id, options) {
+  const emit = useChannel({});
+  emit(HIGHLIGHT, { id, selectors });
+  emit(HIGHLIGHT, { id: undefined, selectors });
+  emit(HIGHLIGHT, { id: '', selectors });
+  emit(HIGHLIGHT, { id: options.id, selectors });
+  emit(HIGHLIGHT, { id: options.id ?? id, selectors });
+  emit(HIGHLIGHT, { id: 'fixed', ...options, selectors });
+  emit(HIGHLIGHT, options);
+}
+`;
+
 describe('add-highlight-ids migration', () => {
   let tree: Tree;
 
@@ -58,6 +73,10 @@ export function show(channel) {
 
       let highlightCount2 = 0;
 
+      function withHighlightId(payload: object | undefined, id: string) {
+        return { ...payload, id: Object(payload).id || id };
+      }
+
       const highlightCount = 'taken';
       const base = { selectors: ['h1'] };
 
@@ -68,15 +87,17 @@ export function show(channel) {
             id: \`apps/app/.storybook/preview.ts:\${++highlightCount2}\`,
             selectors: ['h2'],
           });
-          emitHighlight(ADD_HIGHLIGHT, {
-            id: \`apps/app/.storybook/preview.ts:\${++highlightCount2}\`,
-            ...base,
-            priority: 1,
-          });
-          emitHighlight(ADD_HIGHLIGHT, {
-            id: \`apps/app/.storybook/preview.ts:\${++highlightCount2}\`,
-            ...base,
-          });
+          emitHighlight(
+            ADD_HIGHLIGHT,
+            withHighlightId(
+              { ...base, priority: 1 },
+              \`apps/app/.storybook/preview.ts:\${++highlightCount2}\`,
+            ),
+          );
+          emitHighlight(
+            ADD_HIGHLIGHT,
+            withHighlightId(base, \`apps/app/.storybook/preview.ts:\${++highlightCount2}\`),
+          );
           return storyFn();
         },
       ];
@@ -109,14 +130,57 @@ export function show(channel) {
     expect(result).toEqual({ skipAgentic: true });
   });
 
+  it('should fall back to a generated id where the payload id can be missing or empty', async () => {
+    tree.write('libs/ui/src/highlight.js', FALLBACKS);
+
+    const result = await addHighlightIds(tree);
+
+    expect(tree.read('libs/ui/src/highlight.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { useChannel } from 'storybook/preview-api';
+      import { HIGHLIGHT } from 'storybook/highlight';
+
+      let highlightCount = 0;
+
+      function withHighlightId(payload, id) {
+        return { ...payload, id: Object(payload).id || id };
+      }
+
+      export function highlight(selectors, id, options) {
+        const emit = useChannel({});
+        emit(HIGHLIGHT, { id: id || \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
+        emit(HIGHLIGHT, { id: \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
+        emit(HIGHLIGHT, { id: \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
+        emit(HIGHLIGHT, { id: options.id || \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
+        emit(HIGHLIGHT, {
+          id: (options.id ?? id) || \`libs/ui/src/highlight.js:\${++highlightCount}\`,
+          selectors,
+        });
+        emit(
+          HIGHLIGHT,
+          withHighlightId(
+            { id: 'fixed', ...options, selectors },
+            \`libs/ui/src/highlight.js:\${++highlightCount}\`,
+          ),
+        );
+        emit(HIGHLIGHT, withHighlightId(options, \`libs/ui/src/highlight.js:\${++highlightCount}\`));
+      }
+      "
+    `);
+    expect(result).toEqual({ skipAgentic: true });
+  });
+
   it('should not change payloads that have an id, legacy payloads or listeners', async () => {
     const content = `import { addons, useChannel } from 'storybook/preview-api';
 import { HIGHLIGHT, RESET_HIGHLIGHT } from 'storybook/highlight';
 
 export const decorators = [
-  (storyFn) => {
+  (storyFn, { args }) => {
     const emit = useChannel({ [HIGHLIGHT]: () => {} });
     emit(HIGHLIGHT, { id: 'headings', selectors: ['h2'] });
+    emit(HIGHLIGHT, { id: \`row-\${args.row}\`, selectors: ['tr'] });
+    emit(HIGHLIGHT, { id: args.open ? 'open' : 'closed', selectors: ['p'] });
+    emit(HIGHLIGHT, { ...args.highlight, id: args.id || 'custom' });
     emit(HIGHLIGHT, { elements: ['h3'], color: 'red', style: 'solid' });
     emit(RESET_HIGHLIGHT);
     addons.getChannel().on(HIGHLIGHT, (options) => console.log(options));
@@ -146,15 +210,17 @@ export function relay(channel, event, payload) {
 
   it('should be a no-op when run twice', async () => {
     tree.write('apps/app/.storybook/preview.ts', PREVIEW);
+    tree.write('libs/ui/src/highlight.js', FALLBACKS);
     await addHighlightIds(tree);
-    const afterFirstRun = tree.read('apps/app/.storybook/preview.ts', 'utf-8');
-    expect(afterFirstRun).not.toBe(PREVIEW);
+    const preview = tree.read('apps/app/.storybook/preview.ts', 'utf-8');
+    const fallbacks = tree.read('libs/ui/src/highlight.js', 'utf-8');
+    expect(preview).not.toBe(PREVIEW);
+    expect(fallbacks).not.toBe(FALLBACKS);
 
     const result = await addHighlightIds(tree);
 
-    expect(tree.read('apps/app/.storybook/preview.ts', 'utf-8')).toBe(
-      afterFirstRun
-    );
+    expect(tree.read('apps/app/.storybook/preview.ts', 'utf-8')).toBe(preview);
+    expect(tree.read('libs/ui/src/highlight.js', 'utf-8')).toBe(fallbacks);
     expect(result).toEqual({ skipAgentic: true });
   });
 
@@ -206,7 +272,7 @@ export const play = async (send, args) => {
     expect(result).toMatchInlineSnapshot(`
       {
         "agentContext": [
-          "Added an "id" to 1 HIGHLIGHT payload(s) in apps/app/src/menu.stories.ts. Each id ends in a module-level counter, so every emit still adds its own highlight.",
+          "Gave 1 HIGHLIGHT payload(s) in apps/app/src/menu.stories.ts a generated "id", or a generated fallback where the payload's own id can be missing or empty. Each generated id ends in a module-level counter, so every emit still adds its own highlight.",
           "apps/app/src/menu.stories.ts:9 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
           "apps/app/src/menu.stories.ts:16 passes HIGHLIGHT to "send", which this migration doesn't recognize as an emit. If it emits the event, give the payload a unique string "id".",
           "apps/app/src/menu.stories.ts:17 passes the HIGHLIGHT payload through a spread argument, so it was not checked. Give it a unique string "id".",
