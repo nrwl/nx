@@ -59,6 +59,21 @@ describe('Run Commands', () => {
     expect(readFile(f)).toEqual('123');
   });
 
+  it('should resolve ?? fallbacks in --args from the command env', async () => {
+    const f = fileSync().name;
+    const result = await runCommands(
+      {
+        command: `echo {args.port ?? env.RUN_COMMANDS_PORT ?? 3000}-{args.host ?? localhost}-{args.path ?? env.RUN_COMMANDS_UNSET ?? none} >> ${f}`,
+        args: '--host=h1',
+        env: { RUN_COMMANDS_PORT: '5000' },
+        __unparsed__: [],
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('5000-h1-none');
+  });
+
   it.each([
     {
       unparsed: ['test1', '--args=--key=123', '--test2=1', '--test2=2'],

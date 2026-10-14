@@ -3,10 +3,13 @@ import { ExecutorContext } from '../../config/misc-interfaces';
 import type { Task } from '../../config/task-graph';
 import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
+import { resolveTokens } from '../../tasks-runner/tokens';
 import { createTaskId } from '../../tasks-runner/utils';
 import { NoopChildProcess } from '../../tasks-runner/running-tasks/noop-child-process';
 import {
+  calculateCwd,
   ParallelRunningTasks,
+  processEnv,
   runSingleCommandWithPseudoTerminal,
   SeriallyRunningTasks,
 } from './running-tasks';
@@ -104,7 +107,18 @@ export async function runCommands(
   task?: Pick<Task, 'id' | 'ultracache'>,
   baseEnv?: NodeJS.ProcessEnv
 ) {
-  const normalized = normalizeOptions(options);
+  let env: NodeJS.ProcessEnv;
+  const normalized = normalizeOptions(
+    options,
+    () =>
+      (env ??= processEnv(
+        options.color,
+        calculateCwd(options.cwd, context),
+        options.env ?? {},
+        options.envFile,
+        baseEnv
+      ))
+  );
 
   if (normalized.readyWhenStatus.length && !normalized.parallel) {
     throw new Error(
@@ -193,7 +207,8 @@ export async function runCommands(
 }
 
 function normalizeOptions(
-  options: RunCommandsOptions
+  options: RunCommandsOptions,
+  env: () => NodeJS.ProcessEnv
 ): NormalizedRunCommandsOptions {
   if (options.readyWhen && typeof options.readyWhen === 'string') {
     options.readyWhenStatus = [
@@ -251,7 +266,8 @@ function normalizeOptions(
     c.command = interpolateArgsIntoCommand(
       c.command,
       options as NormalizedRunCommandsOptions,
-      c.forwardAllArgs ?? options.forwardAllArgs ?? true
+      c.forwardAllArgs ?? options.forwardAllArgs ?? true,
+      env
     );
   });
   return options as NormalizedRunCommandsOptions;
@@ -267,7 +283,8 @@ export function interpolateArgsIntoCommand(
     | 'unknownOptions'
     | 'unparsedCommandArgs'
   >,
-  forwardAllArgs: boolean
+  forwardAllArgs: boolean,
+  env: () => NodeJS.ProcessEnv = () => process.env
 ): string {
   if (command.indexOf('{args.') > -1 && command.indexOf('{args}') > -1) {
     throw new Error(
@@ -275,10 +292,13 @@ export function interpolateArgsIntoCommand(
     );
   }
   if (command.indexOf('{args.') > -1) {
-    const regex = /{args\.([^}]+)}/g;
-    return command.replace(regex, (_, group: string) =>
-      opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
-    );
+    return resolveTokens(command, {
+      isToken: (name) => name === 'args',
+      // dot-notation is off, so `{args.a.b}` reads the `a.b` argument
+      read: (_, path) => opts.parsedArgs[path],
+      env: { read: env },
+      noValue: () => '',
+    });
   } else if (command.indexOf('{args}') > -1) {
     const regex = /{args}/g;
     const args = [
