@@ -13154,6 +13154,28 @@ describe('createNxReleaseConfig()', () => {
     });
   });
 
+  describe('release config tokens', () => {
+    it.each([
+      ['v{version}{env.S}', { releaseTag: { pattern: 'v{version}{env.S}' } }],
+      ['{version ?? env.V}', { git: { commitMessage: '{version ?? env.V}' } }],
+      ['{env.F}', { changelog: { projectChangelogs: { file: '{env.F}' } } }],
+      [
+        '{env.E}',
+        { changelog: { projectChangelogs: { entryWhenNoChanges: '{env.E}' } } },
+      ],
+      [
+        '{env.R}',
+        { changelog: { workspaceChangelog: { renderer: '{env.R}' } } },
+      ],
+    ])('rejects %s when the config is loaded', async (template, config) => {
+      await expect(
+        createNxReleaseConfig(projectGraph, projectFileMap, config)
+      ).rejects.toThrow(
+        `Release configuration '${template}' is invalid. It can't read environment variables`
+      );
+    });
+  });
+
   describe('default releaseTag.pattern values', () => {
     it('should have a default pattern of v{version}', async () => {
       const res = await createNxReleaseConfig(projectGraph, projectFileMap, {});

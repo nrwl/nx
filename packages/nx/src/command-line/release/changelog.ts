@@ -12,7 +12,7 @@ import {
   createProjectFileMapUsingProjectGraph,
 } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { interpolate } from '../../tasks-runner/utils';
+import { interpolateReleaseConfig } from './utils/interpolate-release-config';
 import { handleErrors } from '../../utils/handle-errors';
 import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
@@ -40,6 +40,7 @@ import {
   ResolvedCreateRemoteReleaseProvider,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
+  validateCommitMessageTokens,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { ReleaseGroupWithName } from './config/filter-release-groups';
@@ -149,6 +150,9 @@ export function createAPI(
     );
     if (configError) {
       return await handleNxReleaseConfigError(configError);
+    }
+    if (args.gitCommitMessage) {
+      validateCommitMessageTokens(args.gitCommitMessage);
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -987,7 +991,7 @@ async function generateChangelogForWorkspace({
 
   let interpolatedTreePath = config.file || '';
   if (interpolatedTreePath) {
-    interpolatedTreePath = interpolate(interpolatedTreePath, {
+    interpolatedTreePath = interpolateReleaseConfig(interpolatedTreePath, {
       projectName: '', // n/a for the workspace changelog
       projectRoot: '', // n/a for the workspace changelog
       workspaceRoot: '', // within the tree, workspaceRoot is the root
@@ -1136,7 +1140,7 @@ async function generateChangelogForProjects({
   for (const project of projects) {
     let interpolatedTreePath = config.file || '';
     if (interpolatedTreePath) {
-      interpolatedTreePath = interpolate(interpolatedTreePath, {
+      interpolatedTreePath = interpolateReleaseConfig(interpolatedTreePath, {
         projectName: project.name,
         projectRoot: project.data.root,
         workspaceRoot: '', // within the tree, workspaceRoot is the root
@@ -1183,7 +1187,7 @@ async function generateChangelogForProjects({
       project: project.name,
       entryWhenNoChanges:
         typeof config.entryWhenNoChanges === 'string'
-          ? interpolate(config.entryWhenNoChanges, {
+          ? interpolateReleaseConfig(config.entryWhenNoChanges, {
               projectName: project.name,
               projectRoot: project.data.root,
               workspaceRoot: '', // within the tree, workspaceRoot is the root

@@ -3,7 +3,7 @@ import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
 import { calculateFileChanges } from '../../../project-graph/file-utils';
-import { interpolate } from '../../../tasks-runner/utils';
+import { interpolateReleaseConfig } from './interpolate-release-config';
 import type { NxArgs } from '../../../utils/command-line-utils';
 import { output } from '../../../utils/output';
 import { NxReleaseConfig } from '../config/config';
@@ -75,7 +75,7 @@ export class ReleaseVersion {
     releaseGroupName?: string;
   }) {
     this.rawVersion = version;
-    this.gitTag = interpolate(releaseTagPattern, {
+    this.gitTag = interpolateReleaseConfig(releaseTagPattern, {
       version,
       projectName: projectName
         ? sanitizeProjectNameForGitTag(projectName)
@@ -151,7 +151,7 @@ export function createCommitMessageValues(
       releaseTagPattern: releaseGroup.releaseTag.pattern,
       releaseGroupName: releaseGroup.name,
     });
-    commitMessageValues[0] = interpolate(commitMessageValues[0], {
+    commitMessageValues[0] = interpolateReleaseConfig(commitMessageValues[0], {
       version: releaseVersion.rawVersion,
     }).trim();
     return commitMessageValues;
@@ -179,10 +179,13 @@ export function createCommitMessageValues(
         projectName: releaseGroupProjectNames[0],
         releaseGroupName: releaseGroup.name,
       });
-      commitMessageValues[0] = interpolate(commitMessageValues[0], {
-        version: releaseVersion.rawVersion,
-        projectName: releaseGroupProjectNames[0],
-      }).trim();
+      commitMessageValues[0] = interpolateReleaseConfig(
+        commitMessageValues[0],
+        {
+          version: releaseVersion.rawVersion,
+          projectName: releaseGroupProjectNames[0],
+        }
+      ).trim();
       return commitMessageValues;
     }
   }
@@ -308,7 +311,7 @@ export function createGitTagValues(
             // Create tags for both docker and semver versions
             if (projectVersionData.dockerVersion) {
               tags.push(
-                interpolate(releaseGroup.releaseTag.pattern, {
+                interpolateReleaseConfig(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.dockerVersion,
                   projectName: sanitizeProjectNameForGitTag(project),
                   releaseGroupName: releaseGroup.name,
@@ -317,7 +320,7 @@ export function createGitTagValues(
             }
             if (projectVersionData.newVersion) {
               tags.push(
-                interpolate(releaseGroup.releaseTag.pattern, {
+                interpolateReleaseConfig(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.newVersion,
                   projectName: sanitizeProjectNameForGitTag(project),
                   releaseGroupName: releaseGroup.name,
@@ -333,7 +336,7 @@ export function createGitTagValues(
                 projectVersionData.dockerVersion);
             if (version) {
               tags.push(
-                interpolate(releaseGroup.releaseTag.pattern, {
+                interpolateReleaseConfig(releaseGroup.releaseTag.pattern, {
                   version,
                   projectName: sanitizeProjectNameForGitTag(project),
                   releaseGroupName: releaseGroup.name,
@@ -361,7 +364,7 @@ export function createGitTagValues(
         // Create tags for both docker and semver versions
         if (projectVersionData.dockerVersion) {
           tags.push(
-            interpolate(releaseGroup.releaseTag.pattern, {
+            interpolateReleaseConfig(releaseGroup.releaseTag.pattern, {
               version: projectVersionData.dockerVersion,
               releaseGroupName: releaseGroup.name,
             })
@@ -369,7 +372,7 @@ export function createGitTagValues(
         }
         if (projectVersionData.newVersion) {
           tags.push(
-            interpolate(releaseGroup.releaseTag.pattern, {
+            interpolateReleaseConfig(releaseGroup.releaseTag.pattern, {
               version: projectVersionData.newVersion,
               releaseGroupName: releaseGroup.name,
             })
@@ -382,7 +385,7 @@ export function createGitTagValues(
           : (projectVersionData.newVersion ?? projectVersionData.dockerVersion);
         if (version) {
           tags.push(
-            interpolate(releaseGroup.releaseTag.pattern, {
+            interpolateReleaseConfig(releaseGroup.releaseTag.pattern, {
               version,
               releaseGroupName: releaseGroup.name,
             })

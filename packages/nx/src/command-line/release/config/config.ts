@@ -30,6 +30,7 @@ import { normalizePath } from '../../../utils/path';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { defaultCreateReleaseProvider as defaultGitHubCreateReleaseProvider } from '../utils/remote-release-clients/github';
 import { defaultCreateReleaseProvider as defaultGitLabCreateReleaseProvider } from '../utils/remote-release-clients/gitlab';
+import { validateReleaseConfigTemplate } from '../utils/interpolate-release-config';
 import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
@@ -947,6 +948,16 @@ export async function createNxReleaseConfig(
     }
   }
 
+  // Before validateChangelogConfig, which reports any renderer path error as
+  // an unresolvable renderer
+  validateReleaseConfigTokens({
+    releaseTag: WORKSPACE_DEFAULTS.releaseTag,
+    git: rootGitConfig,
+    version: rootVersionConfig,
+    changelog: rootChangelogConfig,
+    groups: releaseGroups,
+  });
+
   const configError = validateChangelogConfig(
     releaseGroups,
     rootChangelogConfig
@@ -1435,6 +1446,58 @@ function isProjectPublic(
     // this will result in it being excluded from the default projects list
     return false;
   }
+}
+
+// The tokens each field is interpolated with during a release
+const releaseTagPatternTokens = ['version', 'projectName', 'releaseGroupName'];
+const commitMessageTokens = ['version', 'projectName'];
+const changelogFileTokens = ['projectName', 'projectRoot', 'workspaceRoot'];
+const changelogRendererTokens = ['workspaceRoot'];
+
+/**
+ * A release can interpolate these fields after it writes files, so an invalid
+ * token has to fail when the config is loaded
+ */
+function validateReleaseConfigTokens(
+  config: Pick<
+    NxReleaseConfig,
+    'releaseTag' | 'git' | 'version' | 'changelog' | 'groups'
+  >
+): void {
+  const templates: Array<[unknown, string[]]> = [
+    [config.releaseTag.pattern, releaseTagPatternTokens],
+    [config.git.commitMessage, commitMessageTokens],
+    [config.version.git.commitMessage, commitMessageTokens],
+    [config.changelog.git.commitMessage, commitMessageTokens],
+  ];
+  const { workspaceChangelog } = config.changelog;
+  if (workspaceChangelog) {
+    // The workspace changelog uses its entryWhenNoChanges as written
+    templates.push(
+      [workspaceChangelog.file, changelogFileTokens],
+      [workspaceChangelog.renderer, changelogRendererTokens]
+    );
+  }
+  for (const group of Object.values(config.groups)) {
+    templates.push([group.releaseTag.pattern, releaseTagPatternTokens]);
+    if (group.changelog) {
+      templates.push(
+        [group.changelog.file, changelogFileTokens],
+        [group.changelog.entryWhenNoChanges, changelogFileTokens],
+        [group.changelog.renderer, changelogRendererTokens]
+      );
+    }
+  }
+  for (const [template, tokens] of templates) {
+    if (typeof template === 'string') {
+      validateReleaseConfigTemplate(template, tokens);
+    }
+  }
+}
+
+/** Validates a commit message passed in place of the configured one */
+export function validateCommitMessageTokens(commitMessage: string): void {
+  validateReleaseConfigTemplate(commitMessage, commitMessageTokens);
 }
 
 /**
