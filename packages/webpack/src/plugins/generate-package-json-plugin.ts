@@ -13,6 +13,7 @@ import {
   readJsonFile,
   serializeJson,
 } from '@nx/devkit';
+import { readModulePackageJson } from '@nx/devkit/internal';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
@@ -34,7 +35,10 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
     const runtimeDependencies: Record<string, string> = {};
     if (this.options.runtimeDependencies) {
       for (const dep of this.options.runtimeDependencies) {
-        const depPkgJson = require.resolve(`${dep}/package.json`);
+        const depPkgJson = readModulePackageJson(dep, [
+          __dirname,
+          this.options.root,
+        ]).path;
         if (!fs.existsSync(depPkgJson)) continue;
         const { name, version } = readJsonFile(depPkgJson);
         runtimeDependencies[name] = version;
