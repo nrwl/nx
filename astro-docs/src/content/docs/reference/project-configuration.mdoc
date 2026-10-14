@@ -542,6 +542,8 @@ The expanded syntax also accepts an `options` property, which controls whether t
 
 When the target runs with a configuration, the options of that configuration are merged over the target options before they are forwarded. `params` and `options` are set independently of each other, and when both are forwarded, the params passed on the command line take precedence over the forwarded options.
 
+The expanded syntax also accepts `inputs`, which only affects dependencies on continuous tasks.
+
 Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
 
 ```json
