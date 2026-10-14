@@ -195,6 +195,15 @@ describe('getReadyWhen', () => {
     // env tokens read the env the producer is started with
     serve.readyWhen.url = 'http://localhost:{env.NX_READY_WHEN_PORT}';
     expect(url(task())).toBe('http://localhost:5000');
+
+    // run-commands runs its command with its `env` option applied on top
+    Object.assign(serve, {
+      executor: 'nx:run-commands',
+      options: { command: 'serve' },
+    });
+    expect(url(task())).toBe('http://localhost:5000');
+    serve.options['env'] = { NX_READY_WHEN_PORT: '5001' };
+    expect(url(task())).toBe('http://localhost:5001');
   });
 });
 

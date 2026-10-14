@@ -1665,19 +1665,12 @@ export class TaskOrchestrator {
           relative(task.projectRoot ?? workspaceRoot, process.cwd()),
           process.env.NX_VERBOSE_LOGGING === 'true'
         );
-        if (combinedOptions.env) {
-          env = {
-            ...env,
-            ...combinedOptions.env,
-          };
-        }
         if (streamOutput) {
           const args = getPrintableCommandArgsForTask(task);
           output.logCommand(args.join(' '));
         }
         const runCommandsOptions = {
           ...combinedOptions,
-          env,
           usePty:
             this.tuiEnabled ||
             (!this.tasksSchedule.hasTasks() &&
@@ -1685,12 +1678,15 @@ export class TaskOrchestrator {
           streamOutput: streamOutput && !shouldPrefix,
         };
 
+        // Same layers as a forked run: the task env is the base, and only the
+        // target's own `env` option goes on top
         const runningTask = await runCommands(
           runCommandsOptions,
           {
             root: workspaceRoot, // only root is needed in runCommands
           } as any,
-          task
+          task,
+          env
         );
 
         this.runningRunCommandsTasks.set(task.id, runningTask);

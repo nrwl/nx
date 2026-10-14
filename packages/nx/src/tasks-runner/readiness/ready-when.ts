@@ -1,4 +1,5 @@
 import { relative } from 'path';
+import type { ExecutorContext } from '../../config/misc-interfaces';
 import type { ProjectGraph } from '../../config/project-graph';
 import type { Task, TaskGraph } from '../../config/task-graph';
 import type {
@@ -320,9 +321,31 @@ export function getReadyWhen(
   if (!inputs) {
     return null;
   }
-  return normalizeReadyWhen(inputs.readyWhen, task.id, {
-    ...inputs.data,
-    env: () => taskEnv,
+  const { readyWhen, executor, data } = inputs;
+  const { options } = data;
+  return normalizeReadyWhen(readyWhen, task.id, {
+    ...data,
+    env: () => {
+      if (executor !== 'nx:run-commands') {
+        return taskEnv;
+      }
+      // The env run-commands runs its command with. Required lazily, because
+      // run-command.ts loads this module before it loads a tasks runner
+      const { calculateCwd, processEnv } =
+        require('../../executors/run-commands/running-tasks') as typeof import('../../executors/run-commands/running-tasks');
+      return processEnv(
+        options.color as boolean,
+        calculateCwd(
+          options.cwd as string,
+          {
+            root: workspaceRoot,
+          } as ExecutorContext
+        ),
+        (options.env ?? {}) as Record<string, string>,
+        options.envFile as string,
+        taskEnv
+      );
+    },
   });
 }
 
@@ -368,6 +391,7 @@ function getReadyWhenInputs(
   );
   return {
     readyWhen,
+    executor: target.executor,
     data: {
       workspaceRoot,
       projectRoot: node.data.root,

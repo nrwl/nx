@@ -101,7 +101,8 @@ export default async function (
 export async function runCommands(
   options: RunCommandsOptions,
   context: ExecutorContext,
-  task?: Pick<Task, 'id' | 'ultracache'>
+  task?: Pick<Task, 'id' | 'ultracache'>,
+  baseEnv?: NodeJS.ProcessEnv
 ) {
   const normalized = normalizeOptions(options);
 
@@ -168,15 +169,17 @@ export async function runCommands(
       ? await runSingleCommandWithPseudoTerminal(
           normalized,
           context,
-          resolvedTask
+          resolvedTask,
+          baseEnv
         )
       : options.parallel
-        ? new ParallelRunningTasks(normalized, context, resolvedTask)
+        ? new ParallelRunningTasks(normalized, context, resolvedTask, baseEnv)
         : new SeriallyRunningTasks(
             normalized,
             context,
             tuiEnabled,
-            resolvedTask
+            resolvedTask,
+            baseEnv
           );
     return runningTask;
   } catch (e) {

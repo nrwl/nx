@@ -657,6 +657,7 @@ Strings in `readyWhen` can use the `{workspaceRoot}`, `{projectRoot}`, `{project
 So `"url": "http://localhost:{options.port}"` follows `--port`, and works without a `port` option when the executor has a default for it.
 `port` accepts such a string too, for example `"{options.port}"`.
 `{env.*}` reads the environment the task runs with, including its `.env` files.
+For an `nx:run-commands` target, that includes its `env` and `envFile` options.
 A placeholder can list fallbacks after `??`, and Nx uses the first one that is set and not empty.
 The last fallback can be plain text, as in `"{options.port ?? env.PORT ?? 4200}"`.
 A placeholder that resolves to no value fails the task before it starts, with an error that names the placeholder.
