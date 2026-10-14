@@ -57,6 +57,24 @@ function getRolldownBuildTargetName(tree: Tree, projectRoot: string): string {
   );
 }
 
+// fastify.inject requires ESM-only `cookie` 2, which Jest cannot load untransformed.
+function allowJestToTransformCookie(tree: Tree, projectRoot: string) {
+  const configFile = ['jest.config.cts', 'jest.config.ts', 'jest.config.js']
+    .map((f) => joinPathFragments(projectRoot, f))
+    .find((f) => tree.exists(f));
+  if (!configFile) {
+    return;
+  }
+  const config = tree.read(configFile, 'utf-8');
+  tree.write(
+    configFile,
+    config.replace(
+      /^(\s*)moduleFileExtensions:/m,
+      `$1transformIgnorePatterns: ['/node_modules/(?!(\\\\.pnpm/[^/]+/node_modules/)?cookie/)'],\n$1moduleFileExtensions:`
+    )
+  );
+}
+
 function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
   if (options.isUsingTsSolutionConfig) {
     return;
@@ -255,6 +273,9 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(jestTask);
+    if (options.framework === 'fastify') {
+      allowJestToTransformCookie(tree, options.appProjectRoot);
+    }
     // There are no tests by default, so set `--passWithNoTests` to avoid test failure on new project.
     const projectConfig = readProjectConfiguration(tree, options.name);
     projectConfig.targets ??= {};

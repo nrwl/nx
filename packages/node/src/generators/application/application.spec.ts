@@ -1673,9 +1673,8 @@ describe('app', () => {
           },
         ]
       `);
-      expect(
-        readNxJson(tree).targetDefaults['e2e-ci--**/**']
-      ).toMatchInlineSnapshot(`
+      expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
+        .toMatchInlineSnapshot(`
         [
           {
             "dependsOn": [

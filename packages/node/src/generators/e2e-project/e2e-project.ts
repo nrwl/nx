@@ -181,6 +181,7 @@ export async function e2eProjectGeneratorInternal(
         offsetFromRoot: rootOffset,
         jestPreset,
         coverageDirectory,
+        js: useCommonJsConfig,
         tmpl: '',
       }
     );
@@ -225,6 +226,7 @@ export async function e2eProjectGeneratorInternal(
         offsetFromRoot: rootOffset,
         jestPreset,
         coverageDirectory,
+        js: useCommonJsConfig,
         tmpl: '',
       }
     );
