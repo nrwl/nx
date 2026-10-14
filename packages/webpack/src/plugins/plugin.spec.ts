@@ -201,6 +201,9 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "development",
                       },
                     },
+                    "readyWhen": {
+                      "port": "{options.port ?? 9000}",
+                    },
                   },
                   "preview-site": {
                     "command": "webpack-cli serve",
@@ -245,6 +248,9 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "production",
                       },
                     },
+                    "readyWhen": {
+                      "port": "{options.port ?? 9000}",
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -274,6 +280,9 @@ describe('@nx/webpack/plugin', () => {
                       "port": 9000,
                       "spa": true,
                     },
+                    "readyWhen": {
+                      "port": "{options.port}",
+                    },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -289,6 +298,52 @@ describe('@nx/webpack/plugin', () => {
         ],
       ]
     `);
+  });
+
+  it.each([
+    ['no devServer', { output: { path: 'dist/foo' } }, 8080],
+    ['an auto port', { devServer: { port: 'auto' } }, 8080],
+    [
+      'a devServer on a later config',
+      [{ name: 'server' }, { name: 'client', devServer: { port: 4300 } }],
+      4300,
+    ],
+  ])('probes the dev server port for %s', async (_, config, expectedPort) => {
+    mockWebpackConfig(config);
+
+    const nodes = await createNodesFunction(
+      ['my-app/webpack.config.js'],
+      {},
+      context
+    );
+
+    const { targets } = nodes[0][1].projects['my-app'];
+    for (const target of ['serve', 'preview']) {
+      expect(targets[target].readyWhen).toEqual({
+        port: `{options.port ?? ${expectedPort}}`,
+      });
+    }
+  });
+
+  it('reads the build outputs with the build env and the dev server port with the serve env', async () => {
+    mockWebpackConfig((env: Record<string, unknown>) => ({
+      output: { path: env.WEBPACK_SERVE ? 'dist/serve' : 'dist/build' },
+      devServer: { port: env.WEBPACK_SERVE ? 4300 : 9000 },
+    }));
+
+    const nodes = await createNodesFunction(
+      ['my-app/webpack.config.js'],
+      {},
+      context
+    );
+
+    const { targets } = nodes[0][1].projects['my-app'];
+    expect(targets.build.outputs).toEqual(['{projectRoot}/dist/build']);
+    for (const target of ['serve', 'preview']) {
+      expect(targets[target].readyWhen).toEqual({
+        port: '{options.port ?? 4300}',
+      });
+    }
   });
 
   it('adds the pnpm install settings inputs in a pnpm workspace', async () => {

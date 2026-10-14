@@ -31,6 +31,7 @@ import {
 } from '@nx/js/internal';
 import { readdirSync } from 'fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { isNxWebpackComposablePlugin } from '../utils/config';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
 export interface WebpackPluginOptions {
@@ -191,6 +192,16 @@ async function createWebpackTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  // webpack-cli serve calls a function config with its serve env
+  const serveOptions = takesEnv(webpackConfig)
+    ? await readWebpackOptions(webpackConfig, { WEBPACK_SERVE: true })
+    : webpackOptions;
+  const devServerReadyWhen: TargetConfiguration['readyWhen'] = {
+    port: `{options.port ?? ${getDevServerPort(
+      serveOptions.find((config) => config.devServer)?.devServer?.port
+    )}}`,
+  };
+
   const buildInputs: TargetConfiguration['inputs'] = [
     ...('production' in namedInputs
       ? ['production', '^production']
@@ -240,6 +251,7 @@ async function createWebpackTargets(
 
   targets[options.serveTargetName] = {
     continuous: true,
+    readyWhen: devServerReadyWhen,
     inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
@@ -262,6 +274,7 @@ async function createWebpackTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    readyWhen: devServerReadyWhen,
     inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
@@ -284,6 +297,7 @@ async function createWebpackTargets(
 
   targets[options.serveStaticTargetName] = {
     continuous: true,
+    readyWhen: { port: '{options.port}' },
     inputs: [...buildInputs],
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
@@ -323,6 +337,18 @@ async function createWebpackTargets(
   );
 
   return { targets, metadata: {} };
+}
+
+function takesEnv(config: unknown): boolean {
+  return Array.isArray(config)
+    ? config.some(takesEnv)
+    : typeof config === 'function' && !isNxWebpackComposablePlugin(config);
+}
+
+// webpack-dev-server picks a free port from 8080 when none is set
+function getDevServerPort(port: unknown): number {
+  const value = Number(port);
+  return Number.isInteger(value) && value > 0 ? value : 8080;
 }
 
 function normalizeOutputPath(
