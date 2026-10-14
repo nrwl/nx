@@ -1,12 +1,13 @@
 vi.mock('child_process');
 
-import { join } from 'path';
+import { dirname, join } from 'path';
 import * as childProcess from 'child_process';
 import {
   mkdirSync,
   mkdtempSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -704,30 +705,113 @@ describe('readModulePackageJson', () => {
     }
   });
 
-  it('walks up from the entry point when the package does not export package.json', () => {
-    const dir = realpathSync(
-      mkdtempSync(join(tmpdir(), 'nx-read-module-package-json-'))
-    );
-    try {
-      const pkgDir = join(dir, 'node_modules', 'nx');
+  describe('when the exports map does not expose package.json', () => {
+    let dir: string;
+
+    beforeEach(() => {
+      dir = realpathSync(
+        mkdtempSync(join(tmpdir(), 'nx-read-module-package-json-'))
+      );
+    });
+
+    afterEach(() => {
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    function writePackage(
+      pkgDir: string,
+      exports: PackageJson['exports'],
+      files: Record<string, string>
+    ) {
       mkdirSync(pkgDir, { recursive: true });
       writeFileSync(
         join(pkgDir, 'package.json'),
         JSON.stringify({
-          name: 'nx',
+          name: 'hidden-manifest',
           version: '0.0.0-fixture',
-          exports: { '.': './index.js' },
+          exports,
         })
       );
-      writeFileSync(join(pkgDir, 'index.js'), 'module.exports = {};');
+      for (const [file, content] of Object.entries(files)) {
+        mkdirSync(join(pkgDir, dirname(file)), { recursive: true });
+        writeFileSync(join(pkgDir, file), content);
+      }
+    }
 
-      const { path, packageJson } = readModulePackageJson('nx', [dir]);
+    it.each([
+      ['a "." entry only', { '.': './index.js' }, { 'index.js': '' }],
+      [
+        'an import-only entry',
+        { '.': { import: './index.mjs' } },
+        { 'index.mjs': '' },
+      ],
+      ['no "." entry', { './sub': './sub.js' }, { 'sub.js': '' }],
+      [
+        'a require entry next to a nested package.json',
+        {
+          '.': {
+            import: './dist/esm/index.js',
+            require: './dist/cjs/index.js',
+          },
+        },
+        {
+          'dist/cjs/index.js': '',
+          'dist/cjs/package.json': '{"type":"commonjs"}',
+          'dist/esm/index.js': '',
+        },
+      ],
+    ])('reads the package root package.json for %s', (_, exports, files) => {
+      const pkgDir = join(dir, 'node_modules', 'hidden-manifest');
+      writePackage(pkgDir, exports, files);
+
+      const { path, packageJson } = readModulePackageJson('hidden-manifest', [
+        dir,
+      ]);
 
       expect(path).toBe(join(pkgDir, 'package.json'));
       expect(packageJson.version).toBe('0.0.0-fixture');
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
+    });
+
+    it.each([
+      [
+        'inside',
+        () =>
+          join(
+            dir,
+            'node_modules',
+            '.pnpm',
+            'hidden-manifest@0.0.0',
+            'node_modules'
+          ),
+      ],
+      ['outside', () => realpathSync(mkdtempSync(join(tmpdir(), 'external-')))],
+    ])(
+      'returns the real path of a linked package stored %s the workspace',
+      (_, targetRoot) => {
+        const target = join(targetRoot(), 'hidden-manifest');
+        writePackage(target, { '.': './index.js' }, { 'index.js': '' });
+        mkdirSync(join(dir, 'node_modules'), { recursive: true });
+        symlinkSync(
+          target,
+          join(dir, 'node_modules', 'hidden-manifest'),
+          'dir'
+        );
+
+        try {
+          expect(readModulePackageJson('hidden-manifest', [dir]).path).toBe(
+            join(target, 'package.json')
+          );
+        } finally {
+          rmSync(dirname(target), { recursive: true, force: true });
+        }
+      }
+    );
+
+    it('throws when the package is not installed', () => {
+      expect(() => readModulePackageJson('hidden-manifest', [dir])).toThrow(
+        "Cannot find module 'hidden-manifest'"
+      );
+    });
   });
 });
 

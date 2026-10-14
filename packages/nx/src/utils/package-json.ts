@@ -384,6 +384,17 @@ export function readModulePackageJson(
     ({ path: packageJsonPath, packageJson } =
       readModulePackageJsonWithoutFallbacks(moduleSpecifier, requirePaths));
   } catch {
+    const lookupPathMatch = findPackageJsonInLookupPaths(
+      moduleSpecifier,
+      requirePaths
+    );
+    if (lookupPathMatch) {
+      return {
+        packageJson: readJsonFile(lookupPathMatch),
+        path: lookupPathMatch,
+      };
+    }
+
     const entryPoint = resolveWithoutCachePollution(
       moduleSpecifier,
       requirePaths
@@ -409,6 +420,25 @@ export function readModulePackageJson(
     packageJson,
     path: packageJsonPath,
   };
+}
+
+function findPackageJsonInLookupPaths(
+  moduleSpecifier: string,
+  requirePaths: string[]
+): string | undefined {
+  for (const requirePath of requirePaths) {
+    const lookupPaths =
+      createRequire(join(resolve(requirePath), 'noop.js')).resolve.paths(
+        moduleSpecifier
+      ) ?? [];
+    for (const lookupPath of lookupPaths) {
+      const candidate = join(lookupPath, moduleSpecifier, 'package.json');
+      if (existsSync(candidate)) {
+        // Resolving gives a symlinked package the same real path Node returns.
+        return resolveWithoutCachePollution(candidate, requirePaths);
+      }
+    }
+  }
 }
 
 /**
