@@ -266,8 +266,9 @@ fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     let mut hasher = Xxh3::new();
     hasher.update(base.as_bytes());
     // Only `true` is hashed, so unset and `false` keep their existing markers.
+    // 0xFF never occurs in UTF-8, so no glob can produce this tag.
     if collect_stats {
-        hasher.update(b"\x01collectStats\0");
+        hasher.update(b"\xFFcollectStats\0");
     }
     // NUL after each glob, so adjacent globs cannot run together.
     for glob in reads {
@@ -491,5 +492,13 @@ mod tests {
             digest(None, reads.clone())
         );
         assert_ne!(digest(Some(true), reads.clone()), digest(Some(true), None));
+        assert_eq!(
+            digest(Some(true), Some(vec!["b".into(), "a".into(), "a".into()])),
+            digest(Some(true), Some(vec!["a".into(), "b".into()]))
+        );
+        assert_ne!(
+            digest(Some(true), None),
+            digest(None, Some(vec!["\u{1}collectStats".into()]))
+        );
     }
 }
