@@ -74,16 +74,11 @@ class MojoAnalyzer(
     val inputs = mutableSetOf<String>()
     val ignoredInputs = mutableSetOf<String>()
 
-    fun isUnder(path: File, dir: File): Boolean {
-      val dirPath = dir.canonicalPath
-      return path.canonicalPath.let { it == dirPath || it.startsWith(dirPath + File.separator) }
-    }
-
     // Maven reads these paths whether git tracks them or not, so they're hashed from disk.
     fun addInput(path: String, glob: String?, excludeGlob: String?) {
       val pathWithGlob = File(glob?.let { "$path/$it" } ?: path)
       // includeIgnored filesets reject `..`
-      fun format(file: File) = if (isUnder(File(path), project.basedir)) {
+      fun format(file: File) = if (File(path).isUnder(project.basedir)) {
         pathResolver.formatInputPath(file, projectRoot = project.basedir)
       } else {
         pathResolver.toWorkspacePath(file, workspaceRoot)

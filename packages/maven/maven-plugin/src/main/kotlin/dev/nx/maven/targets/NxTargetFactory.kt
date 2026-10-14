@@ -4,6 +4,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import dev.nx.maven.utils.MojoAnalyzer
 import dev.nx.maven.utils.PathFormatter
+import dev.nx.maven.utils.isUnder
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.model.Plugin
@@ -671,16 +672,20 @@ class NxTargetFactory(
   // Only for a target after another one in its module: every target writes this
   // file, so one without an upstream would hash its own previous output.
   private fun addOwnBuildStateInput(project: MavenProject, target: NxTarget) {
-    target.inputs?.add(ignoredFileset(pathFormatter.formatInputPath(buildStateFile(project), project.basedir)))
+    target.inputs?.add(ignoredFileset(modulePath(buildStateFile(project), project)))
   }
 
   private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
-    val buildJsonFile = buildStateFile(project)
-    target.inputs?.add(
-      ignoredFileset(pathFormatter.formatInputPath(buildJsonFile, project.basedir), dependencies = true)
-    )
-    target.outputs?.add(pathFormatter.formatOutputPath(buildJsonFile, project.basedir))
+    session.projectDependencyGraph.getUpstreamProjects(project, true).forEach { upstream ->
+      target.inputs?.add(ignoredFileset(pathFormatter.toWorkspacePath(buildStateFile(upstream), workspaceRoot)))
+    }
+    target.outputs?.add(modulePath(buildStateFile(project), project))
   }
+
+  // A build directory outside the module (e.g. set in a parent pom) can't use {projectRoot}/..
+  private fun modulePath(file: File, project: MavenProject): String =
+    if (file.isUnder(project.basedir)) pathFormatter.formatInputPath(file, project.basedir)
+    else pathFormatter.toWorkspacePath(file, workspaceRoot)
 
   // Upstream modules' classes or main artifact end up on this module's classpath. Each one's
   // own layout and file name is used, so stale jars from older versions aren't hashed.
@@ -696,11 +701,10 @@ class NxTargetFactory(
       }
   }
 
-  private fun ignoredFileset(fileset: String, dependencies: Boolean = false): JsonObject {
+  private fun ignoredFileset(fileset: String): JsonObject {
     val obj = JsonObject()
     obj.addProperty("fileset", fileset)
     obj.addProperty("includeIgnored", true)
-    if (dependencies) obj.addProperty("dependencies", true)
     return obj
   }
 
