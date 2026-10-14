@@ -1,9 +1,7 @@
 import type { Mock } from 'vitest';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
 import type { ProjectGraph } from '@nx/devkit';
 import { detectPackageManager } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
 import { GeneratePackageJsonPlugin } from './generate-package-json-plugin';
 
@@ -123,21 +121,21 @@ describe('GeneratePackageJsonPlugin', () => {
   });
 
   it('adds a runtime dependency installed under the workspace root whose exports map hides package.json', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'runtime-deps-'));
+    const tempFs = new TempFs('runtime-deps-', false);
     try {
-      const pkgDir = join(dir, 'node_modules', 'fixture-runtime-dependency');
-      mkdirSync(pkgDir, { recursive: true });
-      writeFileSync(
-        join(pkgDir, 'package.json'),
-        JSON.stringify({
+      tempFs.createFilesSync({
+        'node_modules/fixture-runtime-dependency/package.json': JSON.stringify({
           name: 'fixture-runtime-dependency',
           version: '2.0.0',
           exports: { '.': './index.js', './*': './*.js' },
-        })
-      );
-      writeFileSync(join(pkgDir, 'index.js'), '');
+        }),
+        'node_modules/fixture-runtime-dependency/index.js': '',
+      });
 
-      const { emitAsset } = runPlugin(['fixture-runtime-dependency'], dir);
+      const { emitAsset } = runPlugin(
+        ['fixture-runtime-dependency'],
+        tempFs.tempDir
+      );
 
       const [, manifest] = emitAsset.mock.calls.find(
         ([name]) => name === 'package.json'
@@ -146,7 +144,7 @@ describe('GeneratePackageJsonPlugin', () => {
         'fixture-runtime-dependency': '2.0.0',
       });
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      tempFs.cleanup();
     }
   });
 });

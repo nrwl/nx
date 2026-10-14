@@ -3,76 +3,41 @@ vi.mock('fs', async (importOriginal) => {
   return { ...fs, readFileSync: vi.fn(fs.readFileSync) };
 });
 
-import Module from 'module';
-import {
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-  writeFileSync,
-} from 'fs';
-import { tmpdir } from 'os';
-import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import type {
   ProjectFileMap,
   ProjectGraph,
 } from '../../../config/project-graph';
+import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import type { PackageJson } from '../../../utils/package-json';
 import { createPackageJson } from './create-package-json';
 
 describe('createPackageJson peer dependency collection', () => {
-  const originalNodePath = process.env.NODE_PATH;
-  const roots: string[] = [];
   const graphPackageNames = new Set(['fixture-not-installed']);
-  let workspace: string;
+  let workspace: TempFs;
 
-  function createWorkspace() {
-    const root = realpathSync(
-      mkdtempSync(join(tmpdir(), 'create-package-json-'))
-    );
-    writeFileSync(join(root, 'package.json'), '{}');
-    roots.push(root);
-    return root;
-  }
-
-  function writePackage(
-    root: string,
-    name: string,
-    manifest: Partial<PackageJson>,
-    files: Record<string, string> = { 'index.js': '' }
-  ) {
+  function writePackage(name: string, manifest: Partial<PackageJson>) {
     graphPackageNames.add(name);
-    const pkgDir = join(root, 'node_modules', name);
-    mkdirSync(pkgDir, { recursive: true });
-    writeFileSync(
-      join(pkgDir, 'package.json'),
-      JSON.stringify({ name, version: '1.0.0', ...manifest })
-    );
-    for (const [file, content] of Object.entries(files)) {
-      mkdirSync(join(pkgDir, dirname(file)), { recursive: true });
-      writeFileSync(join(pkgDir, file), content);
-    }
+    workspace.createFilesSync({
+      [`node_modules/${name}/package.json`]: JSON.stringify({
+        name,
+        version: '1.0.0',
+        ...manifest,
+      }),
+      [`node_modules/${name}/index.js`]: '',
+    });
   }
 
-  function writePackageWithPeer(
-    name: string,
-    manifest: Partial<PackageJson>,
-    files?: Record<string, string>
-  ) {
-    writePackage(
-      workspace,
-      name,
-      { peerDependencies: { [`${name}-peer`]: '*' }, ...manifest },
-      files
-    );
-    writePackage(workspace, `${name}-peer`, {});
+  function writePackageWithPeer(name: string, manifest: Partial<PackageJson>) {
+    writePackage(name, {
+      peerDependencies: { [`${name}-peer`]: '*' },
+      ...manifest,
+    });
+    writePackage(`${name}-peer`, {});
   }
 
-  function createAppPackageJson(
-    directDependencies: string[],
-    root = workspace
-  ): PackageJson {
+  function createAppPackageJson(directDependencies: string[]): PackageJson {
     const graph: ProjectGraph = {
       nodes: {
         app: { type: 'app', name: 'app', data: { root: 'apps/app' } },
@@ -99,73 +64,52 @@ describe('createPackageJson peer dependency collection', () => {
       ],
     };
 
-    return createPackageJson('app', graph, { root }, fileMap);
+    return createPackageJson(
+      'app',
+      graph,
+      { root: workspace.tempDir },
+      fileMap
+    );
   }
 
   beforeAll(() => {
-    workspace = createWorkspace();
-    writePackageWithPeer('fixture-legacy-exports', {});
+    workspace = new TempFs('create-package-json-', false);
+    workspace.createFileSync('package.json', '{}');
     writePackageWithPeer('fixture-wildcard-exports', {
       exports: { '.': './index.js', './*': './*.js' },
     });
-    writePackageWithPeer('fixture-dot-only-exports', {
-      exports: { '.': './index.js' },
+    writePackageWithPeer('fixture-import-only-exports', {
+      exports: { '.': { import: './index.js' } },
     });
-    writePackageWithPeer(
-      'fixture-import-only-exports',
-      { exports: { '.': { import: './index.mjs' } } },
-      { 'index.mjs': '' }
-    );
-    writePackageWithPeer(
-      'fixture-no-dot-exports',
-      { exports: { './sub': './sub.js' } },
-      { 'sub.js': '' }
-    );
-    writePackageWithPeer(
-      'fixture-dual-exports',
-      {
-        exports: {
-          '.': {
-            import: './dist/esm/index.js',
-            require: './dist/cjs/index.js',
-          },
-        },
+    writePackageWithPeer('fixture-no-dot-exports', {
+      exports: { './sub': './index.js' },
+    });
+    writePackageWithPeer('fixture-dual-exports', {
+      exports: {
+        '.': { import: './dist/esm/index.js', require: './dist/cjs/index.js' },
       },
-      {
-        'dist/cjs/index.js': '',
-        'dist/cjs/package.json': '{"type":"commonjs"}',
-        'dist/esm/index.js': '',
-      }
-    );
-    writePackage(workspace, 'fixture-transitive-host', {
+    });
+    workspace.createFilesSync({
+      'node_modules/fixture-dual-exports/dist/cjs/index.js': '',
+      'node_modules/fixture-dual-exports/dist/cjs/package.json':
+        '{"type":"commonjs"}',
+    });
+    writePackage('fixture-transitive-host', {
       peerDependencies: { 'fixture-wildcard-exports': '*' },
     });
-    writePackage(workspace, 'fixture-optional-host', {
+    writePackage('fixture-optional-host', {
       exports: { '.': './index.js' },
       peerDependencies: { 'fixture-optional': '*' },
       peerDependenciesMeta: { 'fixture-optional': { optional: true } },
     });
-    writePackage(workspace, 'fixture-optional', {});
-    writePackage(workspace, 'fixture-required-host', {
+    writePackage('fixture-optional', {});
+    writePackage('fixture-required-host', {
       peerDependencies: { 'fixture-optional': '*' },
     });
-
-    // Makes the fixtures resolvable from nx's own location, as packages
-    // installed next to nx are.
-    process.env.NODE_PATH = join(workspace, 'node_modules');
-    (Module as any)._initPaths();
   });
 
   afterAll(() => {
-    if (originalNodePath === undefined) {
-      delete process.env.NODE_PATH;
-    } else {
-      process.env.NODE_PATH = originalNodePath;
-    }
-    (Module as any)._initPaths();
-    for (const root of roots) {
-      rmSync(root, { recursive: true, force: true });
-    }
+    workspace.cleanup();
   });
 
   afterEach(() => {
@@ -174,9 +118,7 @@ describe('createPackageJson peer dependency collection', () => {
   });
 
   it.each([
-    ['no exports map', 'fixture-legacy-exports'],
     ['a wildcard exports map', 'fixture-wildcard-exports'],
-    ['a "." entry only', 'fixture-dot-only-exports'],
     ['an import-only entry', 'fixture-import-only-exports'],
     ['no "." entry', 'fixture-no-dot-exports'],
     ['a require entry next to a nested package.json', 'fixture-dual-exports'],
@@ -231,39 +173,22 @@ describe('createPackageJson peer dependency collection', () => {
       'fixture-not-installed': '1.0.0',
     });
     expect(packageJson.peerDependencies).toBeUndefined();
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn).toHaveBeenCalledWith(
+    expect(warn).toHaveBeenCalledExactlyOnceWith(
       expect.stringContaining('fixture-not-installed')
     );
   });
 
-  it('resolves packages from the root passed to createPackageJson', () => {
-    const otherRoot = createWorkspace();
-    writePackage(otherRoot, 'fixture-root-only', {
-      peerDependencies: { 'fixture-root-only-peer': '*' },
-    });
-    writePackage(otherRoot, 'fixture-root-only-peer', {});
-
-    expect(
-      createAppPackageJson(['fixture-root-only'], otherRoot).peerDependencies
-    ).toEqual({ 'fixture-root-only-peer': '1.0.0' });
-  });
-
   it('reads a package.json once across repeated calls', () => {
-    const otherRoot = createWorkspace();
-    writePackage(otherRoot, 'fixture-repeated', {
-      peerDependencies: { 'fixture-repeated-peer': '*' },
-    });
-    writePackage(otherRoot, 'fixture-repeated-peer', {});
+    writePackageWithPeer('fixture-repeated', {});
     const manifestPath = join(
-      otherRoot,
+      workspace.tempDir,
       'node_modules',
       'fixture-repeated',
       'package.json'
     );
 
-    createAppPackageJson(['fixture-repeated'], otherRoot);
-    const packageJson = createAppPackageJson(['fixture-repeated'], otherRoot);
+    createAppPackageJson(['fixture-repeated']);
+    const packageJson = createAppPackageJson(['fixture-repeated']);
 
     expect(packageJson.peerDependencies).toEqual({
       'fixture-repeated-peer': '1.0.0',

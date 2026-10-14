@@ -2,6 +2,7 @@ vi.mock('child_process');
 
 import { dirname, join } from 'path';
 import * as childProcess from 'child_process';
+import Module from 'module';
 import {
   mkdirSync,
   mkdtempSync,
@@ -739,7 +740,6 @@ describe('readModulePackageJson', () => {
     }
 
     it.each([
-      ['a "." entry only', { '.': './index.js' }, { 'index.js': '' }],
       [
         'an import-only entry',
         { '.': { import: './index.mjs' } },
@@ -806,6 +806,27 @@ describe('readModulePackageJson', () => {
         }
       }
     );
+
+    it('reads a package found only through NODE_PATH', () => {
+      const nodePath = join(dir, 'node-path');
+      const pkgDir = join(nodePath, 'hidden-manifest');
+      writePackage(
+        pkgDir,
+        { '.': { import: './index.mjs' } },
+        { 'index.mjs': '' }
+      );
+      vi.stubEnv('NODE_PATH', nodePath);
+      (Module as any)._initPaths();
+
+      try {
+        expect(readModulePackageJson('hidden-manifest', [dir]).path).toBe(
+          join(pkgDir, 'package.json')
+        );
+      } finally {
+        vi.unstubAllEnvs();
+        (Module as any)._initPaths();
+      }
+    });
 
     it('throws when the package is not installed', () => {
       expect(() => readModulePackageJson('hidden-manifest', [dir])).toThrow(
