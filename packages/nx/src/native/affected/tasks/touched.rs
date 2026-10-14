@@ -344,19 +344,21 @@ fn instruction_matches_detail(
         },
         None => TaskInputMatches::default(),
     };
+    // `project_roots` is an `IgnoredFileSet`'s, see `ScopedMatcher`.
     let collect = |globs: &[String],
                    project: Option<&str>,
-                   scoped: Option<&ScopedMatcher>|
+                   project_roots: &[String]|
      -> anyhow::Result<Vec<InputMatch>> {
         let candidates = under_literal_prefix(globs, changed, changed.candidates(project));
         if candidates.is_empty() {
             return Ok(vec![]);
         }
         let full = build_glob_set(&fileset_patterns(globs))?;
+        let scoped = ScopedMatcher::new(globs, project_roots)?;
         // Scoped before `find`, so a nested-project match can't hide a later one.
         let matches = |i: usize| {
             let file = &changed.files[i];
-            full.is_match(file) && scoped.is_none_or(|s| s.admits(file))
+            full.is_match(file) && scoped.as_ref().is_none_or(|s| s.admits(file))
         };
         if !detail {
             return Ok(candidates
@@ -407,18 +409,17 @@ fn instruction_matches_detail(
 
     match instruction {
         HashInstruction::WorkspaceFileSet(file_sets) => {
-            collect(&globs_from_workspace_globs(file_sets), None, None).map(of_files)
+            collect(&globs_from_workspace_globs(file_sets), None, &[]).map(of_files)
         }
         HashInstruction::ProjectFileSet(project, file_sets) => {
-            collect(file_sets, Some(project), None).map(of_files)
+            collect(file_sets, Some(project), &[]).map(of_files)
         }
         HashInstruction::IgnoredFileSet {
             globs,
             project_roots,
         } => {
             let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
-            let scoped = ScopedMatcher::new(&globs, project_roots)?;
-            collect(&globs, None, scoped.as_ref()).map(of_files)
+            collect(&globs, None, project_roots).map(of_files)
         }
         HashInstruction::JsonFileSet(json)
             if json.fields.is_some() || json.exclude_fields.is_some() =>
@@ -435,11 +436,11 @@ fn instruction_matches_detail(
             ))
         }
         HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
-            Some(project) => collect(std::slice::from_ref(&json.json_path), Some(project), None),
+            Some(project) => collect(std::slice::from_ref(&json.json_path), Some(project), &[]),
             None => collect(
                 &globs_from_workspace_globs(std::slice::from_ref(&json.json_path)),
                 None,
-                None,
+                &[],
             ),
         }
         .map(of_files),
