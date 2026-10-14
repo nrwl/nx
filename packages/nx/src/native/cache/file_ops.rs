@@ -104,37 +104,25 @@ pub(crate) fn copy_and_list(
     Ok((size as i64, written))
 }
 
-/// `fs::copy`, keeping the source's modified time as macOS already does. Linux
-/// and Windows stamp the copy "now", so a restored output looks newer than
+/// `fs::copy`, which keeps the source's modified time on macOS and Windows.
+/// Elsewhere the copy is stamped "now", so a restored output looks newer than
 /// sources edited since and incremental tools skip real work.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 fn copy_file(src: &Path, dest: &Path) -> io::Result<u64> {
     fs::copy(src, dest)
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", windows)))]
 fn copy_file(src: &Path, dest: &Path) -> io::Result<u64> {
     let size = fs::copy(src, dest)?;
+    // Setting explicit times needs ownership, not write access.
     let kept = fs::metadata(src)
         .and_then(|m| m.modified())
-        .and_then(|modified| open_for_times(dest)?.set_modified(modified));
+        .and_then(|modified| fs::File::open(dest)?.set_modified(modified));
     if let Err(e) = kept {
         trace!("Could not keep the modified time of {:?}: {}", dest, e);
     }
     Ok(size)
-}
-
-#[cfg(windows)]
-fn open_for_times(path: &Path) -> io::Result<fs::File> {
-    use std::os::windows::fs::OpenOptionsExt;
-    // FILE_WRITE_ATTRIBUTES: a read-only copy cannot be opened for writing.
-    fs::OpenOptions::new().access_mode(0x100).open(path)
-}
-
-#[cfg(all(not(windows), any(not(target_os = "macos"), test)))]
-fn open_for_times(path: &Path) -> io::Result<fs::File> {
-    // Setting explicit times needs ownership, not write access.
-    fs::File::open(path)
 }
 
 /// Create `dir` and missing ancestors without traversing a symlink at or below
@@ -364,7 +352,12 @@ mod test {
 
     fn backdate(path: &Path) -> std::time::SystemTime {
         let old = std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(1_577_836_800);
-        open_for_times(path).unwrap().set_modified(old).unwrap();
+        fs::OpenOptions::new()
+            .write(true)
+            .open(path)
+            .unwrap()
+            .set_modified(old)
+            .unwrap();
         old
     }
 
