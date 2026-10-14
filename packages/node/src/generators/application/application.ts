@@ -157,6 +157,18 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         })
       );
     }
+  } else if (options.bundler === 'rspack') {
+    const { rspackInitGenerator } = ensurePackage<typeof import('@nx/rspack')>(
+      '@nx/rspack',
+      nxVersion
+    );
+    tasks.push(
+      await rspackInitGenerator(tree, {
+        addPlugin: options.addPlugin,
+        framework: options.isNest ? 'nest' : 'none',
+        rootProject: options.rootProject,
+      })
+    );
   }
 
   addAppFiles(tree, options);

@@ -44,6 +44,13 @@
       "type": "string",
       "enum": ["none", "prettier", "oxfmt"]
     },
+    "bundler": {
+      "description": "Bundler which is used to package the application. `esbuild` is not offered because it does not emit `emitDecoratorMetadata`, which Nest needs to resolve constructor injection.",
+      "type": "string",
+      "enum": ["webpack", "rspack"],
+      "default": "webpack",
+      "x-priority": "important"
+    },
     "unitTestRunner": {
       "description": "Test runner to use for unit tests.",
       "type": "string",
