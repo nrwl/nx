@@ -1,6 +1,5 @@
 package dev.nx.maven.utils
 
-import dev.nx.maven.GitIgnoreClassifier
 import org.apache.maven.execution.DefaultMavenExecutionRequest
 import org.apache.maven.execution.DefaultMavenExecutionResult
 import org.apache.maven.execution.MavenSession
@@ -45,19 +44,42 @@ class MojoAnalyzerTest {
     )
   }
 
-  private fun outputsOf(artifactId: String, goal: String, outputDirectory: String): Set<String> {
+  @Test
+  fun `shade outputs only the jars and the dependency-reduced pom`() {
+    assertEquals(
+      setOf("{projectRoot}/target/*.jar", "{projectRoot}/dependency-reduced-pom.xml"),
+      outputsOf(
+        "maven-shade-plugin", "shade", "target/classes",
+        fileParameter("outputDirectory", "\${project.build.directory}"),
+        fileParameter("dependencyReducedPomLocation", "\${basedir}/dependency-reduced-pom.xml"),
+      )
+    )
+  }
+
+  private fun fileParameter(name: String, defaultValue: String? = null) = Parameter().apply {
+    this.name = name
+    type = "java.io.File"
+    this.defaultValue = defaultValue
+  }
+
+  private fun outputsOf(
+    artifactId: String,
+    goal: String,
+    outputDirectory: String,
+    vararg parameters: Parameter = arrayOf(fileParameter("outputDirectory")),
+  ): Set<String> {
     val basedir = File(workspaceRoot, "app")
     val project = MavenProject(Model().apply {
-      build = Build().apply { this.outputDirectory = File(basedir, outputDirectory).path }
+      build = Build().apply {
+        directory = File(basedir, "target").path
+        this.outputDirectory = File(basedir, outputDirectory).path
+      }
     }).apply { file = File(basedir, "pom.xml") }
 
     val pluginDescriptor = PluginDescriptor().apply { this.artifactId = artifactId }
     pluginDescriptor.addMojo(MojoDescriptor().apply {
       this.goal = goal
-      addParameter(Parameter().apply {
-        name = "outputDirectory"
-        type = "java.io.File"
-      })
+      parameters.forEach { addParameter(it) }
     })
 
     val analyzer = MojoAnalyzer(
@@ -65,7 +87,6 @@ class MojoAnalyzerTest {
         MavenSession(DefaultRepositorySystemSession { false }, DefaultMavenExecutionRequest(), DefaultMavenExecutionResult())
       ),
       PathFormatter(),
-      GitIgnoreClassifier(workspaceRoot),
       workspaceRoot,
     )
     return analyzer.analyzeMojo(pluginDescriptor, goal, project)!!.outputs
