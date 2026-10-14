@@ -84,7 +84,7 @@ Add a `rolldown.config.ts` to an existing project with the following command:
 nx g @nx/rolldown:configuration my-project
 ```
 
-The generated configuration bundles `src/main.ts` (or `src/index.ts`) for Node.js. Packages listed in `dependencies` and `peerDependencies` stay out of the bundle and load from `node_modules` at runtime, so native addons and packages that use dynamic `require` keep working. Pass `--externalDependencies=false` to bundle them, `--format=cjs` for CommonJS output, or `--platform=browser` to bundle everything for the browser.
+The generated configuration bundles `src/main.ts` (or `src/index.ts`) for Node.js. Packages listed in `dependencies` stay out of the bundle and load from `node_modules` at runtime, so native addons and packages that use dynamic `require` keep working. Pass `--externalDependencies=false` to bundle them, `--format=cjs` for CommonJS output, or `--platform=browser` to bundle everything for the browser.
 
 ### Generate a Node application using Rolldown
 

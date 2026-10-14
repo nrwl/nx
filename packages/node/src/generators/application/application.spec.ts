@@ -1861,10 +1861,7 @@ describe('app', () => {
           import packageJson from './package.json' with { type: 'json' };
 
           // Installed at runtime instead of bundled (native addons, dynamic requires).
-          const dependencies = Object.keys({
-            ...packageJson.dependencies,
-            ...packageJson.peerDependencies,
-          });
+          const dependencies = Object.keys(packageJson.dependencies);
 
           export default defineConfig([
             {

@@ -73,10 +73,7 @@ ${
 }import packageJson from '${packageJsonPath}' with { type: 'json' };
 
 // Installed at runtime instead of bundled (native addons, dynamic requires).
-const dependencies = Object.keys({
-  ...packageJson.dependencies,
-  ...packageJson.peerDependencies,
-});`
+const dependencies = Object.keys(packageJson.dependencies);`
         : ''
     }
 
