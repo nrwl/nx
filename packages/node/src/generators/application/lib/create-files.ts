@@ -64,6 +64,9 @@ export function addAppFiles(tree: Tree, options: NormalizedSchema) {
           tree,
           options.appProjectRoot
         ),
+        importExtension: options.serveRuntime === 'node' ? '.ts' : '',
+        dirname:
+          options.serveRuntime === 'node' ? 'import.meta.dirname' : '__dirname',
       }
     );
   }

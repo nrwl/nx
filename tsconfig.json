@@ -83,6 +83,9 @@
       "path": "./packages/rollup"
     },
     {
+      "path": "./packages/rolldown"
+    },
+    {
       "path": "./packages/rsbuild"
     },
     {
