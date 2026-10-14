@@ -136,6 +136,9 @@ describe('@nx/rspack', () => {
                         "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
+                    "readyWhen": {
+                      "port": "{options.port ?? 9000}",
+                    },
                   },
                   "serve": {
                     "command": "rspack serve",
@@ -158,6 +161,9 @@ describe('@nx/rspack', () => {
                         "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
+                    "readyWhen": {
+                      "port": "{options.port ?? 9000}",
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -179,6 +185,9 @@ describe('@nx/rspack', () => {
                       "port": 9000,
                       "spa": true,
                     },
+                    "readyWhen": {
+                      "port": "{options.port}",
+                    },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -194,6 +203,55 @@ describe('@nx/rspack', () => {
         ],
       ]
     `);
+  });
+
+  it.each([
+    ['no devServer', `export default {};`, 8080],
+    ['an auto port', `export default { devServer: { port: 'auto' } };`, 8080],
+    [
+      'a devServer on a later config',
+      `export default [{ name: 'server' }, { name: 'client', devServer: { port: 4300 } }];`,
+      4300,
+    ],
+  ])('probes the dev server port for %s', async (_, config, expectedPort) => {
+    tempFs.createFileSync('my-app/rspack.config.ts', config);
+
+    const nodes = await createNodesFunction(
+      ['my-app/rspack.config.ts'],
+      {},
+      context
+    );
+
+    const { targets } = nodes[0][1].projects['my-app'];
+    for (const target of ['serve', 'preview']) {
+      expect(targets[target].readyWhen).toEqual({
+        port: `{options.port ?? ${expectedPort}}`,
+      });
+    }
+  });
+
+  it('reads the build outputs with the build env and the dev server port with the serve env', async () => {
+    tempFs.createFileSync(
+      'my-app/rspack.config.ts',
+      `export default (env) => ({
+        output: { path: env.RSPACK_SERVE ? 'dist/serve' : 'dist/build' },
+        devServer: { port: env.RSPACK_SERVE ? 4300 : 9000 },
+      });`
+    );
+
+    const nodes = await createNodesFunction(
+      ['my-app/rspack.config.ts'],
+      {},
+      context
+    );
+
+    const { targets } = nodes[0][1].projects['my-app'];
+    expect(targets.build.outputs).toEqual(['{projectRoot}/dist/build']);
+    for (const target of ['serve', 'preview']) {
+      expect(targets[target].readyWhen).toEqual({
+        port: '{options.port ?? 4300}',
+      });
+    }
   });
 
   it('adds the pnpm install settings inputs in a pnpm workspace', async () => {

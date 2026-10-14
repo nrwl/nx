@@ -29,6 +29,7 @@ import {
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'fs';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
+import { isNxRspackComposablePlugin } from '../utils/config';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
 export interface RspackPluginOptions {
@@ -191,6 +192,17 @@ async function createRspackTargets(
 
   const targets = {};
 
+  // rspack serve calls a function config with its serve env
+  const serveOptions = takesEnv(rspackConfig)
+    ? await readRspackOptions(rspackConfig, { RSPACK_SERVE: true })
+    : rspackOptions;
+  const devServer = serveOptions.find((config) => config.devServer)?.devServer;
+  const devServerReadyWhen: TargetConfiguration['readyWhen'] = {
+    port: `{options.port ?? ${getDevServerPort(
+      devServer ? devServer.port : undefined
+    )}}`,
+  };
+
   const env: NodeJS.ProcessEnv = {};
   const isTsConfig = ['.ts', '.cts', '.mts'].includes(extname(configFilePath));
   if (isTsConfig) {
@@ -241,6 +253,7 @@ async function createRspackTargets(
 
   targets[options.serveTargetName] = {
     continuous: true,
+    readyWhen: devServerReadyWhen,
     inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
@@ -252,6 +265,7 @@ async function createRspackTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    readyWhen: devServerReadyWhen,
     inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
@@ -264,6 +278,7 @@ async function createRspackTargets(
   targets[options.serveStaticTargetName] = {
     dependsOn: [`${options.buildTargetName}`],
     continuous: true,
+    readyWhen: { port: '{options.port}' },
     inputs: [...buildInputs],
     executor: '@nx/web:file-server',
     options: {
@@ -311,6 +326,18 @@ function normalizeOptions(options: RspackPluginOptions): RspackPluginOptions {
   options.previewTargetName ??= 'preview';
   options.serveStaticTargetName ??= 'serve-static';
   return options;
+}
+
+function takesEnv(config: unknown): boolean {
+  return Array.isArray(config)
+    ? config.some(takesEnv)
+    : typeof config === 'function' && !isNxRspackComposablePlugin(config);
+}
+
+// The rspack dev server picks a free port from 8080 when none is set
+function getDevServerPort(port: unknown): number {
+  const value = Number(port);
+  return Number.isInteger(value) && value > 0 ? value : 8080;
 }
 
 function normalizeOutputPath(

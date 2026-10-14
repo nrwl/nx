@@ -97,6 +97,8 @@ The `@nx/rspack/plugin` is configured in the `plugins` array in `nx.json`.
 
 The build task depends on builds of project dependencies. When TypeScript project references are enabled, the tasks also run the TypeScript sync generator.
 
+The `serve` and `preview` tasks are [ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready) once the dev server port accepts connections. A task that depends on them with `waitFor: "ready"` waits until then. Nx checks the `--port` value when you pass one, otherwise `devServer.port` from the Rspack configuration, otherwise `8080`. The `serve-static` task is ready once its `port` option accepts connections. When the port Nx checks is taken, the file server moves to the next free port. The dev server does the same when neither `--port` nor `devServer.port` is set. Nx keeps checking the original port, so the process already listening there counts as ready. To check something else, set `readyWhen` on the target in `project.json`. It replaces the inferred check.
+
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/rspack/plugin`.
 
 ## Using @nx/rspack

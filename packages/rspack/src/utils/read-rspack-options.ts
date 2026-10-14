@@ -11,9 +11,11 @@ import { readNxJsonFromDisk } from '@nx/devkit/internal';
  * 4. A Nx-specific composable function that takes Nx context, rspack config, and returns the config object.
  *
  * @param rspackConfig
+ * @param env The env a standard function is called with. Defaults to the production build env.
  */
 export async function readRspackOptions(
-  rspackConfig: unknown
+  rspackConfig: unknown,
+  env: Record<string, unknown> = { production: true }
 ): Promise<Configuration[]> {
   const configs: Configuration[] = [];
 
@@ -49,12 +51,7 @@ export async function readRspackOptions(
         }
       );
     } else if (typeof config === 'function') {
-      const resolved = await config(
-        {
-          production: true, // we want the production build options
-        },
-        {}
-      );
+      const resolved = await config(env, {});
       // If the resolved configuration is an array, resolve each configuration
       return Array.isArray(resolved)
         ? (await Promise.all(resolved.map(resolveConfig))).flat()
