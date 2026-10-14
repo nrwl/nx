@@ -512,12 +512,7 @@ function recursivelyCollectPeerDependencies(
 
   const packageName = npmPackage.data.packageName;
   try {
-    // nx's own location first: under pnpm it reaches the hidden hoisted
-    // .pnpm/node_modules, which the workspace root does not.
-    const { packageJson } = readModulePackageJson(packageName, [
-      __dirname,
-      root,
-    ]);
+    const packageJson = readDependencyPackageJson(packageName, root);
     if (!packageJson.peerDependencies) {
       return npmDeps;
     }
@@ -556,4 +551,22 @@ function recursivelyCollectPeerDependencies(
     );
     return npmDeps;
   }
+}
+
+// Watch builds collect peers on every compilation, so read each manifest once.
+const dependencyPackageJsonCache = new Map<string, PackageJson>();
+
+function readDependencyPackageJson(
+  packageName: string,
+  root: string
+): PackageJson {
+  const cacheKey = `${root}\0${packageName}`;
+  let packageJson = dependencyPackageJsonCache.get(cacheKey);
+  if (!packageJson) {
+    // nx's own location first: under pnpm it reaches the hidden hoisted
+    // .pnpm/node_modules, which the workspace root does not.
+    ({ packageJson } = readModulePackageJson(packageName, [__dirname, root]));
+    dependencyPackageJsonCache.set(cacheKey, packageJson);
+  }
+  return packageJson;
 }

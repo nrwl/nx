@@ -1,7 +1,13 @@
+vi.mock('fs', async (importOriginal) => {
+  const fs = await importOriginal<typeof import('fs')>();
+  return { ...fs, readFileSync: vi.fn(fs.readFileSync) };
+});
+
 import Module from 'module';
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
   rmSync,
   writeFileSync,
@@ -241,5 +247,31 @@ describe('createPackageJson peer dependency collection', () => {
     expect(
       createAppPackageJson(['fixture-root-only'], otherRoot).peerDependencies
     ).toEqual({ 'fixture-root-only-peer': '1.0.0' });
+  });
+
+  it('reads a package.json once across repeated calls', () => {
+    const otherRoot = createWorkspace();
+    writePackage(otherRoot, 'fixture-repeated', {
+      peerDependencies: { 'fixture-repeated-peer': '*' },
+    });
+    writePackage(otherRoot, 'fixture-repeated-peer', {});
+    const manifestPath = join(
+      otherRoot,
+      'node_modules',
+      'fixture-repeated',
+      'package.json'
+    );
+
+    createAppPackageJson(['fixture-repeated'], otherRoot);
+    const packageJson = createAppPackageJson(['fixture-repeated'], otherRoot);
+
+    expect(packageJson.peerDependencies).toEqual({
+      'fixture-repeated-peer': '1.0.0',
+    });
+    expect(
+      vi
+        .mocked(readFileSync)
+        .mock.calls.filter(([path]) => path === manifestPath)
+    ).toHaveLength(1);
   });
 });
