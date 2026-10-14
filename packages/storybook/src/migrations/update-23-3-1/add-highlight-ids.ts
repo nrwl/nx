@@ -259,8 +259,16 @@ function migrateFile(
         continue;
       }
       if (ts.isPropertyAssignment(idSource)) {
-        changes.push(...fillMissingId(idSource.initializer, id, sourceFile));
-        continue;
+        const value = readIdValue(idSource.initializer);
+        if (value === 'present') {
+          continue;
+        }
+        if (value === 'unknown') {
+          changes.push(
+            ...appendIdFallback(idSource.initializer, id, sourceFile)
+          );
+          continue;
+        }
       }
       if (ts.isShorthandPropertyAssignment(idSource)) {
         changes.push({
@@ -271,8 +279,8 @@ function migrateFile(
         continue;
       }
     }
-    // Not an object literal, or its id comes from a spread or an accessor, so
-    // the id is only known at runtime.
+    // The id comes from elsewhere at runtime, or is always empty. An empty id
+    // can have side effects or read a local `undefined`, so it isn't replaced.
     changes.push(
       {
         type: ChangeType.Insert,
@@ -496,28 +504,20 @@ function findIdSource(
   return source;
 }
 
-function fillMissingId(
+function appendIdFallback(
   value: Expression,
   id: string,
   sourceFile: SourceFile
 ): StringChange[] {
-  const start = value.getStart(sourceFile);
-  const end = value.getEnd();
-  const state = readIdValue(value);
-  if (state === 'present') {
-    return [];
-  }
-  if (state === 'missing') {
-    return [
-      { type: ChangeType.Insert, index: start, text: id },
-      { type: ChangeType.Delete, start, length: end - start },
-    ];
-  }
   return ts.isLeftHandSideExpression(value)
-    ? [{ type: ChangeType.Insert, index: end, text: ` || ${id}` }]
+    ? [{ type: ChangeType.Insert, index: value.getEnd(), text: ` || ${id}` }]
     : [
-        { type: ChangeType.Insert, index: start, text: '(' },
-        { type: ChangeType.Insert, index: end, text: `) || ${id}` },
+        {
+          type: ChangeType.Insert,
+          index: value.getStart(sourceFile),
+          text: '(',
+        },
+        { type: ChangeType.Insert, index: value.getEnd(), text: `) || ${id}` },
       ];
 }
 

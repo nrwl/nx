@@ -12,9 +12,8 @@ The id combines the file path with a counter that increases on every emit. Repea
 When a payload already sets an `id`, the generated id is only a fallback:
 
 - An `id` that is always a non-empty string, such as `'headings'` or `` `row-${index}` ``, stays unchanged.
-- An `id` set to `undefined`, `null` or an empty string is replaced.
+- A payload whose `id` is always empty, such as `undefined` or `''`, is wrapped in a `withHighlightId(payload, id)` function declared in the file. So is a payload that isn't an object literal, or whose `id` can come from a spread. The wrapper keeps the payload's own `id` unless that id is missing or empty.
 - Any other `id` becomes `id: <value> || <generated id>`.
-- A payload that isn't an object literal, or whose `id` can come from a spread, is wrapped in a `withHighlightId(payload, id)` function declared in the file. It keeps the payload's own `id` unless that id is missing or empty.
 
 Legacy payloads that use `elements` stay unchanged.
 
