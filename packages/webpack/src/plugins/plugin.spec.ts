@@ -202,6 +202,7 @@ describe('@nx/webpack/plugin', () => {
                       },
                     },
                     "readyWhen": {
+                      "host": "{options.host ?? localhost}",
                       "port": "{options.port ?? 9000}",
                     },
                   },
@@ -249,6 +250,7 @@ describe('@nx/webpack/plugin', () => {
                       },
                     },
                     "readyWhen": {
+                      "host": "{options.host ?? localhost}",
                       "port": "{options.port ?? 9000}",
                     },
                   },
@@ -281,6 +283,7 @@ describe('@nx/webpack/plugin', () => {
                       "spa": true,
                     },
                     "readyWhen": {
+                      "host": "{options.host}",
                       "port": "{options.port}",
                     },
                   },
@@ -301,14 +304,58 @@ describe('@nx/webpack/plugin', () => {
   });
 
   it.each([
-    ['no devServer', { output: { path: 'dist/foo' } }, 8080],
-    ['an auto port', { devServer: { port: 'auto' } }, 8080],
+    [
+      'no devServer',
+      { output: { path: 'dist/foo' } },
+      {
+        port: '{options.port ?? env.WEBPACK_DEV_SERVER_BASE_PORT ?? 8080}',
+        host: '{options.host ?? localhost}',
+      },
+    ],
+    [
+      'an auto port',
+      { devServer: { port: 'auto' } },
+      {
+        port: '{options.port ?? env.WEBPACK_DEV_SERVER_BASE_PORT ?? 8080}',
+        host: '{options.host ?? localhost}',
+      },
+    ],
+    [
+      'a port of 0',
+      { devServer: { port: 0 } },
+      { port: '{options.port ?? 0}', host: '{options.host ?? localhost}' },
+    ],
     [
       'a devServer on a later config',
       [{ name: 'server' }, { name: 'client', devServer: { port: 4300 } }],
-      4300,
+      { port: '{options.port ?? 4300}', host: '{options.host ?? localhost}' },
     ],
-  ])('probes the dev server port for %s', async (_, config, expectedPort) => {
+    [
+      'several devServer configs',
+      [
+        { name: 'server', devServer: { port: 4300 } },
+        { name: 'client', devServer: { port: 4400 } },
+      ],
+      { port: '{options.port ?? 4400}', host: '{options.host ?? localhost}' },
+    ],
+    ['an ipc devServer', { devServer: { port: 4300, ipc: true } }, undefined],
+    [
+      'a fixed host',
+      { devServer: { port: 4300, host: '192.168.1.20' } },
+      {
+        port: '{options.port ?? 4300}',
+        host: '{options.host ?? 192.168.1.20}',
+      },
+    ],
+    [
+      'a host that reads as a token',
+      { devServer: { port: 4300, host: 'env.example.com' } },
+      {
+        port: '{options.port ?? 4300}',
+        host: '{options.host ?? Env.example.com}',
+      },
+    ],
+  ])('infers the dev server readyWhen for %s', async (_, config, expected) => {
     mockWebpackConfig(config);
 
     const nodes = await createNodesFunction(
@@ -319,9 +366,7 @@ describe('@nx/webpack/plugin', () => {
 
     const { targets } = nodes[0][1].projects['my-app'];
     for (const target of ['serve', 'preview']) {
-      expect(targets[target].readyWhen).toEqual({
-        port: `{options.port ?? ${expectedPort}}`,
-      });
+      expect(targets[target].readyWhen).toEqual(expected);
     }
   });
 
@@ -340,9 +385,7 @@ describe('@nx/webpack/plugin', () => {
     const { targets } = nodes[0][1].projects['my-app'];
     expect(targets.build.outputs).toEqual(['{projectRoot}/dist/build']);
     for (const target of ['serve', 'preview']) {
-      expect(targets[target].readyWhen).toEqual({
-        port: '{options.port ?? 4300}',
-      });
+      expect(targets[target].readyWhen.port).toBe('{options.port ?? 4300}');
     }
   });
 

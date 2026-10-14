@@ -196,11 +196,11 @@ async function createWebpackTargets(
   const serveOptions = takesEnv(webpackConfig)
     ? await readWebpackOptions(webpackConfig, { WEBPACK_SERVE: true })
     : webpackOptions;
-  const devServerReadyWhen: TargetConfiguration['readyWhen'] = {
-    port: `{options.port ?? ${getDevServerPort(
-      serveOptions.find((config) => config.devServer)?.devServer?.port
-    )}}`,
-  };
+  // webpack-cli starts the dev servers one after another, so the last one
+  // listens only once all of them do
+  const devServerReadyWhen = getDevServerReadyWhen(
+    serveOptions.filter((config) => config.devServer).at(-1)?.devServer
+  );
 
   const buildInputs: TargetConfiguration['inputs'] = [
     ...('production' in namedInputs
@@ -251,7 +251,7 @@ async function createWebpackTargets(
 
   targets[options.serveTargetName] = {
     continuous: true,
-    readyWhen: devServerReadyWhen,
+    ...(devServerReadyWhen && { readyWhen: devServerReadyWhen }),
     inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
@@ -274,7 +274,7 @@ async function createWebpackTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
-    readyWhen: devServerReadyWhen,
+    ...(devServerReadyWhen && { readyWhen: devServerReadyWhen }),
     inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
@@ -297,7 +297,7 @@ async function createWebpackTargets(
 
   targets[options.serveStaticTargetName] = {
     continuous: true,
-    readyWhen: { port: '{options.port}' },
+    readyWhen: { port: '{options.port}', host: '{options.host}' },
     inputs: [...buildInputs],
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
@@ -345,10 +345,44 @@ function takesEnv(config: unknown): boolean {
     : typeof config === 'function' && !isNxWebpackComposablePlugin(config);
 }
 
-// webpack-dev-server picks a free port from 8080 when none is set
-function getDevServerPort(port: unknown): number {
-  const value = Number(port);
-  return Number.isInteger(value) && value > 0 ? value : 8080;
+// A fallback starting with one of these reads as an Nx token
+const TOKEN_NAMES = new Set([
+  'workspaceRoot',
+  'projectRoot',
+  'projectName',
+  'options',
+  'env',
+]);
+
+function getDevServerReadyWhen(
+  devServer: { port?: unknown; host?: unknown; ipc?: unknown } | undefined
+): TargetConfiguration['readyWhen'] {
+  // With ipc the dev server listens on a socket, which no probe can check
+  if (devServer?.ipc) {
+    return undefined;
+  }
+  return {
+    port: `{options.port ?? ${getDevServerPort(devServer?.port)}}`,
+    host: `{options.host ?? ${getDevServerHost(devServer?.host)}}`,
+  };
+}
+
+// With the port unset or 'auto', the dev server picks a free one starting at
+// this env var, else 8080
+function getDevServerPort(port: unknown): string {
+  return port === undefined || port === null || port === 'auto'
+    ? 'env.WEBPACK_DEV_SERVER_BASE_PORT ?? 8080'
+    : String(port);
+}
+
+function getDevServerHost(host: unknown): string {
+  if (typeof host !== 'string' || !host) {
+    return 'localhost';
+  }
+  // Host names are case-insensitive, so a capitalized first label names the
+  // same host without reading as a token
+  const label = host.split('.')[0];
+  return TOKEN_NAMES.has(label) ? label[0].toUpperCase() + host.slice(1) : host;
 }
 
 function normalizeOutputPath(
