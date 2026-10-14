@@ -8,7 +8,7 @@ Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 # Agent discovery via RFC 8288 Link headers (see https://isitagentready.com/.well-known/agent-skills/link-headers/SKILL.md)
 # Points AI agents/crawlers at machine-readable entry points hosted on nx.dev.
 
-Link = '''</llms.txt>; rel="describedby"; type="text/plain", </llms-full.txt>; rel="service-doc"; type="text/plain", </sitemap.xml>; rel="sitemap"; type="application/xml", </docs/fonts/instrument-sans-400.woff2>; rel="preload"; as="font"; type="font/woff2"; crossorigin, </docs/fonts/instrument-sans-600.woff2>; rel="preload"; as="font"; type="font/woff2"; crossorigin, </docs/fonts/server-mono-400.woff2>; rel="preload"; as="font"; type="font/woff2"; crossorigin'''
+Link = '''</llms.txt>; rel="describedby"; type="text/plain", </llms-full.txt>; rel="service-doc"; type="text/plain", </sitemap.xml>; rel="sitemap"; type="application/xml"'''
 
 
 # Disable gradle and maven plugins on Netlify

@@ -377,8 +377,8 @@
 }
 
 /* Brand fonts: Instrument Sans for text, Server Mono for code. The three
-   files used above the fold are preloaded through Link headers in
-   netlify.toml. */
+   files used above the fold are preloaded through Link headers set in
+   netlify/edge-functions/add-link-headers.ts. */
 @font-face {
   font-family: 'Instrument Sans';
   font-style: normal;
