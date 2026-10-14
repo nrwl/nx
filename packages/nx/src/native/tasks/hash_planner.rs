@@ -3520,4 +3520,68 @@ mod nested_project_tests {
             Some(vec![])
         );
     }
+
+    #[test]
+    fn a_recording_hashes_a_nested_project_only_through_its_own_globs() {
+        use crate::native::tasks::hashers::{Source, expand_globs};
+        use crate::native::test_utils::ultracache_configurations;
+        use assert_fs::TempDir;
+        use assert_fs::prelude::*;
+
+        let temp = TempDir::new().unwrap();
+        for path in [
+            "packages/gradle/src/a.ts",
+            "packages/gradle/batch-runner/src/x.kt",
+            "packages/gradle/batch-runner/src/y.kt",
+            "packages/gradle/batch-runner/build/out.jar",
+        ] {
+            temp.child(path).write_str("x").unwrap();
+        }
+        let (_dir, configurations) = ultracache_configurations(&[(
+            "gradle:build",
+            &[
+                "packages/gradle/**/*",
+                "packages/gradle/batch-runner/src/**/*.kt",
+                "!packages/gradle/batch-runner/src/y.kt",
+            ],
+        )]);
+        let plans = planner()
+            .get_plans_materialized(
+                vec!["gradle:build"],
+                task_graph(&[("gradle:build", &[])], &[]),
+                Some(&configurations),
+                &[],
+            )
+            .unwrap();
+        let mut hashed: Vec<String> = plans["gradle:build"]
+            .iter()
+            .filter_map(|instruction| match instruction {
+                HashInstruction::IgnoredFileSet {
+                    globs,
+                    project_roots,
+                } => Some(
+                    expand_globs(
+                        temp.path(),
+                        globs,
+                        project_roots,
+                        &Source::fileset_from_disk(temp.path()),
+                    )
+                    .unwrap()
+                    .files,
+                ),
+                _ => None,
+            })
+            .flatten()
+            .collect();
+        hashed.sort();
+        // The parent glob skips `batch-runner`; its own glob reads `x.kt`, and
+        // the negation still removes `y.kt`.
+        assert_eq!(
+            hashed,
+            vec![
+                "packages/gradle/batch-runner/src/x.kt",
+                "packages/gradle/src/a.ts"
+            ]
+        );
+    }
 }
