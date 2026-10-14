@@ -5,7 +5,13 @@ data class PathPattern(
     val recursive: Boolean = false
 )
 
-data class Parameter(val name: String, val glob: String?, val excludeGlob: String? = null)
+data class Parameter(
+    val name: String,
+    val glob: String?,
+    val excludeGlob: String? = null,
+    // Build output: hashed from disk, since it's gitignored wherever Maven puts it.
+    val includeIgnored: Boolean = false,
+)
 
 data class MojoConfig(
     val inputProperties: Set<String>? = null,
@@ -73,7 +79,7 @@ data class CacheConfig(
                     inputParameters = setOf(
                         Parameter("compileSourceRoots", "**/*.java"),
                         // Include generated sources by convention
-                        Parameter("buildDirectory", "generated-sources/**/*.java"),
+                        Parameter("buildDirectory", "generated-sources/**/*.java", includeIgnored = true),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", "**/*.class"),
@@ -103,8 +109,8 @@ data class CacheConfig(
                 ),
                 "maven-surefire-plugin:test" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("classesDirectory", null),
-                        Parameter("testClassesDirectory", null),
+                        Parameter("classesDirectory", null, includeIgnored = true),
+                        Parameter("testClassesDirectory", null, includeIgnored = true),
                         Parameter("suiteXmlFiles", null),
                     ),
                     outputParameters = setOf(
@@ -113,8 +119,8 @@ data class CacheConfig(
                 ),
                 "maven-failsafe-plugin:integration-test" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("classesDirectory", null),
-                        Parameter("testClassesDirectory", null),
+                        Parameter("classesDirectory", null, includeIgnored = true),
+                        Parameter("testClassesDirectory", null, includeIgnored = true),
                         Parameter("testSourceDirectory", null),
                         Parameter("suiteXmlFiles", null),
                     ),
@@ -124,15 +130,15 @@ data class CacheConfig(
                 ),
                 "maven-failsafe-plugin:verify" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("summaryFile", null),
-                        Parameter("summaryFiles", null),
-                        Parameter("testClassesDirectory", null),
+                        Parameter("summaryFile", null, includeIgnored = true),
+                        Parameter("summaryFiles", null, includeIgnored = true),
+                        Parameter("testClassesDirectory", null, includeIgnored = true),
                     ),
                     outputParameters = emptySet()
                 ),
                 "maven-jar-plugin:jar" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("classesDirectory", null),
+                        Parameter("classesDirectory", null, includeIgnored = true),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", "*.jar"),
@@ -140,7 +146,7 @@ data class CacheConfig(
                 ),
                 "maven-jar-plugin:test-jar" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("testClassesDirectory", null),
+                        Parameter("testClassesDirectory", null, includeIgnored = true),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", "*.jar"),
@@ -167,7 +173,7 @@ data class CacheConfig(
                 ),
                 "spring-boot-maven-plugin:run" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("testClassesDirectory", null),
+                        Parameter("testClassesDirectory", null, includeIgnored = true),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", "*.jar"),
@@ -175,8 +181,8 @@ data class CacheConfig(
                 ),
                 "spring-boot-maven-plugin:repackage" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("classesDirectory", null),
-                        Parameter("testClassesDirectory", null),
+                        Parameter("classesDirectory", null, includeIgnored = true),
+                        Parameter("testClassesDirectory", null, includeIgnored = true),
                         Parameter("embeddedLaunchScript", null),
                     ),
                     outputParameters = setOf(

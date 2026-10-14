@@ -74,15 +74,13 @@ class MojoAnalyzer(
     val inputs = mutableSetOf<String>()
     val ignoredInputs = mutableSetOf<String>()
 
-    // Build output is gitignored, so only an includeIgnored fileset can hash it.
-    val buildDirectory = File(project.build.directory)
     fun isUnder(path: File, dir: File): Boolean {
       val dirPath = dir.canonicalPath
       return path.canonicalPath.let { it == dirPath || it.startsWith(dirPath + File.separator) }
     }
 
-    fun addInput(path: File, pathWithGlob: File) {
-      if (!isUnder(path, buildDirectory)) {
+    fun addInput(path: File, pathWithGlob: File, includeIgnored: Boolean = false) {
+      if (!includeIgnored) {
         inputs.add(pathResolver.formatInputPath(pathWithGlob, projectRoot = project.basedir))
       } else if (isUnder(path, project.basedir)) {
         ignoredInputs.add(pathResolver.formatInputPath(pathWithGlob, projectRoot = project.basedir))
@@ -99,7 +97,7 @@ class MojoAnalyzer(
       val paths = expressionResolver.resolveParameter(parameter, project)
 
       paths.forEach { path ->
-        addInput(File(path), File(paramConfig.glob?.let { "$path/$it" } ?: path))
+        addInput(File(path), File(paramConfig.glob?.let { "$path/$it" } ?: path), paramConfig.includeIgnored)
       }
     }
 

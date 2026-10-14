@@ -56,6 +56,26 @@ class MojoAnalyzerTest {
     )
   }
 
+  @Test
+  fun `build output inputs are includeIgnored wherever Maven puts them`() {
+    val analysis = analyze(
+      "maven-jar-plugin", "jar", "bin/classes",
+      fileParameter("classesDirectory", "\${project.build.outputDirectory}"),
+    )
+    assertEquals(setOf("{projectRoot}/bin/classes"), analysis.ignoredInputs)
+    assertEquals(emptySet(), analysis.inputs)
+  }
+
+  @Test
+  fun `source inputs are not includeIgnored`() {
+    val analysis = analyze(
+      "maven-war-plugin", "war", "target/classes",
+      fileParameter("warSourceDirectory", "\${basedir}/src/main/webapp"),
+    )
+    assertEquals(setOf("{projectRoot}/src/main/webapp"), analysis.inputs)
+    assertEquals(emptySet(), analysis.ignoredInputs)
+  }
+
   private fun fileParameter(name: String, defaultValue: String? = null) = Parameter().apply {
     this.name = name
     type = "java.io.File"
@@ -67,7 +87,14 @@ class MojoAnalyzerTest {
     goal: String,
     outputDirectory: String,
     vararg parameters: Parameter = arrayOf(fileParameter("outputDirectory")),
-  ): Set<String> {
+  ): Set<String> = analyze(artifactId, goal, outputDirectory, *parameters).outputs
+
+  private fun analyze(
+    artifactId: String,
+    goal: String,
+    outputDirectory: String,
+    vararg parameters: Parameter,
+  ): MojoAnalysis {
     val basedir = File(workspaceRoot, "app")
     val project = MavenProject(Model().apply {
       build = Build().apply {
@@ -89,6 +116,6 @@ class MojoAnalyzerTest {
       PathFormatter(),
       workspaceRoot,
     )
-    return analyzer.analyzeMojo(pluginDescriptor, goal, project)!!.outputs
+    return analyzer.analyzeMojo(pluginDescriptor, goal, project)!!
   }
 }
