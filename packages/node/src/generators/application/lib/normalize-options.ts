@@ -1,9 +1,10 @@
-import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
+import { joinPathFragments, logger, names, readNxJson, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup, normalizeLinterOption } from '@nx/js/internal';
+import { satisfies } from 'semver';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -113,10 +114,19 @@ function getServeRuntime(
   // Node runs TypeScript natively but does not resolve tsconfig path aliases.
   // Its ESM sources import `./x.ts`, which only tsc and rolldown rewrite on build,
   // Jest loads ESM sources as CommonJS, so `--js` and jest apps stay CommonJS on tsx.
-  return isUsingTsSolutionConfig &&
-    (options.bundler === 'tsc' || options.bundler === 'rolldown') &&
-    !options.js &&
-    options.unitTestRunner !== 'jest'
-    ? 'node'
-    : 'tsx';
+  if (
+    !isUsingTsSolutionConfig ||
+    (options.bundler !== 'tsc' && options.bundler !== 'rolldown') ||
+    options.js ||
+    options.unitTestRunner === 'jest'
+  ) {
+    return 'tsx';
+  }
+  if (!satisfies(process.versions.node, '^22.18.0 || >=23.6.0')) {
+    logger.warn(
+      `Node.js ${process.versions.node} cannot run TypeScript natively, so "serve" uses tsx. Use Node.js 22.18 or later to serve with node.`
+    );
+    return 'tsx';
+  }
+  return 'node';
 }

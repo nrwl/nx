@@ -1714,6 +1714,27 @@ describe('app', () => {
       );
     });
 
+    it('should serve with tsx on node versions without native typescript', async () => {
+      const nodeVersion = process.versions.node;
+      Object.defineProperty(process.versions, 'node', { value: '22.17.0' });
+      try {
+        await applicationGenerator(tree, {
+          directory: 'apps/api',
+          framework: 'express',
+          addPlugin: true,
+          useProjectJson: false,
+          skipFormat: true,
+        });
+      } finally {
+        Object.defineProperty(process.versions, 'node', { value: nodeVersion });
+      }
+
+      expect(tree.read('apps/api/src/main.ts', 'utf-8')).toMatch(
+        /^#!\/usr\/bin\/env tsx/
+      );
+      expect(readJson(tree, 'apps/api/package.json').type).toBeUndefined();
+    });
+
     it('should use the target name of a reused tsc app build registration', async () => {
       updateNxJson(tree, {
         ...readNxJson(tree),
