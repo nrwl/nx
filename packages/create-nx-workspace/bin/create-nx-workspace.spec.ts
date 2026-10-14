@@ -579,7 +579,7 @@ describe('determineUnitTestRunner', () => {
         e2eTestRunner: 'jest',
         workspaceType: 'integrated',
       },
-      expected: 'jest',
+      expected: 'vitest',
       excluded: '',
     },
   };

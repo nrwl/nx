@@ -12,4 +12,5 @@ export interface Schema {
   useProjectJson?: boolean;
   /** Name of the app's build target. Defaults to `build`. */
   buildTarget?: string;
+  testRunner?: 'jest' | 'vitest';
 }

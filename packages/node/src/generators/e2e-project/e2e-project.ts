@@ -6,6 +6,7 @@ import {
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -17,6 +18,7 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
+  updateNxJson,
   writeJson,
 } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
@@ -34,8 +36,9 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/internal';
+import { existsSync } from 'node:fs';
 import * as path from 'path';
-import { axiosVersion } from '../../utils/versions';
+import { axiosVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 import {
   findRootJestPreset,
@@ -64,6 +67,11 @@ export async function e2eProjectGeneratorInternal(
   const useCommonJsConfig = jestMajorVersion === null || jestMajorVersion >= 30;
   const jestConfigExt = useCommonJsConfig ? 'cts' : 'ts';
 
+  const dependsOn = [
+    `${options.project}:${options.buildTarget ?? 'build'}`,
+    `${options.project}:serve`,
+  ];
+
   // TODO(@ndcunningham): This is broken.. the outputs are wrong.. and this isn't using the jest generator
   const packageJson: PackageJson = {
     name: options.importPath,
@@ -79,18 +87,19 @@ export async function e2eProjectGeneratorInternal(
           : undefined,
       implicitDependencies: [options.project],
       targets: {
-        e2e: {
-          executor: '@nx/jest:jest',
-          outputs: ['{projectRoot}/test-output/jest/coverage'],
-          options: {
-            jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
-            passWithNoTests: true,
-          },
-          dependsOn: [
-            `${options.project}:${options.buildTarget ?? 'build'}`,
-            `${options.project}:serve`,
-          ],
-        },
+        // @nx/vitest infers the rest of the vitest e2e target.
+        e2e:
+          options.testRunner === 'vitest'
+            ? { dependsOn }
+            : {
+                executor: '@nx/jest:jest',
+                outputs: ['{projectRoot}/test-output/jest/coverage'],
+                options: {
+                  jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
+                  passWithNoTests: true,
+                },
+                dependsOn,
+              },
       },
     };
   } else {
@@ -99,18 +108,18 @@ export async function e2eProjectGeneratorInternal(
       implicitDependencies: [options.project],
       projectType: 'application',
       targets: {
-        e2e: {
-          executor: '@nx/jest:jest',
-          outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
-          options: {
-            jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
-            passWithNoTests: true,
-          },
-          dependsOn: [
-            `${options.project}:${options.buildTarget ?? 'build'}`,
-            `${options.project}:serve`,
-          ],
-        },
+        e2e:
+          options.testRunner === 'vitest'
+            ? { dependsOn }
+            : {
+                executor: '@nx/jest:jest',
+                outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
+                options: {
+                  jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
+                  passWithNoTests: true,
+                },
+                dependsOn,
+              },
       },
     });
   }
@@ -221,6 +230,27 @@ export async function e2eProjectGeneratorInternal(
     );
   }
 
+  if (options.testRunner === 'vitest') {
+    tasks.push(await addVitest(host, options.e2eProjectRoot));
+    host.delete(joinPathFragments(options.e2eProjectRoot, 'jest.config.ts'));
+    for (const file of [
+      'src/test-setup.ts',
+      'src/support/global-teardown.ts',
+    ]) {
+      const filePath = joinPathFragments(options.e2eProjectRoot, file);
+      if (host.exists(filePath)) host.delete(filePath);
+    }
+    for (const dir of ['common', options.projectType]) {
+      const templates = path.join(__dirname, 'files/vitest', dir);
+      if (existsSync(templates)) {
+        generateFiles(host, templates, options.e2eProjectRoot, {
+          ...options,
+          tmpl: '',
+        });
+      }
+    }
+  }
+
   // Rename jest.config.ts to jest.config.cts for Jest 30+
   const jestConfigPath = joinPathFragments(
     options.e2eProjectRoot,
@@ -234,7 +264,9 @@ export async function e2eProjectGeneratorInternal(
   }
 
   if (options.isUsingTsSolutionConfig) {
-    addSwcTestConfig(host, options.e2eProjectRoot, 'es6');
+    if (options.testRunner !== 'vitest') {
+      addSwcTestConfig(host, options.e2eProjectRoot, 'es6');
+    }
     generateFiles(
       host,
       path.join(__dirname, 'files/ts-solution'),
@@ -283,7 +315,7 @@ export async function e2eProjectGeneratorInternal(
         addPlugin: options.addPlugin,
         // The generated e2e specs are Jest; this is what enables the linter's
         // Jest rules.
-        unitTestRunner: 'jest',
+        unitTestRunner: options.testRunner,
       })
     );
   }
@@ -383,10 +415,47 @@ async function normalizeOptions(
     e2eProjectName,
     importPath,
     port: options.port ?? 3000,
+    testRunner: options.testRunner ?? 'jest',
     rootProject: !!options.rootProject,
     isUsingTsSolutionConfig,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
+}
+
+async function addVitest(tree: Tree, e2eProjectRoot: string) {
+  ensurePackage('@nx/vitest', nxVersion);
+  // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
+  // exposes the temp install via `Module._initPaths`, which ESM ignores.
+  const {
+    initGenerator,
+  }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
+  const task = await initGenerator(tree, {
+    addPlugin: false,
+    skipFormat: true,
+  });
+
+  // A scoped registration infers `e2e`; the others would add a `test` target.
+  const include = `${e2eProjectRoot}/**/*`;
+  updateNxJson(tree, {
+    ...readNxJson(tree),
+    plugins: [
+      ...(readNxJson(tree).plugins ?? []).map((p) => {
+        const registration = typeof p === 'string' ? { plugin: p } : p;
+        return registration.plugin === '@nx/vitest'
+          ? {
+              ...registration,
+              exclude: [...(registration.exclude ?? []), include],
+            }
+          : p;
+      }),
+      {
+        plugin: '@nx/vitest',
+        include: [include],
+        options: { testTargetName: 'e2e', testMode: 'run' },
+      },
+    ],
+  });
+  return task;
 }
 
 export default e2eProjectGenerator;

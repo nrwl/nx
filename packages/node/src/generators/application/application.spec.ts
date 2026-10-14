@@ -1544,7 +1544,7 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.allowJs).toBe(true);
     });
 
-    it('should keep tsx serve for fastify', async () => {
+    it('should serve fastify as ESM with node and test it with vitest', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/api',
         framework: 'fastify',
@@ -1554,9 +1554,107 @@ describe('app', () => {
       });
 
       expect(tree.read('apps/api/src/main.ts', 'utf-8')).toMatch(
-        /^#!\/usr\/bin\/env tsx\n/
+        /^#!\/usr\/bin\/env node\n[\s\S]*from '\.\/app\/app\.ts';/
       );
-      expect(readJson(tree, 'apps/api/package.json').type).toBeUndefined();
+      expect(tree.read('apps/api/src/app/app.ts', 'utf-8')).toContain(
+        "path.join(import.meta.dirname, 'routes')"
+      );
+      expect(tree.read('apps/api/src/app/app.spec.ts', 'utf-8')).toContain(
+        "from './app.ts';"
+      );
+      expect(readJson(tree, 'apps/api/package.json').type).toBe('module');
+      expect(tree.exists('apps/api/vitest.config.mts')).toBe(true);
+      expect(readJson(tree, 'apps/api/tsconfig.spec.json').compilerOptions)
+        .toMatchInlineSnapshot(`
+        {
+          "allowImportingTsExtensions": true,
+          "module": "nodenext",
+          "moduleResolution": "nodenext",
+          "outDir": "./out-tsc/vitest",
+          "types": [
+            "vitest/globals",
+            "vitest/importMeta",
+            "vite/client",
+            "node",
+            "vitest",
+          ],
+        }
+      `);
+    });
+
+    it('should set up vitest e2e tests for node-served apps', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'express',
+        e2eTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('apps/api-e2e/jest.config.ts')).toBe(false);
+      expect(tree.exists('apps/api-e2e/jest.config.cts')).toBe(false);
+      expect(tree.exists('apps/api-e2e/src/support/global-teardown.ts')).toBe(
+        false
+      );
+      expect(
+        tree.read('apps/api-e2e/vitest.config.mts', 'utf-8')
+      ).toMatchInlineSnapshot(`
+        "import { defineConfig } from 'vitest/config';
+
+        export default defineConfig({
+          test: {
+            name: '@proj/api-e2e',
+            globals: true,
+            environment: 'node',
+            include: ['src/**/*.spec.ts'],
+            globalSetup: ['src/support/global-setup.ts'],
+            setupFiles: ['src/support/test-setup.ts'],
+          },
+        });
+        "
+      `);
+      expect(
+        readJson(tree, 'apps/api-e2e/package.json').nx.targets
+      ).toMatchInlineSnapshot(`
+        {
+          "e2e": {
+            "dependsOn": [
+              "@proj/api:build",
+              "@proj/api:serve",
+            ],
+          },
+        }
+      `);
+      expect(
+        readNxJson(tree).plugins.filter(
+          (p) => typeof p !== 'string' && p.plugin === '@nx/vitest'
+        )
+      ).toMatchInlineSnapshot(`
+        [
+          {
+            "exclude": [
+              "apps/api-e2e/**/*",
+            ],
+            "options": {
+              "ciTargetName": "test-ci",
+              "testMode": "watch",
+              "testTargetName": "test",
+            },
+            "plugin": "@nx/vitest",
+          },
+          {
+            "include": [
+              "apps/api-e2e/**/*",
+            ],
+            "options": {
+              "testMode": "run",
+              "testTargetName": "e2e",
+            },
+            "plugin": "@nx/vitest",
+          },
+        ]
+      `);
     });
 
     it('should use the target name of a reused tsc app build registration', async () => {

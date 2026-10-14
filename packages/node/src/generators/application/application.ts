@@ -302,6 +302,8 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       directory: options.rootProject ? 'e2e' : `${options.appProjectRoot}-e2e`,
       project: options.name,
       buildTarget: options.buildTargetName,
+      // Node-served apps are ESM, which jest loads as CommonJS.
+      testRunner: options.serveRuntime === 'node' ? 'vitest' : 'jest',
       port: options.port,
       isNest: options.isNest,
       skipFormat: true,
@@ -350,6 +352,21 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
         : undefined
     );
+
+    const specTsConfig = joinPathFragments(
+      options.appProjectRoot,
+      'tsconfig.spec.json'
+    );
+    if (options.serveRuntime === 'node' && tree.exists(specTsConfig)) {
+      // Specs import `./x.ts` too, but rewriting them is unsafe (TS2878) since
+      // the app is a referenced project with its own outDir.
+      updateJson(tree, specTsConfig, (json) => {
+        delete json.compilerOptions.rewriteRelativeImportExtensions;
+        delete json.compilerOptions.emitDeclarationOnly;
+        json.compilerOptions.allowImportingTsExtensions = true;
+        return json;
+      });
+    }
   }
 
   sortPackageJsonFields(tree, options.appProjectRoot);

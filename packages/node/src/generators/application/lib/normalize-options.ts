@@ -58,6 +58,11 @@ export async function normalizeOptions(
     );
   }
   const swcJest = options.swcJest ?? isUsingTsSolutionConfig;
+  const serveRuntime = getServeRuntime(
+    options,
+    addPlugin,
+    isUsingTsSolutionConfig
+  );
 
   const appProjectName =
     !isUsingTsSolutionConfig || options.name ? projectName : importPath;
@@ -74,11 +79,13 @@ export async function normalizeOptions(
     importPath,
     parsedTags,
     linter: await normalizeLinterOption(host, options.linter),
-    unitTestRunner: options.unitTestRunner ?? 'jest',
+    // Jest loads the app's ESM sources as CommonJS.
+    unitTestRunner:
+      options.unitTestRunner ?? (serveRuntime === 'node' ? 'vitest' : 'jest'),
     rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,
     buildTargetName: 'build',
-    serveRuntime: getServeRuntime(options, addPlugin, isUsingTsSolutionConfig),
+    serveRuntime,
     outputPath: isUsingTsSolutionConfig
       ? joinPathFragments(appProjectRoot, 'dist')
       : joinPathFragments(
@@ -100,13 +107,11 @@ function getServeRuntime(
   if (!addPlugin || options.bundler === 'webpack') {
     return undefined;
   }
-  // Node runs TypeScript natively but resolves neither tsconfig path aliases nor
-  // the extensionless relative imports and `__dirname` the fastify template uses.
+  // Node runs TypeScript natively but does not resolve tsconfig path aliases.
   // Its ESM sources import `./x.ts`, which only tsc and rolldown rewrite on build,
   // and `--js` apps would make jest load CommonJS configs as ESM.
   return isUsingTsSolutionConfig &&
     (options.bundler === 'tsc' || options.bundler === 'rolldown') &&
-    options.framework !== 'fastify' &&
     !options.js
     ? 'node'
     : 'tsx';

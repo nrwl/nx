@@ -1662,7 +1662,10 @@ async function determineNodeOptions(
   // without asking.
   const formatter = await determineFormatterOptions(parsedArgs);
   linter = await determineLinterOptions(parsedArgs);
-  unitTestRunner = await determineUnitTestRunner(parsedArgs);
+  // Node apps are ESM, which jest loads as CommonJS.
+  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+    preferVitest: framework !== 'nest',
+  });
 
   return {
     preset,

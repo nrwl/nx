@@ -65,6 +65,12 @@
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+    },
+    "testRunner": {
+      "description": "Test runner to use for the E2E tests.",
+      "type": "string",
+      "enum": ["jest", "vitest"],
+      "default": "jest"
     }
   },
   "required": ["project"]

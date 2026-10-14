@@ -116,7 +116,7 @@ export function getInstalledKoaVersion(tree?: Tree): string | null {
 // Fastify — upstream "last 2 majors" policy. Support window v4 + v5.
 export const minSupportedFastifyVersion = '4.0.0';
 export const fastifyVersion = '~5.2.1';
-export const fastifyAutoloadVersion = '~6.0.3';
+export const fastifyAutoloadVersion = '~6.5.1';
 export const fastifySensibleVersion = '~6.0.2';
 export const fastifyPluginVersion = '~5.0.1';
 
