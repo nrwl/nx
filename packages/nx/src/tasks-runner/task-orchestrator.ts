@@ -837,7 +837,7 @@ export class TaskOrchestrator {
     const behindMiss = new Set<string>();
     const behindUncacheable = new Set<string>();
     const pending = (id: string, cacheable: boolean) =>
-      toRun.get(id)?.cache === cacheable;
+      toRun.has(id) && !!toRun.get(id).cache === cacheable;
 
     await walkTaskGraph(batch.taskGraph, async (levelIds) => {
       const runNow: Task[] = [];
