@@ -137,6 +137,7 @@ describe('@nx/rspack', () => {
                       },
                     },
                     "readyWhen": {
+                      "host": "{options.host ?? localhost}",
                       "port": "{options.port ?? 9000}",
                     },
                   },
@@ -162,6 +163,7 @@ describe('@nx/rspack', () => {
                       },
                     },
                     "readyWhen": {
+                      "host": "{options.host ?? localhost}",
                       "port": "{options.port ?? 9000}",
                     },
                   },
@@ -186,6 +188,7 @@ describe('@nx/rspack', () => {
                       "spa": true,
                     },
                     "readyWhen": {
+                      "host": "{options.host}",
                       "port": "{options.port}",
                     },
                   },
@@ -206,14 +209,59 @@ describe('@nx/rspack', () => {
   });
 
   it.each([
-    ['no devServer', `export default {};`, 8080],
-    ['an auto port', `export default { devServer: { port: 'auto' } };`, 8080],
+    [
+      'no devServer',
+      `export default {};`,
+      {
+        port: '{options.port ?? env.RSPACK_DEV_SERVER_BASE_PORT ?? 8080}',
+        host: '{options.host ?? localhost}',
+      },
+    ],
+    [
+      'an auto port',
+      `export default { devServer: { port: 'auto' } };`,
+      {
+        port: '{options.port ?? env.RSPACK_DEV_SERVER_BASE_PORT ?? 8080}',
+        host: '{options.host ?? localhost}',
+      },
+    ],
+    [
+      'a port of 0',
+      `export default { devServer: { port: 0 } };`,
+      { port: '{options.port ?? 0}', host: '{options.host ?? localhost}' },
+    ],
     [
       'a devServer on a later config',
       `export default [{ name: 'server' }, { name: 'client', devServer: { port: 4300 } }];`,
-      4300,
+      { port: '{options.port ?? 4300}', host: '{options.host ?? localhost}' },
     ],
-  ])('probes the dev server port for %s', async (_, config, expectedPort) => {
+    [
+      'a fixed host',
+      `export default { devServer: { port: 4300, host: '192.168.1.20' } };`,
+      {
+        port: '{options.port ?? 4300}',
+        host: '{options.host ?? 192.168.1.20}',
+      },
+    ],
+    [
+      'a host that reads as a token',
+      `export default { devServer: { port: 4300, host: 'env.example.com' } };`,
+      {
+        port: '{options.port ?? 4300}',
+        host: '{options.host ?? Env.example.com}',
+      },
+    ],
+    [
+      'an ipc devServer',
+      `export default { devServer: { port: 4300, ipc: true } };`,
+      undefined,
+    ],
+    [
+      'an ipc of false',
+      `export default { devServer: { port: 4300, ipc: false } };`,
+      undefined,
+    ],
+  ])('infers the dev server readyWhen for %s', async (_, config, expected) => {
     tempFs.createFileSync('my-app/rspack.config.ts', config);
 
     const nodes = await createNodesFunction(
@@ -224,11 +272,40 @@ describe('@nx/rspack', () => {
 
     const { targets } = nodes[0][1].projects['my-app'];
     for (const target of ['serve', 'preview']) {
-      expect(targets[target].readyWhen).toEqual({
-        port: `{options.port ?? ${expectedPort}}`,
-      });
+      expect(targets[target].readyWhen).toEqual(expected);
     }
   });
+
+  it.each([
+    ['1.7.12', '1.1.5', 'WEBPACK_DEV_SERVER_BASE_PORT'],
+    ['2.2.7', '2.0.3', 'RSPACK_DEV_SERVER_BASE_PORT'],
+  ])(
+    'starts from the base port env var of the dev server @rspack/cli %s loads from the project',
+    async (cliVersion, devServerVersion, envVar) => {
+      tempFs.createFilesSync({
+        'my-app/rspack.config.ts': `export default {};`,
+        'my-app/node_modules/@rspack/cli/package.json': JSON.stringify({
+          name: '@rspack/cli',
+          version: cliVersion,
+        }),
+        'my-app/node_modules/@rspack/dev-server/package.json': JSON.stringify({
+          name: '@rspack/dev-server',
+          version: devServerVersion,
+        }),
+      });
+
+      const nodes = await createNodesFunction(
+        ['my-app/rspack.config.ts'],
+        {},
+        context
+      );
+
+      const { targets } = nodes[0][1].projects['my-app'];
+      expect(targets.serve.readyWhen.port).toBe(
+        `{options.port ?? env.${envVar} ?? 8080}`
+      );
+    }
+  );
 
   it('reads the build outputs with the build env and the dev server port with the serve env', async () => {
     tempFs.createFileSync(
@@ -248,9 +325,7 @@ describe('@nx/rspack', () => {
     const { targets } = nodes[0][1].projects['my-app'];
     expect(targets.build.outputs).toEqual(['{projectRoot}/dist/build']);
     for (const target of ['serve', 'preview']) {
-      expect(targets[target].readyWhen).toEqual({
-        port: '{options.port ?? 4300}',
-      });
+      expect(targets[target].readyWhen.port).toBe('{options.port ?? 4300}');
     }
   });
 

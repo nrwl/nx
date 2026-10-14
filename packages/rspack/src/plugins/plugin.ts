@@ -32,6 +32,7 @@ import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { isNxRspackComposablePlugin } from '../utils/config';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
+import { getRspackDevServerMajorVersion } from '../utils/version-utils';
 export interface RspackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
@@ -197,11 +198,14 @@ async function createRspackTargets(
     ? await readRspackOptions(rspackConfig, { RSPACK_SERVE: true })
     : rspackOptions;
   const devServer = serveOptions.find((config) => config.devServer)?.devServer;
-  const devServerReadyWhen: TargetConfiguration['readyWhen'] = {
-    port: `{options.port ?? ${getDevServerPort(
-      devServer ? devServer.port : undefined
-    )}}`,
-  };
+  // The rspack 1 dev server reads webpack-dev-server's env var
+  const devServerReadyWhen = getDevServerReadyWhen(
+    devServer || undefined,
+    getRspackDevServerMajorVersion(join(context.workspaceRoot, projectRoot)) ===
+      1
+      ? 'WEBPACK_DEV_SERVER_BASE_PORT'
+      : 'RSPACK_DEV_SERVER_BASE_PORT'
+  );
 
   const env: NodeJS.ProcessEnv = {};
   const isTsConfig = ['.ts', '.cts', '.mts'].includes(extname(configFilePath));
@@ -253,7 +257,7 @@ async function createRspackTargets(
 
   targets[options.serveTargetName] = {
     continuous: true,
-    readyWhen: devServerReadyWhen,
+    ...(devServerReadyWhen && { readyWhen: devServerReadyWhen }),
     inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
@@ -265,7 +269,7 @@ async function createRspackTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
-    readyWhen: devServerReadyWhen,
+    ...(devServerReadyWhen && { readyWhen: devServerReadyWhen }),
     inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
@@ -278,7 +282,7 @@ async function createRspackTargets(
   targets[options.serveStaticTargetName] = {
     dependsOn: [`${options.buildTargetName}`],
     continuous: true,
-    readyWhen: { port: '{options.port}' },
+    readyWhen: { port: '{options.port}', host: '{options.host}' },
     inputs: [...buildInputs],
     executor: '@nx/web:file-server',
     options: {
@@ -334,10 +338,47 @@ function takesEnv(config: unknown): boolean {
     : typeof config === 'function' && !isNxRspackComposablePlugin(config);
 }
 
-// The rspack dev server picks a free port from 8080 when none is set
-function getDevServerPort(port: unknown): number {
-  const value = Number(port);
-  return Number.isInteger(value) && value > 0 ? value : 8080;
+// A fallback starting with one of these reads as an Nx token
+const TOKEN_NAMES = new Set([
+  'workspaceRoot',
+  'projectRoot',
+  'projectName',
+  'options',
+  'env',
+]);
+
+function getDevServerReadyWhen(
+  devServer: { port?: unknown; host?: unknown; ipc?: unknown } | undefined,
+  basePortEnv: string
+): TargetConfiguration['readyWhen'] {
+  // The dev server listens on a socket for any boolean ipc, false included,
+  // and no probe can check a socket
+  const ipc = devServer?.ipc;
+  if (typeof ipc === 'boolean' || (typeof ipc === 'string' && ipc)) {
+    return undefined;
+  }
+  return {
+    port: `{options.port ?? ${getDevServerPort(devServer?.port, basePortEnv)}}`,
+    host: `{options.host ?? ${getDevServerHost(devServer?.host)}}`,
+  };
+}
+
+// With the port unset or 'auto', the dev server picks a free one starting at
+// this env var, else 8080
+function getDevServerPort(port: unknown, basePortEnv: string): string {
+  return port === undefined || port === null || port === 'auto'
+    ? `env.${basePortEnv} ?? 8080`
+    : String(port);
+}
+
+function getDevServerHost(host: unknown): string {
+  if (typeof host !== 'string' || !host) {
+    return 'localhost';
+  }
+  // Host names are case-insensitive, so a capitalized first label names the
+  // same host without reading as a token
+  const label = host.split('.')[0];
+  return TOKEN_NAMES.has(label) ? label[0].toUpperCase() + host.slice(1) : host;
 }
 
 function normalizeOutputPath(
