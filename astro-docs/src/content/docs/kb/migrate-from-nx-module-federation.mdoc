@@ -34,7 +34,13 @@ removes the wrappers, so migrate your apps to the official plugins directly and 
 its current bundler.
 
 Migrate before you upgrade to v24, while the old setup still builds and you can compare against
-it. Nx will also ship migrations for this later.
+it.
+
+{% aside type="note" title="Coming from the v24 migration" %}
+If you upgraded to Nx v24 with `nx migrate`, its Module Federation migration already ran these
+steps. Use this page as a reference for what changed and why, including which remotes are
+available while you develop and how to keep the host running when a remote is down.
+{% /aside %}
 
 {% aside type="note" title="Scope" %}
 React apps on Rspack or webpack, keeping the same bundler. Server-side rendered apps follow these
@@ -63,6 +69,14 @@ Rspack form of the dev-server executor, which started the host and every remote 
 `nx serve`. `@nx/react:module-federation-static-server` served the remotes you weren't working on
 from a single port. Now you start the processes you want, and the runtime manifest from Step 5
 lets the host boot without them.
+
+{% aside type="caution" title="Only the remotes you start are available" %}
+`nx serve webpack-host` used to serve every remote from one command. Now the host boots on its
+own, but navigating to a remote that isn't running fails with `#RUNTIME-008`. Start the remotes
+you need with the host, as in `nx run-many -t serve -p webpack-host webpackRemoteA webpackRemoteB`,
+or run `nx serve webpackRemoteA` in another terminal. A `serve-static` target can serve the
+remotes you aren't editing.
+{% /aside %}
 
 Keep `NxAppRspackPlugin`, `NxAppWebpackPlugin`, `NxReactRspackPlugin`, and
 `NxReactWebpackPlugin`. They are general bundler plugins and are not part of this removal.
@@ -421,6 +435,49 @@ A host that passes a fetched manifest to `setRemoteDefinitions` still needs the 
 A host that used `setRemoteUrlResolver` from `@nx/react/mf` keeps its URL logic and passes each
 resolved URL as the `entry` in `registerRemotes`.
 
+### Keep the host up when a remote is down
+
+A remote that isn't running rejects its `React.lazy` import, and without an error boundary that
+unmounts the whole host. You can wrap each remote in a boundary that renders a fallback instead,
+like the one the `@nx/react:consumer` generator adds:
+
+```tsx
+// apps/webpack-host/src/app/remote-boundary.tsx
+import { Component, Suspense, type ReactNode } from 'react';
+
+export class RemoteBoundary extends Component<
+  { children: ReactNode; name: string },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return <p role="alert">Remote "{this.props.name}" is unavailable.</p>;
+    }
+    return (
+      <Suspense fallback={<p>Loading {this.props.name}...</p>}>
+        {this.props.children}
+      </Suspense>
+    );
+  }
+}
+```
+
+```tsx
+// apps/webpack-host/src/app/app.tsx
+<Route
+  path="/webpack-remote-a"
+  element={
+    <RemoteBoundary name="webpackRemoteA">
+      <RemoteA />
+    </RemoteBoundary>
+  }
+/>
+```
+
 ## Step 6: swap the wrapper in the bundler config
 
 `composePlugins(withNx(), withReact(), withModuleFederation(config))` returns an Nx-specific
@@ -763,8 +820,8 @@ Keep `@module-federation/enhanced` as a direct dependency and commit the lockfil
 - **Runtime library control.** `withModuleFederation` attached a runtime plugin when the
   dev-server executor set `NX_MF_DEV_REMOTES`. It let a live remote's copy of a shared library win
   over a static one. Nothing sets that variable now.
-- **Automatic remote fallback.** A host fails the request when a remote is unavailable. Add your
-  own error boundary if you need one.
+- **Automatic remote fallback.** A host fails the request when a remote is unavailable. Add an
+  error boundary, as in Step 5, if you need one.
 
 For anything beyond this migration, such as runtime plugins, promise-based remotes, or
 cross-version deployments, use the official

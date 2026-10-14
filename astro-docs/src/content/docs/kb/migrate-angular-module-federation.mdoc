@@ -35,7 +35,13 @@ supports both webpack and Rspack. Nx v24 removes the wrappers, so migrate your a
 plugin directly.
 
 Migrate before you upgrade to v24. The old packages still build, which gives you a baseline to
-compare against. Nx will also ship migrations for this later.
+compare against.
+
+{% aside type="note" title="Coming from the v24 migration" %}
+If you upgraded to Nx v24 with `nx migrate`, its Module Federation migration already ran these
+steps. Use this page as a reference for what changed and why, including which remotes are
+available while you develop.
+{% /aside %}
 
 You have one decision to make before you start:
 
@@ -68,6 +74,13 @@ The last two ran processes and built nothing. `NxModuleFederationDevServerPlugin
 form of the dev-server executor, which started the host and every remote from one `nx serve`.
 `module-federation-static-server` served the remotes you weren't working on from one port. Step 6
 replaces both with targets you start yourself.
+
+{% aside type="caution" title="Only the remotes you start are available" %}
+`nx serve shell` used to serve every remote from one command. Now navigating to a route from a
+remote that isn't running fails to load it. Start the remotes you need with the host, as in
+`nx run-many -t serve -p shell remoteA remoteB`, or run `nx serve remoteA` in another terminal. A
+`serve-static` target can serve the remotes you aren't editing.
+{% /aside %}
 
 ## Capture a baseline first
 
