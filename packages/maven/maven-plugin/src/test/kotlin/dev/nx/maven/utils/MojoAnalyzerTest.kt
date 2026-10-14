@@ -45,6 +45,13 @@ class MojoAnalyzerTest {
   }
 
   @Test
+  fun `shade adds no default source inputs`() {
+    val analysis = analyze("maven-shade-plugin", "shade", "target/classes")
+    assertEquals(emptySet(), analysis.inputs)
+    assertEquals(emptySet(), analysis.ignoredInputs)
+  }
+
+  @Test
   fun `shade outputs only the jars and the dependency-reduced pom`() {
     assertEquals(
       setOf("{projectRoot}/target/*.jar", "{projectRoot}/dependency-reduced-pom.xml"),

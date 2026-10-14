@@ -164,6 +164,8 @@ data class CacheConfig(
                 ),
                 // A pom-configured outputFile isn't resolved; outputDirectory/*.jar covers the default location.
                 "maven-shade-plugin:shade" to MojoConfig(
+                    // Its jar comes from maven-jar-plugin in the same package task, so classesDirectory covers it.
+                    inputParameters = emptySet(),
                     outputParameters = setOf(
                         Parameter("outputDirectory", "*.jar"),
                         Parameter("dependencyReducedPomLocation", null),
