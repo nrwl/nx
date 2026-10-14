@@ -96,7 +96,9 @@
     "react-dom": ">=18.0.0 <20.0.0",
     "@nx/module-federation": "workspace:*",
     "express": "^4.21.2",
-    "http-proxy-middleware": "catalog:"
+    "http-proxy-middleware": "catalog:",
+    "nx": "workspace:*",
+    "typescript": "*"
   },
   "peerDependenciesMeta": {
     "babel-plugin-react-compiler": {
@@ -109,6 +111,12 @@
       "optional": true
     },
     "http-proxy-middleware": {
+      "optional": true
+    },
+    "nx": {
+      "optional": true
+    },
+    "typescript": {
       "optional": true
     }
   },
