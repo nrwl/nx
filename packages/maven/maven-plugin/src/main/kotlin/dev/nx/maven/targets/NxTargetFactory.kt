@@ -677,7 +677,12 @@ class NxTargetFactory(
 
   private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
     session.projectDependencyGraph.getUpstreamProjects(project, true).forEach { upstream ->
-      target.inputs?.add(ignoredFileset(pathFormatter.toWorkspacePath(buildStateFile(upstream), workspaceRoot)))
+      // A pom module (parent, aggregator, BOM) only contributes its pom, not build output.
+      if (upstream.packaging == "pom") {
+        target.inputs?.add(pathFormatter.toWorkspacePath(upstream.file, workspaceRoot))
+      } else {
+        target.inputs?.add(ignoredFileset(pathFormatter.toWorkspacePath(buildStateFile(upstream), workspaceRoot)))
+      }
     }
     target.outputs?.add(modulePath(buildStateFile(project), project))
   }
