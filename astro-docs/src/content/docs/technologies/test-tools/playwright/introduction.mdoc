@@ -106,13 +106,12 @@ address, see [Playwright web server readiness](/docs/kb/playwright-web-server-re
 The `targetName` task runs the complete Playwright suite and caches the configured test and reporter
 outputs.
 The `ciTargetName` task uses the [Atomizer](/docs/kb/split-e2e-tasks).
-To have an atomized task hash from the app code its test file imports instead of the whole app,
-see [hash e2e tests from their imports](/docs/kb/hash-e2e-tests-from-imports).
 
 Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
 
-To stop an atomized task from rerunning for every library the app bundles, scope it to the projects its test file exercises.
-See [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
+An atomized task reruns when any library the app bundles changes.
+To scope it to the code its test file exercises, see
+[scope atomized e2e tests](/docs/kb/scope-e2e-tests).
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/playwright/plugin`.
 

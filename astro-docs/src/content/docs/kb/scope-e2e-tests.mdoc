@@ -1,0 +1,394 @@
+---
+title: Scope atomized e2e tests to the code they exercise
+description: Scope the task of an atomized Playwright, Cypress, or Jest test file to the code it exercises.
+sidebar:
+  label: Scope atomized e2e tests
+filter: 'type:Guides'
+topics:
+  - 'Playwright'
+  - 'Cypress'
+  - 'Tasks & caching'
+---
+
+The [Atomizer](/docs/kb/split-e2e-tasks) splits an end-to-end (e2e) test suite into one task per
+test file, such as `e2e-ci--src/checkout.spec.ts`.
+An atomized task can hash the whole app in two ways:
+
+- Its `^production` input covers the projects the e2e project depends on.
+  When the e2e project depends on the app, that includes the app and the libraries it bundles.
+- When Nx starts the app's server for the tests, each task depends on the server task.
+  The server task keeps running during the tests, which makes it a continuous dependency.
+  Nx adds the [inputs of continuous dependencies](/docs/reference/inputs#inputs-of-continuous-dependencies)
+  to the hash of the tasks that depend on them.
+
+A change to any feature therefore reruns every e2e test:
+
+![Without scoping, checkout.spec.ts and search.spec.ts both hash checkout/, search/, cart/, and shared/, so an edit in search/ reruns both tests.](../../../assets/guides/running-tasks/e2e-hash-whole-app.svg)
+
+## Choose how to scope a test file
+
+Scope a test file's task by the projects it exercises or by the app code it imports:
+
+| Scope          | By projects                                         | By imports                                                          |
+| -------------- | --------------------------------------------------- | ------------------------------------------------------------------- |
+| Directive      | `// @nx-depends-on: <projects>`                     | `// @nx-ignore-server-inputs`                                       |
+| The hash keeps | The listed projects and the projects they depend on | The app code the test file imports, directly or through its imports |
+| Requires       | None                                                | Ultracache in CI, with Nx Cloud                                     |
+| Upkeep         | List each project the test exercises                | Import the app code the test exercises                              |
+
+[Ultracache](/docs/reference/project-configuration#ultracache) hashes a task from the files it read on a
+recorded run, instead of its declared file inputs.
+Scope by imports when the test's results depend only on code the test file can import.
+To check, see [decide whether a test fits](#decide-whether-a-test-fits).
+Otherwise, scope by projects.
+
+Each directive is a comment at the top of the test file.
+The plugin reads it and adjusts the configuration it infers for the file's atomized target.
+The plugin keeps the rest of the inferred configuration.
+The directive moves with the test file when you rename it.
+
+You can also write that configuration in `project.json`, under the name of the atomized target.
+Its `inputs` and `dependsOn` replace the arrays the plugin infers, so copy every inferred entry you
+keep.
+Without a directive, don't add the [spread token](/docs/reference/nx-json#spread-token), `"..."`, to
+these arrays.
+It restores `^production` and the server task's inputs.
+The target name contains the test file's path, so moving or renaming the file breaks the match.
+Each new test file needs its own target.
+
+## Supported runners and setups
+
+A directive changes only the atomized target of a test file.
+The targets that run the whole suite or group the atomized targets, such as `e2e` and `e2e-ci`,
+don't change.
+
+| Runner and setup                                                                                                            | `@nx-depends-on`                                          | `@nx-ignore-server-inputs`          |
+| --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------- |
+| Playwright, with a `webServer` Nx runs as a server task                                                                     | Scopes the inputs and leaves out the server task's inputs | Leaves out the server task's inputs |
+| Playwright, with a `webServer` Playwright starts                                                                            | Scopes the inputs                                         | No effect                           |
+| Cypress, with a `ciWebServerCommand` that runs an Nx task                                                                   | Scopes the inputs and leaves out the server task's inputs | Leaves out the server task's inputs |
+| Cypress, with a `ciWebServerCommand` that doesn't run an Nx task, or with the preset's `reuseExistingServer` set to `false` | Scopes the inputs                                         | No effect                           |
+| Jest                                                                                                                        | Scopes the inputs                                         | Ignored with a warning              |
+| Vitest and Cypress component tests                                                                                          | Not read                                                  | Not read                            |
+
+No effect means the task has no server task, so there are no server inputs to leave out.
+
+Leaving out the server task's inputs also drops any environment variables, runtime inputs, or
+external dependencies it declares.
+To keep the ones the test needs, add them to the test file's target in `project.json`.
+Put `"..."` first in its `inputs` to keep the inputs the directive inferred.
+
+Nx runs a Playwright `webServer` as a server task when it meets all of these conditions:
+
+- `reuseExistingServer` is `true`.
+- It sets no `wait` pattern and no `env` variables.
+- Its `command` runs an Nx task, such as `nx run shop:serve`.
+
+For the `webServer` entries Nx leaves to Playwright, see
+[Playwright web server readiness](/docs/kb/playwright-web-server-readiness).
+Cypress creates atomized e2e tasks only when the `nxE2EPreset` options set `ciWebServerCommand`.
+
+## Scope a test file to its projects
+
+To keep changes to other projects from rerunning a test file, list the projects it exercises in an
+`@nx-depends-on` directive:
+
+```ts
+// apps/shop-e2e/src/e2e/checkout.cy.ts
+// @nx-depends-on: checkout, checkout-utils
+import { getSubmitButton } from '../support/app.po';
+```
+
+For the `e2e-ci--src/e2e/checkout.cy.ts` target, the plugin then infers what this `project.json`
+entry sets:
+
+```jsonc
+// apps/shop-e2e/project.json
+{
+  "targets": {
+    "e2e-ci--src/e2e/checkout.cy.ts": {
+      "inputs": [
+        "default",
+        {
+          "input": "production",
+          "projects": ["checkout", "checkout-utils"],
+          "always": true,
+        },
+        {
+          "input": "production",
+          "projects": ["checkout", "checkout-utils"],
+          "dependencies": true,
+          "always": true,
+        },
+        { "externalDependencies": ["cypress"] },
+      ],
+      "dependsOn": [
+        { "projects": ["shop"], "target": "serve-static", "inputs": false },
+      ],
+    },
+  },
+}
+```
+
+- The dependency inputs, such as `^production`, become two inputs with the same
+  [named input](/docs/kb/configure-inputs).
+  The first selects the listed projects.
+  The second, with `"dependencies": true`, selects the projects they depend on.
+- With `"always": true`, Ultracache keeps the files of these projects in the hash.
+  The test runner doesn't read the code the server serves, so Ultracache would otherwise drop it.
+- The dependency on the server task sets `"inputs": false`, so the server task's inputs leave the
+  hash.
+  Without a server task, such as for Jest, only the inputs change.
+
+After scoping, the task's hash covers these inputs:
+
+- The listed projects and the projects they depend on.
+- The task's other inputs, such as `default` and any shared globs it includes.
+
+Listing the app puts the whole app in the hash, because the app depends on the libraries it bundles.
+
+Under Ultracache, the `always` inputs stay in the hash next to the files the task read.
+A change outside these inputs leaves the hash unchanged, so Nx replays the cached result.
+
+{% aside type="caution" title="List every project the test exercises" %}
+A change to a project left off the list reruns the test only when another input covers it.
+The `"dependencies": true` input covers it when a listed project depends on it.
+{% /aside %}
+
+`nx affected -t e2e-ci` runs the task of every test file in an affected e2e project.
+The `e2e-ci` task depends on all of them.
+Nx replays the cached result of each task whose hash didn't change.
+
+## Hash a test file from its imports
+
+An e2e test drives the app through a browser, so the test runner doesn't read the app's code.
+To hash the test from the app code it exercises, import that code into the test file.
+The test runner reads those files when it loads the test file, and the recorded run lists them.
+`@nx-ignore-server-inputs` leaves the server task's inputs out of the task's hash.
+The hash then covers the app code that the test file's imports reach:
+
+![With @nx-ignore-server-inputs and imports of the app code, checkout.spec.ts hashes checkout/ and shared/, and search.spec.ts hashes search/ and shared/, so an edit in search/ reruns only search.spec.ts.](../../../assets/guides/running-tasks/e2e-hash-imports.svg)
+
+{% aside type="note" title="Ultracache runs in CI with Nx Cloud" %}
+Nx applies a recorded run only in CI, with `NX_CLOUD_USE_ULTRACACHE` set to `true`.
+Nx Cloud must also have a recorded run for the task.
+Without a recorded run, such as on your machine, the task hashes its declared inputs without the
+server task's inputs.
+An app change then reruns the test only when those inputs cover it.
+For example, `^production` covers the app when the e2e project depends on the app.
+{% /aside %}
+
+Add `// @nx-ignore-server-inputs` to the top of the test file, and import the app code the test
+exercises:
+
+```ts
+// apps/shop-e2e/src/checkout.spec.ts
+// @nx-ignore-server-inputs
+// This test's task hashes the app code imported below.
+// Import the code the test exercises: https://nx.dev/docs/kb/scope-e2e-tests
+import '../../shop/src/app/checkout/checkout-page';
+import { expect, test } from '@playwright/test';
+
+test('shows the order summary', async ({ page }) => {
+  await page.goto('/checkout');
+  await expect(
+    page.getByRole('heading', { name: 'Order summary' })
+  ).toBeVisible();
+});
+```
+
+The two comment lines after the directive are optional.
+They tell maintainers why the test imports modules it doesn't use.
+
+For the `e2e-ci--src/checkout.spec.ts` target, the plugin then infers what this `project.json` entry
+sets:
+
+```jsonc
+// apps/shop-e2e/project.json
+{
+  "targets": {
+    "e2e-ci--src/checkout.spec.ts": {
+      "dependsOn": [
+        { "projects": ["shop"], "target": "serve", "inputs": false },
+        { "target": "e2e--wait-for-webserver" },
+      ],
+    },
+  },
+}
+```
+
+The second entry is the inferred task that waits for the Playwright `webServer` to be ready.
+It isn't a continuous dependency, so it adds no server inputs.
+Its name can differ, and some setups have no such task.
+Copy the entry that `nx show project` lists.
+
+### What the recorded run covers
+
+Ultracache stores the recorded run as file patterns.
+A pattern covers each folder the test runner read from, including subfolders, for the kinds of files
+it read there.
+JavaScript and TypeScript files count as one kind, and other files count by extension, such as
+`.css`.
+A new file of that kind in the folder or its subfolders changes the hash, unless a pattern
+excludes it.
+A pattern can widen to a parent folder when the test runner read all its existing files of that
+kind.
+Outside the folders the test runner read from, a new file changes the hash only under such a
+pattern.
+
+The patterns leave these files out of the hash:
+
+- Existing files that the test runner didn't read.
+- Files of that kind under an existing subfolder that had such files, when the test runner read
+  none of them.
+  The exclusion also covers new files and new subfolders inside it.
+- Files with a shared name ending such as `.page.ts`, when the test runner read none of them.
+  This applies once two or more files under the pattern's folder have the ending, and includes new
+  files with it.
+
+### Decide whether a test fits
+
+A test fits when all the code it exercises is in modules the test file can import.
+Examples are pages, components, and the services they call.
+A test doesn't fit when its results depend on something the test runner doesn't read:
+
+- Files the app loads by path instead of importing them, such as static assets and data it fetches
+  at runtime.
+  This includes templates and stylesheets that a component names by path, such as Angular
+  `templateUrl` and `styleUrl` files.
+- App code the test exercises but doesn't import, such as the app shell, layouts, and shared
+  providers.
+- Stylesheets the test runner doesn't read.
+  Of the setups in [choose what to import](#choose-what-to-import), only Cypress with the Vite
+  preprocessor reads the stylesheets that imports reach.
+  Screenshot comparisons and visibility checks depend on stylesheets.
+- Other services the app calls, such as an API server.
+- The server task's configuration files, environment variables, runtime inputs, and external
+  dependencies.
+
+For a test that doesn't fit, scope it by projects.
+To keep the server task's environment variables, runtime inputs, or external dependencies, see
+[supported runners and setups](#supported-runners-and-setups).
+
+{% aside type="caution" title="A missed change replays an old result" %}
+A change to an existing file that the test runner didn't read doesn't rerun the test.
+Neither does a new file that the patterns don't cover.
+Nx replays the earlier result, even when the change broke the feature.
+An extra import only costs a rerun, so import more when you're unsure.
+{% /aside %}
+
+### Choose what to import
+
+The test runner reads the modules that the test file's imports reach, directly or through other
+modules.
+Choose imports that reach the feature's code:
+
+- Import the module of the feature the test exercises, such as its page or component.
+  Avoid route tables, the app entry point, and barrel files that re-export many features.
+  They make the task hash every feature they import.
+- Import a lazy-loaded feature's module directly.
+  Playwright doesn't load the modules that a dynamic `import()` loads, such as lazy-loaded routes.
+  Cypress bundles them, so a route table makes the task hash every lazy-loaded route.
+- Use a bare import, `import '<path>'`, unless the test uses an imported value.
+  The TypeScript transform of the test runner can remove an import whose names the file doesn't
+  use.
+  The test runner then never reads that module.
+
+The test runner loads each imported module and runs its top-level code.
+Playwright does this in Node.
+Cypress bundles the test file with its preprocessor.
+It uses the Vite preprocessor when the `nxE2EPreset` options set `bundler: 'vite'`, and its default
+webpack preprocessor otherwise.
+These setups handle the files that imports reach as follows:
+
+| File that an import reaches                             | Playwright                                         | Cypress with webpack | Cypress with Vite          |
+| ------------------------------------------------------- | -------------------------------------------------- | -------------------- | -------------------------- |
+| A module that a dynamic `import()` loads                | Not read                                           | Read                 | Read                       |
+| A stylesheet                                            | Not read, or fails to load in an ES module package | Fails to bundle      | Read                       |
+| A `.vue` file                                           | Fails to load                                      | Fails to bundle      | Fails without a Vue plugin |
+| A file a component names by path, such as `templateUrl` | Not read                                           | Not read             | Not read                   |
+
+In Playwright, a module that fails to load fails the test file before its tests run.
+The error points at the import.
+Top-level code that uses browser globals such as `window` or `document` also fails to load.
+With a custom Cypress preprocessor, its configuration decides what it reads and what it can bundle.
+For a feature that doesn't load, import the TypeScript modules it uses, or scope the test by
+projects.
+
+## Check the inferred configuration
+
+Run `nx show project` for the e2e project:
+
+```shell
+nx show project shop-e2e --json
+```
+
+In the target of a scoped test file, the `dependsOn` entries for server tasks have
+`"inputs": false`:
+
+```json
+{
+  "targets": {
+    "e2e-ci--src/checkout.spec.ts": {
+      "dependsOn": [
+        { "projects": ["shop"], "target": "serve", "inputs": false },
+        { "target": "e2e--wait-for-webserver" }
+      ]
+    }
+  }
+}
+```
+
+With project names, the target's `inputs` also select the listed projects with `"always": true`.
+
+A target default in `nx.json`, such as one for `e2e-ci--**/**`, replaces the inferred `inputs` and
+`dependsOn`.
+To keep what the directive inferred, add `"..."` to each array the target default sets.
+Set `"inputs": false` yourself on any server task dependency a target default adds.
+
+## Lint and type-check the imports
+
+The [`@nx/enforce-module-boundaries` rule](/docs/kb/enforce-module-boundaries#e2e-tests-that-hash-from-their-imports)
+reports imports of app code from another project.
+In a test file with `@nx-ignore-server-inputs`, the rule skips most of its checks on bare imports
+of app code.
+It still checks imports that name values or types.
+The rule reads the directive, so a test file with only `@nx-depends-on` or scoped in `project.json`
+gets every check.
+
+The `import/no-unassigned-import` rule of `eslint-plugin-import` and of the oxlint import plugin
+reports bare imports that its `allow` option doesn't match.
+If you use it, disable it for the e2e project's test files instead of removing the imports.
+
+When a test file imports `.tsx` files, set `jsx` in the `compilerOptions` of the e2e project's
+TypeScript configuration.
+For example, set `"jsx": "react-jsx"` so TypeScript can check the imported files.
+With TypeScript project references, a missing `jsx` makes TypeScript report error TS6305 on the
+import.
+The message reads `Output file '<path>' has not been built from source file '<path>'`.
+With path aliases, it reports error TS6142.
+
+## Directive syntax
+
+- Put the directive in a line comment or a block comment at the top of the test file.
+  Blank lines, a `#!` line, and other comments can come before it.
+- Start the line with the directive, after `//` or a block comment's leading `*`.
+  Nx ignores a directive in any other form, or with a misspelled name, without a warning.
+- Nx stops reading at the first line of code, so a directive after it has no effect.
+- A test file can have both directives.
+  `@nx-depends-on` already leaves out the server task's inputs, so the file is scoped by projects.
+
+`@nx-depends-on`:
+
+- Put the colon right after its name, as in `// @nx-depends-on: checkout`.
+- It takes project names or patterns, such as `tag:checkout`, separated by commas.
+  Repeat it on more lines to list more projects.
+- Nx ignores it with no value, such as `// @nx-depends-on:`, and logs a warning that names the test
+  file.
+- A listed name or pattern that matches no project is an error when Nx hashes the task.
+
+`@nx-ignore-server-inputs`:
+
+- It takes no value.
+  Nx ignores it with one, such as `// @nx-ignore-server-inputs: false`, and logs a warning that
+  names the test file.
