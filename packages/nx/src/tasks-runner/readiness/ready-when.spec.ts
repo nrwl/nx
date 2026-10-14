@@ -21,7 +21,12 @@ const data = {
   workspaceRoot: '/workspace',
   projectRoot: 'apps/app',
   projectName: 'app',
-  options: { port: 4200, host: 'dev.local', server: { port: 0 } },
+  options: {
+    port: 4200,
+    host: 'dev.local',
+    server: { port: 0 },
+    hmrPort: 'auto',
+  },
   env: () => ({}),
 };
 
@@ -68,6 +73,9 @@ describe('normalizeReadyWhen', () => {
     expect(
       normalize({ port: '{options.port}', host: '{options.host}' })
     ).toMatchObject({ port: 4200, host: 'dev.local' });
+    expect(normalize({ port: '{options.hmrPort ?? 4300}' })).toMatchObject({
+      port: 4300,
+    });
     expect(
       normalize({
         command:
@@ -169,6 +177,12 @@ describe('normalizeReadyWhen', () => {
     ],
     [{ port: '{port}' }, '"port" contains an unknown placeholder'],
     [{ port: '{options.host}' }, '"port" must be an integer from 1 to 65535'],
+    // `auto` is an unset port, and only a port
+    [{ port: '{options.hmrPort}' }, '"{options.hmrPort}" has no value'],
+    [
+      { url: 'http://localhost:{options.hmrPort}' },
+      '"url" must be an http or https URL',
+    ],
   ])('rejects %j', (readyWhen, reason) => {
     expect(() =>
       normalizeReadyWhen(readyWhen as any, 'app:serve', data)

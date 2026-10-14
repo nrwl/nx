@@ -33,6 +33,8 @@ export interface TokenScope {
   env?: { read: () => NodeJS.ProcessEnv } | { reject: () => Error };
   /** The text of a token with no value and no literal fallback */
   noValue(token: string): string;
+  /** Whether a value counts as unset, as `undefined`, `null` and `''` always do */
+  isUnset?(value: unknown): boolean;
   /** The text of a value; defaults to `String(value)` */
   toText?(value: unknown, token: string): string;
 }
@@ -94,7 +96,12 @@ export function resolveToken(
       part.name === 'env' && scope.env && 'read' in scope.env
         ? readEnv(scope.env.read(), part.path)
         : scope.read(part.name, part.path);
-    if (value !== undefined && value !== null && value !== '') {
+    if (
+      value !== undefined &&
+      value !== null &&
+      value !== '' &&
+      !scope.isUnset?.(value)
+    ) {
       return scope.toText ? scope.toText(value, token.raw) : String(value);
     }
   }

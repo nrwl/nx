@@ -55,7 +55,7 @@ impl PortHost {
     fn parse(host: Option<&str>) -> anyhow::Result<Self> {
         Ok(match host {
             None => Self::Loopback,
-            Some(host) => match host.parse::<IpAddr>() {
+            Some(host) => match unbracketed(host).parse::<IpAddr>() {
                 Ok(ip) => Self::Ip(ip),
                 Err(_) => Self::Name(host.to_string(), Box::new(system_resolver()?)),
             },
@@ -73,7 +73,7 @@ impl Probe {
     fn from_config(config: &ReadinessProbeConfig, cwd: String) -> anyhow::Result<Self> {
         match (&config.url, config.port, &config.command) {
             (Some(url), None, None) => Ok(Self::Url {
-                url: Url::parse(url)?,
+                url: connect_url(url)?,
                 client: OnceCell::new(),
             }),
             (None, Some(port), None) => Ok(Self::Port {
@@ -137,8 +137,7 @@ async fn http_client(url: &Url, deadline: Instant) -> anyhow::Result<Client> {
 // resolver, so a proxied request never waits on local DNS and a literal needs
 // no DNS configuration at all.
 async fn loopback_addrs(url: &Url, deadline: Instant) -> Option<Vec<IpAddr>> {
-    let host = url.host_str()?;
-    let host = host.trim_start_matches('[').trim_end_matches(']');
+    let host = unbracketed(url.host_str()?);
     if let Ok(ip) = host.parse::<IpAddr>() {
         return ip_is_loopback(ip).then(|| vec![ip]);
     }
@@ -298,9 +297,40 @@ async fn probe_port(port: u16, host: &PortHost, deadline: Instant) -> bool {
 }
 
 async fn connects(ip: IpAddr, port: u16, deadline: Instant) -> bool {
-    tokio::time::timeout_at(deadline.into(), TcpStream::connect((ip, port)))
-        .await
-        .is_ok_and(|result| result.is_ok())
+    tokio::time::timeout_at(
+        deadline.into(),
+        TcpStream::connect((connect_destination(ip), port)),
+    )
+    .await
+    .is_ok_and(|result| result.is_ok())
+}
+
+// A wildcard means loopback of its own family, as on Linux and macOS and in
+// Node on Windows. Windows itself rejects it as a destination.
+fn connect_destination(ip: IpAddr) -> IpAddr {
+    match ip.to_canonical() {
+        IpAddr::V4(v4) if v4.is_unspecified() => Ipv4Addr::LOCALHOST.into(),
+        IpAddr::V6(v6) if v6.is_unspecified() => Ipv6Addr::LOCALHOST.into(),
+        _ => ip,
+    }
+}
+
+// Rewriting the host, not only the connection, gives a wildcard url the
+// loopback client
+fn connect_url(url: &str) -> anyhow::Result<Url> {
+    let mut url = Url::parse(url)?;
+    if let Some(Ok(ip)) = url
+        .host_str()
+        .map(|host| unbracketed(host).parse::<IpAddr>())
+    {
+        url.set_ip_host(connect_destination(ip))
+            .map_err(|()| anyhow::anyhow!("Cannot set the host of {url}"))?;
+    }
+    Ok(url)
+}
+
+fn unbracketed(host: &str) -> &str {
+    host.trim_start_matches('[').trim_end_matches(']')
 }
 
 // On overrun or cancel the whole tree is killed: the shell's own kill leaves
@@ -583,6 +613,58 @@ mod tests {
                 .await
                 .unwrap()
         );
+    }
+
+    #[test]
+    fn a_wildcard_connects_to_loopback_of_the_same_family() {
+        // Linux and macOS remap a wildcard destination themselves, so only
+        // the mapping shows the Windows behavior
+        for (host, destination) in [
+            ("0.0.0.0", "127.0.0.1"),
+            ("::", "::1"),
+            ("::ffff:0.0.0.0", "127.0.0.1"),
+            ("::ffff:127.0.0.1", "::ffff:127.0.0.1"),
+            ("10.0.0.1", "10.0.0.1"),
+            ("fd00::1", "fd00::1"),
+        ] {
+            assert_eq!(
+                connect_destination(host.parse().unwrap()),
+                destination.parse::<IpAddr>().unwrap(),
+                "{host}"
+            );
+        }
+        for (url, requested) in [
+            ("https://0.0.0.0:4200/a?b", "https://127.0.0.1:4200/a?b"),
+            ("http://[::]:4200/", "http://[::1]:4200/"),
+            (
+                "http://[::ffff:7f00:1]:4200/",
+                "http://[::ffff:7f00:1]:4200/",
+            ),
+            ("http://localhost:4200/", "http://localhost:4200/"),
+        ] {
+            let config = ReadinessProbeConfig {
+                url: Some(url.into()),
+                port: None,
+                host: None,
+                command: None,
+                timeout: 1,
+                interval: None,
+            };
+            let Probe::Url { url: built, .. } = Probe::from_config(&config, String::new()).unwrap()
+            else {
+                panic!("{url}");
+            };
+            assert_eq!(built.as_str(), requested);
+        }
+    }
+
+    #[test]
+    fn port_host_may_be_a_bracketed_ipv6_address() {
+        let config = port_config(4200, Some("[::1]"), 1);
+        assert!(matches!(
+            Probe::from_config(&config, String::new()).unwrap(),
+            Probe::Port { host: PortHost::Ip(ip), .. } if ip == Ipv6Addr::LOCALHOST
+        ));
     }
 
     #[cfg(not(windows))]

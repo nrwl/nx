@@ -81,7 +81,9 @@ function resolveReadyWhen(
   data: ReadyWhenData
 ): ReadyWhenProbe<EnvDeferred> {
   const invalid = (reason: string) =>
-    new Error(`Task "${taskId}" has an invalid "readyWhen": ${reason}.`);
+    new InvalidReadyWhenError(
+      `Task "${taskId}" has an invalid "readyWhen": ${reason}.`
+    );
 
   if (typeof readyWhen !== 'object' || readyWhen === null) {
     throw invalid('expected an object');
@@ -105,18 +107,23 @@ function resolveReadyWhen(
       return String(value);
     },
   };
-  const resolve = (value: unknown): unknown => {
+  // webpack-dev-server and the Rspack dev server treat `auto` as an unset port
+  const portScope: TokenScope = {
+    ...scope,
+    isUnset: (value) => value === 'auto',
+  };
+  const resolve = (value: unknown, tokenScope = scope): unknown => {
     if (typeof value !== 'string') {
       return value;
     }
     let nodes: TokenNode[];
     try {
-      nodes = parseTokens(value, scope);
+      nodes = parseTokens(value, tokenScope);
     } catch (e) {
       throw invalid(e.message);
     }
     try {
-      return renderTokens(nodes, scope);
+      return renderTokens(nodes, tokenScope);
     } catch (e) {
       if (e instanceof EnvUnknownHere) {
         return new EnvDeferred(value);
@@ -126,8 +133,11 @@ function resolveReadyWhen(
   };
   // Braces are never valid in a host or port once resolved, so a leftover is
   // a typo. A url keeps them: they are legal in its path and query.
-  const resolveWithoutBraces = (key: string): unknown => {
-    const value = resolve(config[key]);
+  const resolveWithoutBraces = (
+    key: string,
+    tokenScope?: TokenScope
+  ): unknown => {
+    const value = resolve(config[key], tokenScope);
     if (typeof value === 'string' && /[{}]/.test(value)) {
       throw invalid(`"${key}" contains an unknown placeholder`);
     }
@@ -163,7 +173,7 @@ function resolveReadyWhen(
       return { kind: 'url', url, ...shared };
     }
     case 'port': {
-      let port = resolveWithoutBraces('port');
+      let port = resolveWithoutBraces('port', portScope);
       if (typeof port === 'string' && /^\d+$/.test(port)) {
         port = Number(port);
       }
@@ -200,7 +210,7 @@ function resolveReadyWhen(
         Array.isArray(config.logMatches)
           ? config.logMatches
           : [config.logMatches]
-      ).map(resolve);
+      ).map((match) => resolve(match));
       if (
         logMatches.length === 0 ||
         !logMatches.every(
@@ -261,6 +271,8 @@ export class ProducerFailedError extends Error {
 
 // An exit or a stop is completed by its own handler, not as a verdict
 export class NotReadyError extends Error {}
+
+export class InvalidReadyWhenError extends Error {}
 
 export function notReadyError(
   taskId: string,

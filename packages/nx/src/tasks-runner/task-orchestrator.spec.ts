@@ -14,6 +14,7 @@ import type { RunningTask } from './running-tasks/running-task';
 import { TaskOrchestrator } from './task-orchestrator';
 import { BatchStatus } from '../native';
 import type { TaskResult } from './life-cycle';
+import { getExecutorForTask } from './utils';
 
 performance.mark = vi.fn((name: string) => ({ name }) as PerformanceMark);
 performance.measure = vi.fn();
@@ -2761,6 +2762,87 @@ describe('TaskOrchestrator', () => {
           })
         );
       });
+
+      it('fails a producer before it starts on an error outside its readyWhen even when nothing waits for it', async () => {
+        const { orchestrator, serve } = createOrchestrator({
+          readyWhen: { port: 4200 },
+          waitFor: 'started',
+        });
+        orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+        const error = new Error('Unable to resolve @acme/plugin:serve.');
+        vi.mocked(getExecutorForTask).mockImplementationOnce(() => {
+          throw error;
+        });
+
+        const shared = await orchestrator.startContinuousTask(serve, 1);
+
+        await expect(shared.getResults()).resolves.toMatchObject({ code: 1 });
+        expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+          false,
+          serve,
+          1,
+          error
+        );
+      });
+
+      it.each([
+        ['an owned', []],
+        ['a shared', ['app:serve']],
+      ])(
+        'runs %s producer with an invalid readyWhen without a check when nothing waits for it to be ready',
+        async (_, running) => {
+          const { orchestrator, serve, runningTask } = createOrchestrator({
+            readyWhen: { port: 0 },
+            waitFor: 'started',
+          });
+          Object.assign(orchestrator, {
+            runTask: vi.fn(async () => ({ ...runningTask, onExit: vi.fn() })),
+            detectTaskInvocationLoop: vi.fn(),
+            scheduleNextTasksAndReleaseThreads: vi.fn(),
+            runningContinuousTasks: new Map(),
+            continuousTaskExitHandled: new Map(),
+          });
+          orchestrator.processedTasks.set(
+            'app:serve',
+            Promise.resolve(process.env)
+          );
+          orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+          orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
+          orchestrator.runningTasksService.getRunningTasks = () => running;
+          const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+          try {
+            const started = await orchestrator.startContinuousTask(serve, 1);
+
+            expect(
+              orchestrator.handleDiscreteWorkerFailure
+            ).not.toHaveBeenCalled();
+            expect(orchestrator.runningContinuousTasks.has('app:serve')).toBe(
+              true
+            );
+            expect(
+              orchestrator.options.lifeCycle.appendTaskOutput
+            ).toHaveBeenCalledWith(
+              'app:serve',
+              '\r\nTask "app:serve" has an invalid "readyWhen": "port" must be an integer from 1 to 65535. Nothing in this run waits for it to be ready, so it runs without a readiness check.\r\n',
+              false
+            );
+            // The TUI replaces an owned task's terminal in runTask
+            if (running.length === 0) {
+              expect(
+                orchestrator.options.lifeCycle.appendTaskOutput.mock
+                  .invocationCallOrder[0]
+              ).toBeGreaterThan(
+                orchestrator.runTask.mock.invocationCallOrder[0]
+              );
+            }
+            // Detach without running the exit handling of a real producer
+            orchestrator.completedTasks.set('app:serve', 'stopped');
+            started.kill();
+          } finally {
+            log.mockRestore();
+          }
+        }
+      );
 
       it('ignores a readiness row that turns ready after a shared producer exited', async () => {
         const { orchestrator, serve } = createOrchestrator({

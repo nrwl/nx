@@ -61,6 +61,7 @@ import {
   getReadyWhen,
   getReadyWhenConfig,
   getReadyWhenWait,
+  InvalidReadyWhenError,
   NotReadyError,
   notReadyError,
   ProducerFailedError,
@@ -1854,8 +1855,11 @@ export class TaskOrchestrator {
       this.runningTasksService.getRunningTasks([task.id]).length
     ) {
       let readyWhen: ReadyWhenWait | null;
+      let uncheckedReason: string | undefined;
       try {
-        readyWhen = this.getReadyWhenWait(task);
+        ({ readyWhen, uncheckedReason } = this.getReadinessCheck(task, () =>
+          this.getReadyWhenWait(task)
+        ));
       } catch (e) {
         return this.failTaskBeforeStart(task, groupId, e);
       }
@@ -1869,6 +1873,9 @@ export class TaskOrchestrator {
         this.runningTasksService,
         task.id
       );
+      if (uncheckedReason) {
+        this.warnUncheckedReadiness(task, uncheckedReason);
+      }
       if (readyWhen) {
         const state = this.armReadiness(task.id);
         this.pollReadinessRow(task, readyWhen, state.abort.signal, true).then(
@@ -1914,6 +1921,7 @@ export class TaskOrchestrator {
     let streamOutput: boolean;
     let env: NodeJS.ProcessEnv;
     let readyWhen: NormalizedReadyWhen | null;
+    let uncheckedReason: string | undefined;
     try {
       const taskSpecificEnv = await this.processedTasks.get(task.id);
       pipeOutput = await this.pipeOutputCapture(task);
@@ -1948,7 +1956,9 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput
           );
-      readyWhen = this.getReadyWhen(task, env);
+      ({ readyWhen, uncheckedReason } = this.getReadinessCheck(task, () =>
+        this.getReadyWhen(task, env)
+      ));
       await this.waitForReadyDependencies(task);
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
@@ -1977,6 +1987,9 @@ export class TaskOrchestrator {
         pipeOutput
       );
       this.tasksSchedule.markContinuousTaskStarted(task.id);
+      if (uncheckedReason) {
+        this.warnUncheckedReadiness(task, uncheckedReason);
+      }
       if (readyWhen) {
         this.startReadinessProbe(task, readyWhen, childProcess);
       }
@@ -2034,6 +2047,40 @@ export class TaskOrchestrator {
       this.projects,
       workspaceRoot
     );
+  }
+
+  // An invalid readyWhen fails the task before it starts only when something
+  // in this run waits for it; otherwise the task runs without a check
+  private getReadinessCheck<T>(
+    task: Task,
+    resolve: () => T | null
+  ): { readyWhen: T | null; uncheckedReason?: string } {
+    try {
+      return { readyWhen: resolve() };
+    } catch (e) {
+      if (
+        !(e instanceof InvalidReadyWhenError) ||
+        this.hasReadyWaiter(task.id)
+      ) {
+        throw e;
+      }
+      return { readyWhen: null, uncheckedReason: e.message };
+    }
+  }
+
+  // Call it after the start: the TUI replaces the task's terminal when it
+  // starts, dropping output appended before
+  private warnUncheckedReadiness(task: Task, reason: string) {
+    const message = `${reason} Nothing in this run waits for it to be ready, so it runs without a readiness check.`;
+    if (this.tuiEnabled) {
+      this.options.lifeCycle.appendTaskOutput(
+        task.id,
+        `\r\n${message}\r\n`,
+        false
+      );
+    } else {
+      console.warn(message);
+    }
   }
 
   private async waitForReadyDependencies(task: Task): Promise<void> {
@@ -2599,7 +2646,11 @@ export class TaskOrchestrator {
       // The log probe reads the captured output. Read from the config, because
       // the probe resolves against the env that depends on this
       const readyWhen = getReadyWhenConfig(task, this.projectGraph);
-      if (readyWhen && 'logMatches' in readyWhen) {
+      if (
+        typeof readyWhen === 'object' &&
+        readyWhen &&
+        'logMatches' in readyWhen
+      ) {
         return true;
       }
 
