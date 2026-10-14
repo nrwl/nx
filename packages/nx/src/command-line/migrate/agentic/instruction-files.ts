@@ -1,44 +1,5 @@
 import { writeFileSync } from 'fs';
 import { join, relative } from 'path';
-import { mkdirSafely, stepPromptsDir } from './handoff';
-
-export interface StepInstructionFiles {
-  /** Absolute path: config loaders resolve it, not the agent from its cwd. */
-  systemPromptFilePath: string;
-  /** Single-line command-line text pointing the agent at its instructions. */
-  instructionsPointer: string;
-}
-
-export interface WriteStepInstructionFilesArgs {
-  workspaceRoot: string;
-  runDir: string;
-  migration: { package: string; name: string };
-  systemPrompt: string;
-  instructions: string;
-}
-
-/**
- * Writes prompts as files on every platform to keep one delivery path.
- * Windows npm shims cannot carry multi-line prompts within cmd.exe's limit.
- */
-export function writeStepInstructionFiles(
-  args: WriteStepInstructionFilesArgs
-): StepInstructionFiles {
-  const { workspaceRoot, runDir, migration, systemPrompt, instructions } = args;
-  const promptsDir = stepPromptsDir(runDir, migration);
-  mkdirSafely(promptsDir, `prompt directory for ${migration.name}`);
-  const systemPromptFilePath = join(promptsDir, 'system.md');
-  writeStepFile(systemPromptFilePath, systemPrompt, 'system prompt');
-  const instructionsFilePath = writeInstructionsFile(
-    workspaceRoot,
-    promptsDir,
-    instructions
-  );
-  return {
-    systemPromptFilePath,
-    instructionsPointer: `Your instructions for this migration step are in the file ${instructionsFilePath} (path is relative to the workspace root). Read it in full, then follow it.`,
-  };
-}
 
 /** Writes `instructions.md` into an existing `promptsDir`; returns its path. */
 export function writeInstructionsFile(

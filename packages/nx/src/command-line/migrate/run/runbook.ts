@@ -44,8 +44,9 @@ export interface RunbookContext {
 export function renderRunbook(ctx: RunbookContext): string {
   const runId = singleLine(ctx.runId);
   const reconcile = singleLine(ctx.reconcileCommand);
-  // Run-scoped like the Claude runner grant: a wildcard run segment would let
-  // a configured child write handoffs that settle steps in another run.
+  // Run-scoped like the Claude Code handoff grant: a wildcard run segment
+  // would let a configured child write handoffs that settle steps in another
+  // run.
   const handoffsGlob = `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${HANDOFFS_DIR_NAME}/**`;
   const lines: string[] = [
     `# Nx migrate run ${runId}`,
@@ -146,9 +147,9 @@ export function renderRunbook(ctx: RunbookContext): string {
     `- A migration with an AI-driven part makes its worker emit a`,
     `  \`nx_migrate_prompt\` block pointing at an instructions file. Apply`,
     `  those instructions to the workspace. Scope rules for that work:`,
-    ...renderAuthorScopeRuleLines(singleLine(ctx.pmExec), {
-      source: 'dispensed-step',
-    }).map((line) => `  ${line}`),
+    ...renderAuthorScopeRuleLines(singleLine(ctx.pmExec)).map(
+      (line) => `  ${line}`
+    ),
     NX_JSON_MIGRATE_RULE,
     `  The \`nx migrate\` commands this runbook and the step blocks hand you`,
     `  (the reconcile, worker and \`next\` commands) are the exception to the`,

@@ -434,18 +434,11 @@ export async function runOrchestratorInit(
     refuseUnsafeScratchExposure(scratchExposure, INIT_CONTINUE_HINT);
   }
   // Applied before the checkpoint so the entry (when it can be added) already
-  // covers older scratch by the time the checkpoint's `git add -A` runs; the
-  // fallback's standalone commit is suppressed because that checkpoint
-  // carries the edit. A planned ignore migration can't be deferred to: the
-  // run dir is created below, before that migration runs.
+  // covers older scratch by the time the checkpoint's `git add -A` runs.
   await applyAgenticHandoffGitignoreFallback({
     migrations: sorted,
     installedNxVersion,
-    effectiveCreateCommits: createCommits,
-    commitPrefix,
     root,
-    applyWhenPlanned: true,
-    commitStandalone: false,
   });
   if (scratchExposure === 'unignored') {
     // The fallback was the workspace's last chance at ignore coverage;
@@ -3308,9 +3301,8 @@ function planPromptPath(
   return null;
 }
 
-// Wording mirrors the classic runner's ambiguous-outcome cause lines. A
-// readable handoff whose issue report is invalid is a rejection too: the fold
-// refused to consume it, and only this response can tell the agent why.
+// A readable handoff whose issue report is invalid is a rejection too: the
+// fold refused to consume it, and only this response can tell the agent why.
 function describeRejectedHandoff(
   dir: string,
   state: MigrateRunState,

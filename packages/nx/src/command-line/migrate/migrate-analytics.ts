@@ -37,7 +37,6 @@ export type MigratePromptChoices = {
   agentic: 'yes-once' | 'yes-flex' | 'yes-pin' | 'no-once' | 'no-never';
   // The chosen agent id (open-ended).
   agent_select: string;
-  ambiguous_agent_outcome: 'abort' | 'continue';
 };
 export type MigratePromptName = keyof MigratePromptChoices;
 // Underscore-shaped because the code is appended verbatim to the error event

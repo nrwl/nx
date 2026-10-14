@@ -38,19 +38,6 @@ export function logMigrationBoundary(
 }
 
 /**
- * Logs the outcome line that closes an agentic phase. Vocabulary:
- *   ✓ <label>[ (<sha>)]: <summary>
- */
-export function logAgenticSuccessOutcome(
-  label: string,
-  sha: string | null,
-  summary: string
-): void {
-  const shaPart = sha ? ` (${sha})` : '';
-  logger.info(`${pc.green('✓')} ${label}${shaPart}: ${summary}`);
-}
-
-/**
  * Callers must already know an agentic step was owed; this only picks which one
  * the waiver dropped. The dropped-`agentContext` note is aimed at the migration
  * author, hence `--verbose`.

@@ -69,7 +69,6 @@ describe('GA4 event name length cap', () => {
     multi_major: true,
     agentic: true,
     agent_select: true,
-    ambiguous_agent_outcome: true,
   };
   const GENERATE_ERROR_CODES: Record<MigrateGenerateErrorCode, true> = {
     resolve_version: true,

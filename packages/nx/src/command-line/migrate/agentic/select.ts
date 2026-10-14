@@ -87,17 +87,6 @@ export async function resolveAgentic(
   return { kind: 'enabled', selectedAgent: selected };
 }
 
-/**
- * No warning when `--validate` is passed with the agentic flow off: validation
- * requires an active agent session by definition.
- */
-export function resolveShouldRunValidation(args: {
-  validate: boolean | undefined;
-  agenticKind: ResolvedAgentic['kind'];
-}): boolean {
-  return args.validate !== false && args.agenticKind === 'enabled';
-}
-
 const ID_PROBLEM_LABELS: Record<MigrationIdProblem, string> = {
   'not-shell-safe': 'not shell-safe',
   duplicate: 'listed more than once',

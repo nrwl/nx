@@ -176,11 +176,6 @@ export function commitCheckpointBeforeMigrations(
   }
 }
 
-/**
- * `agenticHasDiffContext` gates the agent prompt: without per-migration commits
- * to isolate a migration's diff, the prompt embeds a file list instead of
- * pointing at git.
- */
 export function resolveCreateCommits(args: {
   createCommits: boolean | undefined;
   // An orchestrated run always takes the agentic defaults, so the two can
@@ -190,7 +185,6 @@ export function resolveCreateCommits(args: {
   commitPrefixIsCustom?: boolean;
 }): {
   effective: boolean;
-  agenticHasDiffContext: boolean;
   warning?: string;
   error?: string;
 } {
@@ -203,7 +197,6 @@ export function resolveCreateCommits(args: {
   if (createCommits === true && !isGitRepo) {
     return {
       effective: false,
-      agenticHasDiffContext: false,
       error:
         '`--create-commits` requires a git repository. Run `git init` first, or omit the flag.',
     };
@@ -213,7 +206,6 @@ export function resolveCreateCommits(args: {
     if (createCommits === false) {
       return {
         effective: false,
-        agenticHasDiffContext: false,
         warning:
           (orchestrated
             ? "--no-create-commits was passed, but orchestrated migrate runs create per-migration commits by default. Without them, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review."
@@ -228,7 +220,6 @@ export function resolveCreateCommits(args: {
     if (!isGitRepo) {
       return {
         effective: false,
-        agenticHasDiffContext: false,
         warning:
           (orchestrated
             ? 'Orchestrated migrate runs create per-migration commits by default, but the workspace is not a git repository. Continuing without commits, so the agent will not receive per-file diff context. Run `git init` to enable.'
@@ -238,12 +229,11 @@ export function resolveCreateCommits(args: {
             : ''),
       };
     }
-    return { effective: true, agenticHasDiffContext: true };
+    return { effective: true };
   }
 
   return {
     effective: createCommits === true,
-    agenticHasDiffContext: false,
     warning:
       commitPrefixIsCustom && createCommits !== true
         ? 'A custom migrate commit prefix is configured, but commits are not enabled for this run, so it has no effect. Set `migrate.createCommits` to `true` (or pass `--create-commits`) to create a commit per migration.'
