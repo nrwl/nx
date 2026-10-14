@@ -231,7 +231,14 @@ export async function e2eProjectGeneratorInternal(
   }
 
   if (options.testRunner === 'vitest') {
-    tasks.push(await addVitest(host, options.e2eProjectRoot));
+    tasks.push(
+      await addVitest(
+        host,
+        options.e2eProjectRoot,
+        options.e2eProjectName,
+        dependsOn
+      )
+    );
     host.delete(joinPathFragments(options.e2eProjectRoot, 'jest.config.ts'));
     for (const file of [
       'src/test-setup.ts',
@@ -422,7 +429,12 @@ async function normalizeOptions(
   };
 }
 
-async function addVitest(tree: Tree, e2eProjectRoot: string) {
+async function addVitest(
+  tree: Tree,
+  e2eProjectRoot: string,
+  e2eProjectName: string,
+  dependsOn: string[]
+) {
   ensurePackage('@nx/vitest', nxVersion);
   // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
   // exposes the temp install via `Module._initPaths`, which ESM ignores.
@@ -436,10 +448,24 @@ async function addVitest(tree: Tree, e2eProjectRoot: string) {
 
   // A scoped registration infers `e2e`; the others would add a `test` target.
   const include = `${e2eProjectRoot}/**/*`;
+  const nxJson = readNxJson(tree);
+  // Split tasks get no `dependsOn` from `e2e`, so give them the app's serve here.
+  const ciTargetDefaults = nxJson.targetDefaults?.['e2e-ci--**/**'];
   updateNxJson(tree, {
-    ...readNxJson(tree),
+    ...nxJson,
+    targetDefaults: {
+      ...nxJson.targetDefaults,
+      'e2e-ci--**/**': [
+        ...(Array.isArray(ciTargetDefaults)
+          ? ciTargetDefaults
+          : ciTargetDefaults
+            ? [ciTargetDefaults]
+            : []),
+        { filter: { projects: [e2eProjectName] }, dependsOn },
+      ],
+    },
     plugins: [
-      ...(readNxJson(tree).plugins ?? []).map((p) => {
+      ...(nxJson.plugins ?? []).map((p) => {
         const registration = typeof p === 'string' ? { plugin: p } : p;
         return registration.plugin === '@nx/vitest'
           ? {
@@ -451,7 +477,11 @@ async function addVitest(tree: Tree, e2eProjectRoot: string) {
       {
         plugin: '@nx/vitest',
         include: [include],
-        options: { testTargetName: 'e2e', testMode: 'run' },
+        options: {
+          testTargetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+          testMode: 'run',
+        },
       },
     ],
   });

@@ -1582,6 +1582,25 @@ describe('app', () => {
       `);
     });
 
+    it('should serve jest apps as CommonJS with tsx', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'fastify',
+        unitTestRunner: 'jest',
+        e2eTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/api/src/main.ts', 'utf-8')).toMatch(
+        /^#!\/usr\/bin\/env tsx\n[\s\S]*from '\.\/app\/app';/
+      );
+      expect(readJson(tree, 'apps/api/package.json').type).toBeUndefined();
+      expect(tree.exists('apps/api/jest.config.cts')).toBe(true);
+      expect(tree.exists('apps/api-e2e/jest.config.cts')).toBe(true);
+    });
+
     it('should set up vitest e2e tests for node-served apps', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/api',
@@ -1597,9 +1616,8 @@ describe('app', () => {
       expect(tree.exists('apps/api-e2e/src/support/global-teardown.ts')).toBe(
         false
       );
-      expect(
-        tree.read('apps/api-e2e/vitest.config.mts', 'utf-8')
-      ).toMatchInlineSnapshot(`
+      expect(tree.read('apps/api-e2e/vitest.config.mts', 'utf-8'))
+        .toMatchInlineSnapshot(`
         "import { defineConfig } from 'vitest/config';
 
         export default defineConfig({
@@ -1614,9 +1632,8 @@ describe('app', () => {
         });
         "
       `);
-      expect(
-        readJson(tree, 'apps/api-e2e/package.json').nx.targets
-      ).toMatchInlineSnapshot(`
+      expect(readJson(tree, 'apps/api-e2e/package.json').nx.targets)
+        .toMatchInlineSnapshot(`
         {
           "e2e": {
             "dependsOn": [
@@ -1648,10 +1665,28 @@ describe('app', () => {
               "apps/api-e2e/**/*",
             ],
             "options": {
+              "ciTargetName": "e2e-ci",
               "testMode": "run",
               "testTargetName": "e2e",
             },
             "plugin": "@nx/vitest",
+          },
+        ]
+      `);
+      expect(
+        readNxJson(tree).targetDefaults['e2e-ci--**/**']
+      ).toMatchInlineSnapshot(`
+        [
+          {
+            "dependsOn": [
+              "@proj/api:build",
+              "@proj/api:serve",
+            ],
+            "filter": {
+              "projects": [
+                "@proj/api-e2e",
+              ],
+            },
           },
         ]
       `);

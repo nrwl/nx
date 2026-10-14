@@ -109,10 +109,11 @@ function getServeRuntime(
   }
   // Node runs TypeScript natively but does not resolve tsconfig path aliases.
   // Its ESM sources import `./x.ts`, which only tsc and rolldown rewrite on build,
-  // and `--js` apps would make jest load CommonJS configs as ESM.
+  // Jest loads ESM sources as CommonJS, so `--js` and jest apps stay CommonJS on tsx.
   return isUsingTsSolutionConfig &&
     (options.bundler === 'tsc' || options.bundler === 'rolldown') &&
-    !options.js
+    !options.js &&
+    options.unitTestRunner !== 'jest'
     ? 'node'
     : 'tsx';
 }
