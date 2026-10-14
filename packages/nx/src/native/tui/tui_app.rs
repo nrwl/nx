@@ -332,14 +332,19 @@ pub trait TuiApp: Send {
 
     /// Append output to a task's output buffer
     ///
-    /// Default implementation delegates to print_task_terminal_output.
+    /// Default implementation writes to the task's PTY, or creates one through
+    /// print_task_terminal_output when the task has none.
     ///
     /// # Arguments
     ///
     /// * `task_id` - The task identifier
     /// * `output` - The output string to append
     fn append_task_output(&mut self, task_id: String, output: String) {
-        self.print_task_terminal_output(task_id, output);
+        let pty = self.state().lock().get_pty_instance(&task_id);
+        match pty {
+            Some(pty) => pty.process_output(output.as_bytes()),
+            None => self.print_task_terminal_output(task_id, output),
+        }
     }
 
     // === Callback Management ===

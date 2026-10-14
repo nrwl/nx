@@ -1391,6 +1391,19 @@ mod tests {
     }
 
     #[test]
+    fn test_append_task_output_writes_to_a_registered_pty() {
+        let mut app = create_test_inline_app();
+        app.register_running_non_interactive_task(String::from("app1:build"));
+
+        app.append_task_output(String::from("app1:build"), String::from("streamed\n"));
+
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
+        let pty = state.get_pty_instance("app1:build").unwrap();
+        assert!(pty.get_screen().unwrap().contents().contains("streamed"));
+    }
+
+    #[test]
     fn test_calculate_pty_dimensions() {
         let app = create_test_inline_app();
         let (rows, cols) = app.calculate_pty_dimensions();
