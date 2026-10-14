@@ -97,7 +97,7 @@
       "x-deprecated": "Use `enableTypedLinting` instead. This option will be removed in Nx v24."
     },
     "bundler": {
-      "description": "Bundler which is used to package the application. Defaults to `tsc` in TypeScript solution workspaces, otherwise `rolldown` (`esbuild` for the fastify framework). `tsc` requires a TypeScript solution workspace.",
+      "description": "Bundler which is used to package the application. Defaults to `tsc` in TypeScript solution workspaces, otherwise `rolldown`. `tsc` requires a TypeScript solution workspace.",
       "type": "string",
       "enum": ["tsc", "rolldown", "esbuild", "webpack"],
       "x-priority": "important"
