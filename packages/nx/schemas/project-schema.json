@@ -254,7 +254,7 @@
   },
   "definitions": {
     "readyWhen": {
-      "description": "How Nx detects that this continuous target is ready. Dependents opt in with \"waitFor\": \"ready\" on their dependsOn entry. Strings may use the {workspaceRoot}, {projectRoot}, {projectName} and {options.*} placeholders, resolved against the options the task runs with.",
+      "description": "How Nx detects that this continuous target is ready. Dependents opt in with \"waitFor\": \"ready\" on their dependsOn entry. Strings may use the {workspaceRoot}, {projectRoot}, {projectName}, {options.*} and {env.*} placeholders, resolved against the options and environment the task runs with. A placeholder can list fallbacks, as in {options.port ?? env.PORT ?? 4200}.",
       "type": "object",
       "properties": {
         "url": {

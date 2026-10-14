@@ -59,11 +59,14 @@ import { waitForReadiness } from './readiness/probes';
 import {
   getReadyProducerIds,
   getReadyWhen,
+  getReadyWhenConfig,
+  getReadyWhenWait,
   NotReadyError,
   notReadyError,
   ProducerFailedError,
   readinessTimeoutError,
   type NormalizedReadyWhen,
+  type ReadyWhenWait,
 } from './readiness/ready-when';
 import { BatchProcess } from './running-tasks/batch-process';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
@@ -1855,9 +1858,9 @@ export class TaskOrchestrator {
       this.runningTasksService &&
       this.runningTasksService.getRunningTasks([task.id]).length
     ) {
-      let readyWhen: NormalizedReadyWhen | null;
+      let readyWhen: ReadyWhenWait | null;
       try {
-        readyWhen = this.getReadyWhen(task);
+        readyWhen = this.getReadyWhenWait(task);
       } catch (e) {
         return this.failTaskBeforeStart(task, groupId, e);
       }
@@ -1911,11 +1914,47 @@ export class TaskOrchestrator {
     // duplicate of it.
     this.runningTasksService?.addRunningTask(task.id);
 
-    let taskSpecificEnv: NodeJS.ProcessEnv;
+    let pipeOutput: boolean;
+    let temporaryOutputPath: string;
+    let streamOutput: boolean;
+    let env: NodeJS.ProcessEnv;
     let readyWhen: NormalizedReadyWhen | null;
     try {
-      taskSpecificEnv = await this.processedTasks.get(task.id);
-      readyWhen = this.getReadyWhen(task);
+      const taskSpecificEnv = await this.processedTasks.get(task.id);
+      pipeOutput = await this.pipeOutputCapture(task);
+      // obtain metadata
+      temporaryOutputPath = this.cache.temporaryOutputPath(task);
+      // Deliberately not gated on `printsTaskOutput`, unlike `runTaskDirectly`.
+      // `SummaryTerminalOutputLifeCycle.printTaskTerminalOutput` is a no-op and it
+      // only reports at `endCommand`, which never runs for a task that does not
+      // end - so suppressing here would leave a `nx serve` under `summary` with a
+      // permanently silent terminal and no file to read yet. Streaming is the only
+      // channel a continuous task has.
+      streamOutput = isStaticOutputStyle(this.specifiedOutputStyle)
+        ? false
+        : shouldStreamOutput(task, this.initiatingProject);
+
+      env = pipeOutput
+        ? getEnvVariablesForTask(
+            task,
+            taskSpecificEnv,
+            getForceColorForChild(),
+            this.options.skipNxCache,
+            this.options.captureStderr,
+            null,
+            null
+          )
+        : getEnvVariablesForTask(
+            task,
+            taskSpecificEnv,
+            undefined,
+            this.options.skipNxCache,
+            this.options.captureStderr,
+            temporaryOutputPath,
+            streamOutput
+          );
+      // Resolved against the env the task is started with
+      readyWhen = this.getReadyWhen(task, env);
       await this.waitForReadyDependencies(task);
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
@@ -1935,38 +1974,6 @@ export class TaskOrchestrator {
     try {
       await this.preRunSteps([task], { groupId });
 
-      const pipeOutput = await this.pipeOutputCapture(task);
-      // obtain metadata
-      const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-      // Deliberately not gated on `printsTaskOutput`, unlike `runTaskDirectly`.
-      // `SummaryTerminalOutputLifeCycle.printTaskTerminalOutput` is a no-op and it
-      // only reports at `endCommand`, which never runs for a task that does not
-      // end - so suppressing here would leave a `nx serve` under `summary` with a
-      // permanently silent terminal and no file to read yet. Streaming is the only
-      // channel a continuous task has.
-      const streamOutput = isStaticOutputStyle(this.specifiedOutputStyle)
-        ? false
-        : shouldStreamOutput(task, this.initiatingProject);
-
-      let env = pipeOutput
-        ? getEnvVariablesForTask(
-            task,
-            taskSpecificEnv,
-            getForceColorForChild(),
-            this.options.skipNxCache,
-            this.options.captureStderr,
-            null,
-            null
-          )
-        : getEnvVariablesForTask(
-            task,
-            taskSpecificEnv,
-            undefined,
-            this.options.skipNxCache,
-            this.options.captureStderr,
-            temporaryOutputPath,
-            streamOutput
-          );
       this.detectTaskInvocationLoop(task);
       childProcess = await this.runTask(
         task,
@@ -2012,15 +2019,34 @@ export class TaskOrchestrator {
   // endregion Single Task
 
   // region Readiness
-  private getReadyWhen(task: Task): NormalizedReadyWhen | null {
-    return getReadyWhen(task, this.projectGraph, this.projects, workspaceRoot);
+  private getReadyWhen(
+    task: Task,
+    env: NodeJS.ProcessEnv
+  ): NormalizedReadyWhen | null {
+    return getReadyWhen(
+      task,
+      this.projectGraph,
+      this.projects,
+      workspaceRoot,
+      env
+    );
+  }
+
+  // Only the process that runs a producer knows the env its probe reads
+  private getReadyWhenWait(task: Task): ReadyWhenWait | null {
+    return getReadyWhenWait(
+      task,
+      this.projectGraph,
+      this.projects,
+      workspaceRoot
+    );
   }
 
   private async waitForReadyDependencies(task: Task): Promise<void> {
     const producerIds = getReadyProducerIds(task, this.fullTaskGraph);
     for (const producerId of producerIds) {
       const producer = this.fullTaskGraph.tasks[producerId];
-      const readyWhen = this.getReadyWhen(producer);
+      const readyWhen = this.getReadyWhenWait(producer);
       if (!readyWhen) {
         if (process.env.NX_VERBOSE_LOGGING === 'true') {
           console.log(
@@ -2056,7 +2082,7 @@ export class TaskOrchestrator {
   // that disappears mid-wait means the producer exited.
   private async pollReadinessRow(
     producer: Task,
-    readyWhen: NormalizedReadyWhen,
+    readyWhen: ReadyWhenWait,
     signal?: AbortSignal,
     ownerObserved = false
   ): Promise<void> {
@@ -2576,8 +2602,10 @@ export class TaskOrchestrator {
         return true;
       }
 
-      // The log probe reads the captured output
-      if (this.getReadyWhen(task)?.kind === 'logMatches') {
+      // The log probe reads the captured output. Read from the config, because
+      // the probe resolves against the env that depends on this
+      const readyWhen = getReadyWhenConfig(task, this.projectGraph);
+      if (readyWhen && 'logMatches' in readyWhen) {
         return true;
       }
 
