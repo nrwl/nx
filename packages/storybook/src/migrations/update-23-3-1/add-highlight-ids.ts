@@ -270,7 +270,9 @@ function migrateFile(
     if (
       ts.isCallExpression(payload) &&
       ts.isIdentifier(payload.expression) &&
-      declaredHelpers.has(payload.expression.text)
+      declaredHelpers.has(payload.expression.text) &&
+      payload.arguments.length === 2 &&
+      isGeneratedId(payload.arguments[1], filePath)
     ) {
       continue;
     }
@@ -322,11 +324,12 @@ function migrateFile(
   }
   const declarations = [`let ${counter} = 0;`];
   if (usesHelper) {
-    const params = TS_FILE_PATTERN.test(filePath)
-      ? 'payload: object | undefined, id: string'
-      : 'payload, id';
+    // Typed so a payload keeps its fields for a typed emitter. The copy reads
+    // an id getter once.
     declarations.push(
-      `function ${helper}(${params}) {\n  return { ...payload, id: Object(payload).id || id };\n}`
+      TS_FILE_PATTERN.test(filePath)
+        ? `function ${helper}<T extends object | undefined>(payload: T, id: string) {\n  const copy: { id?: unknown } = { ...payload };\n  return { ...copy, id: copy.id || id } as T & { id: string };\n}`
+        : `function ${helper}(payload, id) {\n  const copy = { ...payload };\n  return { ...copy, id: copy.id || id };\n}`
     );
   }
   changes.push(
@@ -498,6 +501,24 @@ function skipOuterExpressions(expression: Expression): Expression {
     current = current.expression;
   }
   return current;
+}
+
+// Matches `${filePath}:${++counter}`, the id an earlier run generated.
+function isGeneratedId(expression: Expression, filePath: string): boolean {
+  if (
+    !ts.isTemplateExpression(expression) ||
+    expression.head.text !== `${filePath}:` ||
+    expression.templateSpans.length !== 1
+  ) {
+    return false;
+  }
+  const [span] = expression.templateSpans;
+  return (
+    span.literal.text === '' &&
+    ts.isPrefixUnaryExpression(span.expression) &&
+    span.expression.operator === ts.SyntaxKind.PlusPlusToken &&
+    ts.isIdentifier(span.expression.operand)
+  );
 }
 
 // The last spread or `id` property sets the payload's id at runtime.
