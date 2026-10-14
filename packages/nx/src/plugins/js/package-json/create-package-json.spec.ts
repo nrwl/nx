@@ -5,16 +5,21 @@ vi.mock('fs', async () => ({
 vi.mock('../../../utils/fileutils');
 
 // Fixtures below reference `@nx/devkit` as a graph external node.
-// `recursivelyCollectPeerDependencies` then runs
-// `require('@nx/devkit/package.json')` to discover peer deps, which resolves
-// to the real `packages/devkit/package.json` via this monorepo's pnpm
-// symlinks and shows up as a sandbox-violating cross-project read. Stub it
-// with the only field this code path consumes — `peerDependencies` —
-// preserving the assertion that `nx` is collected as a transitive peer dep
-// of `@nx/devkit`.
-vi.mock('@nx/devkit/package.json', () => ({ peerDependencies: { nx: '*' } }), {
-  virtual: true,
-});
+// `recursivelyCollectPeerDependencies` then reads its package.json to discover
+// peer deps, which resolves to the real `packages/devkit/package.json` via this
+// monorepo's pnpm symlinks and shows up as a sandbox-violating cross-project
+// read. Stub the read with the only field this code path consumes,
+// `peerDependencies`, preserving the assertion that `nx` is collected as a
+// transitive peer dep of `@nx/devkit`. Other packages read as missing.
+vi.mock('../../../utils/package-json', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../utils/package-json')>()),
+  readModulePackageJson: (moduleSpecifier: string) => {
+    if (moduleSpecifier !== '@nx/devkit') {
+      throw new Error(`No package.json stub for ${moduleSpecifier}`);
+    }
+    return { packageJson: { peerDependencies: { nx: '*' } }, path: '' };
+  },
+}));
 
 import * as fs from 'fs';
 import * as configModule from '../../../config/configuration';

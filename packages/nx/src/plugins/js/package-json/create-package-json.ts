@@ -10,6 +10,7 @@ import {
 import {
   getDependencyVersionFromPackageJson,
   PackageJson,
+  readModulePackageJson,
 } from '../../../utils/package-json';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
@@ -25,6 +26,7 @@ import {
   findNodeMatchingVersion,
   isLinkNode,
 } from '../lock-file/project-graph-pruning';
+import { logger } from '../../../utils/logger';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -57,7 +59,7 @@ export function createPackageJson(
 
   const rootPackageJson: PackageJson = readJsonFile(join(root, 'package.json'));
 
-  const npmDeps = findProjectsNpmDependencies(
+  const npmDeps = findNpmDependencies(
     projectNode,
     graph,
     options.target,
@@ -66,7 +68,8 @@ export function createPackageJson(
       helperDependencies: options.helperDependencies,
       isProduction: options.isProduction,
     },
-    fileMap
+    fileMap,
+    root
   );
 
   // default package.json if one does not exist
@@ -323,6 +326,26 @@ export function findProjectsNpmDependencies(
   },
   fileMap?: ProjectFileMap
 ): NpmDeps {
+  return findNpmDependencies(
+    projectNode,
+    graph,
+    target,
+    rootPackageJson,
+    options,
+    fileMap,
+    workspaceRoot
+  );
+}
+
+function findNpmDependencies(
+  projectNode: ProjectGraphProjectNode,
+  graph: ProjectGraph,
+  target: string,
+  rootPackageJson: PackageJson,
+  options: Parameters<typeof findProjectsNpmDependencies>[4],
+  fileMap: ProjectFileMap | undefined,
+  root: string
+): NpmDeps {
   if (fileMap == null) {
     fileMap = readFileMapCache()?.fileMap?.projectFileMap || {};
   }
@@ -346,7 +369,7 @@ export function findProjectsNpmDependencies(
     }
     seen.add(node.name);
     npmDeps.dependencies[node.data.packageName] = node.data.version;
-    recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
+    recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen, root);
   });
 
   // if it's production, we want to ignore all found devDependencies
@@ -364,6 +387,7 @@ export function findProjectsNpmDependencies(
     graph,
     npmDeps,
     seen,
+    root,
     ignoredDependencies,
     dependencyInputs,
     selfInputs,
@@ -379,6 +403,7 @@ function findAllNpmDeps(
   graph: ProjectGraph,
   npmDeps: NpmDeps,
   seen: Set<string>,
+  root: string,
   ignoredDependencies: string[],
   dependencyPatterns: string[],
   rootPatterns?: string[],
@@ -426,7 +451,13 @@ function findAllNpmDeps(
         }
 
         npmDeps.dependencies[node.data.packageName] = node.data.version;
-        recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
+        recursivelyCollectPeerDependencies(
+          node.name,
+          graph,
+          npmDeps,
+          seen,
+          root
+        );
       } else if (graph.nodes[dep]) {
         findAllNpmDeps(
           projectFileMap,
@@ -434,6 +465,7 @@ function findAllNpmDeps(
           graph,
           npmDeps,
           seen,
+          root,
           ignoredDependencies,
           dependencyPatterns,
           undefined,
@@ -470,7 +502,8 @@ function recursivelyCollectPeerDependencies(
   projectName: string,
   graph: ProjectGraph,
   npmDeps: NpmDeps,
-  seen: Set<string>
+  seen: Set<string>,
+  root: string
 ) {
   const npmPackage = graph.externalNodes[projectName];
   if (!npmPackage) {
@@ -479,7 +512,12 @@ function recursivelyCollectPeerDependencies(
 
   const packageName = npmPackage.data.packageName;
   try {
-    const packageJson = require(`${packageName}/package.json`);
+    // nx's own location first: under pnpm it reaches the hidden hoisted
+    // .pnpm/node_modules, which the workspace root does not.
+    const { packageJson } = readModulePackageJson(packageName, [
+      __dirname,
+      root,
+    ]);
     if (!packageJson.peerDependencies) {
       return npmDeps;
     }
@@ -501,11 +539,20 @@ function recursivelyCollectPeerDependencies(
               optional: true,
             };
           }
-          recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
+          recursivelyCollectPeerDependencies(
+            node.name,
+            graph,
+            npmDeps,
+            seen,
+            root
+          );
         }
       });
     return npmDeps;
   } catch (e) {
+    logger.verbose(
+      `Could not read the package.json of ${packageName}, so its peer dependencies were not collected: ${e.message}`
+    );
     return npmDeps;
   }
 }
