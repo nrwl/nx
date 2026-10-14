@@ -33,6 +33,10 @@ export async function highlightAll() {
 const FALLBACKS = `import { useChannel } from 'storybook/preview-api';
 import { HIGHLIGHT } from 'storybook/highlight';
 
+function withHighlightId(payload, id) {
+  return id ? { ...payload, id } : payload;
+}
+
 export function highlight(selectors, id, options) {
   const emit = useChannel({});
   emit(HIGHLIGHT, { id, selectors });
@@ -42,6 +46,7 @@ export function highlight(selectors, id, options) {
   emit(HIGHLIGHT, { id: options.id ?? id, selectors });
   emit(HIGHLIGHT, { id: 'fixed', ...options, selectors });
   emit(HIGHLIGHT, options);
+  emit(HIGHLIGHT, withHighlightId(options, id));
 }
 `;
 
@@ -73,8 +78,9 @@ export function show(channel) {
 
       let highlightCount2 = 0;
 
-      function withHighlightId(payload: object | undefined, id: string) {
-        return { ...payload, id: Object(payload).id || id };
+      function withHighlightId<T extends object | undefined>(payload: T, id: string) {
+        const copy: { id?: unknown } = { ...payload };
+        return { ...copy, id: copy.id || id } as T & { id: string };
       }
 
       const highlightCount = 'taken';
@@ -113,7 +119,7 @@ export function show(channel) {
         }
       }
       "
-    `);
+      `);
     expect(tree.read('libs/ui/src/highlight.js', 'utf-8'))
       .toMatchInlineSnapshot(`
       "#!/usr/bin/env node
@@ -142,8 +148,13 @@ export function show(channel) {
 
       let highlightCount = 0;
 
+      function withHighlightId2(payload, id) {
+        const copy = { ...payload };
+        return { ...copy, id: copy.id || id };
+      }
+
       function withHighlightId(payload, id) {
-        return { ...payload, id: Object(payload).id || id };
+        return id ? { ...payload, id } : payload;
       }
 
       export function highlight(selectors, id, options) {
@@ -158,15 +169,19 @@ export function show(channel) {
         });
         emit(
           HIGHLIGHT,
-          withHighlightId(
+          withHighlightId2(
             { id: 'fixed', ...options, selectors },
             \`libs/ui/src/highlight.js:\${++highlightCount}\`,
           ),
         );
-        emit(HIGHLIGHT, withHighlightId(options, \`libs/ui/src/highlight.js:\${++highlightCount}\`));
+        emit(HIGHLIGHT, withHighlightId2(options, \`libs/ui/src/highlight.js:\${++highlightCount}\`));
+        emit(
+          HIGHLIGHT,
+          withHighlightId2(withHighlightId(options, id), \`libs/ui/src/highlight.js:\${++highlightCount}\`),
+        );
       }
       "
-    `);
+      `);
     expect(result).toEqual({ skipAgentic: true });
   });
 
