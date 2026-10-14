@@ -571,7 +571,7 @@ mod tests {
             ),
             (
                 "e2e:e2e",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
+                vec![HashInstruction::ignored_files(strings(&[
                     "dist/apps/web/**",
                 ]))],
             ),
@@ -681,21 +681,17 @@ mod tests {
             ),
             (
                 "a:serve",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
+                vec![HashInstruction::ignored_files(strings(&[
                     "dist/libs/lib/**",
                 ]))],
             ),
             (
                 "b:serve",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "dist/apps/a/**",
-                ]))],
+                vec![HashInstruction::ignored_files(strings(&["dist/apps/a/**"]))],
             ),
             (
                 "c:e2e",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "dist/apps/b/**",
-                ]))],
+                vec![HashInstruction::ignored_files(strings(&["dist/apps/b/**"]))],
             ),
         ]);
         let mut tg = task_graph(
@@ -868,7 +864,7 @@ mod tests {
             ("lib:build", vec![reads_x()]),
             (
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
+                vec![HashInstruction::ignored_files(strings(&[
                     "dist/libs/lib/**",
                 ]))],
             ),
@@ -927,7 +923,7 @@ mod tests {
             ("app:prebuild", vec![reads_x()]),
             (
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&["dist/gen/**"]))],
+                vec![HashInstruction::ignored_files(strings(&["dist/gen/**"]))],
             ),
         ]);
         let tg = task_graph(
@@ -953,7 +949,7 @@ mod tests {
             ("app:prebuild", vec![reads_x()]),
             (
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&["dist/gen/**"]))],
+                vec![HashInstruction::ignored_files(strings(&["dist/gen/**"]))],
             ),
             ("app:lint", vec![]),
         ]);

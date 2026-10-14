@@ -152,6 +152,11 @@ A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored f
 A new matching file counts without a configuration change.
 A path can name a file that doesn't exist yet: the cache key changes when the file appears or is removed.
 
+Like a `{projectRoot}` fileset, a glob doesn't reach into projects nested inside the project it reads from.
+`{projectRoot}/**/*` on `packages/app` matches the gitignored files of `packages/app`, but no file of a project at `packages/app/plugin`.
+A glob that starts inside the nested project, such as `{projectRoot}/plugin/dist/**`, matches that project's files.
+A glob that starts outside every project, such as `{workspaceRoot}/dist/**`, matches every file it names.
+
 A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob resolved with it.
 For a fileset on the project itself, that's the project's other `includeIgnored` globs.
 For one with `dependencies: true`, it's the globs carrying that flag, applied together to each dependency:

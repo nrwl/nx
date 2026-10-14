@@ -13,6 +13,7 @@ use tracing::{debug, trace};
 use super::dependency_closure::walk_dependencies;
 use super::plan_ids::referenced_ids;
 use crate::native::glob::{normalize_glob, parse_glob, partition_glob};
+use crate::native::tasks::hashers::{Positive, ProjectScope};
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
 /// Consumer task id -> the upstream task ids whose declared outputs it reads.
@@ -98,12 +99,16 @@ impl OutputReads {
                 HashInstruction::TaskOutput(_, outputs) => {
                     declared.insert(id, outputs.clone());
                 }
-                HashInstruction::IgnoredFileSet(patterns) => {
+                HashInstruction::IgnoredFileSet {
+                    globs: patterns,
+                    project_roots,
+                } => {
+                    let scope = ProjectScope::new(project_roots);
                     // Negated patterns are exclusions, not things read.
                     let reads = patterns
                         .iter()
                         .filter(|pattern| !pattern.starts_with('!'))
-                        .map(|pattern| GlobShape::new(pattern))
+                        .map(|pattern| GlobShape::read(pattern, &scope))
                         .collect();
                     globs.insert(id, reads);
                 }
@@ -169,6 +174,9 @@ fn producers_read_by<'a>(
 struct GlobShape {
     prefix: String,
     extension: Option<String>,
+    /// For a read: the nested project roots it does not match, see
+    /// `ProjectScope::nested_below`.
+    skipped: Vec<String>,
 }
 
 impl GlobShape {
@@ -177,6 +185,16 @@ impl GlobShape {
         Self {
             prefix: partition_glob(&glob).0,
             extension: extension_after_wildcard(&glob),
+            skipped: Vec::new(),
+        }
+    }
+
+    fn read(glob: &str, scope: &ProjectScope) -> Self {
+        Self {
+            skipped: Positive::parse(glob)
+                .map(|entry| scope.nested_below(&entry))
+                .unwrap_or_default(),
+            ..Self::new(glob)
         }
     }
 
@@ -188,7 +206,12 @@ impl GlobShape {
             || output.prefix.is_empty()
             || is_path_prefix(&self.prefix, &output.prefix)
             || is_path_prefix(&output.prefix, &self.prefix);
-        folders_meet && self.may_share_extension(output)
+        folders_meet
+            && self.may_share_extension(output)
+            && !self
+                .skipped
+                .iter()
+                .any(|root| is_path_prefix(root, &output.prefix))
     }
 
     /// Only two different extensions rule a match out; an unknown one could be anything.
@@ -243,7 +266,7 @@ mod tests {
 
     /// A disk-backed fileset: workspace-relative globs with no project.
     fn include_ignored(globs: &[&str]) -> HashInstruction {
-        HashInstruction::IgnoredFileSet(strings(globs))
+        HashInstruction::ignored_files(strings(globs))
     }
 
     #[test]
@@ -289,6 +312,29 @@ mod tests {
             )],
         );
         assert_eq!(e["app:build"], strings(&["ui:build"]));
+    }
+
+    #[test]
+    fn a_read_does_not_reach_an_output_in_a_nested_project_it_skips() {
+        let scoped = HashInstruction::IgnoredFileSet {
+            globs: strings(&["packages/gradle/**/*"]),
+            project_roots: strings(&["packages/gradle", "packages/gradle/runner"]),
+        };
+        let e = edges(
+            &[
+                ("runner:build", &["packages/gradle/runner/build"]),
+                ("gradle:compile", &["packages/gradle/build"]),
+                ("all:build", &["packages"]),
+                ("gradle:copy", &[]),
+            ],
+            &[(
+                "gradle:copy",
+                &["runner:build", "gradle:compile", "all:build"],
+            )],
+            &[("gradle:copy", vec![scoped])],
+        );
+        // `packages` holds the glob's own folder, so it still counts.
+        assert_eq!(e["gradle:copy"], strings(&["all:build", "gradle:compile"]));
     }
 
     #[test]

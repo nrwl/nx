@@ -733,8 +733,12 @@ export declare const enum EventType {
   rescan = 'rescan'
 }
 
-/** The files an `includeIgnored` fileset group matches on disk, sorted. */
-export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
+/**
+ * The files an `includeIgnored` fileset group matches on disk, sorted.
+ * Given the workspace's project roots, an entry skips projects nested below
+ * the one it reads from, as hashing does.
+ */
+export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>, projectRoots?: Array<string> | undefined | null): Array<string>
 
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 

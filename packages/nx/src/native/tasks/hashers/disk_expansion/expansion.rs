@@ -10,6 +10,7 @@ use anyhow::{Result, bail};
 use dashmap::DashMap;
 
 use super::entries::{Negation, Positive};
+use super::scope::ProjectScope;
 use crate::native::glob::{build_glob_set, expand_literal_braces, normalize_glob};
 use crate::native::walker::{PathPredicate, read_directory};
 
@@ -19,14 +20,15 @@ pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 
 /// Lists a directory, asked of whoever knows: the ignored index answers from
 /// a listing it keeps or from the disk, a caller without one reads the disk.
-/// `accept` is passed in so the answer is filtered as it is gathered. `None`
-/// when the directory cannot be read at all.
+/// `accept` is passed in so the answer is filtered as it is gathered, and a
+/// walk need not enter the directories in the last argument. `None` when the
+/// directory cannot be read at all.
 pub(crate) type ListDirectory<'a> =
-    Box<dyn Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a>;
+    Box<dyn Fn(&str, PathPredicate, &[String]) -> Option<Vec<String>> + Sync + 'a>;
 
 /// Reads the disk every time, for a caller with no index behind it.
 fn disk_files(workspace_root: &Path) -> ListDirectory<'_> {
-    Box::new(move |dir, accept| read_directory(workspace_root, dir, accept))
+    Box::new(move |dir, accept, skip| read_directory(workspace_root, dir, accept, skip))
 }
 
 /// For a caller with no workspace context: every path is checked on disk.
@@ -49,7 +51,7 @@ impl<'a> Source<'a> {
     /// the context can vouch for a path.
     pub(crate) fn fileset(
         tracked_file: PathPredicate<'a>,
-        list_directory: impl Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a,
+        list_directory: impl Fn(&str, PathPredicate, &[String]) -> Option<Vec<String>> + Sync + 'a,
     ) -> Self {
         Self {
             tracked_file,
@@ -91,14 +93,16 @@ pub struct FilesExpansion {
 /// Expands a group of globs into the files it names. `source` says what the
 /// expansion may lean on instead of the disk, see `expand_entries`. Every
 /// positive glob is resolved from its literal prefix, then the negations
-/// filter the result.
+/// filter the result. `project_roots` are the group's, see `scope_roots`.
 pub(crate) fn expand_globs(
     workspace_root: &Path,
     globs: &[String],
+    project_roots: &[String],
     source: &Source,
 ) -> Result<FilesExpansion> {
     let (positives, negations) = parse_group(globs)?;
-    expand_entries(workspace_root, &positives, &negations, source)
+    let scope = ProjectScope::new(project_roots);
+    expand_entries(workspace_root, &positives, &negations, &scope, source)
 }
 
 /// A group's entries split at their literal prefixes, positives then
@@ -128,11 +132,12 @@ pub(crate) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negati
 /// skips the stat on an exact path, and `list_directory` may answer from a
 /// listing instead of walking. Walks skip the same directories the
 /// workspace walker never enters, but an exact path or a prefix inside one of
-/// them is read as-is.
+/// them is read as-is. A walk keeps only the files `scope` admits.
 pub(crate) fn expand_entries(
     workspace_root: &Path,
     positives: &[Positive],
     negations: &[Negation],
+    scope: &ProjectScope,
     source: &Source,
 ) -> Result<FilesExpansion> {
     let Source {
@@ -174,12 +179,23 @@ pub(crate) fn expand_entries(
             let prefix_len = if root.is_empty() { 0 } else { root.len() + 1 };
             let set = build_glob_set(&[pattern])?;
             Box::new(move |path: &str| {
-                path.len() > prefix_len && set.is_match(&path[prefix_len..]) && !excluded(path)
+                path.len() > prefix_len
+                    && set.is_match(&path[prefix_len..])
+                    && !excluded(path)
+                    && scope.admits(entry, path)
             })
         } else {
-            Box::new(move |path: &str| !excluded(path))
+            Box::new(move |path: &str| !excluded(path) && scope.admits(entry, path))
         };
-        if let Some(under) = list_directory(root, &*accept) {
+        let mut skip = scope.nested_below(entry);
+        skip.extend(
+            negations
+                .iter()
+                .filter_map(Negation::whole_directory)
+                .filter(|dir| root.is_empty() || dir.starts_with(&format!("{root}/")))
+                .map(str::to_string),
+        );
+        if let Some(under) = list_directory(root, &*accept, &skip) {
             // Filtered again: a source is asked to apply `accept` so it can
             // skip work, not trusted to have done it.
             found.extend(under.into_iter().filter(|path| accept(path)));
