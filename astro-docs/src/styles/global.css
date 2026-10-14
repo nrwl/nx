@@ -17,7 +17,9 @@
    utility classes used across the docs and the shared nx-dev libraries pick up
    the brand colors without touching every component. */
 @theme {
-  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    'Instrument Sans', 'Instrument Sans Fallback', ui-sans-serif, system-ui,
+    sans-serif;
   --font-mono:
     'Server Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     monospace;
@@ -241,7 +243,7 @@
   }
 }
 :root {
-  --sl-font: 'Instrument Sans';
+  --sl-font: 'Instrument Sans', 'Instrument Sans Fallback';
   --sl-font-mono: 'Server Mono';
   --sl-line-height: 1.65;
 
@@ -374,7 +376,9 @@
   fill: black;
 }
 
-/* Brand fonts: Instrument Sans for text, Server Mono for code. */
+/* Brand fonts: Instrument Sans for text, Server Mono for code. The three
+   files used above the fold are preloaded through Link headers in
+   netlify.toml. */
 @font-face {
   font-family: 'Instrument Sans';
   font-style: normal;
@@ -415,6 +419,31 @@
   src: url('/docs/fonts/server-mono-400-oblique.woff2') format('woff2');
 }
 
+/* Arial, resized to Instrument Sans' glyph width (measured on docs text) and
+   vertical metrics, shown until the web font loads. Keeps text from shifting on the swap, which
+   matters most when a deep link scrolls to a heading on load. */
+@font-face {
+  font-family: 'Instrument Sans Fallback';
+  font-style: normal;
+  font-weight: 400 500;
+  src: local('Arial'), local('ArialMT');
+  size-adjust: 102.16%;
+  ascent-override: 94.95%;
+  descent-override: 24.47%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Instrument Sans Fallback';
+  font-style: normal;
+  font-weight: 600 700;
+  src: local('Arial Bold'), local('Arial-BoldMT');
+  size-adjust: 97.81%;
+  ascent-override: 99.17%;
+  descent-override: 25.56%;
+  line-gap-override: 0%;
+}
+
 code,
 pre {
   font-family: var(--__sl-font-mono);
@@ -433,7 +462,7 @@ h2 {
 /* Header and footer mirror the nx.dev (Framer) site, which sets its chrome in
    Instrument Sans with the ss05 stylistic set. */
 .nx-chrome {
-  font-family: 'Instrument Sans', sans-serif;
+  font-family: 'Instrument Sans', 'Instrument Sans Fallback', sans-serif;
   font-feature-settings: 'ss05';
 }
 
