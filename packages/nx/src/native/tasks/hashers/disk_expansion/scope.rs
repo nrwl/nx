@@ -12,6 +12,7 @@ use anyhow::Result;
 use super::entries::Positive;
 use super::expansion::parse_group;
 use crate::native::glob::{NxGlobSet, build_glob_set};
+use crate::native::utils::path::parent_dirs;
 
 /// The project roots a group needs to decide ownership: each scoped entry's
 /// owner and every root nested below where it is read from.
@@ -29,18 +30,14 @@ impl ProjectScope {
 
     /// The deepest root that is `directory` or holds it.
     fn owner_of_directory(&self, directory: &str) -> Option<&str> {
-        let mut current = directory;
-        loop {
-            if let Some(root) = self.roots.get(current) {
-                return Some(root);
-            }
-            current = &current[..current.rfind('/')?];
-        }
+        std::iter::once(directory)
+            .chain(parent_dirs(directory))
+            .find_map(|dir| self.roots.get(dir).map(String::as_str))
     }
 
     /// The deepest root holding the file at `path`.
     fn owner_of_file(&self, path: &str) -> Option<&str> {
-        self.owner_of_directory(&path[..path.rfind('/')?])
+        parent_dirs(path).find_map(|dir| self.roots.get(dir).map(String::as_str))
     }
 
     /// The roots below where `entry` reads from: projects it cannot match,

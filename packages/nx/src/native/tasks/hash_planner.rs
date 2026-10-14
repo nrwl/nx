@@ -32,6 +32,7 @@ use crate::native::tasks::ultracache_eligibility::{
 use crate::native::tasks::utils;
 use crate::native::ultracache::UltracacheConfigurations;
 use crate::native::utils::find_matching_projects;
+use crate::native::utils::path::parent_dirs;
 use std::sync::{Arc, OnceLock};
 
 /// Ids a plan keeps even when a configuration replaces its declared files: those of
@@ -625,14 +626,9 @@ impl HashPlanner {
             .map(|(name, _)| name.as_str())
             .unwrap_or(self_project);
         let owner = |glob: &str| -> &str {
-            let mut dir = glob.strip_prefix('!').unwrap_or(glob);
-            while let Some(cut) = dir.rfind('/') {
-                dir = &dir[..cut];
-                if let Some(name) = project_by_root.get(dir) {
-                    return name.as_str();
-                }
-            }
-            unowned
+            parent_dirs(glob.strip_prefix('!').unwrap_or(glob))
+                .find_map(|dir| project_by_root.get(dir))
+                .map_or(unowned, String::as_str)
         };
 
         // A recorded glob stays whole unless its brace alternatives belong to
@@ -1625,18 +1621,15 @@ fn overlaps_any(sorted_roots: &[String], root: &str) -> bool {
     if root.is_empty() || sorted_roots.first().is_some_and(|r| r.is_empty()) {
         return !sorted_roots.is_empty();
     }
-    let mut ancestor = root;
-    loop {
-        if sorted_roots
-            .binary_search_by(|r| r.as_str().cmp(ancestor))
-            .is_ok()
-        {
-            return true;
-        }
-        match ancestor.rfind('/') {
-            Some(cut) => ancestor = &ancestor[..cut],
-            None => break,
-        }
+    if std::iter::once(root)
+        .chain(parent_dirs(root))
+        .any(|ancestor| {
+            sorted_roots
+                .binary_search_by(|r| r.as_str().cmp(ancestor))
+                .is_ok()
+        })
+    {
+        return true;
     }
     let below = format!("{root}/");
     let start = sorted_roots.partition_point(|r| r.as_str() < below.as_str());
