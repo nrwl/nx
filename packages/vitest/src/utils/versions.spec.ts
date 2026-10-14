@@ -121,6 +121,71 @@ describe('versions', () => {
     expect(() => versions(tree)).toThrow(/not compatible with this workspace/);
   });
 
+  // @angular/build 22.2.0 and analog 2.8.0 widened their vitest peer to
+  // `^4.0.0 || ^5.0.0`.
+  it('should allow vitest 5 when @angular/build and analog peer it', () => {
+    setDevDependency('vite', '^8.0.0');
+    setDevDependency('@angular/build', '~22.2.2');
+    setDevDependency('@analogjs/vitest-angular', '~2.8.0');
+
+    expect(versions(tree).vitestVersion).toBe(vitestVersion);
+  });
+
+  it('should accept an installed vitest 5 when @angular/build and analog peer it', () => {
+    setDevDependency('vite', '^8.0.0');
+    setDevDependency('vitest', '5.0.3');
+    setDevDependency('@angular/build', '22.2.2');
+    setDevDependency('@analogjs/vitest-angular', '2.8.0');
+
+    expect(versions(tree).vitestVersion).toBe(vitestVersion);
+  });
+
+  it('should cap at vitest 4 when any vitest peer does not take vitest 5', () => {
+    setDevDependency('vite', '^8.0.0');
+    setDevDependency('vitest', '~5.0.1');
+    setDevDependency('@angular/build', '~22.2.2');
+    setDevDependency('@analogjs/vitest-angular', '~2.7.2');
+
+    expect(() => versions(tree)).toThrow(/Pin vitest to \^4\.0\.0 first/);
+  });
+
+  it('should prefer the vitest peer range of the installed package', () => {
+    setDevDependency('vite', '^8.0.0');
+    setDevDependency('@angular/build', '^22.1.0');
+    tree.write(
+      'node_modules/@angular/build/package.json',
+      JSON.stringify({
+        name: '@angular/build',
+        version: '22.2.2',
+        peerDependencies: { vitest: '^4.0.8 || ^5.0.0' },
+      })
+    );
+
+    expect(versions(tree).vitestVersion).toBe(vitestVersion);
+  });
+
+  it('should cap at the installed package peer range over the declared version', () => {
+    setDevDependency('vite', '^8.0.0');
+    setDevDependency('@analogjs/vitest-angular', 'latest');
+    tree.write(
+      'node_modules/@analogjs/vitest-angular/package.json',
+      JSON.stringify({
+        name: '@analogjs/vitest-angular',
+        version: '2.7.2',
+        peerDependencies: { vitest: '^1.3.1 || ^2.0.0 || ^3.0.0 || ^4.0.0' },
+      })
+    );
+
+    expect(versions(tree).vitestVersion).toBe('^4.0.0');
+  });
+
+  it('should cap at vitest 4 when the vitest peer version cannot be resolved', () => {
+    setDevDependency('vite', '^8.0.0');
+    setDevDependency('@angular/build', 'latest');
+
+    expect(versions(tree).vitestVersion).toBe('^4.0.0');
+  });
+
   it.each(['^6.4.0', '^7.0.0', '^8.0.0'])(
     'should use the latest versions when vite %s supports vitest 5',
     (viteRange) => {
