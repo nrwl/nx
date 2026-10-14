@@ -107,7 +107,7 @@
   },
   "devDependencies": {
     "nx": "workspace:*",
-    "storybook": "9.0.6"
+    "storybook": "9.1.21"
   },
   "peerDependencies": {
     "@nx/web": "workspace:*",
