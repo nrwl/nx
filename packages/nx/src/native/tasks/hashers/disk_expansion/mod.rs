@@ -329,6 +329,53 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_walk_skips_a_directory_a_negation_excludes_whole() {
+        let temp = workspace();
+        let skipped = std::sync::Mutex::new(Vec::new());
+        let reading = |dir: &str, accept: PathPredicate, skip: &[String]| {
+            skipped.lock().unwrap().extend(skip.iter().cloned());
+            crate::native::walker::read_directory(temp.path(), dir, accept, skip)
+        };
+        let expand = |group: &[&str]| {
+            skipped.lock().unwrap().clear();
+            let files = expand_globs(
+                temp.path(),
+                &globs(group),
+                &[],
+                &Source::fileset(NOTHING_TRACKED, reading),
+            )
+            .unwrap()
+            .files;
+            (files, skipped.lock().unwrap().clone())
+        };
+        let kept = vec!["dist/gen/a.js", "dist/gen/a.js.map", "dist/other/c.js"];
+        for negation in [
+            "!dist/gen/nested",
+            "!dist/gen/nested/**",
+            "!dist/gen/nested/**/*",
+        ] {
+            assert_eq!(
+                expand(&["dist/**", negation]),
+                (globs(&kept), globs(&["dist/gen/nested"])),
+                "{negation}"
+            );
+        }
+        // Other files in the folder are still wanted, so it is walked.
+        assert_eq!(
+            expand(&["dist/**", "!dist/**/*.map"]),
+            (
+                globs(&["dist/gen/a.js", "dist/gen/nested/b.js", "dist/other/c.js"]),
+                vec![]
+            )
+        );
+        // A folder outside where the glob reads is not its to skip.
+        assert_eq!(
+            expand(&["dist/gen/**", "!dist/other"]).1,
+            Vec::<String>::new()
+        );
+    }
+
+    #[test]
     fn a_walk_skips_projects_nested_below_the_one_it_reads_from() {
         let temp = TempDir::new().unwrap();
         for path in [

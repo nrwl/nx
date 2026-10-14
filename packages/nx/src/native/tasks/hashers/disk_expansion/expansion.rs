@@ -187,7 +187,14 @@ pub(crate) fn expand_entries(
         } else {
             Box::new(move |path: &str| !excluded(path) && scope.admits(entry, path))
         };
-        let skip = scope.nested_below(entry);
+        let mut skip = scope.nested_below(entry);
+        skip.extend(
+            negations
+                .iter()
+                .filter_map(Negation::whole_directory)
+                .filter(|dir| root.is_empty() || dir.starts_with(&format!("{root}/")))
+                .map(str::to_string),
+        );
         if let Some(under) = list_directory(root, &*accept, &skip) {
             // Filtered again: a source is asked to apply `accept` so it can
             // skip work, not trusted to have done it.
