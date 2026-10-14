@@ -41,6 +41,7 @@ import * as path from 'path';
 import { axiosVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 import {
+  ensureRootJest,
   findRootJestPreset,
   getInstalledJestMajorVersion,
 } from '@nx/jest/internal';
@@ -158,6 +159,11 @@ export async function e2eProjectGeneratorInternal(
         }),
       };
     });
+  }
+
+  // The app may use another unit test runner, leaving no Jest setup to share.
+  if (options.testRunner !== 'vitest' && !findRootJestPreset(host)) {
+    tasks.push(await ensureRootJest(host));
   }
 
   const jestPreset = findRootJestPreset(host) ?? 'jest.preset.js';

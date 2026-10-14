@@ -315,7 +315,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  if (options.e2eTestRunner === 'jest') {
+  if (options.e2eTestRunner === 'jest' || options.e2eTestRunner === 'vitest') {
     const e2eTask = await e2eProjectGenerator(tree, {
       ...options,
       projectType: options.framework === 'none' ? 'cli' : 'server',
@@ -323,8 +323,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       directory: options.rootProject ? 'e2e' : `${options.appProjectRoot}-e2e`,
       project: options.name,
       buildTarget: options.buildTargetName,
-      // Node-served apps are ESM, which jest loads as CommonJS.
-      testRunner: options.serveRuntime === 'node' ? 'vitest' : 'jest',
+      testRunner: options.e2eTestRunner,
       port: options.port,
       isNest: options.isNest,
       skipFormat: true,

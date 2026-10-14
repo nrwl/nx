@@ -24,8 +24,6 @@ export async function normalizeOptions(
   });
   options.rootProject = appProjectRoot === '.';
 
-  options.e2eTestRunner = options.e2eTestRunner ?? 'jest';
-
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
@@ -64,6 +62,10 @@ export async function normalizeOptions(
     isUsingTsSolutionConfig
   );
 
+  // Jest loads the app's ESM sources as CommonJS.
+  const unitTestRunner =
+    options.unitTestRunner ?? (serveRuntime === 'node' ? 'vitest' : 'jest');
+
   const appProjectName =
     !isUsingTsSolutionConfig || options.name ? projectName : importPath;
   const useProjectJson = options.useProjectJson ?? !isUsingTsSolutionConfig;
@@ -79,9 +81,10 @@ export async function normalizeOptions(
     importPath,
     parsedTags,
     linter: await normalizeLinterOption(host, options.linter),
-    // Jest loads the app's ESM sources as CommonJS.
-    unitTestRunner:
-      options.unitTestRunner ?? (serveRuntime === 'node' ? 'vitest' : 'jest'),
+    unitTestRunner,
+    e2eTestRunner:
+      options.e2eTestRunner ??
+      (unitTestRunner === 'vitest' ? 'vitest' : 'jest'),
     rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,
     buildTargetName: 'build',

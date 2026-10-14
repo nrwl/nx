@@ -6,7 +6,7 @@ export interface Schema {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
-  e2eTestRunner?: 'jest' | 'none';
+  e2eTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: LinterType;
   formatter?: 'none' | 'prettier' | 'oxfmt';
   tags?: string;

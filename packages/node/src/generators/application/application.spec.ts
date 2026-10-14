@@ -1601,11 +1601,10 @@ describe('app', () => {
       expect(tree.exists('apps/api-e2e/jest.config.cts')).toBe(true);
     });
 
-    it('should set up vitest e2e tests for node-served apps', async () => {
+    it('should default e2e tests to the vitest unit test runner', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/api',
         framework: 'express',
-        e2eTestRunner: 'jest',
         addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
@@ -1689,6 +1688,30 @@ describe('app', () => {
           },
         ]
       `);
+    });
+
+    it('should set up jest for explicit jest e2e tests alongside vitest unit tests', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'express',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('apps/api-e2e/jest.config.cts')).toBe(true);
+      expect(tree.read('jest.preset.js', 'utf-8')).toContain('@nx/jest/preset');
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies).toEqual(
+        expect.objectContaining({
+          '@nx/jest': expect.any(String),
+          jest: expect.any(String),
+          '@swc/jest': expect.any(String),
+          '@swc/core': expect.any(String),
+        })
+      );
     });
 
     it('should use the target name of a reused tsc app build registration', async () => {
