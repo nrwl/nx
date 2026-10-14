@@ -222,6 +222,7 @@ class NxTargetFactory(
       outputs.forEach { output -> outputsArray.add(output) }
       target.outputs = outputsArray
       addBuildStateJsonInputsAndOutputs(project, target)
+      addUpstreamOutputInputs(project, target)
       addExternalDependenciesInput(target, externalDependencies)
     }
 
@@ -586,6 +587,7 @@ class NxTargetFactory(
     }
 
     addBuildStateJsonInputsAndOutputs(project, target)
+    addUpstreamOutputInputs(project, target)
     return target
   }
 
@@ -656,6 +658,7 @@ class NxTargetFactory(
       dependsOnNode.addProperty("params", "forward")
       testCiTarget.dependsOn!!.add(dependsOnNode)
       addBuildStateJsonInputsAndOutputs(project, target)
+      addUpstreamOutputInputs(project, target)
     }
 
     return targets
@@ -672,16 +675,20 @@ class NxTargetFactory(
 
   private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
     val buildJsonFile = buildStateFile(project)
-    val buildState = pathFormatter.formatInputPath(buildJsonFile, project.basedir)
-
-    // Upstream modules reach this one through their build output, resolved per dependency.
-    listOf(
-      buildState,
-      pathFormatter.formatInputPath(File(project.build.outputDirectory), project.basedir),
-      pathFormatter.formatInputPath(File(project.build.directory, "*.jar"), project.basedir),
-    ).forEach { target.inputs?.add(ignoredFileset(it, dependencies = true)) }
-
+    target.inputs?.add(
+      ignoredFileset(pathFormatter.formatInputPath(buildJsonFile, project.basedir), dependencies = true)
+    )
     target.outputs?.add(pathFormatter.formatOutputPath(buildJsonFile, project.basedir))
+  }
+
+  // Upstream modules' classes or jar end up on this module's classpath; resolved per dependency.
+  private fun addUpstreamOutputInputs(project: MavenProject, target: NxTarget) {
+    listOf(
+      File(project.build.outputDirectory),
+      File(project.build.directory, "*.jar"),
+    ).forEach {
+      target.inputs?.add(ignoredFileset(pathFormatter.formatInputPath(it, project.basedir), dependencies = true))
+    }
   }
 
   private fun ignoredFileset(fileset: String, dependencies: Boolean = false): JsonObject {
