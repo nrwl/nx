@@ -59,7 +59,7 @@ two places this bites:
 
 - between paragraphs: the separator line is `>` on its own
 - around a fenced code block: the fences are `> ```` and the blank lines above and below them are
-`>` too, so the whole fence sits inside the quote
+  `>` too, so the whole fence sits inside the quote
 
 The two blank lines that must stay genuinely empty are the ones bracketing the blockquote itself —
 after `</summary>` and before `</details>`. Those are the HTML boundaries, and putting a `>` on them
