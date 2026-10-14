@@ -1156,6 +1156,11 @@
               "default": "on",
               "description": "How this target's tasks participate. 'on' records IO and lets the recording stand in for the declared inputs and outputs. 'warn' records and reports undeclared reads and writes without applying them. 'error' is reserved for failing the task on an undeclared read or write; until per-target enforcement lands it behaves as 'warn'. 'off' records nothing."
             },
+            "collectStats": {
+              "type": "boolean",
+              "default": false,
+              "description": "Collect successful stat metadata accesses as inputs. Missing-path probes are tracked independently of this setting."
+            },
             "ignoredReads": {
               "type": "array",
               "items": {

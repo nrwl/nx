@@ -1460,6 +1460,11 @@ export interface TaskUltracacheSettings {
   /** How this target's tasks participate. Defaults to `on`. */
   mode?: 'on' | 'warn' | 'error' | 'off'
   /**
+   * Collect successful stat metadata accesses as inputs. Defaults to `false`.
+   * Missing-path probes are tracked independently of this setting.
+   */
+  collectStats?: boolean
+  /**
    * Workspace-relative glob patterns for reads that should be excluded
    * from ultracache reports. The first path segment cannot contain `*`,
    * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the

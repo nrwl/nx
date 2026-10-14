@@ -189,29 +189,38 @@ describe('createTaskGraph', () => {
     });
   });
 
-  it('should copy the target ultracache configuration onto the task', () => {
-    projectGraph.nodes['app1'].data.targets['test'].ultracache = {
-      mode: 'off',
-      ignoredReads: ['tmp/**'],
-      ignoredWrites: ['scratch/**'],
-    };
+  it.each([true, false, undefined])(
+    'should serialize collectStats=%s on the task',
+    (collectStats) => {
+      projectGraph.nodes['app1'].data.targets['test'].ultracache = {
+        mode: 'off',
+        collectStats,
+        ignoredReads: ['tmp/**'],
+        ignoredWrites: ['scratch/**'],
+      };
 
-    const taskGraph = createTaskGraph(
-      projectGraph,
-      {},
-      ['app1', 'lib1'],
-      ['test'],
-      undefined,
-      {}
-    );
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['app1', 'lib1'],
+        ['test'],
+        undefined,
+        {}
+      );
 
-    expect(taskGraph.tasks['app1:test'].ultracache).toEqual({
-      mode: 'off',
-      ignoredReads: ['tmp/**'],
-      ignoredWrites: ['scratch/**'],
-    });
-    expect(taskGraph.tasks['lib1:test'].ultracache).toBeUndefined();
-  });
+      const serializedGraph = JSON.parse(JSON.stringify(taskGraph));
+      expect(serializedGraph.tasks['app1:test'].ultracache).toEqual({
+        mode: 'off',
+        ...(collectStats === undefined ? {} : { collectStats }),
+        ignoredReads: ['tmp/**'],
+        ignoredWrites: ['scratch/**'],
+      });
+      expect(taskGraph.tasks['lib1:test'].ultracache).toBeUndefined();
+      expect(serializedGraph.tasks['app1:test'].ultracache.collectStats).toBe(
+        collectStats
+      );
+    }
+  );
 
   it('should return tasks with outputs', () => {
     projectGraph.nodes.app1.data.targets.test.outputs = [
