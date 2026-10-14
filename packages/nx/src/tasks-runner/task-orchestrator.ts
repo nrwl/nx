@@ -803,7 +803,11 @@ export class TaskOrchestrator {
    *
    * Walks the task graph level by level. A deferred task (its hash reads
    * another task's outputs) behind an upstream batch task that still has to
-   * run is held back for a later wave, where it hashes after that task ran.
+   * run is never looked up yet:
+   * - behind a non-cacheable task only, it is held back for a later wave,
+   *   where it hashes after that task ran;
+   * - behind a cache miss, it runs in this wave and re-hashes after execution.
+   * Every task run in this wave gets a hash first, for Cloud's startTasks.
    */
   private async applyBatchCachedResults(
     batch: Batch,
@@ -812,23 +816,31 @@ export class TaskOrchestrator {
   ): Promise<{
     cachedResults: TaskResult[];
     tasksToRun: Task[];
+    /** Run without a cache lookup; hash again once their inputs exist. */
+    rehashAfterRun: Set<string>;
   }> {
     const cachedResults: TaskResult[] = [];
+    const rehashAfterRun = new Set<string>();
     const tasks = Object.values(batch.taskGraph.tasks);
 
     if (!doNotSkipCache) {
       // Cache skipped — just hash so startTasks has valid hashes
       await this.hashBatchTasks(tasks);
-      return { cachedResults, tasksToRun: tasks };
+      return { cachedResults, tasksToRun: tasks, rehashAfterRun };
     }
 
     const toRun = new Map<string, Task>();
     // Neither restored nor run in this wave; a later wave picks them up.
     const heldBack = new Set<string>();
-    // Tasks with an upstream task that still has to run in this wave.
-    const behindRun = new Set<string>();
+    // Tasks with a cache miss / a non-cacheable task upstream that still has
+    // to run in this wave.
+    const behindMiss = new Set<string>();
+    const behindUncacheable = new Set<string>();
+    const pending = (id: string, cacheable: boolean) =>
+      toRun.has(id) && !!toRun.get(id).cache === cacheable;
 
     await walkTaskGraph(batch.taskGraph, async (levelIds) => {
+      const runNow: Task[] = [];
       const lookUp: Task[] = [];
       for (const id of levelIds) {
         const task = batch.taskGraph.tasks[id];
@@ -838,17 +850,31 @@ export class TaskOrchestrator {
           continue;
         }
 
-        if (deps.some((dep) => behindRun.has(dep) || toRun.has(dep))) {
-          behindRun.add(id);
-          if (this.hashingDeferredTaskIds?.has(id)) {
-            heldBack.add(id);
-            continue;
-          }
+        const afterMiss = deps.some(
+          (dep) => behindMiss.has(dep) || pending(dep, true)
+        );
+        const afterUncacheable = deps.some(
+          (dep) => behindUncacheable.has(dep) || pending(dep, false)
+        );
+        if (afterMiss) behindMiss.add(id);
+        if (afterUncacheable) behindUncacheable.add(id);
+
+        const deferred = this.hashingDeferredTaskIds?.has(id);
+        if (deferred && afterMiss) {
+          runNow.push(task);
+        } else if (deferred && afterUncacheable) {
+          heldBack.add(id);
+        } else {
+          lookUp.push(task);
         }
-        lookUp.push(task);
       }
 
-      await this.hashBatchTasks(lookUp);
+      await this.hashBatchTasks([...runNow, ...lookUp]);
+
+      for (const task of runNow) {
+        toRun.set(task.id, task);
+        rehashAfterRun.add(task.id);
+      }
 
       if (lookUp.length > 0) {
         const cacheResults = await this.applyCachedResults(lookUp);
@@ -873,7 +899,7 @@ export class TaskOrchestrator {
       }
     });
 
-    return { cachedResults, tasksToRun: [...toRun.values()] };
+    return { cachedResults, tasksToRun: [...toRun.values()], rehashAfterRun };
   }
 
   private async hashBatchTasks(tasks: Task[]): Promise<void> {
@@ -964,8 +990,11 @@ export class TaskOrchestrator {
   ): Promise<TaskResult[]> {
     const tasks = Object.values(batch.taskGraph.tasks);
 
-    const { cachedResults, tasksToRun: wave } =
-      await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
+    const {
+      cachedResults,
+      tasksToRun: wave,
+      rehashAfterRun,
+    } = await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
 
     // Cached tasks were started and completed inside applyBatchCachedResults;
     // a member skipped meanwhile (a dependency failed) must not run either
@@ -977,7 +1006,7 @@ export class TaskOrchestrator {
       await this.preRunSteps(tasksToRun, { groupId });
     }
 
-    // Phase 2: Run this wave's tasks
+    // Phase 2: Run this wave's tasks, then re-hash those run without a lookup
     let batchResults: TaskResult[] = [];
 
     // Read again: a member can be skipped while the hooks above ran
@@ -1003,6 +1032,24 @@ export class TaskOrchestrator {
         this.batchEnv,
         groupId
       );
+
+      // Re-hash tasks that read dep outputs — those outputs are now on disk
+      const tasksToRehash = batchResults
+        .filter(
+          (r) =>
+            rehashAfterRun.has(r.task.id) &&
+            (r.status === 'success' || r.status === 'failure')
+        )
+        .map((r) => r.task);
+      if (tasksToRehash.length > 0) {
+        // hashTasks skips tasks that already have a hash — clear the
+        // preliminary hashes so these tasks actually get re-hashed
+        for (const task of tasksToRehash) {
+          task.hash = undefined;
+          task.hashDetails = undefined;
+        }
+        await this.hashBatchTasks(tasksToRehash);
+      }
     }
 
     if (batchResults.length > 0) {
