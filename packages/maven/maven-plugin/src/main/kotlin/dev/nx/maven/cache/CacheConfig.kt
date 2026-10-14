@@ -14,7 +14,7 @@ data class Parameter(
 )
 
 data class MojoConfig(
-    val inputProperties: Set<String>? = null,
+    val inputProperties: Set<Parameter>? = null,
     val inputParameters: Set<Parameter>? = null,
     val outputParameters: Set<Parameter>? = null,
 )
@@ -79,22 +79,37 @@ data class CacheConfig(
                     inputParameters = setOf(
                         Parameter("compileSourceRoots", "**/*.java"),
                         // Include generated sources by convention
-                        Parameter("buildDirectory", "generated-sources/**/*.java", includeIgnored = true),
+                        // javac writes annotations/ itself, so hashing it would miss on the next run.
+                        Parameter(
+                            "buildDirectory",
+                            "generated-sources/**/*.java",
+                            excludeGlob = "generated-sources/annotations/**",
+                            includeIgnored = true,
+                        ),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", "**/*.class"),
                     )
                 ),
                 "maven-compiler-plugin:testCompile" to MojoConfig(
+                    inputProperties = setOf(
+                        Parameter("project.build.outputDirectory", null, includeIgnored = true),
+                    ),
                     inputParameters = setOf(
                         Parameter("compileSourceRoots", "**/*.java"),
+                        Parameter(
+                            "buildDirectory",
+                            "generated-test-sources/**/*.java",
+                            excludeGlob = "generated-test-sources/test-annotations/**",
+                            includeIgnored = true,
+                        ),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", "**/*.class"),
                     )
                 ),
                 "maven-resources-plugin:resources" to MojoConfig(
-                    inputProperties = setOf("project.build.resources"),
+                    inputProperties = setOf(Parameter("project.build.resources", null)),
                     outputParameters = setOf(
                         Parameter("outputDirectory", null, excludeGlob = "**/*.class"),
                     )

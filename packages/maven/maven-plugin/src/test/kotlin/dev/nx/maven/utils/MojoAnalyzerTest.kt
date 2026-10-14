@@ -76,6 +76,35 @@ class MojoAnalyzerTest {
     assertEquals(emptySet(), analysis.ignoredInputs)
   }
 
+  @Test
+  fun `compile hashes generated sources but not javac's own annotation output`() {
+    assertEquals(
+      setOf(
+        "{projectRoot}/target/generated-sources/**/*.java",
+        "!{projectRoot}/target/generated-sources/annotations/**",
+      ),
+      analyze(
+        "maven-compiler-plugin", "compile", "target/classes",
+        fileParameter("buildDirectory", "\${project.build.directory}"),
+      ).ignoredInputs
+    )
+  }
+
+  @Test
+  fun `testCompile hashes main classes and generated test sources`() {
+    assertEquals(
+      setOf(
+        "{projectRoot}/target/classes",
+        "{projectRoot}/target/generated-test-sources/**/*.java",
+        "!{projectRoot}/target/generated-test-sources/test-annotations/**",
+      ),
+      analyze(
+        "maven-compiler-plugin", "testCompile", "target/classes",
+        fileParameter("buildDirectory", "\${project.build.directory}"),
+      ).ignoredInputs
+    )
+  }
+
   private fun fileParameter(name: String, defaultValue: String? = null) = Parameter().apply {
     this.name = name
     type = "java.io.File"

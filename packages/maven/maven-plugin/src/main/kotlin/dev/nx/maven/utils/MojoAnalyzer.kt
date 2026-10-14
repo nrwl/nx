@@ -1,6 +1,7 @@
 package dev.nx.maven.utils
 
 import dev.nx.maven.cache.CacheConfig
+import dev.nx.maven.cache.Parameter
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
@@ -79,36 +80,37 @@ class MojoAnalyzer(
       return path.canonicalPath.let { it == dirPath || it.startsWith(dirPath + File.separator) }
     }
 
-    fun addInput(path: File, pathWithGlob: File, includeIgnored: Boolean = false) {
-      if (!includeIgnored) {
+    fun addInput(path: String, paramConfig: Parameter) {
+      val pathWithGlob = File(paramConfig.glob?.let { "$path/$it" } ?: path)
+      if (!paramConfig.includeIgnored) {
         inputs.add(pathResolver.formatInputPath(pathWithGlob, projectRoot = project.basedir))
-      } else if (isUnder(path, project.basedir)) {
-        ignoredInputs.add(pathResolver.formatInputPath(pathWithGlob, projectRoot = project.basedir))
-      } else {
-        // includeIgnored filesets reject `..`
-        ignoredInputs.add(pathResolver.toWorkspacePath(pathWithGlob, workspaceRoot))
+        return
       }
+      // includeIgnored filesets reject `..`
+      fun format(file: File) = if (isUnder(File(path), project.basedir)) {
+        pathResolver.formatInputPath(file, projectRoot = project.basedir)
+      } else {
+        pathResolver.toWorkspacePath(file, workspaceRoot)
+      }
+      ignoredInputs.add(format(pathWithGlob))
+      paramConfig.excludeGlob?.let { ignoredInputs.add("!" + format(File("$path/$it"))) }
     }
 
     mojoConfig?.inputParameters?.forEach { paramConfig ->
       val parameter = mojoDescriptor.parameterMap[paramConfig.name]
         ?: return@forEach
 
-      val paths = expressionResolver.resolveParameter(parameter, project)
-
-      paths.forEach { path ->
-        addInput(File(path), File(paramConfig.glob?.let { "$path/$it" } ?: path), paramConfig.includeIgnored)
-      }
+      expressionResolver.resolveParameter(parameter, project).forEach { addInput(it, paramConfig) }
     }
 
-    mojoConfig?.inputProperties?.forEach { propertyPath ->
-      val paths = expressionResolver.resolveProperty(propertyPath, project)
-
-      paths.forEach { path -> addInput(File(path), File(path)) }
+    mojoConfig?.inputProperties?.forEach { paramConfig ->
+      expressionResolver.resolveProperty(paramConfig.name, project).forEach { addInput(it, paramConfig) }
     }
 
     if (mojoConfig?.inputParameters == null && mojoConfig?.inputProperties == null) {
-      cacheConfig.defaultInputs.forEach { input -> addInput(File(input.path), File(input.path)) }
+      cacheConfig.defaultInputs.forEach { input ->
+        inputs.add(pathResolver.formatInputPath(File(input.path), projectRoot = project.basedir))
+      }
     }
 
     // Always include pom.xml and in-workspace ancestor pom.xml files as inputs

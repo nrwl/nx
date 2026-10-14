@@ -224,6 +224,7 @@ class MavenExpressionResolver(
     fun resolveProperty(propertyPath: String, project: MavenProject): List<String> {
         return when(propertyPath) {
             "project.build.resources" -> project.build.resources.mapNotNull { resource -> resource.directory }
+            "project.build.outputDirectory" -> listOfNotNull(project.build.outputDirectory)
             else -> emptyList()
         }
     }
