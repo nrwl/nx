@@ -19,7 +19,9 @@ use tracing::trace;
 use crate::native::glob::{
     NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
 };
-use crate::native::tasks::hashers::{OnceCache, parse_group, scope_roots, validate_files_globs};
+use crate::native::tasks::hashers::{
+    OnceCache, Positive, ProjectScope, parse_group, scope_roots, validate_files_globs,
+};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
 };
@@ -1518,8 +1520,9 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
 /// they depend on, directly or through the chain, writes: any task with a
 /// `dependentTasksOutputFiles` instruction, and any task with a disk-backed
 /// fileset that reads from a directory containing, or sitting inside, an
-/// output an upstream task declares. Any other disk-backed fileset hashes up
-/// front like a tracked one.
+/// output an upstream task declares. An output inside a project nested below
+/// the glob's own is not read by it, so it does not count. Any other
+/// disk-backed fileset hashes up front like a tracked one.
 fn deferred_tasks(
     plans: &HashMap<String, Vec<u32>>,
     pool: &InstructionPool,
@@ -1528,16 +1531,25 @@ fn deferred_tasks(
     plans
         .par_iter()
         .filter(|(task_id, ids)| {
-            let mut disk_roots: Vec<String> = Vec::new();
+            // Each read root with the nested project roots its glob skips.
+            let mut disk_roots: Vec<(String, Vec<String>)> = Vec::new();
             for id in ids.iter() {
                 match &*pool.get(*id) {
                     HashInstruction::TaskOutput(_, _) => return true,
-                    HashInstruction::IgnoredFileSet { globs, .. } => disk_roots.extend(
-                        globs
-                            .iter()
-                            .filter(|glob| !glob.starts_with('!'))
-                            .map(|glob| walk_root(glob)),
-                    ),
+                    HashInstruction::IgnoredFileSet {
+                        globs,
+                        project_roots,
+                    } => {
+                        let scope = ProjectScope::new(project_roots);
+                        disk_roots.extend(globs.iter().filter(|glob| !glob.starts_with('!')).map(
+                            |glob| {
+                                let skipped = Positive::parse(glob)
+                                    .map(|entry| scope.nested_below(&entry))
+                                    .unwrap_or_default();
+                                (walk_root(glob), skipped)
+                            },
+                        ))
+                    }
                     _ => {}
                 }
             }
@@ -1545,10 +1557,16 @@ fn deferred_tasks(
                 return false;
             }
             let output_roots = upstream_output_roots(task_graph, task_id);
-            disk_roots.iter().any(|disk| {
-                output_roots
-                    .iter()
-                    .any(|output| paths_overlap(disk, output))
+            disk_roots.iter().any(|(disk, skipped)| {
+                output_roots.iter().any(|output| {
+                    paths_overlap(disk, output)
+                        && !skipped.iter().any(|root| {
+                            output == root
+                                || output
+                                    .strip_prefix(root.as_str())
+                                    .is_some_and(|rest| rest.starts_with('/'))
+                        })
+                })
             })
         })
         .map(|(task_id, _)| task_id.clone())
@@ -2557,6 +2575,53 @@ mod tests {
                 "web:test"
             ]
         );
+    }
+
+    #[test]
+    fn does_not_defer_for_an_output_in_a_nested_project_the_glob_skips() {
+        let pool = InstructionPool::new();
+        let scoped = pool.intern(HashInstruction::IgnoredFileSet {
+            globs: vec!["packages/gradle/**/*".into()],
+            project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
+        });
+        let plans: HashMap<String, Vec<u32>> = [
+            ("gradle:nested-output".to_string(), vec![scoped]),
+            ("gradle:own-output".to_string(), vec![scoped]),
+            ("gradle:holding-output".to_string(), vec![scoped]),
+        ]
+        .into();
+        let task = |id: &str, outputs: &[&str]| {
+            let (project, target) = id.split_once(':').unwrap();
+            (
+                id.to_string(),
+                Task::new(project, target)
+                    .with_outputs(outputs.iter().map(|o| o.to_string()).collect()),
+            )
+        };
+        let task_graph = TaskGraph {
+            roots: vec![],
+            tasks: HashMap::from([
+                task("gradle:nested-output", &[]),
+                task("gradle:own-output", &[]),
+                task("gradle:holding-output", &[]),
+                task("runner:build", &["packages/gradle/runner/build"]),
+                task("gradle:compile", &["packages/gradle/build"]),
+                task("all:build", &["packages"]),
+            ]),
+            dependencies: HashMap::from([
+                ("gradle:nested-output".into(), edges_to(&["runner:build"])),
+                ("gradle:own-output".into(), edges_to(&["gradle:compile"])),
+                ("gradle:holding-output".into(), edges_to(&["all:build"])),
+            ]),
+            continuous_dependencies: HashMap::new(),
+        };
+        let mut deferred: Vec<String> = deferred_tasks(&plans, &pool, &task_graph)
+            .into_iter()
+            .collect();
+        deferred.sort();
+        // `runner/build` is in a project the glob skips; `packages` holds the
+        // glob's own folder, so it still counts.
+        assert_eq!(deferred, vec!["gradle:holding-output", "gradle:own-output"]);
     }
 
     #[test]
