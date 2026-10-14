@@ -258,7 +258,10 @@ function migrateFile(
         changes.push(insertIdProperty(content, literal, id, sourceFile));
         continue;
       }
-      if (ts.isPropertyAssignment(idSource)) {
+      if (
+        ts.isPropertyAssignment(idSource) &&
+        getStaticName(idSource.name) === 'id'
+      ) {
         const value = readIdValue(idSource.initializer);
         if (value === 'present') {
           continue;
@@ -488,15 +491,21 @@ function isGeneratedId(expression: Expression, filePath: string): boolean {
   );
 }
 
-// The last spread or `id` property sets the payload's id at runtime.
+// Returns the last property that can set the payload's id at runtime: a
+// spread, an `id` property or a computed key that isn't a string literal.
 function findIdSource(
   literal: ObjectLiteralExpression
 ): ObjectLiteralElementLike | undefined {
   let source: ObjectLiteralElementLike | undefined;
   for (const property of literal.properties) {
+    if (ts.isSpreadAssignment(property)) {
+      source = property;
+      continue;
+    }
+    const name = getStaticName(property.name);
     if (
-      ts.isSpreadAssignment(property) ||
-      (property.name !== undefined && getStaticName(property.name) === 'id')
+      name === 'id' ||
+      (name === undefined && ts.isComputedPropertyName(property.name))
     ) {
       source = property;
     }

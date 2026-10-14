@@ -37,7 +37,9 @@ function withHighlightId(payload, id) {
   return id ? { ...payload, id } : payload;
 }
 
-export function highlight(selectors, id, options) {
+const other = 'label';
+
+export function highlight(selectors, id, options, key) {
   const emit = useChannel({});
   emit(HIGHLIGHT, { id, selectors });
   emit(HIGHLIGHT, { id: undefined, selectors });
@@ -45,6 +47,9 @@ export function highlight(selectors, id, options) {
   emit(HIGHLIGHT, { id: options.id, selectors });
   emit(HIGHLIGHT, { id: options.id ?? id, selectors });
   emit(HIGHLIGHT, { id: 'fixed', ...options, selectors });
+  emit(HIGHLIGHT, { selectors, [key]: undefined });
+  emit(HIGHLIGHT, { id: 'fixed', selectors, [key]: id });
+  emit(HIGHLIGHT, { selectors, [other]: 'x' });
   emit(HIGHLIGHT, options);
   emit(HIGHLIGHT, withHighlightId(options, id));
 }
@@ -157,7 +162,9 @@ export function show(channel) {
         return id ? { ...payload, id } : payload;
       }
 
-      export function highlight(selectors, id, options) {
+      const other = 'label';
+
+      export function highlight(selectors, id, options, key) {
         const emit = useChannel({});
         emit(HIGHLIGHT, { id: id || \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
         emit(
@@ -179,6 +186,24 @@ export function show(channel) {
             { id: 'fixed', ...options, selectors },
             \`libs/ui/src/highlight.js:\${++highlightCount}\`,
           ),
+        );
+        emit(
+          HIGHLIGHT,
+          withHighlightId2(
+            { selectors, [key]: undefined },
+            \`libs/ui/src/highlight.js:\${++highlightCount}\`,
+          ),
+        );
+        emit(
+          HIGHLIGHT,
+          withHighlightId2(
+            { id: 'fixed', selectors, [key]: id },
+            \`libs/ui/src/highlight.js:\${++highlightCount}\`,
+          ),
+        );
+        emit(
+          HIGHLIGHT,
+          withHighlightId2({ selectors, [other]: 'x' }, \`libs/ui/src/highlight.js:\${++highlightCount}\`),
         );
         emit(HIGHLIGHT, withHighlightId2(options, \`libs/ui/src/highlight.js:\${++highlightCount}\`));
         emit(
@@ -202,6 +227,7 @@ export const decorators = [
     emit(HIGHLIGHT, { id: \`row-\${args.row}\`, selectors: ['tr'] });
     emit(HIGHLIGHT, { id: args.open ? 'open' : 'closed', selectors: ['p'] });
     emit(HIGHLIGHT, { ...args.highlight, id: args.id || 'custom' });
+    emit(HIGHLIGHT, { [args.key]: undefined, id: 'late', selectors: ['h4'] });
     emit(HIGHLIGHT, { elements: ['h3'], color: 'red', style: 'solid' });
     emit(RESET_HIGHLIGHT);
     addons.getChannel().on(HIGHLIGHT, (options) => console.log(options));
