@@ -26,7 +26,6 @@ const HIGHLIGHT_DOCS =
   'https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id';
 const SOURCE_FILE_PATTERN = /\.[cm]?[jt]sx?$/;
 const TS_FILE_PATTERN = /\.[cm]?tsx?$/;
-const ID_HELPER_PATTERN = /^withHighlightId\d*$/;
 // Story and docs formats whose scripts can use Highlight but aren't parsed here.
 const UNPARSED_FILE_PATTERN = /\.(mdx|svelte|vue)$/;
 const LISTENER_METHODS = new Set([
@@ -48,18 +47,10 @@ type HighlightImports = {
   bindings: Identifier[];
 };
 
-type FileResult = {
-  content: string;
-  rewrites: number;
-  helper?: string;
-  notes: string[];
-};
-type IdValue = 'present' | 'missing' | 'unknown';
-
 let ts: typeof import('typescript') | undefined;
 
 export default async function addHighlightIds(tree: Tree) {
-  const rewritten: string[] = [];
+  let rewritten = false;
   const pending: string[] = [];
 
   // Stories, decorators, preview files and addons can all emit highlights, so
@@ -84,33 +75,28 @@ export default async function addHighlightIds(tree: Tree) {
     }
 
     const result = migrateFile(filePath, content, referencesHighlight);
-    if (result.rewrites > 0) {
+    if (result.content !== content) {
       tree.write(filePath, result.content);
-      rewritten.push(
-        `Gave ${result.rewrites} HIGHLIGHT payload(s) in ${filePath} a generated "id", or a generated fallback where the payload's own id can be missing or empty. Each generated id ends in a module-level counter, so every emit still adds its own highlight.` +
-          (result.helper
-            ? ` Payloads that aren't object literals, or that spread another object after their id, are wrapped in the "${result.helper}" function declared in the file.`
-            : '')
-      );
+      rewritten = true;
     }
     pending.push(...result.notes);
   });
 
-  if (rewritten.length > 0) {
+  if (rewritten) {
     await formatFiles(tree);
   }
   if (pending.length === 0) {
     return { skipAgentic: true };
   }
 
-  return { nextSteps: pending, agentContext: [...rewritten, ...pending] };
+  return { nextSteps: pending, agentContext: pending };
 }
 
 function migrateFile(
   filePath: string,
   content: string,
   referencesHighlight: boolean
-): FileResult {
+): { content: string; notes: string[] } {
   ts ??= ensurePackage<typeof import('typescript')>('typescript', '*');
   const sourceFile = ts.createSourceFile(
     filePath,
@@ -123,7 +109,6 @@ function migrateFile(
   ) {
     return {
       content,
-      rewrites: 0,
       notes: referencesHighlight
         ? [
             `Could not parse ${filePath}, so its HIGHLIGHT payloads and menu items were not checked. Give each HIGHLIGHT payload a unique string "id", and replace "clickEvent" in its menu items as described in ${HIGHLIGHT_DOCS}.`,
@@ -248,29 +233,15 @@ function migrateFile(
     );
   }
 
-  // Payloads an earlier run wrapped in one of these already have an id.
-  const declaredHelpers = new Set<string>();
-  for (const statement of sourceFile.statements) {
-    if (
-      ts.isFunctionDeclaration(statement) &&
-      statement.name &&
-      ID_HELPER_PATTERN.test(statement.name.text)
-    ) {
-      declaredHelpers.add(statement.name.text);
-    }
-  }
-
   const counter = uniqueName('highlightCount', identifiers);
   const helper = uniqueName('withHighlightId', identifiers);
   const id = `\`${escapeTemplateText(filePath)}:\${++${counter}}\``;
   const changes: StringChange[] = [];
-  let rewrites = 0;
   let usesHelper = false;
   for (const payload of payloads) {
+    // An earlier run already wrapped it.
     if (
       ts.isCallExpression(payload) &&
-      ts.isIdentifier(payload.expression) &&
-      declaredHelpers.has(payload.expression.text) &&
       payload.arguments.length === 2 &&
       isGeneratedId(payload.arguments[1], filePath)
     ) {
@@ -285,15 +256,10 @@ function migrateFile(
       const idSource = findIdSource(literal);
       if (!idSource) {
         changes.push(insertIdProperty(content, literal, id, sourceFile));
-        rewrites++;
         continue;
       }
       if (ts.isPropertyAssignment(idSource)) {
-        const idChanges = fillMissingId(idSource.initializer, id, sourceFile);
-        if (idChanges.length > 0) {
-          changes.push(...idChanges);
-          rewrites++;
-        }
+        changes.push(...fillMissingId(idSource.initializer, id, sourceFile));
         continue;
       }
       if (ts.isShorthandPropertyAssignment(idSource)) {
@@ -302,7 +268,6 @@ function migrateFile(
           index: idSource.getEnd(),
           text: `: ${idSource.name.text} || ${id}`,
         });
-        rewrites++;
         continue;
       }
     }
@@ -316,11 +281,10 @@ function migrateFile(
       },
       { type: ChangeType.Insert, index: payload.getEnd(), text: `, ${id})` }
     );
-    rewrites++;
     usesHelper = true;
   }
-  if (rewrites === 0) {
-    return { content, rewrites, notes };
+  if (changes.length === 0) {
+    return { content, notes };
   }
   const declarations = [`let ${counter} = 0;`];
   if (usesHelper) {
@@ -336,12 +300,7 @@ function migrateFile(
     insertDeclarations(sourceFile, content, declarations.join('\n\n'))
   );
 
-  return {
-    content: applyChangesToString(content, changes),
-    rewrites,
-    helper: usesHelper ? helper : undefined,
-    notes,
-  };
+  return { content: applyChangesToString(content, changes), notes };
 }
 
 function readHighlightImports(sourceFile: SourceFile): HighlightImports {
@@ -564,7 +523,9 @@ function fillMissingId(
 
 // Follows TypeScript's syntactic truthiness check, which rejects `value || id`
 // when `value` is always truthy or always falsy.
-function readIdValue(expression: Expression): IdValue {
+function readIdValue(
+  expression: Expression
+): 'present' | 'missing' | 'unknown' {
   const value = skipOuterExpressions(expression);
   if (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) {
     return value.text ? 'present' : 'missing';

@@ -287,7 +287,6 @@ export const play = async (send, args) => {
     expect(result).toMatchInlineSnapshot(`
       {
         "agentContext": [
-          "Gave 1 HIGHLIGHT payload(s) in apps/app/src/menu.stories.ts a generated "id", or a generated fallback where the payload's own id can be missing or empty. Each generated id ends in a module-level counter, so every emit still adds its own highlight.",
           "apps/app/src/menu.stories.ts:9 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
           "apps/app/src/menu.stories.ts:16 passes HIGHLIGHT to "send", which this migration doesn't recognize as an emit. If it emits the event, give the payload a unique string "id".",
           "apps/app/src/menu.stories.ts:17 passes the HIGHLIGHT payload through a spread argument, so it was not checked. Give it a unique string "id".",
