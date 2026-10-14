@@ -125,8 +125,8 @@ export function normalizeTarget(
 const KNOWN_ULTRACACHE_KEYS = new Set<string>([
   'mode',
   'collectStats',
-  'ignoredReads',
-  'ignoredWrites',
+  'ignoreReads',
+  'ignoreWrites',
   NX_SPREAD_TOKEN,
 ]);
 
@@ -187,7 +187,7 @@ function validateTargetUltracache(
   for (const key of Object.keys(ultracache)) {
     if (!KNOWN_ULTRACACHE_KEYS.has(key)) {
       errors.push(
-        `"ultracache.${key}" for target ${where} is not an ultracache option. Supported options are "mode", "collectStats", "ignoredReads" and "ignoredWrites".`
+        `"ultracache.${key}" for target ${where} is not an ultracache option. Supported options are "mode", "collectStats", "ignoreReads" and "ignoreWrites".`
       );
     }
   }
@@ -215,7 +215,7 @@ function validateTargetUltracache(
     );
   }
 
-  for (const key of ['ignoredReads', 'ignoredWrites'] as const) {
+  for (const key of ['ignoreReads', 'ignoreWrites'] as const) {
     const value = ultracache[key];
     if (value === undefined) continue;
     if (!Array.isArray(value)) {

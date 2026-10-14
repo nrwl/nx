@@ -236,22 +236,22 @@ pub fn get_ultracache_report(
     .report()
 }
 
-/// The marker's digest: the task's `ignoredReads` and `collectStats`, which
+/// The marker's digest: the task's `ignoreReads` and `collectStats`, which
 /// shape the reads its recording holds, so editing them re-runs the task and
 /// records it afresh. Sorted, since glob order means nothing.
 fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
-    // used, so `ignoredWrites` can't change what the task caches.
+    // used, so `ignoreWrites` can't change what the task caches.
     let (mut reads, collect_stats) = match ultracache {
         Some(TaskUltracacheSettings {
-            ignored_reads,
-            ignored_writes: _,
+            ignore_reads,
+            ignore_writes: _,
             mode: _,
             collect_stats,
         }) => (
-            ignored_reads.clone().unwrap_or_default(),
+            ignore_reads.clone().unwrap_or_default(),
             collect_stats.unwrap_or(false),
         ),
         None => (Vec::new(), false),
@@ -471,10 +471,10 @@ mod tests {
 
     #[test]
     fn only_collect_stats_true_changes_the_configuration_digest() {
-        let digest = |collect_stats, ignored_reads: Option<Vec<String>>| {
+        let digest = |collect_stats, ignore_reads: Option<Vec<String>>| {
             configuration_digest(Some(&TaskUltracacheSettings {
                 collect_stats,
-                ignored_reads,
+                ignore_reads,
                 ..Default::default()
             }))
         };

@@ -1470,14 +1470,14 @@ export interface TaskUltracacheSettings {
    * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
    * pattern to a directory instead of leading with `**`.
    */
-  ignoredReads?: Array<string>
+  ignoreReads?: Array<string>
   /**
    * Workspace-relative glob patterns for writes that should be excluded
    * from ultracache reports. The first path segment cannot contain `*`,
    * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
    * pattern to a directory instead of leading with `**`.
    */
-  ignoredWrites?: Array<string>
+  ignoreWrites?: Array<string>
 }
 
 export interface TerminalOutputRecord {

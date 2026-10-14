@@ -76,12 +76,12 @@ pub struct TaskUltracacheSettings {
     /// from ultracache reports. The first path segment cannot contain `*`,
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
-    pub ignored_reads: Option<Vec<String>>,
+    pub ignore_reads: Option<Vec<String>>,
     /// Workspace-relative glob patterns for writes that should be excluded
     /// from ultracache reports. The first path segment cannot contain `*`,
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
-    pub ignored_writes: Option<Vec<String>>,
+    pub ignore_writes: Option<Vec<String>>,
 }
 
 impl Task {

@@ -171,7 +171,7 @@ describe('validateAndNormalizeProjectRootMap', () => {
 
       expect(() =>
         mergeCreateNodesResults(
-          resultsFor({ mode: 'off', ignoredReads: ['tmp/**'] }) as any,
+          resultsFor({ mode: 'off', ignoreReads: ['tmp/**'] }) as any,
           [],
           {} as any,
           tempFs.tempDir,
@@ -220,17 +220,17 @@ describe('validateAndNormalizeProjectRootMap', () => {
     });
 
     it('should reject a string where a glob array is required', () => {
-      expect(ultracacheErrors({ ignoredReads: 'tmp/**' })).toEqual([
+      expect(ultracacheErrors({ ignoreReads: 'tmp/**' })).toEqual([
         expect.stringMatching(
-          /"ultracache.ignoredReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
+          /"ultracache.ignoreReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
         ),
       ]);
     });
 
     it('should reject a non-string element inside a glob array', () => {
-      expect(ultracacheErrors({ ignoredWrites: ['ok/**', 7] })).toEqual([
+      expect(ultracacheErrors({ ignoreWrites: ['ok/**', 7] })).toEqual([
         expect.stringMatching(
-          /"ultracache.ignoredWrites\[1\]".*must be a glob pattern string/
+          /"ultracache.ignoreWrites\[1\]".*must be a glob pattern string/
         ),
       ]);
     });
@@ -272,9 +272,9 @@ describe('validateAndNormalizeProjectRootMap', () => {
     );
 
     it('should reject a key that is not an ultracache option', () => {
-      expect(ultracacheErrors({ ignoreReads: ['tmp/**'] })).toEqual([
+      expect(ultracacheErrors({ ignoredReads: ['tmp/**'] })).toEqual([
         expect.stringMatching(
-          /"ultracache.ignoreReads" for target "build" in project "a-ui" is not an ultracache option/
+          /"ultracache.ignoredReads" for target "build" in project "a-ui" is not an ultracache option/
         ),
       ]);
     });
@@ -288,25 +288,25 @@ describe('validateAndNormalizeProjectRootMap', () => {
     it('should report every malformed key in one error', () => {
       const [message] = ultracacheErrors({
         mode: 'enabled',
-        ignoreReads: ['tmp/**'],
-        ignoredReads: 'tmp/**',
-        ignoredWrites: ['ok/**', 7],
+        ignoredReads: ['tmp/**'],
+        ignoreReads: 'tmp/**',
+        ignoreWrites: ['ok/**', 7],
       });
 
       expect(message).toMatch(
-        /"ultracache.ignoreReads" .* is not an ultracache option/
+        /"ultracache.ignoredReads" .* is not an ultracache option/
       );
       expect(message).toMatch(/"ultracache.mode"/);
-      expect(message).toMatch(/"ultracache.ignoredReads"/);
-      expect(message).toMatch(/"ultracache.ignoredWrites\[1\]"/);
+      expect(message).toMatch(/"ultracache.ignoreReads"/);
+      expect(message).toMatch(/"ultracache.ignoreWrites\[1\]"/);
     });
 
     it('should accept a well-formed ultracache', () => {
       expect(
         ultracacheErrors({
           mode: 'warn',
-          ignoredReads: ['tmp/**'],
-          ignoredWrites: ['scratch/**'],
+          ignoreReads: ['tmp/**'],
+          ignoreWrites: ['scratch/**'],
         })
       ).toEqual([]);
     });

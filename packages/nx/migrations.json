@@ -203,6 +203,12 @@
       "description": "Sets affected.legacy to true in nx.json so nx affected keeps selecting whole projects. Nx 24 selects individual affected tasks by default.",
       "implementation": "./dist/src/migrations/update-24-0-0/enable-legacy-affected",
       "documentation": "./dist/src/migrations/update-24-0-0/enable-legacy-affected.md"
+    },
+    "24-0-0-rename-ultracache-ignore-options": {
+      "version": "24.0.0-beta.3",
+      "description": "Renames the ultracache target options \"ignoredReads\" and \"ignoredWrites\" to \"ignoreReads\" and \"ignoreWrites\", and renames .nx/workflows/sandboxing-config.yaml to ultracache-config.yaml with its \"exclude-reads\" and \"exclude-writes\" keys renamed to \"ignore-reads\" and \"ignore-writes\".",
+      "implementation": "./dist/src/migrations/update-24-0-0/rename-ultracache-ignore-options",
+      "documentation": "./dist/src/migrations/update-24-0-0/rename-ultracache-ignore-options.md"
     }
   }
 }
