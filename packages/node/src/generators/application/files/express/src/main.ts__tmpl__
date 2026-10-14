@@ -9,6 +9,10 @@ app.get('/', (req, res) => {
     res.send({ 'message': 'Hello API'});
 });
 
-app.listen(port, host, () => {
+const server = app.listen(port, host, () => {
     console.log(`[ ready ] http://${host}:${port}`);
+});
+
+process.on('SIGTERM', () => {
+    server.close(() => process.exit(0));
 });

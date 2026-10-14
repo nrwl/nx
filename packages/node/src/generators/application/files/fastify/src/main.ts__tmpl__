@@ -21,3 +21,8 @@ server.listen({ port, host }, (err) => {
     console.log(`[ ready ] http://${host}:${port}`);
   }
 });
+
+process.on('SIGTERM', async () => {
+  await server.close();
+  process.exit(0);
+});
