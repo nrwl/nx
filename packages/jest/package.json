@@ -92,13 +92,17 @@
   },
   "peerDependencies": {
     "jest": "^29.0.0 || ^30.0.0",
-    "ts-jest": "^29.0.0"
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.8.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "jest": {
       "optional": true
     },
     "ts-jest": {
+      "optional": true
+    },
+    "typescript": {
       "optional": true
     }
   },
