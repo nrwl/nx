@@ -59,7 +59,10 @@ import {
   parseCommits,
 } from './utils/git';
 import { launchEditor } from './utils/launch-editor';
-import { parseChangelogMarkdown } from './utils/markdown';
+import {
+  parseChangelogMarkdown,
+  replaceChangelogRelease,
+} from './utils/markdown';
 import { printAndFlushChanges } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
 import { ReleaseGraph, createReleaseGraph } from './utils/release-graph';
@@ -1059,8 +1062,9 @@ async function generateChangelogForWorkspace({
         (r) => r.version === releaseVersion.rawVersion
       );
       if (existingVersionToUpdate) {
-        rootChangelogContents = rootChangelogContents.replace(
-          `## ${releaseVersion.rawVersion}\n\n\n${existingVersionToUpdate.body}`,
+        rootChangelogContents = replaceChangelogRelease(
+          rootChangelogContents,
+          releaseVersion.rawVersion,
           contents
         );
       } else {
@@ -1226,8 +1230,9 @@ async function generateChangelogForProjects({
           (r) => r.version === releaseVersion.rawVersion
         );
         if (existingVersionToUpdate) {
-          changelogContents = changelogContents.replace(
-            `## ${releaseVersion.rawVersion}\n\n\n${existingVersionToUpdate.body}`,
+          changelogContents = replaceChangelogRelease(
+            changelogContents,
+            releaseVersion.rawVersion,
             contents
           );
         } else {
