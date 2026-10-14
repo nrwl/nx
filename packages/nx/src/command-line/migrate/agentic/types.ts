@@ -30,9 +30,7 @@ export const PROMPTS_DIR_NAME = 'prompts';
  * `.gitignore`. Hard-coded because the agentic preflight is a deliberate
  * one-off coupling: this exact migration owns the entry that keeps
  * `.nx/migrate-runs/<run-id>/...` scratch out of per-migration commits. If
- * the migration is ever renamed, this entry must move with it. It lives here
- * rather than in `handoff-gitignore.ts` so `sortMigrations`' hoist check
- * doesn't load that module's migration-execution machinery.
+ * the migration is ever renamed, this entry must move with it.
  */
 const HANDOFF_GITIGNORE_MIGRATION_PACKAGE = 'nx';
 const HANDOFF_GITIGNORE_MIGRATION_NAME =

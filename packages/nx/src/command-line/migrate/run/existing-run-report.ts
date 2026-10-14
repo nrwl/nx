@@ -186,11 +186,13 @@ export interface ExistingRunCommands {
   startFresh: { command: string } | { migrationsPath: string };
 }
 
+// `agentic` echoes the invocation's choice into the start-fresh command; the
+// continue command needs an agent, so it takes only an agent id.
 export function renderExistingRunCommands(
   root: string,
   facts: ExistingRunFacts,
   migrationsPath: string | undefined,
-  agentId?: string
+  agentic?: string | false
 ): ExistingRunCommands {
   const flag =
     migrationsPath === undefined
@@ -201,14 +203,14 @@ export function renderExistingRunCommands(
       root,
       facts.runId,
       facts.policy,
-      agentId
+      agentic === false ? undefined : agentic
     ),
     startFresh:
       flag === null
         ? { migrationsPath }
         : {
             command: `${pmExecPrefix(root)} nx migrate ${flag}${
-              agentId === undefined ? '' : ` --agentic=${agentId}`
+              agentic === undefined ? '' : ` --agentic=${agentic}`
             } --start-fresh --run-id=${facts.runId}`,
           },
   };
@@ -255,7 +257,7 @@ export function renderExistingRunReport(
     lines.push(
       `  plan overlap: ${facts.appliedStillPlanned} of the applied migrations ${
         facts.appliedStillPlanned === 1 ? 'is' : 'are'
-      } still in the plan; a new run applies ${
+      } still in the plan; running the plan applies ${
         facts.appliedStillPlanned === 1 ? 'it' : 'them'
       } again`
     );
@@ -270,8 +272,7 @@ export function renderExistingRunReport(
           : `re-run this command with --start-fresh --run-id=${facts.runId}, keeping the --run-migrations argument, which names ${displayPath(
               commands.startFresh.migrationsPath
             )}; that path cannot be rendered as a command for this shell`
-      }`,
-      `Run either command with NX_MIGRATE_ORCHESTRATOR=true set in the environment.`
+      }`
     );
   }
   return {

@@ -6,6 +6,7 @@ import {
   type MigrateGenerateErrorCode,
   type MigratePromptName,
   type MigrateRunErrorCode,
+  type MigrateRunStopReason,
 } from './migrate-analytics';
 
 describe('computeMajorsCrossed', () => {
@@ -81,6 +82,12 @@ describe('GA4 event name length cap', () => {
     agentic: true,
     other: true,
   };
+  const RUN_STOP_REASONS: Record<MigrateRunStopReason, true> = {
+    existing_run: true,
+    declined_commits: true,
+    aborted: true,
+    runbook_missing: true,
+  };
 
   it('keeps every event name within 40 characters', () => {
     const names = [
@@ -102,6 +109,7 @@ describe('GA4 event name length cap', () => {
         (c) => `migrate_generate_error_${c}`
       ),
       ...Object.keys(RUN_ERROR_CODES).map((c) => `migrate_run_error_${c}`),
+      ...Object.keys(RUN_STOP_REASONS).map((r) => `migrate_run_stopped_${r}`),
     ];
     const tooLong = names.filter((name) => name.length > 40);
     expect(tooLong).toEqual([]);
@@ -163,6 +171,7 @@ describe('migrate-analytics events', () => {
         migrationCount: 3,
         appliedCount: 3,
       });
+      a.reportMigrateRunStopped('aborted');
       a.reportMigrateGenerateError('fetch_migrations', new Error('x'));
       a.reportMigrateRunError({ code: 'other', error: new Error('x') });
       expect(mockReportEvent).not.toHaveBeenCalled();
@@ -392,6 +401,12 @@ describe('migrate-analytics events', () => {
         migrationCount: 5,
         appliedCount: 4,
       });
+    });
+
+    it('encodes the stop reason in the event name', async () => {
+      const a = await load();
+      a.reportMigrateRunStopped('existing_run');
+      expect(countOf('migrate_run_stopped_existing_run')).toBe(1);
     });
   });
 
