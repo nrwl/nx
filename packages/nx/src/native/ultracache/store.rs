@@ -291,36 +291,6 @@ mod tests {
         assert!(store.get("head".into()).is_none());
     }
 
-    #[test]
-    fn persists_the_recorded_stat_policy_and_reads_legacy_entries() {
-        let (_dir, store) = temp_store();
-        let imported = import(
-            &store,
-            r#"{
-                "enabled": { "commit": "head", "inputs": [], "collectStats": true },
-                "disabled": { "commit": "head", "inputs": [], "collectStats": false },
-                "legacy": { "commit": "head", "inputs": [] }
-            }"#,
-        )
-        .unwrap();
-        let reopened = store
-            .get_version("head".into(), imported.resolution().fetched_at)
-            .unwrap();
-        let entries = reopened
-            .entries_for(&["enabled", "disabled", "legacy"])
-            .unwrap();
-        assert_eq!(entries["enabled"].collect_stats, Some(true));
-        assert_eq!(entries["disabled"].collect_stats, Some(false));
-        assert_eq!(entries["legacy"].collect_stats, None);
-
-        let malformed =
-            r#"{ "a:build": { "commit": "head", "inputs": [], "collectStats": "true" } }"#;
-        assert_eq!(
-            import(&store, malformed).err().unwrap().status,
-            "INVALID_RESPONSE"
-        );
-    }
-
     // Unknown fields are ignored so Nx Cloud can add some; an `inputs` shape
     // nx does not model is refused rather than half-read.
     #[test]
@@ -365,7 +335,6 @@ mod tests {
                     UltracacheConfiguration {
                         commit: commit.into(),
                         inputs: vec![format!("libs/{id}/a.ts"), "b.ts".into()],
-                        collect_stats: None,
                     },
                 )
             })

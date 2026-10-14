@@ -1936,7 +1936,6 @@ describe('task planner', () => {
         {
           inputs?: string[];
           outputs?: string[];
-          collectStats?: boolean;
         }
       >
     ) {
@@ -1951,7 +1950,6 @@ describe('task planner', () => {
                 commit,
                 inputs: e.inputs ?? [],
                 outputs: e.outputs ?? [],
-                collectStats: e.collectStats,
               },
             ])
           )
@@ -2488,54 +2486,7 @@ describe('task planner', () => {
       }
     );
 
-    it.each([
-      [undefined, undefined, true],
-      [undefined, false, true],
-      [false, undefined, true],
-      [false, false, true],
-      [true, true, true],
-      [true, undefined, false],
-      [true, false, false],
-      [false, true, false],
-      [undefined, true, false],
-    ])(
-      'checks task collectStats=%s against recording collectStats=%s',
-      (requested, recorded, compatible) => {
-        const { planner, taskGraph } = fixture();
-        taskGraph.tasks['parent:build'].ultracache =
-          requested === undefined ? undefined : { collectStats: requested };
-        // Cross the serialized task graph and native binding boundaries too.
-        const graph = JSON.parse(JSON.stringify(taskGraph));
-        const configurations = configurationsFor({
-          'parent:build': {
-            inputs: ['libs/parent/filea.ts'],
-            collectStats: recorded,
-          },
-        });
-        const declared = planner.getPlans(['parent:build'], graph)[
-          'parent:build'
-        ];
-        const plan = planner.getPlans(['parent:build'], graph, configurations)[
-          'parent:build'
-        ];
-        const report = getUltracacheReport(
-          configurations,
-          getUltracacheSettings(graph)
-        );
-        if (compatible) {
-          expect(plan).toContain('files:[libs/parent/filea.ts]');
-          expect(report.used).toContain('parent:build');
-        } else {
-          expect(plan).toEqual(declared);
-          expect(report.diagnostics).toContainEqual({
-            reason: 'stat-policy-mismatch',
-            taskId: 'parent:build',
-          });
-        }
-      }
-    );
-
-    it("moves the configuration marker when the task's read policy changes", () => {
+    it("moves the configuration marker when the task's ignoredReads change, and only then", () => {
       const { planner, taskGraph } = fixture();
       const configurations = configurationsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
@@ -2555,22 +2506,6 @@ describe('task planner', () => {
       expect(markerWith({ ignoredReads: [] })).toBe(none);
       // Recorded writes are never used, so their exclusions don't count.
       expect(markerWith({ ignoredWrites: ['tmp/**', 'cache/**'] })).toBe(none);
-      expect(markerWith({ collectStats: false })).toBe(none);
-      taskGraph.tasks['parent:build'].ultracache = { collectStats: true };
-      const withStats = planner
-        .getPlans(
-          ['parent:build'],
-          taskGraph,
-          configurationsFor({
-            'parent:build': {
-              inputs: ['libs/parent/filea.ts'],
-              collectStats: true,
-            },
-          })
-        )
-        ['parent:build'].find((entry) => entry.startsWith('io-snapshot:'));
-      expect(withStats).toBeDefined();
-      expect(withStats).not.toBe(none);
     });
 
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {

@@ -1512,11 +1512,7 @@ export interface TuiConfig {
 /** The Ultracache configurations the Nx Cloud client read for HEAD, as JS hands them over. */
 export interface UltracacheConfigurationImportOptions {
   requestedCommit: string
-  /**
-   * `Record<taskId, { commit, inputs, collectStats? }>` as JSON. `collectStats`
-   * is the policy actually used by the recording daemon. A legacy entry
-   * without it is compatible only with a task whose policy is `false`.
-   */
+  /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
   configurationsJson: string
 }
 

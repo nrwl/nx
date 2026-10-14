@@ -718,8 +718,6 @@ Set `collectStats: true` to include successful stat metadata accesses in the rec
 }
 ```
 
-Changing `collectStats` changes the task's recording policy and hash. Nx applies a recording only when its recorded policy matches the target's effective setting; otherwise it hashes the declared inputs. Legacy recordings without policy metadata remain usable for `false` or omitted settings, but `true` requires a recording explicitly collected with successful stats enabled.
-
 Use `ignoredReads` and `ignoredWrites` to keep recording the target while excluding paths from its report. The patterns are globs relative to the workspace root.
 
 ```json

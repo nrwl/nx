@@ -14,8 +14,6 @@ pub struct UltracacheConfigurationResolution {
 #[napi(object)]
 pub struct UltracacheConfigurationImportOptions {
     pub requested_commit: String,
-    /// `Record<taskId, { commit, inputs, collectStats? }>` as JSON. `collectStats`
-    /// is the policy actually used by the recording daemon. A legacy entry
-    /// without it is compatible only with a task whose policy is `false`.
+    /// `Record<taskId, { commit, inputs, outputs }>` as JSON.
     pub configurations_json: String,
 }
