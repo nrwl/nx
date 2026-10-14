@@ -1,4 +1,4 @@
-import { killPort, waitForPortOpen } from '@nx/node/utils';
+import { waitForPortOpen } from '@nx/node/utils';
 
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : <%= port %>;
@@ -11,6 +11,5 @@ export async function setup() {
 
 export async function teardown() {
   // Put clean up logic here (e.g. stopping services, docker-compose, etc.).
-  await killPort(port);
   console.log('\nTearing down...\n');
 }
