@@ -20,14 +20,15 @@ pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 
 /// Lists a directory, asked of whoever knows: the ignored index answers from
 /// a listing it keeps or from the disk, a caller without one reads the disk.
-/// `accept` is passed in so the answer is filtered as it is gathered. `None`
-/// when the directory cannot be read at all.
+/// `accept` is passed in so the answer is filtered as it is gathered, and a
+/// walk need not enter the directories in the last argument. `None` when the
+/// directory cannot be read at all.
 pub(crate) type ListDirectory<'a> =
-    Box<dyn Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a>;
+    Box<dyn Fn(&str, PathPredicate, &[String]) -> Option<Vec<String>> + Sync + 'a>;
 
 /// Reads the disk every time, for a caller with no index behind it.
 fn disk_files(workspace_root: &Path) -> ListDirectory<'_> {
-    Box::new(move |dir, accept| read_directory(workspace_root, dir, accept))
+    Box::new(move |dir, accept, skip| read_directory(workspace_root, dir, accept, skip))
 }
 
 /// For a caller with no workspace context: every path is checked on disk.
@@ -50,7 +51,7 @@ impl<'a> Source<'a> {
     /// the context can vouch for a path.
     pub(crate) fn fileset(
         tracked_file: PathPredicate<'a>,
-        list_directory: impl Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a,
+        list_directory: impl Fn(&str, PathPredicate, &[String]) -> Option<Vec<String>> + Sync + 'a,
     ) -> Self {
         Self {
             tracked_file,
@@ -186,7 +187,8 @@ pub(crate) fn expand_entries(
         } else {
             Box::new(move |path: &str| !excluded(path) && scope.admits(entry, path))
         };
-        if let Some(under) = list_directory(root, &*accept) {
+        let skip = scope.nested_below(entry);
+        if let Some(under) = list_directory(root, &*accept, &skip) {
             // Filtered again: a source is asked to apply `accept` so it can
             // skip work, not trusted to have done it.
             found.extend(under.into_iter().filter(|path| accept(path)));

@@ -89,7 +89,7 @@ pub(crate) mod tests {
     #[test]
     fn a_source_that_ignores_the_filter_cannot_widen_the_result() {
         let temp = workspace();
-        let everything = |dir: &str, _accept: PathPredicate| {
+        let everything = |dir: &str, _accept: PathPredicate, _skip: &[String]| {
             (dir == "dist/gen").then(|| globs(&["dist/gen/a.js", "dist/gen/a.js.map"]))
         };
         let group = globs(&["dist/gen/**/*.js"]);
@@ -109,7 +109,7 @@ pub(crate) mod tests {
     fn a_directory_is_whatever_the_source_says_it_holds() {
         let temp = workspace();
         // A phantom the disk does not have, to prove the source is believed.
-        let listed = |dir: &str, accept: PathPredicate| {
+        let listed = |dir: &str, accept: PathPredicate, _skip: &[String]| {
             (dir == "dist/gen").then(|| {
                 globs(&[
                     "dist/gen/a.js",

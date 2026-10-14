@@ -802,12 +802,13 @@ impl TaskHasher {
                 // The index answers from a listing it keeps only while
                 // nothing has run, like the file map; afterwards it reads the
                 // disk for us.
-                let list_directory = |dir: &str, accept: PathPredicate| {
+                let list_directory = |dir: &str, accept: PathPredicate, skip: &[String]| {
                     self.ignored_index.files_under(
                         workspace_root,
                         dir,
                         run_stage.nothing_ran(),
                         accept,
+                        skip,
                     )
                 };
                 let key = format!("files#{id}");

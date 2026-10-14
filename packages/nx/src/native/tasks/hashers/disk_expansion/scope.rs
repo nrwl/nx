@@ -43,6 +43,17 @@ impl ProjectScope {
         self.owner_of_directory(&path[..path.rfind('/')?])
     }
 
+    /// The roots below where `entry` reads from: projects it cannot match,
+    /// so a walk need not enter them. Empty when `entry` is unscoped.
+    pub(crate) fn nested_below(&self, entry: &Positive) -> Vec<String> {
+        if self.roots.is_empty() || self.owner_of_directory(&entry.root).is_none() {
+            return vec![];
+        }
+        roots_below(&self.roots, &entry.root)
+            .map(str::to_string)
+            .collect()
+    }
+
     /// Whether `entry` may match `path`.
     pub(crate) fn admits(&self, entry: &Positive, path: &str) -> bool {
         if self.roots.is_empty() {
@@ -67,15 +78,18 @@ pub(crate) fn scope_roots(positives: &[Positive], project_roots: &BTreeSet<Strin
             continue;
         };
         needed.insert(owner);
-        let below = format!("{}/", entry.root);
-        needed.extend(
-            project_roots
-                .range(below.clone()..)
-                .take_while(|root| root.starts_with(&below))
-                .map(String::as_str),
-        );
+        needed.extend(roots_below(project_roots, &entry.root));
     }
     needed.into_iter().map(str::to_string).collect()
+}
+
+/// The roots strictly below `dir`, in order.
+fn roots_below<'a>(roots: &'a BTreeSet<String>, dir: &str) -> impl Iterator<Item = &'a str> {
+    let below = format!("{dir}/");
+    roots
+        .range(below.clone()..)
+        .take_while(move |root| root.starts_with(&below))
+        .map(String::as_str)
 }
 
 /// For a caller holding paths rather than walking: whether a path one of
@@ -159,6 +173,34 @@ mod tests {
         assert!(scope.admits(&entry, "packages/gradle/build/out.json"));
         assert!(!scope.admits(&entry, "packages/gradle/batch-runner/build.gradle.kts"));
         assert!(!scope.admits(&entry, "packages/gradle/batch-runner/build/out.jar"));
+    }
+
+    #[test]
+    fn a_walk_need_not_enter_the_projects_below_a_scoped_entry() {
+        let all = roots(&[
+            "packages/gradle",
+            "packages/gradle/batch-runner",
+            "packages/gradle/batch-runner/inner",
+            "packages/gradle-two",
+        ]);
+        let below = |glob: &str| {
+            let entry = positive(glob);
+            let scope = ProjectScope::new(&scope_roots(std::slice::from_ref(&entry), &all));
+            scope.nested_below(&entry)
+        };
+        assert_eq!(
+            below("packages/gradle/**/*"),
+            vec![
+                "packages/gradle/batch-runner",
+                "packages/gradle/batch-runner/inner"
+            ]
+        );
+        assert_eq!(
+            below("packages/gradle/batch-runner/**"),
+            vec!["packages/gradle/batch-runner/inner"]
+        );
+        // Unscoped entries read every project, so nothing is skipped.
+        assert!(below("packages/**/*.json").is_empty());
     }
 
     #[test]
