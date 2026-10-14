@@ -862,6 +862,8 @@ export class TaskOrchestrator {
         const deferred = this.hashingDeferredTaskIds?.has(id);
         if (deferred && afterMiss) {
           runNow.push(task);
+          toRun.set(id, task);
+          rehashAfterRun.add(id);
         } else if (deferred && afterUncacheable) {
           heldBack.add(id);
         } else {
@@ -870,11 +872,6 @@ export class TaskOrchestrator {
       }
 
       await this.hashBatchTasks([...runNow, ...lookUp]);
-
-      for (const task of runNow) {
-        toRun.set(task.id, task);
-        rehashAfterRun.add(task.id);
-      }
 
       if (lookUp.length > 0) {
         const cacheResults = await this.applyCachedResults(lookUp);
