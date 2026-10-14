@@ -1,7 +1,6 @@
 package dev.nx.maven.utils
 
 import dev.nx.maven.cache.CacheConfig
-import dev.nx.maven.cache.Parameter
 import org.apache.maven.plugin.descriptor.MojoDescriptor
 import org.apache.maven.plugin.descriptor.PluginDescriptor
 import org.apache.maven.project.MavenProject
@@ -81,8 +80,8 @@ class MojoAnalyzer(
     }
 
     // Maven reads these paths whether git tracks them or not, so they're hashed from disk.
-    fun addInput(path: String, paramConfig: Parameter) {
-      val pathWithGlob = File(paramConfig.glob?.let { "$path/$it" } ?: path)
+    fun addInput(path: String, glob: String?, excludeGlob: String?) {
+      val pathWithGlob = File(glob?.let { "$path/$it" } ?: path)
       // includeIgnored filesets reject `..`
       fun format(file: File) = if (isUnder(File(path), project.basedir)) {
         pathResolver.formatInputPath(file, projectRoot = project.basedir)
@@ -90,18 +89,20 @@ class MojoAnalyzer(
         pathResolver.toWorkspacePath(file, workspaceRoot)
       }
       ignoredInputs.add(format(pathWithGlob))
-      paramConfig.excludeGlob?.let { ignoredInputs.add("!" + format(File("$path/$it"))) }
+      excludeGlob?.let { ignoredInputs.add("!" + format(File("$path/$it"))) }
     }
 
     mojoConfig?.inputParameters?.forEach { paramConfig ->
       val parameter = mojoDescriptor.parameterMap[paramConfig.name]
         ?: return@forEach
 
-      expressionResolver.resolveParameter(parameter, project).forEach { addInput(it, paramConfig) }
+      expressionResolver.resolveParameter(parameter, project)
+        .forEach { addInput(it, paramConfig.glob, paramConfig.excludeGlob) }
     }
 
-    mojoConfig?.inputProperties?.forEach { paramConfig ->
-      expressionResolver.resolveProperty(paramConfig.name, project).forEach { addInput(it, paramConfig) }
+    mojoConfig?.inputProperties?.forEach { property ->
+      expressionResolver.resolveProperty(property.name, project)
+        .forEach { addInput(it, property.glob, property.excludeGlob) }
     }
 
     if (mojoConfig?.inputParameters == null && mojoConfig?.inputProperties == null) {

@@ -7,8 +7,11 @@ data class PathPattern(
 
 data class Parameter(val name: String, val glob: String?, val excludeGlob: String? = null)
 
+// A path from the project model (e.g. project.build.outputDirectory) rather than a mojo parameter.
+data class Property(val name: String, val glob: String? = null, val excludeGlob: String? = null)
+
 data class MojoConfig(
-    val inputProperties: Set<Parameter>? = null,
+    val inputProperties: Set<Property>? = null,
     val inputParameters: Set<Parameter>? = null,
     val outputParameters: Set<Parameter>? = null,
 )
@@ -86,7 +89,7 @@ data class CacheConfig(
                 ),
                 "maven-compiler-plugin:testCompile" to MojoConfig(
                     inputProperties = setOf(
-                        Parameter("project.build.outputDirectory", null),
+                        Property("project.build.outputDirectory"),
                     ),
                     inputParameters = setOf(
                         Parameter("compileSourceRoots", "**/*.java"),
@@ -101,7 +104,7 @@ data class CacheConfig(
                     )
                 ),
                 "maven-resources-plugin:resources" to MojoConfig(
-                    inputProperties = setOf(Parameter("project.build.resources", null)),
+                    inputProperties = setOf(Property("project.build.resources")),
                     outputParameters = setOf(
                         Parameter("outputDirectory", null, excludeGlob = "**/*.class"),
                     )
