@@ -370,6 +370,22 @@ describe('@nx/webpack/plugin', () => {
     }
   });
 
+  it.each([
+    ['a port string', '3000', 3000],
+    ['an auto port', 'auto', undefined],
+  ])('infers the serve-static port for %s', async (_, port, expected) => {
+    mockWebpackConfig({ devServer: { port } });
+
+    const nodes = await createNodesFunction(
+      ['my-app/webpack.config.js'],
+      {},
+      context
+    );
+
+    const { targets } = nodes[0][1].projects['my-app'];
+    expect(targets['serve-static'].options.port).toBe(expected);
+  });
+
   it('reads the build outputs with the build env and the dev server port with the serve env', async () => {
     mockWebpackConfig((env: Record<string, unknown>) => ({
       output: { path: env.WEBPACK_SERVE ? 'dist/serve' : 'dist/build' },

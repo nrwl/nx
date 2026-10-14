@@ -308,9 +308,9 @@ async function createWebpackTargets(
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
-  if (webpackConfig.devServer?.port && webpackConfig.devServer?.port !== 4200) {
-    targets[options.serveStaticTargetName].options.port =
-      webpackConfig.devServer.port;
+  const serveStaticPort = getPortNumber(webpackConfig.devServer?.port);
+  if (serveStaticPort && serveStaticPort !== 4200) {
+    targets[options.serveStaticTargetName].options.port = serveStaticPort;
   }
 
   if (isTsSolutionSetup) {
@@ -383,6 +383,17 @@ function getDevServerHost(host: unknown): string {
   // same host without reading as a token
   const label = host.split('.')[0];
   return TOKEN_NAMES.has(label) ? label[0].toUpperCase() + host.slice(1) : host;
+}
+
+// The file server takes a port number, so a value only the dev server
+// understands, such as 'auto', leaves it on its default port
+function getPortNumber(port: unknown): number | undefined {
+  if (typeof port === 'number') {
+    return port;
+  }
+  return typeof port === 'string' && /^\d+$/.test(port)
+    ? Number(port)
+    : undefined;
 }
 
 function normalizeOutputPath(
