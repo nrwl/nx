@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import type { Compiler, WebpackPluginInstance } from 'webpack';
 import {
   createPackageJson,
@@ -10,7 +9,6 @@ import {
 import {
   detectPackageManager,
   type ProjectGraph,
-  readJsonFile,
   serializeJson,
 } from '@nx/devkit';
 import { readModulePackageJson } from '@nx/devkit/internal';
@@ -35,12 +33,10 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
     const runtimeDependencies: Record<string, string> = {};
     if (this.options.runtimeDependencies) {
       for (const dep of this.options.runtimeDependencies) {
-        const depPkgJson = readModulePackageJson(dep, [
+        const { name, version } = readModulePackageJson(dep, [
           __dirname,
           this.options.root,
-        ]).path;
-        if (!fs.existsSync(depPkgJson)) continue;
-        const { name, version } = readJsonFile(depPkgJson);
+        ]).packageJson;
         runtimeDependencies[name] = version;
       }
     }
