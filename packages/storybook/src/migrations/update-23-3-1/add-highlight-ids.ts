@@ -12,6 +12,7 @@ import type {
   Expression,
   Identifier,
   Node,
+  ObjectLiteralElementLike,
   ObjectLiteralExpression,
   SourceFile,
   Symbol as TsSymbol,
@@ -24,6 +25,8 @@ const HIGHLIGHT_EVENT = 'storybook/highlight/add';
 const HIGHLIGHT_DOCS =
   'https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id';
 const SOURCE_FILE_PATTERN = /\.[cm]?[jt]sx?$/;
+const TS_FILE_PATTERN = /\.[cm]?tsx?$/;
+const ID_HELPER_PATTERN = /^withHighlightId\d*$/;
 // Story and docs formats whose scripts can use Highlight but aren't parsed here.
 const UNPARSED_FILE_PATTERN = /\.(mdx|svelte|vue)$/;
 const LISTENER_METHODS = new Set([
@@ -45,7 +48,13 @@ type HighlightImports = {
   bindings: Identifier[];
 };
 
-type FileResult = { content: string; rewrites: number; notes: string[] };
+type FileResult = {
+  content: string;
+  rewrites: number;
+  helper?: string;
+  notes: string[];
+};
+type IdValue = 'present' | 'missing' | 'unknown';
 
 let ts: typeof import('typescript') | undefined;
 
@@ -78,7 +87,10 @@ export default async function addHighlightIds(tree: Tree) {
     if (result.rewrites > 0) {
       tree.write(filePath, result.content);
       rewritten.push(
-        `Added an "id" to ${result.rewrites} HIGHLIGHT payload(s) in ${filePath}. Each id ends in a module-level counter, so every emit still adds its own highlight.`
+        `Gave ${result.rewrites} HIGHLIGHT payload(s) in ${filePath} a generated "id", or a generated fallback where the payload's own id can be missing or empty. Each generated id ends in a module-level counter, so every emit still adds its own highlight.` +
+          (result.helper
+            ? ` Payloads that aren't object literals, or that spread another object after their id, are wrapped in the "${result.helper}" function declared in the file.`
+            : '')
       );
     }
     pending.push(...result.notes);
@@ -236,41 +248,95 @@ function migrateFile(
     );
   }
 
+  // Payloads an earlier run wrapped in one of these already have an id.
+  const declaredHelpers = new Set<string>();
+  for (const statement of sourceFile.statements) {
+    if (
+      ts.isFunctionDeclaration(statement) &&
+      statement.name &&
+      ID_HELPER_PATTERN.test(statement.name.text)
+    ) {
+      declaredHelpers.add(statement.name.text);
+    }
+  }
+
   const counter = uniqueName('highlightCount', identifiers);
+  const helper = uniqueName('withHighlightId', identifiers);
   const id = `\`${escapeTemplateText(filePath)}:\${++${counter}}\``;
   const changes: StringChange[] = [];
   let rewrites = 0;
+  let usesHelper = false;
   for (const payload of payloads) {
-    const literal = unwrapObjectLiteral(payload);
-    if (!literal) {
-      // The generated id comes first, so an id the payload carries at runtime
-      // still wins.
-      changes.push(
-        {
-          type: ChangeType.Insert,
-          index: payload.getStart(sourceFile),
-          text: `{ id: ${id}, ...`,
-        },
-        { type: ChangeType.Insert, index: payload.getEnd(), text: ' }' }
-      );
-      rewrites++;
-    } else if (
-      !hasStaticKey(literal, 'id') &&
-      // Storybook still gives a legacy `elements` payload an id itself.
-      !hasStaticKey(literal, 'elements')
+    if (
+      ts.isCallExpression(payload) &&
+      ts.isIdentifier(payload.expression) &&
+      declaredHelpers.has(payload.expression.text)
     ) {
-      changes.push(insertIdProperty(content, literal, id, sourceFile));
-      rewrites++;
+      continue;
     }
+    const literal = skipOuterExpressions(payload);
+    if (ts.isObjectLiteralExpression(literal)) {
+      // Storybook still gives a legacy `elements` payload an id itself.
+      if (hasStaticKey(literal, 'elements')) {
+        continue;
+      }
+      const idSource = findIdSource(literal);
+      if (!idSource) {
+        changes.push(insertIdProperty(content, literal, id, sourceFile));
+        rewrites++;
+        continue;
+      }
+      if (ts.isPropertyAssignment(idSource)) {
+        const idChanges = fillMissingId(idSource.initializer, id, sourceFile);
+        if (idChanges.length > 0) {
+          changes.push(...idChanges);
+          rewrites++;
+        }
+        continue;
+      }
+      if (ts.isShorthandPropertyAssignment(idSource)) {
+        changes.push({
+          type: ChangeType.Insert,
+          index: idSource.getEnd(),
+          text: `: ${idSource.name.text} || ${id}`,
+        });
+        rewrites++;
+        continue;
+      }
+    }
+    // Not an object literal, or its id comes from a spread or an accessor, so
+    // the id is only known at runtime.
+    changes.push(
+      {
+        type: ChangeType.Insert,
+        index: payload.getStart(sourceFile),
+        text: `${helper}(`,
+      },
+      { type: ChangeType.Insert, index: payload.getEnd(), text: `, ${id})` }
+    );
+    rewrites++;
+    usesHelper = true;
   }
   if (rewrites === 0) {
     return { content, rewrites, notes };
   }
-  changes.push(declareCounter(sourceFile, content, counter));
+  const declarations = [`let ${counter} = 0;`];
+  if (usesHelper) {
+    const params = TS_FILE_PATTERN.test(filePath)
+      ? 'payload: object | undefined, id: string'
+      : 'payload, id';
+    declarations.push(
+      `function ${helper}(${params}) {\n  return { ...payload, id: Object(payload).id || id };\n}`
+    );
+  }
+  changes.push(
+    insertDeclarations(sourceFile, content, declarations.join('\n\n'))
+  );
 
   return {
     content: applyChangesToString(content, changes),
     rewrites,
+    helper: usesHelper ? helper : undefined,
     notes,
   };
 }
@@ -420,9 +486,7 @@ function hasStaticKey(literal: ObjectLiteralExpression, key: string): boolean {
   );
 }
 
-function unwrapObjectLiteral(
-  expression: Expression
-): ObjectLiteralExpression | undefined {
+function skipOuterExpressions(expression: Expression): Expression {
   let current = expression;
   while (
     ts.isParenthesizedExpression(current) ||
@@ -433,7 +497,82 @@ function unwrapObjectLiteral(
   ) {
     current = current.expression;
   }
-  return ts.isObjectLiteralExpression(current) ? current : undefined;
+  return current;
+}
+
+// The last spread or `id` property sets the payload's id at runtime.
+function findIdSource(
+  literal: ObjectLiteralExpression
+): ObjectLiteralElementLike | undefined {
+  let source: ObjectLiteralElementLike | undefined;
+  for (const property of literal.properties) {
+    if (
+      ts.isSpreadAssignment(property) ||
+      (property.name !== undefined && getStaticName(property.name) === 'id')
+    ) {
+      source = property;
+    }
+  }
+  return source;
+}
+
+function fillMissingId(
+  value: Expression,
+  id: string,
+  sourceFile: SourceFile
+): StringChange[] {
+  const start = value.getStart(sourceFile);
+  const end = value.getEnd();
+  const state = readIdValue(value);
+  if (state === 'present') {
+    return [];
+  }
+  if (state === 'missing') {
+    return [
+      { type: ChangeType.Insert, index: start, text: id },
+      { type: ChangeType.Delete, start, length: end - start },
+    ];
+  }
+  return ts.isLeftHandSideExpression(value)
+    ? [{ type: ChangeType.Insert, index: end, text: ` || ${id}` }]
+    : [
+        { type: ChangeType.Insert, index: start, text: '(' },
+        { type: ChangeType.Insert, index: end, text: `) || ${id}` },
+      ];
+}
+
+// Follows TypeScript's syntactic truthiness check, which rejects `value || id`
+// when `value` is always truthy or always falsy.
+function readIdValue(expression: Expression): IdValue {
+  const value = skipOuterExpressions(expression);
+  if (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) {
+    return value.text ? 'present' : 'missing';
+  }
+  if (ts.isTemplateExpression(value)) {
+    return value.head.text ||
+      value.templateSpans.some((span) => span.literal.text)
+      ? 'present'
+      : 'unknown';
+  }
+  if (ts.isConditionalExpression(value)) {
+    const whenTrue = readIdValue(value.whenTrue);
+    return whenTrue === readIdValue(value.whenFalse) ? whenTrue : 'unknown';
+  }
+  if (
+    ts.isBinaryExpression(value) &&
+    value.operatorToken.kind === ts.SyntaxKind.BarBarToken
+  ) {
+    return readIdValue(value.right) === 'present' ? 'present' : 'unknown';
+  }
+  if (
+    value.kind === ts.SyntaxKind.NullKeyword ||
+    ts.isVoidExpression(value) ||
+    (ts.isIdentifier(value) && value.text === 'undefined')
+  ) {
+    return 'missing';
+  }
+  // Storybook ignores a number id, but `2 || id` doesn't compile.
+  return ts.isNumericLiteral(value) ? 'present' : 'unknown';
 }
 
 function insertIdProperty(
@@ -451,10 +590,10 @@ function insertIdProperty(
   return { type: ChangeType.Insert, index, text };
 }
 
-function declareCounter(
+function insertDeclarations(
   sourceFile: SourceFile,
   content: string,
-  counter: string
+  declaration: string
 ): StringChange {
   // Before the first statement that isn't an import or directive, so no code
   // runs before the counter is declared.
@@ -472,7 +611,6 @@ function declareCounter(
     }
     anchor = statement;
   }
-  const declaration = `let ${counter} = 0;`;
   return anchor
     ? {
         type: ChangeType.Insert,
