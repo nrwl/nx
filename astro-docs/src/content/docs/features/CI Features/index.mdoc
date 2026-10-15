@@ -2,7 +2,7 @@
 title: Continuous Integration (CI) with Nx Cloud
 sidebar:
   hidden: true
-description: Nx Cloud cuts CI time and cost with remote caching and distributed task execution with dynamic task packing, which fills machines by CPU and memory use.
+description: Nx Cloud cuts CI time and cost with remote caching, Ultracache, and distributed task execution with dynamic task packing, which fills machines by CPU and memory use.
 filter: 'type:Features'
 ---
 
@@ -10,7 +10,7 @@ filter: 'type:Features'
 
 Nx Cloud makes CI faster and cheaper in two ways:
 
-- [Remote caching](/docs/features/ci-features/remote-cache) skips any task that already ran with the same inputs, in CI or on a developer machine.
+- [Remote caching](/docs/features/ci-features/remote-cache) skips any task that already ran with the same inputs, in CI or on a developer machine. On Nx Cloud, Ultracache records the files each task actually reads, so cache hits follow what tasks read and more of them hit.
 - [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across Nx Agents, and _dynamic task packing_ fills each agent by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
 
 In most workspaces, distribution uses about 50% fewer machine-minutes than remote caching alone.
@@ -21,6 +21,7 @@ Teams using Nx Cloud report 30% to 70% faster CI.
 |                 | Nx Core                                                                                                    | Nx Cloud                                                                                                          |
 | --------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Caching         | [Local cache](/docs/features/cache-task-results), per machine                                              | Adds a [remote cache](/docs/features/ci-features/remote-cache) shared across your team and CI                     |
+| Task inputs     | Hashes each task from its declared or inferred `inputs`                                                    | Ultracache records what each task reads in CI and hashes from that                                                |
 | Task scheduling | Task graph on one machine, [`nx affected`](/docs/features/ci-features/affected) to skip untouched projects | Adds [distribution across agents](/docs/features/ci-features/distribute-task-execution) with dynamic task packing |
 | Failing CI      | You read the logs and fix it                                                                               | [Self-healing CI](/docs/features/ci-features/self-healing-ci) proposes a fix on the PR                            |
 | Visibility      | Terminal output for the run in front of you                                                                | [Run history, task analytics, and CI observability](/docs/kb/optimize-your-ttg)                                   |

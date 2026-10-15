@@ -128,6 +128,9 @@ Note that you only need to define output locations if they differ from the usual
 
 Learn more [about configuring inputs including `namedInputs`](/docs/kb/configure-inputs).
 
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) records the files each task
+actually reads and hashes later runs from those files instead of the declared file inputs.
+
 ## Configure caching automatically
 
 When using [Nx plugins](/docs/concepts/nx-plugins), many tasks have caching configured automatically, saving you the effort of manual setup. **Nx plugins can [automatically infer tasks](/docs/concepts/mental-model#inferred-tasks) and configure caching** based on your underlying tooling configuration files.

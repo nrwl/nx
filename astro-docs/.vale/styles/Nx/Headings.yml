@@ -12,6 +12,7 @@ exceptions:
   - Nx Agents
   - Enterprise
   - Nx Replay
+  - Ultracache
   - AI
   - CI
   - CD

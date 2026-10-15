@@ -100,13 +100,15 @@ The generated workflow also includes the Nx Cloud steps described below.
 
 ## Add remote caching
 
-With remote caching, a task that already ran with the same inputs, in CI or on a teammate's machine, is restored from the cache instead of running again.
+With [remote caching](/docs/features/ci-features/remote-cache), a task that already ran with the same inputs, in CI or on a teammate's machine, is restored from the cache instead of running again.
 A pipeline with many cache hits finishes sooner and uses fewer machine-minutes, which reduces cost.
 Setup takes under 5 minutes and is free to start.
 
 {% call_to_action variant="default" title="Connect your workspace" url="https://cloud.nx.app/setup/connect-workspace/guide?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=ci-setup" description="Setup takes less than 5 minutes" /%}
 
 For read-only and read-write CI tokens, see [CI access tokens](/docs/kb/access-tokens).
+
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) configures each task's inputs and outputs automatically from the files it reads and writes, so cache hits are always correct.
 
 ## Distribute tasks with Nx Agents
 

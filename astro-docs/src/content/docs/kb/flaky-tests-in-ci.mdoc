@@ -122,8 +122,8 @@ A test can appear flaky when its execution context changed but the task did not 
 in its inputs. Include configuration, environment values, generated files, and other dependencies
 that affect the result.
 
-[How caching works](/docs/concepts/how-caching-works) explains how Nx uses task inputs. [Task
-sandboxing](/docs/kb/sandboxing) can find undeclared task dependencies.
+[How caching works](/docs/concepts/how-caching-works) explains how Nx uses task inputs. [Ultracache](/docs/features/ci-features/remote-cache#ultracache)
+records the files each task reads on Nx Agents, so an undeclared read inside the workspace doesn't cause a stale hit.
 
 For the wider CI design, use [Monorepo CI best practices](/docs/kb/monorepo-ci-best-practices). It
 covers affected runs, caching, distribution, test splitting, and flaky-task handling together.

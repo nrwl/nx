@@ -220,8 +220,8 @@ Check the task's `inputs`. These are the files and values that contribute to the
 - An environment variable changed
 - A dependency was updated
 
-{% aside type="tip" title="Enforce correct inputs and outputs" %}
-Use [sandboxing](/docs/kb/sandboxing) to detect tasks that read files not listed in their `inputs` or write files not listed in their `outputs`. This catches configuration mistakes that lead to stale caches or missing artifacts.
+{% aside type="tip" title="Record inputs with Ultracache" %}
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) records the files each task reads and uses them as its inputs. **Analytics** > **Cache inputs and outputs** in Nx Cloud lists the reads it couldn't record, which can lead to stale caches.
 {% /aside %}
 
 ## Nx Console

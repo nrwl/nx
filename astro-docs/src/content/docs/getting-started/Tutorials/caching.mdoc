@@ -239,8 +239,8 @@ Inputs aren't limited to files. You can also include environment variables and r
 
 For more details, see [configure inputs](/docs/kb/configure-inputs).
 
-{% aside type="tip" title="Enforce correct inputs and outputs" %}
-Not sure if your `inputs` and `outputs` are configured correctly? Use [sandboxing](/docs/kb/sandboxing) to detect tasks that read or write files outside their declared configuration.
+{% aside type="tip" title="Record inputs with Ultracache" %}
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) records the files each task reads and uses them as its inputs, so an undeclared read inside the workspace no longer causes a stale cache hit.
 {% /aside %}
 
 Now that caching, inputs, and outputs are configured, try it out: change a source file and run `nx build my-app`. Nx detects the change, computes a new hash, and runs the build. Revert the change and run again to see the cached result restored, including the `dist/` output files.
@@ -257,6 +257,7 @@ nx connect
 This command guides you through creating a free Nx Cloud account and stores an access token in your workspace. Once connected, cached results are shared automatically.
 
 When a teammate or CI pipeline has already run a task with the same inputs, you get the cached result instantly, even on a fresh checkout.
+On Nx Cloud, Ultracache configures each task's inputs and outputs automatically from the files it reads and writes, so cache hits are always correct.
 
 For more information, see [remote caching](/docs/features/ci-features/remote-cache).
 To configure Nx Cloud in CI, see [set up CI](/docs/getting-started/setup-ci).
