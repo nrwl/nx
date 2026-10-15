@@ -1406,8 +1406,12 @@ mod tests {
 
     #[test]
     fn test_registers_a_pty_with_the_terminal_dimensions_set_by_init() {
-        // The inline chrome reserves 2 rows; a shorter terminal gets the PTY minimum
-        for (terminal, expected) in [(Size::new(80, 24), (22, 80)), (Size::new(80, 2), (3, 80))] {
+        // The inline chrome reserves 2 rows; a smaller terminal gets the PTY minimum
+        for (terminal, expected) in [
+            (Size::new(80, 24), (22, 80)),
+            (Size::new(80, 2), (3, 80)),
+            (Size::new(10, 24), (22, 20)),
+        ] {
             let mut app = create_test_inline_app();
             app.init(terminal).unwrap();
             app.register_running_non_interactive_task(String::from("app1:build"));
