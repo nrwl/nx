@@ -766,7 +766,7 @@ describe('@nx/cypress/plugin', () => {
           { target: 'serve-static', projects: ['my-app'] },
         ]);
         expect(warn).toHaveBeenCalledWith(
-          'src/feature.cy.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.'
+          'src/feature.cy.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas, or write NONE to leave the servers\' inputs out of the task\'s hash.'
         );
       } finally {
         warn.mockRestore();

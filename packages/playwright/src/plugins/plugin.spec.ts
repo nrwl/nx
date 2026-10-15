@@ -1268,7 +1268,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
           { target: 'e2e--wait-for-webserver' },
         ]);
         expect(warn).toHaveBeenCalledWith(
-          'tests/feature.spec.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.'
+          'tests/feature.spec.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas, or write NONE to leave the servers\' inputs out of the task\'s hash.'
         );
       } finally {
         warn.mockRestore();

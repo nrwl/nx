@@ -44,7 +44,11 @@ export function applyTestFileDirectives(
     case 'empty':
       emitPluginWorkerLog(
         'warn',
-        `${file}: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.`
+        `${file}: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas${
+          options.dependsOnNone
+            ? ", or write NONE to leave the servers' inputs out of the task's hash"
+            : ''
+        }.`
       );
       return target;
     case 'mixed':
