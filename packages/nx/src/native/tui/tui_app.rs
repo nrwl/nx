@@ -296,9 +296,8 @@ pub trait TuiApp: Send {
 
     /// Print terminal output for a specific task
     ///
-    /// This method is called after tasks complete. If a PTY already exists,
-    /// it means the task ran interactively and the PTY already has all output.
-    /// Only tasks that didn't run in a pseudo-terminal need a new PTY.
+    /// A task's existing PTY already holds its output, written by its
+    /// pseudo-terminal or `append_task_output`. Only tasks without one get a new PTY.
     ///
     /// # Arguments
     ///
