@@ -601,6 +601,7 @@ impl TuiApp for InlineApp {
             .state()
             .lock()
             .get_dimensions()
+            .map(|(width, height)| (height, width))
             .unwrap_or_else(|| {
                 // Get terminal size
                 debug!("Getting terminal size for PTY dimensions inline_app");
@@ -1401,6 +1402,21 @@ mod tests {
         let state = state_ref.lock();
         let pty = state.get_pty_instance("app1:build").unwrap();
         assert!(pty.get_screen().unwrap().contents().contains("streamed"));
+    }
+
+    #[test]
+    fn test_registers_a_pty_with_the_terminal_dimensions_set_by_init() {
+        // The inline chrome reserves 2 rows; a shorter terminal gets the PTY minimum
+        for (terminal, expected) in [(Size::new(80, 24), (22, 80)), (Size::new(80, 2), (3, 80))] {
+            let mut app = create_test_inline_app();
+            app.init(terminal).unwrap();
+            app.register_running_non_interactive_task(String::from("app1:build"));
+
+            let state_ref = app.get_state();
+            let state = state_ref.lock();
+            let pty = state.get_pty_instance("app1:build").unwrap();
+            assert_eq!(pty.get_dimensions(), expected, "{terminal:?}");
+        }
     }
 
     #[test]
