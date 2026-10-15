@@ -601,6 +601,12 @@ mod tests {
                 .await
                 .unwrap()
         );
+        assert!(
+            !probe(port_config(port, Some("0.0.0.0"), 300))
+                .wait()
+                .await
+                .unwrap()
+        );
     }
 
     #[tokio::test]
