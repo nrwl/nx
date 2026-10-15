@@ -289,6 +289,24 @@ describe('utils', () => {
       }
     );
 
+    it.each([
+      ['dist/', 'myapp/dist/myapp'],
+      ['../', 'myapp'],
+    ])(
+      'should keep the separator a fallback literal ends with: %s',
+      (dir, output) => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task.target,
+            task.overrides,
+            getNode({
+              outputs: [`{projectRoot}/{options.dir ?? ${dir}}{projectName}`],
+            })
+          )
+        ).toEqual([output]);
+      }
+    );
+
     it('should interpolate options set to 0 or false', () => {
       expect(
         getOutputsForTargetAndConfiguration(

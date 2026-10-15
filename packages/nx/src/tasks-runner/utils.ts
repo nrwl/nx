@@ -467,20 +467,24 @@ function isWorkspaceRootOnlyAtStart(
 // `{projectRoot}` away, wherever it sits
 function joinSegments(nodes: TokenNode[], data: any, scope: TokenScope) {
   const segments = [''];
-  for (const node of nodes) {
-    if (node.kind === 'text') {
-      const [first, ...rest] = node.text.split('/');
-      segments[segments.length - 1] += first;
-      segments.push(...rest);
-    } else {
-      segments[segments.length - 1] +=
-        data.projectRoot == '.' && node.raw === '{projectRoot}'
-          ? ''
-          : resolveToken(node, scope, (literal) =>
-              joinSegments(literal, data, scope)
-            );
+  const append = (nodes: TokenNode[]): string => {
+    for (const node of nodes) {
+      if (node.kind === 'text') {
+        const [first, ...rest] = node.text.split('/');
+        segments[segments.length - 1] += first;
+        segments.push(...rest);
+      } else {
+        // Resolved before indexing `segments`: a fallback literal appends to it
+        const value =
+          data.projectRoot == '.' && node.raw === '{projectRoot}'
+            ? ''
+            : resolveToken(node, scope, append);
+        segments[segments.length - 1] += value;
+      }
     }
-  }
+    return '';
+  };
+  append(nodes);
   return join(...segments);
 }
 
