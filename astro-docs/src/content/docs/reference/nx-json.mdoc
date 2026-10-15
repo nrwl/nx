@@ -668,6 +668,8 @@ The tag pattern supports interpolating the following values:
 - `{projectName}` - The name of the project being released (for independent releases)
 - `{releaseGroupName}` - The name of the release group being released (when using release groups)
 
+The tag pattern can't use `{env.*}` placeholders or `??` fallbacks.
+
 Example patterns and their results:
 
 - `v{version}` → `v1.0.0` (default for fixed releases)
