@@ -13158,6 +13158,7 @@ describe('createNxReleaseConfig()', () => {
     it.each([
       ['v{version}{env.S}', { releaseTag: { pattern: 'v{version}{env.S}' } }],
       ['{version ?? env.V}', { git: { commitMessage: '{version ?? env.V}' } }],
+      ['/release {env.C}', { git: { commitMessage: '/release {env.C}' } }],
       ['{env.F}', { changelog: { projectChangelogs: { file: '{env.F}' } } }],
       [
         '{env.E}',

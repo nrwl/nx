@@ -421,8 +421,7 @@ export function interpolate(
   data: any,
   options?: { envNotAllowed?: (template: string) => string }
 ): string {
-  // Path is absolute or doesn't need interpolation
-  if (template.startsWith('/') || !/{[\s\S]+?}/.test(template)) {
+  if (!/{[\s\S]+?}/.test(template)) {
     return template;
   }
 
@@ -434,6 +433,14 @@ export function interpolate(
       : undefined,
     noValue: (token) => token,
   };
+  // An absolute path is used as written, but parsing it still rejects env
+  // tokens
+  if (template.startsWith('/')) {
+    if (options?.envNotAllowed) {
+      parseTokens(template, scope);
+    }
+    return template;
+  }
   const nodes = parseTokens(template, scope);
   if (!isWorkspaceRootOnlyAtStart(nodes, true)) {
     throw new Error(
