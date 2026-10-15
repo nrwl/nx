@@ -74,6 +74,7 @@ import {
   withRunCreationLock,
 } from './state-lock';
 import {
+  commitFailureRecovery,
   installDepsChangedSinceDispense,
   nowIso,
   pmExecPrefix,
@@ -395,8 +396,6 @@ async function runStandalone(
   // unrelated pending diffs under its name. The commit path installs deps
   // itself, so the else branch does it here instead.
   if (createCommits && madeChanges) {
-    // No later commit or end-of-run recap absorbs a failed commit's diff, so
-    // its failure log carries this guidance instead of the default.
     await commitMigrationIfRequested(
       root,
       migration,
@@ -404,7 +403,7 @@ async function runStandalone(
       commitPrefix,
       () => installer.installDepsIfChanged(),
       [],
-      'Commit or revert any remaining uncommitted changes manually.'
+      'manual'
     );
   } else {
     await installer.installDepsIfChanged();
@@ -501,6 +500,7 @@ async function runAgenticSingleMigration(
     );
     if (!parked) {
       logToAgent({ title: `Migration ${migrationId} is complete.` });
+      warnAboutLeftovers(root, runId, readRunState(runDir(root, runId)));
       reportMigrateSingleMigrationComplete({});
       return;
     }
@@ -526,9 +526,7 @@ async function runAgenticSingleMigration(
         return 1;
       case 'completed': {
         const unresolved = logSingleMigrationOutcome(state, migrationId);
-        for (const lines of completionWarnings(root, runId, state)) {
-          warnToAgent({ title: lines[0], bodyLines: lines.slice(1) });
-        }
+        warnAboutLeftovers(root, runId, state);
         reportMigrateSingleMigrationComplete({ agentUsed: agent.id });
         return unresolved ? 1 : undefined;
       }
@@ -539,6 +537,16 @@ async function runAgenticSingleMigration(
     }
   } finally {
     withRunCreationLock(root, () => removeSingleMigrationRun(root, runId));
+  }
+}
+
+function warnAboutLeftovers(
+  root: string,
+  runId: string,
+  state: MigrateRunState
+): void {
+  for (const lines of completionWarnings(root, runId, state)) {
+    warnToAgent({ title: lines[0], bodyLines: lines.slice(1) });
   }
 }
 
@@ -1025,6 +1033,7 @@ async function commitStepChanges(
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
+  const recovery = commitFailureRecovery(state);
   let commit: BrokeredCommit;
   try {
     commit = await commitStepTree(
@@ -1038,7 +1047,8 @@ async function commitStepChanges(
           true,
           state.commitPrefix,
           installDeps,
-          stepsToPendingMigrations(state, absorbedStepIds)
+          stepsToPendingMigrations(state, absorbedStepIds),
+          recovery
         ),
       scope
     );
@@ -1056,7 +1066,7 @@ async function commitStepChanges(
     throw commitError;
   }
   if (commit.result.status === 'failed') {
-    warnCommitFailed(migration.name);
+    warnCommitFailed(migration.name, recovery);
   }
   const entry = commitResultToLedgerEntry(
     commit.result,

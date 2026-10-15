@@ -5,6 +5,7 @@
 
 import {
   commitMigrationIfRequested,
+  type CommitFailureRecovery,
   type CommitResult,
 } from '../migrate-commits';
 import type { MigrateOutputSink } from '../deferred-output';
@@ -36,6 +37,7 @@ import {
   unresolvedCommitName,
 } from './state-machine';
 import {
+  commitFailureRecovery,
   installDepsChangedSinceDispense,
   summarizeError,
   warnCommitFailed,
@@ -108,7 +110,7 @@ export async function giveUpWithCommit(
           input.output
         ),
       stepsToPendingMigrations(state, absorbedStepIds),
-      undefined,
+      commitFailureRecovery(state),
       input.output
     );
     commit = result;
@@ -223,15 +225,16 @@ export function warnUnresolvedNotArchived(
 /** What the reconcile owes the agent for a give-up that went through. */
 export function warnAboutGiveUp(
   step: MigrateStep,
-  outcome: Extract<GiveUpOutcome, { kind: 'given-up' }>
+  outcome: Extract<GiveUpOutcome, { kind: 'given-up' }>,
+  recovery: CommitFailureRecovery
 ): void {
   const name = unresolvedCommitName(step);
   switch (outcome.commit.status) {
     case 'install-failed':
-      warnCommitFailed(name, outcome.commit.reason);
+      warnCommitFailed(name, recovery, outcome.commit.reason);
       break;
     case 'failed':
-      warnCommitFailed(name);
+      warnCommitFailed(name, recovery);
       break;
     case 'committed':
     case 'no-changes':

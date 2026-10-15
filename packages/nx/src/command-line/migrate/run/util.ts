@@ -10,7 +10,8 @@ import {
   runInstall,
 } from '../execute-migration';
 import type { MigrateOutputSink } from '../deferred-output';
-import type { MigrateStep } from './run-state';
+import type { CommitFailureRecovery } from '../migrate-commits';
+import { runKind, type MigrateRunState, type MigrateStep } from './run-state';
 import { updateRunState } from './state-lock';
 import { warnToAgent } from './agent-output';
 import { hasLineBreak } from '../text';
@@ -147,13 +148,40 @@ export function summarizeError(e: unknown): string {
   return firstLine.length > 200 ? `${firstLine.slice(0, 197)}...` : firstLine;
 }
 
+// A `--run-migration` run has no later migration step to absorb the diff.
+export function commitFailureRecovery(
+  state: MigrateRunState
+): CommitFailureRecovery {
+  const kind = runKind(state);
+  switch (kind) {
+    case 'single':
+      return 'manual';
+    case 'active':
+    case 'finished':
+      return 'later-step';
+    default: {
+      const unhandled: never = kind;
+      throw new Error(`Unhandled migrate run kind: ${unhandled}`);
+    }
+  }
+}
+
+const UNCOMMITTED_CHANGES_FATE: Record<CommitFailureRecovery, string> = {
+  'later-step': ' for a later commit to absorb',
+  manual: '',
+};
+
 // The commit helper reports its own failures via the result status and logs
 // the details itself; `cause` is set only when the attempt threw instead
 // (the pre-commit dependency install), which nothing else has logged.
-export function warnCommitFailed(name: string, cause?: unknown): void {
+export function warnCommitFailed(
+  name: string,
+  recovery: CommitFailureRecovery,
+  cause?: unknown
+): void {
   const causeText = cause === undefined ? '' : ` (${summarizeError(cause)})`;
   warnToAgent({
-    title: `The commit for ${name} could not be created${causeText}; its changes remain in the working tree for a later commit to absorb.`,
+    title: `The commit for ${name} could not be created${causeText}; its changes remain in the working tree${UNCOMMITTED_CHANGES_FATE[recovery]}.`,
   });
 }
 

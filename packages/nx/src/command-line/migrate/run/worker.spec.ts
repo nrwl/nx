@@ -70,12 +70,22 @@ const mockIsGitRepository = vi.fn();
 const mockGetGitCurrentBranch = vi.fn();
 const mockGetLatestCommitSha = vi.fn();
 const mockGetGitRemoteNames = vi.fn(() => [] as string[]);
+const mockGetPathCommitExposure = vi.fn();
+// Reached only by tests that run the real commitMigrationIfRequested.
+const mockHasUncommittedChanges = vi.fn();
+const mockTryCommitChangesAsync = vi.fn();
 vi.mock('../../../utils/git-utils', async () => ({
   ...(await vi.importActual('../../../utils/git-utils')),
   isGitRepository: (...args: unknown[]) => mockIsGitRepository(...args),
   getGitCurrentBranch: (...args: unknown[]) => mockGetGitCurrentBranch(...args),
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
   getGitRemoteNames: (...args: unknown[]) => mockGetGitRemoteNames(),
+  getPathCommitExposure: (...args: unknown[]) =>
+    mockGetPathCommitExposure(...args),
+  hasUncommittedChanges: (...args: unknown[]) =>
+    mockHasUncommittedChanges(...args),
+  tryCommitChangesAsync: (...args: unknown[]) =>
+    mockTryCommitChangesAsync(...args),
 }));
 
 const mockGetBaseRef = vi.fn();
@@ -261,6 +271,10 @@ describe('runSingleMigrationWorker', () => {
     mockCanPrompt.mockReset().mockReturnValue(false);
     mockMigrateConfirm.mockReset().mockResolvedValue(true);
     mockGetLatestCommitSha.mockReset().mockReturnValue(null);
+    // What git reports for the tmp roots, which are not repositories.
+    mockGetPathCommitExposure.mockReset().mockReturnValue('unknown');
+    mockHasUncommittedChanges.mockReset();
+    mockTryCommitChangesAsync.mockReset();
     mockLogSkippedInstall.mockReset();
     mockChangedDepInstallerCtor.mockReset();
     mockStringifiedDeps.mockReset().mockReturnValue('{"deps":1}');
@@ -764,8 +778,7 @@ describe('runSingleMigrationWorker', () => {
         )
       ).resolves.toBeUndefined();
 
-      // The standalone run has no later commit or end-of-run recap to absorb
-      // the diff, so it must pass its own guidance instead of the default.
+      // The standalone run has no later migration step to absorb the diff.
       expect(mockCommit).toHaveBeenCalledWith(
         root,
         expect.objectContaining({ name: 'gen' }),
@@ -773,7 +786,7 @@ describe('runSingleMigrationWorker', () => {
         'chore: [nx migration] ',
         expect.any(Function),
         [],
-        'Commit or revert any remaining uncommitted changes manually.'
+        'manual'
       );
       // `commitMigrationIfRequested` already logs the failure with that
       // guidance; the worker must not print a second message for it.
@@ -3094,6 +3107,52 @@ describe('runSingleMigrationWorker', () => {
         expect(runDirs()).toEqual([]);
       }
     );
+
+    it('tells the user to commit by hand when the commit of a migration that needs no agent fails', async () => {
+      writeMigrations([genMig('@nx/js', 'gen')]);
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+      const { commitMigrationIfRequested } =
+        await vi.importActual<typeof import('../migrate-commits')>(
+          '../migrate-commits'
+        );
+      mockCommit.mockImplementation(commitMigrationIfRequested);
+      mockGetPathCommitExposure.mockReturnValue('ignored');
+      mockHasUncommittedChanges.mockReturnValue(true);
+      mockTryCommitChangesAsync.mockRejectedValue(
+        new Error('error: gpg failed to sign the data')
+      );
+
+      await runSingleMigrationWorker(
+        standaloneInput({
+          runMigration: '@nx/js:gen',
+          createCommits: true,
+          validate: false,
+        })
+      );
+
+      const printed = [
+        ...vi.mocked(logger.info).mock.calls.map(([text]) => String(text)),
+        ...vi.mocked(output.warn).mock.calls.map(([{ title }]) => title),
+      ].join('\n');
+      expect(printed).toContain(
+        'Commit or revert any remaining uncommitted changes manually.'
+      );
+      expect(printed).not.toMatch(/later commit|next successful commit/);
+      // The tmp root is not a git repository, and an unknown tree status
+      // counts as dirty.
+      expect(output.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title:
+            'The changes made by @nx/js:gen could not be committed and may remain in the working tree; review and commit them manually.',
+        })
+      );
+    });
 
     it('exits 1 and says to re-run the command when the session ends with the migration unfinished', async () => {
       writeMigrations([promptMig('@nx/js', 'p')]);

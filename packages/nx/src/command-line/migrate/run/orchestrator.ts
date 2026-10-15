@@ -149,6 +149,7 @@ import {
   type PlannedMigration,
 } from '../migration-shape';
 import {
+  commitFailureRecovery,
   depsHash,
   installDepsChangedSinceDispense,
   isPidAlive,
@@ -1414,7 +1415,7 @@ export async function runOrchestratorReconcile(
           emitError(root, runId, state, outcome.reason);
           return;
         }
-        warnAboutGiveUp(target, outcome);
+        warnAboutGiveUp(target, outcome, commitFailureRecovery(state));
         if (target.installFailed === true) warnInstallLeftToUser(root, target);
         // Settled already; the dispense refuses a tree still held.
         scope.lease?.release();
@@ -2224,6 +2225,7 @@ async function commitForStep(
     (id) => id !== step.id
   );
   const skipInstall = state.skipInstall === true;
+  const recovery = commitFailureRecovery(state);
   let commit: BrokeredCommit;
   try {
     commit = await commitStepTree(
@@ -2244,7 +2246,8 @@ async function commitForStep(
               skipInstall,
               reconcileCommand(root, state.runId)
             ),
-          stepsToPendingMigrations(state, absorbedStepIds)
+          stepsToPendingMigrations(state, absorbedStepIds),
+          recovery
         ),
       scope,
       commitAs
@@ -2263,14 +2266,14 @@ async function commitForStep(
     // reports through result.status. The debt cannot stand in for the install
     // failure, since a later commit absorbing this diff clears the debt while
     // the dependencies are still missing.
-    warnCommitFailed(name, e);
+    warnCommitFailed(name, recovery, e);
     return {
       entry: { kind: 'failed', stepIds: [step.id] },
       installFailed: true,
     };
   }
   if (commit.result.status === 'failed') {
-    warnCommitFailed(name);
+    warnCommitFailed(name, recovery);
   }
   return {
     entry: commitResultToLedgerEntry(
