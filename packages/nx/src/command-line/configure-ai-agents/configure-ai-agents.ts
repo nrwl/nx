@@ -168,10 +168,12 @@ export async function configureAiAgentsHandlerImpl(
           title: 'The following AI agents are out of date:',
           bodyLines: [
             ...outOfDateAgents.map((a) => {
-              const rulesPath = a.rulesPath;
-              const displayPath = rulesPath.startsWith(workspaceRoot)
-                ? relative(workspaceRoot, rulesPath)
-                : rulesPath;
+              if (!a.configPath) {
+                return `- ${a.displayName}`;
+              }
+              const displayPath = a.configPath.startsWith(workspaceRoot)
+                ? relative(workspaceRoot, a.configPath)
+                : a.configPath;
               return `- ${a.displayName} (${displayPath})`;
             }),
             '',
@@ -421,12 +423,9 @@ type AgentPromptChoice = {
  * Describes the end state per agent type.
  */
 function getAgentFooterDescription(agent: AgentConfiguration): string {
-  // Extract filename from rulesPath
-  const rulesFile = agent.rulesPath.split('/').pop() || 'AGENTS.md';
-
   switch (agent.name) {
     case 'claude': {
-      let description = `Installs Nx plugin (MCP + skills + agents). Updates ${rulesFile}.`;
+      let description = 'Installs the Nx plugin (MCP + skills + agents).';
       // Check if .mcp.json exists with nx-mcp - if so, mention cleanup
       const mcpJsonPath = claudeMcpJsonPath(workspaceRoot);
       if (existsSync(mcpJsonPath)) {
@@ -445,13 +444,15 @@ function getAgentFooterDescription(agent: AgentConfiguration): string {
       return description;
     }
     case 'cursor':
-    case 'copilot':
-      return `Installs Nx Console (MCP). Adds skills and agents. Updates ${rulesFile}.`;
-    case 'gemini':
-    case 'opencode':
-      return `Configures MCP server. Adds skills and agents. Updates ${rulesFile}.`;
+      return 'Installs the Nx plugin (MCP + skills + agents) for this project and Nx Console.';
     case 'codex':
-      return `Configures MCP server. Adds skills. Updates ${rulesFile}.`;
+      return 'Enables the Nx plugin (MCP + skills) for this project and installs it for your user.';
+    case 'opencode':
+      return 'Installs the Nx plugin (MCP + skills + agents) for this project.';
+    case 'copilot':
+      return 'Installs Nx Console (MCP). Adds skills and agents.';
+    case 'gemini':
+      return 'Configures MCP server. Adds skills and commands.';
     default:
       return '';
   }
@@ -462,32 +463,25 @@ function getAgentFooterDescription(agent: AgentConfiguration): string {
  * Used in the post-configuration output.
  */
 function getAgentConfiguredDescription(agent: AgentConfiguration): string {
-  // Extract filename from rulesPath
-  const rulesFile = agent.rulesPath.split('/').pop() || 'AGENTS.md';
-
   switch (agent.name) {
     case 'claude':
-      return `Nx plugin (MCP + skills + agents) + ${rulesFile}`;
     case 'cursor':
-    case 'copilot':
-      return `Nx Console (MCP) + skills + ${rulesFile}`;
-    case 'gemini':
-    case 'opencode':
-      return `MCP + skills + ${rulesFile}`;
     case 'codex':
-      return `MCP + skills + ${rulesFile}`;
+    case 'opencode':
+      return 'Nx plugin (MCP + skills)';
+    case 'copilot':
+      return 'Nx Console (MCP) + skills';
+    case 'gemini':
+      return 'MCP + skills';
     default:
       return '';
   }
 }
 
 function getAgentChoiceForPrompt(agent: AgentConfiguration): AgentPromptChoice {
-  const partiallyConfigured = agent.mcp !== agent.rules;
-  const needsUpdate = partiallyConfigured || agent.outdated;
-
   return {
     value: agent.name,
-    label: needsUpdate
+    label: agent.outdated
       ? `${agent.displayName} (update available)`
       : agent.displayName,
     hint: getAgentFooterDescription(agent),

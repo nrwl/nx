@@ -197,7 +197,6 @@ export async function generateWorkspaceFiles(
   if (options.aiAgents && options.aiAgents.length > 0) {
     aiAgentsCallback = await setupAiAgentsGenerator(tree, {
       directory: options.directory,
-      writeNxCloudRules: options.nxCloud !== 'skip',
       packageVersion: 'latest',
       agents: [...options.aiAgents],
     });

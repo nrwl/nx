@@ -1,64 +1,54 @@
 import type { MockedFunction } from 'vitest';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
-import { join } from 'path';
-import { tmpdir } from 'os';
 import { shouldPrintConfigureAiAgentsDisclaimer } from './configure-ai-agents-disclaimer';
-import { agentsMdPath, getAgentRulesWrapped } from './constants';
 
 vi.mock('./detect-ai-agent', () => ({
   detectAiAgent: vi.fn(() => null),
 }));
 
+vi.mock('../native', () => ({
+  isAiAgent: vi.fn(() => false),
+}));
+
 import { detectAiAgent } from './detect-ai-agent';
+import { isAiAgent } from '../native';
 
 describe('shouldPrintConfigureAiAgentsDisclaimer', () => {
   const outdated = [{ name: 'claude' as const, displayName: 'Claude Code' }];
   const mockedDetectAiAgent = detectAiAgent as MockedFunction<
     typeof detectAiAgent
   >;
+  const mockedIsAiAgent = isAiAgent as MockedFunction<typeof isAiAgent>;
 
   beforeEach(() => {
     mockedDetectAiAgent.mockReturnValue(null);
+    mockedIsAiAgent.mockReturnValue(false);
   });
 
   it('should not print when nothing is outdated', () => {
-    expect(shouldPrintConfigureAiAgentsDisclaimer([], '/tmp')).toBe(false);
+    expect(shouldPrintConfigureAiAgentsDisclaimer([])).toBe(false);
   });
 
-  it('should not print for unsupported agents when AGENTS.md has Nx rules', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'nx-disclaimer-'));
-    try {
-      writeFileSync(
-        agentsMdPath(dir),
-        getAgentRulesWrapped({ writeNxCloudRules: false, useH1: true })
-      );
-      expect(shouldPrintConfigureAiAgentsDisclaimer(outdated, dir)).toBe(false);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
+  it('should print when no agent is running nx', () => {
+    expect(shouldPrintConfigureAiAgentsDisclaimer(outdated)).toBe(true);
   });
 
-  it('should print for unsupported agents when AGENTS.md is missing', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'nx-disclaimer-'));
-    try {
-      expect(existsSync(agentsMdPath(dir))).toBe(false);
-      expect(shouldPrintConfigureAiAgentsDisclaimer(outdated, dir)).toBe(true);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
+  it('should not print for unsupported agents', () => {
+    mockedIsAiAgent.mockReturnValue(true);
+
+    expect(shouldPrintConfigureAiAgentsDisclaimer(outdated)).toBe(false);
   });
 
   it('should print when the detected supported agent is outdated', () => {
     mockedDetectAiAgent.mockReturnValue('claude');
+    mockedIsAiAgent.mockReturnValue(true);
 
-    expect(shouldPrintConfigureAiAgentsDisclaimer(outdated, '/tmp')).toBe(true);
+    expect(shouldPrintConfigureAiAgentsDisclaimer(outdated)).toBe(true);
   });
 
   it('should not print when a different supported agent is outdated', () => {
     mockedDetectAiAgent.mockReturnValue('cursor');
+    mockedIsAiAgent.mockReturnValue(true);
 
-    expect(shouldPrintConfigureAiAgentsDisclaimer(outdated, '/tmp')).toBe(
-      false
-    );
+    expect(shouldPrintConfigureAiAgentsDisclaimer(outdated)).toBe(false);
   });
 });

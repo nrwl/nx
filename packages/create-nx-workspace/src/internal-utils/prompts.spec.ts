@@ -322,7 +322,7 @@ describe('determineAiAgents', () => {
   it('should not configure copilot-cli, which detection reports but the generator cannot set up', async () => {
     // Detection is broader than `supportedAgents`. Passing this through would
     // run setupAiAgentsGenerator with an agent no `hasAgent` branch matches:
-    // no rules file, but still the unconditional .claude/* .gitignore entries.
+    // no plugin or MCP setup, but still the unconditional .claude/* .gitignore entries.
     // Copilot CLI configuration is tracked separately (NXC-4622).
     mockDetect.mockReturnValue('copilot-cli');
 
