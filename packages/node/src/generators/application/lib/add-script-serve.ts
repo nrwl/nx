@@ -50,20 +50,22 @@ function includeAppInScriptPlugin(
   const files = '{package.json,project.json,src/main.{ts,js}}';
   const pattern = projectRoot === '.' ? files : `${projectRoot}/${files}`;
 
-  // Only registrations with `watch` infer a continuous serve.
-  const registrations = nxJson.plugins.filter(
-    (p): p is ExpandedPluginConfiguration<{ watch?: boolean }> =>
-      typeof p !== 'string' &&
-      p.plugin === plugin &&
-      (p.options as { watch?: boolean })?.watch === true
-  );
-  const covers = (p: (typeof registrations)[number]) =>
+  type Registration = ExpandedPluginConfiguration<{ watch?: boolean }>;
+  const registrations: Registration[] = nxJson.plugins
+    .map((p) => (typeof p === 'string' ? { plugin: p } : p))
+    .filter((p): p is Registration => p.plugin === plugin);
+  const covers = (p: Registration) =>
     findMatchingConfigFiles([mainFile, marker], p.include, p.exclude).length ===
     2;
-  if (registrations.some(covers)) {
+  const isScopedWatch = (p: Registration) =>
+    p.options?.watch === true && !!p.include && !p.exclude;
+
+  // The last registration that matches the app wins its `serve` command.
+  const last = registrations.map(covers).lastIndexOf(true);
+  if (last !== -1 && registrations[last].options?.watch === true) {
     return;
   }
-  const scoped = registrations.find((p) => !!p.include && !p.exclude);
+  const scoped = registrations.slice(last + 1).find(isScopedWatch);
   if (scoped) {
     scoped.include.push(pattern);
   } else {

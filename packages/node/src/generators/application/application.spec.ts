@@ -910,6 +910,43 @@ describe('app', () => {
       ]);
     });
 
+    it.each([
+      ['api/{package.json,project.json,src/main.{ts,js}}'],
+      ['myapp/{package.json,project.json,src/main.{ts,js}}'],
+    ])(
+      'should not reuse a watch registration (%s) that a later unscoped one overrides',
+      async (include) => {
+        const scoped = {
+          plugin: '@nx/js/tsx',
+          include: [include],
+          options: { watch: true },
+        };
+        updateNxJson(tree, {
+          ...readNxJson(tree),
+          plugins: [scoped, '@nx/js/tsx'],
+        });
+        await applicationGenerator(tree, {
+          directory: 'myapp',
+          addPlugin: true,
+          skipFormat: true,
+        });
+
+        expect(
+          readNxJson(tree).plugins.filter(
+            (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
+          )
+        ).toEqual([
+          scoped,
+          '@nx/js/tsx',
+          {
+            plugin: '@nx/js/tsx',
+            include: ['myapp/{package.json,project.json,src/main.{ts,js}}'],
+            options: { watch: true },
+          },
+        ]);
+      }
+    );
+
     it('should keep the @nx/js:node serve target for webpack', async () => {
       await applicationGenerator(tree, {
         directory: 'myapp',
