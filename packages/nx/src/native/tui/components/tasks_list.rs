@@ -6361,9 +6361,10 @@ mod tests {
             StdHashMap::new(),
             None,
         )));
+        let running = ["db:up", "api:serve", "shop:serve", "éééééé:serve"];
         {
             let mut state = state.lock();
-            for id in ["db:up", "api:serve", "shop:serve", "éééééé:serve"] {
+            for id in running {
                 state.update_task_status(id, TaskStatus::InProgress);
             }
             state.update_task_readiness("db:up", TaskReadiness::Ready);
@@ -6387,6 +6388,10 @@ mod tests {
         tasks_list
             .update(Action::StartTasks([&tasks[..3], &tasks[4..]].concat()))
             .unwrap();
+        // Rows sort by start time, so one shared start time orders them by name
+        for id in running {
+            tasks_list.set_task_timing(id.to_string(), Some(1000), None);
+        }
 
         let mut terminal = create_test_terminal(80, 10);
         render_to_test_backend(&mut terminal, &mut tasks_list);
