@@ -1,8 +1,15 @@
 import { type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import type { Mock } from 'vitest';
 import { mkdirSync, symlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createNodesV2 } from './plugin';
+
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
+}));
 
 describe('@nx/rolldown/plugin', () => {
   const createNodesFunction = createNodesV2[1];
@@ -11,6 +18,7 @@ describe('@nx/rolldown/plugin', () => {
   let context: CreateNodesContext;
 
   beforeEach(() => {
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
     process.env.NX_CACHE_PROJECT_GRAPH = 'false';
     tempFs = new TempFs('rolldown-plugin');
     context = {
@@ -239,5 +247,75 @@ export default defineConfig([
     );
 
     expect(nodes).toEqual([]);
+  });
+  describe('typecheck', () => {
+    beforeEach(() => {
+      tempFs.createFileSync('apps/api/package.json', '{"name":"api"}');
+      tempFs.createFileSync(
+        'apps/api/rolldown.config.mjs',
+        `export default { input: 'src/main.ts' };`
+      );
+    });
+
+    async function getTargets(options = {}) {
+      const nodes = await createNodesFunction(
+        ['apps/api/rolldown.config.mjs'],
+        options,
+        context
+      );
+      return nodes[0][1].projects['apps/api'].targets;
+    }
+
+    it('should infer a noEmit typecheck target from the app tsconfig', async () => {
+      tempFs.createFileSync('apps/api/tsconfig.json', '{}');
+      tempFs.createFileSync('apps/api/tsconfig.app.json', '{}');
+
+      const targets = await getTargets();
+
+      expect(targets.typecheck).toEqual({
+        command: 'tsc -p tsconfig.app.json --noEmit',
+        options: { cwd: 'apps/api' },
+        cache: true,
+        inputs: [
+          'production',
+          '^production',
+          { externalDependencies: ['typescript'] },
+        ],
+        metadata: {
+          technologies: ['typescript'],
+          description: 'Runs type-checking for the project.',
+          help: {
+            command: 'npx tsc -p tsconfig.app.json --help',
+            example: { options: { noEmit: true } },
+          },
+        },
+      });
+    });
+
+    it('should leave the default tsconfig.json out of the command', async () => {
+      tempFs.createFileSync('apps/api/tsconfig.json', '{}');
+
+      expect((await getTargets()).typecheck.command).toBe('tsc --noEmit');
+    });
+
+    it('should not infer typecheck without a tsconfig', async () => {
+      expect((await getTargets()).typecheck).toBeUndefined();
+    });
+
+    it('should not infer typecheck in a TS solution setup', async () => {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+      tempFs.createFileSync('apps/api/tsconfig.json', '{}');
+
+      expect((await getTargets()).typecheck).toBeUndefined();
+    });
+
+    it('should not infer typecheck when typecheckTargetName is false', async () => {
+      tempFs.createFileSync('apps/api/tsconfig.json', '{}');
+
+      const targets = await getTargets({ typecheckTargetName: false });
+
+      expect(targets.typecheck).toBeUndefined();
+      expect(targets['false']).toBeUndefined();
+    });
   });
 });
