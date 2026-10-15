@@ -1,6 +1,12 @@
-import { type CreateNodesContext, logger } from '@nx/devkit';
+import { type CreateNodesContext } from '@nx/devkit';
+import { emitPluginWorkerLog } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createScriptNodes } from './create-script-nodes';
+
+vi.mock('@nx/devkit/internal', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@nx/devkit/internal')>()),
+  emitPluginWorkerLog: vi.fn(),
+}));
 
 describe('createScriptNodes', () => {
   const [glob, createNodes] = createScriptNodes({
@@ -186,16 +192,15 @@ describe('createScriptNodes', () => {
   });
 
   it('should warn and fall back to the file name on an invalid directive', async () => {
-    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     const results = await run({
       'package.json': '{}',
-      'scripts/seed.js': '#!/usr/bin/env node\n// @nx-target-name: db:seed\n',
+      'scripts/seed.js': '#!/usr/bin/env node\n// @nx-target-name:\n',
     });
 
     expect(Object.keys(results[0][1].projects['.'].targets)).toEqual(['seed']);
-    expect(warn).toHaveBeenCalledWith(
-      'scripts/seed.js: "@nx-target-name: db:seed" cannot contain ":".'
+    expect(emitPluginWorkerLog).toHaveBeenCalledWith(
+      'warn',
+      'scripts/seed.js: "@nx-target-name" is empty.'
     );
-    warn.mockRestore();
   });
 });

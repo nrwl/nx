@@ -54,15 +54,21 @@ function includeAppInScriptPlugin(
   const registrations: Registration[] = nxJson.plugins
     .map((p) => (typeof p === 'string' ? { plugin: p } : p))
     .filter((p): p is Registration => p.plugin === plugin);
+  const matchesMain = (p: Registration) =>
+    findMatchingConfigFiles([mainFile], p.include, p.exclude).length === 1;
   const covers = (p: Registration) =>
     findMatchingConfigFiles([mainFile, marker], p.include, p.exclude).length ===
     2;
   const isScopedWatch = (p: Registration) =>
     p.options?.watch === true && !!p.include && !p.exclude;
 
-  // The last registration that matches the app wins its `serve` command.
-  const last = registrations.map(covers).lastIndexOf(true);
-  if (last !== -1 && registrations[last].options?.watch === true) {
+  // The last registration that sees the main file decides the `serve` command.
+  const last = registrations.map(matchesMain).lastIndexOf(true);
+  if (
+    last !== -1 &&
+    registrations[last].options?.watch === true &&
+    covers(registrations[last])
+  ) {
     return;
   }
   const scoped = registrations.slice(last + 1).find(isScopedWatch);

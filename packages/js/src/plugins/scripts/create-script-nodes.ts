@@ -1,12 +1,12 @@
 import {
   type CreateNodes,
   type CreateNodesResultArray,
-  logger,
   type TargetConfiguration,
 } from '@nx/devkit';
 import {
   calculateHashesForCreateNodes,
   combineGlobPatterns,
+  emitPluginWorkerLog,
   hashObject,
   PluginCache,
   workspaceDataDirectory,
@@ -183,7 +183,7 @@ function createTargets<T extends ScriptPluginOptions>(
     }
     const { name, warnings } = parseTargetName(header);
     for (const warning of warnings) {
-      logger.warn(`${script}: ${warning}.`);
+      emitPluginWorkerLog('warn', `${script}: ${warning}.`);
     }
     claimed.push({
       path: script,

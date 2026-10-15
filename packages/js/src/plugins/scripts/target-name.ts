@@ -20,11 +20,5 @@ export function parseTargetName(header: string): TargetNameDirective {
   if (!value) {
     return { warnings: ['"@nx-target-name" is empty', ...warnings] };
   }
-  if (value.includes(':')) {
-    // `nx run proj:a:b` would read `b` as a configuration.
-    return {
-      warnings: [`"@nx-target-name: ${value}" cannot contain ":"`, ...warnings],
-    };
-  }
   return { name: value, warnings };
 }
