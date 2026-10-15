@@ -11,22 +11,38 @@ export interface Shebang {
   args: string[];
 }
 
-/** Returns the shebang line without `#!`, or `null` when the file has none. */
-export function readShebangLine(absolutePath: string): string | null {
+/**
+ * Returns the first bytes of a script that starts with `#!`, or `null` when it
+ * has no shebang or cannot be read (e.g. a tracked broken symlink).
+ */
+export function readScriptHeader(absolutePath: string): string | null {
   const buffer = Buffer.alloc(SNIFF_BYTES);
-  const fd = openSync(absolutePath, 'r');
   let bytesRead: number;
   try {
-    bytesRead = readSync(fd, buffer, 0, SNIFF_BYTES, 0);
-  } finally {
-    closeSync(fd);
+    const fd = openSync(absolutePath, 'r');
+    try {
+      bytesRead = readSync(fd, buffer, 0, SNIFF_BYTES, 0);
+    } finally {
+      closeSync(fd);
+    }
+  } catch {
+    return null;
   }
-  const text = stripBom(buffer.toString('utf8', 0, bytesRead));
+  let text = stripBom(buffer.toString('utf8', 0, bytesRead));
   if (!text.startsWith('#!')) {
     return null;
   }
-  const end = text.search(/\r?\n/);
-  return (end === -1 ? text : text.slice(0, end)).slice(2).trim();
+  // Drop a line the sniff cut off, so a directive is never read truncated.
+  if (bytesRead === SNIFF_BYTES && text.includes('\n')) {
+    text = text.slice(0, text.lastIndexOf('\n'));
+  }
+  return text;
+}
+
+/** The shebang line of a header from `readScriptHeader`, without `#!`. */
+export function getShebangLine(header: string): string {
+  const end = header.search(/\r?\n/);
+  return (end === -1 ? header : header.slice(0, end)).slice(2).trim();
 }
 
 /**

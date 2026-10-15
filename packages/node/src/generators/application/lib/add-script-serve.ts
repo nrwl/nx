@@ -9,7 +9,7 @@ import { findMatchingConfigFiles } from '@nx/devkit/internal';
 import type { NormalizedSchema } from './normalized-schema';
 
 /**
- * Prepends a shebang and `@nx` block to the main file so @nx/js/node or
+ * Prepends a shebang and target name to the main file so @nx/js/node or
  * @nx/js/tsx infers `serve` as `node --watch` / `tsx watch` on it.
  */
 export function addScriptServe(tree: Tree, options: NormalizedSchema): void {
@@ -19,16 +19,7 @@ export function addScriptServe(tree: Tree, options: NormalizedSchema): void {
     'src',
     options.js ? 'main.js' : 'main.ts'
   );
-  // `^build` builds workspace libraries whose exports point at their output.
-  const header = `#!/usr/bin/env ${runtime}
-/**
- * @nx
- * name: serve
- * continuous: true
- * watch: true
- * dependsOn: ["^build"]
- */
-`;
+  const header = `#!/usr/bin/env ${runtime}\n// @nx-target-name: serve\n`;
   tree.write(mainFile, header + tree.read(mainFile, 'utf-8'));
   includeAppInScriptPlugin(
     tree,
@@ -59,24 +50,28 @@ function includeAppInScriptPlugin(
   const files = '{package.json,project.json,src/main.{ts,js}}';
   const pattern = projectRoot === '.' ? files : `${projectRoot}/${files}`;
 
+  // Only registrations with `watch` infer a continuous serve.
   const registrations = nxJson.plugins.filter(
-    (p) => (typeof p === 'string' ? p : p.plugin) === plugin
+    (p): p is ExpandedPluginConfiguration<{ watch?: boolean }> =>
+      typeof p !== 'string' &&
+      p.plugin === plugin &&
+      (p.options as { watch?: boolean })?.watch === true
   );
   const covers = (p: (typeof registrations)[number]) =>
-    typeof p === 'string' ||
     findMatchingConfigFiles([mainFile, marker], p.include, p.exclude).length ===
-      2;
+    2;
   if (registrations.some(covers)) {
     return;
   }
-  const scoped = registrations.find(
-    (p): p is ExpandedPluginConfiguration =>
-      typeof p !== 'string' && !!p.include && !p.exclude
-  );
+  const scoped = registrations.find((p) => !!p.include && !p.exclude);
   if (scoped) {
     scoped.include.push(pattern);
   } else {
-    nxJson.plugins.push({ plugin, include: [pattern] });
+    nxJson.plugins.push({
+      plugin,
+      include: [pattern],
+      options: { watch: true },
+    });
   }
   updateNxJson(tree, nxJson);
 }

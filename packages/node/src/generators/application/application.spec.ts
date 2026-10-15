@@ -377,6 +377,12 @@ describe('app', () => {
                 "{workspaceRoot}/dist/my-dir/my-node-app/package-lock.json",
               ],
             },
+            "serve": {
+              "continuous": true,
+              "dependsOn": [
+                "^build",
+              ],
+            },
             "test": {
               "options": {
                 "passWithNoTests": true,
@@ -824,33 +830,29 @@ describe('app', () => {
         skipFormat: true,
       });
 
-      expect(
-        readProjectConfiguration(tree, 'myapp').targets.serve
-      ).toBeUndefined();
-      expect(tree.read('myapp/src/main.ts', 'utf-8').split('\n').slice(0, 9))
+      expect(readProjectConfiguration(tree, 'myapp').targets.serve).toEqual({
+        continuous: true,
+        dependsOn: ['^build'],
+      });
+      expect(tree.read('myapp/src/main.ts', 'utf-8').split('\n').slice(0, 3))
         .toMatchInlineSnapshot(`
         [
           "#!/usr/bin/env tsx",
-          "/**",
-          " * @nx",
-          " * name: serve",
-          " * continuous: true",
-          " * watch: true",
-          " * dependsOn: [\"^build\"]",
-          " */",
+          "// @nx-target-name: serve",
           "import express from 'express';",
         ]
       `);
       expect(readNxJson(tree).plugins).toContainEqual({
         plugin: '@nx/js/tsx',
         include: ['myapp/{package.json,project.json,src/main.{ts,js}}'],
+        options: { watch: true },
       });
       expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
         'tsx'
       );
     });
 
-    it('should scope @nx/js/tsx to each app', async () => {
+    it('should scope one watch registration of @nx/js/tsx to each app', async () => {
       updateNxJson(tree, {
         ...readNxJson(tree),
         plugins: [{ plugin: '@nx/js/tsx', include: ['tools/**/*'] }],
@@ -874,18 +876,19 @@ describe('app', () => {
           (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
         )
       ).toEqual([
+        { plugin: '@nx/js/tsx', include: ['tools/**/*'] },
         {
           plugin: '@nx/js/tsx',
           include: [
-            'tools/**/*',
             '{package.json,project.json,src/main.{ts,js}}',
             'myapp/{package.json,project.json,src/main.{ts,js}}',
           ],
+          options: { watch: true },
         },
       ]);
     });
 
-    it('should leave an unscoped @nx/js/tsx registration alone', async () => {
+    it('should add a watch registration next to an unscoped @nx/js/tsx', async () => {
       updateNxJson(tree, { ...readNxJson(tree), plugins: ['@nx/js/tsx'] });
       await applicationGenerator(tree, {
         directory: 'myapp',
@@ -897,7 +900,14 @@ describe('app', () => {
         readNxJson(tree).plugins.filter(
           (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
         )
-      ).toEqual(['@nx/js/tsx']);
+      ).toEqual([
+        '@nx/js/tsx',
+        {
+          plugin: '@nx/js/tsx',
+          include: ['myapp/{package.json,project.json,src/main.{ts,js}}'],
+          options: { watch: true },
+        },
+      ]);
     });
 
     it('should keep the @nx/js:node serve target for webpack', async () => {
@@ -1362,7 +1372,10 @@ describe('app', () => {
 
       const project = readProjectConfiguration(tree, '@proj/api');
       expect(project.targets.build).toBeUndefined();
-      expect(project.targets.serve).toBeUndefined();
+      expect(project.targets.serve).toEqual({
+        continuous: true,
+        dependsOn: ['^build'],
+      });
       expect(
         readNxJson(tree).plugins.filter(
           (p) =>
@@ -1456,11 +1469,12 @@ describe('app', () => {
       });
 
       expect(tree.read('apps/api/src/main.ts', 'utf-8')).toMatch(
-        /^#!\/usr\/bin\/env node\n\/\*\*\n \* @nx\n/
+        /^#!\/usr\/bin\/env node\n\/\/ @nx-target-name: serve\n/
       );
       expect(readNxJson(tree).plugins).toContainEqual({
         plugin: '@nx/js/node',
         include: ['apps/api/{package.json,project.json,src/main.{ts,js}}'],
+        options: { watch: true },
       });
       expect(readJson(tree, 'package.json').devDependencies).not.toHaveProperty(
         'tsx'
@@ -1514,6 +1528,7 @@ describe('app', () => {
         {
           plugin: '@nx/js/node',
           include: ['apps/api/{package.json,project.json,src/main.{ts,js}}'],
+          options: { watch: true },
         },
       ]);
     });
@@ -1547,6 +1562,37 @@ describe('app', () => {
         readProjectConfiguration(tree, '@proj/api').targets['prune-lockfile']
           .options.buildTarget
       ).toBe('rolldown:build');
+    });
+
+    it('should register rolldown for the app when an existing one excludes it', async () => {
+      updateNxJson(tree, {
+        ...readNxJson(tree),
+        plugins: [
+          {
+            plugin: '@nx/rolldown/plugin',
+            exclude: ['apps/**'],
+            options: { buildTargetName: 'bundle' },
+          },
+        ],
+      });
+
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        bundler: 'rolldown',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readNxJson(tree).plugins).toContainEqual({
+        plugin: '@nx/rolldown/plugin',
+        include: ['apps/api/rolldown.config.ts'],
+        options: { buildTargetName: 'build' },
+      });
+      expect(
+        readProjectConfiguration(tree, '@proj/api').targets['prune-lockfile']
+          .options.buildTarget
+      ).toBe('build');
     });
 
     it('should let the tsc build compile a --js app', async () => {
@@ -1882,7 +1928,10 @@ describe('app', () => {
         `);
       const project = readProjectConfiguration(tree, '@proj/api');
       expect(project.targets.build).toBeUndefined();
-      expect(project.targets.serve).toBeUndefined();
+      expect(project.targets.serve).toEqual({
+        continuous: true,
+        dependsOn: ['^build'],
+      });
       expect(
         readNxJson(tree).plugins.some(
           (p) => typeof p !== 'string' && p.plugin === '@nx/rolldown/plugin'

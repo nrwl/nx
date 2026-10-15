@@ -1,4 +1,9 @@
-import { readNxJson, type Tree } from '@nx/devkit';
+import {
+  type ExpandedPluginConfiguration,
+  readNxJson,
+  type Tree,
+  updateNxJson,
+} from '@nx/devkit';
 import { findMatchingConfigFiles } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addTscAppBuildPlugin } from './add-tsc-build-plugin';
@@ -35,5 +40,26 @@ describe('addTscAppBuildPlugin', () => {
     addTscAppBuildPlugin(tree, 'apps/api');
 
     expect(appBuildIncludes()).toEqual(['apps/api/*', 'apps/worker/*']);
+  });
+
+  it('should add a registration when the existing one excludes the app', () => {
+    addTscAppBuildPlugin(tree, 'apps/api');
+    const nxJson = readNxJson(tree);
+    const shared = nxJson.plugins.find(
+      (p) => typeof p !== 'string' && p.plugin === '@nx/js/typescript'
+    ) as ExpandedPluginConfiguration;
+    shared.exclude = ['apps/worker/**'];
+    updateNxJson(tree, nxJson);
+
+    expect(addTscAppBuildPlugin(tree, 'apps/worker')).toBe('build');
+
+    const registrations = readNxJson(tree).plugins.filter(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === '@nx/js/typescript'
+    );
+    expect(registrations.map((p) => [p.include, p.exclude])).toEqual([
+      [['apps/api/*'], ['apps/worker/**']],
+      [['apps/worker/*'], undefined],
+    ]);
   });
 });

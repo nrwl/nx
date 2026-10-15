@@ -78,6 +78,10 @@ export function addProject(
   };
   if (!options.serveRuntime) {
     project.targets.serve = getServeConfig(options);
+  } else {
+    // @nx/js/node or @nx/js/tsx infers the command. `^build` builds workspace
+    // libraries whose exports point at their output.
+    project.targets.serve = { continuous: true, dependsOn: ['^build'] };
   }
 
   const packageJson: PackageJson = {

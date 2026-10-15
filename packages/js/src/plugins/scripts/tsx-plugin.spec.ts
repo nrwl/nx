@@ -23,26 +23,41 @@ describe('@nx/js/tsx', () => {
     }
   });
 
-  it('should only claim tsx shebangs', async () => {
-    const files = {
-      'package.json': JSON.stringify({ bin: { cli: './dist/cli.js' } }),
-      'scripts/gen.ts': '#!/usr/bin/env -S npx tsx\n',
-      'scripts/dev.ts': '#!/usr/bin/env tsx\n/** @nx watch: true */\n',
-      'scripts/plain.js': '#!/usr/bin/env node\n',
-    };
+  async function targetsFor(files: Record<string, string>, options = {}) {
     await tempFs.createFiles(files);
-
     const [[, result]] = await createNodesFunction(
       Object.keys(files),
-      {},
+      options,
       context
     );
+    return result.projects['.'].targets;
+  }
 
-    const targets = result.projects['.'].targets;
-    expect(Object.keys(targets)).toEqual(['gen', 'dev']);
+  it('should only claim tsx shebangs', async () => {
+    const targets = await targetsFor({
+      'package.json': JSON.stringify({ bin: { cli: './dist/cli.js' } }),
+      'scripts/gen.ts': '#!/usr/bin/env -S npx tsx\n',
+      'scripts/plain.js': '#!/usr/bin/env node\n',
+    });
+
+    expect(Object.keys(targets)).toEqual(['gen']);
     expect(targets.gen.command).toBe('tsx scripts/gen.ts');
     expect(targets.gen.metadata.technologies).toEqual(['tsx']);
-    expect(targets.dev.command).toBe('tsx watch scripts/dev.ts');
+    expect(targets.gen.continuous).toBeUndefined();
+  });
+
+  it('should put watch before shebang flags when watch is set', async () => {
+    const targets = await targetsFor(
+      {
+        'package.json': '{}',
+        'scripts/dev.ts': '#!/usr/bin/env -S tsx --env-file=.env\n',
+      },
+      { watch: true }
+    );
+
+    expect(targets.dev.command).toBe(
+      'tsx watch --env-file=.env scripts/dev.ts'
+    );
     expect(targets.dev.continuous).toBe(true);
   });
 });

@@ -11,12 +11,21 @@ import {
   PluginCache,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
-import { readFileSync } from 'node:fs';
 import { basename, dirname, extname, join, posix } from 'node:path';
-import { type Frontmatter, parseFrontmatter } from './frontmatter';
-import { parseShebang, readShebangLine, type Shebang } from './shebang';
+import {
+  getShebangLine,
+  parseShebang,
+  readScriptHeader,
+  type Shebang,
+} from './shebang';
+import { parseTargetName } from './target-name';
 
-export interface ScriptPluginDefinition<T> {
+export interface ScriptPluginOptions {
+  /** Runs claimed scripts in watch mode as continuous targets. */
+  watch?: boolean;
+}
+
+export interface ScriptPluginDefinition<T extends ScriptPluginOptions> {
   /** Prefix of the plugin's cache file. */
   cacheName: string;
   technology: string;
@@ -34,12 +43,10 @@ export interface ScriptPluginDefinition<T> {
 
 export type ScriptTargets = Record<string, TargetConfiguration>;
 
-// Frontmatter keys the plugin interprets; any other key merges into the target.
-const RESERVED_KEYS = ['name', 'description', 'disable', 'watch', 'cwd'];
 const SCRIPT_GLOB = '**/*.{js,cjs,mjs,ts,cts,mts}';
 const PROJECT_MARKERS = ['package.json', 'project.json'];
 
-export function createScriptNodes<T extends object>(
+export function createScriptNodes<T extends ScriptPluginOptions>(
   definition: ScriptPluginDefinition<T>
 ): CreateNodes<T> {
   return [
@@ -86,7 +93,8 @@ export function createScriptNodes<T extends object>(
                 definition,
                 context.workspaceRoot,
                 projectRoot,
-                scripts
+                scripts,
+                options?.watch === true
               ),
             });
           }
@@ -155,40 +163,33 @@ interface ClaimedScript {
   path: string;
   relativePath: string;
   shebang: Shebang;
-  frontmatter: Frontmatter;
+  targetName?: string;
 }
 
-function createTargets<T>(
+function createTargets<T extends ScriptPluginOptions>(
   definition: ScriptPluginDefinition<T>,
   workspaceRoot: string,
   projectRoot: string,
-  scripts: string[]
+  scripts: string[],
+  watch: boolean
 ): ScriptTargets {
   const claimed: ClaimedScript[] = [];
   for (const script of scripts) {
-    const absolutePath = join(workspaceRoot, script);
-    const line = readShebangLine(absolutePath);
-    const shebang = line === null ? null : parseShebang(line);
+    const header = readScriptHeader(join(workspaceRoot, script));
+    const shebang =
+      header === null ? null : parseShebang(getShebangLine(header));
     if (!shebang || !definition.claims(shebang)) {
       continue;
     }
-    let frontmatter: Frontmatter = {};
-    try {
-      frontmatter = parseFrontmatter(readFileSync(absolutePath, 'utf-8'));
-    } catch (e) {
-      logger.warn(
-        `Ignoring the nx frontmatter in ${script}: ${(e as Error).message}`
-      );
-    }
-    frontmatter = dropInvalidKeys(frontmatter, script);
-    if (frontmatter.disable === true) {
-      continue;
+    const { name, warnings } = parseTargetName(header);
+    for (const warning of warnings) {
+      logger.warn(`${script}: ${warning}.`);
     }
     claimed.push({
       path: script,
       relativePath: posix.relative(projectRoot, script),
       shebang,
-      frontmatter,
+      targetName: name,
     });
   }
 
@@ -202,92 +203,35 @@ function createTargets<T>(
   for (const script of claimed) {
     const baseName = withoutExtension(basename(script.relativePath));
     const name =
-      typeof script.frontmatter.name === 'string'
-        ? script.frontmatter.name
-        : baseNameCounts.get(baseName) > 1
-          ? withoutExtension(script.relativePath)
-          : baseName;
-    targets[name] = createTarget(definition, projectRoot, script);
+      script.targetName ??
+      (baseNameCounts.get(baseName) > 1
+        ? withoutExtension(script.relativePath)
+        : baseName);
+    targets[name] = createTarget(definition, projectRoot, script, watch);
   }
   return targets;
 }
 
-function createTarget<T>(
+function createTarget<T extends ScriptPluginOptions>(
   definition: ScriptPluginDefinition<T>,
   projectRoot: string,
-  { path, relativePath, shebang, frontmatter }: ClaimedScript
+  { path, relativePath, shebang }: ClaimedScript,
+  watch: boolean
 ): TargetConfiguration {
-  const { description, watch, cwd, options, metadata } = frontmatter as {
-    description?: string;
-    watch?: boolean;
-    cwd?: string;
-    options?: Record<string, unknown>;
-    metadata?: Record<string, unknown>;
-  };
-  const rest = { ...frontmatter };
-  for (const key of [...RESERVED_KEYS, 'options', 'metadata']) {
-    delete rest[key];
-  }
-  const targetCwd =
-    cwd ?? (typeof options?.cwd === 'string' ? options.cwd : projectRoot);
   return {
     command: definition.command(
-      quoteShellArg(posix.relative(targetCwd, path)),
+      quoteShellArg(posix.relative(projectRoot, path)),
       shebang,
-      watch === true
+      watch
     ),
-    options: { ...options, cwd: targetCwd },
+    options: { cwd: projectRoot },
     cache: false,
-    ...(watch === true && { continuous: true }),
+    ...(watch && { continuous: true }),
     metadata: {
       technologies: [definition.technology],
-      description: description ?? `Runs ${relativePath}`,
-      ...metadata,
+      description: `Runs ${relativePath}`,
     },
-    ...rest,
   };
-}
-
-const EXPECTED_TYPES: Record<
-  string,
-  'string' | 'boolean' | 'array' | 'object'
-> = {
-  name: 'string',
-  description: 'string',
-  cwd: 'string',
-  cache: 'boolean',
-  continuous: 'boolean',
-  watch: 'boolean',
-  disable: 'boolean',
-  dependsOn: 'array',
-  inputs: 'array',
-  outputs: 'array',
-  options: 'object',
-  metadata: 'object',
-};
-
-/** Drops known keys with the wrong type so they cannot break the project graph. */
-function dropInvalidKeys(
-  frontmatter: Frontmatter,
-  script: string
-): Frontmatter {
-  const valid: Frontmatter = {};
-  for (const [key, value] of Object.entries(frontmatter)) {
-    const expected = EXPECTED_TYPES[key];
-    const actual = Array.isArray(value)
-      ? 'array'
-      : value === null
-        ? 'null'
-        : typeof value;
-    if (expected && actual !== expected) {
-      logger.warn(
-        `Ignoring nx frontmatter key "${key}" in ${script}: expected ${expected}, got ${actual}.`
-      );
-      continue;
-    }
-    valid[key] = value;
-  }
-  return valid;
 }
 
 /**

@@ -83,8 +83,8 @@ export function getEsBuildConfig(
     options: {
       platform: 'node',
       outputPath: options.outputPath,
-      // CJS for widest compatibility, unless the app is ESM (`"type": "module"`).
-      format: [options.serveRuntime === 'node' ? 'esm' : 'cjs'],
+      // Use CJS for Node apps for widest compatibility.
+      format: ['cjs'],
       bundle: false,
       main: joinPathFragments(
         sourceRoot,
