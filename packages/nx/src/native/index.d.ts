@@ -1168,7 +1168,7 @@ export interface ProjectGraph {
   externalNodes: Record<string, ExternalNode>
 }
 
-/** Exactly one of `url`, `port` or `command` is set. `interval` absent means backoff. */
+/** Exactly one of `url`, `port` or `command` is set. */
 export interface ReadinessProbeConfig {
   url?: string
   port?: number

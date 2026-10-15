@@ -12,7 +12,7 @@ const DEFAULT_READY_TIMEOUT = 60_000;
 // Node timers take at most a signed 32-bit count of milliseconds
 const MAX_DURATION = 2_147_483_647;
 
-// No interval means the probe backs off on its own
+// No interval means the probe's own default applies
 export type NormalizedReadyWhen = { timeout: number; interval?: number } & (
   | { kind: 'url'; url: string }
   | { kind: 'port'; port: number; host?: string }

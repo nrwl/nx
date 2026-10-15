@@ -198,8 +198,8 @@ export interface ReadyWhenOptions {
   timeout?: number;
 
   /**
-   * Milliseconds between probe attempts. By default attempts back off from
-   * 100 to 1000 milliseconds. Unused by `logMatches`.
+   * Milliseconds between probe attempts. Default is 250. Unused by
+   * `logMatches`.
    */
   interval?: number;
 }

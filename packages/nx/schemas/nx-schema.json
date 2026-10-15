@@ -661,7 +661,8 @@
         "interval": {
           "type": "integer",
           "minimum": 1,
-          "description": "Milliseconds between probe attempts. By default attempts back off from 100 to 1000 milliseconds. Unused by logMatches"
+          "default": 250,
+          "description": "Milliseconds between probe attempts. Unused by logMatches"
         }
       },
       "oneOf": [
