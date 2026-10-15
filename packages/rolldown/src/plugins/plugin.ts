@@ -16,8 +16,13 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
-import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
-import { existsSync } from 'node:fs';
+import {
+  createTypecheckTarget,
+  isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+  selectTypecheckTsConfig,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+} from '@nx/js/internal';
+import { existsSync, readdirSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { OutputOptions, RolldownOptions } from 'rolldown';
@@ -28,6 +33,7 @@ type ConfigExport = Awaited<
 
 export interface RolldownPluginOptions {
   buildTargetName?: string;
+  typecheckTargetName?: string | false;
 }
 
 type RolldownTargets = Record<string, TargetConfiguration>;
@@ -46,6 +52,7 @@ export const createNodes: CreateNodes<RolldownPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
 
     const configFiles = configFilePaths.filter((configFile) =>
       isProjectRoot(context.workspaceRoot, dirname(configFile))
@@ -54,7 +61,7 @@ export const createNodes: CreateNodes<RolldownPluginOptions> = [
     try {
       const projectHashes = await calculateHashesForCreateNodes(
         configFiles.map((f) => dirname(f)),
-        normalizedOptions,
+        { ...normalizedOptions, isUsingTsSolutionSetup },
         context,
         configFiles.map(() => [lockFileName])
       );
@@ -71,7 +78,8 @@ export const createNodes: CreateNodes<RolldownPluginOptions> = [
                 projectRoot,
                 normalizedOptions,
                 ctx,
-                pmc
+                pmc,
+                isUsingTsSolutionSetup
               )
             );
           }
@@ -101,13 +109,14 @@ async function buildRolldownTargets(
   projectRoot: string,
   options: Required<RolldownPluginOptions>,
   context: CreateNodesContext,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  isUsingTsSolutionSetup: boolean
 ): Promise<RolldownTargets> {
   const absoluteConfigPath = join(context.workspaceRoot, configFilePath);
   const configs = await loadRolldownConfig(absoluteConfigPath);
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  return {
+  const targets: RolldownTargets = {
     [options.buildTargetName]: {
       command: `rolldown -c ${basename(configFilePath)}`,
       options: { cwd: projectRoot },
@@ -136,6 +145,24 @@ async function buildRolldownTargets(
       },
     },
   };
+
+  // TS solution setups get typecheck from @nx/js/typescript.
+  if (options.typecheckTargetName !== false && !isUsingTsSolutionSetup) {
+    const tsConfigFiles = readdirSync(
+      join(context.workspaceRoot, projectRoot)
+    ).filter((file) => /^tsconfig.*\.json$/.test(file));
+    if (tsConfigFiles.length) {
+      targets[options.typecheckTargetName] = createTypecheckTarget({
+        mode: 'noEmit',
+        projectRoot: joinPathFragments(projectRoot),
+        pmc,
+        tsConfig: selectTypecheckTsConfig(tsConfigFiles),
+        namedInputs,
+      });
+    }
+  }
+
+  return targets;
 }
 
 async function loadRolldownConfig(
@@ -216,5 +243,6 @@ function normalizeOptions(
 ): Required<RolldownPluginOptions> {
   return {
     buildTargetName: options?.buildTargetName ?? 'build',
+    typecheckTargetName: options?.typecheckTargetName ?? 'typecheck',
   };
 }

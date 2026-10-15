@@ -48,6 +48,8 @@ The `@nx/rolldown/plugin` plugin looks for these Rolldown configuration files:
 
 A configuration file is associated with a project when its directory also contains a `package.json` or `project.json`. Nx creates a cached build task that runs `rolldown -c` and depends on the same task in dependency projects. The task outputs come from the configuration: each entry's `output.dir`, or `output.file` and its sourcemap. A configuration that exports an array contributes the outputs of every entry.
 
+When the project has a `tsconfig*.json` file, Nx also creates a cached `typecheck` task. In a TypeScript solution setup, [`@nx/js/typescript` creates the `typecheck` task](/docs/technologies/typescript/introduction#how-the-typescript-plugin-infers-tasks) instead.
+
 Configure the plugin in `nx.json`:
 
 ```json
@@ -57,16 +59,18 @@ Configure the plugin in `nx.json`:
     {
       "plugin": "@nx/rolldown/plugin",
       "options": {
-        "buildTargetName": "build"
+        "buildTargetName": "build",
+        "typecheckTargetName": "typecheck"
       }
     }
   ]
 }
 ```
 
-| Option            | Type   | Default | Description                             |
-| ----------------- | ------ | ------- | --------------------------------------- |
-| `buildTargetName` | string | `build` | Name of the cached Rolldown build task. |
+| Option                | Type              | Default     | Description                                                          |
+| --------------------- | ----------------- | ----------- | -------------------------------------------------------------------- |
+| `buildTargetName`     | string            | `build`     | Name of the cached Rolldown build task.                              |
+| `typecheckTargetName` | string or `false` | `typecheck` | Name of the cached TypeScript typecheck task, or `false` to skip it. |
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference.
 A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact

@@ -1,6 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { readJson, readNxJson, type Tree } from '@nx/devkit';
+import { readJson, readNxJson, type Tree, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion, rolldownVersion } from '../../utils/versions';
 import { rolldownInitGenerator } from './init';
@@ -21,8 +21,31 @@ describe('rolldownInitGenerator', () => {
     });
     expect(readNxJson(tree).plugins).toContainEqual({
       plugin: '@nx/rolldown/plugin',
-      options: { buildTargetName: 'build' },
+      options: { buildTargetName: 'build', typecheckTargetName: 'typecheck' },
     });
+  });
+
+  it('should register @nx/js/typescript in a TS solution setup', async () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ name: 'ws', workspaces: ['packages/*'] })
+    );
+    writeJson(tree, 'tsconfig.base.json', {
+      compilerOptions: { composite: true },
+    });
+    writeJson(tree, 'tsconfig.json', {
+      extends: './tsconfig.base.json',
+      files: [],
+      references: [],
+    });
+
+    await rolldownInitGenerator(tree, { addPlugin: true });
+
+    expect(
+      readNxJson(tree).plugins.some(
+        (p) => typeof p !== 'string' && p.plugin === '@nx/js/typescript'
+      )
+    ).toBe(true);
   });
 
   it('should keep an existing rolldown version', async () => {
