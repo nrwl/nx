@@ -122,6 +122,24 @@ describe('normalizeReadyWhen', () => {
     ).toMatchObject({ url });
   });
 
+  it.each([true, false])('treats %s as an unset host or port', (flag) => {
+    const normalize = (readyWhen: any) =>
+      normalizeReadyWhen(readyWhen, 'app:serve', {
+        ...data,
+        options: { ...data.options, host: flag, port: flag },
+      });
+
+    expect(
+      normalize({
+        port: '{options.port ?? 5173}',
+        host: '{options.host ?? localhost}',
+      })
+    ).toMatchObject({ port: 5173, host: 'localhost' });
+    expect(() => normalize({ port: 3000, host: '{options.host}' })).toThrow(
+      'Task "app:serve" has an invalid "readyWhen": "{options.host}" has no value'
+    );
+  });
+
   it('reads env tokens case-insensitively on Windows', () => {
     const platform = process.platform;
     Object.defineProperty(process, 'platform', { value: 'win32' });

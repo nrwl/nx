@@ -107,10 +107,16 @@ function resolveReadyWhen(
       return String(value);
     },
   };
+  // A flag passed without a value parses as `true`, and no host or port is a
+  // boolean
+  const hostScope: TokenScope = {
+    ...scope,
+    isUnset: (value) => typeof value === 'boolean',
+  };
   // webpack-dev-server and the Rspack dev server treat `auto` as an unset port
   const portScope: TokenScope = {
     ...scope,
-    isUnset: (value) => value === 'auto',
+    isUnset: (value) => typeof value === 'boolean' || value === 'auto',
   };
   const resolve = (value: unknown, tokenScope = scope): unknown => {
     if (typeof value !== 'string') {
@@ -183,7 +189,7 @@ function resolveReadyWhen(
       ) {
         throw invalid('"port" must be an integer from 1 to 65535');
       }
-      const host = resolveWithoutBraces('host');
+      const host = resolveWithoutBraces('host', hostScope);
       if (host == null) {
         return { kind: 'port', port, ...shared };
       }

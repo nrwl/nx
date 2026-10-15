@@ -666,6 +666,8 @@ The variable name can contain only the letters `a` to `z` in either case, digits
 and parentheses.
 A placeholder can list fallbacks after `??`, and Nx uses the first one that is set and not empty.
 In `port`, `auto` counts as not set, because webpack-dev-server and the Rspack dev server treat it as an unset port.
+In `host` and `port`, `true` and `false` also count as not set.
+A flag passed without a value, such as `--host`, parses as `true`, and `--no-host` parses as `false`.
 The last fallback can be plain text, as in `"{options.port ?? env.PORT ?? 4200}"`.
 A placeholder that resolves to no value makes `readyWhen` invalid, with an error that names the placeholder.
 Other text in braces, such as a `{{.State.Health.Status}}` template in a command, is left as it is.
