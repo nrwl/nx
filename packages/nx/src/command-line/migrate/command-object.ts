@@ -188,12 +188,12 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('agentic', {
       describe:
-        'Use an AI agent to apply prompt-based migrations and review the results. With --run-migrations, one agent session drives the whole run. With --run-migration, the session covers that one migration. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, or opencode). Pass `--agentic=false` or `--no-agentic` to disable it, including when nx migrate runs inside an AI agent.',
+        'Use an AI agent to apply prompt-based migrations and review the results. With --run-migrations, one agent session drives the whole run. With --run-migration, the session covers that one migration. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, or opencode). Pass `--agentic=false` or `--no-agentic` to disable it. Inside an AI agent, disabling it stops nx from asking that agent to review the changes of generator-only migrations. Migration prompts still go to that agent.',
       coerce: coerceAgenticArg,
     })
     .option('validate', {
       describe:
-        'Have the AI agent driving the run review the changes of generator-only migrations (those with no `prompt:` field). On by default; pass `--no-validate` to opt out. A continued run keeps the setting it started with. Has no effect when no agent drives the run. With --run-migration inside an AI agent, it controls whether nx prints review instructions for that agent.',
+        'Have the AI agent driving the run review the changes of generator-only migrations (those with no `prompt:` field). On by default; pass `--no-validate` to opt out. A continued run keeps the setting it started with. Has no effect when no agent drives the run. With --run-migration inside an AI agent, it controls whether nx prints review instructions for that agent. `--agentic=false` turns them off too.',
       type: 'boolean',
     })
     .option('finalValidation', {

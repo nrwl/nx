@@ -238,7 +238,8 @@ export async function runSingleMigrationWorker(
 
   await runStandalone(root, migration, {
     agenticKind: agentic.kind,
-    validate: input.validate,
+    // Inside an agent, --agentic=false drops the review; prompts still go out.
+    validate: input.agentic === false ? false : input.validate,
     createCommits,
     commitPrefix,
     skipInstall,

@@ -720,29 +720,33 @@ describe('runSingleMigrationWorker', () => {
       expect(stdout).not.toContain('<agent_context');
     });
 
-    it.each<[string, Record<string, unknown>]>([
+    it.each<[string, Record<string, unknown>, AgenticArg?]>([
       ['when the generator made no changes', { kind: 'inside-agent' }],
       ['outside an agent', { kind: 'disabled' }],
-    ])('hands no validation work to an agent %s', async (label, agentic) => {
-      mockResolveAgentic.mockResolvedValue(agentic);
-      writeMigrations([genMig('@nx/js', 'gen')]);
-      if (label !== 'when the generator made no changes') {
-        mockRunMigration.mockResolvedValue({
-          changes: changeList(),
-          nextSteps: [],
-          agentContext: [],
-          logs: '',
-          madeChanges: true,
-        });
+      ['inside an agent with --agentic=false', { kind: 'inside-agent' }, false],
+    ])(
+      'hands no validation work to an agent %s',
+      async (label, agentic, agenticArg) => {
+        mockResolveAgentic.mockResolvedValue(agentic);
+        writeMigrations([genMig('@nx/js', 'gen')]);
+        if (label !== 'when the generator made no changes') {
+          mockRunMigration.mockResolvedValue({
+            changes: changeList(),
+            nextSteps: [],
+            agentContext: [],
+            logs: '',
+            madeChanges: true,
+          });
+        }
+
+        await runSingleMigrationWorker(
+          standaloneInput({ runMigration: '@nx/js:gen', agentic: agenticArg })
+        );
+
+        expect(mockRunMigration).toHaveBeenCalledTimes(1);
+        expect(stdout).not.toContain('<nx_migrate_prompt');
       }
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen' })
-      );
-
-      expect(mockRunMigration).toHaveBeenCalledTimes(1);
-      expect(stdout).not.toContain('<nx_migrate_prompt');
-    });
+    );
 
     it('does not forward agentContext outside an agent', async () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
