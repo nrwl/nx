@@ -341,19 +341,17 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           const { errors, warnings } = await (this.#diagnosticsPromise ??
             this.#createDiagnosticsPromise());
           for (const error of errors ?? []) {
-            compilation.errors.push({
+            addError(compilation, {
               name: PLUGIN_NAME,
               message: error.text || '',
               file: error.location?.file,
-              stack: error.text,
             });
           }
           for (const warning of warnings ?? []) {
-            compilation.warnings.push({
+            addWarning(compilation, {
               name: PLUGIN_NAME,
               message: warning.text || '',
               file: warning.location?.file,
-              stack: warning.text,
             });
           }
         }
