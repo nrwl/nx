@@ -1,4 +1,5 @@
 import type { TargetConfiguration } from 'nx/src/devkit-exports';
+import { parseNxDirectives } from './nx-directives';
 import { withoutServerInputs } from './without-server-inputs';
 
 const NONE = 'NONE';
@@ -30,6 +31,15 @@ export function readDependsOnDirective(values: string[]): DependsOnDirective {
     return { kind: 'projects', projects: [...projects] };
   }
   return projects.size === 1 ? { kind: 'none' } : { kind: 'mixed' };
+}
+
+/**
+ * Whether the comment block that opens `content` has `@nx-depends-on: NONE`
+ * and no project names.
+ */
+export function hasDependsOnNoneDirective(content: string): boolean {
+  const values = parseNxDirectives(content).get('depends-on');
+  return values !== undefined && readDependsOnDirective(values).kind === 'none';
 }
 
 /**

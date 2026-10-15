@@ -2037,7 +2037,7 @@ Violation detected in:
     expect(failures[1].message).toEqual(message);
   });
 
-  describe('atomized e2e specs with "@nx-ultracache: imports"', () => {
+  describe('atomized e2e specs with "@nx-depends-on: NONE"', () => {
     const projectGraph: ProjectGraph = {
       nodes: {
         shopE2eName: {
@@ -2150,7 +2150,7 @@ Violation detected in:
       [
         'skips the path, app, lazy-loaded and tag checks in a spec with the directive',
         'src/checkout.spec.ts',
-        `// @nx-ultracache: imports\n${imports}`,
+        `// @nx-depends-on: NONE\n${imports}`,
         ['noImportsOfE2e', 'bannedExternalImportsViolation'],
       ],
       [
@@ -2160,21 +2160,33 @@ Violation detected in:
         allChecks,
       ],
       [
+        'checks a spec whose directive names projects',
+        'src/checkout.spec.ts',
+        `// @nx-depends-on: otherName\n${imports}`,
+        allChecks,
+      ],
+      [
+        'checks a spec whose directive mixes NONE with projects',
+        'src/checkout.spec.ts',
+        `// @nx-depends-on: NONE, otherName\n${imports}`,
+        allChecks,
+      ],
+      [
         'checks a file with the directive that no atomized target runs',
         'src/support.ts',
-        `// @nx-ultracache: imports\n${imports}`,
+        `// @nx-depends-on: NONE\n${imports}`,
         allChecks,
       ],
       [
         'checks a file with the directive that the graph does not list yet',
         'src/new.spec.ts',
-        `// @nx-ultracache: imports\n${imports}`,
+        `// @nx-depends-on: NONE\n${imports}`,
         allChecks,
       ],
       [
         'checks imports that are not bare in a spec with the directive',
         'src/checkout.spec.ts',
-        `// @nx-ultracache: imports
+        `// @nx-depends-on: NONE
           import { a } from '../../myapp/src/index';
           import type { B } from '@mycompany/myapp';
           import {} from '@mycompany/myapp';

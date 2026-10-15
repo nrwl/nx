@@ -50,7 +50,7 @@ import {
   stringifyTags,
 } from '../utils/runtime-lint-utils';
 import {
-  hasUltracacheImportsDirective,
+  hasDependsOnNoneDirective,
   isRelativePath,
   isProjectGraphProjectNode,
 } from '@nx/devkit/internal';
@@ -257,11 +257,11 @@ export default ESLintUtils.RuleCreator(
         projectGraph
       );
 
-    let ultracacheImportsSpec: boolean | undefined;
-    // Atomized e2e specs (`<target>--<spec path>`) with the
-    // `// @nx-ultracache: imports` directive import app code with bare imports
+    let dependsOnNoneSpec: boolean | undefined;
+    // Atomized e2e specs (`<target>--<spec path>`) with
+    // `// @nx-depends-on: NONE` import app code with bare imports
     // (`import 'app/feature'`) to hash from it.
-    function isUltracacheImport(
+    function isDependsOnNoneImport(
       node: Parameters<typeof run>[1],
       sourceProject: ProjectGraphProjectNode,
       sourceFilePath: string
@@ -273,17 +273,17 @@ export default ESLintUtils.RuleCreator(
       ) {
         return false;
       }
-      if (ultracacheImportsSpec === undefined) {
+      if (dependsOnNoneSpec === undefined) {
         const specPath = normalizePath(
           relative(sourceProject.data.root, sourceFilePath)
         );
-        ultracacheImportsSpec =
-          hasUltracacheImportsDirective(context.sourceCode.text) &&
+        dependsOnNoneSpec =
+          hasDependsOnNoneDirective(context.sourceCode.text) &&
           Object.keys(sourceProject.data.targets ?? {}).some((targetName) =>
             targetName.endsWith(`--${specPath}`)
           );
       }
-      return ultracacheImportsSpec;
+      return dependsOnNoneSpec;
     }
 
     function run(
@@ -332,7 +332,7 @@ export default ESLintUtils.RuleCreator(
       if (
         ((targetProject && sourceProject !== targetProject) ||
           isAbsoluteImportIntoAnotherProj) &&
-        !isUltracacheImport(node, sourceProject, sourceFilePath)
+        !isDependsOnNoneImport(node, sourceProject, sourceFilePath)
       ) {
         context.report({
           node,
@@ -638,7 +638,7 @@ export default ESLintUtils.RuleCreator(
       if (
         targetProject.type === 'app' &&
         !appIsMFERemote(targetProject) &&
-        !isUltracacheImport(node, sourceProject, sourceFilePath)
+        !isDependsOnNoneImport(node, sourceProject, sourceFilePath)
       ) {
         context.report({
           node,
@@ -689,7 +689,7 @@ export default ESLintUtils.RuleCreator(
           imp,
           sourceFilePath
         ) &&
-        !isUltracacheImport(node, sourceProject, sourceFilePath)
+        !isDependsOnNoneImport(node, sourceProject, sourceFilePath)
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(
           projectFileMap,
@@ -712,7 +712,7 @@ export default ESLintUtils.RuleCreator(
       // check that dependency constraints are satisfied
       if (
         depConstraints.length > 0 &&
-        !isUltracacheImport(node, sourceProject, sourceFilePath)
+        !isDependsOnNoneImport(node, sourceProject, sourceFilePath)
       ) {
         const constraints = findConstraintsFor(depConstraints, sourceProject);
         // when no constrains found => error. Force the user to provision them.

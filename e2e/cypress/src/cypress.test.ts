@@ -66,7 +66,7 @@ describe('Cypress E2E Test runner', () => {
   );
 
   it(
-    'should keep the server inputs out of atomized specs with "@nx-ultracache: imports"',
+    'should keep the server inputs out of atomized specs with "@nx-depends-on: NONE"',
     () => {
       const app = uniq('app');
       runCLI(
@@ -78,7 +78,7 @@ describe('Cypress E2E Test runner', () => {
       );
       createFile(
         `apps/${app}-e2e/src/e2e/feature.cy.ts`,
-        `// @nx-ultracache: imports\nimport '../../../${app}/src/app/feature';\n${readFile(
+        `// @nx-depends-on: NONE\nimport '../../../${app}/src/app/feature';\n${readFile(
           `apps/${app}-e2e/src/e2e/app.cy.ts`
         )}`
       );
