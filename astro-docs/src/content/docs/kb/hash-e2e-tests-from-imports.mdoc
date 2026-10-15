@@ -1,6 +1,6 @@
 ---
 title: Hash e2e tests from the app code they import
-description: Add the @nx-ultracache imports directive to an atomized Playwright or Cypress test file so its task hashes from the app code the file imports, and a change to one feature reruns only the tests that import it.
+description: Add the @nx-depends-on NONE directive to an atomized Playwright or Cypress test file so its task hashes from the app code the file imports, and a change to one feature reruns only the tests that import it.
 sidebar:
   label: Hash e2e tests from their imports
 filter: 'type:Guides'
@@ -23,7 +23,7 @@ With [Ultracache](/docs/reference/project-configuration#ultracache), Nx hashes a
 it read on a recorded run instead of its declared file inputs.
 A test file that imports the app code it exercises makes the test runner read that code, so the
 recording covers it.
-Add `// @nx-ultracache: imports` to the top of the test file, and the servers' inputs stay out of
+Add `// @nx-depends-on: NONE` to the top of the test file, and the servers' inputs stay out of
 the hash of its atomized task.
 The task's hash then covers the app code that the test file imports directly or through other
 imports:
@@ -36,7 +36,7 @@ Add the directive at the top of the test file and import the app code the test e
 
 ```ts
 // apps/shop-e2e/src/checkout.spec.ts
-// @nx-ultracache: imports
+// @nx-depends-on: NONE
 // This test's task hashes from the app code imported below, not from the whole app.
 // Keep importing the code the test exercises: https://nx.dev/docs/kb/hash-e2e-tests-from-imports
 import '../../shop/src/app/checkout/checkout-page';
@@ -62,9 +62,9 @@ The task that runs the whole suite, `e2e` by default, and the `e2e-ci` task that
 tasks don't change.
 
 An [`@nx-depends-on`](/docs/kb/split-e2e-tasks#scope-a-task-with-a-comment-in-the-test-file)
-comment in the same file also leaves out the servers' inputs.
-The task keeps hashing the projects that comment lists, even under Ultracache, so listing the app
-there puts the whole app back in the hash.
+comment that lists projects instead of `NONE` also leaves out the servers' inputs.
+The task keeps hashing the listed projects, even under Ultracache, so listing the app there puts
+the whole app back in the hash.
 
 ## Choose what to import
 
@@ -154,9 +154,10 @@ error TS6305, `Output file '<path>' has not been built from source file '<path>'
   It can be a line comment or sit inside a block comment, and blank lines, a `#!` line, and other
   comments can come before it.
 - Nx stops reading at the first line of code, so a directive after it has no effect.
-- `imports` is the only value.
-  Nx ignores the directive in a test file with any other value and logs a warning that names the
-  file.
+- Write `NONE` in capital letters.
+  Nx reads any other spelling, such as `none`, as a project name.
+- When the `@nx-depends-on` comments of a test file combine `NONE` with project names, on one line
+  or across several lines, Nx ignores them and logs a warning that names the file.
 - The Jest plugin ignores the directive and logs a warning.
   The Vitest plugin and Cypress component tests don't read it.
 - The directive only applies to atomized e2e tasks that depend on a server Nx runs.

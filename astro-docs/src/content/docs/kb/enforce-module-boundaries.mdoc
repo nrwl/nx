@@ -119,7 +119,7 @@ a given `source` project the resulting constraints would be **all** that match i
 
 ## E2E tests that hash from their imports
 
-An atomized e2e test file with `// @nx-ultracache: imports` imports app code so its task
+An atomized e2e test file with `// @nx-depends-on: NONE` imports app code so its task
 [hashes from that code](/docs/kb/hash-e2e-tests-from-imports).
 For its bare imports of other projects, such as
 `import '../../shop/src/app/checkout/checkout-page'`, the rule skips these checks:
