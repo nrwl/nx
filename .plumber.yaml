@@ -1,0 +1,21 @@
+# Plumber overlay: inherits the built-in defaults, only the deltas are listed.
+extends: plumber:default
+version: "2.0"
+
+github:
+  controls:
+    githubActionMustComeFromAuthorizedSources:
+      # keep the curated list of well-known publishers and add the actions
+      # these workflows already use, all pinned by commit
+      includePlumberDefaults: true
+      trustedGithubActions:
+        - cross-platform-actions/action
+        - dawidd6/action-download-artifact
+        - dessant/lock-threads
+        - jdx/mise-action
+        - mxschmitt/action-tmate
+        - ravsamhq/notify-slack-action
+    branchMustBeProtected:
+      # master is the published line, release/* are short-lived working branches
+      namePatterns:
+        - master
