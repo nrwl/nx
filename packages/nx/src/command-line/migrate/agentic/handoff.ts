@@ -9,16 +9,7 @@ import {
   type BigIntStats,
 } from 'fs';
 import { join } from 'path';
-import {
-  HANDOFFS_DIR_NAME,
-  HandoffFile,
-  MIGRATE_RUNS_RELATIVE_DIR,
-} from './types';
-
-/** Returns the run directory for a given workspace + run id. */
-export function runDirPath(workspaceRoot: string, runId: string): string {
-  return join(workspaceRoot, MIGRATE_RUNS_RELATIVE_DIR, runId);
-}
+import { HANDOFFS_DIR_NAME, HandoffFile } from './types';
 
 /**
  * `mkdir -p` with a contextual error wrapper. Without this, the raw
@@ -43,22 +34,6 @@ export function mkdirSafely(dir: string, purpose: string): void {
   }
 }
 
-// Windows reserved device names fail to open even with an extension —
-// a migration named `CON` would otherwise produce a `CON.json` that the
-// agent can't write to.
-const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
-
-function sanitizeSegment(value: string): string {
-  if (value === '.' || value === '..') return '_';
-  let sanitized = value.replace(/[\x00-\x1f<>:"/\\|?*+]/g, '_');
-  // Windows forbids trailing dots/spaces on file/directory names.
-  sanitized = sanitized.replace(/[. ]+$/, '');
-  if (WINDOWS_RESERVED_NAMES.test(sanitized)) {
-    sanitized = `_${sanitized}`;
-  }
-  return sanitized || '_';
-}
-
 // Truncates to a UTF-8 byte budget without splitting a code point.
 export function truncateUtf8(value: string, maxBytes: number): string {
   let out = '';
@@ -72,9 +47,9 @@ export function truncateUtf8(value: string, maxBytes: number): string {
   return out;
 }
 
-/** Handoff path for a run step. No hash needed: step ids are unique within the run. */
+// Step ids match run-state's STEP_ID (`step-<n>`), so they are safe file names.
 export function runStepHandoffPath(runDir: string, stepId: string): string {
-  return join(runDir, HANDOFFS_DIR_NAME, `${sanitizeSegment(stepId)}.json`);
+  return join(runDir, HANDOFFS_DIR_NAME, `${stepId}.json`);
 }
 
 export type HandoffReadFailureReason =

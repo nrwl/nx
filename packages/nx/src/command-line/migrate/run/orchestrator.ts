@@ -4,7 +4,6 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
-  readdirSync,
   rmSync,
   writeFileSync,
   type BigIntStats,
@@ -89,6 +88,7 @@ import {
   NewerRunStateFormatError,
   runDir,
   runHandoffsDir,
+  runKind,
   writeRunState,
   CURRENT_RUN_STATE_FORMAT_VERSION,
   RUN_STATE_FILE_NAME,
@@ -109,6 +109,8 @@ import {
   findOtherLiveRuns,
   heldRunError,
   holdRunActivity,
+  isHeld,
+  listOtherRuns,
   liveRunActivityPids,
   liveRunRefusal,
   registerRunActivity,
@@ -393,11 +395,7 @@ export async function runOrchestratorInit(
   }
   if (existsSync(migrateRunsDir(root))) {
     withRunCreationLock(root, () => {
-      if (singleMigration) {
-        scanRunsForSingleMigration(root);
-        return;
-      }
-      refuseNewRunAlongsideLiveRun(root);
+      refuseNewRunAlongsideLiveRun(root, singleMigration);
       if (active) {
         refuseUndeletableRun(root, active.runId, active.state);
       }
@@ -456,7 +454,7 @@ export async function runOrchestratorInit(
   let deleted = false;
   const reserved = withRunCreationLock(root, () => {
     if (singleMigration) {
-      scanRunsForSingleMigration(root);
+      refuseNewRunAlongsideLiveRun(root, true);
     } else {
       const nowActive = findActiveRunForInit(root, active !== null);
       if (nowActive && nowActive.runId !== active?.runId) {
@@ -573,9 +571,9 @@ export function runOrchestratorResume(
  * Holds the active run `runId` names and returns its state. A continue calls
  * this before the install and the agent selection: a concurrent start-fresh
  * must not delete the run meanwhile. Throws when the id names no run or a
- * finished one, and while another process holds the run: continuing would
- * open a second session over a live one. Under WASM nothing is held and no
- * holder refuses.
+ * finished one, and while another process holds the run or works on a
+ * different run: continuing would open a second session over a live one.
+ * Under WASM nothing is held and no holder refuses.
  */
 export function holdRunToContinue(
   root: string,
@@ -752,16 +750,23 @@ function warnIgnoredRunDirs(uninterpretable: UninterpretableRunDir[]): void {
  * Throws while another process works on a run that init wouldn't report: a
  * `--run-migration` run, a run being started, or a run nx can't read. A new
  * run would install and commit over its in-progress edits. An active
- * `--run-migrations` run is reported instead, and records no process holds
- * block nothing.
+ * `--run-migrations` run is reported instead, except to a `--run-migration`
+ * run, and records no process holds block nothing.
  */
-export function refuseNewRunAlongsideLiveRun(root: string): void {
+export function refuseNewRunAlongsideLiveRun(
+  root: string,
+  singleMigration = false
+): void {
   const live = findOtherLiveRuns(root).find(
-    (run) =>
-      !(run.state?.status === 'active' && run.state.singleMigration !== true)
+    (run) => singleMigration || !run.state || runKind(run.state) !== 'active'
   );
   if (live) {
-    throw liveRunRefusal('Not running the migrations', live);
+    throw liveRunRefusal(
+      singleMigration
+        ? 'Not running the migration'
+        : 'Not running the migrations',
+      live
+    );
   }
 }
 
@@ -771,9 +776,7 @@ export function refuseNewRunAlongsideLiveRun(root: string): void {
  */
 export function checkRunsForSingleMigration(root: string): void {
   if (!existsSync(migrateRunsDir(root))) return;
-  withRunCreationLock(root, () => {
-    scanRunsForSingleMigration(root);
-  });
+  withRunCreationLock(root, () => refuseNewRunAlongsideLiveRun(root, true));
 }
 
 /**
@@ -784,12 +787,25 @@ export function checkRunsForSingleMigration(root: string): void {
  */
 export function prepareSingleMigrationRun(root: string): void {
   if (!existsSync(migrateRunsDir(root))) return;
-  const { idleRunIds, uninterpretable } = withRunCreationLock(root, () => {
-    const scan = scanRunsForSingleMigration(root);
-    for (const runId of scan.leftovers) {
-      removeSingleMigrationRun(root, runId);
+  const idleRunIds: string[] = [];
+  const uninterpretable: UninterpretableRunDir[] = [];
+  withRunCreationLock(root, () => {
+    refuseNewRunAlongsideLiveRun(root, true);
+    // No other process holds what is left.
+    for (const run of listOtherRuns(root)) {
+      if (run.starting) continue;
+      if (run.state?.singleMigration === true) {
+        removeSingleMigrationRun(root, run.dirName);
+      } else if (run.state) {
+        idleRunIds.push(run.dirName);
+      } else if (!(run.readError instanceof NewerRunStateFormatError)) {
+        // A newer nx's run is that nx's to report.
+        uninterpretable.push({
+          dirName: run.dirName,
+          reason: summarizeError(run.readError),
+        });
+      }
     }
-    return scan;
   });
   if (uninterpretable.length > 0) {
     warnIgnoredRunDirs(uninterpretable);
@@ -807,54 +823,6 @@ export function prepareSingleMigrationRun(root: string): void {
       ],
     });
   }
-}
-
-// Call under the creation lock. Refuses while another process works on a run
-// this one could collide with: its install and commit would act on that run's
-// in-progress edits. A run being started counts too.
-function scanRunsForSingleMigration(root: string): {
-  idleRunIds: string[];
-  leftovers: string[];
-  uninterpretable: UninterpretableRunDir[];
-} {
-  const [live] = findOtherLiveRuns(root);
-  if (live) {
-    throw liveRunRefusal('Not running the migration', live);
-  }
-  const idleRunIds: string[] = [];
-  const leftovers: string[] = [];
-  const uninterpretable: UninterpretableRunDir[] = [];
-  for (const entry of readdirSync(migrateRunsDir(root), {
-    withFileTypes: true,
-  })) {
-    if (!entry.isDirectory()) continue;
-    const dir = join(migrateRunsDir(root), entry.name);
-    if (!hasRunState(dir)) continue;
-    let state: MigrateRunState | null = null;
-    let readError: unknown;
-    try {
-      state = readRunState(dir);
-    } catch (e) {
-      readError = e;
-    }
-    if (state?.status === 'completed' && state.singleMigration !== true) {
-      continue;
-    }
-    if (state === null) {
-      // A newer nx's run is that nx's to report.
-      if (!(readError instanceof NewerRunStateFormatError)) {
-        uninterpretable.push({
-          dirName: entry.name,
-          reason: summarizeError(readError),
-        });
-      }
-    } else if (state.singleMigration === true) {
-      leftovers.push(entry.name);
-    } else {
-      idleRunIds.push(entry.name);
-    }
-  }
-  return { idleRunIds, leftovers, uninterpretable };
 }
 
 /**
@@ -949,7 +917,7 @@ function refuseUndeletableRun(
     );
   }
   const holders = liveRunActivityPids(runDir(root, runId));
-  if (holders === 'unknown' || holders.length > 0) {
+  if (isHeld(holders)) {
     throw heldRunError('deleting', runId, holders);
   }
   const workers = liveWorkers(state);
@@ -1003,7 +971,7 @@ function deleteUnheldRunRecord(
     if (!hasRunState(dir)) return 'gone';
     refuse?.(readRunState(dir));
     const holders = liveRunActivityPids(dir);
-    if (holders === 'unknown' || holders.length > 0) return { holders };
+    if (isHeld(holders)) return { holders };
     // The hold's lock file is inside the directory removed afterwards.
     releaseRunActivity(dir);
     rmSync(join(dir, RUN_STATE_FILE_NAME), { force: true });
@@ -2521,12 +2489,7 @@ function readDispenseBaselines(root: string): DispenseBaselines {
 export function dispenseSingleMigrationStep(root: string, runId: string): void {
   const baselines = readDispenseBaselines(root);
   updateRunState(runDir(root, runId), (fresh) => {
-    const step = firstActionableStep(fresh);
-    if (step?.status !== 'pending') {
-      throw new Error(
-        `Migrate run '${runId}' has no pending step to dispense.`
-      );
-    }
+    const [step] = fresh.steps;
     return setDispenseBaselines(
       applyEventOrThrow(fresh, dispenseEvent(step)),
       step.id,
@@ -2872,7 +2835,7 @@ function assessPreMarkerRetry(
 }
 
 // Whichever attempt landed it, the commit is this migration's result.
-function lastCoveringLandedEntry(
+export function lastCoveringLandedEntry(
   state: MigrateRunState,
   step: MigrateStep
 ): MigrateCommitLedgerEntry | null {
@@ -3524,8 +3487,8 @@ function emit(
   }
 }
 
-// A `--run-migration` run reports its own events, so the orchestrator's count
-// only `--run-migrations` runs.
+// A `--run-migration` run reports its own events, so only `--run-migrations`
+// runs report orchestrator events.
 function reportsOrchestratorAnalytics(state: MigrateRunState): boolean {
   return state.singleMigration !== true;
 }

@@ -59,23 +59,12 @@ vi.mock('../agentic/select', async () => ({
 }));
 
 // Stands in for the agent process: worker.ts lazy-requires the session
-// module (CJS channel), so replace it in the require channel as well as the
-// import graph.
+// module (CJS channel), so replace it in the require channel.
 const mockDriveMasterSession = vi.fn();
 import { mockCjsModule } from '../../../internal-testing-utils/cjs-mock';
 mockCjsModule(import.meta.url, '../agentic/master/run-master-session', {
   driveMasterSession: (...args: unknown[]) => mockDriveMasterSession(...args),
 });
-vi.mock('../agentic/master/run-master-session', () => ({
-  driveMasterSession: (...args: unknown[]) => mockDriveMasterSession(...args),
-}));
-
-const mockGitignoreFallback = vi.fn();
-vi.mock('../agentic/handoff-gitignore', async () => ({
-  ...(await vi.importActual('../agentic/handoff-gitignore')),
-  applyAgenticHandoffGitignoreFallback: (...args: unknown[]) =>
-    mockGitignoreFallback(...args),
-}));
 
 const mockIsGitRepository = vi.fn();
 const mockGetGitCurrentBranch = vi.fn();
@@ -262,7 +251,6 @@ describe('runSingleMigrationWorker', () => {
     mockCheckpoint.mockReset();
     mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
     mockDriveMasterSession.mockReset();
-    mockGitignoreFallback.mockReset().mockResolvedValue(undefined);
     mockIsGitRepository.mockReset().mockReturnValue(true);
     mockGetGitCurrentBranch.mockReset().mockReturnValue('feature/x');
     mockGetBaseRef.mockReset().mockReturnValue('main');
@@ -718,33 +706,29 @@ describe('runSingleMigrationWorker', () => {
       expect(stdout).not.toContain('<agent_context');
     });
 
-    it.each<[string, Record<string, unknown>, Record<string, unknown>]>([
-      ['with --validate=false', { kind: 'inside-agent' }, { validate: false }],
-      ['when the generator made no changes', { kind: 'inside-agent' }, {}],
-      ['outside an agent', { kind: 'disabled' }, {}],
-    ])(
-      'hands no validation work to an agent %s',
-      async (label, agentic, overrides) => {
-        mockResolveAgentic.mockResolvedValue(agentic);
-        writeMigrations([genMig('@nx/js', 'gen')]);
-        if (label !== 'when the generator made no changes') {
-          mockRunMigration.mockResolvedValue({
-            changes: changeList(),
-            nextSteps: [],
-            agentContext: [],
-            logs: '',
-            madeChanges: true,
-          });
-        }
-
-        await runSingleMigrationWorker(
-          standaloneInput({ runMigration: '@nx/js:gen', ...overrides })
-        );
-
-        expect(mockRunMigration).toHaveBeenCalledTimes(1);
-        expect(stdout).not.toContain('<nx_migrate_prompt');
+    it.each<[string, Record<string, unknown>]>([
+      ['when the generator made no changes', { kind: 'inside-agent' }],
+      ['outside an agent', { kind: 'disabled' }],
+    ])('hands no validation work to an agent %s', async (label, agentic) => {
+      mockResolveAgentic.mockResolvedValue(agentic);
+      writeMigrations([genMig('@nx/js', 'gen')]);
+      if (label !== 'when the generator made no changes') {
+        mockRunMigration.mockResolvedValue({
+          changes: changeList(),
+          nextSteps: [],
+          agentContext: [],
+          logs: '',
+          madeChanges: true,
+        });
       }
-    );
+
+      await runSingleMigrationWorker(
+        standaloneInput({ runMigration: '@nx/js:gen' })
+      );
+
+      expect(mockRunMigration).toHaveBeenCalledTimes(1);
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+    });
 
     it('does not forward agentContext outside an agent', async () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
@@ -928,10 +912,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunMigration).toHaveBeenCalledTimes(1);
     });
 
-    // It cannot tell whether another process works on a run in there.
-    it('refuses without running the migration when the run directories cannot be scanned', async () => {
+    it('refuses without running the migration when .nx/migrate-runs is not a directory', async () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
-      // migrate-runs as a file makes the scan fail
       mkdirSync(join(root, '.nx'), { recursive: true });
       writeFileSync(join(root, '.nx', 'migrate-runs'), 'not a directory');
 
@@ -2984,10 +2966,8 @@ describe('runSingleMigrationWorker', () => {
       settle: (state: MigrateRunState) => MigrateRunState
     ) =>
       mockDriveMasterSession.mockImplementation(
-        async ({ ready }: { ready: { runRoot: string; runId: string } }) => ({
-          kind: 'ended',
-          state: settle(readRunState(runDir(ready.runRoot, ready.runId))),
-        })
+        async ({ ready }: { ready: { runRoot: string; runId: string } }) =>
+          settle(readRunState(runDir(ready.runRoot, ready.runId)))
       );
 
     const settleStep =
@@ -3038,7 +3018,7 @@ describe('runSingleMigrationWorker', () => {
             payloadStored = existsSync(
               agentWorkPayloadPath(dir, parked.id, parked.attempt)
             );
-            return { kind: 'ended', state: settleStep('succeeded')(state) };
+            return settleStep('succeeded')(state);
           }
         );
 
@@ -3143,7 +3123,7 @@ describe('runSingleMigrationWorker', () => {
           const dir = runDir(ready.runRoot, runId);
           holder = new FileLock(join(dir, 'activity', '999-cafe.lock'));
           holder.lock();
-          return { kind: 'ended', state: readRunState(dir) };
+          return readRunState(dir);
         }
       );
 
@@ -3256,36 +3236,20 @@ describe('runSingleMigrationWorker', () => {
       }
     );
 
-    it('reports an agent session that could not start as an agentic run error', async () => {
+    it('hands the session the migration and the re-run hint, and exits 1 when the session could not start', async () => {
       writeMigrations([promptMig('@nx/js', 'p')]);
-      const errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {});
-      mockDriveMasterSession.mockImplementation(
-        async ({
-          reportAgentError,
-        }: {
-          reportAgentError: (error: Error) => void;
-        }) => {
-          const error = new Error('spawn claude ENOENT');
-          reportAgentError(error);
-          return { kind: 'spawn-failed', error };
-        }
-      );
+      mockDriveMasterSession.mockResolvedValue(null);
 
       const exitCode = await runSingleMigrationWorker(agentInput('@nx/js:p'));
 
       expect(exitCode).toBe(1);
-      expect(errorSpy).toHaveBeenCalledWith({
-        title: 'Could not start Claude Code: spawn claude ENOENT',
-        bodyLines: [
-          'Migration @nx/js:p did not finish. Re-run the same command to run it again.',
-        ],
-      });
-      expect(mockReportRunError).toHaveBeenCalledWith({
-        code: 'agentic',
-        migrationPackage: '@nx/js',
-        migrationName: 'p',
-        error: new Error('spawn claude ENOENT'),
-      });
+      expect(mockDriveMasterSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          migration: expect.objectContaining({ package: '@nx/js', name: 'p' }),
+          notStartedHint:
+            'Migration @nx/js:p did not finish. Re-run the same command to run it again.',
+        })
+      );
       expect(runDirs()).toEqual([]);
     });
 

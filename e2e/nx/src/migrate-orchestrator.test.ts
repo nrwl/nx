@@ -1811,7 +1811,7 @@ while (block.action !== 'complete') {
     }
     // \`next\` is the retry: the step's generator already ran.
   } else if (block.action === 'await-prompt') {
-    // Named after the run, so a later run's step with the same id still changes it.
+    // Holds the run id, so a later run's step with the same id still changes the file.
     fs.writeFileSync(path.join(process.cwd(), 'applied-' + block.step + '.txt'), 'applied by fake agent in ' + block.runId);
     const handoffPath = block.payload.instructions.match(/^Handoff file: (.+)$/m)[1];
     // Generator validation goes through the same action; only a prompt the

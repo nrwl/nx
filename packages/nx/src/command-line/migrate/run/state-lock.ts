@@ -4,8 +4,8 @@
 // the kernel releases a dead holder's lock automatically, so there is no
 // stale-lock state to detect or clean up. Under WASM the native lock is
 // unavailable and sections run unserialized, matching the project graph's
-// IS_WASM guard for this lock. Not part of run/'s public surface (not
-// re-exported via ./index): import directly within run/.
+// IS_WASM guard for this lock. Only `isHeld` is part of run/'s public surface
+// (re-exported via ./index): import the rest directly within run/.
 //
 // Locked sections must stay synchronous. lock() blocks the whole thread, so
 // if a holder parked on an await while a second in-process caller reached
@@ -23,6 +23,7 @@ import {
   migrateRunsDir,
   readRunState,
   runDir,
+  runKind,
   writeRunState,
   type MigrateRunState,
 } from './run-state';
@@ -117,7 +118,7 @@ export function holdRunActivity(
     }
     if (exclusive) {
       const others = liveRunActivityPids(dir);
-      if (others === 'unknown' || others.length > 0) {
+      if (isHeld(others)) {
         throw heldRunError('continuing', runId, others);
       }
     }
@@ -134,6 +135,8 @@ export interface LiveRun {
   // Reserved by an init that hasn't written run.json yet.
   starting: boolean;
   state: MigrateRunState | null;
+  // Why run.json could not be read.
+  readError?: unknown;
   holders: number[] | 'unknown';
 }
 
@@ -145,6 +148,11 @@ export interface LiveRun {
  * each other.
  */
 export function findOtherLiveRuns(root: string, ownRunId?: string): LiveRun[] {
+  return listOtherRuns(root, ownRunId).filter((run) => isHeld(run.holders));
+}
+
+// findOtherLiveRuns' runs, including the ones no process holds.
+export function listOtherRuns(root: string, ownRunId?: string): LiveRun[] {
   let entries: Dirent[];
   try {
     entries = readdirSync(migrateRunsDir(root), { withFileTypes: true });
@@ -152,7 +160,7 @@ export function findOtherLiveRuns(root: string, ownRunId?: string): LiveRun[] {
     if (e?.code === 'ENOENT') return [];
     throw e;
   }
-  const live: LiveRun[] = [];
+  const runs: LiveRun[] = [];
   for (const entry of entries) {
     if (!entry.isDirectory() || entry.name === ownRunId) continue;
     const dir = join(migrateRunsDir(root), entry.name);
@@ -161,32 +169,24 @@ export function findOtherLiveRuns(root: string, ownRunId?: string): LiveRun[] {
     // agentic scratch, or what a dead init or an unfinished removal left.
     if (starting && !hasAnyLiveRunActivity(dir)) continue;
     let state: MigrateRunState | null = null;
+    let readError: unknown;
     if (!starting) {
       try {
         state = readRunState(dir);
-      } catch {
-        // Still a run another process may be working on.
+      } catch (e) {
+        readError = e;
       }
-      if (state?.status === 'completed' && state.singleMigration !== true) {
-        continue;
-      }
+      if (state && runKind(state) === 'finished') continue;
     }
-    const holders = liveRunActivityPids(dir);
-    if (holders === 'unknown' || holders.length > 0) {
-      live.push({ dirName: entry.name, starting, state, holders });
-    }
+    runs.push({
+      dirName: entry.name,
+      starting,
+      state,
+      readError,
+      holders: liveRunActivityPids(dir),
+    });
   }
-  return live;
-}
-
-// Refused at once, never waited for: this process may be a git hook of the
-// init's checkpoint commit, which the init waits on.
-function startingRunRefusal(dirName: string): Error {
-  return new Error(
-    `Another nx migrate process is starting a run (${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(
-      dirName
-    )}). Wait for it to finish, then re-run the command.`
-  );
+  return runs;
 }
 
 /**
@@ -195,10 +195,14 @@ function startingRunRefusal(dirName: string): Error {
  * migration".
  */
 export function liveRunRefusal(refusal: string, run: LiveRun): Error {
-  if (run.starting && run.holders !== 'unknown') {
-    return startingRunRefusal(run.dirName);
-  }
   const path = `${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(run.dirName)}`;
+  // Refused at once, never waited for: this process may be a git hook of the
+  // init's checkpoint commit, which the init waits on.
+  if (run.starting && run.holders !== 'unknown') {
+    return new Error(
+      `Another nx migrate process is starting a run (${path}). Wait for it to finish, then re-run the command.`
+    );
+  }
   const described = run.starting
     ? `the run being started in ${path}`
     : run.state?.singleMigration === true
@@ -285,8 +289,12 @@ export function liveRunActivityPids(dir: string): number[] | 'unknown' {
  * WASM any lock file counts.
  */
 export function hasAnyLiveRunActivity(dir: string): boolean {
-  const names = liveActivityNames(dir, undefined);
-  return names === 'unknown' || names.length > 0;
+  return isHeld(liveActivityNames(dir, undefined));
+}
+
+// Whether a run's holders or held lock names show it held; 'unknown' counts.
+export function isHeld(holders: readonly unknown[] | 'unknown'): boolean {
+  return holders === 'unknown' || holders.length > 0;
 }
 
 // The names of the held lock files other than `skip`; 'unknown' when the
@@ -305,7 +313,6 @@ function liveActivityNames(
   const held: string[] = [];
   for (const name of names) {
     if (name === skip) continue;
-    if (IS_WASM) return 'unknown';
     try {
       if (new FileLock(join(dir, ACTIVITY_DIR_NAME, name)).check()) {
         held.push(name);

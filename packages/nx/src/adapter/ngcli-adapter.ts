@@ -438,8 +438,7 @@ async function createRecorder(
         `${pc.blue('RENAME')} ${eventPath} => ${event.to}`
       );
       // Surface as DELETE source + CREATE destination so downstream consumers
-      // (e.g. the agentic validation prompt's `<files_changed>` block) see
-      // both endpoints.
+      // see both endpoints.
       const toPath = event.to.startsWith('/') ? event.to.slice(1) : event.to;
       record.changes?.push({ type: 'DELETE', path: eventPath, content: null });
       record.changes?.push(emptyFileChange('CREATE', toPath));

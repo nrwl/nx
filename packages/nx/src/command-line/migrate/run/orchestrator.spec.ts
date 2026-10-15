@@ -348,6 +348,12 @@ describe('orchestrator', () => {
     return dir;
   }
 
+  function runDirNames(): string[] {
+    return readdirSync(migrateRunsDir(root), { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name);
+  }
+
   function handoffPathIn(dir: string, pkg: string, name: string): string {
     const step = readRunState(dir).steps.find(
       (s) => s.kind === 'migration' && s.migrationId === `${pkg}:${name}`
@@ -1494,12 +1500,6 @@ describe('orchestrator', () => {
     });
     const sha = (n: number) => n.toString(16).padStart(40, '0');
 
-    function runDirNames(): string[] {
-      return readdirSync(migrateRunsDir(root), { withFileTypes: true })
-        .filter((e) => e.isDirectory())
-        .map((e) => e.name);
-    }
-
     it('records the checked-out branch on a new run', async () => {
       mockGetGitCurrentBranch.mockReturnValue('feature/upgrade');
       await runOrchestratorInit(initInput({ migrations: [] }));
@@ -2313,12 +2313,6 @@ describe('orchestrator', () => {
     });
     const pendingStep = () => [migStep('step-1', '@nx/js:a', 'pending')];
 
-    function runDirNames(): string[] {
-      return readdirSync(migrateRunsDir(root), { withFileTypes: true })
-        .filter((e) => e.isDirectory())
-        .map((e) => e.name);
-    }
-
     function holdAs(dir: string, pid: number): FileLock {
       mkdirSync(join(dir, 'activity'), { recursive: true });
       const holder = new FileLock(join(dir, 'activity', `${pid}-cafe.lock`));
@@ -2380,11 +2374,6 @@ describe('orchestrator', () => {
 
     it.each([
       [
-        'an active run',
-        () => setupRun('run-1', { steps: pendingStep() }),
-        "Not running the migration while migrate run 'run-1' is in use: process 999 is still working on it. Wait for it to end, then re-run the command.",
-      ],
-      [
         'another --run-migration run',
         () =>
           setupRun('run-1', { steps: pendingStep(), singleMigration: true }),
@@ -2407,18 +2396,14 @@ describe('orchestrator', () => {
         },
         "Not running the migration while migrate run 'run-1' is in use: process 999 is still working on it. Wait for it to end, then re-run the command.",
       ],
-    ])(
-      'refuses while another process works on %s, removing nothing',
-      (_, setup, message) => {
-        const holder = holdAs(setup(), 999);
-        try {
-          expect(() => prepareSingleMigrationRun(root)).toThrow(message);
-        } finally {
-          holder.unlock();
-        }
-        expect(runDirNames()).toEqual(['run-1']);
+    ])('refuses while another process works on %s', (_, setup, message) => {
+      const holder = holdAs(setup(), 999);
+      try {
+        expect(() => prepareSingleMigrationRun(root)).toThrow(message);
+      } finally {
+        holder.unlock();
       }
-    );
+    });
 
     it('runs alongside a finished run another process still holds', () => {
       const holder = holdAs(
@@ -2430,15 +2415,6 @@ describe('orchestrator', () => {
       } finally {
         holder.unlock();
       }
-    });
-
-    it("ignores an older nx's agentic scratch directory under WASM", () => {
-      mkdirSync(join(migrateRunsDir(root), '21.0.0', 'handoffs'), {
-        recursive: true,
-      });
-      wasm.active = true;
-
-      expect(() => prepareSingleMigrationRun(root)).not.toThrow();
     });
 
     it('refuses a new run under WASM while a lock file marks a run being started', () => {

@@ -26,6 +26,7 @@ import {
   deleteRunForStartFresh,
   refuseNewRunAlongsideLiveRun,
 } from './run/orchestrator';
+import { isHeld } from './run/state-lock';
 import {
   type MigrateRunState,
   migrationIdProblems,
@@ -50,6 +51,7 @@ mockCjsModule(import.meta.url, './run', {
   deleteRunForStartFresh: (...args: unknown[]) =>
     mockDeleteRunForStartFresh(...args),
   checkRunsForSingleMigration,
+  isHeld,
   refuseNewRunAlongsideLiveRun,
   latestRound,
   migrationIdProblems,

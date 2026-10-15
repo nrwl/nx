@@ -30,8 +30,7 @@ export interface RunbookContext {
   createCommits: boolean;
   validate: boolean;
   finalValidation: boolean;
-  // A `--run-migration` run: one step, no issue ledger, and a record nx
-  // deletes when the run ends.
+  // A `--run-migration` run: one step and no issue ledger.
   singleMigration: boolean;
 }
 

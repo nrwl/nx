@@ -1,5 +1,5 @@
-// Contract wording the runbook (run/runbook.ts), the dispensed step blocks and
-// the final validation instructions must state identically.
+// The runbook's (run/runbook.ts) contract wording. The dispensed step blocks
+// and the final validation instructions reuse parts of it word for word.
 
 import { formatCommandFor } from '../format-command';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../types';

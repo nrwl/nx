@@ -49,6 +49,8 @@ export type {
 
 export { createRunId } from './run-id';
 
+export { isHeld } from './state-lock';
+
 export { pmInstallCommand } from './util';
 
 export { runSingleMigrationWorker } from './worker';

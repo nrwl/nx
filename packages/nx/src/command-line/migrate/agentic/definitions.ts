@@ -92,7 +92,7 @@ export function encodeTomlString(value: string): string {
   return encoded;
 }
 
-export const codexDefinition: AgentDefinition = {
+const codexDefinition: AgentDefinition = {
   id: 'codex',
   displayName: 'OpenAI Codex',
   binaryNames: ['codex'],

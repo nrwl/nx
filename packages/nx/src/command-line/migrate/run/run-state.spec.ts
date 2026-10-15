@@ -1298,17 +1298,6 @@ describe('run-state', () => {
           createdAt: '2026-01-03T00:00:00.000Z',
         })
       );
-      // a --run-migration run's record: never an active run
-      writeRun(
-        root,
-        'single',
-        buildState({
-          runId: 'single',
-          status: 'active',
-          createdAt: '2026-01-04T00:00:00.000Z',
-          singleMigration: true,
-        })
-      );
       // legacy per-version runner dir: no run.json, must be ignored
       mkdirSync(join(migrateRunsDir(root), 'legacy'), { recursive: true });
       // corrupt run.json: must not crash the scan or win, but must be reported

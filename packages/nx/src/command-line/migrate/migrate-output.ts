@@ -5,7 +5,7 @@ import { isHybridMigration } from './migration-shape';
 /**
  * Pure presentation helpers for the migrate run phase (`--run-migrations` and
  * the single-migration worker). Shared glyph vocabulary:
- *   `→` start, `✓` success, `✗` failure, `↷` skipped, `ℹ` info, `─` boundary
+ *   `→` start, `↷` skipped, `ℹ` info, `─` boundary
  *
  * Inputs are typed structurally (e.g. `{ name: string }[]`) so this module
  * stays decoupled from the migration executor in migrate.ts.

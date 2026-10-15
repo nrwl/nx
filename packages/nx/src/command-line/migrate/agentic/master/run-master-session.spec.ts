@@ -44,6 +44,7 @@ import { output } from '../../../../utils/output';
 import type { ExistingRunFacts } from '../../run/existing-run-report';
 import type { MigrateRunState } from '../../run/run-state';
 import {
+  driveMasterSession,
   runMasterSession,
   type RunMasterSessionInput,
 } from './run-master-session';
@@ -181,6 +182,7 @@ describe('runMasterSession', () => {
       runbookPath: ready.runbookPath,
       reconcileCommand: ready.reconcileCommand,
       policy: { createCommits: false, skipInstall: false },
+      singleMigration: false,
     });
     expect(mockReadRunState).toHaveBeenCalledWith(
       join(root, '.nx', 'migrate-runs', runId)
@@ -646,6 +648,51 @@ describe('runMasterSession', () => {
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
     expect(mockReadRunState).not.toHaveBeenCalled();
     expect(mockRunComplete).not.toHaveBeenCalled();
+  });
+
+  describe('a --run-migration session', () => {
+    const drive = () =>
+      driveMasterSession({
+        agent: input().agent,
+        ready,
+        policy: { createCommits: false, skipInstall: false },
+        migration: { package: '@nx/js', name: 'p' },
+        notStartedHint: 'Re-run the same command.',
+      });
+
+    it('reports a session that could not start with the migration and the given hint', async () => {
+      const error = new Error('spawn claude ENOENT');
+      mockSpawnMaster.mockResolvedValue({ kind: 'spawn-failed', error });
+
+      expect(await drive()).toBeNull();
+
+      expect(mockSpawnMaster).toHaveBeenCalledWith(
+        expect.objectContaining({ singleMigration: true })
+      );
+      expect(errorSpy).toHaveBeenCalledWith({
+        title: 'Could not start Claude Code: spawn claude ENOENT',
+        bodyLines: ['Re-run the same command.'],
+      });
+      expect(mockRunError).toHaveBeenCalledWith({
+        code: 'agentic',
+        migrationPackage: '@nx/js',
+        migrationName: 'p',
+        error,
+      });
+    });
+
+    it('names the migration when its state cannot be read', async () => {
+      mockReadRunState.mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory, open run.json');
+      });
+
+      expect(await drive()).toBeNull();
+
+      expect(errorSpy).toHaveBeenCalledWith({
+        title: 'Nx could not determine whether migration @nx/js:p completed.',
+        bodyLines: ['ENOENT: no such file or directory, open run.json'],
+      });
+    });
   });
   it('exits 1 with the error, the error and abandonment events and the resume hint when the session had to be closed on an unanswered request and the run is still active', async () => {
     const error = new Error('EACCES: permission denied, rename');

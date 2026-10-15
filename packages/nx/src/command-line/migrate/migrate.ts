@@ -3116,6 +3116,7 @@ async function settleActiveRunForClassic(
   const {
     activeRunForClassic,
     checkRunForStartFresh,
+    isHeld,
     renderContinueCommand,
     renderExistingRunCommands,
     renderExistingRunReport,
@@ -3139,8 +3140,7 @@ async function settleActiveRunForClassic(
   const { runId, facts } = active;
   // Start fresh refuses while another process holds the run, so a held run
   // leaves nothing to ask; an agent cannot answer a prompt.
-  const held =
-    facts.otherHolders === 'unknown' || facts.otherHolders.length > 0;
+  const held = isHeld(facts.otherHolders);
   if (
     opts.startFresh !== true &&
     !held &&

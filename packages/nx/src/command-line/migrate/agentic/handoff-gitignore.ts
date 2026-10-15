@@ -9,20 +9,12 @@ import {
 } from './types';
 
 /**
- * The orchestrator writes its run scratch under `.nx/migrate-runs/<run-id>/`
- * at init, before any migration runs. The v23 migration
- * `23-0-0-add-migrate-runs-to-git-ignore` adds `.nx/migrate-runs` to
- * `.gitignore`, so this applies its body inline against an `FsTree` first;
- * otherwise the run's commits would absorb the scratch into the user-visible
- * diff. It commits nothing: the orchestrator applies it before its init
- * checkpoint, which carries the edit when commits are on and the checkpoint
- * succeeds.
- *
- * A planned v23 migration means the entry is still owed, so it applies
- * whatever the installed version, and that migration then changes nothing in
- * its own step. When the v23 migration is not planned and nx is at v23 or
- * later, the user is already past v23. They had the entry historically; if it
- * is gone, that is a conscious removal we respect.
+ * Applies the v23 migration `23-0-0-add-migrate-runs-to-git-ignore` inline:
+ * the orchestrator writes run scratch at init, before that migration runs, and
+ * the run's commits would otherwise absorb it. Commits nothing; the init
+ * checkpoint carries the edit when commits are on and the checkpoint succeeds.
+ * Skipped at nx v23 or later unless the v23 migration is planned: a missing
+ * entry is then a conscious removal.
  */
 export async function applyAgenticHandoffGitignoreFallback({
   migrations,

@@ -52,21 +52,6 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     rmSync(workspace, { recursive: true, force: true });
   });
 
-  it('applies the entry when the migration is in the queue, even at nx v23+', async () => {
-    // The orchestrator's run scratch exists before the planned migration runs,
-    // and a planned migration means the missing entry is not a conscious
-    // removal.
-    writeFileSync(gitignorePath(), 'node_modules\n');
-    await applyAgenticHandoffGitignoreFallback({
-      migrations: [HANDOFF_GITIGNORE_MIGRATION],
-      installedNxVersion: '23.0.0',
-      root: workspace,
-    });
-    expect(readFileSync(gitignorePath(), 'utf-8')).toContain(
-      '.nx/migrate-runs'
-    );
-  });
-
   it('does nothing when the migration is not in the queue and installed nx is at v23+ (respect conscious removal)', async () => {
     writeFileSync(gitignorePath(), 'node_modules\n');
     await applyAgenticHandoffGitignoreFallback({

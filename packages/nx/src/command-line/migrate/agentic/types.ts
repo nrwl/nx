@@ -3,19 +3,19 @@ export type { AgentId };
 
 /**
  * Workspace-relative directory holding all migrate-run scratch: a run
- * directory per run id. Shared by the run-dir layout in `handoff.ts` and the
+ * directory per run id. Shared by the run-dir layout in `run-state.ts` and the
  * agent permission rules in `definitions.ts` so the pre-authorized write scope
  * can't drift from the actual layout. It lives here so `definitions.ts`,
- * loaded whenever the agentic flow is resolved, doesn't pull in the handoff
- * runtime for the path alone.
+ * loaded whenever the agentic flow is resolved, doesn't pull in the run state
+ * module for the path alone.
  */
 export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
 
 /**
  * The one subtree of a run directory an agent writes; everything beside it is
  * state Nx owns, so the pre-authorized write scope stops here. Handoff names
- * derive from step ids or package and migration names, so flattening them into
- * the run dir would leave Nx no name it could safely add.
+ * derive from step ids, so flattening them into the run dir would leave Nx no
+ * name it could safely add.
  */
 export const HANDOFFS_DIR_NAME = 'handoffs';
 
@@ -83,8 +83,7 @@ export interface AgentDefinition {
 
 /**
  * Output of the agent's handoff file, written at the end of an agentic step.
- * The two locked fields drive the failure-handling matrix in the design doc;
- * extra fields are tolerated and surfaced via `extras`.
+ * Extra fields are tolerated and surfaced via `extras`.
  */
 export interface HandoffFile {
   status: 'success' | 'failed';

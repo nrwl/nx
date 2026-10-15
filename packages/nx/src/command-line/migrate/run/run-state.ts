@@ -340,10 +340,27 @@ export interface MigrateRunState {
   // the working tree. Set before the operation and cleared by its owner after
   // the state that records it is written; a dead owner pid voids it.
   treeOperation?: MigrateTreeOperation;
-  // Set on the record of a `--run-migration` run. Active-run discovery skips
-  // it, and the run removes it when it ends.
+  // Set on the record of a `--run-migration` run, which active-run discovery
+  // skips.
   singleMigration?: boolean;
   analytics: MigrateRunAnalytics;
+}
+
+// A `--run-migration` record is 'single' whatever its status.
+export function runKind(
+  state: MigrateRunState
+): 'single' | 'active' | 'finished' {
+  if (state.singleMigration === true) return 'single';
+  switch (state.status) {
+    case 'active':
+      return 'active';
+    case 'completed':
+      return 'finished';
+    default: {
+      const unhandled: never = state.status;
+      throw new Error(`Unhandled migrate run status: ${unhandled}`);
+    }
+  }
 }
 
 export const TREE_OPERATION_KINDS = [
@@ -971,7 +988,7 @@ export function findActiveRun(root: string): {
       });
       continue;
     }
-    if (state.status !== 'active' || state.singleMigration === true) continue;
+    if (runKind(state) !== 'active') continue;
     // Run ids are joined into paths and interpolated into dispensed commands,
     // so a dir whose name fails the gate is never trusted as a resumable run.
     if (!RUN_ID_SAFE.test(entry.name)) {

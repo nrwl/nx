@@ -8,27 +8,19 @@ export function writeInstructionsFile(
   instructions: string
 ): string {
   const absolutePath = join(promptsDir, 'instructions.md');
-  writeStepFile(absolutePath, instructions, 'instructions');
-  // Workspace-relative: the agent resolves this one itself with its cwd pinned
-  // to the workspace root. Forward slashes because it is read as prose out of
-  // the agent's prompt, where a `\` is an escape.
-  return relative(workspaceRoot, absolutePath).replace(/\\/g, '/');
-}
-
-function writeStepFile(
-  filePath: string,
-  contents: string,
-  purpose: string
-): void {
   try {
-    writeFileSync(filePath, contents, 'utf-8');
+    writeFileSync(absolutePath, instructions, 'utf-8');
   } catch (err) {
     const code = (err as NodeJS.ErrnoException)?.code;
     throw new Error(
-      `Could not write the step's ${purpose} to ${filePath}${
+      `Could not write the step's instructions to ${absolutePath}${
         code ? ` (${code})` : ''
       }: ${err instanceof Error ? err.message : String(err)}`,
       { cause: err }
     );
   }
+  // Workspace-relative: the agent resolves this one itself with its cwd pinned
+  // to the workspace root. Forward slashes because it is read as prose out of
+  // the agent's prompt, where a `\` is an escape.
+  return relative(workspaceRoot, absolutePath).replace(/\\/g, '/');
 }
