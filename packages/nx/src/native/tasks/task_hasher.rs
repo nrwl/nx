@@ -13,7 +13,7 @@ use crate::native::{
 };
 use crate::native::{
     project_graph::utils::ProjectRootMappings,
-    tasks::hashers::{hash_cwd, hash_env, hash_runtime},
+    tasks::hashers::{RuntimeCache, hash_cwd, hash_env, hash_runtime},
 };
 use crate::native::{
     tasks::hashers::{
@@ -536,7 +536,7 @@ impl TaskHasher {
     {
         // Per-invocation: these read live disk/exec state (task outputs, shell commands,
         // json file contents) that can change mid-run, so they must not persist.
-        let runtime_cache: DashMap<String, String> = DashMap::new();
+        let runtime_cache = RuntimeCache::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
         let files_expansion_cache = FilesExpansionCache::new();
         // Deduplicates env-dependent hash values (Environment, Runtime)
@@ -1043,7 +1043,7 @@ struct HashInstructionArgs<'a> {
     project_root_mappings: &'a ProjectRootMappings,
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
-    runtime_cache: &'a DashMap<String, String>,
+    runtime_cache: &'a RuntimeCache,
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
