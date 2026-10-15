@@ -5,7 +5,6 @@ import { getLatestCommitSha, isGitRepository } from '../../../utils/git-utils';
 import { readJsonFile } from '../../../utils/fileutils';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { readModulePackageJson } from '../../../utils/package-json';
-import { output } from '../../../utils/output';
 import { printDroppedAgentContextForOuterAgent } from '../agentic/print-dropped-agent-context';
 import {
   dropUnsupportedAgent,
@@ -91,7 +90,12 @@ import {
   type TreeScope,
 } from './broker';
 import { singleLine } from '../text';
-import { emitPromptBlock, logToAgent, warnToAgent } from './agent-output';
+import {
+  emitPromptBlock,
+  errorToAgent,
+  logToAgent,
+  warnToAgent,
+} from './agent-output';
 import {
   agentWorkPayloadPath,
   latestStoredAgentWorkPayload,
@@ -496,12 +500,12 @@ async function runAgenticSingleMigration(
       'single-run-parent'
     );
     if (!parked) {
-      output.log({ title: `Migration ${migrationId} is complete.` });
+      logToAgent({ title: `Migration ${migrationId} is complete.` });
       reportMigrateSingleMigrationComplete({});
       return;
     }
 
-    output.log({
+    logToAgent({
       title: `Starting ${agent.displayName} for migration ${migrationId}.`,
     });
     const { driveMasterSession } =
@@ -518,12 +522,12 @@ async function runAgenticSingleMigration(
     switch (state.status) {
       case 'active':
         reportMigrateSingleMigrationAbandoned({ agentUsed: agent.id });
-        output.warn({ title: rerunHint });
+        warnToAgent({ title: rerunHint });
         return 1;
       case 'completed': {
         const unresolved = logSingleMigrationOutcome(state, migrationId);
         for (const lines of completionWarnings(root, runId, state)) {
-          output.warn({ title: lines[0], bodyLines: lines.slice(1) });
+          warnToAgent({ title: lines[0], bodyLines: lines.slice(1) });
         }
         reportMigrateSingleMigrationComplete({ agentUsed: agent.id });
         return unresolved ? 1 : undefined;
@@ -552,7 +556,7 @@ function logSingleMigrationOutcome(
   ];
   switch (step.status) {
     case 'succeeded':
-      output.log({
+      logToAgent({
         title: `Migration ${migrationId} is complete.`,
         // Adopt writes outcome.summary; promptOutcome still holds the failed
         // handoff.
@@ -564,7 +568,7 @@ function logSingleMigrationOutcome(
       });
       return false;
     case 'skipped':
-      output.log({
+      logToAgent({
         title: `Migration ${migrationId} was skipped.`,
         // After a --step-action skip, promptOutcome is the failed handoff's.
         bodyLines: outcomeLines(
@@ -575,7 +579,7 @@ function logSingleMigrationOutcome(
       });
       return false;
     case 'unresolved':
-      output.error({
+      errorToAgent({
         title: `Migration ${migrationId} is unresolved.`,
         bodyLines: outcomeLines(unresolvedFailureDetail(step)),
       });

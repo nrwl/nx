@@ -3105,6 +3105,7 @@ describe('runSingleMigrationWorker', () => {
       expect(output.warn).toHaveBeenCalledWith({
         title:
           'Migration @nx/js:p did not finish. Re-run the same command to run it again.',
+        bodyLines: [],
       });
       expect(mockReportSingleAbandoned).toHaveBeenCalledWith({
         agentUsed: 'claude-code',
