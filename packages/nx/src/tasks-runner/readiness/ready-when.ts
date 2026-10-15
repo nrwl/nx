@@ -16,7 +16,7 @@ import {
 } from '../tokens';
 import { getExecutorForTask } from '../utils';
 
-const DEFAULT_READY_TIMEOUT = 60_000;
+export const DEFAULT_READY_TIMEOUT = 60_000;
 // Node timers take at most a signed 32-bit count of milliseconds
 const MAX_DURATION = 2_147_483_647;
 

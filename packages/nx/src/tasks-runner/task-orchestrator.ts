@@ -57,6 +57,7 @@ import { terminalOutputPathForHash } from './terminal-output-path';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { waitForReadiness } from './readiness/probes';
 import {
+  DEFAULT_READY_TIMEOUT,
   getReadyProducerIds,
   getReadyWhen,
   getReadyWhenConfig,
@@ -2089,7 +2090,28 @@ export class TaskOrchestrator {
     const producerIds = getReadyProducerIds(task, this.fullTaskGraph);
     for (const producerId of producerIds) {
       const producer = this.fullTaskGraph.tasks[producerId];
-      const readyWhen = this.getReadyWhenWait(producer);
+      let readyWhen: ReadyWhenWait | null;
+      try {
+        readyWhen = this.getReadyWhenWait(producer);
+      } catch (e) {
+        // An owner in another process runs it unchecked and marks its row
+        // failed, or drops the row. Without a row, nothing will settle it.
+        if (
+          !(e instanceof InvalidReadyWhenError) ||
+          this.taskGraph.tasks[producerId]
+        ) {
+          throw e;
+        }
+        this.onReadinessHold(producerId);
+        const owned = await this.pollReadinessRow(producer, {
+          timeout: DEFAULT_READY_TIMEOUT,
+          description: 'invalid',
+        });
+        if (!owned) {
+          throw e;
+        }
+        continue;
+      }
       if (!readyWhen) {
         if (process.env.NX_VERBOSE_LOGGING === 'true') {
           console.log(
@@ -2121,14 +2143,14 @@ export class TaskOrchestrator {
   }
 
   // A row absent from the start means no Nx process this one can see owns the
-  // producer, unless the caller already saw the owner: then it exited. A row
-  // that disappears mid-wait means the producer exited.
+  // producer (resolves false), unless the caller already saw the owner: then it
+  // exited. A row that disappears mid-wait means the producer exited.
   private async pollReadinessRow(
     producer: Task,
     readyWhen: ReadyWhenWait,
     signal?: AbortSignal,
     ownerObserved = false
-  ): Promise<void> {
+  ): Promise<boolean> {
     const deadline = Date.now() + readyWhen.timeout;
     let lastStatus: TaskReadiness | null = null;
     while (true) {
@@ -2144,14 +2166,14 @@ export class TaskOrchestrator {
         if (lastStatus !== null || ownerObserved) {
           throw notReadyError(producer.id, 'exited');
         }
-        return;
+        return false;
       }
       if (status !== lastStatus) {
         lastStatus = status;
         this.options.lifeCycle.setTaskReadiness?.(producer.id, status);
       }
       if (status === TaskReadiness.Ready) {
-        return;
+        return true;
       }
       if (status === TaskReadiness.Failed) {
         throw new ProducerFailedError(producer.id);

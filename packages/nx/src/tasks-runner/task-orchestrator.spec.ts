@@ -2614,6 +2614,39 @@ describe('TaskOrchestrator', () => {
       expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
     });
 
+    it.each([
+      ['pending, then failed', 0, 2, 'skipped', ''],
+      ['failed, then gone', 2, null, 'skipped', ''],
+      [
+        'pending, then gone',
+        0,
+        null,
+        'failure',
+        'Task "app:serve" exited before it became ready.',
+      ],
+      [
+        'absent',
+        null,
+        null,
+        'failure',
+        'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 1 to 65535.',
+      ],
+    ])(
+      'settles a waiter on a producer with an invalid readyWhen when its row is %s',
+      async (_, first, then, status, terminalOutput) => {
+        const { orchestrator, e2e } = createOrchestrator({
+          flat: true,
+          readyWhen: { port: 0 },
+        });
+        orchestrator.runningTasksService.getTaskReadiness
+          .mockReturnValueOnce(first)
+          .mockReturnValue(then);
+        await expect(
+          orchestrator.runTaskDirectly(true, e2e, 1)
+        ).resolves.toMatchObject({ task: e2e, status, terminalOutput });
+      }
+    );
+
     describe('dispatch', () => {
       it('keeps the summary output style silent about the wait', () => {
         const { orchestrator } = createOrchestrator();
