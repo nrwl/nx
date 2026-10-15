@@ -63,7 +63,7 @@ View the project's configuration to see a list of the outputs which are defined 
 ## Configure outputs
 
 The tasks you run in your workspace will likely already have `outputs` defined.
-Be sure to [view the existing outputs](#viewing-outputs-of-a-task) and start from there.
+Be sure to [view the existing outputs](#view-outputs-of-a-task) and start from there.
 
 Nx Plugins often [infer outputs for tasks](/docs/concepts/mental-model#inferred-tasks) which run other tools.
 Nx Plugins will look at the configuration files and/or command-line-arguments of the tools in your workspace to understand the outputs of running those tools.
@@ -76,7 +76,7 @@ In some cases, Nx plugins may not infer the outputs of a task as you expect, the
 - The `outputs` array for a specific target in the project configuration file.
 
 {% aside title="Copy the existing outputs before modifying outputs for a task" %}
-To override the `outputs` of a task, start by copying over the entire array shown when [viewing the project details](#viewing-the-outputs-of-a-task) and then add/modify/remove outputs as needed.
+To override the `outputs` of a task, start by copying over the entire array shown when viewing the project details and then add/modify/remove outputs as needed.
 {% /aside %}
 
 As you configure `outputs`, keep the project details screen open and it will refresh as changes are made. Check to make sure that the intended configuration is shown.
