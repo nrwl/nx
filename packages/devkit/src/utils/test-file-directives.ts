@@ -4,84 +4,60 @@ import type { TargetConfiguration } from 'nx/src/devkit-exports';
 import { emitPluginWorkerLog } from 'nx/src/devkit-internals';
 import { parseNxDirectives } from './nx-directives';
 import {
-  dependsOnProjects,
+  readDependsOnDirective,
   scopeTestTargetToProjects,
 } from './test-file-depends-on';
-import { findUnsupportedUltracacheValue } from './ultracache-directive';
 import { withoutServerInputs } from './without-server-inputs';
 
-const TEST_FILE_DIRECTIVES = ['depends-on', 'ultracache'] as const;
-
-/** An `@nx-<name>` directive a plugin can apply to a test file's target. */
-type TestFileDirective = (typeof TEST_FILE_DIRECTIVES)[number];
-
 /**
- * `target` with the `@nx-*` directives of a workspace-relative test file
- * applied, for the directives in `supported`. A directive that is not
- * supported, has an unsupported value or lists no projects is skipped with a
- * warning.
+ * `target` with the `@nx-depends-on` directive of a workspace-relative test
+ * file applied. A directive that lists no projects, mixes `NONE` with projects,
+ * or uses `NONE` without `dependsOnNone` is skipped with a warning.
  */
 export function applyTestFileDirectives(
   target: TargetConfiguration,
   workspaceRoot: string,
   file: string,
-  supported: readonly TestFileDirective[]
+  options: { dependsOnNone: boolean }
 ): TargetConfiguration {
-  const directives = parseNxDirectives(
+  const values = parseNxDirectives(
     readFileSync(join(workspaceRoot, file), 'utf-8')
-  );
-  let result = target;
-  for (const directive of TEST_FILE_DIRECTIVES) {
-    const values = directives.get(directive);
-    if (values === undefined) {
-      continue;
-    }
-    if (!supported.includes(directive)) {
-      emitPluginWorkerLog(
-        'warn',
-        `${file}: "@nx-${directive}" is not supported in this test file, so Nx ignores it.`
-      );
-      continue;
-    }
-    result = applyDirective(result, directive, values, file);
+  ).get('depends-on');
+  if (values === undefined) {
+    return target;
   }
-  return result;
-}
-
-function applyDirective(
-  target: TargetConfiguration,
-  directive: TestFileDirective,
-  values: string[],
-  file: string
-): TargetConfiguration {
-  switch (directive) {
-    case 'depends-on': {
-      const projects = dependsOnProjects(values);
-      if (projects.length === 0) {
+  const directive = readDependsOnDirective(values);
+  switch (directive.kind) {
+    case 'projects':
+      return scopeTestTargetToProjects(target, directive.projects);
+    case 'none':
+      if (!options.dependsOnNone) {
         emitPluginWorkerLog(
           'warn',
-          `${file}: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.`
-        );
-        return target;
-      }
-      return scopeTestTargetToProjects(target, projects);
-    }
-    case 'ultracache': {
-      const unsupported = findUnsupportedUltracacheValue(values);
-      if (unsupported !== undefined) {
-        emitPluginWorkerLog(
-          'warn',
-          `${file}: "@nx-ultracache:${unsupported && ` ${unsupported}`}" is not supported, so Nx ignores "@nx-ultracache" in this file. Use "@nx-ultracache: imports".`
+          `${file}: "@nx-depends-on: NONE" is not supported in this test file, so Nx ignores it.`
         );
         return target;
       }
       return target.dependsOn
         ? { ...target, dependsOn: withoutServerInputs(target.dependsOn) }
         : target;
-    }
+    case 'empty':
+      emitPluginWorkerLog(
+        'warn',
+        `${file}: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.`
+      );
+      return target;
+    case 'mixed':
+      emitPluginWorkerLog(
+        'warn',
+        `${file}: "@nx-depends-on" combines NONE with project names, so Nx ignores it. Use NONE alone or list only projects.`
+      );
+      return target;
     default: {
       const unhandled: never = directive;
-      throw new Error(`Unhandled test file directive: ${unhandled}`);
+      throw new Error(
+        `Unhandled @nx-depends-on directive: ${JSON.stringify(unhandled)}`
+      );
     }
   }
 }

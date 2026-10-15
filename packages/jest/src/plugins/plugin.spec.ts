@@ -671,23 +671,20 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       }
     });
 
-    it('ignores "@nx-ultracache" with a warning naming the file, and still applies "@nx-depends-on"', async () => {
+    it('ignores NONE with a warning naming the file', async () => {
       await tempFs.createFiles({
-        'proj/src/feature.spec.ts':
-          '// @nx-depends-on: feature\n// @nx-ultracache: imports\n',
+        'proj/src/feature.spec.ts': '// @nx-depends-on: NONE\n',
       });
       const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       try {
         const targets = await atomizedTargets();
 
-        expect(targets['test-ci--src/feature.spec.ts'].inputs).toContainEqual({
-          input: 'production',
-          projects: ['feature'],
-          always: true,
-        });
+        expect(targets['test-ci--src/feature.spec.ts'].inputs).toEqual(
+          targets['test'].inputs
+        );
         expect(warn).toHaveBeenCalledWith(
-          'proj/src/feature.spec.ts: "@nx-ultracache" is not supported in this test file, so Nx ignores it.'
+          'proj/src/feature.spec.ts: "@nx-depends-on: NONE" is not supported in this test file, so Nx ignores it.'
         );
       } finally {
         warn.mockRestore();

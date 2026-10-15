@@ -1,15 +1,35 @@
 import {
-  dependsOnProjects,
+  readDependsOnDirective,
   scopeTestTargetToProjects,
 } from './test-file-depends-on';
 
-describe('dependsOnProjects', () => {
-  it('merges several directives and drops duplicates', () => {
-    expect(dependsOnProjects(['a, b', 'b,c'])).toEqual(['a', 'b', 'c']);
-  });
-
-  it('returns no projects for a directive that lists none', () => {
-    expect(dependsOnProjects(['', ' , '])).toEqual([]);
+describe('readDependsOnDirective', () => {
+  it.each([
+    [
+      'merges several directives and drops duplicates',
+      ['a, b', 'b,c'],
+      { kind: 'projects', projects: ['a', 'b', 'c'] },
+    ],
+    [
+      'reads a lowercase none as a project',
+      ['none'],
+      { kind: 'projects', projects: ['none'] },
+    ],
+    ['finds no entries', ['', ' , '], { kind: 'empty' }],
+    ['reads NONE alone', ['NONE'], { kind: 'none' }],
+    [
+      'reads NONE repeated with empty entries as NONE alone',
+      ['NONE,', 'NONE'],
+      { kind: 'none' },
+    ],
+    ['rejects NONE with projects on one line', ['NONE, a'], { kind: 'mixed' }],
+    [
+      'rejects NONE with projects across lines',
+      ['a', 'NONE'],
+      { kind: 'mixed' },
+    ],
+  ])('%s', (_, values, expected) => {
+    expect(readDependsOnDirective(values)).toEqual(expected);
   });
 });
 

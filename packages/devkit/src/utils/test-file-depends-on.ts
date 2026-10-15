@@ -1,8 +1,19 @@
 import type { TargetConfiguration } from 'nx/src/devkit-exports';
 import { withoutServerInputs } from './without-server-inputs';
 
-/** The distinct projects the `@nx-depends-on` values name. */
-export function dependsOnProjects(values: string[]): string[] {
+const NONE = 'NONE';
+
+export type DependsOnDirective =
+  | { kind: 'projects'; projects: string[] }
+  | { kind: 'none' }
+  | { kind: 'empty' }
+  | { kind: 'mixed' };
+
+/**
+ * The distinct projects the `@nx-depends-on` values name, or whether they are
+ * `NONE` alone, empty, or `NONE` mixed with projects.
+ */
+export function readDependsOnDirective(values: string[]): DependsOnDirective {
   const projects = new Set<string>();
   for (const value of values) {
     for (const project of value.split(',')) {
@@ -12,7 +23,13 @@ export function dependsOnProjects(values: string[]): string[] {
       }
     }
   }
-  return [...projects];
+  if (projects.size === 0) {
+    return { kind: 'empty' };
+  }
+  if (!projects.has(NONE)) {
+    return { kind: 'projects', projects: [...projects] };
+  }
+  return projects.size === 1 ? { kind: 'none' } : { kind: 'mixed' };
 }
 
 /**
