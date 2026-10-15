@@ -9,7 +9,7 @@ import {
   type MigratePromptChoices,
   reportMigratePrompt,
 } from '../migrate-analytics';
-import type { MigrationIdProblem } from '../run/run-state';
+import type { MigrationIdProblem } from '../run';
 import { migrateChoice } from '../safe-prompt';
 import { singleLine } from '../text';
 import { detectInstalledAgents } from './detect-installed';
