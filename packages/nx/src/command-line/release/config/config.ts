@@ -1448,7 +1448,6 @@ function isProjectPublic(
   }
 }
 
-// The tokens each field is interpolated with during a release
 const releaseTagPatternTokens = ['version', 'projectName', 'releaseGroupName'];
 const commitMessageTokens = ['version', 'projectName'];
 const changelogFileTokens = ['projectName', 'projectRoot', 'workspaceRoot'];
@@ -1495,7 +1494,6 @@ function validateReleaseConfigTokens(
   }
 }
 
-/** Validates a commit message passed in place of the configured one */
 export function validateCommitMessageTokens(commitMessage: string): void {
   validateReleaseConfigTemplate(commitMessage, commitMessageTokens);
 }
