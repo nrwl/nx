@@ -120,7 +120,7 @@ describe('GeneratePackageJsonPlugin', () => {
     ]);
   });
 
-  it('adds a runtime dependency installed under the workspace root whose exports map hides package.json', () => {
+  it('adds runtime dependencies installed under the workspace root, including hidden manifests and npm aliases', () => {
     const tempFs = new TempFs('runtime-deps-', false);
     try {
       tempFs.createFilesSync({
@@ -130,10 +130,14 @@ describe('GeneratePackageJsonPlugin', () => {
           exports: { '.': './index.js', './*': './*.js' },
         }),
         'node_modules/fixture-runtime-dependency/index.js': '',
+        'node_modules/runtime-alias/package.json': JSON.stringify({
+          name: 'fixture-runtime-target',
+          version: '1.0.0',
+        }),
       });
 
       const { emitAsset } = runPlugin(
-        ['fixture-runtime-dependency'],
+        ['fixture-runtime-dependency', 'runtime-alias'],
         tempFs.tempDir
       );
 
@@ -142,6 +146,7 @@ describe('GeneratePackageJsonPlugin', () => {
       );
       expect(JSON.parse(manifest.source()).dependencies).toEqual({
         'fixture-runtime-dependency': '2.0.0',
+        'runtime-alias': 'npm:fixture-runtime-target@1.0.0',
       });
     } finally {
       tempFs.cleanup();

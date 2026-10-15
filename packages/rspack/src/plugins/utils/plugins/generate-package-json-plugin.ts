@@ -37,7 +37,9 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
           __dirname,
           this.options.root,
         ]).packageJson;
-        runtimeDependencies[name] = version;
+        // An npm alias installs `name` under the folder `dep`, so keep the alias for `require(dep)` to resolve.
+        runtimeDependencies[dep] =
+          name === dep ? version : `npm:${name}@${version}`;
       }
     }
     return runtimeDependencies;
