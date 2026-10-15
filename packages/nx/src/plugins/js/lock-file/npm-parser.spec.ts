@@ -1809,6 +1809,101 @@ describe('NPM lock file utility', () => {
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
     });
+
+    // https://github.com/nrwl/nx/issues/37247
+    it('should nest a workspace dependency that npm installed under the workspace', () => {
+      // the app uses wt@2 (hoisted), lib-a pins wt@1, which npm nests under libs/lib-a
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { '@myorg/lib-a': 'file:libs/lib-a', wt: '^2.0.0' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '0.0.1',
+            dependencies: { wt: '1.0.0' },
+          },
+          'libs/lib-a/node_modules/rs': { version: '1.0.0' },
+          'libs/lib-a/node_modules/wt': {
+            version: '1.0.0',
+            dependencies: { rs: '^1.0.0' },
+          },
+          'node_modules/@myorg/lib-a': {
+            resolved: 'libs/lib-a',
+            link: true,
+          },
+          'node_modules/rs': { version: '2.0.0' },
+          'node_modules/wt': {
+            version: '2.0.0',
+            dependencies: { rs: '^2.0.0' },
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'file:libs/lib-a', wt: '^2.0.0' },
+      };
+
+      const npmNode = (
+        packageName: string,
+        version: string,
+        hoisted: boolean
+      ) => ({
+        type: 'npm' as const,
+        name: hoisted ? `npm:${packageName}` : `npm:${packageName}@${version}`,
+        data: { version, packageName, hash: `${packageName}-${version}` },
+      });
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {
+          'npm:wt': npmNode('wt', '2.0.0', true),
+          'npm:rs': npmNode('rs', '2.0.0', true),
+          'npm:wt@1.0.0': npmNode('wt', '1.0.0', false),
+          'npm:rs@1.0.0': npmNode('rs', '1.0.0', false),
+        },
+        { '@myorg/lib-a': ['npm:wt@1.0.0'] }
+      );
+      graph.dependencies['npm:wt'] = [
+        { source: 'npm:wt', target: 'npm:rs', type: 'static' as any },
+      ];
+      graph.dependencies['npm:wt@1.0.0'] = [
+        {
+          source: 'npm:wt@1.0.0',
+          target: 'npm:rs@1.0.0',
+          type: 'static' as any,
+        },
+      ];
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages['node_modules/wt'].version).toEqual('2.0.0');
+      expect(result.packages['node_modules/rs'].version).toEqual('2.0.0');
+      expect(
+        result.packages['workspace_modules/@myorg/lib-a/node_modules/wt']
+          .version
+      ).toEqual('1.0.0');
+      expect(
+        result.packages['workspace_modules/@myorg/lib-a/node_modules/rs']
+          .version
+      ).toEqual('1.0.0');
+    });
   });
 });
 
