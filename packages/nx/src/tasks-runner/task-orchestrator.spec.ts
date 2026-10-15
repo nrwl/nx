@@ -2786,11 +2786,11 @@ describe('TaskOrchestrator', () => {
       });
 
       it.each([
-        ['an owned', []],
-        ['a shared', ['app:serve']],
+        ['an owned', [], 2],
+        ['a shared', ['app:serve'], 0],
       ])(
         'runs %s producer with an invalid readyWhen without a check when nothing waits for it to be ready',
-        async (_, running) => {
+        async (_, running, rowReadiness) => {
           const { orchestrator, serve, runningTask } = createOrchestrator({
             readyWhen: { port: 0 },
             waitFor: 'started',
@@ -2808,7 +2808,17 @@ describe('TaskOrchestrator', () => {
           );
           orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
           orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
-          orchestrator.runningTasksService.getRunningTasks = () => running;
+          // The native rows: a claim resets the task's readiness to Pending
+          const readiness = new Map<string, number>(
+            running.map((id) => [id, 0])
+          );
+          Object.assign(orchestrator.runningTasksService, {
+            getRunningTasks: () => running,
+            addRunningTask: (id: string) => readiness.set(id, 0),
+            setTaskReadiness: (id: string, status: number) => {
+              if (readiness.has(id)) readiness.set(id, status);
+            },
+          });
           const log = vi.spyOn(console, 'log').mockImplementation(() => {});
           try {
             const started = await orchestrator.startContinuousTask(serve, 1);
@@ -2819,6 +2829,8 @@ describe('TaskOrchestrator', () => {
             expect(orchestrator.runningContinuousTasks.has('app:serve')).toBe(
               true
             );
+            // A waiter in another process polls the owner's row
+            expect(readiness.get('app:serve')).toBe(rowReadiness);
             expect(
               orchestrator.options.lifeCycle.appendTaskOutput
             ).toHaveBeenCalledWith(

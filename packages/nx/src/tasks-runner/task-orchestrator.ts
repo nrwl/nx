@@ -1989,6 +1989,8 @@ export class TaskOrchestrator {
       this.tasksSchedule.markContinuousTaskStarted(task.id);
       if (uncheckedReason) {
         this.warnUncheckedReadiness(task, uncheckedReason);
+        // No probe settles the row, and a waiter in another process polls it
+        this.publishReadiness(task, TaskReadiness.Failed);
       }
       if (readyWhen) {
         this.startReadinessProbe(task, readyWhen, childProcess);
@@ -2238,10 +2240,13 @@ export class TaskOrchestrator {
     }
   }
 
-  // The probe's verdict stands for local waiters even when the row for
-  // other processes cannot be written
   private recordReadiness(task: Task, status: TaskReadiness) {
     this.options.lifeCycle.setTaskReadiness?.(task.id, status);
+    this.publishReadiness(task, status);
+  }
+
+  // Only other processes read the row, so a failed write must not fail this one
+  private publishReadiness(task: Task, status: TaskReadiness) {
     try {
       this.runningTasksService?.setTaskReadiness(task.id, status);
     } catch (e) {
