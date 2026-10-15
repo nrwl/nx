@@ -2486,27 +2486,31 @@ describe('TaskOrchestrator', () => {
     });
 
     it('resolves the probe of a producer it starts against the env it starts it with', async () => {
-      const { orchestrator, serve, runningTask } = createOrchestrator({
-        readyWhen: { logMatches: 'ready {env.NX_TASK_TARGET_PROJECT}' },
+      vi.stubEnv('NX_TASK_TARGET_PROJECT', 'ambient');
+      onTestFinished(() => {
+        vi.unstubAllEnvs();
       });
+      const { orchestrator, serve, e2e, runningTask, emit, settled } =
+        createOrchestrator({
+          readyWhen: { logMatches: 'ready {env.NX_TASK_TARGET_PROJECT}' },
+        });
       orchestrator.runningTasksService.getRunningTasks = () => [];
       orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
       orchestrator.runTask = vi.fn(async () =>
         Object.assign(runningTask, { onExit: vi.fn() })
       );
-      orchestrator.startReadinessProbe = vi.fn();
       orchestrator.options.skipNxCache = false;
       orchestrator.continuousTaskExitHandled = new Map();
       orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
       orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
 
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
       await orchestrator.startContinuousTask(serve, 1);
-
-      expect(orchestrator.startReadinessProbe).toHaveBeenCalledWith(
-        serve,
-        expect.objectContaining({ logMatches: ['ready app'] }),
-        runningTask
-      );
+      await expect(settled(waiting)).resolves.toBe('pending');
+      emit('ready {env.NX_TASK_TARGET_PROJECT}');
+      await expect(settled(waiting)).resolves.toBe('pending');
+      emit('ready app');
+      await expect(settled(waiting)).resolves.toBe('resolved');
     });
 
     it('fails the waiter when the row is still pending at its own deadline', async () => {

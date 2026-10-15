@@ -103,6 +103,24 @@ describe('normalizeReadyWhen', () => {
     ).toMatchObject({ url });
   });
 
+  it('reads env tokens case-insensitively on Windows', () => {
+    const platform = process.platform;
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    onTestFinished(() => {
+      Object.defineProperty(process, 'platform', { value: platform });
+    });
+    const normalize = (readyWhen: any) =>
+      normalizeReadyWhen(readyWhen, 'app:serve', {
+        ...data,
+        env: () => ({ Port: '5000' }),
+      });
+
+    expect(normalize({ port: '{env.PORT}' })).toMatchObject({ port: 5000 });
+    expect(() => normalize({ port: '{env.READY_PORT}' })).toThrow(
+      'Task "app:serve" has an invalid "readyWhen": "{env.READY_PORT}" has no value'
+    );
+  });
+
   it.each([
     ['ready on', 'expected an object'],
     [{}, 'expected exactly one of'],
