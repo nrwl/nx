@@ -1,8 +1,9 @@
-const DIRECTIVE = /^@nx-([\w-]+):(.*)$/;
+const DIRECTIVE = /^@nx-([\w-]+)(?::(.*))?$/;
 
 /**
  * The `@nx-<name>: <value>` directives in the comment block that opens a file,
- * by name, with their trimmed values in order. Reading stops at the first line
+ * by name, with their trimmed values in order. A bare `@nx-<name>` has the
+ * value `''`. Reading stops at the first line
  * that is not blank, a shebang or a comment.
  */
 export function parseNxDirectives(content: string): Map<string, string[]> {
@@ -41,7 +42,7 @@ export function parseNxDirectives(content: string): Map<string, string[]> {
     }
     const match = line.trim().match(DIRECTIVE);
     if (match) {
-      const [, name, value] = match;
+      const [, name, value = ''] = match;
       const values = directives.get(name);
       if (values) {
         values.push(value.trim());
