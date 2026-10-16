@@ -9,7 +9,7 @@ import {
   formatFiles,
   runTasksInSerial,
 } from '@nx/devkit';
-import { ensureTypescriptPluginForTsSolution } from '@nx/js/internal';
+import { ensureTypescriptPlugin } from '@nx/js/internal';
 import { InitGeneratorSchema } from './schema';
 import { createNodes } from '../../plugins/plugin';
 import { nxVersion } from '../../utils/versions';
@@ -69,11 +69,6 @@ export async function initGeneratorInternal(
         devTargetName: ['dev', 'rsbuild:dev', 'rsbuild-dev'],
         previewTargetName: ['preview', 'rsbuild:preview', 'rsbuild-preview'],
         inspectTargetName: ['inspect', 'rsbuild:inspect', 'rsbuild-inspect'],
-        typecheckTargetName: [
-          'typecheck',
-          'rsbuild:typecheck',
-          'rsbuild-typecheck',
-        ],
         buildDepsTargetName: [
           'build-deps',
           'rsbuild:build-deps',
@@ -88,10 +83,7 @@ export async function initGeneratorInternal(
 
       schema.updatePackageScripts
     );
-    await ensureTypescriptPluginForTsSolution(
-      tree,
-      schema.updatePackageScripts
-    );
+    await ensureTypescriptPlugin(tree, schema.updatePackageScripts);
   }
 
   const tasks: GeneratorCallback[] = [];

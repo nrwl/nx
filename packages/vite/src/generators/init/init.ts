@@ -9,7 +9,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 
-import { ensureTypescriptPluginForTsSolution } from '@nx/js/internal';
+import { ensureTypescriptPlugin } from '@nx/js/internal';
 import { setupPathsPlugin } from '../setup-paths-plugin/setup-paths-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
@@ -80,9 +80,10 @@ export async function initGeneratorInternal(
       },
       schema.updatePackageScripts
     );
-    await ensureTypescriptPluginForTsSolution(
+    await ensureTypescriptPlugin(
       tree,
-      schema.updatePackageScripts
+      schema.updatePackageScripts,
+      '@nx/vite/plugin'
     );
   }
 
