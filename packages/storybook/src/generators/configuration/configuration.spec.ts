@@ -197,7 +197,6 @@ describe('@nx/storybook:configuration', () => {
           await configurationGenerator(tree, {
             project: 'test-ui-lib',
             uiFramework: '@storybook/react-vite',
-            addPlugin: true,
           });
 
           const main = tree.read('test-ui-lib/.storybook/main.ts', 'utf-8');
