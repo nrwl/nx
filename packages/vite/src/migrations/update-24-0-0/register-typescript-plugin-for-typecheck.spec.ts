@@ -40,7 +40,7 @@ describe('register-typescript-plugin-for-typecheck migration', () => {
 
     expect(await update(tree)).toBeUndefined();
 
-    expect(readNxJson(tree).plugins[1]).toEqual({
+    expect(readNxJson(tree).plugins[0]).toEqual({
       plugin: '@nx/js/typescript',
       options: { typecheck: { targetName: 'check' } },
     });
@@ -54,9 +54,25 @@ describe('register-typescript-plugin-for-typecheck migration', () => {
     expect(tree.read('nx.json', 'utf-8')).toBe(before);
   });
 
-  it('should not touch a workspace without a TS solution setup', async () => {
+  it('should register @nx/js/typescript outside a TS solution setup', async () => {
     tree.delete('tsconfig.json');
     setPlugins(['@nx/vite/plugin']);
+
+    expect(await update(tree)).toBeUndefined();
+
+    expect(readNxJson(tree).plugins).toEqual([
+      {
+        plugin: '@nx/js/typescript',
+        options: { typecheck: { targetName: 'typecheck' } },
+      },
+      '@nx/vite/plugin',
+    ]);
+  });
+
+  it('should skip registrations that disable the typecheck target', async () => {
+    setPlugins([
+      { plugin: '@nx/vite/plugin', options: { typecheckTargetName: false } },
+    ]);
     const before = tree.read('nx.json', 'utf-8');
 
     expect(await update(tree)).toEqual({ skipAgentic: true });

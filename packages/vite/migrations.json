@@ -62,7 +62,7 @@
     },
     "update-24-0-0-register-typescript-plugin-for-typecheck": {
       "version": "24.0.0-beta.0",
-      "description": "Register @nx/js/typescript with its typecheck target in TS solution workspaces that use @nx/vite/plugin without it, since @nx/vite/plugin no longer infers typecheck targets in TS solution setups.",
+      "description": "Register @nx/js/typescript with its typecheck target in workspaces that use @nx/vite/plugin without it, since @nx/vite/plugin no longer infers typecheck targets except for Vue projects.",
       "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
       "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
     }

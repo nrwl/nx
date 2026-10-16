@@ -1,8 +1,8 @@
-#### Register `@nx/js/typescript` for typecheck targets in TS solution workspaces
+#### Register `@nx/js/typescript` for typecheck targets
 
-In TS solution workspaces, `@nx/vite/plugin` no longer infers a `typecheck` target; `@nx/js/typescript` provides it instead. Vue projects keep their `vue-tsc` typecheck target from `@nx/vite/plugin`. This migration registers `@nx/js/typescript` with only its typecheck target when the workspace uses `@nx/vite/plugin` and doesn't register `@nx/js/typescript` yet, so your projects keep a `typecheck` target.
+`@nx/vite/plugin` no longer infers a `typecheck` target, except for Vue projects, which keep their `vue-tsc` target. `@nx/js/typescript` provides the `typecheck` target instead, in all workspaces. This migration registers `@nx/js/typescript` with only its typecheck target when the workspace uses `@nx/vite/plugin` and doesn't register `@nx/js/typescript` yet, so your projects keep a `typecheck` target.
 
-The new registration reuses the plugin's `typecheckTargetName`. Registrations with `typecheckTargetName: false` are skipped, and workspaces that aren't TS solution setups are left unchanged.
+The new registration reuses the plugin's `typecheckTargetName`. Registrations with `typecheckTargetName: false` are skipped.
 
 #### Sample code changes
 
