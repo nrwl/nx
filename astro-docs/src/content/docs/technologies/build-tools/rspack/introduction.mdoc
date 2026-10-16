@@ -106,18 +106,24 @@ Nx checks this address:
 When the port is `0`, or you pass `--port auto`, the dev server picks its port when it starts, so Nx skips the check.
 A task that waits for `serve` or `preview` then runs once they start.
 
+When the configuration sets `devServer.ipc`, or the port isn't a number when Nx builds the project graph, Nx waits for the dev server to log its address instead.
+The port isn't a number when the configuration computes it from an environment variable that is unset at that point.
+For example, `port: Number(process.env.APP_PORT)` gives `NaN` when `APP_PORT` is set only in the project's `.env` file, because Nx loads that file only for tasks.
+When `infrastructureLogging.level` is `none`, `error`, or `warn`, or `infrastructureLogging` sets its own `console` or `stream`, Nx skips this check and a waiting task runs once the dev server starts.
+
 The `serve-static` task is ready once the file server accepts connections on its `host` and `port` options.
 
 When the port Nx checks is taken, the file server moves to the next free port.
 The dev server does the same when the port is unset or `devServer.port` is `auto`.
 Nx keeps checking the original port, so the process already listening there counts as ready.
 
-Nx checks the wrong port in these cases:
+Nx checks the wrong port, or waits for a line the dev server never logs, in these cases:
 
-- The configuration reads the port from an environment variable, such as `port: Number(process.env.APP_PORT)`. Nx reads the configuration when it builds the project graph and caches the result. It doesn't see a value that changes between runs, or one that the target's `env` option sets.
+- The configuration reads the port from an environment variable, such as `port: process.env.APP_PORT` or `port: Number(process.env.APP_PORT) || 4200`. Nx reads the configuration when it builds the project graph and caches the result. It doesn't see a value that changes between runs, or one that only the task's environment sets, such as the project's `.env` file or the target's `env` option.
 - An Rspack plugin changes `devServer.port`. Nx reads the configuration without running its plugins.
 - The port comes from a `--port` flag inside the `args` option, such as `"args": ["--port=4300"]`. Nx follows the `port` option, which `args` doesn't set. Pass the port as the `port` option or as `--port` on the command line instead.
 - You select a configuration with `--config-name`, and it isn't the first one that sets `devServer`. Nx still checks the port of the first one.
+- Nx waits for the dev server to log its address, and an Rspack plugin that intercepts infrastructure logging hides that line.
 
 When another task waits for that check, Nx fails the dev server task after 60 seconds, and the waiting task doesn't run.
 To fix it, set `readyWhen` yourself.
