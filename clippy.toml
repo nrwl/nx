@@ -6,6 +6,14 @@ disallowed-methods = [
   { path = "std::path::Path::canonicalize", reason = "Use dunce::canonicalize; std returns a Windows extended-length verbatim path that mismatches normal paths" },
 ]
 
+await-holding-invalid-types = [
+  # The registry keeps entered spans on a per-thread stack. A guard held across
+  # `.await` exits on whichever worker the task resumes on, leaving a stale id
+  # on the original one that later panics in tracing-subscriber's clone_span.
+  { path = "tracing::span::Entered", reason = "Instrument the future with `.instrument(span)` instead of holding an entered guard across `.await`" },
+  { path = "tracing::span::EnteredSpan", reason = "Instrument the future with `.instrument(span)` instead of holding an entered guard across `.await`" },
+]
+
 disallowed-types = [
   # We need to ensure adjustments for light and dark themes are applied appropriately
   { path = "ratatui::style::Color", reason = "Use our utils from crate::native::tui::colors instead to ensure appropriate light/dark theme support" },
