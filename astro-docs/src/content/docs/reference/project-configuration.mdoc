@@ -750,7 +750,10 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 {% /aside %}
 
 {% aside type="note" title="Nx Cloud only" %}
-Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it. Applying a recording additionally needs [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) set in CI, and a recording for the task in question. See [task sandboxing](/docs/kb/sandboxing).
+Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it.
+Applying a recording also needs a CI run, a recording for the task in question, and Ultracache turned on for your workspace in Nx Cloud.
+Setting [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false` turns it off for a run.
+See [task sandboxing](/docs/kb/sandboxing).
 {% /aside %}
 
 A target that defines `ultracache` replaces the inherited settings rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoreReads` and `ignoreWrites` to keep inherited patterns.
