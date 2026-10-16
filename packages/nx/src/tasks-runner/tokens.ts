@@ -27,8 +27,8 @@ export interface TokenScope {
   /** The value of `{name}` or `{name.path}` */
   read(name: string, path: string | undefined): unknown;
   /**
-   * Where `env.` references read from. When absent, a token that references
-   * `env` is left as written.
+   * Where `env.` references read from. When absent, `env.` is not a token, so
+   * `{env.X}` stays text and a fallback `env.X` is a literal.
    */
   env?: { read: () => NodeJS.ProcessEnv } | { reject: () => Error };
   /** The text of a token with no value and no literal fallback */
@@ -86,9 +86,6 @@ export function resolveToken(
   scope: TokenScope,
   renderLiteral: (nodes: TokenNode[]) => string
 ): string {
-  if (!scope.env && readsEnv(token.parts)) {
-    return token.raw;
-  }
   for (const part of token.parts) {
     if (part.kind === 'literal') {
       return renderLiteral(part.nodes);
@@ -163,7 +160,8 @@ function parseReference(
   const path = dot === -1 ? undefined : source.slice(dot + 1);
   const isReference =
     name === 'env'
-      ? path !== undefined &&
+      ? scope.env !== undefined &&
+        path !== undefined &&
         ENV_NAME.test(path) &&
         (!first || scope.isToken(name, path))
       : scope.isToken(name, path);

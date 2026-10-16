@@ -47,15 +47,6 @@ describe('utils', () => {
         'https://npm-registry.example.com/'
       );
     });
-
-    it('should leave env tokens as written', () => {
-      expect(
-        interpolate('{projectRoot}/{options.out ?? env.OUT}', {
-          projectRoot: 'a',
-          options: {},
-        })
-      ).toEqual('a/{options.out ?? env.OUT}');
-    });
   });
 
   describe('getOutputsForTargetAndConfiguration', () => {
@@ -350,19 +341,16 @@ describe('utils', () => {
       ).toEqual(['myapp/shard-0-false']);
     });
 
-    it('should throw when an output reads an environment variable', () => {
-      expect(() =>
+    it('should use a fallback that starts with env. as a path', () => {
+      expect(
         getOutputsForTargetAndConfiguration(
           task.target,
           task.overrides,
           getNode({
-            outputs: ['{options.outputPath ?? {workspaceRoot}/{env.OUT}}'],
-            options: { outputPath: 'dist' },
+            outputs: ['{projectRoot}/{options.outputFile ?? env.json}'],
           })
         )
-      ).toThrow(
-        "Output '{options.outputPath ?? {workspaceRoot}/{env.OUT}}' is invalid. Outputs can't read environment variables"
-      );
+      ).toEqual(['myapp/env.json']);
     });
 
     it('should keep a glob that starts with env. as written', () => {
@@ -370,9 +358,19 @@ describe('utils', () => {
         getOutputsForTargetAndConfiguration(
           task.target,
           task.overrides,
-          getNode({ outputs: ['{projectRoot}/src/{env.ts,env.d.ts}'] })
+          getNode({
+            outputs: [
+              '{projectRoot}/src/{env.ts,env.d.ts}',
+              '{projectRoot}/{env.json}',
+              '{options.outputPath ?? {projectRoot}/dist/{env.json}}',
+            ],
+          })
         )
-      ).toEqual(['myapp/src/{env.ts,env.d.ts}']);
+      ).toEqual([
+        'myapp/src/{env.ts,env.d.ts}',
+        'myapp/{env.json}',
+        'myapp/dist/{env.json}',
+      ]);
     });
 
     it('should support interpolation based on configuration-specific options', () => {

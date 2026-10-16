@@ -395,27 +395,20 @@ export function interpolateOutput(
 ): string {
   // A leading `!` is negation, not part of the path: strip it so
   // `{workspaceRoot}` still sits where interpolate requires it.
-  return interpolate(
-    output.startsWith('!') ? output.substring(1) : output,
-    {
-      projectRoot: node.data.root,
-      projectName: node.name,
-      project: { ...node.data, name: node.name }, // this is legacy
-      options,
-    },
-    {
-      envNotAllowed: (template) =>
-        `Output '${template}' is invalid. Outputs can't read environment variables, because they are resolved once with the task graph, and the task can run on a machine with a different environment.`,
-    }
-  );
+  return interpolate(output.startsWith('!') ? output.substring(1) : output, {
+    projectRoot: node.data.root,
+    projectName: node.name,
+    project: { ...node.data, name: node.name }, // this is legacy
+    options,
+  });
 }
 
 /**
  * Resolves Nx tokens in a path, where each token names a key of `data`
  * (`{projectRoot}/dist`, `{options.outputPath ?? dist/{projectRoot}}`).
  * Paths starting with `/` are returned as written. A token with no value
- * stays as written. An `env.` token stays as written too, unless
- * `envNotAllowed` is given: then it throws with that message.
+ * stays as written. `env.` is text, unless `envNotAllowed` is given: then it
+ * throws with that message.
  */
 export function interpolate(
   template: string,
