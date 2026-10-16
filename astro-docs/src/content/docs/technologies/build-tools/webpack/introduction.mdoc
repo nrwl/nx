@@ -140,6 +140,7 @@ Nx checks the wrong port, or waits for a line the dev server never logs, in thes
 - A Webpack plugin changes `devServer.port`. Nx reads the configuration without running its plugins.
 - The port comes from a `--port` flag inside the `args` option, such as `"args": ["--port=4300"]`. Nx follows the `port` option, which `args` doesn't set. Pass the port as the `port` option or as `--port` on the command line instead.
 - You select a configuration with `--config-name`, and it isn't the last one that sets `devServer`. Nx still checks the port of the last one.
+- You pass `--ipc`, and the configuration doesn't set `devServer.ipc`. The dev server then listens on a socket, and Nx still checks the port.
 - Nx waits for the dev server to log its address, and the `--infrastructure-logging-level` flag or a Webpack plugin that intercepts infrastructure logging hides that line.
 
 When another task waits for that check, Nx fails the dev server task after 60 seconds, and the waiting task doesn't run.
