@@ -1948,7 +1948,6 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput
           );
-      // Resolved against the env the task is started with
       readyWhen = this.getReadyWhen(task, env);
       await this.waitForReadyDependencies(task);
     } catch (e) {
