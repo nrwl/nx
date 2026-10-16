@@ -260,6 +260,119 @@ describe('utils', () => {
       ).toEqual([]);
     });
 
+    it.each([
+      [{}, ['dist/myapp']],
+      [{ outputPath: 'build/myapp' }, ['build/myapp']],
+    ])(
+      'should resolve ?? fallbacks with overrides %j',
+      (overrides, outputs) => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task.target,
+            overrides,
+            getNode({
+              outputs: [
+                '{options.outputPath ?? {workspaceRoot}/dist/{projectRoot}}',
+              ],
+            })
+          )
+        ).toEqual(outputs);
+      }
+    );
+
+    it.each([
+      ['dist/', 'myapp/dist/myapp'],
+      ['../', 'myapp'],
+    ])(
+      'should keep the separator a fallback literal ends with: %s',
+      (dir, output) => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task.target,
+            task.overrides,
+            getNode({
+              outputs: [`{projectRoot}/{options.dir ?? ${dir}}{projectName}`],
+            })
+          )
+        ).toEqual([output]);
+      }
+    );
+
+    it.each([
+      ['myapp', '{options.dir ?? /root/build/myapp}', '/root/build/myapp'],
+      [
+        '.',
+        '{projectRoot}/{options.dir ?? /root/build/myapp}',
+        '/root/build/myapp',
+      ],
+      [
+        'myapp',
+        '{projectRoot}/{options.dir ?? /root/build/myapp}',
+        'myapp/root/build/myapp',
+      ],
+    ])(
+      'should resolve a fallback literal starting with / like the same option value (root %s): %s',
+      (root, output, expected) => {
+        const node = getNode({ outputs: [output] });
+        node.data.root = root;
+        expect(
+          getOutputsForTargetAndConfiguration(task.target, {}, node)
+        ).toEqual([expected]);
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task.target,
+            { dir: '/root/build/myapp' },
+            node
+          )
+        ).toEqual([expected]);
+      }
+    );
+
+    it('should interpolate options set to 0 or false', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: ['{projectRoot}/shard-{options.shard}-{options.cache}'],
+            options: { shard: 0, cache: false },
+          })
+        )
+      ).toEqual(['myapp/shard-0-false']);
+    });
+
+    it('should use a fallback that starts with env. as a path', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: ['{projectRoot}/{options.outputFile ?? env.json}'],
+          })
+        )
+      ).toEqual(['myapp/env.json']);
+    });
+
+    it('should keep a glob that starts with env. as written', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: [
+              '{projectRoot}/src/{env.ts,env.d.ts}',
+              '{projectRoot}/{env.json}',
+              '{options.outputPath ?? {projectRoot}/dist/{env.json}}',
+            ],
+          })
+        )
+      ).toEqual([
+        'myapp/src/{env.ts,env.d.ts}',
+        'myapp/{env.json}',
+        'myapp/dist/{env.json}',
+      ]);
+    });
+
     it('should support interpolation based on configuration-specific options', () => {
       expect(
         getOutputsForTargetAndConfiguration(

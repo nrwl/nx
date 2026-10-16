@@ -598,6 +598,10 @@ For more information on how `nx release` works, see [manage releases](/docs/feat
 
 The full list of configuration options available for `"release"` can be found here: [https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts) under `NxReleaseConfiguration`.
 
+Placeholders in release configuration, such as `{version}` in a tag pattern,
+can't list fallbacks with `??`.
+Only Docker `versionSchemes` can read environment variables with `{env.*}`.
+
 ### Projects
 
 If you want to limit the projects that `nx release` targets, you can use the `projects` property in `nx.json` to do so. This property is either a string, or an array of strings. The strings can be project names, glob patterns, directories, tag references or anything else that is supported by the `--projects` filter you may know from other commands such as `nx run`.

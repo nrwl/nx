@@ -14,6 +14,7 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
+import { readEnv } from '../../tasks-runner/tokens';
 import type { Task } from '../../config/task-graph';
 import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
@@ -71,7 +72,8 @@ export class ParallelRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    task: Pick<Task, 'id' | 'ultracache'>
+    task: Pick<Task, 'id' | 'ultracache'>,
+    baseEnv?: NodeJS.ProcessEnv
   ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
@@ -83,7 +85,8 @@ export class ParallelRunningTasks implements RunningTask {
           options.readyWhenStatus,
           options.streamOutput,
           options.envFile,
-          task
+          task,
+          baseEnv
         )
     );
     this.readyWhenStatus = options.readyWhenStatus;
@@ -252,7 +255,8 @@ export class SeriallyRunningTasks implements RunningTask {
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
     private readonly tuiEnabled: boolean,
-    private readonly task: Pick<Task, 'id' | 'ultracache'>
+    private readonly task: Pick<Task, 'id' | 'ultracache'>,
+    private readonly baseEnv?: NodeJS.ProcessEnv
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -329,7 +333,8 @@ export class SeriallyRunningTasks implements RunningTask {
         options.usePty,
         options.streamOutput,
         options.tty,
-        options.envFile
+        options.envFile,
+        this.baseEnv
       );
       this.currentProcess = childProcess;
 
@@ -362,7 +367,8 @@ export class SeriallyRunningTasks implements RunningTask {
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
-    envFile?: string
+    envFile?: string,
+    baseEnv?: NodeJS.ProcessEnv
   ): Promise<PseudoTtyProcess | RunningNodeProcess> {
     // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
     // currently does not work properly in windows
@@ -383,7 +389,8 @@ export class SeriallyRunningTasks implements RunningTask {
         env,
         streamOutput,
         tty,
-        envFile
+        envFile,
+        baseEnv
       );
 
       // Register process for metrics collection (direct run-commands execution)
@@ -404,7 +411,8 @@ export class SeriallyRunningTasks implements RunningTask {
       [],
       streamOutput,
       envFile,
-      task
+      task,
+      baseEnv
     );
   }
 }
@@ -437,9 +445,10 @@ class RunningNodeProcess implements RunningTask {
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
     private readonly streamOutput = true,
     envFile: string,
-    private task: Pick<Task, 'id' | 'ultracache'>
+    private task: Pick<Task, 'id' | 'ultracache'>,
+    baseEnv?: NodeJS.ProcessEnv
   ) {
-    env = processEnv(color, cwd, env, envFile);
+    env = processEnv(color, cwd, env, envFile, baseEnv);
     this.command = commandConfig.command;
     const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
     this.terminalOutputChunks.push(header);
@@ -636,7 +645,8 @@ class RunningNodeProcess implements RunningTask {
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
   context: ExecutorContext,
-  task: Pick<Task, 'id' | 'ultracache'>
+  task: Pick<Task, 'id' | 'ultracache'>,
+  baseEnv?: NodeJS.ProcessEnv
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(
@@ -647,7 +657,8 @@ export async function runSingleCommandWithPseudoTerminal(
     normalized.env,
     normalized.streamOutput,
     pseudoTerminal ? normalized.isTTY : false,
-    normalized.envFile
+    normalized.envFile,
+    baseEnv
   );
 
   // Register process for metrics collection (direct run-commands execution)
@@ -669,11 +680,12 @@ async function createProcessWithPseudoTty(
   env: Record<string, string>,
   streamOutput: boolean = true,
   tty: boolean,
-  envFile?: string
+  envFile?: string,
+  baseEnv?: NodeJS.ProcessEnv
 ) {
   return pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
-    jsEnv: processEnv(color, cwd, env, envFile),
+    jsEnv: processEnv(color, cwd, env, envFile, baseEnv),
     quiet: !streamOutput,
     tty,
   });
@@ -702,7 +714,7 @@ function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
   return out;
 }
 
-function calculateCwd(
+export function calculateCwd(
   cwd: string | undefined,
   context: ExecutorContext
 ): string {
@@ -715,21 +727,22 @@ function calculateCwd(
  * Env variables are processed in the following order:
  * - env option from executor options
  * - env file from envFile option if provided
- * - local env variables
+ * - local env variables, read from `baseEnv`
  */
-function processEnv(
+export function processEnv(
   color: boolean,
   cwd: string,
   envOptionFromExecutor: Record<string, string>,
-  envFile?: string
+  envFile?: string,
+  baseEnv: NodeJS.ProcessEnv = process.env
 ) {
-  let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
+  let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd(), env: baseEnv });
   localEnv = {
-    ...process.env,
+    ...baseEnv,
     ...localEnv,
   };
 
-  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false' && envFile) {
+  if (readEnv(baseEnv, 'NX_LOAD_DOT_ENV_FILES') !== 'false' && envFile) {
     loadEnvVarsFile(envFile, localEnv);
   }
   let res: Record<string, string> = {

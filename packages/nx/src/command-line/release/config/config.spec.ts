@@ -13154,6 +13154,66 @@ describe('createNxReleaseConfig()', () => {
     });
   });
 
+  describe('release config tokens', () => {
+    const env = "It can't read environment variables";
+    const fallback = "It can't use ?? fallbacks";
+
+    it.each([
+      [
+        'v{version}{env.S}',
+        { releaseTag: { pattern: 'v{version}{env.S}' } },
+        env,
+      ],
+      ['/release {env.C}', { git: { commitMessage: '/release {env.C}' } }, env],
+      [
+        '{env.F}',
+        { changelog: { projectChangelogs: { file: '{env.F}' } } },
+        env,
+      ],
+      [
+        '{env.E}',
+        { changelog: { projectChangelogs: { entryWhenNoChanges: '{env.E}' } } },
+        env,
+      ],
+      [
+        '{env.R}',
+        { changelog: { workspaceChangelog: { renderer: '{env.R}' } } },
+        env,
+      ],
+      [
+        '{projectName ?? releaseGroupName}-v{version}',
+        {
+          releaseTag: {
+            pattern: '{projectName ?? releaseGroupName}-v{version}',
+          },
+        },
+        fallback,
+      ],
+      [
+        '/release {version ?? next}',
+        { git: { commitMessage: '/release {version ?? next}' } },
+        fallback,
+      ],
+    ])(
+      'rejects %s when the config is loaded',
+      async (template, config, reason) => {
+        await expect(
+          createNxReleaseConfig(projectGraph, projectFileMap, config)
+        ).rejects.toThrow(
+          `Release configuration '${template}' is invalid. ${reason}`
+        );
+      }
+    );
+
+    it('keeps ?? that is not part of a release placeholder', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        git: { commitMessage: 'chore(release): a ?? b {version} {foo ?? bar}' },
+      });
+
+      expect(res.error).toBeNull();
+    });
+  });
+
   describe('default releaseTag.pattern values', () => {
     it('should have a default pattern of v{version}', async () => {
       const res = await createNxReleaseConfig(projectGraph, projectFileMap, {});

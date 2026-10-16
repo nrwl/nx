@@ -1,4 +1,5 @@
 import { relative } from 'path';
+import type { ExecutorContext } from '../../config/misc-interfaces';
 import type { ProjectGraph } from '../../config/project-graph';
 import type { Task, TaskGraph } from '../../config/task-graph';
 import type {
@@ -6,6 +7,13 @@ import type {
   ReadyWhen,
 } from '../../config/workspace-json-project-json';
 import { combineOptionsForExecutor, type Options } from '../../utils/params';
+import {
+  parseTokens,
+  readPath,
+  renderTokens,
+  type TokenNode,
+  type TokenScope,
+} from '../tokens';
 import { getExecutorForTask } from '../utils';
 
 const DEFAULT_READY_TIMEOUT = 60_000;
@@ -13,24 +21,49 @@ const DEFAULT_READY_TIMEOUT = 60_000;
 const MAX_DURATION = 2_147_483_647;
 
 // No interval means the probe's own default applies
-export type NormalizedReadyWhen = { timeout: number; interval?: number } & (
-  | { kind: 'url'; url: string }
-  | { kind: 'port'; port: number; host?: string }
-  | { kind: 'command'; command: string }
-  | { kind: 'logMatches'; logMatches: string[] }
+type ReadyWhenProbe<Deferred> = { timeout: number; interval?: number } & (
+  | { kind: 'url'; url: string | Deferred }
+  | { kind: 'port'; port: number | Deferred; host?: string | Deferred }
+  | { kind: 'command'; command: string | Deferred }
+  | { kind: 'logMatches'; logMatches: (string | Deferred)[] }
 );
+
+export type NormalizedReadyWhen = ReadyWhenProbe<never>;
+
+// A process that doesn't run the producer only waits on its readiness row
+export interface ReadyWhenWait {
+  timeout: number;
+  description: string;
+}
 
 const PROBE_KEYS = ['url', 'port', 'command', 'logMatches'] as const;
 
-// The placeholders `outputs` resolve, matched by name so that braces a shell
-// command needs (`{{.State.Health.Status}}`, `${VAR}`, `{a,b}`) stay literal
-const PLACEHOLDER = /{(workspaceRoot|projectRoot|projectName|options\.[^}]+)}/g;
+class EnvUnknownHere extends Error {}
+
+// A value that reads the producer's env. It keeps its written form, and
+// getReadyWhen checks it in the process that runs the producer
+class EnvDeferred {
+  constructor(private readonly written: string) {}
+
+  toString() {
+    return this.written;
+  }
+}
+
+// `options` and `env` are tokens only with a path, so shell text such as
+// `${options}` stays as written
+const PATHLESS_TOKENS = new Set([
+  'workspaceRoot',
+  'projectRoot',
+  'projectName',
+]);
 
 export interface ReadyWhenData {
   workspaceRoot: string;
   projectRoot: string;
   projectName: string;
   options: Record<string, unknown>;
+  env: () => NodeJS.ProcessEnv;
 }
 
 export function normalizeReadyWhen(
@@ -38,6 +71,15 @@ export function normalizeReadyWhen(
   taskId: string,
   data: ReadyWhenData
 ): NormalizedReadyWhen {
+  // Only checkReadyWhen's env throws EnvUnknownHere, so nothing is deferred
+  return resolveReadyWhen(readyWhen, taskId, data) as NormalizedReadyWhen;
+}
+
+function resolveReadyWhen(
+  readyWhen: ReadyWhen,
+  taskId: string,
+  data: ReadyWhenData
+): ReadyWhenProbe<EnvDeferred> {
   const invalid = (reason: string) =>
     new Error(`Task "${taskId}" has an invalid "readyWhen": ${reason}.`);
 
@@ -46,22 +88,42 @@ export function normalizeReadyWhen(
   }
 
   const config = readyWhen as unknown as Record<string, unknown>;
-  const resolve = (value: unknown): unknown =>
-    typeof value === 'string'
-      ? value.replace(PLACEHOLDER, (match, name: string) => {
-          let resolved: unknown = data;
-          for (const key of name.split('.')) {
-            resolved = resolved?.[key];
-          }
-          if (resolved == null) {
-            throw invalid(`"${match}" has no value`);
-          }
-          if (!['string', 'number', 'boolean'].includes(typeof resolved)) {
-            throw invalid(`"${match}" is not a string or a number`);
-          }
-          return String(resolved);
-        })
-      : value;
+  const scope: TokenScope = {
+    isToken: (name, path) =>
+      path === undefined
+        ? PATHLESS_TOKENS.has(name)
+        : name === 'options' || name === 'env',
+    read: (name, path) => readPath(data[name], path),
+    env: { read: data.env },
+    noValue: (token) => {
+      throw invalid(`"${token}" has no value`);
+    },
+    toText: (value, token) => {
+      if (!['string', 'number', 'boolean'].includes(typeof value)) {
+        throw invalid(`"${token}" is not a string or a number`);
+      }
+      return String(value);
+    },
+  };
+  const resolve = (value: unknown): unknown => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    let nodes: TokenNode[];
+    try {
+      nodes = parseTokens(value, scope);
+    } catch (e) {
+      throw invalid(e.message);
+    }
+    try {
+      return renderTokens(nodes, scope);
+    } catch (e) {
+      if (e instanceof EnvUnknownHere) {
+        return new EnvDeferred(value);
+      }
+      throw e;
+    }
+  };
   // Braces are never valid in a host or port once resolved, so a leftover is
   // a typo. A url keeps them: they are legal in its path and query.
   const resolveWithoutBraces = (key: string): unknown => {
@@ -92,7 +154,10 @@ export function normalizeReadyWhen(
   switch (present[0]) {
     case 'url': {
       const url = resolve(config.url);
-      if (typeof url !== 'string' || !isHttpUrl(url)) {
+      if (
+        !(url instanceof EnvDeferred) &&
+        (typeof url !== 'string' || !isHttpUrl(url))
+      ) {
         throw invalid('"url" must be an http or https URL');
       }
       return { kind: 'url', url, ...shared };
@@ -102,21 +167,30 @@ export function normalizeReadyWhen(
       if (typeof port === 'string' && /^\d+$/.test(port)) {
         port = Number(port);
       }
-      if (!isPositiveInteger(port) || port > 65535) {
+      if (
+        !(port instanceof EnvDeferred) &&
+        (!isPositiveInteger(port) || port > 65535)
+      ) {
         throw invalid('"port" must be an integer from 1 to 65535');
       }
       const host = resolveWithoutBraces('host');
       if (host == null) {
         return { kind: 'port', port, ...shared };
       }
-      if (typeof host !== 'string' || !host) {
+      if (
+        !(host instanceof EnvDeferred) &&
+        (typeof host !== 'string' || !host)
+      ) {
         throw invalid('"host" must be a non-empty string');
       }
       return { kind: 'port', port, host, ...shared };
     }
     case 'command': {
       const command = resolve(config.command);
-      if (typeof command !== 'string' || !command) {
+      if (
+        !(command instanceof EnvDeferred) &&
+        (typeof command !== 'string' || !command)
+      ) {
         throw invalid('"command" must be a non-empty string');
       }
       return { kind: 'command', command, ...shared };
@@ -129,7 +203,10 @@ export function normalizeReadyWhen(
       ).map(resolve);
       if (
         logMatches.length === 0 ||
-        !logMatches.every((m): m is string => typeof m === 'string' && !!m)
+        !logMatches.every(
+          (m): m is string | EnvDeferred =>
+            m instanceof EnvDeferred || (typeof m === 'string' && !!m)
+        )
       ) {
         throw invalid(
           '"logMatches" must be a non-empty string or an array of them'
@@ -140,14 +217,36 @@ export function normalizeReadyWhen(
   }
 }
 
+/**
+ * Checks a producer's probe without the env the producer runs with. A value
+ * that reads that env is left to getReadyWhen in the process that runs the
+ * producer, and every other value is checked the way getReadyWhen checks it.
+ */
+export function checkReadyWhen(
+  readyWhen: ReadyWhen,
+  taskId: string,
+  data: Omit<ReadyWhenData, 'env'>
+): ReadyWhenWait {
+  const probe = resolveReadyWhen(readyWhen, taskId, {
+    ...data,
+    env: () => {
+      throw new EnvUnknownHere();
+    },
+  });
+  return {
+    timeout: probe.timeout,
+    description: describeReadyWhen(probe),
+  };
+}
+
 export function readinessTimeoutError(
   taskId: string,
-  readyWhen: NormalizedReadyWhen
+  readyWhen: NormalizedReadyWhen | ReadyWhenWait
 ): Error {
+  const description =
+    'kind' in readyWhen ? describeReadyWhen(readyWhen) : readyWhen.description;
   return new Error(
-    `Task "${taskId}" did not become ready within ${
-      readyWhen.timeout
-    }ms (readyWhen: ${describeReadyWhen(readyWhen)}).`
+    `Task "${taskId}" did not become ready within ${readyWhen.timeout}ms (readyWhen: ${description}).`
   );
 }
 
@@ -172,7 +271,7 @@ export function notReadyError(
   );
 }
 
-function describeReadyWhen(readyWhen: NormalizedReadyWhen): string {
+function describeReadyWhen(readyWhen: ReadyWhenProbe<EnvDeferred>): string {
   switch (readyWhen.kind) {
     case 'url':
       return `url ${readyWhen.url}`;
@@ -201,14 +300,83 @@ export function getReadyWhenConfig(
   ]?.readyWhen;
 }
 
-// Placeholders resolve against the options the executor receives: aliases,
-// schema defaults and the spelling of command-line overrides applied
+/**
+ * The probe of a producer this process starts with `taskEnv`. Env tokens read
+ * `taskEnv`, or for run-commands the env its command runs with
+ */
 export function getReadyWhen(
   task: Task,
   projectGraph: ProjectGraph,
   projects: Record<string, ProjectConfiguration>,
-  workspaceRoot: string
+  workspaceRoot: string,
+  taskEnv: NodeJS.ProcessEnv
 ): NormalizedReadyWhen | null {
+  const inputs = getReadyWhenInputs(
+    task,
+    projectGraph,
+    projects,
+    workspaceRoot
+  );
+  if (!inputs) {
+    return null;
+  }
+  const { readyWhen, executor, data } = inputs;
+  const { options } = data;
+  let commandEnv: NodeJS.ProcessEnv | undefined;
+  return normalizeReadyWhen(readyWhen, task.id, {
+    ...data,
+    env: () => {
+      if (executor !== 'nx:run-commands') {
+        return taskEnv;
+      }
+      if (commandEnv) {
+        return commandEnv;
+      }
+      // Required lazily, so loading run-command.ts doesn't also load the
+      // run-commands executor
+      const { calculateCwd, processEnv } =
+        require('../../executors/run-commands/running-tasks') as typeof import('../../executors/run-commands/running-tasks');
+      commandEnv = processEnv(
+        options.color as boolean,
+        calculateCwd(
+          options.cwd as string,
+          {
+            root: workspaceRoot,
+          } as ExecutorContext
+        ),
+        (options.env ?? {}) as Record<string, string>,
+        options.envFile as string,
+        taskEnv
+      );
+      return commandEnv;
+    },
+  });
+}
+
+// The probe of a producer another process may run
+export function getReadyWhenWait(
+  task: Task,
+  projectGraph: ProjectGraph,
+  projects: Record<string, ProjectConfiguration>,
+  workspaceRoot: string
+): ReadyWhenWait | null {
+  const inputs = getReadyWhenInputs(
+    task,
+    projectGraph,
+    projects,
+    workspaceRoot
+  );
+  return inputs && checkReadyWhen(inputs.readyWhen, task.id, inputs.data);
+}
+
+// Placeholders resolve against the options the executor receives: aliases,
+// schema defaults and the spelling of command-line overrides applied
+function getReadyWhenInputs(
+  task: Task,
+  projectGraph: ProjectGraph,
+  projects: Record<string, ProjectConfiguration>,
+  workspaceRoot: string
+) {
   const readyWhen = getReadyWhenConfig(task, projectGraph);
   if (readyWhen == null) {
     return null;
@@ -216,20 +384,25 @@ export function getReadyWhen(
   const node = projectGraph.nodes[task.target.project];
   const target = node.data.targets[task.target.target];
   const { schema } = getExecutorForTask(task, projects);
-  return normalizeReadyWhen(readyWhen, task.id, {
-    workspaceRoot,
-    projectRoot: node.data.root,
-    projectName: node.name,
-    options: combineOptionsForExecutor(
-      task.overrides as Options,
-      task.target.configuration ?? target.defaultConfiguration,
-      target,
-      schema,
-      task.target.project,
-      relative(task.projectRoot ?? workspaceRoot, process.cwd()),
-      process.env.NX_VERBOSE_LOGGING === 'true'
-    ),
-  });
+  const options = combineOptionsForExecutor(
+    task.overrides as Options,
+    task.target.configuration ?? target.defaultConfiguration,
+    target,
+    schema,
+    task.target.project,
+    relative(task.projectRoot ?? workspaceRoot, process.cwd()),
+    process.env.NX_VERBOSE_LOGGING === 'true'
+  );
+  return {
+    readyWhen,
+    executor: target.executor,
+    data: {
+      workspaceRoot,
+      projectRoot: node.data.root,
+      projectName: node.name,
+      options,
+    },
+  };
 }
 
 export function getReadyProducerIds(

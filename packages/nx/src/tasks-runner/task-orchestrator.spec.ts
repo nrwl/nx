@@ -2160,7 +2160,7 @@ describe('TaskOrchestrator', () => {
 
       orchestrator.startReadinessProbe(
         serve,
-        orchestrator.getReadyWhen(serve),
+        orchestrator.getReadyWhen(serve, {}),
         runningTask
       );
       await expect(settled(waiting)).resolves.toBe('pending');
@@ -2185,7 +2185,7 @@ describe('TaskOrchestrator', () => {
       const waiting = orchestrator.waitForReadyDependencies(e2e);
       orchestrator.startReadinessProbe(
         serve,
-        orchestrator.getReadyWhen(serve),
+        orchestrator.getReadyWhen(serve, {}),
         runningTask
       );
       await expect(waiting).rejects.toThrow('did not become ready within 20ms');
@@ -2219,7 +2219,7 @@ describe('TaskOrchestrator', () => {
       });
       orchestrator.startReadinessProbe(
         serve,
-        orchestrator.getReadyWhen(serve),
+        orchestrator.getReadyWhen(serve, {}),
         runningTask
       );
       await expect(
@@ -2243,7 +2243,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.completeContinuousTask = vi.fn();
       orchestrator.startReadinessProbe(
         serve,
-        orchestrator.getReadyWhen(serve),
+        orchestrator.getReadyWhen(serve, {}),
         runningTask
       );
       await vi.waitFor(() => expect(orchestrator.complete).toHaveBeenCalled());
@@ -2265,7 +2265,7 @@ describe('TaskOrchestrator', () => {
       });
       orchestrator.startReadinessProbe(
         serve,
-        orchestrator.getReadyWhen(serve),
+        orchestrator.getReadyWhen(serve, {}),
         runningTask
       );
       await expect(
@@ -2295,7 +2295,7 @@ describe('TaskOrchestrator', () => {
         createOrchestrator();
       orchestrator.startReadinessProbe(
         serve,
-        orchestrator.getReadyWhen(serve),
+        orchestrator.getReadyWhen(serve, {}),
         runningTask
       );
       emit('listening');
@@ -2305,7 +2305,7 @@ describe('TaskOrchestrator', () => {
 
       orchestrator.startReadinessProbe(
         serve,
-        orchestrator.getReadyWhen(serve),
+        orchestrator.getReadyWhen(serve, {}),
         runningTask
       );
       await expect(
@@ -2473,6 +2473,46 @@ describe('TaskOrchestrator', () => {
       ).resolves.toBe('resolved');
     });
 
+    it('waits on the row of a producer whose probe reads the env of the process running it', async () => {
+      const { orchestrator, e2e, settled } = createOrchestrator({
+        flat: true,
+        readyWhen: { url: 'http://localhost:{env.NX_READY_WHEN_UNSET}' },
+      });
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(0);
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await expect(settled(waiting)).resolves.toBe('pending');
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(1);
+      await expect(waiting).resolves.toBeUndefined();
+    });
+
+    it('resolves the probe of a producer it starts against the env it starts it with', async () => {
+      vi.stubEnv('NX_TASK_TARGET_PROJECT', 'ambient');
+      onTestFinished(() => {
+        vi.unstubAllEnvs();
+      });
+      const { orchestrator, serve, e2e, runningTask, emit, settled } =
+        createOrchestrator({
+          readyWhen: { logMatches: 'ready {env.NX_TASK_TARGET_PROJECT}' },
+        });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      orchestrator.runTask = vi.fn(async () =>
+        Object.assign(runningTask, { onExit: vi.fn() })
+      );
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await orchestrator.startContinuousTask(serve, 1);
+      await expect(settled(waiting)).resolves.toBe('pending');
+      emit('ready {env.NX_TASK_TARGET_PROJECT}');
+      await expect(settled(waiting)).resolves.toBe('pending');
+      emit('ready app');
+      await expect(settled(waiting)).resolves.toBe('resolved');
+    });
+
     it('fails the waiter when the row is still pending at its own deadline', async () => {
       const { orchestrator, e2e } = createOrchestrator({
         flat: true,
@@ -2550,7 +2590,7 @@ describe('TaskOrchestrator', () => {
       const waiting = orchestrator.waitForReadyDependencies(e2e);
       orchestrator.startReadinessProbe(
         serve,
-        orchestrator.getReadyWhen(serve),
+        orchestrator.getReadyWhen(serve, {}),
         runningTask
       );
       emit('listening');
@@ -2560,7 +2600,7 @@ describe('TaskOrchestrator', () => {
     it('skips a task from runTaskDirectly when the row says the producer failed elsewhere', async () => {
       const { orchestrator, e2e } = createOrchestrator({
         flat: true,
-        readyWhen: { port: 4200 },
+        readyWhen: { port: '{env.NX_READY_WHEN_UNSET}' },
       });
       orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(2);
       const result = await orchestrator.runTaskDirectly(true, e2e, 1);
@@ -2594,7 +2634,7 @@ describe('TaskOrchestrator', () => {
         orchestrator.waitingForTasks.push(parked);
         orchestrator.startReadinessProbe(
           serve,
-          orchestrator.getReadyWhen(serve),
+          orchestrator.getReadyWhen(serve, {}),
           runningTask
         );
         expect(parked).not.toHaveBeenCalled();
@@ -2636,7 +2676,7 @@ describe('TaskOrchestrator', () => {
 
         orchestrator.startReadinessProbe(
           serve,
-          orchestrator.getReadyWhen(serve),
+          orchestrator.getReadyWhen(serve, {}),
           runningTask
         );
         emit('listening');
@@ -2678,7 +2718,7 @@ describe('TaskOrchestrator', () => {
         });
         orchestrator.startReadinessProbe(
           serve,
-          orchestrator.getReadyWhen(serve),
+          orchestrator.getReadyWhen(serve, {}),
           runningTask
         );
         const skippedWhenRejected = orchestrator

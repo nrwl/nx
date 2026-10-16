@@ -1,6 +1,8 @@
+import { writeFileSync } from 'fs';
+import { fileSync } from 'tmp';
 import type { ProjectGraph } from '../../config/project-graph';
 import type { Task } from '../../config/task-graph';
-import { getReadyWhen, normalizeReadyWhen } from './ready-when';
+import { checkReadyWhen, getReadyWhen, normalizeReadyWhen } from './ready-when';
 
 vi.mock('../utils', async () => ({
   ...(await vi.importActual('../utils')),
@@ -20,6 +22,7 @@ const data = {
   projectRoot: 'apps/app',
   projectName: 'app',
   options: { port: 4200, host: 'dev.local', server: { port: 0 } },
+  env: () => ({}),
 };
 
 describe('normalizeReadyWhen', () => {
@@ -79,6 +82,54 @@ describe('normalizeReadyWhen', () => {
         logMatches: ['listening on {options.server.port}', '{ready}'],
       })
     ).toMatchObject({ logMatches: ['listening on 0', '{ready}'] });
+    expect(
+      normalize({ command: 'test "${options}" = ready || {projectName.x}' })
+    ).toMatchObject({
+      command: 'test "${options}" = ready || {projectName.x}',
+    });
+  });
+
+  it.each([
+    ['{options.port ?? env.READY_PORT ?? 3000}', 'http://h/4200'],
+    ['{options.unset ?? env.READY_PORT ?? 3000}', 'http://h/5000'],
+    ['{options.empty ?? env.READY_EMPTY ?? 3000}', 'http://h/3000'],
+    ['{options.unset ?? env.APP.HTTP-PORT ?? 3000}', 'http://h/5001'],
+    ['{options.unset ?? env.ProgramFiles(x86) ?? 3000}', 'http://h/5002'],
+    ['{options.zero ?? 1}/{options.no ?? true}', 'http://h/0/false'],
+    ['{options.constructor ?? 3000}', 'http://h/3000'],
+    ['{options.unset ?? env.toString ?? 3000}', 'http://h/3000'],
+    ['{options.unset ?? {projectName}/{options.port}}', 'http://h/app/4200'],
+  ])('resolves the fallbacks in %s', (tokens, url) => {
+    expect(
+      normalizeReadyWhen({ url: `http://h/${tokens}` }, 'app:serve', {
+        ...data,
+        options: { ...data.options, empty: '', zero: 0, no: false },
+        env: () => ({
+          READY_PORT: '5000',
+          READY_EMPTY: '',
+          'APP.HTTP-PORT': '5001',
+          'ProgramFiles(x86)': '5002',
+        }),
+      })
+    ).toMatchObject({ url });
+  });
+
+  it('reads env tokens case-insensitively on Windows', () => {
+    const platform = process.platform;
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    onTestFinished(() => {
+      Object.defineProperty(process, 'platform', { value: platform });
+    });
+    const normalize = (readyWhen: any) =>
+      normalizeReadyWhen(readyWhen, 'app:serve', {
+        ...data,
+        env: () => ({ Port: '5000' }),
+      });
+
+    expect(normalize({ port: '{env.PORT}' })).toMatchObject({ port: 5000 });
+    expect(() => normalize({ port: '{env.READY_PORT}' })).toThrow(
+      'Task "app:serve" has an invalid "readyWhen": "{env.READY_PORT}" has no value'
+    );
   });
 
   it.each([
@@ -107,6 +158,14 @@ describe('normalizeReadyWhen', () => {
     [
       { url: 'http://localhost:{option.port}' },
       '"url" must be an http or https URL',
+    ],
+    [
+      { url: 'http://localhost:{options.prot ?? env.NX_READY_WHEN_UNSET}' },
+      '"{options.prot ?? env.NX_READY_WHEN_UNSET}" has no value',
+    ],
+    [
+      { port: '{options.port ?? 4200 ?? env.PORT}' },
+      '"{options.port ?? 4200 ?? env.PORT}" has a fallback after the literal "4200" that can never be used',
     ],
     [{ port: '{port}' }, '"port" contains an unknown placeholder'],
     [{ port: '{options.host}' }, '"port" must be an integer from 1 to 65535'],
@@ -145,8 +204,13 @@ describe('getReadyWhen', () => {
         overrides,
         continuous: true,
       }) as Task;
+    const taskEnv = { NX_READY_WHEN_PORT: '5000' };
     const url = (t: Task) =>
-      (getReadyWhen(t, projectGraph, projects, '/w') as { url: string }).url;
+      (
+        getReadyWhen(t, projectGraph, projects, '/w', taskEnv) as {
+          url: string;
+        }
+      ).url;
 
     // schema defaults fill host and port
     expect(url(task())).toBe('http://localhost:4200/dist/app');
@@ -156,5 +220,74 @@ describe('getReadyWhen', () => {
     expect(
       url(task('ci', { 'static-file-path': 'dist/new-app', port: 4400 }))
     ).toBe('http://localhost:4400/dist/new-app');
+
+    // env tokens read the env the producer is started with
+    serve.readyWhen.url = 'http://localhost:{env.NX_READY_WHEN_PORT}';
+    expect(url(task())).toBe('http://localhost:5000');
+
+    // run-commands runs its command with its `env` option applied on top
+    Object.assign(serve, {
+      executor: 'nx:run-commands',
+      options: { command: 'serve' },
+    });
+    expect(url(task())).toBe('http://localhost:5000');
+    serve.options['env'] = { NX_READY_WHEN_PORT: '5001' };
+    expect(url(task())).toBe('http://localhost:5001');
+    // and with the values from its `envFile`
+    const envFile = fileSync().name;
+    writeFileSync(envFile, 'NX_READY_WHEN_FILE_PORT=5002');
+    serve.options['envFile'] = envFile;
+    serve.readyWhen.url = 'http://localhost:{env.NX_READY_WHEN_FILE_PORT}';
+    expect(url(task())).toBe('http://localhost:5002');
+  });
+});
+
+describe('checkReadyWhen', () => {
+  const check = (readyWhen: any) =>
+    checkReadyWhen(readyWhen, 'app:serve', {
+      workspaceRoot: '/workspace',
+      projectRoot: 'apps/app',
+      projectName: 'app',
+      options: { port: 4200 },
+    });
+
+  it('leaves only the values that read the env to the producer process', () => {
+    expect(check({ url: 'http://localhost:{options.port}' })).toEqual({
+      timeout: 60_000,
+      description: 'url http://localhost:4200',
+    });
+    // options.port has a value, so the env is never read
+    expect(check({ port: '{options.port ?? env.PORT}' })).toEqual({
+      timeout: 60_000,
+      description: 'port 4200',
+    });
+    expect(
+      check({ port: '{options.unset ?? env.PORT}', host: 'h', timeout: 5 })
+    ).toEqual({
+      timeout: 5,
+      description: 'port h:{options.unset ?? env.PORT}',
+    });
+    expect(check({ logMatches: ['on {env.PORT}', 'ready'] })).toEqual({
+      timeout: 60_000,
+      description: 'logMatches "on {env.PORT}", "ready"',
+    });
+  });
+
+  it.each([
+    [{ port: 0 }, '"port" must be an integer from 1 to 65535'],
+    [{ port: '{options.prot}' }, '"{options.prot}" has no value'],
+    [{ port: '{env.PORT}', host: '' }, '"host" must be a non-empty string'],
+    [
+      { logMatches: ['', '{env.READY_TEXT}'] },
+      '"logMatches" must be a non-empty string or an array of them',
+    ],
+    [
+      { url: 'http://localhost:{env.PORT}', timeout: 0 },
+      '"timeout" must be an integer from 1 to',
+    ],
+  ])('rejects %j', (readyWhen, reason) => {
+    expect(() => check(readyWhen)).toThrow(
+      `Task "app:serve" has an invalid "readyWhen": ${reason}`
+    );
   });
 });

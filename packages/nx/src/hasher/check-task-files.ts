@@ -12,6 +12,7 @@ import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import {
   createTaskId,
   getOutputsForTargetAndConfiguration,
+  interpolateOutput,
 } from '../tasks-runner/utils';
 import { normalizePath } from '../utils/path';
 import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
@@ -225,10 +226,7 @@ function getUnresolvedOutputs(
   };
 
   return (targetConfig.outputs ?? []).filter((output) =>
-    [...output.matchAll(/\{options\.([^}]+)\}/g)].some(([, key]) => {
-      const value = key.split('.').reduce<any>((acc, k) => acc?.[k], options);
-      return value === undefined;
-    })
+    /{options.*}/.test(interpolateOutput(output, projectNode, options))
   );
 }
 

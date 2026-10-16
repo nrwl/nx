@@ -207,8 +207,9 @@ export interface ReadyWhenOptions {
 /**
  * Readiness probe of a continuous target. Exactly one of `url`, `port`,
  * `command` or `logMatches` must be set. Strings may use the `{workspaceRoot}`,
- * `{projectRoot}`, `{projectName}` and `{options.*}` placeholders, resolved
- * against the options the task runs with.
+ * `{projectRoot}`, `{projectName}`, `{options.*}` and `{env.*}` placeholders,
+ * resolved against the options and environment the task runs with. A
+ * placeholder can list fallbacks, as in `{options.port ?? env.PORT ?? 4200}`.
  */
 export type ReadyWhen =
   | ({

@@ -21,6 +21,7 @@ import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
   type NxReleaseConfig,
+  validateCommitMessageTokens,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { ReleaseGroupWithName } from './config/filter-release-groups';
@@ -93,6 +94,9 @@ export function createAPI(
     );
     if (configError) {
       return await handleNxReleaseConfigError(configError);
+    }
+    if (args.gitCommitMessage) {
+      validateCommitMessageTokens(args.gitCommitMessage);
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
