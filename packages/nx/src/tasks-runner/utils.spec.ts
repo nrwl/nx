@@ -335,6 +335,16 @@ describe('utils', () => {
       );
     });
 
+    it('should keep a glob that starts with env. as written', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({ outputs: ['{projectRoot}/src/{env.ts,env.d.ts}'] })
+        )
+      ).toEqual(['myapp/src/{env.ts,env.d.ts}']);
+    });
+
     it('should support interpolation based on configuration-specific options', () => {
       expect(
         getOutputsForTargetAndConfiguration(

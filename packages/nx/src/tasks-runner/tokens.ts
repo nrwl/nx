@@ -145,6 +145,10 @@ function readsEnv(parts: TokenPart[]): boolean {
   return parts.some((p) => p.kind === 'reference' && p.name === 'env');
 }
 
+// The names an env file can define, plus parentheses for Windows names such as
+// `ProgramFiles(x86)`. A glob such as `{env.ts,env.d.ts}` stays text
+const ENV_NAME = /^[\w.()-]+$/;
+
 function parseReference(
   source: string,
   scope: TokenScope,
@@ -155,7 +159,9 @@ function parseReference(
   const path = dot === -1 ? undefined : source.slice(dot + 1);
   const isReference =
     name === 'env'
-      ? !!path && (!first || scope.isToken(name, path))
+      ? path !== undefined &&
+        ENV_NAME.test(path) &&
+        (!first || scope.isToken(name, path))
       : scope.isToken(name, path);
   return isReference ? { kind: 'reference', name, path } : null;
 }

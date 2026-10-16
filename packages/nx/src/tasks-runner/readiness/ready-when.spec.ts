@@ -91,6 +91,8 @@ describe('normalizeReadyWhen', () => {
     ['{options.port ?? env.READY_PORT ?? 3000}', 'http://h/4200'],
     ['{options.unset ?? env.READY_PORT ?? 3000}', 'http://h/5000'],
     ['{options.empty ?? env.READY_EMPTY ?? 3000}', 'http://h/3000'],
+    ['{options.unset ?? env.APP.HTTP-PORT ?? 3000}', 'http://h/5001'],
+    ['{options.unset ?? env.ProgramFiles(x86) ?? 3000}', 'http://h/5002'],
     ['{options.zero ?? 1}/{options.no ?? true}', 'http://h/0/false'],
     ['{options.unset ?? {projectName}/{options.port}}', 'http://h/app/4200'],
   ])('resolves the fallbacks in %s', (tokens, url) => {
@@ -98,7 +100,12 @@ describe('normalizeReadyWhen', () => {
       normalizeReadyWhen({ url: `http://h/${tokens}` }, 'app:serve', {
         ...data,
         options: { ...data.options, empty: '', zero: 0, no: false },
-        env: () => ({ READY_PORT: '5000', READY_EMPTY: '' }),
+        env: () => ({
+          READY_PORT: '5000',
+          READY_EMPTY: '',
+          'APP.HTTP-PORT': '5001',
+          'ProgramFiles(x86)': '5002',
+        }),
       })
     ).toMatchObject({ url });
   });
