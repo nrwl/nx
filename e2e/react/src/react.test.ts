@@ -263,10 +263,8 @@ describe('React Applications', () => {
     });
   });
 
-  // TODO(colum): Revisit when cypress --js works with crystal
-  describe('Non-Crystal Tests', () => {
+  describe('Webpack apps', () => {
     beforeAll(async () => {
-      process.env.NX_ADD_PLUGINS = 'false';
       proj = newProject({
         keepBackup: true,
         packages: [
@@ -282,7 +280,6 @@ describe('React Applications', () => {
 
     afterAll(() => {
       cleanupProject();
-      delete process.env.NX_ADD_PLUGINS;
     });
 
     it('should be able to use JS and JSX', async () => {

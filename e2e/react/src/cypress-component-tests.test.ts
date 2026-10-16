@@ -18,7 +18,6 @@ describe('React Cypress Component Tests', () => {
   const buildableLibName = uniq('cy-react-buildable-lib');
 
   beforeAll(async () => {
-    process.env.NX_ADD_PLUGINS = 'false';
     projectName = newProject({
       name: uniq('cy-react'),
       packages: ['@nx/react', '@nx/webpack', '@nx/jest', '@nx/cypress'],
@@ -146,7 +145,6 @@ export default Input;
 
   afterAll(() => {
     cleanupProject();
-    delete process.env.NX_ADD_PLUGINS;
   });
 
   it('should test app', async () => {

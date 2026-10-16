@@ -56,7 +56,6 @@ describe('React:CypressComponentTestConfiguration', () => {
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   // TODO(@jaysoo): Turn this back to adding the plugin
-  let originalEnv: string;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -66,13 +65,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       dependencies: {},
     };
 
-    originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = 'false';
     mockedInstalledCypressVersion.mockReturnValue(14);
-  });
-
-  afterEach(() => {
-    process.env.NX_ADD_PLUGINS = originalEnv;
   });
 
   afterAll(() => {

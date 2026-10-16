@@ -1793,12 +1793,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/nx
 
-  e2e/nx-init:
-    dependencies:
-      '@nx/e2e-utils':
-        specifier: workspace:*
-        version: link:../utils
-
   e2e/oxlint:
     dependencies:
       '@nx/e2e-utils':

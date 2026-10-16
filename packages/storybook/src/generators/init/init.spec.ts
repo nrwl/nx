@@ -51,7 +51,6 @@ describe('@nx/storybook:init', () => {
     expect(nxJson.plugins).toContainEqual(
       expect.objectContaining({ plugin: '@nx/storybook/plugin' })
     );
-    delete process.env.NX_ADD_PLUGINS;
   });
 
   it('should add storybook-static to .gitignore', async () => {
