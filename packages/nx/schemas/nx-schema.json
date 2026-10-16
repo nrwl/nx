@@ -15,11 +15,17 @@
       "properties": {
         "defaultBase": {
           "type": "string",
-          "description": "Default based branch used by affected commands."
+          "description": "Default based branch used by affected commands.",
+          "deprecated": "Use the top-level `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 25."
+        },
+        "granularity": {
+          "type": "string",
+          "enum": ["task", "project"],
+          "default": "task",
+          "description": "Whether `nx affected -t` selects the individual tasks a change reaches (`task`) or every task of each affected project (`project`)."
         }
       },
-      "additionalProperties": false,
-      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
+      "additionalProperties": false
     },
     "extends": {
       "type": "string",

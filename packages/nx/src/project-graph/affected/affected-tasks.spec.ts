@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 
 // getProjectGlobPatterns reads these from the plugins' recorded capabilities.
 vi.mock('../plugins/get-plugins', () => ({
@@ -28,7 +29,11 @@ vi.mock('../../tasks-runner/utils', async (importOriginal) => {
         : actual.getExecutorForTask(task, projects),
   };
 });
-import { computeAffectedTasks, selectsAffectedTasks } from './affected-tasks';
+import {
+  computeAffectedTasks,
+  selectsAffectedTasks,
+  taskGranularityRequirement,
+} from './affected-tasks';
 import {
   DeletedFileChange,
   LockFileChange,
@@ -1206,6 +1211,12 @@ describe('computeAffectedTasks with the daemon on', () => {
 
 describe('selectsAffectedTasks', () => {
   const original = process.env.NX_LEGACY_AFFECTED;
+  const granularity = (value?: 'project' | 'task'): NxJsonConfiguration =>
+    value ? { affected: { granularity: value } } : {};
+
+  beforeEach(() => {
+    delete process.env.NX_LEGACY_AFFECTED;
+  });
 
   afterEach(() => {
     if (original === undefined) {
@@ -1215,19 +1226,48 @@ describe('selectsAffectedTasks', () => {
     }
   });
 
-  // Task selection stays opt-in; flipping the default must be a deliberate edit that fails here.
-  it('selects whole projects when the variable is unset', () => {
-    delete process.env.NX_LEGACY_AFFECTED;
-    expect(selectsAffectedTasks()).toBe(false);
+  it('selects tasks when nx.json sets no granularity', () => {
+    expect(selectsAffectedTasks(granularity())).toBe(true);
   });
 
-  it('selects whole projects when the variable is true', () => {
+  it('follows the granularity in nx.json', () => {
+    expect(selectsAffectedTasks(granularity('task'))).toBe(true);
+    expect(selectsAffectedTasks(granularity('project'))).toBe(false);
+  });
+
+  it('lets NX_LEGACY_AFFECTED override nx.json', () => {
     process.env.NX_LEGACY_AFFECTED = 'true';
-    expect(selectsAffectedTasks()).toBe(false);
+    expect(selectsAffectedTasks(granularity('task'))).toBe(false);
+    process.env.NX_LEGACY_AFFECTED = 'false';
+    expect(selectsAffectedTasks(granularity('project'))).toBe(true);
   });
 
-  it('selects tasks only when the variable is false', () => {
-    process.env.NX_LEGACY_AFFECTED = 'false';
-    expect(selectsAffectedTasks()).toBe(true);
+  it('ignores other NX_LEGACY_AFFECTED values', () => {
+    process.env.NX_LEGACY_AFFECTED = '1';
+    expect(selectsAffectedTasks(granularity('project'))).toBe(false);
+    expect(selectsAffectedTasks(granularity())).toBe(true);
+  });
+});
+
+describe('taskGranularityRequirement', () => {
+  const original = process.env.NX_LEGACY_AFFECTED;
+
+  afterEach(() => {
+    if (original === undefined) {
+      delete process.env.NX_LEGACY_AFFECTED;
+    } else {
+      process.env.NX_LEGACY_AFFECTED = original;
+    }
+  });
+
+  it('points at nx.json unless the variable forces projects', () => {
+    delete process.env.NX_LEGACY_AFFECTED;
+    expect(taskGranularityRequirement()).toBe(
+      'affected.granularity set to "task" in nx.json'
+    );
+    process.env.NX_LEGACY_AFFECTED = 'true';
+    expect(taskGranularityRequirement()).toBe(
+      'NX_LEGACY_AFFECTED unset or set to false'
+    );
   });
 });

@@ -26,14 +26,18 @@ export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
 }
 
-/**
- * @deprecated Use {@link NxJsonConfiguration#defaultBase } instead
- */
 export interface NxAffectedConfig {
   /**
    * Default based branch used by affected commands.
+   * @deprecated Use {@link NxJsonConfiguration#defaultBase } instead. This will be removed in Nx 25.
    */
   defaultBase?: string;
+  /**
+   * Whether `nx affected -t` selects the individual tasks a change reaches
+   * (`task`) or every task of each affected project (`project`).
+   * Defaults to `task`.
+   */
+  granularity?: 'project' | 'task';
 }
 
 /**
@@ -868,7 +872,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   targetDefaults?: TargetDefaults;
   /**
    * Default options for `nx affected`
-   * @deprecated use {@link defaultBase} instead. For more information see https://nx.dev/docs/reference/nx-json#default-base
    */
   affected?: NxAffectedConfig;
 

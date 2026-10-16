@@ -36,6 +36,8 @@ const tasks = vi.hoisted(() => ({
 }));
 vi.mock('../../project-graph/affected/affected-tasks', () => ({
   selectsAffectedTasks: () => tasks.enabled,
+  taskGranularityRequirement: () =>
+    'affected.granularity set to "task" in nx.json',
   computeAffectedTasks: tasks.computeAffectedTasks,
 }));
 
@@ -117,7 +119,7 @@ describe('nx affected --explain', () => {
   // Project selection has no task layers to explain.
   it('refuses to explain when projects are selected', async () => {
     await expect(run({ explain: true })).rejects.toThrow(
-      '--explain needs NX_LEGACY_AFFECTED=false.'
+      '--explain needs affected.granularity set to "task" in nx.json.'
     );
     expect(runCommand).not.toHaveBeenCalled();
   });
