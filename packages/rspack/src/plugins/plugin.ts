@@ -199,15 +199,11 @@ async function createRspackTargets(
     ? await readRspackOptions(rspackConfig, { RSPACK_SERVE: true })
     : rspackOptions;
   const devServer = serveOptions.find((config) => config.devServer)?.devServer;
-  // The rspack 1 dev server reads webpack-dev-server's env var
   const devServerReadyWhen = getDevServerReadyWhen(
     devServer || undefined,
     () =>
-      getRspackDevServerMajorVersion(
-        join(context.workspaceRoot, projectRoot)
-      ) === 1
-        ? 'WEBPACK_DEV_SERVER_BASE_PORT'
-        : 'RSPACK_DEV_SERVER_BASE_PORT'
+      getRspackDevServerMajorVersion(join(context.workspaceRoot, projectRoot)),
+    logsInfrastructureInfo(serveOptions)
   );
 
   const env: NodeJS.ProcessEnv = {};
@@ -343,25 +339,65 @@ function takesEnv(config: unknown): boolean {
 
 function getDevServerReadyWhen(
   devServer: { port?: unknown; host?: unknown; ipc?: unknown } | undefined,
-  getBasePortEnv: () => string
+  getDevServerMajor: () => number | null,
+  canMatchLog: boolean
 ): TargetConfiguration['readyWhen'] {
   // The dev server listens on a socket for any boolean ipc, false included,
-  // and no probe can check a socket
+  // and every major logs that socket once it listens
   const ipc = devServer?.ipc;
   if (typeof ipc === 'boolean' || (typeof ipc === 'string' && ipc)) {
+    return canMatchLog ? { logMatches: 'Project is running at:' } : undefined;
+  }
+  // A NaN port is unset at graph time, so only the address line logged after
+  // listen can tell the dev server is ready. An unknown major gets no check,
+  // since waiting for a line it never logs fails the task.
+  if (Number.isNaN(devServer?.port)) {
+    if (!canMatchLog) {
+      return undefined;
+    }
+    const major = getDevServerMajor();
+    if (major === 1) {
+      return { logMatches: 'Project is running at:' };
+    }
+    if (major === 2) {
+      return { logMatches: '  ➜  ' };
+    }
     return undefined;
   }
   return {
-    port: `{options.port ?? ${getDevServerPort(devServer?.port, getBasePortEnv)}}`,
+    port: `{options.port ?? ${getDevServerPort(devServer?.port, getDevServerMajor)}}`,
     host: `{options.host ?? ${getReadyWhenHost(devServer?.host)}}`,
   };
 }
 
+// The dev servers log their address only when infrastructure logging includes
+// the info level, and a custom console or stream can send it elsewhere
+function logsInfrastructureInfo(
+  configs: {
+    infrastructureLogging?: {
+      level?: string;
+      console?: unknown;
+      stream?: unknown;
+    };
+  }[]
+): boolean {
+  return configs.every(
+    ({ infrastructureLogging: logging = {} }) =>
+      [undefined, 'info', 'log', 'verbose'].includes(logging.level) &&
+      !logging.console &&
+      !logging.stream
+  );
+}
+
 // With the port unset or 'auto', the dev server picks a free one starting at
-// this env var, else 8080
-function getDevServerPort(port: unknown, getBasePortEnv: () => string): string {
+// its base port env var, else 8080. The rspack 1 dev server reads
+// webpack-dev-server's env var.
+function getDevServerPort(
+  port: unknown,
+  getDevServerMajor: () => number | null
+): string {
   return port === undefined || port === null || port === 'auto'
-    ? `env.${getBasePortEnv()} ?? 8080`
+    ? `env.${getDevServerMajor() === 1 ? 'WEBPACK_DEV_SERVER_BASE_PORT' : 'RSPACK_DEV_SERVER_BASE_PORT'} ?? 8080`
     : String(port);
 }
 

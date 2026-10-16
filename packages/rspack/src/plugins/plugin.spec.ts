@@ -254,11 +254,26 @@ describe('@nx/rspack', () => {
     [
       'an ipc devServer',
       `export default { devServer: { port: 4300, ipc: true } };`,
-      undefined,
+      { logMatches: 'Project is running at:' },
     ],
     [
       'an ipc of false',
       `export default { devServer: { port: 4300, ipc: false } };`,
+      { logMatches: 'Project is running at:' },
+    ],
+    [
+      'an ipc devServer with a quiet infrastructure log',
+      `export default { devServer: { ipc: true }, infrastructureLogging: { level: 'none' } };`,
+      undefined,
+    ],
+    [
+      'an ipc devServer with its own infrastructure log console',
+      `export default { devServer: { ipc: true }, infrastructureLogging: { console } };`,
+      undefined,
+    ],
+    [
+      'a NaN port with an unknown dev server major',
+      `export default { devServer: { port: NaN } };`,
       undefined,
     ],
   ])('infers the dev server readyWhen for %s', async (_, config, expected) => {
@@ -276,34 +291,59 @@ describe('@nx/rspack', () => {
     }
   });
 
-  it.each([
-    ['1.7.12', '1.1.5', 'WEBPACK_DEV_SERVER_BASE_PORT'],
-    ['2.2.7', '2.0.3', 'RSPACK_DEV_SERVER_BASE_PORT'],
+  describe.each([
+    [
+      '1.7.12',
+      '1.1.5',
+      'WEBPACK_DEV_SERVER_BASE_PORT',
+      'Project is running at:',
+    ],
+    ['2.2.7', '2.0.3', 'RSPACK_DEV_SERVER_BASE_PORT', '  ➜  '],
   ])(
-    'starts from the base port env var of the dev server @rspack/cli %s loads from the project',
-    async (cliVersion, devServerVersion, envVar) => {
-      tempFs.createFilesSync({
-        'my-app/rspack.config.ts': `export default {};`,
-        'my-app/node_modules/@rspack/cli/package.json': JSON.stringify({
-          name: '@rspack/cli',
-          version: cliVersion,
-        }),
-        'my-app/node_modules/@rspack/dev-server/package.json': JSON.stringify({
-          name: '@rspack/dev-server',
-          version: devServerVersion,
-        }),
+    'with the dev server @rspack/cli %s loads from the project',
+    (cliVersion, devServerVersion, envVar, logLine) => {
+      beforeEach(() => {
+        tempFs.createFilesSync({
+          'my-app/node_modules/@rspack/cli/package.json': JSON.stringify({
+            name: '@rspack/cli',
+            version: cliVersion,
+          }),
+          'my-app/node_modules/@rspack/dev-server/package.json': JSON.stringify(
+            { name: '@rspack/dev-server', version: devServerVersion }
+          ),
+        });
       });
 
-      const nodes = await createNodesFunction(
-        ['my-app/rspack.config.ts'],
-        {},
-        context
-      );
+      it('starts from its base port env var', async () => {
+        tempFs.createFileSync('my-app/rspack.config.ts', `export default {};`);
 
-      const { targets } = nodes[0][1].projects['my-app'];
-      expect(targets.serve.readyWhen.port).toBe(
-        `{options.port ?? env.${envVar} ?? 8080}`
-      );
+        const nodes = await createNodesFunction(
+          ['my-app/rspack.config.ts'],
+          {},
+          context
+        );
+
+        const { targets } = nodes[0][1].projects['my-app'];
+        expect(targets.serve.readyWhen.port).toBe(
+          `{options.port ?? env.${envVar} ?? 8080}`
+        );
+      });
+
+      it('matches the address it logs for a NaN port', async () => {
+        tempFs.createFileSync(
+          'my-app/rspack.config.ts',
+          `export default { devServer: { port: NaN } };`
+        );
+
+        const nodes = await createNodesFunction(
+          ['my-app/rspack.config.ts'],
+          {},
+          context
+        );
+
+        const { targets } = nodes[0][1].projects['my-app'];
+        expect(targets.serve.readyWhen).toEqual({ logMatches: logLine });
+      });
     }
   );
 
