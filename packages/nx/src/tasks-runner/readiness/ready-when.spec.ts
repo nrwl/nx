@@ -1,3 +1,5 @@
+import { writeFileSync } from 'fs';
+import { fileSync } from 'tmp';
 import type { ProjectGraph } from '../../config/project-graph';
 import type { Task } from '../../config/task-graph';
 import { checkReadyWhen, getReadyWhen, normalizeReadyWhen } from './ready-when';
@@ -229,6 +231,12 @@ describe('getReadyWhen', () => {
     expect(url(task())).toBe('http://localhost:5000');
     serve.options['env'] = { NX_READY_WHEN_PORT: '5001' };
     expect(url(task())).toBe('http://localhost:5001');
+    // and with the values from its `envFile`
+    const envFile = fileSync().name;
+    writeFileSync(envFile, 'NX_READY_WHEN_FILE_PORT=5002');
+    serve.options['envFile'] = envFile;
+    serve.readyWhen.url = 'http://localhost:{env.NX_READY_WHEN_FILE_PORT}';
+    expect(url(task())).toBe('http://localhost:5002');
   });
 });
 
