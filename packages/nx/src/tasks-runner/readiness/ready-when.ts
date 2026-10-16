@@ -38,11 +38,10 @@ export interface ReadyWhenWait {
 
 const PROBE_KEYS = ['url', 'port', 'command', 'logMatches'] as const;
 
-// Only the process that runs the producer knows the env it runs with
 class EnvUnknownHere extends Error {}
 
-// A value that reads that env: it keeps its written form, and the producer's
-// process checks it
+// A value that reads the producer's env. It keeps its written form, and
+// getReadyWhen checks it in the process that runs the producer
 class EnvDeferred {
   constructor(private readonly written: string) {}
 
@@ -219,9 +218,9 @@ function resolveReadyWhen(
 }
 
 /**
- * Checks a producer's probe in a process that doesn't run the producer. A
- * value that reads the producer's env is left to the producer's process, and
- * every other value is checked the way that process checks it.
+ * Checks a producer's probe without the env the producer runs with. A value
+ * that reads that env is left to getReadyWhen in the process that runs the
+ * producer, and every other value is checked the way getReadyWhen checks it.
  */
 export function checkReadyWhen(
   readyWhen: ReadyWhen,
@@ -302,8 +301,8 @@ export function getReadyWhenConfig(
 }
 
 /**
- * The probe of a producer this process runs, resolved against `taskEnv`, the
- * env it starts the producer with
+ * The probe of a producer this process starts with `taskEnv`. Env tokens read
+ * `taskEnv`, or for run-commands the env its command runs with
  */
 export function getReadyWhen(
   task: Task,
@@ -333,8 +332,8 @@ export function getReadyWhen(
       if (commandEnv) {
         return commandEnv;
       }
-      // The env run-commands runs its command with. Required lazily, because
-      // run-command.ts loads this module before it loads a tasks runner
+      // Required lazily, so loading run-command.ts doesn't also load the
+      // run-commands executor
       const { calculateCwd, processEnv } =
         require('../../executors/run-commands/running-tasks') as typeof import('../../executors/run-commands/running-tasks');
       commandEnv = processEnv(

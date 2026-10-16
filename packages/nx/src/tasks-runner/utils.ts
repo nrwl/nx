@@ -411,10 +411,11 @@ export function interpolateOutput(
 }
 
 /**
- * Resolves the Nx tokens in a path, where each token names a key of `data`
- * (`{projectRoot}/dist`, `{options.outputPath ?? dist/{projectRoot}}`). A
- * token with no value stays as written. An `env.` token stays as written too,
- * unless `envNotAllowed` is given: then it throws with that message.
+ * Resolves Nx tokens in a path, where each token names a key of `data`
+ * (`{projectRoot}/dist`, `{options.outputPath ?? dist/{projectRoot}}`).
+ * Paths starting with `/` are returned as written. A token with no value
+ * stays as written. An `env.` token stays as written too, unless
+ * `envNotAllowed` is given: then it throws with that message.
  */
 export function interpolate(
   template: string,
@@ -433,8 +434,6 @@ export function interpolate(
       : undefined,
     noValue: (token) => token,
   };
-  // An absolute path is used as written, but parsing it still rejects env
-  // tokens
   if (template.startsWith('/')) {
     if (options?.envNotAllowed) {
       parseTokens(template, scope);

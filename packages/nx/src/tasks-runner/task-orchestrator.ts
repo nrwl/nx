@@ -1678,8 +1678,7 @@ export class TaskOrchestrator {
           streamOutput: streamOutput && !shouldPrefix,
         };
 
-        // Same layers as a forked run: the task env is the base, and only the
-        // target's own `env` option goes on top
+        // As in a forked run, run-commands builds its env on the task env
         const runningTask = await runCommands(
           runCommandsOptions,
           {

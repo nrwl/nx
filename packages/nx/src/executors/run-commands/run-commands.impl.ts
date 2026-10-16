@@ -294,7 +294,8 @@ export function interpolateArgsIntoCommand(
   if (command.indexOf('{args.') > -1) {
     return resolveTokens(command, {
       isToken: (name) => name === 'args',
-      // dot-notation is off, so `{args.a.b}` reads the `a.b` argument
+      // Overrides are parsed without dot-notation, so `{args.a.b}` reads the
+      // `--a.b` override
       read: (_, path) => opts.parsedArgs[path],
       env: { read: env },
       noValue: () => '',

@@ -10,8 +10,6 @@ const releaseTokens = new Set([
   'workspaceRoot',
 ]);
 
-// Every run resolves the configuration again, for example the tag pattern to
-// find the previous release, so it can't depend on the environment
 export function interpolateReleaseConfig(
   template: string,
   data: Record<string, unknown>

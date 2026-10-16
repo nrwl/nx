@@ -22,7 +22,7 @@ interface Reference {
 }
 
 export interface TokenScope {
-  /** Whether `{name}` or `{name.path}` is a token; a fallback can always read `env` */
+  /** Whether `{name}` or `{name.path}` is a token. An `env.` fallback skips this check */
   isToken(name: string, path: string | undefined): boolean;
   /** The value of `{name}` or `{name.path}` */
   read(name: string, path: string | undefined): unknown;
