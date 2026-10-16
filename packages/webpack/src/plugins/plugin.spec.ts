@@ -338,7 +338,37 @@ describe('@nx/webpack/plugin', () => {
       ],
       { port: '{options.port ?? 4400}', host: '{options.host ?? localhost}' },
     ],
-    ['an ipc devServer', { devServer: { port: 4300, ipc: true } }, undefined],
+    [
+      'an ipc devServer',
+      { devServer: { port: 4300, ipc: true } },
+      { logMatches: 'Project is running at:' },
+    ],
+    [
+      'a NaN port',
+      { devServer: { port: NaN } },
+      { logMatches: 'Project is running at:' },
+    ],
+    [
+      'an ipc devServer with a quiet infrastructure log',
+      { devServer: { ipc: true }, infrastructureLogging: { level: 'warn' } },
+      undefined,
+    ],
+    [
+      'a NaN port with its own infrastructure log stream',
+      {
+        devServer: { port: NaN },
+        infrastructureLogging: { stream: process.stdout },
+      },
+      undefined,
+    ],
+    [
+      'an ipc devServer after another devServer config',
+      [
+        { name: 'server', devServer: { port: 4300 } },
+        { name: 'client', devServer: { ipc: true } },
+      ],
+      undefined,
+    ],
     [
       'a fixed host',
       { devServer: { port: 4300, host: '192.168.1.20' } },

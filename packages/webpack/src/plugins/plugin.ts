@@ -199,8 +199,12 @@ async function createWebpackTargets(
     : webpackOptions;
   // webpack-cli starts the dev servers one after another, so the last one
   // listens only once all of them do
+  const devServerConfigs = serveOptions.filter((config) => config.devServer);
   const devServerReadyWhen = getDevServerReadyWhen(
-    serveOptions.filter((config) => config.devServer).at(-1)?.devServer
+    devServerConfigs.at(-1)?.devServer,
+    // Each dev server logs its address, so with several the first line comes
+    // before the last one listens
+    devServerConfigs.length === 1 && logsInfrastructureInfo(serveOptions)
   );
 
   const buildInputs: TargetConfiguration['inputs'] = [
@@ -347,16 +351,37 @@ function takesEnv(config: unknown): boolean {
 }
 
 function getDevServerReadyWhen(
-  devServer: { port?: unknown; host?: unknown; ipc?: unknown } | undefined
+  devServer: { port?: unknown; host?: unknown; ipc?: unknown } | undefined,
+  canMatchLog: boolean
 ): TargetConfiguration['readyWhen'] {
-  // With ipc the dev server listens on a socket, which no probe can check
-  if (devServer?.ipc) {
-    return undefined;
+  // An ipc socket or a NaN port (computed from a value unset at graph time)
+  // leaves no port to check, but the dev server logs its address once it listens
+  if (devServer?.ipc || Number.isNaN(devServer?.port)) {
+    return canMatchLog ? { logMatches: 'Project is running at:' } : undefined;
   }
   return {
     port: `{options.port ?? ${getDevServerPort(devServer?.port)}}`,
     host: `{options.host ?? ${getReadyWhenHost(devServer?.host)}}`,
   };
+}
+
+// The dev server logs its address at the info level of webpack's
+// infrastructure logger, and a custom console or stream sends it elsewhere
+function logsInfrastructureInfo(
+  configs: {
+    infrastructureLogging?: {
+      level?: string;
+      console?: unknown;
+      stream?: unknown;
+    };
+  }[]
+): boolean {
+  return configs.every(
+    ({ infrastructureLogging: logging = {} }) =>
+      [undefined, 'info', 'log', 'verbose'].includes(logging.level) &&
+      !logging.console &&
+      !logging.stream
+  );
 }
 
 // With the port unset or 'auto', the dev server picks a free one starting at
