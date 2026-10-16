@@ -36,6 +36,12 @@
       "requires": {
         "@rspack/core": ">=2.0.0"
       }
+    },
+    "update-24-0-0-migrate-compose-plugins": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts Rspack configs that use the removed `composePlugins`, `withNx`, `withWeb` and `withReact` helpers with `@nx/rspack:convert-config-to-rspack-plugin`, then hands an AI prompt the projects it could not convert and the `.old` configs it left behind.",
+      "implementation": "./dist/src/migrations/update-24-0-0/migrate-compose-plugins",
+      "prompt": "./dist/src/migrations/update-24-0-0/migrate-compose-plugins.md"
     }
   },
   "packageJsonUpdates": {

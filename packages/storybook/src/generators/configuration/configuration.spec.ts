@@ -191,6 +191,30 @@ describe('@nx/storybook:configuration', () => {
         ).not.toBeDefined();
       });
 
+      it.each([
+        ['^7.0.0', false],
+        ['^8.0.0', true],
+      ])(
+        'should resolve tsconfig paths for vite %s without a project vite config',
+        async (viteVersion, native) => {
+          addDependenciesToPackageJson(tree, {}, { vite: viteVersion });
+
+          await configurationGenerator(tree, {
+            project: 'test-ui-lib',
+            uiFramework: '@storybook/react-vite',
+            addPlugin: true,
+          });
+
+          const main = tree.read('test-ui-lib/.storybook/main.ts', 'utf-8');
+          const packageJson = readJson(tree, 'package.json');
+          expect(main.includes('tsconfigPaths: true')).toBe(native);
+          expect(main.includes('tsconfigPaths({ loose: true })')).toBe(!native);
+          expect(
+            packageJson.devDependencies['vite-tsconfig-paths'] !== undefined
+          ).toBe(!native);
+        }
+      );
+
       it('should add html related dependencies when using html as uiFramework', async () => {
         const existing = 'existing';
         const existingVersion = '1.0.0';

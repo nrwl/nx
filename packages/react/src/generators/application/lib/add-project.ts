@@ -113,6 +113,7 @@ function createRspackBuildTarget(
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
+      standardRspackConfigFunction: true,
       outputPath: options.isUsingTsSolutionConfig
         ? joinPathFragments(options.appProjectRoot, 'dist')
         : joinPathFragments(

@@ -1024,8 +1024,6 @@ describe('app', () => {
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import { reactRouter } from '@react-router/dev/vite';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -1038,10 +1036,13 @@ describe('app', () => {
             port: 4300,
             host: 'localhost',
           },
-          plugins: [!process.env.VITEST && reactRouter(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          resolve: {
+            tsconfigPaths: true,
+          },
+          plugins: [!process.env.VITEST && reactRouter()],
           // Uncomment this if you are using workers.
           // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -1833,8 +1834,6 @@ describe('app', () => {
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -1847,10 +1846,13 @@ describe('app', () => {
             port: 9000,
             host: 'localhost',
           },
-          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          resolve: {
+            tsconfigPaths: true,
+          },
+          plugins: [react()],
           // Uncomment this if you are using workers.
           // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -1967,8 +1969,6 @@ describe('app', () => {
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -1981,10 +1981,13 @@ describe('app', () => {
             port: 4300,
             host: 'localhost',
           },
-          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          resolve: {
+            tsconfigPaths: true,
+          },
+          plugins: [react()],
           // Uncomment this if you are using workers.
           // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           build: {
             outDir: '../dist/my-app',

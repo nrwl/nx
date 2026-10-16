@@ -99,7 +99,6 @@
     "@nx/js": "workspace:*",
     "@nx/vitest": "workspace:*",
     "picomatch": "catalog:",
-    "tsconfig-paths": "catalog:typescript",
     "semver": "catalog:",
     "tslib": "catalog:typescript",
     "ajv": "catalog:"

@@ -206,7 +206,7 @@ export function addOrChangeBuildTarget(
     executor: '@nx/rspack:rspack',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
-    options: buildOptions,
+    options: { ...buildOptions, standardRspackConfigFunction: true },
     configurations: {
       development: {
         ...(existingProjectConfigurations['development'] ?? {}),
@@ -340,20 +340,10 @@ function generateWebConfig(
   }
 
   return `
-const { composePlugins, withNx, withWeb } = require('@nx/rspack');
-module.exports = composePlugins(withNx(), withWeb(${
-    options.stylePreprocessorOptions
-      ? `
-  {
-    stylePreprocessorOptions: ${JSON.stringify(
-      options.stylePreprocessorOptions
-    )},
-  }
-  `
-      : ''
-  }), (config) => {
-    return config;
-  });
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+module.exports = {
+  plugins: [new NxAppRspackPlugin(${JSON.stringify({ stylePreprocessorOptions: options.stylePreprocessorOptions })})],
+};
 `;
 }
 
@@ -361,19 +351,15 @@ function generateReactConfig({
   stylePreprocessorOptions,
 }: ConfigurationWithStylePreprocessorOptions) {
   return `
-const { composePlugins, withNx, withReact } = require('@nx/rspack');
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
 
-module.exports = composePlugins(withNx(), withReact(${
-    stylePreprocessorOptions
-      ? `
-  {
-    stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
-  }
-  `
-      : ''
-  }), (config) => {
-  return config;
-});
+module.exports = {
+  plugins: [
+    new NxAppRspackPlugin(${JSON.stringify({ stylePreprocessorOptions })}),
+    new NxReactRspackPlugin(),
+  ],
+};
     `;
 }
 
@@ -423,11 +409,12 @@ module.exports = {
   }
 
   return `
-const { composePlugins, withNx } = require('@nx/rspack');
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
 const rspack = require('@rspack/core');
 
-module.exports = composePlugins(withNx(), (config) => {
-  config.optimization = {
+module.exports = {
+  plugins: [new NxAppRspackPlugin()],
+  optimization: {
     minimizer: [
       new rspack.SwcJsMinimizerRspackPlugin({
         minimizerOptions: {
@@ -442,9 +429,8 @@ module.exports = composePlugins(withNx(), (config) => {
         },
       }),
     ],
-  };
-  return config;
-});
+  },
+};
 `;
 }
 
@@ -458,22 +444,11 @@ function generateGenericConfig(
   }
 
   return `
-const { composePlugins, withNx${
-    options.stylePreprocessorOptions ? ', withWeb' : ''
-  } } = require('@nx/rspack');
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
 
-module.exports = composePlugins(withNx()${
-    options.stylePreprocessorOptions
-      ? `,
-    withWeb({
-      stylePreprocessorOptions: ${JSON.stringify(
-        options.stylePreprocessorOptions
-      )},
-    })`
-      : ''
-  }, (config) => {
-    return config;
-  });
+module.exports = {
+  plugins: [new NxAppRspackPlugin(${JSON.stringify({ stylePreprocessorOptions: options.stylePreprocessorOptions })})],
+};
 `;
 }
 

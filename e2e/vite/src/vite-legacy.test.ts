@@ -120,11 +120,9 @@ describe('Vite Plugin', () => {
           `/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: './node_modules/.vite/${myApp}',
   server: {
     port: 4200,
@@ -134,10 +132,11 @@ export default defineConfig({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: { tsconfigPaths: true },
+  plugins: [react()],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   builder: {},
   environments: {
@@ -286,7 +285,7 @@ export default async function render(_url: string, document: string) {
     100_000;
   });
 
-  describe('incremental building', () => {
+  describe('workspace library path resolution', () => {
     const app = uniq('demo');
     const lib = uniq('my-lib');
     beforeAll(() => {
@@ -308,8 +307,6 @@ export default async function render(_url: string, document: string) {
         `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive --directory=${lib}`
       );
 
-      // because the default js lib builds as cjs it cannot be loaded from dist
-      // so the paths plugin should always resolve to the libs source
       runCLI(
         `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive  --directory=${lib}-js`
       );
@@ -344,8 +341,8 @@ export default App;
       cleanupProject();
     });
 
-    it('should build app from libs source', () => {
-      const results = runCLI(`build ${app} --buildLibsFromSource=true`);
+    it('should resolve library source or built output from tsconfig paths', () => {
+      const results = runCLI(`build ${app}`);
       expect(results).toContain('Successfully ran target build for project');
       // Get the last "N modules transformed" (the app build, not lib builds)
       const sourceMatches = results.match(/(\d+) modules transformed/g);
@@ -354,36 +351,48 @@ export default App;
         sourceMatches[sourceMatches.length - 1].match(/(\d+)/)[1]
       );
 
-      const distResults = runCLI(`build ${app} --buildLibsFromSource=false`);
-      expect(distResults).toContain(
-        'Successfully ran target build for project'
+      runCLI(`build ${lib}-buildable`);
+      const outputPath = `dist/${lib}-buildable`;
+      const builtPackage = readJson(`${outputPath}/package.json`);
+      checkFilesExist(
+        join(outputPath, builtPackage.exports['.'].import),
+        join(outputPath, builtPackage.types)
       );
-      const distMatches = distResults.match(/(\d+) modules transformed/g);
-      expect(distMatches.length).toBeGreaterThan(0);
-      const distModuleCount = parseInt(
-        distMatches[distMatches.length - 1].match(/(\d+)/)[1]
-      );
+      const originalTsconfig = readFile('tsconfig.base.json');
+      try {
+        updateJson('tsconfig.base.json', (json) => {
+          json.compilerOptions.paths['@acme/buildable'] = [`./${outputPath}`];
+          return json;
+        });
+        const distResults = runCLI(`build ${app} --skip-nx-cache`);
+        expect(distResults).toContain(
+          'Successfully ran target build for project'
+        );
+        const distMatches = distResults.match(/(\d+) modules transformed/g);
+        expect(distMatches.length).toBeGreaterThan(0);
+        const distModuleCount = parseInt(
+          distMatches[distMatches.length - 1].match(/(\d+)/)[1]
+        );
 
-      // building from source should transform more modules than from dist
-      expect(sourceModuleCount).toBeGreaterThan(distModuleCount);
+        // Building from source should transform more modules than from dist.
+        expect(sourceModuleCount).toBeGreaterThan(distModuleCount);
+      } finally {
+        updateFile('tsconfig.base.json', originalTsconfig);
+      }
     });
 
     it('should build app from libs without package.json in lib', () => {
-      removeFile(`${lib}-buildable/package.json`);
-
-      const buildFromSourceResults = runCLI(
-        `build ${app} --buildLibsFromSource=true`
-      );
-      expect(buildFromSourceResults).toContain(
-        'Successfully ran target build for project'
-      );
-
-      const noBuildFromSourceResults = runCLI(
-        `build ${app} --buildLibsFromSource=false`
-      );
-      expect(noBuildFromSourceResults).toContain(
-        'Successfully ran target build for project'
-      );
+      const packageJsonPath = `${lib}-buildable/package.json`;
+      const originalPackageJson = readFile(packageJsonPath);
+      removeFile(packageJsonPath);
+      try {
+        const buildFromSourceResults = runCLI(`build ${app} --skip-nx-cache`);
+        expect(buildFromSourceResults).toContain(
+          'Successfully ran target build for project'
+        );
+      } finally {
+        updateFile(packageJsonPath, originalPackageJson);
+      }
     });
   });
 
@@ -434,7 +443,7 @@ export default App;
     });
 
     it('should build without a TS6059 rootDir error', () => {
-      const result = runCLI(`build ${app} --buildLibsFromSource=true`);
+      const result = runCLI(`build ${app}`);
 
       expect(result).not.toContain('TS6059');
       expect(result).toContain('Successfully ran target build for project');
@@ -523,12 +532,12 @@ export default App;
           return `/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
         
         export default defineConfig({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../../node_modules/.vite/libs/${lib}',
-          plugins: [react(), nxViteTsPaths()],
+          resolve: { tsconfigPaths: true },
+          plugins: [react()],
           test: {
             globals: true,
             cache: {
@@ -574,7 +583,6 @@ export default App;
         updateFile(`libs/${lib}/vite.config.mts`, () => {
           return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 
 export default defineConfig({
@@ -582,10 +590,8 @@ export default defineConfig({
     port: 4200,
     host: 'localhost',
   },
-  plugins: [
-    react(),
-    nxViteTsPaths()
-  ],
+  resolve: { tsconfigPaths: true },
+  plugins: [react()],
   test: {
     globals: true,
     cache: {
@@ -701,7 +707,6 @@ export default defineConfig({
         import fooPlugin from '@acme/foo';
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
         
         export default defineConfig({
           cacheDir: '../../node_modules/.vite/root-app',
@@ -709,7 +714,8 @@ export default defineConfig({
             port: 4200,
             host: 'localhost',
           },
-          plugins: [react(), nxViteTsPaths(), fooPlugin()],
+          resolve: { tsconfigPaths: true },
+          plugins: [react(), fooPlugin()],
         });`
       );
 

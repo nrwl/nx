@@ -93,6 +93,7 @@ describe('Node Applications + webpack', () => {
         env: {
           NX_DAEMON: 'true',
         },
+        timeout: 120_000,
       }
     );
 

@@ -30,6 +30,12 @@
       "description": "Rename imports of `createNodesV2` from `@nx/webpack/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-24-0-0-migrate-compose-plugins": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts webpack configs that use the removed `composePlugins`, `withNx`, `withWeb` and `withReact` helpers with `@nx/webpack:convert-config-to-webpack-plugin`, then hands an AI prompt the projects it could not convert and the `.old` configs it left behind.",
+      "implementation": "./dist/src/migrations/update-24-0-0/migrate-compose-plugins",
+      "prompt": "./dist/src/migrations/update-24-0-0/migrate-compose-plugins.md"
     }
   },
   "packageJsonUpdates": {

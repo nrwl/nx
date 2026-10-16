@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  fileExists,
   killProcessAndPorts,
   newProject,
   readFile,
@@ -80,7 +81,7 @@ describe('Webpack Plugin (legacy)', () => {
   });
 
   // Issue: https://github.com/nrwl/nx/issues/20179
-  it('should allow main/styles entries to be spread within composePlugins() function (#20179)', () => {
+  it('should allow main/styles entries to be spread after native plugins apply (#20179)', () => {
     const appName = uniq('app');
     runCLI(
       `generate @nx/web:app ${appName} --bundler webpack --unitTestRunner=jest --linter=eslint`
@@ -92,17 +93,22 @@ describe('Webpack Plugin (legacy)', () => {
     updateFile(
       `${appName}/webpack.config.js`,
       `
-        const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-        module.exports = composePlugins(withNx(), withWeb(), (config) => {
-        config.output.clean = true;
-          return {
-            ...config,
-            entry: {
-              main: [...config.entry.main],
-              styles: [...config.entry.styles],
-            }
-          };
-        });
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        module.exports = {
+          output: { clean: true },
+          plugins: [
+            new NxAppWebpackPlugin(),
+            {
+              apply(compiler) {
+                const { main, styles } = compiler.options.entry;
+                compiler.options.entry = {
+                  main: { ...main, import: [...main.import] },
+                  styles: { ...styles, import: [...styles.import] },
+                };
+              },
+            },
+          ],
+        };
       `
     );
 
@@ -165,9 +171,9 @@ describe('Webpack Plugin (legacy)', () => {
     }
   });
 
-  describe('ConvertConfigToWebpackPlugin,', () => {
-    it('should convert withNx webpack config to a standard config using NxWebpackPlugin', async () => {
-      const appName = 'app3224373'; // Needs to be reserved so that the snapshot projectName matches
+  describe('convert-config-to-webpack-plugin', () => {
+    it('should leave a generated native config unchanged when no conversion is needed', async () => {
+      const appName = uniq('app');
       const port = await reservePort();
       runCLI(
         `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=vitest --linter=eslint --port=${port}`
@@ -182,25 +188,20 @@ describe('Webpack Plugin (legacy)', () => {
     `
       );
 
-      runCLI(
-        `generate @nx/webpack:convert-config-to-webpack-plugin --project ${appName}`
+      const webpackConfig = readFile(`${appName}/webpack.config.js`);
+      const projectJSON = readFile(`${appName}/project.json`);
+      expect(webpackConfig).toContain('NxAppWebpackPlugin');
+      const conversionOutput = runCLI(
+        `generate @nx/webpack:convert-config-to-webpack-plugin --project ${appName}`,
+        { silenceError: true }
       );
-
-      // The reserved port differs per run; keep it out of the snapshots.
-      const withoutPort = (contents: string) =>
-        contents.replace(new RegExp(`\\b${port}\\b`, 'g'), '<port>');
-      const webpackConfig = withoutPort(
-        readFile(`${appName}/webpack.config.js`)
+      expect(runCLI.lastExitCode).not.toBe(0);
+      expect(conversionOutput).toContain(
+        'Could not find any projects to migrate.'
       );
-      const oldWebpackConfig = withoutPort(
-        readFile(`${appName}/webpack.config.old.js`)
-      );
-      const projectJSON = withoutPort(readFile(`${appName}/project.json`));
-
-      expect(webpackConfig).toMatchSnapshot();
-      expect(projectJSON).toMatchSnapshot(); // This file should be updated adding standardWebpackConfigFunction: true
-
-      expect(oldWebpackConfig).toMatchSnapshot(); // This file should be renamed and updated to not include `withNx`, `withReact`, and `withWeb`.
+      expect(readFile(`${appName}/webpack.config.js`)).toBe(webpackConfig);
+      expect(readFile(`${appName}/project.json`)).toBe(projectJSON);
+      expect(fileExists(`${appName}/webpack.config.old.js`)).toBe(false);
 
       expect(() => {
         runCLI(`build ${appName}`);

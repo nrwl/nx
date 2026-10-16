@@ -4,6 +4,7 @@ import {
   ensurePackage,
   formatFiles,
   generateFiles,
+  getDependencyVersionFromPackageJson,
   GeneratorCallback,
   joinPathFragments,
   logger,
@@ -12,12 +13,14 @@ import {
   Tree,
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '@nx/react/internal';
+import { coerce, major } from 'semver';
 
 import {
   nxVersion,
   reactNativeWebVersion,
   reactNativeSvgWebVersion,
   typesReactDomVersion,
+  viteTsconfigPathsVersion,
   assertSupportedReactNativeVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
@@ -68,12 +71,28 @@ export async function webConfigurationGenerator(
 
   // create files for webpack and vite config, index.html
   if (normalizedSchema.bundler === 'vite') {
+    // resolve.tsconfigPaths is native only from Vite 8; older majors ignore it.
+    const installedVite = coerce(
+      getDependencyVersionFromPackageJson(tree, 'vite') ?? ''
+    );
+    const useNativeTsconfigPaths = !installedVite || major(installedVite) >= 8;
     generateFiles(
       tree,
       joinPathFragments(__dirname, './files/base-vite'),
       normalizedSchema.projectRoot,
-      { ...normalizedSchema, tmpl: '' }
+      { ...normalizedSchema, useNativeTsconfigPaths, tmpl: '' }
     );
+    if (!useNativeTsconfigPaths && !options.skipPackageJson) {
+      tasks.push(
+        addDependenciesToPackageJson(
+          tree,
+          {},
+          { 'vite-tsconfig-paths': viteTsconfigPathsVersion },
+          undefined,
+          true
+        )
+      );
+    }
   } else {
     generateFiles(
       tree,
