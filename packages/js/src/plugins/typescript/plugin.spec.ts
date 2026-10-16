@@ -3,7 +3,14 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
 import { mkdirSync, rmSync } from 'node:fs';
 import { getLockFileName, setupWorkspaceContext } from '@nx/devkit/internal';
+import type { Mock } from 'vitest';
+import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
+
+vi.mock('../../utils/typescript/ts-solution-setup', async () => ({
+  ...(await vi.importActual<any>('../../utils/typescript/ts-solution-setup')),
+  isUsingTsSolutionSetup: vi.fn(),
+}));
 
 vi.mock('nx/src/utils/cache-directory', async () => ({
   ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
@@ -19,6 +26,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   let configFiles: string[];
 
   beforeEach(async () => {
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
     mkdirSync('tmp/project-graph-cache', { recursive: true });
     tempFs = new TempFs('typescript-plugin');
     context = {
@@ -3711,6 +3719,127 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }
         `);
       });
+    });
+  });
+
+  describe('typecheck target outside TS solution setups', () => {
+    beforeEach(() => {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
+    });
+
+    it('should check the app tsconfig without emitting', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          files: [],
+          references: [
+            { path: './tsconfig.app.json' },
+            { path: './tsconfig.spec.json' },
+          ],
+        }),
+        'apps/my-app/tsconfig.app.json': JSON.stringify({
+          include: ['src/**/*.ts'],
+        }),
+        'apps/my-app/tsconfig.spec.json': JSON.stringify({
+          include: ['src/**/*.spec.ts'],
+        }),
+        'apps/my-app/project.json': `{}`,
+      });
+
+      const { projects } = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {}
+      );
+      const target = projects['apps/my-app'].targets.typecheck;
+
+      expect(target.command).toBe('tsc -p tsconfig.app.json --noEmit');
+      expect(target.options).toEqual({ cwd: 'apps/my-app' });
+      expect(target.dependsOn).toBeUndefined();
+      expect(target.outputs).toBeUndefined();
+      expect(target.syncGenerators).toBeUndefined();
+      expect(target.inputs).toContain('{projectRoot}/tsconfig.app.json');
+    });
+
+    it('should fall back to the lib and then the root tsconfig', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({
+          files: [],
+          references: [{ path: './tsconfig.lib.json' }],
+        }),
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/project.json': `{}`,
+        'libs/other-lib/tsconfig.json': JSON.stringify({
+          include: ['src/**/*.ts'],
+        }),
+        'libs/other-lib/project.json': `{}`,
+      });
+
+      const { projects } = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        { compiler: 'tsgo' }
+      );
+
+      expect(projects['libs/my-lib'].targets.typecheck.command).toBe(
+        'tsgo -p tsconfig.lib.json --noEmit'
+      );
+      expect(projects['libs/other-lib'].targets.typecheck.command).toBe(
+        'tsgo --noEmit'
+      );
+    });
+
+    it('should skip projects whose build already type-checks', async () => {
+      const tsconfig = JSON.stringify({ include: ['src/**/*.ts'] });
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/tsc-lib/tsconfig.json': tsconfig,
+        'libs/tsc-lib/project.json': JSON.stringify({
+          targets: { build: { executor: '@nx/js:tsc' } },
+        }),
+        'apps/webpack-app/tsconfig.json': tsconfig,
+        'apps/webpack-app/project.json': `{}`,
+        'apps/webpack-app/webpack.config.js': `module.exports = {};`,
+        'apps/esbuild-app/tsconfig.json': tsconfig,
+        'apps/esbuild-app/project.json': JSON.stringify({
+          targets: {
+            build: {
+              executor: '@nx/esbuild:esbuild',
+              options: { skipTypeCheck: true },
+            },
+          },
+        }),
+      });
+
+      const { projects } = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {}
+      );
+
+      expect(projects['libs/tsc-lib']?.targets?.typecheck).toBeUndefined();
+      expect(projects['apps/webpack-app']?.targets?.typecheck).toBeUndefined();
+      expect(projects['apps/esbuild-app'].targets.typecheck.command).toBe(
+        'tsc --noEmit'
+      );
+    });
+
+    it('should respect addTypecheckTarget: false', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({
+          include: ['src/**/*.ts'],
+          nx: { addTypecheckTarget: false },
+        }),
+        'libs/my-lib/project.json': `{}`,
+      });
+
+      const { projects } = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {}
+      );
+
+      expect(projects['libs/my-lib']?.targets?.typecheck).toBeUndefined();
     });
   });
 
