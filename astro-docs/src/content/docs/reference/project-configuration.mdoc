@@ -661,7 +661,7 @@ Other text in braces, such as a `{{.State.Health.Status}}` template in a command
 The optional `timeout` key is how long Nx waits for readiness, in milliseconds.
 It defaults to `60000`.
 The optional `interval` key is the time between attempts, in milliseconds.
-Without it, attempts back off from 100 to 1000 milliseconds.
+It defaults to `250`.
 
 If the target isn't ready within `timeout`, its task fails and the tasks waiting for it are skipped, as with any failed dependency.
 The continuous task keeps running until nothing in the run needs it.

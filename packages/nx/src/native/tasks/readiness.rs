@@ -13,11 +13,11 @@ use vte::{Parser, Perform};
 
 use crate::native::pseudo_terminal::process_killer::kill_process_tree_internal;
 
-const BACKOFF_MS: [u64; 4] = [100, 250, 500, 1000];
+const DEFAULT_INTERVAL: Duration = Duration::from_millis(250);
 // A killed shell exits at once; past this the wait would only hang
 const REAP_MS: u64 = 1000;
 
-/// Exactly one of `url`, `port` or `command` is set. `interval` absent means backoff.
+/// Exactly one of `url`, `port` or `command` is set.
 #[napi(object)]
 pub struct ReadinessProbeConfig {
     pub url: Option<String>,
@@ -197,7 +197,7 @@ fn build_http_client(loopback: Option<(&str, &[IpAddr])>) -> reqwest::Result<Cli
 pub struct ReadinessProbe {
     probe: Probe,
     timeout: Duration,
-    interval: Option<Duration>,
+    interval: Duration,
     token: CancellationToken,
 }
 
@@ -208,7 +208,9 @@ impl ReadinessProbe {
         Ok(Self {
             probe: Probe::from_config(&config, cwd)?,
             timeout: Duration::from_millis(config.timeout.into()),
-            interval: config.interval.map(|ms| Duration::from_millis(ms.into())),
+            interval: config
+                .interval
+                .map_or(DEFAULT_INTERVAL, |ms| Duration::from_millis(ms.into())),
             token: CancellationToken::new(),
         })
     }
@@ -217,18 +219,13 @@ impl ReadinessProbe {
     #[napi]
     pub async fn wait(&self) -> anyhow::Result<bool> {
         let deadline = Instant::now() + self.timeout;
-        let mut attempt = 0usize;
         while !self.token.is_cancelled() && Instant::now() < deadline {
             if self.probe.run(deadline, &self.token).await? {
                 return Ok(true);
             }
-            let delay = self.interval.unwrap_or_else(|| {
-                Duration::from_millis(BACKOFF_MS[attempt.min(BACKOFF_MS.len() - 1)])
-            });
-            attempt += 1;
             tokio::select! {
                 _ = self.token.cancelled() => break,
-                _ = tokio::time::sleep(delay.min(deadline.saturating_duration_since(Instant::now()))) => {}
+                _ = tokio::time::sleep(self.interval.min(deadline.saturating_duration_since(Instant::now()))) => {}
             }
         }
         Ok(false)
