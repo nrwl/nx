@@ -195,8 +195,8 @@ describe('createTaskGraph', () => {
       projectGraph.nodes['app1'].data.targets['test'].ultracache = {
         mode: 'off',
         collectStats,
-        ignoredReads: ['tmp/**'],
-        ignoredWrites: ['scratch/**'],
+        ignoreReads: ['tmp/**'],
+        ignoreWrites: ['scratch/**'],
       };
 
       const taskGraph = createTaskGraph(
@@ -212,8 +212,8 @@ describe('createTaskGraph', () => {
       expect(serializedGraph.tasks['app1:test'].ultracache).toEqual({
         mode: 'off',
         ...(collectStats === undefined ? {} : { collectStats }),
-        ignoredReads: ['tmp/**'],
-        ignoredWrites: ['scratch/**'],
+        ignoreReads: ['tmp/**'],
+        ignoreWrites: ['scratch/**'],
       });
       expect(taskGraph.tasks['lib1:test'].ultracache).toBeUndefined();
       expect(serializedGraph.tasks['app1:test'].ultracache.collectStats).toBe(

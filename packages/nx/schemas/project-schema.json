@@ -168,14 +168,14 @@
                 "default": false,
                 "description": "Collect successful stat metadata accesses as inputs. Missing-path probes are tracked independently of this setting."
               },
-              "ignoredReads": {
+              "ignoreReads": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 },
                 "description": "Workspace-relative glob patterns for reads excluded from ultracache reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
               },
-              "ignoredWrites": {
+              "ignoreWrites": {
                 "type": "array",
                 "items": {
                   "type": "string"

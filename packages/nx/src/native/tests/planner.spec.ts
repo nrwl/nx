@@ -2558,7 +2558,7 @@ describe('task planner', () => {
       }
     );
 
-    it("moves the configuration marker when the task's ignoredReads change, and only then", () => {
+    it("moves the configuration marker when the task's ignoreReads change, and only then", () => {
       const { planner, taskGraph } = fixture();
       const configurations = configurationsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
@@ -2571,13 +2571,13 @@ describe('task planner', () => {
       };
 
       const none = markerWith(undefined);
-      const reads = markerWith({ ignoredReads: ['tmp/**', 'cache/**'] });
+      const reads = markerWith({ ignoreReads: ['tmp/**', 'cache/**'] });
       expect(reads).not.toBe(none);
       // Order means nothing; an empty list is no exclusion.
-      expect(markerWith({ ignoredReads: ['cache/**', 'tmp/**'] })).toBe(reads);
-      expect(markerWith({ ignoredReads: [] })).toBe(none);
+      expect(markerWith({ ignoreReads: ['cache/**', 'tmp/**'] })).toBe(reads);
+      expect(markerWith({ ignoreReads: [] })).toBe(none);
       // Recorded writes are never used, so their exclusions don't count.
-      expect(markerWith({ ignoredWrites: ['tmp/**', 'cache/**'] })).toBe(none);
+      expect(markerWith({ ignoreWrites: ['tmp/**', 'cache/**'] })).toBe(none);
     });
 
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
