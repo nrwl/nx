@@ -239,6 +239,27 @@ Tells Nx which base branch to use when calculating affected projects.
 
 - `defaultBase` defines the default base branch, defaults to `main`.
 
+## Affected
+
+The `affected` block configures how `nx affected` selects what to run.
+
+By default, only tasks whose inputs a change reaches run. Set `legacy` to `true` to run every task of every affected project instead:
+
+```json
+// nx.json
+{
+  "affected": {
+    "legacy": true
+  }
+}
+```
+
+`legacy` applies to `nx affected -t` and `nx show projects --affected -t`. The [`NX_LEGACY_AFFECTED`](/docs/reference/environment-variables) environment variable overrides it for one invocation.
+
+`affected.defaultBase` is deprecated. Use the top-level [`defaultBase`](#default-base) instead.
+
+For how the affected set is computed, see [run only tasks affected by a PR](/docs/features/ci-features/affected).
+
 ## Target defaults
 
 Target defaults provide a way to configure common options for targets across projects without duplicating the configuration. When Nx builds a project's configuration, it applies applicable defaults for each target as the base for that target's configuration.

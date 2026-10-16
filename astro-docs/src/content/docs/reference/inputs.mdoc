@@ -350,8 +350,8 @@ The option has no effect on dependencies that aren't continuous.
 The Playwright and Cypress plugins set it for the atomized tasks of test files that
 [hash from the app code they import](/docs/kb/hash-e2e-tests-from-imports).
 
-Set `NX_LEGACY_AFFECTED=false` to make `nx affected` select tasks by their inputs.
-Without it, `nx affected` selects whole projects, regardless of `"inputs": false`.
+`nx affected` selects tasks by their inputs.
+With [`affected.legacy`](/docs/reference/nx-json#affected), it selects whole projects, regardless of `"inputs": false`.
 
 ### Inputs kept under ultracache
 

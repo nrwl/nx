@@ -15,11 +15,16 @@
       "properties": {
         "defaultBase": {
           "type": "string",
-          "description": "Default based branch used by affected commands."
+          "description": "Default based branch used by affected commands.",
+          "deprecated": "Use the top-level `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 25."
+        },
+        "legacy": {
+          "type": "boolean",
+          "default": false,
+          "description": "Select every task of each affected project, instead of only the tasks whose inputs a change reaches."
         }
       },
-      "additionalProperties": false,
-      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
+      "additionalProperties": false
     },
     "extends": {
       "type": "string",
