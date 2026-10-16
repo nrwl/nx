@@ -3824,6 +3824,30 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       );
     });
 
+    it('should not fail when an extended tsconfig is missing', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'tsconfig.base.json': JSON.stringify({ compilerOptions: {} }),
+        'libs/my-lib/tsconfig.json': JSON.stringify({
+          extends: '../../tsconfig.base.json',
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/project.json': `{}`,
+      });
+      await invokeCreateNodesOnMatchingFiles(configFiles, context, {});
+      tempFs.removeFileSync('tsconfig.base.json');
+      configFiles = configFiles.filter((f) => f !== 'tsconfig.base.json');
+
+      const { projects } = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {}
+      );
+
+      expect(projects['libs/my-lib'].targets.typecheck.command).toBe(
+        'tsc --noEmit'
+      );
+    });
+
     it('should respect addTypecheckTarget: false', async () => {
       configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
