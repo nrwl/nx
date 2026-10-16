@@ -1,5 +1,6 @@
 import { exec } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 import { runNxAsync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
@@ -10,6 +11,7 @@ import {
   getPackageManagerCommand,
   getPackageManagerVersion,
 } from '../../utils/package-manager';
+import { acknowledgeDeclaredBuildScripts } from '../../utils/acknowledge-build-scripts';
 import { handleErrors } from '../../utils/handle-errors';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -47,7 +49,7 @@ export function addHandler(options: AddOptions): Promise<number> {
   });
 }
 
-async function installPackage(
+export async function installPackage(
   pkgName: string,
   version: string,
   nxJson: NxJsonConfiguration
@@ -67,13 +69,28 @@ async function installPackage(
 
     // pnpm 11+ fails the install when the plugin's own dependency tree
     // carries unacknowledged build scripts, and the plugin's generators can
-    // only record allowBuilds decisions after this install. Warn and skip
-    // for this one install, like pnpm 10 did. pnpm 12 gave `--config` a
-    // meaning of its own and takes the setting from the environment instead.
+    // only record allowBuilds decisions after this install. A plugin that
+    // declares them in its package.json keeps the install strict; otherwise
+    // warn and skip for this one install, like pnpm 10 did. pnpm 12 gave
+    // `--config` a meaning of its own and takes the setting from the
+    // environment instead.
     const env = { ...process.env };
+    let restorePnpmWorkspace: (() => void) | undefined;
     if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
-      command += ' --config.strictDepBuilds=false';
-      env.PNPM_CONFIG_STRICT_DEP_BUILDS = 'false';
+      restorePnpmWorkspace = snapshotFile(
+        join(workspaceRoot, 'pnpm-workspace.yaml')
+      );
+      if (
+        !(await acknowledgeDeclaredBuildScripts(
+          workspaceRoot,
+          pm,
+          pkgName,
+          version
+        ))
+      ) {
+        command += ' --config.strictDepBuilds=false';
+        env.PNPM_CONFIG_STRICT_DEP_BUILDS = 'false';
+      }
     }
     await new Promise<void>((resolve) =>
       exec(
@@ -93,6 +110,9 @@ async function installPackage(
             output.error({
               title: `Failed to install ${pkgName}. Please check the error above for more details.`,
             });
+            // The decisions the plugin declared were recorded for a plugin
+            // that never installed; put the file back.
+            restorePnpmWorkspace?.();
             process.exit(1);
           }
 
@@ -126,6 +146,14 @@ async function installPackage(
   }
 
   spinner.succeed();
+}
+
+function snapshotFile(path: string): () => void {
+  const before = existsSync(path) ? readFileSync(path, 'utf-8') : null;
+  return () =>
+    before === null
+      ? rmSync(path, { force: true })
+      : writeFileSync(path, before);
 }
 
 async function initializePlugin(

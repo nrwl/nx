@@ -11,6 +11,7 @@ export {
   resolvePrompt,
   PromptResolutionError,
   acknowledgeBuildScripts,
+  acknowledgeDeclaredBuildScripts,
   createCliOptions,
   createOverrides,
   isAiAgent,
