@@ -5,20 +5,34 @@ use std::collections::HashMap;
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 use std::process::Command;
+use std::sync::{Arc, OnceLock};
 use tracing::trace;
 
+/// One hash_plans invocation's runtime commands and environments, including in-flight failures.
+pub type RuntimeCache = DashMap<String, Arc<OnceLock<Result<String, String>>>>;
 pub fn hash_runtime(
     workspace_root: &str,
     command: &str,
     env: &HashMap<String, String>,
-    cache: &DashMap<String, String>,
+    cache: &RuntimeCache,
 ) -> anyhow::Result<String> {
-    let cache_key = runtime_cache_key(command, env);
+    // Drop the map's shard guard before running or waiting: unrelated keys must proceed independently.
+    let cell = cache
+        .entry(runtime_cache_key(command, env))
+        .or_insert_with(|| Arc::new(OnceLock::new()))
+        .clone();
+    cell.get_or_init(|| {
+        run_runtime(workspace_root, command, env).map_err(|error| format!("{error:#}"))
+    })
+    .clone()
+    .map_err(anyhow::Error::msg)
+}
 
-    if let Some(cache_results) = cache.get(&cache_key) {
-        return Ok(cache_results.clone());
-    }
-
+fn run_runtime(
+    workspace_root: &str,
+    command: &str,
+    env: &HashMap<String, String>,
+) -> anyhow::Result<String> {
     let mut command_builder = create_shell_command();
 
     append_shell_command(&mut command_builder, command);
@@ -35,11 +49,7 @@ pub fn hash_runtime(
 
     let std_out = std::str::from_utf8(&output.stdout)?.trim();
     let std_err = std::str::from_utf8(&output.stderr)?.trim();
-    let hash_result = hash(&[std_out.as_bytes(), std_err.as_bytes()].concat());
-
-    cache.insert(cache_key, hash_result.clone());
-
-    Ok(hash_result)
+    Ok(hash(&[std_out.as_bytes(), std_err.as_bytes()].concat()))
 }
 
 // Rust escapes inner quotes as \" when it quotes an argument, and `cmd /C`
@@ -71,6 +81,7 @@ mod tests {
     use super::*;
     use dashmap::DashMap;
     use std::collections::HashMap;
+    use std::sync::Barrier;
 
     #[test]
     fn test_hash_runtime() {
@@ -109,5 +120,103 @@ mod tests {
         let key_b = runtime_cache_key(command, &env_b);
 
         assert_eq!(key_a, key_b);
+    }
+
+    #[test]
+    fn concurrent_identical_requests_run_once_and_the_next_invocation_runs_again() {
+        let root = tempfile::tempdir().unwrap();
+        let command =
+            "node -e \"require('fs').appendFileSync('runs', 'run\\n'); console.log('joined')\"";
+        let cache = RuntimeCache::new();
+        let env = HashMap::new();
+        let barrier = Barrier::new(8);
+        std::thread::scope(|scope| {
+            let handles: Vec<_> = (0..8)
+                .map(|_| {
+                    scope.spawn(|| {
+                        barrier.wait();
+                        hash_runtime(root.path().to_str().unwrap(), command, &env, &cache).unwrap()
+                    })
+                })
+                .collect();
+            for handle in handles {
+                assert_eq!(handle.join().unwrap(), hash(b"joined"));
+            }
+        });
+        assert_eq!(
+            std::fs::read_to_string(root.path().join("runs")).unwrap(),
+            "run\n"
+        );
+        assert_eq!(
+            hash_runtime(
+                root.path().to_str().unwrap(),
+                command,
+                &env,
+                &RuntimeCache::new()
+            )
+            .unwrap(),
+            hash(b"joined")
+        );
+        assert_eq!(
+            std::fs::read_to_string(root.path().join("runs")).unwrap(),
+            "run\nrun\n"
+        );
+    }
+
+    #[test]
+    fn concurrent_failures_share_one_execution() {
+        let root = tempfile::tempdir().unwrap();
+        let command = "node -e \"require('fs').appendFileSync('runs', 'run\\n'); process.stdout.write(Buffer.from([255]))\"";
+        let cache = RuntimeCache::new();
+        let env = HashMap::new();
+        let barrier = Barrier::new(8);
+        let errors = std::thread::scope(|scope| {
+            let handles: Vec<_> = (0..8)
+                .map(|_| {
+                    scope.spawn(|| {
+                        barrier.wait();
+                        hash_runtime(root.path().to_str().unwrap(), command, &env, &cache)
+                            .unwrap_err()
+                            .to_string()
+                    })
+                })
+                .collect();
+            handles
+                .into_iter()
+                .map(|handle| handle.join().unwrap())
+                .collect::<Vec<_>>()
+        });
+        assert!(errors[0].contains("invalid utf-8"));
+        assert!(errors.iter().all(|error| error == &errors[0]));
+        assert_eq!(
+            std::fs::read_to_string(root.path().join("runs")).unwrap(),
+            "run\n"
+        );
+    }
+
+    #[test]
+    fn different_environments_execute_separately() {
+        let root = tempfile::tempdir().unwrap();
+        let command = "node -e \"require('fs').appendFileSync('runs', 'run\\n'); console.log(process.env.NX_RUNTIME_VALUE)\"";
+        let cache = RuntimeCache::new();
+        let first = HashMap::from([("NX_RUNTIME_VALUE".to_string(), "one".to_string())]);
+        let second = HashMap::from([("NX_RUNTIME_VALUE".to_string(), "two".to_string())]);
+        let barrier = Barrier::new(2);
+        std::thread::scope(|scope| {
+            let one = scope.spawn(|| {
+                barrier.wait();
+                hash_runtime(root.path().to_str().unwrap(), command, &first, &cache).unwrap()
+            });
+            let two = scope.spawn(|| {
+                barrier.wait();
+                hash_runtime(root.path().to_str().unwrap(), command, &second, &cache).unwrap()
+            });
+            assert_eq!(one.join().unwrap(), hash(b"one"));
+            assert_eq!(two.join().unwrap(), hash(b"two"));
+        });
+        assert_eq!(
+            std::fs::read_to_string(root.path().join("runs")).unwrap(),
+            "run\nrun\n"
+        );
     }
 }
