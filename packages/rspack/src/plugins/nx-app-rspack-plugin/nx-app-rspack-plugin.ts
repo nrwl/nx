@@ -3,9 +3,6 @@ import type {
   NormalizedNxAppRspackPluginOptions,
   NxAppRspackPluginOptions,
 } from '../utils/models';
-import { normalizeOptions } from '../utils/plugins/normalize-options';
-import { applyBaseConfig } from '../utils/apply-base-config';
-import { applyWebConfig } from '../utils/apply-web-config';
 
 /**
  * This plugin provides features to build Node and Web applications.
@@ -20,13 +17,23 @@ export class NxAppRspackPlugin {
   private readonly options: NormalizedNxAppRspackPluginOptions;
 
   constructor(options: NxAppRspackPluginOptions = {}) {
-    // If we're building inferred targets, skip normalizing the build options
+    // If we're building inferred targets, skip normalizing the build options.
+    // Lazy-required so graph creation does not load it either.
     if (!global.NX_GRAPH_CREATION) {
+      const { normalizeOptions } =
+        require('../utils/plugins/normalize-options') as typeof import('../utils/plugins/normalize-options');
       this.options = normalizeOptions(options);
     }
   }
 
   apply(compiler: Compiler) {
+    // Lazy-required so graph creation, which only constructs this plugin, does
+    // not load them
+    const { applyBaseConfig } =
+      require('../utils/apply-base-config') as typeof import('../utils/apply-base-config');
+    const { applyWebConfig } =
+      require('../utils/apply-web-config') as typeof import('../utils/apply-web-config');
+
     // Default's to web
     const target = this.options.target ?? compiler.options.target;
     this.options.outputPath ??= compiler.options.output?.path;

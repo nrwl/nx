@@ -1,7 +1,5 @@
-import { workspaceRoot } from '@nx/devkit';
 import type { Configuration } from '@rspack/core';
-import { isNxRspackComposablePlugin } from './config';
-import { readNxJsonFromDisk } from '@nx/devkit/internal';
+import { isNxRspackComposablePlugin } from './composable-plugin';
 
 /**
  * Reads the Rspack options from a give Rspack configuration. The configuration can be:
@@ -25,6 +23,11 @@ export async function readRspackOptions(
     config: unknown
   ): Promise<Configuration | Configuration[]> => {
     if (isNxRspackComposablePlugin(config)) {
+      // Lazy-required so reading any other config does not load them
+      const { workspaceRoot } =
+        require('@nx/devkit') as typeof import('@nx/devkit');
+      const { readNxJsonFromDisk } =
+        require('@nx/devkit/internal') as typeof import('@nx/devkit/internal');
       return await config(
         {},
         {

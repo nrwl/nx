@@ -2,14 +2,12 @@ import type { ExecutorContext } from '@nx/devkit';
 import type { Configuration } from '@rspack/core';
 import type { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
 import { warnRspackComposeHelpersDeprecation } from './deprecation';
+import { nxRspackComposablePlugin } from './composable-plugin';
 
-export const nxRspackComposablePlugin = 'nxRspackComposablePlugin';
-
-export function isNxRspackComposablePlugin(
-  a: unknown
-): a is AsyncNxComposableRspackPlugin {
-  return a?.[nxRspackComposablePlugin] === true;
-}
+export {
+  isNxRspackComposablePlugin,
+  nxRspackComposablePlugin,
+} from './composable-plugin';
 
 export interface NxRspackExecutionContext {
   options: NormalizedRspackExecutorSchema;
