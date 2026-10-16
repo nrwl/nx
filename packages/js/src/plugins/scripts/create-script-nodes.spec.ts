@@ -1,6 +1,12 @@
-import { type CreateNodesContext, logger } from '@nx/devkit';
+import { type CreateNodesContext } from '@nx/devkit';
+import { emitPluginWorkerLog } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createScriptNodes } from './create-script-nodes';
+
+vi.mock('@nx/devkit/internal', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@nx/devkit/internal')>()),
+  emitPluginWorkerLog: vi.fn(),
+}));
 
 describe('createScriptNodes', () => {
   const [glob, createNodes] = createScriptNodes({
@@ -29,9 +35,9 @@ describe('createScriptNodes', () => {
     }
   });
 
-  async function run(files: Record<string, string>) {
+  async function run(files: Record<string, string>, options = {}) {
     await tempFs.createFiles(files);
-    return createNodes(Object.keys(files), {}, context);
+    return createNodes(Object.keys(files), options, context);
   }
 
   it('should match scripts and project markers', () => {
@@ -135,7 +141,7 @@ describe('createScriptNodes', () => {
       'package.json': '{}',
       'scripts/a/build.js': '#!/usr/bin/env node\n',
       'scripts/b/build.js': '#!/usr/bin/env node\n',
-      'scripts/c/run.js': '#!/usr/bin/env node\n/** @nx name: build */\n',
+      'scripts/c/run.js': '#!/usr/bin/env node\n// @nx-target-name: build\n',
     });
 
     expect(Object.keys(results[0][1].projects['.'].targets)).toEqual([
@@ -145,86 +151,33 @@ describe('createScriptNodes', () => {
     ]);
   });
 
-  it('should apply frontmatter', async () => {
-    const results = await run({
-      'package.json': '{}',
-      'scripts/dev.ts': [
-        '#!/usr/bin/env node',
-        '/** @nx',
-        'name: dev-server',
-        'description: Start the dev server',
-        'watch: true',
-        'dependsOn: [build]',
-        'cwd: scripts',
-        '*/',
-      ].join('\n'),
-      'scripts/skip.ts': '#!/usr/bin/env node\n/** @nx disable: true */\n',
-    });
+  it('should run claimed scripts in watch mode when watch is set', async () => {
+    const results = await run(
+      {
+        'package.json': '{}',
+        'src/main.ts': '#!/usr/bin/env node\n// @nx-target-name: serve\n',
+      },
+      { watch: true }
+    );
 
     expect(results[0][1].projects['.'].targets).toMatchInlineSnapshot(`
       {
-        "dev-server": {
+        "serve": {
           "cache": false,
-          "command": "node --watch dev.ts",
+          "command": "node --watch src/main.ts",
           "continuous": true,
-          "dependsOn": [
-            "build",
-          ],
           "metadata": {
-            "description": "Start the dev server",
+            "description": "Runs src/main.ts",
             "technologies": [
               "node",
             ],
           },
           "options": {
-            "cwd": "scripts",
+            "cwd": ".",
           },
         },
       }
     `);
-  });
-
-  it('should merge options and metadata and drop mistyped keys', async () => {
-    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
-    const results = await run({
-      'package.json': '{}',
-      'scripts/seed.js': [
-        '#!/usr/bin/env node',
-        '/** @nx',
-        'dependsOn: build',
-        'options: { env: { SEED: "1" } }',
-        'metadata: { owner: data }',
-        'parallelism: false',
-        '*/',
-      ].join('\n'),
-    });
-
-    expect(results[0][1].projects['.'].targets.seed).toMatchInlineSnapshot(`
-      {
-        "cache": false,
-        "command": "node scripts/seed.js",
-        "metadata": {
-          "description": "Runs scripts/seed.js",
-          "owner": "data",
-          "technologies": [
-            "node",
-          ],
-        },
-        "options": {
-          "cwd": ".",
-          "env": {
-            "SEED": "1",
-          },
-        },
-        "parallelism": false,
-      }
-    `);
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"dependsOn" in scripts/seed.js: expected array, got string'
-      )
-    );
-    warn.mockRestore();
   });
 
   it('should quote script paths the shell would split', async () => {
@@ -238,21 +191,16 @@ describe('createScriptNodes', () => {
     );
   });
 
-  it('should warn and fall back to defaults on malformed frontmatter', async () => {
-    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+  it('should warn and fall back to the file name on an invalid directive', async () => {
     const results = await run({
       'package.json': '{}',
-      'scripts/broken.js': '#!/usr/bin/env node\n/* @nx\nname: [oops\n*/\n',
+      'scripts/seed.js': '#!/usr/bin/env node\n// @nx-target-name:\n',
     });
 
-    expect(Object.keys(results[0][1].projects['.'].targets)).toEqual([
-      'broken',
-    ]);
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Ignoring the nx frontmatter in scripts/broken.js'
-      )
+    expect(Object.keys(results[0][1].projects['.'].targets)).toEqual(['seed']);
+    expect(emitPluginWorkerLog).toHaveBeenCalledWith(
+      'warn',
+      'scripts/seed.js: "@nx-target-name" is empty.'
     );
-    warn.mockRestore();
   });
 });

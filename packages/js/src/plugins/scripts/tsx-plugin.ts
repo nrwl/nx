@@ -1,6 +1,9 @@
-import { createScriptNodes } from './create-script-nodes';
+import {
+  createScriptNodes,
+  type ScriptPluginOptions,
+} from './create-script-nodes';
 
-export const createNodes = createScriptNodes<Record<string, never>>({
+export const createNodes = createScriptNodes<ScriptPluginOptions>({
   cacheName: 'js-tsx-scripts',
   technology: 'tsx',
   claims: (shebang) => shebang.interpreter === 'tsx',

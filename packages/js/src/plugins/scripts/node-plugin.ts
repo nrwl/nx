@@ -5,10 +5,11 @@ import { join, posix } from 'node:path';
 import {
   createScriptNodes,
   quoteShellArg,
+  type ScriptPluginOptions,
   type ScriptTargets,
 } from './create-script-nodes';
 
-export interface NodeScriptsPluginOptions {
+export interface NodeScriptsPluginOptions extends ScriptPluginOptions {
   /**
    * `dependsOn` for `bin` targets whose file is build output (not a tracked
    * workspace file). Defaults to `["build"]`.

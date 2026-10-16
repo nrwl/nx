@@ -56,26 +56,17 @@ describe('@nx/js/node', () => {
     const targets = await targetsFor(
       {
         'apps/api/package.json': '{}',
-        'apps/api/src/main.ts': [
-          '#!/usr/bin/env node',
-          '/**',
-          ' * @nx',
-          ' * name: serve',
-          ' * continuous: true',
-          ' * watch: true',
-          ' * dependsOn: ["^build"]',
-          ' */',
-          'console.log("hi");',
-        ].join('\n'),
+        'apps/api/src/main.ts':
+          '#!/usr/bin/env node\n// @nx-target-name: serve\nconsole.log("hi");\n',
       },
-      'apps/api'
+      'apps/api',
+      { watch: true }
     );
 
     expect(targets).toEqual({
       serve: expect.objectContaining({
         command: 'node --watch src/main.ts',
         continuous: true,
-        dependsOn: ['^build'],
         options: { cwd: 'apps/api' },
       }),
     });

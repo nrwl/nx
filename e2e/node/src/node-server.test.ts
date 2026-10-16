@@ -39,7 +39,7 @@ describe('Node Applications + webpack', () => {
     const mainFile = `apps/${appName}/src/main.ts`;
     const content = readFile(mainFile);
     // Keep the shebang first so the inferred serve target still resolves.
-    const header = content.match(/^#!.*\n(?:\/\*\*[\s\S]*?\*\/\n)?/)?.[0] ?? '';
+    const header = content.match(/^#!.*\n(?:\/\/.*\n)*/)?.[0] ?? '';
     updateFile(
       mainFile,
       `${header}

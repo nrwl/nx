@@ -64,22 +64,16 @@ nx g @nx/node:application apps/my-new-app
 
 You can run your application with `nx serve my-new-app`, which starts it in watch mode.
 
-The `serve` task comes from the comment block at the top of `src/main.ts`:
+The `serve` task comes from the first two lines of `src/main.ts`:
 
 ```ts
 #!/usr/bin/env node
-/**
- * @nx
- * name: serve
- * continuous: true
- * watch: true
- * dependsOn: ["^build"]
- */
+// @nx-target-name: serve
 ```
 
-Because the shebang names `node`, `nx serve` runs the file with `node --watch` and restarts it on changes without a build step. Workspace libraries the application depends on are built first. Node runs the TypeScript source directly, which requires Node.js 22.18 or later. These applications are ES modules, with `"type": "module"` in their `package.json`, so relative imports name the `.ts` file (`./message.ts`). The build rewrites them to `.js`.
+`@nx/js/node` picks up files whose shebang names `node`, and `@nx-target-name` sets the task name. The generator registers that plugin in `nx.json` with `watch: true`, so `nx serve` runs the file with `node --watch` and restarts it on changes without a build step. Workspace libraries the application depends on are built first, through `dependsOn` on the `serve` entry in the project configuration. Node runs the TypeScript source directly, which requires Node.js 22.18 or later. These applications are ES modules, with `"type": "module"` in their `package.json`, so relative imports name the `.ts` file (`./message.ts`). The build rewrites them to `.js`.
 
-In workspaces that use TypeScript path aliases, and for Fastify, esbuild, or JavaScript (`--js`) applications, the shebang names [`tsx`](https://tsx.is/) instead, which resolves path aliases and extensionless imports. Applications that use webpack, or workspaces with [inference plugins](/docs/concepts/nx-plugins) turned off, get an explicit `serve` target in `project.json` instead.
+In workspaces that use TypeScript path aliases, and for esbuild, Jest, or JavaScript (`--js`) applications, the shebang names [`tsx`](https://tsx.is/) instead, which resolves path aliases and extensionless imports. Applications that use webpack, or workspaces with [inference plugins](/docs/concepts/nx-plugins) turned off, get an explicit `serve` target in `project.json` instead.
 
 ### Creating libraries
 
@@ -144,7 +138,6 @@ When generating Node applications, Nx automatically creates a VSCode debugging c
 - **Automatic setup**: A `.vscode/launch.json` file is created with pre-configured debugging settings.
 - **Smart port allocation**: Debug ports are automatically assigned starting from 9229, preventing conflicts between multiple applications.
 - **Source map support**: Webpack configurations include `devtoolModuleFilenameTemplate` for accurate source mapping.
-- **Multi-format support**: Supports debugging `.js`, `.mjs`, and `.cjs` output files.
 
 To debug your Node application in VSCode:
 
@@ -158,7 +151,7 @@ The debugger will automatically:
 
 - Start your application with `nx serve`.
 - Attach to the Node.js debugger on the allocated port.
-- Map compiled JavaScript back to your TypeScript source files.
+- Stop on breakpoints in your TypeScript source files, which `nx serve` runs directly.
 
 #### Manual debugging
 

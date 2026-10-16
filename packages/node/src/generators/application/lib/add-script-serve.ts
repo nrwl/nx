@@ -9,7 +9,7 @@ import { findMatchingConfigFiles } from '@nx/devkit/internal';
 import type { NormalizedSchema } from './normalized-schema';
 
 /**
- * Prepends a shebang and `@nx` block to the main file so @nx/js/node or
+ * Prepends a shebang and target name to the main file so @nx/js/node or
  * @nx/js/tsx infers `serve` as `node --watch` / `tsx watch` on it.
  */
 export function addScriptServe(tree: Tree, options: NormalizedSchema): void {
@@ -19,16 +19,7 @@ export function addScriptServe(tree: Tree, options: NormalizedSchema): void {
     'src',
     options.js ? 'main.js' : 'main.ts'
   );
-  // `^build` builds workspace libraries whose exports point at their output.
-  const header = `#!/usr/bin/env ${runtime}
-/**
- * @nx
- * name: serve
- * continuous: true
- * watch: true
- * dependsOn: ["^build"]
- */
-`;
+  const header = `#!/usr/bin/env ${runtime}\n// @nx-target-name: serve\n`;
   tree.write(mainFile, header + tree.read(mainFile, 'utf-8'));
   includeAppInScriptPlugin(
     tree,
@@ -59,24 +50,37 @@ function includeAppInScriptPlugin(
   const files = '{package.json,project.json,src/main.{ts,js}}';
   const pattern = projectRoot === '.' ? files : `${projectRoot}/${files}`;
 
-  const registrations = nxJson.plugins.filter(
-    (p) => (typeof p === 'string' ? p : p.plugin) === plugin
-  );
-  const covers = (p: (typeof registrations)[number]) =>
-    typeof p === 'string' ||
+  type Registration = ExpandedPluginConfiguration<{ watch?: boolean }>;
+  const registrations: Registration[] = nxJson.plugins
+    .map((p) => (typeof p === 'string' ? { plugin: p } : p))
+    .filter((p): p is Registration => p.plugin === plugin);
+  const matchesMain = (p: Registration) =>
+    findMatchingConfigFiles([mainFile], p.include, p.exclude).length === 1;
+  const covers = (p: Registration) =>
     findMatchingConfigFiles([mainFile, marker], p.include, p.exclude).length ===
-      2;
-  if (registrations.some(covers)) {
+    2;
+  const isScopedWatch = (p: Registration) =>
+    p.options?.watch === true && !!p.include && !p.exclude;
+
+  // The generated serve target must watch for changes. Keep its watch-enabled
+  // plugin entry after other main-file matches so a later entry cannot disable watch.
+  const last = registrations.map(matchesMain).lastIndexOf(true);
+  if (
+    last !== -1 &&
+    registrations[last].options?.watch === true &&
+    covers(registrations[last])
+  ) {
     return;
   }
-  const scoped = registrations.find(
-    (p): p is ExpandedPluginConfiguration =>
-      typeof p !== 'string' && !!p.include && !p.exclude
-  );
+  const scoped = registrations.slice(last + 1).find(isScopedWatch);
   if (scoped) {
     scoped.include.push(pattern);
   } else {
-    nxJson.plugins.push({ plugin, include: [pattern] });
+    nxJson.plugins.push({
+      plugin,
+      include: [pattern],
+      options: { watch: true },
+    });
   }
   updateNxJson(tree, nxJson);
 }

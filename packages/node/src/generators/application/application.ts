@@ -12,6 +12,7 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
+  updateNxJson,
   updateProjectConfiguration,
   updateTsConfigsToJs,
 } from '@nx/devkit';
@@ -41,14 +42,30 @@ import {
   NormalizedSchema,
 } from './lib';
 
-function getRolldownBuildTargetName(tree: Tree, projectRoot: string): string {
+/**
+ * Returns the build target name of the rolldown registration that covers the
+ * app. init skips registering when one exists, even if its `exclude` covers the
+ * app, so a scoped registration is added then.
+ */
+function ensureRolldownBuildTarget(tree: Tree, projectRoot: string): string {
   const configFile = joinPathFragments(projectRoot, 'rolldown.config.ts');
-  const registration = readNxJson(tree)?.plugins?.find((p) =>
+  const nxJson = readNxJson(tree);
+  nxJson.plugins ??= [];
+  const registration = nxJson.plugins.find((p) =>
     typeof p === 'string'
       ? p === '@nx/rolldown/plugin'
       : p.plugin === '@nx/rolldown/plugin' &&
         findMatchingConfigFiles([configFile], p.include, p.exclude).length > 0
   );
+  if (!registration) {
+    nxJson.plugins.push({
+      plugin: '@nx/rolldown/plugin',
+      include: [configFile],
+      options: { buildTargetName: 'build' },
+    });
+    updateNxJson(tree, nxJson);
+    return 'build';
+  }
   return (
     (typeof registration === 'object' &&
       (registration.options as { buildTargetName?: string })
@@ -214,7 +231,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     );
     // The registration may infer `bundle`/`rolldown:build` instead of `build`.
     if (options.addPlugin) {
-      options.buildTargetName = getRolldownBuildTargetName(
+      options.buildTargetName = ensureRolldownBuildTarget(
         tree,
         options.appProjectRoot
       );

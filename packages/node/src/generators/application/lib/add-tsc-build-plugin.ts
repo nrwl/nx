@@ -1,9 +1,11 @@
 import {
   type ExpandedPluginConfiguration,
+  joinPathFragments,
   readNxJson,
   type Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { findMatchingConfigFiles } from '@nx/devkit/internal';
 
 const tsPlugin = '@nx/js/typescript';
 const appBuildConfigName = 'tsconfig.app.json';
@@ -24,13 +26,23 @@ export function addTscAppBuildPlugin(tree: Tree, projectRoot: string): string {
   // `./*` matches nothing for a root project.
   const pattern = projectRoot === '.' ? '*' : `${projectRoot}/*`;
 
-  const registration = nxJson.plugins.find(
-    (p) =>
+  const configFile = joinPathFragments(projectRoot, appBuildConfigName);
+
+  const registrations = nxJson.plugins.filter(
+    (p): p is ExpandedPluginConfiguration =>
       typeof p !== 'string' &&
       p.plugin === tsPlugin &&
       (p.options as TscAppBuildOptions)?.build?.configName ===
         appBuildConfigName
-  ) as ExpandedPluginConfiguration | undefined;
+  );
+  // An `exclude` can hide the app from a registration that lists it.
+  let registration = registrations.find(
+    (p) => findMatchingConfigFiles([configFile], p.include, p.exclude).length
+  );
+  if (!registration) {
+    registration = registrations.find((p) => p.include && !p.exclude);
+    registration?.include.push(pattern);
+  }
 
   if (!registration) {
     nxJson.plugins.push({
@@ -47,8 +59,6 @@ export function addTscAppBuildPlugin(tree: Tree, projectRoot: string): string {
         },
       },
     });
-  } else if (registration.include && !registration.include.includes(pattern)) {
-    registration.include.push(pattern);
   }
 
   updateNxJson(tree, nxJson);
