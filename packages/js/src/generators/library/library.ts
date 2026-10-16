@@ -805,7 +805,7 @@ async function normalizeOptions(
   options.linter = await normalizeLinterOption(tree, options.linter);
 
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
-  // Outside TS solution setups @nx/js/typescript only infers typecheck.
+  // Outside TS solution setups the plugin may be registered for typecheck only.
   const hasPlugin = isUsingTsSolutionConfig && isUsingTypeScriptPlugin(tree);
 
   if (isUsingTsSolutionConfig) {
