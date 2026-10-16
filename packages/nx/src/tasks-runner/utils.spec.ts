@@ -307,6 +307,36 @@ describe('utils', () => {
       }
     );
 
+    it.each([
+      ['myapp', '{options.dir ?? /root/build/myapp}', '/root/build/myapp'],
+      [
+        '.',
+        '{projectRoot}/{options.dir ?? /root/build/myapp}',
+        '/root/build/myapp',
+      ],
+      [
+        'myapp',
+        '{projectRoot}/{options.dir ?? /root/build/myapp}',
+        'myapp/root/build/myapp',
+      ],
+    ])(
+      'should resolve a fallback literal starting with / like the same option value (root %s): %s',
+      (root, output, expected) => {
+        const node = getNode({ outputs: [output] });
+        node.data.root = root;
+        expect(
+          getOutputsForTargetAndConfiguration(task.target, {}, node)
+        ).toEqual([expected]);
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task.target,
+            { dir: '/root/build/myapp' },
+            node
+          )
+        ).toEqual([expected]);
+      }
+    );
+
     it('should interpolate options set to 0 or false', () => {
       expect(
         getOutputsForTargetAndConfiguration(

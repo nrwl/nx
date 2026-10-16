@@ -473,24 +473,28 @@ function isWorkspaceRootOnlyAtStart(
 // `{projectRoot}` away, wherever it sits
 function joinSegments(nodes: TokenNode[], data: any, scope: TokenScope) {
   const segments = [''];
-  const append = (nodes: TokenNode[]): string => {
-    for (const node of nodes) {
+  const append = (nodes: TokenNode[], isLiteral: boolean): string => {
+    for (const [i, node] of nodes.entries()) {
       if (node.kind === 'text') {
-        const [first, ...rest] = node.text.split('/');
-        segments[segments.length - 1] += first;
+        // A literal keeps its leading `/` on the segment, as an option value
+        // does, so an absolute fallback stays absolute
+        const root =
+          isLiteral && i === 0 && node.text.startsWith('/') ? '/' : '';
+        const [first, ...rest] = node.text.substring(root.length).split('/');
+        segments[segments.length - 1] += root + first;
         segments.push(...rest);
       } else {
         // Resolved before indexing `segments`: a fallback literal appends to it
         const value =
           data.projectRoot == '.' && node.raw === '{projectRoot}'
             ? ''
-            : resolveToken(node, scope, append);
+            : resolveToken(node, scope, (literal) => append(literal, true));
         segments[segments.length - 1] += value;
       }
     }
     return '';
   };
-  append(nodes);
+  append(nodes, false);
   return join(...segments);
 }
 
