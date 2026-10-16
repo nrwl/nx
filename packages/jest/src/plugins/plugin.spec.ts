@@ -671,9 +671,9 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       }
     });
 
-    it('ignores NONE with a warning naming the file', async () => {
+    it('ignores "@nx-ignore-server-inputs" with a warning naming the file', async () => {
       await tempFs.createFiles({
-        'proj/src/feature.spec.ts': '// @nx-depends-on: NONE\n',
+        'proj/src/feature.spec.ts': '// @nx-ignore-server-inputs\n',
       });
       const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -684,7 +684,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
           targets['test'].inputs
         );
         expect(warn).toHaveBeenCalledWith(
-          'proj/src/feature.spec.ts: "@nx-depends-on: NONE" is not supported in this test file, so Nx ignores it.'
+          'proj/src/feature.spec.ts: "@nx-ignore-server-inputs" is not supported in this test file, so Nx ignores it.'
         );
       } finally {
         warn.mockRestore();

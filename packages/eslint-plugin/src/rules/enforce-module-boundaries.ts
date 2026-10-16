@@ -50,7 +50,7 @@ import {
   stringifyTags,
 } from '../utils/runtime-lint-utils';
 import {
-  hasDependsOnNoneDirective,
+  hasIgnoreServerInputsDirective,
   isRelativePath,
   isProjectGraphProjectNode,
 } from '@nx/devkit/internal';
@@ -257,11 +257,11 @@ export default ESLintUtils.RuleCreator(
         projectGraph
       );
 
-    let dependsOnNoneSpec: boolean | undefined;
+    let ignoreServerInputsSpec: boolean | undefined;
     // Atomized e2e specs (`<target>--<spec path>`) with
-    // `// @nx-depends-on: NONE` import app code with bare imports
+    // `// @nx-ignore-server-inputs` import app code with bare imports
     // (`import 'app/feature'`) to hash from it.
-    function isDependsOnNoneImport(
+    function isIgnoreServerInputsImport(
       node: Parameters<typeof run>[1],
       sourceProject: ProjectGraphProjectNode,
       sourceFilePath: string
@@ -273,17 +273,17 @@ export default ESLintUtils.RuleCreator(
       ) {
         return false;
       }
-      if (dependsOnNoneSpec === undefined) {
+      if (ignoreServerInputsSpec === undefined) {
         const specPath = normalizePath(
           relative(sourceProject.data.root, sourceFilePath)
         );
-        dependsOnNoneSpec =
-          hasDependsOnNoneDirective(context.sourceCode.text) &&
+        ignoreServerInputsSpec =
+          hasIgnoreServerInputsDirective(context.sourceCode.text) &&
           Object.keys(sourceProject.data.targets ?? {}).some((targetName) =>
             targetName.endsWith(`--${specPath}`)
           );
       }
-      return dependsOnNoneSpec;
+      return ignoreServerInputsSpec;
     }
 
     function run(
@@ -332,7 +332,7 @@ export default ESLintUtils.RuleCreator(
       if (
         ((targetProject && sourceProject !== targetProject) ||
           isAbsoluteImportIntoAnotherProj) &&
-        !isDependsOnNoneImport(node, sourceProject, sourceFilePath)
+        !isIgnoreServerInputsImport(node, sourceProject, sourceFilePath)
       ) {
         context.report({
           node,
@@ -638,7 +638,7 @@ export default ESLintUtils.RuleCreator(
       if (
         targetProject.type === 'app' &&
         !appIsMFERemote(targetProject) &&
-        !isDependsOnNoneImport(node, sourceProject, sourceFilePath)
+        !isIgnoreServerInputsImport(node, sourceProject, sourceFilePath)
       ) {
         context.report({
           node,
@@ -689,7 +689,7 @@ export default ESLintUtils.RuleCreator(
           imp,
           sourceFilePath
         ) &&
-        !isDependsOnNoneImport(node, sourceProject, sourceFilePath)
+        !isIgnoreServerInputsImport(node, sourceProject, sourceFilePath)
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(
           projectFileMap,
@@ -712,7 +712,7 @@ export default ESLintUtils.RuleCreator(
       // check that dependency constraints are satisfied
       if (
         depConstraints.length > 0 &&
-        !isDependsOnNoneImport(node, sourceProject, sourceFilePath)
+        !isIgnoreServerInputsImport(node, sourceProject, sourceFilePath)
       ) {
         const constraints = findConstraintsFor(depConstraints, sourceProject);
         // when no constrains found => error. Force the user to provision them.

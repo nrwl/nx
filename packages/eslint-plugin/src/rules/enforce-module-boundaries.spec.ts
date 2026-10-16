@@ -2037,7 +2037,7 @@ Violation detected in:
     expect(failures[1].message).toEqual(message);
   });
 
-  describe('atomized e2e specs with "@nx-depends-on: NONE"', () => {
+  describe('atomized e2e specs with "@nx-ignore-server-inputs"', () => {
     const projectGraph: ProjectGraph = {
       nodes: {
         shopE2eName: {
@@ -2150,7 +2150,7 @@ Violation detected in:
       [
         'skips the path, app, lazy-loaded and tag checks in a spec with the directive',
         'src/checkout.spec.ts',
-        `// @nx-depends-on: NONE\n${imports}`,
+        `// @nx-ignore-server-inputs\n${imports}`,
         ['noImportsOfE2e', 'bannedExternalImportsViolation'],
       ],
       [
@@ -2160,33 +2160,33 @@ Violation detected in:
         allChecks,
       ],
       [
-        'checks a spec whose directive names projects',
+        'checks a spec with only "@nx-depends-on"',
         'src/checkout.spec.ts',
         `// @nx-depends-on: otherName\n${imports}`,
         allChecks,
       ],
       [
-        'checks a spec whose directive mixes NONE with projects',
+        'checks a spec whose directive has a value',
         'src/checkout.spec.ts',
-        `// @nx-depends-on: NONE, otherName\n${imports}`,
+        `// @nx-ignore-server-inputs: false\n${imports}`,
         allChecks,
       ],
       [
         'checks a file with the directive that no atomized target runs',
         'src/support.ts',
-        `// @nx-depends-on: NONE\n${imports}`,
+        `// @nx-ignore-server-inputs\n${imports}`,
         allChecks,
       ],
       [
         'checks a file with the directive that the graph does not list yet',
         'src/new.spec.ts',
-        `// @nx-depends-on: NONE\n${imports}`,
+        `// @nx-ignore-server-inputs\n${imports}`,
         allChecks,
       ],
       [
         'checks imports that are not bare in a spec with the directive',
         'src/checkout.spec.ts',
-        `// @nx-depends-on: NONE
+        `// @nx-ignore-server-inputs
           import { a } from '../../myapp/src/index';
           import type { B } from '@mycompany/myapp';
           import {} from '@mycompany/myapp';

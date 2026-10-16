@@ -552,7 +552,7 @@ async function buildPlaywrightTargets(
           ciBaseTargetConfig,
           context.workspaceRoot,
           testFile,
-          { dependsOnNone: true }
+          { ignoreServerInputs: true }
         ),
         options: {
           ...ciBaseTargetConfig.options,

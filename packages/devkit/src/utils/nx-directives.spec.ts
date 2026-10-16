@@ -17,6 +17,15 @@ describe('parseNxDirectives', () => {
     );
   });
 
+  it('reads a directive without a value as an empty value', () => {
+    expect(parseNxDirectives('// @nx-a\n// @nx-b:\n')).toEqual(
+      new Map([
+        ['a', ['']],
+        ['b', ['']],
+      ])
+    );
+  });
+
   it('skips blank lines, a shebang and other comments before a directive', () => {
     expect(
       parseNxDirectives(

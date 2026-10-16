@@ -454,7 +454,7 @@ async function buildJestTargets(
           },
           context.workspaceRoot,
           joinPathFragments(projectRoot, relativePath),
-          { dependsOnNone: false }
+          { ignoreServerInputs: false }
         );
         targetGroup.push(targetName);
       }
@@ -604,7 +604,7 @@ async function buildJestTargets(
             },
             context.workspaceRoot,
             joinPathFragments(projectRoot, relativePath),
-            { dependsOnNone: false }
+            { ignoreServerInputs: false }
           );
           targetGroup.push(targetName);
         }

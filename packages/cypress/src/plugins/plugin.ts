@@ -505,7 +505,7 @@ async function buildCypressTargets(
           targets[targetName],
           context.workspaceRoot,
           file,
-          { dependsOnNone: true }
+          { ignoreServerInputs: true }
         );
       }
 

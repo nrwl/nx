@@ -1268,14 +1268,14 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
           { target: 'e2e--wait-for-webserver' },
         ]);
         expect(warn).toHaveBeenCalledWith(
-          'tests/feature.spec.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas, or write NONE to leave the servers\' inputs out of the task\'s hash.'
+          'tests/feature.spec.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.'
         );
       } finally {
         warn.mockRestore();
       }
     });
 
-    it('keeps the server inputs out and the inputs unchanged with NONE', async () => {
+    it('keeps the server inputs out and the inputs unchanged with "@nx-ignore-server-inputs"', async () => {
       await mockPlaywrightConfig(tempFs, {
         testDir: 'tests',
         webServer: {
@@ -1286,7 +1286,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       });
       await tempFs.createFiles({
         'tests/feature.spec.ts':
-          '// @nx-depends-on: NONE\nimport "../../app1/src/feature";\n',
+          '// @nx-ignore-server-inputs\nimport "../../app1/src/feature";\n',
       });
 
       const targets = await atomizedTargets();
@@ -1300,10 +1300,10 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       ]);
     });
 
-    it('accepts NONE without a warning when Playwright starts the server itself', async () => {
+    it('accepts "@nx-ignore-server-inputs" without a warning when Playwright starts the server itself', async () => {
       await mockPlaywrightConfig(tempFs, { testDir: 'tests' });
       await tempFs.createFiles({
-        'tests/feature.spec.ts': '// @nx-depends-on: NONE\n',
+        'tests/feature.spec.ts': '// @nx-ignore-server-inputs\n',
       });
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -1322,7 +1322,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       }
     });
 
-    it('ignores NONE mixed with projects, with a warning naming the spec', async () => {
+    it('ignores "@nx-ignore-server-inputs" with a value, with a warning naming the spec', async () => {
       await mockPlaywrightConfig(tempFs, {
         testDir: 'tests',
         webServer: {
@@ -1332,8 +1332,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
         },
       });
       await tempFs.createFiles({
-        'tests/feature.spec.ts':
-          '// @nx-depends-on: feature\n// @nx-depends-on: NONE\n',
+        'tests/feature.spec.ts': '// @nx-ignore-server-inputs: false\n',
       });
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -1348,7 +1347,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
           { target: 'e2e--wait-for-webserver' },
         ]);
         expect(warn).toHaveBeenCalledWith(
-          'tests/feature.spec.ts: "@nx-depends-on" combines NONE with project names, so Nx ignores it. Use NONE alone or list only projects.'
+          'tests/feature.spec.ts: "@nx-ignore-server-inputs" takes no value, so Nx ignores it. Write "// @nx-ignore-server-inputs" alone.'
         );
       } finally {
         warn.mockRestore();

@@ -766,17 +766,17 @@ describe('@nx/cypress/plugin', () => {
           { target: 'serve-static', projects: ['my-app'] },
         ]);
         expect(warn).toHaveBeenCalledWith(
-          'src/feature.cy.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas, or write NONE to leave the servers\' inputs out of the task\'s hash.'
+          'src/feature.cy.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.'
         );
       } finally {
         warn.mockRestore();
       }
     });
 
-    it('keeps the server inputs out and the inputs unchanged with NONE', async () => {
+    it('keeps the server inputs out and the inputs unchanged with "@nx-ignore-server-inputs"', async () => {
       await tempFs.createFiles({
         'src/feature.cy.ts':
-          '// @nx-depends-on: NONE\nimport "../../my-app/src/feature";\n',
+          '// @nx-ignore-server-inputs\nimport "../../my-app/src/feature";\n',
       });
 
       const targets = await atomizedTargets();
