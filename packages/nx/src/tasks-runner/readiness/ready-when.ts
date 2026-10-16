@@ -334,7 +334,7 @@ function describeReadyWhen(
 export function getReadyWhenConfig(
   task: Task,
   projectGraph: ProjectGraph
-): ReadyWhen | undefined {
+): ReadyWhen | null | undefined {
   if (!task.continuous) {
     return undefined;
   }

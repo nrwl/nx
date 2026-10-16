@@ -399,9 +399,10 @@ export interface TargetConfiguration<T = any> {
   /**
    * How Nx detects that this continuous target is ready. Only honored when
    * `continuous` is true; dependents opt in with `waitFor: 'ready'` on their
-   * `dependsOn` entry.
+   * `dependsOn` entry. `null` turns off a check inherited from a plugin or
+   * `targetDefaults`.
    */
-  readyWhen?: ReadyWhen;
+  readyWhen?: ReadyWhen | null;
 
   /**
    * List of generators to run before the target to ensure the workspace

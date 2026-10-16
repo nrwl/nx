@@ -691,6 +691,9 @@ A continuous target without `readyWhen` counts as ready once it has started.
 On such a dependency, `waitFor: "ready"` changes nothing.
 The WASM build of Nx doesn't support `readyWhen`, so a target that declares it fails there when a task waits for it.
 
+A `readyWhen` in `targetDefaults` replaces the whole `readyWhen` a plugin infers, and one in the project configuration replaces both.
+Set `readyWhen` to `null` to turn off a check inherited from a plugin or `targetDefaults`.
+
 `readyWhen` is unrelated to the option of the same name on the `nx:run-commands` executor.
 That option marks the run-commands task itself as done.
 
