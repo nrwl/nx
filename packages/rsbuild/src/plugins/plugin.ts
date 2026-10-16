@@ -18,21 +18,16 @@ import {
   detectPackageManager,
   normalizePath,
 } from '@nx/devkit';
-import {
-  isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
-  addBuildAndWatchDepsTargets,
-} from '@nx/js/internal';
+import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { join, dirname, isAbsolute, relative } from 'path';
-import { minimatch } from 'minimatch';
 import type { RsbuildConfig } from '@rsbuild/core';
 export interface RsbuildPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   previewTargetName?: string;
   inspectTargetName?: string;
-  typecheckTargetName?: string;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
@@ -50,7 +45,6 @@ export const createNodes: CreateNodes<RsbuildPluginOptions> = [
       `rsbuild-${optionsHash}.hash`
     );
     const targetsCache = new PluginCache<RsbuildTargets>(cachePath);
-    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
@@ -64,7 +58,7 @@ export const createNodes: CreateNodes<RsbuildPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        { ...normalizedOptions, isUsingTsSolutionSetup },
+        normalizedOptions,
         context,
         entries.map(() => [lockFileName])
       );
@@ -79,9 +73,7 @@ export const createNodes: CreateNodes<RsbuildPluginOptions> = [
               normalizedOptions,
               ctx,
               targetsCache,
-              isUsingTsSolutionSetup,
               pmc,
-              entries[idx].tsConfigFiles,
               projectHashes[idx]
             ),
           entries.map((e) => e.configFile),
@@ -118,9 +110,7 @@ async function createNodesInternal(
   normalizedOptions: RsbuildPluginOptions,
   context: CreateNodesContext,
   targetsCache: PluginCache<RsbuildTargets>,
-  isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  tsConfigFiles: string[],
   hash: string
 ) {
   const projectRoot = dirname(configFilePath);
@@ -132,8 +122,6 @@ async function createNodesInternal(
         configFilePath,
         projectRoot,
         normalizedOptions,
-        tsConfigFiles,
-        isUsingTsSolutionSetup,
         context,
         pmc
       )
@@ -157,8 +145,6 @@ async function createRsbuildTargets(
   configFilePath: string,
   projectRoot: string,
   options: RsbuildPluginOptions,
-  tsConfigFiles: string[],
-  isUsingTsSolutionSetup: boolean,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RsbuildTargets> {
@@ -248,47 +234,6 @@ async function createRsbuildTargets(
     },
   };
 
-  if (tsConfigFiles.length) {
-    const tsConfigToUse =
-      ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
-        tsConfigFiles.includes(t)
-      ) ?? tsConfigFiles[0];
-    targets[options.typecheckTargetName] = {
-      cache: true,
-      inputs: [
-        ...('production' in namedInputs
-          ? ['production', '^production']
-          : ['default', '^default']),
-        { externalDependencies: ['typescript'] },
-      ],
-      command: isUsingTsSolutionSetup
-        ? `tsc --build --emitDeclarationOnly`
-        : `tsc -p ${tsConfigToUse} --noEmit`,
-      options: { cwd: joinPathFragments(projectRoot) },
-      metadata: {
-        description: `Runs type-checking for the project.`,
-        technologies: ['typescript'],
-        help: {
-          command: isUsingTsSolutionSetup
-            ? `${pmc.exec} tsc --build --help`
-            : `${pmc.exec} tsc -p ${tsConfigToUse} --help`,
-          example: isUsingTsSolutionSetup
-            ? { args: ['--force'] }
-            : { options: { noEmit: true } },
-        },
-      },
-    };
-
-    if (isUsingTsSolutionSetup) {
-      targets[options.typecheckTargetName].dependsOn = [
-        `^${options.typecheckTargetName}`,
-      ];
-      targets[options.typecheckTargetName].syncGenerators = [
-        '@nx/js:typescript-sync',
-      ];
-    }
-  }
-
   addBuildAndWatchDepsTargets(
     context.workspaceRoot,
     projectRoot,
@@ -350,7 +295,6 @@ function normalizeOutputPath(
 interface RsbuildEntry {
   configFile: string;
   projectRoot: string;
-  tsConfigFiles: string[];
 }
 
 async function filterRsbuildConfigs(
@@ -374,11 +318,7 @@ async function filterRsbuildConfigs(
         ) {
           return null;
         }
-        const tsConfigFiles =
-          siblingFiles.filter((p) =>
-            minimatch(p, 'tsconfig*{.json,.*.json}')
-          ) ?? [];
-        return { configFile, projectRoot, tsConfigFiles };
+        return { configFile, projectRoot };
       } catch (e) {
         preErrors.push([configFile, e as Error]);
         return null;
@@ -397,6 +337,5 @@ function normalizeOptions(options: RsbuildPluginOptions): RsbuildPluginOptions {
   options.devTargetName ??= 'dev';
   options.previewTargetName ??= 'preview';
   options.inspectTargetName ??= 'inspect';
-  options.typecheckTargetName ??= 'typecheck';
   return options;
 }

@@ -65,6 +65,12 @@
       "description": "Replace `nxViteTsPaths` with Vite's native `resolve.tsconfigPaths`, then migrate the remaining deprecated vite configuration helpers while preserving custom behavior.",
       "implementation": "./dist/src/migrations/update-24-0-0/migrate-nx-vite-ts-paths",
       "prompt": "./dist/src/migrations/update-24-0-0/migrate-config-helpers.md"
+    },
+    "update-24-0-0-register-typescript-plugin-for-typecheck": {
+      "version": "24.0.0-beta.3",
+      "description": "Register @nx/js/typescript with its typecheck target in workspaces that use @nx/vite/plugin without it, since @nx/vite/plugin no longer infers typecheck targets except for Vue projects.",
+      "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
+      "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
     }
   },
   "packageJsonUpdates": {

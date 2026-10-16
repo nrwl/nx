@@ -7,6 +7,7 @@ import {
   readNxJson,
   type Tree,
 } from '@nx/devkit';
+import { ensureTypescriptPlugin } from '@nx/js/internal';
 import { createNodesV2 } from '../../plugins/plugin';
 import {
   assertSupportedRolldownVersion,
@@ -43,6 +44,7 @@ export async function rolldownInitGenerator(tree: Tree, schema: Schema) {
       { buildTargetName: ['build', 'rolldown:build', 'rolldown-build'] },
       schema.updatePackageScripts
     );
+    await ensureTypescriptPlugin(tree, schema.updatePackageScripts);
   }
 
   if (!schema.skipFormat) {

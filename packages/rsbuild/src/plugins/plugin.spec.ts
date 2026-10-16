@@ -1,6 +1,4 @@
-import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { createNodes } from './plugin';
 import { mockCjsModule, TempFs } from '@nx/devkit/internal-testing-utils';
 
@@ -8,18 +6,12 @@ import { mockCjsModule, TempFs } from '@nx/devkit/internal-testing-utils';
 const loadConfig = vi.fn();
 mockCjsModule(import.meta.url, '@rsbuild/core', { loadConfig });
 
-vi.mock('@nx/js/internal', async () => ({
-  ...(await vi.importActual<any>('@nx/js/internal')),
-  isUsingTsSolutionSetup: vi.fn(),
-}));
-
 describe('@nx/rsbuild', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
     loadConfig.mockResolvedValue({
       filePath: 'my-app/rsbuild.config.ts',
       content: {},
@@ -56,7 +48,6 @@ describe('@nx/rsbuild', () => {
         devTargetName: 'dev-serve',
         previewTargetName: 'preview-serve',
         inspectTargetName: 'inspect-serve',
-        typecheckTargetName: 'typecheck-app',
       },
       context
     );
@@ -179,79 +170,16 @@ describe('@nx/rsbuild', () => {
     `);
   });
 
-  it('should infer typecheck with -p flag when not using TS solution setup', async () => {
+  it('should not infer a typecheck target', async () => {
     tempFs.createFileSync('my-app/tsconfig.json', `{}`);
 
     const nodes = await createNodesFunction(
       ['my-app/rsbuild.config.ts'],
-      { typecheckTargetName: 'typecheck' },
+      {},
       context
     );
 
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.command).toEqual(
-      `tsc -p tsconfig.json --noEmit`
-    );
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-      .toMatchInlineSnapshot(`
-      {
-        "description": "Runs type-checking for the project.",
-        "help": {
-          "command": "npx tsc -p tsconfig.json --help",
-          "example": {
-            "options": {
-              "noEmit": true,
-            },
-          },
-        },
-        "technologies": [
-          "typescript",
-        ],
-      }
-    `);
-    expect(
-      nodes[0][1].projects['my-app'].targets.typecheck.dependsOn
-    ).toBeUndefined();
-    expect(
-      nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-    ).toBeUndefined();
-  });
-
-  it('should infer typecheck with --build flag when using TS solution setup', async () => {
-    (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
-    tempFs.createFileSync('my-app/tsconfig.json', `{}`);
-
-    const nodes = await createNodesFunction(
-      ['my-app/rsbuild.config.ts'],
-      { typecheckTargetName: 'typecheck' },
-      context
-    );
-
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.command).toEqual(
-      `tsc --build --emitDeclarationOnly`
-    );
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-      .toMatchInlineSnapshot(`
-      {
-        "description": "Runs type-checking for the project.",
-        "help": {
-          "command": "npx tsc --build --help",
-          "example": {
-            "args": [
-              "--force",
-            ],
-          },
-        },
-        "technologies": [
-          "typescript",
-        ],
-      }
-    `);
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.dependsOn).toEqual([
-      `^typecheck`,
-    ]);
-    expect(
-      nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-    ).toEqual(['@nx/js:typescript-sync']);
+    expect(nodes[0][1].projects['my-app'].targets.typecheck).toBeUndefined();
   });
 
   describe('build outputs', () => {

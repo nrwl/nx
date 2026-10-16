@@ -92,36 +92,6 @@ exports[`@nx/remix/plugin > Remix Classic Compiler > non-root project > should c
                 "cwd": "my-app",
               },
             },
-            "tsc": {
-              "cache": true,
-              "command": "tsc --noEmit",
-              "inputs": [
-                "production",
-                "^production",
-                {
-                  "externalDependencies": [
-                    "typescript",
-                  ],
-                },
-              ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
-              "options": {
-                "cwd": "my-app",
-              },
-            },
             "watch-deps": {
               "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
               "continuous": true,
@@ -229,36 +199,6 @@ exports[`@nx/remix/plugin > Remix Classic Compiler > non-root project > should i
                 "cwd": "my-app",
               },
             },
-            "tsc": {
-              "cache": true,
-              "command": "tsc --noEmit",
-              "inputs": [
-                "production",
-                "^production",
-                {
-                  "externalDependencies": [
-                    "typescript",
-                  ],
-                },
-              ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
-              "options": {
-                "cwd": "my-app",
-              },
-            },
             "watch-deps": {
               "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
               "continuous": true,
@@ -357,36 +297,6 @@ exports[`@nx/remix/plugin > Remix Classic Compiler > root project > should creat
                   ],
                 },
               ],
-              "options": {
-                "cwd": ".",
-              },
-            },
-            "typecheck": {
-              "cache": true,
-              "command": "tsc --noEmit",
-              "inputs": [
-                "production",
-                "^production",
-                {
-                  "externalDependencies": [
-                    "typescript",
-                  ],
-                },
-              ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
               "options": {
                 "cwd": ".",
               },
@@ -490,36 +400,6 @@ exports[`@nx/remix/plugin > Remix Vite Compiler > non-root project > should crea
                 "cwd": "my-app",
               },
             },
-            "tsc": {
-              "cache": true,
-              "command": "tsc --noEmit",
-              "inputs": [
-                "production",
-                "^production",
-                {
-                  "externalDependencies": [
-                    "typescript",
-                  ],
-                },
-              ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
-              "options": {
-                "cwd": "my-app",
-              },
-            },
             "watch-deps": {
               "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
               "continuous": true,
@@ -617,36 +497,6 @@ exports[`@nx/remix/plugin > Remix Vite Compiler > root project > should create n
                   ],
                 },
               ],
-              "options": {
-                "cwd": ".",
-              },
-            },
-            "typecheck": {
-              "cache": true,
-              "command": "tsc --noEmit",
-              "inputs": [
-                "production",
-                "^production",
-                {
-                  "externalDependencies": [
-                    "typescript",
-                  ],
-                },
-              ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
               "options": {
                 "cwd": ".",
               },

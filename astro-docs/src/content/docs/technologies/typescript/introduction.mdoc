@@ -311,7 +311,19 @@ Otherwise you can manually add the [plugin to your `nx.json#plugins` to enable i
 
 The `@nx/js/typescript` plugin adds tasks based on the files it finds in your project:
 
-The `@nx/js/typescript` plugin will add a `typecheck` task to any project that has a `tsconfig.json`.
+The `@nx/js/typescript` plugin will add a `typecheck` task to any project that has a `tsconfig.json`. Next.js projects don't get one. It's the only plugin that infers `typecheck` for Vite, Rsbuild, Rolldown, Remix, and React Router projects, except Vue projects, which get a `vue-tsc` task from `@nx/vite/plugin`.
+
+The `typecheck` command depends on whether the workspace uses a TypeScript solution setup with [project references](#typescript-project-references-kept-in-sync):
+
+- In a TypeScript solution setup, it runs `tsc --build --emitDeclarationOnly` and depends on the `typecheck` tasks of dependency projects.
+- Otherwise, it runs `tsc -p <tsconfig> --noEmit` against the first of `tsconfig.app.json`, `tsconfig.lib.json`, and `tsconfig.json` that exists. This task has no outputs and doesn't depend on other tasks.
+
+Outside a TypeScript solution setup, the plugin skips projects whose build already typechecks them:
+
+- Projects with a `project.json` target that uses `@nx/js:tsc` or an Angular build executor.
+- Projects with an `@nx/js:swc`, `@nx/esbuild:esbuild`, `@nx/rollup:rollup`, or `@nx/vite:build` `project.json` target, unless it sets `skipTypeCheck: true`.
+- Projects with an `@nx/webpack:webpack` or `@nx/rspack:rspack` `project.json` target, unless it sets `typeCheckOptions: false` or `skipTypeChecking: true` (or its alias `typeCheck: true`).
+- Projects without one of those targets that have a `webpack.config.*`, `rspack.config.*`, or `rollup.config.*` file.
 
 The plugin also adds a `build` task for projects that meet both of the following conditions:
 
@@ -393,7 +405,7 @@ Configure `@nx/js/typescript` in the `plugins` array in `nx.json`:
 | `build.skipBuildCheck` | Allows build inference without package exports that point to compiled output. | `false`             |
 | `verboseOutput`        | Adds TypeScript's `--verbose` flag to the underlying commands.                | `false`             |
 
-The `typecheck` and `build` tasks are cached, with inputs and outputs based on your TypeScript configuration, and depend on the corresponding tasks in dependency projects.
+The `typecheck` and `build` tasks are cached, with inputs and outputs based on your TypeScript configuration. In a TypeScript solution setup, they depend on the corresponding tasks in dependency projects.
 
 ### Exclude or include specific projects
 
