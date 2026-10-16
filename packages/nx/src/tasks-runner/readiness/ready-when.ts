@@ -284,7 +284,8 @@ export function readinessTimeoutError(
   const description =
     'kind' in readyWhen ? describeReadyWhen(readyWhen) : readyWhen.description;
   return new Error(
-    `Task "${taskId}" did not become ready within ${readyWhen.timeout}ms (readyWhen: ${description}).`
+    `Task "${taskId}" did not become ready within ${readyWhen.timeout}ms (readyWhen: ${description}). ` +
+      'To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.'
   );
 }
 

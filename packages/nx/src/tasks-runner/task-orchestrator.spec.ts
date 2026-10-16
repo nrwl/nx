@@ -2191,7 +2191,7 @@ describe('TaskOrchestrator', () => {
       );
       await expect(waiting).rejects.toThrow('did not become ready within 20ms');
       const message =
-        'Task "app:serve" did not become ready within 20ms (readyWhen: logMatches "never").';
+        'Task "app:serve" did not become ready within 20ms (readyWhen: logMatches "never"). To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.';
       expect(orchestrator.complete).toHaveBeenCalledWith(
         [{ task: serve, status: 'failure', terminalOutput: message }],
         1
