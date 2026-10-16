@@ -1243,6 +1243,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'apps/my-app',
         swcJest: true,
+        unitTestRunner: 'jest',
         useProjectJson: false,
       } as Schema);
 

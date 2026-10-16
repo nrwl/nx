@@ -3635,6 +3635,9 @@ importers:
       '@nx/rsbuild':
         specifier: workspace:*
         version: link:../rsbuild
+      '@nx/rspack':
+        specifier: workspace:*
+        version: link:../rspack
       '@nx/storybook':
         specifier: workspace:*
         version: link:../storybook
