@@ -1,4 +1,5 @@
 import {
+  FsTree,
   getNamedInputs,
   hashFile,
   hashObject,
@@ -45,7 +46,13 @@ import {
   type ExtendedConfigFile,
   type ParsedTsconfigData,
 } from './util';
-import { createTypecheckTarget, getTsConfigArg } from './typecheck-target';
+import {
+  createTypecheckTarget,
+  getTsConfigArg,
+  selectTypecheckTsConfig,
+} from './typecheck-target';
+import { buildTypechecksProject } from './build-typechecks';
+import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 
 export interface TscPluginOptions {
   compiler?: 'tsc' | 'tsgo';
@@ -302,6 +309,9 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
     initializeTsConfigCache(configFilePaths, context.workspaceRoot, cache);
 
     const normalizedOptions = normalizePluginOptions(options);
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup(
+      new FsTree(context.workspaceRoot, false)
+    );
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
@@ -313,10 +323,11 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
     } = await resolveValidConfigFilesAndHashes(
       configFilePaths,
       normalizedOptions,
-      optionsHash,
+      hashObject({ options, isUsingTsSolutionSetup }),
       context,
       cache,
-      lockFileName
+      lockFileName,
+      isUsingTsSolutionSetup
     );
 
     try {
@@ -339,7 +350,8 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
             context,
             validConfigFilePaths,
             cache,
-            pmc
+            pmc,
+            isUsingTsSolutionSetup
           );
 
           const { targets } = targetsCache[targetsCacheKey];
@@ -380,7 +392,8 @@ async function resolveValidConfigFilesAndHashes(
   optionsHash: string,
   context: CreateNodesContext,
   cache: InvocationCache,
-  lockFileName: string
+  lockFileName: string,
+  isUsingTsSolutionSetup: boolean
 ): Promise<{
   configFilePaths: string[];
   hashes: string[];
@@ -418,15 +431,25 @@ async function resolveValidConfigFilesAndHashes(
 
     projectRoots.push(projectRoot);
     validConfigFilePaths.push(configFilePath);
+    const configFileHash = await getConfigFileHash(
+      configFilePath,
+      context.workspaceRoot,
+      configContext.project,
+      optionsHash,
+      lockFileHash,
+      cache
+    );
     hashes.push(
-      await getConfigFileHash(
-        configFilePath,
-        context.workspaceRoot,
-        configContext.project,
-        optionsHash,
-        lockFileHash,
-        cache
-      )
+      isUsingTsSolutionSetup
+        ? configFileHash
+        : hashArray([
+            configFileHash,
+            ...getNoEmitTypecheckHashInputs(
+              configContext.project,
+              context.workspaceRoot,
+              cache
+            ),
+          ])
     );
   }
 
@@ -547,7 +570,8 @@ function buildTscTargets(
   context: CreateNodesContext,
   configFiles: readonly string[],
   cache: InvocationCache,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  isUsingTsSolutionSetup: boolean
 ) {
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(config.project.root, context);
@@ -577,7 +601,35 @@ function buildTscTargets(
     );
     const targetName = options.typecheck.targetName;
     const compiler = options.compiler;
-    if (!targets[targetName]) {
+    // `tsc --build` needs composite projects, so other setups check without
+    // emitting, and skip projects whose build already type-checks.
+    if (!isUsingTsSolutionSetup) {
+      const siblingFiles = readdirSync(config.project.absolute);
+      if (
+        !buildTypechecksProject(
+          siblingFiles,
+          readProjectJsonTargets(config.project.absolute, siblingFiles)
+        )
+      ) {
+        targets[targetName] = createTypecheckTarget({
+          mode: 'noEmit',
+          projectRoot: config.project.normalized,
+          pmc,
+          tsConfig: selectTypecheckTsConfig(
+            siblingFiles.filter((file) => /^tsconfig.*\.json$/.test(file))
+          ),
+          compiler,
+          inputs: getInputs(
+            namedInputs,
+            config,
+            tsConfig,
+            internalProjectReferences,
+            context.workspaceRoot,
+            cache
+          ),
+        });
+      }
+    } else if (!targets[targetName]) {
       let buildTargetName: string | undefined;
       if (options.build && targets[options.build.targetName]) {
         // we already processed and have a build target
@@ -716,6 +768,49 @@ function buildTscTargets(
   }
 
   return { targets };
+}
+
+/**
+ * Files that decide the `noEmit` typecheck target: the sibling tsconfigs and
+ * bundler configs by name, and `project.json` by content.
+ */
+function getNoEmitTypecheckHashInputs(
+  project: ProjectContext,
+  workspaceRoot: string,
+  cache: InvocationCache
+): string[] {
+  const siblingFiles = readdirSync(project.absolute);
+  return [
+    ...siblingFiles
+      .filter((file) =>
+        /^(tsconfig.*\.json|(webpack|rspack|rollup)\.config\..+)$/.test(file)
+      )
+      .sort(),
+    ...(siblingFiles.includes('project.json')
+      ? [
+          getFileHash(
+            join(project.absolute, 'project.json'),
+            workspaceRoot,
+            cache
+          ),
+        ]
+      : []),
+  ];
+}
+
+function readProjectJsonTargets(
+  projectRoot: string,
+  siblingFiles: string[]
+): ProjectConfiguration['targets'] {
+  if (!siblingFiles.includes('project.json')) {
+    return undefined;
+  }
+  try {
+    return readJsonFile<ProjectConfiguration>(join(projectRoot, 'project.json'))
+      .targets;
+  } catch {
+    return undefined;
+  }
 }
 
 function getInputs(
