@@ -423,6 +423,82 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
   });
 
+  it('preserves versioned approvals and denials for retained package names', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'allowBuilds:',
+        "  'canvas@3.0.0 || 3.1.0': true",
+        "  '@scope/native@2.0.1': false",
+        "  'absent@1.0.0': true",
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      prunedLockfileWith('canvas@3.1.0', '@scope/native@2.0.1')
+    );
+
+    expect(require('@zkochan/js-yaml').load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: {
+        'canvas@3.0.0 || 3.1.0': true,
+        '@scope/native@2.0.1': false,
+      },
+    });
+  });
+
+  it('relocates file and link approval selectors with the shipped packages', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'allowBuilds:',
+        "  'native@file:./vendor/native.tgz': true",
+        "  '@scope/native@link:vendor/scoped': false",
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      prunedLockfileWith(
+        'native@file:local_path_modules/vendor/native.tgz',
+        '@scope/native@link:local_path_modules/vendor/scoped'
+      )
+    );
+
+    expect(require('@zkochan/js-yaml').load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: {
+        'native@file:local_path_modules/vendor/native.tgz': true,
+        '@scope/native@link:local_path_modules/vendor/scoped': false,
+      },
+    });
+  });
+
+  it('keeps a denial when local approval selectors normalize to the same path', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'allowBuilds:',
+        "  'native@file:vendor/native': false",
+        "  'native@file:./vendor/native': true",
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      prunedLockfileWith('native@file:local_path_modules/vendor/native')
+    );
+
+    expect(require('@zkochan/js-yaml').load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: { 'native@file:local_path_modules/vendor/native': false },
+    });
+  });
+
   // Valid YAML that is not a lockfile document. Each case needs its own content,
   // since the parse is memoized (see the unparseable case below).
   it.each([
