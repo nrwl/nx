@@ -530,6 +530,16 @@ describe('Run Commands', () => {
       ).not.toContain('undefined');
     });
 
+    it('should not read inherited properties as arguments', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo {args.toString ?? default}',
+          { parsedArgs: {}, __unparsed__: [] },
+          false
+        )
+      ).toEqual('echo default');
+    });
+
     it('should interpolate provided values', () => {
       expect(
         interpolateArgsIntoCommand(

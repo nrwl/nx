@@ -96,6 +96,8 @@ describe('normalizeReadyWhen', () => {
     ['{options.unset ?? env.APP.HTTP-PORT ?? 3000}', 'http://h/5001'],
     ['{options.unset ?? env.ProgramFiles(x86) ?? 3000}', 'http://h/5002'],
     ['{options.zero ?? 1}/{options.no ?? true}', 'http://h/0/false'],
+    ['{options.constructor ?? 3000}', 'http://h/3000'],
+    ['{options.unset ?? env.toString ?? 3000}', 'http://h/3000'],
     ['{options.unset ?? {projectName}/{options.port}}', 'http://h/app/4200'],
   ])('resolves the fallbacks in %s', (tokens, url) => {
     expect(

@@ -296,7 +296,10 @@ export function interpolateArgsIntoCommand(
       isToken: (name) => name === 'args',
       // Overrides are parsed without dot-notation, so `{args.a.b}` reads the
       // `--a.b` override
-      read: (_, path) => opts.parsedArgs[path],
+      read: (_, path) =>
+        Object.hasOwn(opts.parsedArgs, path)
+          ? opts.parsedArgs[path]
+          : undefined,
       env: { read: env },
       noValue: () => '',
     });

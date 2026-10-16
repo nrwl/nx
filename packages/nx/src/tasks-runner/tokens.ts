@@ -110,7 +110,11 @@ export function readPath(value: unknown, path: string | undefined): unknown {
     return value;
   }
   for (const key of path.split('.')) {
-    if (value === undefined || value === null) {
+    if (
+      value === undefined ||
+      value === null ||
+      !Object.hasOwn(value as object, key)
+    ) {
       return undefined;
     }
     value = value[key];
@@ -203,8 +207,11 @@ export function readEnv(
   env: NodeJS.ProcessEnv,
   name: string
 ): string | undefined {
-  if (Object.hasOwn(env, name) || process.platform !== 'win32') {
+  if (Object.hasOwn(env, name)) {
     return env[name];
+  }
+  if (process.platform !== 'win32') {
+    return undefined;
   }
   const upperName = name.toUpperCase();
   const key = Object.keys(env).find((k) => k.toUpperCase() === upperName);
