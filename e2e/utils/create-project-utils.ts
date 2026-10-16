@@ -741,7 +741,9 @@ export function runNgNew(
   }
 
   projName = uniq('ng-proj');
-  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularCliVersion} new ${projName} --package-manager=${packageManager}`;
+  // Installed once below, after the ranges are pinned. Installing here would
+  // resolve the latest minor, which npm then refuses to downgrade to the pin.
+  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularCliVersion} new ${projName} --package-manager=${packageManager} --skip-install`;
   execSync(command, {
     cwd: e2eCwd,
     stdio: isVerbose() ? 'inherit' : 'pipe',
