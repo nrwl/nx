@@ -6,6 +6,8 @@ The migration lists the targets the converter cannot convert safely. In agentic 
 
 The `@nx/expo:build-list`, `@nx/expo:sync-deps`, `@nx/expo:update` and `@nx/expo:ensure-symlink` executors stay.
 
+`@nx/expo:build` copied the root dependencies and lock file into the app before `eas build`. The `add-eas-build-pre-install` migration moves that step to an `eas-build-pre-install` script that EAS Build runs.
+
 #### Sample code changes
 
 The `install` target has no options that differ from the inferred target, so it is removed. The `export` options become CLI arguments.

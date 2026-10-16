@@ -91,6 +91,12 @@
       "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
       "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
       "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "add-eas-build-pre-install": {
+      "version": "24.0.0-beta.3",
+      "description": "Adds an `eas-build-pre-install` script to Expo apps with an `eas.json`, which copies the root dependencies and lock file into the app on EAS Build as the removed `@nx/expo:build` executor did locally.",
+      "implementation": "./dist/src/migrations/update-24-0-0/add-eas-build-pre-install",
+      "documentation": "./dist/src/migrations/update-24-0-0/add-eas-build-pre-install.md"
     }
   },
   "packageJsonUpdates": {

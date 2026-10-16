@@ -312,6 +312,8 @@ To run an EAS build:
 nx build <app-name>
 ```
 
+In a workspace without package manager workspaces, the app's `eas-build-pre-install` script copies the root dependencies and lock file into the app on the build machine, so EAS installs the versions pinned at the workspace root. The app generator adds this script.
+
 If you are not signed into an EAS account, run the following command to log in:
 
 ```shell
