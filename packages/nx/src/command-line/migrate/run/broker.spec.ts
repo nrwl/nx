@@ -21,10 +21,17 @@ vi.mock('../../../utils/package-manager', () => ({
 
 const mockGetLatestCommitSha = vi.fn();
 const mockResetWorkingTree = vi.fn();
+// Reached only by tests that run the real commitMigrationIfRequested.
+const mockHasUncommittedChanges = vi.fn();
+const mockTryCommitChangesAsync = vi.fn();
 vi.mock('../../../utils/git-utils', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../utils/git-utils')>()),
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
   resetWorkingTree: (...args: unknown[]) => mockResetWorkingTree(...args),
+  hasUncommittedChanges: (...args: unknown[]) =>
+    mockHasUncommittedChanges(...args),
+  tryCommitChangesAsync: (...args: unknown[]) =>
+    mockTryCommitChangesAsync(...args),
 }));
 
 const mockLockCtor = vi.fn();
@@ -152,6 +159,8 @@ describe('migrate commit broker', () => {
     vi.spyOn(output, 'error').mockImplementation(() => {});
     mockLockCtor.mockReset();
     mockCommit.mockReset().mockResolvedValue(committed);
+    mockHasUncommittedChanges.mockReset();
+    mockTryCommitChangesAsync.mockReset();
     mockReadPackageJsonDeps.mockReset().mockReturnValue('{"deps":2}');
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockLogSkippedInstall.mockReset();
@@ -289,7 +298,7 @@ describe('migrate commit broker', () => {
         'chore: [nx migration] ',
         expect.any(Function),
         [{ package: '@nx/js', name: 'old' }],
-        undefined,
+        'later-step',
         expect.anything()
       );
       expect(mockRunInstall).not.toHaveBeenCalled();
@@ -996,6 +1005,41 @@ describe('migrate commit broker', () => {
       broker.close();
 
       expect(mockCommit).not.toHaveBeenCalled();
+    });
+
+    it('tells the agent of a --run-migration run that a failed commit is left to the user', async () => {
+      writeRunState(dir, runState({ singleMigration: true }));
+      const { commitMigrationIfRequested } =
+        await vi.importActual<typeof import('../migrate-commits')>(
+          '../migrate-commits'
+        );
+      mockCommit.mockImplementation(commitMigrationIfRequested);
+      mockHasUncommittedChanges.mockReturnValue(true);
+      mockTryCommitChangesAsync.mockRejectedValue(
+        new Error('error: gpg failed to sign the data')
+      );
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      const resultPath = writeRequest(broker.nonce);
+
+      await broker.service();
+      const answer = JSON.parse(readFileSync(resultPath, 'utf8'));
+      broker.close();
+
+      expect(answer.output).toContainEqual({
+        kind: 'line',
+        color: 'red',
+        text: expect.stringContaining(
+          "Commit or revert any remaining uncommitted changes manually. Commits in this session cannot ask for input, such as a signing passphrase or a hook's prompt. Tell the user what failed."
+        ),
+      });
+      expect(JSON.stringify(answer.output)).not.toMatch(
+        /later commit|next successful commit|next step/
+      );
     });
 
     it('answers a request once, whatever else rewrites it', async () => {

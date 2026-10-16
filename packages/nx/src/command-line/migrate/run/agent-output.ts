@@ -49,6 +49,10 @@ export function warnToAgent(message: AgentMessage): void {
   output.warn(safe(message));
 }
 
+export function errorToAgent(message: AgentMessage): void {
+  output.error(safe(message));
+}
+
 export function logLineToAgent(line: string): void {
   logger.info(singleLine(line));
 }

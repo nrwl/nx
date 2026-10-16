@@ -20,10 +20,40 @@ import { terminalOutput, type MigrateOutputSink } from './deferred-output';
 // .gitignore edit, or the migration's own changes).
 const MIGRATE_COMMIT_EXCLUDES = [MIGRATE_RUNS_RELATIVE_DIR];
 
-// Without it the agent continues as the absorb guidance says, and a cause that
-// fails every commit leaves the whole run uncommitted.
-const AGENT_SESSION_COMMIT_FAILURE =
-  "Commits in this session cannot ask for input, such as a signing passphrase or a hook's prompt, so later commits may fail the same way until the cause is fixed. Before the next step, tell the user what failed and ask whether to fix the cause first or to continue as is. Either way nx tries every later commit, and the first one that lands includes these changes.";
+/**
+ * What becomes of a failed commit's changes: a later migration step's commit
+ * takes them in, or, with no later step, the user commits or reverts them.
+ */
+export type CommitFailureRecovery = 'later-step' | 'manual';
+
+const AGENT_SESSION_NO_INPUT =
+  "Commits in this session cannot ask for input, such as a signing passphrase or a hook's prompt";
+
+function commitFailureGuidance(
+  recovery: CommitFailureRecovery,
+  inAgentSession: boolean
+): string {
+  switch (recovery) {
+    case 'later-step':
+      // Without the session half, the agent continues as the absorb guidance
+      // says, and a cause that fails every commit leaves the run uncommitted.
+      return `Any uncommitted changes will be included in the next successful commit, which will reference this migration; if they remain uncommitted, the end-of-run output will list this migration so you can commit or revert them manually.${
+        inAgentSession
+          ? ` ${AGENT_SESSION_NO_INPUT}, so later commits may fail the same way until the cause is fixed. Before the next step, tell the user what failed and ask whether to fix the cause first or to continue as is. Either way nx tries every later commit, and the first one that lands includes these changes.`
+          : ''
+      }`;
+    case 'manual':
+      return `Commit or revert any remaining uncommitted changes manually.${
+        inAgentSession
+          ? ` ${AGENT_SESSION_NO_INPUT}. Tell the user what failed.`
+          : ''
+      }`;
+    default: {
+      const unhandled: never = recovery;
+      throw new Error(`Unhandled commit failure recovery: ${unhandled}`);
+    }
+  }
+}
 
 /**
  * Discriminated result for `commitMigrationIfRequested`. Distinguishes the
@@ -48,9 +78,9 @@ export type CommitResult =
  * can see which earlier migrations' diffs this commit absorbed (their own
  * commits failed and `git add -A` picked their working-tree state up too).
  *
- * The default `failureGuidance` describes the classic loop's absorb-and-recap
- * behavior; a caller with no later commit or recap to absorb the diff (the
- * standalone single-migration worker) passes its own.
+ * `recovery` picks the failure guidance: the default describes the classic
+ * loop's absorb-and-recap behavior, and a caller with no later migration step
+ * (a `--run-migration` run) passes 'manual'.
  *
  * A `sink` collects the output for a caller sharing the terminal with an
  * agent, and the commit then runs without the terminal.
@@ -62,7 +92,7 @@ export async function commitMigrationIfRequested(
   commitPrefix: string,
   installDepsIfChanged: () => Promise<void>,
   pendingMigrations: ReadonlyArray<{ package: string; name: string }> = [],
-  failureGuidance = 'Any uncommitted changes will be included in the next successful commit, which will reference this migration; if they remain uncommitted, the end-of-run output will list this migration so you can commit or revert them manually.',
+  recovery: CommitFailureRecovery = 'later-step',
   sink?: MigrateOutputSink
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
@@ -98,9 +128,10 @@ export async function commitMigrationIfRequested(
     const reason = err instanceof Error ? err.message : String(err);
     out.line(
       'red',
-      `The commit for ${migration.name} failed:\n${reason}\nCheck \`git status\` and \`git log\`; the commit may have landed despite this error. ${failureGuidance}${
-        sink ? ` ${AGENT_SESSION_COMMIT_FAILURE}` : ''
-      }`
+      `The commit for ${migration.name} failed:\n${reason}\nCheck \`git status\` and \`git log\`; the commit may have landed despite this error. ${commitFailureGuidance(
+        recovery,
+        sink !== undefined
+      )}`
     );
     return { status: 'failed', reason };
   }
@@ -176,11 +207,6 @@ export function commitCheckpointBeforeMigrations(
   }
 }
 
-/**
- * `agenticHasDiffContext` gates the agent prompt: without per-migration commits
- * to isolate a migration's diff, the prompt embeds a file list instead of
- * pointing at git.
- */
 export function resolveCreateCommits(args: {
   createCommits: boolean | undefined;
   // An orchestrated run always takes the agentic defaults, so the two can
@@ -190,7 +216,6 @@ export function resolveCreateCommits(args: {
   commitPrefixIsCustom?: boolean;
 }): {
   effective: boolean;
-  agenticHasDiffContext: boolean;
   warning?: string;
   error?: string;
 } {
@@ -203,7 +228,6 @@ export function resolveCreateCommits(args: {
   if (createCommits === true && !isGitRepo) {
     return {
       effective: false,
-      agenticHasDiffContext: false,
       error:
         '`--create-commits` requires a git repository. Run `git init` first, or omit the flag.',
     };
@@ -213,7 +237,6 @@ export function resolveCreateCommits(args: {
     if (createCommits === false) {
       return {
         effective: false,
-        agenticHasDiffContext: false,
         warning:
           (orchestrated
             ? "--no-create-commits was passed, but orchestrated migrate runs create per-migration commits by default. Without them, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review."
@@ -228,7 +251,6 @@ export function resolveCreateCommits(args: {
     if (!isGitRepo) {
       return {
         effective: false,
-        agenticHasDiffContext: false,
         warning:
           (orchestrated
             ? 'Orchestrated migrate runs create per-migration commits by default, but the workspace is not a git repository. Continuing without commits, so the agent will not receive per-file diff context. Run `git init` to enable.'
@@ -238,12 +260,11 @@ export function resolveCreateCommits(args: {
             : ''),
       };
     }
-    return { effective: true, agenticHasDiffContext: true };
+    return { effective: true };
   }
 
   return {
     effective: createCommits === true,
-    agenticHasDiffContext: false,
     warning:
       commitPrefixIsCustom && createCommits !== true
         ? 'A custom migrate commit prefix is configured, but commits are not enabled for this run, so it has no effect. Set `migrate.createCommits` to `true` (or pass `--create-commits`) to create a commit per migration.'

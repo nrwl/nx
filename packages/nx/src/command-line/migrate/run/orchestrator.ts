@@ -4,7 +4,6 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
-  readdirSync,
   rmSync,
   writeFileSync,
   type BigIntStats,
@@ -86,8 +85,10 @@ import {
   hasRunState,
   readRunState,
   migrateRunsDir,
+  NewerRunStateFormatError,
   runDir,
   runHandoffsDir,
+  runKind,
   writeRunState,
   CURRENT_RUN_STATE_FORMAT_VERSION,
   RUN_STATE_FILE_NAME,
@@ -99,14 +100,19 @@ import {
   type MigrateStepPromptOutcome,
   type MigrateTreeOperation,
   type MigrationIdProblem,
+  type UninterpretableRunDir,
   TERMINAL_STEP_STATUSES,
   migrationIdProblems,
 } from './run-state';
 import {
-  hasAnyLiveRunActivity,
+  describeHolders,
+  findOtherLiveRuns,
   heldRunError,
   holdRunActivity,
+  isHeld,
+  listOtherRuns,
   liveRunActivityPids,
+  liveRunRefusal,
   registerRunActivity,
   releaseRunActivity,
   updateRunState,
@@ -143,6 +149,7 @@ import {
   type PlannedMigration,
 } from '../migration-shape';
 import {
+  commitFailureRecovery,
   depsHash,
   installDepsChangedSinceDispense,
   isPidAlive,
@@ -242,6 +249,9 @@ export interface RunOrchestratorInitInput {
   // Asked once init has decided to start a run, before any run is deleted or
   // any git side effect lands; false refuses.
   confirmStart?: () => Promise<boolean>;
+  // A `--run-migration` run: marked so discovery skips it, started alongside
+  // idle active runs, and refused while another process works on any run.
+  singleMigration?: boolean;
 }
 
 export type OrchestratorInitResult =
@@ -346,6 +356,7 @@ export async function runOrchestratorInit(
     onExistingRun = 'report',
     replaceRunId,
     confirmStart,
+    singleMigration = false,
   } = input;
   const migrations = (migrationsJson.migrations ?? []) as PlannedMigration[];
   const sorted = sortMigrations(migrations.slice());
@@ -356,8 +367,9 @@ export async function runOrchestratorInit(
   // and whether to continue it or replace it is the user's call, not a guess
   // from the plans. Reported before the migration id check below: this plan
   // is not being started. NewerRunStateFormatError propagates.
-  const active =
-    onExistingRun === 'start-fresh'
+  const active = singleMigration
+    ? null
+    : onExistingRun === 'start-fresh'
       ? activeRunToReplace(root, replaceRunId)
       : findActiveRunForInit(root);
   if (
@@ -384,7 +396,7 @@ export async function runOrchestratorInit(
   }
   if (existsSync(migrateRunsDir(root))) {
     withRunCreationLock(root, () => {
-      refuseLiveReservation(root);
+      refuseNewRunAlongsideLiveRun(root, singleMigration);
       if (active) {
         refuseUndeletableRun(root, active.runId, active.state);
       }
@@ -421,18 +433,11 @@ export async function runOrchestratorInit(
     refuseUnsafeScratchExposure(scratchExposure, INIT_CONTINUE_HINT);
   }
   // Applied before the checkpoint so the entry (when it can be added) already
-  // covers older scratch by the time the checkpoint's `git add -A` runs; the
-  // fallback's standalone commit is suppressed because that checkpoint
-  // carries the edit. A planned ignore migration can't be deferred to: the
-  // run dir is created below, before that migration runs.
+  // covers older scratch by the time the checkpoint's `git add -A` runs.
   await applyAgenticHandoffGitignoreFallback({
     migrations: sorted,
     installedNxVersion,
-    effectiveCreateCommits: createCommits,
-    commitPrefix,
     root,
-    applyWhenPlanned: true,
-    commitStandalone: false,
   });
   if (scratchExposure === 'unignored') {
     // The fallback was the workspace's last chance at ignore coverage;
@@ -449,17 +454,20 @@ export async function runOrchestratorInit(
   // migrate would wait on this process. The .gitignore fallback is idempotent.
   let deleted = false;
   const reserved = withRunCreationLock(root, () => {
-    refuseLiveReservation(root);
-    const nowActive = findActiveRunForInit(root, active !== null);
-    if (nowActive && nowActive.runId !== active?.runId) {
-      return nowActive;
-    }
-    if (active) {
-      // Completed meanwhile (a reconcile finished it): nothing to replace.
-      if (!nowActive) {
-        throw new Error(noActiveRunToReplace(active.runId));
+    if (singleMigration) {
+      refuseNewRunAlongsideLiveRun(root, true);
+    } else {
+      const nowActive = findActiveRunForInit(root, active !== null);
+      if (nowActive && nowActive.runId !== active?.runId) {
+        return nowActive;
       }
-      deleted = deleteRunRecord(root, active.runId);
+      if (active) {
+        // Completed meanwhile (a reconcile finished it): nothing to replace.
+        if (!nowActive) {
+          throw new Error(noActiveRunToReplace(active.runId));
+        }
+        deleted = deleteRunRecord(root, active.runId);
+      }
     }
     // The snapshot must exist before run.json makes the run discoverable: a
     // crash in between must not leave an active run without its plan.
@@ -529,6 +537,7 @@ export async function runOrchestratorInit(
     steps: buildSteps(sorted, finalValidation !== false),
     commits: checkpoint ? [checkpoint] : [],
     ...(checkpointFailed ? { checkpointFailed: true } : {}),
+    ...(singleMigration ? { singleMigration: true } : {}),
     analytics: { startEmitted: false, completeEmitted: false },
   };
   withRunCreationLock(root, () => {
@@ -563,9 +572,9 @@ export function runOrchestratorResume(
  * Holds the active run `runId` names and returns its state. A continue calls
  * this before the install and the agent selection: a concurrent start-fresh
  * must not delete the run meanwhile. Throws when the id names no run or a
- * finished one, and while another process holds the run: continuing would
- * open a second session over a live one. Under WASM nothing is held and no
- * holder refuses.
+ * finished one, and while another process holds the run or works on a
+ * different run: continuing would open a second session over a live one.
+ * Under WASM nothing is held and no holder refuses.
  */
 export function holdRunToContinue(
   root: string,
@@ -674,7 +683,6 @@ function activeRunToDelete(
   root: string,
   runId: string
 ): { runId: string; state: MigrateRunState } {
-  refuseLiveReservation(root);
   const active = findActiveRunForInit(root, true);
   if (!active) {
     throw new Error(noActiveRunToReplace(runId));
@@ -692,60 +700,159 @@ function activeRunToDelete(
 // invocation would compete with) but only warn when a healthy active run is
 // found, unless `refuseUninterpretable`: a start-fresh would delete that run
 // and then find only the unreadable ones. NewerRunStateFormatError propagates
-// from the read.
+// from the read. Refuses while another process works on a run it wouldn't
+// report.
 function findActiveRunForInit(
   root: string,
   refuseUninterpretable = false
 ): { runId: string; state: MigrateRunState } | null {
+  refuseNewRunAlongsideLiveRun(root);
   const { active, uninterpretable } = findActiveRun(root);
   if (uninterpretable.length > 0) {
-    const noun = uninterpretable.length === 1 ? 'directory' : 'directories';
-    // A directory name is whatever is on disk and a reason quotes what it
-    // found, so neither can be trusted to stay on the line it is put on.
-    // Sanitized here rather than left to the gateway: these same lines are
-    // joined into the throw below, which leaves through handleErrors.
-    const details = uninterpretable.map(
-      (u) =>
-        `${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(u.dirName)}: ${singleLine(
-          u.reason
-        )}`
-    );
     if (!active || refuseUninterpretable) {
+      const noun = uninterpretable.length === 1 ? 'directory' : 'directories';
       throw new Error(
         [
           `Whether a migrate run is still active could not be determined; running the plan could re-apply migrations an unfinished run already applied.`,
-          ...details,
+          ...uninterpretableDetails(uninterpretable),
           `Fix or remove the listed ${noun}, then re-run the command.`,
         ].join('\n')
       );
     }
-    warnToAgent({
-      title: `Ignoring ${uninterpretable.length} migrate run ${noun} that could not be read.`,
-      bodyLines: details,
-    });
+    warnIgnoredRunDirs(uninterpretable);
   }
   return active;
 }
 
-// A run directory without run.json but with a live activity lock is an init
-// between reserving the directory and writing run.json: the checkpoint commit
-// is in flight and no run may start alongside it. Refused at once, never
-// waited for: a git hook re-entering nx migrate during that commit would
-// otherwise wait on the process waiting for the hook. An unlocked one is the
-// remains of an init that died, which discovery ignores like any other
-// directory without run.json. Call under the creation lock.
-function refuseLiveReservation(root: string): void {
-  for (const entry of readdirSync(migrateRunsDir(root), {
-    withFileTypes: true,
-  })) {
-    if (!entry.isDirectory()) continue;
-    const dir = join(migrateRunsDir(root), entry.name);
-    if (hasRunState(dir) || !hasAnyLiveRunActivity(dir)) continue;
-    throw new Error(
-      `Another nx migrate process is starting a run (${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(
-        entry.name
-      )}). Wait for it to finish, then re-run the command.`
+// A directory name is whatever is on disk and a reason quotes what it found,
+// so neither can be trusted to stay on the line it is put on. Sanitized here
+// rather than left to the gateway: these lines are also joined into a throw,
+// which leaves through handleErrors.
+function uninterpretableDetails(
+  uninterpretable: UninterpretableRunDir[]
+): string[] {
+  return uninterpretable.map(
+    (u) =>
+      `${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(u.dirName)}: ${singleLine(
+        u.reason
+      )}`
+  );
+}
+
+function warnIgnoredRunDirs(uninterpretable: UninterpretableRunDir[]): void {
+  const noun = uninterpretable.length === 1 ? 'directory' : 'directories';
+  warnToAgent({
+    title: `Ignoring ${uninterpretable.length} migrate run ${noun} that could not be read.`,
+    bodyLines: uninterpretableDetails(uninterpretable),
+  });
+}
+
+/**
+ * Throws while another process works on a run that init wouldn't report: a
+ * `--run-migration` run, a run being started, or a run nx can't read. A new
+ * run would install and commit over its in-progress edits. An active
+ * `--run-migrations` run is reported instead, except to a `--run-migration`
+ * run, and records no process holds block nothing.
+ */
+export function refuseNewRunAlongsideLiveRun(
+  root: string,
+  singleMigration = false
+): void {
+  const live = findOtherLiveRuns(root).find(
+    (run) => singleMigration || !run.state || runKind(run.state) !== 'active'
+  );
+  if (live) {
+    throw liveRunRefusal(
+      singleMigration
+        ? 'Not running the migration'
+        : 'Not running the migrations',
+      live
     );
+  }
+}
+
+/**
+ * The refusals of prepareSingleMigrationRun alone, for the CLI to make before
+ * its install. Removes and warns about nothing.
+ */
+export function checkRunsForSingleMigration(root: string): void {
+  if (!existsSync(migrateRunsDir(root))) return;
+  withRunCreationLock(root, () => refuseNewRunAlongsideLiveRun(root, true));
+}
+
+/**
+ * The check every `--run-migration` run without a run id makes before it runs
+ * anything. Throws while another nx migrate process works on a run, removes
+ * `--run-migration` records no process holds, and warns about idle active
+ * runs, which do not record this migration.
+ */
+export function prepareSingleMigrationRun(root: string): void {
+  if (!existsSync(migrateRunsDir(root))) return;
+  const idleRunIds: string[] = [];
+  const uninterpretable: UninterpretableRunDir[] = [];
+  withRunCreationLock(root, () => {
+    refuseNewRunAlongsideLiveRun(root, true);
+    // No other process holds what is left.
+    for (const run of listOtherRuns(root)) {
+      if (run.starting) continue;
+      if (run.state?.singleMigration === true) {
+        removeSingleMigrationRun(root, run.dirName);
+      } else if (run.state) {
+        idleRunIds.push(run.dirName);
+      } else if (!(run.readError instanceof NewerRunStateFormatError)) {
+        // A newer nx's run is that nx's to report.
+        uninterpretable.push({
+          dirName: run.dirName,
+          reason: summarizeError(run.readError),
+        });
+      }
+    }
+  });
+  if (uninterpretable.length > 0) {
+    warnIgnoredRunDirs(uninterpretable);
+  }
+  if (idleRunIds.length > 0) {
+    const runs = idleRunIds.map((id) => `'${singleLine(id)}'`).join(', ');
+    warnToAgent({
+      title: `This migration won't be recorded into the active migrate ${
+        idleRunIds.length === 1 ? 'run' : 'runs'
+      } ${runs}.`,
+      bodyLines: [
+        idleRunIds.length === 1
+          ? 'Continuing that run may apply the migration again.'
+          : 'Continuing one of those runs may apply the migration again.',
+      ],
+    });
+  }
+}
+
+/**
+ * Removes a `--run-migration` run's record. Call under the creation lock. Kept
+ * while another process still works on the run, such as a worker the agent
+ * left running: other runs refuse alongside it, and the next
+ * `--run-migration` removes it once none does. Otherwise best effort: what is
+ * left blocks nothing.
+ */
+export function removeSingleMigrationRun(root: string, runId: string): void {
+  const dir = runDir(root, runId);
+  const path = `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}`;
+  try {
+    const deletion = deleteUnheldRunRecord(root, runId);
+    if (typeof deletion === 'object') {
+      releaseRunActivity(dir);
+      warnToAgent({
+        title:
+          deletion.holders === 'unknown'
+            ? `Kept ${path}: nx cannot tell whether another nx migrate process is still working on it. Make sure none is, then remove it.`
+            : `Kept ${path}: ${describeHolders(deletion.holders)}. Other nx migrate runs refuse until it ends, and the next --run-migration removes it.`,
+      });
+      return;
+    }
+    rmSync(dir, { recursive: true, force: true });
+  } catch (e) {
+    warnToAgent({
+      title: `Could not remove ${path}: ${summarizeError(e)}. It blocks nothing; remove it when convenient.`,
+    });
   }
 }
 
@@ -811,7 +918,7 @@ function refuseUndeletableRun(
     );
   }
   const holders = liveRunActivityPids(runDir(root, runId));
-  if (holders === 'unknown' || holders.length > 0) {
+  if (isHeld(holders)) {
     throw heldRunError('deleting', runId, holders);
   }
   const workers = liveWorkers(state);
@@ -837,18 +944,39 @@ function noActiveRunToReplace(runId: string | undefined): string {
   } is active, so there is nothing to replace. To start a run, re-run the command without --start-fresh and --run-id.`;
 }
 
-// Removes run.json under the state lock, so no reconcile or worker can start
-// against a directory about to disappear. The refusals run again on fresh
-// state: the early pass predates the prompt. False when already gone.
+// The refusals run again on fresh state: the early pass predates the prompt.
+// False when already gone.
 function deleteRunRecord(root: string, runId: string): boolean {
+  const deletion = deleteUnheldRunRecord(root, runId, (state) =>
+    refuseUndeletableRun(root, runId, state)
+  );
+  if (deletion === 'deleted') return true;
+  if (deletion === 'gone') return false;
+  throw heldRunError('deleting', runId, deletion.holders);
+}
+
+/**
+ * Removes run.json unless another process holds the run, and returns its
+ * holders instead. Call under the creation lock, which every claim takes, so
+ * no process starts holding the run between the check and the removal. The
+ * state lock keeps a reconcile or worker from starting against a directory
+ * about to disappear. `refuse` sees the state read under it.
+ */
+function deleteUnheldRunRecord(
+  root: string,
+  runId: string,
+  refuse?: (state: MigrateRunState) => void
+): 'deleted' | 'gone' | { holders: number[] | 'unknown' } {
   const dir = runDir(root, runId);
   return withRunStateLock(dir, () => {
-    if (!hasRunState(dir)) return false;
-    refuseUndeletableRun(root, runId, readRunState(dir));
-    // The hold's lock file is inside the directory removeDeletedRunDir removes.
+    if (!hasRunState(dir)) return 'gone';
+    refuse?.(readRunState(dir));
+    const holders = liveRunActivityPids(dir);
+    if (isHeld(holders)) return { holders };
+    // The hold's lock file is inside the directory removed afterwards.
     releaseRunActivity(dir);
     rmSync(join(dir, RUN_STATE_FILE_NAME), { force: true });
-    return true;
+    return 'deleted';
   });
 }
 
@@ -1019,7 +1147,10 @@ function finishInit(
   runbook?: string
 ): OrchestratorInitResult {
   let current = state;
-  if (!current.analytics.startEmitted) {
+  if (
+    reportsOrchestratorAnalytics(current) &&
+    !current.analytics.startEmitted
+  ) {
     // Claim the watermark on the fresh state first: of two concurrent inits
     // exactly one flips it, and only that one reports.
     let claimed = false;
@@ -1040,7 +1171,7 @@ function finishInit(
       });
     }
   }
-  if (origin === 'resumed') {
+  if (origin === 'resumed' && reportsOrchestratorAnalytics(current)) {
     reportMigrateOrchestratorResume(runTallies(current));
   }
   const content = runbook ?? ensureRunbook(root, dir, runId, current);
@@ -1173,6 +1304,7 @@ function runbookContext(
     // The pass guidance follows the plan: an opted-out run, or one recorded
     // before the pass existed, has no pass step to dispense.
     finalValidation: state.steps.some((s) => s.kind === 'final-validation'),
+    singleMigration: state.singleMigration === true,
   };
 }
 
@@ -1259,7 +1391,7 @@ export async function runOrchestratorReconcile(
         scope
       );
       if (result.kind === 'error') {
-        emitError(root, runId, result.reason);
+        emitError(root, runId, state, result.reason);
         return; // no transition was written
       }
       const target = result.targetStep;
@@ -1280,10 +1412,10 @@ export async function runOrchestratorReconcile(
           scope
         );
         if (outcome.kind === 'refused') {
-          emitError(root, runId, outcome.reason);
+          emitError(root, runId, state, outcome.reason);
           return;
         }
-        warnAboutGiveUp(target, outcome);
+        warnAboutGiveUp(target, outcome, commitFailureRecovery(state));
         if (target.installFailed === true) warnInstallLeftToUser(root, target);
         // Settled already; the dispense refuses a tree still held.
         scope.lease?.release();
@@ -1380,6 +1512,7 @@ export async function runOrchestratorReconcile(
         emitError(
           root,
           runId,
+          state,
           entry?.kind === 'landed' && entry.sha
             ? `${freshRejection} Note: this action's commit ${entry.sha} had already landed and stays in history; resolve the step against the tree as it stands now.`
             : freshRejection
@@ -2092,6 +2225,7 @@ async function commitForStep(
     (id) => id !== step.id
   );
   const skipInstall = state.skipInstall === true;
+  const recovery = commitFailureRecovery(state);
   let commit: BrokeredCommit;
   try {
     commit = await commitStepTree(
@@ -2112,7 +2246,8 @@ async function commitForStep(
               skipInstall,
               reconcileCommand(root, state.runId)
             ),
-          stepsToPendingMigrations(state, absorbedStepIds)
+          stepsToPendingMigrations(state, absorbedStepIds),
+          recovery
         ),
       scope,
       commitAs
@@ -2131,14 +2266,14 @@ async function commitForStep(
     // reports through result.status. The debt cannot stand in for the install
     // failure, since a later commit absorbing this diff clears the debt while
     // the dependencies are still missing.
-    warnCommitFailed(name, e);
+    warnCommitFailed(name, recovery, e);
     return {
       entry: { kind: 'failed', stepIds: [step.id] },
       installFailed: true,
     };
   }
   if (commit.result.status === 'failed') {
-    warnCommitFailed(name);
+    warnCommitFailed(name, recovery);
   }
   return {
     entry: commitResultToLedgerEntry(
@@ -2291,11 +2426,7 @@ function dispenseNextStep(
   // Read the pre-step baselines (git and package.json reads) before the
   // lock; the dispense transition and the baselines then apply to the fresh
   // state in one write.
-  const baselines: DispenseBaselines = {
-    gitRefBefore: getLatestCommitSha(root) ?? undefined,
-    treeCleanAtDispense: getWorkingTreeStatus(root) === 'clean',
-    depsHashAtDispense: depsHash(root),
-  };
+  const baselines = readDispenseBaselines(root);
   let advancedElsewhere = false;
   let held: MigrateTreeOperation | undefined;
   const current = updateRunState(dir, (fresh) => {
@@ -2325,10 +2456,12 @@ function dispenseNextStep(
     return;
   }
   const dispensed = current.steps.find((s) => s.id === step.id);
-  reportMigrateOrchestratorStepDispensed({
-    attempt: dispensed.attempt,
-    ordinal: runTallies(current).dispenseCount,
-  });
+  if (reportsOrchestratorAnalytics(current)) {
+    reportMigrateOrchestratorStepDispensed({
+      attempt: dispensed.attempt,
+      ordinal: runTallies(current).dispenseCount,
+    });
+  }
   switch (dispensed.kind) {
     case 'migration':
       emitNextStep(root, runId, current, dispensed, noProgress);
@@ -2341,6 +2474,31 @@ function dispenseNextStep(
       throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
     }
   }
+}
+
+function readDispenseBaselines(root: string): DispenseBaselines {
+  return {
+    gitRefBefore: getLatestCommitSha(root) ?? undefined,
+    treeCleanAtDispense: getWorkingTreeStatus(root) === 'clean',
+    depsHashAtDispense: depsHash(root),
+  };
+}
+
+/**
+ * Dispenses a `--run-migration` run's step without a response: the parent
+ * runs the step's first attempt itself, and an agent it starts afterwards
+ * gets the step from the "next" command.
+ */
+export function dispenseSingleMigrationStep(root: string, runId: string): void {
+  const baselines = readDispenseBaselines(root);
+  updateRunState(runDir(root, runId), (fresh) => {
+    const [step] = fresh.steps;
+    return setDispenseBaselines(
+      applyEventOrThrow(fresh, dispenseEvent(step)),
+      step.id,
+      baselines
+    );
+  });
 }
 
 function dispenseEvent(step: MigrateStep): StepEvent {
@@ -2680,7 +2838,7 @@ function assessPreMarkerRetry(
 }
 
 // Whichever attempt landed it, the commit is this migration's result.
-function lastCoveringLandedEntry(
+export function lastCoveringLandedEntry(
   state: MigrateRunState,
   step: MigrateStep
 ): MigrateCommitLedgerEntry | null {
@@ -2698,7 +2856,10 @@ function unresolvedOptionLine(
   resetTree: boolean
 ): string {
   const command = reconcileCommand(root, runId, 'unresolved');
-  const recorded = `The failure is recorded as a run issue and listed in the completion report.`;
+  const recorded =
+    state.singleMigration === true
+      ? `The failure is listed in the completion report.`
+      : `The failure is recorded as a run issue and listed in the completion report.`;
   const noun = stepNoun(step);
   if (resetTree) {
     return `  unresolved: give up on this ${noun}, resetting the tree to ${
@@ -3106,9 +3267,8 @@ function planPromptPath(
   return null;
 }
 
-// Wording mirrors the classic runner's ambiguous-outcome cause lines. A
-// readable handoff whose issue report is invalid is a rejection too: the fold
-// refused to consume it, and only this response can tell the agent why.
+// A readable handoff whose issue report is invalid is a rejection too: the
+// fold refused to consume it, and only this response can tell the agent why.
 function describeRejectedHandoff(
   dir: string,
   state: MigrateRunState,
@@ -3165,7 +3325,12 @@ function describeRejectedHandoff(
 // to the request, and it carries the reconcile command to run next. A non-zero
 // exit would tell the driving agent that reconcile itself crashed, and it
 // would stop reading for the correction it is being handed.
-function emitError(root: string, runId: string, reason: string): void {
+function emitError(
+  root: string,
+  runId: string,
+  state: MigrateRunState,
+  reason: string
+): void {
   // A rejected action is an active response like any dispense, so it carries
   // the runbook footer: the master receiving it may have just lost its
   // context. One sanitized array feeds both outputs, as in emit().
@@ -3178,7 +3343,9 @@ function emitError(root: string, runId: string, reason: string): void {
     next: reconcileCommand(root, runId),
     instructions: lines.join('\n'),
   });
-  reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
+  if (reportsOrchestratorAnalytics(state)) {
+    reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
+  }
 }
 
 /**
@@ -3255,7 +3422,7 @@ function completeRun(
       };
     });
   }
-  if (shouldEmit) {
+  if (shouldEmit && reportsOrchestratorAnalytics(current)) {
     reportMigrateOrchestratorComplete(runTallies(current));
   }
 
@@ -3314,11 +3481,19 @@ function emit(
     ...rest,
     ...(lines ? { instructions: lines.join('\n') } : {}),
   });
-  reportMigrateOrchestratorDispense({
-    action: effectiveAction,
-    attempt: step.attempt,
-    ordinal: runTallies(state).dispenseCount,
-  });
+  if (reportsOrchestratorAnalytics(state)) {
+    reportMigrateOrchestratorDispense({
+      action: effectiveAction,
+      attempt: step.attempt,
+      ordinal: runTallies(state).dispenseCount,
+    });
+  }
+}
+
+// A `--run-migration` run reports its own events, so only `--run-migrations`
+// runs report orchestrator events.
+function reportsOrchestratorAnalytics(state: MigrateRunState): boolean {
+  return state.singleMigration !== true;
 }
 
 function noProgressLines(

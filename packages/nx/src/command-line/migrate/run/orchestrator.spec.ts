@@ -112,6 +112,9 @@ import {
   activeRunForClassic,
   activeRunToReplace,
   deleteRunForStartFresh,
+  holdRunToContinue,
+  prepareSingleMigrationRun,
+  refuseNewRunAlongsideLiveRun,
   runOrchestratorInit,
   runOrchestratorReconcile,
   runOrchestratorResume,
@@ -299,6 +302,7 @@ describe('orchestrator', () => {
       validate?: boolean;
       gitRefAtInit?: string;
       issues?: MigrateRunIssue[];
+      singleMigration?: boolean;
     }
   ): string {
     const dir = runDir(root, runId);
@@ -334,6 +338,7 @@ describe('orchestrator', () => {
       commits: opts.commits ?? [],
       ...(opts.issues ? { issues: opts.issues } : {}),
       ...(opts.checkpointFailed ? { checkpointFailed: true } : {}),
+      ...(opts.singleMigration ? { singleMigration: true } : {}),
       analytics: {
         startEmitted: opts.startEmitted ?? true,
         completeEmitted: opts.completeEmitted ?? false,
@@ -341,6 +346,12 @@ describe('orchestrator', () => {
     };
     writeRunState(dir, state);
     return dir;
+  }
+
+  function runDirNames(): string[] {
+    return readdirSync(migrateRunsDir(root), { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name);
   }
 
   function handoffPathIn(dir: string, pkg: string, name: string): string {
@@ -1489,12 +1500,6 @@ describe('orchestrator', () => {
     });
     const sha = (n: number) => n.toString(16).padStart(40, '0');
 
-    function runDirNames(): string[] {
-      return readdirSync(migrateRunsDir(root), { withFileTypes: true })
-        .filter((e) => e.isDirectory())
-        .map((e) => e.name);
-    }
-
     it('records the checked-out branch on a new run', async () => {
       mockGetGitCurrentBranch.mockReturnValue('feature/upgrade');
       await runOrchestratorInit(initInput({ migrations: [] }));
@@ -2287,6 +2292,287 @@ describe('orchestrator', () => {
       ).toThrow("Invalid run id 'bad;id'.");
       expect(existsSync(join(dir, 'activity'))).toBe(false);
       expect(existsSync(runDir(root, 'missing'))).toBe(false);
+    });
+  });
+
+  describe('single migration runs', () => {
+    const singleInit = (
+      extra: Partial<Parameters<typeof runOrchestratorInit>[0]> = {}
+    ) => ({
+      root,
+      migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+      createCommits: false,
+      commitPrefix: 'chore: [nx migration] ',
+      skipInstall: false,
+      installedNxVersion: '23.0.0',
+      validate: undefined as boolean | undefined,
+      finalValidation: false,
+      emitAgentInstructions: false,
+      singleMigration: true,
+      ...extra,
+    });
+    const pendingStep = () => [migStep('step-1', '@nx/js:a', 'pending')];
+
+    function holdAs(dir: string, pid: number): FileLock {
+      mkdirSync(join(dir, 'activity'), { recursive: true });
+      const holder = new FileLock(join(dir, 'activity', `${pid}-cafe.lock`));
+      holder.lock();
+      return holder;
+    }
+
+    it('starts a marked run alongside an idle active run, without the existing-run report or init analytics', async () => {
+      setupRun('run-1', { steps: pendingStep() });
+
+      const result = await runOrchestratorInit(singleInit());
+
+      expect(result.kind).toBe('ready');
+      const { runId } = result as Extract<typeof result, { kind: 'ready' }>;
+      expect(readRunState(runDir(root, runId)).singleMigration).toBe(true);
+      expect(findActiveRun(root).active.runId).toBe('run-1');
+      expect(mockExistingRun).not.toHaveBeenCalled();
+      expect(mockInit).not.toHaveBeenCalled();
+    });
+
+    it('warns about idle active runs and unreadable run dirs, ignoring finished runs', () => {
+      setupRun('run-1', { steps: pendingStep() });
+      setupRun('run-0', { steps: pendingStep(), status: 'completed' });
+      mkdirSync(runDir(root, 'corrupt'), { recursive: true });
+      writeFileSync(join(runDir(root, 'corrupt'), 'run.json'), 'nope');
+
+      prepareSingleMigrationRun(root);
+
+      expect((output.warn as Mock).mock.calls.map(([m]) => m)).toEqual([
+        {
+          title: 'Ignoring 1 migrate run directory that could not be read.',
+          bodyLines: [
+            expect.stringMatching(
+              /^\.nx\/migrate-runs\/corrupt: Corrupt run state/
+            ),
+          ],
+        },
+        {
+          title:
+            "This migration won't be recorded into the active migrate run 'run-1'.",
+          bodyLines: ['Continuing that run may apply the migration again.'],
+        },
+      ]);
+    });
+
+    it('removes --run-migration records no process holds, finished or not', () => {
+      setupRun('left', { steps: pendingStep(), singleMigration: true });
+      setupRun('done', {
+        steps: pendingStep(),
+        singleMigration: true,
+        status: 'completed',
+      });
+      setupRun('run-1', { steps: pendingStep() });
+
+      prepareSingleMigrationRun(root);
+
+      expect(runDirNames()).toEqual(['run-1']);
+    });
+
+    it.each([
+      [
+        'another --run-migration run',
+        () =>
+          setupRun('run-1', { steps: pendingStep(), singleMigration: true }),
+        'Not running the migration while an nx migrate --run-migration run (.nx/migrate-runs/run-1) is in use: process 999 is still working on it. Wait for it to end, then re-run the command.',
+      ],
+      [
+        'a run being started',
+        () => {
+          mkdirSync(runDir(root, 'run-1'), { recursive: true });
+          return runDir(root, 'run-1');
+        },
+        'Another nx migrate process is starting a run (.nx/migrate-runs/run-1). Wait for it to finish, then re-run the command.',
+      ],
+      [
+        'a run whose run.json cannot be read',
+        () => {
+          mkdirSync(runDir(root, 'run-1'), { recursive: true });
+          writeFileSync(join(runDir(root, 'run-1'), 'run.json'), 'nope');
+          return runDir(root, 'run-1');
+        },
+        "Not running the migration while migrate run 'run-1' is in use: process 999 is still working on it. Wait for it to end, then re-run the command.",
+      ],
+    ])('refuses while another process works on %s', (_, setup, message) => {
+      const holder = holdAs(setup(), 999);
+      try {
+        expect(() => prepareSingleMigrationRun(root)).toThrow(message);
+      } finally {
+        holder.unlock();
+      }
+    });
+
+    it('runs alongside a finished run another process still holds', () => {
+      const holder = holdAs(
+        setupRun('run-1', { steps: pendingStep(), status: 'completed' }),
+        999
+      );
+      try {
+        expect(() => prepareSingleMigrationRun(root)).not.toThrow();
+      } finally {
+        holder.unlock();
+      }
+    });
+
+    it('refuses a new run under WASM while a lock file marks a run being started', () => {
+      const holder = holdAs(runDir(root, 'run-2'), 999);
+      wasm.active = true;
+      try {
+        expect(() => refuseNewRunAlongsideLiveRun(root)).toThrow(
+          'Not running the migrations: the WASM build cannot tell whether another nx migrate process is working on the run being started in .nx/migrate-runs/run-2. Re-run the command with the native nx binary, or make sure no nx migrate process is acting on it, remove .nx/migrate-runs/run-2, then re-run the command.'
+        );
+      } finally {
+        holder.unlock();
+      }
+    });
+
+    it('refuses under WASM, which cannot tell whether a process works on an active run', () => {
+      setupRun('run-1', { steps: pendingStep() });
+      wasm.active = true;
+
+      expect(() => prepareSingleMigrationRun(root)).toThrow(
+        "Not running the migration: the WASM build cannot tell whether another nx migrate process is working on migrate run 'run-1'. Re-run the command with the native nx binary, or make sure no nx migrate process is acting on it, remove .nx/migrate-runs/run-1, then re-run the command."
+      );
+    });
+
+    it.each<[string, () => Promise<unknown>, unknown]>([
+      [
+        'an init',
+        () => runOrchestratorInit(singleInit({ singleMigration: false })),
+        expect.objectContaining({ kind: 'ready' }),
+      ],
+      [
+        'the classic loop',
+        async () => activeRunForClassic(root, ['@nx/js:a']),
+        null,
+      ],
+    ])(
+      'refuses %s while another process works on a --run-migration run, not once none does',
+      async (_, start, unheld) => {
+        const holder = holdAs(
+          setupRun('run-1', { steps: pendingStep(), singleMigration: true }),
+          999
+        );
+        try {
+          await expect(start()).rejects.toThrow(
+            'Not running the migrations while an nx migrate --run-migration run (.nx/migrate-runs/run-1) is in use: process 999 is still working on it. Wait for it to end, then re-run the command.'
+          );
+        } finally {
+          holder.unlock();
+        }
+        expect(await start()).toEqual(unheld);
+      }
+    );
+
+    it('refuses the classic loop under WASM while a --run-migration record exists', () => {
+      setupRun('run-1', { steps: pendingStep(), singleMigration: true });
+      wasm.active = true;
+
+      expect(() => activeRunForClassic(root, ['@nx/js:a'])).toThrow(
+        'Not running the migrations: the WASM build cannot tell whether another nx migrate process is working on an nx migrate --run-migration run (.nx/migrate-runs/run-1). Re-run the command with the native nx binary, or make sure no nx migrate process is acting on it, remove .nx/migrate-runs/run-1, then re-run the command.'
+      );
+    });
+
+    it.each<[string, string, () => unknown, () => string, string]>([
+      [
+        'a continue',
+        'a --run-migration run',
+        () => holdRunToContinue(root, 'run-1'),
+        () =>
+          setupRun('run-2', { steps: pendingStep(), singleMigration: true }),
+        "Not continuing migrate run 'run-1' while an nx migrate --run-migration run (.nx/migrate-runs/run-2) is in use: process 999 is still working on it. Wait for it to end, then re-run the command.",
+      ],
+      [
+        'a reconcile',
+        'a run it is starting',
+        () => runOrchestratorReconcile({ root, runId: 'run-1' }),
+        () => {
+          mkdirSync(runDir(root, 'run-2'), { recursive: true });
+          return runDir(root, 'run-2');
+        },
+        'Another nx migrate process is starting a run (.nx/migrate-runs/run-2). Wait for it to finish, then re-run the command.',
+      ],
+    ])(
+      'refuses %s of a run while another process works on %s',
+      async (_claimed, _other, claim, other, message) => {
+        setupRun('run-1', { steps: pendingStep() });
+        const holder = holdAs(other(), 999);
+        try {
+          await expect(async () => claim()).rejects.toThrow(message);
+        } finally {
+          holder.unlock();
+        }
+      }
+    );
+
+    it('reconciles a --run-migration run while its own parent holds it', async () => {
+      const dir = setupRun('run-1', {
+        steps: pendingStep(),
+        plan: [genMig('@nx/js', 'a')],
+        singleMigration: true,
+      });
+      const holder = holdAs(dir, 999);
+      try {
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+      } finally {
+        holder.unlock();
+      }
+
+      expect(parseBlocks().map((b) => b.action)).toEqual(['next-step']);
+    });
+
+    it('refuses under the creation lock a run that another process took during the start confirmation', async () => {
+      const dir = setupRun('run-1', { steps: pendingStep() });
+      let holder: FileLock | undefined;
+      const confirmStart = async () => {
+        holder = holdAs(dir, 999);
+        return true;
+      };
+
+      try {
+        await expect(
+          runOrchestratorInit(singleInit({ confirmStart }))
+        ).rejects.toThrow(
+          "Not running the migration while migrate run 'run-1' is in use: process 999 is still working on it."
+        );
+      } finally {
+        holder?.unlock();
+      }
+      expect(runDirNames()).toEqual(['run-1']);
+    });
+
+    it('reports no orchestrator analytics while driving a --run-migration run', async () => {
+      const dir = setupRun('run-1', {
+        steps: pendingStep(),
+        plan: [genMig('@nx/js', 'a')],
+        singleMigration: true,
+      });
+
+      // Rejected: no step is failed or died.
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      const state = readRunState(dir);
+      writeRunState(dir, {
+        ...state,
+        steps: [{ ...state.steps[0], status: 'succeeded' }],
+      });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(parseBlocks().map((b) => b.action)).toEqual([
+        'error',
+        'next-step',
+        'complete',
+      ]);
+      expect(mockDispense).not.toHaveBeenCalled();
+      expect(mockStepDispensed).not.toHaveBeenCalled();
+      expect(mockComplete).not.toHaveBeenCalled();
     });
   });
 
@@ -7009,6 +7295,34 @@ describe('orchestrator', () => {
         });
       }
     );
+
+    it("gives up on a single run's failed step without minting an issue", async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      mockGetLatestCommitSha.mockReturnValue(REF);
+      const dir = setupRun('run-1', {
+        steps: [restorableFailure('failed')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+        singleMigration: true,
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const menu = lastBlock().payload.instructions;
+      expect(menu).toContain('The failure is listed in the completion report.');
+      expect(menu).not.toContain('run issue');
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'unresolved',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('unresolved');
+      expect(state.steps[0].unresolvedIssueId).toBeUndefined();
+      expect(state.issues ?? []).toEqual([]);
+    });
 
     it.each(['failed', 'died'] as const)(
       'refuses giving up on a %s step whose commit may be in history before its reset runs',

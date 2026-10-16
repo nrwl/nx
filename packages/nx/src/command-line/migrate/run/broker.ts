@@ -55,7 +55,11 @@ import {
 } from './state-machine';
 import { attachIssueIdsToCommitEntry } from './issues';
 import { resetForCleanRetry } from './clean-retry';
-import { installDepsChangedSinceDispense, isPidAlive } from './util';
+import {
+  commitFailureRecovery,
+  installDepsChangedSinceDispense,
+  isPidAlive,
+} from './util';
 
 export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
 const BROKER_DIR_NAME = 'broker';
@@ -818,7 +822,7 @@ export class MigrateCommitBroker {
         state.commitPrefix,
         install,
         stepsToPendingMigrations(state, absorbedStepIds),
-        undefined,
+        commitFailureRecovery(state),
         output
       );
       return {

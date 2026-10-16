@@ -6,10 +6,11 @@ that hash the same things, so the targets keep caching correctly once the hasher
 is gone.
 
 The generator half of this migration only scans. It edits no files, and it lists
-every executor that declares a hasher in the advisory context, one line each,
-with the executor name, the hasher path, and the `executors.json` path. Lines
-starting with `Could not parse` name files the scan skipped, and lines starting
-with `Entry` name executor entries it could not read.
+every executor that declares a hasher in the `impl.agentContext` field of the
+step's `nx_migrate_prompt` block, one line each, with the executor name, the
+hasher path, and the `executors.json` path. Lines starting with
+`Could not parse` name files the scan skipped, and lines starting with `Entry`
+name executor entries it could not read.
 
 Do not touch executors that declare no hasher, executors installed from
 `node_modules`, or any other caching configuration.
@@ -18,13 +19,13 @@ Do not touch executors that declare no hasher, executors installed from
 
 Confirm this before changing anything. If it fails, make no changes and stop:
 
-1. The advisory context lists at least one executor that declares a custom
+1. `impl.agentContext` lists at least one executor that declares a custom
    hasher, or at least one file or entry it could not read. Read each of those
    yourself; if it declares no `hasher`, drop it from the list.
 
 ## Step 1: Read what each hasher hashes
 
-Open the hasher module named in the advisory context. Work out every value it
+Open the hasher module named in `impl.agentContext`. Work out every value it
 feeds into the hash it returns:
 
 - `context.hasher.hashTask(task, ...)` alone is Nx default hashing.

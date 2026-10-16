@@ -178,6 +178,31 @@ You can even provide a custom location for the migrations file if you wish, you 
 nx migrate --run-migrations=migrations.json
 ```
 
+### Running a single migration
+
+To run one migration from `migrations.json` on its own, pass its id to `--run-migration`:
+
+```shell
+nx migrate --run-migration=<package>:<migration-name>
+```
+
+A bare `<migration-name>` also works when it matches exactly one migration.
+Running the command again runs the migration again, which is also how you restart it after an
+interruption.
+
+With the agentic flow enabled, Nx runs the migration's generator itself, if it has one, and starts
+an agent session only when the migration leaves a prompt to apply or changes to review.
+The session ends once that migration is done, without the final check of the projects a run
+touched.
+
+If a `--run-migrations` run is active, Nx warns that the run doesn't record this migration, so
+continuing it later may apply the migration again.
+Nx refuses to start while another `nx migrate` process is working on a run.
+
+Inside an AI agent's terminal, Nx prints the migration's prompt, or instructions to review its
+generator's changes, for that agent to follow.
+Pass `--no-validate` or `--no-agentic` to skip the review instructions.
+
 ## Using an AI agent to apply migrations
 
 Some migrations ship an AI prompt that an installed agent applies for you. The [agentic flow](/docs/features/automate-updating-dependencies#step-2-run-migrations) is interactive by default, but you can control it with flags:

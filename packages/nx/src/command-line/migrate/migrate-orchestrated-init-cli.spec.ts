@@ -22,8 +22,11 @@ import {
 import {
   activeRunForClassic,
   checkRunForStartFresh,
+  checkRunsForSingleMigration,
   deleteRunForStartFresh,
+  refuseNewRunAlongsideLiveRun,
 } from './run/orchestrator';
+import { isHeld } from './run/state-lock';
 import {
   type MigrateRunState,
   migrationIdProblems,
@@ -33,6 +36,7 @@ import {
 } from './run/run-state';
 import { latestRound, stepLabel } from './run/state-machine';
 import { pmInstallCommand } from './run/util';
+import * as agenticSelect from './agentic/select';
 mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: vi.fn(),
   runOrchestratorInit: (...args: unknown[]) => mockRunOrchestratorInit(...args),
@@ -46,6 +50,9 @@ mockCjsModule(import.meta.url, './run', {
     mockCheckRunForStartFresh(...args),
   deleteRunForStartFresh: (...args: unknown[]) =>
     mockDeleteRunForStartFresh(...args),
+  checkRunsForSingleMigration,
+  isHeld,
+  refuseNewRunAlongsideLiveRun,
   latestRound,
   migrationIdProblems,
   pmInstallCommand,
@@ -61,10 +68,11 @@ mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
   runMasterSession: (...args: unknown[]) => mockRunMasterSession(...args),
 });
 // Stubbed the same way: the user-initiated path resolves the agentic flow
-// before it can branch to the master session.
+// before it can branch to the master session. The rest comes from the import
+// graph, so the agent downgrade sees the IS_WASM mock and the spied output.
 const mockResolveAgentic = vi.fn();
 mockCjsModule(import.meta.url, './agentic/select', {
-  ...require('./agentic/select'),
+  ...agenticSelect,
   resolveAgentic: (...args: unknown[]) => mockResolveAgentic(...args),
 });
 
@@ -503,6 +511,57 @@ describe('migrate() orchestrated init dispatch', () => {
     expect(mockRunInstall).not.toHaveBeenCalled();
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
   });
+
+  it.each<[string, Record<string, unknown>, string[], () => void, string]>([
+    [
+      'a --run-migrations run while another process starts a run',
+      runMigrationsArgs(),
+      ['--run-migrations'],
+      () => {},
+      'Another nx migrate process is starting a run (.nx/migrate-runs/run-1). Wait for it to finish, then re-run the command.',
+    ],
+    [
+      'a --run-migration run while another process works on a --run-migration run',
+      { runMigration: '@nx/js:gen', skipInstall: false, verbose: false },
+      ['--run-migration=@nx/js:gen'],
+      () =>
+        writeRunState(runDir(root, 'run-1'), {
+          formatVersion: 1,
+          runId: 'run-1',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          nxVersion: '23.0.0',
+          status: 'active',
+          createCommits: true,
+          commitPrefix: 'chore: [nx migration] ',
+          rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
+          steps: [],
+          commits: [],
+          analytics: { startEmitted: false, completeEmitted: false },
+          singleMigration: true,
+        } as MigrateRunState),
+      'Not running the migration while an nx migrate --run-migration run (.nx/migrate-runs/run-1) is in use: process 4242 is still working on it. Wait for it to end, then re-run the command.',
+    ],
+  ])(
+    'refuses %s, before the preflight install',
+    async (_label, args, rawArgs, arrange, message) => {
+      arrange();
+      mkdirSync(join(runDir(root, 'run-1'), 'activity'));
+      const holder = new FileLock(
+        join(runDir(root, 'run-1'), 'activity', '4242-beef.lock')
+      );
+      holder.lock();
+      try {
+        expect(await migrate(root, args, rawArgs)).toBe(1);
+      } finally {
+        holder.unlock();
+      }
+
+      expect(output.error).toHaveBeenCalledWith(
+        expect.objectContaining({ title: message })
+      );
+      expect(mockRunInstall).not.toHaveBeenCalled();
+    }
+  );
 
   it('replaces the run --start-fresh --run-id names through init, on the workspace plan', async () => {
     await migrate(

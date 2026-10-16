@@ -318,7 +318,7 @@ describe('commitMigrationIfRequested with an output sink', () => {
         [
           'red',
           expect.stringContaining(
-            'gpg failed to sign the data\nCheck `git status` and `git log`; the commit may have landed despite this error. Commit or revert the changes manually.'
+            'gpg failed to sign the data\nCheck `git status` and `git log`; the commit may have landed despite this error. Commit or revert any remaining uncommitted changes manually.'
           ),
         ],
       ],
@@ -336,7 +336,7 @@ describe('commitMigrationIfRequested with an output sink', () => {
         PREFIX,
         installDeps,
         [],
-        'Commit or revert the changes manually.',
+        'manual',
         out
       );
 

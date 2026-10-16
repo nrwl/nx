@@ -6278,44 +6278,29 @@ module.exports = {
           string,
           boolean | undefined,
           'disabled' | 'inside-agent' | 'enabled',
-          { effective: boolean; agenticHasDiffContext: boolean },
+          { effective: boolean },
         ]
       >([
-        [
-          'explicit true, no agentic',
-          true,
-          'disabled',
-          { effective: true, agenticHasDiffContext: false },
-        ],
-        [
-          'explicit false, no agentic',
-          false,
-          'disabled',
-          { effective: false, agenticHasDiffContext: false },
-        ],
-        [
-          'unset, no agentic',
-          undefined,
-          'disabled',
-          { effective: false, agenticHasDiffContext: false },
-        ],
+        ['explicit true, no agentic', true, 'disabled', { effective: true }],
+        ['explicit false, no agentic', false, 'disabled', { effective: false }],
+        ['unset, no agentic', undefined, 'disabled', { effective: false }],
         [
           'unset, inside-agent',
           undefined,
           'inside-agent',
-          { effective: false, agenticHasDiffContext: false },
+          { effective: false },
         ],
         [
           'unset, agentic enabled — soft-force on',
           undefined,
           'enabled',
-          { effective: true, agenticHasDiffContext: true },
+          { effective: true },
         ],
         [
           'explicit true, agentic enabled',
           true,
           'enabled',
-          { effective: true, agenticHasDiffContext: true },
+          { effective: true },
         ],
       ])('git repo: %s', (_label, createCommits, agenticKind, expected) => {
         expect(
@@ -6327,14 +6312,13 @@ module.exports = {
         ).toEqual(expected);
       });
 
-      it('warns and drops diff context when createCommits=false is explicit alongside agentic', () => {
+      it('warns when createCommits=false is explicit alongside agentic', () => {
         const result = resolveCreateCommits({
           createCommits: false,
           mode: 'enabled',
           isGitRepo: true,
         });
         expect(result.effective).toBe(false);
-        expect(result.agenticHasDiffContext).toBe(false);
         expect(result.warning).toMatch(/--no-create-commits/);
       });
 
@@ -6374,14 +6358,13 @@ module.exports = {
         );
       });
 
-      it('degrades agentic without git (createCommits unset): warns, no error, no diff context', () => {
+      it('degrades agentic without git (createCommits unset): warns, no error', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
           mode: 'enabled',
           isGitRepo: false,
         });
         expect(result.effective).toBe(false);
-        expect(result.agenticHasDiffContext).toBe(false);
         expect(result.error).toBeUndefined();
         expect(result.warning).toMatch(/not a git repository/);
       });

@@ -45,6 +45,9 @@ export interface SpawnMasterSessionInput {
   runbookPath: string;
   reconcileCommand: string;
   policy: MigrateRunPolicy;
+  // A `--run-migration` run, which ends with its record removed: it is run
+  // again rather than resumed.
+  singleMigration?: boolean;
   sentinelPollIntervalMs?: number;
   gracefulExitMs?: number;
   forceKillWaitMs?: number;
@@ -108,6 +111,7 @@ export async function spawnMasterSession(
     runbookPath,
     reconcileCommand,
     policy,
+    singleMigration = false,
     sentinelPollIntervalMs = 500,
     gracefulExitMs = AGENT_GRACEFUL_EXIT_MS,
     forceKillWaitMs = FORCE_KILL_WAIT_MS,
@@ -252,7 +256,7 @@ export async function spawnMasterSession(
     let stoppedWaiting = false;
     if (started && exited) {
       restoreTerminal();
-      const inFlight = warnOperationInFlight(broker);
+      const inFlight = warnOperationInFlight(broker, singleMigration);
       if (inFlight && (await interruptedTwice(brokerDone, ctrlC))) {
         signalCommandsWithoutTerminal('SIGKILL');
         if (!(await raceWithTimeout(brokerDone, OPERATION_KILL_WAIT_MS))) {
@@ -263,7 +267,9 @@ export async function spawnMasterSession(
               inFlight.stepName
             )}.`,
             bodyLines: [
-              'A process it started may still be running. Resume the run once it has exited.',
+              `A process it started may still be running. ${
+                singleMigration ? 'Re-run the same command' : 'Resume the run'
+              } once it has exited.`,
             ],
           });
         }
@@ -290,7 +296,8 @@ function restoreTerminal(): void {
 
 // With the agent gone nothing else tells the user an operation still runs.
 function warnOperationInFlight(
-  broker: MigrateCommitBroker
+  broker: MigrateCommitBroker,
+  singleMigration: boolean
 ): MigrateCommitBroker['requestInFlight'] {
   const inFlight = broker.requestInFlight;
   if (!inFlight) return null;
@@ -298,11 +305,15 @@ function warnOperationInFlight(
     title: `Still running ${treeOperationLabel(
       inFlight.request,
       inFlight.stepName
-    )} for this migrate run (${formatElapsed(
+    )}${singleMigration ? '' : ' for this migrate run'} (${formatElapsed(
       Date.now() - inFlight.startedAt
     )} so far).${
       commitsStep(inFlight.request.kind) ? ` ${COMMIT_INSTALLS_FIRST}` : ''
-    } Press Ctrl+C to end it, and again to stop everything it started. The run can be resumed afterwards.`,
+    } Press Ctrl+C to end it, and again to stop everything it started. ${
+      singleMigration
+        ? 'Re-run the same command afterwards to run the migration again.'
+        : 'The run can be resumed afterwards.'
+    }`,
   });
   return inFlight;
 }

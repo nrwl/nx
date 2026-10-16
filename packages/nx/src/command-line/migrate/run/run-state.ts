@@ -340,7 +340,27 @@ export interface MigrateRunState {
   // the working tree. Set before the operation and cleared by its owner after
   // the state that records it is written; a dead owner pid voids it.
   treeOperation?: MigrateTreeOperation;
+  // Set on the record of a `--run-migration` run, which active-run discovery
+  // skips.
+  singleMigration?: boolean;
   analytics: MigrateRunAnalytics;
+}
+
+// A `--run-migration` record is 'single' whatever its status.
+export function runKind(
+  state: MigrateRunState
+): 'single' | 'active' | 'finished' {
+  if (state.singleMigration === true) return 'single';
+  switch (state.status) {
+    case 'active':
+      return 'active';
+    case 'completed':
+      return 'finished';
+    default: {
+      const unhandled: never = state.status;
+      throw new Error(`Unhandled migrate run status: ${unhandled}`);
+    }
+  }
 }
 
 export const TREE_OPERATION_KINDS = [
@@ -732,6 +752,7 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     isOptionalBoolean(parsed.checkpointFailed) &&
     isOptionalBoolean(parsed.skipInstall) &&
     isOptionalBoolean(parsed.validate) &&
+    isOptionalBoolean(parsed.singleMigration) &&
     isOptionalSha(parsed.gitRefAtInit) &&
     isOptionalMatching(RUNBOOK_NAME, parsed.runbookPath) &&
     isOptionalString(parsed.branch) &&
@@ -933,7 +954,8 @@ export interface UninterpretableRunDir {
  *
  * A dir that reads cleanly as a finished run is skipped whatever its name is:
  * it competes with nothing, and reporting it would block every future run
- * with no way for retention to ever clear it.
+ * with no way for retention to ever clear it. A `--run-migration` run's record
+ * is skipped too: nothing continues it, and a leftover must not block a run.
  *
  * Throws {@link NewerRunStateFormatError} when any run dir holds a
  * newer-format run.json: whether that run is active can't be determined
@@ -966,7 +988,7 @@ export function findActiveRun(root: string): {
       });
       continue;
     }
-    if (state.status !== 'active') continue;
+    if (runKind(state) !== 'active') continue;
     // Run ids are joined into paths and interpolated into dispensed commands,
     // so a dir whose name fails the gate is never trusted as a resumable run.
     if (!RUN_ID_SAFE.test(entry.name)) {

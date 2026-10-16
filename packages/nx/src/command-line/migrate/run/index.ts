@@ -49,6 +49,8 @@ export type {
 
 export { createRunId } from './run-id';
 
+export { isHeld } from './state-lock';
+
 export { pmInstallCommand } from './util';
 
 export { runSingleMigrationWorker } from './worker';
@@ -58,9 +60,11 @@ export {
   activeRunForClassic,
   activeRunToReplace,
   checkRunForStartFresh,
+  checkRunsForSingleMigration,
   completionWarnings,
   deleteRunForStartFresh,
   holdRunToContinue,
+  refuseNewRunAlongsideLiveRun,
   releaseRunToHandOff,
   runOrchestratorInit,
   runOrchestratorReconcile,
