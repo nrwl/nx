@@ -1,5 +1,6 @@
 import {
   getNamedInputs,
+  getReadyWhenHost,
   PluginCache,
   hashFile,
   hashObject,
@@ -338,15 +339,6 @@ function takesEnv(config: unknown): boolean {
     : typeof config === 'function' && !isNxRspackComposablePlugin(config);
 }
 
-// A fallback starting with one of these reads as an Nx token
-const TOKEN_NAMES = new Set([
-  'workspaceRoot',
-  'projectRoot',
-  'projectName',
-  'options',
-  'env',
-]);
-
 function getDevServerReadyWhen(
   devServer: { port?: unknown; host?: unknown; ipc?: unknown } | undefined,
   basePortEnv: string
@@ -359,7 +351,7 @@ function getDevServerReadyWhen(
   }
   return {
     port: `{options.port ?? ${getDevServerPort(devServer?.port, basePortEnv)}}`,
-    host: `{options.host ?? ${getDevServerHost(devServer?.host)}}`,
+    host: `{options.host ?? ${getReadyWhenHost(devServer?.host)}}`,
   };
 }
 
@@ -369,16 +361,6 @@ function getDevServerPort(port: unknown, basePortEnv: string): string {
   return port === undefined || port === null || port === 'auto'
     ? `env.${basePortEnv} ?? 8080`
     : String(port);
-}
-
-function getDevServerHost(host: unknown): string {
-  if (typeof host !== 'string' || !host) {
-    return 'localhost';
-  }
-  // Host names are case-insensitive, so a capitalized first label names the
-  // same host without reading as a token
-  const label = host.split('.')[0];
-  return TOKEN_NAMES.has(label) ? label[0].toUpperCase() + host.slice(1) : host;
 }
 
 // The file server takes a port number, so a value only the dev server
