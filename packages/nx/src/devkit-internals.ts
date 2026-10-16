@@ -123,6 +123,10 @@ export { handleImport } from './utils/handle-import';
 export { PluginCache, safeWriteFileCache } from './utils/plugin-cache-utils';
 export { emitPluginWorkerLog } from './project-graph/plugins/isolation/worker-streaming';
 export {
+  evaluateUnderTaskEnv,
+  hashTaskDotEnvFiles,
+} from './project-graph/plugins/evaluate-under-task-env';
+export {
   resolveImplementation,
   resolveSchema,
   ImplementationResolutionError,
