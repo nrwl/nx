@@ -221,9 +221,10 @@ export type ReadyWhen =
     } & ReadyWhenOptions)
   | ({
       /**
-       * Ready when a TCP connection to the port succeeds. A string must
-       * resolve to a port number through a placeholder such as
-       * `{options.port}`.
+       * Ready when a TCP connection to the port succeeds. A string can be a
+       * port number, `"auto"`, or a placeholder such as `{options.port}`.
+       * With `0` or `"auto"` the server picks its port, so Nx runs no check
+       * and the target counts as ready once it starts.
        */
       port: number | string;
 
