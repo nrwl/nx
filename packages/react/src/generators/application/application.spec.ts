@@ -1650,44 +1650,40 @@ describe('app', () => {
 
       expect(appTree.read('apps/my-app/webpack.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-        const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-        const { join } = require('path');
+          "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+          const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+          const { join } = require('path');
 
-        module.exports = {
-          output: {
-            path: join(__dirname, 'dist'),
-            clean: true,
-          },
-          devServer: {
-            port: 4200,
-            historyApiFallback: {
-              index: '/index.html',
-              disableDotRule: true,
-              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+          module.exports = {
+            output: {
+              path: join(__dirname, 'dist'),
+              clean: true,
             },
-          },
-          plugins: [
-            new NxAppWebpackPlugin({
-              tsConfig: './tsconfig.app.json',
-              compiler: 'babel',
-              main: './src/main.tsx',
-              index: './src/index.html',
-              baseHref: '/',
-              assets: ["./src/favicon.ico","./src/assets"],
-              styles: [],
-              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-              optimization: process.env['NODE_ENV'] === 'production',
-            }),
-            new NxReactWebpackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
-          ],
-        };
-        "
-      `);
+            devServer: {
+              port: 4200,
+              historyApiFallback: {
+                index: '/index.html',
+                disableDotRule: true,
+                htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+              },
+            },
+            plugins: [
+              new NxAppWebpackPlugin({
+                tsConfig: './tsconfig.app.json',
+                compiler: 'babel',
+                main: './src/main.tsx',
+                index: './src/index.html',
+                baseHref: '/',
+                assets: ["./src/favicon.ico","./src/assets"],
+                styles: [],
+                outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+                optimization: process.env['NODE_ENV'] === 'production',
+              }),
+              new NxReactWebpackPlugin(),
+            ],
+          };
+          "
+        `);
     });
 
     it('should configure webpack build task correctly with the output contained within the project root', async () => {
@@ -1908,11 +1904,7 @@ describe('app', () => {
               outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
               optimization: process.env['NODE_ENV'] === 'production',
             }),
-            new NxReactWebpackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactWebpackPlugin(),
           ],
         };
         "
@@ -1956,11 +1948,7 @@ describe('app', () => {
               outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
               optimization: process.env['NODE_ENV'] === 'production',
             }),
-            new NxReactRspackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactRspackPlugin(),
           ],
         };
         "

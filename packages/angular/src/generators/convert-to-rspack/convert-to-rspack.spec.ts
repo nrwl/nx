@@ -925,10 +925,8 @@ describe('convert-to-rspack', () => {
     expect(updatedProject.targets.serve).not.toBeDefined();
   });
 
-  it('should convert an angular webpack application with custom webpack config function to rspack', async () => {
-    // ARRANGE
+  it('should refuse a project using a module federation executor', async () => {
     const tree = createTreeWithEmptyWorkspace();
-
     addProjectConfiguration(tree, 'app', {
       root: 'apps/app',
       sourceRoot: 'apps/app/src',
@@ -938,17 +936,35 @@ describe('convert-to-rspack', () => {
           executor: '@nx/angular:webpack-browser',
           options: {
             outputPath: 'dist/apps/app',
-            index: 'apps/app/src/index.html',
             main: 'apps/app/src/main.ts',
-            polyfills: ['tslib'],
             tsConfig: 'apps/app/tsconfig.app.json',
-            assets: [
-              'apps/app/src/favicon.ico',
-              'apps/app/src/assets',
-              { input: 'apps/app/public', glob: '**/*' },
-            ],
-            styles: ['apps/app/src/styles.scss'],
-            scripts: [],
+          },
+        },
+        serve: {
+          executor: '@nx/angular:module-federation-dev-server',
+          options: { buildTarget: 'app:build' },
+        },
+      },
+    });
+
+    await expect(convertToRspack(tree, { project: 'app' })).rejects.toThrow(
+      "The project app is using Module Federation. At the moment, we don't support migrating projects that use Module Federation."
+    );
+  });
+
+  it('should refuse a project whose custom webpack config uses @nx/module-federation', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nx/angular:webpack-browser',
+          options: {
+            outputPath: 'dist/apps/app',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
             customWebpackConfig: {
               path: 'apps/app/webpack.config.js',
             },
@@ -956,88 +972,20 @@ describe('convert-to-rspack', () => {
         },
       },
     });
-    writeJson(tree, 'apps/app/tsconfig.json', {});
-    tree.write(
-      'apps/app/module-federation.config.js',
-      `
-    module.exports = {
-      name: 'app',
-      exposes: {
-        './app': './src/app/index.ts',
-      },
-      remotes: ['remote1', 'remote2'],
-    };
-    `
-    );
     tree.write(
       'apps/app/webpack.config.js',
-      `
-    const { withModuleFederation } = require('@nx/module-federation/angular');
-    const config = require('./module-federation.config');
-    module.exports = withModuleFederation(config, { dts: false });
-    `
+      `const { withModuleFederation } = require('@nx/module-federation/angular');
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config, { dts: false });
+`
     );
 
-    // ACT
-    await convertToRspack(tree, { project: 'app' });
-
-    // ASSERT
-    const updatedProject = readProjectConfiguration(tree, 'app');
-    expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { createConfig } from '@nx/angular-rspack';
-      import baseWebpackConfig from './webpack.config';
-      import webpackMerge from 'webpack-merge';
-
-      export default async () => {
-        const baseConfig = await createConfig({
-          options: {
-            root: __dirname,
-
-            outputPath: {
-              base: '../../dist/apps/app',
-            },
-            index: './src/index.html',
-            browser: './src/main.ts',
-            polyfills: ['tslib'],
-            tsConfig: './tsconfig.app.json',
-            assets: [
-              './src/favicon.ico',
-              './src/assets',
-              {
-                input: './public',
-                glob: '**/*',
-              },
-            ],
-            styles: ['./src/styles.scss'],
-            scripts: [],
-          },
-        });
-        return webpackMerge(baseConfig[0], baseWebpackConfig);
-      };
-      "
-    `);
-    expect(tree.read('apps/app/webpack.config.js', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "const {
-        NxModuleFederationPlugin,
-        NxModuleFederationDevServerPlugin,
-      } = require('@nx/module-federation/rspack');
-      const config = require('./module-federation.config');
-
-      module.exports = {
-        plugins: [
-          new NxModuleFederationPlugin(
-            { config },
-            {
-              dts: false,
-            },
-          ),
-          new NxModuleFederationDevServerPlugin({ config }),
-        ],
-      };
-      "
-    `);
+    await expect(convertToRspack(tree, { project: 'app' })).rejects.toThrow(
+      'The project app is using Module Federation.'
+    );
+    expect(tree.read('apps/app/webpack.config.js', 'utf-8')).toContain(
+      'withModuleFederation(config'
+    );
   });
 
   it('should convert an angular webpack application with custom webpack config to rspack', async () => {

@@ -90,6 +90,15 @@ export default defineConfig({
     '/technologies/react/guides/use-environment-variables-in-react':
       '/docs/reference/environment-variables#loading-environment-variables',
     '/knowledge-base/installation': '/docs/kb/installation-and-updates',
+    '/kb/angular-micro-frontends': '/docs/kb/migrate-angular-module-federation',
+    '/kb/angular-module-federation-with-ssr':
+      '/docs/kb/migrate-angular-module-federation',
+    '/kb/dynamic-module-federation-with-angular':
+      '/docs/kb/migrate-angular-module-federation',
+    '/kb/nx-module-federation-plugin':
+      '/docs/kb/migrate-from-nx-module-federation',
+    '/kb/faster-builds-with-module-federation':
+      '/docs/technologies/module-federation/introduction',
     '/kb/overview-react': '/docs/kb/storybook-for-react',
     '/kb/project-graph-plugins': '/docs/kb/add-language-support',
     '/kb/intro': '/docs/kb/add-language-support',

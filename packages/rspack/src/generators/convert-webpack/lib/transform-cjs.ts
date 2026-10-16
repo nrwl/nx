@@ -2,28 +2,15 @@ import type { Tree } from '@nx/devkit';
 import { ast, query } from '@phenomnomnominal/tsquery';
 
 export function transformCjsConfigFile(tree: Tree, configPath: string) {
-  const configContents = tree.read(configPath, 'utf-8');
-  const usesJsExtensions = detectJsExtensions(configContents);
-
   ['@nx', '@nrwl'].forEach((scope: '@nx' | '@nrwl') => {
     transformComposePlugins(tree, configPath, scope);
     transformWithNx(tree, configPath, scope);
     transformWithWeb(tree, configPath, scope);
     transformWithReact(tree, configPath, scope);
-    transformModuleFederationConfig(tree, configPath, scope);
-    transformWithModuleFederation(tree, configPath, scope, usesJsExtensions);
-    transformWithModuleFederationSSR(tree, configPath, scope, usesJsExtensions);
   });
 
   // Add useLegacyHtmlPlugin: true to withWeb() calls
   transformWithWebCalls(tree, configPath);
-}
-
-function detectJsExtensions(configContents: string): boolean {
-  // Check if any require calls use .js extensions
-  const requireWithJsExtensionRegex =
-    /require\s*\(\s*['"]@nx\/[^'"]*\.js['"]\s*\)/;
-  return requireWithJsExtensionRegex.test(configContents);
 }
 
 function transformWithWebCalls(tree: Tree, configPath: string) {
@@ -255,126 +242,6 @@ function transformWithReact(
   }
 
   const newContents = `const { withReact } = require('@nx/rspack');
-  ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
-
-  tree.write(configPath, newContents);
-}
-
-function transformModuleFederationConfig(
-  tree: Tree,
-  configPath: string,
-  scope: '@nx' | '@nrwl'
-) {
-  const configContents = tree.read(configPath, 'utf-8');
-  const sourceFile = ast(configContents);
-
-  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=ModuleFederationConfig]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/webpack]`;
-  const nodes = query(sourceFile, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
-  if (nodes.length === 0) {
-    return;
-  }
-
-  const WITH_MODULE_FEDERATION_IMPORT =
-    'VariableDeclaration:has(Identifier[name=ModuleFederationConfig]) Identifier[name=ModuleFederationConfig]';
-  const withModuleFederationNodes = query(
-    sourceFile,
-    WITH_MODULE_FEDERATION_IMPORT
-  );
-  if (nodes.length === 0) {
-    return;
-  }
-
-  const startIndex = withModuleFederationNodes[0].getStart();
-  let endIndex = withModuleFederationNodes[0].getEnd();
-  if (configContents.charAt(endIndex) === ',') {
-    endIndex++;
-  }
-
-  const newContents = `const { ModuleFederationConfig } = require('@nx/module-federation');
-  ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
-
-  tree.write(configPath, newContents);
-}
-
-function transformWithModuleFederation(
-  tree: Tree,
-  configPath: string,
-  scope: '@nx' | '@nrwl',
-  usesJsExtensions: boolean
-) {
-  const configContents = tree.read(configPath, 'utf-8');
-  const sourceFile = ast(configContents);
-
-  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederation]) > CallExpression:has(Identifier[name=require]) StringLiteral[value="${scope}/module-federation/webpack${
-    usesJsExtensions ? '.js' : ''
-  }"]`;
-  const nodes = query(sourceFile, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
-  if (nodes.length === 0) {
-    return;
-  }
-
-  const WITH_MODULE_FEDERATION_IMPORT =
-    'VariableDeclaration:has(Identifier[name=withModuleFederation]) Identifier[name=withModuleFederation]';
-  const withModuleFederationNodes = query(
-    sourceFile,
-    WITH_MODULE_FEDERATION_IMPORT
-  );
-  if (nodes.length === 0) {
-    return;
-  }
-
-  const startIndex = withModuleFederationNodes[0].getStart();
-  let endIndex = withModuleFederationNodes[0].getEnd();
-  if (configContents.charAt(endIndex) === ',') {
-    endIndex++;
-  }
-
-  const rspackImport = usesJsExtensions
-    ? '@nx/module-federation/rspack.js'
-    : '@nx/module-federation/rspack';
-  const newContents = `const { withModuleFederation } = require('${rspackImport}');
-  ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
-
-  tree.write(configPath, newContents);
-}
-
-function transformWithModuleFederationSSR(
-  tree: Tree,
-  configPath: string,
-  scope: '@nx' | '@nrwl',
-  usesJsExtensions: boolean
-) {
-  const configContents = tree.read(configPath, 'utf-8');
-  const sourceFile = ast(configContents);
-
-  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederationForSSR]) > CallExpression:has(Identifier[name=require]) StringLiteral[value="${scope}/module-federation/webpack${
-    usesJsExtensions ? '.js' : ''
-  }"]`;
-  const nodes = query(sourceFile, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
-  if (nodes.length === 0) {
-    return;
-  }
-
-  const WITH_MODULE_FEDERATION_IMPORT =
-    'VariableDeclaration:has(Identifier[name=withModuleFederationForSSR]) Identifier[name=withModuleFederationForSSR]';
-  const withModuleFederationNodes = query(
-    sourceFile,
-    WITH_MODULE_FEDERATION_IMPORT
-  );
-  if (nodes.length === 0) {
-    return;
-  }
-
-  const startIndex = withModuleFederationNodes[0].getStart();
-  let endIndex = withModuleFederationNodes[0].getEnd();
-  if (configContents.charAt(endIndex) === ',') {
-    endIndex++;
-  }
-
-  const rspackImport = usesJsExtensions
-    ? '@nx/module-federation/rspack.js'
-    : '@nx/module-federation/rspack';
-  const newContents = `const { withModuleFederationForSSR } = require('${rspackImport}');
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);
