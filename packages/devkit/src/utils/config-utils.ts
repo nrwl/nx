@@ -10,6 +10,12 @@ import {
   registerTsProject,
 } from 'nx/src/devkit-internals';
 import { dirname, extname, join, sep } from 'path';
+import { createRequire } from 'node:module';
+
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = createRequire(__filename);
 
 export let dynamicImport = new Function(
   'modulePath',
