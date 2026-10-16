@@ -59,7 +59,7 @@
     }
   },
   "dependencies": {
-    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/schematics": ">=11.0.0 <13.0.0",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
@@ -68,8 +68,8 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
-    "@nestjs/core": ">=10.0.0 <12.0.0",
-    "@nestjs/common": ">=10.0.0 <12.0.0",
+    "@nestjs/core": ">=10.0.0 <13.0.0",
+    "@nestjs/common": ">=10.0.0 <13.0.0",
     "reflect-metadata": ">=0.1.0 <0.3.0",
     "rxjs": "^7.0.0"
   },
