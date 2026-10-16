@@ -62,7 +62,8 @@ function includeAppInScriptPlugin(
   const isScopedWatch = (p: Registration) =>
     p.options?.watch === true && !!p.include && !p.exclude;
 
-  // The last registration that sees the main file decides the `serve` command.
+  // The generated serve target must watch for changes. Keep its watch-enabled
+  // plugin entry after other main-file matches so a later entry cannot disable watch.
   const last = registrations.map(matchesMain).lastIndexOf(true);
   if (
     last !== -1 &&
