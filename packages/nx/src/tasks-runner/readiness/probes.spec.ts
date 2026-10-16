@@ -129,6 +129,22 @@ describe('waitForReadiness', () => {
       family: address.includes(':') ? 'IPv6' : 'IPv4',
       internal,
     });
+    async function listenOn(address: string): Promise<number | null> {
+      const listener = createTcpServer();
+      try {
+        await new Promise<void>((resolve, reject) =>
+          listener.once('error', reject).listen(0, address, resolve)
+        );
+      } catch (e) {
+        // Some CI kernels have no IPv6 loopback
+        if (e.code === 'EADDRNOTAVAIL') return null;
+        throw e;
+      }
+      onTestFinished(async () => {
+        await new Promise((r) => listener.close(r));
+      });
+      return (listener.address() as AddressInfo).port;
+    }
     it.each([
       // The first non-internal IPv4 address, before any IPv6 one
       [
@@ -156,26 +172,22 @@ describe('waitForReadiness', () => {
       'checks %s on the address the dev server resolves it to',
       async (host, address, interfaces) => {
         machine.interfaces = interfaces;
-        const listener = createTcpServer();
-        try {
-          await new Promise<void>((resolve, reject) =>
-            listener.once('error', reject).listen(0, address, resolve)
-          );
-        } catch (e) {
-          // Some CI kernels have no IPv6 loopback
-          if (e.code === 'EADDRNOTAVAIL') return;
-          throw e;
-        }
-        try {
-          const port = (listener.address() as AddressInfo).port;
-          await expect(
-            wait({ port, host, timeout: 2000, interval: 10 })
-          ).resolves.toBeUndefined();
-        } finally {
-          await new Promise((r) => listener.close(r));
-        }
+        const port = await listenOn(address);
+        if (port === null) return;
+        await expect(
+          wait({ port, host, timeout: 2000, interval: 10 })
+        ).resolves.toBeUndefined();
       }
     );
+
+    it('never checks local-ipv4 on an IPv6 address', async () => {
+      machine.interfaces = { lo: [ip('127.0.0.1', true)], en0: [ip('::1')] };
+      const port = await listenOn('::1');
+      if (port === null) return;
+      await expect(
+        wait({ port, host: 'local-ipv4', timeout: 100, interval: 10 })
+      ).rejects.toThrow('did not become ready within 100ms');
+    });
   });
 
   describe('url', () => {
