@@ -4,7 +4,7 @@ Nx 24 removes the `@nx/rspack:rspack` and `@nx/rspack:dev-server` executors and 
 
 The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
 
-The `@nx/rspack:ssr-dev-server` executor and the Module Federation executors stay.
+The `@nx/rspack:ssr-dev-server` executor stays.
 
 #### Sample code changes
 

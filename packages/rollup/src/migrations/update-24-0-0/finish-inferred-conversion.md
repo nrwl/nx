@@ -1,10 +1,10 @@
 # Replace removed @nx/rollup executors with inferred tasks
 
-Nx 24 removed `@nx/rollup:rollup` (including old `@nrwl` aliases). Complete the deterministic `convert-to-inferred` step using the recorded pre-migration projects, target defaults, errors and file diff.
+Nx 24 removed `@nx/rollup:rollup` (including old `@nrwl` aliases). The `convert-to-inferred` generator has already run. The recorded pre-migration projects, target defaults, errors and file diff show what it changed.
 
 Before changing anything, confirm this migration left work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, the advisory context reports a conversion error, or the generator changed files. If none applies, make no changes and stop. Otherwise review the generator's changes instead of redoing them, and treat each advisory-context item as pending work.
 
-1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Reuse `@nx/rollup:convert-to-inferred` for unfinished projects where possible; it may retain unsupported targets, so inspect its results. Do not restore executor registrations or install older Nx packages.
+1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Do not restore executor registrations or install older Nx packages.
 2. Generate native Rollup configuration preserving library formats, declaration generation, externals, assets and package metadata. Check every configuration and custom build target.
 3. Register `@nx/rollup/plugin` with options/includes that preserve custom target names and mixed inferred/explicit projects. Replace remaining removed-executor targets, including those in package.json and filtered targetDefaults. Transfer their behavior before removing obsolete defaults. Preserve configurations, dependencies, cache inputs/outputs and environment behavior. Do not silently delete unsupported options or unrelated targets. Migrate old @nrwl aliases too.
 4. Run project graph creation with the daemon and graph cache disabled (`NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false`), using the workspace package manager. Inspect resolved project targets and verify each migrated entrypoint exists and is inferred (a thin alias to an inferred target is acceptable). Resolve graph errors before completing this migration, even if task validation was skipped. Configs must load for subsequent migrations.
