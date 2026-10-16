@@ -1,11 +1,15 @@
 import type { Mock } from 'vitest';
-import { type CreateNodesContext } from '@nx/devkit';
+import { type CreateNodesContext, workspaceRoot } from '@nx/devkit';
 import {
   isUsingTsSolutionSetup,
   PNPM_INSTALL_SETTINGS_INPUTS,
   PNPM_MAJOR_RUNTIME_INPUT,
 } from '@nx/js/internal';
-import { hashObject, workspaceDataDirectory } from '@nx/devkit/internal';
+import {
+  hashObject,
+  setWorkspaceRoot,
+  workspaceDataDirectory,
+} from '@nx/devkit/internal';
 import { rmSync } from 'fs';
 import { join } from 'path';
 import { createNodes } from './plugin';
@@ -15,6 +19,32 @@ vi.mock('@nx/js/internal', async () => ({
   ...(await vi.importActual<any>('@nx/js/internal')),
   isUsingTsSolutionSetup: vi.fn(),
 }));
+
+// The real helper forks a process, which resolves Nx packages to their build
+// output instead of this source. Call the module here under the cwd and env it
+// would get instead, one call at a time since both are process-wide.
+vi.mock('@nx/devkit/internal', async () => {
+  let evaluations: Promise<unknown> = Promise.resolve();
+  return {
+    ...(await vi.importActual<any>('@nx/devkit/internal')),
+    evaluateUnderTaskEnv: (modulePath, exportName, args, { cwd, env }) => {
+      const evaluation = evaluations.then(async () => {
+        const originalCwd = process.cwd();
+        const originalEnv = process.env;
+        process.chdir(cwd);
+        process.env = env;
+        try {
+          return await (await import(modulePath))[exportName](...args);
+        } finally {
+          process.env = originalEnv;
+          process.chdir(originalCwd);
+        }
+      });
+      evaluations = evaluation.catch(() => {});
+      return evaluation;
+    },
+  };
+});
 
 describe('@nx/rspack', () => {
   let createNodesFunction = createNodes[1];
@@ -297,11 +327,20 @@ describe('@nx/rspack', () => {
       '1.1.5',
       'WEBPACK_DEV_SERVER_BASE_PORT',
       'Project is running at:',
+      'WEBPACK_SERVE',
+      'RSPACK_SERVE',
     ],
-    ['2.2.7', '2.0.3', 'RSPACK_DEV_SERVER_BASE_PORT', '  ➜  '],
+    [
+      '2.2.7',
+      '2.0.3',
+      'RSPACK_DEV_SERVER_BASE_PORT',
+      '  ➜  ',
+      'RSPACK_SERVE',
+      'WEBPACK_SERVE',
+    ],
   ])(
     'with the dev server @rspack/cli %s loads from the project',
-    (cliVersion, devServerVersion, envVar, logLine) => {
+    (cliVersion, devServerVersion, envVar, logLine, serveFlag, otherFlag) => {
       beforeEach(() => {
         tempFs.createFilesSync({
           'my-app/node_modules/@rspack/cli/package.json': JSON.stringify({
@@ -344,6 +383,29 @@ describe('@nx/rspack', () => {
         const { targets } = nodes[0][1].projects['my-app'];
         expect(targets.serve.readyWhen).toEqual({ logMatches: logLine });
       });
+
+      it('reads the config with only the serve flag its dev server sets', async () => {
+        tempFs.createFileSync(
+          'my-app/rspack.config.ts',
+          `export default () => ({
+            devServer: {
+              port:
+                process.env.${serveFlag} === 'true' && !process.env.${otherFlag}
+                  ? 4300
+                  : 9000,
+            },
+          });`
+        );
+
+        const nodes = await createNodesFunction(
+          ['my-app/rspack.config.ts'],
+          {},
+          context
+        );
+
+        const { targets } = nodes[0][1].projects['my-app'];
+        expect(targets.serve.readyWhen.port).toBe('{options.port ?? 4300}');
+      });
     }
   );
 
@@ -385,6 +447,156 @@ describe('@nx/rspack', () => {
     expect(targets.build.outputs).toEqual(['{projectRoot}/dist/build']);
     for (const target of ['serve', 'preview']) {
       expect(targets[target].readyWhen.port).toBe('{options.port ?? 4300}');
+    }
+  });
+
+  it('reads the dev server port under the env and cwd of each task', async () => {
+    const originalWorkspaceRoot = workspaceRoot;
+    const originalNodeEnv = process.env.NODE_ENV;
+    setWorkspaceRoot(tempFs.tempDir);
+    // rspack serve sets it from --node-env only when it is unset
+    delete process.env.NODE_ENV;
+    tempFs.createFilesSync({
+      'my-app/.env': 'SERVE_PORT=4300',
+      'my-app/.env.preview': 'NODE_ENV=staging',
+      'my-app/preview-port': '4400',
+      'my-app/rspack.config.ts': `import { readFileSync } from 'fs';
+      export default (env, argv) => {
+        const { NODE_ENV, SERVE_PORT } = process.env;
+        if (argv.nodeEnv === 'development' && NODE_ENV === 'development') {
+          return { devServer: { port: Number(SERVE_PORT) } };
+        }
+        if (argv.nodeEnv === 'production' && NODE_ENV === 'staging') {
+          return {
+            devServer: { port: Number(readFileSync('preview-port', 'utf8')) },
+          };
+        }
+        return { devServer: { port: 9000 } };
+      };`,
+    });
+
+    try {
+      const nodes = await createNodesFunction(
+        ['my-app/rspack.config.ts'],
+        {},
+        context
+      );
+
+      const { targets } = nodes[0][1].projects['my-app'];
+      expect(targets.serve.readyWhen.port).toBe('{options.port ?? 4300}');
+      expect(targets.preview.readyWhen.port).toBe('{options.port ?? 4400}');
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv;
+      setWorkspaceRoot(originalWorkspaceRoot);
+    }
+  });
+
+  it.each([
+    [
+      'a root dotenv file of the task changes',
+      (tempFs: TempFs) =>
+        tempFs.createFileSync('.env.serve-env-cache', 'SERVE_PORT=4500'),
+    ],
+    [
+      'the ambient env changes',
+      () => {
+        process.env.SERVE_PORT = '4500';
+      },
+    ],
+  ])(
+    'reads the dev server port again when %s',
+    async (_, change: (tempFs: TempFs) => void) => {
+      const options = { serveTargetName: 'serve-env-cache' };
+      const cachePath = join(
+        workspaceDataDirectory,
+        `rspack-${hashObject(options)}.hash`
+      );
+      rmSync(cachePath, { force: true });
+      process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+      const originalWorkspaceRoot = workspaceRoot;
+      setWorkspaceRoot(tempFs.tempDir);
+      tempFs.createFileSync(
+        'my-app/rspack.config.ts',
+        `export default () => ({
+          devServer: { port: Number(process.env.SERVE_PORT) || 4300 },
+        });`
+      );
+
+      try {
+        const before = await createNodesFunction(
+          ['my-app/rspack.config.ts'],
+          { ...options },
+          context
+        );
+        expect(
+          before[0][1].projects['my-app'].targets['serve-env-cache'].readyWhen
+            .port
+        ).toBe('{options.port ?? 4300}');
+
+        change(tempFs);
+        const after = await createNodesFunction(
+          ['my-app/rspack.config.ts'],
+          { ...options },
+          context
+        );
+        expect(
+          after[0][1].projects['my-app'].targets['serve-env-cache'].readyWhen
+            .port
+        ).toBe('{options.port ?? 4500}');
+      } finally {
+        delete process.env.SERVE_PORT;
+        setWorkspaceRoot(originalWorkspaceRoot);
+        rmSync(cachePath, { force: true });
+      }
+    }
+  );
+
+  it('infers no readyWhen and caches nothing when the dev server options cannot be read', async () => {
+    const options = { serveTargetName: 'serve-read-failure' };
+    const cachePath = join(
+      workspaceDataDirectory,
+      `rspack-${hashObject(options)}.hash`
+    );
+    rmSync(cachePath, { force: true });
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    // A file outside the cache key, so only a failure left uncached recovers
+    const readableFlag = join(tempFs.tempDir, 'readable');
+    tempFs.createFileSync(
+      'my-app/rspack.config.ts',
+      `import { existsSync } from 'fs';
+      export default (env) => {
+        if (env.RSPACK_SERVE && !existsSync(${JSON.stringify(readableFlag)})) {
+          throw new Error('unreadable');
+        }
+        return { devServer: { port: 4300 } };
+      };`
+    );
+
+    try {
+      const failed = await createNodesFunction(
+        ['my-app/rspack.config.ts'],
+        { ...options },
+        context
+      );
+      expect(
+        failed[0][1].projects['my-app'].targets['serve-read-failure'].readyWhen
+      ).toBeUndefined();
+
+      tempFs.createFileSync('readable', '');
+      const recovered = await createNodesFunction(
+        ['my-app/rspack.config.ts'],
+        { ...options },
+        context
+      );
+      expect(
+        recovered[0][1].projects['my-app'].targets['serve-read-failure']
+          .readyWhen
+      ).toEqual({
+        port: '{options.port ?? 4300}',
+        host: '{options.host ?? localhost}',
+      });
+    } finally {
+      rmSync(cachePath, { force: true });
     }
   });
 
