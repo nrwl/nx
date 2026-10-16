@@ -161,6 +161,7 @@ The build and typecheck tasks are cached, with build outputs based on your Vite 
 The dev, preview, and static-server tasks are continuous.
 When `compiler` is omitted, Nx uses `vue-tsc` when it detects a Vite Vue plugin.
 Set `compiler` to `tsc` or `tsgo` to drop the `vue-tsc` task and let `@nx/js/typescript` provide `typecheck` instead.
+To typecheck with `tsgo`, set `compiler: 'tsgo'` on `@nx/js/typescript`, which ignores the Vite plugin's `compiler`.
 
 ### Disable or scope inference
 

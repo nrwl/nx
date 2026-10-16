@@ -91,8 +91,8 @@ export async function ensureTypescriptPlugin(
 /**
  * Registers `@nx/js/typescript`, with only its typecheck target, in a
  * workspace where `frameworkPlugin` no longer infers `typecheck`. Reuses the
- * framework plugin's `typecheckTargetName`, and skips workspaces that already
- * register `@nx/js/typescript` or set it to `false`. With
+ * framework plugin's `typecheckTargetName` and a `tsgo` compiler, and skips
+ * workspaces that already register `@nx/js/typescript` or set it to `false`. With
  * `removeTypecheckTargetName`, the option is also dropped from the framework
  * plugin's registrations. Returns whether nx.json changed.
  */
@@ -109,14 +109,18 @@ export function registerTypescriptPluginForTypecheck(
   const frameworkRegistrations = nxJson.plugins.filter(
     (p) => getPluginName(p) === frameworkPlugin
   );
-  const targetName = frameworkRegistrations
-    .map((p) =>
-      typeof p === 'string'
-        ? 'typecheck'
-        : ((p.options as { typecheckTargetName?: string | false } | undefined)
-            ?.typecheckTargetName ?? 'typecheck')
+  const typecheckOptions = frameworkRegistrations
+    .map(
+      (p) =>
+        (typeof p === 'string' ? {} : (p.options ?? {})) as {
+          typecheckTargetName?: string | false;
+          compiler?: string;
+        }
     )
-    .find((name): name is string => name !== false);
+    .find((options) => options.typecheckTargetName !== false);
+  const targetName = typecheckOptions
+    ? (typecheckOptions.typecheckTargetName ?? 'typecheck')
+    : undefined;
 
   let changed = false;
   if (removeTypecheckTargetName) {
@@ -138,7 +142,10 @@ export function registerTypescriptPluginForTypecheck(
   ) {
     nxJson.plugins.push({
       plugin: '@nx/js/typescript',
-      options: { typecheck: { targetName } },
+      options: {
+        typecheck: { targetName },
+        ...(typecheckOptions.compiler === 'tsgo' ? { compiler: 'tsgo' } : {}),
+      },
     });
     moveTypescriptPluginBefore(nxJson.plugins, frameworkPlugin);
     changed = true;
