@@ -2849,6 +2849,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '*'
+        version: 6.0.3
     devDependencies:
       nx:
         specifier: workspace:*
@@ -3003,6 +3006,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '*'
+        version: 6.0.3
       yargs-parser:
         specifier: 'catalog:'
         version: 21.1.1
@@ -3103,6 +3109,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '*'
+        version: 6.0.3
       verdaccio:
         specifier: ^6.0.5
         version: 6.3.2(encoding@0.1.13)(supports-color@10.2.2)(typanion@3.14.0)
@@ -3490,6 +3499,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '*'
+        version: 6.0.3
       undici:
         specifier: ^7.29.0
         version: 7.29.0
@@ -3676,6 +3688,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '*'
+        version: 6.0.3
     devDependencies:
       '@nx/cypress':
         specifier: workspace:*
@@ -4042,6 +4057,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '*'
+        version: 6.0.3
     devDependencies:
       nx:
         specifier: workspace:*
@@ -4079,6 +4097,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '*'
+        version: 6.0.3
       vite:
         specifier: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
         version: 8.0.16(@types/node@24.12.2)(esbuild@0.28.1)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(sass-embedded@1.97.2)(sass@1.101.0)(terser@5.49.0)(tsx@4.20.5)(yaml@2.9.0)
@@ -4110,6 +4131,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '*'
+        version: 6.0.3
       vite:
         specifier: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
         version: 8.0.16(@types/node@24.12.2)(esbuild@0.28.1)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(sass-embedded@1.97.2)(sass@1.101.0)(terser@5.49.0)(tsx@4.20.5)(yaml@2.9.0)
