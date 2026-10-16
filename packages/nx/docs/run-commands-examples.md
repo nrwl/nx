@@ -101,6 +101,8 @@ An argument that isn't passed resolves to an empty string. To use another value,
 }
 ```
 
+The resolved command is part of the task's terminal output, which Nx caches when the target is cacheable. To keep a secret out of that output, read it as a shell variable instead, such as `$TOKEN`.
+
 Keep in mind that any command in the list that does not include interpolation will still have all passed arguments forwarded to it by default. For example, given:
 
 ```json
