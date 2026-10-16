@@ -20,19 +20,15 @@ import {
 
 import { dirname, join } from 'path';
 import { readdirSync } from 'fs';
-import { minimatch } from 'minimatch';
 import { getLockFileName } from '@nx/js';
 import {
   addBuildAndWatchDepsTargets,
-  createTypecheckTarget,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
-  selectTypecheckTsConfig,
 } from '@nx/js/internal';
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
-  typecheckTargetName?: string | false;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
@@ -91,10 +87,6 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
         async (configFile, _, context, idx) => {
           const projectRoot = dirname(configFile);
 
-          const siblingFiles = readdirSync(
-            joinPathFragments(context.workspaceRoot, projectRoot)
-          );
-
           const hash = hashes[idx] + configFile;
           if (!targetsCache.has(hash)) {
             targetsCache.set(
@@ -104,7 +96,6 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
                 projectRoot,
                 normalizedOptions,
                 context,
-                siblingFiles,
                 isUsingTsSolutionSetup,
                 pmCommand
               )
@@ -148,7 +139,6 @@ async function buildReactRouterTargets(
   projectRoot: string,
   options: ReactRouterPluginOptions,
   context: CreateNodesContext,
-  siblingFiles: string[],
   isUsingTsSolutionSetup: boolean,
   pmCommand: ReturnType<typeof getPackageManagerCommand>
 ): Promise<ReactRouterTargets> {
@@ -190,23 +180,6 @@ async function buildReactRouterTargets(
       namedInputs,
       isUsingTsSolutionSetup
     );
-  }
-
-  const tsConfigFiles = siblingFiles.filter((file) =>
-    minimatch(file, 'tsconfig*{.json,.*.json}')
-  );
-  if (
-    options.typecheckTargetName &&
-    !isUsingTsSolutionSetup &&
-    tsConfigFiles.length
-  ) {
-    targets[options.typecheckTargetName] = createTypecheckTarget({
-      mode: 'noEmit',
-      projectRoot: joinPathFragments(projectRoot),
-      pmc: pmCommand,
-      tsConfig: selectTypecheckTsConfig(tsConfigFiles),
-      namedInputs,
-    });
   }
 
   addBuildAndWatchDepsTargets(
@@ -332,7 +305,6 @@ function normalizeOptions(options: ReactRouterPluginOptions) {
   options.buildTargetName ??= 'build';
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
-  options.typecheckTargetName ??= 'typecheck';
 
   return options;
 }
