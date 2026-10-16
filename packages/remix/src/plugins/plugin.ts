@@ -17,25 +17,21 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   ProjectConfiguration,
-  readJsonFile,
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import {
   addBuildAndWatchDepsTargets,
-  createTypecheckTarget,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
-  selectTypecheckTsConfig,
 } from '@nx/js/internal';
 export interface RemixPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
-  typecheckTargetName?: string | false;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
   serveStaticTargetName?: string;
@@ -86,7 +82,6 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
               targetsCache,
               isUsingTsSolutionSetup,
               pmc,
-              entries[idx].siblingFiles,
               entries[idx].remixCompiler,
               projectHashes[idx] + configFile
             ),
@@ -126,7 +121,6 @@ async function createNodesInternal(
   targetsCache: PluginCache<RemixTargets>,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  siblingFiles: string[],
   remixCompiler: RemixCompiler,
   hash: string
 ) {
@@ -140,7 +134,6 @@ async function createNodesInternal(
         projectRoot,
         options,
         context,
-        siblingFiles,
         remixCompiler,
         isUsingTsSolutionSetup,
         pmc
@@ -168,7 +161,6 @@ async function buildRemixTargets(
   projectRoot: string,
   options: RemixPluginOptions,
   context: CreateNodesContext,
-  siblingFiles: string[],
   remixCompiler: RemixCompiler,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
@@ -215,23 +207,6 @@ async function buildRemixTargets(
     namedInputs,
     isUsingTsSolutionSetup
   );
-  const tsConfigFiles = siblingFiles.filter((file) =>
-    /^tsconfig.*\.json$/.test(file)
-  );
-  if (
-    options.typecheckTargetName &&
-    !isUsingTsSolutionSetup &&
-    tsConfigFiles.length > 0
-  ) {
-    targets[options.typecheckTargetName] = createTypecheckTarget({
-      mode: 'noEmit',
-      projectRoot: joinPathFragments(projectRoot),
-      pmc,
-      tsConfig: selectTypecheckTsConfig(tsConfigFiles),
-      namedInputs,
-    });
-  }
-
   addBuildAndWatchDepsTargets(
     context.workspaceRoot,
     projectRoot,
@@ -411,7 +386,6 @@ function normalizeOptions(options: RemixPluginOptions) {
   options.buildTargetName ??= 'build';
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
-  options.typecheckTargetName ??= 'typecheck';
   options.serveStaticTargetName ??= 'serve-static';
 
   return options;
@@ -449,7 +423,6 @@ enum RemixCompiler {
 interface RemixEntry {
   configFile: string;
   projectRoot: string;
-  siblingFiles: string[];
   remixCompiler: RemixCompiler;
 }
 
@@ -481,7 +454,7 @@ async function filterRemixConfigs(
         if (remixCompiler === RemixCompiler.IsNotRemix) {
           return null;
         }
-        return { configFile, projectRoot, siblingFiles, remixCompiler };
+        return { configFile, projectRoot, remixCompiler };
       } catch (e) {
         preErrors.push([configFile, e as Error]);
         return null;
