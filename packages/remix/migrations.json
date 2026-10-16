@@ -22,7 +22,7 @@
       "prompt": "./dist/src/migrations/update-24-0-0/migrate-to-react-router.md"
     },
     "update-24-0-0-register-typescript-plugin-for-typecheck": {
-      "version": "24.0.0-beta.0",
+      "version": "24.0.0-beta.3",
       "description": "Register @nx/js/typescript with its typecheck target in workspaces that use @nx/remix/plugin without it, and remove the typecheckTargetName option from @nx/remix/plugin, since @nx/remix/plugin no longer infers typecheck targets.",
       "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
       "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
