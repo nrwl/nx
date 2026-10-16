@@ -275,14 +275,14 @@ function collectUpstreamTaskIds(
   transitive: boolean
 ): string[] {
   const direct = taskGraph.dependencies[rootTaskId] ?? [];
-  if (!transitive) return [...direct];
+  if (!transitive) return direct.map((dep) => dep.id);
 
   const collected = new Set<string>();
   const walk = (id: string): void => {
     for (const dep of taskGraph.dependencies[id] ?? []) {
-      if (collected.has(dep)) continue;
-      collected.add(dep);
-      walk(dep);
+      if (collected.has(dep.id)) continue;
+      collected.add(dep.id);
+      walk(dep.id);
     }
   };
   walk(rootTaskId);

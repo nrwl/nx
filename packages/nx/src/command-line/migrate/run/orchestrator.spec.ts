@@ -109,7 +109,9 @@ import { output } from '../../../utils/output';
 import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
 import {
+  activeRunForClassic,
   activeRunToReplace,
+  deleteRunForStartFresh,
   runOrchestratorInit,
   runOrchestratorReconcile,
   runOrchestratorResume,
@@ -707,7 +709,7 @@ describe('orchestrator', () => {
       expect(state.checkpointFailed).toBe(true);
     });
 
-    it('adds the .gitignore entry at init when the hoisted ignore migration is planned but has not run yet', async () => {
+    it('adds the .gitignore entry at init when the ignore migration is planned but has not run yet', async () => {
       // The run dir is created before any migration executes; without the
       // entry, a retry-clean's `git clean` or a checkpoint retry could eat the
       // run's own scratch.
@@ -1009,24 +1011,56 @@ describe('orchestrator', () => {
       expect(block.payload.next).toBe(`npx nx migrate --run-id=${runId}`);
     });
 
-    it('refuses a migration id that is not shell-safe, naming it', async () => {
-      await expect(
-        runOrchestratorInit({
-          root,
-          migrationsJson: {
-            migrations: [genMig('@nx/js', "evil'; rm -rf ~")],
-          },
-          createCommits: false,
-          commitPrefix: 'chore: [nx migration] ',
-          skipInstall: false,
-          installedNxVersion: '23.0.0',
-          validate: undefined,
-          finalValidation: undefined,
-        })
-      ).rejects.toThrow(
-        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe`
-      );
-      expect(findActiveRun(root).active).toBeNull();
+    it.each([
+      [
+        'is not shell-safe',
+        [genMig('@nx/js', "evil'; rm -rf ~")],
+        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids. To run the plan without orchestration, re-run with --agentic=false.`,
+      ],
+      [
+        'is listed twice',
+        [genMig('@nx/js', 'a'), genMig('@nx/js', 'b'), genMig('@nx/js', 'a')],
+        `The migration id '@nx/js:a' is listed more than once in the plan. Orchestrated runs require each migration id once. To run the plan without orchestration, re-run with --agentic=false.`,
+      ],
+    ])(
+      'refuses a migration id that %s, naming it and the way to run the plan',
+      async (_label, migrations, message) => {
+        await expect(
+          runOrchestratorInit({
+            root,
+            migrationsJson: { migrations },
+            createCommits: false,
+            commitPrefix: 'chore: [nx migration] ',
+            skipInstall: false,
+            installedNxVersion: '23.0.0',
+            validate: undefined,
+            finalValidation: undefined,
+          })
+        ).rejects.toThrow(message);
+        expect(findActiveRun(root).active).toBeNull();
+      }
+    );
+
+    it('starts a run whose plan has one migration name under two packages', async () => {
+      await runOrchestratorInit({
+        root,
+        migrationsJson: {
+          migrations: [genMig('@nx/js', 'a'), genMig('@nx/react', 'a')],
+        },
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+        finalValidation: undefined,
+      });
+
+      expect(
+        findActiveRun(root)
+          .active.state.steps.filter((s) => s.kind === 'migration')
+          .map((s) => s.migrationId)
+          .sort()
+      ).toEqual(['@nx/js:a', '@nx/react:a']);
     });
 
     it('announces the run it resumed and how far along it is', async () => {
@@ -1126,35 +1160,45 @@ describe('orchestrator', () => {
       );
     });
 
-    it('validates migration ids before deleting the active run for --start-fresh', async () => {
-      const migrationsJson = {
-        migrations: [genMig('@nx/js', "evil'; rm -rf ~")],
-      };
-      // The active run carries a safe id because no init could have created it
-      // otherwise; the unsafe one arrives with this invocation's plan.
-      setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:a', 'pending')],
-        plan: migrationsJson.migrations,
-      });
+    it.each([
+      [
+        'not shell-safe',
+        [genMig('@nx/js', "evil'; rm -rf ~")],
+        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe`,
+      ],
+      [
+        'listed twice',
+        [genMig('@nx/js', 'a'), genMig('@nx/js', 'a')],
+        `The migration id '@nx/js:a' is listed more than once in the plan`,
+      ],
+    ])(
+      'refuses an id that is %s before deleting the active run for --start-fresh',
+      async (_label, migrations, message) => {
+        // The active run carries an id init accepts because no init could have
+        // created it otherwise; the refused one arrives with this invocation's
+        // plan.
+        setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          plan: migrations,
+        });
 
-      await expect(
-        runOrchestratorInit({
-          root,
-          migrationsJson,
-          createCommits: false,
-          commitPrefix: 'chore: [nx migration] ',
-          skipInstall: false,
-          installedNxVersion: '23.0.0',
-          validate: undefined,
-          finalValidation: undefined,
-          onExistingRun: 'start-fresh',
-        })
-      ).rejects.toThrow(
-        `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe`
-      );
+        await expect(
+          runOrchestratorInit({
+            root,
+            migrationsJson: { migrations },
+            createCommits: false,
+            commitPrefix: 'chore: [nx migration] ',
+            skipInstall: false,
+            installedNxVersion: '23.0.0',
+            validate: undefined,
+            finalValidation: undefined,
+            onExistingRun: 'start-fresh',
+          })
+        ).rejects.toThrow(message);
 
-      expect(activeRunDirNames()).toEqual(['run-1']);
-    });
+        expect(activeRunDirNames()).toEqual(['run-1']);
+      }
+    );
 
     it('repeats a non-default migrations path in the start-fresh command of the report', async () => {
       const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
@@ -1577,11 +1621,10 @@ describe('orchestrator', () => {
             '  activity: no other nx migrate process is working on it',
             '  issues: 1 unresolved',
             '  other active runs on disk: run-2',
-            '  plan overlap: 1 of the applied migrations is still in the plan; a new run applies it again',
+            '  plan overlap: 1 of the applied migrations is still in the plan; running the plan applies it again',
             '',
             'To continue the run: npx nx migrate --run-migrations --agentic --run-id=run-1 --create-commits',
             'To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations --start-fresh --run-id=run-1',
-            'Run either command with NX_MIGRATE_ORCHESTRATOR=true set in the environment.',
           ],
         },
       ]);
@@ -1616,7 +1659,7 @@ describe('orchestrator', () => {
           '  branch: unknown',
           `  commits: newest recorded commit ${sha(2).slice(0, 10)} is of unknown reachability from HEAD (0 of 1 reachable, 1 could not be checked)`,
           '  worker: none running',
-          '  plan overlap: 0 of the applied migrations are still in the plan; a new run applies them again',
+          '  plan overlap: 0 of the applied migrations are still in the plan; running the plan applies them again',
         ])
       );
       expect(mockGetAncestorStatus).not.toHaveBeenCalled();
@@ -2068,6 +2111,105 @@ describe('orchestrator', () => {
         expect(() => activeRunToReplace(root, 'run-9')).not.toThrow();
         expect(existsSync(join(dir, 'activity'))).toBe(false);
       });
+    });
+
+    describe('classic loop', () => {
+      it('finds no run without creating the runs directory', () => {
+        expect(activeRunForClassic(root, ['@nx/js:a'])).toBeNull();
+        expect(existsSync(migrateRunsDir(root))).toBe(false);
+      });
+
+      it('holds the active run it reports, so a start-fresh elsewhere refuses to delete it', () => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        });
+
+        expect(activeRunForClassic(root, ['@nx/js:a'])).toMatchObject({
+          runId: 'run-1',
+          facts: { otherHolders: [], appliedStillPlanned: 1 },
+        });
+
+        const names = readdirSync(join(dir, 'activity'));
+        expect(names).toEqual([
+          expect.stringMatching(
+            new RegExp(`^${process.pid}-[0-9a-f]{8}\\.lock$`)
+          ),
+        ]);
+        expect(new FileLock(join(dir, 'activity', names[0])).check()).toBe(
+          true
+        );
+      });
+
+      it('deletes the run it holds, directory and all', () => {
+        setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        });
+        activeRunForClassic(root, ['@nx/js:a']);
+
+        deleteRunForStartFresh(root, 'run-1');
+
+        expect(runDirNames()).toEqual([]);
+        expect(logged.map((l) => l.title)).toContain(
+          'Deleted the record of migrate run run-1.'
+        );
+      });
+
+      it.each<[string, () => () => void, string]>([
+        [
+          'another process holds the run',
+          () => {
+            const dir = runDir(root, 'run-1');
+            mkdirSync(join(dir, 'activity'));
+            const holder = new FileLock(
+              join(dir, 'activity', '4242-beef.lock')
+            );
+            holder.lock();
+            return () => holder.unlock();
+          },
+          "Not deleting migrate run 'run-1': process 4242 is still working on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.",
+        ],
+        [
+          'the run completed',
+          () => {
+            const dir = runDir(root, 'run-1');
+            writeRunState(dir, { ...readRunState(dir), status: 'completed' });
+            return () => {};
+          },
+          "Not starting fresh: no migrate run 'run-1' is active, so there is nothing to replace.",
+        ],
+        [
+          'another run became the active one',
+          () => {
+            const dir = runDir(root, 'run-1');
+            writeRunState(dir, { ...readRunState(dir), status: 'completed' });
+            setupRun('run-2', {
+              steps: [migStep('step-1', '@nx/js:a', 'pending')],
+            });
+            return () => {};
+          },
+          "Not starting fresh: migrate run 'run-2' became active while this command was starting. Re-run the command to see it.",
+        ],
+      ])(
+        'refuses to delete, keeping every record, when %s',
+        (_label, arrange, message) => {
+          setupRun('run-1', {
+            steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+          });
+          const release = arrange();
+
+          try {
+            expect(() => deleteRunForStartFresh(root, 'run-1')).toThrow(
+              message
+            );
+          } finally {
+            release();
+          }
+
+          expect(existsSync(join(runDir(root, 'run-1'), 'run.json'))).toBe(
+            true
+          );
+        }
+      );
     });
 
     it('refuses to continue while another process holds the run, and reports that process', async () => {
@@ -5509,6 +5651,99 @@ describe('orchestrator', () => {
       expect(block.payload.next).toBeUndefined();
     });
 
+    it.each<
+      [
+        string,
+        MigrateStepStatus,
+        Partial<MigrateStepBase>,
+        { commits?: MigrateCommitLedgerEntry[] },
+        string[],
+      ]
+    >([
+      [
+        'a died step whose install did not complete',
+        'died',
+        { generatorCompleted: true, installFailed: true },
+        {},
+        [
+          "Its dependency install did not complete. A retry runs it again, so fix the cause first if it can be fixed. Any other choice settles the step without installing and leaves the install to you; the run's final report asks for `npm install`.",
+        ],
+      ],
+      [
+        'a failed step whose install did not complete',
+        'failed',
+        {
+          generatorCompleted: true,
+          installFailed: true,
+          outcome: { summary: 'registry unreachable' },
+        },
+        {},
+        [
+          "Its dependency install did not complete. A retry runs it again, so fix the cause first if it can be fixed. Any other choice settles the step without installing and leaves the install to you; the run's final report asks for `npm install`.",
+        ],
+      ],
+      [
+        'a died step whose recorded commit failed',
+        'died',
+        { generatorCompleted: true, commitStarted: true, commitLedgerIndex: 0 },
+        { commits: [{ kind: 'failed', stepIds: ['step-1'] }] },
+        ['Its commit did not complete. Every choice below commits again.'],
+      ],
+      [
+        'a died step whose commit outcome is unknown',
+        'died',
+        { generatorCompleted: true, commitStarted: true },
+        {},
+        [],
+      ],
+      [
+        'a failed step whose recorded commit failed',
+        'failed',
+        {
+          generatorCompleted: true,
+          commitStarted: true,
+          commitLedgerIndex: 0,
+          outcome: { summary: 'validation failed' },
+        },
+        { commits: [{ kind: 'failed', stepIds: ['step-1'] }] },
+        ['Its commit did not complete. Every choice below commits again.'],
+      ],
+      [
+        'a failed step whose commit outcome is unknown',
+        'failed',
+        {
+          generatorCompleted: true,
+          commitStarted: true,
+          outcome: { summary: 'validation failed' },
+        },
+        {},
+        [
+          "  adopt: a commit of this migration's changes was started and never recorded; keep the current working-tree state as its result, then run: npx nx migrate --run-id=run-1 --step-action=adopt",
+        ],
+      ],
+    ])(
+      'says what each choice does about the unfinished operation of %s',
+      async (_, status, stepFields, runFields, expected) => {
+        setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:gen', status, stepFields)],
+          ...runFields,
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        expect(
+          lastBlock()
+            .payload.instructions.split('\n')
+            .filter(
+              (line) =>
+                line.startsWith('Its ') || line.includes('never recorded')
+            )
+        ).toEqual(expected);
+      }
+    );
+
     it('offers only adopt when the dead step has no captured pre-migration ref', async () => {
       vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
@@ -6623,6 +6858,55 @@ describe('orchestrator', () => {
       expect(state.steps[0].status).toBe('succeeded');
       expect(state.steps[0].installFailed).toBe(true);
     });
+
+    it.each([
+      ['died', 'adopt', 'succeeded'],
+      ['died', 'skip', 'skipped'],
+      ['died', 'unresolved', 'unresolved'],
+      ['failed', 'adopt', 'succeeded'],
+    ] as const)(
+      'settles a %s step whose install already failed with %s without installing, and says the install is left to the user',
+      async (from, stepAction, status) => {
+        vi.spyOn(process, 'kill').mockReturnValue(true as never);
+        const warned: string[] = [];
+        vi.spyOn(output, 'warn').mockImplementation((opts) => {
+          warned.push((opts as { title: string }).title);
+        });
+        mockGetWorkingTreeStatus.mockReturnValue('dirty');
+        mockCommit.mockImplementation(async (...args: unknown[]) => {
+          await (args[4] as () => Promise<void>)();
+          return {
+            status: 'committed',
+            sha: 'face0041face0041face0041face0041face0041',
+          };
+        });
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', from, {
+              ...(from === 'died'
+                ? { pid: 999999 }
+                : { outcome: { summary: 'registry unreachable' } }),
+              generatorCompleted: true,
+              installFailed: true,
+              depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+            }),
+          ],
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({ root, runId: 'run-1', stepAction });
+
+        expect(mockRunInstall).not.toHaveBeenCalled();
+        expect(readRunState(dir).steps[0]).toMatchObject({
+          status,
+          installFailed: true,
+        });
+        expect(warned).toContain(
+          'The dependency changes made by @nx/js:gen are not installed.'
+        );
+      }
+    );
 
     it('does not refold a stale handoff after a retry re-arms the step', async () => {
       const dir = setupRun('run-1', {
@@ -8177,13 +8461,29 @@ describe('orchestrator', () => {
       expect(mockComplete).toHaveBeenCalledTimes(1);
     });
 
-    it('warns about outstanding commit debt when the tree is dirty', async () => {
+    it('warns about outstanding commit debt when the tree is dirty, naming the migrations no later commit covered', async () => {
       mockGetWorkingTreeStatus.mockReturnValue('dirty');
       setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:gen', 'succeeded')],
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'succeeded'),
+          migStep('step-2', '@nx/js:other', 'succeeded'),
+          migStep('step-3', '@nx/js:third', 'succeeded'),
+        ],
         createCommits: true,
-        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
-        plan: [genMig('@nx/js', 'gen')],
+        commits: [
+          { kind: 'failed', stepIds: ['step-1'] },
+          { kind: 'failed', stepIds: ['step-2'] },
+          {
+            kind: 'landed',
+            sha: 'face0051face0051face0051face0051face0051',
+            stepIds: ['step-3', 'step-2'],
+          },
+        ],
+        plan: [
+          genMig('@nx/js', 'gen'),
+          genMig('@nx/js', 'other'),
+          genMig('@nx/js', 'third'),
+        ],
       });
 
       await runOrchestratorReconcile({ root, runId: 'run-1' });
@@ -8192,7 +8492,9 @@ describe('orchestrator', () => {
       expect(state.status).toBe('completed');
       const block = lastBlock();
       expect(block.action).toBe('complete');
-      expect(block.payload.instructions).toContain('could not be committed');
+      expect(block.payload.instructions).toContain(
+        'The changes made by @nx/js:gen could not be committed and may remain in the working tree'
+      );
       expect(output.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           title: expect.stringContaining('could not be committed'),
@@ -8470,63 +8772,133 @@ describe('orchestrator', () => {
       expect(lastBlock().action).toBe('complete');
     });
 
-    it('adopts a failed step through the session under an adopt request of its own', async () => {
-      mockGetWorkingTreeStatus.mockReturnValue('dirty');
-      mockCommit.mockResolvedValue({
-        status: 'committed',
-        sha: 'face0031face0031face0031face0031face0031',
-      });
-      const dir = setupRun('run-1', {
-        steps: [
-          migStep('step-1', '@nx/js:gen', 'failed', {
-            generatorCompleted: true,
-            outcome: { summary: 'registry unreachable' },
-          }),
-        ],
-        createCommits: true,
-        plan: [genMig('@nx/js', 'gen')],
-      });
-      const broker = new MigrateCommitBroker(
-        root,
-        dir,
-        'npx nx migrate',
-        POLICY
-      );
-      process.env.NX_MIGRATE_BROKER = broker.nonce;
-      // The answer that failed the step, still on disk under the worker's
-      // request; reusing that request would replay it.
-      writeFileSync(
-        join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.result.json`),
-        JSON.stringify({
-          kind: 'install-failed',
-          message: 'registry unreachable',
-          peerDeps: false,
+    const installedDepsHash = createHash('sha256')
+      .update('{"deps":1}')
+      .digest('hex');
+    const installFailedAnswer = {
+      kind: 'install-failed',
+      message: 'registry unreachable',
+      peerDeps: false,
+      output: [],
+    };
+    it.each<
+      [
+        string,
+        MigrateStepStatus,
+        Partial<MigrateStepBase>,
+        { commits?: MigrateCommitLedgerEntry[] },
+        object,
+      ]
+    >([
+      [
+        'a failed step',
+        'failed',
+        {
+          outcome: { summary: 'registry unreachable' },
+          depsHashAtDispense: installedDepsHash,
+        },
+        {},
+        installFailedAnswer,
+      ],
+      [
+        'a died step once its failed install is on record',
+        'died',
+        {
+          pid: 999999,
+          installFailed: true,
+          depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+        },
+        {},
+        installFailedAnswer,
+      ],
+      [
+        'a died step once its failed commit is on record',
+        'died',
+        // The install landed before the commit failed.
+        {
+          pid: 999999,
+          commitStarted: true,
+          commitLedgerIndex: 0,
+          depsHashAtDispense: installedDepsHash,
+        },
+        { commits: [{ kind: 'failed', stepIds: ['step-1'] }] },
+        {
+          kind: 'commit',
+          result: {
+            status: 'failed',
+            reason: 'gpg: signing failed: Inappropriate ioctl for device',
+          },
+          absorbedStepIds: [],
           output: [],
-        })
-      );
+        },
+      ],
+    ])(
+      'adopts %s through the session under an adopt request of its own',
+      async (_, status, stepFields, runFields, workerAnswer) => {
+        vi.spyOn(process, 'kill').mockReturnValue(true as never);
+        mockGetWorkingTreeStatus.mockReturnValue('dirty');
+        mockCommit.mockImplementation(async (...args: unknown[]) => {
+          await (args[4] as () => Promise<void>)();
+          return {
+            status: 'committed',
+            sha: 'face0031face0031face0031face0031face0031',
+          };
+        });
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', status, {
+              generatorCompleted: true,
+              ...stepFields,
+            }),
+          ],
+          ...runFields,
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+        const broker = new MigrateCommitBroker(
+          root,
+          dir,
+          'npx nx migrate',
+          POLICY
+        );
+        process.env.NX_MIGRATE_BROKER = broker.nonce;
+        // The worker's answered request, still on disk; reusing it would
+        // replay that answer.
+        writeFileSync(
+          join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.result.json`),
+          JSON.stringify(workerAnswer)
+        );
 
-      const adopting = runOrchestratorReconcile({
-        root,
-        runId: 'run-1',
-        stepAction: 'adopt',
-      });
-      for (let i = 0; i < 100; i++) {
-        await broker.service();
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        const adopting = runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'adopt',
+        });
+        for (let i = 0; i < 100; i++) {
+          await broker.service();
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+        await adopting;
+        expect(readRequest(dir)).toEqual({
+          kind: 'commit',
+          stepId: 'step-1',
+          attempt: 1,
+          commitAs: 'adopt',
+        });
+        broker.close();
+
+        expect(mockRunInstall).not.toHaveBeenCalled();
+        expect(mockCommit).toHaveBeenCalledTimes(1);
+        expect(mockCommit.mock.calls[0][1]).toEqual({ name: 'gen' });
+        const state = readRunState(dir);
+        expect(state.steps[0].status).toBe('succeeded');
+        expect(state.commits).toContainEqual({
+          kind: 'landed',
+          sha: 'face0031face0031face0031face0031face0031',
+          stepIds: ['step-1'],
+        });
       }
-      await adopting;
-      expect(readRequest(dir)).toEqual({
-        kind: 'commit',
-        stepId: 'step-1',
-        attempt: 1,
-        commitAs: 'adopt',
-      });
-      broker.close();
-
-      expect(mockCommit).toHaveBeenCalledTimes(1);
-      expect(mockCommit.mock.calls[0][1]).toEqual({ name: 'gen' });
-      expect(readRunState(dir).steps[0].status).toBe('succeeded');
-    });
+    );
 
     it.each<[string, (accepted: MigrateRunState) => MigrateRunState, string]>([
       [
@@ -8989,7 +9361,7 @@ describe('orchestrator', () => {
           status: 'running',
           action: 'held',
           instructions: [
-            `held by process ${process.pid} for the commit of step 'step-1'`,
+            `held by process ${process.pid} for the commit of @nx/js:gen`,
           ],
           absent: [`pid ${DEAD_PID}`],
           next: 'npx nx migrate --run-id=run-1',
@@ -9044,7 +9416,7 @@ describe('orchestrator', () => {
           treeCleanAtDispense: true,
         },
         { kind: 'reset' },
-        `held by process ${process.pid} for the reset of step 'step-1'`,
+        `held by process ${process.pid} for the reset of @nx/js:gen`,
       ],
       [
         'pending',
@@ -9127,6 +9499,42 @@ describe('orchestrator', () => {
       }
     );
 
+    it.each([
+      ['this session', 'session-nonce', true],
+      ['another process', 'another-process', false],
+    ])(
+      'tells how the user ends the held operation only when %s holds the tree',
+      async (_, owner, wayOut) => {
+        vi.spyOn(process, 'kill').mockReturnValue(true as never);
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', 'running', {
+              pid: 4242,
+              startedAt: new Date().toISOString(),
+            }),
+            migStep('step-2', '@nx/js:other', 'pending'),
+          ],
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen'), genMig('@nx/js', 'other')],
+        });
+        reserve(dir, { stepId: 'step-2', pid: process.pid, owner });
+        process.env.NX_MIGRATE_BROKER = 'session-nonce';
+        try {
+          await runOrchestratorReconcile({ root, runId: 'run-1' });
+        } finally {
+          delete process.env.NX_MIGRATE_BROKER;
+        }
+
+        const block = lastBlock();
+        expect(block.action).toBe('held');
+        expect(
+          block.payload.instructions.includes(
+            'If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end the commit of @nx/js:other, and resume the run afterwards.'
+          )
+        ).toBe(wayOut);
+      }
+    );
+
     it('keeps the held block for a live running step while the tree is held for another step', async () => {
       vi.spyOn(process, 'kill').mockReturnValue(true as never);
       const dir = setupRun('run-1', {
@@ -9147,7 +9555,7 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('held');
       expect(block.payload.instructions).toContain(
-        `held by process ${process.pid} for the commit of step 'step-2'`
+        `held by process ${process.pid} for the commit of @nx/js:other`
       );
     });
 

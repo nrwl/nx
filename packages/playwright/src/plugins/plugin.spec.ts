@@ -1047,6 +1047,125 @@ describe('@nx/playwright/plugin', () => {
     );
   });
 
+  it('keeps the server inputs out of atomized tasks for specs with "@nx-ultracache: imports"', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({
+      'tests/opted-in.spec.ts':
+        '// @nx-ultracache: imports\nimport "../../app1/src/feature";\n',
+      'tests/other.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e-ci--tests/opted-in.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve', inputs: false },
+      { target: 'e2e--wait-for-webserver' },
+    ]);
+    expect(targets['e2e-ci--tests/other.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+      { target: 'e2e--wait-for-webserver' },
+    ]);
+  });
+
+  it('applies "@nx-depends-on" and "@nx-ultracache: imports" together', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({
+      'tests/both.spec.ts':
+        '// @nx-depends-on: feature\n// @nx-ultracache: imports\n',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const target =
+      results[0][1].projects['.'].targets['e2e-ci--tests/both.spec.ts'];
+
+    expect(target.inputs).toContainEqual({
+      input: 'production',
+      projects: ['feature'],
+      always: true,
+    });
+    expect(target.dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve', inputs: false },
+      { target: 'e2e--wait-for-webserver' },
+    ]);
+  });
+
+  it('accepts "@nx-ultracache: imports" in a spec whose atomized task has no server', async () => {
+    await mockPlaywrightConfig(tempFs, { testDir: 'tests' });
+    await tempFs.createFiles({
+      'tests/opted-in.spec.ts': '// @nx-ultracache: imports\n',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+
+    expect(
+      results[0][1].projects['.'].targets['e2e-ci--tests/opted-in.spec.ts']
+        .dependsOn
+    ).toBeUndefined();
+  });
+
+  it('ignores an unsupported "@nx-ultracache" value with a warning naming the spec', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({
+      'tests/typo.spec.ts': '// @nx-ultracache: import\n',
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+
+      expect(
+        results[0][1].projects['.'].targets['e2e-ci--tests/typo.spec.ts']
+          .dependsOn
+      ).toEqual([
+        { projects: ['app1'], target: 'serve' },
+        { target: 'e2e--wait-for-webserver' },
+      ]);
+      expect(warn).toHaveBeenCalledWith(
+        'tests/typo.spec.ts: "@nx-ultracache: import" is not supported, so Nx ignores "@nx-ultracache" in this file. Use "@nx-ultracache: imports".'
+      );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it("runs the wait-for-webserver task under its own env files, not the atomized target group's", async () => {
     // A task in the CI target group loads the group's `nonAtomizedTarget`
     // dotenv files at run time; the gate's probe env is checked at graph time
@@ -1165,6 +1284,115 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     expect(project.metadata.targetGroups['E2E (CI)']).not.toContain(
       'e2e--wait-for-webserver'
     );
+  });
+
+  describe('a test file with an @nx-depends-on directive', () => {
+    const scopedInputs = [
+      'default',
+      {
+        input: 'production',
+        projects: ['feature', 'feature-utils'],
+        always: true,
+      },
+      {
+        input: 'production',
+        projects: ['feature', 'feature-utils'],
+        dependencies: true,
+        always: true,
+      },
+      { externalDependencies: ['@playwright/test'] },
+    ];
+
+    async function atomizedTargets() {
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      return results[0][1].projects['.'].targets;
+    }
+
+    it("scopes its atomized target's dependency inputs and server edge", async () => {
+      await mockPlaywrightConfig(tempFs, {
+        testDir: 'tests',
+        webServer: {
+          command: 'npx nx run app1:serve',
+          port: 4200,
+          reuseExistingServer: true,
+        },
+      });
+      await tempFs.createFiles({
+        'tests/feature.spec.ts':
+          '// @nx-depends-on: feature, feature-utils\nimport { test } from "@playwright/test";\n',
+        'tests/other.spec.ts': 'import { test } from "@playwright/test";\n',
+      });
+
+      const targets = await atomizedTargets();
+
+      expect(targets['e2e-ci--tests/feature.spec.ts'].inputs).toEqual(
+        scopedInputs
+      );
+      expect(targets['e2e-ci--tests/feature.spec.ts'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve', inputs: false },
+        { target: 'e2e--wait-for-webserver' },
+      ]);
+      // Files without the directive keep today's targets exactly.
+      expect(targets['e2e-ci--tests/other.spec.ts'].inputs).toEqual(
+        targets['e2e-ci'].inputs
+      );
+      expect(targets['e2e-ci--tests/other.spec.ts'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+        { target: 'e2e--wait-for-webserver' },
+      ]);
+    });
+
+    it('only scopes the inputs when Playwright starts the server itself', async () => {
+      await mockPlaywrightConfig(tempFs, { testDir: 'tests' });
+      await tempFs.createFiles({
+        'tests/feature.spec.ts': '// @nx-depends-on: feature, feature-utils\n',
+      });
+
+      const targets = await atomizedTargets();
+
+      expect(targets['e2e-ci--tests/feature.spec.ts'].inputs).toEqual(
+        scopedInputs
+      );
+      expect(
+        targets['e2e-ci--tests/feature.spec.ts'].dependsOn
+      ).toBeUndefined();
+    });
+
+    it('ignores a directive that lists no projects, with a warning naming the spec', async () => {
+      await mockPlaywrightConfig(tempFs, {
+        testDir: 'tests',
+        webServer: {
+          command: 'npx nx run app1:serve',
+          port: 4200,
+          reuseExistingServer: true,
+        },
+      });
+      await tempFs.createFiles({
+        'tests/feature.spec.ts': '// @nx-depends-on:\n',
+      });
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const targets = await atomizedTargets();
+
+        expect(targets['e2e-ci--tests/feature.spec.ts'].inputs).toEqual(
+          targets['e2e-ci'].inputs
+        );
+        expect(targets['e2e-ci--tests/feature.spec.ts'].dependsOn).toEqual([
+          { projects: ['app1'], target: 'serve' },
+          { target: 'e2e--wait-for-webserver' },
+        ]);
+        expect(warn).toHaveBeenCalledWith(
+          'tests/feature.spec.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.'
+        );
+      } finally {
+        warn.mockRestore();
+      }
+    });
   });
 
   it('resolves the serve dependency under the task env even when waitForWebServer is false', async () => {

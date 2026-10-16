@@ -110,6 +110,44 @@ describe('computeAffectedTasks', () => {
     ]);
   });
 
+  // `e2e` has no graph edges; it reaches `lib` only through `app`'s dependencies.
+  it.each([
+    ['packages/nx/src/index.ts', ['app:test', 'e2e:test', 'lib:test']],
+    ['packages/js/src/index.ts', ['app:test']],
+  ])(
+    "follows a project selection's dependencies to %s",
+    async (file, expected) => {
+      const projectGraph = graph();
+      projectGraph.nodes.e2e = {
+        name: 'e2e',
+        type: 'e2e',
+        data: {
+          root: 'packages/devkit',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: [
+                { input: 'production', projects: 'app', dependencies: true },
+              ],
+            },
+          },
+        },
+      };
+      projectGraph.dependencies.e2e = [];
+      const result = await computeAffectedTasks({
+        projectGraph,
+        nxJson: {
+          namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        } as any,
+        targets: ['test'],
+        touchedFiles: [
+          { file, getChanges: () => [new WholeFileChange()] },
+        ] as any,
+      });
+      expect([...result.affectedTaskIds].sort()).toEqual(expected);
+    }
+  );
+
   /**
    * ProjectConfiguration is spliced into a consumer's plan for each dependency
    * and is real hash entropy, but it resolves to no files, so nothing in the
@@ -667,13 +705,10 @@ describe('a continuous dependency with inputs: false', () => {
   it('still selects the dependent through its own inputs and runs the server', async () => {
     const result = await select(false, 'packages/workspace/src/index.ts');
     expect([...result.affectedTaskIds]).toEqual(['e2e:e2e']);
-    expect(result.taskGraph.continuousDependencies['e2e:e2e']).toEqual([
-      'app:serve',
-    ]);
     // The run hashes from this graph, so it must keep the opt-out.
-    expect(result.taskGraph.continuousDependenciesWithoutInputs).toEqual({
-      'e2e:e2e': ['app:serve'],
-    });
+    expect(result.taskGraph.continuousDependencies['e2e:e2e']).toEqual([
+      { id: 'app:serve', inputs: false },
+    ]);
   });
 });
 
@@ -876,6 +911,58 @@ describe('selection with Ultracache configurations', () => {
       withConfigurations.taskSelection.ultracacheConfigurationOutcome
     ).toBe(outcome);
   });
+
+  // app:test's recording never read lib's files, so its declared ^production
+  // stops selecting it, unless the dependency input is kept.
+  it.each([
+    ['a plain dependency input', '^production', 'static', ['lib:test']],
+    [
+      'an always dependency input',
+      { input: 'production', dependencies: true, always: true },
+      'static',
+      ['app:test', 'lib:test'],
+    ],
+  ])(
+    'selects a recorded dependent through %s',
+    async (_, dependencyInput, edgeType, expected) => {
+      const commit = 'head'.padEnd(40, '1');
+      const db = connectToNxDb(dir, 'ultracache');
+      new UltracacheConfigurationStore(db).import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify({
+          'app:test': {
+            commit,
+            inputs: ['packages/js/src/index.ts'],
+            outputs: [],
+          },
+        }),
+      });
+      const projectGraph = graph();
+      projectGraph.nodes.app.data.targets.test.inputs = [
+        '{projectRoot}/src/**/*',
+        dependencyInput,
+      ];
+      projectGraph.dependencies.app[0].type = edgeType as any;
+      const result = await computeAffectedTasks({
+        projectGraph,
+        nxJson: {
+          namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        } as any,
+        targets: ['test'],
+        touchedFiles: [
+          {
+            file: 'packages/nx/src/index.ts',
+            getChanges: () => [new WholeFileChange()],
+          },
+        ] as any,
+        ultracacheConfigurationOutcome: {
+          status: 'fetched',
+          configurations: new UltracacheConfigurationStore(db).get(commit),
+        } as any,
+      });
+      expect([...result.affectedTaskIds].sort()).toEqual(expected);
+    }
+  );
 });
 
 describe('tasks with a custom hasher', () => {

@@ -52,6 +52,53 @@ describe('retrieve-workspace-files', () => {
       expect(configPaths).not.toContain('not-projects/project.json');
       expect(configPaths).toContain('projects/project.json');
     });
+
+    it('should glob only the include patterns of a scoped plugin', async () => {
+      // Own workspace: the shared one's file context predates these files.
+      const scopedFs = new TempFs('retrieveProjectConfigurationPaths-scoped');
+      await scopedFs.createFiles({
+        'apps/api/package.json': '{}',
+        'apps/api/src/main.ts': '',
+        'apps/api/src/other.ts': '',
+        'apps/web/src/main.ts': '',
+        'libs/a/src/index.ts': '',
+      });
+
+      const configPaths = await retrieveProjectConfigurationPaths(
+        scopedFs.tempDir,
+        [
+          {
+            name: 'scoped',
+            include: [
+              'apps/api/{package.json,src/main.{ts,js}}',
+              'libs/*/README.md',
+            ],
+            createNodes: ['{**/*.ts,**/package.json}', async () => []],
+          },
+          {
+            name: 'negated',
+            include: ['apps/*/src/main.ts', '!apps/api/**'],
+            createNodes: ['**/main.ts', async () => []],
+          },
+          {
+            name: 'broad',
+            include: ['libs/**/*'],
+            createNodes: ['**/index.ts', async () => []],
+          },
+        ]
+      );
+
+      expect(configPaths.sort()).toEqual([
+        // scoped: include results that also match the plugin pattern
+        'apps/api/package.json',
+        'apps/api/src/main.ts',
+        // negated and broad: plugin pattern only; include is applied later
+        'apps/api/src/main.ts',
+        'apps/web/src/main.ts',
+        'libs/a/src/index.ts',
+      ]);
+      scopedFs.cleanup();
+    });
   });
 
   describe('retrieveProjectConfigurations', () => {

@@ -1,6 +1,6 @@
 import { defaultMaxListeners } from 'events';
 import type { OutputStyle } from '../command-line/yargs-utils/shared-options';
-import { statSync, writeFileSync } from 'fs';
+import { appendFileSync, statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import * as pc from 'picocolors';
@@ -24,6 +24,7 @@ import {
   RunningTasksService,
   TaskDetails,
   TaskInvocationTracker,
+  TaskReadiness,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { getLocalDbConnection } from '../utils/db-connection';
@@ -54,6 +55,16 @@ import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { terminalOutputPathForHash } from './terminal-output-path';
 import { PseudoTtyProcess } from './pseudo-terminal';
+import { waitForReadiness } from './readiness/probes';
+import {
+  getReadyProducerIds,
+  getReadyWhen,
+  NotReadyError,
+  notReadyError,
+  ProducerFailedError,
+  readinessTimeoutError,
+  type NormalizedReadyWhen,
+} from './readiness/ready-when';
 import { BatchProcess } from './running-tasks/batch-process';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
@@ -106,6 +117,40 @@ function hasContent(path: string): boolean {
   }
 }
 
+interface ReadinessState {
+  promise: Promise<void>;
+  resolve: () => void;
+  reject: (error: Error) => void;
+  settled: boolean;
+  abort: AbortController;
+}
+
+function createReadinessState(
+  onSettled: (outcome: 'ready' | 'failed') => void
+): ReadinessState {
+  const state = {
+    settled: false,
+    abort: new AbortController(),
+  } as ReadinessState;
+  state.promise = new Promise<void>((resolve, reject) => {
+    state.resolve = () => {
+      if (state.settled) return;
+      state.settled = true;
+      resolve();
+      onSettled('ready');
+    };
+    state.reject = (error) => {
+      if (state.settled) return;
+      state.settled = true;
+      reject(error);
+      onSettled('failed');
+    };
+  });
+  // A producer with no waiter still settles; that must not be unhandled
+  state.promise.catch(() => {});
+  return state;
+}
+
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
@@ -139,7 +184,13 @@ export class TaskOrchestrator {
     this.projectGraph,
     this.projects,
     this.taskGraph,
-    this.options
+    this.options,
+    this.fullTaskGraph,
+    {
+      readinessElsewhere: (producerId) =>
+        this.runningTasksService?.getTaskReadiness(producerId) ?? null,
+      onReadinessHold: (producerId) => this.onReadinessHold(producerId),
+    }
   );
 
   // region internal state
@@ -206,6 +257,14 @@ export class TaskOrchestrator {
   >();
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
+  // Keyed by producer id: a producer this process started or shares
+  private readiness = new Map<string, ReadinessState>();
+  // Producers that failed their check while still running: the exit must not
+  // report them again, and the saved log gets the reason after the transcript
+  private readinessFailures = new Map<string, Promise<void>>();
+  private readinessFailureReasons = new Map<string, string>();
+  private readinessSettled = false;
+  private waitingLogged = new Set<string>();
   private cleanupPromise: Promise<void> | null = null;
   private signalHandlers: Array<[NodeJS.Signals, () => void]> = [];
   // Tasks whose runner already owns the write to
@@ -233,7 +292,7 @@ export class TaskOrchestrator {
     private readonly resolvedOutputStyle: OutputStyle,
     private readonly fullTaskGraph: TaskGraph = taskGraph,
     /** Tasks the up-front pass left to hash once the tasks they read from have run. */
-    private readonly deferredTaskIds?: ReadonlySet<string>
+    private readonly hashingDeferredTaskIds?: ReadonlySet<string>
   ) {}
 
   async init() {
@@ -344,6 +403,8 @@ export class TaskOrchestrator {
     while (true) {
       if (this.bailed || this.stopRequested) break;
 
+      await this.scheduleAfterReadiness();
+
       // 1. Hash BEFORE processAll so processTask sees hashes set, and so
       //    resolveCachedTasksBulk can look them up in the cache. Each task
       //    is hashed with its own task-specific env (project/target .env
@@ -357,8 +418,8 @@ export class TaskOrchestrator {
           .filter(
             (t) =>
               !t.hash &&
-              this.taskGraph.dependencies[t.id].every((depId) =>
-                this.completedTasks.has(depId)
+              this.taskGraph.dependencies[t.id].every(({ id }) =>
+                this.completedTasks.has(id)
               )
           );
         if (unhashed.length > 0) {
@@ -382,6 +443,10 @@ export class TaskOrchestrator {
       if (doNotSkipCache) {
         const resolved = await this.resolveCachedTasksBulk();
         if (resolved) continue;
+        // A pass from a continuous loop during the waits above may have
+        // admitted tasks this iteration never looked up; they must not reach
+        // step 5 without a confirmed miss
+        if (this.hasUnresolvedCacheableTask()) continue;
       }
 
       // 3. Process remaining scheduled tasks (cache misses + non-cacheable).
@@ -413,6 +478,9 @@ export class TaskOrchestrator {
       }
 
       // 7. Wait for a worker to finish (woken by scheduleNextTasksAndReleaseThreads)
+      // A verdict that landed during this iteration found nothing parked,
+      // so run its pass instead of parking
+      if (this.readinessSettled) continue;
       await new Promise((res) => this.waitingForTasks.push(res));
     }
   }
@@ -424,6 +492,7 @@ export class TaskOrchestrator {
         return null;
       }
 
+      await this.scheduleAfterReadiness();
       this.processAllScheduledTasks();
 
       const task = this.tasksSchedule.nextTask((t) => t.continuous);
@@ -450,7 +519,30 @@ export class TaskOrchestrator {
       }
 
       // block until some other task completes, then try again
+      if (this.readinessSettled) continue;
       await new Promise((res) => this.waitingForTasks.push(res));
+    }
+  }
+
+  private hasUnresolvedCacheableTask(): boolean {
+    return this.tasksSchedule
+      .getAllScheduledTasks()
+      .scheduledTasks.some((id) => {
+        const task = this.taskGraph.tasks[id];
+        return (
+          !task.continuous &&
+          task.cache &&
+          (!task.hash || !this.cacheMissedHashes.has(task.hash))
+        );
+      });
+  }
+
+  // A verdict releases tasks the schedule has not admitted yet. Whichever
+  // loop wakes first runs the pass; the coordinator may be inside a batch.
+  private async scheduleAfterReadiness() {
+    if (this.readinessSettled) {
+      this.readinessSettled = false;
+      await this.scheduleNextTasksAndReleaseThreads();
     }
   }
 
@@ -709,10 +801,13 @@ export class TaskOrchestrator {
   /**
    * Hash all batch tasks and resolve cache hits topologically.
    *
-   * Walks the task graph level by level. Every task gets a preliminary hash
-   * (so startTasks always has a valid hash for Cloud). Tasks the up-front
-   * pass deferred, whose deps weren't cached, are ineligible for cache lookup but still
-   * receive a preliminary hash — they'll be re-hashed after execution.
+   * Walks the task graph level by level. A deferred task (its hash reads
+   * another task's outputs) behind an upstream batch task that still has to
+   * run is never looked up yet:
+   * - behind a non-cacheable task only, it is held back for a later wave,
+   *   where it hashes after that task ran;
+   * - behind a cache miss, it runs in this wave and re-hashes after execution.
+   * Every task run in this wave gets a hash first, for Cloud's startTasks.
    */
   private async applyBatchCachedResults(
     batch: Batch,
@@ -720,40 +815,66 @@ export class TaskOrchestrator {
     groupId: number
   ): Promise<{
     cachedResults: TaskResult[];
-    needsRehashAfterExecution: Set<string>;
+    tasksToRun: Task[];
+    /** Run without a cache lookup; hash again once their inputs exist. */
+    rehashAfterRun: Set<string>;
   }> {
     const cachedResults: TaskResult[] = [];
-    const needsRehashAfterExecution = new Set<string>();
+    const rehashAfterRun = new Set<string>();
     const tasks = Object.values(batch.taskGraph.tasks);
 
     if (!doNotSkipCache) {
       // Cache skipped — just hash so startTasks has valid hashes
       await this.hashBatchTasks(tasks);
-      return { cachedResults, needsRehashAfterExecution };
+      return { cachedResults, tasksToRun: tasks, rehashAfterRun };
     }
 
-    const nonCachedTaskIds = new Set<string>();
+    const toRun = new Map<string, Task>();
+    // Neither restored nor run in this wave; a later wave picks them up.
+    const heldBack = new Set<string>();
+    // Tasks with a cache miss / a non-cacheable task upstream that still has
+    // to run in this wave.
+    const behindMiss = new Set<string>();
+    const behindUncacheable = new Set<string>();
+    const pending = (id: string, cacheable: boolean) =>
+      toRun.has(id) && !!toRun.get(id).cache === cacheable;
 
-    await walkTaskGraph(batch.taskGraph, async (rootTaskIds) => {
-      const rootTasks = rootTaskIds.map((id) => batch.taskGraph.tasks[id]);
+    await walkTaskGraph(batch.taskGraph, async (levelIds) => {
+      const runNow: Task[] = [];
+      const lookUp: Task[] = [];
+      for (const id of levelIds) {
+        const task = batch.taskGraph.tasks[id];
+        const deps = batch.taskGraph.dependencies[id].map((dep) => dep.id);
+        if (deps.some((dep) => heldBack.has(dep))) {
+          heldBack.add(id);
+          continue;
+        }
 
-      await this.hashBatchTasks(rootTasks);
+        const afterMiss = deps.some(
+          (dep) => behindMiss.has(dep) || pending(dep, true)
+        );
+        const afterUncacheable = deps.some(
+          (dep) => behindUncacheable.has(dep) || pending(dep, false)
+        );
+        if (afterMiss) behindMiss.add(id);
+        if (afterUncacheable) behindUncacheable.add(id);
 
-      const eligible: Task[] = [];
-      for (const task of rootTasks) {
-        const depIds = batch.taskGraph.dependencies[task.id];
-        const hasNonCachedDep = depIds.some((id) => nonCachedTaskIds.has(id));
-
-        if (hasNonCachedDep && this.deferredTaskIds?.has(task.id)) {
-          nonCachedTaskIds.add(task.id);
-          needsRehashAfterExecution.add(task.id);
+        const deferred = this.hashingDeferredTaskIds?.has(id);
+        if (deferred && afterMiss) {
+          runNow.push(task);
+          toRun.set(id, task);
+          rehashAfterRun.add(id);
+        } else if (deferred && afterUncacheable) {
+          heldBack.add(id);
         } else {
-          eligible.push(task);
+          lookUp.push(task);
         }
       }
 
-      if (eligible.length > 0) {
-        const cacheResults = await this.applyCachedResults(eligible);
+      await this.hashBatchTasks([...runNow, ...lookUp]);
+
+      if (lookUp.length > 0) {
+        const cacheResults = await this.applyCachedResults(lookUp);
         const cachedIds = new Set(cacheResults.map((r) => r.task.id));
         cachedResults.push(...cacheResults);
 
@@ -767,15 +888,15 @@ export class TaskOrchestrator {
           await this.postRunSteps(cacheResults, false, groupId);
         }
 
-        for (const task of eligible) {
+        for (const task of lookUp) {
           if (!cachedIds.has(task.id)) {
-            nonCachedTaskIds.add(task.id);
+            toRun.set(task.id, task);
           }
         }
       }
     });
 
-    return { cachedResults, needsRehashAfterExecution };
+    return { cachedResults, tasksToRun: [...toRun.values()], rehashAfterRun };
   }
 
   private async hashBatchTasks(tasks: Task[]): Promise<void> {
@@ -802,37 +923,98 @@ export class TaskOrchestrator {
     batch: Batch,
     groupId: number
   ): Promise<TaskResult[]> {
+    if (this.bailed || this.stopRequested) {
+      return [];
+    }
     const applyFromCacheOrRunBatchStart = performance.mark(
       'TaskOrchestrator-apply-from-cache-or-run-batch:start'
     );
-    const taskEntries = Object.entries(batch.taskGraph.tasks);
-    const tasks = taskEntries.map(([, task]) => task);
+    const taskIds = Object.keys(batch.taskGraph.tasks);
 
     this.options.lifeCycle.registerRunningBatch?.(batch.id, {
       executorName: batch.executorName,
-      taskIds: Object.keys(batch.taskGraph.tasks),
+      taskIds,
     });
 
-    const { cachedResults, needsRehashAfterExecution } =
-      await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
-
-    // Schedule and start non-cached tasks (cached tasks were already
-    // started and completed inside applyBatchCachedResults)
-    const cachedTaskIds = new Set(cachedResults.map((r) => r.task.id));
-    const nonCachedTasks = tasks.filter((t) => !cachedTaskIds.has(t.id));
-    if (nonCachedTasks.length > 0) {
-      await Promise.all(
-        nonCachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
+    // Each wave restores or runs what it can; tasks held back for a later
+    // wave (or left out by the executor) stay incomplete and go again.
+    const results: TaskResult[] = [];
+    let taskGraph = batch.taskGraph;
+    while (
+      Object.keys(taskGraph.tasks).length > 0 &&
+      !this.bailed &&
+      !this.stopRequested
+    ) {
+      results.push(
+        ...(await this.runBatchWave(
+          doNotSkipCache,
+          { ...batch, taskGraph },
+          groupId
+        ))
       );
-      await this.preRunSteps(nonCachedTasks, { groupId });
+      this.forkedProcessTaskRunner.cleanUpBatchProcesses();
+      taskGraph = removeTasksFromTaskGraph(
+        taskGraph,
+        Object.keys(taskGraph.tasks).filter((id) => this.completedTasks.has(id))
+      );
     }
 
-    // Phase 2: Run non-cached tasks, then re-hash tasks that read their outputs
-    const taskIdsToSkip = cachedResults.map((r) => r.task.id);
+    // Once, after every wave: an earlier status would end the batch in the TUI.
+    const hasFailures = taskIds.some((taskId) => {
+      const status = this.completedTasks.get(taskId);
+      return status === 'failure' || status === 'skipped';
+    });
+    this.options.lifeCycle.setBatchStatus?.(
+      batch.id,
+      hasFailures ? BatchStatus.Failure : BatchStatus.Success
+    );
+
+    const applyFromCacheOrRunBatchEnd = performance.mark(
+      'TaskOrchestrator-apply-from-cache-or-run-batch:end'
+    );
+    performance.measure(
+      'TaskOrchestrator-apply-from-cache-or-run-batch',
+      applyFromCacheOrRunBatchStart.name,
+      applyFromCacheOrRunBatchEnd.name
+    );
+    return results;
+  }
+
+  private async runBatchWave(
+    doNotSkipCache: boolean,
+    batch: Batch,
+    groupId: number
+  ): Promise<TaskResult[]> {
+    const tasks = Object.values(batch.taskGraph.tasks);
+
+    const {
+      cachedResults,
+      tasksToRun: wave,
+      rehashAfterRun,
+    } = await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
+
+    // Cached tasks were started and completed inside applyBatchCachedResults;
+    // a member skipped meanwhile (a dependency failed) must not run either
+    const tasksToRun = wave.filter((t) => !this.completedTasks.has(t.id));
+    if (tasksToRun.length > 0) {
+      await Promise.all(
+        tasksToRun.map((task) => this.options.lifeCycle.scheduleTask(task))
+      );
+      await this.preRunSteps(tasksToRun, { groupId });
+    }
+
+    // Phase 2: Run this wave's tasks, then re-hash those run without a lookup
     let batchResults: TaskResult[] = [];
 
-    if (taskIdsToSkip.length < tasks.length) {
-      const runGraph = removeTasksFromTaskGraph(batch.taskGraph, taskIdsToSkip);
+    // Read again: a member can be skipped while the hooks above ran
+    const runIds = new Set(
+      tasksToRun.filter((t) => !this.completedTasks.has(t.id)).map((t) => t.id)
+    );
+    if (runIds.size > 0) {
+      const runGraph = removeTasksFromTaskGraph(
+        batch.taskGraph,
+        tasks.filter((t) => !runIds.has(t.id)).map((t) => t.id)
+      );
 
       for (const task of Object.values(runGraph.tasks)) {
         this.detectTaskInvocationLoop(task);
@@ -852,7 +1034,7 @@ export class TaskOrchestrator {
       const tasksToRehash = batchResults
         .filter(
           (r) =>
-            needsRehashAfterExecution.has(r.task.id) &&
+            rehashAfterRun.has(r.task.id) &&
             (r.status === 'success' || r.status === 'failure')
         )
         .map((r) => r.task);
@@ -871,46 +1053,6 @@ export class TaskOrchestrator {
       await this.postRunSteps(batchResults, doNotSkipCache, groupId);
     }
 
-    // Update batch status based on all task results
-    const hasFailures = taskEntries.some(([taskId]) => {
-      const status = this.completedTasks.get(taskId);
-      return status === 'failure' || status === 'skipped';
-    });
-    this.options.lifeCycle.setBatchStatus?.(
-      batch.id,
-      hasFailures ? BatchStatus.Failure : BatchStatus.Success
-    );
-
-    this.forkedProcessTaskRunner.cleanUpBatchProcesses();
-
-    const tasksCompleted = taskEntries.filter(([taskId]) =>
-      this.completedTasks.has(taskId)
-    );
-
-    // Batch is still not done, run it again
-    if (tasksCompleted.length !== taskEntries.length) {
-      await this.applyFromCacheOrRunBatch(
-        doNotSkipCache,
-        {
-          id: batch.id,
-          executorName: batch.executorName,
-          taskGraph: removeTasksFromTaskGraph(
-            batch.taskGraph,
-            tasksCompleted.map(([taskId]) => taskId)
-          ),
-        },
-        groupId
-      );
-    }
-    // Batch is done, mark it as completed
-    const applyFromCacheOrRunBatchEnd = performance.mark(
-      'TaskOrchestrator-apply-from-cache-or-run-batch:end'
-    );
-    performance.measure(
-      'TaskOrchestrator-apply-from-cache-or-run-batch',
-      applyFromCacheOrRunBatchStart.name,
-      applyFromCacheOrRunBatchEnd.name
-    );
     return [...cachedResults, ...batchResults];
   }
 
@@ -1337,8 +1479,7 @@ export class TaskOrchestrator {
         // Wake coordinator — the delete above may satisfy the exit condition
         // (pendingDiscreteWorkers.size === 0) that was missed when
         // scheduleNextTasksAndReleaseThreads fired earlier.
-        this.waitingForTasks.forEach((f) => f(null));
-        this.waitingForTasks.length = 0;
+        this.releaseThreads();
       });
     this.pendingDiscreteWorkers.add(worker);
   }
@@ -1375,9 +1516,9 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Spawn and wait on a task's child process, unconditionally — no cache
-   * lookup. Callers must have already confirmed the task is a cache miss
-   * (or disabled caching entirely).
+   * Spawn and wait on a task's child process once its ready dependencies are
+   * ready, with no cache lookup. Callers must have already confirmed the task
+   * is a cache miss (or disabled caching entirely).
    */
   async runTaskDirectly(
     doNotSkipCache: boolean,
@@ -1386,6 +1527,35 @@ export class TaskOrchestrator {
   ): Promise<TaskResult> {
     // Wait for task to be processed
     const taskSpecificEnv = await this.processedTasks.get(task.id);
+
+    const waitError: Error | null = await this.waitForReadyDependencies(
+      task
+    ).then(
+      () => null,
+      (e) => e
+    );
+    // Skipped by a failed dependency's propagation while waiting
+    if (this.completedTasks.has(task.id)) {
+      return {
+        task,
+        code: 1,
+        status: this.completedTasks.get(task.id),
+        terminalOutput: '',
+      };
+    }
+    if (waitError instanceof ProducerFailedError) {
+      await this.skipWaiter(task, groupId);
+      return { task, code: 1, status: 'skipped', terminalOutput: '' };
+    }
+    if (waitError) {
+      await this.failTaskBeforeStart(task, groupId, waitError, doNotSkipCache);
+      return {
+        task,
+        code: 1,
+        status: 'failure',
+        terminalOutput: waitError.message,
+      };
+    }
 
     await this.preRunSteps([task], { groupId });
 
@@ -1685,6 +1855,12 @@ export class TaskOrchestrator {
       this.runningTasksService &&
       this.runningTasksService.getRunningTasks([task.id]).length
     ) {
+      let readyWhen: NormalizedReadyWhen | null;
+      try {
+        readyWhen = this.getReadyWhen(task);
+      } catch (e) {
+        return this.failTaskBeforeStart(task, groupId, e);
+      }
       await this.preRunSteps([task], { groupId });
 
       if (this.tuiEnabled) {
@@ -1695,6 +1871,17 @@ export class TaskOrchestrator {
         this.runningTasksService,
         task.id
       );
+      if (readyWhen) {
+        const state = this.armReadiness(task.id);
+        this.pollReadinessRow(task, readyWhen, state.abort.signal, true).then(
+          () => {
+            if (!state.abort.signal.aborted) state.resolve();
+          },
+          (e) => {
+            if (!state.abort.signal.aborted) this.failReadiness(task, state, e);
+          }
+        );
+      }
 
       this.runningContinuousTasks.set(task.id, {
         runningTask,
@@ -1713,6 +1900,7 @@ export class TaskOrchestrator {
 
       // task is already running by another process, we schedule the next tasks
       // and release the threads
+      this.tasksSchedule.markContinuousTaskStarted(task.id);
       await this.scheduleNextTasksAndReleaseThreads();
       return runningTask;
     }
@@ -1723,9 +1911,28 @@ export class TaskOrchestrator {
     // duplicate of it.
     this.runningTasksService?.addRunningTask(task.id);
 
+    let taskSpecificEnv: NodeJS.ProcessEnv;
+    let readyWhen: NormalizedReadyWhen | null;
+    try {
+      taskSpecificEnv = await this.processedTasks.get(task.id);
+      readyWhen = this.getReadyWhen(task);
+      await this.waitForReadyDependencies(task);
+    } catch (e) {
+      this.runningTasksService?.removeRunningTask(task.id);
+      if (e instanceof ProducerFailedError) {
+        await this.skipWaiter(task, groupId);
+        return new NoopChildProcess({ code: 1, terminalOutput: '' });
+      }
+      return this.failTaskBeforeStart(task, groupId, e);
+    }
+    // Skipped by a failed dependency's propagation while waiting
+    if (this.completedTasks.has(task.id)) {
+      this.runningTasksService?.removeRunningTask(task.id);
+      return new NoopChildProcess({ code: 1, terminalOutput: '' });
+    }
+
     let childProcess: RunningTask;
     try {
-      const taskSpecificEnv = await this.processedTasks.get(task.id);
       await this.preRunSteps([task], { groupId });
 
       const pipeOutput = await this.pipeOutputCapture(task);
@@ -1768,6 +1975,10 @@ export class TaskOrchestrator {
         temporaryOutputPath,
         pipeOutput
       );
+      this.tasksSchedule.markContinuousTaskStarted(task.id);
+      if (readyWhen) {
+        this.startReadinessProbe(task, readyWhen, childProcess);
+      }
       this.runningContinuousTasks.set(task.id, {
         runningTask: childProcess,
         groupId,
@@ -1799,6 +2010,235 @@ export class TaskOrchestrator {
   }
 
   // endregion Single Task
+
+  // region Readiness
+  private getReadyWhen(task: Task): NormalizedReadyWhen | null {
+    return getReadyWhen(task, this.projectGraph, this.projects, workspaceRoot);
+  }
+
+  private async waitForReadyDependencies(task: Task): Promise<void> {
+    const producerIds = getReadyProducerIds(task, this.fullTaskGraph);
+    for (const producerId of producerIds) {
+      const producer = this.fullTaskGraph.tasks[producerId];
+      const readyWhen = this.getReadyWhen(producer);
+      if (!readyWhen) {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
+          console.log(
+            `Task "${producer.id}" declares no "readyWhen", so "${task.id}" runs once it has started.`
+          );
+        }
+        continue;
+      }
+      // A producer in this task graph is held by dispatch and settled by its
+      // probe or row poll; one outside it (an agent's flat graph) has only its row
+      if (this.taskGraph.tasks[producerId]) {
+        await this.readinessOf(producerId).promise;
+      } else {
+        this.onReadinessHold(producerId);
+        await this.pollReadinessRow(producer, readyWhen);
+      }
+    }
+  }
+
+  private onReadinessHold(producerId: string) {
+    if (
+      !this.waitingLogged.has(producerId) &&
+      !this.tuiEnabled &&
+      printsTaskOutput(this.resolvedOutputStyle)
+    ) {
+      this.waitingLogged.add(producerId);
+      console.log(`Waiting for "${producerId}" to be ready...`);
+    }
+  }
+
+  // A row absent from the start means no Nx process this one can see owns the
+  // producer, unless the caller already saw the owner: then it exited. A row
+  // that disappears mid-wait means the producer exited.
+  private async pollReadinessRow(
+    producer: Task,
+    readyWhen: NormalizedReadyWhen,
+    signal?: AbortSignal,
+    ownerObserved = false
+  ): Promise<void> {
+    const deadline = Date.now() + readyWhen.timeout;
+    let lastStatus: TaskReadiness | null = null;
+    while (true) {
+      if (signal?.aborted) {
+        throw notReadyError(producer.id, 'exited');
+      }
+      if (this.stopRequested || this.bailed) {
+        throw notReadyError(producer.id, 'was stopped');
+      }
+      const status =
+        this.runningTasksService?.getTaskReadiness(producer.id) ?? null;
+      if (status === null) {
+        if (lastStatus !== null || ownerObserved) {
+          throw notReadyError(producer.id, 'exited');
+        }
+        return;
+      }
+      if (status !== lastStatus) {
+        lastStatus = status;
+        this.options.lifeCycle.setTaskReadiness?.(producer.id, status);
+      }
+      if (status === TaskReadiness.Ready) {
+        return;
+      }
+      if (status === TaskReadiness.Failed) {
+        throw new ProducerFailedError(producer.id);
+      }
+      if (Date.now() >= deadline) {
+        throw readinessTimeoutError(producer.id, readyWhen);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+
+  private startReadinessProbe(
+    task: Task,
+    readyWhen: NormalizedReadyWhen,
+    runningTask: RunningTask
+  ) {
+    const state = this.armReadiness(task.id);
+    this.options.lifeCycle.setTaskReadiness?.(task.id, TaskReadiness.Pending);
+    waitForReadiness(readyWhen, {
+      taskId: task.id,
+      runningTask,
+      cwd: workspaceRoot,
+      signal: state.abort.signal,
+    }).then(
+      () => {
+        if (state.abort.signal.aborted) return;
+        this.recordReadiness(task, TaskReadiness.Ready);
+        state.resolve();
+      },
+      (e) => {
+        if (state.abort.signal.aborted) return;
+        this.recordReadiness(task, TaskReadiness.Failed);
+        this.failReadiness(task, state, e);
+      }
+    );
+  }
+
+  // A verdict against a producer something in this run waits for fails the
+  // producer, and the skip propagation covers the waiters. Without a waiter
+  // the producer is left alone, as a plain `nx serve` with a probe would be.
+  private async failReadiness(task: Task, state: ReadinessState, e: any) {
+    const message = e?.message ?? String(e);
+    const entry = this.runningContinuousTasks.get(task.id);
+    if (
+      entry &&
+      !(e instanceof NotReadyError) &&
+      this.hasReadyWaiter(task.id)
+    ) {
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.appendTaskOutput(
+          task.id,
+          `\r\n${message}\r\n`,
+          false
+        );
+      } else {
+        console.error(message);
+      }
+      this.readinessFailureReasons.set(task.id, message);
+      const completion = this.complete(
+        [{ task, status: 'failure', terminalOutput: message }],
+        entry.groupId
+      );
+      this.readinessFailures.set(task.id, completion);
+      try {
+        await completion;
+      } finally {
+        this.readinessFailures.delete(task.id);
+      }
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(message);
+    }
+    state.reject(e);
+  }
+
+  // On an agent the waiter runs in another process with its own flat graph
+  private hasReadyWaiter(producerId: string): boolean {
+    return Object.values(this.fullTaskGraph.tasks).some((task) =>
+      getReadyProducerIds(task, this.fullTaskGraph).includes(producerId)
+    );
+  }
+
+  // The producer is not in this task graph, so no skip propagates to the waiter
+  private async skipWaiter(task: Task, groupId: number) {
+    if (!this.completedTasks.has(task.id)) {
+      await this.complete([{ task, status: 'skipped' }], groupId);
+    }
+  }
+
+  // The probe's verdict stands for local waiters even when the row for
+  // other processes cannot be written
+  private recordReadiness(task: Task, status: TaskReadiness) {
+    this.options.lifeCycle.setTaskReadiness?.(task.id, status);
+    try {
+      this.runningTasksService?.setTaskReadiness(task.id, status);
+    } catch (e) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(`Failed to record readiness of "${task.id}":`, e);
+      }
+    }
+  }
+
+  private readinessOf(taskId: string): ReadinessState {
+    return this.readiness.get(taskId) ?? this.armReadiness(taskId);
+  }
+
+  // Replaces a state settled by an earlier run so a restart re-arms it
+  private armReadiness(taskId: string): ReadinessState {
+    let state = this.readiness.get(taskId);
+    if (!state || state.settled) {
+      this.tasksSchedule.markReadinessPending(taskId);
+      state = createReadinessState((outcome) => {
+        if (outcome === 'ready') {
+          this.tasksSchedule.markReady(taskId);
+        } else {
+          this.tasksSchedule.markReadinessFailed(taskId);
+        }
+        this.readinessSettled = true;
+        this.releaseThreads();
+      });
+      this.readiness.set(taskId, state);
+    }
+    return state;
+  }
+
+  private abortReadiness(
+    taskId: string,
+    reason: 'exited' | 'was stopped' | 'failed'
+  ) {
+    const state = this.readiness.get(taskId);
+    if (!state) return;
+    state.abort.abort();
+    state.reject(notReadyError(taskId, reason));
+  }
+
+  private abortAllReadiness() {
+    for (const taskId of this.readiness.keys()) {
+      this.abortReadiness(taskId, 'was stopped');
+    }
+  }
+
+  private async failTaskBeforeStart(
+    task: Task,
+    groupId: number,
+    e: any,
+    doNotSkipCache = false
+  ): Promise<RunningTask> {
+    this.abortReadiness(task.id, 'failed');
+    // Already skipped by a failed dependency's propagation
+    if (!this.completedTasks.has(task.id)) {
+      // Lifecycles pair endTasks with startTasks, so start it before failing it
+      await this.preRunSteps([task], { groupId });
+      await this.handleDiscreteWorkerFailure(doNotSkipCache, task, groupId, e);
+    }
+    return new NoopChildProcess({ code: 1, terminalOutput: e?.message ?? '' });
+  }
+  // endregion Readiness
 
   // region Lifecycle
   private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
@@ -1988,7 +2428,13 @@ export class TaskOrchestrator {
   private recordContinuousTerminalOutput(task: Task) {
     if (!task.hash) return;
     try {
-      const { size } = statSync(this.cache.temporaryOutputPath(task));
+      const outputPath = this.cache.temporaryOutputPath(task);
+      // The runner's exit handler wrote the child's transcript alone
+      const reason = this.readinessFailureReasons.get(task.id);
+      if (reason) {
+        appendFileSync(outputPath, `\n${reason}\n`);
+      }
+      const { size } = statSync(outputPath);
       this.cache.recordTerminalOutputs([{ hash: task.hash, size }]);
     } catch {
       // Exit handler: a throw here would be an unhandled rejection.
@@ -1997,14 +2443,15 @@ export class TaskOrchestrator {
 
   private async scheduleNextTasksAndReleaseThreads() {
     if (this.stopRequested) {
-      this.waitingForTasks.forEach((f) => f(null));
-      this.waitingForTasks.length = 0;
+      this.releaseThreads();
       return;
     }
 
     await this.tasksSchedule.scheduleNextTasks();
+    this.releaseThreads();
+  }
 
-    // release blocked threads
+  private releaseThreads() {
     this.waitingForTasks.forEach((f) => f(null));
     this.waitingForTasks.length = 0;
   }
@@ -2092,6 +2539,7 @@ export class TaskOrchestrator {
           // mark the execution as bailed which will stop all further execution
           // only the tasks that are currently running will finish
           this.bailed = true;
+          this.abortAllReadiness();
         } else {
           // Collect reverse deps to skip
           for (const depTaskId of this.reverseTaskDeps[task.id]) {
@@ -2125,6 +2573,11 @@ export class TaskOrchestrator {
   private async pipeOutputCapture(task: Task) {
     try {
       if (process.env.NX_NATIVE_COMMAND_RUNNER !== 'false') {
+        return true;
+      }
+
+      // The log probe reads the captured output
+      if (this.getReadyWhen(task)?.kind === 'logMatches') {
         return true;
       }
 
@@ -2199,8 +2652,15 @@ export class TaskOrchestrator {
     groupId: number,
     ownsRunningTasksService: boolean
   ) {
-    // If cleanup already completed this task, nothing left to do
+    await this.readinessFailures.get(task.id);
+    // Completed by cleanup, or failed its readiness check while still running
     if (this.completedTasks.has(task.id)) {
+      if (
+        this.runningContinuousTasks.delete(task.id) &&
+        ownsRunningTasksService
+      ) {
+        this.runningTasksService?.removeRunningTask(task.id);
+      }
       return;
     }
 
@@ -2242,7 +2702,9 @@ export class TaskOrchestrator {
     return this.tasksSchedule
       .getIncompleteTasks()
       .some((t) =>
-        this.taskGraph.continuousDependencies[t.id]?.includes(taskId)
+        this.taskGraph.continuousDependencies[t.id]?.some(
+          (edge) => edge.id === taskId
+        )
       );
   }
 
@@ -2252,12 +2714,16 @@ export class TaskOrchestrator {
     ownsRunningTasksService: boolean,
     reason: 'fulfilled' | 'interrupted' | 'crashed'
   ) {
-    if (this.completedTasks.has(task.id)) return;
-
+    await this.readinessFailures.get(task.id);
     this.runningContinuousTasks.delete(task.id);
     if (ownsRunningTasksService) {
       this.runningTasksService?.removeRunningTask(task.id);
     }
+    // A probe that does not need the child (url, port, command) could still
+    // pass during completion and release dependents of an exited producer
+    this.readiness.get(task.id)?.abort.abort();
+    // Failed its readiness check while still running
+    if (this.completedTasks.has(task.id)) return;
 
     task.endTime = Date.now();
     if (reason === 'fulfilled') {
@@ -2276,6 +2742,11 @@ export class TaskOrchestrator {
     } else {
       await this.complete([{ task, status: 'stopped' }], groupId);
     }
+    // After the skip propagation above, so a waiter is reported as skipped
+    // rather than as failed
+    this.abortReadiness(task.id, 'exited');
+    // Skipped dependents leave nothing in flight to wake the loops
+    this.releaseThreads();
   }
 
   private async cleanup() {
@@ -2287,6 +2758,9 @@ export class TaskOrchestrator {
   }
 
   private async performCleanup() {
+    // Waiters must not sit out a probe once the run is stopping
+    this.abortAllReadiness();
+
     // Mark all running tasks for intentional stop
     const reason = this.stopRequested ? 'interrupted' : 'fulfilled';
     for (const entry of this.runningContinuousTasks.values()) {
@@ -2441,7 +2915,7 @@ export class TaskOrchestrator {
       const continuousDependencies =
         this.taskGraph.continuousDependencies[task.id];
       for (const continuousDependency of continuousDependencies) {
-        neededContinuousTasks.add(continuousDependency);
+        neededContinuousTasks.add(continuousDependency.id);
       }
     }
 

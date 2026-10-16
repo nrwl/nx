@@ -20,6 +20,7 @@ import {
 } from './clean-retry';
 import {
   acquireTreeOperation,
+  BROKER_ENV_VAR,
   BrokerStaleRequestError,
   BrokerUnavailableError,
   commitStepTree,
@@ -27,6 +28,7 @@ import {
   installStepTree,
   resetStepTree,
   liveTreeOperation,
+  sessionOperationWayOut,
   TreeBusyError,
   treeBusyMessage,
   treeOperationLabel,
@@ -89,7 +91,6 @@ import {
   writeRunState,
   CURRENT_RUN_STATE_FORMAT_VERSION,
   RUN_STATE_FILE_NAME,
-  SHELL_SAFE_VALUE,
   type MigrateCommitLedgerEntry,
   type MigrateRunNoProgress,
   type MigrateRunPolicy,
@@ -97,7 +98,9 @@ import {
   type MigrateStep,
   type MigrateStepPromptOutcome,
   type MigrateTreeOperation,
+  type MigrationIdProblem,
   TERMINAL_STEP_STATUSES,
+  migrationIdProblems,
 } from './run-state';
 import {
   hasAnyLiveRunActivity,
@@ -118,7 +121,6 @@ import {
   commitResultToLedgerEntry,
   completionSummaryLines,
   coveringLandedEntries,
-  hasPendingCommitDebt,
   latestRound,
   markInstallFailed,
   commitNameForStep,
@@ -195,7 +197,7 @@ import {
 } from './existing-run-report';
 import { detectPackageManager } from '../../../utils/package-manager';
 
-// The dark migrate orchestrator: drives a durable run one dispense at a time.
+// The migrate orchestrator: drives a durable run one dispense at a time.
 // An outer AI agent runs each dispensed command and re-invokes `nx migrate
 // --run-id=<id>` to reconcile; there is no long-lived process.
 
@@ -270,7 +272,14 @@ export interface RunOrchestratorReconcileInput {
 }
 
 const INIT_CONTINUE_HINT =
-  're-run the command, or unset NX_MIGRATE_ORCHESTRATOR to use the standard migrate flow.';
+  're-run the command, or re-run it with --agentic=false to use the standard migrate flow.';
+
+const ID_PROBLEM_REFUSALS: Record<MigrationIdProblem, string> = {
+  'not-shell-safe':
+    'contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids.',
+  duplicate:
+    'is listed more than once in the plan. Orchestrated runs require each migration id once.',
+};
 
 function continueRunHint(runId: string): string {
   return `re-run the command to continue run '${runId}'.`;
@@ -339,9 +348,7 @@ export async function runOrchestratorInit(
     confirmStart,
   } = input;
   const migrations = (migrationsJson.migrations ?? []) as PlannedMigration[];
-  const sorted = sortMigrations(migrations.slice(), {
-    hoistHandoffGitignore: true,
-  });
+  const sorted = sortMigrations(migrations.slice());
   const plannedIds = sorted.map((m) => `${m.package}:${m.name}`);
 
   // An active run means a prior init already happened (e.g. it crashed before
@@ -384,15 +391,15 @@ export async function runOrchestratorInit(
     });
   }
 
-  // Dispensed commands interpolate migration ids verbatim, so every init
-  // validates the incoming plan's ids. Before the delete below: a run must
-  // not be thrown away for a plan that cannot start.
-  for (const id of plannedIds) {
-    if (!SHELL_SAFE_VALUE.test(id)) {
-      throw new Error(
-        `The migration id '${id}' contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids.`
-      );
-    }
+  // Dispensed commands interpolate migration ids verbatim and a worker finds
+  // its step by id, so every init validates the incoming plan's ids. Before
+  // the delete below: a run must not be thrown away for a plan that cannot
+  // start.
+  const [idProblem] = migrationIdProblems(sorted);
+  if (idProblem !== undefined) {
+    throw new Error(
+      `The migration id '${idProblem.id}' ${ID_PROBLEM_REFUSALS[idProblem.problem]} To run the plan without orchestration, re-run with --agentic=false.`
+    );
   }
 
   if (confirmStart && !(await confirmStart())) {
@@ -416,9 +423,8 @@ export async function runOrchestratorInit(
   // Applied before the checkpoint so the entry (when it can be added) already
   // covers older scratch by the time the checkpoint's `git add -A` runs; the
   // fallback's standalone commit is suppressed because that checkpoint
-  // carries the edit. Unlike the classic loop, a planned ignore migration
-  // can't be deferred to: the run dir is created below, before that
-  // migration runs.
+  // carries the edit. A planned ignore migration can't be deferred to: the
+  // run dir is created below, before that migration runs.
   await applyAgenticHandoffGitignoreFallback({
     migrations: sorted,
     installedNxVersion,
@@ -611,11 +617,81 @@ export function releaseRunToHandOff(root: string, runId: string): void {
   releaseRunActivity(runDir(root, runId));
 }
 
+/**
+ * The active run a classic `--run-migrations` must not run over, held while
+ * the caller reports it or asks what to do; null when no run is active. Run
+ * directories that cannot be read refuse as they do for init.
+ */
+export function activeRunForClassic(
+  root: string,
+  plannedIds: readonly string[]
+): { runId: string; facts: ExistingRunFacts } | null {
+  const active = findActiveRunForInit(root);
+  if (!active) return null;
+  // Held before the facts are read, as init's report does.
+  holdRunActivity(root, active.runId);
+  return {
+    runId: active.runId,
+    facts: collectExistingRunFacts(
+      root,
+      active.runId,
+      active.state,
+      plannedIds
+    ),
+  };
+}
+
+/**
+ * Throws when a classic start fresh could not delete the active run `runId`.
+ * Run before the commit prompt, as init does, so the user is not asked for a
+ * run that is then refused; deleteRunForStartFresh repeats the checks.
+ */
+export function checkRunForStartFresh(root: string, runId: string): void {
+  withRunCreationLock(root, () => {
+    const active = activeRunToDelete(root, runId);
+    refuseUndeletableRun(root, runId, active.state);
+  });
+}
+
+/**
+ * Deletes the record of the active run `runId` for a classic start fresh,
+ * under the refusals init applies before it replaces a run. The classic loop
+ * records no run of its own afterwards.
+ */
+export function deleteRunForStartFresh(root: string, runId: string): void {
+  const deleted = withRunCreationLock(root, () => {
+    activeRunToDelete(root, runId);
+    return deleteRunRecord(root, runId);
+  });
+  if (deleted) {
+    removeDeletedRunDir(root, runId);
+  }
+}
+
+// Call under the creation lock. A run that became active since the user chose
+// is refused, never deleted in place of the one they saw.
+function activeRunToDelete(
+  root: string,
+  runId: string
+): { runId: string; state: MigrateRunState } {
+  refuseLiveReservation(root);
+  const active = findActiveRunForInit(root, true);
+  if (!active) {
+    throw new Error(noActiveRunToReplace(runId));
+  }
+  if (active.runId !== runId) {
+    throw new Error(
+      `Not starting fresh: migrate run '${active.runId}' became active while this command was starting. Re-run the command to see it.`
+    );
+  }
+  return active;
+}
+
 // Reads the newest active run; null when no run is active. Uninterpretable
 // run dirs refuse a fresh start (one of them could be an active run this
-// init would compete with) but only warn when a healthy active run is found,
-// unless `refuseUninterpretable`: a start-fresh would delete that run and
-// then find only the unreadable ones. NewerRunStateFormatError propagates
+// invocation would compete with) but only warn when a healthy active run is
+// found, unless `refuseUninterpretable`: a start-fresh would delete that run
+// and then find only the unreadable ones. NewerRunStateFormatError propagates
 // from the read.
 function findActiveRunForInit(
   root: string,
@@ -637,7 +713,7 @@ function findActiveRunForInit(
     if (!active || refuseUninterpretable) {
       throw new Error(
         [
-          `Whether a migrate run is still active could not be determined; starting a new run could re-apply migrations an unfinished run already applied.`,
+          `Whether a migrate run is still active could not be determined; running the plan could re-apply migrations an unfinished run already applied.`,
           ...details,
           `Fix or remove the listed ${noun}, then re-run the command.`,
         ].join('\n')
@@ -1208,6 +1284,7 @@ export async function runOrchestratorReconcile(
           return;
         }
         warnAboutGiveUp(target, outcome);
+        if (target.installFailed === true) warnInstallLeftToUser(root, target);
         // Settled already; the dispense refuses a tree still held.
         scope.lease?.release();
         scope.lease = undefined;
@@ -1218,8 +1295,9 @@ export async function runOrchestratorReconcile(
       // sections stay synchronous); the transition and any unrecorded entry then
       // land in one write. Adopt and skip keep the tree, so the install they owe
       // runs here: the next dispense would take the changed deps as its baseline.
-      // Giving up keeps it the same way when the run does not commit. Retries
-      // owe nothing: the rearmed attempt reconciles itself.
+      // Giving up keeps it the same way when the run does not commit. An install
+      // that already failed is left to the step's mark instead. Retries owe
+      // nothing: the rearmed attempt reconciles itself.
       const { entry, installFailed, recorded } = await stepActionSideEffects(
         root,
         dir,
@@ -1310,6 +1388,13 @@ export async function runOrchestratorReconcile(
       }
       if (unresolvedArchiveError !== undefined) {
         warnUnresolvedNotArchived(stepLabel(target), unresolvedArchiveError);
+      }
+      // A retry's rearm drops the mark: its next attempt installs.
+      if (
+        target.installFailed === true &&
+        written.steps.find((s) => s.id === target.id)?.installFailed === true
+      ) {
+        warnInstallLeftToUser(root, target);
       }
       state = written;
     } finally {
@@ -1660,6 +1745,15 @@ async function installFailedForStep(
   }
 }
 
+function warnInstallLeftToUser(root: string, step: MigrateStep): void {
+  warnToAgent({
+    title: `The dependency changes made by ${stepLabel(step)} are not installed.`,
+    bodyLines: [
+      `Run \`${pmInstallCommand(root)}\` once the cause of the failed install is fixed. The run's final report repeats this unless a later install covers them.`,
+    ],
+  });
+}
+
 // A failed handoff fails the prompt; a success handoff completes it, unless it
 // marks the prompt not applicable via `extras.outcome === 'skipped'`.
 function handoffToPromptOutcome(
@@ -1919,9 +2013,9 @@ async function stepActionSideEffects(
 ): Promise<StepSideEffects> {
   switch (action) {
     case 'adopt':
-      // A died worker's unrecorded commit request is reused. A failed step, or
-      // a recorded commit, needs an adopt request of its own, or the old answer
-      // would be replayed.
+      // A died worker's commit request is reused while nothing records its
+      // outcome, since the session may still answer it. Otherwise the adopt
+      // asks under its own request, or the old answer would be replayed.
       return state.createCommits
         ? commitForStep(
             root,
@@ -1930,6 +2024,8 @@ async function stepActionSideEffects(
             step,
             scope,
             step.status === 'failed' ||
+              step.commitLedgerIndex !== undefined ||
+              step.installFailed === true ||
               coveringLandedEntries(state, step.id).length > 0
               ? 'adopt'
               : undefined
@@ -2349,6 +2445,7 @@ function emitRetryFailed(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
+    ...unfinishedOperationLines(root, state, step),
     retryBudgetLine(step, committed),
     ``,
     `Decide how to proceed and re-run reconcile with one of:`,
@@ -2367,6 +2464,14 @@ function emitRetryFailed(
       )}`
     );
   }
+  // A failed commit is already named above the choices.
+  const adoptWhen = recordedCommitFailed(state, step)
+    ? ''
+    : committed
+      ? `a commit of this ${stepNoun(step)}'s changes was started and never recorded; `
+      : `the ${stepNoun(step)} was ${
+          step.kind === 'migration' ? 'applied' : 'done'
+        } by hand; `;
   lines.push(
     landed
       ? `  adopt: keep the landed commit${
@@ -2376,13 +2481,7 @@ function emitRetryFailed(
           runId,
           'adopt'
         )}`
-      : `  adopt: ${
-          committed
-            ? `a commit of this ${stepNoun(step)}'s changes was started and never recorded`
-            : `the ${stepNoun(step)} was ${
-                step.kind === 'migration' ? 'applied' : 'done'
-              } by hand`
-        }; keep the current working-tree state as its result, then run: ${reconcileCommand(
+      : `  adopt: ${adoptWhen}keep the current working-tree state as its result, then run: ${reconcileCommand(
           root,
           runId,
           'adopt'
@@ -2440,6 +2539,44 @@ function retryBudgetLine(step: MigrateStep, committed: boolean): string {
       ? `adopt only once you have inspected the tree and finished the ${stepNoun(step)}; otherwise stop and report`
       : 'give the step up with unresolved and continue'
   }.`;
+}
+
+// A recorded failed commit with the mark standing withdraws skip and
+// unresolved, so every choice left commits.
+function unfinishedOperationLines(
+  root: string,
+  state: MigrateRunState,
+  step: MigrateStep
+): string[] {
+  const lines: string[] = [];
+  if (step.installFailed === true) {
+    lines.push(
+      `Its dependency install did not complete. A retry runs it again, so fix the cause first if it can be fixed. Any other choice settles the step without installing and leaves the install to you; the run's final report asks for \`${pmInstallCommand(
+        root
+      )}\`.`,
+      ``
+    );
+  }
+  if (recordedCommitFailed(state, step)) {
+    lines.push(
+      `Its commit did not complete. Every choice below commits again.`,
+      ``
+    );
+  }
+  return lines;
+}
+
+function recordedCommitFailed(
+  state: MigrateRunState,
+  step: MigrateStep
+): boolean {
+  // Not commitReceipt, which throws on an index the ledger lacks: a dispense
+  // has to render whatever run.json holds.
+  const receipt =
+    step.commitLedgerIndex === undefined
+      ? undefined
+      : state.commits[step.commitLedgerIndex];
+  return step.commitStarted === true && receipt?.kind === 'failed';
 }
 
 // Opens a capped dispense and is the reason a retry past the cap is refused.
@@ -2595,6 +2732,7 @@ function emitDied(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
+    ...unfinishedOperationLines(root, state, step),
     retryBudgetLine(step, committed),
     ``,
   ];
@@ -2684,6 +2822,8 @@ function emitHeld(
   held: MigrateTreeOperation,
   noProgress: MigrateRunNoProgress | null
 ): void {
+  const heldStep = state.steps.find((s) => s.id === held.stepId);
+  const heldStepName = heldStep && stepLabel(heldStep);
   emit(
     root,
     runId,
@@ -2692,7 +2832,17 @@ function emitHeld(
     'held',
     {
       next: reconcileCommand(root, runId),
-      instructionLines: [treeBusyMessage(held)],
+      instructionLines: [
+        treeBusyMessage(held, heldStepName),
+        // Quitting this session frees the terminal only for its own parent.
+        ...(held.owner === process.env[BROKER_ENV_VAR]
+          ? [
+              `If it seems stuck, the user can ${sessionOperationWayOut(
+                treeOperationLabel(held, heldStepName)
+              )}.`,
+            ]
+          : []),
+      ],
     },
     noProgress
   );
@@ -2726,7 +2876,9 @@ function emitStillRunning(
     )} minutes and may be hung.`;
     lines.push(
       parentOperation
-        ? `${hung} Report this to the user: they can quit this session, then press Ctrl+C in the terminal to end ${parentOperation}, and resume the run afterwards.`
+        ? `${hung} Report this to the user: they can ${sessionOperationWayOut(
+            parentOperation
+          )}.`
         : `${hung} Verify pid ${step.pid}; either keep waiting, or kill it so the next reconcile can classify it as died.`
     );
   }
@@ -3043,15 +3195,22 @@ export function completionWarnings(
   // fact absorbed; suppress the warning only on a verified-clean tree. A dirty
   // tree can still be unrelated edits, so the warning only claims the changes
   // "may remain".
-  const commitDebt =
-    hasPendingCommitDebt(state) && getWorkingTreeStatus(root) !== 'clean';
+  const debtStepIds = uncoveredFailedStepIds(state);
+  const uncommitted =
+    debtStepIds.length > 0 && getWorkingTreeStatus(root) !== 'clean'
+      ? state.steps.filter((s) => debtStepIds.includes(s.id))
+      : [];
   const uninstalled = state.steps.filter((s) => s.installFailed);
   const issueLines = renderUnresolvedIssueLines(state, runId);
   return [
-    ...(commitDebt
+    ...(uncommitted.length > 0
       ? [
           [
-            'Some migration changes could not be committed and may remain in the working tree; review and commit them manually.',
+            `The changes made by ${uncommitted
+              .map(stepLabel)
+              .join(
+                ', '
+              )} could not be committed and may remain in the working tree; review and commit them manually.`,
           ],
         ]
       : []),

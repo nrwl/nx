@@ -556,8 +556,8 @@ export function findMatchingConfigFiles(
   include: string[],
   exclude: string[]
 ): string[] {
-  // projectFiles already comes from multiGlobWithWorkspaceContext for the
-  // plugin's createNodes pattern, so only include/exclude filters remain here.
+  // Callers pass files that already match the plugin's createNodes pattern,
+  // so only include/exclude filters remain here.
   // Empty include means include everything, empty exclude means exclude nothing
   const includes = createMatcher(include, true);
   const excludes = createMatcher(exclude, false);

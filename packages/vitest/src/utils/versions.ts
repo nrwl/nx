@@ -1,7 +1,14 @@
-import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
-import { getInstalledPackageVersion } from '@nx/devkit/internal';
+import {
+  getDependencyVersionFromPackageJson,
+  readJson,
+  type Tree,
+} from '@nx/devkit';
+import {
+  getDeclaredPackageVersion,
+  getInstalledPackageVersion,
+} from '@nx/devkit/internal';
 import { join } from 'path';
-import { clean, coerce, gte, major } from 'semver';
+import { clean, coerce, gte, intersects, major, validRange } from 'semver';
 
 export const nxVersion = require(join('@nx/vitest', 'package.json')).version;
 export const minSupportedVitestVersion = '3.0.0';
@@ -108,16 +115,57 @@ export function versions(
 }
 
 /**
- * `@analogjs/vitest-angular` at the version Nx installs, and `@angular/build`,
- * both peer vitest 4. A workspace carrying either cannot take vitest 5.
+ * Packages that peer vitest, with the first version whose peer range takes
+ * vitest 5. Older versions peer vitest 4 and below.
  */
+const VITEST_PEERS: Readonly<Record<string, string>> = {
+  '@angular/build': '22.2.0',
+  '@analogjs/vitest-angular': '2.8.0',
+};
+
 function highestMajorTheWorkspacePeersAllow(tree: Tree): number {
-  return getDependencyVersionFromPackageJson(
-    tree,
-    '@analogjs/vitest-angular'
-  ) || getDependencyVersionFromPackageJson(tree, '@angular/build')
-    ? 4
-    : 5;
+  let cap = VITEST_COMPAT[0].major;
+  for (const [peer, firstVitestV5Version] of Object.entries(VITEST_PEERS)) {
+    if (getDependencyVersionFromPackageJson(tree, peer)) {
+      cap = Math.min(
+        cap,
+        highestVitestMajorAllowedBy(tree, peer, firstVitestV5Version)
+      );
+    }
+  }
+  return cap;
+}
+
+function highestVitestMajorAllowedBy(
+  tree: Tree,
+  peer: string,
+  firstVitestV5Version: string
+): number {
+  const installedPeerRange = readInstalledPeerVitestRange(tree, peer);
+  if (installedPeerRange) {
+    const allowed = VITEST_COMPAT.find((compat) =>
+      intersects(`^${compat.major}.0.0`, installedPeerRange)
+    );
+    if (allowed) {
+      return allowed.major;
+    }
+  }
+
+  const declaredVersion = getDeclaredPackageVersion(tree, peer);
+  return declaredVersion && gte(declaredVersion, firstVitestV5Version) ? 5 : 4;
+}
+
+function readInstalledPeerVitestRange(tree: Tree, peer: string): string | null {
+  const packageJsonPath = `node_modules/${peer}/package.json`;
+  if (!tree.exists(packageJsonPath)) {
+    return null;
+  }
+  try {
+    const range = readJson(tree, packageJsonPath).peerDependencies?.vitest;
+    return typeof range === 'string' && validRange(range) ? range : null;
+  } catch {
+    return null;
+  }
 }
 
 export function getInstalledVitestVersion(tree?: Tree): string | null {

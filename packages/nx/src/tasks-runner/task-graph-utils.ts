@@ -1,11 +1,18 @@
 import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import { output } from '../utils/output';
+
+/** Task graph edges, or the project ids of the command graph. */
+type Edge = string | TaskGraphEdge;
+
+function edgeId(edge: Edge): string {
+  return typeof edge === 'string' ? edge : edge.id;
+}
 
 function _findCycle(
   graph: {
-    dependencies: Record<string, string[]>;
-    continuousDependencies?: Record<string, string[]>;
+    dependencies: Record<string, Edge[]>;
+    continuousDependencies?: Record<string, Edge[]>;
   },
   id: string,
   visited: { [taskId: string]: boolean },
@@ -17,7 +24,7 @@ function _findCycle(
   for (const d of [
     ...graph.dependencies[id],
     ...(graph.continuousDependencies?.[id] ?? []),
-  ]) {
+  ].map(edgeId)) {
     if (path.includes(d)) return [...path, d];
     const cycle = _findCycle(graph, d, visited, [...path, d]);
     if (cycle) return cycle;
@@ -30,8 +37,8 @@ function _findCycle(
  * @returns the first cycle found, or null if no cycle is found.
  */
 export function findCycle(graph: {
-  dependencies: Record<string, string[]>;
-  continuousDependencies?: Record<string, string[]>;
+  dependencies: Record<string, Edge[]>;
+  continuousDependencies?: Record<string, Edge[]>;
 }): string[] | null {
   const visited = {};
   for (const t of Object.keys(graph.dependencies)) {
@@ -51,8 +58,8 @@ export function findCycle(graph: {
  * @returns a list of unique task ids in all cycles found, or null if no cycle is found.
  */
 export function findCycles(graph: {
-  dependencies: Record<string, string[]>;
-  continuousDependencies?: Record<string, string[]>;
+  dependencies: Record<string, Edge[]>;
+  continuousDependencies?: Record<string, Edge[]>;
 }): Set<string> | null {
   const visited = {};
   const cycles = new Set<string>();
@@ -72,8 +79,8 @@ export function findCycles(graph: {
 
 function _makeAcyclic(
   graph: {
-    dependencies: Record<string, string[]>;
-    continuousDependencies?: Record<string, string[]>;
+    dependencies: Record<string, Edge[]>;
+    continuousDependencies?: Record<string, Edge[]>;
   },
   id: string,
   visited: { [taskId: string]: boolean },
@@ -84,13 +91,15 @@ function _makeAcyclic(
 
   const deps = graph.dependencies[id];
   const continuousDeps = graph.continuousDependencies?.[id] ?? [];
-  for (const d of [...deps, ...continuousDeps]) {
+  for (const d of [...deps, ...continuousDeps].map(edgeId)) {
     if (path.includes(d)) {
-      const depsIdx = deps.indexOf(d);
+      const depsIdx = deps.findIndex((edge) => edgeId(edge) === d);
       if (depsIdx >= 0) {
         deps.splice(depsIdx, 1);
       }
-      const continuousIdx = continuousDeps.indexOf(d);
+      const continuousIdx = continuousDeps.findIndex(
+        (edge) => edgeId(edge) === d
+      );
       if (continuousIdx >= 0) {
         continuousDeps.splice(continuousIdx, 1);
       }
@@ -103,7 +112,7 @@ function _makeAcyclic(
 
 export function makeAcyclic(graph: {
   roots: string[];
-  dependencies: Record<string, string[]>;
+  dependencies: Record<string, Edge[]>;
 }): void {
   const visited = {};
   for (const t of Object.keys(graph.dependencies)) {
@@ -174,7 +183,9 @@ export function assertTaskGraphDoesNotContainInvalidTargets(
     ) {
       nonParallelTasksThatDependOnContinuousTasks.push(task);
     }
-    for (const dependency of taskGraph.continuousDependencies[task.id]) {
+    for (const { id: dependency } of taskGraph.continuousDependencies[
+      task.id
+    ]) {
       if (taskGraph.tasks[dependency].parallelism === false) {
         nonParallelContinuousTasksThatAreDependedOn.push(
           taskGraph.tasks[dependency]
@@ -206,9 +217,9 @@ class NonParallelTaskDependsOnContinuousTasksError extends Error {
       'The following tasks do not support parallelism but depend on continuous tasks:';
 
     for (const task of invalidTasks) {
-      message += `\n - ${task.id} -> ${taskGraph.continuousDependencies[
-        task.id
-      ].join(', ')}`;
+      message += `\n - ${task.id} -> ${taskGraph.continuousDependencies[task.id]
+        .map((edge) => edge.id)
+        .join(', ')}`;
     }
 
     super(message);
@@ -227,7 +238,9 @@ class DependingOnNonParallelContinuousTaskError extends Error {
     for (const task of invalidTasks) {
       const dependents = Object.keys(taskGraph.continuousDependencies).filter(
         (parentTaskId) =>
-          taskGraph.continuousDependencies[parentTaskId].includes(task.id)
+          taskGraph.continuousDependencies[parentTaskId].some(
+            (edge) => edge.id === task.id
+          )
       );
 
       message += `\n - ${task.id} <- ${dependents.join(', ')}`;
@@ -261,15 +274,15 @@ function reverseTaskGraph(taskGraph: TaskGraph): TaskGraph {
     ),
   } as TaskGraph;
   for (const [taskId, dependencies] of Object.entries(taskGraph.dependencies)) {
-    for (const dependency of dependencies) {
-      reversed.dependencies[dependency].push(taskId);
+    for (const { id: dependency } of dependencies) {
+      reversed.dependencies[dependency].push({ id: taskId });
     }
   }
   for (const [taskId, dependencies] of Object.entries(
     taskGraph.continuousDependencies
   )) {
-    for (const dependency of dependencies) {
-      reversed.dependencies[dependency].push(taskId);
+    for (const { id: dependency } of dependencies) {
+      reversed.dependencies[dependency].push({ id: taskId });
     }
   }
   return reversed;
@@ -298,7 +311,7 @@ export async function walkTaskGraph(
 
     const nextRoots: string[] = [];
     for (const id of currentRoots) {
-      for (const depId of reversed.dependencies[id] ?? []) {
+      for (const { id: depId } of reversed.dependencies[id] ?? []) {
         inDegree[depId]--;
         if (inDegree[depId] === 0) {
           nextRoots.push(depId);

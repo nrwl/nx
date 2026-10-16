@@ -55,6 +55,13 @@ export type MigrateRunErrorCode =
   | 'migration_exec'
   | 'agentic'
   | 'other';
+// Why a run-phase invocation stopped before running anything; appended to the
+// event name like the error codes, so it costs no GA custom dimension.
+export type MigrateRunStopReason =
+  | 'existing_run'
+  | 'declined_commits'
+  | 'aborted'
+  | 'runbook_missing';
 
 // Identifier-shaped tokens only (Node codes like ENOENT, class names like
 // TypeError). Rejects anything with a slash, space, or punctuation so a
@@ -240,6 +247,17 @@ export function reportMigrateRunComplete(opts: {
       [customDimensions.migrationCount]: opts.migrationCount,
       [customDimensions.appliedCount]: opts.appliedCount,
     });
+  });
+}
+
+/**
+ * Closes a `migrate_run_start` whose invocation stopped before running any
+ * migration.
+ */
+export function reportMigrateRunStopped(reason: MigrateRunStopReason): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent(`migrate_run_stopped_${reason}`);
   });
 }
 

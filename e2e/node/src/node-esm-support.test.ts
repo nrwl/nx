@@ -13,6 +13,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  updateMainFile,
   updateJson,
   detectPackageManager,
 } from '@nx/e2e-utils';
@@ -72,7 +73,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const expressApp = uniq('express-esm');
       runCLI(
-        `generate @nx/node:app apps/${expressApp} --framework=express --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${expressApp} --framework=express --bundler=esbuild --linter=eslint --unitTestRunner=jest`
       );
 
       // Install node-fetch (ESM-only package)
@@ -123,7 +124,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const expressApp = uniq('express-esm-serve');
       runCLI(
-        `generate @nx/node:app apps/${expressApp} --framework=express --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${expressApp} --framework=express --bundler=esbuild --linter=eslint --unitTestRunner=jest`
       );
 
       // Install node-fetch (ESM-only package)
@@ -134,7 +135,7 @@ describe('Node.js Framework ESM Support', () => {
       configureAsEsm(`apps/${expressApp}`);
 
       // Create Express server with ESM imports
-      updateFile(
+      updateMainFile(
         `apps/${expressApp}/src/main.ts`,
         stripIndents`
           import express from 'express';
@@ -174,7 +175,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const fastifyApp = uniq('fastify-esm');
       runCLI(
-        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --bundler=esbuild --linter=eslint --unitTestRunner=jest`
       );
 
       // Install node-fetch (ESM-only package)
@@ -233,7 +234,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const fastifyApp = uniq('fastify-esm-serve');
       runCLI(
-        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --bundler=esbuild --linter=eslint --unitTestRunner=jest`
       );
 
       // Install node-fetch (ESM-only package)
@@ -244,7 +245,7 @@ describe('Node.js Framework ESM Support', () => {
       configureAsEsm(`apps/${fastifyApp}`);
 
       // Create Fastify server with ESM imports
-      updateFile(
+      updateMainFile(
         `apps/${fastifyApp}/src/main.ts`,
         stripIndents`
           import Fastify from 'fastify';
@@ -289,7 +290,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const koaApp = uniq('koa-esm');
       runCLI(
-        `generate @nx/node:app apps/${koaApp} --framework=koa --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${koaApp} --framework=koa --bundler=esbuild --linter=eslint --unitTestRunner=jest`
       );
 
       // Install node-fetch (ESM-only package) and koa router
@@ -346,7 +347,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const koaApp = uniq('koa-esm-serve');
       runCLI(
-        `generate @nx/node:app apps/${koaApp} --framework=koa --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${koaApp} --framework=koa --bundler=esbuild --linter=eslint --unitTestRunner=jest`
       );
 
       // Install node-fetch (ESM-only package) and koa router
@@ -359,7 +360,7 @@ describe('Node.js Framework ESM Support', () => {
       configureAsEsm(`apps/${koaApp}`);
 
       // Create Koa server with ESM imports
-      updateFile(
+      updateMainFile(
         `apps/${koaApp}/src/main.ts`,
         stripIndents`
           import Koa from 'koa';
@@ -403,7 +404,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const nestApp = uniq('nest-esm');
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --bundler=esbuild --linter=eslint --unitTestRunner=jest`
       );
 
       // Install node-fetch (ESM-only package)
@@ -460,7 +461,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const nestApp = uniq('nest-esm-serve');
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --bundler=esbuild --linter=eslint --unitTestRunner=jest`
       );
 
       // Install node-fetch (ESM-only package) and ajv@8 to fix dependency conflicts
@@ -517,7 +518,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const nodeApp = uniq('node-mixed-imports');
       runCLI(
-        `generate @nx/node:app apps/${nodeApp} --framework=express --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${nodeApp} --framework=express --bundler=esbuild --linter=eslint --unitTestRunner=jest`
       );
 
       // Install packages with different module formats

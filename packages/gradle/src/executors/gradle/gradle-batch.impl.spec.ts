@@ -130,7 +130,7 @@ describe('getGradlewTasksToRun', () => {
         },
       },
       dependencies: {
-        'app1:test': ['app1:lint', 'app2:build'],
+        'app1:test': [{ id: 'app1:lint' }, { id: 'app2:build' }],
         'app1:lint': [],
         'app2:build': [],
       },
@@ -229,7 +229,7 @@ describe('getGradlewTasksToRun', () => {
       projectRoot: 'app3',
       parallelism: false,
     };
-    taskGraph.dependencies['app3:deploy'] = ['app1:test'];
+    taskGraph.dependencies['app3:deploy'] = [{ id: 'app1:test' }];
     inputs['app3:deploy'] = {
       taskName: 'deploy',
       excludeDependsOn: true,
@@ -266,7 +266,7 @@ describe('getGradlewTasksToRun', () => {
         },
         dependencies: {
           'app2:build': [],
-          'app1:test': ['app2:build'],
+          'app1:test': [{ id: 'app2:build' }],
         },
         continuousDependencies: {},
         roots: ['app2:build'],
@@ -438,8 +438,11 @@ describe('getGradlewTasksToRun', () => {
       parallelism: false,
     };
     taskGraph.dependencies['lib1:jar'] = [];
-    taskGraph.dependencies['app1:test'] = ['app1:lint', 'lib1:jar'];
-    taskGraph.dependencies['app2:build'] = ['lib1:jar'];
+    taskGraph.dependencies['app1:test'] = [
+      { id: 'app1:lint' },
+      { id: 'lib1:jar' },
+    ];
+    taskGraph.dependencies['app2:build'] = [{ id: 'lib1:jar' }];
 
     const taskIds = ['app1:test', 'app2:build'];
     const result = getGradlewTasksToRun(taskIds, taskGraph, inputs, nodes);

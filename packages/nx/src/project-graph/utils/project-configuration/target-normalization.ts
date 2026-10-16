@@ -264,6 +264,7 @@ function warnAboutLegacyCachedTargets(
  */
 const KNOWN_ULTRACACHE_KEYS = new Set<string>([
   'mode',
+  'collectStats',
   'ignoredReads',
   'ignoredWrites',
   NX_SPREAD_TOKEN,
@@ -326,7 +327,7 @@ function validateTargetUltracache(
   for (const key of Object.keys(ultracache)) {
     if (!KNOWN_ULTRACACHE_KEYS.has(key)) {
       errors.push(
-        `"ultracache.${key}" for target ${where} is not an ultracache option. Supported options are "mode", "ignoredReads" and "ignoredWrites".`
+        `"ultracache.${key}" for target ${where} is not an ultracache option. Supported options are "mode", "collectStats", "ignoredReads" and "ignoredWrites".`
       );
     }
   }
@@ -342,6 +343,15 @@ function validateTargetUltracache(
           ? `"${ultracache.mode}"`
           : describeUltracacheValue(ultracache.mode)
       }.`
+    );
+  }
+
+  if (
+    ultracache.collectStats !== undefined &&
+    typeof ultracache.collectStats !== 'boolean'
+  ) {
+    errors.push(
+      `"ultracache.collectStats" for target ${where} must be a boolean, but it is ${describeUltracacheValue(ultracache.collectStats)}.`
     );
   }
 
