@@ -25,6 +25,7 @@ export default [
             'typescript',
             // Installed on demand via `ensurePackage` when the generator is
             // asked for that bundler / unit test runner.
+            '@nx/rolldown',
             '@nx/webpack',
             '@nx/vitest',
             'express',

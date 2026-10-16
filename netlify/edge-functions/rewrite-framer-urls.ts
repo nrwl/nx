@@ -349,6 +349,7 @@ export const config = {
     '/cypress/overview',
     '/jest/overview',
     '/more-concepts/monorepo-nx-enterprise',
+    '/more-concepts/global-nx',
     '/storybook/overview-react',
     '/ai',
     '/advent-of-code',

@@ -67,6 +67,7 @@ const nxPackages = [
   `@nx/oxlint`,
   `@nx/plugin`,
   `@nx/playwright`,
+  `@nx/rolldown`,
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,

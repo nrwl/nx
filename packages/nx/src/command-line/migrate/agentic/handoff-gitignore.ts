@@ -17,26 +17,23 @@ import {
  * `.nx/migrate-runs/<run-id>/`: handoff and prompt files in both cases, plus
  * the durable run state and its plan snapshots for the orchestrator. The v23
  * migration `23-0-0-add-migrate-runs-to-git-ignore` adds `.nx/migrate-runs` to
- * `.gitignore`; in its declared slot (typically late) earlier per-migration
- * commits would absorb the scratch into the user-visible diff.
+ * `.gitignore`, but the scratch exists before that migration runs, so earlier
+ * commits would absorb it into the user-visible diff. Its two callers use this
+ * function to add the entry before that can happen:
  *
- * Two paths cover the leak, with no overlap:
+ *   1. Orchestrator init calls it with `applyWhenPlanned` and no standalone
+ *      commit, before it creates the run dir. Its checkpoint commit carries the
+ *      edit when commits are on and the checkpoint succeeds. A planned v23
+ *      migration then changes nothing in its own step.
  *
- *   1. HOIST: `sortMigrations`, which `executeMigrations` applies, sorts the
- *      v23 migration to position 0 when it is in the queue, so it runs first
- *      through the normal runner with its own log line and commit. A
- *      single-migration worker run needs no hoisting: the requested migration
- *      is the entire queue.
+ *   2. A single-migration worker run with an agent defers to the requested
+ *      migration when it is the v23 one. Otherwise, below v23, it applies the
+ *      entry and commits it as a standalone preflight commit (or leaves it in
+ *      the working tree under `--no-create-commits`).
  *
- *   2. INLINE FALLBACK, this function. When the migration is NOT in the queue
- *      AND the highest target version is < v23 (intra-pre-v23 `--agentic`
- *      run) it will never run, so apply its body inline against an `FsTree`
- *      and commit it as a standalone preflight commit (or leave it in the
- *      working tree under `--no-create-commits`).
- *
- * Not in the queue AND target >= v23 means the user is already past v23. They
- * had the entry historically; if it is gone, that is a conscious removal we
- * respect.
+ * When the v23 migration is not planned and nx is at v23 or later, the user is
+ * already past v23. They had the entry historically; if it is gone, that is a
+ * conscious removal we respect.
  */
 export async function applyAgenticHandoffGitignoreFallback({
   migrations,
@@ -60,12 +57,11 @@ export async function applyAgenticHandoffGitignoreFallback({
   commitPrefix: string;
   root: string;
   /**
-   * Apply the entry even when the hoisted migration is in the plan. The
-   * classic loop can defer to that migration because its run scratch appears
-   * only after migration 1 has run; the orchestrator creates its run dir at
-   * init, before any migration, so it needs the entry immediately. A planned
-   * migration also means the missing entry is not a conscious removal, so the
-   * v23 cutoff does not apply.
+   * Apply the entry even when the v23 migration is in the plan. The
+   * orchestrator creates its run dir at init, before any migration runs, so
+   * it can't defer to that migration. A planned migration also means the
+   * missing entry is not a conscious removal, so the v23 cutoff does not
+   * apply.
    */
   applyWhenPlanned?: boolean;
   /**
@@ -80,8 +76,8 @@ export async function applyAgenticHandoffGitignoreFallback({
 }): Promise<void> {
   if (migrations.some(isHandoffGitignoreMigration)) {
     if (!applyWhenPlanned) {
-      // The queue runs it itself: hoisted to the front by the sort comparator
-      // in a full run, or as the single requested migration in a worker run.
+      // The single-migration worker run is that migration, and it adds the
+      // entry itself.
       return;
     }
   } else if (major(installedNxVersion) >= 23) {

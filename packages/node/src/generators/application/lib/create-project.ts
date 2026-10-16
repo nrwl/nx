@@ -16,9 +16,11 @@ import {
   type MatchedTargetRef,
 } from '@nx/js/internal';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { addTscAppBuildPlugin } from './add-tsc-build-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {
   getEsBuildConfig,
+  getTscBuildConfig,
   getServeConfig,
   getWebpackBuildConfig,
   getPruneTargets,
@@ -59,17 +61,31 @@ export function addProject(
       project.targets.build = getWebpackBuildConfig(tree, project, options);
       ensurePnpmDeployInputs(tree, options, project.targets.build);
     }
+  } else if (options.bundler === 'tsc') {
+    if (options.addPlugin) {
+      options.buildTargetName = addTscAppBuildPlugin(
+        tree,
+        options.appProjectRoot
+      );
+    } else {
+      project.targets.build = getTscBuildConfig(tree, options);
+    }
   }
+  // The rolldown build target comes from @nx/rolldown:configuration.
   project.targets = {
     ...project.targets,
-    ...getPruneTargets('build', options.outputPath),
+    ...getPruneTargets(options.buildTargetName, options.outputPath),
   };
-  project.targets.serve = getServeConfig(options);
+  if (!options.serveRuntime) {
+    project.targets.serve = getServeConfig(options);
+  }
 
   const packageJson: PackageJson = {
     name: options.importPath,
     version: '0.0.1',
     private: true,
+    // Node runs the TypeScript source as ESM; without this it warns on every start.
+    ...(options.serveRuntime === 'node' && { type: 'module' }),
     dependencies: { ...frameworkDependencies },
   };
 
@@ -83,7 +99,12 @@ export function addProject(
     addProjectConfiguration(tree, options.name, project);
   }
 
-  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+  // The prune targets read the project package.json for the deps to deploy.
+  if (
+    !options.useProjectJson ||
+    options.isUsingTsSolutionConfig ||
+    !options.rootProject
+  ) {
     writeJson(
       tree,
       joinPathFragments(options.appProjectRoot, 'package.json'),

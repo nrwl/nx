@@ -36,26 +36,18 @@ describe('Node Applications + webpack', () => {
   afterAll(() => cleanupProject());
 
   function addLibImport(appName: string, libName: string, importPath?: string) {
-    const content = readFile(`apps/${appName}/src/main.ts`);
-    if (importPath) {
-      updateFile(
-        `apps/${appName}/src/main.ts`,
-        `
-      import { ${libName} } from '${importPath}';
-      ${content}
+    const mainFile = `apps/${appName}/src/main.ts`;
+    const content = readFile(mainFile);
+    // Keep the shebang first so the inferred serve target still resolves.
+    const header = content.match(/^#!.*\n(?:\/\*\*[\s\S]*?\*\/\n)?/)?.[0] ?? '';
+    updateFile(
+      mainFile,
+      `${header}
+      import { ${libName} } from '${importPath ?? `@${proj}/${libName}`}';
+      ${content.slice(header.length)}
       console.log(${libName}());
       `
-      );
-    } else {
-      updateFile(
-        `apps/${appName}/src/main.ts`,
-        `
-      import { ${libName} } from '@${proj}/${libName}';
-      ${content}
-      console.log(${libName}());
-      `
-      );
-    }
+    );
   }
 
   async function runE2eTests(appName: string, port: number) {
@@ -189,10 +181,10 @@ describe('Node Applications + webpack', () => {
 
     // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app apps/${nodeApp1} --framework=none --no-interactive --port=${nodeApp1Port} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp1} --framework=none --bundler=webpack --no-interactive --port=${nodeApp1Port} --linter=eslint --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/node:app apps/${nodeApp2} --framework=none --no-interactive --port=${nodeApp2Port} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp2} --framework=none --bundler=webpack --no-interactive --port=${nodeApp2Port} --linter=eslint --unitTestRunner=jest`
     );
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];
@@ -212,7 +204,7 @@ describe('Node Applications + webpack', () => {
     const port = await reservePort();
 
     runCLI(
-      `generate @nx/node:app apps/${app} --framework=none --no-interactive --port=${port} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${app} --framework=none --bundler=webpack --no-interactive --port=${port} --linter=eslint --unitTestRunner=jest`
     );
 
     // Server with a slow graceful shutdown that holds the port after SIGTERM.

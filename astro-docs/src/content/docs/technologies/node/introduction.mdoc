@@ -64,6 +64,23 @@ nx g @nx/node:application apps/my-new-app
 
 You can run your application with `nx serve my-new-app`, which starts it in watch mode.
 
+The `serve` task comes from the comment block at the top of `src/main.ts`:
+
+```ts
+#!/usr/bin/env node
+/**
+ * @nx
+ * name: serve
+ * continuous: true
+ * watch: true
+ * dependsOn: ["^build"]
+ */
+```
+
+Because the shebang names `node`, `nx serve` runs the file with `node --watch` and restarts it on changes without a build step. Workspace libraries the application depends on are built first. Node runs the TypeScript source directly, which requires Node.js 22.18 or later. These applications are ES modules, with `"type": "module"` in their `package.json`, so relative imports name the `.ts` file (`./message.ts`). The build rewrites them to `.js`.
+
+In workspaces that use TypeScript path aliases, and for Fastify, esbuild, or JavaScript (`--js`) applications, the shebang names [`tsx`](https://tsx.is/) instead, which resolves path aliases and extensionless imports. Applications that use webpack, or workspaces with [inference plugins](/docs/concepts/nx-plugins) turned off, get an explicit `serve` target in `project.json` instead.
+
 ### Creating libraries
 
 Node libraries are a good way to separate features within your organization. To create a Node library run the following command:
@@ -105,7 +122,9 @@ And if you generated a library with `--buildable`, then you can build a library 
 nx build my-new-lib
 ```
 
-The output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.
+Applications build with `tsc` in [TypeScript workspaces that use project references](/docs/kb/switch-to-workspaces-project-references), and with [Rolldown](/docs/technologies/build-tools/rolldown/introduction) in workspaces that use TypeScript path aliases. Fastify applications use esbuild there instead. Pass `--bundler` when generating the application to choose `tsc`, `rolldown`, `esbuild`, or `webpack`. The `tsc` bundler needs project references.
+
+The output is in a `dist` folder. To change it, set `outDir` in `tsconfig.app.json` for `tsc`, or `output.dir` in `rolldown.config.ts` for Rolldown.
 
 ### Application proxies
 
@@ -143,7 +162,13 @@ The debugger will automatically:
 
 #### Manual debugging
 
-For advanced debugging scenarios, you can manually configure the debug port by setting the port option in the `serve` target in the project.json, or by running the serve command with `--port <number>`.
+To open the debugger on a specific port, add Node's `--inspect` flag to the shebang in `src/main.ts`, after the existing `node` or `tsx`:
+
+```ts
+#!/usr/bin/env -S node --inspect=9230
+```
+
+If the application has an explicit `serve` target in `project.json`, set its `port` option or run `nx serve my-new-app --port <number>` instead.
 
 For additional information on Node.js debugging, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 

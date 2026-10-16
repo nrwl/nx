@@ -1,4 +1,7 @@
-import { TargetConfiguration } from '../../../config/workspace-json-project-json';
+import {
+  TargetConfiguration,
+  type TargetUltracacheSettings,
+} from '../../../config/workspace-json-project-json';
 import {
   isCompatibleTarget,
   mergeTargetConfigurations,
@@ -477,6 +480,33 @@ describe('target merging', () => {
   });
 
   describe('ultracache', () => {
+    it.each<
+      [
+        TargetUltracacheSettings | undefined,
+        TargetUltracacheSettings,
+        boolean | undefined,
+      ]
+    >([
+      [undefined, { collectStats: true }, true],
+      [undefined, { collectStats: false }, false],
+      [{ '...': true }, { collectStats: true }, true],
+      [{ '...': true, collectStats: false }, { collectStats: true }, false],
+      [{ '...': true, collectStats: true }, { collectStats: false }, true],
+      [{ collectStats: false, '...': true }, { collectStats: true }, true],
+      [{ collectStats: true, '...': true }, { collectStats: false }, false],
+      [{ collectStats: false }, { collectStats: true }, false],
+      [{ ignoredReads: ['tmp/**'] }, { collectStats: true }, undefined],
+    ])(
+      'merges collectStats in %j over %j as %s',
+      (ultracache, base, expected) => {
+        const result = mergeTargetConfigurations(
+          { executor: 'nx:run-commands', ultracache },
+          { executor: 'nx:run-commands', ultracache: base }
+        );
+        expect(result.ultracache.collectStats).toBe(expected);
+      }
+    );
+
     it('should take the base ultracache when the target does not define one', () => {
       const result = mergeTargetConfigurations(
         { executor: 'nx:run-commands' },

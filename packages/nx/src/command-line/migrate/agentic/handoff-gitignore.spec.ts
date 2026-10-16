@@ -66,7 +66,7 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     rmSync(workspace, { recursive: true, force: true });
   });
 
-  it('defers to the hoist path when the v23 gitignore migration is in the queue (primary check wins over the version fallback)', async () => {
+  it('defers to the planned v23 gitignore migration (primary check wins over the version fallback)', async () => {
     writeFileSync(gitignorePath(), 'node_modules\n');
     await applyAgenticHandoffGitignoreFallback({
       migrations: [
@@ -107,7 +107,7 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
   });
 
   it('applies the entry with applyWhenPlanned even when the migration is in the queue and nx is at v23+', async () => {
-    // The orchestrator's run scratch exists before the hoisted migration runs,
+    // The orchestrator's run scratch exists before the planned migration runs,
     // so a planned migration must not defer, and a planned migration means the
     // missing entry is not a conscious removal.
     writeFileSync(gitignorePath(), 'node_modules\n');

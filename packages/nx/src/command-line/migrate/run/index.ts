@@ -9,6 +9,7 @@ export {
   findActiveRun,
   createRun,
   TERMINAL_STEP_STATUSES,
+  migrationIdProblems,
 } from './run-state';
 export type {
   MigrateRunStatus,
@@ -27,6 +28,7 @@ export type {
   MigrateRunNoProgress,
   MigrateRunPolicy,
   MigrateRunState,
+  MigrationIdProblem,
 } from './run-state';
 
 export {
@@ -53,8 +55,11 @@ export { runSingleMigrationWorker } from './worker';
 export type { RunSingleMigrationWorkerInput } from './worker';
 
 export {
+  activeRunForClassic,
   activeRunToReplace,
+  checkRunForStartFresh,
   completionWarnings,
+  deleteRunForStartFresh,
   holdRunToContinue,
   releaseRunToHandOff,
   runOrchestratorInit,

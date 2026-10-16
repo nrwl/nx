@@ -1,6 +1,12 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { readJson, Tree, updateJson, writeJson } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { e2eProjectGenerator } from './e2e-project';
@@ -60,27 +66,66 @@ describe('e2eProjectGenerator', () => {
 
     expect(tree.read('api-e2e/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "export default {
-        displayName: 'api-e2e',
-        preset: '../jest.preset.js',
-        globalSetup: '<rootDir>/src/support/global-setup.ts',
-        globalTeardown: '<rootDir>/src/support/global-teardown.ts',
-        setupFiles: ['<rootDir>/src/support/test-setup.ts'],
-        testEnvironment: 'node',
-        transform: {
-          '^.+\\\\.[tj]s$': [
-            'ts-jest',
-            {
-              tsconfig: '<rootDir>/tsconfig.spec.json',
-            },
-          ],
-        },
-        moduleFileExtensions: ['ts', 'js', 'html'],
-        coverageDirectory: '../coverage/api-e2e',
-      };
-      "
-    `);
+        "module.exports = {
+          displayName: 'api-e2e',
+          preset: '../jest.preset.js',
+          globalSetup: '<rootDir>/src/support/global-setup.ts',
+          globalTeardown: '<rootDir>/src/support/global-teardown.ts',
+          setupFiles: ['<rootDir>/src/support/test-setup.ts'],
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': [
+              'ts-jest',
+              {
+                tsconfig: '<rootDir>/tsconfig.spec.json',
+              },
+            ],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../coverage/api-e2e',
+        };
+        "
+      `);
     expect(tree.exists('api-e2e/.spec.swcrc')).toBeFalsy();
+  });
+
+  it('should run the root app build output in a cli project', async () => {
+    await applicationGenerator(tree, {
+      directory: '.',
+      name: 'my-cli',
+      framework: 'none',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+    await e2eProjectGenerator(tree, {
+      projectType: 'cli',
+      project: 'my-cli',
+      rootProject: true,
+      addPlugin: true,
+    });
+
+    expect(tree.read('e2e/src/cli/cli.spec.ts', 'utf-8')).toContain(
+      'dist/my-cli/main.js'
+    );
+  });
+
+  it('should depend on the given build target', async () => {
+    await applicationGenerator(tree, {
+      directory: 'api',
+      framework: 'express',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+    await e2eProjectGenerator(tree, {
+      projectType: 'server',
+      project: 'api',
+      buildTarget: 'bundle',
+      addPlugin: true,
+    });
+
+    expect(
+      readProjectConfiguration(tree, 'api-e2e').targets.e2e.dependsOn
+    ).toEqual(['api:bundle', 'api:serve']);
   });
 
   it('should generate cli project', async () => {
@@ -102,7 +147,7 @@ describe('e2eProjectGenerator', () => {
 
       describe('CLI tests', () => {
         it('should print a message', () => {
-          const cliPath = join(process.cwd(), 'dist/api');
+          const cliPath = join(process.cwd(), 'dist/api/main.js');
 
           const output = execSync(\`node \${cliPath}\`).toString();
 
@@ -128,24 +173,24 @@ describe('e2eProjectGenerator', () => {
 
     expect(tree.read('cli-e2e/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "export default {
-        displayName: 'cli-e2e',
-        preset: '../jest.preset.js',
-        setupFiles: ['<rootDir>/src/test-setup.ts'],
-        testEnvironment: 'node',
-        transform: {
-          '^.+\\\\.[tj]s$': [
-            'ts-jest',
-            {
-              tsconfig: '<rootDir>/tsconfig.spec.json',
-            },
-          ],
-        },
-        moduleFileExtensions: ['ts', 'js', 'html'],
-        coverageDirectory: '../coverage/cli-e2e',
-      };
-      "
-    `);
+        "module.exports = {
+          displayName: 'cli-e2e',
+          preset: '../jest.preset.js',
+          setupFiles: ['<rootDir>/src/test-setup.ts'],
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': [
+              'ts-jest',
+              {
+                tsconfig: '<rootDir>/tsconfig.spec.json',
+              },
+            ],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../coverage/cli-e2e',
+        };
+        "
+      `);
     expect(tree.exists('cli-e2e/.spec.swcrc')).toBeFalsy();
   });
 
@@ -200,6 +245,10 @@ describe('e2eProjectGenerator', () => {
             "noImplicitAny": false,
             "noUnusedLocals": false,
             "outDir": "out-tsc/api-e2e",
+            "types": [
+              "jest",
+              "node",
+            ],
           },
           "extends": "../tsconfig.base.json",
           "include": [
@@ -227,30 +276,30 @@ describe('e2eProjectGenerator', () => {
 
       expect(tree.read('api-e2e/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        import { readFileSync } from 'fs';
+          "/* eslint-disable */
+          const { readFileSync } = require('fs');
 
-        // Reading the SWC compilation config for the spec files
-        const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
+          // Reading the SWC compilation config for the spec files
+          const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
-        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
-        swcJestConfig.swcrc = false;
+          // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+          swcJestConfig.swcrc = false;
 
-        export default {
-          displayName: 'api-e2e',
-          preset: '../jest.preset.js',
-          globalSetup: '<rootDir>/src/support/global-setup.ts',
-          globalTeardown: '<rootDir>/src/support/global-teardown.ts',
-          setupFiles: ['<rootDir>/src/support/test-setup.ts'],
-          testEnvironment: 'node',
-          transform: {
-            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
-          },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: 'test-output/jest/coverage',
-        };
-        "
-      `);
+          module.exports = {
+            displayName: 'api-e2e',
+            preset: '../jest.preset.js',
+            globalSetup: '<rootDir>/src/support/global-setup.ts',
+            globalTeardown: '<rootDir>/src/support/global-teardown.ts',
+            setupFiles: ['<rootDir>/src/support/test-setup.ts'],
+            testEnvironment: 'node',
+            transform: {
+              '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+            },
+            moduleFileExtensions: ['ts', 'js', 'html'],
+            coverageDirectory: 'test-output/jest/coverage',
+          };
+          "
+        `);
       expect(tree.read('api-e2e/.spec.swcrc', 'utf-8')).toMatchInlineSnapshot(`
         "{
           "jsc": {
@@ -295,28 +344,28 @@ describe('e2eProjectGenerator', () => {
 
       expect(tree.read('cli-e2e/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        import { readFileSync } from 'fs';
+          "/* eslint-disable */
+          const { readFileSync } = require('fs');
 
-        // Reading the SWC compilation config for the spec files
-        const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
+          // Reading the SWC compilation config for the spec files
+          const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
-        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
-        swcJestConfig.swcrc = false;
+          // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+          swcJestConfig.swcrc = false;
 
-        export default {
-          displayName: 'cli-e2e',
-          preset: '../jest.preset.js',
-          setupFiles: ['<rootDir>/src/test-setup.ts'],
-          testEnvironment: 'node',
-          transform: {
-            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
-          },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: 'test-output/jest/coverage',
-        };
-        "
-      `);
+          module.exports = {
+            displayName: 'cli-e2e',
+            preset: '../jest.preset.js',
+            setupFiles: ['<rootDir>/src/test-setup.ts'],
+            testEnvironment: 'node',
+            transform: {
+              '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+            },
+            moduleFileExtensions: ['ts', 'js', 'html'],
+            coverageDirectory: 'test-output/jest/coverage',
+          };
+          "
+        `);
       expect(tree.read('cli-e2e/.spec.swcrc', 'utf-8')).toMatchInlineSnapshot(`
         "{
           "jsc": {

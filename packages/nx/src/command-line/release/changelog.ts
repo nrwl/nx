@@ -293,7 +293,7 @@ export function createAPI(
     // Set resolved version plans on groups
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
-      releaseGraph.releaseGroups,
+      releaseGraph.allReleaseGroups,
       Object.keys(projectGraph.nodes),
       args.verbose
     );
@@ -301,7 +301,7 @@ export function createAPI(
     // Validate version plans against the filter after resolution
     const versionPlanValidationError =
       validateResolvedVersionPlansAgainstFilter(
-        releaseGraph.releaseGroups,
+        releaseGraph.allReleaseGroups,
         releaseGraph.releaseGroupToFilteredProjects
       );
     if (versionPlanValidationError) {

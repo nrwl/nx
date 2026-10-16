@@ -1,0 +1,16 @@
+{
+  "name": "rolldown",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/rolldown",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js rolldown packages/rolldown/readme-template.md packages/rolldown/README.md",
+      "inputs": ["copyReadme"]
+    },
+    "test": {
+      "inputs": ["...", "{workspaceRoot}/tools/vitest/**/*"]
+    }
+  }
+}

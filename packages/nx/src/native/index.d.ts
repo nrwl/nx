@@ -947,6 +947,10 @@ export interface InputMatch {
 
 export interface InputsInput {
   input: string
+  /**
+   * With `projects`: the selected projects' dependencies' `input`, as `^input`
+   * resolves for each, instead of the projects' own files.
+   */
   dependencies?: boolean
   projects?: string | Array<string>
   /**
@@ -1455,6 +1459,11 @@ export interface TaskTarget {
 export interface TaskUltracacheSettings {
   /** How this target's tasks participate. Defaults to `on`. */
   mode?: 'on' | 'warn' | 'error' | 'off'
+  /**
+   * Collect successful stat metadata accesses as inputs. Defaults to `false`.
+   * Missing-path probes are tracked independently of this setting.
+   */
+  collectStats?: boolean
   /**
    * Workspace-relative glob patterns for reads that should be excluded
    * from ultracache reports. The first path segment cannot contain `*`,

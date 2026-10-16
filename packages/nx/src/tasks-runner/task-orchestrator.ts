@@ -292,7 +292,7 @@ export class TaskOrchestrator {
     private readonly resolvedOutputStyle: OutputStyle,
     private readonly fullTaskGraph: TaskGraph = taskGraph,
     /** Tasks the up-front pass left to hash once the tasks they read from have run. */
-    private readonly deferredTaskIds?: ReadonlySet<string>
+    private readonly hashingDeferredTaskIds?: ReadonlySet<string>
   ) {}
 
   async init() {
@@ -801,10 +801,13 @@ export class TaskOrchestrator {
   /**
    * Hash all batch tasks and resolve cache hits topologically.
    *
-   * Walks the task graph level by level. Every task gets a preliminary hash
-   * (so startTasks always has a valid hash for Cloud). Tasks the up-front
-   * pass deferred, whose deps weren't cached, are ineligible for cache lookup but still
-   * receive a preliminary hash — they'll be re-hashed after execution.
+   * Walks the task graph level by level. A deferred task (its hash reads
+   * another task's outputs) behind an upstream batch task that still has to
+   * run is never looked up yet:
+   * - behind a non-cacheable task only, it is held back for a later wave,
+   *   where it hashes after that task ran;
+   * - behind a cache miss, it runs in this wave and re-hashes after execution.
+   * Every task run in this wave gets a hash first, for Cloud's startTasks.
    */
   private async applyBatchCachedResults(
     batch: Batch,
@@ -812,41 +815,66 @@ export class TaskOrchestrator {
     groupId: number
   ): Promise<{
     cachedResults: TaskResult[];
-    needsRehashAfterExecution: Set<string>;
+    tasksToRun: Task[];
+    /** Run without a cache lookup; hash again once their inputs exist. */
+    rehashAfterRun: Set<string>;
   }> {
     const cachedResults: TaskResult[] = [];
-    const needsRehashAfterExecution = new Set<string>();
+    const rehashAfterRun = new Set<string>();
     const tasks = Object.values(batch.taskGraph.tasks);
 
     if (!doNotSkipCache) {
       // Cache skipped — just hash so startTasks has valid hashes
       await this.hashBatchTasks(tasks);
-      return { cachedResults, needsRehashAfterExecution };
+      return { cachedResults, tasksToRun: tasks, rehashAfterRun };
     }
 
-    const nonCachedTaskIds = new Set<string>();
+    const toRun = new Map<string, Task>();
+    // Neither restored nor run in this wave; a later wave picks them up.
+    const heldBack = new Set<string>();
+    // Tasks with a cache miss / a non-cacheable task upstream that still has
+    // to run in this wave.
+    const behindMiss = new Set<string>();
+    const behindUncacheable = new Set<string>();
+    const pending = (id: string, cacheable: boolean) =>
+      toRun.has(id) && !!toRun.get(id).cache === cacheable;
 
-    await walkTaskGraph(batch.taskGraph, async (rootTaskIds) => {
-      const rootTasks = rootTaskIds.map((id) => batch.taskGraph.tasks[id]);
+    await walkTaskGraph(batch.taskGraph, async (levelIds) => {
+      const runNow: Task[] = [];
+      const lookUp: Task[] = [];
+      for (const id of levelIds) {
+        const task = batch.taskGraph.tasks[id];
+        const deps = batch.taskGraph.dependencies[id].map((dep) => dep.id);
+        if (deps.some((dep) => heldBack.has(dep))) {
+          heldBack.add(id);
+          continue;
+        }
 
-      await this.hashBatchTasks(rootTasks);
-
-      const eligible: Task[] = [];
-      for (const task of rootTasks) {
-        const hasNonCachedDep = batch.taskGraph.dependencies[task.id].some(
-          ({ id }) => nonCachedTaskIds.has(id)
+        const afterMiss = deps.some(
+          (dep) => behindMiss.has(dep) || pending(dep, true)
         );
+        const afterUncacheable = deps.some(
+          (dep) => behindUncacheable.has(dep) || pending(dep, false)
+        );
+        if (afterMiss) behindMiss.add(id);
+        if (afterUncacheable) behindUncacheable.add(id);
 
-        if (hasNonCachedDep && this.deferredTaskIds?.has(task.id)) {
-          nonCachedTaskIds.add(task.id);
-          needsRehashAfterExecution.add(task.id);
+        const deferred = this.hashingDeferredTaskIds?.has(id);
+        if (deferred && afterMiss) {
+          runNow.push(task);
+          toRun.set(id, task);
+          rehashAfterRun.add(id);
+        } else if (deferred && afterUncacheable) {
+          heldBack.add(id);
         } else {
-          eligible.push(task);
+          lookUp.push(task);
         }
       }
 
-      if (eligible.length > 0) {
-        const cacheResults = await this.applyCachedResults(eligible);
+      await this.hashBatchTasks([...runNow, ...lookUp]);
+
+      if (lookUp.length > 0) {
+        const cacheResults = await this.applyCachedResults(lookUp);
         const cachedIds = new Set(cacheResults.map((r) => r.task.id));
         cachedResults.push(...cacheResults);
 
@@ -860,15 +888,15 @@ export class TaskOrchestrator {
           await this.postRunSteps(cacheResults, false, groupId);
         }
 
-        for (const task of eligible) {
+        for (const task of lookUp) {
           if (!cachedIds.has(task.id)) {
-            nonCachedTaskIds.add(task.id);
+            toRun.set(task.id, task);
           }
         }
       }
     });
 
-    return { cachedResults, needsRehashAfterExecution };
+    return { cachedResults, tasksToRun: [...toRun.values()], rehashAfterRun };
   }
 
   private async hashBatchTasks(tasks: Task[]): Promise<void> {
@@ -895,39 +923,98 @@ export class TaskOrchestrator {
     batch: Batch,
     groupId: number
   ): Promise<TaskResult[]> {
+    if (this.bailed || this.stopRequested) {
+      return [];
+    }
     const applyFromCacheOrRunBatchStart = performance.mark(
       'TaskOrchestrator-apply-from-cache-or-run-batch:start'
     );
-    const taskEntries = Object.entries(batch.taskGraph.tasks);
-    const tasks = taskEntries.map(([, task]) => task);
+    const taskIds = Object.keys(batch.taskGraph.tasks);
 
     this.options.lifeCycle.registerRunningBatch?.(batch.id, {
       executorName: batch.executorName,
-      taskIds: Object.keys(batch.taskGraph.tasks),
+      taskIds,
     });
 
-    const { cachedResults, needsRehashAfterExecution } =
-      await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
+    // Each wave restores or runs what it can; tasks held back for a later
+    // wave (or left out by the executor) stay incomplete and go again.
+    const results: TaskResult[] = [];
+    let taskGraph = batch.taskGraph;
+    while (
+      Object.keys(taskGraph.tasks).length > 0 &&
+      !this.bailed &&
+      !this.stopRequested
+    ) {
+      results.push(
+        ...(await this.runBatchWave(
+          doNotSkipCache,
+          { ...batch, taskGraph },
+          groupId
+        ))
+      );
+      this.forkedProcessTaskRunner.cleanUpBatchProcesses();
+      taskGraph = removeTasksFromTaskGraph(
+        taskGraph,
+        Object.keys(taskGraph.tasks).filter((id) => this.completedTasks.has(id))
+      );
+    }
+
+    // Once, after every wave: an earlier status would end the batch in the TUI.
+    const hasFailures = taskIds.some((taskId) => {
+      const status = this.completedTasks.get(taskId);
+      return status === 'failure' || status === 'skipped';
+    });
+    this.options.lifeCycle.setBatchStatus?.(
+      batch.id,
+      hasFailures ? BatchStatus.Failure : BatchStatus.Success
+    );
+
+    const applyFromCacheOrRunBatchEnd = performance.mark(
+      'TaskOrchestrator-apply-from-cache-or-run-batch:end'
+    );
+    performance.measure(
+      'TaskOrchestrator-apply-from-cache-or-run-batch',
+      applyFromCacheOrRunBatchStart.name,
+      applyFromCacheOrRunBatchEnd.name
+    );
+    return results;
+  }
+
+  private async runBatchWave(
+    doNotSkipCache: boolean,
+    batch: Batch,
+    groupId: number
+  ): Promise<TaskResult[]> {
+    const tasks = Object.values(batch.taskGraph.tasks);
+
+    const {
+      cachedResults,
+      tasksToRun: wave,
+      rehashAfterRun,
+    } = await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
 
     // Cached tasks were started and completed inside applyBatchCachedResults;
     // a member skipped meanwhile (a dependency failed) must not run either
-    const nonCachedTasks = tasks.filter((t) => !this.completedTasks.has(t.id));
-    if (nonCachedTasks.length > 0) {
+    const tasksToRun = wave.filter((t) => !this.completedTasks.has(t.id));
+    if (tasksToRun.length > 0) {
       await Promise.all(
-        nonCachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
+        tasksToRun.map((task) => this.options.lifeCycle.scheduleTask(task))
       );
-      await this.preRunSteps(nonCachedTasks, { groupId });
+      await this.preRunSteps(tasksToRun, { groupId });
     }
 
-    // Phase 2: Run non-cached tasks, then re-hash tasks that read their outputs
+    // Phase 2: Run this wave's tasks, then re-hash those run without a lookup
     let batchResults: TaskResult[] = [];
 
     // Read again: a member can be skipped while the hooks above ran
-    const taskIdsToSkip = tasks
-      .filter((t) => this.completedTasks.has(t.id))
-      .map((t) => t.id);
-    if (taskIdsToSkip.length < tasks.length) {
-      const runGraph = removeTasksFromTaskGraph(batch.taskGraph, taskIdsToSkip);
+    const runIds = new Set(
+      tasksToRun.filter((t) => !this.completedTasks.has(t.id)).map((t) => t.id)
+    );
+    if (runIds.size > 0) {
+      const runGraph = removeTasksFromTaskGraph(
+        batch.taskGraph,
+        tasks.filter((t) => !runIds.has(t.id)).map((t) => t.id)
+      );
 
       for (const task of Object.values(runGraph.tasks)) {
         this.detectTaskInvocationLoop(task);
@@ -947,7 +1034,7 @@ export class TaskOrchestrator {
       const tasksToRehash = batchResults
         .filter(
           (r) =>
-            needsRehashAfterExecution.has(r.task.id) &&
+            rehashAfterRun.has(r.task.id) &&
             (r.status === 'success' || r.status === 'failure')
         )
         .map((r) => r.task);
@@ -966,46 +1053,6 @@ export class TaskOrchestrator {
       await this.postRunSteps(batchResults, doNotSkipCache, groupId);
     }
 
-    // Update batch status based on all task results
-    const hasFailures = taskEntries.some(([taskId]) => {
-      const status = this.completedTasks.get(taskId);
-      return status === 'failure' || status === 'skipped';
-    });
-    this.options.lifeCycle.setBatchStatus?.(
-      batch.id,
-      hasFailures ? BatchStatus.Failure : BatchStatus.Success
-    );
-
-    this.forkedProcessTaskRunner.cleanUpBatchProcesses();
-
-    const tasksCompleted = taskEntries.filter(([taskId]) =>
-      this.completedTasks.has(taskId)
-    );
-
-    // Batch is still not done, run it again
-    if (tasksCompleted.length !== taskEntries.length) {
-      await this.applyFromCacheOrRunBatch(
-        doNotSkipCache,
-        {
-          id: batch.id,
-          executorName: batch.executorName,
-          taskGraph: removeTasksFromTaskGraph(
-            batch.taskGraph,
-            tasksCompleted.map(([taskId]) => taskId)
-          ),
-        },
-        groupId
-      );
-    }
-    // Batch is done, mark it as completed
-    const applyFromCacheOrRunBatchEnd = performance.mark(
-      'TaskOrchestrator-apply-from-cache-or-run-batch:end'
-    );
-    performance.measure(
-      'TaskOrchestrator-apply-from-cache-or-run-batch',
-      applyFromCacheOrRunBatchStart.name,
-      applyFromCacheOrRunBatchEnd.name
-    );
     return [...cachedResults, ...batchResults];
   }
 

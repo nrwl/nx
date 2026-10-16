@@ -1,8 +1,10 @@
 import { output } from '../../../../utils/output';
 import {
+  type MigrateRunStopReason,
   reportMigrateOrchestratorAbandoned,
   reportMigrateRunComplete,
   reportMigrateRunError,
+  reportMigrateRunStopped,
 } from '../../migrate-analytics';
 import {
   completionSummaryLines,
@@ -66,22 +68,29 @@ export async function runMasterSession(
     createCommits: init.createCommits,
     skipInstall: init.skipInstall,
   };
-  const resume = (runId: string) =>
-    runOrchestratorResume({
+  // A resume refuses when it cannot restore the run's missing runbook; a
+  // start refuses when the default-branch commit confirmation is declined.
+  let refusal: MigrateRunStopReason = 'declined_commits';
+  const resume = (runId: string) => {
+    refusal = 'runbook_missing';
+    return runOrchestratorResume({
       root: init.root,
       runId,
       policy,
       emitAgentInstructions: false,
     });
+  };
   // With `replaceRunId`, starts fresh over that run only; the consent covers
   // the run the user saw, and any other active run is reported instead.
-  const start = (replaceRunId?: string) =>
-    runOrchestratorInit({
+  const start = (replaceRunId?: string) => {
+    refusal = 'declined_commits';
+    return runOrchestratorInit({
       ...init,
       emitAgentInstructions: false,
       onExistingRun: replaceRunId === undefined ? 'report' : 'start-fresh',
       replaceRunId,
     });
+  };
   let ready =
     requestedRunId !== undefined && !startFresh
       ? resume(requestedRunId)
@@ -92,6 +101,7 @@ export async function runMasterSession(
       output.log({
         title: `Leaving migrate run ${ready.runId} as it is. ${continueHint(init.root, agent.id, ready.runId, ready.facts.policy)}`,
       });
+      reportMigrateRunStopped('aborted');
       return;
     }
     if (decision === 'continue') {
@@ -113,9 +123,11 @@ export async function runMasterSession(
         )
       )
     );
+    reportMigrateRunStopped('existing_run');
     return 1;
   }
   if (ready.kind === 'refused') {
+    reportMigrateRunStopped(refusal);
     return;
   }
   const { runId, runRoot, runbookPath, reconcileCommand } = ready;
@@ -209,7 +221,7 @@ function continueHint(
   runId: string,
   policy: MigrateRunPolicy
 ): string {
-  return `Run ${renderContinueCommand(root, runId, policy, agentId)}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`;
+  return `Run ${renderContinueCommand(root, runId, policy, agentId)} to continue it.`;
 }
 
 async function decideExistingRun(
