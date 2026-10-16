@@ -2,23 +2,22 @@ import { formatChangedFiles } from '../../generators/internal-utils/format-chang
 import { Tree } from '../../generators/tree';
 import { hasAgentSetup } from '../../ai/set-up-ai-agents/agent-plugin-config';
 import {
-  findNxRulesFiles,
-  removeNxRulesBlock,
+  hasUnsupportedAgentSetup,
+  removeLegacyNxSetup,
 } from '../../ai/set-up-ai-agents/legacy-agent-config';
 import { setupAiAgentsGeneratorImpl } from '../../ai/set-up-ai-agents/set-up-ai-agents';
-import { supportedAgents, type Agent } from '../../ai/utils';
-
-// Agents that now get the Nx agent plugin. Copilot and Gemini have no plugin
-// and keep their copied files, so they are left to `nx configure-ai-agents`.
-const pluginAgents: Agent[] = ['claude', 'cursor', 'codex', 'opencode'];
+import { supportedAgents } from '../../ai/utils';
 
 export default async function migrateAiAgentsToPlugins(tree: Tree) {
-  const configured = supportedAgents.filter((agent) =>
+  const agents = supportedAgents.filter((agent) =>
     hasAgentSetup(tree, '.', agent)
   );
-  const agents = pluginAgents.filter((agent) => configured.includes(agent));
-
+  const hadUnsupportedAgentSetup = hasUnsupportedAgentSetup(tree, '.');
   const nextSteps: string[] = [];
+
+  // Runs for every workspace; the generator below repeats it harmlessly.
+  const { kept } = removeLegacyNxSetup(tree, '.');
+
   if (agents.length > 0) {
     const callback = await setupAiAgentsGeneratorImpl(tree, {
       directory: '.',
@@ -40,11 +39,15 @@ export default async function migrateAiAgentsToPlugins(tree: Tree) {
     }
   }
 
-  // Guidelines no configured agent reads are left over from removed setups.
-  for (const { path, owners } of findNxRulesFiles(tree, '.')) {
-    if (!owners.some((owner) => configured.includes(owner))) {
-      removeNxRulesBlock(tree, path);
-    }
+  if (hadUnsupportedAgentSetup) {
+    nextSteps.push(
+      'Nx no longer configures GitHub Copilot and Gemini, so the Nx MCP server entry and skills it set up for them were removed.'
+    );
+  }
+  if (kept.length > 0) {
+    nextSteps.push(
+      `Kept files Nx previously copied that were edited since; delete them once your changes are no longer needed: ${kept.join(', ')}`
+    );
   }
 
   await formatChangedFiles(tree);

@@ -1,9 +1,6 @@
-import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { major } from 'semver';
 import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
-import { generateFiles } from '../../generators/utils/generate-files';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import { readNxJson } from '../../generators/utils/nx-json';
 import { isAnalyticsEnabled } from '../../utils/analytics-enabled';
@@ -21,8 +18,6 @@ import { installPackageToTmp } from '../../utils/package-json';
 import { detectPackageManager } from '../../utils/package-manager';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import {
   analyticsDomain,
   NX_ALLOWLIST_ROOTS,
@@ -31,19 +26,15 @@ import {
   claudePluginPackage,
   codexConfigTomlPath,
 } from '../constants';
-import { getAiConfigRepoPath } from '../clone-ai-config-repo';
 import { Agent, agentDisplayMap, supportedAgents } from '../utils';
 import {
   getLatestAgentPluginVersion,
   pickAgentPluginVersion,
 } from './agent-plugin-version';
 import {
-  hasAgentSetup,
-  hasGeminiNxMcp,
   readCodexConfig,
   readCursorPluginVersion,
   readOpencodePluginVersion,
-  readsSharedSkills,
   writeCodexPlugin,
   writeCursorPlugin,
   writeOpencodePlugin,
@@ -55,11 +46,9 @@ import {
   isCodexPluginInstalled,
 } from './codex-plugin';
 import {
-  findNxRulesFiles,
   legacyAgentFolders,
-  removeDanglingGeminiContextFile,
   removeLegacyAgentFiles,
-  removeNxRulesBlock,
+  removeLegacyNxSetup,
 } from './legacy-agent-config';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
@@ -71,29 +60,6 @@ export type ModificationResults = {
   messages: CLINoteMessageConfig[];
   errors: CLIErrorMessageConfig[];
 };
-
-/**
- * Best-effort fallback when `getInstalledNxVersion()` can't find an
- * installed nx — read the version declared in the workspace's
- * `package.json` (devDependencies/dependencies), stripping any semver
- * range prefix, and finally a sane default.
- */
-function getDeclaredNxVersionOrDefault(): string {
-  try {
-    const workspacePackageJson = JSON.parse(
-      readFileSync(join(workspaceRoot, 'package.json'), 'utf-8')
-    );
-    const declared =
-      workspacePackageJson.devDependencies?.nx ||
-      workspacePackageJson.dependencies?.nx;
-    if (declared) {
-      return declared.replace(/^[\^~>=<]+/, '');
-    }
-  } catch {
-    // fall through to default
-  }
-  return '22.0.0';
-}
 
 export async function setupAiAgentsGenerator(
   tree: Tree,
@@ -144,7 +110,10 @@ function normalizeOptions(
     directory: options.directory,
     writeNxCloudRules: options.writeNxCloudRules ?? false,
     packageVersion: options.packageVersion ?? 'latest',
-    agents: options.agents ?? [...supportedAgents],
+    // Callers from older Nx versions may still pass agents nx no longer supports
+    agents: (options.agents ?? [...supportedAgents]).filter((agent) =>
+      supportedAgents.includes(agent)
+    ),
   };
 }
 
@@ -153,25 +122,17 @@ export async function setupAiAgentsGeneratorImpl(
   options: NormalizedSetupAiAgentsGeneratorSchema
 ): Promise<(check?: boolean) => Promise<ModificationResults>> {
   const hasAgent = (agent: Agent) => options.agents.includes(agent);
-  const nxVersion = getInstalledNxVersion() ?? getDeclaredNxVersionOrDefault();
   const analyticsEnabled = isAnalyticsEnabled(readNxJson(tree));
   let addedAnalyticsDomain = false;
   // Problems that keep an agent from being configured. They are reported, but
   // unlike messages they don't mark the agent as outdated.
   const setupErrors: CLIErrorMessageConfig[] = [];
-  const keptLegacyFiles: string[] = [];
-  // Agents fully set up by this run; a failed one keeps its old setup.
-  const succeeded = new Set<Agent>();
-  // Taken before this run changes anything, to know which agents still rely on
-  // shared files from an older setup.
-  const configuredBefore = new Set(
-    supportedAgents.filter((agent) =>
-      hasAgentSetup(tree, options.directory, agent)
-    )
-  );
-  const sharedSkillsReaders = (['codex', 'cursor'] as const).filter((agent) =>
-    readsSharedSkills(tree, options.directory, agent)
-  );
+  // Rules-file blocks and the Copilot and Gemini setups go on every run,
+  // whichever agents are selected.
+  const keptLegacyFiles = [
+    ...removeLegacyNxSetup(tree, options.directory).kept,
+  ];
+  let codexConfigured = false;
 
   const latestPluginVersion =
     hasAgent('cursor') || hasAgent('opencode') || hasAgent('codex')
@@ -292,7 +253,6 @@ export async function setupAiAgentsGeneratorImpl(
         // Ignore errors reading .mcp.json
       }
     }
-    succeeded.add('claude');
   }
 
   if (hasAgent('cursor')) {
@@ -303,7 +263,6 @@ export async function setupAiAgentsGeneratorImpl(
     if (version) {
       writeCursorPlugin(tree, options.directory, version);
       removeLegacyFiles(legacyAgentFolders.cursor);
-      succeeded.add('cursor');
     } else {
       setupErrors.push(pluginVersionUnavailable('cursor'));
     }
@@ -314,7 +273,7 @@ export async function setupAiAgentsGeneratorImpl(
       // Copied subagent files go first so their config entries can go with them.
       removeLegacyFiles(legacyAgentFolders.codex);
       writeCodexPlugin(tree, options.directory);
-      succeeded.add('codex');
+      codexConfigured = true;
     } else {
       setupErrors.push({
         title: `Could not configure the Nx plugin for ${agentDisplayMap.codex}`,
@@ -333,96 +292,8 @@ export async function setupAiAgentsGeneratorImpl(
     if (version) {
       writeOpencodePlugin(tree, options.directory, version);
       removeLegacyFiles(legacyAgentFolders.opencode);
-      succeeded.add('opencode');
     } else {
       setupErrors.push(pluginVersionUnavailable('opencode'));
-    }
-  }
-
-  if (hasAgent('gemini')) {
-    const geminiSettingsPath = join(
-      options.directory,
-      '.gemini',
-      'settings.json'
-    );
-    if (!tree.exists(geminiSettingsPath)) {
-      writeJson(tree, geminiSettingsPath, {});
-    }
-    updateJson(tree, geminiSettingsPath, (json) =>
-      mcpConfigUpdater(json, nxVersion)
-    );
-    succeeded.add('gemini');
-  }
-
-  if (hasAgent('copilot')) {
-    succeeded.add('copilot');
-  }
-
-  // Older Codex and Cursor setups, and Gemini, read Nx skills from the shared
-  // .agents folder; the copies go once nothing reads them any more.
-  if (
-    (succeeded.has('codex') || succeeded.has('cursor')) &&
-    !hasAgent('gemini') &&
-    !hasGeminiNxMcp(tree, options.directory) &&
-    sharedSkillsReaders.every((agent) => succeeded.has(agent))
-  ) {
-    removeLegacyFiles(legacyAgentFolders.sharedSkills);
-  }
-
-  // The Nx guidelines now ship with the plugins. A rules file is cleaned up
-  // only by a run that sets up every agent still reading it.
-  for (const { path, owners } of findNxRulesFiles(tree, options.directory)) {
-    if (
-      owners.some(hasAgent) &&
-      owners.every(
-        (owner) =>
-          succeeded.has(owner) ||
-          (!hasAgent(owner) && !configuredBefore.has(owner))
-      )
-    ) {
-      removeNxRulesBlock(tree, path);
-    }
-  }
-  if (succeeded.has('gemini')) {
-    removeDanglingGeminiContextFile(tree, options.directory);
-  }
-
-  // Copilot and Gemini have no plugin to install, so they still get the Nx
-  // skills, commands and subagents copied into the workspace.
-  if (hasAgent('copilot') || hasAgent('gemini')) {
-    let aiConfigRepoPath: string | undefined;
-    try {
-      aiConfigRepoPath = getAiConfigRepoPath();
-    } catch {
-      // Network/clone failure — the copied files are left as they are
-    }
-    if (aiConfigRepoPath) {
-      const copies: { agent: Agent; src: string; dest: string }[] = [
-        { agent: 'copilot', src: 'generated/.github', dest: '.github' },
-        { agent: 'gemini', src: 'generated/.agents', dest: '.agents' },
-        { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
-      ];
-      for (const { agent, src, dest } of copies) {
-        const srcPath = join(aiConfigRepoPath, src);
-        if (hasAgent(agent) && existsSync(srcPath)) {
-          generateFiles(tree, srcPath, join(options.directory, dest), {});
-        }
-      }
-    }
-  }
-
-  // Clean up legacy .gemini/skills that have been migrated to shared .agents/skills.
-  // Only delete skills that exist in both locations to preserve user-created skills.
-  if (hasAgent('gemini')) {
-    const geminiSkillsDir = join(options.directory, '.gemini', 'skills');
-    const sharedSkillsDir = join(options.directory, '.agents', 'skills');
-    if (tree.exists(geminiSkillsDir) && tree.exists(sharedSkillsDir)) {
-      const sharedSkills = new Set(tree.children(sharedSkillsDir));
-      for (const skill of tree.children(geminiSkillsDir)) {
-        if (sharedSkills.has(skill)) {
-          tree.delete(join(geminiSkillsDir, skill));
-        }
-      }
     }
   }
 
@@ -471,7 +342,6 @@ export async function setupAiAgentsGeneratorImpl(
         ],
       });
     }
-    const codexConfigured = succeeded.has('codex');
     if (codexConfigured && isCodexAvailable()) {
       if (check) {
         // Codex caches plugins per user, so a teammate who pulls the workspace
@@ -517,44 +387,6 @@ export async function setupAiAgentsGeneratorImpl(
         ],
       });
     }
-    if (hasAgent('copilot')) {
-      try {
-        if (
-          (await isEditorInstalled(SupportedEditor.VSCode)) &&
-          (await canInstallNxConsoleForEditor(SupportedEditor.VSCode))
-        ) {
-          if (!check) {
-            await installNxConsoleForEditor(SupportedEditor.VSCode);
-          }
-          messages.push({
-            title: `Installed Nx Console for VSCode`,
-          });
-        }
-      } catch (e) {
-        errors.push({
-          title: `Failed to install Nx Console for VSCode. Please install it manually.`,
-          bodyLines: [(e as Error).message],
-        });
-      }
-      try {
-        if (
-          (await isEditorInstalled(SupportedEditor.VSCodeInsiders)) &&
-          (await canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders))
-        ) {
-          if (!check) {
-            await installNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
-          }
-          messages.push({
-            title: `Installed Nx Console for VSCode Insiders`,
-          });
-        }
-      } catch (e) {
-        errors.push({
-          title: `Failed to install Nx Console for VSCode Insiders. Please install it manually.`,
-          bodyLines: [(e as Error).message],
-        });
-      }
-    }
     if (hasAgent('cursor')) {
       try {
         if (
@@ -592,70 +424,6 @@ function withEntries(
   ...values: readonly string[]
 ): string[] {
   return [...new Set([...(existing ?? []), ...values])];
-}
-
-/**
- * Extract user-added extra args/flags from an existing MCP config args array
- * by stripping the known base command prefix.
- *
- * Known base patterns (matched in order, first wins):
- *   ['nx', 'mcp']  or  ['nx-mcp'] (possibly with @version suffix like nx-mcp@latest)
- *   For opencode the caller prepends 'npx' to these patterns.
- */
-function getExtraMcpArgs(
-  existingArgs: string[] | undefined,
-  knownBasePatterns: string[][]
-): string[] {
-  if (!Array.isArray(existingArgs) || existingArgs.length === 0) return [];
-
-  for (const pattern of knownBasePatterns) {
-    if (existingArgs.length < pattern.length) continue;
-
-    const matches = pattern.every((baseArg, i) => {
-      if (baseArg === 'nx-mcp') {
-        // Also match versioned variants like nx-mcp@latest
-        return (
-          existingArgs[i] === 'nx-mcp' || existingArgs[i].startsWith('nx-mcp@')
-        );
-      }
-      return existingArgs[i] === baseArg;
-    });
-
-    if (matches) {
-      return existingArgs.slice(pattern.length);
-    }
-  }
-
-  return [];
-}
-
-function mcpConfigUpdater(existing: any, nxVersion: string): any {
-  const majorVersion = major(nxVersion);
-  const mcpArgs = majorVersion >= 22 ? ['nx', 'mcp'] : ['nx-mcp'];
-
-  // Preserve any extra args (e.g. --experimental-polygraph, --transport http) from existing config
-  const extraArgs = getExtraMcpArgs(existing.mcpServers?.['nx-mcp']?.args, [
-    ['nx', 'mcp'],
-    ['nx-mcp'],
-  ]);
-  mcpArgs.push(...extraArgs);
-
-  if (existing.mcpServers) {
-    existing.mcpServers['nx-mcp'] = {
-      type: 'stdio',
-      command: 'npx',
-      args: mcpArgs,
-    };
-  } else {
-    existing.mcpServers = {
-      'nx-mcp': {
-        type: 'stdio',
-        command: 'npx',
-        args: mcpArgs,
-      },
-    };
-  }
-  return existing;
 }
 
 export default setupAiAgentsGenerator;

@@ -6,7 +6,6 @@ import { output } from '../utils/output';
 import {
   codexConfigTomlPath,
   cursorSettingsPath,
-  geminiSettingsPath,
   opencodeMcpPath,
 } from './constants';
 import { hasAgentSetup } from './set-up-ai-agents/agent-plugin-config';
@@ -17,32 +16,57 @@ import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
 export const supportedAgents = [
   'claude',
   'codex',
-  'copilot',
   'cursor',
-  'gemini',
   'opencode',
 ] as const;
 export type Agent = (typeof supportedAgents)[number];
 export const agentDisplayMap: Record<Agent, string> = {
   claude: 'Claude Code',
-  gemini: 'Gemini',
   codex: 'OpenAI Codex',
-  copilot: 'GitHub Copilot for VSCode',
   cursor: 'Cursor',
   opencode: 'OpenCode',
 };
 
+/**
+ * Agents earlier versions configured. They are still accepted on the command
+ * line, but only produce a warning.
+ */
+export const removedAgents = ['copilot', 'gemini'] as const;
+const removedAgentDisplayMap: Record<(typeof removedAgents)[number], string> = {
+  copilot: 'GitHub Copilot',
+  gemini: 'Gemini',
+};
+
+/**
+ * Keeps the supported agents from a requested list, warning about agents nx
+ * no longer configures.
+ */
+export function filterSupportedAgents(agents: readonly string[]): Agent[] {
+  const removed = removedAgents.filter((agent) => agents.includes(agent));
+  if (removed.length > 0) {
+    output.warn({
+      title: `${removed
+        .map((agent) => removedAgentDisplayMap[agent])
+        .join(
+          ' and '
+        )} ${removed.length === 1 ? 'is' : 'are'} no longer supported by nx configure-ai-agents`,
+      bodyLines: [
+        'Nx no longer configures these agents. Continuing with the other agents.',
+      ],
+    });
+  }
+  return agents.filter((agent): agent is Agent =>
+    supportedAgents.includes(agent as Agent)
+  );
+}
+
 export type AgentConfiguration = {
   name: Agent;
   displayName: string;
-  /**
-   * Whether the workspace has an Nx setup for this agent: the Nx plugin, or a
-   * file-based setup from an older version of `nx configure-ai-agents` that
-   * still needs to be migrated.
-   */
+  /** Whether the workspace has the Nx plugin or an older Nx setup to migrate. */
   configured: boolean;
-  /** The file holding the agent's Nx setup, when there is one. */
-  configPath: string | null;
+  /** The file that registers the agent's Nx plugin. */
+  configPath: string;
   outdated: boolean;
   disabled?: boolean;
 };
@@ -86,7 +110,7 @@ async function getAgentConfiguration(
 ): Promise<AgentConfiguration> {
   const tree = new FsTree(workspaceRoot, false);
   const configured = hasAgentSetup(tree, '.', agent);
-  let configPath: string | null = null;
+  let configPath: string;
   let disabled: boolean | undefined;
   switch (agent) {
     case 'claude':
@@ -101,14 +125,6 @@ async function getAgentConfiguration(
       break;
     case 'opencode':
       configPath = opencodeMcpPath(workspaceRoot);
-      break;
-    case 'copilot':
-      disabled =
-        !(await isEditorInstalled(SupportedEditor.VSCode)) &&
-        !(await isEditorInstalled(SupportedEditor.VSCodeInsiders));
-      break;
-    case 'gemini':
-      configPath = geminiSettingsPath(workspaceRoot);
       break;
   }
 

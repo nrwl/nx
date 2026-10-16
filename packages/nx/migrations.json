@@ -207,7 +207,7 @@
     },
     "24-0-0-migrate-ai-agents-to-plugins": {
       "version": "24.0.0-beta.4",
-      "description": "Replaces the rules files, MCP entries and copied skills that configure-ai-agents wrote for Claude Code, Cursor, Codex and OpenCode with the Nx agent plugins.",
+      "description": "Replaces the rules files, MCP entries and copied skills that configure-ai-agents wrote with the Nx agent plugins for Claude Code, Cursor, Codex and OpenCode, and removes the GitHub Copilot and Gemini setups nx no longer maintains.",
       "implementation": "./dist/src/migrations/update-24-0-0/migrate-ai-agents-to-plugins",
       "documentation": "./dist/src/migrations/update-24-0-0/migrate-ai-agents-to-plugins.md"
     }

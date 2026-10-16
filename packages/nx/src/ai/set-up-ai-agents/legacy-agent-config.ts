@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { dirname, join, normalize } from 'path';
 import { Tree } from '../../generators/tree';
-import { readJson, updateJson } from '../../generators/utils/json';
+import { readJson, writeJson } from '../../generators/utils/json';
 import {
   agentsMdPath,
   claudeMdPath,
@@ -9,21 +9,18 @@ import {
   geminiSettingsPath,
   rulesRegex,
 } from '../constants';
-import type { Agent } from '../utils';
 import { legacyAgentFiles } from './legacy-agent-files';
 
 /**
- * Workspace folders that older versions of `nx configure-ai-agents` copied
- * files into, per owner. `.agents` holds skills shared by Codex, Cursor and
- * Gemini.
+ * Workspace folders older versions of `nx configure-ai-agents` copied files
+ * into. `unsupported` holds copies for Copilot and Gemini, which nx no longer
+ * configures, and the skills Codex, Cursor and Gemini shared in `.agents`.
  */
 export const legacyAgentFolders = {
   codex: ['.codex/agents'],
-  copilot: ['.github'],
   cursor: ['.cursor'],
-  gemini: ['.gemini'],
   opencode: ['.opencode'],
-  sharedSkills: ['.agents'],
+  unsupported: ['.github', '.gemini', '.agents'],
 } as const;
 
 /**
@@ -102,61 +99,23 @@ export function removeLegacyAgentFiles(
   return { removed, kept };
 }
 
-export type NxRulesFile = {
-  path: string;
-  /** The agents that read this file. */
-  owners: Agent[];
-};
-
-function readGeminiContextFileName(
-  tree: Tree,
-  directory: string
-): string | undefined {
+function readGeminiSettings(tree: Tree, directory: string): any {
   const settingsPath = geminiSettingsPath(directory);
   if (!tree.isFile(settingsPath)) {
     return undefined;
   }
   try {
-    const contextFileName = readJson(tree, settingsPath).contextFileName;
-    return typeof contextFileName === 'string' ? contextFileName : undefined;
+    return readJson(tree, settingsPath);
   } catch {
     return undefined;
   }
 }
 
 /**
- * Rules files that still contain the Nx guidelines block older versions of
- * `nx configure-ai-agents` wrote, with the agents that read each file.
- */
-export function findNxRulesFiles(tree: Tree, directory: string): NxRulesFile[] {
-  const owners = new Map<string, Set<Agent>>();
-  const addOwners = (path: string, agents: Agent[]) => {
-    const key = normalize(path);
-    owners.set(key, new Set([...(owners.get(key) ?? []), ...agents]));
-  };
-  addOwners(agentsMdPath(directory), [
-    'codex',
-    'cursor',
-    'opencode',
-    'copilot',
-  ]);
-  addOwners(claudeMdPath(directory), ['claude']);
-  addOwners(geminiMdPath(directory), ['gemini']);
-  const contextFileName = readGeminiContextFileName(tree, directory);
-  if (contextFileName) {
-    addOwners(join(directory, contextFileName), ['gemini']);
-  }
-
-  return [...owners]
-    .filter(([path]) => hasNxRulesBlock(tree, path))
-    .map(([path, agents]) => ({ path, owners: [...agents] }));
-}
-
-/**
  * Removes the Nx guidelines block from a rules file, deleting the file when
  * nothing else is left in it.
  */
-export function removeNxRulesBlock(tree: Tree, path: string): void {
+function removeNxRulesBlock(tree: Tree, path: string): void {
   let content = tree.read(path, 'utf-8');
   let match: RegExpExecArray | null;
   while ((match = rulesRegex.exec(content))) {
@@ -174,22 +133,101 @@ export function removeNxRulesBlock(tree: Tree, path: string): void {
 }
 
 /**
- * Older versions pointed Gemini at AGENTS.md for the Nx guidelines. Once that
- * file is gone, the setting points nowhere and is dropped.
+ * Removes every Nx guidelines block older versions wrote into AGENTS.md,
+ * CLAUDE.md, GEMINI.md or the file Gemini's `contextFileName` points to.
  */
-export function removeDanglingGeminiContextFile(
+function removeNxRulesBlocks(tree: Tree, directory: string): void {
+  const contextFileName = readGeminiSettings(tree, directory)?.contextFileName;
+  const candidates = new Set(
+    [
+      agentsMdPath(directory),
+      claudeMdPath(directory),
+      geminiMdPath(directory),
+      typeof contextFileName === 'string'
+        ? join(directory, contextFileName)
+        : undefined,
+    ]
+      .filter((path): path is string => !!path)
+      .map((path) => normalize(path))
+  );
+  for (const path of candidates) {
+    if (hasNxRulesBlock(tree, path)) {
+      removeNxRulesBlock(tree, path);
+    }
+  }
+}
+
+/**
+ * Removes what older versions wrote into `.gemini/settings.json`: the `nx-mcp`
+ * server, and a `contextFileName` pointing at an AGENTS.md they wrote.
+ */
+function removeGeminiSetup(
+  tree: Tree,
+  directory: string,
+  agentsMdHadNxBlock: boolean
+): void {
+  const settingsPath = geminiSettingsPath(directory);
+  const settings = readGeminiSettings(tree, directory);
+  if (!settings) {
+    return;
+  }
+  const original = JSON.stringify(settings);
+  if (settings.mcpServers?.['nx-mcp']) {
+    delete settings.mcpServers['nx-mcp'];
+    if (Object.keys(settings.mcpServers).length === 0) {
+      delete settings.mcpServers;
+    }
+  }
+  if (
+    settings.contextFileName === 'AGENTS.md' &&
+    (agentsMdHadNxBlock || !tree.exists(agentsMdPath(directory)))
+  ) {
+    delete settings.contextFileName;
+  }
+  if (JSON.stringify(settings) === original) {
+    return;
+  }
+  if (Object.keys(settings).length === 0) {
+    tree.delete(settingsPath);
+    if (tree.children(dirname(settingsPath)).length === 0) {
+      tree.delete(dirname(settingsPath));
+    }
+  } else {
+    writeJson(tree, settingsPath, settings);
+  }
+}
+
+/**
+ * Whether the workspace still has a Copilot or Gemini setup from an older
+ * version of `nx configure-ai-agents`.
+ */
+export function hasUnsupportedAgentSetup(
   tree: Tree,
   directory: string
-): void {
-  if (
-    readGeminiContextFileName(tree, directory) === 'AGENTS.md' &&
-    !tree.exists(agentsMdPath(directory))
-  ) {
-    updateJson(tree, geminiSettingsPath(directory), (json) => {
-      delete json.contextFileName;
-      return json;
-    });
-  }
+): boolean {
+  return (
+    !!readGeminiSettings(tree, directory)?.mcpServers?.['nx-mcp'] ||
+    findLegacyAgentFiles(tree, directory, ['.github', '.gemini']).length > 0
+  );
+}
+
+/**
+ * Removes what older versions wrote for every agent regardless of which agents
+ * are being configured: Nx guidelines blocks in rules files, and the Copilot,
+ * Gemini and shared `.agents` setups nx no longer maintains.
+ */
+export function removeLegacyNxSetup(
+  tree: Tree,
+  directory: string
+): LegacyAgentFilesCleanup {
+  const agentsMdHadNxBlock = hasNxRulesBlock(tree, agentsMdPath(directory));
+  removeNxRulesBlocks(tree, directory);
+  removeGeminiSetup(tree, directory, agentsMdHadNxBlock);
+  return removeLegacyAgentFiles(
+    tree,
+    directory,
+    legacyAgentFolders.unsupported
+  );
 }
 
 export function hasNxRulesBlock(tree: Tree, path: string): boolean {

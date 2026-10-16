@@ -116,28 +116,6 @@ describe('migrate-ai-agents-to-plugins migration', () => {
     expect(tree.exists('.opencode')).toBe(false);
   });
 
-  it('should keep AGENTS.md while an agent without a plugin still reads it', async () => {
-    tree.write('AGENTS.md', nxRules);
-    tree.write(
-      '.github/skills/nx-workspace/SKILL.md',
-      shipped['.github/skills/nx-workspace/SKILL.md']
-    );
-    tree.write(
-      '.codex/config.toml',
-      '[mcp_servers."nx-mcp"]\ncommand = "npx"\n'
-    );
-
-    await migrateAiAgentsToPlugins(tree);
-
-    // The test tree formats files written in the test, so compare loosely
-    expect(tree.read('AGENTS.md', 'utf-8')).toContain(
-      '<!-- nx configuration start-->'
-    );
-    expect(TOML.parse(tree.read('.codex/config.toml', 'utf-8'))).toEqual({
-      plugins: { 'nx@nx-agent-plugins': { enabled: true } },
-    });
-  });
-
   it('should remove AGENTS.md once the migrated agents were its only readers', async () => {
     tree.write('AGENTS.md', nxRules);
     tree.write(
@@ -148,6 +126,53 @@ describe('migrate-ai-agents-to-plugins migration', () => {
     await migrateAiAgentsToPlugins(tree);
 
     expect(tree.exists('AGENTS.md')).toBe(false);
+  });
+
+  it('should remove AGENTS.md even when an agent nx no longer supports read it', async () => {
+    tree.write('AGENTS.md', nxRules);
+    tree.write(
+      '.github/skills/nx-workspace/SKILL.md',
+      shipped['.github/skills/nx-workspace/SKILL.md']
+    );
+
+    await migrateAiAgentsToPlugins(tree);
+
+    expect(tree.exists('AGENTS.md')).toBe(false);
+  });
+
+  it('should clean up Copilot and Gemini setups and say why', async () => {
+    tree.write(
+      '.github/skills/nx-workspace/SKILL.md',
+      shipped['.github/skills/nx-workspace/SKILL.md']
+    );
+    tree.write(
+      '.gemini/settings.json',
+      JSON.stringify({
+        contextFileName: 'AGENTS.md',
+        mcpServers: { 'nx-mcp': { command: 'npx' } },
+      })
+    );
+    tree.write('AGENTS.md', nxRules);
+
+    const nextSteps = await migrateAiAgentsToPlugins(tree);
+
+    expect(tree.exists('.github/skills')).toBe(false);
+    expect(tree.exists('.gemini')).toBe(false);
+    expect(tree.exists('AGENTS.md')).toBe(false);
+    expect(nextSteps).toEqual([
+      'Nx no longer configures GitHub Copilot and Gemini, so the Nx MCP server entry and skills it set up for them were removed.',
+    ]);
+  });
+
+  it('should report edited copies it keeps', async () => {
+    tree.write('.github/skills/nx-workspace/SKILL.md', 'my own changes');
+
+    const nextSteps = await migrateAiAgentsToPlugins(tree);
+
+    expect(tree.exists('.github/skills/nx-workspace/SKILL.md')).toBe(true);
+    expect(nextSteps).toContain(
+      'Kept files Nx previously copied that were edited since; delete them once your changes are no longer needed: .github/skills/nx-workspace/SKILL.md'
+    );
   });
 
   it('should not install anything on the machine running the migration', async () => {
@@ -162,17 +187,6 @@ describe('migrate-ai-agents-to-plugins migration', () => {
     expect(nextSteps).toEqual([
       'Codex installs plugins per user: run "nx configure-ai-agents" once to install the Nx plugin for Codex on your machine. Teammates using Codex need to do the same.',
     ]);
-  });
-
-  it('should leave copied files of agents without a plugin alone', async () => {
-    tree.write(
-      '.github/skills/nx-workspace/SKILL.md',
-      shipped['.github/skills/nx-workspace/SKILL.md']
-    );
-
-    await migrateAiAgentsToPlugins(tree);
-
-    expect(tree.exists('.github/skills/nx-workspace/SKILL.md')).toBe(true);
   });
 
   it('should keep copied files and report it when the plugin version is unknown', async () => {

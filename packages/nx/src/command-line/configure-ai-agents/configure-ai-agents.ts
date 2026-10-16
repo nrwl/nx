@@ -10,6 +10,7 @@ import {
   agentDisplayMap,
   AgentConfiguration,
   configureAgents,
+  filterSupportedAgents,
   getAgentConfigurations,
   supportedAgents,
 } from '../../ai/utils';
@@ -104,11 +105,9 @@ export async function configureAiAgentsHandlerImpl(
   } = await getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
 
   if (disabledAgents.length > 0) {
-    const commandNames = disabledAgents.map((a) => {
-      if (a.name === 'cursor') return '"cursor"';
-      if (a.name === 'copilot') return '"code"/"code-insiders"';
-      return a;
-    });
+    const commandNames = disabledAgents.map((a) =>
+      a.name === 'cursor' ? '"cursor"' : a.name
+    );
 
     const title =
       commandNames.length === 1
@@ -168,9 +167,6 @@ export async function configureAiAgentsHandlerImpl(
           title: 'The following AI agents are out of date:',
           bodyLines: [
             ...outOfDateAgents.map((a) => {
-              if (!a.configPath) {
-                return `- ${a.displayName}`;
-              }
               const displayPath = a.configPath.startsWith(workspaceRoot)
                 ? relative(workspaceRoot, a.configPath)
                 : a.configPath;
@@ -449,10 +445,6 @@ function getAgentFooterDescription(agent: AgentConfiguration): string {
       return 'Enables the Nx plugin (MCP + skills) for this project and installs it for your user.';
     case 'opencode':
       return 'Installs the Nx plugin (MCP + skills + agents) for this project.';
-    case 'copilot':
-      return 'Installs Nx Console (MCP). Adds skills and agents.';
-    case 'gemini':
-      return 'Configures MCP server. Adds skills and commands.';
     default:
       return '';
   }
@@ -469,10 +461,6 @@ function getAgentConfiguredDescription(agent: AgentConfiguration): string {
     case 'codex':
     case 'opencode':
       return 'Nx plugin (MCP + skills)';
-    case 'copilot':
-      return 'Nx Console (MCP) + skills';
-    case 'gemini':
-      return 'MCP + skills';
     default:
       return '';
   }
@@ -498,9 +486,9 @@ type NormalizedAiAgentSetupOptions = Omit<
 function normalizeOptions(
   options: ConfigureAiAgentsOptions
 ): NormalizedAiAgentSetupOptions {
-  const agents = (options.agents ?? supportedAgents).filter((a) =>
-    supportedAgents.includes(a as Agent)
-  ) as Agent[];
+  const agents = options.agents
+    ? filterSupportedAgents(options.agents)
+    : [...supportedAgents];
   // it used to be just --check which was implicitly 'outdated'
   const check = (options.check === true ? 'outdated' : options.check) ?? false;
   return {

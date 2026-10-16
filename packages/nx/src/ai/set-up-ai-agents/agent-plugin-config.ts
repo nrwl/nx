@@ -9,7 +9,6 @@ import {
   codexPluginId,
   cursorPluginKey,
   cursorSettingsPath,
-  geminiSettingsPath,
   opencodeMcpPath,
   opencodePluginPackage,
 } from '../constants';
@@ -270,13 +269,6 @@ export function writeCodexPlugin(tree: Tree, directory: string): boolean {
   return true;
 }
 
-// ── Gemini ──
-
-export function hasGeminiNxMcp(tree: Tree, directory: string): boolean {
-  return !!readJsonOrUndefined(tree, geminiSettingsPath(directory))
-    ?.mcpServers?.['nx-mcp'];
-}
-
 // ── Setup detection ──
 
 /** Whether the workspace has an Nx setup for the agent, old or new. */
@@ -310,32 +302,5 @@ export function hasAgentSetup(
         hasOpencodeNxMcp(tree, directory) ||
         hasLegacyFiles(legacyAgentFolders.opencode)
       );
-    case 'copilot':
-      return hasLegacyFiles(legacyAgentFolders.copilot);
-    case 'gemini':
-      return hasGeminiNxMcp(tree, directory);
   }
-}
-
-/**
- * Whether Codex or Cursor still has a file-based Nx setup from an older
- * version, which reads Nx skills from the shared `.agents` folder.
- */
-export function readsSharedSkills(
-  tree: Tree,
-  directory: string,
-  agent: 'codex' | 'cursor'
-): boolean {
-  if (agent === 'codex') {
-    return (
-      !hasCodexPlugin(tree, directory) &&
-      (hasCodexNxMcp(tree, directory) ||
-        findLegacyAgentFiles(tree, directory, legacyAgentFolders.codex).length >
-          0)
-    );
-  }
-  return (
-    !hasCursorPlugin(tree, directory) &&
-    findLegacyAgentFiles(tree, directory, legacyAgentFolders.cursor).length > 0
-  );
 }

@@ -38,7 +38,9 @@ function withConfigureAiAgentsOptions(yargs: Argv) {
       type: 'array',
       string: true,
       description: 'List of AI agents to set up.',
-      choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini', 'opencode'],
+      // copilot and gemini are no longer supported; they are accepted so the
+      // command can warn about them instead of failing.
+      choices: ['claude', 'codex', 'cursor', 'opencode', 'copilot', 'gemini'],
     })
     .option('interactive', {
       type: 'boolean',
@@ -66,8 +68,8 @@ function withConfigureAiAgentsOptions(yargs: Argv) {
       'Interactively select AI agents to update and configure'
     )
     .example(
-      '$0 configure-ai-agents --agents claude gemini',
-      'Prompts for updates and and configuration of Claude and Gemini AI agents'
+      '$0 configure-ai-agents --agents claude codex',
+      'Prompts for updates and and configuration of Claude and Codex AI agents'
     )
     .example(
       '$0 configure-ai-agents --check',
@@ -78,7 +80,7 @@ function withConfigureAiAgentsOptions(yargs: Argv) {
       'Checks if any agents are not configured, out of date or partially configured'
     )
     .example(
-      '$0 configure-ai-agents --agents claude gemini --no-interactive',
-      'Configures and updates Claude and Gemini AI agents without prompts'
+      '$0 configure-ai-agents --agents claude codex --no-interactive',
+      'Configures and updates Claude and Codex AI agents without prompts'
     ) as any; // because of the coerce function
 }

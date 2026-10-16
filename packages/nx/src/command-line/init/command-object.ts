@@ -60,13 +60,15 @@ async function withInitOptions(yargs: Argv) {
         type: 'array',
         string: true,
         description: 'List of AI agents to set up. Use "none" to skip.',
+        // copilot and gemini are no longer supported; they are accepted so
+        // init can warn about them instead of failing.
         choices: [
           'claude',
           'codex',
-          'copilot',
           'cursor',
-          'gemini',
           'opencode',
+          'copilot',
+          'gemini',
           'none',
         ],
       })

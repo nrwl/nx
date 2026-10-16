@@ -1,5 +1,4 @@
 import { join } from 'path';
-import { readJsonFile } from '../utils/fileutils';
 import { NX_TMP_DIR_POSIX } from '../utils/nx-tmp-dir';
 
 export function agentsMdPath(root: string): string {
@@ -8,15 +7,6 @@ export function agentsMdPath(root: string): string {
 
 export function geminiMdPath(root: string): string {
   return join(root, 'GEMINI.md');
-}
-
-export function parseGeminiSettings(root: string): any | undefined {
-  const settingsPath = geminiSettingsPath(root);
-  try {
-    return readJsonFile(settingsPath);
-  } catch {
-    return undefined;
-  }
 }
 
 export function geminiSettingsPath(root: string): string {

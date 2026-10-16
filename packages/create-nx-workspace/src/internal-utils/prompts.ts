@@ -14,6 +14,7 @@ import { isCI } from '../utils/ci/is-ci';
 import {
   Agent,
   agentDisplayMap,
+  removedAgents,
   supportedAgents,
 } from '../create-workspace-options';
 import { detectAiAgentName, isAiAgent } from '../utils/ai/ai-output';
@@ -137,22 +138,28 @@ export async function determineTemplate(
 
 export async function determineAiAgents(
   parsedArgs: yargs.Arguments<{
-    aiAgents?: (Agent | 'none')[];
+    aiAgents?: string[];
     interactive?: boolean;
   }>
 ): Promise<Agent[]> {
   if (parsedArgs.aiAgents) {
-    const filtered = parsedArgs.aiAgents.filter((a) => a !== 'none') as Agent[];
-    if (filtered.length > 0) {
-      return filtered;
+    const removed = removedAgents.filter((a) =>
+      parsedArgs.aiAgents.includes(a)
+    );
+    if (removed.length > 0) {
+      output.warn({
+        title: `Nx no longer configures ${removed
+          .map((a) => (a === 'copilot' ? 'GitHub Copilot' : 'Gemini'))
+          .join(' and ')}. Continuing with the other agents.`,
+      });
     }
-    return [];
+    return parsedArgs.aiAgents.filter((a): a is Agent =>
+      supportedAgents.includes(a as Agent)
+    );
   }
   const detected = detectAiAgentName();
-  // Detection is broader than what the generator can configure — `copilot-cli`
-  // is reported so CNW can switch to agent output, but has no generator branch,
-  // and `copilot` is the VS Code extension, whose branch installs Nx Console.
-  // Mirrors the same guard in nx's `ai/detect-ai-agent.ts`.
+  // Detection is broader than what the generator can configure (e.g.
+  // `copilot-cli`, `gemini`). Mirrors the guard in nx's `ai/detect-ai-agent.ts`.
   if (detected && supportedAgents.includes(detected as Agent)) {
     return [detected as Agent];
   }
