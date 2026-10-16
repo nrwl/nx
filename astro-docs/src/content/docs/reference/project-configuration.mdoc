@@ -652,7 +652,8 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
   A `prefix` set on an `nx:run-commands` command is part of the matched text.
   Color codes and other terminal control sequences are removed before matching.
 
-Strings in `readyWhen` can use the `{workspaceRoot}`, `{projectRoot}`, `{projectName}`, `{options.*}`, and `{env.*}` placeholders.
+Strings in `readyWhen` can use the `{workspaceRoot}`, `{projectRoot}`, `{projectName}`,
+`{options.*}`, and `{env.*}` placeholders.
 `{options.*}` reads the options the executor receives: the target options, the configuration in use, the command-line overrides and the executor's defaults.
 So `"url": "http://localhost:{options.port}"` follows `--port`, and works without a `port` option when the executor has a default for it.
 `port` accepts such a string too, for example `"{options.port}"`.
@@ -662,8 +663,10 @@ The variable name can contain only the letters `a` to `z` in either case, digits
 and parentheses.
 A placeholder can list fallbacks after `??`, and Nx uses the first one that is set and not empty.
 The last fallback can be plain text, as in `"{options.port ?? env.PORT ?? 4200}"`.
-A placeholder that resolves to no value fails the task before it starts, with an error that names the placeholder.
+A placeholder that resolves to no value fails the task before it starts,
+with an error that names the placeholder.
 Other text in braces, such as a `{{.State.Health.Status}}` template in a command, is left as it is.
+In `port` and `host`, such text fails the task instead.
 
 The optional `timeout` key is how long Nx waits for readiness, in milliseconds.
 It defaults to `60000`.

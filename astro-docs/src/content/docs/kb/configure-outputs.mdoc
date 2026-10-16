@@ -42,9 +42,11 @@ This path is resolved from the root of the workspace.
 An output whose option isn't set, or is empty, is left out.
 To cache another location in that case, list fallbacks after `??`.
 Nx uses the first one that is set and not empty, and the last one can be a path.
-For a project at `apps/myapp`, `{options.outputPath ?? {workspaceRoot}/dist/{projectRoot}}` caches `dist/apps/myapp` when `outputPath` isn't set.
+For a project at `apps/myapp`, `{options.outputPath ?? {workspaceRoot}/dist/{projectRoot}}`
+caches `dist/apps/myapp` when `outputPath` isn't set.
 Outputs can't read environment variables.
-Nx resolves them once, when it creates the task graph, and the task can run on a machine with a different environment.
+Nx resolves them once, when it creates the task graph,
+and the task can run on a machine with a different environment.
 
 If an output file or directory does not exist, it will be ignored.
 
@@ -76,7 +78,8 @@ In some cases, Nx plugins may not infer the outputs of a task as you expect, the
 - The `outputs` array for a specific target in the project configuration file.
 
 {% aside title="Copy the existing outputs before modifying outputs for a task" %}
-To override the `outputs` of a task, start by copying over the entire array shown when viewing the project details and then add/modify/remove outputs as needed.
+To override the `outputs` of a task, start by copying over the entire array shown when viewing the
+project details and then add/modify/remove outputs as needed.
 {% /aside %}
 
 As you configure `outputs`, keep the project details screen open and it will refresh as changes are made. Check to make sure that the intended configuration is shown.
