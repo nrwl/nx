@@ -42,9 +42,6 @@ function normalizeOptions(
     options.testEnvironment = 'jsdom';
   }
 
-  // `options` is the caller's `schema`, which the js init call also reads.
-  options.addPlugin = true;
-
   options.targetName ??= 'test';
 
   if (!options.hasOwnProperty('supportTsx')) {
@@ -72,7 +69,7 @@ function normalizeOptions(
 }
 
 export function configurationGenerator(tree: Tree, schema: JestProjectSchema) {
-  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return configurationGeneratorInternal(tree, schema);
 }
 
 export async function configurationGeneratorInternal(

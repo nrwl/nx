@@ -29,8 +29,6 @@ export async function rspackInitGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  schema.addPlugin = true;
-
   await addPlugin(
     tree,
     await createProjectGraphAsync(),

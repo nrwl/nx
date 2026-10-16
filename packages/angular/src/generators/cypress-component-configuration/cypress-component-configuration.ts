@@ -95,7 +95,6 @@ export async function cypressComponentConfiguration(
     await baseCyCTConfig(tree, {
       project: options.project,
       skipFormat: true,
-      addPlugin: false,
       skipPackageJson: options.skipPackageJson,
     })
   );

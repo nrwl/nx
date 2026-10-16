@@ -139,7 +139,6 @@ describe('next library', () => {
       style: 'css',
       component: true,
       bundler: 'rollup',
-      addPlugin: true,
     });
 
     const rollupConfig = appTree.read(
@@ -501,7 +500,6 @@ describe('next library', () => {
         component: false,
         useProjectJson: false,
         bundler: 'rollup',
-        addPlugin: true,
       });
 
       const rollupConfig = tree.read('mylib/rollup.config.cjs', 'utf-8');
@@ -592,7 +590,6 @@ describe('next library', () => {
         linter: 'eslint',
         unitTestRunner: 'jest',
         style: 'css',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });

@@ -21,7 +21,6 @@ export interface Schema {
   install: boolean; // default is true
   skipPackageJson?: boolean; //default is false
   // Internal options
-  addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'oxfmt' | 'none';

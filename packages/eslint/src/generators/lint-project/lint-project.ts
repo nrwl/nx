@@ -58,7 +58,6 @@ interface LintProjectOptions {
   unitTestRunner?: string;
   rootProject?: boolean;
   keepExistingVersions?: boolean;
-  addPlugin?: boolean;
   eslintConfigFormat?: 'mjs' | 'cjs';
 
   /**
@@ -68,7 +67,7 @@ interface LintProjectOptions {
 }
 
 export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
-  return lintProjectGeneratorInternal(tree, { addPlugin: false, ...options });
+  return lintProjectGeneratorInternal(tree, options);
 }
 
 export async function lintProjectGeneratorInternal(

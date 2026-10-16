@@ -42,8 +42,6 @@ export async function normalizeOptions(
   });
   options.rootProject = appProjectRoot === '.';
 
-  options.addPlugin = true;
-
   const isTsSolutionSetup =
     options.useTsSolution || isUsingTsSolutionSetup(host);
   const appProjectName =

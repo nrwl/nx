@@ -38,8 +38,6 @@ export async function normalizeOptions(
     importPath: options.importPath,
   });
 
-  options.addPlugin = true;
-
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];

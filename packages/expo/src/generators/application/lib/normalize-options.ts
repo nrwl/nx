@@ -41,7 +41,6 @@ export async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
   });
-  options.addPlugin = true;
 
   const { className } = names(projectName);
   const parsedTags = options.tags

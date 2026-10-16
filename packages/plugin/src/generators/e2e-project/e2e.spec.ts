@@ -41,7 +41,6 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginName: 'my-plugin',
         pluginOutputPath: `dist/libs/my-plugin`,
         npmPackageName: '@proj/my-plugin',
-        addPlugin: true,
       })
     ).resolves.toBeDefined();
 
@@ -50,7 +49,6 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginName: 'my-nonexistentplugin',
         pluginOutputPath: `dist/libs/my-nonexistentplugin`,
         npmPackageName: '@proj/my-nonexistentplugin',
-        addPlugin: true,
       })
     ).rejects.toThrow();
   });
@@ -60,7 +58,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     expect(tree.exists('my-plugin-e2e/tsconfig.json')).toBeTruthy();
@@ -76,7 +73,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
       packageManager: 'pnpm',
-      addPlugin: true,
     });
 
     const spec = tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8');
@@ -94,7 +90,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     // The hook shells out synchronously, which jest cannot interrupt but vitest
@@ -112,7 +107,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const tsConfig = readJson(tree, 'my-plugin-e2e/tsconfig.json');
@@ -126,7 +120,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const tsConfig = readJson(tree, 'my-plugin-e2e/tsconfig.json');
@@ -139,7 +132,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginOutputPath: `dist/libs/namespace/my-plugin`,
       npmPackageName: '@proj/namespace-my-plugin',
       projectDirectory: 'namespace/my-plugin',
-      addPlugin: true,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -151,7 +143,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
     const projects = Object.fromEntries(getProjects(tree));
     expect(projects).toMatchObject({
@@ -166,7 +157,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -191,7 +181,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     expect(readJson(tree, 'nx.json').plugins).toContainEqual({
@@ -225,7 +214,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -243,7 +231,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -278,7 +265,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
       testRunner: 'vitest',
-      addPlugin: false,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -336,7 +322,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
       testRunner: 'vitest',
-      addPlugin: true,
     });
 
     // `@nx/vitest` only infers `test`, so without an explicit target `nx e2e`
@@ -359,7 +344,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     expect(tree.exists('my-plugin-e2e/eslint.config.mjs')).toBeTruthy();

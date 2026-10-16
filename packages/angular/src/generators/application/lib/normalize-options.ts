@@ -1,4 +1,4 @@
-import { joinPathFragments, readNxJson, type Tree } from '@nx/devkit';
+import { joinPathFragments, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -8,12 +8,6 @@ import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
-
-function arePluginsExplicitlyDisabled(host: Tree) {
-  const { useInferencePlugins } = readNxJson(host);
-  const addPluginEnvVar = process.env.NX_ADD_PLUGINS;
-  return useInferencePlugins === false || addPluginEnvVar === 'false';
-}
 
 function validateBundler(bundler: string): 'esbuild' | 'webpack' | 'rspack' {
   if (['esbuild', 'webpack', 'rspack'].includes(bundler)) {
@@ -26,8 +20,7 @@ function validateBundler(bundler: string): 'esbuild' | 'webpack' | 'rspack' {
 
 export async function normalizeOptions(
   host: Tree,
-  options: Partial<Schema>,
-  isRspack?: boolean
+  options: Partial<Schema>
 ): Promise<NormalizedSchema> {
   await ensureRootProjectName(options as Schema, 'application');
   const { projectName: appProjectName, projectRoot: appProjectRoot } =
@@ -48,9 +41,6 @@ export async function normalizeOptions(
 
   const bundler = validateBundler(options.bundler ?? 'esbuild');
 
-  const addPlugin =
-    options.addPlugin ?? (!arePluginsExplicitlyDisabled(host) && isRspack);
-
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
   const zonelessDefaultValue = angularMajorVersion >= 21 ? true : false;
   const unitTestRunner =
@@ -63,7 +53,6 @@ export async function normalizeOptions(
 
   // Set defaults and then overwrite with user options
   return {
-    addPlugin,
     style: 'css',
     routing: true,
     inlineStyle: false,

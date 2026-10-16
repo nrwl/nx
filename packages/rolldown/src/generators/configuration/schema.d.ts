@@ -8,5 +8,4 @@ export interface Schema {
   externalDependencies?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
-  addPlugin?: boolean;
 }

@@ -45,9 +45,7 @@ describe('@nx/eslint:init', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     setWorkspaceRoot(tree.root);
-    options = {
-      addPlugin: true,
-    };
+    options = {};
   });
 
   it('should not generate the global eslint config if it already exist', async () => {
@@ -128,20 +126,4 @@ describe('@nx/eslint:init', () => {
       }
     `);
   });
-
-  it.each(['cjs', 'mjs'] as const)(
-    'uses inference with legacy addPlugin=false (%s)',
-    async (eslintConfigFormat) => {
-      await lintInitGenerator(tree, {
-        ...options,
-        addPlugin: false,
-        eslintConfigFormat,
-      });
-      expect(readJson(tree, 'nx.json').plugins).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ plugin: '@nx/eslint/plugin' }),
-        ])
-      );
-    }
-  );
 });

@@ -34,7 +34,6 @@ export interface AddLintingToProjectOptions {
   project: string;
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
-  addPlugin?: boolean;
   /** ESLint-only. Ignored by other linters. */
   tsConfigPaths?: string[];
   unitTestRunner?: string;
@@ -116,7 +115,6 @@ export async function addLintingToProject(
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       keepExistingVersions: options.keepExistingVersions,
-      // No `addPlugin`: `@nx/oxlint` is inference-only, so it always registers.
     });
   }
 
@@ -133,7 +131,6 @@ export async function addLintingToProject(
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       keepExistingVersions: options.keepExistingVersions,
-      addPlugin: options.addPlugin,
     });
   }
 

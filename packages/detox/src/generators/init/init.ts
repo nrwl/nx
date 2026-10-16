@@ -18,7 +18,7 @@ import {
 import { Schema } from './schema';
 
 export function detoxInitGenerator(host: Tree, schema: Schema) {
-  return detoxInitGeneratorInternal(host, { addPlugin: false, ...schema });
+  return detoxInitGeneratorInternal(host, schema);
 }
 
 export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {

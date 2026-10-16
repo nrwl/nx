@@ -51,7 +51,6 @@ describe('app', () => {
     linter: 'eslint',
     style: 'css',
     strict: true,
-    addPlugin: true,
   };
   let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
@@ -153,7 +152,6 @@ describe('app', () => {
         ...schema,
         bundler: 'vite',
         unitTestRunner: 'vitest',
-        addPlugin: true,
         // Let the generator format the tree so we assert on the same
         // prettier-formatted config a user gets, not the raw intermediate the
         // e2e generator writes with skipFormat.
@@ -205,7 +203,6 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'playwright',
-        addPlugin: true,
       });
       // Spot-check the generated playwright config. Avoid inline snapshot
       // here: `webServer.command` interpolates `packageCmd` at runtime
@@ -1280,7 +1277,7 @@ describe('app', () => {
     });
   });
 
-  it('should enable inference when addPlugin=false', async () => {
+  it('should enable inference', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     let nxJson = readNxJson(tree);
@@ -1290,7 +1287,6 @@ describe('app', () => {
     // ACT
     await applicationGenerator(tree, {
       directory: 'myapp',
-      addPlugin: false,
       linter: 'none',
       style: 'none',
       e2eTestRunner: 'none',
@@ -1333,7 +1329,6 @@ describe('app', () => {
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1502,7 +1497,6 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
         name: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1528,7 +1522,6 @@ describe('app', () => {
     it('should add project to workspaces when using TS solution (npm, yarn, bun)', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1538,7 +1531,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'libs/nested1',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1547,7 +1539,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'libs/nested2',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1575,7 +1566,6 @@ describe('app', () => {
 
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1585,7 +1575,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested1',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1595,7 +1584,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested2',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1605,7 +1593,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'packages/shared/util',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1631,7 +1618,6 @@ describe('app', () => {
         linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1681,7 +1667,6 @@ describe('app', () => {
         linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: false,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1698,7 +1683,6 @@ describe('app', () => {
         linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: false,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1711,7 +1695,6 @@ describe('app', () => {
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',

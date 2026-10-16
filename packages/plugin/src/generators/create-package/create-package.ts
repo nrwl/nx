@@ -35,7 +35,6 @@ export async function createPackageGenerator(
 ) {
   return await createPackageGeneratorInternal(host, {
     useProjectJson: true,
-    addPlugin: false,
     ...schema,
   });
 }

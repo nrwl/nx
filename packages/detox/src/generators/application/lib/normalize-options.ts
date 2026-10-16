@@ -27,7 +27,6 @@ export async function normalizeOptions(
     projectType: 'application',
     directory: options.e2eDirectory,
   });
-  options.addPlugin = true;
 
   const { fileName: appFileName, className: appClassName } = names(
     options.appName || options.appProject

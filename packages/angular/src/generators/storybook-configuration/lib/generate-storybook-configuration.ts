@@ -17,6 +17,5 @@ export async function generateStorybookConfiguration(
     interactionTests: options.interactionTests,
     configureStaticServe: options.configureStaticServe,
     skipFormat: true,
-    addPlugin: false,
   });
 }

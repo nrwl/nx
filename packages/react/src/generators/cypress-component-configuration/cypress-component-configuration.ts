@@ -18,10 +18,7 @@ export function cypressComponentConfigGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  return cypressComponentConfigGeneratorInternal(tree, {
-    addPlugin: false,
-    ...options,
-  });
+  return cypressComponentConfigGeneratorInternal(tree, options);
 }
 
 /**

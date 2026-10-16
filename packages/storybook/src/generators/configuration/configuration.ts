@@ -238,18 +238,14 @@ export async function configurationGeneratorInternal(
 function normalizeSchema(
   schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
-  const addPlugin = true;
-
   const defaults = {
     interactionTests: true,
     js: false,
     tsConfiguration: true,
-    addPlugin,
   };
   return {
     ...defaults,
     ...schema,
-    addPlugin: true,
   };
 }
 

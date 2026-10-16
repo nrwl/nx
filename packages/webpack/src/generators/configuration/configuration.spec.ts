@@ -20,7 +20,6 @@ describe('webpackProject', () => {
   it('should generate files', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
-      addPlugin: true,
     });
 
     expect(tree.exists('libs/mypkg/webpack.config.js')).toBeTruthy();
@@ -29,7 +28,6 @@ describe('webpackProject', () => {
   it('should support --main option', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
-      addPlugin: true,
       main: 'libs/mypkg/index.ts',
     });
 
@@ -41,7 +39,6 @@ describe('webpackProject', () => {
   it('should support --tsConfig option', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
-      addPlugin: true,
       tsConfig: 'libs/mypkg/tsconfig.custom.json',
     });
 
@@ -53,7 +50,6 @@ describe('webpackProject', () => {
   it('should write a .babelrc when the compiler is babel', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
-      addPlugin: true,
       compiler: 'babel',
     });
 
@@ -68,7 +64,6 @@ describe('webpackProject', () => {
   it('should use --babelConfig instead of writing a .babelrc', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
-      addPlugin: true,
       compiler: 'babel',
       babelConfig: 'libs/mypkg/babel.config.json',
     });

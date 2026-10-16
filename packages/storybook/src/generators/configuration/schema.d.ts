@@ -10,7 +10,6 @@ export interface StorybookConfigureSchema {
   tsConfiguration?: boolean;
   configureStaticServe?: boolean;
   skipFormat?: boolean;
-  addPlugin?: boolean;
 
   /**
    * @internal

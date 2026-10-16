@@ -13,7 +13,7 @@ import { nxVersion, playwrightVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
 export function initGenerator(tree: Tree, options: InitGeneratorSchema) {
-  return initGeneratorInternal(tree, { addPlugin: false, ...options });
+  return initGeneratorInternal(tree, options);
 }
 
 export async function initGeneratorInternal(

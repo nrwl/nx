@@ -20,7 +20,6 @@ describe('init', () => {
   it('should NOT add react-router plugin when useReactRouterPlugin is false', async () => {
     await reactInitGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       useReactRouterPlugin: false,
     });
     const nxJson = readNxJson(tree);
@@ -35,7 +34,6 @@ describe('init', () => {
   it('should add react-router plugin when useReactRouterPlugin is true', async () => {
     await reactInitGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       useReactRouterPlugin: true,
     });
     const nxJson = readNxJson(tree);

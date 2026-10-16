@@ -52,7 +52,7 @@ describe('@nx/vitest:init', () => {
     });
   });
 
-  it('should add the plugin by default when addPlugin is not provided', async () => {
+  it('should add the plugin to nx.json', async () => {
     await initGenerator(tree, {
       skipFormat: true,
       skipPackageJson: true,
@@ -166,83 +166,34 @@ describe('@nx/vitest:init', () => {
     }
   });
 
-  describe('with addPlugin: true', () => {
-    it('should add the vitest plugin to nx.json', async () => {
-      await initGenerator(tree, {
-        skipFormat: true,
-        addPlugin: true,
-        skipPackageJson: true,
-      });
-
-      const nxJson = readNxJson(tree);
-      expect(nxJson.plugins).toContainEqual(
-        expect.objectContaining({ plugin: '@nx/vitest' })
-      );
+  it('should not add plugin if already in array', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.plugins = ['@nx/vitest'];
+      return json;
     });
 
-    it('should not add plugin if already in array', async () => {
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-        json.plugins = ['@nx/vitest'];
-        return json;
-      });
-
-      await initGenerator(tree, {
-        skipFormat: true,
-        addPlugin: true,
-        skipPackageJson: true,
-      });
-
-      const nxJson = readNxJson(tree);
-      expect(nxJson.plugins).toEqual(['@nx/vitest']);
+    await initGenerator(tree, {
+      skipFormat: true,
+      skipPackageJson: true,
     });
 
-    it('should not add target defaults when plugin is registered', async () => {
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-        json.namedInputs ??= {};
-        json.namedInputs.production = ['default'];
-        return json;
-      });
-
-      await initGenerator(tree, {
-        skipFormat: true,
-        addPlugin: true,
-        skipPackageJson: true,
-      });
-
-      const nxJson = readNxJson(tree);
-      expect(nxJson.targetDefaults?.['@nx/vitest:test']).toBeUndefined();
-    });
+    const nxJson = readNxJson(tree);
+    expect(nxJson.plugins).toEqual(['@nx/vitest']);
   });
 
-  describe('with addPlugin: false', () => {
-    it('should enable inference when addPlugin is false', async () => {
-      await initGenerator(tree, {
-        skipFormat: true,
-        addPlugin: false,
-        skipPackageJson: true,
-      });
-
-      const nxJson = readNxJson(tree);
-      expect(nxJson.plugins).toContainEqual(
-        expect.objectContaining({ plugin: '@nx/vitest' })
-      );
+  it('should not add target defaults when plugin is registered', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.namedInputs ??= {};
+      json.namedInputs.production = ['default'];
+      return json;
     });
 
-    it('should not add defaults for the removed executor', async () => {
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-        json.namedInputs ??= {};
-        json.namedInputs.production = ['default'];
-        return json;
-      });
-
-      await initGenerator(tree, {
-        skipFormat: true,
-        addPlugin: false,
-        skipPackageJson: true,
-      });
-
-      const nxJson = readNxJson(tree);
-      expect(nxJson.targetDefaults?.['@nx/vitest:test']).toBeUndefined();
+    await initGenerator(tree, {
+      skipFormat: true,
+      skipPackageJson: true,
     });
+
+    const nxJson = readNxJson(tree);
+    expect(nxJson.targetDefaults?.['@nx/vitest:test']).toBeUndefined();
   });
 });

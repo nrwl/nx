@@ -34,10 +34,7 @@ export function viteConfigurationGenerator(
   host: Tree,
   schema: ViteConfigurationGeneratorSchema
 ) {
-  return viteConfigurationGeneratorInternal(host, {
-    addPlugin: false,
-    ...schema,
-  });
+  return viteConfigurationGeneratorInternal(host, schema);
 }
 
 export async function viteConfigurationGeneratorInternal(
@@ -80,8 +77,6 @@ export async function viteConfigurationGeneratorInternal(
   });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, schema));
-
-  schema.addPlugin = true;
 
   if (projectType === 'library') {
     // update tsconfig.lib.json to include vite/client
@@ -146,7 +141,6 @@ export async function viteConfigurationGeneratorInternal(
       skipViteConfig: true,
       testTarget: 'test',
       skipFormat: true,
-      addPlugin: schema.addPlugin,
       compiler: schema.compiler,
       projectType,
       testEnvironment: schema.testEnvironment,

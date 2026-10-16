@@ -36,9 +36,7 @@ describe('init', () => {
   let options: Schema;
 
   beforeEach(() => {
-    options = {
-      addPlugin: true,
-    };
+    options = {};
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
@@ -60,15 +58,6 @@ describe('init', () => {
     expect(packageJson.devDependencies[existing]).toBeDefined();
     expect(packageJson.dependencies['@nx/cypress']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
-  });
-
-  it('should register inference even when legacy callers disable it', async () => {
-    await cypressInitGenerator(tree, { ...options, addPlugin: false });
-    expect(readJson(tree, 'nx.json').plugins).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ plugin: '@nx/cypress/plugin' }),
-      ])
-    );
   });
 
   it('should setup @nx/cypress/plugin', async () => {

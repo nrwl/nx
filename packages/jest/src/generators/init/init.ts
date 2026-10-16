@@ -66,7 +66,7 @@ function updateDependencies(tree: Tree, options: JestInitSchema) {
 }
 
 export function jestInitGenerator(tree: Tree, options: JestInitSchema) {
-  return jestInitGeneratorInternal(tree, { addPlugin: false, ...options });
+  return jestInitGeneratorInternal(tree, options);
 }
 
 export async function jestInitGeneratorInternal(

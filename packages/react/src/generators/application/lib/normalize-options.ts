@@ -27,8 +27,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
     rootProject: options.rootProject,
   });
 
-  options.addPlugin = true;
-
   options.rootProject = appProjectRoot === '.';
 
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);

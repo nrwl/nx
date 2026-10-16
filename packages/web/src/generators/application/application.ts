@@ -178,7 +178,6 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
         'webpack.config.js'
       ),
       skipFormat: true,
-      addPlugin: options.addPlugin,
     });
     // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
   } else if (options.bundler === 'none') {
@@ -248,10 +247,7 @@ function setDefaults(tree: Tree, options: NormalizedSchema) {
 }
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
-  return await applicationGeneratorInternal(host, {
-    addPlugin: false,
-    ...schema,
-  });
+  return await applicationGeneratorInternal(host, schema);
 }
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
@@ -291,7 +287,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         linter: options.linter,
         project: options.projectName,
         unitTestRunner: options.unitTestRunner,
-        addPlugin: options.addPlugin,
       })
     );
   }
@@ -316,7 +311,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       enableTypedLinting,
-      addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
 
@@ -346,7 +340,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
-      addPlugin: options.addPlugin,
       port: options.port,
     });
     tasks.push(viteTask);
@@ -382,7 +375,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
-      addPlugin: options.addPlugin,
       compiler: options.compiler,
     });
     tasks.push(vitestTask);
@@ -451,7 +443,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       host,
       options.projectName,
       joinPathFragments(options.appProjectRoot, `webpack.config.js`),
-      options.addPlugin,
       // Undefined unless --port was passed, so targetDefaults still apply.
       options.port
     );
@@ -463,7 +454,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       host,
       options.projectName,
       joinPathFragments(options.appProjectRoot, `vite.config.ts`),
-      options.addPlugin,
       options.port ?? 4200,
       // An explicit port serves both dev and preview, as in @nx/react:app.
       options.port
@@ -565,7 +555,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       enableTypedLinting,
       webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
-      addPlugin: options.addPlugin,
     });
 
     tasks.push(playwrightTask);
@@ -583,7 +572,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       setupFile: 'none',
       compiler: options.compiler,
       skipFormat: true,
-      addPlugin: options.addPlugin,
     });
     tasks.push(jestTask);
   }
@@ -662,12 +650,6 @@ async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
   });
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
-
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const appProjectName =
     !isUsingTsSolutionConfig || options.name ? projectName : importPath;

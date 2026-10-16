@@ -25,7 +25,6 @@ describe('@nx/playwright:init', () => {
   it('should add the plugin', async () => {
     await initGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
@@ -47,7 +46,6 @@ describe('@nx/playwright:init', () => {
     });
     await initGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
@@ -70,7 +68,6 @@ describe('@nx/playwright:init', () => {
     });
     await initGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
@@ -79,19 +76,5 @@ describe('@nx/playwright:init', () => {
         "@nx/playwright/plugin",
       ]
     `);
-  });
-
-  it('should add inference when a legacy caller disables plugins', async () => {
-    await initGenerator(tree, {
-      skipFormat: true,
-      addPlugin: false,
-      skipPackageJson: false,
-    });
-    const nxJson = readNxJson(tree);
-    expect(nxJson.plugins).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ plugin: '@nx/playwright/plugin' }),
-      ])
-    );
   });
 });

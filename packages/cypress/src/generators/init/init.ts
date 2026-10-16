@@ -96,7 +96,7 @@ function updateProductionFileset(tree: Tree) {
 }
 
 export async function cypressInitGenerator(tree: Tree, options: Schema) {
-  return cypressInitGeneratorInternal(tree, { addPlugin: false, ...options });
+  return cypressInitGeneratorInternal(tree, options);
 }
 
 export async function cypressInitGeneratorInternal(

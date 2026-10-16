@@ -1481,11 +1481,10 @@ describe('app', () => {
       expect(jestPlugin).toBeDefined();
     });
 
-    it('should use crystal vitest when --bundler=rspack and vitest-analog with addPlugin', async () => {
+    it('should use crystal vitest when --bundler=rspack and vitest-analog', async () => {
       await generateApp(appTree, 'app1', {
         bundler: 'rspack',
         unitTestRunner: UnitTestRunner.VitestAnalog,
-        addPlugin: true,
       });
 
       const project = readProjectConfiguration(appTree, 'app1');
@@ -1754,11 +1753,10 @@ describe('app', () => {
         expect(targets.serve.executor).toBe('@angular/build:dev-server');
       });
 
-      it('should use crystal vitest when --bundler=rspack and addPlugin', async () => {
+      it('should use crystal vitest when --bundler=rspack', async () => {
         await generateApp(appTree, 'app1', {
           bundler: 'rspack',
           unitTestRunner: UnitTestRunner.VitestAnalog,
-          addPlugin: true,
         });
 
         const project = readProjectConfiguration(appTree, 'app1');

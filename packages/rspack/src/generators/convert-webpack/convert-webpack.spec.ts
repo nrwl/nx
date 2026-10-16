@@ -13,7 +13,6 @@ describe('Convert webpack', () => {
         directory: 'demo',
         e2eTestRunner: 'none',
         linter: 'none',
-        addPlugin: true,
       });
 
       // ACT

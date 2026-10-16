@@ -34,7 +34,7 @@ export function updateNxJsonSettings(tree: Tree) {
 }
 
 export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
-  return initGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return initGeneratorInternal(tree, schema);
 }
 
 export async function initGeneratorInternal(

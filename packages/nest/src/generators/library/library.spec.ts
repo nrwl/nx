@@ -34,7 +34,6 @@ describe('lib', () => {
     it('should update project configuration', async () => {
       await libraryGenerator(tree, {
         directory: 'my-lib',
-        addPlugin: true,
       });
 
       const config = readProjectConfiguration(tree, 'my-lib');

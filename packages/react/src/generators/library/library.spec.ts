@@ -38,7 +38,6 @@ describe('lib', () => {
     style: 'css',
     component: true,
     strict: true,
-    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -653,10 +652,9 @@ module.exports = withNx(
 `);
     });
 
-    it('should add build targets (legacy)', async () => {
+    it('should add build targets', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
       });
@@ -673,10 +671,9 @@ module.exports = withNx(
       expect(rollupConfig).toContain("main: './src/index.ts'");
     });
 
-    it('should support style none (legacy)', async () => {
+    it('should support style none', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: 'none',

@@ -5,11 +5,6 @@
   "type": "object",
   "description": "Vitest init generator.",
   "properties": {
-    "addPlugin": {
-      "type": "boolean",
-      "x-priority": "internal",
-      "description": "Ignored. The generator always adds the `@nx/vitest` plugin to nx.json."
-    },
     "rootProject": {
       "type": "boolean",
       "x-priority": "internal"

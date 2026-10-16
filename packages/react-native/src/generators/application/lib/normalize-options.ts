@@ -41,7 +41,6 @@ export async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
   });
-  options.addPlugin = true;
 
   const { className, fileName } = names(projectNames.projectSimpleName);
   const iosProjectRoot = joinPathFragments(appProjectRoot, 'ios');

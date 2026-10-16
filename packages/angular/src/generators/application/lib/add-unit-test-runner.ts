@@ -15,7 +15,6 @@ export async function addUnitTestRunner(
         projectRoot: options.appProjectRoot,
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
-        addPlugin: options.addPlugin,
         runtimeTsconfigFileName: 'tsconfig.app.json',
         zoneless: options.zoneless,
       });
@@ -33,7 +32,6 @@ export async function addUnitTestRunner(
         skipFormat: options.skipFormat,
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
-        addPlugin: options.addPlugin,
         zoneless: options.zoneless,
       });
     default:

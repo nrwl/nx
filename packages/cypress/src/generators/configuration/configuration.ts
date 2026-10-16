@@ -69,7 +69,6 @@ export interface CypressE2EConfigSchema {
   webServerCommands?: Record<string, string>;
   ciWebServerCommand?: string;
   ciBaseUrl?: string;
-  addPlugin?: boolean;
 }
 
 type NormalizedSchema = Awaited<ReturnType<typeof normalizeOptions>>;
@@ -78,10 +77,7 @@ export function configurationGenerator(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
-  return configurationGeneratorInternal(tree, {
-    addPlugin: false,
-    ...options,
-  });
+  return configurationGeneratorInternal(tree, options);
 }
 
 export async function configurationGeneratorInternal(
@@ -237,8 +233,6 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
   if (!options.baseUrl && !devServerTarget) {
     throw new Error('Either baseUrl or devServerTarget must be provided');
   }
-
-  options.addPlugin = true;
 
   return {
     ...options,

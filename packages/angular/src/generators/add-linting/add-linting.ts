@@ -47,7 +47,6 @@ export async function addLintingGenerator(
       unitTestRunner: options.unitTestRunner,
       enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: rootProject,
-      addPlugin: options.addPlugin ?? false,
       skipPackageJson: options.skipPackageJson,
     })
   );

@@ -52,7 +52,6 @@ export async function addE2e(
         options.appProjectRoot,
         `webpack.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.port
     );
   } else if (options.bundler === 'rspack') {
@@ -66,7 +65,6 @@ export async function addE2e(
         options.appProjectRoot,
         `rspack.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.port
     );
   } else if (options.bundler === 'vite') {
@@ -80,7 +78,6 @@ export async function addE2e(
             options.appProjectRoot,
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
-          options.addPlugin,
           options.port ?? 4200,
           // If the user manually sets the port, then use it for dev and preview
           options.port
@@ -92,7 +89,6 @@ export async function addE2e(
             options.appProjectRoot,
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
-          options.addPlugin,
           options.port ?? 4200,
           // If the user manually sets the port, then use it for dev and preview
           options.port
@@ -110,7 +106,6 @@ export async function addE2e(
         options.appProjectRoot,
         `rsbuild.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.port ?? 4200
     );
   }
@@ -231,7 +226,6 @@ export async function addE2e(
         webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
       });
 
       return e2eTask;

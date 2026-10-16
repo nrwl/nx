@@ -65,7 +65,6 @@ describe('addLinting generator', () => {
       expect.anything(),
       expect.objectContaining({
         project: appProjectName,
-        addPlugin: false,
         rootProject: false,
         tsConfigPaths: [`${appProjectRoot}/tsconfig.app.json`],
       })

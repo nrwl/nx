@@ -47,7 +47,6 @@ export async function applicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -63,7 +62,6 @@ export async function applicationGeneratorInternal(
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(tree, {

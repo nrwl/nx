@@ -49,7 +49,7 @@ export function configurationGenerator(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
-  return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
+  return configurationGeneratorInternal(tree, options);
 }
 
 export async function configurationGeneratorInternal(
@@ -215,7 +215,6 @@ export async function configurationGeneratorInternal(
       directory: options.directory,
       enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject ?? projectConfig.root === '.',
-      addPlugin: options.addPlugin,
     })
   );
 
@@ -268,8 +267,6 @@ async function normalizeOptions(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ): Promise<NormalizedGeneratorOptions> {
-  const addPlugin = true;
-
   const linter = await normalizeLinterOption(tree, options.linter);
 
   if (!options.webServerCommand || !options.webServerAddress) {
@@ -281,7 +278,6 @@ async function normalizeOptions(
 
   return {
     ...options,
-    addPlugin,
     linter,
     directory: options.directory ?? 'e2e',
   };

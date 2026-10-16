@@ -29,7 +29,6 @@ export async function normalizeOptions(
       importPath: options.importPath,
     });
 
-  options.addPlugin = true;
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
   return {

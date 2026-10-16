@@ -29,7 +29,6 @@ export interface VitestGeneratorSchema {
   testTarget?: string;
   skipFormat?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  addPlugin?: boolean;
   runtimeTsconfigFileName?: string;
   compiler?: 'babel' | 'swc';
   projectType?: 'application' | 'library';
@@ -43,8 +42,8 @@ export function addOrChangeTestTarget(
   const nxJson = readNxJson(tree);
   const target = options.testTarget ?? 'test';
 
-  // The plugin only infers the target names it is registered for, so a request
-  // for any other name still needs an explicit target.
+  // The plugin only infers the target names it is registered for, so any other
+  // name gets its own project-scoped plugin registration below.
   hasPlugin ||=
     nxJson.plugins?.some((p) => {
       if (typeof p === 'string') {

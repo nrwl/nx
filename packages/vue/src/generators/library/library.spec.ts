@@ -708,7 +708,6 @@ module.exports = [
         ...defaultSchema,
         setParserOptionsProject: true,
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: false,
         bundler: 'vite',
         skipFormat: true,
@@ -746,7 +745,6 @@ module.exports = [
         ...defaultSchema,
         setParserOptionsProject: true,
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: false,
         bundler: 'vite',
         skipFormat: true,
@@ -762,7 +760,6 @@ module.exports = [
         ...defaultSchema,
         directory: 'my-lib',
         name: 'my-lib', // import path contains the npm scope, so it would be different
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -777,7 +774,6 @@ module.exports = [
         ...defaultSchema,
         directory: 'my-lib',
         name: '@proj/my-lib',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -789,7 +785,6 @@ module.exports = [
       await libraryGenerator(tree, {
         ...defaultSchema, // defaultSchema has no name
         directory: 'my-lib',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -801,7 +796,6 @@ module.exports = [
       await libraryGenerator(tree, {
         ...defaultSchema,
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });

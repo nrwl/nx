@@ -65,7 +65,6 @@ describe('rspack configuration generator', () => {
         framework: 'react',
         target: 'web',
         newProject: false,
-        addPlugin: false,
       });
 
       const tsconfig = readJson(tree, 'tsconfig.json');
@@ -93,7 +92,6 @@ describe('rspack configuration generator', () => {
         framework: 'react',
         target: 'web',
         newProject: false,
-        addPlugin: false,
       });
 
       const tsconfig = readJson(tree, 'tsconfig.json');
@@ -152,7 +150,6 @@ describe('rspack configuration generator', () => {
         framework: 'react',
         target: 'web',
         newProject: false,
-        addPlugin: false,
       });
 
       const tsconfig = readJson(tree, 'apps/app/tsconfig.json');

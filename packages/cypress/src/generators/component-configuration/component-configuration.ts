@@ -35,10 +35,7 @@ export function componentConfigurationGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  return componentConfigurationGeneratorInternal(tree, {
-    addPlugin: false,
-    ...options,
-  });
+  return componentConfigurationGeneratorInternal(tree, options);
 }
 
 export async function componentConfigurationGeneratorInternal(

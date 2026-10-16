@@ -19,7 +19,6 @@ import { addTscAppBuildPlugin } from './add-tsc-build-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {
   getEsBuildConfig,
-  getTscBuildConfig,
   getServeConfig,
   getPruneTargets,
 } from './create-targets';
@@ -51,14 +50,10 @@ export function addProject(
     project.targets.build = getEsBuildConfig(tree, project, options);
     ensurePnpmDeployInputs(tree, options, project.targets.build);
   } else if (options.bundler === 'tsc') {
-    if (options.addPlugin) {
-      options.buildTargetName = addTscAppBuildPlugin(
-        tree,
-        options.appProjectRoot
-      );
-    } else {
-      project.targets.build = getTscBuildConfig(tree, options);
-    }
+    options.buildTargetName = addTscAppBuildPlugin(
+      tree,
+      options.appProjectRoot
+    );
   }
   // The rolldown build target comes from @nx/rolldown:configuration.
   project.targets = {

@@ -37,8 +37,6 @@ export async function normalizeOptions(
     importPath: options.importPath,
   });
 
-  options.addPlugin = true;
-
   const fileName = projectNames.projectFileName;
 
   const parsedTags = options.tags

@@ -344,37 +344,12 @@ describe('app', () => {
     );
   });
 
-  it('should generate native Next configuration when addPlugin is false', async () => {
-    const name = uniq();
-
-    await applicationGenerator(tree, {
-      directory: name,
-      style: 'css',
-      addPlugin: false,
-    });
-
-    expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "//@ts-check
-
-      /** @type {import('next').NextConfig} */
-      const nextConfig = {
-        // Next.js options go here
-        // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
-      };
-
-      module.exports = nextConfig;
-      "
-    `);
-  });
-
   it('should generate a plain next.config.js for the inferred plugin', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
       directory: name,
       style: 'css',
-      addPlugin: true,
     });
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
@@ -948,7 +923,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -1115,7 +1089,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -1143,7 +1116,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });
@@ -1188,7 +1160,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: true,
         src: false,
         skipFormat: true,
@@ -1208,7 +1179,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1226,7 +1196,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         src: false,
         skipFormat: true,

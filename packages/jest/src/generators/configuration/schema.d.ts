@@ -11,7 +11,6 @@ export interface JestProjectSchema {
   skipSerializers?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'none';
   skipFormat?: boolean;
-  addPlugin?: boolean;
   compiler?: 'tsc' | 'babel' | 'swc';
   skipPackageJson?: boolean;
   js?: boolean;

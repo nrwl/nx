@@ -24,7 +24,6 @@ export interface LinterInitOptions {
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
   updatePackageScripts?: boolean;
-  addPlugin?: boolean;
   // Internal option
   eslintConfigFormat?: 'mjs' | 'cjs';
 }
@@ -148,5 +147,5 @@ export async function lintInitGenerator(
   tree: Tree,
   options: LinterInitOptions
 ) {
-  return await initEsLint(tree, { addPlugin: false, ...options });
+  return await initEsLint(tree, options);
 }

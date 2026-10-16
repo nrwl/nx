@@ -21,10 +21,7 @@ export function cypressComponentConfiguration(
   tree: Tree,
   options: CypressComponentConfigurationGeneratorSchema
 ) {
-  return cypressComponentConfigurationInternal(tree, {
-    addPlugin: false,
-    ...options,
-  });
+  return cypressComponentConfigurationInternal(tree, options);
 }
 
 export async function cypressComponentConfigurationInternal(
@@ -44,7 +41,6 @@ export async function cypressComponentConfigurationInternal(
       skipFormat: true,
       framework: 'next',
       jsx: true,
-      addPlugin: options.addPlugin,
     })
   );
 
@@ -55,7 +51,6 @@ export async function cypressComponentConfigurationInternal(
   tasks.push(
     await webpackInitGenerator(tree, {
       skipFormat: true,
-      addPlugin: options.addPlugin,
     })
   );
   const {

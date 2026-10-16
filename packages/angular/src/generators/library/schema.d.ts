@@ -39,6 +39,5 @@ export interface Schema {
   skipTests?: boolean;
   selector?: string;
   skipSelector?: boolean;
-  addPlugin?: boolean;
   skipTsConfig?: boolean;
 }

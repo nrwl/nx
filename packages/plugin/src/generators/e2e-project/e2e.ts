@@ -13,7 +13,6 @@ import {
   names,
   offsetFromRoot,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -48,7 +47,6 @@ interface NormalizedSchema extends Schema {
   pluginPropertyName: string;
   linter: LinterType;
   useProjectJson: boolean;
-  addPlugin: boolean;
   isTsSolutionSetup: boolean;
 }
 
@@ -59,12 +57,6 @@ async function normalizeOptions(
   const linter = await normalizeLinterOption(host, options.linter);
 
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
-
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    options.addPlugin ??
-    (process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false);
 
   let projectRoot: string;
   const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
@@ -89,7 +81,6 @@ async function normalizeOptions(
     linter,
     pluginPropertyName,
     projectRoot,
-    addPlugin,
     useProjectJson: options.useProjectJson ?? !isTsSolutionSetup,
     isTsSolutionSetup,
   };
@@ -162,7 +153,6 @@ async function addJest(host: Tree, options: NormalizedSchema) {
     supportTsx: false,
     skipSerializers: true,
     skipFormat: true,
-    addPlugin: options.addPlugin,
     compiler: options.isTsSolutionSetup ? 'swc' : undefined,
   });
 
@@ -244,7 +234,6 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     project: options.projectName,
     testTarget: 'e2e',
     skipFormat: true,
-    addPlugin: options.addPlugin,
     testEnvironment: 'node',
     coverageProvider: 'none',
   } satisfies Partial<VitestGeneratorSchema>);
@@ -358,7 +347,6 @@ async function addLintingToApplication(
     ],
     unitTestRunner: options.testRunner ?? 'jest',
     enableTypedLinting: false,
-    addPlugin: options.addPlugin,
   });
 }
 
@@ -373,7 +361,6 @@ function updatePluginPackageJson(tree: Tree, options: NormalizedSchema) {
 
 export async function e2eProjectGenerator(host: Tree, schema: Schema) {
   return await e2eProjectGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });

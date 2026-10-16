@@ -84,7 +84,6 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
 export async function pluginGenerator(tree: Tree, schema: Schema) {
   return await pluginGeneratorInternal(tree, {
     useProjectJson: true,
-    addPlugin: false,
     ...schema,
   });
 }
@@ -105,7 +104,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       linter: options.linter,
       unitTestRunner: options.unitTestRunner,
       useProjectJson: options.useProjectJson,
-      addPlugin: options.addPlugin,
       skipFormat: true,
       useTscExecutor: true,
     })
@@ -191,7 +189,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         rootProject: options.rootProject,
         linter: options.linter,
         useProjectJson: options.useProjectJson,
-        addPlugin: options.addPlugin,
         testRunner: options.e2eTestRunner as 'jest' | 'vitest',
       })
     );

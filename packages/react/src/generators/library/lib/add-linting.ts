@@ -36,7 +36,6 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       unitTestRunner: options.unitTestRunner,
       skipPackageJson: options.skipPackageJson,
       enableTypedLinting: isTypedLintingEnabled(options),
-      addPlugin: options.addPlugin,
     })
   );
 
