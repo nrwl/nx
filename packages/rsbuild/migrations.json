@@ -35,7 +35,7 @@
     },
     "update-24-0-0-register-typescript-plugin-for-typecheck": {
       "version": "24.0.0-beta.0",
-      "description": "Register @nx/js/typescript with its typecheck target in TS solution workspaces that use @nx/rsbuild without it, since @nx/rsbuild no longer infers typecheck targets in TS solution setups.",
+      "description": "Register @nx/js/typescript with its typecheck target in workspaces that use @nx/rsbuild without it, and remove the typecheckTargetName option from @nx/rsbuild, since @nx/rsbuild no longer infers typecheck targets.",
       "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
       "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
     }
