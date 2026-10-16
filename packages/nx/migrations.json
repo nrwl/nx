@@ -197,6 +197,12 @@
       "implementation": "./dist/src/migrations/update-24-0-0/find-custom-hashers",
       "prompt": "./dist/src/migrations/update-24-0-0/move-custom-hashers-to-inputs.md",
       "documentation": "./dist/src/migrations/update-24-0-0/find-custom-hashers.md"
+    },
+    "24-0-0-set-affected-granularity-to-project": {
+      "version": "24.0.0-beta.3",
+      "description": "Sets affected.granularity to \"project\" in nx.json so nx affected keeps selecting whole projects. Nx 24 selects individual affected tasks by default.",
+      "implementation": "./dist/src/migrations/update-24-0-0/set-affected-granularity-to-project",
+      "documentation": "./dist/src/migrations/update-24-0-0/set-affected-granularity-to-project.md"
     }
   }
 }
