@@ -31,34 +31,44 @@ const TYPECHECKING_BUILD_CONFIG =
 
 /**
  * Whether the project's build already type-checks it, judged from its
- * `project.json` targets and its bundler config files. Options set inside a
- * bundler config can't be read, so those builds are assumed to type-check,
- * which is their default.
+ * `project.json` targets and, when no build executor is found, its bundler
+ * config files. Options set inside a bundler config can't be read, so those
+ * builds are assumed to type-check, which is their default.
  */
 export function buildTypechecksProject(
   siblingFiles: string[],
   targets: Record<string, TargetConfiguration> | undefined
 ): boolean {
-  if (siblingFiles.some((file) => TYPECHECKING_BUILD_CONFIG.test(file))) {
-    return true;
-  }
-  return Object.values(targets ?? {}).some(({ executor, options }) => {
+  let hasBuildExecutor = false;
+  for (const { executor, options } of Object.values(targets ?? {})) {
     if (!executor) {
-      return false;
+      continue;
     }
     if (TYPECHECKING_EXECUTORS.has(executor)) {
       return true;
     }
     if (SKIP_TYPECHECK_EXECUTORS.has(executor)) {
-      return options?.skipTypeCheck !== true;
+      hasBuildExecutor = true;
+      if (options?.skipTypeCheck !== true) {
+        return true;
+      }
+    } else if (TYPE_CHECKER_PLUGIN_EXECUTORS.has(executor)) {
+      hasBuildExecutor = true;
+      if (typeCheckerPluginRuns(options)) {
+        return true;
+      }
     }
-    if (TYPE_CHECKER_PLUGIN_EXECUTORS.has(executor)) {
-      return (
-        options?.typeCheckOptions !== false &&
-        options?.skipTypeChecking !== true &&
-        options?.typeCheck !== false
-      );
-    }
+  }
+  if (hasBuildExecutor) {
     return false;
-  });
+  }
+  return siblingFiles.some((file) => TYPECHECKING_BUILD_CONFIG.test(file));
+}
+
+function typeCheckerPluginRuns(options: Record<string, unknown> | undefined) {
+  if (options?.typeCheckOptions !== undefined) {
+    return options.typeCheckOptions !== false;
+  }
+  // `typeCheck` is the schema alias of `skipTypeChecking`.
+  return (options?.skipTypeChecking ?? options?.typeCheck) !== true;
 }

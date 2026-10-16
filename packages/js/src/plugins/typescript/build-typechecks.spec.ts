@@ -38,12 +38,36 @@ describe('buildTypechecksProject', () => {
       for (const options of [
         { typeCheckOptions: false },
         { skipTypeChecking: true },
-        { typeCheck: false },
+        { typeCheck: true },
+        { typeCheckOptions: false, skipTypeChecking: false },
       ]) {
         expect(
           buildTypechecksProject([], { build: { executor, options } })
         ).toBe(false);
       }
+      for (const options of [
+        { typeCheck: false },
+        { typeCheckOptions: { async: true }, skipTypeChecking: true },
+      ]) {
+        expect(
+          buildTypechecksProject([], { build: { executor, options } })
+        ).toBe(true);
+      }
+    }
+  );
+
+  it.each([
+    ['webpack.config.js', '@nx/webpack:webpack', { skipTypeChecking: true }],
+    ['rspack.config.ts', '@nx/rspack:rspack', { typeCheckOptions: false }],
+    ['rollup.config.cjs', '@nx/rollup:rollup', { skipTypeCheck: true }],
+  ])(
+    'should read the executor options before assuming %s type-checks',
+    (file, executor, options) => {
+      expect(
+        buildTypechecksProject([file, 'project.json'], {
+          build: { executor, options },
+        })
+      ).toBe(false);
     }
   );
 
