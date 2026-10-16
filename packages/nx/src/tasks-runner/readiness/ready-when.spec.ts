@@ -200,7 +200,7 @@ describe('normalizeReadyWhen', () => {
     [{ url: 'http://x', port: 1 }, 'expected exactly one of'],
     [{ url: 'ftp://x' }, '"url" must be an http or https URL'],
     [{ url: 'not a url' }, '"url" must be an http or https URL'],
-    [{ port: 70000 }, '"port" must be an integer from 1 to 65535'],
+    [{ port: 70000 }, '"port" must be an integer from 0 to 65535, or "auto"'],
     [{ port: 80, host: '' }, '"host" must be a non-empty string'],
     [{ command: '' }, '"command" must be a non-empty string'],
     [{ logMatches: [] }, '"logMatches" must be a non-empty string'],
@@ -229,7 +229,10 @@ describe('normalizeReadyWhen', () => {
       '"{options.port ?? 4200 ?? env.PORT}" has a fallback after the literal "4200" that can never be used',
     ],
     [{ port: '{port}' }, '"port" contains an unknown placeholder'],
-    [{ port: '{options.host}' }, '"port" must be an integer from 1 to 65535'],
+    [
+      { port: '{options.host}' },
+      '"port" must be an integer from 0 to 65535, or "auto"',
+    ],
     // Only a port reads `auto` as a port the server picks
     [
       { url: 'http://localhost:{options.hmrPort}' },

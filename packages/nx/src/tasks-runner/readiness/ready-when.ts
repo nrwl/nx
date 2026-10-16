@@ -205,7 +205,7 @@ function resolveReadyWhen(
         !(port instanceof EnvDeferred) &&
         (!isPositiveInteger(port) || port > 65535)
       ) {
-        throw invalid('"port" must be an integer from 1 to 65535');
+        throw invalid('"port" must be an integer from 0 to 65535, or "auto"');
       }
       const host = resolveWithoutBraces('host', hostScope);
       if (host == null) {

@@ -2639,7 +2639,7 @@ describe('TaskOrchestrator', () => {
         null,
         null,
         'failure',
-        'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 1 to 65535.',
+        'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
       ],
     ])(
       'settles a waiter on a producer with an invalid readyWhen when its row is %s',
@@ -2801,7 +2801,7 @@ describe('TaskOrchestrator', () => {
           1,
           expect.objectContaining({
             message:
-              'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 1 to 65535.',
+              'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
           })
         );
       });
@@ -2885,7 +2885,7 @@ describe('TaskOrchestrator', () => {
               orchestrator.options.lifeCycle.appendTaskOutput
             ).toHaveBeenCalledWith(
               'app:serve',
-              '\r\nTask "app:serve" has an invalid "readyWhen": "port" must be an integer from 1 to 65535. Nothing in this run waits for it to be ready, so it runs without a readiness check.\r\n',
+              '\r\nTask "app:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto". Nothing in this run waits for it to be ready, so it runs without a readiness check.\r\n',
               false
             );
             // The TUI replaces an owned task's terminal in runTask
