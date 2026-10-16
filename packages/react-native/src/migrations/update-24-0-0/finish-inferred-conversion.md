@@ -1,8 +1,8 @@
 # Replace removed @nx/react-native executors with inferred tasks
 
-Nx 24 removed `@nx/react-native:build-android`, `@nx/react-native:build-ios`, `@nx/react-native:bundle`, `@nx/react-native:pod-install`, `@nx/react-native:run-android`, `@nx/react-native:run-ios`, `@nx/react-native:start`, `@nx/react-native:upgrade` (including old `@nrwl` aliases). The `convert-to-inferred` generator has already run. The recorded pre-migration projects, target defaults, errors and file diff show what it changed.
+Nx 24 removed `@nx/react-native:build-android`, `@nx/react-native:build-ios`, `@nx/react-native:bundle`, `@nx/react-native:pod-install`, `@nx/react-native:run-android`, `@nx/react-native:run-ios`, `@nx/react-native:start`, `@nx/react-native:upgrade` (including old `@nrwl` aliases).
 
-Before changing anything, confirm this migration left work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, the advisory context reports a conversion error, or the generator changed files. If none applies, make no changes and stop. Otherwise review the generator's changes instead of redoing them, and treat each advisory-context item as pending work.
+Before changing anything, check for leftover work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, or the advisory context reports a conversion error. If none applies, make no changes and stop. Treat each advisory-context item as pending work.
 
 1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Do not restore executor registrations or install older Nx packages.
 2. Preserve platform variants, bundle output paths, Metro config and native setup. Keep storybook, sync-deps and ensure-symlink executors. Device validation may be skipped explicitly; graph creation may not.

@@ -1,8 +1,8 @@
 # Replace removed @nx/expo executors with inferred tasks
 
-Nx 24 removed `@nx/expo:build`, `@nx/expo:export`, `@nx/expo:install`, `@nx/expo:prebuild`, `@nx/expo:run`, `@nx/expo:serve`, `@nx/expo:start`, `@nx/expo:submit` (including old `@nrwl` aliases). The `convert-to-inferred` generator has already run. The recorded pre-migration projects, target defaults, errors and file diff show what it changed.
+Nx 24 removed `@nx/expo:build`, `@nx/expo:export`, `@nx/expo:install`, `@nx/expo:prebuild`, `@nx/expo:run`, `@nx/expo:serve`, `@nx/expo:start`, `@nx/expo:submit` (including old `@nrwl` aliases).
 
-Before changing anything, confirm this migration left work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, the advisory context reports a conversion error, or the generator changed files. If none applies, make no changes and stop. Otherwise review the generator's changes instead of redoing them, and treat each advisory-context item as pending work.
+Before changing anything, check for leftover work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, or the advisory context reports a conversion error. If none applies, make no changes and stop. Treat each advisory-context item as pending work.
 
 1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Do not restore executor registrations or install older Nx packages.
 2. Preserve Expo/EAS profiles, platforms, environment settings and target names. Keep build-list, sync-deps, update and ensure-symlink executors. Do not submit or publish releases as validation; validate local builds where possible.

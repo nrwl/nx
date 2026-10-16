@@ -1,8 +1,8 @@
 # Replace removed @nx/playwright executors with inferred tasks
 
-Nx 24 removed `@nx/playwright:playwright` (including old `@nrwl` aliases). The `convert-to-inferred` generator has already run. The recorded pre-migration projects, target defaults, errors and file diff show what it changed.
+Nx 24 removed `@nx/playwright:playwright` (including old `@nrwl` aliases).
 
-Before changing anything, confirm this migration left work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, the advisory context reports a conversion error, or the generator changed files. If none applies, make no changes and stop. Otherwise review the generator's changes instead of redoing them, and treat each advisory-context item as pending work.
+Before changing anything, check for leftover work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, or the advisory context reports a conversion error. If none applies, make no changes and stop. Treat each advisory-context item as pending work.
 
 1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Do not restore executor registrations or install older Nx packages.
 2. Preserve Playwright config, browser projects, CI sharding and webServer orchestration.

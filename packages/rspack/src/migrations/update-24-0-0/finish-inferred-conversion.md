@@ -1,8 +1,8 @@
 # Replace removed @nx/rspack executors with inferred tasks
 
-Nx 24 removed `@nx/rspack:rspack`, `@nx/rspack:dev-server` (including old `@nrwl` aliases). The `convert-to-inferred` generator has already run. The recorded pre-migration projects, target defaults, errors and file diff show what it changed.
+Nx 24 removed `@nx/rspack:rspack`, `@nx/rspack:dev-server` (including old `@nrwl` aliases).
 
-Before changing anything, confirm this migration left work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, the advisory context reports a conversion error, or the generator changed files. If none applies, make no changes and stop. Otherwise review the generator's changes instead of redoing them, and treat each advisory-context item as pending work.
+Before changing anything, check for leftover work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, or the advisory context reports a conversion error. If none applies, make no changes and stop. Treat each advisory-context item as pending work.
 
 1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Do not restore executor registrations or install older Nx packages.
 2. Register `@nx/rspack/plugin` with options/includes that preserve custom target names and mixed inferred/explicit projects. Replace remaining removed-executor targets, including those in package.json and filtered targetDefaults. Transfer their behavior before removing obsolete defaults. Preserve configurations, dependencies, cache inputs/outputs and environment behavior. Do not silently delete unsupported options or unrelated targets. Migrate old @nrwl aliases too.

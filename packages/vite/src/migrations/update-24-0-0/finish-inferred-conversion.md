@@ -1,8 +1,8 @@
 # Replace removed @nx/vite executors with inferred tasks
 
-Nx 24 removed `@nx/vite:build`, `@nx/vite:dev-server`, `@nx/vite:preview-server` (including old `@nrwl` aliases) and `@nx/vitest:test` (including the old `@nx/vite:test` and `@nrwl/vite:test` names). This migration also converts Vitest targets because `@nx/vitest` may only be installed transitively, so its own migration might not run. The `convert-to-inferred` generator has already run. The recorded pre-migration projects, target defaults, errors and file diff show what it changed.
+Nx 24 removed `@nx/vite:build`, `@nx/vite:dev-server`, `@nx/vite:preview-server` (including old `@nrwl` aliases) and `@nx/vitest:test` (including the old `@nx/vite:test` and `@nrwl/vite:test` names). This migration also converts Vitest targets because `@nx/vitest` may only be installed transitively, so its own migration might not run.
 
-Before changing anything, confirm this migration left work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, the advisory context reports a conversion error, or the generator changed files. If none applies, make no changes and stop. Otherwise review the generator's changes instead of redoing them, and treat each advisory-context item as pending work.
+Before changing anything, check for leftover work: a project target, a package.json target or a `targetDefaults` entry still uses a removed executor, or the advisory context reports a conversion error. If none applies, make no changes and stop. Treat each advisory-context item as pending work.
 
 1. Inspect all affected projects and workspace defaults. Repair config-loading errors first. Do not restore executor registrations or install older Nx packages.
 2. Move build/serve/preview options into Vite configuration or supported CLI flags. Preserve environment modes, output directories, aliases, framework plugins, library entrypoints, assets and server ports. Register `@nx/vitest` for test targets and keep Vitest options in the Vitest config.
