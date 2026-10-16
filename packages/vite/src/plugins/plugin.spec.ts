@@ -131,50 +131,57 @@ describe('@nx/vite/plugin', () => {
       expect(targets?.['serve-input'].command).toMatch(/vite/);
     });
 
-    it('should infer typecheck with tsc --noEmit when not using TS solution setup', async () => {
-      tempFs.createFileSync('tsconfig.json', '');
+    it.each([false, true])(
+      'should not infer typecheck for non-Vue projects (TS solution: %s)',
+      async (tsSolution) => {
+        (isUsingTsSolutionSetup as Mock).mockReturnValue(tsSolution);
+        tempFs.createFileSync('tsconfig.json', '');
 
-      const nodes = await createNodesFunction(
-        ['vite.config.ts'],
-        {
-          buildTargetName: 'build',
-          serveTargetName: 'serve',
-          previewTargetName: 'preview',
-          testTargetName: 'test',
-          serveStaticTargetName: 'serve-static',
-        },
-        context
-      );
-
-      expect(nodes[0][1].projects['.'].targets.typecheck.command).toEqual(
-        `tsc --noEmit`
-      );
-      expect(nodes[0][1].projects['.'].targets.typecheck.metadata)
-        .toMatchInlineSnapshot(`
-        {
-          "description": "Runs type-checking for the project.",
-          "help": {
-            "command": "npx tsc --help",
-            "example": {
-              "options": {
-                "noEmit": true,
-              },
-            },
+        const nodes = await createNodesFunction(
+          ['vite.config.ts'],
+          {
+            buildTargetName: 'build',
+            serveTargetName: 'serve',
+            previewTargetName: 'preview',
+            testTargetName: 'test',
+            serveStaticTargetName: 'serve-static',
           },
-          "technologies": [
-            "typescript",
-          ],
-        }
-      `);
-      expect(
-        nodes[0][1].projects['.'].targets.typecheck.dependsOn
-      ).toBeUndefined();
-      expect(
-        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
-      ).toBeUndefined();
-    });
+          context
+        );
 
-    it('should pass the app tsconfig to tsc when not using TS solution setup', async () => {
+        expect(nodes[0][1].projects['.'].targets.typecheck).toBeUndefined();
+      }
+    );
+
+    it.each([false, true])(
+      'should not infer typecheck when compiler option is tsgo (TS solution: %s)',
+      async (tsSolution) => {
+        (isUsingTsSolutionSetup as Mock).mockReturnValue(tsSolution);
+        tempFs.createFileSync('tsconfig.json', '');
+
+        const nodes = await createNodesFunction(
+          ['vite.config.ts'],
+          {
+            buildTargetName: 'build',
+            serveTargetName: 'serve',
+            previewTargetName: 'preview',
+            testTargetName: 'test',
+            serveStaticTargetName: 'serve-static',
+            compiler: 'tsgo',
+          },
+          context
+        );
+
+        expect(nodes[0][1].projects['.'].targets.typecheck).toBeUndefined();
+      }
+    );
+
+    it('should infer a vue-tsc --noEmit typecheck for Vue projects when not using TS solution setup', async () => {
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi
+          .fn()
+          .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+      });
       tempFs.createFileSync('tsconfig.json', '');
       tempFs.createFileSync('tsconfig.app.json', '');
 
@@ -190,55 +197,21 @@ describe('@nx/vite/plugin', () => {
         context
       );
 
-      expect(nodes[0][1].projects['.'].targets.typecheck.command).toEqual(
-        `tsc -p tsconfig.app.json --noEmit`
-      );
-    });
-
-    it('should not infer typecheck for tsc when using TS solution setup', async () => {
-      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
-      tempFs.createFileSync('tsconfig.json', '');
-
-      const nodes = await createNodesFunction(
-        ['vite.config.ts'],
-        {
-          buildTargetName: 'build',
-          serveTargetName: 'serve',
-          previewTargetName: 'preview',
-          testTargetName: 'test',
-          serveStaticTargetName: 'serve-static',
-        },
-        context
-      );
-
-      expect(nodes[0][1].projects['.'].targets.typecheck).toBeUndefined();
-    });
-
-    it('should use tsgo for typecheck when compiler option is tsgo', async () => {
-      tempFs.createFileSync('tsconfig.json', '');
-
-      const nodes = await createNodesFunction(
-        ['vite.config.ts'],
-        {
-          buildTargetName: 'build',
-          serveTargetName: 'serve',
-          previewTargetName: 'preview',
-          testTargetName: 'test',
-          serveStaticTargetName: 'serve-static',
-          compiler: 'tsgo',
-        },
-        context
-      );
-
       const typecheck = nodes[0][1].projects['.'].targets.typecheck;
-      expect(typecheck.command).toEqual(`tsgo --noEmit`);
-      expect(typecheck.inputs).toContainEqual({
-        externalDependencies: ['@typescript/native-preview'],
-      });
+      expect(typecheck.command).toEqual(
+        `vue-tsc -p tsconfig.app.json --noEmit`
+      );
+      expect(typecheck.dependsOn).toBeUndefined();
+      expect(typecheck.syncGenerators).toBeUndefined();
+      expect(typecheck.metadata.technologies).toEqual(['typescript', 'vue']);
     });
 
-    it('should not infer typecheck for tsgo when using TS solution setup', async () => {
-      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+    it('should not infer typecheck for Vue projects when compiler option is tsc', async () => {
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi
+          .fn()
+          .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+      });
       tempFs.createFileSync('tsconfig.json', '');
 
       const nodes = await createNodesFunction(
@@ -249,7 +222,7 @@ describe('@nx/vite/plugin', () => {
           previewTargetName: 'preview',
           testTargetName: 'test',
           serveStaticTargetName: 'serve-static',
-          compiler: 'tsgo',
+          compiler: 'tsc',
         },
         context
       );

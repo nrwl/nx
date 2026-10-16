@@ -41,12 +41,16 @@ export interface VitePluginOptions {
   devTargetName?: string;
   previewTargetName?: string;
   serveStaticTargetName?: string;
+  /**
+   * Name of the `vue-tsc` typecheck target inferred for Vue projects. Other
+   * projects get their typecheck target from `@nx/js/typescript`.
+   */
   typecheckTargetName?: string | false;
   /**
-   * The compiler to use for type-checking. When unset, defaults to `vue-tsc`
-   * for Vue projects (detected via the `vite:vue` plugin) and `tsc` otherwise.
-   * Set to `tsgo` to use the TypeScript Go compiler (`@typescript/native-preview`),
-   * or `vue-tsc` to force Vue-aware type-checking when auto-detection misses your setup.
+   * The compiler used to typecheck Vue projects. Defaults to `vue-tsc` when the
+   * `vite:vue` plugin is detected. Set `vue-tsc` to force the target when
+   * detection misses your setup, or `tsc`/`tsgo` to skip it and rely on
+   * `@nx/js/typescript`.
    */
   compiler?: 'tsc' | 'tsgo' | 'vue-tsc';
   watchDepsTargetName?: string;
@@ -273,36 +277,35 @@ async function buildViteTargets(
     }
   }
 
-  if (options.typecheckTargetName !== false && tsConfigFiles.length) {
-    const hasVuePlugin = viteBuildConfig.plugins?.some(
-      (p) => p.name === 'vite:vue' || p.name === 'vite:vue2'
-    );
-    // Explicit `compiler` option wins over inference so users can override
-    // when their setup isn't detected (e.g. custom/non-standard Vue plugin).
-    const resolvedCompiler =
-      options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc');
+  const hasVuePlugin = viteBuildConfig.plugins?.some(
+    (p) => p.name === 'vite:vue' || p.name === 'vite:vue2'
+  );
+  // @nx/js/typescript provides tsc typecheck targets but can't run vue-tsc.
+  const usesVueTsc =
+    (options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc')) === 'vue-tsc';
+  if (
+    usesVueTsc &&
+    options.typecheckTargetName !== false &&
+    tsConfigFiles.length
+  ) {
     const technologies = hasVuePlugin ? ['typescript', 'vue'] : ['typescript'];
 
-    // TS solution setups get typecheck from @nx/js/typescript, which can't run vue-tsc.
     if (!isUsingTsSolutionSetup) {
       targets[options.typecheckTargetName] = createTypecheckTarget({
         mode: 'noEmit',
         projectRoot: joinPathFragments(projectRoot),
         pmc,
         tsConfig: selectTypecheckTsConfig(tsConfigFiles),
-        compiler: resolvedCompiler,
+        compiler: 'vue-tsc',
         namedInputs,
         technologies,
       });
-    } else if (
-      resolvedCompiler === 'vue-tsc' &&
-      tsConfigFiles.includes('tsconfig.json')
-    ) {
+    } else if (tsConfigFiles.includes('tsconfig.json')) {
       targets[options.typecheckTargetName] = createTypecheckTarget({
         mode: 'build',
         projectRoot: joinPathFragments(projectRoot),
         pmc,
-        compiler: resolvedCompiler,
+        compiler: 'vue-tsc',
         targetName: options.typecheckTargetName,
         buildTargetName: targets[options.buildTargetName]
           ? options.buildTargetName
