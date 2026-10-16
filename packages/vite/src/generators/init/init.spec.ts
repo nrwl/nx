@@ -158,6 +158,14 @@ describe('@nx/vite:init', () => {
           "plugins": [
             {
               "options": {
+                "typecheck": {
+                  "targetName": "typecheck",
+                },
+              },
+              "plugin": "@nx/js/typescript",
+            },
+            {
+              "options": {
                 "buildDepsTargetName": "build-deps",
                 "buildTargetName": "build",
                 "devTargetName": "dev",
@@ -412,6 +420,15 @@ vite.config.*.timestamp*`
     expect(config).toContain("import tsconfigPaths from 'vite-tsconfig-paths'");
     expect(config).toContain('tsconfigPaths({ loose: true })');
     expect(config).not.toContain('tsconfigPaths: true');
+  });
+
+  it('should register @nx/js/typescript for typecheck outside a TS solution setup', async () => {
+    await initGenerator(tree, { addPlugin: true });
+
+    expect(readNxJson(tree).plugins).toContainEqual({
+      plugin: '@nx/js/typescript',
+      options: { typecheck: { targetName: 'typecheck' } },
+    });
   });
 
   it('should register @nx/js/typescript in a TS solution setup', async () => {
