@@ -1,6 +1,5 @@
 import {
   applyChangesToString,
-  detectPackageManager,
   joinPathFragments,
   logger,
   names,
@@ -17,6 +16,7 @@ import {
   addRemoteRoute,
   addRemoteToConfig,
 } from '../../../module-federation/ast-utils';
+import { getWorkspaceDependencyVersion } from '../../../utils/get-workspace-dependency-version';
 
 let tsModule: typeof import('typescript');
 
@@ -137,9 +137,7 @@ function addRemoteAsHostDependency(
     );
   }
 
-  const packageManager = detectPackageManager(tree.root);
-  // npm doesn't support workspace: protocol, use * instead
-  const versionSpec = packageManager === 'npm' ? '*' : 'workspace:*';
+  const versionSpec = getWorkspaceDependencyVersion(tree.root);
 
   updateJson(tree, hostPackageJsonPath, (json) => {
     json.devDependencies ??= {};
