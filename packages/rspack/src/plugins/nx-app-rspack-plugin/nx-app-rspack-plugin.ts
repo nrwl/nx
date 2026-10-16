@@ -47,12 +47,17 @@ export class NxAppRspackPlugin {
       useNormalizedEntry: true,
       compiler,
     });
+    compiler.context = compiler.options.context;
 
     if (compiler.options.target) {
       this.options.target = compiler.options.target;
     }
 
-    if (this.options.target === 'web' || this.options.target === 'webworker') {
+    if (
+      this.options.target === 'web' ||
+      this.options.target === 'webworker' ||
+      this.options.ssr
+    ) {
       applyWebConfig(this.options, compiler.options, {
         useNormalizedEntry: true,
         compiler,

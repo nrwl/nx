@@ -434,7 +434,7 @@ describe('Webpack Plugin', () => {
     );
   });
 
-  it('should be able to support webpack config with nx enhanced and babel', () => {
+  it('should support native webpack plugins with babel', () => {
     const appName = uniq('app');
 
     runCLI(
@@ -444,26 +444,33 @@ describe('Webpack Plugin', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx } = require('@nx/webpack');
-      const { withReact } = require('@nx/react');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+      const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
       const { join } = require('path');
-      
-      const pluginOption = {
-        index: 'apps/${appName}/src/index.html',
-        main: 'apps/${appName}/src/main.ts',
-        tsConfig: 'apps/${appName}/tsconfig.app.json',
-        outputPath: 'dist/apps/${appName}',
-      }
-      
-      // Nx composable plugins for webpack.
-      module.exports = composePlugins(
-        withNx(pluginOption),
-        withReact(pluginOption),
-      );`
+
+      module.exports = {
+        output: {
+          path: join(__dirname, '../../dist/apps/${appName}'),
+        },
+        plugins: [
+          new NxAppWebpackPlugin({
+            compiler: 'babel',
+            index: './src/index.html',
+            main: './src/main.ts',
+            tsConfig: './tsconfig.app.json',
+            outputHashing: 'none',
+          }),
+          new NxReactWebpackPlugin(),
+        ],
+      };`
     );
 
     const result = runCLI(`build ${appName}`);
 
+    checkFilesExist(
+      `dist/apps/${appName}/main.js`,
+      `dist/apps/${appName}/index.html`
+    );
     expect(result).toContain(`nx run ${appName}:build`);
     expect(result).toContain(
       `Successfully ran target build for project ${appName}`

@@ -57,18 +57,34 @@ export async function convertConfigToRspackPluginGenerator(
         const rspackConfigPath = currentTargetOptions?.rspackConfig || '';
 
         if (rspackConfigPath && tree.exists(rspackConfigPath)) {
-          let { withNxConfig: rspackOptions, withReactConfig } =
-            extractRspackOptions(tree, rspackConfigPath);
+          let {
+            withNxConfig: rspackOptions,
+            withReactConfig,
+            strippedSource,
+          } = extractRspackOptions(tree, rspackConfigPath);
 
           // if rspackOptions === undefined
           // withNx was not found in the rspack.config.js file so we should skip this project
           if (rspackOptions !== undefined) {
             let parsedOptions = {};
             if (rspackOptions) {
-              parsedOptions = JSON.parse(
-                preprocessText(rspackOptions.getText())
-              );
+              // Parse before writing anything: a non-literal option value leaves the
+              // project untouched for the migration prompt instead of a config whose
+              // helper calls are gone and whose options never made it across.
+              try {
+                parsedOptions = JSON.parse(
+                  preprocessText(rspackOptions.getText())
+                );
+              } catch {
+                throw new Error(
+                  `Could not read the \`withNx\` options in ${rspackConfigPath}. They must be a plain object literal; spreads, variables and function calls are not supported.`
+                );
+              }
               parsedOptions = normalizePathOptions(project.root, parsedOptions);
+            }
+
+            if (strippedSource !== undefined) {
+              tree.write(rspackConfigPath, strippedSource);
             }
 
             target.options.standardRspackConfigFunction = true;

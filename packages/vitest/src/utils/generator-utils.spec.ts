@@ -4,6 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateNxJson,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -28,6 +29,25 @@ describe('createOrEditViteConfig', () => {
   });
 
   describe('vitest config generation', () => {
+    it.each([5, 6, 7])('should preserve path aliases on Vite %s', (version) => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { vite: `^${version}.0.0` },
+      }));
+      createOrEditViteConfig(
+        tree,
+        { project: 'my-app', includeVitest: true, coverageProvider: 'none' },
+        true,
+        { vitestFileName: true }
+      );
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+      expect(config).toContain(
+        "import tsconfigPaths from 'vite-tsconfig-paths'"
+      );
+      expect(config).toContain('tsconfigPaths({ loose: true })');
+      expect(config).not.toContain('tsconfigPaths: true');
+    });
+
     it('should escape special characters in testInclude patterns', () => {
       createOrEditViteConfig(
         tree,

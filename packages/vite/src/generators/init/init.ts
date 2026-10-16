@@ -84,14 +84,14 @@ export async function initGeneratorInternal(
   updateNxJsonSettings(tree);
   await ignoreViteTempFiles(tree, schema.projectRoot);
 
-  if (schema.setupPathsPlugin) {
-    await setupPathsPlugin(tree, { skipFormat: true });
-  }
-
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveToDevDependencies(tree));
     tasks.push(await checkDependenciesInstalled(tree, schema));
+  }
+
+  if (schema.setupPathsPlugin) {
+    await setupPathsPlugin(tree, { skipFormat: true });
   }
 
   if (!schema.skipFormat) {

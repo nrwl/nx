@@ -25,25 +25,15 @@ module.exports = {
   ],
 };
 <%_ } else { _%>
-const { composePlugins, withNx} = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 
-// Nx plugins for webpack.
-module.exports = composePlugins(
-  withNx({
-    target: 'node',
-  }),
-  (config) => {
-    config.output = {
-      ...config.output,
-      ...(process.env.NODE_ENV !== 'production' && {
-      clean: true,
+module.exports = {
+  output: {
+    clean: true,
+    ...(process.env.NODE_ENV !== 'production' && {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
-      }),
-    };
-    config.devtool = 'source-map';
-    // Update the webpack config as needed here.
-    // e.g. `config.plugins.push(new MyPlugin())`
-    return config;
-  }
-);
+    }),
+  },
+  plugins: [new NxAppWebpackPlugin({ target: 'node', sourceMap: true })],
+};
 <%_ } _%>

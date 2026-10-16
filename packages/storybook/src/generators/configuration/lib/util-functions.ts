@@ -576,7 +576,8 @@ export function createProjectStorybookDir(
   viteConfigFilePath?: string,
   hasPlugin?: boolean,
   viteConfigFileName?: string,
-  usesReactNative?: boolean
+  usesReactNative?: boolean,
+  useNativeTsconfigPaths = true
 ) {
   let projectDirectory =
     getProjectType(tree, root, projectType as 'application' | 'library') ===
@@ -628,6 +629,7 @@ export function createProjectStorybookDir(
     hasPlugin,
     viteConfigFileName,
     usesReactNative,
+    useNativeTsconfigPaths,
   });
 
   if (js) {

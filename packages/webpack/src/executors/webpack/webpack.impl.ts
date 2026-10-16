@@ -1,3 +1,4 @@
+import { webpackExecutorContext } from '../../plugins/nx-webpack-plugin/lib/normalize-options';
 import { eachValueFrom } from '@nx/devkit/internal';
 import {
   ExecutorContext,
@@ -139,7 +140,17 @@ export async function* webpackExecutor(
     );
   }
 
-  const configs = await getWebpackConfigs(options, context);
+  const configs = await webpackExecutorContext.run(
+    {
+      options: _options,
+      target: {
+        project: context.projectName,
+        target: context.targetName,
+        configuration: context.configurationName,
+      },
+    },
+    () => getWebpackConfigs(options, context)
+  );
 
   return yield* eachValueFrom(
     of(configs).pipe(

@@ -57,18 +57,34 @@ export async function convertConfigToWebpackPluginGenerator(
         const webpackConfigPath = currentTargetOptions?.webpackConfig || '';
 
         if (webpackConfigPath && tree.exists(webpackConfigPath)) {
-          let { withNxConfig: webpackOptions, withReactConfig } =
-            extractWebpackOptions(tree, webpackConfigPath);
+          let {
+            withNxConfig: webpackOptions,
+            withReactConfig,
+            strippedSource,
+          } = extractWebpackOptions(tree, webpackConfigPath);
 
           // if webpackOptions === undefined
           // withNx was not found in the webpack.config.js file so we should skip this project
           if (webpackOptions !== undefined) {
             let parsedOptions = {};
             if (webpackOptions) {
-              parsedOptions = JSON.parse(
-                preprocessText(webpackOptions.getText())
-              );
+              // Parse before writing anything: a non-literal option value leaves the
+              // project untouched for the migration prompt instead of a config whose
+              // helper calls are gone and whose options never made it across.
+              try {
+                parsedOptions = JSON.parse(
+                  preprocessText(webpackOptions.getText())
+                );
+              } catch {
+                throw new Error(
+                  `Could not read the \`withNx\` options in ${webpackConfigPath}. They must be a plain object literal; spreads, variables and function calls are not supported.`
+                );
+              }
               parsedOptions = normalizePathOptions(project.root, parsedOptions);
+            }
+
+            if (strippedSource !== undefined) {
+              tree.write(webpackConfigPath, strippedSource);
             }
 
             target.options.standardWebpackConfigFunction = true;

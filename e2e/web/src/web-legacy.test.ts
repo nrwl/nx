@@ -89,10 +89,8 @@ describe('Web Components Applications (legacy)', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-      module.exports = composePlugins(withNx(), withWeb(), (config, context) => {
-        return config;
-      });
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+      module.exports = () => ({ plugins: [new NxAppWebpackPlugin()] });
     `
     );
     runCLI(`build ${appName} --outputHashing=none`);
@@ -104,10 +102,8 @@ describe('Web Components Applications (legacy)', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-      module.exports = composePlugins(withNx(), withWeb(), async (config, context) => {
-        return config;
-      });
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+      module.exports = async () => ({ plugins: [new NxAppWebpackPlugin()] });
     `
     );
     runCLI(`build ${appName} --outputHashing=none`);
@@ -119,10 +115,8 @@ describe('Web Components Applications (legacy)', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-      module.exports = composePlugins(withNx(), withWeb(), Promise.resolve((config, context) => {
-        return config;
-      }));
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+      module.exports = Promise.resolve(() => ({ plugins: [new NxAppWebpackPlugin()] }));
     `
     );
     runCLI(`build ${appName} --outputHashing=none`);
