@@ -166,7 +166,7 @@ type ReferenceExpansionCache = Map<string, Map<string, ReferenceExpansion>>;
 
 type InvocationCache = {
   fileHashes: Record<string, string>;
-  rawFiles: Record<string, string>;
+  rawFiles: Record<string, string | undefined>;
   picomatchMatchers: Record<string, (input: string) => boolean>;
   extendedFilesHashes: Map<string, string>;
   configOwners: Map<string, string>;
@@ -1879,21 +1879,27 @@ function getFileHash(
   const relativePath = posixRelative(workspaceRoot, filePath);
   if (!cache.fileHashes[relativePath]) {
     const content = readFile(filePath, workspaceRoot, cache);
-    cache.fileHashes[relativePath] = hashArray([content]);
+    cache.fileHashes[relativePath] = hashArray([content ?? '<missing>']);
   }
 
   return cache.fileHashes[relativePath];
 }
 
+/**
+ * Returns `undefined` for a missing file, as `ts.sys.readFile` does, so a
+ * tsconfig extending a deleted file is reported by TypeScript instead of
+ * throwing.
+ */
 function readFile(
   filePath: string,
   workspaceRoot: string,
   cache: InvocationCache
-): string {
+): string | undefined {
   const relativePath = posixRelative(workspaceRoot, filePath);
-  if (!cache.rawFiles[relativePath]) {
-    const content = readFileSync(filePath, 'utf8');
-    cache.rawFiles[relativePath] = content;
+  if (!(relativePath in cache.rawFiles)) {
+    cache.rawFiles[relativePath] = existsSync(filePath)
+      ? readFileSync(filePath, 'utf8')
+      : undefined;
   }
 
   return cache.rawFiles[relativePath];
