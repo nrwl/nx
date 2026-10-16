@@ -1,10 +1,5 @@
-import {
-  logger,
-  ProjectGraphProjectNode,
-  readJsonFile,
-  workspaceRoot,
-} from '@nx/devkit';
-import { findNodes } from '@nx/js';
+import { logger, ProjectGraphProjectNode, readJsonFile } from '@nx/devkit';
+import { findNodes, getRootTsConfigPath } from '@nx/js';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { getModifiers } from '@typescript-eslint/type-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
@@ -12,10 +7,16 @@ import { dirname, join } from 'path';
 import ts = require('typescript');
 
 function tryReadBaseJson() {
+  // Root tsconfig can be named either `tsconfig.base.json` or `tsconfig.json`;
+  // getRootTsConfigPath() checks both instead of hardcoding the former.
+  const tsConfigPath = getRootTsConfigPath();
+  if (!tsConfigPath) {
+    return null;
+  }
   try {
-    return readJsonFile(join(workspaceRoot, 'tsconfig.base.json'));
+    return readJsonFile(tsConfigPath);
   } catch (e) {
-    logger.warn(`Error reading "tsconfig.base.json": \n${JSON.stringify(e)}`);
+    logger.warn(`Error reading "${tsConfigPath}": \n${JSON.stringify(e)}`);
     return null;
   }
 }
