@@ -162,9 +162,9 @@ function canEnableCache(
 
 /**
  * Whether the target name key declares `cache: true` on an entry that always
- * applies. Mirrors `declaresCacheTrue` in `target-normalization.ts`: a filtered
- * entry declaring `cache` makes the value unknowable without project context,
- * so nothing is claimed. Among unfiltered entries the last wins.
+ * applies. A filtered entry declaring `cache` makes the value unknowable
+ * without project context, so nothing is claimed. Among unfiltered entries the
+ * last wins.
  */
 function declaresCacheTrue(value: TargetDefaultValue | undefined): boolean {
   if (!value) {
@@ -296,7 +296,6 @@ function executorDeclaresContinuous(
 
 /**
  * Target names the pre-23 `longRunningTask` guard excluded from caching.
- * Mirrors `isLongRunningTarget` in `target-normalization.ts`.
  */
 function isLongRunningTargetName(targetName: string): boolean {
   return (
