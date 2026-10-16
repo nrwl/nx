@@ -1,8 +1,8 @@
-#### Register `@nx/js/typescript` for typecheck targets in TS solution workspaces
+#### Register `@nx/js/typescript` for typecheck targets
 
-In TS solution workspaces, `@nx/remix/plugin` no longer infers a `typecheck` target; `@nx/js/typescript` provides it instead. This migration registers `@nx/js/typescript` with only its typecheck target when the workspace uses `@nx/remix/plugin` and doesn't register `@nx/js/typescript` yet, so your projects keep a `typecheck` target.
+`@nx/remix/plugin` no longer infers a `typecheck` target in any setup, and `@nx/js/typescript` provides it instead. This migration registers `@nx/js/typescript` with only its typecheck target when the workspace uses `@nx/remix/plugin` and doesn't register `@nx/js/typescript` yet, so your projects keep a `typecheck` target.
 
-The new registration reuses the plugin's `typecheckTargetName`. Registrations with `typecheckTargetName: false` are skipped, and workspaces that aren't TS solution setups are left unchanged.
+The new registration reuses the plugin's `typecheckTargetName`, and the migration then removes that option from `@nx/remix/plugin`. Registrations with `typecheckTargetName: false` have the option removed without registering `@nx/js/typescript`.
 
 #### Sample code changes
 
@@ -13,7 +13,10 @@ The new registration reuses the plugin's `typecheckTargetName`. Registrations wi
   "plugins": [
     {
       "plugin": "@nx/remix/plugin",
-      "options": { "typecheckTargetName": "typecheck" }
+      "options": {
+        "buildTargetName": "build",
+        "typecheckTargetName": "typecheck"
+      }
     }
   ]
 }
@@ -26,7 +29,7 @@ The new registration reuses the plugin's `typecheckTargetName`. Registrations wi
   "plugins": [
     {
       "plugin": "@nx/remix/plugin",
-      "options": { "typecheckTargetName": "typecheck" }
+      "options": { "buildTargetName": "build" }
     },
     {
       "plugin": "@nx/js/typescript",
