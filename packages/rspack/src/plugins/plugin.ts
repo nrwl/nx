@@ -202,10 +202,12 @@ async function createRspackTargets(
   // The rspack 1 dev server reads webpack-dev-server's env var
   const devServerReadyWhen = getDevServerReadyWhen(
     devServer || undefined,
-    getRspackDevServerMajorVersion(join(context.workspaceRoot, projectRoot)) ===
-      1
-      ? 'WEBPACK_DEV_SERVER_BASE_PORT'
-      : 'RSPACK_DEV_SERVER_BASE_PORT'
+    () =>
+      getRspackDevServerMajorVersion(
+        join(context.workspaceRoot, projectRoot)
+      ) === 1
+        ? 'WEBPACK_DEV_SERVER_BASE_PORT'
+        : 'RSPACK_DEV_SERVER_BASE_PORT'
   );
 
   const env: NodeJS.ProcessEnv = {};
@@ -341,7 +343,7 @@ function takesEnv(config: unknown): boolean {
 
 function getDevServerReadyWhen(
   devServer: { port?: unknown; host?: unknown; ipc?: unknown } | undefined,
-  basePortEnv: string
+  getBasePortEnv: () => string
 ): TargetConfiguration['readyWhen'] {
   // The dev server listens on a socket for any boolean ipc, false included,
   // and no probe can check a socket
@@ -350,16 +352,16 @@ function getDevServerReadyWhen(
     return undefined;
   }
   return {
-    port: `{options.port ?? ${getDevServerPort(devServer?.port, basePortEnv)}}`,
+    port: `{options.port ?? ${getDevServerPort(devServer?.port, getBasePortEnv)}}`,
     host: `{options.host ?? ${getReadyWhenHost(devServer?.host)}}`,
   };
 }
 
 // With the port unset or 'auto', the dev server picks a free one starting at
 // this env var, else 8080
-function getDevServerPort(port: unknown, basePortEnv: string): string {
+function getDevServerPort(port: unknown, getBasePortEnv: () => string): string {
   return port === undefined || port === null || port === 'auto'
-    ? `env.${basePortEnv} ?? 8080`
+    ? `env.${getBasePortEnv()} ?? 8080`
     : String(port);
 }
 
