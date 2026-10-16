@@ -31,7 +31,6 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       devTargetName: 'dev',
       startTargetName: 'start',
       serveStaticTargetName: 'serve-static',
-      typecheckTargetName: 'typecheck',
     },
     [
       {
