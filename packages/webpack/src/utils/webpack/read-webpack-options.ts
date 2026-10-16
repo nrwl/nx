@@ -1,7 +1,5 @@
-import { workspaceRoot } from '@nx/devkit';
-import { isNxWebpackComposablePlugin } from '../config';
 import type { Configuration } from 'webpack';
-import { readNxJsonFromDisk } from '@nx/devkit/internal';
+import { isNxWebpackComposablePlugin } from '../composable-plugin';
 
 /**
  * Reads the webpack options from a give webpack configuration. The configuration can be:
@@ -25,6 +23,11 @@ export async function readWebpackOptions(
     config: unknown
   ): Promise<Configuration | Configuration[]> => {
     if (isNxWebpackComposablePlugin(config)) {
+      // Lazy-required so reading any other config does not load them
+      const { workspaceRoot } =
+        require('@nx/devkit') as typeof import('@nx/devkit');
+      const { readNxJsonFromDisk } =
+        require('@nx/devkit/internal') as typeof import('@nx/devkit/internal');
       return await config(
         {},
         {
