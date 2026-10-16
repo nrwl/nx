@@ -107,29 +107,47 @@ The build task depends on builds of project dependencies. When TypeScript projec
 The `serve` and `preview` tasks are [ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready) once the dev server accepts connections, and a task that depends on them with `waitFor: "ready"` waits until then.
 Nx checks this address:
 
-- Port: the `--port` value, otherwise `devServer.port` from the Webpack configuration, otherwise the `WEBPACK_DEV_SERVER_BASE_PORT` environment variable, otherwise `8080`. A port of `auto` counts as unset.
+- Port: the `--port` value, otherwise `devServer.port` from the Webpack configuration, otherwise the `WEBPACK_DEV_SERVER_BASE_PORT` environment variable, otherwise `8080`. A `devServer.port` of `auto` counts as unset.
 - Host: the `--host` value, otherwise `devServer.host`, otherwise `localhost`.
 
 With several configurations that set `devServer`, Nx reads the last one, because webpack-cli starts its dev server only after the others accept connections.
-When you select configurations with `--config-name`, Nx still checks the last one, which might not start.
-Set your own `readyWhen` in that case.
 
-With port `0`, the dev server picks a random port that Nx can't check.
-`serve` and `preview` still run on their own, but fail before they start when another task waits for them.
-
-When `devServer.ipc` is set, the dev server listens on a socket instead of a port, and Nx infers no check.
+When the port is `0`, or you pass `--port auto`, the dev server picks its port when it starts, so Nx skips the check.
 A task that waits for `serve` or `preview` then runs once they start.
-The inferred check doesn't follow `--ipc` on the command line, so with it Nx keeps checking a port the dev server doesn't open, and a waiting task times out.
-Set your own `readyWhen` in that case.
 
 The `serve-static` task is ready once the file server accepts connections on its `host` and `port` options.
 
 When the port Nx checks is taken, the file server moves to the next free port.
-The dev server does the same when the port is unset or `auto`.
+The dev server does the same when the port is unset or `devServer.port` is `auto`.
 Nx keeps checking the original port, so the process already listening there counts as ready.
 
-To check something else, set `readyWhen` on the target in `project.json`.
-It replaces the inferred check.
+Nx checks the wrong port in these cases:
+
+- The configuration reads the port from an environment variable, such as `port: Number(process.env.APP_PORT)`. Nx reads the configuration when it builds the project graph and caches the result. It doesn't see a value that changes between runs, or one that the target's `env` option sets.
+- A Webpack plugin changes `devServer.port`. Nx reads the configuration without running its plugins.
+- The port comes from a `--port` flag inside the `args` option, such as `"args": ["--port=4300"]`. Nx follows the `port` option, which `args` doesn't set. Pass the port as the `port` option or as `--port` on the command line instead.
+- You select a configuration with `--config-name`, and it isn't the last one that sets `devServer`. Nx still checks the port of the last one.
+
+When another task waits for that check, Nx fails the dev server task after 60 seconds, and the waiting task doesn't run.
+To fix it, set `readyWhen` yourself.
+It replaces the inferred check, and `null` turns the check off.
+To set it for every Webpack project, use a target default:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "serve": [
+      {
+        "filter": { "plugin": "@nx/webpack/plugin" },
+        "readyWhen": { "port": "{env.APP_PORT ?? 4200}" }
+      }
+    ]
+  }
+}
+```
+
+A `readyWhen` on the target in `project.json` takes precedence over target defaults.
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/webpack/plugin`.
 
