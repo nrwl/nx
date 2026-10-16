@@ -323,17 +323,21 @@ export function getReadyWhen(
   }
   const { readyWhen, executor, data } = inputs;
   const { options } = data;
+  let commandEnv: NodeJS.ProcessEnv | undefined;
   return normalizeReadyWhen(readyWhen, task.id, {
     ...data,
     env: () => {
       if (executor !== 'nx:run-commands') {
         return taskEnv;
       }
+      if (commandEnv) {
+        return commandEnv;
+      }
       // The env run-commands runs its command with. Required lazily, because
       // run-command.ts loads this module before it loads a tasks runner
       const { calculateCwd, processEnv } =
         require('../../executors/run-commands/running-tasks') as typeof import('../../executors/run-commands/running-tasks');
-      return processEnv(
+      commandEnv = processEnv(
         options.color as boolean,
         calculateCwd(
           options.cwd as string,
@@ -345,6 +349,7 @@ export function getReadyWhen(
         options.envFile as string,
         taskEnv
       );
+      return commandEnv;
     },
   });
 }
