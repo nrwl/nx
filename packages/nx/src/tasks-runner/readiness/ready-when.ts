@@ -28,6 +28,15 @@ type ReadyWhenProbe<Deferred> = { timeout: number; interval?: number } & (
   | { kind: 'logMatches'; logMatches: (string | Deferred)[] }
 );
 
+// With 0 or `auto` the server picks its port at startup, so there is nothing
+// to probe and waiters wait for the producer to start
+type ServerPicksPort = {
+  kind: 'serverPicksPort';
+  port: 0 | 'auto';
+  host?: string | EnvDeferred;
+  timeout: number;
+};
+
 export type NormalizedReadyWhen = ReadyWhenProbe<never>;
 
 // A process that doesn't run the producer only waits on its readiness row
@@ -70,16 +79,19 @@ export function normalizeReadyWhen(
   readyWhen: ReadyWhen,
   taskId: string,
   data: ReadyWhenData
-): NormalizedReadyWhen {
+): NormalizedReadyWhen | null {
+  const probe = resolveReadyWhen(readyWhen, taskId, data);
   // Only checkReadyWhen's env throws EnvUnknownHere, so nothing is deferred
-  return resolveReadyWhen(readyWhen, taskId, data) as NormalizedReadyWhen;
+  return probe.kind === 'serverPicksPort'
+    ? null
+    : (probe as NormalizedReadyWhen);
 }
 
 function resolveReadyWhen(
   readyWhen: ReadyWhen,
   taskId: string,
   data: ReadyWhenData
-): ReadyWhenProbe<EnvDeferred> {
+): ReadyWhenProbe<EnvDeferred> | ServerPicksPort {
   const invalid = (reason: string) =>
     new InvalidReadyWhenError(
       `Task "${taskId}" has an invalid "readyWhen": ${reason}.`
@@ -113,10 +125,14 @@ function resolveReadyWhen(
     ...scope,
     isUnset: (value) => typeof value === 'boolean',
   };
-  // webpack-dev-server and the Rspack dev server treat `auto` as an unset port
+  // The Rspack dev server reads an empty port option as 0. An empty env var
+  // stays unset.
   const portScope: TokenScope = {
-    ...scope,
-    isUnset: (value) => typeof value === 'boolean' || value === 'auto',
+    ...hostScope,
+    read: (name, path) => {
+      const value = scope.read(name, path);
+      return value === '' ? 0 : value;
+    },
   };
   const resolve = (value: unknown, tokenScope = scope): unknown => {
     if (typeof value !== 'string') {
@@ -184,6 +200,8 @@ function resolveReadyWhen(
         port = Number(port);
       }
       if (
+        port !== 0 &&
+        port !== 'auto' &&
         !(port instanceof EnvDeferred) &&
         (!isPositiveInteger(port) || port > 65535)
       ) {
@@ -191,7 +209,9 @@ function resolveReadyWhen(
       }
       const host = resolveWithoutBraces('host', hostScope);
       if (host == null) {
-        return { kind: 'port', port, ...shared };
+        return port === 0 || port === 'auto'
+          ? { kind: 'serverPicksPort', port, ...shared }
+          : { kind: 'port', port, ...shared };
       }
       if (
         !(host instanceof EnvDeferred) &&
@@ -199,7 +219,9 @@ function resolveReadyWhen(
       ) {
         throw invalid('"host" must be a non-empty string');
       }
-      return { kind: 'port', port, host, ...shared };
+      return port === 0 || port === 'auto'
+        ? { kind: 'serverPicksPort', port, host, ...shared }
+        : { kind: 'port', port, host, ...shared };
     }
     case 'command': {
       const command = resolve(config.command);
@@ -289,11 +311,14 @@ export function notReadyError(
   );
 }
 
-function describeReadyWhen(readyWhen: ReadyWhenProbe<EnvDeferred>): string {
+function describeReadyWhen(
+  readyWhen: ReadyWhenProbe<EnvDeferred> | ServerPicksPort
+): string {
   switch (readyWhen.kind) {
     case 'url':
       return `url ${readyWhen.url}`;
     case 'port':
+    case 'serverPicksPort':
       return readyWhen.host
         ? `port ${readyWhen.host}:${readyWhen.port}`
         : `port ${readyWhen.port}`;

@@ -263,9 +263,9 @@
         },
         "port": {
           "type": ["integer", "string"],
-          "minimum": 1,
+          "minimum": 0,
           "maximum": 65535,
-          "description": "Ready when a TCP connection to this port succeeds. A string must resolve to a port number through a placeholder such as {options.port}"
+          "description": "Ready when a TCP connection to this port succeeds. A string must resolve to a port number through a placeholder such as {options.port}. With 0 or auto the server picks its port, so Nx runs no check"
         },
         "host": {
           "type": "string",

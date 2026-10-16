@@ -647,6 +647,8 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
   Nx tries both `127.0.0.1` and `::1` unless `host` names the address to connect to.
   A `host` of `0.0.0.0` connects to `127.0.0.1`, and `::` connects to `::1`.
   `local-ip`, `local-ipv4` and `local-ipv6` resolve the way webpack-dev-server and the Rspack dev server resolve them.
+  With a `port` of `0` or `auto`, the server picks its port when it starts.
+  Nx then runs no check, and the target counts as ready once it has started.
 - `command`: ready when the command, run through the shell at the workspace root, exits with code 0.
   Use it for a container health check:
   `docker inspect --format='{{.State.Health.Status}}' db | grep -qx healthy`.
@@ -665,9 +667,9 @@ For an `nx:run-commands` target, that includes its `env` and `envFile` options.
 The variable name can contain only the letters `a` to `z` in either case, digits, `_`, `.`, `-`,
 and parentheses.
 A placeholder can list fallbacks after `??`, and Nx uses the first one that is set and not empty.
-In `port`, `auto` counts as not set, because webpack-dev-server and the Rspack dev server treat it as an unset port.
-In `host` and `port`, `true` and `false` also count as not set.
+In `host` and `port`, `true` and `false` count as not set.
 A flag passed without a value, such as `--host`, parses as `true`, and `--no-host` parses as `false`.
+In `port`, an empty option such as `--port=` counts as `0`, so the fallbacks after it aren't used.
 The last fallback can be plain text, as in `"{options.port ?? env.PORT ?? 4200}"`.
 A placeholder that resolves to no value makes `readyWhen` invalid, with an error that names the placeholder.
 Other text in braces, such as a `{{.State.Health.Status}}` template in a command, is left as it is.
@@ -681,7 +683,7 @@ It defaults to `250`.
 If the target isn't ready within `timeout`, its task fails and the tasks waiting for it are skipped, as with any failed dependency.
 The continuous task keeps running until nothing in the run needs it.
 When no task in the run waits for the target, the failed check logs its reason only with `NX_VERBOSE_LOGGING=true`.
-An invalid `readyWhen`, such as a `port` that isn't a number from 1 to 65535, fails the task before it starts when a task in the run waits for it.
+An invalid `readyWhen`, such as a `port` above 65535, fails the task before it starts when a task in the run waits for it.
 Otherwise Nx prints a warning and runs the task without a check.
 Tasks whose `dependsOn` entry doesn't set `waitFor` to `ready` start as before.
 When one entry asks for `ready` and another entry reaches the same continuous target without it, the task waits for `ready`.

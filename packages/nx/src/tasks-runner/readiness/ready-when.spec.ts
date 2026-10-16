@@ -73,9 +73,6 @@ describe('normalizeReadyWhen', () => {
     expect(
       normalize({ port: '{options.port}', host: '{options.host}' })
     ).toMatchObject({ port: 4200, host: 'dev.local' });
-    expect(normalize({ port: '{options.hmrPort ?? 4300}' })).toMatchObject({
-      port: 4300,
-    });
     expect(
       normalize({
         command:
@@ -140,6 +137,45 @@ describe('normalizeReadyWhen', () => {
     );
   });
 
+  it.each([
+    [{ port: 0 }, {}],
+    [{ port: 'auto' }, {}],
+    [{ port: '{options.port ?? 4200}' }, { port: 0 }],
+    [{ port: '{options.port ?? 4200}' }, { port: '0' }],
+    [{ port: '{options.port ?? 4200}' }, { port: 'auto' }],
+    [{ port: '{options.port ?? 4200}' }, { port: '' }],
+  ])('skips the check of %j with the options %j', (readyWhen, options) => {
+    expect(
+      normalizeReadyWhen(readyWhen, 'app:serve', {
+        ...data,
+        options: { ...data.options, ...options },
+      })
+    ).toBeNull();
+  });
+
+  it('treats an empty env var as an unset port', () => {
+    expect(
+      normalizeReadyWhen({ port: '{env.PORT ?? 4200}' }, 'app:serve', {
+        ...data,
+        env: () => ({ PORT: '' }),
+      })
+    ).toMatchObject({ port: 4200 });
+  });
+
+  // A waiter in another process can't read PORT and checks the host, so the
+  // producer's process must check it too
+  it('checks the host when the server picks the port', () => {
+    expect(() =>
+      normalizeReadyWhen(
+        { port: '{env.PORT}', host: '{options.host}' },
+        'app:serve',
+        { ...data, options: {}, env: () => ({ PORT: '0' }) }
+      )
+    ).toThrow(
+      'Task "app:serve" has an invalid "readyWhen": "{options.host}" has no value.'
+    );
+  });
+
   it('reads env tokens case-insensitively on Windows', () => {
     const platform = process.platform;
     Object.defineProperty(process, 'platform', { value: 'win32' });
@@ -164,7 +200,6 @@ describe('normalizeReadyWhen', () => {
     [{ url: 'http://x', port: 1 }, 'expected exactly one of'],
     [{ url: 'ftp://x' }, '"url" must be an http or https URL'],
     [{ url: 'not a url' }, '"url" must be an http or https URL'],
-    [{ port: 0 }, '"port" must be an integer from 1 to 65535'],
     [{ port: 70000 }, '"port" must be an integer from 1 to 65535'],
     [{ port: 80, host: '' }, '"host" must be a non-empty string'],
     [{ command: '' }, '"command" must be a non-empty string'],
@@ -195,8 +230,7 @@ describe('normalizeReadyWhen', () => {
     ],
     [{ port: '{port}' }, '"port" contains an unknown placeholder'],
     [{ port: '{options.host}' }, '"port" must be an integer from 1 to 65535'],
-    // `auto` is an unset port, and only a port
-    [{ port: '{options.hmrPort}' }, '"{options.hmrPort}" has no value'],
+    // Only a port reads `auto` as a port the server picks
     [
       { url: 'http://localhost:{options.hmrPort}' },
       '"url" must be an http or https URL',
@@ -305,8 +339,14 @@ describe('checkReadyWhen', () => {
     });
   });
 
+  it('waits for the producer to start when the server picks the port', () => {
+    expect(check({ port: 'auto', host: 'h' })).toEqual({
+      timeout: 60_000,
+      description: 'port h:auto',
+    });
+  });
+
   it.each([
-    [{ port: 0 }, '"port" must be an integer from 1 to 65535'],
     [{ port: '{options.prot}' }, '"{options.prot}" has no value'],
     [{ port: '{env.PORT}', host: '' }, '"host" must be a non-empty string'],
     [

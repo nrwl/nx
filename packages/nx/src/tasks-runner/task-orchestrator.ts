@@ -1923,6 +1923,7 @@ export class TaskOrchestrator {
     let env: NodeJS.ProcessEnv;
     let readyWhen: NormalizedReadyWhen | null;
     let uncheckedReason: string | undefined;
+    let readyOnStart: boolean | undefined;
     try {
       const taskSpecificEnv = await this.processedTasks.get(task.id);
       pipeOutput = await this.pipeOutputCapture(task);
@@ -1957,8 +1958,9 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput
           );
-      ({ readyWhen, uncheckedReason } = this.getReadinessCheck(task, () =>
-        this.getReadyWhen(task, env)
+      ({ readyWhen, uncheckedReason, readyOnStart } = this.getReadinessCheck(
+        task,
+        () => this.getReadyWhen(task, env)
       ));
       await this.waitForReadyDependencies(task);
     } catch (e) {
@@ -1995,6 +1997,12 @@ export class TaskOrchestrator {
       }
       if (readyWhen) {
         this.startReadinessProbe(task, readyWhen, childProcess);
+      }
+      // Waiters here, in other processes and in the TUI hold on a configured
+      // readyWhen until it gets a verdict
+      if (readyOnStart) {
+        this.recordReadiness(task, TaskReadiness.Ready);
+        this.armReadiness(task.id).resolve();
       }
       this.runningContinuousTasks.set(task.id, {
         runningTask: childProcess,
@@ -2057,9 +2065,16 @@ export class TaskOrchestrator {
   private getReadinessCheck<T>(
     task: Task,
     resolve: () => T | null
-  ): { readyWhen: T | null; uncheckedReason?: string } {
+  ): { readyWhen: T | null; uncheckedReason?: string; readyOnStart?: boolean } {
     try {
-      return { readyWhen: resolve() };
+      const readyWhen = resolve();
+      return {
+        readyWhen,
+        // A readyWhen resolves to no check when the server picks its port
+        readyOnStart:
+          readyWhen === null &&
+          getReadyWhenConfig(task, this.projectGraph) != null,
+      };
     } catch (e) {
       if (
         !(e instanceof InvalidReadyWhenError) ||
