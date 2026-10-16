@@ -141,10 +141,11 @@ The below is purely an example of you might compose them together into one holis
 // scripts/release.ts
 
 import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
-import * as yargs from 'yargs';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 (async () => {
-  const options = await yargs
+  const options = await yargs(hideBin(process.argv))
     .version(false) // don't use the default meaning of version in yargs
     .option('version', {
       description:

@@ -12,13 +12,6 @@ export default defineConfig({
     alias: [
       { find: /^nx\/src\/(.*)$/, replacement: `${import.meta.dirname}/src/$1` },
       { find: /^nx\/bin\/(.*)$/, replacement: `${import.meta.dirname}/bin/$1` },
-      // Source uses CJS-style namespace access (yargs.terminalWidth()); the
-      // ESM entry only exposes `default`, so pin to the CJS entry, which
-      // vitest interops as jest did.
-      {
-        find: /^yargs$/,
-        replacement: `${import.meta.dirname}/node_modules/yargs/index.cjs`,
-      },
     ],
   },
   test: {

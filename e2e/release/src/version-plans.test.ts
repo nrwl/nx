@@ -480,9 +480,10 @@ Update the independent packages with a patch, preminor, and prerelease.
       `
 const { releaseChangelog, releasePublish, releaseVersion } = require('nx/release');
 const yargs = require('yargs');
+const { hideBin } = require('yargs/helpers');
 
 (async () => {
-  const options = await yargs
+  const options = await yargs(hideBin(process.argv))
     .version(false) // don't use the default meaning of version in yargs
     .option('version', {
       description:
