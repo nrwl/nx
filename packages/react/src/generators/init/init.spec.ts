@@ -44,6 +44,18 @@ describe('init', () => {
     );
     expect(hasRouterPlugin).toBeTruthy();
   });
+  it('should register @nx/js/typescript for typecheck only outside a TS solution setup', async () => {
+    await reactInitGenerator(tree, {
+      skipFormat: true,
+      useReactRouterPlugin: true,
+    });
+
+    expect(readNxJson(tree).plugins).toContainEqual({
+      plugin: '@nx/js/typescript',
+      options: { typecheck: { targetName: 'typecheck' } },
+    });
+  });
+
   it('should register @nx/js/typescript in a TS solution setup', async () => {
     updateJson(tree, 'package.json', (json) => {
       json.workspaces = ['packages/*'];

@@ -52,7 +52,7 @@ export {
   updateTsconfigFiles,
 } from './src/utils/typescript/ts-solution-setup';
 export {
-  ensureTypescriptPluginForTsSolution,
+  ensureTypescriptPlugin,
   registerTypescriptPluginForTypecheck,
 } from './src/utils/typescript/add-typescript-plugin';
 

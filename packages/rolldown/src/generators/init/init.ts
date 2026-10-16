@@ -6,7 +6,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescriptPluginForTsSolution } from '@nx/js/internal';
+import { ensureTypescriptPlugin } from '@nx/js/internal';
 import { createNodesV2 } from '../../plugins/plugin';
 import {
   assertSupportedRolldownVersion,
@@ -34,17 +34,10 @@ export async function rolldownInitGenerator(tree: Tree, schema: Schema) {
     await createProjectGraphAsync(),
     '@nx/rolldown/plugin',
     createNodesV2,
-    {
-      buildTargetName: ['build', 'rolldown:build', 'rolldown-build'],
-      typecheckTargetName: [
-        'typecheck',
-        'rolldown:typecheck',
-        'rolldown-typecheck',
-      ],
-    },
+    { buildTargetName: ['build', 'rolldown:build', 'rolldown-build'] },
     schema.updatePackageScripts
   );
-  await ensureTypescriptPluginForTsSolution(tree, schema.updatePackageScripts);
+  await ensureTypescriptPlugin(tree, schema.updatePackageScripts);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

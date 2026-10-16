@@ -70,4 +70,21 @@ describe('init', () => {
       expect.objectContaining({ plugin: '@nx/js/typescript' })
     );
   });
+
+  it('should register @nx/js/typescript for typecheck only outside a TS solution setup', async () => {
+    await initGeneratorInternal(tree, { addPlugin: true });
+
+    const plugins = readNxJson(tree).plugins;
+    expect(plugins).toContainEqual({
+      plugin: '@nx/js/typescript',
+      options: { typecheck: { targetName: 'typecheck' } },
+    });
+    const rsbuildPlugin = plugins.find(
+      (p) => typeof p !== 'string' && p.plugin === '@nx/rsbuild'
+    );
+    expect(rsbuildPlugin).toBeDefined();
+    expect(
+      typeof rsbuildPlugin === 'string' ? {} : rsbuildPlugin.options
+    ).not.toHaveProperty('typecheckTargetName');
+  });
 });

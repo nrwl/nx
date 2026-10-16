@@ -21,7 +21,11 @@ describe('rolldownInitGenerator', () => {
     });
     expect(readNxJson(tree).plugins).toContainEqual({
       plugin: '@nx/rolldown/plugin',
-      options: { buildTargetName: 'build', typecheckTargetName: 'typecheck' },
+      options: { buildTargetName: 'build' },
+    });
+    expect(readNxJson(tree).plugins).toContainEqual({
+      plugin: '@nx/js/typescript',
+      options: { typecheck: { targetName: 'typecheck' } },
     });
   });
 
