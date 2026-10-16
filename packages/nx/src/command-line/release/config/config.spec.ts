@@ -10117,7 +10117,6 @@ describe('createNxReleaseConfig()', () => {
       `);
     });
 
-    // TODO(v24): remove this test along with the runtime error path
     it('should return an error if deprecated releaseTagPattern* properties are present', async () => {
       const resTopLevel = await createNxReleaseConfig(
         projectGraph,

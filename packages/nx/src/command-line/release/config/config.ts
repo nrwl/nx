@@ -135,18 +135,12 @@ export interface CreateNxReleaseConfigError {
     | 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL'
     | 'DOCKER_VERSION_SCHEME_USES_VERSION_ACTIONS_VERSION_WHEN_SKIP_VERSION_ACTIONS'
     | 'GIT_PUSH_FALSE_WITH_CREATE_RELEASE'
-    // TODO(v24): remove this error code along with detectLegacyReleaseTagProperties
     | 'LEGACY_RELEASE_TAG_PATTERN_PROPERTIES_DETECTED';
   data: Record<string, string | string[]>;
 }
 
-// TODO(v24): remove this helper, the call site in createNxReleaseConfig, and
-// the corresponding handleNxReleaseConfigError case. The deprecated flat
-// `releaseTagPattern*` properties were moved to the nested `releaseTag`
-// object in Nx 22 and the consolidation migration runs again in Nx 23 to
-// catch any configs added after the v22 migration. Once Nx 24 lands, configs
-// that still carry the legacy keys are expected to have been repaired via
-// `nx repair`, and we can drop this back-compat error path entirely.
+// Kept on purpose: these keys are otherwise ignored, so a stale config would
+// silently tag with the default pattern. `nx repair` fixes them (22-0-0 migration).
 const LEGACY_RELEASE_TAG_PROPERTY_NAMES = [
   'releaseTagPattern',
   'releaseTagPatternCheckAllBranchesWhen',
@@ -190,7 +184,6 @@ export async function createNxReleaseConfig(
   error: null | CreateNxReleaseConfigError;
   nxReleaseConfig: NxReleaseConfig | null;
 }> {
-  // TODO(v24): remove this back-compat error along with detectLegacyReleaseTagProperties
   const legacyReleaseTagProperties =
     detectLegacyReleaseTagProperties(userConfig);
   if (legacyReleaseTagProperties.length > 0) {
@@ -1117,7 +1110,6 @@ export async function handleNxReleaseConfigError(
         });
       }
       break;
-    // TODO(v24): remove this case along with detectLegacyReleaseTagProperties
     case 'LEGACY_RELEASE_TAG_PATTERN_PROPERTIES_DETECTED':
       {
         const properties = error.data.properties as string[];
