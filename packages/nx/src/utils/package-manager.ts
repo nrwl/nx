@@ -28,7 +28,6 @@ import {
 } from 'yaml';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
-import { getCatalogManager, resolveCatalogReferenceIfNeeded } from './catalog';
 import {
   readFileIfExisting,
   readJsonFile,
@@ -37,7 +36,7 @@ import {
 } from './fileutils';
 import { getNxInstallationPath } from './installation-directory';
 import { logger } from './logger';
-import { PackageJson, readModulePackageJson } from './package-json';
+import type { PackageJson } from './package-json';
 // Type-only so it stays erased: a value import would defeat the deferred
 // require in createRegistrySpawnContext.
 import type { NpmConfigEnv } from './registry-config';
@@ -624,6 +623,8 @@ export async function resolvePackageVersionUsingRegistry(
   version: string
 ): Promise<string> {
   try {
+    const { resolveCatalogReferenceIfNeeded } =
+      require('./catalog') as typeof import('./catalog');
     const resolvedVersion = resolveCatalogReferenceIfNeeded(
       packageName,
       version
@@ -698,6 +699,8 @@ export async function resolvePackageVersionUsingInstallation(
 
   try {
     let resolvedVersion = version;
+    const { getCatalogManager } =
+      require('./catalog') as typeof import('./catalog');
     const manager = getCatalogManager(workspaceRoot);
     if (manager.isCatalogReference(version)) {
       resolvedVersion = manager.resolveCatalogReference(
@@ -718,6 +721,8 @@ export async function resolvePackageVersionUsingInstallation(
       windowsHide: true,
     });
 
+    const { readModulePackageJson } =
+      require('./package-json') as typeof import('./package-json');
     const { packageJson } = readModulePackageJson(packageName, [dir]);
 
     return packageJson.version;
