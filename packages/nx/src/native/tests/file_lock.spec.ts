@@ -81,4 +81,56 @@ describe('FileLock', () => {
     const second = new FileLock(lockPath);
     expect(second.locked).toBe(false);
   });
+
+  it('answers `true` to `check` on the holder without releasing the lock', () => {
+    const holder = new FileLock(lockPath);
+    holder.lock();
+
+    try {
+      expect(holder.check()).toBe(true);
+      expect(new FileLock(lockPath).locked).toBe(true);
+    } finally {
+      holder.unlock();
+    }
+  });
+
+  it('gives up on a held lock once the timeout passes', async () => {
+    const holder = new FileLock(lockPath);
+    holder.lock();
+    const observer = new FileLock(lockPath);
+
+    try {
+      expect(observer.lockTimeout(50)).toBe(false);
+      expect(await observer.waitTimeout(50)).toBe(false);
+    } finally {
+      holder.unlock();
+    }
+
+    expect(observer.lockTimeout(50)).toBe(true);
+    observer.unlock();
+  });
+
+  it('waits without a deadline for `waitTimeout(Infinity)`', async () => {
+    const holder = new FileLock(lockPath);
+    holder.lock();
+    const waiting = new FileLock(lockPath).waitTimeout(Infinity);
+
+    // A timer, not a resolved promise, as in the `wait` test above.
+    const sentinel = new Promise((resolve) =>
+      setTimeout(() => resolve('sentinel'), 50)
+    );
+    expect(await Promise.race([waiting, sentinel])).toBe('sentinel');
+
+    holder.unlock();
+    expect(await waiting).toBe(true);
+  });
+
+  it('refuses a timeout that is not a count of milliseconds', () => {
+    const lock = new FileLock(lockPath);
+
+    expect(() => lock.lockTimeout(-1)).toThrow(/non-negative number/);
+    expect(() => lock.lockTimeout(NaN)).toThrow(/non-negative number/);
+    expect(() => lock.waitTimeout(-1)).toThrow(/non-negative number/);
+    expect(lock.locked).toBe(false);
+  });
 });
