@@ -48,7 +48,11 @@ class MojoAnalyzer(
 
     if (!isCacheable) {
       log.info("${pluginDescriptor.artifactId}:$goal is not cacheable")
-      return MojoAnalysis(emptySet(), emptySet(), emptySet(), false, isContinuous)
+      // Still hashed, but only from an explicit config: the src defaults don't fit these goals.
+      val configured = cacheConfig.configurations.containsKey("${pluginDescriptor.artifactId}:$goal")
+      val (inputs, ignoredInputs) =
+        if (configured) getInputs(pluginDescriptor, mojoDescriptor, project) else Pair(emptySet(), emptySet())
+      return MojoAnalysis(inputs, ignoredInputs, emptySet(), false, isContinuous)
     }
 
     val (inputs, ignoredInputs) = getInputs(pluginDescriptor, mojoDescriptor, project)
