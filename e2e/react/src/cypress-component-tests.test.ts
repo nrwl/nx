@@ -234,7 +234,17 @@ describe(Input.name, () => {
               }, 1000);
             });
             return {
-              plugins: [new NxAppWebpackPlugin(), new NxReactWebpackPlugin()],
+              plugins: [
+                new NxAppWebpackPlugin({
+                  tsConfig: './tsconfig.app.json',
+                  compiler: 'babel',
+                  main: './src/main.tsx',
+                  index: './src/index.html',
+                  assets: ['./src/favicon.ico', './src/assets'],
+                  styles: [],
+                }),
+                new NxReactWebpackPlugin(),
+              ],
             };
         };
       `

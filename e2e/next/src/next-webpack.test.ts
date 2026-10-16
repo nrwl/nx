@@ -2,7 +2,6 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
-  readFile,
   runCLI,
   uniq,
   updateFile,
@@ -32,16 +31,18 @@ describe('Next.js Webpack', () => {
     );
 
     checkFilesExist(`${appName}/next.config.js`);
-    const generatedConfig = readFile(`${appName}/next.config.js`);
     updateFile(
       `${appName}/next.config.js`,
-      `${generatedConfig}
-        /** @type {import('next').NextConfig['webpack']} */
-        module.exports.webpack = (config) => {
-          console.log('NODE_ENV is', process.env.NODE_ENV);
-          return config;
-        };
-      `
+      `/** @type {import('next').NextConfig} */
+const nextConfig = {
+  webpack: (config) => {
+    console.log('NODE_ENV is', process.env.NODE_ENV);
+    return config;
+  },
+};
+
+module.exports = nextConfig;
+`
     );
     // Unset so `next build` sets it, rather than inheriting jest's "test".
     delete process.env.NODE_ENV;
