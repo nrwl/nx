@@ -13,13 +13,16 @@ import {
   opencodeMcpPath,
   opencodePluginPackage,
 } from '../constants';
+import type { Agent } from '../utils';
+import {
+  findLegacyAgentFiles,
+  hasNxRulesBlock,
+  legacyAgentFolders,
+} from './legacy-agent-config';
 import { legacyAgentFiles } from './legacy-agent-files';
 
-/**
- * Reads and writes the workspace configuration that registers the Nx agent
- * plugins, plus the MCP entries older versions of `nx configure-ai-agents`
- * wrote before the plugins shipped the MCP server themselves.
- */
+// Reads and writes the workspace config that registers the Nx agent plugins,
+// and the MCP entries older versions wrote before the plugins shipped them.
 
 function readJsonOrUndefined(tree: Tree, path: string): any {
   if (!tree.isFile(path)) {
@@ -81,6 +84,7 @@ export function writeCursorPlugin(
     plugins: {
       ...json.plugins,
       [cursorPluginKey]: {
+        ...json.plugins?.[cursorPluginKey],
         enabled: true,
         gitUrl: agentPluginsRepoUrl,
         gitRef: `v${version}`,
@@ -142,8 +146,8 @@ export function hasOpencodeNxMcp(tree: Tree, directory: string): boolean {
 }
 
 /**
- * Pins the Nx plugin in `opencode.json` (OpenCode installs npm plugins itself)
- * and drops the `nx-mcp` server entry the plugin now provides.
+ * Pins the Nx plugin in `opencode.json` (OpenCode installs npm plugins itself),
+ * keeping an existing entry's position and options, and drops `nx-mcp`.
  */
 export function writeOpencodePlugin(
   tree: Tree,
@@ -155,11 +159,24 @@ export function writeOpencodePlugin(
     writeJson(tree, path, {});
   }
   updateJson(tree, path, (json) => {
+    const specifier = `${opencodePluginPackage}@${version}`;
     const plugins: unknown[] = Array.isArray(json.plugin) ? json.plugin : [];
-    json.plugin = [
-      ...plugins.filter((entry) => !isNxOpencodePluginEntry(entry)),
-      `${opencodePluginPackage}@${version}`,
-    ];
+    const existing = plugins.findIndex(isNxOpencodePluginEntry);
+    json.plugin =
+      existing === -1
+        ? [...plugins, specifier]
+        : plugins.flatMap((entry, i) => {
+            if (!isNxOpencodePluginEntry(entry)) {
+              return [entry];
+            }
+            // Duplicate entries for the Nx plugin are dropped
+            if (i !== existing) {
+              return [];
+            }
+            return [
+              Array.isArray(entry) ? [specifier, ...entry.slice(1)] : specifier,
+            ];
+          });
     if (json.mcp?.['nx-mcp']) {
       delete json.mcp['nx-mcp'];
       if (Object.keys(json.mcp).length === 0) {
@@ -202,11 +219,9 @@ export function hasCodexNxMcp(tree: Tree, directory: string): boolean {
 }
 
 /**
- * Enables the Nx plugin for this project in `.codex/config.toml` and removes
- * what older versions of `nx configure-ai-agents` merged into that file: the
- * `nx-mcp` server (the plugin provides it) and subagent entries whose copied
- * definition file has been removed. Returns false when the existing file can't
- * be parsed, in which case it is left untouched.
+ * Enables the Nx plugin in `.codex/config.toml`, dropping `nx-mcp` and entries
+ * for removed copied subagents. Returns false, leaving the file untouched,
+ * when it can't be parsed.
  */
 export function writeCodexPlugin(tree: Tree, directory: string): boolean {
   const config = readCodexConfig(tree, directory);
@@ -260,4 +275,67 @@ export function writeCodexPlugin(tree: Tree, directory: string): boolean {
 export function hasGeminiNxMcp(tree: Tree, directory: string): boolean {
   return !!readJsonOrUndefined(tree, geminiSettingsPath(directory))
     ?.mcpServers?.['nx-mcp'];
+}
+
+// ── Setup detection ──
+
+/** Whether the workspace has an Nx setup for the agent, old or new. */
+export function hasAgentSetup(
+  tree: Tree,
+  directory: string,
+  agent: Agent
+): boolean {
+  const hasLegacyFiles = (folders: readonly string[]) =>
+    findLegacyAgentFiles(tree, directory, folders).length > 0;
+  switch (agent) {
+    case 'claude':
+      return (
+        isClaudePluginEnabled(tree, directory) ||
+        hasNxRulesBlock(tree, join(directory, 'CLAUDE.md'))
+      );
+    case 'cursor':
+      return (
+        hasCursorPlugin(tree, directory) ||
+        hasLegacyFiles(legacyAgentFolders.cursor)
+      );
+    case 'codex':
+      return (
+        hasCodexPlugin(tree, directory) ||
+        hasCodexNxMcp(tree, directory) ||
+        hasLegacyFiles(legacyAgentFolders.codex)
+      );
+    case 'opencode':
+      return (
+        hasOpencodePlugin(tree, directory) ||
+        hasOpencodeNxMcp(tree, directory) ||
+        hasLegacyFiles(legacyAgentFolders.opencode)
+      );
+    case 'copilot':
+      return hasLegacyFiles(legacyAgentFolders.copilot);
+    case 'gemini':
+      return hasGeminiNxMcp(tree, directory);
+  }
+}
+
+/**
+ * Whether Codex or Cursor still has a file-based Nx setup from an older
+ * version, which reads Nx skills from the shared `.agents` folder.
+ */
+export function readsSharedSkills(
+  tree: Tree,
+  directory: string,
+  agent: 'codex' | 'cursor'
+): boolean {
+  if (agent === 'codex') {
+    return (
+      !hasCodexPlugin(tree, directory) &&
+      (hasCodexNxMcp(tree, directory) ||
+        findLegacyAgentFiles(tree, directory, legacyAgentFolders.codex).length >
+          0)
+    );
+  }
+  return (
+    !hasCursorPlugin(tree, directory) &&
+    findLegacyAgentFiles(tree, directory, legacyAgentFolders.cursor).length > 0
+  );
 }

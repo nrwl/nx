@@ -43,12 +43,8 @@ export function cursorSettingsPath(root: string): string {
   return join(root, '.cursor', 'settings.json');
 }
 
-/**
- * Markers around the Nx guidelines block that older versions of
- * `nx configure-ai-agents` wrote into AGENTS.md, CLAUDE.md and GEMINI.md. The
- * guidelines now ship with the Nx agent plugins; the markers are only kept to
- * find and remove those blocks.
- */
+// Markers around the Nx guidelines block older versions wrote into rules
+// files, kept only to find and remove those blocks.
 export const nxRulesMarkerCommentStart = `<!-- nx configuration start-->`;
 export const nxRulesMarkerCommentEnd = `<!-- nx configuration end-->`;
 export const rulesRegex = new RegExp(
@@ -56,11 +52,8 @@ export const rulesRegex = new RegExp(
   'm'
 );
 
-/**
- * The Nx agent plugins are built and released from this repository. Every
- * release publishes the npm packages below with one shared version and tags
- * the repository with `v<version>`.
- */
+// The Nx agent plugins are released from this repository: the npm packages
+// below share one version, and each release is tagged `v<version>`.
 export const agentPluginsRepoUrl =
   'https://github.com/nrwl/nx-ai-agents-config.git';
 /** The package whose `latest` version determines which plugin version to pin. */

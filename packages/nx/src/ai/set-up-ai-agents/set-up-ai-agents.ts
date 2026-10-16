@@ -38,9 +38,12 @@ import {
   pickAgentPluginVersion,
 } from './agent-plugin-version';
 import {
+  hasAgentSetup,
   hasGeminiNxMcp,
+  readCodexConfig,
   readCursorPluginVersion,
   readOpencodePluginVersion,
+  readsSharedSkills,
   writeCodexPlugin,
   writeCursorPlugin,
   writeOpencodePlugin,
@@ -52,9 +55,11 @@ import {
   isCodexPluginInstalled,
 } from './codex-plugin';
 import {
+  findNxRulesFiles,
   legacyAgentFolders,
+  removeDanglingGeminiContextFile,
   removeLegacyAgentFiles,
-  removeNxRulesBlocks,
+  removeNxRulesBlock,
 } from './legacy-agent-config';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
@@ -155,10 +160,18 @@ export async function setupAiAgentsGeneratorImpl(
   // unlike messages they don't mark the agent as outdated.
   const setupErrors: CLIErrorMessageConfig[] = [];
   const keptLegacyFiles: string[] = [];
-
-  // The Nx guidelines ship with the agent plugins now, so the blocks older
-  // versions wrote into AGENTS.md, CLAUDE.md and GEMINI.md are removed.
-  removeNxRulesBlocks(tree, options.directory);
+  // Agents fully set up by this run; a failed one keeps its old setup.
+  const succeeded = new Set<Agent>();
+  // Taken before this run changes anything, to know which agents still rely on
+  // shared files from an older setup.
+  const configuredBefore = new Set(
+    supportedAgents.filter((agent) =>
+      hasAgentSetup(tree, options.directory, agent)
+    )
+  );
+  const sharedSkillsReaders = (['codex', 'cursor'] as const).filter((agent) =>
+    readsSharedSkills(tree, options.directory, agent)
+  );
 
   const latestPluginVersion =
     hasAgent('cursor') || hasAgent('opencode') || hasAgent('codex')
@@ -279,9 +292,9 @@ export async function setupAiAgentsGeneratorImpl(
         // Ignore errors reading .mcp.json
       }
     }
+    succeeded.add('claude');
   }
 
-  let cursorConfigured = false;
   if (hasAgent('cursor')) {
     const version = pickAgentPluginVersion(
       latestPluginVersion,
@@ -290,18 +303,18 @@ export async function setupAiAgentsGeneratorImpl(
     if (version) {
       writeCursorPlugin(tree, options.directory, version);
       removeLegacyFiles(legacyAgentFolders.cursor);
-      cursorConfigured = true;
+      succeeded.add('cursor');
     } else {
       setupErrors.push(pluginVersionUnavailable('cursor'));
     }
   }
 
-  let codexConfigured = false;
   if (hasAgent('codex')) {
-    // Copied subagent files go first so their config entries can go with them.
-    removeLegacyFiles(legacyAgentFolders.codex);
-    if (writeCodexPlugin(tree, options.directory)) {
-      codexConfigured = true;
+    if (readCodexConfig(tree, options.directory)) {
+      // Copied subagent files go first so their config entries can go with them.
+      removeLegacyFiles(legacyAgentFolders.codex);
+      writeCodexPlugin(tree, options.directory);
+      succeeded.add('codex');
     } else {
       setupErrors.push({
         title: `Could not configure the Nx plugin for ${agentDisplayMap.codex}`,
@@ -320,6 +333,7 @@ export async function setupAiAgentsGeneratorImpl(
     if (version) {
       writeOpencodePlugin(tree, options.directory, version);
       removeLegacyFiles(legacyAgentFolders.opencode);
+      succeeded.add('opencode');
     } else {
       setupErrors.push(pluginVersionUnavailable('opencode'));
     }
@@ -337,16 +351,40 @@ export async function setupAiAgentsGeneratorImpl(
     updateJson(tree, geminiSettingsPath, (json) =>
       mcpConfigUpdater(json, nxVersion)
     );
+    succeeded.add('gemini');
   }
 
-  // Codex and Cursor used to read Nx skills from the shared .agents folder.
-  // Gemini still does, so the copies stay while Gemini is configured.
+  if (hasAgent('copilot')) {
+    succeeded.add('copilot');
+  }
+
+  // Older Codex and Cursor setups, and Gemini, read Nx skills from the shared
+  // .agents folder; the copies go once nothing reads them any more.
   if (
-    (cursorConfigured || codexConfigured) &&
+    (succeeded.has('codex') || succeeded.has('cursor')) &&
     !hasAgent('gemini') &&
-    !hasGeminiNxMcp(tree, options.directory)
+    !hasGeminiNxMcp(tree, options.directory) &&
+    sharedSkillsReaders.every((agent) => succeeded.has(agent))
   ) {
     removeLegacyFiles(legacyAgentFolders.sharedSkills);
+  }
+
+  // The Nx guidelines now ship with the plugins. A rules file is cleaned up
+  // only by a run that sets up every agent still reading it.
+  for (const { path, owners } of findNxRulesFiles(tree, options.directory)) {
+    if (
+      owners.some(hasAgent) &&
+      owners.every(
+        (owner) =>
+          succeeded.has(owner) ||
+          (!hasAgent(owner) && !configuredBefore.has(owner))
+      )
+    ) {
+      removeNxRulesBlock(tree, path);
+    }
+  }
+  if (succeeded.has('gemini')) {
+    removeDanglingGeminiContextFile(tree, options.directory);
   }
 
   // Copilot and Gemini have no plugin to install, so they still get the Nx
@@ -433,6 +471,7 @@ export async function setupAiAgentsGeneratorImpl(
         ],
       });
     }
+    const codexConfigured = succeeded.has('codex');
     if (codexConfigured && isCodexAvailable()) {
       if (check) {
         // Codex caches plugins per user, so a teammate who pulls the workspace
@@ -445,7 +484,10 @@ export async function setupAiAgentsGeneratorImpl(
             title: `The Nx plugin for ${agentDisplayMap.codex} is not installed for this user`,
           });
         }
-      } else {
+      } else if (
+        !latestPluginVersion ||
+        !isCodexPluginInstalled(latestPluginVersion)
+      ) {
         const version = latestPluginVersion ?? 'latest';
         const result = installCodexPlugin(version, tree.root);
         if (result.ok) {

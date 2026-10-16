@@ -9,6 +9,7 @@ import {
   geminiSettingsPath,
   rulesRegex,
 } from '../constants';
+import type { Agent } from '../utils';
 import { legacyAgentFiles } from './legacy-agent-files';
 
 /**
@@ -26,10 +27,8 @@ export const legacyAgentFolders = {
 } as const;
 
 /**
- * Identifies a version of a copied file independently of formatting: copied
- * files went through the workspace formatter, which only changes whitespace and
- * punctuation. Must match fingerprintAgentFile in
- * scripts/generate-legacy-ai-agent-files.mjs.
+ * Identifies a copied file's version regardless of formatter changes. Must
+ * match fingerprintAgentFile in scripts/generate-legacy-ai-agent-files.mjs.
  */
 export function fingerprintAgentFile(content: string): string {
   return createHash('sha256')
@@ -103,71 +102,94 @@ export function removeLegacyAgentFiles(
   return { removed, kept };
 }
 
+export type NxRulesFile = {
+  path: string;
+  /** The agents that read this file. */
+  owners: Agent[];
+};
+
+function readGeminiContextFileName(
+  tree: Tree,
+  directory: string
+): string | undefined {
+  const settingsPath = geminiSettingsPath(directory);
+  if (!tree.isFile(settingsPath)) {
+    return undefined;
+  }
+  try {
+    const contextFileName = readJson(tree, settingsPath).contextFileName;
+    return typeof contextFileName === 'string' ? contextFileName : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
- * Removes the Nx guidelines block that older versions of
- * `nx configure-ai-agents` wrote into AGENTS.md, CLAUDE.md, GEMINI.md or the
- * file Gemini's `contextFileName` points to. A file that held nothing but that
- * block is deleted. Returns the workspace-relative paths that changed.
+ * Rules files that still contain the Nx guidelines block older versions of
+ * `nx configure-ai-agents` wrote, with the agents that read each file.
  */
-export function removeNxRulesBlocks(tree: Tree, directory: string): string[] {
-  const geminiSettings = geminiSettingsPath(directory);
-  let contextFileName: unknown;
-  if (tree.exists(geminiSettings)) {
-    try {
-      contextFileName = readJson(tree, geminiSettings).contextFileName;
-    } catch {
-      // An unreadable settings file has no context file to clean up.
-    }
-  }
-
-  const candidates = new Set([
-    agentsMdPath(directory),
-    claudeMdPath(directory),
-    geminiMdPath(directory),
+export function findNxRulesFiles(tree: Tree, directory: string): NxRulesFile[] {
+  const owners = new Map<string, Set<Agent>>();
+  const addOwners = (path: string, agents: Agent[]) => {
+    const key = normalize(path);
+    owners.set(key, new Set([...(owners.get(key) ?? []), ...agents]));
+  };
+  addOwners(agentsMdPath(directory), [
+    'codex',
+    'cursor',
+    'opencode',
+    'copilot',
   ]);
-  if (typeof contextFileName === 'string') {
-    candidates.add(join(directory, contextFileName));
+  addOwners(claudeMdPath(directory), ['claude']);
+  addOwners(geminiMdPath(directory), ['gemini']);
+  const contextFileName = readGeminiContextFileName(tree, directory);
+  if (contextFileName) {
+    addOwners(join(directory, contextFileName), ['gemini']);
   }
 
-  const changed: string[] = [];
-  for (const path of candidates) {
-    if (!tree.isFile(path)) {
-      continue;
-    }
-    const original = tree.read(path, 'utf-8');
-    let content = original;
-    let match: RegExpExecArray | null;
-    while ((match = rulesRegex.exec(content))) {
-      const before = content.slice(0, match.index).replace(/\s+$/, '');
-      const after = content
-        .slice(match.index + match[0].length)
-        .replace(/^\s+/, '');
-      content = before && after ? `${before}\n\n${after}` : before || after;
-    }
-    if (content === original) {
-      continue;
-    }
-    if (content.trim() === '') {
-      tree.delete(path);
-    } else {
-      tree.write(path, `${content.replace(/\s+$/, '')}\n`);
-    }
-    changed.push(path);
-  }
+  return [...owners]
+    .filter(([path]) => hasNxRulesBlock(tree, path))
+    .map(([path, agents]) => ({ path, owners: [...agents] }));
+}
 
-  // Older versions pointed Gemini at AGENTS.md for the guidelines; once that
-  // file is gone the setting points nowhere.
+/**
+ * Removes the Nx guidelines block from a rules file, deleting the file when
+ * nothing else is left in it.
+ */
+export function removeNxRulesBlock(tree: Tree, path: string): void {
+  let content = tree.read(path, 'utf-8');
+  let match: RegExpExecArray | null;
+  while ((match = rulesRegex.exec(content))) {
+    const before = content.slice(0, match.index).replace(/\s+$/, '');
+    const after = content
+      .slice(match.index + match[0].length)
+      .replace(/^\s+/, '');
+    content = before && after ? `${before}\n\n${after}` : before || after;
+  }
+  if (content.trim() === '') {
+    tree.delete(path);
+  } else {
+    tree.write(path, `${content.replace(/\s+$/, '')}\n`);
+  }
+}
+
+/**
+ * Older versions pointed Gemini at AGENTS.md for the Nx guidelines. Once that
+ * file is gone, the setting points nowhere and is dropped.
+ */
+export function removeDanglingGeminiContextFile(
+  tree: Tree,
+  directory: string
+): void {
   if (
-    contextFileName === 'AGENTS.md' &&
+    readGeminiContextFileName(tree, directory) === 'AGENTS.md' &&
     !tree.exists(agentsMdPath(directory))
   ) {
-    updateJson(tree, geminiSettings, (json) => {
+    updateJson(tree, geminiSettingsPath(directory), (json) => {
       delete json.contextFileName;
       return json;
     });
   }
-
-  return changed;
 }
 
 export function hasNxRulesBlock(tree: Tree, path: string): boolean {

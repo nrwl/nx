@@ -4,12 +4,8 @@ import { homedir } from 'os';
 import { delimiter, join } from 'path';
 import { codexPluginMarketplace, codexPluginPackage } from '../constants';
 
-/**
- * Codex plugins are installed per user (into Codex's plugin cache) and enabled
- * per project. The `@nx/codex-plugin` installer caches the Nx plugin without
- * enabling it globally, so it only turns on in workspaces whose
- * `.codex/config.toml` enables it.
- */
+// Codex installs plugins per user and enables them per project. The
+// @nx/codex-plugin installer caches the Nx plugin without enabling it globally.
 
 export function isCodexAvailable(
   env: NodeJS.ProcessEnv = process.env

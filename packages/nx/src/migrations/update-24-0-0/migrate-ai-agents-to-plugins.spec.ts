@@ -116,6 +116,40 @@ describe('migrate-ai-agents-to-plugins migration', () => {
     expect(tree.exists('.opencode')).toBe(false);
   });
 
+  it('should keep AGENTS.md while an agent without a plugin still reads it', async () => {
+    tree.write('AGENTS.md', nxRules);
+    tree.write(
+      '.github/skills/nx-workspace/SKILL.md',
+      shipped['.github/skills/nx-workspace/SKILL.md']
+    );
+    tree.write(
+      '.codex/config.toml',
+      '[mcp_servers."nx-mcp"]\ncommand = "npx"\n'
+    );
+
+    await migrateAiAgentsToPlugins(tree);
+
+    // The test tree formats files written in the test, so compare loosely
+    expect(tree.read('AGENTS.md', 'utf-8')).toContain(
+      '<!-- nx configuration start-->'
+    );
+    expect(TOML.parse(tree.read('.codex/config.toml', 'utf-8'))).toEqual({
+      plugins: { 'nx@nx-agent-plugins': { enabled: true } },
+    });
+  });
+
+  it('should remove AGENTS.md once the migrated agents were its only readers', async () => {
+    tree.write('AGENTS.md', nxRules);
+    tree.write(
+      '.codex/config.toml',
+      '[mcp_servers."nx-mcp"]\ncommand = "npx"\n'
+    );
+
+    await migrateAiAgentsToPlugins(tree);
+
+    expect(tree.exists('AGENTS.md')).toBe(false);
+  });
+
   it('should not install anything on the machine running the migration', async () => {
     tree.write(
       '.codex/config.toml',

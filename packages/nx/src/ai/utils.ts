@@ -4,26 +4,12 @@ import { isAiAgent, isEditorInstalled, SupportedEditor } from '../native';
 import { isSandbox } from '../utils/is-sandbox';
 import { output } from '../utils/output';
 import {
-  claudeMdPath,
   codexConfigTomlPath,
   cursorSettingsPath,
   geminiSettingsPath,
   opencodeMcpPath,
 } from './constants';
-import {
-  hasCodexNxMcp,
-  hasCodexPlugin,
-  hasCursorPlugin,
-  hasGeminiNxMcp,
-  hasOpencodeNxMcp,
-  hasOpencodePlugin,
-  isClaudePluginEnabled,
-} from './set-up-ai-agents/agent-plugin-config';
-import {
-  findLegacyAgentFiles,
-  hasNxRulesBlock,
-  legacyAgentFolders,
-} from './set-up-ai-agents/legacy-agent-config';
+import { hasAgentSetup } from './set-up-ai-agents/agent-plugin-config';
 import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
 
 // when adding new agents, be sure to also update the list in
@@ -66,11 +52,7 @@ export async function getAgentConfigurations(
   workspaceRoot: string
 ): Promise<{
   nonConfiguredAgents: AgentConfiguration[];
-  /**
-   * Always empty: an agent's Nx setup is a single plugin registration, so it
-   * is either configured or not. Kept for callers from older Nx versions that
-   * load this module from the latest Nx.
-   */
+  /** Always empty; kept for older Nx versions that load this module. */
   partiallyConfiguredAgents: AgentConfiguration[];
   fullyConfiguredAgents: AgentConfiguration[];
   disabledAgents: AgentConfiguration[];
@@ -103,60 +85,31 @@ async function getAgentConfiguration(
   workspaceRoot: string
 ): Promise<AgentConfiguration> {
   const tree = new FsTree(workspaceRoot, false);
-  let configured: boolean;
-  let configPath: string | null;
+  const configured = hasAgentSetup(tree, '.', agent);
+  let configPath: string | null = null;
   let disabled: boolean | undefined;
   switch (agent) {
-    case 'claude': {
+    case 'claude':
       configPath = resolve(workspaceRoot, '.claude', 'settings.json');
-      configured =
-        isClaudePluginEnabled(tree, '.') ||
-        hasNxRulesBlock(tree, claudeMdPath('.'));
       break;
-    }
-    case 'cursor': {
+    case 'cursor':
       configPath = cursorSettingsPath(workspaceRoot);
-      configured =
-        hasCursorPlugin(tree, '.') ||
-        findLegacyAgentFiles(tree, '.', legacyAgentFolders.cursor).length > 0;
       disabled = !(await isEditorInstalled(SupportedEditor.Cursor));
       break;
-    }
-    case 'codex': {
+    case 'codex':
       configPath = codexConfigTomlPath(workspaceRoot);
-      configured =
-        hasCodexPlugin(tree, '.') ||
-        hasCodexNxMcp(tree, '.') ||
-        findLegacyAgentFiles(tree, '.', legacyAgentFolders.codex).length > 0;
       break;
-    }
-    case 'opencode': {
+    case 'opencode':
       configPath = opencodeMcpPath(workspaceRoot);
-      configured =
-        hasOpencodePlugin(tree, '.') ||
-        hasOpencodeNxMcp(tree, '.') ||
-        findLegacyAgentFiles(tree, '.', legacyAgentFolders.opencode).length > 0;
       break;
-    }
-    case 'copilot': {
-      // Copilot has no plugin; Nx copies its skills and subagents instead.
-      configPath = null;
-      configured =
-        findLegacyAgentFiles(tree, '.', legacyAgentFolders.copilot).length > 0;
-      const hasInstalledVSCode = await isEditorInstalled(
-        SupportedEditor.VSCode
-      );
-      const hasInstalledVSCodeInsiders = await isEditorInstalled(
-        SupportedEditor.VSCodeInsiders
-      );
-      disabled = !hasInstalledVSCode && !hasInstalledVSCodeInsiders;
+    case 'copilot':
+      disabled =
+        !(await isEditorInstalled(SupportedEditor.VSCode)) &&
+        !(await isEditorInstalled(SupportedEditor.VSCodeInsiders));
       break;
-    }
-    case 'gemini': {
+    case 'gemini':
       configPath = geminiSettingsPath(workspaceRoot);
-      configured = hasGeminiNxMcp(tree, '.');
       break;
-    }
   }
 
   return {

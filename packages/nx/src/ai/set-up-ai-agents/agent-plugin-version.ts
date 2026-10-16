@@ -40,10 +40,8 @@ export function resetLatestAgentPluginVersionCache(): void {
 }
 
 /**
- * Picks the plugin version to pin in a workspace: the latest release, unless
- * the workspace already pins a newer one (a stale registry mirror must never
- * downgrade it). Without a registry answer the existing pin is kept, and
- * without either there is no version to write.
+ * The version to pin: the latest release, unless the workspace pins a newer
+ * one. Falls back to the existing pin, or null when neither is known.
  */
 export function pickAgentPluginVersion(
   latest: string | null,

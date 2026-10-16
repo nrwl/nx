@@ -65,6 +65,9 @@ function setAnalytics(tree: Tree, analytics: boolean) {
   updateJson(tree, 'nx.json', (json) => ({ ...json, analytics }));
 }
 
+const nxRulesBlock =
+  '<!-- nx configuration start-->\n# General Guidelines for working with Nx\n<!-- nx configuration end-->\n';
+
 function shippedContent(path: string): string {
   return shipped[path];
 }
@@ -1178,10 +1181,57 @@ describe('setup-ai-agents generator', () => {
 
       await setupAiAgentsGenerator(tree, {
         directory: '.',
-        agents: ['claude'],
+        agents: ['codex'],
       });
 
       expect(tree.exists('AGENTS.md')).toBe(false);
+    });
+
+    it('should only clean up the rules files of the selected agents', async () => {
+      tree.write('AGENTS.md', nxRulesBlock);
+      tree.write('GEMINI.md', nxRulesBlock);
+      tree.write('CLAUDE.md', nxRulesBlock);
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['claude'],
+      });
+
+      expect(tree.exists('CLAUDE.md')).toBe(false);
+      expect(tree.read('AGENTS.md', 'utf-8')).toEqual(nxRulesBlock);
+      expect(tree.read('GEMINI.md', 'utf-8')).toEqual(nxRulesBlock);
+    });
+
+    it('should keep AGENTS.md while another configured agent reading it is not selected', async () => {
+      tree.write('AGENTS.md', nxRulesBlock);
+      tree.write(
+        '.github/skills/nx-workspace/SKILL.md',
+        shippedContent('.github/skills/nx-workspace/SKILL.md')
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+      expect(tree.read('AGENTS.md', 'utf-8')).toEqual(nxRulesBlock);
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex', 'copilot'],
+      });
+      expect(tree.exists('AGENTS.md')).toBe(false);
+    });
+
+    it('should keep AGENTS.md when a selected agent reading it could not be set up', async () => {
+      latestPluginVersionSpy.mockResolvedValue(null);
+      tree.write('AGENTS.md', nxRulesBlock);
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex', 'cursor'],
+      });
+
+      expect(tree.read('AGENTS.md', 'utf-8')).toEqual(nxRulesBlock);
     });
 
     it('should remove only the Nx guidelines block from a rules file', async () => {
@@ -1265,6 +1315,31 @@ describe('setup-ai-agents generator', () => {
             gitRef: 'v1.2.3',
           },
         },
+      });
+    });
+
+    it('should keep keys users added to the Nx plugin entry', async () => {
+      tree.write(
+        '.cursor/settings.json',
+        JSON.stringify({
+          plugins: {
+            'nx-agent-plugins/nx': { gitRef: 'v1.0.0', custom: 'kept' },
+          },
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['cursor'],
+      });
+
+      expect(
+        readJson(tree, '.cursor/settings.json').plugins['nx-agent-plugins/nx']
+      ).toEqual({
+        custom: 'kept',
+        enabled: true,
+        gitUrl: 'https://github.com/nrwl/nx-ai-agents-config.git',
+        gitRef: 'v1.2.3',
       });
     });
 
@@ -1489,6 +1564,19 @@ enabled = true
       );
     });
 
+    it('should keep copied subagents when the config cannot be parsed', async () => {
+      const copiedAgent = '.codex/agents/ci-monitor-subagent.toml';
+      tree.write(copiedAgent, shippedContent(copiedAgent));
+      tree.write('.codex/config.toml', 'not [valid toml');
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+
+      expect(tree.exists(copiedAgent)).toBe(true);
+    });
+
     it('should remove copied shared skills when Gemini does not use them', async () => {
       const skill = Object.keys(legacyAgentFiles).find((path) =>
         path.startsWith('.agents/skills/')
@@ -1501,6 +1589,42 @@ enabled = true
       });
 
       expect(tree.exists(skill)).toBe(false);
+    });
+
+    it('should keep copied shared skills while an unselected Cursor setup reads them', async () => {
+      const skill = '.agents/skills/nx-workspace/SKILL.md';
+      tree.write(skill, shippedContent(skill));
+      tree.write(
+        '.cursor/commands/monitor-ci.md',
+        shippedContent('.cursor/commands/monitor-ci.md')
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+      expect(tree.exists(skill)).toBe(true);
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex', 'cursor'],
+      });
+      expect(tree.exists(skill)).toBe(false);
+    });
+
+    it('should keep copied shared skills when the Codex setup reading them fails', async () => {
+      const skill = '.agents/skills/nx-workspace/SKILL.md';
+      const copiedAgent = '.codex/agents/ci-monitor-subagent.toml';
+      tree.write(skill, shippedContent(skill));
+      tree.write(copiedAgent, shippedContent(copiedAgent));
+      tree.write('.codex/config.toml', 'not [valid toml');
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex', 'cursor'],
+      });
+
+      expect(tree.exists(skill)).toBe(true);
     });
 
     it('should keep copied shared skills while Gemini is configured', async () => {
@@ -1581,6 +1705,21 @@ enabled = true
       ]);
     });
 
+    it('should not reinstall a plugin version that is already installed', async () => {
+      isCodexAvailableSpy.mockReturnValue(true);
+      isCodexPluginInstalledSpy.mockReturnValue(true);
+
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+      const { messages, errors } = await callback();
+
+      expect(installCodexPluginSpy).not.toHaveBeenCalled();
+      expect(errors).toEqual([]);
+      expect(messages).toEqual([]);
+    });
+
     it('should report nothing when checking an installed plugin', async () => {
       isCodexAvailableSpy.mockReturnValue(true);
       isCodexPluginInstalledSpy.mockReturnValue(true);
@@ -1618,6 +1757,48 @@ enabled = true
         $schema: 'https://opencode.ai/config.json',
         plugin: ['other-plugin', '@nx/opencode-plugin@1.2.3'],
       });
+    });
+
+    it('should update an existing entry in place and keep its options', async () => {
+      tree.write(
+        'opencode.json',
+        JSON.stringify({
+          plugin: [
+            ['@nx/opencode-plugin@0.9.0', { verbose: true }],
+            'other-plugin',
+            '@nx/opencode-plugin',
+          ],
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['opencode'],
+      });
+
+      expect(readJson(tree, 'opencode.json').plugin).toEqual([
+        ['@nx/opencode-plugin@1.2.3', { verbose: true }],
+        'other-plugin',
+      ]);
+    });
+
+    it('should keep the position of an existing entry', async () => {
+      tree.write(
+        'opencode.json',
+        JSON.stringify({
+          plugin: ['@nx/opencode-plugin@0.9.0', 'other-plugin'],
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['opencode'],
+      });
+
+      expect(readJson(tree, 'opencode.json').plugin).toEqual([
+        '@nx/opencode-plugin@1.2.3',
+        'other-plugin',
+      ]);
     });
 
     it('should keep other MCP servers', async () => {
