@@ -18,11 +18,10 @@
           "description": "Default based branch used by affected commands.",
           "deprecated": "Use the top-level `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 25."
         },
-        "granularity": {
-          "type": "string",
-          "enum": ["task", "project"],
-          "default": "task",
-          "description": "Whether `nx affected -t` selects the individual tasks a change reaches (`task`) or every task of each affected project (`project`)."
+        "legacy": {
+          "type": "boolean",
+          "default": false,
+          "description": "Select every task of each affected project, instead of only the tasks whose inputs a change reaches."
         }
       },
       "additionalProperties": false

@@ -61,21 +61,21 @@ import { AUTO_AFFECTED_LOCK_FILES } from '../../plugins/js/lock-file/lock-file';
 /**
  * Whether `nx affected` selects the individual tasks whose inputs a change
  * reaches, rather than whole projects. `NX_LEGACY_AFFECTED` overrides
- * nx.json's `affected.granularity`, which defaults to `task`.
+ * nx.json's `affected.legacy`.
  *
  * The run also executes the selected tasks' dependencies.
  */
 export function selectsAffectedTasks(nxJson: NxJsonConfiguration): boolean {
   if (process.env.NX_LEGACY_AFFECTED === 'true') return false;
   if (process.env.NX_LEGACY_AFFECTED === 'false') return true;
-  return (nxJson.affected?.granularity ?? 'task') === 'task';
+  return !nxJson.affected?.legacy;
 }
 
 /** What to change so {@link selectsAffectedTasks} returns true, for error messages. */
 export function taskGranularityRequirement(): string {
   return process.env.NX_LEGACY_AFFECTED === 'true'
     ? 'NX_LEGACY_AFFECTED unset or set to false'
-    : 'affected.granularity set to "task" in nx.json';
+    : 'affected.legacy unset or false in nx.json';
 }
 
 export interface AffectedTasksResult {

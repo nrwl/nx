@@ -239,22 +239,22 @@ Task selection can also pick up a task that project selection misses. A `depends
 
 The run also executes the tasks the affected ones depend on, and those can restore from cache when nothing in them changed.
 
-To select whole projects instead, so every task of every affected project runs, set `affected.granularity` to `"project"` in `nx.json`:
+To select whole projects instead, so every task of every affected project runs, set `affected.legacy` to `true` in `nx.json`:
 
 ```json
 // nx.json
 {
   "affected": {
-    "granularity": "project"
+    "legacy": true
   }
 }
 ```
 
-Running `nx migrate` to Nx 24 writes this setting into existing workspaces, so upgrading doesn't change what runs. Remove it, or set it to `"task"`, to select tasks.
+Running `nx migrate` to Nx 24 writes this setting into existing workspaces, so upgrading doesn't change what runs. Remove it, or set it to `false`, to select tasks.
 
 `NX_LEGACY_AFFECTED` overrides the setting for one invocation. `true` selects projects and `false` selects tasks. Set it for the whole CI job, so `nx show projects --affected -t test` and `nx affected -t test` in the same script see the same affected set.
 
-Granularity applies to `nx affected -t` and `nx show projects --affected -t`. `nx graph --affected` always shows projects.
+The setting applies to `nx affected -t` and `nx show projects --affected -t`. `nx graph --affected` always shows projects.
 
 {% aside type="caution" title="What task selection changes" %}
 Nx selects a task when your change reaches one of its inputs, rather than by where the task sits in the task graph.
@@ -276,7 +276,7 @@ Use the `--explain` flag to show why tasks are affected. Nx prints the explanati
 nx affected -t build --explain
 ```
 
-`--explain` explains task selection, so it needs task granularity and targets passed with `-t`. Under project granularity, it stops with an error.
+`--explain` explains task selection, so it needs targets passed with `-t`. Without them, or with `affected.legacy` set, it stops with an error.
 
 ```text
  NX   3 out of 12 build tasks are affected

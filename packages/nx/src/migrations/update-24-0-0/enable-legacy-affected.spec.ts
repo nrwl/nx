@@ -2,23 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
 import { readJson, writeJson } from '../../generators/utils/json';
-import update from './set-affected-granularity-to-project';
+import update from './enable-legacy-affected';
 
-describe('set-affected-granularity-to-project', () => {
+describe('enable-legacy-affected', () => {
   function setup(nxJson: Record<string, unknown>): Tree {
     const tree = createTreeWithEmptyWorkspace();
     writeJson(tree, 'nx.json', nxJson);
     return tree;
   }
 
-  it('sets project granularity when nx.json has no affected block', async () => {
+  it('enables legacy affected when nx.json has no affected block', async () => {
     const tree = setup({ defaultBase: 'main' });
 
     const result = await update(tree);
 
     expect(readJson(tree, 'nx.json')).toEqual({
       defaultBase: 'main',
-      affected: { granularity: 'project' },
+      affected: { legacy: true },
     });
     expect(result).toEqual({ skipAgentic: true });
   });
@@ -30,12 +30,12 @@ describe('set-affected-granularity-to-project', () => {
 
     expect(readJson(tree, 'nx.json').affected).toEqual({
       defaultBase: 'develop',
-      granularity: 'project',
+      legacy: true,
     });
   });
 
-  it('leaves an explicit granularity alone', async () => {
-    const tree = setup({ affected: { granularity: 'task' } });
+  it('leaves an explicit legacy setting alone', async () => {
+    const tree = setup({ affected: { legacy: false } });
     const before = tree.read('nx.json', 'utf-8');
 
     const result = await update(tree);

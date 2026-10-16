@@ -557,4 +557,4 @@ These rules apply to both ways of scoping:
 - Under ultracache, the files the test read during its recorded run replace the declared file inputs, except the `always` ones.
 - A change outside the remaining inputs leaves the task's hash unchanged, so Nx replays the cached result.
 - A listed name that matches no project is an error. A project left off the list goes unnoticed unless a listed project depends on it, so list every project the test exercises.
-- `nx affected` selects the task by these inputs. Under [project granularity](/docs/reference/nx-json#affected), it selects whole projects.
+- `nx affected` selects the task by these inputs. With [`affected.legacy`](/docs/reference/nx-json#affected), it selects whole projects.

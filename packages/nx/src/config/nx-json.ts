@@ -33,11 +33,10 @@ export interface NxAffectedConfig {
    */
   defaultBase?: string;
   /**
-   * Whether `nx affected -t` selects the individual tasks a change reaches
-   * (`task`) or every task of each affected project (`project`).
-   * Defaults to `task`.
+   * Select every task of each affected project, instead of only the tasks
+   * whose inputs a change reaches. Defaults to `false`.
    */
-  granularity?: 'project' | 'task';
+  legacy?: boolean;
 }
 
 /**

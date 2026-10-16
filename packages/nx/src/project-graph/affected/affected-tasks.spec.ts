@@ -1211,8 +1211,8 @@ describe('computeAffectedTasks with the daemon on', () => {
 
 describe('selectsAffectedTasks', () => {
   const original = process.env.NX_LEGACY_AFFECTED;
-  const granularity = (value?: 'project' | 'task'): NxJsonConfiguration =>
-    value ? { affected: { granularity: value } } : {};
+  const legacy = (value?: boolean): NxJsonConfiguration =>
+    value === undefined ? {} : { affected: { legacy: value } };
 
   beforeEach(() => {
     delete process.env.NX_LEGACY_AFFECTED;
@@ -1226,26 +1226,26 @@ describe('selectsAffectedTasks', () => {
     }
   });
 
-  it('selects tasks when nx.json sets no granularity', () => {
-    expect(selectsAffectedTasks(granularity())).toBe(true);
+  it('selects tasks when nx.json leaves legacy unset', () => {
+    expect(selectsAffectedTasks(legacy())).toBe(true);
   });
 
-  it('follows the granularity in nx.json', () => {
-    expect(selectsAffectedTasks(granularity('task'))).toBe(true);
-    expect(selectsAffectedTasks(granularity('project'))).toBe(false);
+  it('follows affected.legacy in nx.json', () => {
+    expect(selectsAffectedTasks(legacy(false))).toBe(true);
+    expect(selectsAffectedTasks(legacy(true))).toBe(false);
   });
 
   it('lets NX_LEGACY_AFFECTED override nx.json', () => {
     process.env.NX_LEGACY_AFFECTED = 'true';
-    expect(selectsAffectedTasks(granularity('task'))).toBe(false);
+    expect(selectsAffectedTasks(legacy(false))).toBe(false);
     process.env.NX_LEGACY_AFFECTED = 'false';
-    expect(selectsAffectedTasks(granularity('project'))).toBe(true);
+    expect(selectsAffectedTasks(legacy(true))).toBe(true);
   });
 
   it('ignores other NX_LEGACY_AFFECTED values', () => {
     process.env.NX_LEGACY_AFFECTED = '1';
-    expect(selectsAffectedTasks(granularity('project'))).toBe(false);
-    expect(selectsAffectedTasks(granularity())).toBe(true);
+    expect(selectsAffectedTasks(legacy(true))).toBe(false);
+    expect(selectsAffectedTasks(legacy())).toBe(true);
   });
 });
 
@@ -1263,7 +1263,7 @@ describe('taskGranularityRequirement', () => {
   it('points at nx.json unless the variable forces projects', () => {
     delete process.env.NX_LEGACY_AFFECTED;
     expect(taskGranularityRequirement()).toBe(
-      'affected.granularity set to "task" in nx.json'
+      'affected.legacy unset or false in nx.json'
     );
     process.env.NX_LEGACY_AFFECTED = 'true';
     expect(taskGranularityRequirement()).toBe(

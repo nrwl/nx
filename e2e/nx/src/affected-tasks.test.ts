@@ -158,25 +158,25 @@ describe('Nx Affected with task selection', () => {
       expect(selected[`${mypublishablelib}:build`]).toBeUndefined();
     });
 
-    describe('affected.granularity in nx.json', () => {
+    describe('affected.legacy in nx.json', () => {
       let command: string;
 
       beforeAll(() => {
         command = `affected -t build,test --files="libs/${mypublishablelib}/src/lib/${mypublishablelib}.spec.ts"`;
         updateJson('nx.json', (json) => ({
           ...json,
-          affected: { ...json.affected, granularity: 'project' },
+          affected: { ...json.affected, legacy: true },
         }));
       });
       afterAll(() =>
         updateJson('nx.json', (json) => {
-          delete json.affected.granularity;
+          delete json.affected.legacy;
           if (Object.keys(json.affected).length === 0) delete json.affected;
           return json;
         })
       );
 
-      it('"project" selects every target of an affected project', async () => {
+      it('selects every target of an affected project', async () => {
         const tasks = await graphOf(command);
         expect(tasks[`${mypublishablelib}:build`]).toBeDefined();
         expect(tasks[`${mypublishablelib}:test`]).toBeDefined();

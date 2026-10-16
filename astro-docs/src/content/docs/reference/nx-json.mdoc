@@ -243,21 +243,18 @@ Tells Nx which base branch to use when calculating affected projects.
 
 The `affected` block configures how `nx affected` selects what to run.
 
+By default, only tasks whose inputs a change reaches run. Set `legacy` to `true` to run every task of every affected project instead:
+
 ```json
 // nx.json
 {
   "affected": {
-    "granularity": "task"
+    "legacy": true
   }
 }
 ```
 
-| Value       | Description                                                 |
-| ----------- | ----------------------------------------------------------- |
-| `"task"`    | **(default)** Only tasks whose inputs a change reaches run. |
-| `"project"` | Every task of every affected project runs.                  |
-
-Granularity applies to `nx affected -t` and `nx show projects --affected -t`. The [`NX_LEGACY_AFFECTED`](/docs/reference/environment-variables) environment variable overrides it for one invocation.
+`legacy` applies to `nx affected -t` and `nx show projects --affected -t`. The [`NX_LEGACY_AFFECTED`](/docs/reference/environment-variables) environment variable overrides it for one invocation.
 
 `affected.defaultBase` is deprecated. Use the top-level [`defaultBase`](#default-base) instead.
 
