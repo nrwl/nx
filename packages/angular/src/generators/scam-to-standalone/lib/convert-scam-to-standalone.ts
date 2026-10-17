@@ -58,7 +58,10 @@ export function convertScamToStandalone(
           'imports: [',
           `imports: [${componentName}, `
         );
-        newComponentSpecContents.replace(/declarations: \[.+/, '');
+        newComponentSpecContents = newComponentSpecContents.replace(
+          /declarations: \[.+/,
+          ''
+        );
       } else {
         newComponentSpecContents = newComponentSpecContents.replace(
           'declarations: [',
