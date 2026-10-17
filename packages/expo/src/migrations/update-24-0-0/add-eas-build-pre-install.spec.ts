@@ -90,11 +90,14 @@ describe('add-eas-build-pre-install', () => {
         'eas-build-pre-install'
       ]
     ).toBe('echo custom');
+    expect(tree.exists('tools/scripts/eas-build-pre-install.mjs')).toBe(true);
     expect(result).toEqual({
       nextSteps: [
         `apps/mobile/package.json already defines "eas-build-pre-install". Make it also run "${hookCommand}".`,
       ],
-      agentContext: `apps/mobile/package.json already defines "eas-build-pre-install". Make it also run "${hookCommand}".`,
+      agentContext: [
+        `apps/mobile/package.json already defines "eas-build-pre-install". Make it also run "${hookCommand}".`,
+      ],
     });
   });
 
@@ -179,17 +182,17 @@ describe('add-eas-build-pre-install', () => {
 
     it('should use the package manager configured in nx.json', async () => {
       await runHook({
-        'nx.json': JSON.stringify({ cli: { packageManager: 'pnpm' } }),
+        'nx.json': JSON.stringify({ cli: { packageManager: 'npm' } }),
         'package.json': JSON.stringify({ dependencies: { expo: '~53.0.0' } }),
         'pnpm-lock.yaml': "lockfileVersion: '9.0'",
         'package-lock.json': '{}',
         'apps/mobile/package.json': JSON.stringify({ name: 'mobile' }),
       });
 
-      expect(existsSync(join(root, 'apps/mobile/pnpm-lock.yaml'))).toBe(true);
       expect(existsSync(join(root, 'apps/mobile/package-lock.json'))).toBe(
-        false
+        true
       );
+      expect(existsSync(join(root, 'apps/mobile/pnpm-lock.yaml'))).toBe(false);
     });
 
     it.each([

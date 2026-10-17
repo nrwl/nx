@@ -5,6 +5,7 @@ import {
   offsetFromRoot,
   readJson,
   updateJson,
+  type MigrationReturnObject,
   type Tree,
 } from '@nx/devkit';
 import type { PackageJson } from '@nx/devkit/internal';
@@ -15,7 +16,9 @@ import {
 
 const hookName = 'eas-build-pre-install';
 
-export default async function update(tree: Tree) {
+export default async function update(
+  tree: Tree
+): Promise<MigrationReturnObject> {
   const conflicts: string[] = [];
   let changed = false;
 
@@ -39,6 +42,9 @@ export default async function update(tree: Tree) {
       conflicts.push(
         `${packageJsonPath} already defines "${hookName}". Make it also run "${hookCommand}".`
       );
+      // The reported command runs this script, so it has to exist either way.
+      addEasBuildPreInstallScript(tree);
+      changed = true;
       continue;
     }
 
@@ -55,7 +61,7 @@ export default async function update(tree: Tree) {
   }
 
   if (conflicts.length) {
-    return { nextSteps: conflicts, agentContext: conflicts.join('\n') };
+    return { nextSteps: conflicts, agentContext: conflicts };
   }
   return { skipAgentic: true };
 }

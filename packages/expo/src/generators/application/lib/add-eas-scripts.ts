@@ -51,7 +51,7 @@ function isWorkspacesEnabled(packageManager, rootPackageJson) {
     const pnpmWorkspacePath = join(workspaceRoot, 'pnpm-workspace.yaml');
     return (
       existsSync(pnpmWorkspacePath) &&
-      /^packages\\s*:/m.test(readFileSync(pnpmWorkspacePath, 'utf-8'))
+      /^["']?packages["']?\\s*:/m.test(readFileSync(pnpmWorkspacePath, 'utf-8'))
     );
   }
   return !!rootPackageJson.workspaces;
@@ -76,9 +76,11 @@ if (rootPackageJson.overrides) {
 }
 writeFileSync(projectPackageJsonPath, JSON.stringify(projectPackageJson, null, 2));
 
-const lockFile = lockFiles[packageManager]?.find((file) =>
-  existsSync(join(workspaceRoot, file))
-);
+const lockFile = Object.hasOwn(lockFiles, packageManager)
+  ? lockFiles[packageManager].find((file) =>
+      existsSync(join(workspaceRoot, file))
+    )
+  : undefined;
 if (lockFile) {
   copyFileSync(join(workspaceRoot, lockFile), join(projectRoot, lockFile));
   console.log(\`Copied root dependencies and \${lockFile} into \${projectRoot}\`);
