@@ -304,7 +304,7 @@ async function createRspackTargets(
   targets[options.serveStaticTargetName] = {
     dependsOn: [`${options.buildTargetName}`],
     continuous: true,
-    readyWhen: { port: '{options.port}', host: '{options.host}' },
+    readyWhen: { port: '{options.port}', host: '{options.host ?? localhost}' },
     inputs: [...buildInputs],
     executor: '@nx/web:file-server',
     options: {
