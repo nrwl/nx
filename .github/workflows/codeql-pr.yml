@@ -15,6 +15,11 @@ on:
   pull_request:
     branches: [ "**" ]
 
+concurrency:
+  # Isolate manual reruns so an older revision cannot cancel the current PR run.
+  group: codeql-pr-${{ github.event.pull_request.number }}-${{ github.run_attempt > 1 && format('{0}-{1}', github.run_id, github.run_attempt) || 'updates' }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
