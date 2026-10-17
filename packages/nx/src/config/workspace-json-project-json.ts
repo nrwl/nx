@@ -221,9 +221,10 @@ export type ReadyWhen =
     } & ReadyWhenOptions)
   | ({
       /**
-       * Ready when a TCP connection to the port succeeds. A string must
-       * resolve to a port number through a placeholder such as
-       * `{options.port}`.
+       * Ready when a TCP connection to the port succeeds. A string can be a
+       * port number, `"auto"`, or a placeholder such as `{options.port}`.
+       * With `0` or `"auto"` the server picks its port, so Nx runs no check
+       * and the target counts as ready once it starts.
        */
       port: number | string;
 
@@ -399,9 +400,10 @@ export interface TargetConfiguration<T = any> {
   /**
    * How Nx detects that this continuous target is ready. Only honored when
    * `continuous` is true; dependents opt in with `waitFor: 'ready'` on their
-   * `dependsOn` entry.
+   * `dependsOn` entry. `null` turns off a check inherited from a plugin or
+   * `targetDefaults`.
    */
-  readyWhen?: ReadyWhen;
+  readyWhen?: ReadyWhen | null;
 
   /**
    * List of generators to run before the target to ensure the workspace

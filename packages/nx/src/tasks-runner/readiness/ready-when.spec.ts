@@ -21,7 +21,12 @@ const data = {
   workspaceRoot: '/workspace',
   projectRoot: 'apps/app',
   projectName: 'app',
-  options: { port: 4200, host: 'dev.local', server: { port: 0 } },
+  options: {
+    port: 4200,
+    host: 'dev.local',
+    server: { port: 0 },
+    hmrPort: 'auto',
+  },
   env: () => ({}),
 };
 
@@ -114,6 +119,63 @@ describe('normalizeReadyWhen', () => {
     ).toMatchObject({ url });
   });
 
+  it.each([true, false])('treats %s as an unset host or port', (flag) => {
+    const normalize = (readyWhen: any) =>
+      normalizeReadyWhen(readyWhen, 'app:serve', {
+        ...data,
+        options: { ...data.options, host: flag, port: flag },
+      });
+
+    expect(
+      normalize({
+        port: '{options.port ?? 5173}',
+        host: '{options.host ?? localhost}',
+      })
+    ).toMatchObject({ port: 5173, host: 'localhost' });
+    expect(() => normalize({ port: 3000, host: '{options.host}' })).toThrow(
+      'Task "app:serve" has an invalid "readyWhen": "{options.host}" has no value'
+    );
+  });
+
+  it.each([
+    [{ port: 0 }, {}],
+    [{ port: 'auto' }, {}],
+    [{ port: '{options.port ?? 4200}' }, { port: 0 }],
+    [{ port: '{options.port ?? 4200}' }, { port: '0' }],
+    [{ port: '{options.port ?? 4200}' }, { port: 'auto' }],
+    [{ port: '{options.port ?? 4200}' }, { port: '' }],
+  ])('skips the check of %j with the options %j', (readyWhen, options) => {
+    expect(
+      normalizeReadyWhen(readyWhen, 'app:serve', {
+        ...data,
+        options: { ...data.options, ...options },
+      })
+    ).toBeNull();
+  });
+
+  it('treats an empty env var as an unset port', () => {
+    expect(
+      normalizeReadyWhen({ port: '{env.PORT ?? 4200}' }, 'app:serve', {
+        ...data,
+        env: () => ({ PORT: '' }),
+      })
+    ).toMatchObject({ port: 4200 });
+  });
+
+  // A waiter in another process can't read PORT and checks the host, so the
+  // producer's process must check it too
+  it('checks the host when the server picks the port', () => {
+    expect(() =>
+      normalizeReadyWhen(
+        { port: '{env.PORT}', host: '{options.host}' },
+        'app:serve',
+        { ...data, options: {}, env: () => ({ PORT: '0' }) }
+      )
+    ).toThrow(
+      'Task "app:serve" has an invalid "readyWhen": "{options.host}" has no value.'
+    );
+  });
+
   it('reads env tokens case-insensitively on Windows', () => {
     const platform = process.platform;
     Object.defineProperty(process, 'platform', { value: 'win32' });
@@ -138,8 +200,7 @@ describe('normalizeReadyWhen', () => {
     [{ url: 'http://x', port: 1 }, 'expected exactly one of'],
     [{ url: 'ftp://x' }, '"url" must be an http or https URL'],
     [{ url: 'not a url' }, '"url" must be an http or https URL'],
-    [{ port: 0 }, '"port" must be an integer from 1 to 65535'],
-    [{ port: 70000 }, '"port" must be an integer from 1 to 65535'],
+    [{ port: 70000 }, '"port" must be an integer from 0 to 65535, or "auto"'],
     [{ port: 80, host: '' }, '"host" must be a non-empty string'],
     [{ command: '' }, '"command" must be a non-empty string'],
     [{ logMatches: [] }, '"logMatches" must be a non-empty string'],
@@ -168,7 +229,15 @@ describe('normalizeReadyWhen', () => {
       '"{options.port ?? 4200 ?? env.PORT}" has a fallback after the literal "4200" that can never be used',
     ],
     [{ port: '{port}' }, '"port" contains an unknown placeholder'],
-    [{ port: '{options.host}' }, '"port" must be an integer from 1 to 65535'],
+    [
+      { port: '{options.host}' },
+      '"port" must be an integer from 0 to 65535, or "auto"',
+    ],
+    // Only a port reads `auto` as a port the server picks
+    [
+      { url: 'http://localhost:{options.hmrPort}' },
+      '"url" must be an http or https URL',
+    ],
   ])('rejects %j', (readyWhen, reason) => {
     expect(() =>
       normalizeReadyWhen(readyWhen as any, 'app:serve', data)
@@ -273,8 +342,14 @@ describe('checkReadyWhen', () => {
     });
   });
 
+  it('waits for the producer to start when the server picks the port', () => {
+    expect(check({ port: 'auto', host: 'h' })).toEqual({
+      timeout: 60_000,
+      description: 'port h:auto',
+    });
+  });
+
   it.each([
-    [{ port: 0 }, '"port" must be an integer from 1 to 65535'],
     [{ port: '{options.prot}' }, '"{options.prot}" has no value'],
     [{ port: '{env.PORT}', host: '' }, '"host" must be a non-empty string'],
     [

@@ -16,7 +16,7 @@ import {
 } from '../tokens';
 import { getExecutorForTask } from '../utils';
 
-const DEFAULT_READY_TIMEOUT = 60_000;
+export const DEFAULT_READY_TIMEOUT = 60_000;
 // Node timers take at most a signed 32-bit count of milliseconds
 const MAX_DURATION = 2_147_483_647;
 
@@ -27,6 +27,15 @@ type ReadyWhenProbe<Deferred> = { timeout: number; interval?: number } & (
   | { kind: 'command'; command: string | Deferred }
   | { kind: 'logMatches'; logMatches: (string | Deferred)[] }
 );
+
+// With 0 or `auto` the server picks its port at startup, so there is nothing
+// to probe and waiters wait for the producer to start
+type ServerPicksPort = {
+  kind: 'serverPicksPort';
+  port: 0 | 'auto';
+  host?: string | EnvDeferred;
+  timeout: number;
+};
 
 export type NormalizedReadyWhen = ReadyWhenProbe<never>;
 
@@ -70,18 +79,23 @@ export function normalizeReadyWhen(
   readyWhen: ReadyWhen,
   taskId: string,
   data: ReadyWhenData
-): NormalizedReadyWhen {
+): NormalizedReadyWhen | null {
+  const probe = resolveReadyWhen(readyWhen, taskId, data);
   // Only checkReadyWhen's env throws EnvUnknownHere, so nothing is deferred
-  return resolveReadyWhen(readyWhen, taskId, data) as NormalizedReadyWhen;
+  return probe.kind === 'serverPicksPort'
+    ? null
+    : (probe as NormalizedReadyWhen);
 }
 
 function resolveReadyWhen(
   readyWhen: ReadyWhen,
   taskId: string,
   data: ReadyWhenData
-): ReadyWhenProbe<EnvDeferred> {
+): ReadyWhenProbe<EnvDeferred> | ServerPicksPort {
   const invalid = (reason: string) =>
-    new Error(`Task "${taskId}" has an invalid "readyWhen": ${reason}.`);
+    new InvalidReadyWhenError(
+      `Task "${taskId}" has an invalid "readyWhen": ${reason}.`
+    );
 
   if (typeof readyWhen !== 'object' || readyWhen === null) {
     throw invalid('expected an object');
@@ -105,18 +119,33 @@ function resolveReadyWhen(
       return String(value);
     },
   };
-  const resolve = (value: unknown): unknown => {
+  // A flag passed without a value parses as `true`, and no host or port is a
+  // boolean
+  const hostScope: TokenScope = {
+    ...scope,
+    isUnset: (value) => typeof value === 'boolean',
+  };
+  // The Rspack dev server reads an empty port option as 0. An empty env var
+  // stays unset.
+  const portScope: TokenScope = {
+    ...hostScope,
+    read: (name, path) => {
+      const value = scope.read(name, path);
+      return value === '' ? 0 : value;
+    },
+  };
+  const resolve = (value: unknown, tokenScope = scope): unknown => {
     if (typeof value !== 'string') {
       return value;
     }
     let nodes: TokenNode[];
     try {
-      nodes = parseTokens(value, scope);
+      nodes = parseTokens(value, tokenScope);
     } catch (e) {
       throw invalid(e.message);
     }
     try {
-      return renderTokens(nodes, scope);
+      return renderTokens(nodes, tokenScope);
     } catch (e) {
       if (e instanceof EnvUnknownHere) {
         return new EnvDeferred(value);
@@ -126,8 +155,11 @@ function resolveReadyWhen(
   };
   // Braces are never valid in a host or port once resolved, so a leftover is
   // a typo. A url keeps them: they are legal in its path and query.
-  const resolveWithoutBraces = (key: string): unknown => {
-    const value = resolve(config[key]);
+  const resolveWithoutBraces = (
+    key: string,
+    tokenScope?: TokenScope
+  ): unknown => {
+    const value = resolve(config[key], tokenScope);
     if (typeof value === 'string' && /[{}]/.test(value)) {
       throw invalid(`"${key}" contains an unknown placeholder`);
     }
@@ -163,19 +195,23 @@ function resolveReadyWhen(
       return { kind: 'url', url, ...shared };
     }
     case 'port': {
-      let port = resolveWithoutBraces('port');
+      let port = resolveWithoutBraces('port', portScope);
       if (typeof port === 'string' && /^\d+$/.test(port)) {
         port = Number(port);
       }
       if (
+        port !== 0 &&
+        port !== 'auto' &&
         !(port instanceof EnvDeferred) &&
         (!isPositiveInteger(port) || port > 65535)
       ) {
-        throw invalid('"port" must be an integer from 1 to 65535');
+        throw invalid('"port" must be an integer from 0 to 65535, or "auto"');
       }
-      const host = resolveWithoutBraces('host');
+      const host = resolveWithoutBraces('host', hostScope);
       if (host == null) {
-        return { kind: 'port', port, ...shared };
+        return port === 0 || port === 'auto'
+          ? { kind: 'serverPicksPort', port, ...shared }
+          : { kind: 'port', port, ...shared };
       }
       if (
         !(host instanceof EnvDeferred) &&
@@ -183,7 +219,9 @@ function resolveReadyWhen(
       ) {
         throw invalid('"host" must be a non-empty string');
       }
-      return { kind: 'port', port, host, ...shared };
+      return port === 0 || port === 'auto'
+        ? { kind: 'serverPicksPort', port, host, ...shared }
+        : { kind: 'port', port, host, ...shared };
     }
     case 'command': {
       const command = resolve(config.command);
@@ -200,7 +238,7 @@ function resolveReadyWhen(
         Array.isArray(config.logMatches)
           ? config.logMatches
           : [config.logMatches]
-      ).map(resolve);
+      ).map((match) => resolve(match));
       if (
         logMatches.length === 0 ||
         !logMatches.every(
@@ -246,7 +284,8 @@ export function readinessTimeoutError(
   const description =
     'kind' in readyWhen ? describeReadyWhen(readyWhen) : readyWhen.description;
   return new Error(
-    `Task "${taskId}" did not become ready within ${readyWhen.timeout}ms (readyWhen: ${description}).`
+    `Task "${taskId}" did not become ready within ${readyWhen.timeout}ms (readyWhen: ${description}). ` +
+      'To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.'
   );
 }
 
@@ -262,6 +301,8 @@ export class ProducerFailedError extends Error {
 // An exit or a stop is completed by its own handler, not as a verdict
 export class NotReadyError extends Error {}
 
+export class InvalidReadyWhenError extends Error {}
+
 export function notReadyError(
   taskId: string,
   reason: 'exited' | 'was stopped' | 'failed'
@@ -271,11 +312,14 @@ export function notReadyError(
   );
 }
 
-function describeReadyWhen(readyWhen: ReadyWhenProbe<EnvDeferred>): string {
+function describeReadyWhen(
+  readyWhen: ReadyWhenProbe<EnvDeferred> | ServerPicksPort
+): string {
   switch (readyWhen.kind) {
     case 'url':
       return `url ${readyWhen.url}`;
     case 'port':
+    case 'serverPicksPort':
       return readyWhen.host
         ? `port ${readyWhen.host}:${readyWhen.port}`
         : `port ${readyWhen.port}`;
@@ -291,7 +335,7 @@ function describeReadyWhen(readyWhen: ReadyWhenProbe<EnvDeferred>): string {
 export function getReadyWhenConfig(
   task: Task,
   projectGraph: ProjectGraph
-): ReadyWhen | undefined {
+): ReadyWhen | null | undefined {
   if (!task.continuous) {
     return undefined;
   }

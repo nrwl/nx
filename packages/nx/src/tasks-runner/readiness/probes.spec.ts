@@ -5,11 +5,19 @@ import {
   type AddressInfo,
   type Socket,
 } from 'node:net';
-import { tmpdir } from 'node:os';
+import { tmpdir, type NetworkInterfaceInfo } from 'node:os';
 import { join } from 'node:path';
 import type { RunningTask } from '../running-tasks/running-task';
 import { waitForReadiness } from './probes';
 import { normalizeReadyWhen, type NormalizedReadyWhen } from './ready-when';
+
+const machine = vi.hoisted(() => ({
+  interfaces: {} as Record<string, Partial<NetworkInterfaceInfo>[]>,
+}));
+vi.mock('os', async () => ({
+  ...(await vi.importActual('os')),
+  networkInterfaces: () => machine.interfaces,
+}));
 
 const native = vi.hoisted(() => ({ wasm: false }));
 vi.mock('../../native', async () => ({
@@ -109,6 +117,76 @@ describe('waitForReadiness', () => {
 
     it('resolves once the port accepts connections', async () => {
       await expect(wait({ port, interval: 10 })).resolves.toBeUndefined();
+    });
+
+    // Only the listener's address accepts on its port, so the check passes
+    // only on the address the dev server picks
+    const ip = (
+      address: string,
+      internal = false
+    ): Partial<NetworkInterfaceInfo> => ({
+      address,
+      family: address.includes(':') ? 'IPv6' : 'IPv4',
+      internal,
+    });
+    async function listenOn(address: string): Promise<number | null> {
+      const listener = createTcpServer();
+      try {
+        await new Promise<void>((resolve, reject) =>
+          listener.once('error', reject).listen(0, address, resolve)
+        );
+      } catch (e) {
+        // Some CI kernels have no IPv6 loopback
+        if (e.code === 'EADDRNOTAVAIL') return null;
+        throw e;
+      }
+      onTestFinished(async () => {
+        await new Promise((r) => listener.close(r));
+      });
+      return (listener.address() as AddressInfo).port;
+    }
+    it.each([
+      // The first non-internal IPv4 address, before any IPv6 one
+      [
+        'local-ip',
+        '127.0.0.1',
+        {
+          lo: [ip('10.255.255.1', true)],
+          en0: [ip('fd00::1'), ip('127.0.0.1')],
+        },
+      ],
+      // Then IPv6, where a global address is not one the dev server takes
+      [
+        'local-ip',
+        '::1',
+        {
+          lo: [ip('127.0.0.1', true)],
+          en0: [ip('2001:db8::1'), ip('::1')],
+        },
+      ],
+      // Without one the dev server listens on 0.0.0.0
+      ['local-ipv4', '127.0.0.1', { lo: [ip('10.255.255.1', true)] }],
+      // or on ::
+      ['local-ipv6', '::1', { lo: [ip('::1', true)], en0: [ip('127.0.0.1')] }],
+    ])(
+      'checks %s on the address the dev server resolves it to',
+      async (host, address, interfaces) => {
+        machine.interfaces = interfaces;
+        const port = await listenOn(address);
+        if (port === null) return;
+        await expect(
+          wait({ port, host, timeout: 2000, interval: 10 })
+        ).resolves.toBeUndefined();
+      }
+    );
+
+    it('never checks local-ipv4 on an IPv6 address', async () => {
+      machine.interfaces = { lo: [ip('127.0.0.1', true)], en0: [ip('::1')] };
+      const port = await listenOn('::1');
+      if (port === null) return;
+      await expect(
+        wait({ port, host: 'local-ipv4', timeout: 100, interval: 10 })
+      ).rejects.toThrow('did not become ready within 100ms');
     });
   });
 

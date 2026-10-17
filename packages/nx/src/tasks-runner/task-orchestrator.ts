@@ -57,10 +57,12 @@ import { terminalOutputPathForHash } from './terminal-output-path';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { waitForReadiness } from './readiness/probes';
 import {
+  DEFAULT_READY_TIMEOUT,
   getReadyProducerIds,
   getReadyWhen,
   getReadyWhenConfig,
   getReadyWhenWait,
+  InvalidReadyWhenError,
   NotReadyError,
   notReadyError,
   ProducerFailedError,
@@ -1854,8 +1856,11 @@ export class TaskOrchestrator {
       this.runningTasksService.getRunningTasks([task.id]).length
     ) {
       let readyWhen: ReadyWhenWait | null;
+      let uncheckedReason: string | undefined;
       try {
-        readyWhen = this.getReadyWhenWait(task);
+        ({ readyWhen, uncheckedReason } = this.getReadinessCheck(task, () =>
+          this.getReadyWhenWait(task)
+        ));
       } catch (e) {
         return this.failTaskBeforeStart(task, groupId, e);
       }
@@ -1869,6 +1874,9 @@ export class TaskOrchestrator {
         this.runningTasksService,
         task.id
       );
+      if (uncheckedReason) {
+        this.warnUncheckedReadiness(task, uncheckedReason);
+      }
       if (readyWhen) {
         const state = this.armReadiness(task.id);
         this.pollReadinessRow(task, readyWhen, state.abort.signal, true).then(
@@ -1914,6 +1922,8 @@ export class TaskOrchestrator {
     let streamOutput: boolean;
     let env: NodeJS.ProcessEnv;
     let readyWhen: NormalizedReadyWhen | null;
+    let uncheckedReason: string | undefined;
+    let readyOnStart: boolean | undefined;
     try {
       const taskSpecificEnv = await this.processedTasks.get(task.id);
       pipeOutput = await this.pipeOutputCapture(task);
@@ -1948,7 +1958,10 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput
           );
-      readyWhen = this.getReadyWhen(task, env);
+      ({ readyWhen, uncheckedReason, readyOnStart } = this.getReadinessCheck(
+        task,
+        () => this.getReadyWhen(task, env)
+      ));
       await this.waitForReadyDependencies(task);
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
@@ -1977,8 +1990,19 @@ export class TaskOrchestrator {
         pipeOutput
       );
       this.tasksSchedule.markContinuousTaskStarted(task.id);
+      if (uncheckedReason) {
+        this.warnUncheckedReadiness(task, uncheckedReason);
+        // No probe settles the row, and a waiter in another process polls it
+        this.publishReadiness(task, TaskReadiness.Failed);
+      }
       if (readyWhen) {
         this.startReadinessProbe(task, readyWhen, childProcess);
+      }
+      // Waiters here, in other processes and in the TUI hold on a configured
+      // readyWhen until it gets a verdict
+      if (readyOnStart) {
+        this.recordReadiness(task, TaskReadiness.Ready);
+        this.armReadiness(task.id).resolve();
       }
       this.runningContinuousTasks.set(task.id, {
         runningTask: childProcess,
@@ -2036,11 +2060,73 @@ export class TaskOrchestrator {
     );
   }
 
+  // An invalid readyWhen fails the task before it starts only when something
+  // in this run waits for it; otherwise the task runs without a check
+  private getReadinessCheck<T>(
+    task: Task,
+    resolve: () => T | null
+  ): { readyWhen: T | null; uncheckedReason?: string; readyOnStart?: boolean } {
+    try {
+      const readyWhen = resolve();
+      return {
+        readyWhen,
+        // A readyWhen resolves to no check when the server picks its port
+        readyOnStart:
+          readyWhen === null &&
+          getReadyWhenConfig(task, this.projectGraph) != null,
+      };
+    } catch (e) {
+      if (
+        !(e instanceof InvalidReadyWhenError) ||
+        this.hasReadyWaiter(task.id)
+      ) {
+        throw e;
+      }
+      return { readyWhen: null, uncheckedReason: e.message };
+    }
+  }
+
+  // Call it after the start: the TUI replaces the task's terminal when it
+  // starts, dropping output appended before
+  private warnUncheckedReadiness(task: Task, reason: string) {
+    const message = `${reason} Nothing in this run waits for it to be ready, so it runs without a readiness check.`;
+    if (this.tuiEnabled) {
+      this.options.lifeCycle.appendTaskOutput(
+        task.id,
+        `\r\n${message}\r\n`,
+        false
+      );
+    } else {
+      console.warn(message);
+    }
+  }
+
   private async waitForReadyDependencies(task: Task): Promise<void> {
     const producerIds = getReadyProducerIds(task, this.fullTaskGraph);
     for (const producerId of producerIds) {
       const producer = this.fullTaskGraph.tasks[producerId];
-      const readyWhen = this.getReadyWhenWait(producer);
+      let readyWhen: ReadyWhenWait | null;
+      try {
+        readyWhen = this.getReadyWhenWait(producer);
+      } catch (e) {
+        // An owner in another process runs it unchecked and marks its row
+        // failed, or drops the row. Without a row, nothing will settle it.
+        if (
+          !(e instanceof InvalidReadyWhenError) ||
+          this.taskGraph.tasks[producerId]
+        ) {
+          throw e;
+        }
+        this.onReadinessHold(producerId);
+        const owned = await this.pollReadinessRow(producer, {
+          timeout: DEFAULT_READY_TIMEOUT,
+          description: 'invalid',
+        });
+        if (!owned) {
+          throw e;
+        }
+        continue;
+      }
       if (!readyWhen) {
         if (process.env.NX_VERBOSE_LOGGING === 'true') {
           console.log(
@@ -2072,14 +2158,14 @@ export class TaskOrchestrator {
   }
 
   // A row absent from the start means no Nx process this one can see owns the
-  // producer, unless the caller already saw the owner: then it exited. A row
-  // that disappears mid-wait means the producer exited.
+  // producer (resolves false), unless the caller already saw the owner: then it
+  // exited. A row that disappears mid-wait means the producer exited.
   private async pollReadinessRow(
     producer: Task,
     readyWhen: ReadyWhenWait,
     signal?: AbortSignal,
     ownerObserved = false
-  ): Promise<void> {
+  ): Promise<boolean> {
     const deadline = Date.now() + readyWhen.timeout;
     let lastStatus: TaskReadiness | null = null;
     while (true) {
@@ -2095,14 +2181,14 @@ export class TaskOrchestrator {
         if (lastStatus !== null || ownerObserved) {
           throw notReadyError(producer.id, 'exited');
         }
-        return;
+        return false;
       }
       if (status !== lastStatus) {
         lastStatus = status;
         this.options.lifeCycle.setTaskReadiness?.(producer.id, status);
       }
       if (status === TaskReadiness.Ready) {
-        return;
+        return true;
       }
       if (status === TaskReadiness.Failed) {
         throw new ProducerFailedError(producer.id);
@@ -2191,10 +2277,13 @@ export class TaskOrchestrator {
     }
   }
 
-  // The probe's verdict stands for local waiters even when the row for
-  // other processes cannot be written
   private recordReadiness(task: Task, status: TaskReadiness) {
     this.options.lifeCycle.setTaskReadiness?.(task.id, status);
+    this.publishReadiness(task, status);
+  }
+
+  // Only other processes read the row, so a failed write must not fail this one
+  private publishReadiness(task: Task, status: TaskReadiness) {
     try {
       this.runningTasksService?.setTaskReadiness(task.id, status);
     } catch (e) {
@@ -2599,7 +2688,11 @@ export class TaskOrchestrator {
       // The log probe reads the captured output. Read from the config, because
       // the probe resolves against the env that depends on this
       const readyWhen = getReadyWhenConfig(task, this.projectGraph);
-      if (readyWhen && 'logMatches' in readyWhen) {
+      if (
+        typeof readyWhen === 'object' &&
+        readyWhen &&
+        'logMatches' in readyWhen
+      ) {
         return true;
       }
 
