@@ -325,6 +325,28 @@ describe('remove-deprecated-executors', () => {
     `);
   });
 
+  it('converts a config built on the removed helpers before inferring its targets', async () => {
+    const project = createProject(tree);
+    writeWebpackConfig(
+      tree,
+      project.root,
+      `const { composePlugins, withNx } = require('@nx/webpack');
+
+module.exports = composePlugins(withNx(), (config) => config);
+`
+    );
+
+    await update(tree);
+
+    expect(tree.exists(`${project.root}/webpack.config.old.js`)).toBe(true);
+    expect(tree.read(`${project.root}/webpack.config.js`, 'utf-8')).toContain(
+      'new NxAppWebpackPlugin(buildOptions)'
+    );
+    expect(
+      readProjectConfiguration(tree, project.name).targets.build?.executor
+    ).toBeUndefined();
+  });
+
   it('skips the prompt when no project uses the removed executors', async () => {
     const nxJson = readNxJson(tree);
 

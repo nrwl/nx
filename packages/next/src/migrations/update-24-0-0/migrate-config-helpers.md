@@ -11,8 +11,9 @@ aliased imports from `@nx/next` and `@nx/next/plugins/with-nx`. Read project tar
 configuration overrides, package scripts, tsconfigs, and workspace package exports.
 Record the installed Next version and whether each command uses webpack or
 Turbopack. Preserve both; do not switch bundlers or upgrade Next as part of this
-migration. Executor conversion is separate: handle explicit and inferred targets
-without rewriting target types here.
+migration. Handle explicit and inferred targets without changing their types. Nx 24
+removed the `@nx/next` build and serve executors, and a separate migration converts
+their targets, so do not add them back.
 
 Record existing output locations, build/serve/export commands, and custom behavior.
 Build a baseline before edits if possible; otherwise use an isolated checkout of
@@ -44,8 +45,8 @@ implementation as the replacement.
   `transpilePackages` entries only where required, merging existing entries. Do not
   assume all workspace libraries are transpiled without configuration.
 - **Output paths:** preserve build output and standalone deployment expectations,
-  explicit `distDir`, executor `outputPath`, and any `NX_NEXT_OUTPUT_PATH` behavior
-  still used by retained executors. Keep development output compatible with the
+  explicit `distDir`, the `outputPath` the removed executor set, and any
+  `NX_NEXT_OUTPUT_PATH` behavior. Keep development output compatible with the
   existing bundler. Check Nx's declared cache outputs still cover actual files.
 - **Static export:** preserve `output: 'export'`, the export destination, and the
   commands that serve it. Do not replace a static export with a server deployment.

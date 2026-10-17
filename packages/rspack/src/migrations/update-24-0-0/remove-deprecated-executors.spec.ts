@@ -323,6 +323,28 @@ describe('remove-deprecated-executors', () => {
     `);
   });
 
+  it('converts a config built on the removed helpers before inferring its targets', async () => {
+    const project = createProject(tree);
+    writeRspackConfig(
+      tree,
+      project.root,
+      `const { composePlugins, withNx } = require('@nx/rspack');
+
+module.exports = composePlugins(withNx(), (config) => config);
+`
+    );
+
+    await update(tree);
+
+    expect(tree.exists(`${project.root}/rspack.config.old.js`)).toBe(true);
+    expect(tree.read(`${project.root}/rspack.config.js`, 'utf-8')).toContain(
+      'new NxAppRspackPlugin(buildOptions)'
+    );
+    expect(
+      readProjectConfiguration(tree, project.name).targets.build?.executor
+    ).toBeUndefined();
+  });
+
   it('skips the prompt when no project uses the removed executors', async () => {
     const nxJson = readNxJson(tree);
 

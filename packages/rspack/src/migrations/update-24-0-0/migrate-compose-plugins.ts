@@ -14,11 +14,8 @@ export default async function migrateComposePlugins(tree: Tree) {
   const remaining: { usage: HelperUsage; reason: string }[] = [];
 
   for (const usage of usages) {
-    if (!usage.usesExecutor) {
-      remaining.push({
-        usage,
-        reason: `does not use the \`@nx/rspack:rspack\` executor, which ${CONVERTER} requires`,
-      });
+    if (!usage.usesHelpers) {
+      converted.push(usage);
       continue;
     }
 
