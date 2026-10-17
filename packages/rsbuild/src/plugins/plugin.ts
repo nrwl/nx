@@ -228,6 +228,7 @@ async function createRsbuildTargets(
       cwd: projectRoot,
       args: ['--mode=development'],
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'dev'),
   };
 
   targets[options.previewTargetName] = {
@@ -239,6 +240,7 @@ async function createRsbuildTargets(
       cwd: projectRoot,
       args: ['--mode=production'],
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'preview'),
   };
 
   targets[options.inspectTargetName] = {
@@ -399,4 +401,20 @@ function normalizeOptions(options: RsbuildPluginOptions): RsbuildPluginOptions {
   options.inspectTargetName ??= 'inspect';
   options.typecheckTargetName ??= 'typecheck';
   return options;
+}
+
+// pluginNxReadySignal() signals once the server listens. Without it, the
+// fallback loads the config at task time, with the task's env and options.
+function getServerReadyWhen(
+  configFilePath: string,
+  command: 'dev' | 'preview'
+): TargetConfiguration['readyWhen'] {
+  return {
+    signal: true,
+    fallback: {
+      command: `node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], '${command}')" "${configFilePath}"`,
+      // Each attempt loads the config
+      interval: 1000,
+    },
+  };
 }

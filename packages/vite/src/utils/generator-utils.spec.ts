@@ -238,38 +238,40 @@ describe('generator utils', () => {
 
       expect(tree.read('myproj/vite.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
+          "/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-          cacheDir: '../node_modules/.vite/myproj',
-          server:{
-            port: 4200,
-            host: 'localhost',
-          },
-          preview:{
-            port: 4300,
-            host: 'localhost',
-          },
-          resolve: {
-            tsconfigPaths: true,
-          },
-          // Uncomment this if you are using workers.
-          // worker: {
-          //  plugins: [],
-          // },
-          build: {
-            outDir: '../dist/myproj',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
+          export default defineConfig(() => ({
+            root: import.meta.dirname,
+            cacheDir: '../node_modules/.vite/myproj',
+            server:{
+              port: 4200,
+              host: 'localhost',
             },
-          },
-        }));
-        "
-      `);
+            preview:{
+              port: 4300,
+              host: 'localhost',
+            },
+            resolve: {
+              tsconfigPaths: true,
+            },
+            plugins: [nxReadySignal()],
+            // Uncomment this if you are using workers.
+            // worker: {
+            //  plugins: [],
+            // },
+            build: {
+              outDir: '../dist/myproj',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+            },
+          }));
+          "
+        `);
     });
 
     it('should generate correct config when using ts solution setup', () => {

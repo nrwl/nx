@@ -26,6 +26,7 @@ export {
   applyDaemonEnvFromClient,
   getGraphTimeDotEnvForTask,
   hashDaemonClientEnv,
+  resolveStartupHost,
 } from 'nx/src/devkit-internals';
 
 // Formatter detection and setup. `@nx/js` needs these to write and detect a

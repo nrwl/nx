@@ -86,6 +86,40 @@ Use `include` and `exclude` glob patterns on the plugin entry to scope inference
 A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact
 identifier `@nx/rsbuild`.
 
+### Wait for the dev server to be ready
+
+The inferred `dev` and `preview` targets come with a `readyWhen` check, so a task can wait until the server accepts requests instead of only until it has started.
+The `pluginNxReadySignal()` plugin reports the dev or preview server's address to Nx once it listens.
+Generated configs include it.
+In an existing config, import it from `@nx/rsbuild/ready-signal` and add it to `plugins` in `rsbuild.config.*`.
+The report carries the port the server actually uses, so the check is right however the port was chosen, including when the configured port is busy and Rsbuild moves to the next free one.
+
+Without the plugin, Nx falls back to loading the config when the task runs, in the task's environment and with its flags, the way the Rsbuild CLI does.
+That covers the `.env` files for its `--env-mode`.
+It takes the port from the `--port` flag, `server.port`, or the default of 3000, and waits for it.
+With a port of `0`, the server picks its own port.
+There's nothing to wait for then, and the target counts as ready once it has started.
+
+A dependent task starts as soon as the server task has started, unless its `dependsOn` entry sets `waitFor` to `ready`:
+
+```json
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        { "projects": "myapp", "target": "dev", "waitFor": "ready" }
+      ]
+    }
+  }
+}
+```
+
+The waiting task gets the server's address in the `NX_READY_URL` environment variable, when exactly one target it waits for reported one.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
+For the `fallback` key and for signaling from your own server, see [signal readiness from the task](/docs/reference/project-configuration#signal-readiness-from-the-task).
+
 ## Using @nx/rsbuild
 
 ### Generate a new project using Rsbuild

@@ -239,6 +239,8 @@ async function createRspackTargets(
     outputs,
   };
 
+  const devServerReadyWhen = getDevServerReadyWhen(configFilePath);
+
   targets[options.serveTargetName] = {
     continuous: true,
     inputs: [...buildInputs],
@@ -248,6 +250,7 @@ async function createRspackTargets(
       args: ['--node-env=development'],
       env,
     },
+    readyWhen: devServerReadyWhen,
   };
 
   targets[options.previewTargetName] = {
@@ -259,6 +262,7 @@ async function createRspackTargets(
       args: ['--node-env=production'],
       env,
     },
+    readyWhen: devServerReadyWhen,
   };
 
   targets[options.serveStaticTargetName] = {
@@ -270,6 +274,7 @@ async function createRspackTargets(
       buildTarget: options.buildTargetName,
       spa: true,
     },
+    readyWhen: { port: '{options.port}', host: '{options.host}' },
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
@@ -341,4 +346,19 @@ function normalizeOutputPath(
       }
     }
   }
+}
+
+// NxAppRspackPlugin signals once the dev server listens. Without it, the
+// fallback reads the config at task time, with the task's env and options.
+function getDevServerReadyWhen(
+  configFilePath: string
+): TargetConfiguration['readyWhen'] {
+  return {
+    signal: true,
+    fallback: {
+      command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" "${configFilePath}"`,
+      // Each attempt loads the config
+      interval: 1000,
+    },
+  };
 }

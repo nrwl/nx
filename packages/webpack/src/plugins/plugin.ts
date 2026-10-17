@@ -238,6 +238,8 @@ async function createWebpackTargets(
     },
   };
 
+  const devServerReadyWhen = getDevServerReadyWhen(configFilePath);
+
   targets[options.serveTargetName] = {
     continuous: true,
     inputs: [...buildInputs],
@@ -246,6 +248,7 @@ async function createWebpackTargets(
       cwd: projectRoot,
       env: { NODE_ENV: 'development' },
     },
+    readyWhen: devServerReadyWhen,
     metadata: {
       technologies: ['webpack'],
       description: 'Starts Webpack dev server',
@@ -268,6 +271,7 @@ async function createWebpackTargets(
       cwd: projectRoot,
       env: { NODE_ENV: 'production' },
     },
+    readyWhen: devServerReadyWhen,
     metadata: {
       technologies: ['webpack'],
       description: 'Starts Webpack dev server in production mode',
@@ -291,6 +295,7 @@ async function createWebpackTargets(
       buildTarget: options.buildTargetName,
       spa: true,
     },
+    readyWhen: { port: '{options.port}', host: '{options.host}' },
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
@@ -404,5 +409,20 @@ function normalizeOptions(
     previewTargetName: options?.previewTargetName ?? 'preview',
     buildDepsTargetName: 'build-deps',
     watchDepsTargetName: 'watch-deps',
+  };
+}
+
+// NxAppWebpackPlugin signals once the dev server listens. Without it, the
+// fallback reads the config at task time, with the task's env and options.
+function getDevServerReadyWhen(
+  configFilePath: string
+): TargetConfiguration['readyWhen'] {
+  return {
+    signal: true,
+    fallback: {
+      command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" "${configFilePath}"`,
+      // Each attempt loads the config
+      interval: 1000,
+    },
   };
 }
