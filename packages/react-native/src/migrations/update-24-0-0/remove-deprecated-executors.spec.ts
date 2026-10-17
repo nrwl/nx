@@ -283,7 +283,7 @@ describe('remove-deprecated-executors', () => {
         "plugin": "@nx/react-native/plugin",
       }
     `);
-    // `bundle` has no inferred equivalent; the migration names these targets
+    // The converter has no `bundle` mapping; the migration names these targets
     // for the prompt to replace.
     expect(readProjectConfiguration(tree, project.name).targets)
       .toMatchInlineSnapshot(`
