@@ -136,6 +136,13 @@ describe('@nx/rspack', () => {
                         "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
+                    "readyWhen": {
+                      "fallback": {
+                        "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" "my-app/rspack.config.ts"",
+                        "interval": 1000,
+                      },
+                      "signal": true,
+                    },
                   },
                   "serve": {
                     "command": "rspack serve",
@@ -158,6 +165,13 @@ describe('@nx/rspack', () => {
                         "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
+                    "readyWhen": {
+                      "fallback": {
+                        "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" "my-app/rspack.config.ts"",
+                        "interval": 1000,
+                      },
+                      "signal": true,
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -178,6 +192,10 @@ describe('@nx/rspack', () => {
                       "buildTarget": "build",
                       "port": 9000,
                       "spa": true,
+                    },
+                    "readyWhen": {
+                      "host": "{options.host}",
+                      "port": "{options.port}",
                     },
                   },
                   "watch-deps": {

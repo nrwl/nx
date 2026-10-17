@@ -31,6 +31,9 @@ export class NxAppWebpackPlugin {
       require('./lib/apply-base-config') as typeof import('./lib/apply-base-config');
     const { applyWebConfig } =
       require('./lib/apply-web-config') as typeof import('./lib/apply-web-config');
+    const { applyDevServerReadySignal } =
+      require('../../utils/dev-server-ready-signal') as typeof import('../../utils/dev-server-ready-signal');
+    applyDevServerReadySignal(compiler);
 
     // Defaults to 'web' if not specified to match Webpack's default.
     const target = this.options.target ?? compiler.options.target ?? 'web';

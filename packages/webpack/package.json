@@ -38,6 +38,9 @@
       ],
       "internal": [
         "dist/internal.d.ts"
+      ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
       ]
     }
   },
@@ -73,6 +76,11 @@
       "@nx/nx-source": "./plugin.ts",
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
     },
     "./tsconfig-paths-plugin": {
       "@nx/nx-source": "./tsconfig-paths-plugin.ts",
