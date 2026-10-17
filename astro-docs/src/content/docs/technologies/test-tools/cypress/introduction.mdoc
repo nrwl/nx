@@ -127,15 +127,13 @@ export default defineConfig({
 });
 ```
 
-To stop an atomized task from rerunning for every library the app bundles, scope it to the projects its test file exercises.
-See [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
-
 {% aside type="note" title="Using setupNodeEvents function" %}
 If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/kb/cypress-setup-node-events) for more details.
 {% /aside %}
 
-To have an atomized task hash from the app code its test file imports instead of the whole app,
-see [hash e2e tests from their imports](/docs/kb/hash-e2e-tests-from-imports).
+An atomized task reruns when any library the app bundles changes.
+To scope it to the code its test file exercises, see
+[scope atomized e2e tests](/docs/kb/scope-e2e-tests).
 
 ### Splitting component testing tasks by file
 

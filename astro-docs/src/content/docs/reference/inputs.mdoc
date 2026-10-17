@@ -347,8 +347,10 @@ For example, an `e2e` task that tests one feature of an app shouldn't rerun when
 The task still depends on the server, but this entry doesn't include the server's inputs in the hash.
 Nx also leaves out the servers that entry reaches, unless another entry with inputs reaches them.
 The option has no effect on dependencies that aren't continuous.
-The Playwright and Cypress plugins set it for the atomized tasks of test files that
-[hash from the app code they import](/docs/kb/hash-e2e-tests-from-imports).
+The Playwright and Cypress plugins set it for the atomized task of a test file with an
+`@nx-depends-on` or `@nx-ignore-server-inputs` directive.
+They set it only when Nx runs the server as a task.
+For more information, see [scope atomized e2e tests](/docs/kb/scope-e2e-tests).
 
 `nx affected` selects tasks by their inputs.
 With [`affected.legacy`](/docs/reference/nx-json#affected), it selects whole projects, regardless of `"inputs": false`.
@@ -380,7 +382,8 @@ The `fileset`, `json`, and `input` forms accept `always`, including `{ "input": 
 A task hashed from its declared inputs hashes the same with or without it.
 With `always`, a `projects` pattern that matches no project is a configuration error, so a misspelled name can't drop a project unnoticed.
 
-To narrow an atomized test file to the projects it exercises, see [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
+For the atomized task of an e2e test file, the `@nx-depends-on` directive sets these inputs for the
+projects it lists.
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 
