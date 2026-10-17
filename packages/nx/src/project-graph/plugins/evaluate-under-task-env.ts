@@ -24,10 +24,10 @@ const evaluationQueue: Array<() => void> = [];
 /**
  * Calls the `exportName` function of `modulePath` with `args` the way a task
  * process would: in `cwd`, with exactly `env` as its environment and no node
- * options. It runs in this process only when this process already matches all
- * three, and otherwise in a fresh one, so modules an earlier evaluation cached
- * and env it wrote cannot leak in. `args` must be JSON-serializable and the
- * result structured-cloneable.
+ * options. When this process already matches all three, it runs here and
+ * shares this process's module cache. Otherwise it runs in a fresh process, so
+ * no module this process cached and no env it wrote can leak in. `args` must be
+ * JSON-serializable and the result structured-cloneable.
  */
 export async function evaluateUnderTaskEnv<T>(
   modulePath: string,
