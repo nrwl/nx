@@ -10,6 +10,7 @@ import {
   hashTaskDotEnvFiles,
   PluginCache,
   hashObject,
+  readEnv,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
@@ -430,7 +431,9 @@ function getServeTaskEnv(
     ...optionsEnv,
   };
   // webpack-dev-server sets it as it loads, before the config runs
-  env.WEBPACK_SERVE ||= 'true';
+  if (!readEnv(env, 'WEBPACK_SERVE')) {
+    env.WEBPACK_SERVE = 'true';
+  }
   return env;
 }
 

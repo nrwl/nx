@@ -126,6 +126,7 @@ export {
   evaluateUnderTaskEnv,
   hashTaskDotEnvFiles,
 } from './project-graph/plugins/evaluate-under-task-env';
+export { readEnv } from './tasks-runner/tokens';
 export {
   resolveImplementation,
   resolveSchema,

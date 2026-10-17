@@ -266,6 +266,11 @@ describe('@nx/rspack', () => {
       { port: '{options.port ?? 4300}', host: '{options.host ?? localhost}' },
     ],
     [
+      'two configs with a devServer',
+      `export default [{ name: 'client', devServer: { port: 4300 } }, { name: 'admin', devServer: { port: 4400 } }];`,
+      { port: '{options.port ?? 4300}', host: '{options.host ?? localhost}' },
+    ],
+    [
       'a fixed host',
       `export default { devServer: { port: 4300, host: '192.168.1.20' } };`,
       {
@@ -488,6 +493,44 @@ describe('@nx/rspack', () => {
     } finally {
       process.env.NODE_ENV = originalNodeEnv;
       setWorkspaceRoot(originalWorkspaceRoot);
+    }
+  });
+
+  it('adds no NODE_ENV over a lowercase node_env on Windows', async () => {
+    const originalPlatform = process.platform;
+    const originalNodeEnv = process.env.NODE_ENV;
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    delete process.env.NODE_ENV;
+    process.env.node_env = 'staging';
+    // The evaluation mock keeps both spellings, while Node on Windows passes
+    // only the uppercase one, so the config reads that one first
+    tempFs.createFileSync(
+      'my-app/rspack.config.ts',
+      `export default () => ({
+        devServer: {
+          port:
+            (process.env.NODE_ENV ?? process.env.node_env) === 'staging'
+              ? 4400
+              : 4300,
+        },
+      });`
+    );
+
+    try {
+      const nodes = await createNodesFunction(
+        ['my-app/rspack.config.ts'],
+        {},
+        context
+      );
+
+      const { targets } = nodes[0][1].projects['my-app'];
+      for (const target of ['serve', 'preview']) {
+        expect(targets[target].readyWhen.port).toBe('{options.port ?? 4400}');
+      }
+    } finally {
+      Object.defineProperty(process, 'platform', { value: originalPlatform });
+      delete process.env.node_env;
+      process.env.NODE_ENV = originalNodeEnv;
     }
   });
 

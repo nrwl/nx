@@ -10,6 +10,7 @@ import {
   PluginCache,
   hashFile,
   hashObject,
+  readEnv,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
@@ -429,10 +430,15 @@ function getServeTaskEnv(
     ...optionsEnv,
   };
   // `--node-env` applies only when NODE_ENV is unset
-  env.NODE_ENV ??= nodeEnv;
+  if (readEnv(env, 'NODE_ENV') === undefined) {
+    env.NODE_ENV = nodeEnv;
+  }
   // The dev server sets it as it loads, before the config runs. The major 1
   // one does it through webpack-dev-server.
-  env[devServerMajor === 1 ? 'WEBPACK_SERVE' : 'RSPACK_SERVE'] ||= 'true';
+  const serveFlag = devServerMajor === 1 ? 'WEBPACK_SERVE' : 'RSPACK_SERVE';
+  if (!readEnv(env, serveFlag)) {
+    env[serveFlag] = 'true';
+  }
   return env;
 }
 
