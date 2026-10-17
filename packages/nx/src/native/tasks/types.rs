@@ -363,7 +363,8 @@ impl HashInstruction {
 
     /// What hash details name this instruction: its Display, except that a
     /// large disk-backed group lists its first positives and counts the rest.
-    /// Unique within a task only: a task's groups never share a positive.
+    /// Not unique, even within a task: a task hash folds instructions that
+    /// share a label into one entry.
     pub fn label(&self) -> String {
         match self {
             HashInstruction::IgnoredFileSet { globs, .. }
