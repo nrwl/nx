@@ -66,29 +66,21 @@ describe('evaluateUnderTaskEnv', () => {
     expect(result.pid).not.toBe(process.pid);
   });
 
-  it.each([
-    ['everything matches', [], true, true, true],
-    ['the cwd differs', [], false, true, false],
-    ['the env differs', [], true, false, false],
-    ['it has node options', ['--conditions=development'], true, true, false],
-  ])(
-    'calls the export in this process only when %s',
-    async (_, execArgv: string[], sameCwd, sameEnv, inProcess) => {
-      const originalExecArgv = process.execArgv;
-      process.execArgv = execArgv;
+  it('calls the export in another process when this one has the same cwd, env and node options', async () => {
+    const originalExecArgv = process.execArgv;
+    process.execArgv = [];
 
-      try {
-        const result = await evaluateUnderTaskEnv<any>(modulePath, 'read', [], {
-          cwd: sameCwd ? process.cwd() : tempFs.tempDir,
-          env: sameEnv ? { ...process.env } : { ...process.env, PORT: '4300' },
-        });
+    try {
+      const result = await evaluateUnderTaskEnv<any>(modulePath, 'read', [], {
+        cwd: process.cwd(),
+        env: { ...process.env },
+      });
 
-        expect(result.pid === process.pid).toBe(inProcess);
-      } finally {
-        process.execArgv = originalExecArgv;
-      }
+      expect(result.pid).not.toBe(process.pid);
+    } finally {
+      process.execArgv = originalExecArgv;
     }
-  );
+  });
 
   it.each([
     ['the export throws', 'fail', /cannot read the config/],

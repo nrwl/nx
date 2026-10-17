@@ -24,10 +24,9 @@ const evaluationQueue: Array<() => void> = [];
 /**
  * Calls the `exportName` function of `modulePath` with `args` the way a task
  * process would: in `cwd`, with exactly `env` as its environment and no node
- * options. When this process already matches all three, it runs here and
- * shares this process's module cache. Otherwise it runs in a fresh process, so
- * no module this process cached and no env it wrote can leak in. `args` must be
- * JSON-serializable and the result structured-cloneable.
+ * options. It runs in a fresh process, so no module this process cached and no
+ * env it wrote can leak in. `args` must be JSON-serializable and the result
+ * structured-cloneable.
  */
 export async function evaluateUnderTaskEnv<T>(
   modulePath: string,
@@ -35,13 +34,6 @@ export async function evaluateUnderTaskEnv<T>(
   args: unknown[],
   { cwd, env }: { cwd: string; env: NodeJS.ProcessEnv }
 ): Promise<T> {
-  if (
-    cwd === process.cwd() &&
-    process.execArgv.length === 0 &&
-    isSameEnv(env, process.env)
-  ) {
-    return await require(modulePath)[exportName](...args);
-  }
   // `while`: a caller arriving between a release and the woken waiter's resume
   // can take the slot first
   while (activeEvaluations >= MAX_CONCURRENT_EVALUATIONS) {
@@ -76,16 +68,6 @@ export function hashTaskDotEnvFiles(
     }
   }
   return hashArray(parts);
-}
-
-function isSameEnv(a: NodeJS.ProcessEnv, b: NodeJS.ProcessEnv): boolean {
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  for (const key of keys) {
-    if (a[key] !== b[key]) {
-      return false;
-    }
-  }
-  return true;
 }
 
 function isWorkerMessage(
