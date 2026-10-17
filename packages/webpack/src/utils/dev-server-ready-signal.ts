@@ -26,6 +26,13 @@ export function applyDevServerReadySignal(compiler: Compiler): void {
   };
 }
 
+/** Reports the dev server's address to an Nx task whose readyWhen is `signal`. */
+export class NxReadySignalPlugin {
+  apply(compiler: Compiler): void {
+    applyDevServerReadySignal(compiler);
+  }
+}
+
 export function getDevServerUrl(server: {
   server?: { address(): AddressInfo | string | null };
   options?: { server?: string | { type?: string } };

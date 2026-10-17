@@ -110,9 +110,10 @@ Use `include` and `exclude` glob patterns on the plugin entry to scope inference
 
 The inferred `serve` and `preview` targets come with a `readyWhen` check, so a task can wait until the dev server accepts requests instead of only until it has started.
 `NxAppWebpackPlugin` in the webpack config reports the server's address to Nx once it listens.
+In a config without `NxAppWebpackPlugin`, add `new NxReadySignalPlugin()` from `@nx/webpack/ready-signal` to `plugins` instead.
 The report carries the port the server actually uses, so the check is right however the port was chosen.
 
-Without `NxAppWebpackPlugin`, Nx falls back to reading the webpack config when the task runs, in the task's environment and with its options.
+Without either plugin, Nx falls back to reading the webpack config when the task runs, in the task's environment and with its options.
 That covers `.env` files and `--port` or `--host` flags.
 It works out the port the way `webpack-cli serve` does, from the `--port` flag, `devServer.port`, `WEBPACK_DEV_SERVER_BASE_PORT`, or 8080, and waits for it.
 When the server picks its own port (a `devServer.port` of `0` or `"auto"`) or listens on a socket instead of a port (`devServer.ipc`), there's nothing to wait for, and the target counts as ready once it has started.
