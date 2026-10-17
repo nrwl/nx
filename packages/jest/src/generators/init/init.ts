@@ -37,8 +37,8 @@ function updateProductionFileSet(tree: Tree) {
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
       // Remove tsconfig.spec.json
       '!{projectRoot}/tsconfig.spec.json',
-      // Remove jest.config.js/ts
-      '!{projectRoot}/jest.config.[jt]s',
+      // Remove jest configs
+      '!{projectRoot}/jest.config.{cjs,mjs,js,cts,mts,ts}',
       // Remove test-setup.js/ts
       // TODO(meeroslav) this should be standardized
       '!{projectRoot}/src/test-setup.[jt]s',
