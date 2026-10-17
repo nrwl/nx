@@ -50,6 +50,7 @@ describe('loadUltracacheConfigurationsForRun', () => {
   /** A run that opted in, stated explicitly so the machine's env cannot. */
   const optedIn = (overrides: Record<string, unknown> = {}) => ({
     NX_CLOUD_USE_ULTRACACHE: 'true',
+    NX_CLOUD_ULTRACACHE_MODE: 'on',
     ...overrides,
   });
   /** A stored set for HEAD. */
@@ -127,6 +128,46 @@ describe('loadUltracacheConfigurationsForRun', () => {
       })
     );
     expect(result).toEqual({ status: 'fetched', configurations: set });
+  });
+
+  it.each([undefined, 'invalid'])(
+    'learns the workspace mode from Cloud even with stored recordings when env is %s',
+    async (mode) => {
+      vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', mode);
+      store.get.mockReturnValue(stored());
+      const fresh = stored();
+      store.import.mockReturnValue(fresh);
+      cloud.fetchUltracacheConfigurations.mockImplementationOnce(async () => {
+        await Promise.resolve();
+        vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', 'warn');
+        return { configurations: {}, defaultUltracacheMode: 'warn' };
+      });
+      expect(
+        await loadUltracacheConfigurationsForRun(
+          nxJson,
+          {},
+          optedIn({
+            NX_CLOUD_ULTRACACHE_MODE: mode,
+          })
+        )
+      ).toEqual({ status: 'fetched', configurations: fresh });
+      expect(cloud.fetchUltracacheConfigurations).toHaveBeenCalledTimes(1);
+      expect(process.env.NX_CLOUD_ULTRACACHE_MODE).toBe('warn');
+    }
+  );
+
+  it('keeps the older mode fallback when an older client supplies no workspace default', async () => {
+    vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', undefined);
+    store.import.mockReturnValue(stored());
+    const result = await loadUltracacheConfigurationsForRun(
+      nxJson,
+      {},
+      optedIn({
+        NX_CLOUD_ULTRACACHE_MODE: undefined,
+      })
+    );
+    expect(result.status).toBe('fetched');
+    expect(process.env.NX_CLOUD_ULTRACACHE_MODE).toBeUndefined();
   });
 
   it('fetches once under the lock, and uses a set another process stored meanwhile', async () => {

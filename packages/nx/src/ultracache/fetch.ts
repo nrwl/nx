@@ -5,6 +5,7 @@ import {
 } from '../nx-cloud/update-manager';
 import { workspaceRoot } from '../utils/workspace-root';
 import type { UltracacheCloudOptions } from './config';
+import type { TaskUltracacheSettings } from '../native';
 
 const READ_TIMEOUT_MS = 10_000;
 
@@ -23,6 +24,8 @@ export interface ReadUltracacheConfiguration {
 
 export interface ReadUltracacheConfigurationsResult {
   configurations: Readonly<Record<string, ReadUltracacheConfiguration>>;
+  /** The client also sets NX_CLOUD_ULTRACACHE_MODE before returning. */
+  defaultUltracacheMode?: TaskUltracacheSettings['mode'];
 }
 
 /**

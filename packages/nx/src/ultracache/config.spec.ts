@@ -1,4 +1,76 @@
-import { ultracacheEnv, isUltracacheConfigurationFetchEnabled } from './config';
+import type { Task } from '../config/task-graph';
+import {
+  applyDefaultUltracacheMode,
+  getDefaultUltracacheMode,
+  ultracacheEnv,
+  isUltracacheConfigurationFetchEnabled,
+} from './config';
+
+describe('workspace Ultracache defaults', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each(['on', 'warn', 'error', 'off'] as const)(
+    'resolves %s without changing the recording-fetch gate',
+    (mode) => {
+      vi.stubEnv('CI', 'true');
+      vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', mode);
+      expect(getDefaultUltracacheMode()).toBe(mode);
+      const env = ultracacheEnv({
+        NX_CLOUD_ULTRACACHE_MODE: mode,
+        NX_CLOUD_USE_ULTRACACHE: 'true',
+      });
+      expect(getDefaultUltracacheMode(env)).toBe(mode);
+      expect(
+        isUltracacheConfigurationFetchEnabled({ nxCloudId: 'id' }, {}, env)
+      ).toBe(true);
+      expect(
+        isUltracacheConfigurationFetchEnabled(
+          { nxCloudId: 'id' },
+          {},
+          {
+            ...env,
+            NX_CLOUD_USE_ULTRACACHE: undefined,
+          }
+        )
+      ).toBe(false);
+    }
+  );
+
+  it.each([undefined, '', 'WARNING', 'STRICT', 'ON', 'true', 'unknown'])(
+    'preserves older behavior for an absent or invalid mode (%s)',
+    (mode) => {
+      const task = { ultracache: undefined } as Task;
+      const defaultMode = getDefaultUltracacheMode({
+        NX_CLOUD_ULTRACACHE_MODE: mode,
+      });
+      applyDefaultUltracacheMode([task], defaultMode);
+      expect(defaultMode).toBeUndefined();
+      expect(task.ultracache).toBeUndefined();
+    }
+  );
+
+  it.each(['on', 'warn', 'error', 'off'] as const)(
+    'fills missing modes with %s while preserving explicit overrides and options',
+    (mode) => {
+      const options = { ignoreReads: ['tmp/**'], collectStats: true };
+      const tasks = [
+        {},
+        { ultracache: options },
+        ...(['on', 'warn', 'error', 'off'] as const).map((mode) => ({
+          ultracache: { ...options, mode },
+        })),
+      ] as Task[];
+      const explicit = tasks.slice(2).map((task) => task.ultracache);
+      applyDefaultUltracacheMode(tasks, mode);
+      expect(tasks[0].ultracache).toEqual({ mode });
+      expect(tasks[1].ultracache).toEqual({ ...options, mode });
+      expect(options).not.toHaveProperty('mode');
+      for (const [i, settings] of explicit.entries()) {
+        expect(tasks[i + 2].ultracache).toBe(settings);
+      }
+    }
+  );
+});
 
 describe('isUltracacheConfigurationFetchEnabled', () => {
   const connected = { nxCloudId: 'id' } as any;

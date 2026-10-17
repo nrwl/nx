@@ -18,6 +18,7 @@ import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { toRustProjectGraph } from '../transform-objects';
 import { getUltracacheSettings } from '../../ultracache/overrides';
+import { applyDefaultUltracacheMode } from '../../ultracache/config';
 import { DependencyType } from '../../config/project-graph';
 
 let tempFs = new TempFs('task-planner');
@@ -2669,6 +2670,38 @@ describe('task planner', () => {
         ).toContainEqual(
           expect.objectContaining({ reason, taskId: 'parent:build' })
         );
+      }
+    );
+
+    it.each(['on', 'warn', 'error', 'off'] as const)(
+      'uses workspace mode %s for hashing and preserves a target opt-in',
+      (mode) => {
+        const { planner, taskGraph } = fixture();
+        taskGraph.tasks['parent:build'].ultracache = { collectStats: true };
+        taskGraph.tasks['child:build'].ultracache = { mode: 'on' };
+        const configurations = configurationsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+          'child:build': { inputs: ['libs/child/filea.ts'] },
+        });
+        const plain = planner.getPlans(['parent:build'], taskGraph);
+        applyDefaultUltracacheMode(Object.values(taskGraph.tasks), mode);
+        const plans = planner.getPlans(
+          ['parent:build'],
+          taskGraph,
+          configurations
+        );
+        const report = getUltracacheReport(
+          configurations,
+          getUltracacheSettings(taskGraph)
+        );
+        expect(report.used).toContain('child:build');
+        if (mode === 'on') {
+          expect(plans).not.toEqual(plain);
+          expect(report.used).toContain('parent:build');
+        } else {
+          expect(plans).toEqual(plain);
+          expect(report.used).not.toContain('parent:build');
+        }
       }
     );
 
