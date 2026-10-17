@@ -705,104 +705,99 @@ impl HashPlanner {
             return Ok(None);
         };
 
-        // we can only vouch for @nx packages's executor dependencies
-        // if it's "run commands" or third-party we skip traversing since we have no info what this command depends on
-        if target
-            .executor
-            .as_ref()
-            .is_some_and(|e| e.starts_with("@nrwl/") || e.starts_with("@nx/"))
-        {
-            let executor_package = target
-                .executor
-                .as_ref()
-                .unwrap()
-                .split(':')
-                .next()
-                .expect("Executors should always have a ':'");
-            let existing_packages =
-                find_external_dependency_node_names(executor_package, &self.project_graph);
-            if existing_packages.is_empty() {
-                // this usually happens because the executor was a local plugin.
-                // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
-                return Ok(None);
-            }
-            let mut external_deps = hashbrown::HashSet::new();
-            for existing_package in existing_packages {
-                trace!(
-                    "Add External Instruction for executor {existing_package}: {}",
-                    target.executor.as_ref().unwrap()
-                );
-                trace!(
-                    "Add External Instructions for dependencies of executor {existing_package}: {:?}",
-                    &external_deps_map[existing_package]
-                );
-                external_deps.insert(existing_package);
-                external_deps.extend(&external_deps_map[existing_package]);
-            }
-            Ok(Some(
-                external_deps
-                    .iter()
-                    .map(|s| HashInstruction::External(s.to_string()))
-                    .collect(),
-            ))
-        } else {
-            let mut external_deps = hashbrown::HashSet::new();
-            let mut has_external_deps = false;
-            for input in self_inputs {
-                match input {
-                    Input::ExternalDependency(deps) => {
-                        has_external_deps = true;
-                        for dep in deps.iter() {
-                            let external_node_names =
-                                find_external_dependency_node_names(dep, &self.project_graph);
-                            if external_node_names.is_empty() {
-                                if self.project_graph.nodes.contains_key(dep) {
-                                    let deps = self.project_graph.dependencies.get(project_name);
-                                    if deps.is_some_and(|deps| deps.contains(dep)) {
-                                        anyhow::bail!(
-                                            "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node and is already a dependency. Please remove it from the externalDependency inputs."
-                                        )
-                                    } else {
-                                        anyhow::bail!(
-                                            "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node. If you believe this is a dependency, add an implicitDependency to '{project_name}'"
-                                        )
-                                    }
-                                } else {
-                                    anyhow::bail!(
-                                        "The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found"
-                                    )
-                                }
-                            }
-                            for external_node_name in external_node_names {
-                                trace!(
-                                    "Add External Instruction for External Input {external_node_name}: {}",
-                                    target.executor.as_ref().unwrap()
-                                );
-                                trace!(
-                                    "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
-                                    &external_deps_map[external_node_name]
-                                );
-                                external_deps.insert(external_node_name);
-                                external_deps.extend(&external_deps_map[external_node_name]);
-                            }
+        let mut external_deps = hashbrown::HashSet::new();
+        let mut declares_external_deps = false;
+        for input in self_inputs {
+            let Input::ExternalDependency(deps) = input else {
+                continue;
+            };
+            declares_external_deps = true;
+            for dep in deps.iter() {
+                let external_node_names =
+                    find_external_dependency_node_names(dep, &self.project_graph);
+                if external_node_names.is_empty() {
+                    if self.project_graph.nodes.contains_key(dep) {
+                        let deps = self.project_graph.dependencies.get(project_name);
+                        if deps.is_some_and(|deps| deps.contains(dep)) {
+                            anyhow::bail!(
+                                "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node and is already a dependency. Please remove it from the externalDependency inputs."
+                            )
+                        } else {
+                            anyhow::bail!(
+                                "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node. If you believe this is a dependency, add an implicitDependency to '{project_name}'"
+                            )
                         }
+                    } else {
+                        anyhow::bail!(
+                            "The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found"
+                        )
                     }
-                    _ => continue,
+                }
+                for external_node_name in external_node_names {
+                    trace!(
+                        "Add External Instructions for External Input {external_node_name} of {project_name}:{target_name}: {:?}",
+                        &external_deps_map[external_node_name]
+                    );
+                    external_deps.insert(external_node_name);
+                    external_deps.extend(&external_deps_map[external_node_name]);
                 }
             }
-            if !external_deps.is_empty() {
-                Ok(Some(
-                    external_deps
-                        .iter()
-                        .map(|s| HashInstruction::External(s.to_string()))
-                        .collect(),
-                ))
-            } else if !has_external_deps {
-                Ok(Some(vec![HashInstruction::AllExternalDependencies]))
-            } else {
-                Ok(None)
-            }
         }
+
+        // Only @nx executors have a known package. Anything else could depend
+        // on any external, unless the target declares which ones it uses.
+        let Some(executor_package) = target
+            .executor
+            .as_deref()
+            .filter(|e| e.starts_with("@nrwl/") || e.starts_with("@nx/"))
+            .map(|e| {
+                e.split(':')
+                    .next()
+                    .expect("Executors should always have a ':'")
+            })
+        else {
+            return Ok(Some(if declares_external_deps {
+                external_instructions(external_deps)
+            } else {
+                vec![HashInstruction::AllExternalDependencies]
+            }));
+        };
+
+        let executor_nodes =
+            find_external_dependency_node_names(executor_package, &self.project_graph);
+        if !executor_nodes.is_empty() {
+            for executor_node in executor_nodes {
+                trace!(
+                    "Add External Instructions for executor {executor_node} of {project_name}:{target_name}: {:?}",
+                    &external_deps_map[executor_node]
+                );
+                external_deps.insert(executor_node);
+                external_deps.extend(&external_deps_map[executor_node]);
+            }
+            return Ok(Some(external_instructions(external_deps)));
+        }
+
+        // A local plugin's executor is workspace source, so its project's
+        // files stand in for the installed package's closure.
+        let mut instructions = external_instructions(external_deps);
+        if let Some((executor_project, executor_config)) = target
+            .executor_project
+            .as_ref()
+            .and_then(|name| self.project_graph.nodes.get_key_value(name))
+        {
+            trace!(
+                "Add Project File Instruction for local executor {executor_project} of {project_name}:{target_name}"
+            );
+            instructions.push(HashInstruction::ProjectFileSet(
+                executor_project.to_string(),
+                vec![resolve_tokens(
+                    "{projectRoot}/**/*",
+                    &executor_config.root,
+                    executor_project,
+                )],
+            ));
+        }
+        Ok(Some(instructions))
     }
 
     fn self_and_deps_inputs<'a>(
@@ -1922,6 +1917,13 @@ fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> Str
             .map(str::to_string)
             .unwrap_or(resolved),
     }
+}
+
+fn external_instructions(external_deps: hashbrown::HashSet<&String>) -> Vec<HashInstruction> {
+    external_deps
+        .into_iter()
+        .map(|dep| HashInstruction::External(dep.to_string()))
+        .collect()
 }
 
 /// Without an exact `<pkg>`/`npm:<pkg>` node, every installed version of the
