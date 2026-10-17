@@ -48,6 +48,21 @@ Code that imported an executor function directly needs to call the tool instead.
 
 The executor option types, such as `ViteBuildExecutorOptions` and `PlaywrightExecutorSchema`, are still exported.
 
+## Changed generator APIs
+
+Generators no longer accept the `addPlugin` option. They always add their inference plugin, so remove `addPlugin` from code that calls them.
+
+The `@nx/react:setup-ssr` generator is removed. It configured server builds on the removed `@nx/webpack:webpack` and `@nx/rspack:rspack` executors.
+
+`getViteE2EWebServerInfo` and `getReactRouterE2EWebServerInfo` from `@nx/vite`, `getWebpackE2EWebServerInfo` from `@nx/webpack`, `getRspackE2EWebServerInfo` from `@nx/rspack` and `getRsbuildE2EWebServerInfo` from `@nx/rsbuild` no longer take the `isPluginBeingAdded` argument. The port override moves up to the fourth argument, and the Vite helpers take the CI port override fifth:
+
+```ts
+// Before
+await getViteE2EWebServerInfo(tree, 'my-app', configFilePath, true, 4200);
+// After
+await getViteE2EWebServerInfo(tree, 'my-app', configFilePath, 4200);
+```
+
 ## Migrate
 
 Run the standard migration. Each affected plugin ships a `remove-deprecated-executors` migration that converts your projects.

@@ -155,7 +155,7 @@
     },
     "useInferencePlugins": {
       "type": "boolean",
-      "description": "Specifies whether to add inference plugins when generating new projects. Some plugins, such as @nx/vite and @nx/jest, always add their inference plugin."
+      "description": "When `false`, `nx add` does not update package.json scripts by default and `nx init` uses its legacy setup. Generators ignore this setting and always add their inference plugin."
     },
     "analytics": {
       "type": "boolean",
