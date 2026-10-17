@@ -16,6 +16,9 @@ export function addError(
     if (messageOrError.hideStack) {
       (error as RspackError).hideStack = true;
     }
+    if (messageOrError.file) {
+      (error as RspackError).file = messageOrError.file;
+    }
   }
   compilation.errors.push(error);
 }
@@ -30,6 +33,9 @@ export function addWarning(
   if (typeof messageOrError !== 'string') {
     if (messageOrError.hideStack) {
       (warning as RspackError).hideStack = true;
+    }
+    if (messageOrError.file) {
+      (warning as RspackError).file = messageOrError.file;
     }
   }
   compilation.warnings.push(warning);

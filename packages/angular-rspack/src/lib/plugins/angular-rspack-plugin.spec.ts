@@ -557,6 +557,36 @@ describe('AngularRspackPlugin', () => {
     ).toBe(true);
   });
 
+  it('should report Angular diagnostics as WebpackError instances with the file', async () => {
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: {
+        diagnoseFiles: vi.fn().mockResolvedValue({
+          errors: [{ text: 'type error', location: { file: 'a.ts' } }],
+          warnings: [{ text: 'some warning', location: { file: 'b.ts' } }],
+        }),
+      },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = applyPlugin();
+
+    await runBuildStart(compiler);
+    const compilation = createFakeCompilation(compiler);
+    await fireAsyncTaps(compiler.hooks.emit, compilation);
+
+    expect(compilation.errors).toHaveLength(1);
+    expect(compilation.errors[0]).toBeInstanceOf(FakeWebpackError);
+    expect(compilation.errors[0]).toMatchObject({
+      message: 'type error',
+      file: 'a.ts',
+    });
+    expect(compilation.warnings).toHaveLength(1);
+    expect(compilation.warnings[0]).toBeInstanceOf(FakeWebpackError);
+    expect(compilation.warnings[0]).toMatchObject({
+      message: 'some warning',
+      file: 'b.ts',
+    });
+  });
+
   it('should use a persistent cache path scoped to the project', () => {
     new AngularRspackPlugin({ ...options, projectName: 'app' });
 
