@@ -642,6 +642,21 @@ describe('Linter', () => {
           })
         ).not.toThrow();
       });
+
+      it('should track packages imported by the flat configs as lint inputs', () => {
+        const jsLib = uniq('js-lib');
+
+        runCLI(`generate @nx/js:lib ${jsLib} --linter eslint`);
+
+        const project = JSON.parse(runCLI(`show project ${jsLib} --json`));
+        const externalDependencies = project.targets.lint.inputs.find(
+          (input) =>
+            typeof input === 'object' && 'externalDependencies' in input
+        )?.externalDependencies;
+        expect(externalDependencies).toEqual(
+          expect.arrayContaining(['eslint', '@nx/eslint-plugin'])
+        );
+      });
     });
   });
 
