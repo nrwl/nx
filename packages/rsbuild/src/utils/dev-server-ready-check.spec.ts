@@ -23,14 +23,20 @@ describe('parseRsbuildFlags', () => {
 
 describe('getRsbuildServerAddress', () => {
   it("takes the flag, then the config, then Rsbuild's default port", () => {
-    expect(getRsbuildServerAddress({ port: 5000 }, { port: '3100' })).toEqual({ port: 3100 });
+    expect(getRsbuildServerAddress({ port: 5000 }, { port: '3100' })).toEqual({
+      port: 3100,
+    });
     expect(getRsbuildServerAddress({ port: 5000 }, {})).toEqual({ port: 5000 });
     expect(getRsbuildServerAddress({}, {})).toEqual({ port: 3000 });
   });
 
   it('probes loopback unless a specific host is named', () => {
-    expect(getRsbuildServerAddress({ port: 1, host: '0.0.0.0' }, {})).toEqual({ port: 1 });
-    expect(getRsbuildServerAddress({ port: 1, host: 'dev.local' }, {})).toEqual({ port: 1, host: 'dev.local' });
+    expect(getRsbuildServerAddress({ port: 1, host: '0.0.0.0' }, {})).toEqual({
+      port: 1,
+    });
+    expect(getRsbuildServerAddress({ port: 1, host: 'dev.local' }, {})).toEqual(
+      { port: 1, host: 'dev.local' }
+    );
   });
 });
 
@@ -55,6 +61,19 @@ describe('waitForRsbuildServer', () => {
     vi.unstubAllEnvs();
     rmSync(dir, { recursive: true, force: true });
     await new Promise((r) => server.close(r));
+  });
+
+  it('loads the env files of the mode the command implies, as the CLI does', async () => {
+    const config = join(dir, 'rsbuild.config.mjs');
+    writeFileSync(
+      config,
+      `export default ({ env, envMode }) => ({ server: { port: env === 'development' && envMode === 'development' ? Number(process.env.APP_PORT) : 1 } });`
+    );
+    writeFileSync(join(dir, '.env.development'), `APP_PORT=${port}`);
+    vi.stubEnv('NODE_ENV', undefined);
+    vi.stubEnv('NX_TASK_OPTIONS', JSON.stringify({ cwd: dir }));
+
+    await expect(waitForRsbuildServer(config, 'dev')).resolves.toBeUndefined();
   });
 
   it('reads the port the config computes from the env files of the env mode', async () => {

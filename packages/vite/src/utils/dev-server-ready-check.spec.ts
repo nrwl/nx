@@ -26,15 +26,23 @@ describe('parseViteFlags', () => {
 
 describe('getViteServerAddress', () => {
   it("takes the flag, then the config, then Vite's default port", () => {
-    expect(getViteServerAddress({ port: 5000 }, { port: '3000' }, 'serve')).toEqual({ port: 3000 });
-    expect(getViteServerAddress({ port: 5000 }, {}, 'serve')).toEqual({ port: 5000 });
+    expect(
+      getViteServerAddress({ port: 5000 }, { port: '3000' }, 'serve')
+    ).toEqual({ port: 3000 });
+    expect(getViteServerAddress({ port: 5000 }, {}, 'serve')).toEqual({
+      port: 5000,
+    });
     expect(getViteServerAddress({}, {}, 'serve')).toEqual({ port: 5173 });
     expect(getViteServerAddress({}, {}, 'preview')).toEqual({ port: 4173 });
   });
 
   it('probes loopback unless a specific host is named', () => {
-    expect(getViteServerAddress({ port: 1, host: true }, {}, 'serve')).toEqual({ port: 1 });
-    expect(getViteServerAddress({ port: 1, host: 'dev.local' }, {}, 'serve')).toEqual({ port: 1, host: 'dev.local' });
+    expect(getViteServerAddress({ port: 1, host: true }, {}, 'serve')).toEqual({
+      port: 1,
+    });
+    expect(
+      getViteServerAddress({ port: 1, host: 'dev.local' }, {}, 'serve')
+    ).toEqual({ port: 1, host: 'dev.local' });
   });
 });
 

@@ -11,7 +11,9 @@ export interface RsbuildFlags {
  * The flags `rsbuild dev` and `rsbuild preview` take from the target's
  * options: named options are forwarded as flags, and `args` holds the rest.
  */
-export function parseRsbuildFlags(options: Record<string, unknown>): RsbuildFlags {
+export function parseRsbuildFlags(
+  options: Record<string, unknown>
+): RsbuildFlags {
   const flags: RsbuildFlags = {};
   const args = Array.isArray(options.args)
     ? options.args.map(String)
@@ -78,8 +80,9 @@ export async function waitForRsbuildServer(
 
   const { loadConfig, loadEnv } =
     require('@rsbuild/core') as typeof import('@rsbuild/core');
-  // The CLI loads the env files, then the config, and sets NODE_ENV only
-  // after that. A config function reads the command from argv.
+  // The CLI sets NODE_ENV first, then loads the env files for that mode and
+  // the config, whose function form reads the command from argv
+  process.env.NODE_ENV ||= command === 'dev' ? 'development' : 'production';
   loadEnv({ cwd: root, mode: flags.envMode });
   process.argv[2] = command;
   const { content } = await loadConfig({
