@@ -74,6 +74,14 @@ if (rootPackageJson.overrides) {
 } else if (rootPackageJson.resolutions) {
   projectPackageJson.resolutions = rootPackageJson.resolutions;
 }
+// EAS installs with a frozen lock file, and pnpm records its settings in the lock file.
+if (rootPackageJson.pnpm) {
+  projectPackageJson.pnpm = rootPackageJson.pnpm;
+}
+// Yarn Berry keys the root workspace by name in the lock file.
+if (packageManager === 'yarn') {
+  projectPackageJson.name = rootPackageJson.name;
+}
 writeFileSync(projectPackageJsonPath, JSON.stringify(projectPackageJson, null, 2));
 
 const lockFile = Object.hasOwn(lockFiles, packageManager)

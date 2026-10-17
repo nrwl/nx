@@ -180,6 +180,36 @@ describe('add-eas-build-pre-install', () => {
       expect(existsSync(join(root, 'apps/mobile/yarn.lock'))).toBe(true);
     });
 
+    it('should copy the root pnpm settings', async () => {
+      await runHook({
+        'package.json': JSON.stringify({
+          dependencies: { expo: '~53.0.0' },
+          pnpm: { overrides: { semver: '7.6.0' } },
+        }),
+        'pnpm-lock.yaml': "lockfileVersion: '9.0'",
+        'apps/mobile/package.json': JSON.stringify({ name: 'mobile' }),
+      });
+
+      expect(readProjectPackageJson()).toEqual({
+        name: 'mobile',
+        dependencies: { expo: '~53.0.0' },
+        pnpm: { overrides: { semver: '7.6.0' } },
+      });
+    });
+
+    it('should use the root package name with yarn', async () => {
+      await runHook({
+        'package.json': JSON.stringify({
+          name: '@org/source',
+          dependencies: { expo: '~53.0.0' },
+        }),
+        'yarn.lock': '__metadata:\n  version: 8\n',
+        'apps/mobile/package.json': JSON.stringify({ name: 'mobile' }),
+      });
+
+      expect(readProjectPackageJson().name).toBe('@org/source');
+    });
+
     it('should use the package manager configured in nx.json', async () => {
       await runHook({
         'nx.json': JSON.stringify({ cli: { packageManager: 'npm' } }),
