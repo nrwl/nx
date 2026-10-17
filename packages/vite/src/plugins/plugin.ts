@@ -249,6 +249,7 @@ async function buildViteTargets(
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
       const devTarget = serveTarget(
         projectRoot,
+        configFilePath,
         isUsingTsSolutionSetup,
         pmc,
         namedInputs
@@ -265,6 +266,7 @@ async function buildViteTargets(
       targets[options.devTargetName] = devTarget;
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
+        configFilePath,
         options.buildTargetName,
         pmc,
         namedInputs
@@ -388,6 +390,7 @@ function buildInputs(namedInputs: {
 
 function serveTarget(
   projectRoot: string,
+  configFilePath: string,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   namedInputs: { [inputName: string]: any[] }
@@ -399,6 +402,7 @@ function serveTarget(
     options: {
       cwd: joinPathFragments(projectRoot),
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'serve'),
     metadata: {
       technologies: ['vite'],
       description: `Starts Vite dev server`,
@@ -422,6 +426,7 @@ function serveTarget(
 
 function previewTarget(
   projectRoot: string,
+  configFilePath: string,
   buildTargetName: string,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   namedInputs: { [inputName: string]: any[] }
@@ -434,6 +439,7 @@ function previewTarget(
     options: {
       cwd: joinPathFragments(projectRoot),
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'preview'),
     metadata: {
       technologies: ['vite'],
       description: `Locally preview Vite production build`,
@@ -464,6 +470,7 @@ function serveStaticTarget(
       buildTarget: `${options.buildTargetName}`,
       spa: true,
     },
+    readyWhen: { port: '{options.port}', host: '{options.host}' },
   };
 
   if (isUsingTsSolutionSetup) {
@@ -471,6 +478,22 @@ function serveStaticTarget(
   }
 
   return targetConfig;
+}
+
+// The nxReadySignal() plugin signals once the server listens. Without it, the
+// fallback resolves the config at task time, with the task's env and options.
+function getServerReadyWhen(
+  configFilePath: string,
+  command: 'serve' | 'preview'
+): TargetConfiguration['readyWhen'] {
+  return {
+    signal: true,
+    fallback: {
+      command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], '${command}')" "${configFilePath}"`,
+      // Each attempt resolves the config
+      interval: 1000,
+    },
+  };
 }
 
 function getOutputs(

@@ -583,6 +583,13 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "cwd": "my-lib",
                       },
+                      "readyWhen": {
+                        "fallback": {
+                          "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "my-lib/vite.config.ts"",
+                          "interval": 1000,
+                        },
+                        "signal": true,
+                      },
                     },
                     "preview": {
                       "command": "vite preview",
@@ -616,6 +623,13 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "cwd": "my-lib",
                       },
+                      "readyWhen": {
+                        "fallback": {
+                          "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" "my-lib/vite.config.ts"",
+                          "interval": 1000,
+                        },
+                        "signal": true,
+                      },
                     },
                     "serve": {
                       "command": "vite",
@@ -647,6 +661,13 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "cwd": "my-lib",
                       },
+                      "readyWhen": {
+                        "fallback": {
+                          "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "my-lib/vite.config.ts"",
+                          "interval": 1000,
+                        },
+                        "signal": true,
+                      },
                     },
                     "serve-static": {
                       "continuous": true,
@@ -663,6 +684,10 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "buildTarget": "build",
                         "spa": true,
+                      },
+                      "readyWhen": {
+                        "host": "{options.host}",
+                        "port": "{options.port}",
                       },
                     },
                     "watch-deps": {
