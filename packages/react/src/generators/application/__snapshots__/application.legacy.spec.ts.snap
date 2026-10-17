@@ -4,6 +4,7 @@ exports[`react app generator (legacy) > should setup vite 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -19,7 +20,7 @@ export default defineConfig(() => ({
   resolve: {
     tsconfigPaths: true,
   },
-  plugins: [react()],
+  plugins: [react(), nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [],
