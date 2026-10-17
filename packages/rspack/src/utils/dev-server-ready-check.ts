@@ -1,3 +1,4 @@
+import { resolveStartupHost } from '@nx/devkit/internal';
 import { createConnection } from 'net';
 import { resolve } from 'path';
 
@@ -22,9 +23,9 @@ export function parseServeFlags(options: Record<string, unknown>): ServeFlags {
   for (let i = 0; i < args.length; i++) {
     const [, name, inline] = args[i].match(/^--([^=]+)(?:=(.*))?$/) ?? [];
     if (!name) continue;
-    const value = inline ?? args[i + 1];
-    if (inline === undefined && value !== undefined && !value.startsWith('-')) {
-      i++;
+    let value = inline;
+    if (value === undefined && args[i + 1] && !args[i + 1].startsWith('-')) {
+      value = args[++i];
     }
     if (name === 'port') flags.port = value;
     else if (name === 'host') flags.host = value;
@@ -58,21 +59,17 @@ export function getDevServerAddress(
   if (port === 'auto' || String(port) === '0') return null;
   const number = Number(port);
   if (!Number.isInteger(number) || number <= 0) return null;
-  const host = flags.host ?? devServer?.host;
-  return typeof host === 'string' && !LOOPBACK_HOSTS.has(host)
+  const configured = flags.host ?? devServer?.host;
+  const host =
+    typeof configured === 'string' ? resolveStartupHost(configured) : undefined;
+  return host && !LOOPBACK_HOSTS.has(host)
     ? { port: number, host }
     : { port: number };
 }
 
-// The dev servers resolve these to an address the probe reaches on loopback
-const LOOPBACK_HOSTS = new Set([
-  'localhost',
-  '0.0.0.0',
-  '::',
-  'local-ip',
-  'local-ipv4',
-  'local-ipv6',
-]);
+// The probe reaches these on loopback. `local-ip` and friends resolve to an
+// interface address first, the way the dev server resolves them.
+const LOOPBACK_HOSTS = new Set(['localhost', '0.0.0.0', '::']);
 
 /** Resolves once every address accepts a TCP connection. */
 export async function waitForAddresses(
@@ -83,7 +80,9 @@ export async function waitForAddresses(
 
 async function waitForAddress({ port, host }: DevServerAddress) {
   const hosts = host ? [host] : ['127.0.0.1', '::1'];
-  while (!(await Promise.any(hosts.map((h) => connects(port, h))).catch(() => false))) {
+  while (
+    !(await Promise.any(hosts.map((h) => connects(port, h))).catch(() => false))
+  ) {
     await new Promise((r) => setTimeout(r, 250));
   }
 }
@@ -130,8 +129,7 @@ export async function waitForRspackDevServer(configPath: string) {
   // Skips NxAppRspackPlugin's option normalization, which nothing here uses
   global.NX_GRAPH_CREATION = true;
 
-  const { getRootTsConfigPath } =
-    require('@nx/js') as typeof import('@nx/js');
+  const { getRootTsConfigPath } = require('@nx/js') as typeof import('@nx/js');
   const { resolveUserDefinedRspackConfig } =
     require('./resolve-user-defined-rspack-config') as typeof import('./resolve-user-defined-rspack-config');
   const { readRspackOptions } =
@@ -148,8 +146,7 @@ export async function waitForRspackDevServer(configPath: string) {
     )
   ).filter(
     (config) =>
-      flags.configNames.length === 0 ||
-      flags.configNames.includes(config.name)
+      flags.configNames.length === 0 || flags.configNames.includes(config.name)
   );
 
   // `rspack serve` starts one dev server, for the first config with devServer
