@@ -11,6 +11,7 @@ exports[`new > --preset > should generate necessary npm dependencies for empty p
   },
   "license": "MIT",
   "name": "@my-workspace/source",
+  "packageManager": "npm@10.0.0",
   "private": true,
   "scripts": {},
   "version": "0.0.0",
