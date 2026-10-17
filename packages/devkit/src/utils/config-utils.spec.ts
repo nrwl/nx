@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { mockCjsModule, unmockCjsModule } from '../../internal-testing-utils';
 import {
   clearConfigFromRequireCache,
   isTranspilerRecoverableError,
@@ -147,15 +148,8 @@ describe('isTranspilerRecoverableError', () => {
   it('should classify identically on a host nx that does not export the classifiers', async () => {
     // nx 23.0/23.1 recover these error classes in loadTsFile but do not
     // re-export the classifiers from devkit-internals. config-utils requires it
-    // lazily, which vi.doMock does not reach, so stub it in require.cache.
-    const id = require.resolve('nx/src/devkit-internals');
-    const hostModule = require.cache[id];
-    require.cache[id] = {
-      id,
-      filename: id,
-      loaded: true,
-      exports: {},
-    } as NodeModule;
+    // lazily, which vi.doMock does not reach.
+    mockCjsModule(import.meta.url, 'nx/src/devkit-internals', {});
     vi.resetModules();
     try {
       const { isTranspilerRecoverableError: withoutHostClassifiers } =
@@ -164,11 +158,7 @@ describe('isTranspilerRecoverableError', () => {
         expect(withoutHostClassifiers(err, path)).toBe(expected);
       }
     } finally {
-      if (hostModule) {
-        require.cache[id] = hostModule;
-      } else {
-        delete require.cache[id];
-      }
+      unmockCjsModule(import.meta.url, 'nx/src/devkit-internals');
       vi.resetModules();
     }
   });
