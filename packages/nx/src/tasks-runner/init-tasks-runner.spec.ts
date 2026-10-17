@@ -44,6 +44,41 @@ describe.each([
   const projectGraph = { nodes: {}, dependencies: {} } as any;
 
   beforeEach(() => vi.clearAllMocks());
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each(['on', 'warn', 'error', 'off'])(
+    'applies the workspace default %s to Cloud tasks before hashing',
+    async (mode) => {
+      vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', mode);
+      vi.stubEnv('NX_CLOUD_USE_ULTRACACHE', undefined);
+      const pendingTask = { ...task, ultracache: { collectStats: true } };
+      const explicitTask = {
+        ...task,
+        id: 'app:explicit',
+        ultracache: { mode: 'on' },
+      };
+      const graph = {
+        ...fullTaskGraph,
+        tasks: {
+          [pendingTask.id]: pendingTask,
+          [explicitTask.id]: explicitTask,
+        },
+      };
+      createTaskHasher.mockImplementationOnce(() => {
+        expect(pendingTask.ultracache).toEqual({ collectStats: true, mode });
+        expect(explicitTask.ultracache).toEqual({ mode: 'on' });
+        return {};
+      });
+      await run([pendingTask], projectGraph, graph, {}, {} as any);
+      expect(createTaskHasher).toHaveBeenCalledWith(
+        projectGraph,
+        {},
+        { accessToken: 't' },
+        undefined
+      );
+      expect(process.env.NX_CLOUD_USE_ULTRACACHE).toBeUndefined();
+    }
+  );
 
   it('hashes from the configurations the caller passes', async () => {
     const configurations = {

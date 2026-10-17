@@ -60,6 +60,35 @@ describe('handleSelectAffectedTasks', () => {
   };
 
   beforeEach(() => vi.clearAllMocks());
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('does not retain a mode between requests or write it to the daemon environment', async () => {
+    vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', 'on');
+    for (const mode of ['warn', 'error', 'off', undefined] as const) {
+      await handleSelectAffectedTasks({
+        ...request,
+        defaultUltracacheMode: mode,
+      });
+      expect(
+        selectAffectedTasks.mock.calls.at(-1)[3].defaultUltracacheMode
+      ).toBe(mode);
+      expect(process.env.NX_CLOUD_ULTRACACHE_MODE).toBe('on');
+    }
+  });
+
+  it.each(['on', 'warn', 'error', 'off', undefined] as const)(
+    'passes caller mode %s to selection despite a different daemon environment',
+    async (mode) => {
+      vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', mode === 'on' ? 'off' : 'on');
+      await handleSelectAffectedTasks({
+        ...request,
+        defaultUltracacheMode: mode,
+      });
+      expect(selectAffectedTasks.mock.calls[0][3].defaultUltracacheMode).toBe(
+        mode
+      );
+    }
+  );
 
   // The client runs with this graph, so its ids match the selection's.
   it('returns the graph it selected against, planning with the shared planner', async () => {

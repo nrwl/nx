@@ -1159,8 +1159,7 @@
             },
             "mode": {
               "enum": ["on", "warn", "error", "off"],
-              "default": "on",
-              "description": "How this target's tasks participate. 'on' records IO and lets the recording stand in for the declared inputs and outputs. 'warn' records and reports undeclared reads and writes without applying them. 'error' is reserved for failing the task on an undeclared read or write; until per-target enforcement lands it behaves as 'warn'. 'off' records nothing."
+              "description": "How this target's tasks participate. Defaults to the mode supplied by Nx Cloud for this workspace, or 'on' for older clients. 'on' records IO and lets the recording stand in for the declared inputs and outputs. 'warn' records and reports undeclared reads and writes without applying them. 'error' is reserved for failing the task on an undeclared read or write; until per-target enforcement lands it behaves as 'warn'. 'off' records nothing."
             },
             "collectStats": {
               "type": "boolean",

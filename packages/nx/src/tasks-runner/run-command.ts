@@ -30,6 +30,10 @@ import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
 import { buildUltracacheOverrides } from '../ultracache/overrides';
+import {
+  applyDefaultUltracacheMode,
+  getDefaultUltracacheMode,
+} from '../ultracache/config';
 import { formatUltracacheSummary } from '../ultracache/report';
 import {
   loadUltracacheConfigurationsForRun,
@@ -1079,6 +1083,14 @@ export async function invokeTasksRunner({
   const ultracacheConfigurations = configurationsOf(
     ultracacheConfigurationOutcome
   );
+
+  // The Cloud read above may supply the workspace default on third-party CI.
+  const defaultUltracacheMode = getDefaultUltracacheMode();
+  applyDefaultUltracacheMode(
+    Object.values(taskGraph.tasks),
+    defaultUltracacheMode
+  );
+  applyDefaultUltracacheMode(tasks, defaultUltracacheMode);
 
   let hasher = createTaskHasher(
     projectGraph,

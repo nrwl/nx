@@ -521,6 +521,33 @@ describe('startInBackground', () => {
 });
 
 describe('hashTasks', () => {
+  it.each(['hashTasks', 'hashTasksUpfront'])(
+    '%s sends resolved task modes to the daemon',
+    async (method) => {
+      const { DaemonClient } = await import('./client');
+      const client = Object.create(DaemonClient.prototype);
+      const send = vi
+        .spyOn(client, 'sendToDaemonViaQueue')
+        .mockResolvedValue([] as never);
+      const task = {
+        id: 'a:build',
+        ultracache: { mode: 'warn', collectStats: true },
+      };
+      const taskGraph = {
+        roots: [task.id],
+        tasks: { [task.id]: task },
+        dependencies: {},
+        continuousDependencies: {},
+      };
+      await client[method]({}, [task], taskGraph, {}, '/w');
+      const message = JSON.parse(JSON.stringify(send.mock.calls[0][0]));
+      expect(message.tasks[0].ultracache).toEqual(task.ultracache);
+      expect(message.taskGraph.tasks[task.id].ultracache).toEqual(
+        task.ultracache
+      );
+    }
+  );
+
   it('sends the daemon a graph without run results', async () => {
     const { DaemonClient } = await import('./client');
     // The prototype alone: hashTasks touches nothing the constructor sets up.

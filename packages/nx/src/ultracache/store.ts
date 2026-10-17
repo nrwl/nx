@@ -16,6 +16,7 @@ import { output } from '../utils/output';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
   ultracacheEnv,
+  getDefaultUltracacheMode,
   isUltracacheConfigurationFetchEnabled,
   type UltracacheCloudOptions,
   type UltracacheEnv,
@@ -91,8 +92,9 @@ export function openUltracacheConfigurations(
 
 /**
  * This run's Ultracache configurations for HEAD, in the process that owns the
- * fetch: the newest stored set, otherwise what Nx Cloud reads, imported into
- * the store. The Nx Cloud client imports a fresh set when each CI run starts,
+ * fetch: the newest stored set when the workspace default is already known,
+ * otherwise what Nx Cloud reads, imported into the store. The Nx Cloud client
+ * imports a fresh set when each CI run starts,
  * so a stored set is never older than its run. Returns `null` when Ultracache
  * is not enabled for this workspace; never throws.
  */
@@ -112,7 +114,12 @@ export async function loadUltracacheConfigurationsForRun(
   }
   try {
     const store = getUltracacheConfigurationStore();
+    // On third-party CI the read also supplies the workspace mode. A cached
+    // recording alone cannot tell On from legacy Warn/Error, so do not bypass
+    // that read until Cloud has supplied a recognized mode for this process.
+    const hasWorkspaceDefault = getDefaultUltracacheMode(env) !== undefined;
     const cached = () => {
+      if (!hasWorkspaceDefault) return null;
       const stored = store.get(head);
       return (
         stored &&
@@ -124,7 +131,8 @@ export async function loadUltracacheConfigurationsForRun(
     };
     return (
       cached() ??
-      // Processes that miss together fetch once: the rest find its set.
+      // Processes with an injected mode that miss together fetch once.
+      // Otherwise each process must learn the workspace default from Cloud.
       (await withUltracacheConfigurationFetchLock(async () => {
         const stored = cached();
         if (stored) {
