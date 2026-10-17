@@ -154,10 +154,15 @@ impl Default for SharedStrMap {
 
 impl SharedStrMap {
     #[cfg(test)]
-    pub(crate) fn entry_capacity(&self) -> usize {
+    pub(crate) fn keys(&self) -> Vec<String> {
         match &self.0 {
-            SharedStrMapEntries::Owned(entries) => entries.capacity(),
-            SharedStrMapEntries::Indexed { entries, .. } => entries.capacity(),
+            SharedStrMapEntries::Owned(entries) => {
+                entries.iter().map(|(key, _)| key.to_string()).collect()
+            }
+            SharedStrMapEntries::Indexed { keys, entries } => entries
+                .iter()
+                .map(|(index, _)| keys[*index as usize].to_string())
+                .collect(),
         }
     }
 
@@ -170,6 +175,11 @@ impl SharedStrMap {
         entries: Vec<(u32, SharedStr)>,
     ) -> Self {
         Self(SharedStrMapEntries::Indexed { keys, entries })
+    }
+
+    /// Callers must resolve duplicate keys before constructing the map.
+    pub(crate) fn from_entries(entries: Vec<(SharedStr, SharedStr)>) -> Self {
+        Self(SharedStrMapEntries::Owned(entries))
     }
 }
 
