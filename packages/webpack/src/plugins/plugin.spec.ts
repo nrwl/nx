@@ -201,6 +201,13 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "development",
                       },
                     },
+                    "readyWhen": {
+                      "fallback": {
+                        "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" "my-app/webpack.config.js"",
+                        "interval": 1000,
+                      },
+                      "signal": true,
+                    },
                   },
                   "preview-site": {
                     "command": "webpack-cli serve",
@@ -245,6 +252,13 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "production",
                       },
                     },
+                    "readyWhen": {
+                      "fallback": {
+                        "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" "my-app/webpack.config.js"",
+                        "interval": 1000,
+                      },
+                      "signal": true,
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -273,6 +287,10 @@ describe('@nx/webpack/plugin', () => {
                       "buildTarget": "build-something",
                       "port": 9000,
                       "spa": true,
+                    },
+                    "readyWhen": {
+                      "host": "{options.host}",
+                      "port": "{options.port}",
                     },
                   },
                   "watch-deps": {

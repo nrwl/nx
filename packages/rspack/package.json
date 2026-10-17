@@ -43,6 +43,12 @@
       "plugin.js": [
         "dist/plugin.d.ts"
       ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
+      ],
+      "ready-check.js": [
+        "dist/ready-check.d.ts"
+      ],
       "react-plugin": [
         "dist/react-plugin.d.ts"
       ],
@@ -88,6 +94,11 @@
       "@nx/nx-source": "./plugin.ts",
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
     },
     "./react-plugin": {
       "@nx/nx-source": "./react-plugin.ts",
