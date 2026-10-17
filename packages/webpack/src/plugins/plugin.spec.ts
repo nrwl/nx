@@ -313,7 +313,7 @@ describe('@nx/webpack/plugin', () => {
                       "spa": true,
                     },
                     "readyWhen": {
-                      "host": "{options.host}",
+                      "host": "{options.host ?? localhost}",
                       "port": "{options.port}",
                     },
                   },

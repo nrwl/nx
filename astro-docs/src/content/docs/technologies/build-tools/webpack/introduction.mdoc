@@ -128,6 +128,7 @@ Nx skips this check, and a waiting task runs once the dev server starts, in thes
 - Several configurations set `devServer`. Each dev server logs its address, so the first line comes before the last one accepts connections.
 
 The `serve-static` task is ready once the file server accepts connections on its `host` and `port` options.
+With an empty `host`, the file server listens on every IPv4 address, and Nx checks `localhost`.
 
 When the port Nx checks is taken, the file server moves to the next free port.
 The dev server does the same when the port is unset or `devServer.port` is `auto`.

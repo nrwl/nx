@@ -320,7 +320,7 @@ async function createWebpackTargets(
 
   targets[options.serveStaticTargetName] = {
     continuous: true,
-    readyWhen: { port: '{options.port}', host: '{options.host}' },
+    readyWhen: { port: '{options.port}', host: '{options.host ?? localhost}' },
     inputs: [...buildInputs],
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
