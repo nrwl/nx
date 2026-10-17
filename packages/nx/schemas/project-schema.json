@@ -300,7 +300,7 @@
         },
         "signal": {
           "const": true,
-          "description": "Ready when the task reports it, through signalTaskReady from @nx/devkit. The webpack, Rspack and Vite plugins of Nx report it once their dev server listens"
+          "description": "Ready when the task reports it, through signalTaskReady from @nx/devkit. The webpack, Rspack, Vite and Rsbuild plugins of Nx report it once their dev server listens"
         },
         "fallback": {
           "$ref": "#/definitions/readyWhenFallback",

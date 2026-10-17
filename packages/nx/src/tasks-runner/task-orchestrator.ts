@@ -56,6 +56,7 @@ import { TaskMetadata, TaskResult } from './life-cycle';
 import { terminalOutputPathForHash } from './terminal-output-path';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { waitForReadiness } from './readiness/probes';
+import { READY_URL_ENV } from './readiness/ready-signal';
 import { ReadySignalServer } from './readiness/ready-signal-server';
 import {
   DEFAULT_READY_TIMEOUT,
@@ -2162,7 +2163,7 @@ export class TaskOrchestrator {
     const urls = getReadyProducerIds(task, this.fullTaskGraph)
       .map((id) => this.readyUrls.get(id))
       .filter(Boolean);
-    return urls.length === 1 ? { NX_READY_URL: urls[0] } : {};
+    return urls.length === 1 ? { [READY_URL_ENV]: urls[0] } : {};
   }
 
   private onReadinessHold(producerId: string) {

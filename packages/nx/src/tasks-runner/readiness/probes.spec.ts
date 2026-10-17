@@ -386,6 +386,20 @@ describe('waitForReadiness', () => {
       );
     });
 
+    it('works on the WASM build, where only the fallback has no probe', async () => {
+      native.wasm = true;
+      try {
+        const ready = waitForSignal({
+          signal: true,
+          fallback: { logMatches: 'listening' },
+        });
+        send({ type: 'nx-ready-signal:ready' });
+        await expect(ready).resolves.toEqual({});
+      } finally {
+        native.wasm = false;
+      }
+    });
+
     it('rejects when aborted', async () => {
       const ready = waitForSignal({ signal: true });
       controller.abort();
