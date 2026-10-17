@@ -48,7 +48,11 @@ class MojoAnalyzer(
 
     if (!isCacheable) {
       log.info("${pluginDescriptor.artifactId}:$goal is not cacheable")
-      return MojoAnalysis(emptySet(), emptySet(), emptySet(), false, isContinuous)
+      // Still hashed, but only from an explicit config: the src defaults don't fit these goals.
+      val configured = cacheConfig.configurations.containsKey("${pluginDescriptor.artifactId}:$goal")
+      val (inputs, ignoredInputs) =
+        if (configured) getInputs(pluginDescriptor, mojoDescriptor, project) else Pair(emptySet(), emptySet())
+      return MojoAnalysis(inputs, ignoredInputs, emptySet(), false, isContinuous)
     }
 
     val (inputs, ignoredInputs) = getInputs(pluginDescriptor, mojoDescriptor, project)
@@ -106,7 +110,14 @@ class MojoAnalyzer(
       }
     }
 
-    // Always include pom.xml and in-workspace ancestor pom.xml files as inputs
+    inputs.addAll(pomInputs(project))
+
+    return Pair(inputs, ignoredInputs)
+  }
+
+  /** The module's pom.xml and its in-workspace ancestor poms. */
+  fun pomInputs(project: MavenProject): Set<String> {
+    val inputs = mutableSetOf<String>()
     val canonicalWorkspaceRoot = workspaceRoot.canonicalPath
     val canonicalProjectRoot = project.basedir.canonicalPath
     var currentProject: MavenProject? = project
@@ -125,8 +136,7 @@ class MojoAnalyzer(
       }
       currentProject = currentProject.parent
     }
-
-    return Pair(inputs, ignoredInputs)
+    return inputs
   }
 
   private fun getOutputs(
