@@ -351,7 +351,12 @@ async fn probe_command(
 ) -> bool {
     let mut cmd = if cfg!(windows) {
         let mut cmd = Command::new("cmd.exe");
-        cmd.args(["/d", "/s", "/c", command]);
+        cmd.args(["/d", "/s", "/c"]);
+        // Appended as written, the way Node's `shell: true` does: `/s` strips
+        // the outer quotes, and regular arg quoting would escape every inner
+        // `"` as `\"`, which cmd.exe hands on to the program
+        #[cfg(windows)]
+        cmd.raw_arg(format!("\"{command}\""));
         cmd
     } else {
         let mut cmd = Command::new("sh");
