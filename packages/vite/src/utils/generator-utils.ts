@@ -315,6 +315,14 @@ export function createOrEditViteConfig(
     );
   }
 
+  // Lets the inferred serve and preview targets know when the server is up
+  if (!onlyVitest && !options.includeLib) {
+    imports.push(
+      `import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin'`
+    );
+    plugins.push('nxReadySignal()');
+  }
+
   const reportsDirectory = isTsSolutionSetup
     ? './test-output/vitest/coverage'
     : projectRoot === '.'

@@ -1018,52 +1018,53 @@ describe('app', () => {
 
       expect(appTree.read('my-app/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
-        import { reactRouter } from '@react-router/dev/vite';
+          "/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import { reactRouter } from '@react-router/dev/vite';
+          import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-          cacheDir: '../node_modules/.vite/my-app',
-          server: {
-            port: 4200,
-            host: 'localhost',
-          },
-          preview: {
-            port: 4300,
-            host: 'localhost',
-          },
-          resolve: {
-            tsconfigPaths: true,
-          },
-          plugins: [!process.env.VITEST && reactRouter()],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //  plugins: [],
-          // },
-          build: {
-            outDir: '../dist/my-app',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
+          export default defineConfig(() => ({
+            root: import.meta.dirname,
+            cacheDir: '../node_modules/.vite/my-app',
+            server: {
+              port: 4200,
+              host: 'localhost',
             },
-          },
-          test: {
-            name: 'my-app',
-            watch: false,
-            globals: true,
-            environment: 'jsdom',
-            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            reporters: ['default'],
-            coverage: {
-              reportsDirectory: '../coverage/my-app',
-              provider: 'v8' as const,
+            preview: {
+              port: 4300,
+              host: 'localhost',
             },
-          },
-        }));
-        "
-      `);
+            resolve: {
+              tsconfigPaths: true,
+            },
+            plugins: [!process.env.VITEST && reactRouter(), nxReadySignal()],
+            // Uncomment this if you are using workers.
+            // worker: {
+            //  plugins: [],
+            // },
+            build: {
+              outDir: '../dist/my-app',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+            },
+            test: {
+              name: 'my-app',
+              watch: false,
+              globals: true,
+              environment: 'jsdom',
+              include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+              reporters: ['default'],
+              coverage: {
+                reportsDirectory: '../coverage/my-app',
+                provider: 'v8' as const,
+              },
+            },
+          }));
+          "
+        `);
     });
 
     it('should add types to tsconfig', async () => {
@@ -1802,6 +1803,7 @@ describe('app', () => {
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
+        import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -1817,7 +1819,7 @@ describe('app', () => {
           resolve: {
             tsconfigPaths: true,
           },
-          plugins: [react()],
+          plugins: [react(), nxReadySignal()],
           // Uncomment this if you are using workers.
           // worker: {
           //  plugins: [],
@@ -1937,6 +1939,7 @@ describe('app', () => {
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
+        import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -1952,7 +1955,7 @@ describe('app', () => {
           resolve: {
             tsconfigPaths: true,
           },
-          plugins: [react()],
+          plugins: [react(), nxReadySignal()],
           // Uncomment this if you are using workers.
           // worker: {
           //  plugins: [],
