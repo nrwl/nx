@@ -708,7 +708,7 @@ That option marks the run-commands task itself as done.
 
 With `"signal": true`, Nx doesn't probe the task from outside.
 Instead, code running in the task reports that the task is ready, with the address it listens on.
-`NxAppWebpackPlugin`, `NxAppRspackPlugin`, the `nxReadySignal()` Vite plugin, and the `pluginNxReadySignal()` Rsbuild plugin report it once the dev server listens.
+`NxAppWebpackPlugin`, `NxAppRspackPlugin`, the standalone `NxReadySignalPlugin` for webpack and Rspack, the `nxReadySignal()` Vite plugin, and the `pluginNxReadySignal()` Rsbuild plugin report it once the dev server listens.
 The report carries the port the server actually uses, so it's right however the port was chosen.
 
 ```json

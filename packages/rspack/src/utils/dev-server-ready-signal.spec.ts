@@ -2,6 +2,7 @@ import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 import {
   applyDevServerReadySignal,
   getDevServerUrl,
+  NxReadySignalPlugin,
 } from './dev-server-ready-signal';
 
 const devkit = vi.hoisted(() => ({
@@ -37,6 +38,21 @@ describe('applyDevServerReadySignal', () => {
 
     compiler.options.devServer.onListening(server);
     expect(onListening).toHaveBeenCalledWith(server);
+    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
+      url: 'http://localhost:4300/',
+    });
+  });
+
+  it('wraps onListening when applied as the standalone plugin', () => {
+    const compiler = { options: { devServer: {} } } as any;
+
+    new NxReadySignalPlugin().apply(compiler);
+    expect(devkit.announceTaskReadySignal).toHaveBeenCalled();
+    expect(compiler.options.devServer.onListening).toEqual(
+      expect.any(Function)
+    );
+
+    compiler.options.devServer.onListening(server);
     expect(devkit.signalTaskReady).toHaveBeenCalledWith({
       url: 'http://localhost:4300/',
     });
