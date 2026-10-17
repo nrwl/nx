@@ -60,6 +60,30 @@ describe('invocation tracking env vars', () => {
     ).toBe(`123,${process.pid}`);
   });
 
+  it('drops the readiness variables an outer Nx run set for its own task', () => {
+    const task = makeTask('workspace', 'dev');
+    const outer = {
+      NX_READY_SIGNAL_SOCKET: '/tmp/outer.sock',
+      NX_READY_SIGNAL_TASK: 'outer:serve',
+      NX_READY_URL: 'http://localhost:4200/',
+      KEPT: 'yes',
+    };
+
+    const env = getEnvVariablesForTask(
+      task,
+      outer,
+      'true',
+      false,
+      false,
+      '',
+      false
+    );
+    expect(env).not.toHaveProperty('NX_READY_SIGNAL_SOCKET');
+    expect(env).not.toHaveProperty('NX_READY_SIGNAL_TASK');
+    expect(env).not.toHaveProperty('NX_READY_URL');
+    expect(env.KEPT).toBe('yes');
+  });
+
   it('should append the current PID for batch processes too', () => {
     expect(getEnvVariablesForBatchProcess(false, false)).toMatchObject({
       NX_INVOCATION_ANCESTOR_PIDS: String(process.pid),

@@ -1,8 +1,10 @@
-import { PseudoIPCClient } from '../pseudo-ipc';
+import type { PseudoIPCClient } from '../pseudo-ipc';
 
 // Set on the env of a producer whose readyWhen is `signal`
 export const READY_SIGNAL_SOCKET_ENV = 'NX_READY_SIGNAL_SOCKET';
 export const READY_SIGNAL_TASK_ENV = 'NX_READY_SIGNAL_TASK';
+// Set on the env of a task that waited for a producer that signalled its url
+export const READY_URL_ENV = 'NX_READY_URL';
 
 // `hello` says something in the producer will send `ready`, so a fallback
 // check stops; `ready` carries the address the server listens on
@@ -19,6 +21,9 @@ function connect(): { client: PseudoIPCClient; taskId: string } | null {
   if (!path || !taskId) {
     return null;
   }
+  // Required lazily to keep this module light for the task env code
+  const { PseudoIPCClient } =
+    require('../pseudo-ipc') as typeof import('../pseudo-ipc');
   // A failed connection must not crash the server it reports on, nor keep
   // its process alive
   client ??= new PseudoIPCClient(path)
