@@ -310,4 +310,81 @@ describe('releaseChangelog', () => {
       );
     });
   });
+
+  describe('existing changelog entries', () => {
+    const EXISTING_CHANGELOG = `## 1.0.0 (2026-09-17)
+
+### 🚀 Features
+
+- **foo:** some feature in foo
+
+## 0.1.0 (2026-09-01)
+
+### 🩹 Fixes
+
+- **bar:** some bugfix in bar
+`;
+
+    const UPDATED_CHANGELOG = `${MOCK_CHANGELOG_CONTENTS}
+
+## 0.1.0 (2026-09-01)
+
+### 🩹 Fixes
+
+- **bar:** some bugfix in bar
+`;
+
+    it('should replace an existing workspace changelog entry whose heading includes a date', async () => {
+      await tempFs.createFiles({ 'CHANGELOG.md': EXISTING_CHANGELOG });
+
+      await createAPI(
+        {
+          changelog: {
+            workspaceChangelog: {
+              file: '{workspaceRoot}/CHANGELOG.md',
+              createRelease: false,
+            },
+          },
+        },
+        true
+      )({
+        version: '1.0.0',
+        gitCommit: false,
+        gitTag: false,
+        gitPush: false,
+        stageChanges: false,
+        releaseGraph,
+      } as Parameters<ReturnType<typeof createAPI>>[0]);
+
+      expect(await tempFs.readFile('CHANGELOG.md')).toEqual(UPDATED_CHANGELOG);
+    });
+
+    it('should replace an existing project changelog entry whose heading includes a date', async () => {
+      await tempFs.createFiles({
+        'packages/pkg-a/CHANGELOG.md': EXISTING_CHANGELOG,
+      });
+      releaseGroup.changelog = {
+        createRelease: false,
+        entryWhenNoChanges: false,
+        file: '{projectRoot}/CHANGELOG.md',
+      } as ReleaseGroupWithName['changelog'];
+
+      await runReleaseChangelog({
+        forceChangelogGeneration: true,
+        projects: ['pkg-a'],
+        version: undefined,
+        versionData: {
+          'pkg-a': {
+            currentVersion: '0.1.0',
+            newVersion: '1.0.0',
+            dependentProjects: [],
+          },
+        },
+      });
+
+      expect(await tempFs.readFile('packages/pkg-a/CHANGELOG.md')).toEqual(
+        UPDATED_CHANGELOG
+      );
+    });
+  });
 });
