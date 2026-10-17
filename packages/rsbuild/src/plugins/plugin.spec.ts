@@ -124,6 +124,13 @@ describe('@nx/rsbuild', () => {
                       ],
                       "cwd": "my-app",
                     },
+                    "readyWhen": {
+                      "fallback": {
+                        "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'dev')" "my-app/rsbuild.config.ts"",
+                        "interval": 1000,
+                      },
+                      "signal": true,
+                    },
                   },
                   "inspect-serve": {
                     "command": "rsbuild inspect",
@@ -152,6 +159,13 @@ describe('@nx/rsbuild', () => {
                         "--mode=production",
                       ],
                       "cwd": "my-app",
+                    },
+                    "readyWhen": {
+                      "fallback": {
+                        "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'preview')" "my-app/rsbuild.config.ts"",
+                        "interval": 1000,
+                      },
+                      "signal": true,
                     },
                   },
                   "watch-deps": {
