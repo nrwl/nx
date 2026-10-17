@@ -48,7 +48,7 @@ class AddTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
-    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+    val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
 
     addTestCiTargets(
         testFiles = testFiles,
@@ -59,7 +59,7 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        buildOutputClassifier = buildOutputClassifier)
 
     // Assert each test file created a CI target
     assertTrue(targets.containsKey("ci--MyFirstTest"))
@@ -87,7 +87,9 @@ class AddTestCiTargetsTest {
 
     testFiles.forEach { file ->
       val expectedInput =
-          replaceRootInPath(file.path, projectRoot.absolutePath, workspaceRoot.absolutePath)
+          replaceRootInPath(file.path, projectRoot.absolutePath, workspaceRoot.absolutePath)?.let {
+            includeIgnoredInput(it).toString()
+          }
       assertTrue(
           expectedInput in actualInputStrings,
           "Expected input '$expectedInput' not found in actual inputs: $actualInputStrings")
@@ -108,7 +110,7 @@ class AddTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
-    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+    val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
 
     // Always tries compiled test analysis first, then falls back to regex
     addTestCiTargets(
@@ -120,7 +122,7 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        buildOutputClassifier = buildOutputClassifier)
 
     // Should create targets using regex-based approach since no compiled classes exist
     assertTrue(targets.containsKey("ci--DefaultTest"))
@@ -146,7 +148,7 @@ class AddTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
-    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+    val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
 
     addTestCiTargets(
         testFiles = testFiles,
@@ -157,7 +159,7 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        buildOutputClassifier = buildOutputClassifier)
 
     val ciTarget = targets["ci--DependentTest"]
     assertTrue(ciTarget != null, "CI target should be created")
@@ -211,7 +213,7 @@ class AddTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
-    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+    val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
 
     addTestCiTargets(
         testFiles = testFiles,
@@ -222,7 +224,7 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        buildOutputClassifier = buildOutputClassifier)
 
     // Abstract class should not create a CI target
     assertTrue(
@@ -256,7 +258,7 @@ class AddTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "gradle-ci"
-    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+    val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
     val targetNamePrefix = "gradle-"
 
     addTestCiTargets(
@@ -268,7 +270,7 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier,
+        buildOutputClassifier = buildOutputClassifier,
         targetNameOverrides = emptyMap(),
         targetNamePrefix = targetNamePrefix)
 
@@ -316,7 +318,7 @@ class AddTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "gradle-ci"
-    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+    val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
     val targetNamePrefix = "gradle-"
     val targetNameOverrides = mapOf("testTargetName" to "unit-test")
 
@@ -329,7 +331,7 @@ class AddTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier,
+        buildOutputClassifier = buildOutputClassifier,
         targetNameOverrides = targetNameOverrides,
         targetNamePrefix = targetNamePrefix)
 
