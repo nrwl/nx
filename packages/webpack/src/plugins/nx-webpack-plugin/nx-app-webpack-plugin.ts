@@ -3,7 +3,6 @@ import {
   NormalizedNxAppWebpackPluginOptions,
   NxAppWebpackPluginOptions,
 } from './nx-app-webpack-plugin-options';
-import { normalizeOptions } from './lib/normalize-options';
 
 /**
  * This plugin provides features to build Node and Web applications.
@@ -20,7 +19,10 @@ export class NxAppWebpackPlugin {
 
   constructor(options: NxAppWebpackPluginOptions = {}) {
     // If we're building inferred targets, skip normalizing build options.
+    // Lazy-required so graph creation does not load it either.
     if (!global.NX_GRAPH_CREATION) {
+      const { normalizeOptions } =
+        require('./lib/normalize-options') as typeof import('./lib/normalize-options');
       this.options = normalizeOptions(options);
     }
   }

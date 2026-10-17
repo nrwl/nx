@@ -1,15 +1,23 @@
 import { existsSync, readdirSync } from 'fs';
 import { pathToFileURL } from 'node:url';
 import { types } from 'node:util';
-import { workspaceRoot } from 'nx/src/devkit-exports';
-import {
-  forceRegisterEsmLoader,
-  isRequireInEsmScopeError,
-  isTsEsmNamedExportLinkageError,
-  loadTsFile,
-  registerTsProject,
-} from 'nx/src/devkit-internals';
 import { dirname, extname, join, sep } from 'path';
+
+type DevkitExports = typeof import('nx/src/devkit-exports');
+type DevkitInternals = typeof import('nx/src/devkit-internals');
+
+// Required on first use so a JS config loads without the nx barrels, then kept
+// so clearRequireCache evicting a workspace-linked nx does not reload them
+let devkitExports: DevkitExports | undefined;
+let devkitInternals: DevkitInternals | undefined;
+
+function getDevkitExports(): DevkitExports {
+  return (devkitExports ??= require('nx/src/devkit-exports'));
+}
+
+function getDevkitInternals(): DevkitInternals {
+  return (devkitInternals ??= require('nx/src/devkit-internals'));
+}
 
 export let dynamicImport = new Function(
   'modulePath',
@@ -65,6 +73,7 @@ async function loadTypeScriptModule(
     return result;
   }
 
+  const { loadTsFile, registerTsProject } = getDevkitInternals();
   // loadTsFile was added in nx@23. @nx/devkit's peer range supports older
   // nx majors, so fall back to the legacy registerTsProject + require path
   // when loadTsFile isn't available on the host nx.
@@ -145,6 +154,8 @@ export function isTranspilerRecoverableError(
   err: unknown,
   path: string
 ): boolean {
+  const { isRequireInEsmScopeError, isTsEsmNamedExportLinkageError } =
+    getDevkitInternals();
   return (
     (typeof isRequireInEsmScopeError === 'function'
       ? isRequireInEsmScopeError(err, path)
@@ -264,6 +275,7 @@ async function loadTsFileViaImport(
     ) {
       throw esmErr;
     }
+    const { forceRegisterEsmLoader, registerTsProject } = getDevkitInternals();
     const cleanup = registerTsProject(tsConfigPath);
     try {
       return unwrapCjsInterop(path, await loadESM(path));
@@ -355,10 +367,13 @@ async function loadModuleByExtension(
 
 export function getRootTsConfigPath(): string | null {
   const tsConfigFileName = getRootTsConfigFileName();
-  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
+  return tsConfigFileName
+    ? join(getDevkitExports().workspaceRoot, tsConfigFileName)
+    : null;
 }
 
 export function getRootTsConfigFileName(): string | null {
+  const { workspaceRoot } = getDevkitExports();
   for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
     const pathExists = existsSync(join(workspaceRoot, tsConfigName));
     if (pathExists) {

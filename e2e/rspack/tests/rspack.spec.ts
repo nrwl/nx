@@ -56,8 +56,10 @@ describe('rspack e2e', () => {
     removeFile(`apps/${appName}/rspack.config.js`);
     createFile(
       `apps/${appName}/rspack.shared.ts`,
-      `export const devServerPort = 4310;`
+      `export const devServerPort = Number(process.env.APP_PORT ?? 4310);`
     );
+    // Only the serve task loads it, so the serve-static port keeps the 4310 fallback
+    createFile(`apps/${appName}/.env.serve`, `APP_PORT=4321`);
     createFile(
       `apps/${appName}/rspack.config.ts`,
       `
@@ -98,6 +100,7 @@ describe('rspack e2e', () => {
 
     expect(project.targets.build).toBeDefined();
     expect(project.targets['serve-static'].options.port).toBe(4310);
+    expect(project.targets.serve.readyWhen.port).toBe('{options.port ?? 4321}');
   });
 
   describe('config types', () => {

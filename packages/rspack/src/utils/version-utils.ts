@@ -2,7 +2,9 @@ import { type Tree } from '@nx/devkit';
 import {
   getDeclaredPackageVersion,
   getInstalledPackageVersion,
+  readModulePackageJson,
 } from '@nx/devkit/internal';
+import { dirname } from 'path';
 import { major } from 'semver';
 import {
   backwardCompatibleRspackVersions,
@@ -25,15 +27,19 @@ export function getInstalledRspackMajorVersion(
     : undefined;
 }
 
-export function getInstalledRspackVersionRuntime(): SupportedRspackMajorVersion | null {
-  const version = getInstalledPackageVersion(RSPACK_CORE_PACKAGE);
-  if (!version) {
+// `rspack serve` loads the dev server through the CLI, so resolve the CLI
+// from the project and the dev server from the CLI
+export function getRspackDevServerMajorVersion(
+  projectDir: string
+): number | null {
+  let cliDir: string;
+  try {
+    cliDir = dirname(readModulePackageJson('@rspack/cli', [projectDir]).path);
+  } catch {
     return null;
   }
-  const installedMajor = major(version);
-  return installedMajor in backwardCompatibleRspackVersions
-    ? (installedMajor as SupportedRspackMajorVersion)
-    : null;
+  const version = getInstalledPackageVersion('@rspack/dev-server', [cliDir]);
+  return version ? major(version) : null;
 }
 
 // Reads the version off an already-resolved `@rspack/core` module instance

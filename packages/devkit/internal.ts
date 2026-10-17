@@ -26,6 +26,9 @@ export {
   applyDaemonEnvFromClient,
   getGraphTimeDotEnvForTask,
   hashDaemonClientEnv,
+  evaluateUnderTaskEnv,
+  hashTaskDotEnvFiles,
+  readEnv,
 } from 'nx/src/devkit-internals';
 
 // Formatter detection and setup. `@nx/js` needs these to write and detect a
@@ -117,6 +120,7 @@ export { parseNxDirectives } from './src/utils/nx-directives';
 export { applyTestFileDirectives } from './src/utils/test-file-directives';
 export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
+export { getReadyWhenHost } from './src/utils/ready-when-host';
 export { eachValueFrom } from './src/utils/rxjs-for-await';
 export { checkAndCleanWithSemver } from './src/utils/semver';
 export {

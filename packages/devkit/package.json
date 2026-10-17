@@ -38,6 +38,9 @@
       "internal": [
         "dist/internal.d.ts"
       ],
+      "internal-config-utils": [
+        "dist/internal-config-utils.d.ts"
+      ],
       "internal-testing-utils": [
         "dist/internal-testing-utils.d.ts"
       ],
@@ -91,6 +94,11 @@
       "@nx/nx-source": "./internal.ts",
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
+    },
+    "./internal-config-utils": {
+      "@nx/nx-source": "./internal-config-utils.ts",
+      "types": "./dist/internal-config-utils.d.ts",
+      "default": "./dist/internal-config-utils.js"
     },
     "./internal-testing-utils": {
       "@nx/nx-source": "./internal-testing-utils.ts",

@@ -1,6 +1,3 @@
-import { clearRequireCache } from '@nx/devkit/internal';
-import { loadTsFile } from '@nx/js/internal';
-
 export function resolveUserDefinedWebpackConfig(
   path: string,
   tsConfig: string,
@@ -11,6 +8,8 @@ export function resolveUserDefinedWebpackConfig(
     // Clear cache if the path is in the cache
     if (require.cache[path]) {
       // Clear all entries because config may import other modules
+      const { clearRequireCache } =
+        require('@nx/devkit/internal') as typeof import('@nx/devkit/internal');
       clearRequireCache();
     }
   }
@@ -21,6 +20,9 @@ export function resolveUserDefinedWebpackConfig(
     return require(path);
   }
 
+  // Lazy-required, like clearRequireCache, so a JS config loads without them
+  const { loadTsFile } =
+    require('@nx/js/internal') as typeof import('@nx/js/internal');
   const maybeCustomWebpackConfig = loadTsFile(path, tsConfig);
 
   // If the user provides a configuration in TS file

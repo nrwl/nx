@@ -2,14 +2,12 @@ import type { ExecutorContext } from '@nx/devkit';
 import type { Configuration } from 'webpack';
 import type { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { warnWebpackComposeHelpersDeprecation } from './deprecation';
+import { nxWebpackComposablePlugin } from './composable-plugin';
 
-export const nxWebpackComposablePlugin = 'nxWebpackComposablePlugin';
-
-export function isNxWebpackComposablePlugin(
-  a: unknown
-): a is AsyncNxComposableWebpackPlugin {
-  return a?.[nxWebpackComposablePlugin] === true;
-}
+export {
+  isNxWebpackComposablePlugin,
+  nxWebpackComposablePlugin,
+} from './composable-plugin';
 
 export interface NxWebpackExecutionContext {
   options: NormalizedWebpackExecutorOptions;

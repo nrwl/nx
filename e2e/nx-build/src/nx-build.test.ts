@@ -2,6 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { removeSync } from 'fs-extra';
 import { workspaceRoot } from '@nx/devkit';
+import { getCatalogManager } from '@nx/devkit/internal';
 import { e2eCwd, getPublishedVersion, runCommand } from '@nx/e2e-utils';
 
 // Packages to verify: source file path (relative to packages/<name>)
@@ -182,34 +183,20 @@ describe('Nx Build Verification', () => {
         cwd: e2eCwd,
       });
 
-      // Update nx package versions in root and workspace-plugin to match
+      // Point the `nx` catalog, which the repo's nx packages come from, at
       // what's published in the local registry so pnpm resolves from verdaccio
       const publishedVersion = getPublishedVersion();
-      const excludedPackages = [
-        '@nx/conformance',
-        '@nx/key',
-        '@nx/powerpack-license',
-        '@nx/graph',
-      ];
-      for (const pkgJsonPath of [
-        join(repoDir, 'package.json'),
-        join(repoDir, 'tools/workspace-plugin/package.json'),
-      ]) {
-        const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
-        for (const depsKey of ['dependencies', 'devDependencies']) {
-          const deps = pkg[depsKey];
-          if (!deps) continue;
-          for (const name of Object.keys(deps)) {
-            if (
-              (name === 'nx' || name.startsWith('@nx/')) &&
-              !excludedPackages.includes(name)
-            ) {
-              deps[name] = publishedVersion;
-            }
-          }
-        }
-        writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + '\n');
-      }
+      const catalogManager = getCatalogManager(repoDir);
+      const nxCatalog =
+        catalogManager.getCatalogDefinitions(repoDir).catalogs.nx;
+      catalogManager.updateCatalogVersions(
+        repoDir,
+        Object.keys(nxCatalog).map((packageName) => ({
+          packageName,
+          version: publishedVersion,
+          catalogName: 'nx',
+        }))
+      );
 
       // Install dependencies using the published versions from the local registry
       runCommand('pnpm install --no-frozen-lockfile', {

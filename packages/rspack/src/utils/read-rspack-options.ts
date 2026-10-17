@@ -1,7 +1,5 @@
-import { workspaceRoot } from '@nx/devkit';
 import type { Configuration } from '@rspack/core';
-import { isNxRspackComposablePlugin } from './config';
-import { readNxJsonFromDisk } from '@nx/devkit/internal';
+import { isNxRspackComposablePlugin } from './composable-plugin';
 
 /**
  * Reads the Rspack options from a give Rspack configuration. The configuration can be:
@@ -11,9 +9,13 @@ import { readNxJsonFromDisk } from '@nx/devkit/internal';
  * 4. A Nx-specific composable function that takes Nx context, rspack config, and returns the config object.
  *
  * @param rspackConfig
+ * @param env The env a standard function is called with. Defaults to the production build env.
+ * @param argv The argv a standard function is called with.
  */
 export async function readRspackOptions(
-  rspackConfig: unknown
+  rspackConfig: unknown,
+  env: Record<string, unknown> = { production: true },
+  argv: Record<string, unknown> = {}
 ): Promise<Configuration[]> {
   const configs: Configuration[] = [];
 
@@ -21,6 +23,11 @@ export async function readRspackOptions(
     config: unknown
   ): Promise<Configuration | Configuration[]> => {
     if (isNxRspackComposablePlugin(config)) {
+      // Lazy-required so reading any other config does not load them
+      const { workspaceRoot } =
+        require('@nx/devkit') as typeof import('@nx/devkit');
+      const { readNxJsonFromDisk } =
+        require('@nx/devkit/internal') as typeof import('@nx/devkit/internal');
       return await config(
         {},
         {
@@ -49,12 +56,7 @@ export async function readRspackOptions(
         }
       );
     } else if (typeof config === 'function') {
-      const resolved = await config(
-        {
-          production: true, // we want the production build options
-        },
-        {}
-      );
+      const resolved = await config(env, argv);
       // If the resolved configuration is an array, resolve each configuration
       return Array.isArray(resolved)
         ? (await Promise.all(resolved.map(resolveConfig))).flat()

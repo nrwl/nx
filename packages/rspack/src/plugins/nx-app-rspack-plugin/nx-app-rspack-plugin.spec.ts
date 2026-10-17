@@ -1,20 +1,22 @@
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 import { rspack } from '@rspack/core';
 import { join } from 'path';
 import { NxAppRspackPlugin } from './nx-app-rspack-plugin';
 
-vi.mock('../utils/plugins/normalize-options', () => ({
+// The plugin `require`s these lazily, which `vi.mock` cannot reach.
+mockCjsModule(import.meta.url, '../utils/plugins/normalize-options', {
   normalizeOptions: (options) => ({
     ...options,
     root: process.cwd(),
     projectRoot: 'apps/example',
   }),
-}));
+});
 
-vi.mock('../utils/apply-base-config', () => ({
+mockCjsModule(import.meta.url, '../utils/apply-base-config', {
   applyBaseConfig: (options, config) => {
     config.context = join(options.root, options.projectRoot);
   },
-}));
+});
 
 describe('NxAppRspackPlugin', () => {
   it('passes the project context to downstream rspack plugins', async () => {

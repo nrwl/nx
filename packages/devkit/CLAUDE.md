@@ -14,7 +14,8 @@
   │
   ├── @nx/devkit/testing       → nx/src/devkit-testing-exports
   ├── @nx/devkit/ngcli-adapter → nx/src/adapter/ngcli-adapter
-  └── @nx/devkit/internal      → nx/src/devkit-internals (subset)
+  ├── @nx/devkit/internal      → nx/src/devkit-internals (subset)
+  └── @nx/devkit/internal-config-utils → loadConfigFile, without loading the nx barrels for a JS config
 ```
 
 ## Version Compatibility Contract

@@ -536,6 +536,16 @@ describe('daemon environment', () => {
       expect(hashDaemonClientEnv()).not.toEqual(unset);
     });
 
+    it('is stable across Yarn Berry runs, which differ only by the bin folder', () => {
+      const path = process.env.PATH;
+      process.env.BERRY_BIN_FOLDER = '/tmp/xfs-aaa';
+      process.env.PATH = ['/tmp/xfs-aaa', path].join(delimiter);
+      const first = hashDaemonClientEnv();
+      process.env.BERRY_BIN_FOLDER = '/tmp/xfs-bbb';
+      process.env.PATH = ['/tmp/xfs-bbb', path].join(delimiter);
+      expect(hashDaemonClientEnv()).toEqual(first);
+    });
+
     it('is stable when an excluded env var changes', () => {
       delete process.env.NX_TUI;
       delete process.env.ITERM_SESSION_ID;

@@ -12,13 +12,43 @@ vi.mock('@nx/js/internal', async () => ({
   isUsingTsSolutionSetup: vi.fn(() => false),
 }));
 
-import { CreateNodesContext } from '@nx/devkit';
+// The real helper forks a process, which cannot see the configs mockCjsModule
+// registers here. Call the module here under the cwd and env it would get
+// instead, one call at a time since both are process-wide.
+vi.mock('@nx/devkit/internal', async () => {
+  let evaluations: Promise<unknown> = Promise.resolve();
+  return {
+    ...(await vi.importActual<any>('@nx/devkit/internal')),
+    evaluateUnderTaskEnv: (modulePath, exportName, args, { cwd, env }) => {
+      const evaluation = evaluations.then(async () => {
+        const originalCwd = process.cwd();
+        const originalEnv = process.env;
+        process.chdir(cwd);
+        process.env = env;
+        try {
+          return await (await import(modulePath))[exportName](...args);
+        } finally {
+          process.env = originalEnv;
+          process.chdir(originalCwd);
+        }
+      });
+      evaluations = evaluation.catch(() => {});
+      return evaluation;
+    },
+  };
+});
+
+import { CreateNodesContext, workspaceRoot } from '@nx/devkit';
 import {
   PNPM_INSTALL_SETTINGS_INPUTS,
   PNPM_MAJOR_RUNTIME_INPUT,
 } from '@nx/js/internal';
-import { hashObject, workspaceDataDirectory } from '@nx/devkit/internal';
-import { rmSync } from 'fs';
+import {
+  hashObject,
+  setWorkspaceRoot,
+  workspaceDataDirectory,
+} from '@nx/devkit/internal';
+import { readFileSync, rmSync } from 'fs';
 import { createNodesV2 } from './plugin';
 import { join } from 'path';
 import {
@@ -201,6 +231,10 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "development",
                       },
                     },
+                    "readyWhen": {
+                      "host": "{options.host ?? localhost}",
+                      "port": "{options.port ?? 9000}",
+                    },
                   },
                   "preview-site": {
                     "command": "webpack-cli serve",
@@ -245,6 +279,10 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "production",
                       },
                     },
+                    "readyWhen": {
+                      "host": "{options.host ?? localhost}",
+                      "port": "{options.port ?? 9000}",
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -274,6 +312,10 @@ describe('@nx/webpack/plugin', () => {
                       "port": 9000,
                       "spa": true,
                     },
+                    "readyWhen": {
+                      "host": "{options.host ?? localhost}",
+                      "port": "{options.port}",
+                    },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -289,6 +331,275 @@ describe('@nx/webpack/plugin', () => {
         ],
       ]
     `);
+  });
+
+  it.each([
+    [
+      'no devServer',
+      { output: { path: 'dist/foo' } },
+      {
+        port: '{options.port ?? env.WEBPACK_DEV_SERVER_BASE_PORT ?? 8080}',
+        host: '{options.host ?? localhost}',
+      },
+    ],
+    [
+      'an auto port',
+      { devServer: { port: 'auto' } },
+      {
+        port: '{options.port ?? env.WEBPACK_DEV_SERVER_BASE_PORT ?? 8080}',
+        host: '{options.host ?? localhost}',
+      },
+    ],
+    [
+      'a port of 0',
+      { devServer: { port: 0 } },
+      { port: '{options.port ?? 0}', host: '{options.host ?? localhost}' },
+    ],
+    [
+      'a devServer on a later config',
+      [{ name: 'server' }, { name: 'client', devServer: { port: 4300 } }],
+      { port: '{options.port ?? 4300}', host: '{options.host ?? localhost}' },
+    ],
+    [
+      'several devServer configs',
+      [
+        { name: 'server', devServer: { port: 4300 } },
+        { name: 'client', devServer: { port: 4400 } },
+      ],
+      { port: '{options.port ?? 4400}', host: '{options.host ?? localhost}' },
+    ],
+    [
+      'an ipc devServer',
+      { devServer: { port: 4300, ipc: true } },
+      { logMatches: 'Project is running at:' },
+    ],
+    [
+      'a NaN port',
+      { devServer: { port: NaN } },
+      { logMatches: 'Project is running at:' },
+    ],
+    [
+      'an ipc devServer with a quiet infrastructure log',
+      { devServer: { ipc: true }, infrastructureLogging: { level: 'warn' } },
+      undefined,
+    ],
+    [
+      'a NaN port with its own infrastructure log stream',
+      {
+        devServer: { port: NaN },
+        infrastructureLogging: { stream: process.stdout },
+      },
+      undefined,
+    ],
+    [
+      'an ipc devServer after another devServer config',
+      [
+        { name: 'server', devServer: { port: 4300 } },
+        { name: 'client', devServer: { ipc: true } },
+      ],
+      undefined,
+    ],
+    [
+      'a fixed host',
+      { devServer: { port: 4300, host: '192.168.1.20' } },
+      {
+        port: '{options.port ?? 4300}',
+        host: '{options.host ?? 192.168.1.20}',
+      },
+    ],
+    [
+      'a host that reads as a token',
+      { devServer: { port: 4300, host: 'env.example.com' } },
+      {
+        port: '{options.port ?? 4300}',
+        host: '{options.host ?? Env.example.com}',
+      },
+    ],
+  ])('infers the dev server readyWhen for %s', async (_, config, expected) => {
+    mockWebpackConfig(config);
+
+    const nodes = await createNodesFunction(
+      ['my-app/webpack.config.js'],
+      {},
+      context
+    );
+
+    const { targets } = nodes[0][1].projects['my-app'];
+    for (const target of ['serve', 'preview']) {
+      expect(targets[target].readyWhen).toEqual(expected);
+    }
+  });
+
+  it.each([
+    ['a port string', '3000', 3000],
+    ['an auto port', 'auto', undefined],
+  ])('infers the serve-static port for %s', async (_, port, expected) => {
+    mockWebpackConfig({ devServer: { port } });
+
+    const nodes = await createNodesFunction(
+      ['my-app/webpack.config.js'],
+      {},
+      context
+    );
+
+    const { targets } = nodes[0][1].projects['my-app'];
+    expect(targets['serve-static'].options.port).toBe(expected);
+  });
+
+  it('reads the build outputs with the build env and the dev server port with the serve env', async () => {
+    mockWebpackConfig((env: Record<string, unknown>) => ({
+      output: { path: env.WEBPACK_SERVE ? 'dist/serve' : 'dist/build' },
+      devServer: { port: env.WEBPACK_SERVE ? 4300 : 9000 },
+    }));
+
+    const nodes = await createNodesFunction(
+      ['my-app/webpack.config.js'],
+      {},
+      context
+    );
+
+    const { targets } = nodes[0][1].projects['my-app'];
+    expect(targets.build.outputs).toEqual(['{projectRoot}/dist/build']);
+    for (const target of ['serve', 'preview']) {
+      expect(targets[target].readyWhen.port).toBe('{options.port ?? 4300}');
+    }
+  });
+
+  it('reads the dev server port under the env and cwd of each task', async () => {
+    const originalWorkspaceRoot = workspaceRoot;
+    setWorkspaceRoot(tempFs.tempDir);
+    tempFs.createFilesSync({
+      'my-app/.env': 'SERVE_PORT=4300',
+      'my-app/preview-port': '4400',
+    });
+    mockWebpackConfig(() => {
+      const { WEBPACK_SERVE, NODE_ENV, SERVE_PORT } = process.env;
+      return {
+        devServer: {
+          port:
+            WEBPACK_SERVE !== 'true'
+              ? 9000
+              : NODE_ENV === 'production'
+                ? Number(readFileSync('preview-port', 'utf8'))
+                : Number(SERVE_PORT),
+        },
+      };
+    });
+
+    try {
+      const nodes = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        {},
+        context
+      );
+
+      const { targets } = nodes[0][1].projects['my-app'];
+      expect(targets.serve.readyWhen.port).toBe('{options.port ?? 4300}');
+      expect(targets.preview.readyWhen.port).toBe('{options.port ?? 4400}');
+    } finally {
+      setWorkspaceRoot(originalWorkspaceRoot);
+    }
+  });
+
+  it.each([
+    [
+      'a root dotenv file of the task changes',
+      (tempFs: TempFs) =>
+        tempFs.createFileSync('.env.serve-env-cache', 'SERVE_PORT=4500'),
+    ],
+    [
+      'the ambient env changes',
+      () => {
+        process.env.SERVE_PORT = '4500';
+      },
+    ],
+  ])(
+    'reads the dev server port again when %s',
+    async (_, change: (tempFs: TempFs) => void) => {
+      const options = { serveTargetName: 'serve-env-cache' };
+      const cachePath = join(
+        workspaceDataDirectory,
+        `webpack-${hashObject(options)}.hash`
+      );
+      rmSync(cachePath, { force: true });
+      process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+      const originalWorkspaceRoot = workspaceRoot;
+      setWorkspaceRoot(tempFs.tempDir);
+      mockWebpackConfig(() => ({
+        devServer: { port: Number(process.env.SERVE_PORT) || 4300 },
+      }));
+
+      try {
+        const before = await createNodesFunction(
+          ['my-app/webpack.config.js'],
+          options,
+          context
+        );
+        expect(
+          before[0][1].projects['my-app'].targets['serve-env-cache'].readyWhen
+            .port
+        ).toBe('{options.port ?? 4300}');
+
+        change(tempFs);
+        const after = await createNodesFunction(
+          ['my-app/webpack.config.js'],
+          options,
+          context
+        );
+        expect(
+          after[0][1].projects['my-app'].targets['serve-env-cache'].readyWhen
+            .port
+        ).toBe('{options.port ?? 4500}');
+      } finally {
+        delete process.env.SERVE_PORT;
+        setWorkspaceRoot(originalWorkspaceRoot);
+        rmSync(cachePath, { force: true });
+      }
+    }
+  );
+
+  it('infers no readyWhen and caches nothing when the dev server options cannot be read', async () => {
+    const options = { serveTargetName: 'serve-read-failure' };
+    const cachePath = join(
+      workspaceDataDirectory,
+      `webpack-${hashObject(options)}.hash`
+    );
+    rmSync(cachePath, { force: true });
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    let readable = false;
+    mockWebpackConfig((env: Record<string, unknown>) => {
+      if (env.WEBPACK_SERVE && !readable) {
+        throw new Error('unreadable');
+      }
+      return { devServer: { port: 4300 } };
+    });
+
+    try {
+      const failed = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        options,
+        context
+      );
+      expect(
+        failed[0][1].projects['my-app'].targets['serve-read-failure'].readyWhen
+      ).toBeUndefined();
+
+      readable = true;
+      const recovered = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        options,
+        context
+      );
+      expect(
+        recovered[0][1].projects['my-app'].targets['serve-read-failure']
+          .readyWhen
+      ).toEqual({
+        port: '{options.port ?? 4300}',
+        host: '{options.host ?? localhost}',
+      });
+    } finally {
+      rmSync(cachePath, { force: true });
+    }
   });
 
   it('adds the pnpm install settings inputs in a pnpm workspace', async () => {

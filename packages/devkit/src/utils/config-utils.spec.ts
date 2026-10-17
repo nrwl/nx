@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { mockCjsModule, unmockCjsModule } from '../../internal-testing-utils';
 import {
   clearConfigFromRequireCache,
   isTranspilerRecoverableError,
@@ -146,17 +147,10 @@ describe('isTranspilerRecoverableError', () => {
 
   it('should classify identically on a host nx that does not export the classifiers', async () => {
     // nx 23.0/23.1 recover these error classes in loadTsFile but do not
-    // re-export the classifiers from devkit-internals.
+    // re-export the classifiers from devkit-internals. config-utils requires it
+    // lazily, which vi.doMock does not reach.
+    mockCjsModule(import.meta.url, 'nx/src/devkit-internals', {});
     vi.resetModules();
-    // Each name listed as `undefined`: vitest throws on reading an export its
-    // mock factory did not return.
-    vi.doMock('nx/src/devkit-internals', () => ({
-      forceRegisterEsmLoader: undefined,
-      isRequireInEsmScopeError: undefined,
-      isTsEsmNamedExportLinkageError: undefined,
-      loadTsFile: undefined,
-      registerTsProject: undefined,
-    }));
     try {
       const { isTranspilerRecoverableError: withoutHostClassifiers } =
         await import('./config-utils');
@@ -164,7 +158,7 @@ describe('isTranspilerRecoverableError', () => {
         expect(withoutHostClassifiers(err, path)).toBe(expected);
       }
     } finally {
-      vi.doUnmock('nx/src/devkit-internals');
+      unmockCjsModule(import.meta.url, 'nx/src/devkit-internals');
       vi.resetModules();
     }
   });

@@ -262,16 +262,18 @@ function isExcludedEnvVar(key: string): boolean {
  * `getDaemonEnv` would send, minus the required settings the daemon pins
  * itself. Skipping those yields the same digest whether the process is a
  * daemon plugin worker (which has them set) or a daemonless one (which
- * typically does not).
+ * typically does not). Hashed as graph identity, so Yarn Berry's fresh bin
+ * folder per run does not change it.
  */
 export function hashDaemonClientEnv(): string {
+  const graphEnv = normalizeDaemonEnvironmentForGraph(process.env);
   const env: Record<string, string> = {};
-  for (const key in process.env) {
+  for (const key in graphEnv) {
     if (
       !isExcludedEnvVar(key) &&
       !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
     ) {
-      env[key] = process.env[key];
+      env[key] = graphEnv[key];
     }
   }
   env.NX_LOAD_DOT_ENV_FILES = normalizedLoadDotEnvFiles();
