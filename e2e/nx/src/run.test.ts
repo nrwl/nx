@@ -1100,6 +1100,100 @@ describe('Nx Running Tests', () => {
             )
           );
         }, 60000);
+
+        it('should run a command check with the env and options of its task', () => {
+          updateJson(`libs/${mylib1}/project.json`, (config) => {
+            // idle.js never listens: only the env the check runs with can pass it
+            config.targets.serve = continuousServe(
+              'idle.js',
+              {
+                command: `node -e "const o = JSON.parse(process.env.NX_TASK_OPTIONS); process.exit(o.port === ${port} && process.env.FROM_TASK_ENV === 'yes' ? 0 : 1)"`,
+                timeout: 10000,
+              },
+              { port, env: { FROM_TASK_ENV: 'yes' } }
+            );
+            config.targets.check = {
+              command: 'echo COMMAND_CHECK_PASSED',
+              dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+            };
+            return config;
+          });
+
+          const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+          expect(output).toContain('COMMAND_CHECK_PASSED');
+          expect(output).toContain(
+            `Successfully ran target check for project ${mylib1}`
+          );
+        }, 60000);
+
+        it('should release the waiting task on the signal and pass on its url', () => {
+          // The fallback never matches, so only the signal can release the waiter
+          updateFile(
+            `libs/${mylib1}/signal.js`,
+            `
+            // The workspace itself does not depend on @nx/devkit: pnpm exposes it only
+            // next to the packages that do
+            const { createRequire } = require('module');
+            const { announceTaskReadySignal, signalTaskReady } = createRequire(require.resolve('@nx/js'))('@nx/devkit');
+            console.log('ANNOUNCED=' + announceTaskReadySignal());
+            setTimeout(() => {
+              console.log('SIGNALLED=' + signalTaskReady({ url: 'http://localhost:${port}/' }));
+            }, 1500);
+            setInterval(() => {}, 1000);
+          `
+          );
+          updateJson(`libs/${mylib1}/project.json`, (config) => {
+            config.targets.serve = continuousServe('signal.js', {
+              signal: true,
+              fallback: { logMatches: 'never printed' },
+              timeout: 15000,
+            });
+            config.targets.check = {
+              command:
+                'node -e "console.log(\'READY_URL=\' + process.env.NX_READY_URL)"',
+              dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+            };
+            return config;
+          });
+
+          const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+          expect(output).toContain('ANNOUNCED=true');
+          expect(output).toContain('SIGNALLED=true');
+          expect(output).toContain(`READY_URL=http://localhost:${port}/`);
+          expect(output).toContain(
+            `Successfully ran target check for project ${mylib1}`
+          );
+        }, 60000);
+
+        it('should fail the continuous task when no signal arrives within the timeout', () => {
+          updateJson(`libs/${mylib1}/project.json`, (config) => {
+            // idle.js never signals, and there is no fallback
+            config.targets.serve = continuousServe('idle.js', {
+              signal: true,
+              timeout: 2000,
+            });
+            config.targets.check = {
+              command: 'echo checked',
+              dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+            };
+            return config;
+          });
+
+          const output = runCLI(`check ${mylib1} --skip-nx-cache`, {
+            silenceError: true,
+          });
+          expect(output).toContain(
+            `Task "${mylib1}:serve" did not become ready within 2000ms (readyWhen: signal).`
+          );
+          expect(output).toMatch(
+            new RegExp(`Failed tasks:\\s+- ${mylib1}:serve`)
+          );
+          expect(output).toMatch(
+            new RegExp(
+              `Tasks not run because their dependencies failed or --nx-bail=true:\\s+- ${mylib1}:check`
+            )
+          );
+        }, 60000);
       });
     });
   });
