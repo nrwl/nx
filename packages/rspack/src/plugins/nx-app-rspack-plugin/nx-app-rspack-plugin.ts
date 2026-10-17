@@ -4,6 +4,7 @@ import type {
   NxAppRspackPluginOptions,
 } from '../utils/models';
 import { normalizeOptions } from '../utils/plugins/normalize-options';
+import { READY_SIGNAL_PLUGIN } from '../../utils/dev-server-ready-signal';
 import { applyBaseConfig } from '../utils/apply-base-config';
 import { applyWebConfig } from '../utils/apply-web-config';
 
@@ -18,6 +19,7 @@ import { applyWebConfig } from '../utils/apply-web-config';
  */
 export class NxAppRspackPlugin {
   private readonly options: NormalizedNxAppRspackPluginOptions;
+  readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(options: NxAppRspackPluginOptions = {}) {
     // If we're building inferred targets, skip normalizing the build options

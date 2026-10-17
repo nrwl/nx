@@ -1,8 +1,10 @@
 import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { NxAppRspackPlugin } from '../plugins/nx-app-rspack-plugin/nx-app-rspack-plugin';
 import {
   applyDevServerReadySignal,
   getDevServerUrl,
   NxReadySignalPlugin,
+  sendsReadySignal,
 } from './dev-server-ready-signal';
 
 const devkit = vi.hoisted(() => ({
@@ -90,5 +92,26 @@ describe('getDevServerUrl', () => {
     expect(
       getDevServerUrl({ server: { address: () => '/tmp/dev.sock' } })
     ).toBeUndefined();
+  });
+});
+
+describe('sendsReadySignal', () => {
+  it('finds the plugins that signal in a config with a dev server', () => {
+    // As when inference loads the config
+    global.NX_GRAPH_CREATION = true;
+    try {
+      expect(
+        sendsReadySignal({ devServer: {}, plugins: [new NxAppRspackPlugin()] })
+      ).toBe(true);
+    } finally {
+      delete global.NX_GRAPH_CREATION;
+    }
+    expect(
+      sendsReadySignal({ devServer: {}, plugins: [new NxReadySignalPlugin()] })
+    ).toBe(true);
+    expect(sendsReadySignal({ devServer: {}, plugins: [{}] })).toBe(false);
+    expect(sendsReadySignal({ plugins: [new NxReadySignalPlugin()] })).toBe(
+      false
+    );
   });
 });

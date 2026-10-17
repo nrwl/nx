@@ -1,6 +1,22 @@
 import type { AddressInfo } from 'net';
 import type { Compiler } from '@rspack/core';
 
+// Set on the plugins that report readiness, so inference can find them in a
+// config it has loaded
+export const READY_SIGNAL_PLUGIN = Symbol.for('@nx/ready-signal-plugin');
+
+/** Whether the dev server of this config will report its readiness. */
+export function sendsReadySignal(config: {
+  devServer?: unknown;
+  plugins?: unknown[];
+}): boolean {
+  return (
+    typeof config.devServer === 'object' &&
+    !!config.devServer &&
+    !!config.plugins?.some((plugin) => plugin?.[READY_SIGNAL_PLUGIN])
+  );
+}
+
 /**
  * Reports the dev server's address to an Nx task whose readyWhen is `signal`.
  * `rspack serve` reads `devServer` from the compiler after plugins apply,
@@ -28,6 +44,8 @@ export function applyDevServerReadySignal(compiler: Compiler): void {
 
 /** Reports the dev server's address to an Nx task whose readyWhen is `signal`. */
 export class NxReadySignalPlugin {
+  readonly [READY_SIGNAL_PLUGIN] = true;
+
   apply(compiler: Compiler): void {
     applyDevServerReadySignal(compiler);
   }

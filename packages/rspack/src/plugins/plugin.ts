@@ -5,6 +5,7 @@ import {
   hashObject,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
+import { sendsReadySignal } from '../utils/dev-server-ready-signal';
 import {
   CreateNodesContext,
   createNodesFromFiles,
@@ -239,7 +240,10 @@ async function createRspackTargets(
     outputs,
   };
 
-  const devServerReadyWhen = getDevServerReadyWhen(configFilePath);
+  const devServerReadyWhen = getDevServerReadyWhen(
+    configFilePath,
+    rspackOptions
+  );
 
   targets[options.serveTargetName] = {
     continuous: true,
@@ -348,17 +352,22 @@ function normalizeOutputPath(
   }
 }
 
-// NxAppRspackPlugin signals once the dev server listens. Without it, the
-// fallback reads the config at task time, with the task's env and options.
+// A dev server whose config loads NxAppRspackPlugin or NxReadySignalPlugin reports
+// when it listens. Otherwise the check reads the config when the task runs,
+// with the task's env and options, and waits for the dev server's port.
 function getDevServerReadyWhen(
-  configFilePath: string
+  configFilePath: string,
+  configs: { devServer?: unknown; plugins?: unknown[] }[]
 ): TargetConfiguration['readyWhen'] {
-  return {
-    signal: true,
-    fallback: {
-      command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" "${configFilePath}"`,
-      // Each attempt loads the config
-      interval: 1000,
-    },
-  };
+  // `rspack serve` starts one dev server, for the first config with devServer
+  const signals = sendsReadySignal(
+    configs.find((config) => config.devServer) ?? configs[0] ?? {}
+  );
+  return signals
+    ? { signal: true }
+    : {
+        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" "${configFilePath}"`,
+        // Each attempt loads the config
+        interval: 1000,
+      };
 }

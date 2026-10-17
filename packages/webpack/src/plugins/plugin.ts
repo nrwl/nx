@@ -5,6 +5,7 @@ import {
   hashObject,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
+import { sendsReadySignal } from '../utils/dev-server-ready-signal';
 import {
   AggregateCreateNodesError,
   CreateNodesContext,
@@ -238,7 +239,10 @@ async function createWebpackTargets(
     },
   };
 
-  const devServerReadyWhen = getDevServerReadyWhen(configFilePath);
+  const devServerReadyWhen = getDevServerReadyWhen(
+    configFilePath,
+    webpackOptions
+  );
 
   targets[options.serveTargetName] = {
     continuous: true,
@@ -412,17 +416,23 @@ function normalizeOptions(
   };
 }
 
-// NxAppWebpackPlugin signals once the dev server listens. Without it, the
-// fallback reads the config at task time, with the task's env and options.
+// A dev server whose config loads NxAppWebpackPlugin or NxReadySignalPlugin reports
+// when it listens. Otherwise the check reads the config when the task runs,
+// with the task's env and options, and waits for the dev server's port.
 function getDevServerReadyWhen(
-  configFilePath: string
+  configFilePath: string,
+  configs: { devServer?: unknown; plugins?: unknown[] }[]
 ): TargetConfiguration['readyWhen'] {
-  return {
-    signal: true,
-    fallback: {
-      command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" "${configFilePath}"`,
-      // Each attempt loads the config
-      interval: 1000,
-    },
-  };
+  // webpack-cli starts a dev server for each config with devServer, or for
+  // the first config, without one, when none has it
+  const withDevServer = configs.filter((config) => config.devServer);
+  const signals =
+    withDevServer.length > 0 && withDevServer.every(sendsReadySignal);
+  return signals
+    ? { signal: true }
+    : {
+        command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" "${configFilePath}"`,
+        // Each attempt loads the config
+        interval: 1000,
+      };
 }

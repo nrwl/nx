@@ -4,6 +4,7 @@ import {
   NxAppWebpackPluginOptions,
 } from './nx-app-webpack-plugin-options';
 import { normalizeOptions } from './lib/normalize-options';
+import { READY_SIGNAL_PLUGIN } from '../../utils/dev-server-ready-signal';
 
 /**
  * This plugin provides features to build Node and Web applications.
@@ -17,6 +18,7 @@ import { normalizeOptions } from './lib/normalize-options';
  */
 export class NxAppWebpackPlugin {
   private readonly options: NormalizedNxAppWebpackPluginOptions;
+  readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(options: NxAppWebpackPluginOptions = {}) {
     // If we're building inferred targets, skip normalizing build options.
