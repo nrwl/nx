@@ -56,6 +56,7 @@ import { TaskMetadata, TaskResult } from './life-cycle';
 import { terminalOutputPathForHash } from './terminal-output-path';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { waitForReadiness } from './readiness/probes';
+import { ReadySignalServer } from './readiness/ready-signal-server';
 import {
   DEFAULT_READY_TIMEOUT,
   getReadyProducerIds,
@@ -269,6 +270,9 @@ export class TaskOrchestrator {
   private readinessFailures = new Map<string, Promise<void>>();
   private readinessFailureReasons = new Map<string, string>();
   private readinessSettled = false;
+  private readySignal: ReadySignalServer | undefined;
+  // The url each producer reported with its readiness signal
+  private readyUrls = new Map<string, string>();
   private waitingLogged = new Set<string>();
   private cleanupPromise: Promise<void> | null = null;
   private signalHandlers: Array<[NodeJS.Signals, () => void]> = [];
@@ -1595,6 +1599,7 @@ export class TaskOrchestrator {
           temporaryOutputPath,
           streamOutput
         );
+    Object.assign(env, this.getReadyUrlEnv(task));
 
     let resolveDiscreteExit: () => void;
     const discreteExitHandled = new Promise<void>(
@@ -1962,7 +1967,12 @@ export class TaskOrchestrator {
         task,
         () => this.getReadyWhen(task, env)
       ));
+      if (readyWhen?.kind === 'signal') {
+        this.readySignal ??= new ReadySignalServer();
+        Object.assign(env, await this.readySignal.env(task.id));
+      }
       await this.waitForReadyDependencies(task);
+      Object.assign(env, this.getReadyUrlEnv(task));
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
       if (e instanceof ProducerFailedError) {
@@ -2146,6 +2156,15 @@ export class TaskOrchestrator {
     }
   }
 
+  // A waiter learns the url of the one ready producer that reported it.
+  // Producers run by another Nx process report none here.
+  private getReadyUrlEnv(task: Task): NodeJS.ProcessEnv {
+    const urls = getReadyProducerIds(task, this.fullTaskGraph)
+      .map((id) => this.readyUrls.get(id))
+      .filter(Boolean);
+    return urls.length === 1 ? { NX_READY_URL: urls[0] } : {};
+  }
+
   private onReadinessHold(producerId: string) {
     if (
       !this.waitingLogged.has(producerId) &&
@@ -2212,9 +2231,11 @@ export class TaskOrchestrator {
       runningTask,
       cwd: workspaceRoot,
       signal: state.abort.signal,
+      readySignal: this.readySignal,
     }).then(
-      () => {
+      ({ url }) => {
         if (state.abort.signal.aborted) return;
+        if (url) this.readyUrls.set(task.id, url);
         this.recordReadiness(task, TaskReadiness.Ready);
         state.resolve();
       },
@@ -2875,6 +2896,7 @@ export class TaskOrchestrator {
   private async performCleanup() {
     // Waiters must not sit out a probe once the run is stopping
     this.abortAllReadiness();
+    this.readySignal?.close();
 
     // Mark all running tasks for intentional stop
     const reason = this.stopRequested ? 'interrupted' : 'fulfilled';

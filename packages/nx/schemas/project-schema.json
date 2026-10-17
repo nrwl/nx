@@ -273,7 +273,7 @@
         },
         "command": {
           "type": "string",
-          "description": "Ready when this command, run through the shell at the workspace root, exits with code 0"
+          "description": "Ready when this command, run through the shell at the workspace root, exits with code 0. It runs with the environment the task runs with, and the task's options as JSON in NX_TASK_OPTIONS"
         },
         "logMatches": {
           "description": "Ready when every one of these substrings has appeared in the task's output",
@@ -296,8 +296,37 @@
           "type": "integer",
           "minimum": 1,
           "default": 250,
-          "description": "Milliseconds between probe attempts. Unused by logMatches"
+          "description": "Milliseconds between probe attempts. Unused by logMatches and signal"
+        },
+        "signal": {
+          "const": true,
+          "description": "Ready when the task reports it, through signalTaskReady from @nx/devkit. The webpack, Rspack and Vite plugins of Nx report it once their dev server listens"
+        },
+        "fallback": {
+          "$ref": "#/definitions/readyWhenFallback",
+          "description": "With signal, a check that also counts until the task says it will signal. It takes the signal's timeout"
         }
+      },
+      "oneOf": [
+        { "required": ["url"] },
+        { "required": ["port"] },
+        { "required": ["command"] },
+        { "required": ["logMatches"] },
+        { "required": ["signal"] }
+      ],
+      "additionalProperties": false
+    },
+    "readyWhenFallback": {
+      "type": "object",
+      "properties": {
+        "url": { "$ref": "#/definitions/readyWhen/properties/url" },
+        "port": { "$ref": "#/definitions/readyWhen/properties/port" },
+        "host": { "$ref": "#/definitions/readyWhen/properties/host" },
+        "command": { "$ref": "#/definitions/readyWhen/properties/command" },
+        "logMatches": {
+          "$ref": "#/definitions/readyWhen/properties/logMatches"
+        },
+        "interval": { "$ref": "#/definitions/readyWhen/properties/interval" }
       },
       "oneOf": [
         { "required": ["url"] },

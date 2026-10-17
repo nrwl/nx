@@ -10,6 +10,7 @@ import { join } from 'path';
 import { stripVTControlCharacters } from 'util';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
+import { PseudoIPCClient } from './pseudo-ipc';
 import type { RunningTask } from './running-tasks/running-task';
 import { TaskOrchestrator } from './task-orchestrator';
 import { BatchStatus } from '../native';
@@ -2074,6 +2075,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.readiness = new Map();
       orchestrator.readinessFailures = new Map();
       orchestrator.readinessFailureReasons = new Map();
+      orchestrator.readyUrls = new Map();
       orchestrator.waitingLogged = new Set();
       const outputPath = join(mkdtempSync(join(tmpdir(), 'readiness-')), 'out');
       orchestrator.cache = {
@@ -2522,6 +2524,40 @@ describe('TaskOrchestrator', () => {
       await expect(settled(waiting)).resolves.toBe('pending');
       emit('ready app');
       await expect(settled(waiting)).resolves.toBe('resolved');
+    });
+
+    it('hands the url a producer signals to the tasks that waited for it', async () => {
+      const { orchestrator, serve, e2e, runningTask, settled } =
+        createOrchestrator({ readyWhen: { signal: true } });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      let producerEnv: NodeJS.ProcessEnv;
+      orchestrator.runTask = vi.fn(async (_task, _stream, env) => {
+        producerEnv = env;
+        return Object.assign(runningTask, { onExit: vi.fn() });
+      });
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      onTestFinished(() => orchestrator.readySignal?.close());
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await orchestrator.startContinuousTask(serve, 1);
+      await expect(settled(waiting)).resolves.toBe('pending');
+
+      const client = new PseudoIPCClient(producerEnv.NX_READY_SIGNAL_SOCKET);
+      onTestFinished(() => client.close());
+      expect(producerEnv.NX_READY_SIGNAL_TASK).toBe('app:serve');
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      });
+      await expect(waiting).resolves.toBeUndefined();
+      expect(orchestrator.getReadyUrlEnv(e2e)).toEqual({
+        NX_READY_URL: 'http://localhost:4300/',
+      });
     });
 
     it('fails the waiter when the row is still pending at its own deadline', async () => {

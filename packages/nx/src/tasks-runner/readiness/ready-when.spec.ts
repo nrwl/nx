@@ -245,7 +245,102 @@ describe('normalizeReadyWhen', () => {
   });
 });
 
+describe('normalizeReadyWhen signal', () => {
+  const normalize = (readyWhen: any) =>
+    normalizeReadyWhen(readyWhen, 'app:serve', data);
+
+  it('takes an optional fallback check with the same timeout', () => {
+    expect(normalize({ signal: true })).toEqual({
+      kind: 'signal',
+      timeout: 60_000,
+    });
+    expect(
+      normalize({
+        signal: true,
+        timeout: 5000,
+        fallback: { port: '{options.port}', interval: 20 },
+      })
+    ).toEqual({
+      kind: 'signal',
+      timeout: 5000,
+      fallback: { kind: 'port', port: 4200, timeout: 5000, interval: 20 },
+    });
+  });
+
+  it('counts a fallback whose server picks the port as ready once started', () => {
+    expect(
+      normalize({ signal: true, fallback: { port: '{options.hmrPort}' } })
+    ).toEqual({ kind: 'signal', timeout: 60_000, fallback: null });
+  });
+
+  it.each([
+    [{ signal: false }, '"signal" must be true'],
+    [{ signal: true, interval: 10 }, '"interval" is not used by "signal"'],
+    [
+      { port: 4200, fallback: { port: 1 } },
+      '"fallback" is only allowed with "signal"',
+    ],
+    [
+      { signal: true, fallback: { port: 1, timeout: 5 } },
+      '"fallback" must be a url, port, command or logMatches check without its own timeout',
+    ],
+    [
+      { signal: true, fallback: { signal: true } },
+      '"fallback" must be a url, port, command or logMatches check without its own timeout',
+    ],
+    [
+      { signal: true, fallback: { port: 1, url: 'http://localhost' } },
+      'expected exactly one of',
+    ],
+  ])('rejects %j', (readyWhen, reason) => {
+    expect(() => normalize(readyWhen)).toThrow(reason);
+  });
+});
+
 describe('getReadyWhen', () => {
+  it('gives a command check the env and options the producer runs with', () => {
+    const serve = {
+      executor: 'nx:run-commands',
+      continuous: true,
+      readyWhen: { signal: true, fallback: { command: 'check-ready' } },
+      options: { command: 'serve', env: { NX_READY_WHEN_PORT: '5001' } },
+    };
+    const projectGraph = {
+      nodes: {
+        app: {
+          name: 'app',
+          type: 'app',
+          data: { root: 'apps/app', targets: { serve } },
+        },
+      },
+    } as unknown as ProjectGraph;
+    const projects = { app: { root: 'apps/app', targets: { serve } } };
+    const task = {
+      id: 'app:serve',
+      target: { project: 'app', target: 'serve' },
+      overrides: { port: 4400 },
+      continuous: true,
+    } as Task;
+
+    const readyWhen = getReadyWhen(task, projectGraph, projects, '/w', {
+      NX_TASK_ENV: 'yes',
+    });
+
+    expect(readyWhen).toMatchObject({
+      kind: 'signal',
+      fallback: { kind: 'command', command: 'check-ready' },
+    });
+    const { env } = (readyWhen as any).fallback;
+    expect(env).toMatchObject({
+      NX_TASK_ENV: 'yes',
+      NX_READY_WHEN_PORT: '5001',
+    });
+    expect(JSON.parse(env.NX_TASK_OPTIONS)).toMatchObject({
+      command: 'serve',
+      port: 4400,
+    });
+  });
+
   it('resolves against the options the executor receives', () => {
     const serve = {
       executor: '@nx/web:file-server',

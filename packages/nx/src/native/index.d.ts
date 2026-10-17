@@ -1174,6 +1174,8 @@ export interface ReadinessProbeConfig {
   port?: number
   host?: string
   command?: string
+  /** The whole environment of `command`. Without it the command inherits this process's. */
+  env?: Record<string, string>
   timeout: number
   interval?: number
 }
