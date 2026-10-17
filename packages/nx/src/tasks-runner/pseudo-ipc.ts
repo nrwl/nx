@@ -196,6 +196,11 @@ export class PseudoIPCClient {
     return this;
   }
 
+  unref() {
+    this.socket?.unref();
+    return this;
+  }
+
   close() {
     this.socket?.destroy();
   }

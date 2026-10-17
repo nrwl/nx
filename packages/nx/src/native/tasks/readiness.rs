@@ -1,4 +1,5 @@
 use once_cell::sync::OnceCell;
+use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::process::Stdio;
 use std::time::{Duration, Instant};
@@ -24,6 +25,8 @@ pub struct ReadinessProbeConfig {
     pub port: Option<u32>,
     pub host: Option<String>,
     pub command: Option<String>,
+    /// The whole environment of `command`. Without it the command inherits this process's.
+    pub env: Option<HashMap<String, String>>,
     pub timeout: u32,
     pub interval: Option<u32>,
 }
@@ -41,6 +44,7 @@ enum Probe {
     Command {
         command: String,
         cwd: String,
+        env: Option<HashMap<String, String>>,
     },
 }
 
@@ -83,6 +87,7 @@ impl Probe {
             (None, None, Some(command)) => Ok(Self::Command {
                 command: command.clone(),
                 cwd,
+                env: config.env.clone(),
             }),
             _ => anyhow::bail!("A readiness probe needs exactly one of url, port or command"),
         }
@@ -110,7 +115,9 @@ impl Probe {
                 .run_until_cancelled(probe_port(*port, host, deadline))
                 .await
                 .unwrap_or(false),
-            Self::Command { command, cwd } => probe_command(command, cwd, deadline, token).await,
+            Self::Command { command, cwd, env } => {
+                probe_command(command, cwd, env.as_ref(), deadline, token).await
+            }
         })
     }
 }
@@ -338,6 +345,7 @@ fn unbracketed(host: &str) -> &str {
 async fn probe_command(
     command: &str,
     cwd: &str,
+    env: Option<&HashMap<String, String>>,
     deadline: Instant,
     token: &CancellationToken,
 ) -> bool {
@@ -350,6 +358,9 @@ async fn probe_command(
         cmd.args(["-c", command]);
         cmd
     };
+    if let Some(env) = env {
+        cmd.env_clear().envs(env);
+    }
     cmd.current_dir(cwd)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
@@ -494,6 +505,7 @@ mod tests {
             host: host.map(String::from),
             command: None,
             timeout,
+            env: None,
             interval: None,
         }
     }
@@ -563,6 +575,7 @@ mod tests {
             host: None,
             command: None,
             timeout: 2000,
+            env: None,
             interval: None,
         };
         let started = Instant::now();
@@ -654,6 +667,7 @@ mod tests {
                 host: None,
                 command: None,
                 timeout: 1,
+                env: None,
                 interval: None,
             };
             let Probe::Url { url: built, .. } = Probe::from_config(&config, String::new()).unwrap()
@@ -682,6 +696,25 @@ mod tests {
             host: None,
             command: Some("sleep 1.2".into()),
             timeout: 3000,
+            env: None,
+            interval: Some(50),
+        };
+        assert!(probe(config).wait().await.unwrap());
+    }
+
+    #[cfg(not(windows))]
+    #[tokio::test]
+    async fn command_runs_with_only_the_given_env() {
+        let config = ReadinessProbeConfig {
+            url: None,
+            port: None,
+            host: None,
+            command: Some(r#"test "$NX_READINESS_GIVEN" = yes && test -z "$HOME""#.into()),
+            timeout: 2000,
+            env: Some(HashMap::from([
+                ("NX_READINESS_GIVEN".into(), "yes".into()),
+                ("PATH".into(), std::env::var("PATH").unwrap()),
+            ])),
             interval: Some(50),
         };
         assert!(probe(config).wait().await.unwrap());
@@ -701,6 +734,7 @@ mod tests {
                 marker.display()
             )),
             timeout: 10_000,
+            env: None,
             interval: None,
         };
         let probe = ReadinessProbe::new(config, dir.path().to_string_lossy().to_string()).unwrap();
@@ -747,6 +781,7 @@ mod tests {
             host: None,
             command: None,
             timeout: 5_000,
+            env: None,
             interval: None,
         });
         let token = probe.token.clone();
@@ -786,6 +821,7 @@ mod tests {
             host: None,
             command: None,
             timeout: 500,
+            env: None,
             interval: None,
         };
         SETUP_DELAY_MS.store(600, std::sync::atomic::Ordering::Relaxed);

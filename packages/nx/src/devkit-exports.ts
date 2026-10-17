@@ -252,3 +252,11 @@ export { cacheDir } from './utils/cache-directory';
 export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 
 export { isDaemonEnabled } from './daemon/client/client';
+
+/**
+ * @category Utils
+ */
+export {
+  announceTaskReadySignal,
+  signalTaskReady,
+} from './tasks-runner/readiness/ready-signal';

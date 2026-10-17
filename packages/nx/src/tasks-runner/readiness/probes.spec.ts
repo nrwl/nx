@@ -8,7 +8,13 @@ import {
 import { tmpdir, type NetworkInterfaceInfo } from 'node:os';
 import { join } from 'node:path';
 import type { RunningTask } from '../running-tasks/running-task';
+import { PseudoIPCClient } from '../pseudo-ipc';
 import { waitForReadiness } from './probes';
+import {
+  READY_SIGNAL_SOCKET_ENV,
+  type ReadySignalMessage,
+} from './ready-signal';
+import { ReadySignalServer } from './ready-signal-server';
 import { normalizeReadyWhen, type NormalizedReadyWhen } from './ready-when';
 
 const machine = vi.hoisted(() => ({
@@ -83,7 +89,7 @@ describe('waitForReadiness', () => {
       emit('server listening');
       await expect(settled(ready)).resolves.toBe('pending');
       emit('ready');
-      await expect(ready).resolves.toBeUndefined();
+      await expect(ready).resolves.toEqual({});
     });
 
     it('rejects on timeout, naming the task and the probe', async () => {
@@ -116,7 +122,7 @@ describe('waitForReadiness', () => {
     });
 
     it('resolves once the port accepts connections', async () => {
-      await expect(wait({ port, interval: 10 })).resolves.toBeUndefined();
+      await expect(wait({ port, interval: 10 })).resolves.toEqual({});
     });
 
     // Only the listener's address accepts on its port, so the check passes
@@ -176,7 +182,7 @@ describe('waitForReadiness', () => {
         if (port === null) return;
         await expect(
           wait({ port, host, timeout: 2000, interval: 10 })
-        ).resolves.toBeUndefined();
+        ).resolves.toEqual({});
       }
     );
 
@@ -215,9 +221,9 @@ describe('waitForReadiness', () => {
         res.writeHead(req.url === '/index.html' ? 200 : 404);
         res.end();
       });
-      await expect(
-        wait({ url: `${baseUrl}/`, interval: 10 })
-      ).resolves.toBeUndefined();
+      await expect(wait({ url: `${baseUrl}/`, interval: 10 })).resolves.toEqual(
+        {}
+      );
       await expect(
         wait({ url: `${baseUrl}/app`, timeout: 50, interval: 10 })
       ).rejects.toThrow('did not become ready within 50ms');
@@ -225,9 +231,7 @@ describe('waitForReadiness', () => {
 
     it('accepts 403 as ready', async () => {
       status = 403;
-      await expect(
-        wait({ url: baseUrl, interval: 10 })
-      ).resolves.toBeUndefined();
+      await expect(wait({ url: baseUrl, interval: 10 })).resolves.toEqual({});
     });
 
     it('counts a redirect as ready without requesting its target', async () => {
@@ -244,7 +248,7 @@ describe('waitForReadiness', () => {
       });
       await expect(
         wait({ url: `${baseUrl}/redirect`, interval: 10 })
-      ).resolves.toBeUndefined();
+      ).resolves.toEqual({});
       expect(requested).toEqual(['/redirect']);
     });
 
@@ -290,6 +294,107 @@ describe('waitForReadiness', () => {
     });
   });
 
+  describe('signal', () => {
+    let readySignal: ReadySignalServer;
+    let client: PseudoIPCClient;
+
+    beforeEach(async () => {
+      readySignal = new ReadySignalServer();
+      const env = await readySignal.env('app:serve');
+      client = new PseudoIPCClient(env[READY_SIGNAL_SOCKET_ENV]);
+    });
+
+    afterEach(() => {
+      client.close();
+      readySignal.close();
+    });
+
+    const send = (message: Omit<ReadySignalMessage, 'taskId'>) =>
+      client.sendMessageToParent({ ...message, taskId: 'app:serve' });
+
+    function waitForSignal(
+      readyWhen: Parameters<typeof normalizeReadyWhen>[0]
+    ) {
+      return waitForReadiness(
+        normalizeReadyWhen(readyWhen, 'app:serve', data),
+        {
+          taskId: 'app:serve',
+          runningTask,
+          cwd: process.cwd(),
+          signal: controller.signal,
+          readySignal,
+        }
+      );
+    }
+
+    it('resolves with the url the producer reports', async () => {
+      const ready = waitForSignal({ signal: true });
+      await expect(settled(ready)).resolves.toBe('pending');
+      send({ type: 'nx-ready-signal:ready', url: 'http://localhost:4300/' });
+      await expect(ready).resolves.toEqual({ url: 'http://localhost:4300/' });
+    });
+
+    it('counts a signal sent before the check started', async () => {
+      send({ type: 'nx-ready-signal:ready' });
+      await new Promise((r) => setTimeout(r, 50));
+      await expect(waitForSignal({ signal: true })).resolves.toEqual({});
+    });
+
+    it('ignores the signals of other tasks', async () => {
+      const ready = waitForSignal({ signal: true, timeout: 200 });
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'other:serve',
+      });
+      await expect(ready).rejects.toThrow(
+        'Task "app:serve" did not become ready within 200ms (readyWhen: signal).'
+      );
+    });
+
+    it('resolves on the fallback when the producer never says hello', async () => {
+      const ready = waitForSignal({
+        signal: true,
+        fallback: { logMatches: 'listening' },
+      });
+      await new Promise((r) => setTimeout(r, 20));
+      emit('listening');
+      await expect(ready).resolves.toEqual({});
+    });
+
+    it('stops the fallback once the producer says hello', async () => {
+      const ready = waitForSignal({
+        signal: true,
+        fallback: { logMatches: 'listening' },
+      });
+      send({ type: 'nx-ready-signal:hello' });
+      await new Promise((r) => setTimeout(r, 50));
+      emit('listening');
+      await expect(settled(ready)).resolves.toBe('pending');
+      send({ type: 'nx-ready-signal:ready' });
+      await expect(ready).resolves.toEqual({});
+    });
+
+    it('rejects on timeout, naming the fallback', async () => {
+      await expect(
+        waitForSignal({
+          signal: true,
+          timeout: 50,
+          fallback: { command: 'exit 1', interval: 10 },
+        })
+      ).rejects.toThrow(
+        'Task "app:serve" did not become ready within 50ms (readyWhen: signal, or command "exit 1").'
+      );
+    });
+
+    it('rejects when aborted', async () => {
+      const ready = waitForSignal({ signal: true });
+      controller.abort();
+      await expect(ready).rejects.toThrow(
+        'Task "app:serve" exited before it became ready.'
+      );
+    });
+  });
+
   describe('command', () => {
     let dir: string;
 
@@ -316,7 +421,25 @@ describe('waitForReadiness', () => {
         }
       );
       setTimeout(() => writeFileSync(join(dir, 'marker'), ''), 30);
-      await expect(ready).resolves.toBeUndefined();
+      await expect(ready).resolves.toEqual({});
+    });
+
+    it('runs the command with the env it is given', async () => {
+      const readyWhen: NormalizedReadyWhen = {
+        kind: 'command',
+        command: 'test "$NX_READY_GIVEN" = yes',
+        env: { NX_READY_GIVEN: 'yes', PATH: process.env.PATH },
+        timeout: 2000,
+        interval: 10,
+      };
+      await expect(
+        waitForReadiness(readyWhen, {
+          taskId: 'db:up',
+          runningTask,
+          cwd: dir,
+          signal: controller.signal,
+        })
+      ).resolves.toEqual({});
     });
 
     it('kills what the command spawned when it times out', async () => {
