@@ -150,6 +150,13 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
               "options": {
                 "cwd": "my-app",
               },
+              "readyWhen": {
+                "fallback": {
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "my-app/vite.config.ts"",
+                  "interval": 1000,
+                },
+                "signal": true,
+              },
             },
             "my-serve": {
               "command": "vite",
@@ -180,6 +187,13 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
               },
               "options": {
                 "cwd": "my-app",
+              },
+              "readyWhen": {
+                "fallback": {
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "my-app/vite.config.ts"",
+                  "interval": 1000,
+                },
+                "signal": true,
               },
             },
             "preview-site": {
@@ -214,6 +228,13 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
               "options": {
                 "cwd": "my-app",
               },
+              "readyWhen": {
+                "fallback": {
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" "my-app/vite.config.ts"",
+                  "interval": 1000,
+                },
+                "signal": true,
+              },
             },
             "serve-static": {
               "continuous": true,
@@ -230,6 +251,10 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
               "options": {
                 "buildTarget": "build-something",
                 "spa": true,
+              },
+              "readyWhen": {
+                "host": "{options.host}",
+                "port": "{options.port}",
               },
             },
             "watch-deps": {
@@ -324,6 +349,13 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "readyWhen": {
+                "fallback": {
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "vite.config.ts"",
+                  "interval": 1000,
+                },
+                "signal": true,
+              },
             },
             "preview": {
               "command": "vite preview",
@@ -357,6 +389,13 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "readyWhen": {
+                "fallback": {
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" "vite.config.ts"",
+                  "interval": 1000,
+                },
+                "signal": true,
+              },
             },
             "serve": {
               "command": "vite",
@@ -388,6 +427,13 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "readyWhen": {
+                "fallback": {
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "vite.config.ts"",
+                  "interval": 1000,
+                },
+                "signal": true,
+              },
             },
             "serve-static": {
               "continuous": true,
@@ -404,6 +450,10 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
               "options": {
                 "buildTarget": "build",
                 "spa": true,
+              },
+              "readyWhen": {
+                "host": "{options.host}",
+                "port": "{options.port}",
               },
             },
           },

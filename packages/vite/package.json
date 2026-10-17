@@ -36,11 +36,17 @@
       "plugins/nx-copy-assets.plugin": [
         "dist/plugins/nx-copy-assets.plugin.d.ts"
       ],
+      "plugins/nx-ready-signal.plugin": [
+        "dist/plugins/nx-ready-signal.plugin.d.ts"
+      ],
       "plugins/nx-tsconfig-paths.plugin": [
         "dist/plugins/nx-tsconfig-paths.plugin.d.ts"
       ],
       "plugins/rollup-replace-files.plugin": [
         "dist/plugins/rollup-replace-files.plugin.d.ts"
+      ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
       ]
     }
   },
@@ -59,6 +65,11 @@
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
     },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
+    },
     "./executors": {
       "@nx/nx-source": "./executors.ts",
       "types": "./dist/executors.d.ts",
@@ -68,6 +79,11 @@
       "@nx/nx-source": "./plugins/nx-copy-assets.plugin.ts",
       "types": "./dist/plugins/nx-copy-assets.plugin.d.ts",
       "default": "./dist/plugins/nx-copy-assets.plugin.js"
+    },
+    "./plugins/nx-ready-signal.plugin": {
+      "@nx/nx-source": "./plugins/nx-ready-signal.plugin.ts",
+      "types": "./dist/plugins/nx-ready-signal.plugin.d.ts",
+      "default": "./dist/plugins/nx-ready-signal.plugin.js"
     },
     "./plugins/nx-tsconfig-paths.plugin": {
       "@nx/nx-source": "./plugins/nx-tsconfig-paths.plugin.ts",
