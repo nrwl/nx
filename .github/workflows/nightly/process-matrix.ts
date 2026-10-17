@@ -41,7 +41,6 @@ const matrixData: MatrixData = {
       is_golden: true,
     },
     { name: 'e2e-js', codeowners: 'S04SJ6HHP0X', is_golden: true },
-    { name: 'e2e-nx-init', codeowners: 'S04SYHYKGNP', is_golden: true },
     // Core runs 18 suites serially, including repeated workspace installs.
     // Slower combinations are still making progress at the default 60m limit.
     { name: 'e2e-nx', codeowners: 'S04SYHYKGNP', timeout_minutes: 120 },

@@ -82,7 +82,6 @@ describe('application generator', () => {
       ...options,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'playwright',
-      addPlugin: true,
     });
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
@@ -105,7 +104,6 @@ describe('application generator', () => {
       bundler: 'rsbuild',
       unitTestRunner: 'vitest',
       e2eTestRunner: 'playwright',
-      addPlugin: true,
     });
 
     expect(tree.read('test/vitest.config.mts', 'utf-8')).toMatchSnapshot();
@@ -172,7 +170,6 @@ describe('application generator', () => {
     await applicationGenerator(tree, {
       linter: 'eslint',
       ...options,
-      addPlugin: true,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'cypress',
     });
@@ -215,7 +212,6 @@ describe('application generator', () => {
         ...options,
         style: 'none',
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -350,7 +346,6 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         ...options,
         name: 'myapp',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -376,7 +371,6 @@ describe('application generator', () => {
         e2eTestRunner: 'cypress',
         style: 'none',
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });

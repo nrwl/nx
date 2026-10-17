@@ -518,7 +518,6 @@ export async function convertToRspack(
     nxVersion
   );
   await rspackInitGenerator(tree, {
-    addPlugin: true,
     framework: 'angular',
   });
 

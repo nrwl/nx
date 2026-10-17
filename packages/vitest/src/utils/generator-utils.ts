@@ -5,19 +5,17 @@ import {
   offsetFromRoot,
   readJson,
   readNxJson,
+  updateNxJson,
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { VitestExecutorOptions } from '../executors/test/schema';
 import type { VitestPluginOptions } from '../plugins/plugin';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 import { getInstalledViteMajorVersion } from './version-utils';
 import { viteTsconfigPathsVersion, viteStaticCopyVersion } from './versions';
-import { warnVitestExecutorGenerating } from './deprecation';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -31,7 +29,6 @@ export interface VitestGeneratorSchema {
   testTarget?: string;
   skipFormat?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  addPlugin?: boolean;
   runtimeTsconfigFileName?: string;
   compiler?: 'babel' | 'swc';
   projectType?: 'application' | 'library';
@@ -45,8 +42,8 @@ export function addOrChangeTestTarget(
   const nxJson = readNxJson(tree);
   const target = options.testTarget ?? 'test';
 
-  // The plugin only infers the target names it is registered for, so a request
-  // for any other name still needs an explicit target.
+  // The plugin only infers the target names it is registered for, so any other
+  // name gets its own project-scoped plugin registration below.
   hasPlugin ||=
     nxJson.plugins?.some((p) => {
       if (typeof p === 'string') {
@@ -68,28 +65,16 @@ export function addOrChangeTestTarget(
 
   const project = readProjectConfiguration(tree, options.project);
 
-  const reportsDirectory = joinPathFragments(
-    'coverage',
-    project.root === '.' ? options.project : project.root
-  );
-  const testOptions: VitestExecutorOptions = {
-    reportsDirectory,
-  };
-
-  project.targets ??= {};
-
-  if (project.targets[target]) {
+  if (project.targets?.[target]) {
     throw new Error(`Target "${target}" already exists in the project.`);
-  } else {
-    warnVitestExecutorGenerating();
-    project.targets[target] = {
-      executor: '@nx/vitest:test',
-      outputs: ['{options.reportsDirectory}'],
-      options: testOptions,
-    };
   }
-
-  updateProjectConfiguration(tree, options.project, project);
+  nxJson.plugins ??= [];
+  nxJson.plugins.push({
+    plugin: '@nx/vitest',
+    include: [project.root === '.' ? '**/*' : `${project.root}/**/*`],
+    options: { testTargetName: target },
+  });
+  updateNxJson(tree, nxJson);
 }
 
 // Escape a value for emission inside a single-quoted source literal.

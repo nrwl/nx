@@ -1938,24 +1938,12 @@ describe('lib', () => {
       expect(readJson(tree, 'my-lib/project.json')).toMatchInlineSnapshot(`
         {
           "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "// targets": "to see all targets run: nx show project my-lib --web",
           "name": "my-lib",
           "projectType": "library",
           "sourceRoot": "my-lib/src",
           "tags": [],
-          "targets": {
-            "lint": {
-              "executor": "@nx/eslint:lint",
-            },
-            "test": {
-              "executor": "@nx/jest:jest",
-              "options": {
-                "jestConfig": "my-lib/jest.config.cts",
-              },
-              "outputs": [
-                "{workspaceRoot}/coverage/{projectRoot}",
-              ],
-            },
-          },
+          "targets": {},
         }
       `);
       expect(tree.exists('my-lib/package.json')).toBe(false);
@@ -2535,7 +2523,6 @@ describe('lib', () => {
         name: 'my-lib',
         useProjectJson: false,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/package.json').nx).toStrictEqual({
@@ -2550,7 +2537,6 @@ describe('lib', () => {
         name: '@proj/my-lib',
         useProjectJson: false,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
@@ -2562,7 +2548,6 @@ describe('lib', () => {
         directory: 'my-lib',
         useProjectJson: false,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
@@ -2574,7 +2559,6 @@ describe('lib', () => {
         directory: 'my-lib',
         useProjectJson: true,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/project.json').name).toBe('@proj/my-lib');
@@ -2588,7 +2572,6 @@ describe('lib', () => {
         name: 'my-lib',
         useProjectJson: true,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/project.json').name).toBe('my-lib');
@@ -2607,7 +2590,6 @@ describe('lib', () => {
         name: 'my-lib',
         useProjectJson: true,
         bundler: 'tsc',
-        addPlugin: true,
         skipFormat: true,
       });
 
@@ -2624,7 +2606,6 @@ describe('lib', () => {
         linter: 'eslint',
         bundler: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -2642,7 +2623,6 @@ describe('lib', () => {
         linter: 'eslint',
         bundler: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });

@@ -996,7 +996,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useDaemonProcess?: boolean;
 
   /**
-   * Set this to false to disable adding inference plugins when generating new projects
+   * When false, `nx add` does not update package.json scripts by default and
+   * `nx init` uses its legacy setup. Generators always add their inference plugin.
    */
   useInferencePlugins?: boolean;
 

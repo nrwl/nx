@@ -32,7 +32,6 @@ export interface Schema {
   bundler?: 'webpack' | 'esbuild' | 'rspack';
   ssr?: boolean;
   nxCloudToken?: string;
-  addPlugin?: boolean;
   zoneless?: boolean;
   formatter?: 'prettier' | 'oxfmt' | 'none';
 }

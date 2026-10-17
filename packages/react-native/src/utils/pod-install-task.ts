@@ -53,7 +53,7 @@ export function runPodInstall(
   };
 }
 
-export function podInstall(
+function podInstall(
   iosDirectory: string,
   options: {
     buildFolder?: string;

@@ -7,7 +7,6 @@ import {
   offsetFromRoot,
   ProjectConfiguration,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -25,7 +24,6 @@ import {
 } from '../utils/eslint-file';
 import { extname, join } from 'path';
 import { lintInitGenerator } from '../init/init';
-import { warnEslintExecutorGenerating } from '../../utils/deprecation';
 import type { Linter } from 'eslint';
 import { migrateConfigToMonorepoStyle } from '../init/init-migration';
 import { useFlatConfig } from '../../utils/flat-config';
@@ -60,34 +58,26 @@ interface LintProjectOptions {
   unitTestRunner?: string;
   rootProject?: boolean;
   keepExistingVersions?: boolean;
-  addPlugin?: boolean;
   eslintConfigFormat?: 'mjs' | 'cjs';
 
   /**
    * @internal
    */
-  addExplicitTargets?: boolean;
   addPackageJsonDependencyChecks?: boolean;
 }
 
 export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
-  return lintProjectGeneratorInternal(tree, { addPlugin: false, ...options });
+  return lintProjectGeneratorInternal(tree, options);
 }
 
 export async function lintProjectGeneratorInternal(
   tree: Tree,
   options: LintProjectOptions
 ) {
-  const nxJson = readNxJson(tree);
   options.eslintConfigFormat ??= 'mjs';
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
   const tasks: GeneratorCallback[] = [];
   const initTask = await lintInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
-    addPlugin: options.addPlugin,
     eslintConfigFormat: options.eslintConfigFormat,
   });
   tasks.push(initTask);
@@ -113,35 +103,19 @@ export async function lintProjectGeneratorInternal(
     lintFilePatterns.push(`{projectRoot}/package.json`);
   }
 
-  const hasPlugin = hasEslintPlugin(tree);
-  if (hasPlugin && !options.addExplicitTargets) {
-    if (
-      lintFilePatterns &&
-      lintFilePatterns.length &&
-      lintFilePatterns.some(
-        (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
-      )
-    ) {
-      projectConfig.targets ??= {};
-      projectConfig.targets['lint'] = {
-        command: `eslint ${lintFilePatterns
-          .join(' ')
-          .replace('{projectRoot}', projectConfig.root)}`,
-      };
-    }
-  } else {
-    warnEslintExecutorGenerating();
+  if (
+    lintFilePatterns &&
+    lintFilePatterns.length &&
+    lintFilePatterns.some(
+      (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
+    )
+  ) {
     projectConfig.targets ??= {};
     projectConfig.targets['lint'] = {
-      executor: '@nx/eslint:lint',
+      command: `eslint ${lintFilePatterns
+        .join(' ')
+        .replace('{projectRoot}', projectConfig.root)}`,
     };
-
-    if (lintFilePatterns && lintFilePatterns.length) {
-      // only add lintFilePatterns if they are explicitly defined
-      projectConfig.targets['lint'].options = {
-        lintFilePatterns,
-      };
-    }
   }
 
   // we are adding new project which is not the root project or

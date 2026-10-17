@@ -14,9 +14,7 @@ describe('rspackInitGenerator', () => {
   });
 
   it('should deny the @parcel/watcher build script pulled in by sass', async () => {
-    await withPnpm(tree, '11.2.2', () =>
-      rspackInitGenerator(tree, { addPlugin: true })
-    );
+    await withPnpm(tree, '11.2.2', () => rspackInitGenerator(tree, {}));
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
       /['"]@parcel\/watcher['"]: false/

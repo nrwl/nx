@@ -20,7 +20,6 @@ export async function presetGenerator(
   rawOptions: PresetGeneratorSchema
 ) {
   return await presetGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...rawOptions,
   });
@@ -48,7 +47,6 @@ export async function presetGeneratorInternal(
         : options.pluginName,
     rootProject: options.createPackageName ? false : true,
     useProjectJson: options.useProjectJson,
-    addPlugin: options.addPlugin,
   });
   tasks.push(pluginTask);
 
@@ -66,7 +64,6 @@ export async function presetGeneratorInternal(
       linter: options.linter,
       compiler: 'tsc',
       useProjectJson: options.useProjectJson,
-      addPlugin: options.addPlugin,
     });
     tasks.push(cliTask);
   }

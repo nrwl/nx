@@ -37,8 +37,7 @@ export async function addE2e(
   const e2eWebServerInfo = await getExpoE2EWebServerInfo(
     tree,
     options.projectName,
-    joinPathFragments(options.appProjectRoot, 'app.json'),
-    options.addPlugin
+    joinPathFragments(options.appProjectRoot, 'app.json')
   );
 
   switch (options.e2eTestRunner) {
@@ -141,7 +140,6 @@ export async function addE2e(
         webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
       });
 
       return e2eTask;
@@ -170,11 +168,10 @@ export async function addE2e(
 async function getExpoE2EWebServerInfo(
   tree: Tree,
   projectName: string,
-  configFilePath: string,
-  isPluginBeingAdded: boolean
+  configFilePath: string
 ) {
   const nxJson = readNxJson(tree);
-  let e2ePort = isPluginBeingAdded ? 8081 : 4200;
+  let e2ePort = 8081;
   const serveTargetOptions = readTargetDefaultsForTarget(
     'serve',
     nxJson.targetDefaults
@@ -199,7 +196,6 @@ async function getExpoE2EWebServerInfo(
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: 'http://localhost:4200',
       defaultE2EPort: e2ePort,
-    },
-    isPluginBeingAdded
+    }
   );
 }

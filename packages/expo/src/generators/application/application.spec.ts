@@ -423,7 +423,6 @@ describe('app', () => {
         skipFormat: false,
         js: false,
         unitTestRunner: 'jest',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -559,7 +558,6 @@ describe('app', () => {
         skipFormat: false,
         js: false,
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -604,7 +602,6 @@ describe('app', () => {
         useProjectJson: true,
         unitTestRunner: 'none',
         js: false,
-        addPlugin: true,
         skipFormat: true,
       });
 

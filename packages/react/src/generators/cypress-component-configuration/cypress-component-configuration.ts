@@ -1,7 +1,6 @@
 import {
   ensurePackage,
   formatFiles,
-  readNxJson,
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
@@ -19,10 +18,7 @@ export function cypressComponentConfigGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  return cypressComponentConfigGeneratorInternal(tree, {
-    addPlugin: false,
-    ...options,
-  });
+  return cypressComponentConfigGeneratorInternal(tree, options);
 }
 
 /**
@@ -40,13 +36,6 @@ export async function cypressComponentConfigGeneratorInternal(
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
 
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPlugin;
-
   const projectConfig = readProjectConfiguration(tree, options.project);
   const { found, bundler } = await resolveCypressCTTarget(tree, {
     project: options.project,
@@ -62,7 +51,6 @@ export async function cypressComponentConfigGeneratorInternal(
     project: options.project,
     skipFormat: true,
     jsx: true,
-    addPlugin: options.addPlugin,
     bundler,
   });
 

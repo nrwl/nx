@@ -23,9 +23,7 @@ describe('Cypress e2e configuration', () => {
   });
 
   it('should add web server commands to the cypress config when the @nx/cypress/plugin is present', async () => {
-    await cypressInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await cypressInitGenerator(tree, {});
 
     addProject(tree, { name: 'my-app', type: 'apps' });
 
@@ -37,7 +35,6 @@ describe('Cypress e2e configuration', () => {
         production: 'nx run my-app:serve:production',
       },
       ciWebServerCommand: 'nx run my-app:serve-static',
-      addPlugin: true,
     });
     expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -89,73 +86,6 @@ describe('Cypress e2e configuration', () => {
     assertCypressFiles(tree, 'apps/my-app/src');
   });
 
-  it('should add e2e target to existing app when not using plugin', async () => {
-    addProject(tree, { name: 'my-app', type: 'apps' });
-
-    await cypressE2EConfigurationGenerator(tree, {
-      project: 'my-app',
-      addPlugin: false,
-    });
-
-    expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
-      const { defineConfig } = require('cypress');
-      module.exports = defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-          }),
-        },
-      });
-      "
-    `);
-    expect(readProjectConfiguration(tree, 'my-app').targets.e2e)
-      .toMatchInlineSnapshot(`
-      {
-        "configurations": {
-          "ci": {
-            "devServerTarget": "my-app:serve-static",
-          },
-          "production": {
-            "devServerTarget": "my-app:serve:production",
-          },
-        },
-        "executor": "@nx/cypress:cypress",
-        "options": {
-          "cypressConfig": "apps/my-app/cypress.config.ts",
-          "devServerTarget": "my-app:serve",
-          "testingType": "e2e",
-        },
-      }
-    `);
-    expect(readJson(tree, 'apps/my-app/tsconfig.json')).toMatchInlineSnapshot(`
-      {
-        "compilerOptions": {
-          "allowJs": true,
-          "module": "commonjs",
-          "moduleResolution": "bundler",
-          "outDir": "../../dist/out-tsc",
-          "sourceMap": false,
-          "types": [
-            "cypress",
-            "node",
-          ],
-        },
-        "extends": "../../tsconfig.base.json",
-        "include": [
-          "**/*.ts",
-          "**/*.js",
-          "cypress.config.ts",
-          "**/*.cy.ts",
-          "**/*.cy.js",
-          "**/*.d.ts",
-        ],
-      }
-    `);
-    assertCypressFiles(tree, 'apps/my-app/src');
-  });
-
   it('should add e2e target to existing lib', async () => {
     addProject(tree, { name: 'my-lib', type: 'libs' });
     addProject(tree, { name: 'my-app', type: 'apps' });
@@ -163,7 +93,6 @@ describe('Cypress e2e configuration', () => {
       project: 'my-lib',
       directory: 'cypress',
       devServerTarget: 'my-app:serve',
-      addPlugin: true,
     });
     expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -191,7 +120,6 @@ describe('Cypress e2e configuration', () => {
     await cypressE2EConfigurationGenerator(tree, {
       project: 'my-app',
       baseUrl: 'http://localhost:4200',
-      addPlugin: true,
     });
     assertCypressFiles(tree, 'apps/my-app/src');
     expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
@@ -223,7 +151,6 @@ describe('Cypress e2e configuration', () => {
     await expect(async () => {
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-app',
-        addPlugin: true,
       });
     }).rejects.toThrowErrorMatchingInlineSnapshot(`
       [Error: Project my-app already has an e2e target.
@@ -275,7 +202,6 @@ describe('Cypress e2e configuration', () => {
     await cypressE2EConfigurationGenerator(tree, {
       project: 'my-app',
       directory: 'e2e/something',
-      addPlugin: true,
     });
     assertCypressFiles(tree, 'apps/my-app/e2e/something');
     expect(readJson(tree, 'apps/my-app/e2e/something/tsconfig.json'))
@@ -315,7 +241,6 @@ describe('Cypress e2e configuration', () => {
       directory: 'src/e2e',
       js: true,
       baseUrl: 'http://localhost:4200',
-      addPlugin: true,
     });
     assertCypressFiles(tree, 'libs/my-lib/src/e2e', 'js');
   });
@@ -328,7 +253,6 @@ describe('Cypress e2e configuration', () => {
       project: 'my-lib',
       directory: 'cypress',
       baseUrl: 'http://localhost:4200',
-      addPlugin: true,
       enableTypedLinting: true,
     });
 
@@ -350,7 +274,6 @@ describe('Cypress e2e configuration', () => {
       project: 'my-lib',
       directory: 'cypress',
       baseUrl: 'http://localhost:4200',
-      addPlugin: true,
     });
 
     const eslintConfig = readJson(tree, 'libs/my-lib/.eslintrc.json');
@@ -405,7 +328,6 @@ describe('Cypress e2e configuration', () => {
       project: 'my-lib',
       directory: 'cypress',
       baseUrl: 'http://localhost:4200',
-      addPlugin: true,
     });
     expect(readJson(tree, 'libs/my-lib/.eslintrc.json')).toMatchInlineSnapshot(`
       {
@@ -478,16 +400,11 @@ describe('Cypress e2e configuration', () => {
       project: 'my-lib',
       devServerTarget: 'my-app:serve',
       directory: 'cypress',
-      addPlugin: false,
     });
     assertCypressFiles(tree, 'libs/my-lib/cypress');
-    expect(
-      readProjectConfiguration(tree, 'my-lib').targets['e2e'].configurations.ci
-    ).toMatchInlineSnapshot(`
-        {
-          "devServerTarget": "my-app:serve-static",
-        }
-      `);
+    expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8')).toContain(
+      "ciWebServerCommand: 'nx run my-app:serve-static'"
+    );
   });
 
   it('should set --port', async () => {
@@ -495,18 +412,11 @@ describe('Cypress e2e configuration', () => {
     await cypressE2EConfigurationGenerator(tree, {
       project: 'my-app',
       port: 0,
-      addPlugin: false,
     });
 
-    expect(readProjectConfiguration(tree, 'my-app').targets['e2e'].options)
-      .toMatchInlineSnapshot(`
-        {
-          "cypressConfig": "apps/my-app/cypress.config.ts",
-          "devServerTarget": "my-app:serve",
-          "port": 0,
-          "testingType": "e2e",
-        }
-      `);
+    expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8')).toContain(
+      'nx run my-app:serve --port=0'
+    );
   });
 
   it('should add e2e to an existing config', async () => {
@@ -525,7 +435,6 @@ export default defineConfig({
     await cypressE2EConfigurationGenerator(tree, {
       project: 'my-lib',
       baseUrl: 'http://localhost:4200',
-      addPlugin: true,
     });
 
     expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
@@ -566,7 +475,6 @@ export default defineConfig({
     await cypressE2EConfigurationGenerator(tree, {
       project: 'my-lib',
       baseUrl: 'http://localhost:4200',
-      addPlugin: true,
     });
 
     expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
@@ -682,7 +590,6 @@ export default defineConfig({
 
     await cypressE2EConfigurationGenerator(tree, {
       project: 'my-app',
-      addPlugin: true,
     });
 
     const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
@@ -698,7 +605,6 @@ export default defineConfig({
 
     await cypressE2EConfigurationGenerator(tree, {
       project: 'my-app',
-      addPlugin: true,
     });
 
     const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
@@ -772,7 +678,6 @@ export default defineConfig({
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-lib',
         directory: 'src',
-        addPlugin: true,
       });
 
       const tsconfig = readJson(tree, 'libs/my-lib/src/tsconfig.json');

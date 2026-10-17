@@ -13,7 +13,7 @@ describe('rolldownInitGenerator', () => {
   });
 
   it('should install deps and register the plugin', async () => {
-    await rolldownInitGenerator(tree, { addPlugin: true });
+    await rolldownInitGenerator(tree, {});
 
     expect(readJson(tree, 'package.json').devDependencies).toEqual({
       '@nx/rolldown': nxVersion,
@@ -31,7 +31,7 @@ describe('rolldownInitGenerator', () => {
       JSON.stringify({ devDependencies: { rolldown: '1.1.5' } })
     );
 
-    await rolldownInitGenerator(tree, { addPlugin: true });
+    await rolldownInitGenerator(tree, {});
 
     expect(readJson(tree, 'package.json').devDependencies.rolldown).toBe(
       '1.1.5'

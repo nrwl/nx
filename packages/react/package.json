@@ -110,6 +110,7 @@
     "@nx/playwright": "workspace:*",
     "@nx/rollup": "workspace:*",
     "@nx/rsbuild": "workspace:*",
+    "@nx/rspack": "workspace:*",
     "@nx/vite": "workspace:*",
     "@nx/vitest": "workspace:*",
     "@nx/webpack": "workspace:*",

@@ -1,9 +1,9 @@
 # Migrate Vite config helpers
 
 Replace `nxViteTsPaths` and `nxCopyAssetsPlugin`. Their imports remain available for
-compatibility only. Helper behavior was removed in Nx 24; the stubs do not configure builds. Preserve installed Vite versions, bundlers, commands,
-and executor/inferred target choices. Do not upgrade Vite merely to simplify this
-migration; executor conversion is separate.
+compatibility only. Helper behavior was removed in Nx 24; the stubs do not configure builds. Preserve installed Vite versions, bundlers and commands.
+Do not upgrade Vite merely to simplify this migration. Nx 24 also removed the `@nx/vite`
+executors, and a separate migration converts their targets, so do not add them back.
 
 ## Inventory and baseline
 

@@ -34,7 +34,7 @@ export function updateNxJsonSettings(tree: Tree) {
 }
 
 export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
-  return initGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return initGeneratorInternal(tree, schema);
 }
 
 export async function initGeneratorInternal(
@@ -43,43 +43,27 @@ export async function initGeneratorInternal(
 ) {
   assertSupportedViteVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
-
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/vite/plugin',
-      createNodesV2,
-      {
-        buildTargetName: ['build', 'vite:build', 'vite-build'],
-        serveTargetName: ['serve', 'vite:serve', 'vite-serve'],
-        devTargetName: ['dev', 'vite:dev', 'vite-dev'],
-        previewTargetName: ['preview', 'vite:preview', 'vite-preview'],
-        serveStaticTargetName: [
-          'serve-static',
-          'vite:serve-static',
-          'vite-serve-static',
-        ],
-        typecheckTargetName: ['typecheck', 'vite:typecheck', 'vite-typecheck'],
-        buildDepsTargetName: [
-          'build-deps',
-          'vite:build-deps',
-          'vite-build-deps',
-        ],
-        watchDepsTargetName: [
-          'watch-deps',
-          'vite:watch-deps',
-          'vite-watch-deps',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/vite/plugin',
+    createNodesV2,
+    {
+      buildTargetName: ['build', 'vite:build', 'vite-build'],
+      serveTargetName: ['serve', 'vite:serve', 'vite-serve'],
+      devTargetName: ['dev', 'vite:dev', 'vite-dev'],
+      previewTargetName: ['preview', 'vite:preview', 'vite-preview'],
+      serveStaticTargetName: [
+        'serve-static',
+        'vite:serve-static',
+        'vite-serve-static',
+      ],
+      typecheckTargetName: ['typecheck', 'vite:typecheck', 'vite-typecheck'],
+      buildDepsTargetName: ['build-deps', 'vite:build-deps', 'vite-build-deps'],
+      watchDepsTargetName: ['watch-deps', 'vite:watch-deps', 'vite-watch-deps'],
+    },
+    schema.updatePackageScripts
+  );
 
   updateNxJsonSettings(tree);
   await ignoreViteTempFiles(tree, schema.projectRoot);

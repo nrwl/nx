@@ -84,15 +84,31 @@ describe('migrate-compose-plugins', () => {
     );
   });
 
-  it('should route a project without the executor to the prompt', async () => {
+  it('should convert a project already on the inference plugin', async () => {
     addProjectConfiguration(tree, 'app1', { root: 'app1', targets: {} });
     tree.write('app1/rspack.config.js', LITERAL_CONFIG);
 
     const result = await migrateComposePlugins(tree);
 
-    expect(tree.read('app1/rspack.config.js', 'utf-8')).toEqual(LITERAL_CONFIG);
-    expect(result.agentContext.join('\n')).toContain(
-      'does not use the `@nx/rspack:rspack` executor'
+    expect(tree.exists('app1/rspack.config.old.js')).toBe(true);
+    expect(tree.read('app1/rspack.config.js', 'utf-8')).toContain(
+      'useLegacyNxPlugin'
     );
+    expect(result.nextSteps).toEqual([
+      'Inline the `rspack.config.old.*` files that @nx/rspack:convert-config-to-rspack-plugin left behind in 1 project(s), then drop `useLegacyNxPlugin`.',
+    ]);
+  });
+
+  it('should hand a config an earlier conversion wrapped to the prompt', async () => {
+    addExecutorProject('app1', LITERAL_CONFIG);
+    await migrateComposePlugins(tree);
+    const converted = tree.read('app1/rspack.config.js', 'utf-8');
+
+    const result = await migrateComposePlugins(tree);
+
+    expect(tree.read('app1/rspack.config.js', 'utf-8')).toEqual(converted);
+    expect(result.nextSteps).toEqual([
+      'Inline the `rspack.config.old.*` files that @nx/rspack:convert-config-to-rspack-plugin left behind in 1 project(s), then drop `useLegacyNxPlugin`.',
+    ]);
   });
 });

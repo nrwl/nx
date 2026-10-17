@@ -58,7 +58,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
-    true, // nuxt always adds plugins
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(tree, {

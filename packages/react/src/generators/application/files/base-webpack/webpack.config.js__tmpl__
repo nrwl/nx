@@ -1,4 +1,3 @@
-<%_ if (webpackPluginOptions) { _%>
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
@@ -31,12 +30,3 @@ module.exports = {
     new NxReactWebpackPlugin(),
   ],
 };
-<%_ } else { _%>
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-
-module.exports = {
-  output: { clean: true },
-  plugins: [new NxAppWebpackPlugin(), new NxReactWebpackPlugin()],
-};
-<%_ } _%>

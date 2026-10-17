@@ -20,7 +20,6 @@ describe('init', () => {
   it('should NOT add react-router plugin when useReactRouterPlugin is false', async () => {
     await reactInitGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       useReactRouterPlugin: false,
     });
     const nxJson = readNxJson(tree);
@@ -35,7 +34,6 @@ describe('init', () => {
   it('should add react-router plugin when useReactRouterPlugin is true', async () => {
     await reactInitGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       useReactRouterPlugin: true,
     });
     const nxJson = readNxJson(tree);
@@ -45,20 +43,5 @@ describe('init', () => {
         (typeof p === 'object' && p.plugin === '@nx/react/router-plugin')
     );
     expect(hasRouterPlugin).toBeTruthy();
-  });
-
-  it('should NOT add react-router plugin when addPlugin is false even if useReactRouterPlugin is true', async () => {
-    await reactInitGenerator(tree, {
-      skipFormat: true,
-      addPlugin: false,
-      useReactRouterPlugin: true,
-    });
-    const nxJson = readNxJson(tree);
-    const hasRouterPlugin = nxJson.plugins?.some(
-      (p) =>
-        (typeof p === 'string' && p === '@nx/react/router-plugin') ||
-        (typeof p === 'object' && p.plugin === '@nx/react/router-plugin')
-    );
-    expect(hasRouterPlugin).toBeFalsy();
   });
 });

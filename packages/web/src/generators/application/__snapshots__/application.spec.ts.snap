@@ -158,7 +158,7 @@ export default defineConfig({
 "
 `;
 
-exports[`app > not nested > should use serve target and port if bundler=vite, e2eTestRunner=playwright, addPlugin=false 1`] = `
+exports[`app > not nested > should use serve target and port if bundler=vite, e2eTestRunner=playwright 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
