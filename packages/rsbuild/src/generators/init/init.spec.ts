@@ -64,7 +64,7 @@ describe('init', () => {
       references: [],
     });
 
-    await initGeneratorInternal(tree, { addPlugin: true });
+    await initGeneratorInternal(tree, {});
 
     expect(readNxJson(tree).plugins).toContainEqual(
       expect.objectContaining({ plugin: '@nx/js/typescript' })
@@ -72,7 +72,7 @@ describe('init', () => {
   });
 
   it('should register @nx/js/typescript for typecheck only outside a TS solution setup', async () => {
-    await initGeneratorInternal(tree, { addPlugin: true });
+    await initGeneratorInternal(tree, {});
 
     const plugins = readNxJson(tree).plugins;
     expect(plugins).toContainEqual({

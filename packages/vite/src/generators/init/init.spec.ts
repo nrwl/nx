@@ -418,7 +418,7 @@ vite.config.*.timestamp*`
   });
 
   it('should register @nx/js/typescript for typecheck outside a TS solution setup', async () => {
-    await initGenerator(tree, { addPlugin: true });
+    await initGenerator(tree, {});
 
     expect(readNxJson(tree).plugins).toContainEqual({
       plugin: '@nx/js/typescript',
@@ -441,7 +441,7 @@ vite.config.*.timestamp*`
       references: [],
     });
 
-    await initGenerator(tree, { addPlugin: true });
+    await initGenerator(tree, {});
 
     expect(readNxJson(tree).plugins).toContainEqual(
       expect.objectContaining({ plugin: '@nx/js/typescript' })

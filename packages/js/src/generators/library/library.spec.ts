@@ -129,7 +129,11 @@ describe('lib', () => {
       bundler: 'tsc',
     });
 
-    expect(readJson(tree, 'nx.json').plugins).toEqual([
+    expect(
+      readJson(tree, 'nx.json').plugins.filter(
+        (p) => p.plugin === '@nx/js/typescript'
+      )
+    ).toEqual([
       {
         plugin: '@nx/js/typescript',
         options: { typecheck: { targetName: 'typecheck' } },

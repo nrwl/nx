@@ -420,7 +420,6 @@ describe('@nx/vite:configuration', () => {
       writeJson(tree, 'packages/my-lib/tsconfig.json', {});
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-lib',
         projectType: 'library',

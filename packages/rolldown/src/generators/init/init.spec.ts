@@ -43,7 +43,7 @@ describe('rolldownInitGenerator', () => {
       references: [],
     });
 
-    await rolldownInitGenerator(tree, { addPlugin: true });
+    await rolldownInitGenerator(tree, {});
 
     expect(
       readNxJson(tree).plugins.some(
