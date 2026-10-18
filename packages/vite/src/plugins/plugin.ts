@@ -27,7 +27,7 @@ import {
   selectTypecheckTsConfig,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import picomatch = require('picomatch');
 import type { ResolvedConfig } from 'vite';
@@ -489,7 +489,7 @@ function getServerReadyWhen(
   return {
     signal: true,
     fallback: {
-      command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], '${command}')" "${configFilePath}"`,
+      command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], '${command}')" ${basename(configFilePath)}`,
       // Each attempt resolves the config
       interval: 1000,
     },

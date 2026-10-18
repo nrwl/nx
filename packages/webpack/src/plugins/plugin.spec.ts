@@ -202,7 +202,7 @@ describe('@nx/webpack/plugin', () => {
                       },
                     },
                     "readyWhen": {
-                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" "my-app/webpack.config.js"",
+                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js",
                       "interval": 1000,
                     },
                   },
@@ -250,7 +250,7 @@ describe('@nx/webpack/plugin', () => {
                       },
                     },
                     "readyWhen": {
-                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" "my-app/webpack.config.js"",
+                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js",
                       "interval": 1000,
                     },
                   },
@@ -331,11 +331,21 @@ describe('@nx/webpack/plugin', () => {
     it('checks the port at task time when nothing in the config signals', async () => {
       mockWebpackConfig({ devServer: { port: 9000 }, plugins: [{}] });
       const check = {
-        command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" "my-app/webpack.config.js"`,
+        command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js`,
         interval: 1000,
       };
 
       expect(await readyWhen()).toEqual([check, check]);
+    });
+
+    it('checks every port when several configs start a dev server', async () => {
+      // Only the first dev server to listen would signal
+      mockWebpackConfig([
+        { devServer: { port: 9000 }, plugins: [signallingPlugin] },
+        { devServer: { port: 9001 }, plugins: [signallingPlugin] },
+      ]);
+
+      expect((await readyWhen())[0]).toHaveProperty('command');
     });
 
     it('checks the port when a dev server config lacks the plugin', async () => {

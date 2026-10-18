@@ -169,7 +169,9 @@ The inferred `dev` and `preview` targets come with a `readyWhen` check, so a tas
 The `nxReadySignal()` plugin reports the dev or preview server's address to Nx once it listens.
 Generated app configs include it.
 In an existing config, import it from `@nx/vite/plugins/nx-ready-signal.plugin` and add it to `plugins` in `vite.config.*`.
-The report carries the port the server actually uses, so the check is right however the port was chosen, including when the configured port is busy and Vite moves to the next free one.
+The report carries the address the server actually listens on, so the waiting task tests against it however the port was chosen.
+Until the plugin reports in, the fallback check also counts, and it checks the configured port.
+If another process already holds that port and Vite moves to the next free one, the fallback can pass before the server is up.
 
 Without the plugin, Nx falls back to resolving the Vite config when the task runs, in the task's environment and with its options.
 That covers `.env` files and `--port`, `--host`, or `--mode` flags.

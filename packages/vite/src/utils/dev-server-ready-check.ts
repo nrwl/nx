@@ -76,7 +76,8 @@ export async function waitForViteServer(
   } catch {}
   const flags = parseViteFlags(options);
   const root = resolve(options.cwd ?? '.');
-  const configFile = resolve(configPath);
+  // The config's file name, in the cwd of the task
+  const configFile = resolve(root, configPath);
   process.chdir(root);
 
   const { resolveConfig } = await loadViteDynamicImport();

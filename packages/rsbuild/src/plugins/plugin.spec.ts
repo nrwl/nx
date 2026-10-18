@@ -126,7 +126,7 @@ describe('@nx/rsbuild', () => {
                     },
                     "readyWhen": {
                       "fallback": {
-                        "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'dev')" "my-app/rsbuild.config.ts"",
+                        "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'dev')" rsbuild.config.ts",
                         "interval": 1000,
                       },
                       "signal": true,
@@ -162,7 +162,7 @@ describe('@nx/rsbuild', () => {
                     },
                     "readyWhen": {
                       "fallback": {
-                        "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'preview')" "my-app/rsbuild.config.ts"",
+                        "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'preview')" rsbuild.config.ts",
                         "interval": 1000,
                       },
                       "signal": true,

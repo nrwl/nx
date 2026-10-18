@@ -29,7 +29,15 @@ import {
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'fs';
-import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
 export interface RspackPluginOptions {
@@ -366,7 +374,7 @@ function getDevServerReadyWhen(
   return signals
     ? { signal: true }
     : {
-        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" "${configFilePath}"`,
+        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" ${basename(configFilePath)}`,
         // Each attempt loads the config
         interval: 1000,
       };

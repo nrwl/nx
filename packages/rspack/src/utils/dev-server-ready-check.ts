@@ -122,7 +122,8 @@ export function enterTaskCwd(options: { cwd?: string }) {
 export async function waitForRspackDevServer(configPath: string) {
   const options = readTaskOptions();
   const flags = parseServeFlags(options);
-  const absoluteConfigPath = resolve(configPath);
+  // The config's file name, in the cwd of the serve task
+  const absoluteConfigPath = resolve(options.cwd ?? '.', configPath);
   enterTaskCwd(options);
   // `rspack serve` sets it before it loads the config
   if (flags.nodeEnv) process.env.NODE_ENV ??= flags.nodeEnv;

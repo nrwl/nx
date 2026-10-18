@@ -152,7 +152,7 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
               },
               "readyWhen": {
                 "fallback": {
-                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "my-app/vite.config.ts"",
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
                   "interval": 1000,
                 },
                 "signal": true,
@@ -190,7 +190,7 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
               },
               "readyWhen": {
                 "fallback": {
-                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "my-app/vite.config.ts"",
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
                   "interval": 1000,
                 },
                 "signal": true,
@@ -230,7 +230,7 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
               },
               "readyWhen": {
                 "fallback": {
-                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" "my-app/vite.config.ts"",
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" vite.config.ts",
                   "interval": 1000,
                 },
                 "signal": true,
@@ -351,7 +351,7 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
               },
               "readyWhen": {
                 "fallback": {
-                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "vite.config.ts"",
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
                   "interval": 1000,
                 },
                 "signal": true,
@@ -391,7 +391,7 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
               },
               "readyWhen": {
                 "fallback": {
-                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" "vite.config.ts"",
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" vite.config.ts",
                   "interval": 1000,
                 },
                 "signal": true,
@@ -429,7 +429,7 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
               },
               "readyWhen": {
                 "fallback": {
-                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "vite.config.ts"",
+                  "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
                   "interval": 1000,
                 },
                 "signal": true,

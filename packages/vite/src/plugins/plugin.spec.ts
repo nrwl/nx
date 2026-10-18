@@ -585,7 +585,7 @@ describe('@nx/vite/plugin', () => {
                       },
                       "readyWhen": {
                         "fallback": {
-                          "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "my-lib/vite.config.ts"",
+                          "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
                           "interval": 1000,
                         },
                         "signal": true,
@@ -625,7 +625,7 @@ describe('@nx/vite/plugin', () => {
                       },
                       "readyWhen": {
                         "fallback": {
-                          "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" "my-lib/vite.config.ts"",
+                          "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" vite.config.ts",
                           "interval": 1000,
                         },
                         "signal": true,
@@ -663,7 +663,7 @@ describe('@nx/vite/plugin', () => {
                       },
                       "readyWhen": {
                         "fallback": {
-                          "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" "my-lib/vite.config.ts"",
+                          "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
                           "interval": 1000,
                         },
                         "signal": true,

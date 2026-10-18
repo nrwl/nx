@@ -120,7 +120,8 @@ export function enterTaskCwd(options: { cwd?: string }) {
 export async function waitForWebpackDevServer(configPath: string) {
   const options = readTaskOptions();
   const flags = parseServeFlags(options);
-  const absoluteConfigPath = resolve(configPath);
+  // The config's file name, in the cwd of the serve task
+  const absoluteConfigPath = resolve(options.cwd ?? '.', configPath);
   enterTaskCwd(options);
   // Skips NxAppWebpackPlugin's option normalization, which nothing here uses
   global.NX_GRAPH_CREATION = true;

@@ -31,7 +31,7 @@ import {
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { readdirSync } from 'fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
 export interface WebpackPluginOptions {
@@ -423,15 +423,16 @@ function getDevServerReadyWhen(
   configFilePath: string,
   configs: { devServer?: unknown; plugins?: unknown[] }[]
 ): TargetConfiguration['readyWhen'] {
-  // webpack-cli starts a dev server for each config with devServer, or for
-  // the first config, without one, when none has it
+  // webpack-cli starts a dev server for each config with devServer. Only the
+  // first one to listen would signal, so several get the check that waits
+  // for each of them.
   const withDevServer = configs.filter((config) => config.devServer);
   const signals =
-    withDevServer.length > 0 && withDevServer.every(sendsReadySignal);
+    withDevServer.length === 1 && sendsReadySignal(withDevServer[0]);
   return signals
     ? { signal: true }
     : {
-        command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" "${configFilePath}"`,
+        command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" ${basename(configFilePath)}`,
         // Each attempt loads the config
         interval: 1000,
       };

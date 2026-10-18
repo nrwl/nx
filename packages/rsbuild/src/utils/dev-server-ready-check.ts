@@ -75,7 +75,8 @@ export async function waitForRsbuildServer(
   } catch {}
   const flags = parseRsbuildFlags(options);
   const root = resolve(options.cwd ?? '.');
-  const path = resolve(configPath);
+  // The config's file name, in the cwd of the task
+  const path = resolve(root, configPath);
   process.chdir(root);
 
   const { loadConfig, loadEnv } =

@@ -137,7 +137,7 @@ describe('@nx/rspack', () => {
                       },
                     },
                     "readyWhen": {
-                      "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" "my-app/rspack.config.ts"",
+                      "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" rspack.config.ts",
                       "interval": 1000,
                     },
                   },
@@ -163,7 +163,7 @@ describe('@nx/rspack', () => {
                       },
                     },
                     "readyWhen": {
-                      "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" "my-app/rspack.config.ts"",
+                      "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" rspack.config.ts",
                       "interval": 1000,
                     },
                   },
@@ -231,7 +231,7 @@ describe('@nx/rspack', () => {
 
     it('checks the port at task time when nothing in the config signals', async () => {
       const check = {
-        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" "my-app/rspack.config.ts"`,
+        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" rspack.config.ts`,
         interval: 1000,
       };
 
