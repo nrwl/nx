@@ -148,7 +148,6 @@ describe('application generator', () => {
           "devTargetName": "dev",
           "inspectTargetName": "inspect",
           "previewTargetName": "preview",
-          "typecheckTargetName": "typecheck",
           "watchDepsTargetName": "watch-deps",
         },
         "plugin": "@nx/rsbuild",

@@ -793,8 +793,9 @@ async function normalizeOptions(
   await ensureRootProjectName(options, 'library');
   options.linter = await normalizeLinterOption(tree, options.linter);
 
-  const hasPlugin = isUsingTypeScriptPlugin(tree);
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
+  // Outside TS solution setups the plugin may be registered for typecheck only.
+  const hasPlugin = isUsingTsSolutionConfig && isUsingTypeScriptPlugin(tree);
 
   if (isUsingTsSolutionConfig) {
     options.unitTestRunner ??= isInteractive()

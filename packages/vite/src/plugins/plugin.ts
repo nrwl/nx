@@ -22,7 +22,9 @@ import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
   addBuildAndWatchDepsTargets,
+  createTypecheckTarget,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+  selectTypecheckTsConfig,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
@@ -39,12 +41,16 @@ export interface VitePluginOptions {
   devTargetName?: string;
   previewTargetName?: string;
   serveStaticTargetName?: string;
-  typecheckTargetName?: string;
   /**
-   * The compiler to use for type-checking. When unset, defaults to `vue-tsc`
-   * for Vue projects (detected via the `vite:vue` plugin) and `tsc` otherwise.
-   * Set to `tsgo` to use the TypeScript Go compiler (`@typescript/native-preview`),
-   * or `vue-tsc` to force Vue-aware type-checking when auto-detection misses your setup.
+   * Name of the `vue-tsc` typecheck target inferred for Vue projects. Other
+   * projects get their typecheck target from `@nx/js/typescript`.
+   */
+  typecheckTargetName?: string | false;
+  /**
+   * The compiler used to typecheck Vue projects. Defaults to `vue-tsc` when the
+   * `vite:vue` plugin is detected. Set `vue-tsc` to force the target when
+   * detection misses your setup, or `tsc`/`tsgo` to skip it and rely on
+   * `@nx/js/typescript`.
    */
   compiler?: 'tsc' | 'tsgo' | 'vue-tsc';
   watchDepsTargetName?: string;
@@ -271,61 +277,45 @@ async function buildViteTargets(
     }
   }
 
-  if (tsConfigFiles.length) {
-    const tsConfigToUse =
-      ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
-        tsConfigFiles.includes(t)
-      ) ?? tsConfigFiles[0];
+  const hasVuePlugin = viteBuildConfig.plugins?.some(
+    (p) => p.name === 'vite:vue' || p.name === 'vite:vue2'
+  );
+  // @nx/js/typescript provides tsc typecheck targets but can't run vue-tsc.
+  const usesVueTsc =
+    (options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc')) === 'vue-tsc';
+  if (
+    usesVueTsc &&
+    options.typecheckTargetName !== false &&
+    tsConfigFiles.length
+  ) {
+    const technologies = hasVuePlugin ? ['typescript', 'vue'] : ['typescript'];
 
-    // Check if the project uses Vue plugin
-    const hasVuePlugin = viteBuildConfig.plugins?.some(
-      (p) => p.name === 'vite:vue' || p.name === 'vite:vue2'
-    );
-    // Explicit `compiler` option wins over inference so users can override
-    // when their setup isn't detected (e.g. custom/non-standard Vue plugin).
-    const resolvedCompiler =
-      options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc');
-    const typeCheckCommand = resolvedCompiler;
-    const typeCheckExternalDeps =
-      resolvedCompiler === 'tsgo'
-        ? ['@typescript/native-preview']
-        : resolvedCompiler === 'vue-tsc'
-          ? ['vue-tsc', 'typescript']
-          : ['typescript'];
-
-    targets[options.typecheckTargetName] = {
-      cache: true,
-      inputs: [
-        ...('production' in namedInputs
-          ? ['production', '^production']
-          : ['default', '^default']),
-        { externalDependencies: typeCheckExternalDeps },
-      ],
-      command: isUsingTsSolutionSetup
-        ? `${typeCheckCommand} --build --emitDeclarationOnly`
-        : `${typeCheckCommand} --noEmit -p ${tsConfigToUse}`,
-      options: { cwd: joinPathFragments(projectRoot) },
-      metadata: {
-        description: `Runs type-checking for the project.`,
-        technologies: hasVuePlugin ? ['typescript', 'vue'] : ['typescript'],
-        help: {
-          command: isUsingTsSolutionSetup
-            ? `${pmc.exec} ${typeCheckCommand} --build --help`
-            : `${pmc.exec} ${typeCheckCommand} -p ${tsConfigToUse} --help`,
-          example: isUsingTsSolutionSetup
-            ? { args: ['--force'] }
-            : { options: { noEmit: true } },
-        },
-      },
-    };
-
-    if (isUsingTsSolutionSetup) {
-      targets[options.typecheckTargetName].dependsOn = [
-        `^${options.typecheckTargetName}`,
-      ];
-      targets[options.typecheckTargetName].syncGenerators = [
-        '@nx/js:typescript-sync',
-      ];
+    const tsConfig = selectTypecheckTsConfig(tsConfigFiles);
+    if (!isUsingTsSolutionSetup) {
+      if (tsConfig) {
+        targets[options.typecheckTargetName] = createTypecheckTarget({
+          mode: 'noEmit',
+          projectRoot: joinPathFragments(projectRoot),
+          pmc,
+          tsConfig,
+          compiler: 'vue-tsc',
+          namedInputs,
+          technologies,
+        });
+      }
+    } else if (tsConfigFiles.includes('tsconfig.json')) {
+      targets[options.typecheckTargetName] = createTypecheckTarget({
+        mode: 'build',
+        projectRoot: joinPathFragments(projectRoot),
+        pmc,
+        compiler: 'vue-tsc',
+        targetName: options.typecheckTargetName,
+        buildTargetName: targets[options.buildTargetName]
+          ? options.buildTargetName
+          : undefined,
+        namedInputs,
+        technologies,
+      });
     }
   }
 

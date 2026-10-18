@@ -112,6 +112,38 @@ describe('lib', () => {
     }
   );
 
+  it('should not change a typecheck-only @nx/js/typescript registration outside TS solution setups', async () => {
+    updateJson(tree, 'nx.json', (json) => {
+      json.plugins = [
+        {
+          plugin: '@nx/js/typescript',
+          options: { typecheck: { targetName: 'typecheck' } },
+        },
+      ];
+      return json;
+    });
+
+    await libraryGenerator(tree, {
+      ...defaultOptions,
+      directory: 'my-lib',
+      bundler: 'tsc',
+    });
+
+    expect(
+      readJson(tree, 'nx.json').plugins.filter(
+        (p) => p.plugin === '@nx/js/typescript'
+      )
+    ).toEqual([
+      {
+        plugin: '@nx/js/typescript',
+        options: { typecheck: { targetName: 'typecheck' } },
+      },
+    ]);
+    expect(
+      readProjectConfiguration(tree, 'my-lib').targets.build.executor
+    ).toBe('@nx/js:tsc');
+  });
+
   describe('configs', () => {
     it('should generate an empty ts lib using --config=npm-scripts', async () => {
       await libraryGenerator(tree, {
