@@ -5,7 +5,7 @@ const DEFAULT_TSCONFIG = 'tsconfig.json';
 export interface TypecheckTargetOptions {
   /**
    * `build` runs `tsc --build --emitDeclarationOnly` for TS solution setups.
-   * `noEmit` runs `tsc --noEmit -p <tsconfig>`.
+   * `noEmit` runs `tsc -p <tsconfig> --noEmit`.
    */
   mode: 'build' | 'noEmit';
   /**
@@ -42,8 +42,8 @@ export interface TypecheckTargetOptions {
 }
 
 /**
- * Builds a `typecheck` target. Plugins that infer one share this shape so
- * their targets stay compatible with the one `@nx/js/typescript` infers.
+ * Builds a `typecheck` target. Plugins that infer a `tsc` one share this
+ * shape so it stays compatible with the one `@nx/js/typescript` infers.
  */
 export function createTypecheckTarget(
   options: TypecheckTargetOptions
