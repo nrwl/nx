@@ -12,7 +12,14 @@ import {
 describe('React app dev-server readiness', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/react', '@nx/webpack', '@nx/vite', '@nx/vitest'],
+      packages: [
+        '@nx/react',
+        '@nx/webpack',
+        '@nx/rspack',
+        '@nx/rsbuild',
+        '@nx/vite',
+        '@nx/vitest',
+      ],
     });
   });
 
@@ -61,6 +68,35 @@ describe('React app dev-server readiness', () => {
     const port = await reservePort();
     runCLI(
       `generate @nx/react:app apps/${app} --bundler=vite --linter=none --unitTestRunner=none --e2eTestRunner=none --port=${port} --no-interactive`
+    );
+    addReadyUrlCheck(app, 'dev');
+
+    const output = runCLI(`run ${app}:check`);
+    expectServedOn(output, port);
+    expect(output).toContain(
+      `Successfully ran target check for project ${app}`
+    );
+  }, 300_000);
+  it('should run a task that waits for the rspack dev server once it listens', async () => {
+    const app = uniq('rspack-app');
+    const port = await reservePort();
+    runCLI(
+      `generate @nx/react:app apps/${app} --bundler=rspack --linter=none --unitTestRunner=none --e2eTestRunner=none --port=${port} --no-interactive`
+    );
+    addReadyUrlCheck(app, 'serve');
+
+    const output = runCLI(`run ${app}:check`);
+    expectServedOn(output, port);
+    expect(output).toContain(
+      `Successfully ran target check for project ${app}`
+    );
+  }, 300_000);
+
+  it('should run a task that waits for the rsbuild dev server once it listens', async () => {
+    const app = uniq('rsbuild-app');
+    const port = await reservePort();
+    runCLI(
+      `generate @nx/react:app apps/${app} --bundler=rsbuild --linter=none --unitTestRunner=none --e2eTestRunner=none --port=${port} --no-interactive`
     );
     addReadyUrlCheck(app, 'dev');
 
