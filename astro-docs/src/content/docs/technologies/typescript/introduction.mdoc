@@ -297,7 +297,7 @@ If you're manually defining the `build` targets, make sure to keep the [target c
 nx typecheck my-lib
 ```
 
-The `typecheck` task is automatically inferred for any project with a `tsconfig.json`.
+The `typecheck` task is inferred for projects with a `tsconfig.json`. Outside a TypeScript solution setup, it's skipped for projects whose build already typechecks them. See [how the plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
 
 If you're not using inferred plugins, then you can manually define a `typecheck` target in your [projects configuration](/docs/reference/project-configuration#project-level-configuration-files).
 
@@ -405,7 +405,7 @@ Configure `@nx/js/typescript` in the `plugins` array in `nx.json`:
 | `build.skipBuildCheck` | Allows build inference without package exports that point to compiled output. | `false`             |
 | `verboseOutput`        | Adds TypeScript's `--verbose` flag to the underlying commands.                | `false`             |
 
-The `typecheck` and `build` tasks are cached, with inputs and outputs based on your TypeScript configuration. In a TypeScript solution setup, they depend on the corresponding tasks in dependency projects.
+The `typecheck` and `build` tasks are cached, with inputs based on your TypeScript configuration. In a TypeScript solution setup, they also have outputs and depend on the corresponding tasks in dependency projects.
 
 ### Exclude or include specific projects
 
