@@ -105,6 +105,27 @@ describe('ensureTypescriptPlugin', () => {
     expect(plugins[2]).toBe('@nx/vite/plugin');
   });
 
+  it('should add a typecheck entry next to an unscoped one without typecheck', async () => {
+    const disabled = {
+      plugin: '@nx/js/typescript',
+      options: { typecheck: false },
+    };
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [disabled, '@nx/vite/plugin'];
+    updateNxJson(tree, nxJson);
+
+    await ensureTypescriptPlugin(tree, false, '@nx/vite/plugin');
+
+    expect(readNxJson(tree).plugins).toEqual([
+      disabled,
+      {
+        plugin: '@nx/js/typescript',
+        options: { typecheck: { targetName: 'typecheck' } },
+      },
+      '@nx/vite/plugin',
+    ]);
+  });
+
   it('should place the registration before the framework plugin', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = ['@nx/vite/plugin', '@nx/eslint/plugin'];
@@ -253,6 +274,27 @@ describe('registerTypescriptPluginForTypecheck', () => {
 
     expect(readNxJson(tree).plugins).toEqual([
       nodeApp,
+      {
+        plugin: '@nx/js/typescript',
+        options: { typecheck: { targetName: 'typecheck' } },
+      },
+      '@nx/vite/plugin',
+    ]);
+  });
+
+  it('should register next to an unscoped registration without typecheck', () => {
+    const disabled = {
+      plugin: '@nx/js/typescript',
+      options: { typecheck: false },
+    };
+    setPlugins([disabled, '@nx/vite/plugin']);
+
+    expect(registerTypescriptPluginForTypecheck(tree, '@nx/vite/plugin')).toBe(
+      true
+    );
+
+    expect(readNxJson(tree).plugins).toEqual([
+      disabled,
       {
         plugin: '@nx/js/typescript',
         options: { typecheck: { targetName: 'typecheck' } },

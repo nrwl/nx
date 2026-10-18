@@ -53,7 +53,8 @@ const TYPECHECK_OPTIONS = [
 
 /**
  * Registers `@nx/js/typescript` in a workspace where no registration of it
- * infers `typecheck` yet. Outside TS solution setups it only infers `typecheck`. Callers decide
+ * infers `typecheck` yet, adding a typecheck-only entry next to any existing
+ * one. Outside TS solution setups it only infers `typecheck`. Callers decide
  * whether inference plugins are in use. Pass `frameworkPlugin` when that
  * plugin still infers `typecheck` for some projects, so its target wins.
  */
@@ -62,10 +63,23 @@ export async function ensureTypescriptPlugin(
   updatePackageScripts?: boolean,
   frameworkPlugin?: string
 ): Promise<void> {
-  if (readNxJson(tree)?.plugins?.some(infersTypecheck)) {
+  const nxJson = readNxJson(tree);
+  if (nxJson?.plugins?.some(infersTypecheck)) {
     return;
   }
-  if (isUsingTsSolutionSetup(tree)) {
+  if (
+    nxJson?.plugins?.some(
+      (p) =>
+        typeof p !== 'string' && p.plugin === '@nx/js/typescript' && !p.include
+    )
+  ) {
+    // `addPlugin` skips workspaces that have an unscoped registration.
+    nxJson.plugins.push({
+      plugin: '@nx/js/typescript',
+      options: { typecheck: { targetName: 'typecheck' } },
+    });
+    updateNxJson(tree, nxJson);
+  } else if (isUsingTsSolutionSetup(tree)) {
     await addTypescriptPlugin(tree, updatePackageScripts);
   } else {
     await addPlugin(
@@ -78,9 +92,9 @@ export async function ensureTypescriptPlugin(
     );
   }
   if (frameworkPlugin) {
-    const nxJson = readNxJson(tree);
-    if (moveTypescriptPluginBefore(nxJson.plugins, frameworkPlugin)) {
-      updateNxJson(tree, nxJson);
+    const updated = readNxJson(tree);
+    if (moveTypescriptPluginBefore(updated.plugins, frameworkPlugin)) {
+      updateNxJson(tree, updated);
     }
   }
 }
