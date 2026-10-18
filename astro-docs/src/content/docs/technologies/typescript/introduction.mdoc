@@ -321,8 +321,7 @@ The `typecheck` command depends on whether the workspace uses a TypeScript solut
 Outside a TypeScript solution setup, the plugin skips projects whose build already typechecks them:
 
 - Projects with a `project.json` target that uses `@nx/js:tsc` or an Angular build executor.
-- Projects with an `@nx/js:swc`, `@nx/esbuild:esbuild`, `@nx/rollup:rollup`, or `@nx/vite:build` `project.json` target, unless it sets `skipTypeCheck: true`.
-- Projects with an `@nx/webpack:webpack` or `@nx/rspack:rspack` `project.json` target, unless it sets `typeCheckOptions: false` or `skipTypeChecking: true` (or its alias `typeCheck: true`).
+- Projects with an `@nx/js:swc` or `@nx/esbuild:esbuild` `project.json` target, unless it sets `skipTypeCheck: true`.
 - Projects without one of those targets that have a `webpack.config.*`, `rspack.config.*`, or `rollup.config.*` file.
 
 The plugin also adds a `build` task for projects that meet both of the following conditions:

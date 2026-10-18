@@ -14,17 +14,7 @@ const TYPECHECKING_EXECUTORS = new Set([
   '@angular/build:ng-packagr',
 ]);
 
-const SKIP_TYPECHECK_EXECUTORS = new Set([
-  '@nx/js:swc',
-  '@nx/esbuild:esbuild',
-  '@nx/rollup:rollup',
-  '@nx/vite:build',
-]);
-
-const TYPE_CHECKER_PLUGIN_EXECUTORS = new Set([
-  '@nx/webpack:webpack',
-  '@nx/rspack:rspack',
-]);
+const SKIP_TYPECHECK_EXECUTORS = new Set(['@nx/js:swc', '@nx/esbuild:esbuild']);
 
 const TYPECHECKING_BUILD_CONFIG =
   /^(webpack|rspack|rollup)\.config\.[cm]?[jt]s$/;
@@ -52,23 +42,10 @@ export function buildTypechecksProject(
       if (options?.skipTypeCheck !== true) {
         return true;
       }
-    } else if (TYPE_CHECKER_PLUGIN_EXECUTORS.has(executor)) {
-      hasBuildExecutor = true;
-      if (typeCheckerPluginRuns(options)) {
-        return true;
-      }
     }
   }
   if (hasBuildExecutor) {
     return false;
   }
   return siblingFiles.some((file) => TYPECHECKING_BUILD_CONFIG.test(file));
-}
-
-function typeCheckerPluginRuns(options: Record<string, unknown> | undefined) {
-  if (options?.typeCheckOptions !== undefined) {
-    return options.typeCheckOptions !== false;
-  }
-  // `typeCheck` is the schema alias of `skipTypeChecking`.
-  return (options?.skipTypeChecking ?? options?.typeCheck) !== true;
 }
