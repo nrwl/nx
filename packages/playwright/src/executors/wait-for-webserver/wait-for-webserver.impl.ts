@@ -1,4 +1,4 @@
-import { logger, type ExecutorContext } from '@nx/devkit';
+import { getReadyUrl, logger, type ExecutorContext } from '@nx/devkit';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as http from 'node:http';
 import * as https from 'node:https';
@@ -85,7 +85,7 @@ function withReadyUrl(servers: Server[]): Server[] {
   if (!readyUrl || servers.length !== 1 || servers[0].port != null) {
     return servers;
   }
-  return [{ ...servers[0], url: readyUrl }];
+  return [{ ...servers[0], url: getReadyUrl(servers[0].url) }];
 }
 
 // A malformed URL, an out-of-range port and a proxy that cannot be used are all

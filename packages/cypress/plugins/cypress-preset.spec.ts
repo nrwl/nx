@@ -64,6 +64,17 @@ describe('nxE2EPreset setupNodeEvents', () => {
     expect(request).not.toHaveBeenCalled();
   });
 
+  it("should keep baseUrl's path and loopback host name, taking the reported port", async () => {
+    process.env.NX_READY_URL = 'http://[::1]:4300/';
+    const preset = nxE2EPreset(__filename, { webServerCommands });
+
+    const result = await preset.setupNodeEvents(vi.fn(), {
+      baseUrl: 'http://localhost:4200/app',
+    });
+
+    expect(result.baseUrl).toBe('http://localhost:4300/app');
+  });
+
   it('should use NX_READY_URL when the config has no baseUrl', async () => {
     process.env.NX_READY_URL = 'http://localhost:4300/';
     const preset = nxE2EPreset(__filename, { webServerCommands });

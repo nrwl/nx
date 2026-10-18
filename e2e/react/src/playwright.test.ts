@@ -43,7 +43,7 @@ describe('React Playwright e2e tests', () => {
     updateFile(configPath, (content) => {
       originalConfig = content;
       return content.replace(
-        /url: (?:process\.env\['NX_READY_URL'\] \|\| )?'http:\/\/[^']*'/,
+        /url: (?:getReadyUrl\()?'http:\/\/[^']*'\)?/,
         'url: baseURL'
       );
     });
@@ -71,7 +71,7 @@ describe('React Playwright e2e tests', () => {
     updateFile(configPath, (content) => {
       originalConfig = content;
       return content.replace(
-        /url: (?:process\.env\['NX_READY_URL'\] \|\| )?'http:\/\/[^']*'/,
+        /url: (?:getReadyUrl\()?'http:\/\/[^']*'\)?/,
         'url: baseURL'
       );
     });
@@ -125,7 +125,7 @@ describe('React Playwright e2e tests', () => {
     updateFile(`${e2eProject}/playwright.config.mts`, (content) => {
       originalConfig = content;
       return content.replace(
-        /(url: (?:process\.env\['NX_READY_URL'\] \|\| )?)'http:\/\/[^']*'/,
+        /(url: (?:getReadyUrl\()?)'http:\/\/[^']*'/,
         `$1'http://localhost:${port}'`
       );
     });

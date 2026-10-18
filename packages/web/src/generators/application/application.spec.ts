@@ -723,7 +723,7 @@ describe('app', () => {
       tree
         .read(`${e2eRoot}/playwright.config.mts`, 'utf-8')
         .match(
-          /baseURL = process\.env\['BASE_URL'\] \|\| process\.env\['NX_READY_URL'\] \|\| '([^']+)'/
+          /baseURL = process\.env\['BASE_URL'\] \|\| getReadyUrl\('([^']+)'\)/
         )[1];
 
     it('should write the port to the webpack config and the e2e config (webpack)', async () => {

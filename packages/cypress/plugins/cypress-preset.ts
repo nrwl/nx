@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { execSync, spawn } from 'child_process';
 import { lstatSync } from 'fs';
@@ -178,8 +178,10 @@ export function nxE2EPreset(
       // Set by Nx when the web server task already reported it is ready.
       const readyUrl = process.env.NX_READY_URL;
       if (readyUrl) {
-        console.log(`Testing against the server Nx started on ${readyUrl}`);
-        config.baseUrl = readyUrl;
+        config.baseUrl = getReadyUrl(config.baseUrl);
+        console.log(
+          `Testing against the server Nx started on ${config.baseUrl}`
+        );
         // Cypress only applies config changes returned from setupNodeEvents.
         return config;
       }

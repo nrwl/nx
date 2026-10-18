@@ -46,11 +46,11 @@ describe('Vue Plugin', () => {
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
-            /(const baseURL = .*)'[^']*';/,
-            `$1'http://localhost:${availablePort}';`
+            /(const baseURL = .*)'[^']*'(\)?;)/,
+            `$1'http://localhost:${availablePort}'$2`
           )
           .replace(
-            /(url: (?:process\.env\['NX_READY_URL'\] \|\| )?)'[^']*'/,
+            /(url: (?:getReadyUrl\()?)'[^']*'/,
             `$1'http://localhost:${availablePort}'`
           );
       });
@@ -91,11 +91,11 @@ describe('Vue Plugin', () => {
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
-            /(const baseURL = .*)'[^']*';/,
-            `$1'http://localhost:${availablePort}';`
+            /(const baseURL = .*)'[^']*'(\)?;)/,
+            `$1'http://localhost:${availablePort}'$2`
           )
           .replace(
-            /(url: (?:process\.env\['NX_READY_URL'\] \|\| )?)'[^']*'/,
+            /(url: (?:getReadyUrl\()?)'[^']*'/,
             `$1'http://localhost:${availablePort}'`
           );
       });

@@ -216,11 +216,11 @@ describe('app', () => {
       expect(playwrightConfig).toMatchInlineSnapshot(`
         "import { defineConfig, devices } from '@playwright/test';
         import { nxE2EPreset } from '@nx/playwright/preset';
-        import { workspaceRoot } from '@nx/devkit';
+        import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
         // For CI, you may want to set BASE_URL to the deployed application.
-        // Nx sets NX_READY_URL to the address the dev server task reported.
-        const baseURL = process.env['BASE_URL'] || process.env['NX_READY_URL'] || 'http://localhost:4300';
+        // getReadyUrl moves the address to the port the dev server task reported.
+        const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4300');
 
         /**
          * Read environment variables from file.
@@ -249,7 +249,7 @@ describe('app', () => {
           /* Run your local dev server before starting the tests */
           webServer: {
             command: 'npx nx run my-app:preview',
-            url: process.env['NX_READY_URL'] || 'http://localhost:4300',
+            url: getReadyUrl('http://localhost:4300'),
             reuseExistingServer: true,
             cwd: workspaceRoot
           },
@@ -2003,9 +2003,11 @@ describe('app', () => {
         'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
-      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
       expect(playwrightConfig).toContain(
-        "url: process.env['NX_READY_URL'] || 'http://localhost:9000'"
+        "|| getReadyUrl('http://localhost:9000')"
+      );
+      expect(playwrightConfig).toContain(
+        "url: getReadyUrl('http://localhost:9000')"
       );
     });
 
@@ -2038,9 +2040,11 @@ describe('app', () => {
         'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
-      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
       expect(playwrightConfig).toContain(
-        "url: process.env['NX_READY_URL'] || 'http://localhost:9000'"
+        "|| getReadyUrl('http://localhost:9000')"
+      );
+      expect(playwrightConfig).toContain(
+        "url: getReadyUrl('http://localhost:9000')"
       );
     });
 
@@ -2073,9 +2077,11 @@ describe('app', () => {
         'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
-      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
       expect(playwrightConfig).toContain(
-        "url: process.env['NX_READY_URL'] || 'http://localhost:9000'"
+        "|| getReadyUrl('http://localhost:9000')"
+      );
+      expect(playwrightConfig).toContain(
+        "url: getReadyUrl('http://localhost:9000')"
       );
     });
   });

@@ -683,6 +683,27 @@ describe('waitForWebserverExecutor', () => {
       expect(result).toEqual({ success: true });
     });
 
+    it('keeps the path of the configured url', async () => {
+      // Only the app's base path answers; the root 404s
+      const server = createHttpServer((req, res) => {
+        res.statusCode = req.url === '/app/' ? 200 : 404;
+        res.end();
+      });
+      await listen(server, 0);
+      const port = (server.address() as AddressInfo).port;
+      process.env.NX_READY_URL = `http://127.0.0.1:${port}/`;
+
+      const result = await waitForWebserverExecutor(
+        {
+          servers: [{ url: `http://127.0.0.1:${await closedPort()}/app/` }],
+          timeout: 300,
+        },
+        context
+      );
+
+      expect(result).toEqual({ success: true });
+    });
+
     it('keeps the configured server options for the reported url', async () => {
       const request = https.request as unknown as Mock;
       const port = await closedPort();
