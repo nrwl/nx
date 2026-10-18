@@ -143,11 +143,19 @@ function convertConfigFile(
       `${joinPathFragments(dir, `${name}.old${ext}`)}`
     );
 
+    // `@nx/webpack` does not depend on `@nx/react`, so only React configs may require it.
+    const usesReact = withReactConfig !== undefined;
+    const reactRequire = usesReact
+      ? `\nconst { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');`
+      : '';
+    const reactPlugin = usesReact
+      ? `\nnew NxReactWebpackPlugin(${withReactConfig ? withReactConfig.getText() : ''}),`
+      : '';
+
     tree.write(
       webpackConfigPath,
       stripIndents`
-    const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-    const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+    const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');${reactRequire}
     const { useLegacyNxPlugin } = require('@nx/webpack');
     
     // This file was migrated using @nx/webpack:convert-config-to-webpack-plugin from your './webpack.config.old.js'
@@ -165,12 +173,7 @@ function convertConfigFile(
           webpackOptions
             ? 'new NxAppWebpackPlugin(options)'
             : 'new NxAppWebpackPlugin()'
-        },
-        ${
-          withReactConfig
-            ? `new NxReactWebpackPlugin(${withReactConfig.getText()})`
-            : `new NxReactWebpackPlugin()`
-        },
+        },${reactPlugin}
         // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
         // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
         // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \`apply\` method.
