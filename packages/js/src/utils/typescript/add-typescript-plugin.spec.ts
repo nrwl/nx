@@ -80,6 +80,31 @@ describe('ensureTypescriptPlugin', () => {
     ]);
   });
 
+  it('should register next to a scoped registration without typecheck', async () => {
+    setUpTsSolution();
+    const nodeApp = {
+      plugin: '@nx/js/typescript',
+      include: ['apps/api/*'],
+      options: {
+        typecheck: false,
+        build: { targetName: 'build', configName: 'tsconfig.app.json' },
+      },
+    };
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [nodeApp, '@nx/vite/plugin'];
+    updateNxJson(tree, nxJson);
+
+    await ensureTypescriptPlugin(tree, false, '@nx/vite/plugin');
+
+    const plugins = readNxJson(tree).plugins;
+    expect(plugins[0]).toEqual(nodeApp);
+    expect(plugins[1]).toMatchObject({
+      plugin: '@nx/js/typescript',
+      options: { typecheck: { targetName: 'typecheck' } },
+    });
+    expect(plugins[2]).toBe('@nx/vite/plugin');
+  });
+
   it('should place the registration before the framework plugin', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = ['@nx/vite/plugin', '@nx/eslint/plugin'];
@@ -209,6 +234,31 @@ describe('registerTypescriptPluginForTypecheck', () => {
       false
     );
     expect(tree.read('nx.json', 'utf-8')).toBe(before);
+  });
+
+  it('should register next to a scoped registration without typecheck', () => {
+    const nodeApp = {
+      plugin: '@nx/js/typescript',
+      include: ['apps/api/*'],
+      options: {
+        typecheck: false,
+        build: { targetName: 'build', configName: 'tsconfig.app.json' },
+      },
+    };
+    setPlugins([nodeApp, '@nx/vite/plugin']);
+
+    expect(registerTypescriptPluginForTypecheck(tree, '@nx/vite/plugin')).toBe(
+      true
+    );
+
+    expect(readNxJson(tree).plugins).toEqual([
+      nodeApp,
+      {
+        plugin: '@nx/js/typescript',
+        options: { typecheck: { targetName: 'typecheck' } },
+      },
+      '@nx/vite/plugin',
+    ]);
   });
 
   it('should register before the framework plugin', () => {

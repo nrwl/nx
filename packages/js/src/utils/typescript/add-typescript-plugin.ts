@@ -52,8 +52,8 @@ const TYPECHECK_OPTIONS = [
 ];
 
 /**
- * Registers `@nx/js/typescript` in a workspace that has no registration of it
- * yet. Outside TS solution setups it only infers `typecheck`. Callers decide
+ * Registers `@nx/js/typescript` in a workspace where no registration of it
+ * infers `typecheck` yet. Outside TS solution setups it only infers `typecheck`. Callers decide
  * whether inference plugins are in use. Pass `frameworkPlugin` when that
  * plugin still infers `typecheck` for some projects, so its target wins.
  */
@@ -62,10 +62,7 @@ export async function ensureTypescriptPlugin(
   updatePackageScripts?: boolean,
   frameworkPlugin?: string
 ): Promise<void> {
-  const isRegistered = readNxJson(tree)?.plugins?.some(
-    (p) => getPluginName(p) === '@nx/js/typescript'
-  );
-  if (isRegistered) {
+  if (readNxJson(tree)?.plugins?.some(infersTypecheck)) {
     return;
   }
   if (isUsingTsSolutionSetup(tree)) {
@@ -92,7 +89,8 @@ export async function ensureTypescriptPlugin(
  * Registers `@nx/js/typescript`, with only its typecheck target, in a
  * workspace where `frameworkPlugin` no longer infers `typecheck`. Reuses the
  * framework plugin's `typecheckTargetName` and a `tsgo` compiler, and skips
- * workspaces that already register `@nx/js/typescript` or set it to `false`. With
+ * workspaces where `@nx/js/typescript` already infers it or where
+ * `typecheckTargetName` is `false`. With
  * `removeTypecheckTargetName`, the option is also dropped from the framework
  * plugin's registrations. Returns whether nx.json changed.
  */
@@ -136,10 +134,7 @@ export function registerTypescriptPluginForTypecheck(
     }
   }
 
-  if (
-    targetName &&
-    !nxJson.plugins.some((p) => getPluginName(p) === '@nx/js/typescript')
-  ) {
+  if (targetName && !nxJson.plugins.some(infersTypecheck)) {
     nxJson.plugins.push({
       plugin: '@nx/js/typescript',
       options: {
@@ -165,9 +160,7 @@ function moveTypescriptPluginBefore(
   plugins: PluginConfiguration[],
   frameworkPlugin: string
 ): boolean {
-  const tsIndex = plugins.findIndex(
-    (p) => getPluginName(p) === '@nx/js/typescript'
-  );
+  const tsIndex = plugins.findIndex(infersTypecheck);
   const frameworkIndex = plugins.findIndex(
     (p) => getPluginName(p) === frameworkPlugin
   );
@@ -177,6 +170,16 @@ function moveTypescriptPluginBefore(
   const [tsPlugin] = plugins.splice(tsIndex, 1);
   plugins.splice(frameworkIndex, 0, tsPlugin);
   return true;
+}
+
+// Scoped build-only registrations, like `@nx/node`'s tsc apps, set `typecheck: false`.
+function infersTypecheck(plugin: PluginConfiguration): boolean {
+  return (
+    getPluginName(plugin) === '@nx/js/typescript' &&
+    (typeof plugin === 'string' ||
+      (plugin.options as { typecheck?: unknown } | undefined)?.typecheck !==
+        false)
+  );
 }
 
 function getPluginName(plugin: PluginConfiguration): string {
