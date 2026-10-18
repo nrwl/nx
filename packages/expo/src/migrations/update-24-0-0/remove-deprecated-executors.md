@@ -6,7 +6,7 @@ The migration lists the targets the converter cannot convert safely. In agentic 
 
 The `@nx/expo:build-list`, `@nx/expo:sync-deps`, `@nx/expo:update` and `@nx/expo:ensure-symlink` executors stay.
 
-The inferred `install` and `prebuild` tasks run `expo install` and `expo prebuild` as they are. `@nx/expo:install` also added the installed packages to the app's `package.json`; use the kept `@nx/expo:sync-deps` executor for that. `@nx/expo:prebuild` ran `expo prebuild --no-install` and then installed packages and CocoaPods itself, which `expo prebuild` does by default.
+The inferred `install` and `prebuild` tasks run `expo install` and `expo prebuild` as they are. `@nx/expo:install` installed packages into the root `package.json` and then synced them into the app's. The inferred `install` runs in the app directory, so packages go into the app's `package.json` and no longer into the root one. To keep dependencies in the root `package.json`, install them there and sync them with the kept `@nx/expo:sync-deps` executor. `@nx/expo:prebuild` ran `expo prebuild --no-install` and then installed packages and CocoaPods itself, which `expo prebuild` does by default.
 
 `@nx/expo:build` copied the root dependencies and lock file into the app before `eas build`. The `add-eas-build-pre-install` migration moves that step to an `eas-build-pre-install` script that EAS Build runs.
 
