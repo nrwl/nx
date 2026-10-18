@@ -51,7 +51,6 @@ describe('app', () => {
     linter: 'eslint',
     style: 'css',
     strict: true,
-    addPlugin: true,
   };
   let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
@@ -153,7 +152,6 @@ describe('app', () => {
         ...schema,
         bundler: 'vite',
         unitTestRunner: 'vitest',
-        addPlugin: true,
         // Let the generator format the tree so we assert on the same
         // prettier-formatted config a user gets, not the raw intermediate the
         // e2e generator writes with skipFormat.
@@ -205,7 +203,6 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'playwright',
-        addPlugin: true,
       });
       // Spot-check the generated playwright config. Avoid inline snapshot
       // here: `webServer.command` interpolates `packageCmd` at runtime
@@ -1280,7 +1277,7 @@ describe('app', () => {
     });
   });
 
-  it('should add targetDefaults to nxJson when addPlugin=false', async () => {
+  it('should enable inference', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     let nxJson = readNxJson(tree);
@@ -1290,7 +1287,6 @@ describe('app', () => {
     // ACT
     await applicationGenerator(tree, {
       directory: 'myapp',
-      addPlugin: false,
       linter: 'none',
       style: 'none',
       e2eTestRunner: 'none',
@@ -1298,29 +1294,16 @@ describe('app', () => {
 
     // ASSERT
     nxJson = readNxJson(tree);
-    const td = nxJson.targetDefaults!;
-    const buildEntry = Array.isArray(td)
-      ? td.find(
-          (e) =>
-            e.target === 'build' &&
-            e.projects === undefined &&
-            e.plugin === undefined
+    expect(
+      nxJson.plugins?.some((plugin) =>
+        ['@nx/vite/plugin', '@nx/webpack/plugin', '@nx/rspack/plugin'].includes(
+          typeof plugin === 'string' ? plugin : plugin.plugin
         )
-      : td.build;
-    const {
-      target: _t,
-      projects: _p,
-      plugin: _pl,
-      ...buildConfig
-    } = (buildEntry as any) ?? {};
-    expect(buildConfig).toMatchInlineSnapshot(`
-      {
-        "cache": true,
-        "dependsOn": [
-          "^build",
-        ],
-      }
-    `);
+      )
+    ).toBe(true);
+    expect(
+      readProjectConfiguration(tree, 'myapp').targets?.build
+    ).toBeUndefined();
   });
 
   describe('TS solution setup', () => {
@@ -1346,7 +1329,6 @@ describe('app', () => {
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1515,7 +1497,6 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
         name: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1541,7 +1522,6 @@ describe('app', () => {
     it('should add project to workspaces when using TS solution (npm, yarn, bun)', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1551,7 +1531,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'libs/nested1',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1560,7 +1539,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'libs/nested2',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1588,7 +1566,6 @@ describe('app', () => {
 
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1598,7 +1575,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested1',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1608,7 +1584,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested2',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1618,7 +1593,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'packages/shared/util',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1644,7 +1618,6 @@ describe('app', () => {
         linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1694,15 +1667,13 @@ describe('app', () => {
         linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: false,
         useProjectJson: false,
         skipFormat: true,
       });
 
-      expect(
-        readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
-          .outputPath
-      ).toBe('apps/my-app/dist');
+      expect(appTree.read('apps/my-app/webpack.config.js', 'utf-8')).toContain(
+        "path: join(__dirname, 'dist')"
+      );
     });
 
     it('should configure rspack build task correctly with the output contained within the project root', async () => {
@@ -1712,21 +1683,18 @@ describe('app', () => {
         linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: false,
         useProjectJson: false,
         skipFormat: true,
       });
 
-      expect(
-        readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
-          .outputPath
-      ).toBe('apps/my-app/dist');
+      expect(appTree.read('apps/my-app/rspack.config.js', 'utf-8')).toContain(
+        "path: join(__dirname, 'dist')"
+      );
     });
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -2099,6 +2067,62 @@ describe('app', () => {
       );
       expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
       expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+    });
+  });
+
+  describe('--port', () => {
+    it('should not write a dev-server port that was never requested', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'default-app',
+        bundler: 'webpack',
+      });
+
+      expect(
+        readProjectConfiguration(appTree, 'default-app').targets.serve
+      ).toBeUndefined();
+      expect(appTree.read('default-app/webpack.config.js', 'utf-8')).toContain(
+        'port: 4200'
+      );
+    });
+
+    it('should write an explicitly requested port to the config', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'pinned-app',
+        bundler: 'webpack',
+        port: 4321,
+      });
+
+      expect(appTree.read('pinned-app/webpack.config.js', 'utf-8')).toContain(
+        'port: 4321'
+      );
+    });
+
+    it('should write port 0, which asks the dev server for a free port', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'ephemeral-app',
+        bundler: 'webpack',
+        port: 0,
+      });
+
+      expect(
+        appTree.read('ephemeral-app/webpack.config.js', 'utf-8')
+      ).toContain('port: 0');
+    });
+
+    it('should accept the deprecated devServerPort from programmatic callers', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'aliased-app',
+        bundler: 'webpack',
+        devServerPort: 4322,
+      });
+
+      expect(appTree.read('aliased-app/webpack.config.js', 'utf-8')).toContain(
+        'port: 4322'
+      );
     });
   });
 });

@@ -87,6 +87,8 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   describe('updateProjectConfig', () => {
+    // `component-test` is inferred by `@nx/cypress/plugin`; the generator only
+    // writes the cypress config the plugin reads.
     it('should add project config with --target=<project>:<target>', async () => {
       await generateTestApplication(tree, {
         directory: 'fancy-app',
@@ -143,15 +145,7 @@ describe('Cypress Component Testing Configuration', () => {
       ).toBeFalsy();
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
-      ).toEqual({
-        executor: '@nx/cypress:cypress',
-        options: {
-          cypressConfig: 'fancy-lib/cypress.config.ts',
-          devServerTarget: 'fancy-app:build',
-          skipServe: true,
-          testingType: 'component',
-        },
-      });
+      ).toBeUndefined();
     });
 
     it('should add project config with --target=<project>:<target>:<config>', async () => {
@@ -210,15 +204,7 @@ describe('Cypress Component Testing Configuration', () => {
       ).toBeFalsy();
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
-      ).toEqual({
-        executor: '@nx/cypress:cypress',
-        options: {
-          cypressConfig: 'fancy-lib/cypress.config.ts',
-          devServerTarget: 'fancy-app:build:development',
-          skipServe: true,
-          testingType: 'component',
-        },
-      });
+      ).toBeUndefined();
     });
 
     it('should not throw with invalid --build-target', async () => {
@@ -352,15 +338,7 @@ describe('Cypress Component Testing Configuration', () => {
 
       expect(
         readProjectConfiguration(tree, 'fancy-app').targets['component-test']
-      ).toEqual({
-        executor: '@nx/cypress:cypress',
-        options: {
-          cypressConfig: 'fancy-app/cypress.config.ts',
-          devServerTarget: 'fancy-app:build',
-          skipServe: true,
-          testingType: 'component',
-        },
-      });
+      ).toBeUndefined();
     });
 
     it('should use the project graph to find the correct project config', async () => {
@@ -420,15 +398,7 @@ describe('Cypress Component Testing Configuration', () => {
 
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
-      ).toEqual({
-        executor: '@nx/cypress:cypress',
-        options: {
-          cypressConfig: 'fancy-lib/cypress.config.ts',
-          devServerTarget: 'fancy-app:build',
-          skipServe: true,
-          testingType: 'component',
-        },
-      });
+      ).toBeUndefined();
     });
   });
 
@@ -489,7 +459,7 @@ describe('Cypress Component Testing Configuration', () => {
       "const { nxComponentTestingPreset } = require('@nx/angular/plugins/component-testing');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
-          component: nxComponentTestingPreset(__filename)
+          component: nxComponentTestingPreset(__filename, { "buildTarget": "something:build" })
       });"
     `);
     expect(
@@ -537,7 +507,11 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     const config = tree.read('my-lib/cypress.config.ts', 'utf-8');
-    expect(config).toContain('...nxComponentTestingPreset(__filename)');
+    // No explicit target carries `devServerTarget` any more, so the preset
+    // call receives the build target directly.
+    expect(config).toContain(
+      '...nxComponentTestingPreset(__filename, { "buildTarget": "something:build" })'
+    );
     expect(config).toContain('justInTimeCompile: false');
   });
 

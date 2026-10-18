@@ -362,7 +362,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'jest',
         bundler: 'vite',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -502,7 +501,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'jest',
         bundler: 'vite',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -529,7 +527,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'jest',
         bundler: 'vite',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });
@@ -576,7 +573,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'none',
         bundler: 'webpack',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -595,7 +591,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'none',
         bundler: 'webpack',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });

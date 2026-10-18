@@ -4,5 +4,4 @@ export interface CypressComponentConfigurationSchema {
   skipFormat?: boolean;
   buildTarget?: string;
   bundler?: 'webpack' | 'vite';
-  addPlugin?: boolean;
 }

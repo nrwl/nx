@@ -1,9 +1,3 @@
 {
-  "executors": {
-    "rollup": {
-      "implementation": "./dist/src/executors/rollup/rollup.impl",
-      "schema": "./dist/src/executors/rollup/schema.json",
-      "description": "Bundle a package using Rollup."
-    }
-  }
+  "executors": {}
 }

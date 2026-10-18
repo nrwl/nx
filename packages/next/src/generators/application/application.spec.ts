@@ -344,120 +344,12 @@ describe('app', () => {
     );
   });
 
-  it('should set up the nx next build builder', async () => {
-    const name = uniq();
-
-    // Retained executor targets still honor their outputPath.
-    await applicationGenerator(tree, {
-      directory: name,
-      style: 'css',
-      addPlugin: false,
-    });
-
-    expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
-      .toMatchInlineSnapshot(`
-        "//@ts-check
-        const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
-        const { relative, resolve } = require('path');
-
-        /** @type {import('next').NextConfig} */
-        const nextConfig = {};
-
-        /**
-         * @param {string} phase
-         * @returns {import('next').NextConfig}
-         */
-        module.exports = (phase) => ({
-          ...nextConfig,
-          ...(phase !== PHASE_DEVELOPMENT_SERVER && process.env.NX_NEXT_OUTPUT_PATH
-            ? {
-                distDir: relative(
-                  __dirname,
-                  resolve(__dirname, '../', process.env.NX_NEXT_OUTPUT_PATH, '.next'),
-                ),
-              }
-            : {}),
-          ...(process.env.NX_SERVE_STATIC_BUILD_RUNNING === 'true'
-            ? { output: 'export', distDir: 'out' }
-            : {}),
-        });
-        "
-      `);
-  });
-
-  it('preserves executor output paths without config helpers', async () => {
-    await applicationGenerator(tree, {
-      directory: 'my-app',
-      style: 'css',
-      addPlugin: false,
-    });
-    const configModule = { exports: undefined as any };
-    const env = { NX_NEXT_OUTPUT_PATH: 'dist/custom-app' };
-    const { runInNewContext } = await import('node:vm');
-    runInNewContext(tree.read('my-app/next.config.js', 'utf-8'), {
-      module: configModule,
-      require,
-      __dirname: '/workspace/my-app',
-      process: { env },
-    });
-
-    expect(configModule.exports('phase-production-build').distDir).toBe(
-      '../dist/custom-app/.next'
-    );
-    expect(
-      configModule.exports('phase-development-server').distDir
-    ).toBeUndefined();
-    delete env.NX_NEXT_OUTPUT_PATH;
-    expect(
-      configModule.exports('phase-production-server').distDir
-    ).toBeUndefined();
-  });
-
-  it('typechecks the legacy config under strict JavaScript checking', async () => {
-    await applicationGenerator(tree, {
-      directory: 'my-app',
-      style: 'css',
-      addPlugin: false,
-    });
-    const ts = await import('typescript');
-    const fileName = join(process.cwd(), 'next.config.js');
-    const options = {
-      allowJs: true,
-      checkJs: true,
-      strict: true,
-      noEmit: true,
-      skipLibCheck: true,
-      types: ['node'],
-    };
-    const host = ts.createCompilerHost(options);
-    const getSourceFile = host.getSourceFile.bind(host);
-    host.getSourceFile = (path, languageVersion, ...args) =>
-      path === fileName
-        ? ts.createSourceFile(
-            fileName,
-            tree.read('my-app/next.config.js', 'utf-8'),
-            languageVersion,
-            true,
-            ts.ScriptKind.JS
-          )
-        : getSourceFile(path, languageVersion, ...args);
-    const program = ts.createProgram([fileName], options, host);
-    expect(
-      ts
-        .getPreEmitDiagnostics(program)
-        .map((diagnostic) =>
-          ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
-        )
-    ).toEqual([]);
-  });
-
   it('should generate a plain next.config.js for the inferred plugin', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
       directory: name,
       style: 'css',
-      addPlugin: true,
     });
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
@@ -1031,7 +923,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -1198,7 +1089,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -1226,7 +1116,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });
@@ -1271,7 +1160,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: true,
         src: false,
         skipFormat: true,
@@ -1291,7 +1179,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1309,7 +1196,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         src: false,
         skipFormat: true,
@@ -1594,7 +1480,7 @@ describe('app (legacy)', () => {
     }
   });
 
-  it('should generate build and serve targets', async () => {
+  it('should infer build and serve targets even for legacy callers', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
@@ -1603,8 +1489,8 @@ describe('app (legacy)', () => {
     });
 
     const projectConfiguration = readProjectConfiguration(tree, name);
-    expect(projectConfiguration.targets.build).toBeDefined();
-    expect(projectConfiguration.targets.serve).toBeDefined();
+    expect(projectConfiguration.targets.build).toBeUndefined();
+    expect(projectConfiguration.targets.serve).toBeUndefined();
   });
 
   describe('--unit-test-runner jest', () => {

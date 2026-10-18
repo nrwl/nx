@@ -13,7 +13,6 @@ import {
   names,
   offsetFromRoot,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -47,7 +46,6 @@ export interface NormalizedSchema extends Schema {
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -149,13 +147,6 @@ async function normalizeOptions(
     importPath: options.importPath,
   });
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPluginDefault;
-
   const fileName = names(
     options.simpleModuleName
       ? projectNames.projectSimpleName
@@ -170,8 +161,7 @@ async function normalizeOptions(
   // TS solution setup is not configured, we additionally check if the TS
   // solution setup will be configured by the jsLibraryGenerator
   const isUsingTsSolutionConfig =
-    isUsingTsSolutionSetup(tree) ||
-    shouldConfigureTsSolutionSetup(tree, options.addPlugin);
+    isUsingTsSolutionSetup(tree) || shouldConfigureTsSolutionSetup(tree);
   return {
     ...options,
     fileName,

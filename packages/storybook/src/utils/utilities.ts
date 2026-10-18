@@ -1,6 +1,5 @@
 import { TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
-import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
 import ts = require('typescript');
 import { versions } from './versions';
@@ -42,23 +41,6 @@ export type TsConfig = {
   exclude?: string[];
   references?: Array<{ path: string }>;
 };
-
-export function storybookConfigExistsCheck(
-  config: string,
-  projectName: string
-): void {
-  const exists = !!(config && statSync(config).isDirectory());
-
-  if (!exists) {
-    throw new Error(
-      `Could not find Storybook configuration for project ${projectName}.
-      Please generate Storybook configuration using the following command:
-
-      nx g @nx/storybook:configuration --name=${projectName}
-      `
-    );
-  }
-}
 
 export function dedupe(arr: string[]) {
   return Array.from(new Set(arr));

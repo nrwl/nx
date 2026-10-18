@@ -13,14 +13,9 @@ const config = {
   framework: {
     name: '<%= uiFramework %>',
     options: {
-     <% if (usesVite && viteConfigFilePath && hasPlugin) { %>
+     <% if (usesVite && viteConfigFilePath) { %>
       builder: {
         viteConfigPath: '<%= viteConfigFileName %>',
-      },
-      <% } %>
-      <% if (usesVite && viteConfigFilePath && !hasPlugin) { %>
-      builder: {
-        viteConfigPath: '<%= viteConfigFilePath %>',
       },
       <% } %>
     },

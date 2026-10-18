@@ -123,7 +123,6 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -136,7 +135,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(tree, {
@@ -195,7 +193,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     const webpackInitTask = await webpackInitGenerator(tree, {
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
-      addPlugin: options.addPlugin,
     });
     tasks.push(webpackInitTask);
     if (!options.skipPackageJson) {
@@ -224,18 +221,15 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     }: typeof import('@nx/rolldown') = require('@nx/rolldown');
     tasks.push(
       await rolldownInitGenerator(tree, {
-        addPlugin: options.addPlugin,
         skipPackageJson: options.skipPackageJson,
         skipFormat: true,
       })
     );
     // The registration may infer `bundle`/`rolldown:build` instead of `build`.
-    if (options.addPlugin) {
-      options.buildTargetName = ensureRolldownBuildTarget(
-        tree,
-        options.appProjectRoot
-      );
-    }
+    options.buildTargetName = ensureRolldownBuildTarget(
+      tree,
+      options.appProjectRoot
+    );
   }
 
   addAppFiles(tree, options);
@@ -259,7 +253,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       // Matches the app's module type (see create-project).
       format: options.serveRuntime === 'node' ? 'esm' : 'cjs',
       platform: 'node',
-      addPlugin: options.addPlugin,
       skipPackageJson: true,
       skipFormat: true,
     });
@@ -320,7 +313,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       // Only the fastify template ships a spec, so the other frameworks would
       // otherwise fail `nx test` on a freshly generated app.
       passWithNoTests: true,
-      addPlugin: options.addPlugin,
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
     });

@@ -37,7 +37,6 @@ export interface PlaywrightLinterOptions {
    * Directory from the project root, where the playwright files will be located.
    **/
   directory: string;
-  addPlugin?: boolean;
 }
 
 export async function addLinterToPlaywrightProject(
@@ -65,7 +64,6 @@ export async function addLinterToPlaywrightProject(
         enableTypedLinting,
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
       })
     );
   }

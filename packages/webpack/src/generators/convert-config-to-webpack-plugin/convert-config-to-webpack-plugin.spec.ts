@@ -218,6 +218,48 @@ describe('convertConfigToWebpackPluginGenerator', () => {
     ).resolves.toEqual({ plugins: ['custom'], mode: 'production' });
   });
 
+  it('should not add the React plugin to a config that does not use withReact', async () => {
+    const project = createProject(tree, { name: 'my-app', root: 'my-app' });
+    tree.write(
+      `${project.name}/webpack.config.js`,
+      `
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+      module.exports = composePlugins(withNx(), withWeb(), (config) => config);
+      `
+    );
+
+    await convertConfigToWebpackPluginGenerator(tree, {
+      project: project.name,
+    });
+
+    const config = tree.read(`${project.name}/webpack.config.js`, 'utf-8');
+    expect(config).not.toContain('@nx/react');
+    expect(config).not.toContain('NxReactWebpackPlugin');
+    expect(config).toContain('new NxAppWebpackPlugin()');
+  });
+
+  it('should add the React plugin for withReact called without options', async () => {
+    const project = createProject(tree, { name: 'my-app', root: 'my-app' });
+    tree.write(
+      `${project.name}/webpack.config.js`,
+      `
+      const { composePlugins, withNx } = require('@nx/webpack');
+      const { withReact } = require('@nx/react');
+      module.exports = composePlugins(withNx(), withReact(), (config) => config);
+      `
+    );
+
+    await convertConfigToWebpackPluginGenerator(tree, {
+      project: project.name,
+    });
+
+    const config = tree.read(`${project.name}/webpack.config.js`, 'utf-8');
+    expect(config).toContain(
+      "const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');"
+    );
+    expect(config).toContain('new NxReactWebpackPlugin(),');
+  });
+
   it('should update project.json adding the standardWebpackConfigFunction option', async () => {
     const project = createProject(tree, {
       name: 'my-app',

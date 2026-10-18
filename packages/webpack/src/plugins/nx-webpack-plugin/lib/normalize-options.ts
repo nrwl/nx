@@ -223,11 +223,17 @@ function normalizeRelativePaths(
   }
 }
 
-// Executors receive options with schema defaults already applied. Those defaults
-// must not override the plugin's own options; target options still apply above.
+// Executor-style callers pass options with the removed @nx/webpack:webpack
+// schema defaults applied. Those defaults must not override the plugin's own
+// options; target options still apply above.
+const executorSchemaDefaults: Record<string, unknown> = {
+  outputFileName: 'main.js',
+  standardWebpackConfigFunction: false,
+  buildLibsFromSource: true,
+};
+
 function isExecutorSchemaDefault(key: string, value: unknown): boolean {
-  const schema = require('../../../executors/webpack/schema.json');
-  return schema.properties[key]?.default === value;
+  return key in executorSchemaDefaults && executorSchemaDefaults[key] === value;
 }
 
 function isRelativePath(val: unknown): boolean {

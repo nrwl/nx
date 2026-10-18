@@ -230,9 +230,6 @@
       "path": "./e2e/esbuild"
     },
     {
-      "path": "./e2e/nx-init"
-    },
-    {
       "path": "./e2e/release"
     },
     {

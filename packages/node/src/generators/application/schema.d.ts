@@ -27,7 +27,6 @@ export interface Schema {
   docker?: boolean;
   skipDockerPlugin?: boolean;
   isNest?: boolean;
-  addPlugin?: boolean;
   useTsSolution?: boolean;
   useProjectJson?: boolean;
   keepExistingVersions?: boolean;

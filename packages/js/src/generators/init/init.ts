@@ -7,7 +7,6 @@ import {
   generateFiles,
   GeneratorCallback,
   readJson,
-  readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -60,11 +59,7 @@ export async function initGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const nxJson = readNxJson(tree);
-  schema.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addTsPlugin ??= schema.addPlugin;
+  schema.addTsPlugin ??= true;
 
   if (schema.addTsPlugin) {
     await addPlugin(

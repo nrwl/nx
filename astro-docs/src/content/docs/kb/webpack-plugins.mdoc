@@ -8,14 +8,9 @@ topics:
   - 'Webpack'
 ---
 
-Nx provides two types of Webpack plugins:
+Nx provides [basic plugins](#basic-plugins) that work in a standard [webpack configuration](https://webpack.js.org/configuration/) file and integrate directly with the Webpack CLI.
 
-1. [_Basic_](#basic-plugins) plugins that work in a
-   standard [webpack configuration](https://webpack.js.org/configuration/) file.
-2. [_Nx-enhanced_](#nxenhanced-plugins) plugins that work with
-   the [`@nx/webpack:webpack`](/docs/technologies/build-tools/webpack/executors#webpack) executor.
-
-The basic plugins integrate directly with the Webpack CLI.
+Nx v24 removed the [Nx-enhanced plugins](#nxenhanced-plugins), such as `composePlugins` and `withNx`. Their exports remain only as inert stubs.
 
 For more information on webpack configuration and the
 difference between basic and Nx-enhanced configuration, see

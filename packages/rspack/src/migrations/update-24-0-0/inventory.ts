@@ -3,11 +3,14 @@ import { getProjects, type ProjectConfiguration, type Tree } from '@nx/devkit';
 const CONFIG_EXTENSIONS = ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts'];
 const REMOVED_HELPERS =
   /\b(composePlugins|composePluginsSync|withNx|withWeb|withReact)\b/;
+// Left by an earlier conversion; the wrapped `.old` config still calls the helpers.
+const LEGACY_WRAPPER = /\buseLegacyNxPlugin\b/;
 
 export interface HelperUsage {
   name: string;
   root: string;
   configPaths: string[];
+  usesHelpers: boolean;
   usesExecutor: boolean;
 }
 
@@ -15,15 +18,23 @@ export function inventoryComposePlugins(tree: Tree): HelperUsage[] {
   const usages: HelperUsage[] = [];
 
   for (const [name, project] of getProjects(tree)) {
-    const configPaths = [...collectConfigPaths(tree, project)].filter((path) =>
-      REMOVED_HELPERS.test(tree.read(path, 'utf-8') ?? '')
-    );
+    const configs = [...collectConfigPaths(tree, project)].map((path) => ({
+      path,
+      source: tree.read(path, 'utf-8') ?? '',
+    }));
+    const configPaths = configs
+      .filter(
+        ({ source }) =>
+          REMOVED_HELPERS.test(source) || LEGACY_WRAPPER.test(source)
+      )
+      .map(({ path }) => path);
     if (!configPaths.length) continue;
 
     usages.push({
       name,
       root: project.root,
       configPaths: configPaths.sort(),
+      usesHelpers: configs.some(({ source }) => REMOVED_HELPERS.test(source)),
       usesExecutor: Object.values(project.targets ?? {}).some(
         (target) => target.executor === '@nx/rspack:rspack'
       ),

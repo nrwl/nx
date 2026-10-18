@@ -23,25 +23,6 @@ You can configure Webpack using a [`webpack.config.js`](https://webpack.js.org/c
 ]
 ```
 
-If you are using the [`@nx/webpack:webpack`](/docs/technologies/build-tools/webpack/executors#webpack) executor, the path to your webpack config is set in the `webpackConfig` option in your `project.json` file.
-
-```json5 {% meta="{6}" %}
-// project.json
-"my-app": {
-  "targets": {
-    //...
-    "build": {
-      "executor": "@nx/webpack:webpack",
-      "options": {
-        "webpackConfig": "apps/my-app/webpack.config.js",
-        //...
-      },
-      // ...
-    },
-  }
-}
-```
-
 In the webpack config file, you can add the necessary configuration for Webpack. Read more on how to configure Webpack in the [Webpack documentation](https://webpack.js.org/concepts/configuration/).
 
 ## Basic and Nx-enhanced configuration files
@@ -49,7 +30,7 @@ In the webpack config file, you can add the necessary configuration for Webpack.
 Nx supported two flavors of Webpack configuration file:
 
 1. [_Basic_](#basic-configuration-for-nx) (or standard) Webpack configuration. The file exports a Webpack config object, or one of the [standard configuration types](https://webpack.js.org/configuration/configuration-types).
-2. [_Nx-enhanced_](#nxenhanced-configuration-with-composable-plugins) Webpack configuration. The file exports a function built with `composePlugins` that takes in a Webpack configuration object plus the [`@nx/webpack:webpack`](/docs/technologies/build-tools/webpack/executors#webpack) options and context.
+2. [_Nx-enhanced_](#nxenhanced-configuration-with-composable-plugins) Webpack configuration. The file exports a function built with `composePlugins` that takes in a Webpack configuration object plus the Nx build options and task context.
 
 Nx v24 removed the composable plugins behind the second flavor, so write a basic configuration. It works with the Webpack CLI and with the inferred `@nx/webpack/plugin`.
 
@@ -100,8 +81,8 @@ module.exports = composePlugins(
   // Custom composable plugin
   (config, { options, context }) => {
     // `config` is the Webpack configuration object
-    // `options` is the options passed to the `@nx/webpack:webpack` executor
-    // `context` is the context passed to the `@nx/webpack:webpack` executor
+    // `options` holds Nx build options, such as `projectRoot`
+    // `context` holds the Nx task context, such as `projectName`
     // customize configuration here
     return config;
   }
