@@ -101,6 +101,15 @@ Set the `waitForWebServer` option to `false` to opt out of that task.
 For the `webServer` shapes Nx leaves to Playwright and for how Nx caches and re-infers the server
 address, see [Playwright web server readiness](/docs/kb/playwright-web-server-readiness).
 
+With the `waitForServerReady` option, on by default, the Playwright tasks wait for the serve
+task's `readyWhen` instead of only for the task to start.
+The Vite, webpack, Rspack, and Rsbuild plugins infer `readyWhen` on their serve targets.
+The tasks get the address the server reported in the `NX_READY_URL` environment variable, which
+generated Playwright configs use for `baseURL` and `webServer.url`.
+A migration turns the option off in existing workspaces.
+Set it to `true` to opt in.
+To make another serve target report readiness, see [signal readiness from the task](/docs/reference/project-configuration#signal-readiness-from-the-task).
+
 ### Splitting E2E tests
 
 The `targetName` task runs the complete Playwright suite and caches the configured test and reporter

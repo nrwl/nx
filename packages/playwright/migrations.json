@@ -12,6 +12,12 @@
       "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
       "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
       "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "update-24-0-0-disable-wait-for-server-ready": {
+      "version": "24.0.0-beta.3",
+      "description": "Sets `waitForServerReady: false` on `@nx/playwright/plugin` entries in `nx.json` so existing Playwright e2e tasks keep starting without waiting for the dev server to report it is ready.",
+      "implementation": "./dist/src/migrations/update-24-0-0/disable-wait-for-server-ready",
+      "documentation": "./dist/src/migrations/update-24-0-0/disable-wait-for-server-ready.md"
     }
   }
 }

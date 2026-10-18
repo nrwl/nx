@@ -42,7 +42,10 @@ describe('React Playwright e2e tests', () => {
     let originalConfig = '';
     updateFile(configPath, (content) => {
       originalConfig = content;
-      return content.replace(/url: 'http:\/\/[^']*'/, 'url: baseURL');
+      return content.replace(
+        /url: (?:process\.env\['NX_READY_URL'\] \|\| )?'http:\/\/[^']*'/,
+        'url: baseURL'
+      );
     });
 
     try {
@@ -67,7 +70,10 @@ describe('React Playwright e2e tests', () => {
     let originalConfig = '';
     updateFile(configPath, (content) => {
       originalConfig = content;
-      return content.replace(/url: 'http:\/\/[^']*'/, 'url: baseURL');
+      return content.replace(
+        /url: (?:process\.env\['NX_READY_URL'\] \|\| )?'http:\/\/[^']*'/,
+        'url: baseURL'
+      );
     });
 
     try {
@@ -119,8 +125,8 @@ describe('React Playwright e2e tests', () => {
     updateFile(`${e2eProject}/playwright.config.mts`, (content) => {
       originalConfig = content;
       return content.replace(
-        /url: 'http:\/\/[^']*'/,
-        `url: 'http://localhost:${port}'`
+        /(url: (?:process\.env\['NX_READY_URL'\] \|\| )?)'http:\/\/[^']*'/,
+        `$1'http://localhost:${port}'`
       );
     });
     // Delay the server so Playwright's own probe surely misses when nothing

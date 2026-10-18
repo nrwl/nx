@@ -650,6 +650,96 @@ describe('waitForWebserverExecutor', () => {
     );
   });
 
+  describe('with NX_READY_URL set', () => {
+    let savedReadyUrl: string | undefined;
+    beforeEach(() => {
+      savedReadyUrl = process.env.NX_READY_URL;
+    });
+    afterEach(() => {
+      if (savedReadyUrl === undefined) {
+        delete process.env.NX_READY_URL;
+      } else {
+        process.env.NX_READY_URL = savedReadyUrl;
+      }
+    });
+
+    async function liveHttpUrl() {
+      const server = createHttpServer((_req, res) => res.end('ok'));
+      await listen(server, 0);
+      return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    }
+
+    it('probes the reported url instead of the configured one', async () => {
+      process.env.NX_READY_URL = await liveHttpUrl();
+
+      const result = await waitForWebserverExecutor(
+        {
+          servers: [{ url: `http://127.0.0.1:${await closedPort()}` }],
+          timeout: 300,
+        },
+        context
+      );
+
+      expect(result).toEqual({ success: true });
+    });
+
+    it('keeps the configured server options for the reported url', async () => {
+      const request = https.request as unknown as Mock;
+      const port = await closedPort();
+      process.env.NX_READY_URL = `https://127.0.0.1:${port}`;
+
+      const result = await waitForWebserverExecutor(
+        {
+          servers: [{ url: 'https://127.0.0.1:1', ignoreHTTPSErrors: true }],
+          timeout: 300,
+        },
+        context
+      );
+
+      expect(result).toEqual({ success: false });
+      expect(request).toHaveBeenCalledWith(
+        expect.objectContaining({ port: String(port) }),
+        expect.objectContaining({ rejectUnauthorized: false }),
+        expect.any(Function)
+      );
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Timed out after 300ms')
+      );
+      request.mockClear();
+    });
+
+    it('ignores the reported url when waiting for several servers', async () => {
+      process.env.NX_READY_URL = await liveHttpUrl();
+
+      const result = await waitForWebserverExecutor(
+        {
+          servers: [
+            { url: process.env.NX_READY_URL },
+            { url: `http://127.0.0.1:${await closedPort()}` },
+          ],
+          timeout: 300,
+        },
+        context
+      );
+
+      expect(result).toEqual({ success: false });
+    });
+
+    it('keeps probing a configured port', async () => {
+      const server = createTcpServer();
+      await listen(server, 0);
+      const { port } = server.address() as AddressInfo;
+      process.env.NX_READY_URL = `http://127.0.0.1:${await closedPort()}`;
+
+      const result = await waitForWebserverExecutor(
+        { servers: [{ port }], timeout: 300 },
+        context
+      );
+
+      expect(result).toEqual({ success: true });
+    });
+  });
+
   it.each(['the server', 'the executor'])(
     'treats a timeout of 0 on %s as unset, like Playwright',
     async (level) => {

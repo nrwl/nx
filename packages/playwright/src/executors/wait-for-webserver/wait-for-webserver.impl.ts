@@ -32,7 +32,7 @@ export async function waitForWebserverExecutor(
   options: Schema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  const servers = options.servers ?? [];
+  const servers = withReadyUrl(options.servers ?? []);
   if (servers.length === 0) {
     logger.error(
       '@nx/playwright:wait-for-webserver requires at least one server to wait for.'
@@ -77,6 +77,16 @@ export async function waitForWebserverExecutor(
 }
 
 export default waitForWebserverExecutor;
+
+// The address the server task reported when it signaled readiness. It names no
+// server, so it only replaces the url of a gate waiting for exactly one.
+function withReadyUrl(servers: Server[]): Server[] {
+  const readyUrl = process.env.NX_READY_URL;
+  if (!readyUrl || servers.length !== 1 || servers[0].port != null) {
+    return servers;
+  }
+  return [{ ...servers[0], url: readyUrl }];
+}
 
 // A malformed URL, an out-of-range port and a proxy that cannot be used are all
 // inputs that can never become valid, so they are rejected up front instead of

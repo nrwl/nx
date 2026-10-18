@@ -722,7 +722,9 @@ describe('app', () => {
     const playwrightUrl = (e2eRoot: string) =>
       tree
         .read(`${e2eRoot}/playwright.config.mts`, 'utf-8')
-        .match(/baseURL = process\.env\['BASE_URL'\] \|\| '([^']+)'/)[1];
+        .match(
+          /baseURL = process\.env\['BASE_URL'\] \|\| process\.env\['NX_READY_URL'\] \|\| '([^']+)'/
+        )[1];
 
     it('should write the port to the webpack config and the e2e config (webpack)', async () => {
       await applicationGenerator(tree, {
