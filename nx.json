@@ -575,5 +575,8 @@
       }
     ]
   },
-  "analytics": true
+  "analytics": true,
+  "affected": {
+    "legacy": true
+  }
 }
