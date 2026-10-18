@@ -405,7 +405,7 @@ Configure `@nx/js/typescript` in the `plugins` array in `nx.json`:
 | `build.skipBuildCheck` | Allows build inference without package exports that point to compiled output. | `false`             |
 | `verboseOutput`        | Adds TypeScript's `--verbose` flag to the underlying commands.                | `false`             |
 
-The `typecheck` and `build` tasks are cached, with inputs based on your TypeScript configuration. In a TypeScript solution setup, they also have outputs and depend on the corresponding tasks in dependency projects.
+The `typecheck` and `build` tasks are cached. In a TypeScript solution setup, their inputs and outputs come from your TypeScript configuration, and they depend on the corresponding tasks in dependency projects. Outside one, `typecheck` uses the `production` named input, or `default` if there's no `production`.
 
 ### Exclude or include specific projects
 

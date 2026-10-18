@@ -3757,7 +3757,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       expect(target.dependsOn).toBeUndefined();
       expect(target.outputs).toBeUndefined();
       expect(target.syncGenerators).toBeUndefined();
-      expect(target.inputs).toContain('{projectRoot}/tsconfig.app.json');
+      expect(target.inputs).toEqual([
+        'production',
+        '^production',
+        { externalDependencies: ['typescript'] },
+      ]);
     });
 
     it('should fall back to the lib and then the root tsconfig', async () => {

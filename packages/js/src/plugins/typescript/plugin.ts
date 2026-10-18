@@ -619,14 +619,9 @@ function buildTscTargets(
             siblingFiles.filter((file) => /^tsconfig.*\.json$/.test(file))
           ),
           compiler,
-          inputs: getInputs(
-            namedInputs,
-            config,
-            tsConfig,
-            internalProjectReferences,
-            context.workspaceRoot,
-            cache
-          ),
+          // Like the framework targets it replaces: `{workspaceRoot}` inputs
+          // would mark the project affected by any root tsconfig change.
+          namedInputs,
         });
       }
     } else if (!targets[targetName]) {
