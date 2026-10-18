@@ -53,8 +53,8 @@ const TYPECHECK_OPTIONS = [
 
 /**
  * Registers `@nx/js/typescript` in a workspace where no registration of it
- * infers `typecheck` yet, adding a typecheck-only entry next to any existing
- * one. Outside TS solution setups it only infers `typecheck`. Callers decide
+ * infers `typecheck` yet, adding a typecheck-only entry next to an existing
+ * unscoped one. Outside TS solution setups it only infers `typecheck`. Callers decide
  * whether inference plugins are in use. Pass `frameworkPlugin` when that
  * plugin still infers `typecheck` for some projects, so its target wins.
  */

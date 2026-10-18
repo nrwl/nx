@@ -106,9 +106,12 @@ export function selectTypecheckTsConfig(
   return (
     ['tsconfig.app.json', 'tsconfig.lib.json', DEFAULT_TSCONFIG].find((file) =>
       tsConfigFiles.includes(file)
-    ) ?? tsConfigFiles[0]
+    ) ?? tsConfigFiles.find((file) => SHELL_SAFE_TSCONFIG.test(file))
   );
 }
+
+// The name goes unquoted into a shell command.
+const SHELL_SAFE_TSCONFIG = /^tsconfig[\w.-]*\.json$/;
 
 /**
  * ` <tsconfig>` for a tsc command, or an empty string for `tsconfig.json`,

@@ -3804,6 +3804,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         'apps/webpack-app/tsconfig.json': tsconfig,
         'apps/webpack-app/project.json': `{}`,
         'apps/webpack-app/webpack.config.js': `module.exports = {};`,
+        'libs/package-json-lib/tsconfig.json': tsconfig,
+        'libs/package-json-lib/package.json': JSON.stringify({
+          name: 'package-json-lib',
+          nx: { targets: { build: { executor: '@nx/js:tsc' } } },
+        }),
         'apps/esbuild-app/tsconfig.json': tsconfig,
         'apps/esbuild-app/project.json': JSON.stringify({
           targets: {
@@ -3822,6 +3827,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       );
 
       expect(projects['libs/tsc-lib']?.targets?.typecheck).toBeUndefined();
+      expect(
+        projects['libs/package-json-lib']?.targets?.typecheck
+      ).toBeUndefined();
       expect(projects['apps/webpack-app']?.targets?.typecheck).toBeUndefined();
       expect(projects['apps/esbuild-app'].targets.typecheck.command).toBe(
         'tsc --noEmit'

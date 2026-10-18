@@ -290,16 +290,19 @@ async function buildViteTargets(
   ) {
     const technologies = hasVuePlugin ? ['typescript', 'vue'] : ['typescript'];
 
+    const tsConfig = selectTypecheckTsConfig(tsConfigFiles);
     if (!isUsingTsSolutionSetup) {
-      targets[options.typecheckTargetName] = createTypecheckTarget({
-        mode: 'noEmit',
-        projectRoot: joinPathFragments(projectRoot),
-        pmc,
-        tsConfig: selectTypecheckTsConfig(tsConfigFiles),
-        compiler: 'vue-tsc',
-        namedInputs,
-        technologies,
-      });
+      if (tsConfig) {
+        targets[options.typecheckTargetName] = createTypecheckTarget({
+          mode: 'noEmit',
+          projectRoot: joinPathFragments(projectRoot),
+          pmc,
+          tsConfig,
+          compiler: 'vue-tsc',
+          namedInputs,
+          technologies,
+        });
+      }
     } else if (tsConfigFiles.includes('tsconfig.json')) {
       targets[options.typecheckTargetName] = createTypecheckTarget({
         mode: 'build',

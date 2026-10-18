@@ -173,6 +173,7 @@ type InvocationCache = {
   projectContexts: Map<string, ProjectContext>;
   configContexts: Map<string, ConfigContext>;
   referenceExpansionCache: ReferenceExpansionCache;
+  siblingFiles: Map<string, string[]>;
 };
 
 // Module-level cache store — each invocation gets a unique Symbol key
@@ -303,6 +304,7 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
       projectContexts: new Map(),
       configContexts: new Map(),
       referenceExpansionCache: new Map(),
+      siblingFiles: new Map(),
     });
     const cache = cacheStore.get(cacheKey)!;
 
@@ -532,7 +534,7 @@ function checkIfConfigFileShouldBeProject(
   }
 
   // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(config.project.absolute);
+  const siblingFiles = readSiblingFiles(config.project, cache);
   if (
     !siblingFiles.includes('package.json') &&
     !siblingFiles.includes('project.json')
@@ -604,11 +606,11 @@ function buildTscTargets(
     // `tsc --build` needs composite projects, so other setups check without
     // emitting, and skip projects whose build already type-checks.
     if (!isUsingTsSolutionSetup) {
-      const siblingFiles = readdirSync(config.project.absolute);
+      const siblingFiles = readSiblingFiles(config.project, cache);
       if (
         !buildTypechecksProject(
           siblingFiles,
-          readProjectJsonTargets(config.project.absolute, siblingFiles)
+          readProjectTargets(config.project.absolute, siblingFiles)
         )
       ) {
         targets[targetName] = createTypecheckTarget({
@@ -774,7 +776,7 @@ function getNoEmitTypecheckHashInputs(
   workspaceRoot: string,
   cache: InvocationCache
 ): string[] {
-  const siblingFiles = readdirSync(project.absolute);
+  const siblingFiles = readSiblingFiles(project, cache);
   return [
     ...siblingFiles
       .filter((file) =>
@@ -793,16 +795,49 @@ function getNoEmitTypecheckHashInputs(
   ];
 }
 
-function readProjectJsonTargets(
+function readSiblingFiles(
+  project: ProjectContext,
+  cache: InvocationCache
+): string[] {
+  let files = cache.siblingFiles.get(project.absolute);
+  if (!files) {
+    files = readdirSync(project.absolute);
+    cache.siblingFiles.set(project.absolute, files);
+  }
+  return files;
+}
+
+function readProjectTargets(
   projectRoot: string,
   siblingFiles: string[]
 ): ProjectConfiguration['targets'] {
-  if (!siblingFiles.includes('project.json')) {
+  return {
+    ...readTargets(
+      projectRoot,
+      siblingFiles,
+      'package.json',
+      (json) => json.nx?.targets
+    ),
+    ...readTargets(
+      projectRoot,
+      siblingFiles,
+      'project.json',
+      (json) => json.targets
+    ),
+  };
+}
+
+function readTargets(
+  projectRoot: string,
+  siblingFiles: string[],
+  file: string,
+  getTargets: (json: any) => ProjectConfiguration['targets']
+): ProjectConfiguration['targets'] {
+  if (!siblingFiles.includes(file)) {
     return undefined;
   }
   try {
-    return readJsonFile<ProjectConfiguration>(join(projectRoot, 'project.json'))
-      .targets;
+    return getTargets(readJsonFile(join(projectRoot, file)));
   } catch {
     return undefined;
   }

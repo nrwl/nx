@@ -134,4 +134,11 @@ describe('selectTypecheckTsConfig', () => {
     );
     expect(selectTypecheckTsConfig([])).toBeUndefined();
   });
+
+  it('should not fall back to a tsconfig name that is unsafe in a shell', () => {
+    expect(
+      selectTypecheckTsConfig(['tsconfig $(id).json', 'tsconfig.e2e.json'])
+    ).toBe('tsconfig.e2e.json');
+    expect(selectTypecheckTsConfig(['tsconfig;x.json'])).toBeUndefined();
+  });
 });

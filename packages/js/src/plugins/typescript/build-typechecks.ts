@@ -21,7 +21,7 @@ const TYPECHECKING_BUILD_CONFIG =
 
 /**
  * Whether the project's build already type-checks it, judged from its
- * `project.json` targets and, when no build executor is found, its bundler
+ * `project.json` and `package.json` targets and, when no build executor is found, its bundler
  * config files. Options set inside a bundler config can't be read, so those
  * builds are assumed to type-check, which is their default.
  */
